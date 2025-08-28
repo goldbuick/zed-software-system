@@ -1,4 +1,8 @@
 import { useCallback } from 'react'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
+import { fetchwiki, parsemarkdown } from 'zss/feature/parse/markdown'
+import { doasync } from 'zss/mapping/func'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { useWriteText } from '../gadget/hooks'
@@ -19,10 +23,20 @@ export function TapeTerminalOpenIt({
     const [, openmethod, ...values] = words
     const content = values.join(' ')
     setTimeout(() => {
-      if (openmethod === 'inline') {
-        window.location.href = content
-      } else {
-        window.open(`${openmethod} ${content}`.trim(), '_blank')
+      const player = registerreadplayer()
+      switch (openmethod) {
+        case 'read':
+          doasync(SOFTWARE, player, async () => {
+            const markdowntext = await fetchwiki(content)
+            parsemarkdown(player, markdowntext)
+          })
+          break
+        case 'inline':
+          window.location.href = content
+          break
+        default:
+          window.open(`${openmethod} ${content}`.trim(), '_blank')
+          break
       }
     }, 100)
   }, [words])

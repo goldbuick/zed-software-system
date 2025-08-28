@@ -84,15 +84,15 @@ export function Scroll({
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
-      const step = mods.alt ? 10 : 1
+      const step = mods.ctrl ? totalrows : mods.alt ? 10 : 1
       setCursor((state) => Math.max(0, state - step))
     },
-    [setCursor],
+    [setCursor, totalrows],
   )
 
   const down = useCallback<UserInputHandler>(
     (mods) => {
-      const step = mods.alt ? 10 : 1
+      const step = mods.ctrl ? totalrows : mods.alt ? 10 : 1
       setCursor((state) => Math.min(totalrows, state + step))
     },
     [setCursor, totalrows],

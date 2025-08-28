@@ -8,7 +8,7 @@ import {
   modemwritevaluestring,
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
-import { isnumber, ispresent, isstring, noop } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring, noop } from 'zss/mapping/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { hascenter } from 'zss/words/textformat'
 import { NAME, WORD } from 'zss/words/types'
@@ -114,15 +114,18 @@ export function gadgetcheckqueue(element: string) {
 
 export function gadgetaddcenterpadding(queue: PANEL_ITEM[]) {
   const items: PANEL_ITEM[] = []
+
+  let lasthadcenter: MAYBE<boolean>
   for (let i = 0; i < queue.length; ++i) {
     const item = queue[i]
-    // detect $CENTER and add spacing
-    if (isstring(item) && ispresent(hascenter(item))) {
-      items.push(' ', item, ' ')
-    } else {
-      items.push(item)
+    const itemhascenter = isstring(item) && ispresent(hascenter(item))
+    if (ispresent(lasthadcenter) && lasthadcenter !== itemhascenter) {
+      items.push(' ')
     }
+    items.push(item)
+    lasthadcenter = itemhascenter
   }
+
   return items
 }
 

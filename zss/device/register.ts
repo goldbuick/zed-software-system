@@ -7,6 +7,7 @@ import {
 import { createdevice } from 'zss/device'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
+import { fetchwiki, parsemarkdown } from 'zss/feature/parse/markdown'
 import { setup } from 'zss/feature/t9'
 import { isjoin, islocked, shorturl } from 'zss/feature/url'
 import {
@@ -125,41 +126,9 @@ async function readurlcontent(): Promise<string> {
   return ''
 }
 
-function randominteger(a: number, b: number) {
-  const min = Math.min(a, b)
-  const max = Math.max(a, b)
-  const delta = max - min + 1
-  return min + Math.floor(Math.random() * delta)
-}
-
 async function writewikilink() {
-  // write stk list
-  const result = await fetch(
-    `https://raw.githubusercontent.com/wiki/goldbuick/zed-software-system/stklist.md?q=${randominteger(1111111, 9999999)}`,
-  )
-  const markdowntext = await result.text()
-  const lines = markdowntext.split('\n')
-  for (let i = 0; i < lines.length; ++i) {
-    const line = lines[i].trim()
-    if (line.startsWith('#')) {
-      writeheader(register, myplayerid, line.substring(1))
-    } else if (line.includes(',')) {
-      const [label, url] = line.split(',')
-      writeopenit(register, myplayerid, `inline ${url.trim()}`, label.trim())
-    } else {
-      writetext(register, myplayerid, line)
-    }
-  }
-
-  writetext(register, myplayerid, ' ')
-
-  // write help link
-  writeopenit(
-    register,
-    myplayerid,
-    `https://github.com/goldbuick/zed-software-system/wiki`,
-    `open help wiki`,
-  )
+  const markdowntext = await fetchwiki('cli')
+  parsemarkdown(myplayerid, markdowntext)
 }
 
 function writepages() {

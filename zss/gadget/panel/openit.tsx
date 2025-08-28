@@ -1,4 +1,8 @@
 import { useCallback } from 'react'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
+import { fetchwiki, parsemarkdown } from 'zss/feature/parse/markdown'
+import { doasync } from 'zss/mapping/func'
 import { isstring } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
@@ -17,10 +21,20 @@ export function PanelItemOpenIt({
   const invoke = useCallback(() => {
     const [, openmethod, ...values] = args
     const content = values.join(' ')
-    if (openmethod === 'inline') {
-      window.location.href = content
-    } else if (isstring(openmethod)) {
-      window.open(`${openmethod} ${content}`.trim(), '_blank')
+    const player = registerreadplayer()
+    switch (openmethod) {
+      case 'read':
+        doasync(SOFTWARE, player, async () => {
+          const markdowntext = await fetchwiki(content)
+          parsemarkdown(player, markdowntext)
+        })
+        break
+      case 'inline':
+        window.location.href = content
+        break
+      default:
+        window.open(`${openmethod as string} ${content}`.trim(), '_blank')
+        break
     }
   }, [args])
 
