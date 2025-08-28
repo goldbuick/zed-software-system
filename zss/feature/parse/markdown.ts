@@ -64,6 +64,14 @@ function parserootcontent(player: string, node: RootContent) {
       writetbar(SOFTWARE, player, 10)
       write(SOFTWARE, player, ' ')
       break
+    case 'image':
+      writehyperlink(
+        SOFTWARE,
+        player,
+        `viewit ${node.url}`,
+        node.alt ?? node.url,
+      )
+      break
     case 'text':
       switch (textmode) {
         case 'heading':
