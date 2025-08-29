@@ -33,7 +33,6 @@ export function writeheader(
   player: string,
   header: string,
 ) {
-  write(device, player, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
   writetbar(device, player, header.length + 2)
   write(device, player, `${COLOR_EDGE} $white${header} `)
   writebbar(device, player, header.length + 2)

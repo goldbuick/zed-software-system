@@ -25,7 +25,7 @@ export function TapeTerminalOpenIt({
     setTimeout(() => {
       const player = registerreadplayer()
       switch (openmethod) {
-        case 'read':
+        case 'wiki':
           doasync(SOFTWARE, player, async () => {
             const markdowntext = await fetchwiki(content)
             parsemarkdown(player, markdowntext)
