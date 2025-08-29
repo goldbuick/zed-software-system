@@ -376,6 +376,7 @@ export function tokenizeandstriptextformat(text: string) {
         case MaybeFlag:
           return true
         default:
+          // omit tokens that don't take up space
           return false
       }
     })
