@@ -3,7 +3,6 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { fetchwiki, parsemarkdown } from 'zss/feature/parse/markdown'
 import { doasync } from 'zss/mapping/func'
-import { isstring } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { UserInput } from '../userinput'
@@ -23,7 +22,7 @@ export function PanelItemOpenIt({
     const content = values.join(' ')
     const player = registerreadplayer()
     switch (openmethod) {
-      case 'read':
+      case 'wiki':
         doasync(SOFTWARE, player, async () => {
           const markdowntext = await fetchwiki(content)
           parsemarkdown(player, markdowntext)

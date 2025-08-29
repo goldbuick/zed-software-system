@@ -61,7 +61,6 @@ function parserootcontent(player: string, node: RootContent) {
       activelink = undefined
       break
     case 'thematicBreak':
-      write(SOFTWARE, player, ' ')
       writetbar(SOFTWARE, player, 10)
       write(SOFTWARE, player, ' ')
       break
