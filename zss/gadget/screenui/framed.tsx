@@ -22,6 +22,8 @@ import { IsoGraphics } from '../graphics/iso'
 import { Mode7Graphics } from '../graphics/mode7'
 import { UserInput, UserInputMods, modsfromevent } from '../userinput'
 
+import { TickerText } from './tickertext'
+
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
   if (mods.alt) {
@@ -98,6 +100,9 @@ export function Framed({ width, height }: FramedProps) {
       {control.graphics === 'fpv' && (
         <FPVGraphics width={width} height={height} />
       )}
+      <group position-z={512}>
+        <TickerText width={width} height={height} />
+      </group>
     </>
   )
 }

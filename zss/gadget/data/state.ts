@@ -54,6 +54,7 @@ export const useGadgetClient = create<{
     id: '',
     board: '',
     layers: [],
+    tickers: [],
     scrollname: '',
     scroll: [],
     sidebar: [],

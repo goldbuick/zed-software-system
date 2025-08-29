@@ -1270,14 +1270,12 @@ export function memoryrun(address: string) {
   })
 }
 
-export function memoryreadgadgetlayers(
-  player: string,
-  tickercolor: COLOR,
-): {
+export function memoryreadgadgetlayers(player: string): {
   board: string
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
+  tickers: string[]
 } {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const playerboard = memoryreadplayerboard(player)
@@ -1285,8 +1283,9 @@ export function memoryreadgadgetlayers(
   const over: LAYER[] = []
   const under: LAYER[] = []
   const layers: LAYER[] = []
+  const tickers: string[] = []
   if (!ispresent(mainbook) || !ispresent(playerboard)) {
-    return { board: '', over, under, layers }
+    return { board: '', over, under, layers, tickers }
   }
 
   // read graphics mode
@@ -1298,21 +1297,14 @@ export function memoryreadgadgetlayers(
 
   // compose layers
   under.push(
-    ...memoryconverttogadgetlayers(
-      player,
-      0,
-      underboard,
-      tickercolor,
-      false,
-      true,
-    ),
+    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, false, true),
   )
   layers.push(
     ...memoryconverttogadgetlayers(
       player,
       under.length,
       playerboard,
-      tickercolor,
+      tickers,
       true,
       graphics === 'flat' ? false : true,
     ),
@@ -1322,11 +1314,11 @@ export function memoryreadgadgetlayers(
       player,
       under.length + layers.length,
       overboard,
-      tickercolor,
+      tickers,
       false,
       false,
     ),
   )
 
-  return { board: playerboard.id, over, under, layers }
+  return { board: playerboard.id, over, under, layers, tickers }
 }

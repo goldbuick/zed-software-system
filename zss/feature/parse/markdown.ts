@@ -49,6 +49,7 @@ function parserootcontent(player: string, node: RootContent) {
       for (let i = 0; i < node.children.length; ++i) {
         parserootcontent(player, node.children[i])
       }
+      write(SOFTWARE, player, ' ')
       break
     case 'link':
       textmode = 'link'
@@ -68,8 +69,8 @@ function parserootcontent(player: string, node: RootContent) {
       writehyperlink(
         SOFTWARE,
         player,
-        `viewit ${node.url}`,
-        node.alt ?? node.url,
+        `openit ${node.url}`,
+        `show ${node.alt ?? node.url}`,
       )
       break
     case 'text':
@@ -81,7 +82,7 @@ function parserootcontent(player: string, node: RootContent) {
           write(SOFTWARE, player, `$dkpurple$221$white  ${node.value}`)
           break
         case 'listitem':
-          write(SOFTWARE, player, ` $7 ${node.value}`)
+          write(SOFTWARE, player, ` $grey$7 ${node.value}`)
           break
         case 'text':
           write(SOFTWARE, player, node.value)
