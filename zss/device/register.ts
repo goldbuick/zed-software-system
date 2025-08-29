@@ -36,6 +36,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import { tokenizeandstriptextformat } from 'zss/words/textformat'
 
 import {
   MESSAGE,
@@ -153,18 +154,22 @@ function terminaladdlog(message: MESSAGE) {
   const logs = [...terminal.logs]
 
   // flatten dupes
-  const dupecheck = firstrow.indexOf(row)
-  if (dupecheck === 0) {
-    logs.shift()
-    logs.unshift(`(2)${firstrow}`)
-  } else if (dupecheck !== -1) {
+  const firstrowplain = tokenizeandstriptextformat(firstrow).replace(
+    countregex,
+    '',
+  )
+  const rowplain = tokenizeandstriptextformat(row)
+
+  const dupecheck = firstrowplain.indexOf(rowplain)
+  if (rowplain.length && firstrowplain.length && dupecheck === 0) {
     const countcheck = countregex.exec(firstrow)
     if (ispresent(countcheck)) {
       const newcount = parseFloat(countcheck[1]) + 1
       logs.shift()
       logs.unshift(`(${newcount})${row}`)
     } else {
-      logs.unshift(row)
+      logs.shift()
+      logs.unshift(`(2)${row}`)
     }
   } else {
     logs.unshift(row)

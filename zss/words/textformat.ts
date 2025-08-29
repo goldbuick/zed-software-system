@@ -357,6 +357,34 @@ export function tokenizeandwritetextformat(
   context.changed()
 }
 
+export function tokenizeandstriptextformat(text: string) {
+  const result = tokenize(text)
+  if (!result.tokens) {
+    return ''
+  }
+
+  const plain = result.tokens
+    .filter((token) => {
+      switch (token.tokenType) {
+        case Whitespace:
+        case Newline:
+        case StringLiteralDouble:
+        case StringLiteral:
+        case NumberLiteral:
+        case EscapedDollar:
+        case HyperLinkText:
+        case MaybeFlag:
+          return true
+        default:
+          return false
+      }
+    })
+    .map((token) => token.image)
+    .join('')
+
+  return plain.trim().length === 0 ? '' : plain
+}
+
 export function tokenizeandmeasuretextformat(
   text: string,
   width: number,
