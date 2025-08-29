@@ -250,7 +250,7 @@ export function memoryconverttogadgetlayers(
   player: string,
   index: number,
   board: MAYBE<BOARD>,
-  tickercolor: COLOR,
+  tickers: string[],
   isprimary: boolean,
   isbaseboard: boolean,
 ): LAYER[] {
@@ -295,27 +295,6 @@ export function memoryconverttogadgetlayers(
   layers.push(lighting)
   // reset
   lighting.alphas.fill(isdark)
-
-  const tickers = createcachedtiles(
-    player,
-    iiii++,
-    'tickers',
-    boardwidth,
-    boardheight,
-    COLOR.ONCLEAR,
-  )
-  layers.push(tickers)
-  tickers.char.fill(0)
-
-  const tickercontext = {
-    ...createwritetextcontext(
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      tickercolor,
-      COLOR.ONCLEAR,
-    ),
-    ...tickers,
-  }
 
   const control = createcachedcontrol(player, iiii++)
 
@@ -577,43 +556,16 @@ export function memoryconverttogadgetlayers(
   // process ticker messages
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
-
     // write ticker messages
     if (
       isstring(object.tickertext) &&
       isnumber(object.tickertime) &&
       object.tickertext.length
     ) {
-      // calc placement
-      const TICKER_WIDTH = BOARD_WIDTH
-      const measure = tokenizeandmeasuretextformat(
-        object.tickertext,
-        TICKER_WIDTH,
-        BOARD_HEIGHT - 1,
-      )
-      const width = measure?.measuredwidth ?? 1
-      const x = object.x ?? 0
-      const y = object.y ?? 0
-      const upper = y < BOARD_HEIGHT * 0.5
-      tickercontext.x = x - Math.floor(width * 0.5)
-      // offset from source
-      tickercontext.y = y + (upper ? 2 : -2)
-      // clip placement
-      if (tickercontext.x + width > BOARD_WIDTH) {
-        tickercontext.x = BOARD_WIDTH - width
-      }
-      if (tickercontext.x < 0) {
-        tickercontext.x = 0
-      }
-      // track start
-      const start: PT = { x: tickercontext.x, y: tickercontext.y }
-      // render text
-      tokenizeandwritetextformat(object.tickertext, tickercontext, true)
-      // render backdrop
-      for (let s = 0; s < width; ++s) {
-        const idx = pttoindex({ x: start.x + s, y: start.y }, BOARD_WIDTH)
-        lighting.alphas[idx] = Math.max(lighting.alphas[idx], 0.666)
-      }
+      const icon = bookelementdisplayread(object)
+      const withname = object.kind !== 'player' ? `${icon.name}:$BLUE` : ''
+      const content = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$WHITE ${withname}${object.tickertext}`
+      tickers.push(content)
     }
   }
 

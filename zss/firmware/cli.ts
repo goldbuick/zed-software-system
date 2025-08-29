@@ -222,18 +222,21 @@ export const CLI_FIRMWARE = createfirmware()
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
     if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
+      // update player element ticker
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
       // $WOBBLE $BOUNCE $SPIN
-      READ_CONTEXT.element.tickertext = `${withuser}: ${text}`
+      READ_CONTEXT.element.tickertext = `${withuser}:$BLUE ${text}`
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+
       // log text
       const icon = bookelementdisplayread(READ_CONTEXT.element)
       api_chat(
         SOFTWARE,
         READ_CONTEXT.elementid,
-        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${text}`,
+        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$WHITE ${withuser}:$BLUE ${text}`,
       )
+
       // raise event
       vm_loader(
         SOFTWARE,

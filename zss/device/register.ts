@@ -13,7 +13,6 @@ import { isjoin, islocked, shorturl } from 'zss/feature/url'
 import {
   writecopyit,
   writeheader,
-  writeopenit,
   writeoption,
   writetext,
 } from 'zss/feature/writeui'
@@ -334,6 +333,9 @@ const DOOT_RATE = 10
 const myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
 
+// timeout for TOAST
+let toasttimer: any
+
 export function registerreadplayer() {
   return myplayerid
 }
@@ -653,17 +655,13 @@ const register = createdevice(
         terminaladdlog(message)
         break
       case 'toast':
-        doasync(register, message.player, async () => {
-          if (ispresent(message.data)) {
-            const hold = Math.min(
-              Math.max(message.data.length * 150, 3000),
-              14000,
-            )
-            useTape.setState({ toast: message.data })
-            await waitfor(hold)
-            useTape.setState({ toast: '' })
-          }
-        })
+        if (ispresent(message.data)) {
+          clearTimeout(toasttimer)
+          useTape.setState({ toast: message.data })
+          const holdratio = Math.max(message.data.length * 150, 3000)
+          const hold = Math.min(holdratio, 14000)
+          toasttimer = setTimeout(() => useTape.setState({ toast: '' }), hold)
+        }
         break
       case 'terminal:full':
         useTape.setState((state) => ({
