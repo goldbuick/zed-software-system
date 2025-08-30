@@ -448,10 +448,6 @@ export function TapeTerminalInput({
                   case 'e':
                     vm_cli(SOFTWARE, player, '#export')
                     break
-                  case 'k':
-                    // open ref scroll instead
-                    vm_refscroll(SOFTWARE, player)
-                    break
                   case 'a':
                     useTapeTerminal.setState({
                       // start

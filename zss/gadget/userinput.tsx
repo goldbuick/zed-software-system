@@ -19,6 +19,7 @@ import {
   vm_doot,
   vm_input,
   vm_local,
+  vm_refscroll,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -309,6 +310,10 @@ document.addEventListener(
           vm_cli(SOFTWARE, player, '#fork')
         }
         break
+      case 'k':
+        if (mods.ctrl) {
+          vm_refscroll(SOFTWARE, player)
+        }
     }
     user.root.emit('keydown', event)
   },

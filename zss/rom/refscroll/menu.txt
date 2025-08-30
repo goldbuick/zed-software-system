@@ -1,4 +1,5 @@
-helper scrolls
+section;helper scrolls
+!termscroll hk t T next;terminal commands
 !charscroll hk a A next;char
 !colorscroll hk c C next;color
 !notesscroll hk n N next;notes
