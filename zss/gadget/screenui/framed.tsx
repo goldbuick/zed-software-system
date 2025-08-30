@@ -58,6 +58,8 @@ export function Framed({ width, height }: FramedProps) {
   // handle graphics modes
   const control = layersreadcontrol(layers)
 
+  const tscale = 1.2
+
   return (
     <>
       <UserInput
@@ -100,8 +102,11 @@ export function Framed({ width, height }: FramedProps) {
       {control.graphics === 'fpv' && (
         <FPVGraphics width={width} height={height} />
       )}
-      <group position-z={512}>
-        <TickerText width={width} height={height} />
+      <group position-z={512} scale={[tscale, tscale, tscale]}>
+        <TickerText
+          width={Math.floor(width / tscale)}
+          height={Math.floor(height / tscale)}
+        />
       </group>
     </>
   )
