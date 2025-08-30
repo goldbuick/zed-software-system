@@ -7,7 +7,8 @@ import {
 import { createdevice } from 'zss/device'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
-import { fetchwiki, parsemarkdown } from 'zss/feature/parse/markdown'
+import { fetchwiki } from 'zss/feature/parse/fetchwiki'
+import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { setup } from 'zss/feature/t9'
 import { isjoin, islocked, shorturl } from 'zss/feature/url'
 import {
@@ -128,7 +129,7 @@ async function readurlcontent(): Promise<string> {
 
 async function writewikilink() {
   const markdowntext = await fetchwiki('cli')
-  parsemarkdown(myplayerid, markdowntext)
+  parsemarkdownforwriteui(myplayerid, markdowntext)
 }
 
 function writepages() {

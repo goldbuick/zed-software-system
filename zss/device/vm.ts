@@ -1,5 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
+import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import {
   markzipfilelistitem,
   parsewebfile,
@@ -7,6 +8,7 @@ import {
   readzipfilelist,
   readzipfilelistitem,
 } from 'zss/feature/parse/file'
+import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
 import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
@@ -768,12 +770,23 @@ const vm = createdevice(
                 break
               }
               default: {
-                romparse(romread(`refscroll:${path}`), (line) =>
-                  romscroll(message.player, line),
-                )
-                const shared = gadgetstate(message.player)
-                shared.scrollname = path
-                shared.scroll = gadgetcheckqueue(message.player)
+                doasync(vm, message.player, async () => {
+                  const content = romread(`refscroll:${path}`)
+                  if (!ispresent(content)) {
+                    const shared = gadgetstate(message.player)
+                    shared.scrollname = '$7$7$7 please wait $7$7$7'
+                    shared.scroll = ['loading $7$7$7']
+                    const markdowntext = await fetchwiki(path)
+                    parsemarkdownforscroll(message.player, markdowntext)
+                  } else {
+                    romparse(romread(`refscroll:${path}`), (line) =>
+                      romscroll(message.player, line),
+                    )
+                  }
+                  const shared = gadgetstate(message.player)
+                  shared.scrollname = path
+                  shared.scroll = gadgetcheckqueue(message.player)
+                })
                 break
               }
             }
