@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { fetchwiki, parsemarkdown } from 'zss/feature/parse/markdown'
+import { fetchwiki } from 'zss/feature/parse/fetchwiki'
+import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { doasync } from 'zss/mapping/func'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
@@ -28,7 +29,7 @@ export function TapeTerminalOpenIt({
         case 'wiki':
           doasync(SOFTWARE, player, async () => {
             const markdowntext = await fetchwiki(content)
-            parsemarkdown(player, markdowntext)
+            parsemarkdownforwriteui(player, markdowntext)
           })
           break
         case 'inline':

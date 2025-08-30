@@ -60,17 +60,5 @@ export default defineConfig(({ mode }) => {
         target: 'es2020',
       },
     },
-    // build: {
-    //   rollupOptions: {
-    //     output: {
-    //       manualChunks(id: string) {
-    //         if (id.includes(`node_modules`)) {
-    //           return 'foundation'
-    //         }
-    //         return null
-    //       },
-    //     },
-    //   },
-    // },
   }
 })

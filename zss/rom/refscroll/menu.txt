@@ -6,3 +6,4 @@ section;helper scrolls
 !synthscroll hk s S next;synth
 !effectsscroll hk e E next;effects
 !voicescroll hk v V next;tts voices
+!dictionary hk d D next;dictionary of commands
