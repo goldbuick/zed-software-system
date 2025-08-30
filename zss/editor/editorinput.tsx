@@ -334,10 +334,6 @@ export function EditorInput({
                   case 'e':
                     vm_copyjsonfile(SOFTWARE, player, editorpath)
                     break
-                  case 'k':
-                    // open ref scroll instead
-                    vm_refscroll(SOFTWARE, player)
-                    break
                   case 'z':
                     if (ismac && mods.shift) {
                       undomanager?.redo()

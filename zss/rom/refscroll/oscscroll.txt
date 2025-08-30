@@ -29,7 +29,6 @@ $white In other terms it is the ratio of the
 $white frequency of the modulating signal (mf) 
 $white to the amplitude of the modulating signal 
 $white (ma) -- as in ma/mf
-#synth modenv <a> <d> <s> <r> - in seconds
 section;fatsine, fatsquare, fattriangle, fatsawtooth
 #synth phase <degrees>
 #synth count <number>
