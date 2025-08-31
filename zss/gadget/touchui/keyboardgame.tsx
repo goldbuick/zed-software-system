@@ -111,9 +111,9 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       <ToggleKey
         x={13}
         y={12}
-        letters="t"
+        letters="c"
         onToggle={() => {
-          user.keyboard('t').catch(noop)
+          user.keyboard('c').catch(noop)
         }}
       />
 

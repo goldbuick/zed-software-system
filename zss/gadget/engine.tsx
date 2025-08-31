@@ -22,6 +22,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { doasync } from 'zss/mapping/func'
 import { Tape } from 'zss/tape/component'
+import { islinux } from 'zss/words/system'
 
 import { Scanlines } from './fx/scanlines'
 import { useDeviceData, useMedia } from './hooks'
@@ -70,7 +71,7 @@ export function Engine() {
         setforcelowrez(true)
       }
       const crt = await readconfig('crt')
-      if (crt === 'on') {
+      if (crt === 'on' && !islinux) {
         setcrt(true)
       }
       const scanlines = await readconfig('scanlines')

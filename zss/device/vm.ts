@@ -774,7 +774,7 @@ const vm = createdevice(
                   const content = romread(`refscroll:${path}`)
                   if (!ispresent(content)) {
                     const shared = gadgetstate(message.player)
-                    shared.scrollname = '$7$7$7 please wait $7$7$7'
+                    shared.scrollname = '$7$7$7 please wait'
                     shared.scroll = ['loading $7$7$7']
                     const markdowntext = await fetchwiki(path)
                     parsemarkdownforscroll(message.player, markdowntext)
