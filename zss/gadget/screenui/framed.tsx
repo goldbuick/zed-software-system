@@ -75,7 +75,7 @@ export function Framed({ width, height }: FramedProps) {
           const mods = modsfromevent(event)
           const player = registerreadplayer()
           switch (key) {
-            case 't':
+            case 'c':
               register_terminal_quickopen(SOFTWARE, player, '')
               break
             case '#':

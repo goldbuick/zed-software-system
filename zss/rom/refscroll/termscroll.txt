@@ -1,4 +1,4 @@
-press$white T$yellow to talk
+press$white C$yellow to chat
 press$white #$yellow to run a quick command
 section;dev-tools
 #gadget
