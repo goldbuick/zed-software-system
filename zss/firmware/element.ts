@@ -16,6 +16,7 @@ import {
   memorymoveobject,
   memoryreadflags,
   memoryreadoperator,
+  memoryresetchipafteredit,
   memoryrun,
   memorywritefromkind,
 } from 'zss/memory'
@@ -527,6 +528,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const elements = listnamedelements(READ_CONTEXT.board, name)
     if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
       READ_CONTEXT.element.code = pick(...elements).code ?? ''
+      memoryresetchipafteredit(READ_CONTEXT.elementid)
     }
     return 0
   })

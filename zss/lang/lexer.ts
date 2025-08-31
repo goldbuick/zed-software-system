@@ -106,13 +106,8 @@ function matchBasicText(text: string, startOffset: number) {
       break
     }
     case '#': {
-      const maybetext = text.substring(cursor + 1, cursor + 4).toLowerCase()
-      if (matchweirdnotcommand.test(maybetext) === false) {
-        // not-okay
-        return null
-      }
-      // okay
-      break
+      // not-okay
+      return null
     }
     case '"': {
       cursor--
