@@ -61,12 +61,14 @@ function createlink(player: string, link: string, label: string) {
 function parsetoken(player: string, token: Token) {
   switch (token.type) {
     default:
-      console.info(token)
+      console.info('unknown', token)
       break
     case 'heading':
       gadgetheader(player, token.text)
+      gadgettext(player, ' ')
       break
     case 'hr':
+      gadgettext(player, ' ')
       gadgettbar(player, 10)
       gadgettext(player, ' ')
       break
@@ -76,7 +78,13 @@ function parsetoken(player: string, token: Token) {
           parsetoken(player, token.tokens[i])
         }
       }
-      gadgettext(player, ' ')
+      break
+    case 'code':
+      token.text
+        .split('\n')
+        .forEach((line: string) =>
+          gadgettext(player, line.replace(/\s+/g, ' ').trim()),
+        )
       break
     case 'text':
       gadgettext(player, token.text)

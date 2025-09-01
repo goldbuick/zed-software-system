@@ -6,8 +6,15 @@ import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memorypickcodepagewithtype, memoryreadbooklist } from 'zss/memory'
+import { bookreadcodepagesbytypeandstat } from 'zss/memory/book'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, PT, WORD } from 'zss/words/types'
 
@@ -40,6 +47,23 @@ function readfilter(words: WORD[], index: number) {
   return { targetset, pt1, pt2 }
 }
 
+function pickcodepagewithtype(
+  type: CODE_PAGE_TYPE,
+  address: string,
+): MAYBE<CODE_PAGE> {
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    const fallbackcodepage = pick(
+      bookreadcodepagesbytypeandstat(book, type, address),
+    )
+    if (ispresent(fallbackcodepage)) {
+      return fallbackcodepage
+    }
+  }
+  return undefined
+}
+
 export const TRANSFORM_FIRMWARE = createfirmware()
   .command('snapshot', () => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -60,12 +84,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       return 0
     }
     const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    const sourceboard = pick(...boards)
+    const sourceboard = pickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
     if (ispresent(sourceboard)) {
       const filter = readfilter(words, ii)
       boardcopy(
@@ -87,12 +106,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       ARG_TYPE.NUMBER,
       ARG_TYPE.NUMBER,
     ])
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    const sourceboard = pick(...boards)
+    const sourceboard = pickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
     if (ispresent(sourceboard)) {
       const filter = readfilter(words, ii)
       boardremix(
