@@ -11,12 +11,14 @@ import { ispresent } from 'zss/mapping/types'
 function parsetoken(player: string, token: Token) {
   switch (token.type) {
     default:
-      console.info(token)
+      console.info('unknown', token)
       break
     case 'heading':
       writeheader(SOFTWARE, player, token.text)
+      write(SOFTWARE, player, ' ')
       break
     case 'hr':
+      write(SOFTWARE, player, ' ')
       writetbar(SOFTWARE, player, 10)
       write(SOFTWARE, player, ' ')
       break
@@ -26,7 +28,13 @@ function parsetoken(player: string, token: Token) {
           parsetoken(player, token.tokens[i])
         }
       }
-      write(SOFTWARE, player, ' ')
+      break
+    case 'code':
+      token.text
+        .split('\n')
+        .forEach((line: string) =>
+          write(SOFTWARE, player, line.replace(/\s+/g, ' ').trim()),
+        )
       break
     case 'text':
       write(SOFTWARE, player, token.text)
@@ -74,6 +82,10 @@ export function parsemarkdownforwriteui(player: string, content: string) {
     breaks: false,
     renderer: {
       heading(token) {
+        parsetoken(player, token)
+        return ''
+      },
+      code(token) {
         parsetoken(player, token)
         return ''
       },
