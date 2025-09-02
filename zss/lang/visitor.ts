@@ -1,7 +1,7 @@
 import { CstNode, CstNodeLocation, IToken } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, deepcopy, isarray, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 
 import { parser } from './parser'
 import {

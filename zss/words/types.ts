@@ -37,6 +37,23 @@ export enum COLOR {
   ONWHITE,
   // special bg colors
   ONCLEAR,
+  // blink fg colors
+  BLBLACK,
+  BLDKBLUE,
+  BLDKGREEN,
+  BLDKCYAN,
+  BLDKRED,
+  BLDKPURPLE,
+  BLDKYELLOW,
+  BLLTGRAY,
+  BLDKGRAY,
+  BLBLUE,
+  BLGREEN,
+  BLCYAN,
+  BLRED,
+  BLPURPLE,
+  BLYELLOW,
+  BLWHITE,
 }
 
 export enum COLLISION {

@@ -62,7 +62,6 @@ export const command = createSimpleToken({
 
 let matchTextEnabled = false
 const probablynottext = `@#/?':!`
-const matchweirdnotcommand = /[#\d]+/i
 const matchcomplexdir = /^(by|at|away|toward|find|flee|to|cw|ccw|opp|rndp)/i
 function matchBasicText(text: string, startOffset: number) {
   if (!matchTextEnabled) {
@@ -272,6 +271,31 @@ export const color_ondkgrey = createWordToken('ondkgrey')
 export const color_onltblack = createWordToken('onltblack')
 
 export const color_onclear = createWordToken('onclear')
+
+export const color_blblack = createWordToken('blblack')
+export const color_bldkblue = createWordToken('bldkblue')
+export const color_bldkgreen = createWordToken('bldkgreen')
+export const color_bldkcyan = createWordToken('bldkcyan')
+export const color_bldkred = createWordToken('bldkred')
+export const color_bldkpurple = createWordToken('bldkpurple')
+export const color_bldkyellow = createWordToken('bldkyellow')
+export const color_blltgray = createWordToken('blltgray')
+export const color_bldkgray = createWordToken('bldkgray')
+export const color_blblue = createWordToken('blblue')
+export const color_blgreen = createWordToken('blgreen')
+export const color_blcyan = createWordToken('blcyan')
+export const color_blred = createWordToken('blred')
+export const color_blpurple = createWordToken('blpurple')
+export const color_blyellow = createWordToken('blyellow')
+export const color_blwhite = createWordToken('blwhite')
+
+export const color_blbrown = createWordToken('blbrown')
+export const color_bldkwhite = createWordToken('bldkwhite')
+export const color_blltgrey = createWordToken('blltgrey')
+export const color_blgray = createWordToken('blgray')
+export const color_blgrey = createWordToken('blgrey')
+export const color_bldkgrey = createWordToken('bldkgrey')
+export const color_blltblack = createWordToken('blltblack')
 
 export const dir_idle = createWordToken('idle')
 export const dir_up = createWordToken('up')
@@ -552,6 +576,29 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     color_ondkgrey,
     color_onltblack,
     color_onclear,
+    color_blblack,
+    color_bldkblue,
+    color_bldkgreen,
+    color_bldkcyan,
+    color_bldkred,
+    color_bldkpurple,
+    color_bldkyellow,
+    color_blltgray,
+    color_bldkgray,
+    color_blblue,
+    color_blgreen,
+    color_blcyan,
+    color_blred,
+    color_blpurple,
+    color_blyellow,
+    color_blwhite,
+    color_blbrown,
+    color_bldkwhite,
+    color_blltgrey,
+    color_blgray,
+    color_blgrey,
+    color_bldkgrey,
+    color_blltblack,
     dir_idle,
     dir_up,
     dir_left,

@@ -1,0 +1,106 @@
+import { api_toast } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+import { ispresent } from 'zss/mapping/types'
+import { memoryreadfirstcontentbook } from 'zss/memory'
+import { boardsetterrain, ptwithinboard } from 'zss/memory/board'
+import { bookwritecodepage } from 'zss/memory/book'
+import {
+  codepagereaddata,
+  codepagereadname,
+  createcodepage,
+} from 'zss/memory/codepage'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
+
+import { loadpalettefrombytes } from '../bytes'
+import { PALETTE } from '../palette'
+
+import { renderBytes } from './ansilove'
+
+export function parseansi(
+  player: string,
+  filename: string,
+  content: Uint8Array,
+) {
+  const contentbook = memoryreadfirstcontentbook()
+  if (!ispresent(contentbook)) {
+    return
+  }
+
+  renderBytes(content, (screendata, sauce) => {
+    // create a new board codepage
+    const title = sauce?.title ?? ''
+    const author = sauce?.author ?? ''
+    const code = `@board ${title || filename}${author ? ` by ${author}` : ''}\n`
+    const codepage = createcodepage(code, {})
+    const codepagename = codepagereadname(codepage)
+    bookwritecodepage(contentbook, codepage)
+
+    // get board data from codepage
+    const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+    if (!ispresent(board)) {
+      return
+    }
+
+    const colormap = new Map<number, number>()
+    const palette = loadpalettefrombytes(PALETTE)
+
+    if (ispresent(screendata.palette) && ispresent(palette)) {
+      for (let i = 0; i < screendata.palette.length; ++i) {
+        const screenr = screendata.palette[i][0]
+        const screeng = screendata.palette[i][1]
+        const screenb = screendata.palette[i][2]
+        let dist = 100000
+        let index = 0
+        for (let t = 0; t < palette.height; ++t) {
+          const m = t * palette.width
+          const r = palette.bits[m]
+          const g = palette.bits[m + 1]
+          const b = palette.bits[m + 2]
+          const total =
+            Math.abs(r - screenr) +
+            Math.abs(g - screeng) +
+            Math.abs(b - screenb)
+          if (total < dist) {
+            index = t
+            dist = total
+          }
+        }
+        colormap.set(i, index)
+      }
+    }
+
+    const chars = screendata.getData()
+    let x = 0
+    let y = 0
+    for (let i = 0; i < chars.length; i += 10) {
+      if (chars[i + 1]) {
+        const char = chars[i]
+        const color = colormap.get(15) ?? 0
+        const bg = colormap.get(0) ?? 0
+        if (ptwithinboard({ x, y })) {
+          boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
+        }
+      } else {
+        const char = chars[i]
+        const color = colormap.get(chars[i + 2]) ?? 0
+        const bg = colormap.get(chars[i + 3]) ?? 0
+        if (ptwithinboard({ x, y })) {
+          boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
+        }
+      }
+      ++x
+      if (x >= screendata.columns) {
+        x = 0
+        ++y
+      }
+    }
+
+    console.info(sauce)
+
+    api_toast(
+      SOFTWARE,
+      player,
+      `imported ansi file ${codepagename} into ${contentbook.name} book`,
+    )
+  })
+}

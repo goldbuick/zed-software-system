@@ -71,6 +71,31 @@ export const colorconsts = {
   onltblack: 'ONDKGRAY',
   // special bg colors
   onclear: 'ONCLEAR',
+  // blinking fg colors
+  blblack: 'BLBLACK',
+  bldkblue: 'BLDKBLUE',
+  bldkgreen: 'BLDKGREEN',
+  bldkcyan: 'BLDKCYAN',
+  bldkred: 'BLDKRED',
+  bldkpurple: 'BLDKPURPLE',
+  bldkyellow: 'BLDKYELLOW',
+  blltgray: 'BLLTGRAY',
+  bldkgray: 'BLDKGRAY',
+  blblue: 'BLBLUE',
+  blgreen: 'BLGREEN',
+  blcyan: 'BLCYAN',
+  blred: 'BLRED',
+  blpurple: 'BLPURPLE',
+  blyellow: 'BLYELLOW',
+  blwhite: 'BLWHITE',
+  // aliases
+  blbrown: 'BLDKYELLOW',
+  bldkwhite: 'BLLTGRAY',
+  blltgrey: 'BLLTGRAY',
+  blgray: 'BLLTGRAY',
+  blgrey: 'BLLTGRAY',
+  bldkgrey: 'BLDKGRAY',
+  blltblack: 'BLDKGRAY',
 } as const
 
 export type STR_COLOR_TYPE = typeof colorconsts

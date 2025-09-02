@@ -20,7 +20,7 @@ import {
 } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
+import { COLLISION, NAME, PT } from 'zss/words/types'
 
 import { listelementsbyidnameorpts } from './atomics'
 import {
