@@ -30,7 +30,7 @@ export function parseansi(
     // create a new board codepage
     const title = sauce?.title ?? ''
     const author = sauce?.author ?? ''
-    const code = `@board ${title || filename}${author ? `by ${author}` : ''}\n`
+    const code = `@board ${title || filename}${author ? ` by ${author}` : ''}\n`
     const codepage = createcodepage(code, {})
     const codepagename = codepagereadname(codepage)
     bookwritecodepage(contentbook, codepage)
