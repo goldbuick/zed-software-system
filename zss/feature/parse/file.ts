@@ -11,6 +11,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { parseansi } from './ansi'
 import { parsechr } from './chr'
 import { parsezzl } from './zzl'
 import { parsezzm } from './zzm'
@@ -65,6 +66,8 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'zzl'
       } else if (/.zzm$/i.test(file.name)) {
         return 'zzm'
+      } else if (/.ans$/i.test(file.name)) {
+        return 'ans'
       }
       break
   }
@@ -232,6 +235,14 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .text()
         .then((content) => {
           parsezzm(player, content)
+        })
+        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'ans':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          parseansi(player, file.name, new Uint8Array(arraybuffer))
         })
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break

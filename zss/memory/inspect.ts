@@ -1,6 +1,5 @@
 import { parsetarget } from 'zss/device'
 import {
-  api_log,
   gadgetserver_clearscroll,
   register_copy,
   register_editor_open,
@@ -29,7 +28,7 @@ import {
 } from './board'
 import { boardelementisobject } from './boardelement'
 import { boardsetlookup } from './boardlookup'
-import { bookboardelementreadcodepage, bookelementdisplayread } from './book'
+import { bookboardelementreadcodepage } from './book'
 import { codepagereadname } from './codepage'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
@@ -260,7 +259,7 @@ export function memoryinspectcommand(path: string, player: string) {
           mainbook.id,
           path,
           pagetype,
-          `${name} - ${mainbook.name}`,
+          `${element.name ?? element.kind ?? '??'} - ${mainbook.name}`,
         )
       })
       break

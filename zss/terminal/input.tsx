@@ -5,7 +5,6 @@ import {
   register_terminal_inclayout,
   vm_cli,
   vm_loader,
-  vm_refscroll,
 } from 'zss/device/api'
 import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'

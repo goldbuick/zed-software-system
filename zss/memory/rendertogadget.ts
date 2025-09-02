@@ -23,20 +23,11 @@ import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { dirfrompts, isstrdir } from 'zss/words/dir'
-import {
-  createwritetextcontext,
-  tokenizeandmeasuretextformat,
-  tokenizeandwritetextformat,
-} from 'zss/words/textformat'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boardelementindex, boardevaldir, boardobjectread } from './board'
-import {
-  bookelementdisplayread,
-  bookreadcodepagewithtype,
-  bookreadflags,
-} from './book'
+import { bookelementdisplayread, bookreadflags } from './book'
 import { codepagereaddata } from './codepage'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from './types'
 
