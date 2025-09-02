@@ -1,11 +1,13 @@
 import { parsetarget } from 'zss/device'
-import { register_copy, vm_cli } from 'zss/device/api'
+import { api_toast, register_copy, vm_cli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
-import { PT } from 'zss/words/types'
+import { COLOR, PT } from 'zss/words/types'
 
+import { boardgetterrain } from './board'
+import { bookelementdisplayread } from './book'
 import { memoryinspectempty, memoryinspectemptymenu } from './inspect'
 import {
   memoryinspectbgarea,
@@ -41,6 +43,35 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
     case 'copyterrain':
       await memoryinspectcopy(player, p1, p2, batch.target)
       break
+    case 'copyastext': {
+      const p1x = Math.min(p1.x, p2.x)
+      const p1y = Math.min(p1.y, p2.y)
+      const p2x = Math.max(p1.x, p2.x)
+      const p2y = Math.max(p1.y, p2.y)
+      let content = ''
+      for (let y = p1y; y <= p2y; ++y) {
+        let color = COLOR.ONCLEAR
+        let bg = COLOR.ONCLEAR
+        content += ''
+        for (let x = p1x; x <= p2x; ++x) {
+          const element = boardgetterrain(board, x, y)
+          const display = bookelementdisplayread(element)
+          if (display.color != color) {
+            color = display.color
+            content += `$${COLOR[display.color]}`.toLowerCase()
+          }
+          if (display.bg != bg) {
+            bg = display.bg
+            content += `$ON${COLOR[display.bg]}`.toLowerCase()
+          }
+          content += `$${display.char}`
+        }
+        content += '\n'
+      }
+      register_copy(SOFTWARE, player, content)
+      api_toast(SOFTWARE, player, 'copied chars')
+      break
+    }
     case 'cut':
       memoryinspectcutmenu(player, p1, p2)
       break

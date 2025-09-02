@@ -147,6 +147,11 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
     'hk',
     '3',
   ])
+  gadgethyperlink(player, 'batch', 'copy as text', [
+    `copyastext:${area}`,
+    'hk',
+    '4',
+  ])
 
   // send to player as a scroll
   const shared = gadgetstate(player)
