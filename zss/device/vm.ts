@@ -769,6 +769,16 @@ const vm = createdevice(
                 shared.scroll = gadgetcheckqueue(message.player)
                 break
               }
+              case 'bgscroll': {
+                gadgethyperlink(message.player, 'refscroll', 'bg', [
+                  'bg',
+                  'bgedit',
+                ])
+                const shared = gadgetstate(message.player)
+                shared.scrollname = 'bgs'
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+              }
               default: {
                 doasync(vm, message.player, async () => {
                   const content = romread(`refscroll:${path}`)

@@ -40,6 +40,7 @@ const HYPERLINK_WITH_SHARED = new Set([
   'zssedit',
   'charedit',
   'coloredit',
+  'bgedit',
 ])
 
 const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text'])

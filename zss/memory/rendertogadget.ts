@@ -554,8 +554,8 @@ export function memoryconverttogadgetlayers(
       object.tickertext.length
     ) {
       const icon = bookelementdisplayread(object)
-      const withname = object.kind !== 'player' ? `${icon.name}:$BLUE ` : ''
-      const content = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$WHITE ${withname}${object.tickertext}`
+      const withname = object.kind !== 'player' ? `${icon.name}:$WHITE ` : ''
+      const content = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN ${withname}${object.tickertext}`
       tickers.push(content)
     }
   }

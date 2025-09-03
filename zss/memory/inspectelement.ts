@@ -23,7 +23,7 @@ import {
 } from '.'
 
 function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
-  const id = element?.id ? element.id : boardelementindex(board, element)
+  const id = element?.id ?? boardelementindex(board, element)
   return `inspect:${id}`
 }
 
@@ -63,11 +63,11 @@ export function memoryinspectcolor(
 
   gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'color', [name, 'coloredit'], get, set)
+  gadgethyperlink(player, chip, 'color', [name, `${name}edit`], get, set)
 
   // send to player as a scroll
   const shared = gadgetstate(player)
-  shared.scrollname = 'color'
+  shared.scrollname = name
   shared.scroll = gadgetcheckqueue(player)
 }
 

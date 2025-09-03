@@ -103,6 +103,8 @@ export function PanelItem({
         return <PanelItemCharEdit {...props} />
       case 'coloredit':
         return <PanelItemColorEdit {...props} />
+      case 'bgedit':
+        return <PanelItemColorEdit isbg {...props} />
     }
   }
   return null
