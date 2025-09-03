@@ -143,8 +143,8 @@ export function memoryinspectbgarea(
   gadgethyperlink(
     player,
     `batch:${ptstoarea(p1, p2)}`,
-    'color',
-    [name, 'coloredit'],
+    'bg',
+    [name, 'bgedit'],
     get,
     set,
   )

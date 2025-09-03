@@ -1,9 +1,10 @@
 section;helper scrolls
 !termscroll hk t T next;terminal commands
+!dictionary hk d D next;dictionary of commands
 !charscroll hk a A next;char
 !colorscroll hk c C next;color
+!bgscroll hk b B next;bg
 !notesscroll hk n N next;notes
 !synthscroll hk s S next;synth
 !effectsscroll hk e E next;effects
 !voicescroll hk v V next;tts voices
-!dictionary hk d D next;dictionary of commands

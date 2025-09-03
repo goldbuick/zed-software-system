@@ -226,7 +226,7 @@ export const CLI_FIRMWARE = createfirmware()
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
       // $WOBBLE $BOUNCE $SPIN
-      READ_CONTEXT.element.tickertext = `${withuser}:$BLUE ${text}`
+      READ_CONTEXT.element.tickertext = `${withuser}:$WHITE ${text}`
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
 
       // log text
@@ -234,7 +234,7 @@ export const CLI_FIRMWARE = createfirmware()
       api_chat(
         SOFTWARE,
         READ_CONTEXT.elementid,
-        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$WHITE ${withuser}:$BLUE ${text}`,
+        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN ${withuser}:$WHITE ${text}`,
       )
 
       // raise event

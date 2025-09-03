@@ -148,6 +148,19 @@ const tilemapMaterial = new ShaderMaterial({
     uniform bool flip;
     varying vec2 vUv;
 
+    float exponentialInOut(float t) {
+      return t == 0.0 || t == 1.0
+        ? t
+        : t < 0.5
+          ? +0.5 * pow(2.0, (20.0 * t) - 10.0)
+          : -0.5 * pow(2.0, 10.0 - (t * 20.0)) + 1.0;
+    }
+
+    float cyclefromtime() {
+      float cycle = mod(time * 2.5, interval * 2.0) / interval;
+      return exponentialInOut(abs(cycle - 1.0));
+    }
+
     void main() {
       uvec4 tiledata = texture(data, vUv);
       int colori = int(tiledata.z);
@@ -160,7 +173,8 @@ const tilemapMaterial = new ShaderMaterial({
       if (colori > 31) {
         vec3 bg = palette[bgi];
         color = palette[colori - 33];
-        color = mix(bg, color, clamp(cos(time * 8.0), -0.25, 0.25) * 4.0 + 1.0);
+        float cycle = mod(time * 2.5, interval * 2.0) / interval;
+        color = mix(bg, color, cyclefromtime());
       } else {
         color = palette[colori % 16];
       }

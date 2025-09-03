@@ -3,6 +3,8 @@ import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { pttoindex } from 'zss/mapping/2d'
+import { range } from 'zss/mapping/array'
+import { clamp } from 'zss/mapping/number'
 import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
@@ -30,6 +32,33 @@ function coords() {
   }
 }
 
+function listaltnames(color: string) {
+  switch (color) {
+    case 'dkyellow':
+      return ', brown'
+    case 'ltgray':
+      return ', ltgrey, gray, grey'
+    case 'dkgray':
+      return ', dkgrey, ltblack'
+    case 'ondkyellow':
+      return ', onbrown'
+    case 'onltgray':
+      return ', onltgrey, ongray, ongrey'
+    case 'ondkgray':
+      return ', ondkgrey, onltblack'
+    case 'bldkyellow':
+      return ', blbrown'
+    case 'blltgray':
+      return ', blltgrey, blgray, blgrey'
+    case 'bldkgray':
+      return ', bldkgrey, blltblack'
+  }
+  return ''
+}
+
+const colormap: number[] = [...range(0, 15), ...range(33, 48)]
+const bgmap: number[] = [...range(0, 15), 32]
+
 export function PanelItemColorEdit({
   sidebar,
   chip,
@@ -37,7 +66,8 @@ export function PanelItemColorEdit({
   label,
   args,
   context,
-}: PanelItemProps) {
+  isbg = false,
+}: PanelItemProps & { isbg: boolean }) {
   setuppanelitem(sidebar, row, context)
 
   const [target] = [maptovalue(args[0], '')]
@@ -54,26 +84,35 @@ export function PanelItemColorEdit({
     setfocus(true)
   }, [])
 
+  const withlist = isbg ? bgmap : colormap
+  const idx = withlist.indexOf(state)
+
   const tvalue = `${state}`.padStart(2, '0')
   const tlabel = label.trim()
-  const tcolor = (COLOR[state] || COLOR[COLOR.BLACK])
-    .padEnd(12, ' ')
-    .toLowerCase()
+  const tcolor = (COLOR[state] || COLOR[COLOR.BLACK]).toLowerCase()
+  const tcoloralts = listaltnames(tcolor).padEnd(32, ' ')
 
   const cx = context.x - 1
   const cy = context.y + 2
 
-  const chars: string[] = [`$green${tlabel} ${tvalue} ${tcolor}\n$white`]
-  for (let i = 0; i < 16; ++i) {
+  const chars: string[] = [
+    `$green${tlabel} ${tvalue} ${tcolor}${tcoloralts}\n$white`,
+  ]
+  for (let i = 0; i < withlist.length; ++i) {
     if (i % EDIT_WIDTH === 0) {
       chars.push(`\n`)
     }
-    if (i === state) {
-      const alt = i < 8 ? `$white` : `$black`
-      const highlight = blink ? alt : `$${COLOR[i]}`
-      chars.push(`${highlight}$219`)
+    const c = withlist[i]
+    const ccolor = (COLOR[c] || COLOR[COLOR.BLACK]).toLowerCase()
+    if (c === state) {
+      if (blink) {
+        const alt = i % 16 < 8 ? `white` : `black`
+        chars.push(c > 32 ? `$onwhite$219` : `$${alt}$219`)
+      } else {
+        chars.push(`$onblack$${ccolor}$219`)
+      }
     } else {
-      chars.push(`$${COLOR[i]}$219`)
+      chars.push(`$onblack$${ccolor}$219`)
     }
   }
   chars.push(`$white`)
@@ -82,29 +121,29 @@ export function PanelItemColorEdit({
 
   const scroll = useContext(ScrollContext)
 
+  const update = useCallback(
+    (i: number) => {
+      const value = withlist[clamp(i, 0, withlist.length - 1)]
+      modemwritevaluenumber(address, value)
+    },
+    [withlist, address],
+  )
+
   const up = useCallback(() => {
-    if (state >= EDIT_WIDTH) {
-      modemwritevaluenumber(address, state - EDIT_WIDTH)
-    }
-  }, [address, state])
+    update(idx - EDIT_WIDTH)
+  }, [update, idx])
 
   const left = useCallback(() => {
-    if (state > 0) {
-      modemwritevaluenumber(address, state - 1)
-    }
-  }, [address, state])
+    update(idx - 1)
+  }, [update, idx])
 
   const right = useCallback(() => {
-    if (state < 15) {
-      modemwritevaluenumber(address, state + 1)
-    }
-  }, [address, state])
+    update(idx + 1)
+  }, [update, idx])
 
   const down = useCallback(() => {
-    if (state <= 15 - EDIT_WIDTH) {
-      modemwritevaluenumber(address, state + EDIT_WIDTH)
-    }
-  }, [address, state])
+    update(idx + EDIT_WIDTH)
+  }, [update, idx])
 
   const done = useCallback(() => {
     scroll.sendclose()
@@ -125,7 +164,7 @@ export function PanelItemColorEdit({
             visible={false}
             width={EDIT_WIDTH}
             height={EDIT_HEIGHT}
-            onClick={(e) => {
+            onClick={(e: any) => {
               e.intersections[0].object.worldToLocal(
                 point.copy(e.intersections[0].point),
               )

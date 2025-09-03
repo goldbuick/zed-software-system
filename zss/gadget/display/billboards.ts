@@ -88,6 +88,19 @@ const billboardsMaterial = new ShaderMaterial({
       return clamp(delta * deltaMod, 0.0, maxDelta);
     }
 
+    float exponentialInOut(float t) {
+      return t == 0.0 || t == 1.0
+        ? t
+        : t < 0.5
+          ? +0.5 * pow(2.0, (20.0 * t) - 10.0)
+          : -0.5 * pow(2.0, 10.0 - (t * 20.0)) + 1.0;
+    }
+
+    float cyclefromtime() {
+      float cycle = mod(time * 2.5, interval * 2.0) / interval;
+      return exponentialInOut(abs(cycle - 1.0));
+    }
+
     void main() {
       vVisible = visible;
 
@@ -129,7 +142,7 @@ const billboardsMaterial = new ShaderMaterial({
       vBg = mix(sourceBg, destBg, deltaBg);
 
       if (destColori > 31) {
-        vColor = mix(vBg.rgb, vColor, clamp(cos(time * 8.0), -0.25, 0.25) * 4.0 + 1.0);
+        vColor = mix(vBg.rgb, vColor, cyclefromtime());
       }
 
       vCharData.xy = charData.xy;
