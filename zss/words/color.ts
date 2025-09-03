@@ -10,7 +10,12 @@ import { READ_CONTEXT } from './reader'
 import { COLOR, NAME, WORD } from './types'
 
 export function colortofg(color: MAYBE<COLOR>): MAYBE<number> {
-  return ispresent(color) && color < COLOR.ONBLACK ? color : undefined
+  if (ispresent(color)) {
+    if (color < COLOR.ONBLACK || color > COLOR.ONCLEAR) {
+      return color
+    }
+  }
+  return undefined
 }
 
 export function colortobg(color: MAYBE<COLOR>): MAYBE<number> {

@@ -120,8 +120,8 @@ const spritesMaterial = new ShaderMaterial({
       vec4 destBg = bgFromIndex(charData.w);
       vBg = mix(sourceBg, destBg, deltaBg);
 
-      if (destColori > 31 && mod(time * 4.0, interval * 2.0) > interval) {
-        vColor = vBg.rgb;
+      if (destColori > 31) {
+        vColor = mix(vBg.rgb, vColor, clamp(cos(time * 8.0), -0.25, 0.25) * 4.0 + 1.0);
       }
 
       vCharData.xy = charData.xy;
