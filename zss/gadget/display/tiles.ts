@@ -158,11 +158,9 @@ const tilemapMaterial = new ShaderMaterial({
       
       vec3 color;
       if (colori > 31) {
-        if (mod(time * 4.0 + interval, interval * 2.0) > interval) {
-          color = palette[bgi];
-        } else {
-          color = palette[colori - 33];
-        }
+        vec3 bg = palette[bgi];
+        color = palette[colori - 33];
+        color = mix(bg, color, clamp(cos(time * 8.0), -0.25, 0.25) * 4.0 + 1.0);
       } else {
         color = palette[colori % 16];
       }
