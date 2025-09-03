@@ -155,7 +155,17 @@ const tilemapMaterial = new ShaderMaterial({
 
       vec2 charPosition = mod(vUv, size) / size;
       vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);
-      vec3 color = palette[colori];
+      
+      vec3 color;
+      if (colori > 31) {
+        if (mod(time * 4.0 + interval, interval * 2.0) > interval) {
+          color = palette[bgi];
+        } else {
+          color = palette[colori - 33];
+        }
+      } else {
+        color = palette[colori % 16];
+      }
 
       uv.x += step.x * float(tiledata.x);
       uv.y += step.y * float(tiledata.y);

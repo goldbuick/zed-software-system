@@ -104,14 +104,33 @@ const billboardsMaterial = new ShaderMaterial({
       animPosition.y -= smoothstep(0.0, 1.0, deltaBounce);
 
       float deltaColor = animDelta(lastColor.y, smoothrate, 1.0);
-      vec3 sourceColor = colorFromIndex(lastColor.x);
-      vec3 destColor = colorFromIndex(charData.z);
+      int sourceColori = int(lastColor.x);
+      int destColori = int(charData.z);
+
+      vec3 sourceColor;
+      if (sourceColori > 32) {
+        sourceColor = palette[sourceColori - 33];
+      } else {
+        sourceColor = palette[sourceColori % 16];
+      }
+
+      vec3 destColor;
+      if (destColori > 32) {
+        destColor = palette[destColori - 33];
+      } else {
+        destColor = palette[destColori % 16];
+      }
+
       vColor = mix(sourceColor, destColor, deltaColor);
 
       float deltaBg = animDelta(lastBg.y, smoothrate, 1.0);
       vec4 sourceBg = bgFromIndex(lastBg.x);
       vec4 destBg = bgFromIndex(charData.w);
       vBg = mix(sourceBg, destBg, deltaBg);
+
+      if (destColori > 31 && mod(time * 4.0, interval * 2.0) > interval) {
+        vColor = vBg.rgb;
+      }
 
       vCharData.xy = charData.xy;
 
