@@ -1,6 +1,7 @@
 import { CHIP } from 'zss/chip'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
+import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -17,6 +18,7 @@ import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardobjectread,
+  boardobjectsread,
   boardsafedelete,
   boardsetterrain,
   createboard,
@@ -27,7 +29,7 @@ import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import { dirfrompts, ispt, isstrdir, ptapplydir } from 'zss/words/dir'
+import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
   readstrkindcolor,
@@ -48,6 +50,26 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     !ispresent(READ_CONTEXT.element.y)
   ) {
     return 0
+  }
+
+  // do limit check for players
+  if (READ_CONTEXT.elementisplayer) {
+    const maxplayershots = READ_CONTEXT.board?.maxplayershots ?? 0
+    if (maxplayershots > 0) {
+      const bulletcount = boardobjectsread(READ_CONTEXT.board).filter((obj) => {
+        return (
+          !obj.removed &&
+          ispid(obj.party) &&
+          memoryelementstatread(obj, 'collision') === COLLISION.ISBULLET
+        )
+      }).length
+      if (bulletcount >= maxplayershots) {
+        chip.set('didshoot', 0)
+        // yield after shoot
+        chip.yield()
+        return 0
+      }
+    }
   }
 
   // read direction + what to shoot
@@ -88,6 +110,11 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     const code = bullet.code ?? kind?.code ?? ''
     // bullets get one immediate tick
     memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code)
+  }
+
+  // track if we did shoot
+  if (READ_CONTEXT.elementisplayer) {
+    chip.set('didshoot', ispresent(bullet) ? 1 : 0)
   }
 
   // yield after shoot
@@ -226,6 +253,9 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
       return 1
     }
     mapelementcopy(element, maybetarget)
+    if (ispresent(arg)) {
+      element.arg = arg
+    }
   } else {
     return 1
   }
@@ -429,6 +459,15 @@ export const BOARD_FIRMWARE = createfirmware()
     return 0
   })
   .command('duplicate', commanddupe)
+  .command('duplicatewith', (_, words) => {
+    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    return commanddupe(words.slice(ii), arg)
+  })
+  .command('dupe', commanddupe)
+  .command('dupewith', (_, words) => {
+    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    return commanddupe(words.slice(ii), arg)
+  })
   .command('write', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0

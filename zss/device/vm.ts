@@ -222,6 +222,7 @@ const vm = createdevice(
             'inputok',
             'inputcancel',
             'inputmenu',
+            'didshoot',
           ],
           stats: [
             // board stats

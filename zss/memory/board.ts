@@ -234,6 +234,13 @@ export function boardobjectread(
   return board.objects[id]
 }
 
+export function boardobjectsread(board: MAYBE<BOARD>): BOARD_ELEMENT[] {
+  if (!ispresent(board)) {
+    return []
+  }
+  return [...Object.values(board.objects)]
+}
+
 export function boardobjectreadbypt(
   board: MAYBE<BOARD>,
   pt: PT,
