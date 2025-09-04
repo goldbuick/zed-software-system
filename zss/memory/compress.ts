@@ -53,7 +53,6 @@ export async function compressbooks(books: BOOK[]) {
   // TODO: do we need this still ??
   const content = await zip.generateAsync({
     type: 'base64',
-    compression: 'STORE',
   })
 
   return base64tobase64url(content)
@@ -63,10 +62,9 @@ export async function compressbooks(books: BOOK[]) {
 export async function decompressbooks(base64bytes: string) {
   await getzstdlib()
 
+  const books: BOOK[] = []
   const content = base64urltobase64(base64bytes)
   const zip = await JSZip.loadAsync(content, { base64: true })
-
-  const books: BOOK[] = []
 
   // extract a normal list
   const files: JSZipObject[] = []
@@ -76,37 +74,35 @@ export async function decompressbooks(base64bytes: string) {
   for (let i = 0; i < files.length; ++i) {
     const file = files[i]
 
-    // first check is for binary
-    const maybebinsquash = await file.async('uint8array')
-    if (ispresent(maybebinsquash)) {
-      try {
-        const bin = decompress(maybebinsquash)
-        const maybebookfrombin = unpackformat(bin)
-        if (ispresent(maybebookfrombin)) {
-          const book = importbook(maybebookfrombin)
-          if (ispresent(book)) {
-            books.push(book)
-          }
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error: any) {
-        // fallback to just msgpackr
-        const maybebookfrombin = unpackformat(maybebinsquash)
-        if (ispresent(maybebookfrombin)) {
-          const book = importbook(maybebookfrombin)
-          if (ispresent(book)) {
-            books.push(book)
-          }
-        }
+    // first pass try string
+    const str = await file.async('string')
+    const maybebookfromstr = unpackformat(str)
+    if (ispresent(maybebookfromstr)) {
+      const book = importbook(maybebookfromstr)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
       }
-    } else {
-      const str = await file.async('string')
-      const maybebookfromstr = unpackformat(str)
-      if (ispresent(maybebookfromstr)) {
-        const book = importbook(maybebookfromstr)
-        if (ispresent(book)) {
-          books.push(book)
-        }
+    }
+
+    // second pass uncompressed msgpackr
+    const bin = await file.async('uint8array')
+    const maybebookfrombin = unpackformat(bin)
+    if (ispresent(maybebookfrombin)) {
+      const book = importbook(maybebookfrombin)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
+      }
+    }
+
+    // second pass compressed msgpackr
+    const ubin = decompress(bin)
+    const maybebookfromubin = unpackformat(ubin)
+    if (ispresent(maybebookfromubin)) {
+      const book = importbook(maybebookfromubin)
+      if (ispresent(book)) {
+        books.push(book)
       }
     }
   }
