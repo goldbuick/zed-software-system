@@ -108,6 +108,8 @@ export function bookplayermovetoboard(
   boardobjectlookupwrite(destboard, element)
 
   // updating tracking
+  bookwriteflag(book, player, 'enterx', dest.x)
+  bookwriteflag(book, player, 'entery', dest.y)
   bookplayersetboard(book, player, destboard.id)
 }
 
