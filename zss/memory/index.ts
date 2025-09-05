@@ -728,7 +728,11 @@ function playerwaszapped(
   element: MAYBE<BOARD_ELEMENT>,
   player: string,
 ) {
-  console.info('YO!')
+  const enterx = bookreadflag(book, player, 'enterx')
+  const entery = bookreadflag(book, player, 'entery')
+  if (isnumber(enterx) && isnumber(entery) && ispresent(element)) {
+    boardmoveobject(board, element, { x: enterx, y: entery })
+  }
 }
 
 export function memorymoveobject(
@@ -812,6 +816,9 @@ export function memorymoveobject(
           'bump',
         )
       } else if (blockedisbullet) {
+        if (board?.restartonzap) {
+          playerwaszapped(book, board, element, elementplayer)
+        }
         memorysendinteraction(
           samemparty ? '' : blockedplayer,
           blocked,
@@ -819,10 +826,6 @@ export function memorymoveobject(
           samemparty ? 'partyshot' : 'shot',
         )
         memorysendinteraction(elementplayer, element, blocked, 'thud')
-        console.info('??', board, board?.restartonzap)
-        if (board?.restartonzap) {
-          playerwaszapped(book, board, element, elementplayer)
-        }
       } else {
         memorysendinteraction(
           samemparty ? '' : blockedplayer,
@@ -839,6 +842,9 @@ export function memorymoveobject(
       }
     } else if (elementisbullet) {
       if (blockedbyplayer) {
+        if (board?.restartonzap) {
+          playerwaszapped(book, board, blocked, blockedplayer)
+        }
         memorysendinteraction(
           samemparty ? '' : blockedplayer,
           blocked,
@@ -851,10 +857,6 @@ export function memorymoveobject(
           blocked,
           samemparty ? 'partyshot' : 'shot',
         )
-        console.info('??', board, board?.restartonzap)
-        if (board?.restartonzap) {
-          playerwaszapped(book, board, blocked, blockedplayer)
-        }
       } else if (blockedisbullet) {
         memorysendinteraction(
           samemparty ? '' : blockedplayer,

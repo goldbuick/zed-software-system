@@ -448,10 +448,10 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       codepage.board.id = codepage.id
       const stats = codepagereadstatdefaults(codepage)
 
-      if (stats.isdark) {
+      if (ispresent(stats.isdark)) {
         codepage.board.isdark = 1
       }
-      if (stats.notdark) {
+      if (ispresent(stats.notdark)) {
         codepage.board.isdark = 0
       }
 
@@ -519,10 +519,10 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.board.timelimit = stats.timelimit
       }
 
-      if (stats.restartonzap) {
+      if (ispresent(stats.restartonzap)) {
         codepage.board.restartonzap = 1
       }
-      if (stats.norestartonzap) {
+      if (ispresent(stats.norestartonzap)) {
         codepage.board.restartonzap = 0
       }
 
