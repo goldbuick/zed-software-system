@@ -122,6 +122,8 @@ export function parsezzt(player: string, content: Uint8Array) {
   function normalizedlines(str: string) {
     // check for inline $ text rows (thanks WiL)
     // also check for inlined ascii chars WHEE
+    // need to check for do labels and messages
+    // can also handle case SENSITIVE labels and messages ??
     return str
       .replaceAll(/\r?\n|\r/g, '\n')
       .split('\n')

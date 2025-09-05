@@ -94,23 +94,11 @@ export type RenderOptions = {
 export type DisplayData = {
   width: number
   height: number
-  rgbaData: Uint8Array
-  '2x'?: number
+  palette?: Uint8Array[]
+  screen: [number, number, number][]
 }
 
 export type ParsedData = {
   imageData: ScreenData
   sauce?: Sauce
-}
-
-export type AnimationController = {
-  play: (baud?: number, callback?: () => void, clearScreen?: boolean) => void
-  stop: () => void
-  load: (bytes: Uint8Array, callback: (sauce?: Sauce) => void) => void
-}
-
-export type Ansimation = {
-  canvas: HTMLCanvasElement
-  sauce?: Sauce
-  controller: AnimationController
 }

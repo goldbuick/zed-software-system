@@ -1,9 +1,17 @@
 // Parser module for AnsiLove
 
+import { display, validateOptions } from './display'
 import { File } from './file'
+import { FontModule } from './font'
 import { PaletteModule } from './palette'
 import { ScreenData } from './screendata'
-import type { FileObj, ParsedData, RenderOptions, Sauce } from './types'
+import type {
+  DisplayData,
+  FileObj,
+  ParsedData,
+  RenderOptions,
+  Sauce,
+} from './types'
 
 // ADF parser
 function adf(bytes: Uint8Array, options: RenderOptions): ParsedData {
@@ -12,7 +20,7 @@ function adf(bytes: Uint8Array, options: RenderOptions): ParsedData {
 
   const imageData = new ScreenData(80)
   imageData.palette = PaletteModule.adf(file)
-  // imageData.font = FontModule.font8x16x256(file, options)
+  imageData.font = FontModule.font8x16x256(file, options)
   imageData.raw(file.read())
 
   return {
@@ -141,7 +149,7 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
   }
 
   imageData.columns = columns
-  // imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font || '80x25', options)
 
   switch (options.bits) {
     case 'ced':
@@ -345,7 +353,7 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
 function asc(bytes: Uint8Array, options: RenderOptions): ParsedData {
   const file = new File(bytes)
   const imageData = new ScreenData(80)
-  // imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font || '80x25', options)
   imageData.palette = PaletteModule.ASC_PC
 
   let x = 0
@@ -379,7 +387,7 @@ function asc(bytes: Uint8Array, options: RenderOptions): ParsedData {
 function bin(bytes: Uint8Array, options: RenderOptions): ParsedData {
   const file = new File(bytes)
   const imageData = new ScreenData(options.columns || 160)
-  // imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font || '80x25', options)
   imageData.palette = PaletteModule.BIN
   imageData.raw(file.read())
 
@@ -481,7 +489,7 @@ function idf(bytes: Uint8Array, options: RenderOptions): ParsedData {
     }
   }
 
-  // imageData.font = FontModule.font8x16x256(file, options)
+  imageData.font = FontModule.font8x16x256(file, options)
   imageData.palette = PaletteModule.triplets16(file)
 
   return {
@@ -494,7 +502,7 @@ function idf(bytes: Uint8Array, options: RenderOptions): ParsedData {
 function pcb(bytes: Uint8Array, options: RenderOptions): ParsedData {
   const file = new File(bytes)
   const imageData = new ScreenData(80)
-  // imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font || '80x25', options)
   imageData.palette = PaletteModule.BIN
 
   let bg = 0
@@ -601,7 +609,7 @@ function tnd(bytes: Uint8Array, options: RenderOptions): ParsedData {
   let y = 0
 
   const imageData = new ScreenData(80)
-  // imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font || '80x25', options)
   imageData.palette = PaletteModule.ANSI
 
   while (!file.eof()) {
@@ -750,9 +758,9 @@ function xb(bytes: Uint8Array, options: RenderOptions): ParsedData {
   imageData.palette = header.palette
     ? PaletteModule.triplets16(file)
     : PaletteModule.BIN
-  // imageData.font = header.font
-  //   ? FontModule.xbin(file, header.fontHeight, options)
-  //   : FontModule.preset('80x25', options)
+  imageData.font = header.font
+    ? FontModule.xbin(file, header.fontHeight, options)
+    : FontModule.preset('80x25', options)
 
   if (header.compressed) {
     imageData.raw(uncompress(file, header.width, header.height))
@@ -768,9 +776,12 @@ function xb(bytes: Uint8Array, options: RenderOptions): ParsedData {
 
 export function readBytes(
   bytes: Uint8Array,
-  callback: (data: ScreenData, sauce?: Sauce) => void,
-  options: RenderOptions = {},
+  callback: (data: DisplayData | DisplayData[], sauce?: Sauce) => void,
+  splitRows: number,
+  options?: RenderOptions,
 ): void {
+  options = validateOptions(options)
+
   let data: ParsedData
   switch (options.filetype) {
     case 'txt':
@@ -805,7 +816,18 @@ export function readBytes(
     default:
       data = ans(bytes, options)
   }
-  callback(data.imageData as ScreenData, data.sauce)
+
+  if (splitRows > 0) {
+    const returnArray: DisplayData[] = []
+    for (let start = 0; start < data.imageData.rows; start += splitRows) {
+      const displayData = display(data.imageData, start, splitRows)
+      returnArray.push(displayData)
+    }
+    callback(returnArray, data.sauce)
+  } else {
+    const displayData = display(data.imageData, 0, data.imageData.rows)
+    callback(displayData, data.sauce)
+  }
 }
 
 export const ParserModule = {
