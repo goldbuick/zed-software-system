@@ -68,7 +68,21 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'zzm'
       } else if (/.ans$/i.test(file.name)) {
         return 'ans'
-      }
+      } else if (/.adf$/i.test(file.name)) {
+        return 'adf'
+      } else if (/.bin$/i.test(file.name)) {
+        return 'bin'
+      } else if (/.idf$/i.test(file.name)) {
+        return 'idf'
+      } else if (/.pcb$/i.test(file.name)) {
+        return 'pcb'
+      } else if (/.tnd$/i.test(file.name)) {
+        return 'tnd'
+      } else if (/.xb$/i.test(file.name)) {
+        return 'xb'
+      } else if (/.diz$/i.test(file.name)) {
+        return 'diz'
+      } // idf
       break
   }
   return ''
@@ -239,10 +253,16 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
     case 'ans':
+    case 'adf':
+    case 'bin':
+    case 'idf':
+    case 'pcb':
+    case 'tnd':
+    case 'xb':
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          parseansi(player, file.name, new Uint8Array(arraybuffer))
+          parseansi(player, file.name, filetype, new Uint8Array(arraybuffer))
         })
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break

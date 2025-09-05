@@ -21,6 +21,7 @@ import { renderBytes } from './ansilove'
 export function parseansi(
   player: string,
   filename: string,
+  filetype: string,
   content: Uint8Array,
 ) {
   const contentbook = memoryreadfirstcontentbook()
@@ -28,7 +29,7 @@ export function parseansi(
     return
   }
 
-  renderBytes(content, (screendata, sauce) => {
+  renderBytes(content, { filetype, bits: '8' }, (screendata, sauce) => {
     // create a new board codepage
     const title = sauce?.title ?? ''
     const author = sauce?.author ?? ''

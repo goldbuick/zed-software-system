@@ -6,7 +6,7 @@ import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { ROM_LOOKUP, romintolookup, romread } from 'zss/rom'
+import { ROM_LOOKUP, romintolookup, romread } from 'zss/feature/rom'
 import {
   BG_ACTIVE,
   BG_SELECTED,
