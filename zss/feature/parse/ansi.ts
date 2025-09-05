@@ -1,6 +1,7 @@
 import getSimilarColor, { IDefaultColor } from 'get-similar-color/dist'
 import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { boardsetterrain, ptwithinboard } from 'zss/memory/board'
@@ -43,18 +44,19 @@ export function parseansi(
     }
 
     const colormap = new Map<number, number>()
-    const palette = loadpalettefrombytes(PALETTE)
+    const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 
     if (ispresent(screendata.palette) && ispresent(palette)) {
       const colorlist: IDefaultColor[] = []
-      for (let t = 0; t < palette.height; ++t) {
-        const m = t * palette.width
-        const r = palette.bits[m]
-        const g = palette.bits[m + 1]
-        const b = palette.bits[m + 2]
+      for (let t = 0; t < palette.length; ++t) {
+        const p = palette[t]
         colorlist.push({
           name: `${t}`,
-          rgb: { r, g, b },
+          rgb: {
+            r: Math.round(p.r * 255),
+            g: Math.round(p.g * 255),
+            b: Math.round(p.b * 255),
+          },
         })
       }
 
