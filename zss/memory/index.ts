@@ -47,6 +47,7 @@ import {
   bookreadcodepagesbytypeandstat,
   bookreadflag,
   bookreadflags,
+  bookwriteflag,
   createbook,
 } from './book'
 import {
@@ -572,7 +573,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (ispresent(obj?.id)) {
     // all players self-aggro
     obj.player = player
-    // track current board
+    // track current board, and enterx entery
+    bookwriteflag(mainbook, player, 'enterx', px)
+    bookwriteflag(mainbook, player, 'entery', py)
     bookplayersetboard(mainbook, player, currentboard.id)
     return true
   }
@@ -719,6 +722,19 @@ function playerblockedbyedge(
   }
 }
 
+function playerwaszapped(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  player: string,
+) {
+  const enterx = bookreadflag(book, player, 'enterx')
+  const entery = bookreadflag(book, player, 'entery')
+  if (isnumber(enterx) && isnumber(entery) && ispresent(element)) {
+    boardmoveobject(board, element, { x: enterx, y: entery })
+  }
+}
+
 export function memorymoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -800,6 +816,9 @@ export function memorymoveobject(
           'bump',
         )
       } else if (blockedisbullet) {
+        if (board?.restartonzap) {
+          playerwaszapped(book, board, element, elementplayer)
+        }
         memorysendinteraction(
           samemparty ? '' : blockedplayer,
           blocked,
@@ -823,6 +842,9 @@ export function memorymoveobject(
       }
     } else if (elementisbullet) {
       if (blockedbyplayer) {
+        if (board?.restartonzap) {
+          playerwaszapped(book, board, blocked, blockedplayer)
+        }
         memorysendinteraction(
           samemparty ? '' : blockedplayer,
           blocked,

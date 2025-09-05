@@ -5,6 +5,7 @@ import { PALETTE } from 'zss/feature/palette'
 import { TICK_FPS } from 'zss/mapping/tick'
 
 import { convertpalettetocolors } from '../data/palette'
+import { noiseutilshader } from '../fx/util'
 
 import { cloneMaterial, interval, time } from './anim'
 import { createbitmaptexture } from './textures'
@@ -58,6 +59,8 @@ const spritesMaterial = new ShaderMaterial({
     varying vec3 vColor;
     varying vec4 vBg;
 
+    ${noiseutilshader}
+
     float rand(float co) {
       return fract(sin(co*(91.3458)) * 47453.5453);
     }
@@ -89,7 +92,8 @@ const spritesMaterial = new ShaderMaterial({
     }
 
     float cyclefromtime() {
-      float cycle = mod(time * 2.5, interval * 2.0) / interval;
+      float flux = snoise(vCharData.xy * 5.0) * 0.05;
+      float cycle = mod(time * 2.5 + flux, interval * 2.0) / interval;
       return exponentialInOut(abs(cycle - 1.0));
     }
 

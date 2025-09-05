@@ -1,3 +1,4 @@
+import getSimilarColor, { IDefaultColor } from 'get-similar-color/dist'
 import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
@@ -45,27 +46,33 @@ export function parseansi(
     const palette = loadpalettefrombytes(PALETTE)
 
     if (ispresent(screendata.palette) && ispresent(palette)) {
-      for (let i = 0; i < screendata.palette.length; ++i) {
-        const screenr = screendata.palette[i][0]
-        const screeng = screendata.palette[i][1]
-        const screenb = screendata.palette[i][2]
-        let dist = 100000
-        let index = 0
-        for (let t = 0; t < palette.height; ++t) {
-          const m = t * palette.width
-          const r = palette.bits[m]
-          const g = palette.bits[m + 1]
-          const b = palette.bits[m + 2]
-          const total =
-            Math.abs(r - screenr) +
-            Math.abs(g - screeng) +
-            Math.abs(b - screenb)
-          if (total < dist) {
-            index = t
-            dist = total
-          }
-        }
-        colormap.set(i, index)
+      const colorlist: IDefaultColor[] = []
+      for (let t = 0; t < palette.height; ++t) {
+        const m = t * palette.width
+        const r = palette.bits[m]
+        const g = palette.bits[m + 1]
+        const b = palette.bits[m + 2]
+        colorlist.push({
+          name: `${t}`,
+          rgb: { r, g, b },
+        })
+      }
+
+      for (
+        let sourcecolor = 0;
+        sourcecolor < screendata.palette.length;
+        ++sourcecolor
+      ) {
+        const r = screendata.palette[sourcecolor][0]
+        const g = screendata.palette[sourcecolor][1]
+        const b = screendata.palette[sourcecolor][2]
+        const match = getSimilarColor({
+          targetColor: { r, g, b },
+          colorArray: colorlist,
+          similarityThreshold: 0.5,
+        })
+        const palettecolor = parseFloat(match?.name ?? '0')
+        colormap.set(sourcecolor, palettecolor)
       }
     }
 
@@ -94,8 +101,6 @@ export function parseansi(
         ++y
       }
     }
-
-    console.info(sauce)
 
     api_toast(
       SOFTWARE,

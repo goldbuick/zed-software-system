@@ -621,11 +621,11 @@ export function parsezzt(player: string, content: Uint8Array) {
     if (isnumber(zztboard.maxplayershots)) {
       codepagestats.push(`@maxplayershots ${zztboard.maxplayershots}`)
     }
-    if (isnumber(zztboard.isdark)) {
-      codepagestats.push(`@isdark ${zztboard.isdark}`)
+    if (isnumber(zztboard.isdark) && zztboard.isdark) {
+      codepagestats.push(`@isdark`)
     }
-    if (isnumber(zztboard.restartonzap)) {
-      codepagestats.push(`@restartonzap ${zztboard.restartonzap}`)
+    if (isnumber(zztboard.restartonzap) && zztboard.restartonzap) {
+      codepagestats.push(`@restartonzap`)
     }
     if (isnumber(zztboard.timelimit)) {
       codepagestats.push(`@timelimit ${zztboard.timelimit}`)

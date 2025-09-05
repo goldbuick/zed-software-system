@@ -9,7 +9,7 @@ import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { halftonefragshader } from './halftone'
-import { aastepfragshader, blendfragshader, noisefragshader } from './util'
+import { aasteputilshader, blendutilshader, noiseutilshader } from './util'
 
 const crtshapevertshader = `
 #ifdef ASPECT_CORRECTION
@@ -33,9 +33,9 @@ const crtshapefragshader = `
 uniform float viewheight;
 uniform sampler2D splat;
 
-${blendfragshader}
-${aastepfragshader}
-${noisefragshader}
+${blendutilshader}
+${aasteputilshader}
+${noiseutilshader}
 ${halftonefragshader}
 
 float rectdistance(vec2 uv) {
