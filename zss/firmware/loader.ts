@@ -76,54 +76,7 @@ export const LOADER_FIRMWARE = createfirmware({
       }
     }
 
-    // we use operator flags
-    const player = memoryreadoperator()
-    const value = memoryreadflags(player)[name]
-    return [ispresent(value), value]
-  },
-  set(chip, name, value) {
-    const type = memoryloaderformat(chip.id())
-    if (name === 'format') {
-      // return has unhandled
-      return [false, undefined]
-    }
-    switch (type) {
-      case 'text':
-        switch (name) {
-          case 'filename':
-          case 'cursor':
-          case 'lines':
-            // return has unhandled
-            return [false, undefined]
-        }
-        break
-      case 'json':
-        switch (name) {
-          case 'filename':
-            // return has unhandled
-            return [false, undefined]
-        }
-        break
-      case 'binary':
-        switch (name) {
-          case 'filename':
-          case 'cursor':
-          case 'bytes':
-            // return has unhandled
-            return [false, undefined]
-        }
-        break
-    }
-
-    // we use operator flags
-    const player = memoryreadoperator()
-    const flags = memoryreadflags(player)
-    if (ispresent(flags)) {
-      flags[name] = value
-      return [true, value]
-    }
-
-    // return has unhandled
+    // return as unhandled
     return [false, undefined]
   },
 })
