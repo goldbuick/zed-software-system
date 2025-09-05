@@ -3,11 +3,15 @@ import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memorysetbook, memorywritefromkind } from 'zss/memory'
+import {
+  memoryreadfirstcontentbook,
+  memorysetbook,
+  memorywritefromkind,
+} from 'zss/memory'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
-import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { PT } from 'zss/words/types'
@@ -58,9 +62,17 @@ const ZZT_BOARD_WIDTH = 60
 const ZZT_BOARD_HEIGHT = 25
 const ZZT_BOARD_SIZE = ZZT_BOARD_WIDTH * ZZT_BOARD_HEIGHT
 
-export function parsezzt(player: string, content: Uint8Array) {
+function createreader(content: Uint8Array) {
   let cursor = 0
   const reader = new DataView(content.buffer)
+
+  function seek(to: number) {
+    cursor = to
+  }
+
+  function index() {
+    return cursor
+  }
 
   function readuint8() {
     const value = reader.getUint8(cursor)
@@ -90,6 +102,96 @@ export function parsezzt(player: string, content: Uint8Array) {
     return str.replace('\r', '\n')
   }
 
+  return {
+    seek,
+    index,
+    readuint8,
+    readint16,
+    readint32,
+    readstring,
+  }
+}
+
+type READER = ReturnType<typeof createreader>
+
+function readboardbytes(player: string, reader: READER) {
+  const boardsize = reader.readint16()
+  const start = reader.index()
+
+  const boardnamelength = reader.readuint8()
+  const boardname = reader.readstring(50).slice(0, boardnamelength)
+
+  const board: ZZT_BOARD = {
+    boardname,
+    elements: [],
+    stats: [],
+  }
+
+  // read board elements
+  while (board.elements.length < ZZT_BOARD_SIZE) {
+    let count = reader.readuint8()
+    if (count === 0) {
+      count = 255
+    }
+    const element = reader.readuint8()
+    const color = reader.readuint8()
+    for (let r = 0; r < count; ++r) {
+      board.elements.push({ element, color })
+    }
+  }
+
+  // read board stats
+  board.maxplayershots = reader.readuint8()
+  board.isdark = reader.readuint8()
+  board.exitnorth = reader.readuint8()
+  board.exitsouth = reader.readuint8()
+  board.exitwest = reader.readuint8()
+  board.exiteast = reader.readuint8()
+  board.restartonzap = reader.readuint8()
+  board.messagelength = reader.readuint8()
+  board.message = reader.readstring(58).slice(0, board.messagelength)
+  board.playerenterx = reader.readuint8()
+  board.playerentery = reader.readuint8()
+  board.timelimit = reader.readint16()
+  reader.seek(reader.index() + 16) // skip
+
+  // read element stats
+  const statcount = reader.readint16() + 1 // thanks TIM
+  while (board.stats.length < statcount) {
+    const stat: ZZT_STAT = {}
+    stat.x = reader.readuint8() - 1
+    stat.y = reader.readuint8() - 1
+    stat.stepx = reader.readint16()
+    stat.stepy = reader.readint16()
+    stat.cycle = reader.readint16()
+    stat.p1 = reader.readuint8()
+    stat.p2 = reader.readuint8()
+    stat.p3 = reader.readuint8()
+    stat.follower = reader.readint16()
+    stat.leader = reader.readint16()
+    stat.underelement = reader.readuint8()
+    stat.undercolor = reader.readuint8()
+    stat.pointer = reader.readint32()
+    stat.currentinstruction = reader.readint16()
+    const length = reader.readint16()
+
+    reader.seek(reader.index() + 8) // skip
+    if (length < 0) {
+      // copy code from
+      stat.bind = Math.abs(length)
+    } else {
+      // read code in
+      stat.code = reader.readstring(length)
+    }
+
+    board.stats.push(stat)
+  }
+
+  reader.seek(start + boardsize)
+  return board
+}
+
+function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
   function writefromkind(
     board: MAYBE<BOARD>,
     kind: MAYBE<STR_KIND>,
@@ -468,139 +570,6 @@ export function parsezzt(player: string, content: Uint8Array) {
     return undefined
   }
 
-  // read world
-
-  const worldfileid = readint16()
-  if (worldfileid != -1) {
-    return
-  }
-
-  const numberofboards = readint16()
-  const playerammo = readint16()
-  const playergems = readint16()
-  const keys = readstring(7)
-  const playerhealth = readint16()
-  const playerboard = readint16()
-  const playertorches = readint16()
-  const torchcycles = readint16()
-  const energycycles = readint16()
-  readint16() // skip
-  const playerscore = readint16()
-  const worldnamelength = readuint8()
-  const worldname = readstring(20).slice(0, worldnamelength)
-
-  const flags: string[] = []
-  for (let i = 0; i < 9; i++) {
-    const flagnamelength = readuint8()
-    const flagname = readstring(20).slice(0, flagnamelength)
-    flags.push(flagname)
-  }
-
-  const timepassed = readint16()
-  const timepassedticks = readint16()
-  const locked = readuint8()
-  console.info(
-    playerammo,
-    playergems,
-    keys,
-    playerhealth,
-    playerboard,
-    playertorches,
-    torchcycles,
-    energycycles,
-    playerscore,
-    timepassed,
-    timepassedticks,
-    locked,
-  )
-
-  // read boards
-  cursor = 512 // skip bytes
-
-  const zztboards: ZZT_BOARD[] = []
-  for (let i = 0; i <= numberofboards; ++i) {
-    const boardsize = readint16()
-    const start = cursor
-    const boardnamelength = readuint8()
-    const boardname = readstring(50).slice(0, boardnamelength)
-
-    const board: ZZT_BOARD = {
-      boardname,
-      elements: [],
-      stats: [],
-    }
-
-    // read board elements
-    while (board.elements.length < ZZT_BOARD_SIZE) {
-      let count = readuint8()
-      if (count === 0) {
-        count = 255
-      }
-      const element = readuint8()
-      const color = readuint8()
-      for (let r = 0; r < count; ++r) {
-        board.elements.push({ element, color })
-      }
-    }
-
-    // read board stats
-    board.maxplayershots = readuint8()
-    board.isdark = readuint8()
-    board.exitnorth = readuint8()
-    board.exitsouth = readuint8()
-    board.exitwest = readuint8()
-    board.exiteast = readuint8()
-    board.restartonzap = readuint8()
-    board.messagelength = readuint8()
-    board.message = readstring(58).slice(0, board.messagelength)
-    board.playerenterx = readuint8()
-    board.playerentery = readuint8()
-    board.timelimit = readint16()
-    cursor += 16 // skip
-
-    // read element stats
-    const statcount = readint16() + 1 // thanks TIM
-    while (board.stats.length < statcount) {
-      const stat: ZZT_STAT = {}
-      stat.x = readuint8() - 1
-      stat.y = readuint8() - 1
-      stat.stepx = readint16()
-      stat.stepy = readint16()
-      stat.cycle = readint16()
-      stat.p1 = readuint8()
-      stat.p2 = readuint8()
-      stat.p3 = readuint8()
-      stat.follower = readint16()
-      stat.leader = readint16()
-      stat.underelement = readuint8()
-      stat.undercolor = readuint8()
-      stat.pointer = readint32()
-      stat.currentinstruction = readint16()
-      const length = readint16()
-
-      cursor += 8 // skip
-      if (length < 0) {
-        // copy code from
-        stat.bind = Math.abs(length)
-      } else {
-        // read code in
-        stat.code = readstring(length)
-      }
-
-      board.stats.push(stat)
-    }
-
-    // add to list
-    zztboards.push(board)
-
-    // next
-    cursor = start + boardsize
-  }
-
-  // build book
-  const book = createbook([])
-  book.name = worldname
-
   // process boards
   for (let i = 0; i < zztboards.length; ++i) {
     const zztboard = zztboards[i]
@@ -609,7 +578,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     const codepagestats: string[] = [`@zztboard${i}`, ``]
     if (i === 0) {
       codepagestats.push(`@title`)
-    } else if (i === playerboard) {
+    } else if (i === startboard) {
       codepagestats.push(`@zztstartboard`)
     }
 
@@ -677,6 +646,83 @@ export function parsezzt(player: string, content: Uint8Array) {
     // create lookups before processing stats
     boardsetlookup(board)
   }
+}
+
+export function parsebrd(player: string, content: Uint8Array) {
+  const contentbook = memoryreadfirstcontentbook()
+  if (!ispresent(contentbook)) {
+    return
+  }
+  const reader = createreader(content)
+  const board = readboardbytes(player, reader)
+  processboards(contentbook, -1, [board])
+  api_toast(
+    SOFTWARE,
+    player,
+    `imported zzt brd ${board.boardname} into ${contentbook.name} book`,
+  )
+}
+
+export function parsezzt(player: string, content: Uint8Array) {
+  const reader = createreader(content)
+  const worldfileid = reader.readint16()
+  if (worldfileid != -1) {
+    return
+  }
+
+  const numberofboards = reader.readint16()
+  const playerammo = reader.readint16()
+  const playergems = reader.readint16()
+  const keys = reader.readstring(7)
+  const playerhealth = reader.readint16()
+  const playerboard = reader.readint16()
+  const playertorches = reader.readint16()
+  const torchcycles = reader.readint16()
+  const energycycles = reader.readint16()
+  reader.readint16() // skip
+  const playerscore = reader.readint16()
+  const worldnamelength = reader.readuint8()
+  const worldname = reader.readstring(20).slice(0, worldnamelength)
+
+  const flags: string[] = []
+  for (let i = 0; i < 9; i++) {
+    const flagnamelength = reader.readuint8()
+    const flagname = reader.readstring(20).slice(0, flagnamelength)
+    flags.push(flagname)
+  }
+
+  const timepassed = reader.readint16()
+  const timepassedticks = reader.readint16()
+  const locked = reader.readuint8()
+  console.info(
+    playerammo,
+    playergems,
+    keys,
+    playerhealth,
+    playerboard,
+    playertorches,
+    torchcycles,
+    energycycles,
+    playerscore,
+    timepassed,
+    timepassedticks,
+    locked,
+  )
+
+  // read boards
+  reader.seek(512) // skip bytes
+
+  const zztboards: ZZT_BOARD[] = []
+  for (let i = 0; i <= numberofboards; ++i) {
+    // add to list
+    const board = readboardbytes(player, reader)
+    zztboards.push(board)
+  }
+
+  // build book
+  const book = createbook([])
+  book.name = worldname
+  processboards(book, playerboard, zztboards)
 
   memorysetbook(book)
   api_toast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
