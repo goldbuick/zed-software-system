@@ -74,7 +74,7 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
-import { romparse, romprint, romread } from 'zss/rom'
+import { romparse, romprint, romread } from 'zss/feature/rom'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
 import { stattypestring } from 'zss/words/stats'

@@ -13,10 +13,8 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parseansi } from './ansi'
 import { parsechr } from './chr'
-import { parsezzl } from './zzl'
 import { parsezzm } from './zzm'
-import { parsezzt } from './zzt'
-import { parsezztbrd } from './zztbrd'
+import { parsebrd, parsezzt } from './zzt'
 import { parsezztobj } from './zztobj'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
@@ -62,13 +60,25 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'brd'
       } else if (/.chr$/i.test(file.name)) {
         return 'chr'
-      } else if (/.zzl$/i.test(file.name)) {
-        return 'zzl'
       } else if (/.zzm$/i.test(file.name)) {
         return 'zzm'
       } else if (/.ans$/i.test(file.name)) {
         return 'ans'
-      }
+      } else if (/.adf$/i.test(file.name)) {
+        return 'adf'
+      } else if (/.bin$/i.test(file.name)) {
+        return 'bin'
+      } else if (/.idf$/i.test(file.name)) {
+        return 'idf'
+      } else if (/.pcb$/i.test(file.name)) {
+        return 'pcb'
+      } else if (/.tnd$/i.test(file.name)) {
+        return 'tnd'
+      } else if (/.xb$/i.test(file.name)) {
+        return 'xb'
+      } else if (/.diz$/i.test(file.name)) {
+        return 'diz'
+      } // idf
       break
   }
   return ''
@@ -210,7 +220,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          parsezztbrd(player, new Uint8Array(arraybuffer))
+          parsebrd(player, new Uint8Array(arraybuffer))
         })
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
@@ -219,14 +229,6 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .arrayBuffer()
         .then((arraybuffer) => {
           parsechr(player, file.name, new Uint8Array(arraybuffer))
-        })
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'zzl':
-      file
-        .text()
-        .then((content) => {
-          parsezzl(player, content)
         })
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
@@ -239,10 +241,16 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
     case 'ans':
+    case 'adf':
+    case 'bin':
+    case 'idf':
+    case 'pcb':
+    case 'tnd':
+    case 'xb':
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          parseansi(player, file.name, new Uint8Array(arraybuffer))
+          parseansi(player, file.name, filetype, new Uint8Array(arraybuffer))
         })
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break

@@ -21,6 +21,7 @@ import { renderBytes } from './ansilove'
 export function parseansi(
   player: string,
   filename: string,
+  filetype: string,
   content: Uint8Array,
 ) {
   const contentbook = memoryreadfirstcontentbook()
@@ -28,86 +29,78 @@ export function parseansi(
     return
   }
 
-  renderBytes(content, (screendata, sauce) => {
-    // create a new board codepage
-    const title = sauce?.title ?? ''
-    const author = sauce?.author ?? ''
-    const code = `@board ${title || filename}${author ? ` by ${author}` : ''}\n`
-    const codepage = createcodepage(code, {})
-    const codepagename = codepagereadname(codepage)
-    bookwritecodepage(contentbook, codepage)
+  renderBytes(
+    content,
+    (screendata, sauce) => {
+      // create a new board codepage
+      const title = sauce?.title ?? ''
+      const author = sauce?.author ?? ''
+      const code = `@board ${title || filename}${author ? ` by ${author}` : ''}\n`
+      const codepage = createcodepage(code, {})
+      const codepagename = codepagereadname(codepage)
+      bookwritecodepage(contentbook, codepage)
 
-    // get board data from codepage
-    const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-    if (!ispresent(board)) {
-      return
-    }
-
-    const colormap = new Map<number, number>()
-    const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
-
-    if (ispresent(screendata.palette) && ispresent(palette)) {
-      const colorlist: IDefaultColor[] = []
-      for (let t = 0; t < palette.length; ++t) {
-        const p = palette[t]
-        colorlist.push({
-          name: `${t}`,
-          rgb: {
-            r: Math.round(p.r * 255),
-            g: Math.round(p.g * 255),
-            b: Math.round(p.b * 255),
-          },
-        })
+      // get board data from codepage
+      const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+      if (!ispresent(board)) {
+        return
       }
 
-      for (
-        let sourcecolor = 0;
-        sourcecolor < screendata.palette.length;
-        ++sourcecolor
-      ) {
-        const r = screendata.palette[sourcecolor][0]
-        const g = screendata.palette[sourcecolor][1]
-        const b = screendata.palette[sourcecolor][2]
-        const match = getSimilarColor({
-          targetColor: { r, g, b },
-          colorArray: colorlist,
-          similarityThreshold: 0.5,
-        })
-        const palettecolor = parseFloat(match?.name ?? '0')
-        colormap.set(sourcecolor, palettecolor)
-      }
-    }
+      const colormap = new Map<number, number>()
+      const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 
-    const chars = screendata.getData()
-    let x = 0
-    let y = 0
-    for (let i = 0; i < chars.length; i += 10) {
-      if (chars[i + 1]) {
-        const char = chars[i]
-        const color = colormap.get(15) ?? 0
-        const bg = colormap.get(0) ?? 0
-        if (ptwithinboard({ x, y })) {
-          boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
+      if (ispresent(screendata.palette) && ispresent(palette)) {
+        const colorlist: IDefaultColor[] = []
+        for (let t = 0; t < palette.length; ++t) {
+          const p = palette[t]
+          colorlist.push({
+            name: `${t}`,
+            rgb: {
+              r: Math.round(p.r * 255),
+              g: Math.round(p.g * 255),
+              b: Math.round(p.b * 255),
+            },
+          })
         }
-      } else {
-        const char = chars[i]
-        const color = colormap.get(chars[i + 2]) ?? 0
-        const bg = colormap.get(chars[i + 3]) ?? 0
-        if (ptwithinboard({ x, y })) {
-          boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
+
+        for (
+          let sourcecolor = 0;
+          sourcecolor < screendata.palette.length;
+          ++sourcecolor
+        ) {
+          const r = screendata.palette[sourcecolor][0]
+          const g = screendata.palette[sourcecolor][1]
+          const b = screendata.palette[sourcecolor][2]
+          const match = getSimilarColor({
+            targetColor: { r, g, b },
+            colorArray: colorlist,
+            similarityThreshold: 0.5,
+          })
+          const palettecolor = parseFloat(match?.name ?? '0')
+          colormap.set(sourcecolor, palettecolor)
         }
       }
-      ++x
-      if (x >= screendata.columns) {
-        x = 0
-        ++y
-      }
-    }
 
-    api_toast(
-      SOFTWARE,
-      player,
-      `imported ansi file ${codepagename} into ${contentbook.name} book`,
-    )
-  })
+      let x = 0
+      let y = 0
+      for (let i = 0; i < screendata.screen.length; ++i) {
+        if (ptwithinboard({ x, y })) {
+          const [char, color, bg] = screendata.screen[i]
+          boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
+        }
+        ++x
+        if (x >= screendata.width) {
+          x = 0
+          ++y
+        }
+      }
+
+      api_toast(
+        SOFTWARE,
+        player,
+        `imported ansi file ${codepagename} into ${contentbook.name} book`,
+      )
+    },
+    { filetype, imagedata: 1 },
+  )
 }
