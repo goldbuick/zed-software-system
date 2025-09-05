@@ -236,6 +236,7 @@ document.addEventListener(
         }
         break
       case 'tab':
+      case '/': // << for firefox :<
         event.preventDefault()
         break
     }
