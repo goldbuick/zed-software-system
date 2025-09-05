@@ -1,4 +1,4 @@
-export const blendfragshader = `
+export const blendutilshader = `
 float blendLighten(float base, float blend) {
 	return max(blend,base);
 }
@@ -24,14 +24,14 @@ vec3 blendDarken(vec3 base, vec3 blend, float opacity) {
 }
 `
 
-export const aastepfragshader = `
+export const aasteputilshader = `
 float aastep(float threshold, float value) {
   float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
   return smoothstep(threshold-afwidth, threshold+afwidth, value);
 }
 `
 
-export const noisefragshader = `
+export const noiseutilshader = `
 //
 // Description : Array and textureless GLSL 2D simplex noise function.
 //      Author : Ian McEwan, Ashima Arts.

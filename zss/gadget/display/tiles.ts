@@ -18,6 +18,7 @@ import { COLOR } from 'zss/words/types'
 
 import { convertpalettetocolors } from '../data/palette'
 import { CHARS_PER_ROW } from '../data/types'
+import { noiseutilshader } from '../fx/util'
 
 import { cloneMaterial, interval, time } from './anim'
 import { createbitmaptexture } from './textures'
@@ -148,6 +149,8 @@ const tilemapMaterial = new ShaderMaterial({
     uniform bool flip;
     varying vec2 vUv;
 
+    ${noiseutilshader}
+
     float exponentialInOut(float t) {
       return t == 0.0 || t == 1.0
         ? t
@@ -157,7 +160,8 @@ const tilemapMaterial = new ShaderMaterial({
     }
 
     float cyclefromtime() {
-      float cycle = mod(time * 2.5, interval * 2.0) / interval;
+      float flux = snoise(vUv * 5.0) * 0.05;
+      float cycle = mod(time * 2.5 + flux, interval * 2.0) / interval;
       return exponentialInOut(abs(cycle - 1.0));
     }
 

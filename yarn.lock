@@ -5606,6 +5606,11 @@ get-proto@^1.0.0, get-proto@^1.0.1:
     dunder-proto "^1.0.1"
     es-object-atoms "^1.0.0"
 
+get-similar-color@^1.1.4:
+  version "1.1.4"
+  resolved "https://registry.npmjs.org/get-similar-color/-/get-similar-color-1.1.4.tgz#8e50207f9bb444aa55cdff7bc66e749751c13ed8"
+  integrity sha512-1zMKUCN33jE867kxz9qRviARREvVPpToaaBUM72jqkCMEJotowjS1PU6xEkpaiG8USHHToAkOV72I/XbTrwsug==
+
 get-stream@^6.0.0:
   version "6.0.1"
   resolved "https://registry.npmjs.org/get-stream/-/get-stream-6.0.1.tgz#a262d8eef67aced57c2852ad6167526a43cbf7b7"
