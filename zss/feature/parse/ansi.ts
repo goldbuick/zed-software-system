@@ -66,7 +66,6 @@ export function parseansi(
           const match = getSimilarColor({
             targetColor: { r, g, b },
             colorArray: colorlist,
-            similarityThreshold: 0.75,
           })
           const palettecolor = parseFloat(match?.name ?? '0')
           colormap.set(sourcecolor, palettecolor)
