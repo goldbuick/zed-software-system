@@ -2,16 +2,18 @@ import getSimilarColor, { IDefaultColor } from 'get-similar-color/dist'
 import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
-import { ispresent } from 'zss/mapping/types'
+import { createnameid } from 'zss/mapping/guid'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { boardsetterrain, ptwithinboard } from 'zss/memory/board'
 import { bookwritecodepage } from 'zss/memory/book'
+import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
 import {
-  codepagereaddata,
-  codepagereadname,
-  createcodepage,
-} from 'zss/memory/codepage'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+  BOARD,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 
 import { loadpalettefrombytes } from '../bytes'
 import { PALETTE } from '../palette'
@@ -35,16 +37,6 @@ export function parseansi(
       // create a new board codepage
       const title = sauce?.title ?? ''
       const author = sauce?.author ?? ''
-      const code = `@board ${title || filename}${author ? ` by ${author}` : ''}\n`
-      const codepage = createcodepage(code, {})
-      const codepagename = codepagereadname(codepage)
-      bookwritecodepage(contentbook, codepage)
-
-      // get board data from codepage
-      const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-      if (!ispresent(board)) {
-        return
-      }
 
       const colormap = new Map<number, number>()
       const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
@@ -81,26 +73,62 @@ export function parseansi(
         }
       }
 
-      let x = 0
-      let y = 0
+      // build a patchwork of connected boards to cover the area needed to render the ansi
+      const patchworkname = `${title || filename}${author ? ` by ${author}` : ''}`
+      const boardxcount = Math.ceil(screendata.width / BOARD_WIDTH)
+      const boardycount = Math.ceil(screendata.height / BOARD_HEIGHT)
+
+      const boards: MAYBE<BOARD>[] = []
+      for (let i = 0; i < boardxcount * boardycount; ++i) {
+        boards.push(undefined)
+      }
+
+      let sx = 0
+      let sy = 0
+      const id = createnameid()
       for (let i = 0; i < screendata.screen.length; ++i) {
-        if (ptwithinboard({ x, y })) {
+        const x = sx % BOARD_WIDTH
+        const y = sy % BOARD_HEIGHT
+        const bx = Math.floor(sx / BOARD_WIDTH)
+        const by = Math.floor(sy / BOARD_HEIGHT)
+        const bi = bx + by * boardxcount
+
+        // get target board
+        let board = boards[bi]
+        if (!ispresent(board)) {
+          const stats: string[] = [
+            `@${id}_${bx}_${by}`,
+            `@exitnorth ${id}_${bx}_${by - 1}`,
+            `@exitsouth ${id}_${bx}_${by + 1}`,
+            `@exitwest ${id}_${bx - 1}_${by}`,
+            `@exiteast ${id}_${bx + 1}_${by}`,
+          ]
+          const numeral = `${bi}`.padStart(3, '0')
+          const code = `@board ${patchworkname} ${numeral}\n${stats.join('\n')}\n`
+          const codepage = createcodepage(code, {})
+          bookwritecodepage(contentbook, codepage)
+          // get board data from codepage
+          boards[bi] = board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+        }
+
+        if (ispresent(board) && ptwithinboard({ x, y })) {
           const [char, fromcolor, frombg] = screendata.screen[i]
           const color = colormap.get(fromcolor) ?? 0
           const bg = colormap.get(frombg) ?? 0
           boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
         }
-        ++x
-        if (x >= screendata.width) {
-          x = 0
-          ++y
+
+        ++sx
+        if (sx >= screendata.width) {
+          sx = 0
+          ++sy
         }
       }
 
       api_toast(
         SOFTWARE,
         player,
-        `imported ansi file ${codepagename} into ${contentbook.name} book`,
+        `imported ansi file ${patchworkname} into ${contentbook.name} book`,
       )
     },
     { filetype, imagedata: 1 },
