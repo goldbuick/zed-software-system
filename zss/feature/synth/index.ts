@@ -16,6 +16,7 @@ import {
   getContext,
   getDestination,
   getDraw,
+  getTransport,
 } from 'tone'
 import { api_error, vm_synthsend } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -474,11 +475,10 @@ export function createsynth() {
   function addplay(buffer: string) {
     // parse ops
     const invokes = parseplay(buffer)
-    const seconds = Time('+0').toSeconds()
 
     // reset note offset
     if (pacertime === -1) {
-      pacertime = seconds
+      pacertime = getTransport().now()
     }
 
     // update count
