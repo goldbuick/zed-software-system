@@ -51,10 +51,10 @@ export function parseansi(
 
       if (ispresent(screendata.palette) && ispresent(palette)) {
         const colorlist: IDefaultColor[] = []
-        for (let t = 0; t < palette.length; ++t) {
-          const p = palette[t]
+        for (let i = 0; i < palette.length; ++i) {
+          const p = palette[i]
           colorlist.push({
-            name: `${t}`,
+            name: `${i}`,
             rgb: {
               r: Math.round(p.r * 255),
               g: Math.round(p.g * 255),
@@ -85,7 +85,9 @@ export function parseansi(
       let y = 0
       for (let i = 0; i < screendata.screen.length; ++i) {
         if (ptwithinboard({ x, y })) {
-          const [char, color, bg] = screendata.screen[i]
+          const [char, fromcolor, frombg] = screendata.screen[i]
+          const color = colormap.get(fromcolor) ?? 0
+          const bg = colormap.get(frombg) ?? 0
           boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
         }
         ++x
