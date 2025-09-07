@@ -153,7 +153,7 @@ export function Engine() {
             {mood.includes('bright') && (
               <Fragment key="mood">
                 <Bloom
-                  intensity={0.333}
+                  intensity={0.222}
                   mipmapBlur={false}
                   luminanceThreshold={0.25}
                   luminanceSmoothing={0.7}

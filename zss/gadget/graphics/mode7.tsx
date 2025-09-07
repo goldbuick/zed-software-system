@@ -1,6 +1,6 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { DepthOfField } from '@react-three/postprocessing'
+import { DepthOfField, Noise } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { useRef } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
@@ -224,21 +224,19 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         <RenderLayer
           viewwidth={viewwidth}
           viewheight={viewheight}
-          effects={
+          effects={() => (
             <>
               <DepthOfField
-                // target={[0, 0, 0]}
-                focusDistance={0.3} // where to focus
-                focalLength={0.05} // focal length
-                bokehScale={10} // bokeh size
+                focusDistance={0} // where to focus
+                focalLength={0.02} // focal length
+                bokehScale={2} // bokeh size
               />
             </>
-          }
+          )}
         >
           <PerspectiveCamera
             ref={cameraref}
             makeDefault
-            manual
             near={1}
             far={2000}
             aspect={viewwidth / viewheight}

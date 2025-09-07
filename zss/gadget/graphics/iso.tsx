@@ -189,7 +189,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
         <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
           <OrthographicCamera
             makeDefault
-            manual
             near={1}
             far={2000}
             position={[0, 0, 1000]}

@@ -1,12 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useFBO } from '@react-three/drei'
 import { ForwardRefComponent } from '@react-three/drei/helpers/ts-utils'
-import {
-  ThreeElements,
-  createPortal,
-  useFrame,
-  useThree,
-} from '@react-three/fiber'
+import { ThreeElements, createPortal, useThree } from '@react-three/fiber'
 import * as React from 'react'
 import * as THREE from 'three'
 
@@ -48,9 +43,7 @@ export const RenderTexture: ForwardRefComponent<
     width,
     height,
     samples = 8,
-    renderPriority = 0,
     eventPriority = 0,
-    frames = Infinity,
     stencilBuffer = false,
     depthBuffer = true,
     generateMipmaps = false,
@@ -107,11 +100,11 @@ export const RenderTexture: ForwardRefComponent<
   return (
     <>
       {createPortal(
-        <Container renderPriority={renderPriority} frames={frames} fbo={fbo}>
+        <>
           {children}
           {/* Without an element that receives pointer events state.pointer will always be 0/0 */}
           <group onPointerOver={() => null} />
-        </Container>,
+        </>,
         vScene,
         {
           events: { compute: compute ?? uvCompute, priority: eventPriority },
@@ -121,43 +114,3 @@ export const RenderTexture: ForwardRefComponent<
     </>
   )
 })
-
-// The container component has to be separate, it can not be inlined because "useFrame(state" when run inside createPortal will return
-// the portals own state which includes user-land overrides (custom cameras etc), but if it is executed in <RenderTexture>'s render function
-// it would return the default state.
-function Container({
-  frames,
-  renderPriority,
-  children,
-  fbo,
-}: {
-  frames: number
-  renderPriority: number
-  children: React.ReactNode
-  fbo: THREE.WebGLRenderTarget
-}) {
-  let count = 0
-  let oldAutoClear
-  let oldXrEnabled
-  let oldRenderTarget
-  let oldIsPresenting
-  useFrame((state) => {
-    if (frames === Infinity || count < frames) {
-      oldAutoClear = state.gl.autoClear
-      oldXrEnabled = state.gl.xr.enabled
-      oldRenderTarget = state.gl.getRenderTarget()
-      oldIsPresenting = state.gl.xr.isPresenting
-      state.gl.autoClear = true
-      state.gl.xr.enabled = false
-      state.gl.xr.isPresenting = false
-      state.gl.setRenderTarget(fbo)
-      state.gl.render(state.scene, state.camera)
-      state.gl.setRenderTarget(oldRenderTarget)
-      state.gl.autoClear = oldAutoClear
-      state.gl.xr.enabled = oldXrEnabled
-      state.gl.xr.isPresenting = oldIsPresenting
-      count++
-    }
-  }, renderPriority)
-  return <>{children}</>
-}
