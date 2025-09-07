@@ -201,6 +201,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
           }
         >
           <OrthographicCamera
+            manual
             makeDefault
             near={1}
             far={2000}

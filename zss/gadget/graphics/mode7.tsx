@@ -236,6 +236,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         >
           <PerspectiveCamera
             ref={cameraref}
+            manual
             makeDefault
             near={1}
             far={2000}

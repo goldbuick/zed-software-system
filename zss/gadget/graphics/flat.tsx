@@ -2,7 +2,7 @@ import { OrthographicCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useRef } from 'react'
-import { Group } from 'three'
+import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
@@ -19,6 +19,8 @@ type GraphicsProps = {
 }
 
 export function FlatGraphics({ width, height }: GraphicsProps) {
+  const cameraref = useRef<OrthographicCameraImpl>(null)
+
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
@@ -205,10 +207,13 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         effects={<></>}
       >
         <OrthographicCamera
+          ref={cameraref}
+          manual
           makeDefault
           near={1}
           far={2000}
           position={[0, 0, 1000]}
+          onUpdate={(c) => c.updateProjectionMatrix()}
         />
         <group ref={panref}>
           <group ref={zoomref}>

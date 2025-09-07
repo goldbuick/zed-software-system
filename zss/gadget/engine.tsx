@@ -111,12 +111,6 @@ export function Engine() {
           <TapeViewImage />
         </UserScreen>
       </UserFocus>
-      <OrthographicCamera
-        makeDefault
-        near={1}
-        far={2000}
-        position={[0, 0, 1000]}
-      />
       {shouldcrt && (
         <EffectComposer multisampling={0}>
           <>{scanlines && <Scanlines />}</>

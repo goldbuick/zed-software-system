@@ -14,7 +14,6 @@ import {
   layersreadcontrol,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { FlatLayer } from './flatlayer'
@@ -180,6 +179,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
         >
           <PerspectiveCamera
             ref={cameraref}
+            manual
             makeDefault
             near={1}
             far={2000}
