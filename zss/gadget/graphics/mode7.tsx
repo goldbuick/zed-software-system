@@ -1,5 +1,6 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { useRef } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
@@ -163,8 +164,8 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     }
 
     // calc focus
-    let fx = focusx + 1
-    let fy = focusy + 1
+    let fx = focusx
+    let fy = focusy
     fx += focusref.current.userData.focusvx
     fy += focusref.current.userData.focusvy
     fx *= -RUNTIME.DRAW_CHAR_WIDTH()
@@ -220,7 +221,20 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         {layers.map((layer) => (
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
-        <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
+        <RenderLayer
+          viewwidth={viewwidth}
+          viewheight={viewheight}
+          effects={
+            <>
+              <DepthOfField
+                // target={[0, 0, 0]}
+                focusDistance={0.3} // where to focus
+                focalLength={0.05} // focal length
+                bokehScale={10} // bokeh size
+              />
+            </>
+          }
+        >
           <PerspectiveCamera
             ref={cameraref}
             makeDefault

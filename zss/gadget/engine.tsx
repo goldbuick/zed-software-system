@@ -1,4 +1,4 @@
-import { useDetectGPU } from '@react-three/drei'
+import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
 import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
 import {
   Bloom,
@@ -113,6 +113,7 @@ export function Engine() {
   }, [islowrez, islandscape, showtouchcontrols])
 
   const { mood } = useMedia()
+
   return (
     <>
       <UserFocus>
@@ -123,8 +124,14 @@ export function Engine() {
           <TapeViewImage />
         </UserScreen>
       </UserFocus>
+      <OrthographicCamera
+        makeDefault
+        near={1}
+        far={2000}
+        position={[0, 0, 1000]}
+      />
       {shouldcrt && (
-        <EffectComposer multisampling={8}>
+        <EffectComposer multisampling={0}>
           <>
             {mood.includes('dark') && (
               <Fragment key="mood">
