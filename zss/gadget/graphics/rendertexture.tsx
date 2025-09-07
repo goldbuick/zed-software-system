@@ -10,9 +10,9 @@ export type RenderTextureProps = Omit<
   'ref' | 'args'
 > & {
   /** Optional width of the texture, defaults to viewport bounds */
-  width?: number
+  width: number
   /** Optional height of the texture, defaults to viewport bounds */
-  height?: number
+  height: number
   /** Optional fbo samples */
   samples?: number
   /** Optional stencil buffer, defaults to false */
@@ -51,17 +51,13 @@ export const RenderTexture: ForwardRefComponent<
   },
   forwardRef,
 ) {
-  const { size, viewport } = useThree()
-  const fbo = useFBO(
-    (width ?? size.width) * viewport.dpr,
-    (height ?? size.height) * viewport.dpr,
-    {
-      samples,
-      stencilBuffer,
-      depthBuffer,
-      generateMipmaps,
-    },
-  )
+  const { viewport } = useThree()
+  const fbo = useFBO(width * viewport.dpr, height * viewport.dpr, {
+    samples,
+    stencilBuffer,
+    depthBuffer,
+    generateMipmaps,
+  })
   const [vScene] = React.useState(() => new THREE.Scene())
 
   const uvCompute = React.useCallback(

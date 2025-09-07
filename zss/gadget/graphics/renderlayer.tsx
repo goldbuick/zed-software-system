@@ -1,11 +1,14 @@
+import { Glitch, Noise } from '@react-three/postprocessing'
+import { BlendFunction, CopyPass, GlitchMode } from 'postprocessing'
 import {
-  Bloom,
-  EffectComposerContext,
-  Glitch,
-  Noise,
-} from '@react-three/postprocessing'
-import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
-import { Fragment, ReactNode, useEffect, useRef, useState } from 'react'
+  Fragment,
+  ReactNode,
+  RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+import type { Camera } from 'three'
 import { Texture, WebGLRenderTarget } from 'three'
 import { ispresent } from 'zss/mapping/types'
 
@@ -48,17 +51,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
           />
         </Fragment>
       )}
-      {mood.includes('bright') && (
-        <Fragment key="mood">
-          <Bloom
-            intensity={0.111}
-            mipmapBlur={false}
-            luminanceThreshold={0.25}
-            luminanceSmoothing={0.7}
-            kernelSize={KernelSize.SMALL}
-          />
-        </Fragment>
-      )}
+      {mood.includes('bright') && <Fragment key="mood">{/* // */}</Fragment>}
       {effects}
       <primitive object={copyPass} dispose={null} />
     </>
@@ -66,6 +59,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
 }
 
 type RenderLayerProps = {
+  camera: RefObject<Camera | null>
   viewwidth: number
   viewheight: number
   effects: ReactNode
@@ -73,6 +67,7 @@ type RenderLayerProps = {
 }
 
 export function RenderLayer({
+  camera,
   viewwidth,
   viewheight,
   effects,
@@ -80,23 +75,27 @@ export function RenderLayer({
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const fbo = useRef<WebGLRenderTarget<Texture>>(null)
-
   return (
     <mesh position={[viewwidth * 0.5, viewheight * 0.5, 0]}>
       <planeGeometry args={[viewwidth, viewheight]} />
-      <meshBasicMaterial transparent>
+      <meshBasicMaterial transparent color="white">
         <RenderTexture
           ref={fbo}
+          depthBuffer
           attach="map"
           width={viewwidth}
           height={viewheight}
-          depthBuffer
           stencilBuffer={false}
           generateMipmaps={false}
         >
           {children}
-          {ispresent(fbo.current) && (
-            <EffectComposer key={mood} multisampling={0} renderPriority={100}>
+          {ispresent(fbo.current) && ispresent(camera.current) && (
+            <EffectComposer
+              key={mood}
+              camera={camera.current}
+              width={viewwidth}
+              height={viewheight}
+            >
               <RenderEffects fbo={fbo.current} effects={effects} />
             </EffectComposer>
           )}
@@ -105,3 +104,8 @@ export function RenderLayer({
     </mesh>
   )
 }
+
+/*
+
+
+*/
