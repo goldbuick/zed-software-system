@@ -197,7 +197,15 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
   }
 }
 
-export function layersreadcontrol(layers: LAYER[]) {
+export function layersreadcontrol(layers: LAYER[]): {
+  width: number
+  height: number
+  focusx: number
+  focusy: number
+  viewscale: VIEWSCALE
+  graphics: string
+  facing: number
+} {
   let width = 0
   let height = 0
   let focusx = BOARD_WIDTH * 0.5

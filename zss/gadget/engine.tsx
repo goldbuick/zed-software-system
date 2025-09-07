@@ -1,10 +1,11 @@
 import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
 import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
-import { EffectComposer, Vignette } from '@react-three/postprocessing'
+import { Bloom, Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
-import { VignetteTechnique } from 'postprocessing'
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { KernelSize, VignetteTechnique } from 'postprocessing'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Stats from 'stats.js'
+import { OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME, STATS_DEV } from 'zss/config'
 import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -14,6 +15,7 @@ import { Tape } from 'zss/tape/component'
 import { islinux } from 'zss/words/system'
 
 import { Scanlines } from './fx/scanlines'
+import { EffectComposerMain } from './graphics/effectcomposermain'
 import { useDeviceData } from './hooks'
 import { ScreenUI } from './screenui/component'
 import { TapeToast } from './toast'
@@ -101,8 +103,17 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols])
 
+  const cameraref = useRef<OrthographicCameraImpl>(null)
+
   return (
     <>
+      <OrthographicCamera
+        ref={cameraref}
+        makeDefault
+        near={1}
+        far={2000}
+        position={[0, 0, 1000]}
+      />
       <UserFocus>
         <UserScreen>
           <ScreenUI />
@@ -112,7 +123,14 @@ export function Engine() {
         </UserScreen>
       </UserFocus>
       {shouldcrt && (
-        <EffectComposer multisampling={0}>
+        <EffectComposerMain width={viewwidth} height={viewheight}>
+          <Bloom
+            intensity={0.111}
+            mipmapBlur={false}
+            luminanceThreshold={0.25}
+            luminanceSmoothing={0.7}
+            kernelSize={KernelSize.VERY_LARGE}
+          />
           <>{scanlines && <Scanlines />}</>
           <Vignette
             technique={VignetteTechnique.ESKIL}
@@ -120,7 +138,7 @@ export function Engine() {
             darkness={0.911}
           />
           <CRTShape viewheight={viewheight} />
-        </EffectComposer>
+        </EffectComposerMain>
       )}
     </>
   )

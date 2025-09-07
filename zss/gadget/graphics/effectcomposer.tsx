@@ -1,12 +1,10 @@
 import { type Instance, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
-  DepthDownsamplingPass,
   Effect,
   EffectAttribute,
   EffectComposer as EffectComposerImpl,
   EffectPass,
-  NormalPass,
   Pass,
   RenderPass,
 } from 'postprocessing'
@@ -14,29 +12,19 @@ import {
   type JSX,
   forwardRef,
   memo,
-  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
 } from 'react'
-import type { Camera, Group, Scene, TextureDataType } from 'three'
-import { HalfFloatType, NoToneMapping } from 'three'
+import type { Camera, Group } from 'three'
+import { HalfFloatType } from 'three'
 
 export type EffectComposerProps = {
-  enabled?: boolean
   children: JSX.Element | JSX.Element[]
-  depthBuffer?: boolean
-  /** Only used for SSGI currently, leave it disabled for everything else unless it's needed */
-  enableNormalPass?: boolean
-  stencilBuffer?: boolean
-  autoClear?: boolean
-  resolutionScale?: number
-  multisampling?: number
-  frameBufferType?: TextureDataType
-  renderPriority?: number
-  camera?: Camera
-  scene?: Scene
+  camera: Camera
+  width: number
+  height: number
 }
 
 const isConvolution = (effect: Effect): boolean =>
@@ -45,91 +33,32 @@ const isConvolution = (effect: Effect): boolean =>
 
 export const EffectComposer = /* @__PURE__ */ memo(
   /* @__PURE__ */ forwardRef<EffectComposerImpl, EffectComposerProps>(
-    (
-      {
-        children,
-        camera: _camera,
-        scene: _scene,
-        resolutionScale,
-        enabled = true,
-        renderPriority = 1,
-        autoClear = true,
-        depthBuffer,
-        enableNormalPass,
-        stencilBuffer,
-        multisampling = 8,
-        frameBufferType = HalfFloatType,
-      },
-      ref,
-    ) => {
-      const {
-        gl,
-        scene: defaultScene,
-        camera: defaultCamera,
-        size,
-      } = useThree()
-      const scene = _scene ?? defaultScene
-      const camera = _camera ?? defaultCamera
+    ({ children, camera, width, height }, ref) => {
+      const { gl, scene } = useThree()
 
-      const [composer, normalPass, downSamplingPass] = useMemo(() => {
+      const [composer] = useMemo(() => {
         // Initialize composer
         const effectComposer = new EffectComposerImpl(gl, {
-          depthBuffer,
-          stencilBuffer,
-          multisampling,
-          frameBufferType,
+          depthBuffer: true,
+          stencilBuffer: false,
+          multisampling: 0,
+          frameBufferType: HalfFloatType,
         })
         effectComposer.autoRenderToScreen = false
 
         // Add render pass
         effectComposer.addPass(new RenderPass(scene, camera))
 
-        // Create normal pass
-        let downSamplingPass = null
-        let normalPass = null
-        if (enableNormalPass) {
-          normalPass = new NormalPass(scene, camera)
-          normalPass.enabled = false
-          effectComposer.addPass(normalPass)
-          if (resolutionScale !== undefined) {
-            downSamplingPass = new DepthDownsamplingPass({
-              normalBuffer: normalPass.texture,
-              resolutionScale,
-            })
-            downSamplingPass.enabled = false
-            effectComposer.addPass(downSamplingPass)
-          }
-        }
+        return [effectComposer]
+      }, [camera, gl, scene])
 
-        return [effectComposer, normalPass, downSamplingPass]
-      }, [
-        camera,
-        gl,
-        depthBuffer,
-        stencilBuffer,
-        multisampling,
-        frameBufferType,
-        scene,
-        enableNormalPass,
-        resolutionScale,
-      ])
-
-      useEffect(
-        () => composer?.setSize(size.width, size.height),
-        [composer, size],
-      )
-      useFrame(
-        (_, delta) => {
-          if (enabled) {
-            const currentAutoClear = gl.autoClear
-            gl.autoClear = autoClear
-            if (stencilBuffer && !autoClear) gl.clearStencil()
-            composer.render(delta)
-            gl.autoClear = currentAutoClear
-          }
-        },
-        enabled ? renderPriority : 0,
-      )
+      useFrame((_, delta) => {
+        const currentAutoClear = gl.autoClear
+        gl.autoClear = true
+        composer.setSize(width, height)
+        composer.render(delta)
+        gl.autoClear = currentAutoClear
+      }, 1)
 
       const group = useRef<Group>(null!)
       useLayoutEffect(() => {
@@ -166,45 +95,24 @@ export const EffectComposer = /* @__PURE__ */ memo(
           }
 
           for (const pass of passes) composer?.addPass(pass)
-
-          if (normalPass) normalPass.enabled = true
-          if (downSamplingPass) downSamplingPass.enabled = true
         }
 
         return () => {
           for (const pass of passes) composer?.removePass(pass)
-          if (normalPass) normalPass.enabled = false
-          if (downSamplingPass) downSamplingPass.enabled = false
         }
-      }, [composer, children, camera, normalPass, downSamplingPass])
-
-      // Disable tone mapping because threejs disallows tonemapping on render targets
-      useEffect(() => {
-        const currentTonemapping = gl.toneMapping
-        gl.toneMapping = NoToneMapping
-        return () => {
-          gl.toneMapping = currentTonemapping
-        }
-      }, [gl])
+      }, [composer, children, camera])
 
       // Memoize state, otherwise it would trigger all consumers on every render
       const state = useMemo(
         () => ({
           composer,
-          normalPass,
-          downSamplingPass,
-          resolutionScale,
+          normalPass: null,
+          downSamplingPass: null,
+          resolutionScale: undefined,
           camera,
           scene,
         }),
-        [
-          composer,
-          normalPass,
-          downSamplingPass,
-          resolutionScale,
-          camera,
-          scene,
-        ],
+        [composer, camera, scene],
       )
 
       // Expose the composer
