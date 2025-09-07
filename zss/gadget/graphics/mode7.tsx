@@ -224,15 +224,15 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         <RenderLayer
           viewwidth={viewwidth}
           viewheight={viewheight}
-          effects={() => (
+          effects={
             <>
               <DepthOfField
-                focusDistance={0} // where to focus
-                focalLength={0.02} // focal length
-                bokehScale={2} // bokeh size
+                target={[0, 0, 0]}
+                focalLength={0.2}
+                bokehScale={15}
               />
             </>
-          )}
+          }
         >
           <PerspectiveCamera
             ref={cameraref}

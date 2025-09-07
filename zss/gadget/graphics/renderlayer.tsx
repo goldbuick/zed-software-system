@@ -1,22 +1,27 @@
-import { EffectComposerContext } from '@react-three/postprocessing'
-import { CopyPass } from 'postprocessing'
-import { ReactNode, useContext, useEffect, useRef, useState } from 'react'
+import {
+  Bloom,
+  EffectComposerContext,
+  Glitch,
+  Noise,
+} from '@react-three/postprocessing'
+import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
+import { Fragment, ReactNode, useEffect, useRef, useState } from 'react'
 import { Texture, WebGLRenderTarget } from 'three'
 import { ispresent } from 'zss/mapping/types'
+
+import { useMedia } from '../hooks'
 
 import { EffectComposer } from './effectcomposer'
 import { RenderTexture } from './rendertexture'
 
 type RenderToTargetProps = {
   fbo: WebGLRenderTarget<Texture>
-  effects: () => ReactNode
+  effects: ReactNode
 }
 
 function RenderEffects({ fbo, effects }: RenderToTargetProps) {
+  const { mood } = useMedia()
   const [copyPass] = useState(() => new CopyPass(fbo, true))
-  const { composer } = useContext(EffectComposerContext)
-
-  console.info(composer)
 
   useEffect(() => {
     return () => {
@@ -26,7 +31,35 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
 
   return (
     <>
-      {effects()}
+      {mood.includes('dark') && (
+        <Fragment key="mood">
+          <Glitch
+            delay={[10, 60 * 2]} // min and max glitch delay
+            duration={[0.1, 3.0]} // min and max glitch duration
+            strength={[0, 1]} // min and max glitch strength
+            mode={GlitchMode.SPORADIC} // glitch mode
+            active // turn on/off the effect (switches between "mode" prop and GlitchMode.DISABLED)
+            ratio={0.5} // Threshold for strong glitches, 0 - no weak glitches, 1 - no strong glitches.
+          />
+          <Noise
+            opacity={0.5}
+            premultiply // enables or disables noise premultiplication
+            blendFunction={BlendFunction.DARKEN} // blend mode
+          />
+        </Fragment>
+      )}
+      {mood.includes('bright') && (
+        <Fragment key="mood">
+          <Bloom
+            intensity={0.111}
+            mipmapBlur={false}
+            luminanceThreshold={0.25}
+            luminanceSmoothing={0.7}
+            kernelSize={KernelSize.SMALL}
+          />
+        </Fragment>
+      )}
+      {effects}
       <primitive object={copyPass} dispose={null} />
     </>
   )
@@ -35,7 +68,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
 type RenderLayerProps = {
   viewwidth: number
   viewheight: number
-  effects: () => ReactNode
+  effects: ReactNode
   children?: ReactNode
 }
 
@@ -45,7 +78,9 @@ export function RenderLayer({
   effects,
   children,
 }: RenderLayerProps) {
+  const { mood } = useMedia()
   const fbo = useRef<WebGLRenderTarget<Texture>>(null)
+
   return (
     <mesh position={[viewwidth * 0.5, viewheight * 0.5, 0]}>
       <planeGeometry args={[viewwidth, viewheight]} />
@@ -61,7 +96,7 @@ export function RenderLayer({
         >
           {children}
           {ispresent(fbo.current) && (
-            <EffectComposer multisampling={0} renderPriority={100}>
+            <EffectComposer key={mood} multisampling={0} renderPriority={100}>
               <RenderEffects fbo={fbo.current} effects={effects} />
             </EffectComposer>
           )}

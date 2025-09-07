@@ -153,6 +153,7 @@ const billboardsMaterial = new ShaderMaterial({
 
       animPosition *= pointSize;
       animPosition += pointSize * 0.5;
+      animPosition.x -= 1.0;
 
       // model space
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);

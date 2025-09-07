@@ -1,5 +1,6 @@
 import { OrthographicCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { useRef } from 'react'
 import { Group } from 'three'
@@ -186,7 +187,19 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
         {layers.map((layer) => (
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
-        <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
+        <RenderLayer
+          viewwidth={viewwidth}
+          viewheight={viewheight}
+          effects={
+            <>
+              <DepthOfField
+                target={[0, 0, 0]}
+                focalLength={0.2}
+                bokehScale={15}
+              />
+            </>
+          }
+        >
           <OrthographicCamera
             makeDefault
             near={1}

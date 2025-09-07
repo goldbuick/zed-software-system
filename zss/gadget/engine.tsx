@@ -1,20 +1,9 @@
 import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
 import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
-import {
-  Bloom,
-  EffectComposer,
-  Glitch,
-  Noise,
-  Vignette,
-} from '@react-three/postprocessing'
+import { EffectComposer, Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
-import {
-  BlendFunction,
-  GlitchMode,
-  KernelSize,
-  VignetteTechnique,
-} from 'postprocessing'
-import { Fragment, useEffect, useLayoutEffect, useState } from 'react'
+import { VignetteTechnique } from 'postprocessing'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { RUNTIME, STATS_DEV } from 'zss/config'
 import { readconfig, registerreadplayer } from 'zss/device/register'
@@ -25,7 +14,7 @@ import { Tape } from 'zss/tape/component'
 import { islinux } from 'zss/words/system'
 
 import { Scanlines } from './fx/scanlines'
-import { useDeviceData, useMedia } from './hooks'
+import { useDeviceData } from './hooks'
 import { ScreenUI } from './screenui/component'
 import { TapeToast } from './toast'
 import { UserFocus } from './userinput'
@@ -112,8 +101,6 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols])
 
-  const { mood } = useMedia()
-
   return (
     <>
       <UserFocus>
@@ -132,37 +119,7 @@ export function Engine() {
       />
       {shouldcrt && (
         <EffectComposer multisampling={0}>
-          <>
-            {mood.includes('dark') && (
-              <Fragment key="mood">
-                <Glitch
-                  delay={[10, 60 * 2]} // min and max glitch delay
-                  duration={[0.1, 3.0]} // min and max glitch duration
-                  strength={[0, 1]} // min and max glitch strength
-                  mode={GlitchMode.SPORADIC} // glitch mode
-                  active // turn on/off the effect (switches between "mode" prop and GlitchMode.DISABLED)
-                  ratio={0.5} // Threshold for strong glitches, 0 - no weak glitches, 1 - no strong glitches.
-                />
-                <Noise
-                  opacity={0.5}
-                  premultiply // enables or disables noise premultiplication
-                  blendFunction={BlendFunction.DARKEN} // blend mode
-                />
-              </Fragment>
-            )}
-            {mood.includes('bright') && (
-              <Fragment key="mood">
-                <Bloom
-                  intensity={0.222}
-                  mipmapBlur={false}
-                  luminanceThreshold={0.25}
-                  luminanceSmoothing={0.7}
-                  kernelSize={KernelSize.VERY_LARGE}
-                />
-              </Fragment>
-            )}
-            {scanlines && <Scanlines />}
-          </>
+          <>{scanlines && <Scanlines />}</>
           <Vignette
             technique={VignetteTechnique.ESKIL}
             offset={0.89}

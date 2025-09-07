@@ -1,3 +1,4 @@
+import { OrthographicCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useRef } from 'react'
@@ -10,6 +11,7 @@ import { ispresent } from 'zss/mapping/types'
 
 import { FlatLayer } from './flatlayer'
 import { MediaLayer } from './medialayer'
+import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
   width: number
@@ -20,18 +22,12 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
-  const cornerref = useRef<Group>(null)
   const panref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
   const recenterref = useRef<Group>(null)
 
   useFrame((_, delta) => {
-    if (
-      !cornerref.current ||
-      !panref.current ||
-      !zoomref.current ||
-      !recenterref.current
-    ) {
+    if (!panref.current || !zoomref.current || !recenterref.current) {
       return
     }
 
@@ -98,23 +94,20 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     // smooth viewscale
     const drawwidth = RUNTIME.DRAW_CHAR_WIDTH() * viewscale
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT() * viewscale
-    const cols = viewwidth / drawwidth
-    const rows = viewheight / drawheight
+    const cols = Math.round(viewwidth / drawwidth)
+    const rows = Math.round(viewheight / drawheight)
 
+    // snap to player when zooming
     if (isscaling) {
-      // snap to player when zooming
-      panref.current.userData.tfocusx = control.focusx + 0.5
-      panref.current.userData.tfocusy = control.focusy + 0.5
+      panref.current.userData.tfocusx = control.focusx //+ 0.5
+      panref.current.userData.tfocusy = control.focusy //+ 0.5
     }
-
-    // framing
-    cornerref.current.position.set(viewwidth * 0.5, viewheight * 0.5, 0)
 
     if (!isscaling) {
       if (isnear) {
         // centered
-        panref.current.userData.tfocusx = control.focusx + 0.5
-        panref.current.userData.tfocusy = control.focusy + 0.5
+        panref.current.userData.tfocusx = control.focusx //+ 0.5
+        panref.current.userData.tfocusy = control.focusy //+ 0.5
       } else {
         // panning
         const zonex = Math.round(cols * 0.25)
@@ -135,12 +128,12 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     }
 
     // edge clamp
-    const left = Math.round(cols * 0.5)
-    const top = Math.round(rows * 0.5)
-    const right = control.width - cols * 0.5
-    const bottom = control.height - rows * 0.5
     const marginx = -Math.round((cols - control.width) * 0.5)
     const marginy = -Math.round((rows - control.height) * 0.5)
+    const left = Math.floor(cols * 0.5)
+    const top = Math.floor(rows * 0.5)
+    const right = Math.ceil(control.width - left)
+    const bottom = Math.ceil(control.height - top)
 
     if (marginx >= 0) {
       if (panref.current.userData.tfocusx < left) {
@@ -202,40 +195,53 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   } = useGadgetClient.getState().gadget
 
   return (
-    <group ref={cornerref}>
-      <group ref={panref}>
-        <group ref={zoomref}>
-          <group ref={recenterref}>
-            <TapeTerminalInspector />
-            {under.map((layer, i) => (
-              <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
-            ))}
-            {layers.map((layer) => (
-              <MediaLayer
-                key={`media${layer.id}`}
-                id={layer.id}
-                from="layers"
-              />
-            ))}
-            {layers.map((layer, i) => (
-              <FlatLayer
-                key={layer.id}
-                from="layers"
-                id={layer.id}
-                z={under.length + i * 2}
-              />
-            ))}
-            {over.map((layer, i) => (
-              <FlatLayer
-                key={layer.id}
-                from="over"
-                id={layer.id}
-                z={under.length + layers.length + i * 2}
-              />
-            ))}
+    <group>
+      {layers.map((layer) => (
+        <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
+      ))}
+      <RenderLayer
+        viewwidth={viewwidth}
+        viewheight={viewheight}
+        effects={<></>}
+      >
+        <OrthographicCamera
+          makeDefault
+          near={1}
+          far={2000}
+          position={[0, 0, 1000]}
+        />
+        <group ref={panref}>
+          <group ref={zoomref}>
+            <group ref={recenterref}>
+              <TapeTerminalInspector />
+              {under.map((layer, i) => (
+                <FlatLayer
+                  key={layer.id}
+                  from="under"
+                  id={layer.id}
+                  z={i * 2}
+                />
+              ))}
+              {layers.map((layer, i) => (
+                <FlatLayer
+                  key={layer.id}
+                  from="layers"
+                  id={layer.id}
+                  z={under.length + i * 2}
+                />
+              ))}
+              {over.map((layer, i) => (
+                <FlatLayer
+                  key={layer.id}
+                  from="over"
+                  id={layer.id}
+                  z={under.length + layers.length + i * 2}
+                />
+              ))}
+            </group>
           </group>
         </group>
-      </group>
+      </RenderLayer>
     </group>
   )
 }
