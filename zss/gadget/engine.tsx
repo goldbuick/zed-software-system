@@ -1,8 +1,8 @@
 import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
 import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
-import { Bloom, Vignette } from '@react-three/postprocessing'
+import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
-import { KernelSize, VignetteTechnique } from 'postprocessing'
+import { VignetteTechnique } from 'postprocessing'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Stats from 'stats.js'
 import { OrthographicCamera as OrthographicCameraImpl } from 'three'
@@ -124,13 +124,6 @@ export function Engine() {
       </UserFocus>
       {shouldcrt && (
         <EffectComposerMain width={viewwidth} height={viewheight}>
-          <Bloom
-            intensity={0.111}
-            mipmapBlur={false}
-            luminanceThreshold={0.25}
-            luminanceSmoothing={0.7}
-            kernelSize={KernelSize.VERY_LARGE}
-          />
           <>{scanlines && <Scanlines />}</>
           <Vignette
             technique={VignetteTechnique.ESKIL}

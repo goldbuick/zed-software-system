@@ -1,5 +1,5 @@
-import { Glitch, Noise } from '@react-three/postprocessing'
-import { BlendFunction, CopyPass, GlitchMode } from 'postprocessing'
+import { Bloom, Glitch, Noise } from '@react-three/postprocessing'
+import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
 import {
   Fragment,
   ReactNode,
@@ -51,7 +51,17 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
           />
         </Fragment>
       )}
-      {mood.includes('bright') && <Fragment key="mood">{/* // */}</Fragment>}
+      {mood.includes('bright') && (
+        <Fragment key="mood">
+          <Bloom
+            intensity={0.311}
+            mipmapBlur={false}
+            luminanceThreshold={0.5}
+            luminanceSmoothing={0.001}
+            kernelSize={KernelSize.VERY_LARGE}
+          />
+        </Fragment>
+      )}
       {effects}
       <primitive object={copyPass} dispose={null} />
     </>

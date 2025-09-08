@@ -1,6 +1,6 @@
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { CHAR_HEIGHT, LAYER_TYPE } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'

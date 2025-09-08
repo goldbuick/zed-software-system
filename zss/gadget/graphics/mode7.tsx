@@ -2,14 +2,21 @@ import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField, Noise } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
+import { DepthOfFieldEffect } from 'postprocessing'
 import { useRef } from 'react'
-import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
+import {
+  Group,
+  PerspectiveCamera as PerspectiveCameraImpl,
+  Vector3,
+} from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER_TYPE, VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+
+import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { MediaLayer } from './medialayer'
@@ -82,6 +89,7 @@ function mapviewtodownlead(viewscale: number) {
 }
 
 export function Mode7Graphics({ width, height }: GraphicsProps) {
+  const screensize = useScreenSize()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
@@ -90,14 +98,16 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
   const underref = useRef<Group>(null)
   const focusref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
+  const depthoffield = useRef<DepthOfFieldEffect>(null)
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (
       !tiltref.current ||
       !overref.current ||
       !underref.current ||
       !focusref.current ||
-      !cameraref.current
+      !cameraref.current ||
+      !depthoffield.current
     ) {
       return
     }
@@ -107,13 +117,11 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    // viewsize
-    const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-    const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
-
     // drawsize
-    const drawwidth = BOARD_WIDTH * RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = BOARD_HEIGHT * RUNTIME.DRAW_CHAR_HEIGHT()
+    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const boarddrawwidth = BOARD_WIDTH * drawwidth
+    const boarddrawheight = BOARD_HEIGHT * drawheight
 
     // setup tracking state
     if (!ispresent(focusref.current.userData.focusx)) {
@@ -170,6 +178,8 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     fy += focusref.current.userData.focusvy
     fx *= -RUNTIME.DRAW_CHAR_WIDTH()
     fy *= -RUNTIME.DRAW_CHAR_HEIGHT()
+    fx += boarddrawwidth * 0.5
+    fy += boarddrawheight * 0.5
 
     // update tracking
     focusref.current.userData.focuslx = control.focusx
@@ -202,32 +212,56 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
 
     // facing
     tiltref.current.rotation.z = control.facing
+
+    // center camera
+    cameraref.current.rotation.z = Math.PI
+    cameraref.current.position.x = state.size.width * 0.5
+    cameraref.current.position.y = state.size.height * 0.5
+    cameraref.current.updateProjectionMatrix()
+
+    // adjust depth of field
+    if (!ispresent(depthoffield.current.target)) {
+      // eslint-disable-next-line @react-three/no-new-in-loop
+      depthoffield.current.target = new Vector3()
+    }
+    depthoffield.current.target.x = cameraref.current.position.x
+    // need different values for different ranges
+    depthoffield.current.target.z = 0
   })
 
   // re-render only when layer count changes
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+
   const {
     over = [],
     under = [],
     layers = [],
   } = useGadgetClient.getState().gadget
+
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
+
+  const centerx = boarddrawwidth * -0.5 + screensize.marginx
+  const centery = boarddrawheight * -0.5 + -screensize.marginy
+
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
   return (
     <>
-      <PerspectiveCamera
+      {layers.map((layer) => (
+        <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
+      ))}
+      <perspectiveCamera
         ref={cameraref}
-        manual
         near={1}
         far={2000}
-        aspect={viewwidth / viewheight}
+        aspect={-viewwidth / viewheight}
       />
       <group position-z={layersindex}>
-        {layers.map((layer) => (
-          <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
-        ))}
         <RenderLayer
           camera={cameraref}
           viewwidth={viewwidth}
@@ -235,27 +269,25 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
           effects={
             <>
               <DepthOfField
-                target={[0, 0, 0]}
-                focalLength={0.2}
-                bokehScale={15}
+                ref={depthoffield}
+                focusRange={0.5}
+                bokehScale={20}
               />
             </>
           }
         >
-          <group ref={tiltref}>
-            <group ref={focusref}>
-              {layers.map((layer) => (
-                <Mode7Layer
-                  key={layer.id}
-                  id={layer.id}
-                  from="layers"
-                  z={
-                    layer.type === LAYER_TYPE.TILES && layer.tag === 'tickers'
-                      ? RUNTIME.DRAW_CHAR_HEIGHT()
-                      : 0
-                  }
-                />
-              ))}
+          <group position={[centerx, centery, -1000]}>
+            <group ref={tiltref}>
+              <group ref={focusref}>
+                {layers.map((layer) => (
+                  <Mode7Layer
+                    key={layer.id}
+                    id={layer.id}
+                    from="layers"
+                    z={0}
+                  />
+                ))}
+              </group>
             </group>
           </group>
         </RenderLayer>

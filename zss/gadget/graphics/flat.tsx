@@ -61,7 +61,6 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
 
     const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-
     const boarddrawwidth = BOARD_WIDTH * drawwidth
     const boarddrawheight = BOARD_HEIGHT * drawheight
 
@@ -130,10 +129,13 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     layers = [],
   } = useGadgetClient.getState().gadget
 
-  const flatx =
-    BOARD_WIDTH * RUNTIME.DRAW_CHAR_WIDTH() * -0.5 + screensize.marginx
-  const flaty =
-    BOARD_HEIGHT * RUNTIME.DRAW_CHAR_HEIGHT() * -0.5 - screensize.marginy
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
+
+  const centerx = boarddrawwidth * -0.5 + screensize.marginx
+  const centery = boarddrawheight * -0.5 - screensize.marginy
 
   return (
     <>
@@ -162,7 +164,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         viewheight={viewheight}
         effects={<></>}
       >
-        <group position={[flatx, flaty, 0]}>
+        <group position={[centerx, centery, 0]}>
           <group ref={cornerref}>
             <group ref={zoomref}>
               {under.map((layer, i) => (
