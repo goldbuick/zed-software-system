@@ -52,9 +52,9 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
       cameraref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
-        facing: control.facing,
         tfocusx: control.focusx,
         tfocusy: control.focusy,
+        facing: control.facing,
       }
       zoomref.current.scale.setScalar(control.viewscale)
     }

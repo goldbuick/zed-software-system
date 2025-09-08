@@ -1,6 +1,5 @@
-import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { DepthOfField, Noise } from '@react-three/postprocessing'
+import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { useRef } from 'react'
@@ -11,7 +10,7 @@ import {
 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE, VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -49,42 +48,6 @@ function mapviewtotilt(viewscale: number) {
       return 0.777
     case VIEWSCALE.FAR:
       return 0.444
-  }
-}
-
-function mapviewtolead(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 4
-    default:
-    case VIEWSCALE.MID:
-      return 6
-    case VIEWSCALE.FAR:
-      return 5
-  }
-}
-
-function mapviewtouplead(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 4.6
-    default:
-    case VIEWSCALE.MID:
-      return 6.5
-    case VIEWSCALE.FAR:
-      return 8
-  }
-}
-
-function mapviewtodownlead(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 5.5
-    default:
-    case VIEWSCALE.MID:
-      return 4.5
-    case VIEWSCALE.FAR:
-      return 6
   }
 }
 
@@ -128,11 +91,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       focusref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
-        focuslx: control.focusx,
-        focusly: control.focusy,
-        focusvx: 0,
-        focusvy: 0,
-        facing: control.facing,
       }
     }
 
@@ -146,44 +104,14 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     underref.current.scale.setScalar(rscale)
 
     const animrate = 0.125
-    const { focusx, focusy, focuslx, focusly } = focusref.current.userData
-
-    // bump focus by velocity
-    const deltax = control.focusx - focuslx
-    const deltay = control.focusy - focusly
-
-    // pivot focus
-    const slead = 0.1
-    const xlead = mapviewtolead(control.viewscale) * slead
-    const uplead = mapviewtouplead(control.viewscale) * slead
-    const downlead = mapviewtodownlead(control.viewscale) * slead
-    if (deltay < 0) {
-      focusref.current.userData.focusvx = 0
-      focusref.current.userData.focusvy -= uplead
-    } else if (deltay > 0) {
-      focusref.current.userData.focusvx = 0
-      focusref.current.userData.focusvy += downlead
-    } else if (deltax < 0) {
-      focusref.current.userData.focusvx -= xlead
-      focusref.current.userData.focusvy = 0
-    } else if (deltax > 0) {
-      focusref.current.userData.focusvx += xlead
-      focusref.current.userData.focusvy = 0
-    }
 
     // calc focus
-    let fx = focusx
-    let fy = focusy
-    fx += focusref.current.userData.focusvx
-    fy += focusref.current.userData.focusvy
+    let fx = focusref.current.userData.focusx
+    let fy = focusref.current.userData.focusy
     fx *= -RUNTIME.DRAW_CHAR_WIDTH()
     fy *= -RUNTIME.DRAW_CHAR_HEIGHT()
     fx += boarddrawwidth * 0.5
     fy += boarddrawheight * 0.5
-
-    // update tracking
-    focusref.current.userData.focuslx = control.focusx
-    focusref.current.userData.focusly = control.focusy
 
     // zoom
     damp3(
@@ -209,16 +137,9 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       delta,
     )
 
-    // drawheight * 4 need mapping for viewscale here
-
     // smoothed change in focus
     damp(focusref.current.userData, 'focusx', control.focusx, animrate)
     damp(focusref.current.userData, 'focusy', control.focusy, animrate)
-    damp(focusref.current.userData, 'focusvx', 0, animrate * 5)
-    damp(focusref.current.userData, 'focusvy', 0, animrate * 5)
-
-    // facing
-    tiltref.current.rotation.z = control.facing
 
     // center camera
     cameraref.current.rotation.z = Math.PI
@@ -276,11 +197,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
           viewheight={viewheight}
           effects={
             <>
-              <DepthOfField
-                ref={depthoffield}
-                focusRange={0.311}
-                bokehScale={16}
-              />
+              <DepthOfField ref={depthoffield} focusRange={0.5} />
             </>
           }
         >

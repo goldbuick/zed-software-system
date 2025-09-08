@@ -12,6 +12,7 @@ import {
   type JSX,
   forwardRef,
   memo,
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -51,6 +52,12 @@ export const EffectComposer = /* @__PURE__ */ memo(
 
         return [effectComposer]
       }, [camera, gl, scene])
+
+      useEffect(() => {
+        return () => {
+          composer.dispose()
+        }
+      }, [composer])
 
       useFrame((_, delta) => {
         const currentAutoClear = gl.autoClear

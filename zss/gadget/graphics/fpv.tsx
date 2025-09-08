@@ -29,10 +29,7 @@ type GraphicsProps = {
 function maptolayerz(layer: LAYER): number {
   switch (layer.type) {
     case LAYER_TYPE.TILES:
-      if (layer.tag === 'tickers') {
-        return RUNTIME.DRAW_CHAR_HEIGHT() + 1
-      }
-      break
+      return 0
     case LAYER_TYPE.DITHER:
       return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
