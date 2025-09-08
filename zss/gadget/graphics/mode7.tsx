@@ -217,11 +217,19 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
   const overindex = layersindex + 2
   return (
     <>
+      <PerspectiveCamera
+        ref={cameraref}
+        manual
+        near={1}
+        far={2000}
+        aspect={viewwidth / viewheight}
+      />
       <group position-z={layersindex}>
         {layers.map((layer) => (
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
         <RenderLayer
+          camera={cameraref}
           viewwidth={viewwidth}
           viewheight={viewheight}
           effects={
@@ -234,14 +242,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
             </>
           }
         >
-          <PerspectiveCamera
-            ref={cameraref}
-            manual
-            makeDefault
-            near={1}
-            far={2000}
-            aspect={viewwidth / viewheight}
-          />
           <group ref={tiltref}>
             <group ref={focusref}>
               {layers.map((layer) => (

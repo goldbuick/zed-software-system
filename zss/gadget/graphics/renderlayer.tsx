@@ -78,7 +78,7 @@ export function RenderLayer({
   return (
     <mesh position={[viewwidth * 0.5, viewheight * 0.5, 0]}>
       <planeGeometry args={[viewwidth, viewheight]} />
-      <meshBasicMaterial transparent color="white">
+      <meshBasicMaterial transparent>
         <RenderTexture
           ref={fbo}
           depthBuffer
