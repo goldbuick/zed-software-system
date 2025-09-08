@@ -50,16 +50,14 @@ export function Framed({ width, height }: FramedProps) {
 
   // re-render only when layer count changes or graphics
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
-  useGadgetClient(
-    (state) => layersreadcontrol(state.gadget.layers ?? []).graphics,
-  )
-  const { layers = [] } = useGadgetClient.getState().gadget
 
   // handle graphics modes
-  const control = layersreadcontrol(layers)
+  const graphics = useGadgetClient((state) => {
+    const control = layersreadcontrol(state.gadget.layers ?? [])
+    return control.graphics
+  })
 
   const tscale = 1.2
-
   return (
     <>
       <UserInput
@@ -90,18 +88,10 @@ export function Framed({ width, height }: FramedProps) {
           }
         }}
       />
-      {control.graphics === 'flat' && (
-        <FlatGraphics width={width} height={height} />
-      )}
-      {control.graphics === 'mode7' && (
-        <Mode7Graphics width={width} height={height} />
-      )}
-      {control.graphics === 'iso' && (
-        <IsoGraphics width={width} height={height} />
-      )}
-      {control.graphics === 'fpv' && (
-        <FPVGraphics width={width} height={height} />
-      )}
+      {graphics === 'flat' && <FlatGraphics width={width} height={height} />}
+      {graphics === 'mode7' && <Mode7Graphics width={width} height={height} />}
+      {graphics === 'iso' && <IsoGraphics width={width} height={height} />}
+      {graphics === 'fpv' && <FPVGraphics width={width} height={height} />}
       <group position-z={512} scale={[tscale, tscale, tscale]}>
         <TickerText
           width={Math.floor(width / tscale)}

@@ -162,6 +162,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
         <RenderLayer
+          mode="fpv"
           viewwidth={viewwidth}
           viewheight={viewheight}
           effects={

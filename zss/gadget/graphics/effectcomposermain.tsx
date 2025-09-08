@@ -51,11 +51,11 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
         return [effectComposer]
       }, [camera, gl, scene])
 
-      useEffect(() => {
-        return () => {
-          composer.dispose()
-        }
-      }, [composer])
+      // useEffect(() => {
+      //   return () => {
+      //     composer.dispose()
+      //   }
+      // }, [composer])
 
       useFrame((_, delta) => {
         const currentAutoClear = gl.autoClear

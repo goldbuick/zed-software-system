@@ -159,6 +159,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         onUpdate={(c) => c.updateProjectionMatrix()}
       />
       <RenderLayer
+        mode="flat"
         camera={cameraref}
         viewwidth={viewwidth}
         viewheight={viewheight}

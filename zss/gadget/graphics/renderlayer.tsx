@@ -70,6 +70,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
 
 type RenderLayerProps = {
   camera: RefObject<Camera | null>
+  mode: string
   viewwidth: number
   viewheight: number
   effects: ReactNode
@@ -78,6 +79,7 @@ type RenderLayerProps = {
 
 export function RenderLayer({
   camera,
+  mode,
   viewwidth,
   viewheight,
   effects,
@@ -101,7 +103,7 @@ export function RenderLayer({
           {children}
           {ispresent(fbo.current) && ispresent(camera.current) && (
             <EffectComposer
-              key={mood}
+              key={`${mode}.${mood}`}
               camera={camera.current}
               width={viewwidth}
               height={viewheight}

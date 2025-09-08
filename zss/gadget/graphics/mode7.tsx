@@ -192,6 +192,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       />
       <group position-z={layersindex}>
         <RenderLayer
+          mode="mode7"
           camera={cameraref}
           viewwidth={viewwidth}
           viewheight={viewheight}

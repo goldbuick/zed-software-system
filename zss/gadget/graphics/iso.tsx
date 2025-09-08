@@ -185,6 +185,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
         <RenderLayer
+          mode="iso"
           viewwidth={viewwidth}
           viewheight={viewheight}
           effects={
