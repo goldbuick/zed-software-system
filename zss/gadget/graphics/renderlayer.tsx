@@ -54,7 +54,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
       {mood.includes('bright') && (
         <Fragment key="mood">
           <Bloom
-            intensity={0.311}
+            intensity={0.111}
             mipmapBlur={false}
             luminanceThreshold={0.5}
             luminanceSmoothing={0.001}
@@ -114,8 +114,3 @@ export function RenderLayer({
     </mesh>
   )
 }
-
-/*
-
-
-*/

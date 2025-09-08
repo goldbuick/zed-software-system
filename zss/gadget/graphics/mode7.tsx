@@ -202,7 +202,14 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     )
 
     // focus
-    damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
+    damp3(
+      focusref.current.position,
+      [fx, fy + drawheight * 6, 0],
+      animrate,
+      delta,
+    )
+
+    // drawheight * 4 need mapping for viewscale here
 
     // smoothed change in focus
     damp(focusref.current.userData, 'focusx', control.focusx, animrate)
@@ -225,8 +232,9 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       depthoffield.current.target = new Vector3()
     }
     depthoffield.current.target.x = cameraref.current.position.x
+    depthoffield.current.target.y = cameraref.current.position.y + 100
     // need different values for different ranges
-    depthoffield.current.target.z = 0
+    depthoffield.current.target.z = -200
   })
 
   // re-render only when layer count changes
@@ -270,8 +278,8 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
             <>
               <DepthOfField
                 ref={depthoffield}
-                focusRange={0.5}
-                bokehScale={20}
+                focusRange={0.311}
+                bokehScale={16}
               />
             </>
           }
