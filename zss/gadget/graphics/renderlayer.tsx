@@ -1,3 +1,5 @@
+import { useFBO } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
 import { Bloom, Glitch, Noise } from '@react-three/postprocessing'
 import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
 import {
@@ -69,8 +71,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
 }
 
 type RenderLayerProps = {
-  camera: RefObject<Camera | null>
-  mode: string
+  camera: Camera
   viewwidth: number
   viewheight: number
   effects: ReactNode
@@ -79,38 +80,33 @@ type RenderLayerProps = {
 
 export function RenderLayer({
   camera,
-  mode,
   viewwidth,
   viewheight,
   effects,
   children,
 }: RenderLayerProps) {
   const { mood } = useMedia()
-  const fbo = useRef<WebGLRenderTarget<Texture>>(null)
+  const { viewport } = useThree()
+  const fbo = useFBO(viewwidth * viewport.dpr, viewheight * viewport.dpr, {
+    samples: 0,
+    stencilBuffer: false,
+    depthBuffer: true,
+    generateMipmaps: false,
+  })
   return (
     <mesh position={[viewwidth * 0.5, viewheight * 0.5, 0]}>
       <planeGeometry args={[viewwidth, viewheight]} />
       <meshBasicMaterial transparent>
-        <RenderTexture
-          ref={fbo}
-          depthBuffer
-          attach="map"
-          width={viewwidth}
-          height={viewheight}
-          stencilBuffer={false}
-          generateMipmaps={false}
-        >
+        <RenderTexture attach="map" fbo={fbo}>
           {children}
-          {ispresent(fbo.current) && ispresent(camera.current) && (
-            <EffectComposer
-              key={`${mode}.${mood}`}
-              camera={camera.current}
-              width={viewwidth}
-              height={viewheight}
-            >
-              <RenderEffects fbo={fbo.current} effects={effects} />
-            </EffectComposer>
-          )}
+          <EffectComposer
+            key={mood}
+            camera={camera}
+            width={viewwidth}
+            height={viewheight}
+          >
+            <RenderEffects fbo={fbo} effects={effects} />
+          </EffectComposer>
         </RenderTexture>
       </meshBasicMaterial>
     </mesh>

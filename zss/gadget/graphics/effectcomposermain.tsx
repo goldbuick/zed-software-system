@@ -36,6 +36,8 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
     ({ children, width, height }, ref) => {
       const { gl, scene, camera } = useThree()
 
+      console.info('EffectComposerMain')
+
       const [composer] = useMemo(() => {
         // Initialize composer
         const effectComposer = new EffectComposerImpl(gl, {
@@ -51,17 +53,12 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
         return [effectComposer]
       }, [camera, gl, scene])
 
-      // useEffect(() => {
-      //   return () => {
-      //     composer.dispose()
-      //   }
-      // }, [composer])
-
       useFrame((_, delta) => {
         const currentAutoClear = gl.autoClear
         gl.autoClear = true
         composer.setSize(width, height)
         composer.render(delta)
+        // console.info('effect main render')
         gl.autoClear = currentAutoClear
       }, 100)
 

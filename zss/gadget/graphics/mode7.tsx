@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
   Group,
   PerspectiveCamera as PerspectiveCameraImpl,
@@ -48,6 +48,42 @@ function mapviewtotilt(viewscale: number) {
       return 0.777
     case VIEWSCALE.FAR:
       return 0.444
+  }
+}
+
+function mapviewtofocusrange(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 0.1
+    default:
+    case VIEWSCALE.MID:
+      return 0.2
+    case VIEWSCALE.FAR:
+      return 0.15
+  }
+}
+
+function mapviewtofocusy(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 0
+    default:
+    case VIEWSCALE.MID:
+      return -500
+    case VIEWSCALE.FAR:
+      return 200
+  }
+}
+
+function mapviewtofocusz(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 0
+    default:
+    case VIEWSCALE.MID:
+      return 0
+    case VIEWSCALE.FAR:
+      return 0
   }
 }
 
@@ -152,10 +188,14 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       // eslint-disable-next-line @react-three/no-new-in-loop
       depthoffield.current.target = new Vector3()
     }
-    depthoffield.current.target.x = cameraref.current.position.x
-    depthoffield.current.target.y = cameraref.current.position.y + 100
-    // need different values for different ranges
-    depthoffield.current.target.z = -200
+
+    depthoffield.current.cocMaterial.focusRange = mapviewtofocusrange(
+      control.viewscale,
+    )
+
+    // depthoffield.current.target.x = cameraref.current.position.x
+    depthoffield.current.target.y = mapviewtofocusy(control.viewscale)
+    depthoffield.current.target.z = mapviewtofocusz(control.viewscale)
   })
 
   // re-render only when layer count changes
@@ -179,6 +219,8 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
 
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
+
+  const [, setcameraready] = useState(false)
   return (
     <>
       {layers.map((layer) => (
@@ -189,34 +231,40 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         near={1}
         far={2000}
         aspect={-viewwidth / viewheight}
+        onUpdate={() => setcameraready(true)}
       />
       <group position-z={layersindex}>
-        <RenderLayer
-          mode="mode7"
-          camera={cameraref}
-          viewwidth={viewwidth}
-          viewheight={viewheight}
-          effects={
-            <>
-              <DepthOfField ref={depthoffield} focusRange={0.5} />
-            </>
-          }
-        >
-          <group position={[centerx, centery, -1000]}>
-            <group ref={tiltref}>
-              <group ref={focusref}>
-                {layers.map((layer) => (
-                  <Mode7Layer
-                    key={layer.id}
-                    id={layer.id}
-                    from="layers"
-                    z={0}
-                  />
-                ))}
+        {cameraref.current && (
+          <RenderLayer
+            camera={cameraref.current}
+            viewwidth={viewwidth}
+            viewheight={viewheight}
+            effects={
+              <>
+                <DepthOfField
+                  ref={depthoffield}
+                  focusRange={0.5}
+                  bokehScale={5}
+                />
+              </>
+            }
+          >
+            <group position={[centerx, centery, -1000]}>
+              <group ref={tiltref}>
+                <group ref={focusref}>
+                  {layers.map((layer) => (
+                    <Mode7Layer
+                      key={layer.id}
+                      id={layer.id}
+                      from="layers"
+                      z={0}
+                    />
+                  ))}
+                </group>
               </group>
             </group>
-          </group>
-        </RenderLayer>
+          </RenderLayer>
+        )}
       </group>
       <group ref={underref}>
         {under.map((layer, i) => (

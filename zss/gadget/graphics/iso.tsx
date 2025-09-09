@@ -1,9 +1,8 @@
-import { OrthographicCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
-import { useRef } from 'react'
-import { Group } from 'three'
+import { useRef, useState } from 'react'
+import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
@@ -59,6 +58,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const focusref = useRef<Group>(null)
+  const cameraref = useRef<OrthographicCameraImpl>(null)
 
   useFrame((_, delta) => {
     if (
@@ -178,50 +178,58 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   } = useGadgetClient.getState().gadget
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
+
+  const [, setcameraready] = useState(false)
   return (
     <>
       <group position-z={layersindex}>
         {layers.map((layer) => (
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
-        <RenderLayer
-          mode="iso"
-          viewwidth={viewwidth}
-          viewheight={viewheight}
-          effects={
-            <>
-              <DepthOfField
-                target={[0, 0, 0]}
-                focalLength={0.2}
-                bokehScale={15}
-              />
-            </>
-          }
-        >
-          <OrthographicCamera
-            manual
-            makeDefault
-            near={1}
-            far={2000}
-            position={[0, 0, 1000]}
-          />
-          <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
-            <group ref={zoomref}>
-              <group ref={tiltref}>
-                <group ref={focusref}>
-                  {layers.map((layer) => (
-                    <IsoLayer
-                      key={layer.id}
-                      id={layer.id}
-                      from="layers"
-                      z={maptolayerz(layer)}
-                    />
-                  ))}
+        <orthographicCamera
+          ref={cameraref}
+          left={viewwidth * -0.5}
+          right={viewwidth * 0.5}
+          top={viewheight * -0.5}
+          bottom={viewheight * 0.5}
+          near={1}
+          far={2000}
+          position={[0, 0, 1000]}
+          onUpdate={() => setcameraready(true)}
+        />
+        {cameraref.current && (
+          <RenderLayer
+            camera={cameraref.current}
+            viewwidth={viewwidth}
+            viewheight={viewheight}
+            effects={
+              <>
+                <DepthOfField
+                  target={[0, 0, 0]}
+                  focalLength={0.2}
+                  bokehScale={15}
+                />
+              </>
+            }
+          >
+            <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
+              <group ref={zoomref}>
+                <group ref={tiltref}>
+                  <group ref={focusref}>
+                    {layers.map((layer) => (
+                      <IsoLayer
+                        key={layer.id}
+                        id={layer.id}
+                        from="layers"
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </group>
                 </group>
               </group>
             </group>
-          </group>
-        </RenderLayer>
+          </RenderLayer>
+        )}
       </group>
       <group ref={underref}>
         {under.map((layer, i) => (

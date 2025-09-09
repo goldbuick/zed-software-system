@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -137,6 +137,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   const centerx = boarddrawwidth * -0.5 + screensize.marginx
   const centery = boarddrawheight * -0.5 - screensize.marginy
 
+  const [, setcameraready] = useState(false)
   return (
     <>
       {layers.map((layer) => (
@@ -156,46 +157,47 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         near={1}
         far={2000}
         position={[0, 0, 1000]}
-        onUpdate={(c) => c.updateProjectionMatrix()}
+        onUpdate={() => setcameraready(true)}
       />
-      <RenderLayer
-        mode="flat"
-        camera={cameraref}
-        viewwidth={viewwidth}
-        viewheight={viewheight}
-        effects={<></>}
-      >
-        <group position={[centerx, centery, 0]}>
-          <group ref={cornerref}>
-            <group ref={zoomref}>
-              {under.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="under"
-                  id={layer.id}
-                  z={i * 2}
-                />
-              ))}
-              {layers.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="layers"
-                  id={layer.id}
-                  z={under.length + i * 2}
-                />
-              ))}
-              {over.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="over"
-                  id={layer.id}
-                  z={under.length + layers.length + i * 2}
-                />
-              ))}
+      {cameraref.current && (
+        <RenderLayer
+          camera={cameraref.current}
+          viewwidth={viewwidth}
+          viewheight={viewheight}
+          effects={<></>}
+        >
+          <group position={[centerx, centery, 0]}>
+            <group ref={cornerref}>
+              <group ref={zoomref}>
+                {under.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="under"
+                    id={layer.id}
+                    z={i * 2}
+                  />
+                ))}
+                {layers.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="layers"
+                    id={layer.id}
+                    z={under.length + i * 2}
+                  />
+                ))}
+                {over.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="over"
+                    id={layer.id}
+                    z={under.length + layers.length + i * 2}
+                  />
+                ))}
+              </group>
             </group>
           </group>
-        </group>
-      </RenderLayer>
+        </RenderLayer>
+      )}
     </>
   )
 }

@@ -10,9 +10,9 @@ import {
 } from 'postprocessing'
 import {
   type JSX,
+  RefObject,
   forwardRef,
   memo,
-  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -37,6 +37,8 @@ export const EffectComposer = /* @__PURE__ */ memo(
     ({ children, camera, width, height }, ref) => {
       const { gl, scene } = useThree()
 
+      console.info('EffectComposer')
+
       const [composer] = useMemo(() => {
         // Initialize composer
         const effectComposer = new EffectComposerImpl(gl, {
@@ -53,17 +55,12 @@ export const EffectComposer = /* @__PURE__ */ memo(
         return [effectComposer]
       }, [camera, gl, scene])
 
-      // useEffect(() => {
-      //   return () => {
-      //     composer.dispose()
-      //   }
-      // }, [composer])
-
       useFrame((_, delta) => {
         const currentAutoClear = gl.autoClear
         gl.autoClear = true
         composer.setSize(width, height)
         composer.render(delta)
+        console.info('effect render')
         gl.autoClear = currentAutoClear
       }, 1)
 

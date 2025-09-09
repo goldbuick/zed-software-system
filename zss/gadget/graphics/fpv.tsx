@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { degToRad } from 'maath/misc'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -148,51 +148,58 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+
   const {
     over = [],
     under = [],
     layers = [],
   } = useGadgetClient.getState().gadget
+
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
+
+  const [, setcameraready] = useState(false)
   return (
     <>
       <group position-z={layersindex}>
         {layers.map((layer) => (
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
-        <RenderLayer
-          mode="fpv"
-          viewwidth={viewwidth}
-          viewheight={viewheight}
-          effects={
-            <>
-              <DepthOfField
-                target={[0, 0, 0]}
-                focalLength={0.2}
-                bokehScale={15}
+        <PerspectiveCamera
+          ref={cameraref}
+          manual
+          makeDefault
+          near={1}
+          far={2000}
+          rotation={[Math.PI * -0.5, 0, 0]}
+          position={[0, 0, 200]}
+          onUpdate={() => setcameraready(true)}
+        />
+        {cameraref.current && (
+          <RenderLayer
+            camera={cameraref.current}
+            viewwidth={viewwidth}
+            viewheight={viewheight}
+            effects={
+              <>
+                <DepthOfField
+                  target={[0, 0, 0]}
+                  focalLength={0.2}
+                  bokehScale={15}
+                />
+              </>
+            }
+          >
+            {layers.map((layer) => (
+              <FPVLayer
+                key={layer.id}
+                id={layer.id}
+                from="layers"
+                z={maptolayerz(layer)}
               />
-            </>
-          }
-        >
-          <PerspectiveCamera
-            ref={cameraref}
-            manual
-            makeDefault
-            near={1}
-            far={2000}
-            rotation={[Math.PI * -0.5, 0, 0]}
-            position={[0, 0, 200]}
-          />
-          {layers.map((layer) => (
-            <FPVLayer
-              key={layer.id}
-              id={layer.id}
-              from="layers"
-              z={maptolayerz(layer)}
-            />
-          ))}
-        </RenderLayer>
+            ))}
+          </RenderLayer>
+        )}
       </group>
       <group ref={underref}>
         {under.map((layer, i) => (
