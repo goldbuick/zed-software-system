@@ -5,8 +5,10 @@ import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
 import { Fragment, ReactNode, useEffect, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, WebGLRenderTarget } from 'three'
+import { RUNTIME } from 'zss/config'
 
 import { useMedia } from '../hooks'
+import { Rect } from '../rect'
 
 import { EffectComposer } from './effectcomposer'
 import { RenderTexture } from './rendertexture'
@@ -85,22 +87,35 @@ export function RenderLayer({
     depthBuffer: true,
     generateMipmaps: false,
   })
+  const hvw = viewwidth * 0.5
+  const hvh = viewheight * 0.5
   return (
-    <mesh position={[viewwidth * 0.5, viewheight * 0.5, 0]}>
-      <planeGeometry args={[viewwidth, viewheight]} />
-      <meshBasicMaterial transparent>
-        <RenderTexture attach="map" fbo={fbo}>
-          {children}
-          <EffectComposer
-            key={mood}
-            camera={camera}
-            width={viewwidth}
-            height={viewheight}
-          >
-            <RenderEffects fbo={fbo} effects={effects} />
-          </EffectComposer>
-        </RenderTexture>
-      </meshBasicMaterial>
-    </mesh>
+    <>
+      <mesh position={[hvw, hvh, 0]}>
+        <planeGeometry args={[viewwidth, viewheight]} />
+        <meshBasicMaterial transparent>
+          <RenderTexture attach="map" fbo={fbo}>
+            {children}
+            <EffectComposer
+              key={mood}
+              camera={camera}
+              width={viewwidth}
+              height={viewheight}
+            >
+              <RenderEffects fbo={fbo} effects={effects} />
+            </EffectComposer>
+          </RenderTexture>
+        </meshBasicMaterial>
+      </mesh>
+      {/* <group
+        position={[
+          hvw - RUNTIME.DRAW_CHAR_WIDTH() * 0.5,
+          hvh - RUNTIME.DRAW_CHAR_HEIGHT() * 0.5,
+          1,
+        ]}
+      >
+        <Rect color="blue" opacity={0.4} x={0} y={0} width={1} height={1} />
+      </group> */}
+    </>
   )
 }

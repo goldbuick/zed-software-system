@@ -3,11 +3,7 @@ import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { useRef, useState } from 'react'
-import {
-  Group,
-  PerspectiveCamera as PerspectiveCameraImpl,
-  Vector3,
-} from 'three'
+import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
@@ -25,6 +21,18 @@ import { RenderLayer } from './renderlayer'
 type GraphicsProps = {
   width: number
   height: number
+}
+
+function mapviewtoy(viewscale: number, viewheight: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return viewheight * 0.11
+    default:
+    case VIEWSCALE.MID:
+      return viewheight * 0.082
+    case VIEWSCALE.FAR:
+      return viewheight * 0.04
+  }
 }
 
 function mapviewtoz(viewscale: number) {
@@ -48,42 +56,6 @@ function mapviewtotilt(viewscale: number) {
       return 0.777
     case VIEWSCALE.FAR:
       return 0.444
-  }
-}
-
-function mapviewtofocusrange(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 0.1
-    default:
-    case VIEWSCALE.MID:
-      return 0.2
-    case VIEWSCALE.FAR:
-      return 0.15
-  }
-}
-
-function mapviewtofocusy(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 0
-    default:
-    case VIEWSCALE.MID:
-      return -500
-    case VIEWSCALE.FAR:
-      return 200
-  }
-}
-
-function mapviewtofocusz(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 0
-    default:
-    case VIEWSCALE.MID:
-      return 0
-    case VIEWSCALE.FAR:
-      return 0
   }
 }
 
@@ -142,8 +114,8 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     const animrate = 0.125
 
     // calc focus
-    let fx = focusref.current.userData.focusx
-    let fy = focusref.current.userData.focusy
+    let fx = focusref.current.userData.focusx + 0.5
+    let fy = focusref.current.userData.focusy + 0.5
     fx *= -RUNTIME.DRAW_CHAR_WIDTH()
     fy *= -RUNTIME.DRAW_CHAR_HEIGHT()
     fx += boarddrawwidth * 0.5
@@ -152,7 +124,11 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     // zoom
     damp3(
       cameraref.current.position,
-      [0, 0, mapviewtoz(control.viewscale)],
+      [
+        state.size.width * 0.5,
+        state.size.height * 0.5 + mapviewtoy(control.viewscale, viewheight),
+        mapviewtoz(control.viewscale),
+      ],
       animrate,
       delta,
     )
@@ -166,12 +142,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     )
 
     // focus
-    damp3(
-      focusref.current.position,
-      [fx, fy + drawheight * 6, 0],
-      animrate,
-      delta,
-    )
+    damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
 
     // smoothed change in focus
     damp(focusref.current.userData, 'focusx', control.focusx, animrate)
@@ -179,23 +150,26 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
 
     // center camera
     cameraref.current.rotation.z = Math.PI
-    cameraref.current.position.x = state.size.width * 0.5
-    cameraref.current.position.y = state.size.height * 0.5
     cameraref.current.updateProjectionMatrix()
 
-    // adjust depth of field
-    if (!ispresent(depthoffield.current.target)) {
-      // eslint-disable-next-line @react-three/no-new-in-loop
-      depthoffield.current.target = new Vector3()
+    switch (control.viewscale) {
+      case VIEWSCALE.NEAR:
+        depthoffield.current.bokehScale = 10
+        depthoffield.current.cocMaterial.worldFocusRange = 600
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        break
+      default:
+      case VIEWSCALE.MID:
+        depthoffield.current.bokehScale = 10
+        depthoffield.current.cocMaterial.worldFocusRange = 600
+        depthoffield.current.cocMaterial.worldFocusDistance = 600
+        break
+      case VIEWSCALE.FAR:
+        depthoffield.current.bokehScale = 10
+        depthoffield.current.cocMaterial.worldFocusRange = 600
+        depthoffield.current.cocMaterial.worldFocusDistance = 1100
+        break
     }
-
-    depthoffield.current.cocMaterial.focusRange = mapviewtofocusrange(
-      control.viewscale,
-    )
-
-    // depthoffield.current.target.x = cameraref.current.position.x
-    depthoffield.current.target.y = mapviewtofocusy(control.viewscale)
-    depthoffield.current.target.z = mapviewtofocusz(control.viewscale)
   })
 
   // re-render only when layer count changes
@@ -241,11 +215,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
             viewheight={viewheight}
             effects={
               <>
-                <DepthOfField
-                  ref={depthoffield}
-                  focusRange={0.5}
-                  bokehScale={5}
-                />
+                <DepthOfField ref={depthoffield} />
               </>
             }
           >
