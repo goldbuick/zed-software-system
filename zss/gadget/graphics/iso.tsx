@@ -88,8 +88,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     // drawsize
     const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-    const boarddrawwidth = BOARD_WIDTH * drawwidth
-    const boarddrawheight = BOARD_HEIGHT * drawheight
 
     // viewsize
     const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
@@ -119,27 +117,27 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
 
-    // const animrate = 0.125
+    const animrate = 0.125
 
-    // // calc focus
-    // const viewscale = zoomref.current.scale.x
-    // const focusx = focusref.current.userData.focusx
-    // const focusy = focusref.current.userData.focusy
-    // const fx = focusx * drawwidth * viewscale //+ boarddrawwidth * -0.5
-    // const fy = focusy * drawheight * viewscale //+ boarddrawheight * -0.5
+    // calc focus
+    const focusx = focusref.current.userData.focusx + 0.5
+    const focusy = focusref.current.userData.focusy + 0.5
+    const fx = focusx * drawwidth
+    const fy = focusy * drawheight
 
-    // // zoom
-    // damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
+    // zoom
+    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
-    // // tilt
-    // dampE(tiltref.current.rotation, [0, 0, 0], animrate, delta)
+    // tilt
+    // dampE(cameraref.current.rotation, [0, 0, Math.PI * -0.25], animrate, delta)
+    // dampE(tiltref.current.rotation, [0, 0.3, 0], animrate, delta)
 
-    // // focus
-    // // damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
+    // focus
+    damp3(focusref.current.position, [-fx, -fy, 0], animrate, delta)
 
-    // // smoothed change in focus
-    // damp(focusref.current.userData, 'focusx', control.focusx, animrate)
-    // damp(focusref.current.userData, 'focusy', control.focusy, animrate)
+    // smoothed change in focus
+    damp(focusref.current.userData, 'focusx', control.focusx, animrate)
+    damp(focusref.current.userData, 'focusy', control.focusy, animrate)
 
     // center camera
     cameraref.current.position.x = state.size.width * 0.5
@@ -157,13 +155,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     under = [],
     layers = [],
   } = useGadgetClient.getState().gadget
-
-  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-  const boarddrawwidth = BOARD_WIDTH * drawwidth
-  const boarddrawheight = BOARD_HEIGHT * drawheight
-  const centerx = boarddrawwidth * -0.5 + screensize.marginx
-  const centery = boarddrawheight * -0.5 - screensize.marginy
 
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
@@ -191,11 +182,11 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
             viewheight={viewheight}
             effects={<></>}
           >
-            <group position-z={0}>
-              <group position={[centerx, centery, 0]}>
+            <group position={[screensize.marginx, screensize.marginy, 0]}>
+              <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
                 <group ref={zoomref}>
-                  <group ref={tiltref}>
-                    <group ref={focusref}>
+                  <group ref={focusref}>
+                    <group ref={tiltref}>
                       {layers.map((layer) => (
                         <IsoLayer
                           key={layer.id}
