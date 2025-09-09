@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -14,6 +14,8 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+
+import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { IsoLayer } from './isolayer'
@@ -50,6 +52,7 @@ function maptoscale(viewscale: VIEWSCALE): number {
 }
 
 export function IsoGraphics({ width, height }: GraphicsProps) {
+  const screensize = useScreenSize()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
@@ -60,13 +63,19 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   const focusref = useRef<Group>(null)
   const cameraref = useRef<OrthographicCameraImpl>(null)
 
-  useFrame((_, delta) => {
+  const [, setcameraready] = useState(false)
+  useLayoutEffect(() => {
+    setcameraready(true)
+  }, [])
+
+  useFrame((state, delta) => {
     if (
       !zoomref.current ||
       !tiltref.current ||
       !overref.current ||
       !underref.current ||
-      !focusref.current
+      !focusref.current ||
+      !cameraref.current
     ) {
       return
     }
@@ -76,13 +85,15 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
+    // drawsize
+    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const boarddrawwidth = BOARD_WIDTH * drawwidth
+    const boarddrawheight = BOARD_HEIGHT * drawheight
+
     // viewsize
     const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
     const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
-
-    // drawsize
-    const drawwidth = BOARD_WIDTH * RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = BOARD_HEIGHT * RUNTIME.DRAW_CHAR_HEIGHT()
 
     // setup tracking state
     if (!ispresent(focusref.current.userData.focusx)) {
@@ -108,78 +119,55 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
 
-    const animrate = 0.125
-    const { focusx, focusy, focuslx, focusly } = focusref.current.userData
+    // const animrate = 0.125
 
-    // --
+    // // calc focus
+    // const viewscale = zoomref.current.scale.x
+    // const focusx = focusref.current.userData.focusx
+    // const focusy = focusref.current.userData.focusy
+    // const fx = focusx * drawwidth * viewscale //+ boarddrawwidth * -0.5
+    // const fy = focusy * drawheight * viewscale //+ boarddrawheight * -0.5
 
-    // bump focus by velocity
-    // const deltax = control.focusx - focuslx
-    // const deltay = control.focusy - focusly
+    // // zoom
+    // damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
-    // pivot focus
-    // const slead = 0.1
-    // const xlead = mapviewtolead(control.viewscale) * slead
-    // const uplead = mapviewtouplead(control.viewscale) * slead
-    // const downlead = mapviewtodownlead(control.viewscale) * slead
-    // if (deltay < 0) {
-    //   focusref.current.userData.focusvx = 0
-    //   focusref.current.userData.focusvy -= uplead
-    // } else if (deltay > 0) {
-    //   focusref.current.userData.focusvx = 0
-    //   focusref.current.userData.focusvy += downlead
-    // } else if (deltax < 0) {
-    //   focusref.current.userData.focusvx -= xlead
-    //   focusref.current.userData.focusvy = 0
-    // } else if (deltax > 0) {
-    //   focusref.current.userData.focusvx += xlead
-    //   focusref.current.userData.focusvy = 0
-    // }
+    // // tilt
+    // dampE(tiltref.current.rotation, [0, 0, 0], animrate, delta)
 
-    // calc focus
-    let fx = focusx + 0.25
-    let fy = focusy + 0.5
-    fx += focusref.current.userData.focusvx
-    fy += focusref.current.userData.focusvy
-    fx *= -RUNTIME.DRAW_CHAR_WIDTH()
-    fy *= -RUNTIME.DRAW_CHAR_HEIGHT()
+    // // focus
+    // // damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
 
-    // update tracking
-    focusref.current.userData.focuslx = control.focusx
-    focusref.current.userData.focusly = control.focusy
+    // // smoothed change in focus
+    // damp(focusref.current.userData, 'focusx', control.focusx, animrate)
+    // damp(focusref.current.userData, 'focusy', control.focusy, animrate)
 
-    // zoom
-    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
-
-    // tilt
-    dampE(tiltref.current.rotation, [0, 0, 0], animrate, delta)
-
-    // focus
-    damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
-
-    // smoothed change in focus
-    damp(focusref.current.userData, 'focusx', control.focusx, animrate)
-    damp(focusref.current.userData, 'focusy', control.focusy, animrate)
-    damp(focusref.current.userData, 'focusvx', 0, animrate * 5)
-    damp(focusref.current.userData, 'focusvy', 0, animrate * 5)
-
-    // facing
-    tiltref.current.rotation.z = control.facing
+    // center camera
+    cameraref.current.position.x = state.size.width * 0.5
+    cameraref.current.position.y = state.size.height * 0.5
+    cameraref.current.updateProjectionMatrix()
   })
 
   // re-render only when layer count changes
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+
   const {
     over = [],
     under = [],
     layers = [],
   } = useGadgetClient.getState().gadget
+
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
+  const centerx = boarddrawwidth * -0.5 + screensize.marginx
+  const centery = boarddrawheight * -0.5 - screensize.marginy
+
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
 
-  const [, setcameraready] = useState(false)
   return (
     <>
       <group position-z={layersindex}>
@@ -195,35 +183,28 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
           near={1}
           far={2000}
           position={[0, 0, 1000]}
-          onUpdate={() => setcameraready(true)}
         />
         {cameraref.current && (
           <RenderLayer
             camera={cameraref.current}
             viewwidth={viewwidth}
             viewheight={viewheight}
-            effects={
-              <>
-                <DepthOfField
-                  target={[0, 0, 0]}
-                  focalLength={0.2}
-                  bokehScale={15}
-                />
-              </>
-            }
+            effects={<></>}
           >
-            <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
-              <group ref={zoomref}>
-                <group ref={tiltref}>
-                  <group ref={focusref}>
-                    {layers.map((layer) => (
-                      <IsoLayer
-                        key={layer.id}
-                        id={layer.id}
-                        from="layers"
-                        z={maptolayerz(layer)}
-                      />
-                    ))}
+            <group position-z={0}>
+              <group position={[centerx, centery, 0]}>
+                <group ref={zoomref}>
+                  <group ref={tiltref}>
+                    <group ref={focusref}>
+                      {layers.map((layer) => (
+                        <IsoLayer
+                          key={layer.id}
+                          id={layer.id}
+                          from="layers"
+                          z={maptolayerz(layer)}
+                        />
+                      ))}
+                    </group>
                   </group>
                 </group>
               </group>

@@ -107,7 +107,7 @@ export function RenderLayer({
           </RenderTexture>
         </meshBasicMaterial>
       </mesh>
-      {/* <group
+      <group
         position={[
           hvw - RUNTIME.DRAW_CHAR_WIDTH() * 0.5,
           hvh - RUNTIME.DRAW_CHAR_HEIGHT() * 0.5,
@@ -115,7 +115,7 @@ export function RenderLayer({
         ]}
       >
         <Rect color="blue" opacity={0.4} x={0} y={0} width={1} height={1} />
-      </group> */}
+      </group>
     </>
   )
 }

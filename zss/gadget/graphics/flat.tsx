@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -30,6 +30,11 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   const zoomref = useRef<Group>(null)
   const inspectref = useRef<Group>(null)
   const inspectscaleref = useRef<Group>(null)
+
+  const [, setcameraready] = useState(false)
+  useLayoutEffect(() => {
+    setcameraready(true)
+  }, [])
 
   useFrame((state, delta) => {
     if (
@@ -133,11 +138,9 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
-
   const centerx = boarddrawwidth * -0.5 + screensize.marginx
   const centery = boarddrawheight * -0.5 - screensize.marginy
 
-  const [, setcameraready] = useState(false)
   return (
     <>
       {layers.map((layer) => (
@@ -157,7 +160,6 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         near={1}
         far={2000}
         position={[0, 0, 1000]}
-        onUpdate={() => setcameraready(true)}
       />
       {cameraref.current && (
         <RenderLayer

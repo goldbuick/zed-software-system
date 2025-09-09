@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -70,6 +70,11 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
   const focusref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
   const depthoffield = useRef<DepthOfFieldEffect>(null)
+
+  const [, setcameraready] = useState(false)
+  useLayoutEffect(() => {
+    setcameraready(true)
+  }, [])
 
   useFrame((state, delta) => {
     if (
@@ -194,7 +199,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
 
-  const [, setcameraready] = useState(false)
   return (
     <>
       {layers.map((layer) => (
@@ -205,7 +209,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         near={1}
         far={2000}
         aspect={-viewwidth / viewheight}
-        onUpdate={() => setcameraready(true)}
       />
       <group position-z={layersindex}>
         {cameraref.current && (
