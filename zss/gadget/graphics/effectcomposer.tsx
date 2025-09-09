@@ -10,7 +10,6 @@ import {
 } from 'postprocessing'
 import {
   type JSX,
-  RefObject,
   forwardRef,
   memo,
   useImperativeHandle,
@@ -37,8 +36,6 @@ export const EffectComposer = /* @__PURE__ */ memo(
     ({ children, camera, width, height }, ref) => {
       const { gl, scene } = useThree()
 
-      console.info('EffectComposer')
-
       const [composer] = useMemo(() => {
         // Initialize composer
         const effectComposer = new EffectComposerImpl(gl, {
@@ -60,9 +57,8 @@ export const EffectComposer = /* @__PURE__ */ memo(
         gl.autoClear = true
         composer.setSize(width, height)
         composer.render(delta)
-        console.info('effect render')
         gl.autoClear = currentAutoClear
-      }, 1)
+      }, -1)
 
       const group = useRef<Group>(null!)
       useLayoutEffect(() => {

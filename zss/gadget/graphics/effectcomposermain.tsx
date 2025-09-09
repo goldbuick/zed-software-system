@@ -12,7 +12,6 @@ import {
   type JSX,
   forwardRef,
   memo,
-  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -36,8 +35,6 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
     ({ children, width, height }, ref) => {
       const { gl, scene, camera } = useThree()
 
-      console.info('EffectComposerMain')
-
       const [composer] = useMemo(() => {
         // Initialize composer
         const effectComposer = new EffectComposerImpl(gl, {
@@ -58,9 +55,8 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
         gl.autoClear = true
         composer.setSize(width, height)
         composer.render(delta)
-        // console.info('effect main render')
         gl.autoClear = currentAutoClear
-      }, 100)
+      }, 1)
 
       const group = useRef<Group>(null!)
       useLayoutEffect(() => {

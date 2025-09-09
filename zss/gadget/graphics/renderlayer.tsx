@@ -2,17 +2,9 @@ import { useFBO } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { Bloom, Glitch, Noise } from '@react-three/postprocessing'
 import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
-import {
-  Fragment,
-  ReactNode,
-  RefObject,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { Fragment, ReactNode, useEffect, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, WebGLRenderTarget } from 'three'
-import { ispresent } from 'zss/mapping/types'
 
 import { useMedia } from '../hooks'
 
