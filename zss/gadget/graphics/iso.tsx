@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp, damp3, dampE } from 'maath/easing'
+import { damp, damp3 } from 'maath/easing'
+import { DepthOfFieldEffect } from 'postprocessing'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
@@ -13,7 +14,6 @@ import {
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { useScreenSize } from '../userscreen'
 
@@ -42,12 +42,12 @@ function maptolayerz(layer: LAYER): number {
 function maptoscale(viewscale: VIEWSCALE): number {
   switch (viewscale) {
     case VIEWSCALE.NEAR:
-      return 10
+      return 6
     default:
     case VIEWSCALE.MID:
-      return 4
+      return 3
     case VIEWSCALE.FAR:
-      return 1.5
+      return 1.2
   }
 }
 
@@ -57,11 +57,11 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
   const zoomref = useRef<Group>(null)
-  const tiltref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const focusref = useRef<Group>(null)
   const cameraref = useRef<OrthographicCameraImpl>(null)
+  const depthoffield = useRef<DepthOfFieldEffect>(null)
 
   const [, setcameraready] = useState(false)
   useLayoutEffect(() => {
@@ -71,11 +71,11 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   useFrame((state, delta) => {
     if (
       !zoomref.current ||
-      !tiltref.current ||
       !overref.current ||
       !underref.current ||
       !focusref.current ||
-      !cameraref.current
+      !cameraref.current ||
+      !depthoffield.current
     ) {
       return
     }
@@ -128,10 +128,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     // zoom
     damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
-    // tilt
-    // dampE(cameraref.current.rotation, [0, 0, Math.PI * -0.25], animrate, delta)
-    // dampE(tiltref.current.rotation, [0, 0.3, 0], animrate, delta)
-
     // focus
     damp3(focusref.current.position, [-fx, -fy, 0], animrate, delta)
 
@@ -143,6 +139,26 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     cameraref.current.position.x = state.size.width * 0.5
     cameraref.current.position.y = state.size.height * 0.5
     cameraref.current.updateProjectionMatrix()
+
+    // update dof
+    switch (control.viewscale) {
+      case VIEWSCALE.NEAR:
+        depthoffield.current.bokehScale = 10
+        depthoffield.current.cocMaterial.worldFocusRange = 600
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        break
+      default:
+      case VIEWSCALE.MID:
+        depthoffield.current.bokehScale = 10
+        depthoffield.current.cocMaterial.worldFocusRange = 1000
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        break
+      case VIEWSCALE.FAR:
+        depthoffield.current.bokehScale = 10
+        depthoffield.current.cocMaterial.worldFocusRange = 1500
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        break
+    }
   })
 
   // re-render only when layer count changes
@@ -180,22 +196,24 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
             camera={cameraref.current}
             viewwidth={viewwidth}
             viewheight={viewheight}
-            effects={<></>}
+            effects={
+              <>
+                <DepthOfField ref={depthoffield} />
+              </>
+            }
           >
             <group position={[screensize.marginx, screensize.marginy, 0]}>
               <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
                 <group ref={zoomref}>
                   <group ref={focusref}>
-                    <group ref={tiltref}>
-                      {layers.map((layer) => (
-                        <IsoLayer
-                          key={layer.id}
-                          id={layer.id}
-                          from="layers"
-                          z={maptolayerz(layer)}
-                        />
-                      ))}
-                    </group>
+                    {layers.map((layer) => (
+                      <IsoLayer
+                        key={layer.id}
+                        id={layer.id}
+                        from="layers"
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
                   </group>
                 </group>
               </group>

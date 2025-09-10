@@ -73,8 +73,8 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     damp3(zoomref.current.scale, control.viewscale, animrate, delta)
 
     const viewscale = zoomref.current.scale.x
-    const focusx = cameraref.current.userData.focusx
-    const focusy = cameraref.current.userData.focusy
+    const focusx = cameraref.current.userData.focusx + 0.5
+    const focusy = cameraref.current.userData.focusy + 0.5
     const fx = focusx * drawwidth * viewscale + boarddrawwidth * -0.5
     const fy = focusy * drawheight * viewscale + boarddrawheight * -0.5
 

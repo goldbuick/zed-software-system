@@ -157,6 +157,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     cameraref.current.rotation.z = Math.PI
     cameraref.current.updateProjectionMatrix()
 
+    // update dof
     switch (control.viewscale) {
       case VIEWSCALE.NEAR:
         depthoffield.current.bokehScale = 10
