@@ -69,6 +69,27 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
         }
         return v
       })
+      const wallchars = layer.char.map((v, idx) => {
+        switch (layer.stats[idx] as COLLISION) {
+          case COLLISION.ISSOLID:
+            return v
+        }
+        return 0
+      })
+      const wallcolors = layer.color.map((v, idx) => {
+        switch (layer.stats[idx] as COLLISION) {
+          case COLLISION.ISSOLID:
+            return v
+        }
+        return 0
+      })
+      const wallbgs = layer.bg.map((v, idx) => {
+        switch (layer.stats[idx] as COLLISION) {
+          case COLLISION.ISSOLID:
+            return v
+        }
+        return COLOR.ONCLEAR
+      })
       const waterchars = layer.char.map((v, idx) => {
         switch (layer.stats[idx] as COLLISION) {
           case COLLISION.ISSWIM:
@@ -115,6 +136,15 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
                 bg={waterbgs}
               />
             </group>
+            <group position-z={drawheight * 1}>
+              <Tiles
+                width={layer.width}
+                height={layer.height}
+                char={wallchars}
+                color={wallcolors}
+                bg={wallbgs}
+              />
+            </group>
             <Instances ref={meshes}>
               <BlockMesh />
               {layer.stats
@@ -128,13 +158,9 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
                           position={[
                             (pt.x + 0.5) * drawwidth,
                             (pt.y + 0.5) * drawheight,
-                            drawheight * 0.5,
+                            drawheight * 0.5 - 1,
                           ]}
-                          color={[
-                            layer.char[idx],
-                            layer.color[idx],
-                            layer.bg[idx],
-                          ]}
+                          color={[177, COLOR.DKGRAY, COLOR.BLACK]}
                         />
                       )
                   }
