@@ -145,18 +145,18 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
       case VIEWSCALE.NEAR:
         depthoffield.current.bokehScale = 10
         depthoffield.current.cocMaterial.worldFocusRange = 600
-        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        depthoffield.current.cocMaterial.worldFocusDistance = 1000
         break
       default:
       case VIEWSCALE.MID:
         depthoffield.current.bokehScale = 10
         depthoffield.current.cocMaterial.worldFocusRange = 1000
-        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        depthoffield.current.cocMaterial.worldFocusDistance = 1000
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 10
         depthoffield.current.cocMaterial.worldFocusRange = 1500
-        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        depthoffield.current.cocMaterial.worldFocusDistance = 1000
         break
     }
   })
@@ -202,7 +202,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
               </>
             }
           >
-            <group position={[screensize.marginx, screensize.marginy, 0]}>
+            <group position={[screensize.marginx, screensize.marginy, -500]}>
               <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
                 <group ref={zoomref}>
                   <group ref={focusref}>
