@@ -1,9 +1,20 @@
 import { useEffect, useState } from 'react'
+import { DoubleSide } from 'three'
 import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 
 import { createBlocksMaterial } from '../display/blocks'
 import { useMedia } from '../hooks'
+
+export function ShadowMesh() {
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  return (
+    <>
+      <boxGeometry args={[drawwidth, drawwidth, 2]} />
+      <meshBasicMaterial color="grey" side={DoubleSide} />
+    </>
+  )
+}
 
 export function BlockMesh() {
   const palette = useMedia((state) => state.palettedata)

@@ -34,7 +34,7 @@ function maptolayerz(layer: LAYER): number {
     case LAYER_TYPE.DITHER:
       return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.25
+      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.75
   }
   return 0
 }

@@ -23,6 +23,7 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 type SpritesProps = {
   sprites: SPRITE[]
+  scale?: number
   fliptexture?: boolean
   withbillboards?: boolean
 }
@@ -31,6 +32,7 @@ const SPRITE_COUNT = 2048
 
 export function Sprites({
   sprites,
+  scale = 1,
   fliptexture = true,
   withbillboards = false,
 }: SpritesProps) {
@@ -238,7 +240,7 @@ export function Sprites({
     material.uniforms.palette.value = palette
     material.uniforms.map.value = charset
     material.uniforms.alt.value = altcharset ?? charset
-    material.uniforms.dpr.value = 1
+    material.uniforms.dpr.value = scale
     material.uniforms.screenwidth.value = viewport.width
     material.uniforms.screenheight.value = viewport.height
     material.uniforms.rows.value = imageRows - 1
@@ -264,6 +266,7 @@ export function Sprites({
     withbillboards,
     viewport.width,
     viewport.height,
+    scale,
   ])
 
   return (
