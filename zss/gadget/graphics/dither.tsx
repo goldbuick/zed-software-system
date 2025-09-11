@@ -1,20 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box2, BufferGeometry, MathUtils, Vector2 } from 'three'
+import { useEffect, useMemo, useState } from 'react'
+import { Box2, MathUtils, Vector2 } from 'three'
 import {
   createDitherDataTexture,
   createDitherMaterial,
   updateDitherDataTexture,
 } from 'zss/gadget/display/dither'
-import { createTilemapBufferGeometry } from 'zss/gadget/display/tiles'
+import { createTilemapBufferGeometryAttributes } from 'zss/gadget/display/tiles'
 
 type DitherProps = {
   width: number
   height: number
   alphas: number[]
+  nomesh?: boolean
 }
 
-export function Dither({ width, height, alphas }: DitherProps) {
-  const bgRef = useRef<BufferGeometry>(null)
+export function Dither({ width, height, alphas, nomesh = false }: DitherProps) {
   const [material] = useState(() => createDitherMaterial())
 
   // create data texture
@@ -25,22 +25,34 @@ export function Dither({ width, height, alphas }: DitherProps) {
   // set data texture
   useEffect(() => {
     updateDitherDataTexture(material.uniforms.data.value, width, height, alphas)
-  }, [material.uniforms.data.value, width, height, alphas])
+    // material.needsUpdate = true
+  }, [material, material.uniforms.data.value, width, height, alphas])
 
-  // create / config material
-  useEffect(() => {
-    if (!bgRef.current) {
-      return
-    }
+  // create buffer geo attributes
+  const { position, uv } = useMemo(
+    () => createTilemapBufferGeometryAttributes(width, height),
+    [width, height],
+  )
 
-    createTilemapBufferGeometry(bgRef.current, width, height)
-
-    material.needsUpdate = true
-  }, [material, width, height])
+  if (nomesh) {
+    return (
+      <>
+        <primitive object={material} attach="material" />
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[position, 3]} />
+          <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
+        </bufferGeometry>
+      </>
+    )
+  }
 
   return (
-    <mesh material={material}>
-      <bufferGeometry ref={bgRef} />
+    <mesh>
+      <primitive object={material} attach="material" />
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[position, 3]} />
+        <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
+      </bufferGeometry>
     </mesh>
   )
 }
@@ -49,14 +61,22 @@ type StaticDitherProps = {
   width: number
   height: number
   alpha: number
+  nomesh?: boolean
 }
 
-export function StaticDither({ width, height, alpha }: StaticDitherProps) {
+export function StaticDither({
+  width,
+  height,
+  alpha,
+  nomesh = false,
+}: StaticDitherProps) {
   const alphas = useMemo(
     () => new Array(width * height).fill(alpha),
     [width, height, alpha],
   )
-  return <Dither width={width} height={height} alphas={alphas} />
+  return (
+    <Dither width={width} height={height} alphas={alphas} nomesh={nomesh} />
+  )
 }
 
 type ShadeBoxDitherProps = {

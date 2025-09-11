@@ -16,6 +16,7 @@ type TilesProps = {
   char: number[]
   color: number[]
   bg: number[]
+  nomesh?: boolean
   fliptexture?: boolean
 }
 
@@ -87,8 +88,9 @@ export function Tiles({
   ])
 
   return (
-    <mesh material={material}>
+    <mesh>
       <bufferGeometry ref={bgRef} />
+      <primitive object={material} attach="material" />
     </mesh>
   )
 }

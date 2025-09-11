@@ -84,8 +84,7 @@ export function createTilemapDataTexture(width: number, height: number) {
   return texture
 }
 
-export function createTilemapBufferGeometry(
-  bg: BufferGeometry,
+export function createTilemapBufferGeometryAttributes(
   width: number,
   height: number,
 ) {
@@ -102,8 +101,20 @@ export function createTilemapBufferGeometry(
     }
   })
 
-  bg.setAttribute('position', new BufferAttribute(positions, 3))
-  bg.setAttribute('uv', new BufferAttribute(QUAD_UVS, 2))
+  return {
+    position: positions,
+    uv: QUAD_UVS,
+  }
+}
+
+export function createTilemapBufferGeometry(
+  bg: BufferGeometry,
+  width: number,
+  height: number,
+) {
+  const { position, uv } = createTilemapBufferGeometryAttributes(width, height)
+  bg.setAttribute('position', new BufferAttribute(position, 3))
+  bg.setAttribute('uv', new BufferAttribute(uv, 2))
 
   bg.computeBoundingBox()
   bg.computeBoundingSphere()

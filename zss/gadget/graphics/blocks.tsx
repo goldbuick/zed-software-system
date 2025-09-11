@@ -1,17 +1,40 @@
-import { useEffect, useState } from 'react'
-import { DoubleSide } from 'three'
+import { useEffect, useMemo, useState } from 'react'
 import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 
 import { createBlocksMaterial } from '../display/blocks'
+import {
+  createDitherDataTexture,
+  createDitherMaterial,
+  updateDitherDataTexture,
+} from '../display/dither'
 import { useMedia } from '../hooks'
 
 export function ShadowMesh() {
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const [material] = useState(() => createDitherMaterial())
+
+  const width = 1
+  const height = 1
+  const alphas = useMemo(
+    () => new Array(width * height).fill(0.25),
+    [width, height],
+  )
+
+  useEffect(() => {
+    material.uniforms.data.value = createDitherDataTexture(width, height)
+  }, [material.uniforms.data, width, height])
+
+  // set data texture
+  useEffect(() => {
+    updateDitherDataTexture(material.uniforms.data.value, width, height, alphas)
+  }, [material, material.uniforms.data.value, width, height, alphas])
+
   return (
     <>
-      <boxGeometry args={[drawwidth, drawwidth, 2]} />
-      <meshBasicMaterial color="grey" side={DoubleSide} />
+      <boxGeometry args={[drawwidth, drawwidth, drawwidth]} />
+      {/* <meshBasicMaterial color="grey" /> */}
+      <primitive object={material} attach="material" />
     </>
   )
 }

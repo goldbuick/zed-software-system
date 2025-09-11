@@ -1,18 +1,18 @@
 import { Instance, Instances } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
-import { DoubleSide, InstancedMesh } from 'three'
+import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION, COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { BlockMesh, ShadowMesh } from './blocks'
-import { Dither } from './dither'
+import { Dither, StaticDither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
@@ -45,6 +45,7 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
     case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
+      return null
       const chars = layer.char.map((v, idx) => {
         switch (layer.stats[idx] as COLLISION) {
           case COLLISION.ISSWIM:
@@ -136,7 +137,7 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
                 bg={waterbgs}
               />
             </group>
-            <Instances ref={meshes}>
+            <Instances ref={meshes} limit={BOARD_SIZE}>
               <BlockMesh />
               {layer.stats
                 .map((collision, idx) => {
@@ -176,8 +177,9 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes}>
+          <Instances ref={meshes} limit={BOARD_SIZE}>
             <ShadowMesh />
+            {/* <StaticDither width={1} height={1} alpha={0.5} nomesh /> */}
             {layer.sprites
               .map((sprite, idx) => {
                 return (
@@ -186,9 +188,9 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
                     position={[
                       (sprite.x + 0.5) * drawwidth,
                       (sprite.y + 0.5) * drawheight,
-                      drawheight * -0.75,
+                      drawheight * 2, //-0.75,
                     ]}
-                    color={[0, 0, 0]}
+                    // color={[0, 0, 0]}
                   />
                 )
               })
