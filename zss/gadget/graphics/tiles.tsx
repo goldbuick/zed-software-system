@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { BufferGeometry } from 'three'
+import { useEffect, useMemo, useState } from 'react'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
-  createTilemapBufferGeometry,
+  createTilemapBufferGeometryAttributes,
   createTilemapDataTexture,
   createTilemapMaterial,
   updateTilemapDataTexture,
@@ -33,7 +32,6 @@ export function Tiles({
   const altcharset = useMedia((state) => state.altcharsetdata)
 
   const [material] = useState(() => createTilemapMaterial())
-  const bgRef = useRef<BufferGeometry>(null)
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
 
@@ -62,10 +60,9 @@ export function Tiles({
 
   // create / config material
   useEffect(() => {
-    if (width === 0 || height === 0 || !bgRef.current || !charset) {
+    if (width === 0 || height === 0 || !charset) {
       return
     }
-    createTilemapBufferGeometry(bgRef.current, width, height)
     material.uniforms.map.value = charset
     material.uniforms.alt.value = altcharset ?? charset
     material.uniforms.palette.value = palette
@@ -87,9 +84,18 @@ export function Tiles({
     fliptexture,
   ])
 
+  // create buffer geo attributes
+  const { position, uv } = useMemo(
+    () => createTilemapBufferGeometryAttributes(width, height),
+    [width, height],
+  )
+
   return (
     <mesh>
-      <bufferGeometry ref={bgRef} />
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[position, 3]} />
+        <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
+      </bufferGeometry>
       <primitive object={material} attach="material" />
     </mesh>
   )

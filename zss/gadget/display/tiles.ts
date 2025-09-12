@@ -107,19 +107,6 @@ export function createTilemapBufferGeometryAttributes(
   }
 }
 
-export function createTilemapBufferGeometry(
-  bg: BufferGeometry,
-  width: number,
-  height: number,
-) {
-  const { position, uv } = createTilemapBufferGeometryAttributes(width, height)
-  bg.setAttribute('position', new BufferAttribute(position, 3))
-  bg.setAttribute('uv', new BufferAttribute(uv, 2))
-
-  bg.computeBoundingBox()
-  bg.computeBoundingSphere()
-}
-
 const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
@@ -142,7 +129,11 @@ const tilemapMaterial = new ShaderMaterial({
   vertexShader: `
     varying vec2 vUv;
     void main() {
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vec4 mvPosition = vec4(position, 1.0);
+      #ifdef USE_INSTANCING
+      	mvPosition = instanceMatrix * mvPosition;
+      #endif        
+      mvPosition = modelViewMatrix * mvPosition;
       gl_Position = projectionMatrix * mvPosition;
       vUv = uv;
     }

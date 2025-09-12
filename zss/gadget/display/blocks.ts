@@ -41,7 +41,9 @@ const blocksMaterial = new ShaderMaterial({
       vColor.xyz = instanceColor.xyz;
       
       vec4 mvPosition = vec4(position, 1.0);
-      mvPosition = instanceMatrix * mvPosition;
+      #ifdef USE_INSTANCING
+      	mvPosition = instanceMatrix * mvPosition;
+      #endif        
       mvPosition = modelViewMatrix * mvPosition;
       gl_Position = projectionMatrix * mvPosition;
     }

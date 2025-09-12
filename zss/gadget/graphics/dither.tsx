@@ -11,10 +11,9 @@ type DitherProps = {
   width: number
   height: number
   alphas: number[]
-  nomesh?: boolean
 }
 
-export function Dither({ width, height, alphas, nomesh = false }: DitherProps) {
+export function Dither({ width, height, alphas }: DitherProps) {
   const [material] = useState(() => createDitherMaterial())
 
   // create data texture
@@ -34,18 +33,6 @@ export function Dither({ width, height, alphas, nomesh = false }: DitherProps) {
     [width, height],
   )
 
-  if (nomesh) {
-    return (
-      <>
-        <primitive object={material} attach="material" />
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[position, 3]} />
-          <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
-        </bufferGeometry>
-      </>
-    )
-  }
-
   return (
     <mesh>
       <primitive object={material} attach="material" />
@@ -61,22 +48,14 @@ type StaticDitherProps = {
   width: number
   height: number
   alpha: number
-  nomesh?: boolean
 }
 
-export function StaticDither({
-  width,
-  height,
-  alpha,
-  nomesh = false,
-}: StaticDitherProps) {
+export function StaticDither({ width, height, alpha }: StaticDitherProps) {
   const alphas = useMemo(
     () => new Array(width * height).fill(alpha),
     [width, height, alpha],
   )
-  return (
-    <Dither width={width} height={height} alphas={alphas} nomesh={nomesh} />
-  )
+  return <Dither width={width} height={height} alphas={alphas} />
 }
 
 type ShadeBoxDitherProps = {

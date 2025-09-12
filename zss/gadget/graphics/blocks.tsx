@@ -8,32 +8,33 @@ import {
   createDitherMaterial,
   updateDitherDataTexture,
 } from '../display/dither'
+import { createTilemapBufferGeometryAttributes } from '../display/tiles'
 import { useMedia } from '../hooks'
 
 export function ShadowMesh() {
-  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const [material] = useState(() => createDitherMaterial())
 
-  const width = 1
-  const height = 1
-  const alphas = useMemo(
-    () => new Array(width * height).fill(0.25),
-    [width, height],
-  )
-
   useEffect(() => {
-    material.uniforms.data.value = createDitherDataTexture(width, height)
-  }, [material.uniforms.data, width, height])
+    material.uniforms.data.value = createDitherDataTexture(1, 1)
+  }, [material.uniforms.data])
 
   // set data texture
   useEffect(() => {
-    updateDitherDataTexture(material.uniforms.data.value, width, height, alphas)
-  }, [material, material.uniforms.data.value, width, height, alphas])
+    updateDitherDataTexture(material.uniforms.data.value, 1, 1, [0.5])
+  }, [material, material.uniforms.data.value])
+
+  // create buffer geo attributes
+  const { position, uv } = useMemo(
+    () => createTilemapBufferGeometryAttributes(1, 1 * (8 / 14)),
+    [],
+  )
 
   return (
     <>
-      <boxGeometry args={[drawwidth, drawwidth, drawwidth]} />
-      {/* <meshBasicMaterial color="grey" /> */}
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[position, 3]} />
+        <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
+      </bufferGeometry>
       <primitive object={material} attach="material" />
     </>
   )

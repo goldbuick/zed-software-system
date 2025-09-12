@@ -12,7 +12,7 @@ import { COLLISION, COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { BlockMesh, ShadowMesh } from './blocks'
-import { Dither, StaticDither } from './dither'
+import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
@@ -45,7 +45,6 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
     case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
-      return null
       const chars = layer.char.map((v, idx) => {
         switch (layer.stats[idx] as COLLISION) {
           case COLLISION.ISSWIM:
@@ -177,30 +176,27 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes} limit={BOARD_SIZE}>
-            <ShadowMesh />
-            {/* <StaticDither width={1} height={1} alpha={0.5} nomesh /> */}
-            {layer.sprites
-              .map((sprite, idx) => {
-                return (
-                  <Instance
-                    key={idx}
-                    position={[
-                      (sprite.x + 0.5) * drawwidth,
-                      (sprite.y + 0.5) * drawheight,
-                      drawheight * 2, //-0.75,
-                    ]}
-                    // color={[0, 0, 0]}
-                  />
-                )
-              })
-              .filter((el) => el)}
-          </Instances>
           <Sprites
             sprites={[...layer.sprites]}
             scale={1.5}
             fliptexture={false}
           />
+          <Instances ref={meshes} limit={BOARD_SIZE}>
+            <ShadowMesh />
+            {layer.sprites.map((sprite, idx) => {
+              console.info(sprite.x, sprite.y)
+              return (
+                <Instance
+                  key={idx}
+                  position={[
+                    sprite.x * drawwidth,
+                    (sprite.y + 0.25) * drawheight,
+                    drawheight * -0.75 + 0.5,
+                  ]}
+                />
+              )
+            })}
+          </Instances>
         </group>
       )
     }
