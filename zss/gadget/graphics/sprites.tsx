@@ -61,6 +61,7 @@ export function Sprites({
         char: 0,
         color: 0,
         bg: 0,
+        stat: 0,
       }))
     }
 

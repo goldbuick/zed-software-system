@@ -388,6 +388,7 @@ export function memoryconverttogadgetlayers(
     sprite.char = display.char
     sprite.color = display.color
     sprite.bg = display.bg
+    sprite.stat = collision
     objects.sprites.push(sprite)
 
     // write lighting if needed
@@ -541,6 +542,7 @@ export function memoryconverttogadgetlayers(
     sprite.char = display.char
     sprite.color = display.color
     sprite.bg = display.bg
+    sprite.stat = collision
     objects.sprites.push(sprite)
   }
 
