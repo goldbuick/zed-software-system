@@ -36,12 +36,7 @@ export function Dither({ width, height, alphas }: DitherProps) {
   return (
     <mesh>
       <primitive object={material} attach="material" />
-      <bufferGeometry
-        onUpdate={(bg) => {
-          bg.computeBoundingBox()
-          bg.computeBoundingSphere()
-        }}
-      >
+      <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
       </bufferGeometry>

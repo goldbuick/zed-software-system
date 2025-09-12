@@ -1,6 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useMemo, useState } from 'react'
 import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
+import { COLLISION, COLOR } from 'zss/words/types'
 
 import { createBlocksMaterial } from '../display/blocks'
 import {
@@ -31,12 +33,7 @@ export function ShadowMesh() {
 
   return (
     <>
-      <bufferGeometry
-        onUpdate={(bg) => {
-          bg.computeBoundingBox()
-          bg.computeBoundingSphere()
-        }}
-      >
+      <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
       </bufferGeometry>
@@ -76,4 +73,100 @@ export function BlockMesh() {
       <primitive object={material} attach="material" />
     </>
   )
+}
+
+export function filterlayer2floor(
+  char: number[],
+  color: number[],
+  bg: number[],
+  stats: number[],
+) {
+  return {
+    char: char.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return 0
+      }
+      return v
+    }),
+    color: color.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return COLOR.ONCLEAR
+      }
+      return v
+    }),
+    bg: bg.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return COLOR.ONCLEAR
+      }
+      return v
+    }),
+  }
+}
+
+export function filterlayer2walls(
+  char: number[],
+  color: number[],
+  bg: number[],
+  stats: number[],
+) {
+  return {
+    char: char.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSOLID:
+          return v
+      }
+      return 0
+    }),
+    color: color.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSOLID:
+          return v
+      }
+      return 0
+    }),
+    bg: bg.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSOLID:
+          return v
+      }
+      return COLOR.ONCLEAR
+    }),
+  }
+}
+
+export function filterlayer2water(
+  char: number[],
+  color: number[],
+  bg: number[],
+  stats: number[],
+) {
+  return {
+    char: char.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+          return v
+      }
+      return 176
+    }),
+    color: color.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+          return v
+      }
+      return COLOR.DKGRAY
+    }),
+    bg: bg.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+          return v
+      }
+      return COLOR.BLACK
+    }),
+  }
 }

@@ -11,7 +11,13 @@ import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION, COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { BlockMesh, ShadowMesh } from './blocks'
+import {
+  BlockMesh,
+  ShadowMesh,
+  filterlayer2floor,
+  filterlayer2walls,
+  filterlayer2water,
+} from './blocks'
 import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
@@ -45,95 +51,41 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
     case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
-      const chars = layer.char.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSWIM:
-          case COLLISION.ISSOLID:
-            return 0
-        }
-        return v
-      })
-      const colors = layer.color.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSWIM:
-          case COLLISION.ISSOLID:
-            return COLOR.ONCLEAR
-        }
-        return v
-      })
-      const bgs = layer.bg.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSWIM:
-          case COLLISION.ISSOLID:
-            return COLOR.ONCLEAR
-        }
-        return v
-      })
-      const wallchars = layer.char.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSOLID:
-            return v
-        }
-        return 0
-      })
-      const wallcolors = layer.color.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSOLID:
-            return v
-        }
-        return 0
-      })
-      const wallbgs = layer.bg.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSOLID:
-            return v
-        }
-        return COLOR.ONCLEAR
-      })
-      const waterchars = layer.char.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSWIM:
-            return v
-          case COLLISION.ISSOLID:
-            return 0
-        }
-        return 176
-      })
-      const watercolors = layer.color.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSWIM:
-            return v
-          case COLLISION.ISSOLID:
-            return COLOR.ONCLEAR
-        }
-        return COLOR.DKGRAY
-      })
-      const waterbgs = layer.bg.map((v, idx) => {
-        switch (layer.stats[idx] as COLLISION) {
-          case COLLISION.ISSWIM:
-            return v
-          case COLLISION.ISSOLID:
-            return COLOR.ONCLEAR
-        }
-        return COLOR.BLACK
-      })
+      const floor = filterlayer2floor(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
+      const walls = filterlayer2walls(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
+      const water = filterlayer2water(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
             <Tiles
               width={layer.width}
               height={layer.height}
-              char={chars}
-              color={colors}
-              bg={bgs}
+              char={floor.char}
+              color={floor.color}
+              bg={floor.bg}
             />
             <group position-z={drawheight * -0.5}>
               <Tiles
                 width={layer.width}
                 height={layer.height}
-                char={waterchars}
-                color={watercolors}
-                bg={waterbgs}
+                char={water.char}
+                color={water.color}
+                bg={water.bg}
               />
             </group>
             <Instances ref={meshes} limit={BOARD_SIZE}>
@@ -163,9 +115,9 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
               <Tiles
                 width={layer.width}
                 height={layer.height}
-                char={wallchars}
-                color={wallcolors}
-                bg={wallbgs}
+                char={walls.char}
+                color={walls.color}
+                bg={walls.bg}
               />
             </group>
           </group>
@@ -183,19 +135,16 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
           />
           <Instances ref={meshes} limit={BOARD_SIZE}>
             <ShadowMesh />
-            {layer.sprites.map((sprite, idx) => {
-              console.info(sprite.x, sprite.y)
-              return (
-                <Instance
-                  key={idx}
-                  position={[
-                    sprite.x * drawwidth,
-                    (sprite.y + 0.25) * drawheight,
-                    drawheight * -0.75 + 0.5,
-                  ]}
-                />
-              )
-            })}
+            {layer.sprites.map((sprite, idx) => (
+              <Instance
+                key={idx}
+                position={[
+                  sprite.x * drawwidth,
+                  (sprite.y + 0.25) * drawheight,
+                  drawheight * -0.75 + 0.5,
+                ]}
+              />
+            ))}
           </Instances>
         </group>
       )

@@ -272,13 +272,7 @@ export function Sprites({
 
   return (
     <points frustumCulled={false} material={material}>
-      <bufferGeometry
-        ref={bgRef}
-        onUpdate={(bg) => {
-          bg.computeBoundingBox()
-          bg.computeBoundingSphere()
-        }}
-      />
+      <bufferGeometry ref={bgRef} />
     </points>
   )
 }

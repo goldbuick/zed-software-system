@@ -7,6 +7,7 @@ import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
+import { range } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -30,15 +31,17 @@ function maptolayerz(layer: LAYER): number {
     case LAYER_TYPE.DITHER:
       return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.75
+      return 1
   }
   return 0
 }
 
 export function FPVGraphics({ width, height }: GraphicsProps) {
   const screensize = useScreenSize()
-  const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-  const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const viewwidth = width * drawwidth
+  const viewheight = height * drawheight
 
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
@@ -59,16 +62,15 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
+    // drawsize
     const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const boarddrawwidth = BOARD_WIDTH * drawwidth
+    const boarddrawheight = BOARD_HEIGHT * drawheight
 
     // viewsize
     const viewwidth = width * drawwidth
     const viewheight = height * drawheight
-
-    // drawsize
-    const boarddrawwidth = BOARD_WIDTH * drawwidth
-    const boarddrawheight = BOARD_HEIGHT * drawheight
 
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
@@ -95,28 +97,19 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     let fy = cameraref.current.userData.focusy + 0.5
     fx *= -drawwidth
     fy *= -drawheight
-    fx += boarddrawwidth * 0.5
-    fy += boarddrawheight * 0.5
 
     // smooth this
     dampE(
       cameraref.current.rotation,
-      [Math.PI * -0.5, control.facing, 0],
-      // [Math.PI * -0.5, control.facing, 0],
-      animrate,
+      [0, Math.PI + control.facing, 0],
+      animrate * 3.33,
       delta,
     )
-
-    // bounding box issues ??
 
     // move camera
     damp3(
       cameraref.current.position,
-      [
-        state.size.width * 0.5,
-        state.size.height * 0.5 + 700,
-        600, // state.size.height * 0.5 + drawheight * 0.5,
-      ],
+      [state.size.width * 0.5 - fx, state.size.height * 0.5, fy],
       animrate,
       delta,
     )
@@ -149,10 +142,9 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       ))}
       <perspectiveCamera
         ref={cameraref}
-        near={1}
+        near={0.1}
         far={2000}
         aspect={-viewwidth / viewheight}
-        lookAt={[0, 0, RUNTIME.DRAW_CHAR_HEIGHT() * 0.5]}
       />
       <group ref={underref}>
         {under.map((layer, i) => (
@@ -175,8 +167,11 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
               </>
             }
           >
-            <group rotation={[0, 0, Math.PI]}>
-              <group position={[-screensize.marginx, screensize.marginy, 0]}>
+            <group position={[-screensize.marginx, -screensize.marginy, -512]}>
+              <group
+                rotation={[Math.PI * -0.5, 0, 0]}
+                position={[0, drawheight * -0.75, 0]}
+              >
                 {layers.map((layer) => (
                   <FPVLayer
                     key={layer.id}

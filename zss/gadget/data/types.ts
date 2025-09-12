@@ -29,6 +29,7 @@ export type SPRITE = {
   color: number
   bg: number
   stat: number
+  pid?: string
 }
 
 export enum LAYER_TYPE {

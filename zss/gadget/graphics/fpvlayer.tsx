@@ -1,12 +1,18 @@
 import { Instance, Instances } from '@react-three/drei'
 import { RUNTIME } from 'zss/config'
+import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { indextopt } from 'zss/mapping/2d'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { BlockMesh } from './blocks'
+import {
+  BlockMesh,
+  filterlayer2floor,
+  filterlayer2walls,
+  filterlayer2water,
+} from './blocks'
 import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
@@ -18,6 +24,7 @@ type GraphicsLayerProps = {
 }
 
 export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
+  const player = registerreadplayer()
   const layer = useGadgetClient(
     useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
   )
@@ -31,6 +38,18 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
     case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
+      const floor = filterlayer2floor(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
+      const water = filterlayer2water(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       // filter tiles
       return (
         <>
@@ -38,10 +57,19 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
             <Tiles
               width={layer.width}
               height={layer.height}
-              char={[...layer.char]}
-              color={[...layer.color]}
-              bg={[...layer.bg]}
+              char={floor.char}
+              color={floor.color}
+              bg={floor.bg}
             />
+            <group position-z={drawheight * -0.5}>
+              <Tiles
+                width={layer.width}
+                height={layer.height}
+                char={water.char}
+                color={water.color}
+                bg={water.bg}
+              />
+            </group>
             {/* <Instances limit={BOARD_SIZE}>
               <BlockMesh />
               {layer.stats
@@ -77,7 +105,9 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <Sprites
-            sprites={[...layer.sprites]}
+            sprites={[...layer.sprites].filter(
+              (sprite) => sprite.pid !== player,
+            )}
             withbillboards={true}
             fliptexture={false}
           />

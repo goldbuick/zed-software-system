@@ -92,12 +92,7 @@ export function Tiles({
 
   return (
     <mesh>
-      <bufferGeometry
-        onUpdate={(bg) => {
-          bg.computeBoundingBox()
-          bg.computeBoundingSphere()
-        }}
-      >
+      <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
       </bufferGeometry>

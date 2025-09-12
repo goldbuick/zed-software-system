@@ -389,6 +389,7 @@ export function memoryconverttogadgetlayers(
     sprite.color = display.color
     sprite.bg = display.bg
     sprite.stat = collision
+    sprite.pid = ispid(id) ? id : undefined
     objects.sprites.push(sprite)
 
     // write lighting if needed
