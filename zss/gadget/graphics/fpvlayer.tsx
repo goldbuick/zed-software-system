@@ -42,10 +42,10 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
               color={[...layer.color]}
               bg={[...layer.bg]}
             />
-            <Instances limit={BOARD_SIZE}>
+            {/* <Instances limit={BOARD_SIZE}>
               <BlockMesh />
-              {layer.wall
-                .map((iswall, idx) => {
+              {layer.stats
+                .map((collision, idx) => {
                   const pt = indextopt(idx, BOARD_WIDTH)
                   if (iswall) {
                     return (
@@ -67,7 +67,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                   return null
                 })
                 .filter((el) => el)}
-            </Instances>
+            </Instances> */}
           </group>
         </>
       )
