@@ -31,7 +31,12 @@ export function ShadowMesh() {
 
   return (
     <>
-      <bufferGeometry>
+      <bufferGeometry
+        onUpdate={(bg) => {
+          bg.computeBoundingBox()
+          bg.computeBoundingSphere()
+        }}
+      >
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
       </bufferGeometry>
