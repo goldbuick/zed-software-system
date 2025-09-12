@@ -73,7 +73,7 @@ const blocksMaterial = new ShaderMaterial({
     }
 
     float cyclefromtime() {
-      float flux = snoise(vUv * 5.0) * 0.05;
+      float flux = snoise(gl_FragCoord.xy * 5.0) * 0.05;
       float cycle = mod(time * 2.5 + flux, interval * 2.0) / interval;
       return exponentialInOut(abs(cycle - 1.0));
     }

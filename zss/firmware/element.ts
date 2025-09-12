@@ -9,7 +9,13 @@ import {
 } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
-import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
   memoryelementstatread,
@@ -92,7 +98,11 @@ const STANDARD_STAT_NAMES = new Set([
 
 const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']
 
-function readinput(player: string) {
+function readinput(
+  player: string,
+  graphics: MAYBE<string>,
+  facing: MAYBE<number>,
+) {
   const flags = memoryreadflags(player)
 
   // ensure we have the proper flags on player data
@@ -126,9 +136,76 @@ function readinput(player: string) {
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
     case INPUT.MOVE_LEFT:
-    case INPUT.MOVE_RIGHT:
-      flags.inputmove = [readinputmap[input - INPUT.MOVE_UP]]
+    case INPUT.MOVE_RIGHT: {
+      const inputdir = readinputmap[input - INPUT.MOVE_UP]
+      if (isstring(graphics) && graphics === 'fpv' && isnumber(facing)) {
+        if (facing < 0 || facing > 360) {
+          facing = (facing + 36000) % 360
+        }
+        const mappedfacing = Math.round(facing / 90)
+        switch (mappedfacing) {
+          case 0: // north
+            // no-op
+            flags.inputmove = [inputdir]
+            break
+          case 1: // east
+            switch (inputdir) {
+              default:
+              case 'NORTH': // forward
+                flags.inputmove = ['EAST']
+                break
+              case 'EAST': // step right
+                flags.inputmove = ['SOUTH']
+                break
+              case 'SOUTH': // backward
+                flags.inputmove = ['WEST']
+                break
+              case 'WEST': // step left
+                flags.inputmove = ['NORTH']
+                break
+            }
+            break
+          case 2: // south
+            switch (inputdir) {
+              default:
+              case 'NORTH': // forward
+                flags.inputmove = ['SOUTH']
+                break
+              case 'EAST': // step right
+                flags.inputmove = ['WEST']
+                break
+              case 'SOUTH': // backward
+                flags.inputmove = ['NORTH']
+                break
+              case 'WEST': // step left
+                flags.inputmove = ['EAST']
+                break
+            }
+            break
+          case 3: // west
+            switch (inputdir) {
+              default:
+              case 'NORTH': // forward
+                flags.inputmove = ['WEST']
+                break
+              case 'EAST': // step right
+                flags.inputmove = ['NORTH']
+                break
+              case 'SOUTH': // backward
+                flags.inputmove = ['EAST']
+                break
+              case 'WEST': // step left
+                flags.inputmove = ['SOUTH']
+                break
+            }
+            break
+        }
+      } else {
+        flags.inputmove = [inputdir]
+      }
       break
+    }
+
     case INPUT.OK_BUTTON:
       flags.inputok = 1
       break
@@ -200,7 +277,7 @@ function handledie() {
 }
 
 export const ELEMENT_FIRMWARE = createfirmware({
-  get(_, name) {
+  get(chip, name) {
     // check consts first (data normalization)
     const maybeconst = maptoconst(name)
     if (ispresent(maybeconst)) {
@@ -209,8 +286,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // if we are reading from input AND are a player
     if (READ_CONTEXT.elementisplayer && INPUT_FLAG_NAMES.has(name)) {
+      // we need to have the context to rotate the input
+      const graphics = chip.get('graphics')
+      const facing = chip.get('facing')
       // pull the next input
-      const value = readinput(READ_CONTEXT.elementid)[name]
+      const value = readinput(READ_CONTEXT.elementid, graphics, facing)[name]
       return [ispresent(value), value]
     }
 

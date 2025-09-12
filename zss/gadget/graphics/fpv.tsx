@@ -1,13 +1,12 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp, damp3, dampE } from 'maath/easing'
-import { degToRad } from 'maath/misc'
+import { damp3, dampE } from 'maath/easing'
+import { DepthOfFieldEffect } from 'postprocessing'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
-import { range } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -43,9 +42,11 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const viewwidth = width * drawwidth
   const viewheight = height * drawheight
 
+  const pivotref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
+  const depthoffield = useRef<DepthOfFieldEffect>(null)
 
   const [, setcameraready] = useState(false)
   useLayoutEffect(() => {
@@ -53,7 +54,13 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   }, [])
 
   useFrame((state, delta) => {
-    if (!overref.current || !underref.current || !cameraref.current) {
+    if (
+      !pivotref.current ||
+      !overref.current ||
+      !underref.current ||
+      !cameraref.current ||
+      !depthoffield.current
+    ) {
       return
     }
 
@@ -76,8 +83,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     if (!ispresent(cameraref.current.userData.focusx)) {
       cameraref.current.userData = {
         focusx: control.focusx,
-        focusy: control.focusy,
-        facing: control.facing,
       }
     }
 
@@ -90,34 +95,39 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
 
-    const animrate = 0.125
+    const animrate = 0.05
 
     // calc focus
-    let fx = cameraref.current.userData.focusx + 0.5
-    let fy = cameraref.current.userData.focusy + 0.5
+    let fx = control.focusx - 0.5
+    let fy = control.focusy + 0.5
     fx *= -drawwidth
     fy *= -drawheight
 
-    // smooth this
+    // turn camera
     dampE(
-      cameraref.current.rotation,
+      pivotref.current.rotation,
       [0, Math.PI + control.facing, 0],
-      animrate * 3.33,
+      animrate,
       delta,
     )
 
+    // tilt camera
+    dampE(cameraref.current.rotation, [0.2, 0, 0], animrate, delta)
+
     // move camera
     damp3(
-      cameraref.current.position,
+      pivotref.current.position,
       [state.size.width * 0.5 - fx, state.size.height * 0.5, fy],
       animrate,
       delta,
     )
 
-    // smoothed change in focus
-    damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
-    damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
+    // update effect
+    depthoffield.current.bokehScale = 5
+    depthoffield.current.cocMaterial.worldFocusRange = 1200
+    depthoffield.current.cocMaterial.worldFocusDistance = 100
 
+    // update matrix
     cameraref.current.updateProjectionMatrix()
   })
 
@@ -140,12 +150,14 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       {layers.map((layer) => (
         <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
       ))}
-      <perspectiveCamera
-        ref={cameraref}
-        near={0.1}
-        far={2000}
-        aspect={-viewwidth / viewheight}
-      />
+      <group ref={pivotref}>
+        <perspectiveCamera
+          ref={cameraref}
+          near={0.1}
+          far={6000}
+          aspect={-viewwidth / viewheight}
+        />
+      </group>
       <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
@@ -159,11 +171,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
             viewheight={viewheight}
             effects={
               <>
-                {/* <DepthOfField
-                  target={[0, 0, 0]}
-                  focalLength={0.2}
-                  bokehScale={15}
-                /> */}
+                <DepthOfField ref={depthoffield} />
               </>
             }
           >

@@ -15,7 +15,6 @@ type TilesProps = {
   char: number[]
   color: number[]
   bg: number[]
-  nomesh?: boolean
   fliptexture?: boolean
 }
 

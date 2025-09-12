@@ -128,11 +128,6 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Sprites
-            sprites={[...layer.sprites]}
-            scale={1.5}
-            fliptexture={false}
-          />
           <Instances ref={meshes} limit={BOARD_SIZE}>
             <ShadowMesh />
             {layer.sprites.map((sprite, idx) => (
@@ -146,6 +141,11 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
               />
             ))}
           </Instances>
+          <Sprites
+            sprites={[...layer.sprites]}
+            scale={1.5}
+            fliptexture={false}
+          />
         </group>
       )
     }
