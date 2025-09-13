@@ -255,7 +255,6 @@ export function Sprites({
     material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.flip.value = fliptexture
     material.needsUpdate = true
-    console.info()
   }, [
     palette,
     charset,
@@ -264,15 +263,15 @@ export function Sprites({
     imageWidth,
     imageHeight,
     fliptexture,
-    withbillboards,
     viewport.width,
     viewport.height,
     scale,
   ])
 
   return (
-    <points frustumCulled={false} material={material}>
+    <points frustumCulled={false}>
       <bufferGeometry ref={bgRef} />
+      <primitive object={material} attach="material" />
     </points>
   )
 }

@@ -13,6 +13,7 @@ import { COLLISION, COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
+  BillboardMesh,
   BlockMesh,
   PillarMesh,
   ShadowMesh,
@@ -33,6 +34,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
   const player = registerreadplayer()
   const meshes = useRef<InstancedMesh>(null)
   const meshes2 = useRef<InstancedMesh>(null)
+  const meshes3 = useRef<InstancedMesh>(null)
 
   useFrame(() => {
     if (ispresent(meshes.current)) {
@@ -42,6 +44,10 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
     if (ispresent(meshes2.current)) {
       meshes2.current.computeBoundingBox()
       meshes2.current.computeBoundingSphere()
+    }
+    if (ispresent(meshes3.current)) {
+      meshes3.current.computeBoundingBox()
+      meshes3.current.computeBoundingSphere()
     }
   })
 
@@ -166,8 +172,44 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
               />
             ))}
           </Instances>
-          <Sprites
-            sprites={othersprites.filter((sprite) => sprite.pid !== player)}
+          <Instances ref={meshes2} limit={BOARD_SIZE}>
+            <BillboardMesh />
+            {othersprites
+              .filter((sprite) => sprite.pid !== player)
+              .map((sprite, idx) => {
+                return (
+                  <Instance
+                    key={idx}
+                    position={[
+                      sprite.x * drawwidth,
+                      sprite.y * drawheight,
+                      drawheight * -0.5,
+                    ]}
+                    color={[sprite.char, sprite.color, sprite.bg]}
+                  />
+                )
+              })}
+          </Instances>
+          <Instances ref={meshes3} limit={BOARD_SIZE}>
+            <BillboardMesh />
+            {watersprites
+              .filter((sprite) => sprite.pid !== player)
+              .map((sprite, idx) => {
+                return (
+                  <Instance
+                    key={idx}
+                    position={[
+                      sprite.x * drawwidth,
+                      sprite.y * drawheight,
+                      drawheight * -0.5,
+                    ]}
+                    color={[sprite.char, sprite.color, sprite.bg]}
+                  />
+                )
+              })}
+          </Instances>
+          {/* <Sprites
+            sprites={}
             withbillboards={true}
             fliptexture={false}
           />
@@ -177,7 +219,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
               withbillboards={true}
               fliptexture={false}
             />
-          </group>
+          </group> */}
         </group>
       )
     }
