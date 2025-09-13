@@ -8,9 +8,15 @@ import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
+import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ShadowMesh } from './blocks'
+import {
+  ShadowMesh,
+  filterlayer2floor,
+  filterlayer2walls,
+  filterlayer2water,
+} from './blocks'
 import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
@@ -44,21 +50,63 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
     case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
+      const floor = filterlayer2floor(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
+      const walls = filterlayer2walls(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
+      const water = filterlayer2water(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <Tiles
             width={layer.width}
             height={layer.height}
-            char={[...layer.char]}
-            color={[...layer.color]}
-            bg={[...layer.bg]}
+            char={floor.char}
+            color={floor.color}
+            bg={floor.bg}
           />
+          <group position-z={drawheight * -0.25}>
+            <Tiles
+              width={layer.width}
+              height={layer.height}
+              char={water.char}
+              color={water.color}
+              bg={water.bg}
+            />
+          </group>
+          <group position-z={drawheight * 0.25}>
+            <Tiles
+              width={layer.width}
+              height={layer.height}
+              char={walls.char}
+              color={walls.color}
+              bg={walls.bg}
+            />
+          </group>
         </group>
       )
     }
     case LAYER_TYPE.SPRITES: {
       const rr = 8 / 14
+      const othersprites = layer.sprites.filter(
+        (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISSWIM,
+      )
+      const watersprites = layer.sprites.filter(
+        (sprite) => (sprite.stat as COLLISION) === COLLISION.ISSWIM,
+      )
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
@@ -77,10 +125,17 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
             ))}
           </Instances>
           <Sprites
-            sprites={[...layer.sprites]}
+            sprites={[...othersprites]}
             withbillboards={true}
             fliptexture={false}
           />
+          <group position-z={drawheight * -0.5}>
+            <Sprites
+              sprites={[...watersprites]}
+              withbillboards={true}
+              fliptexture={false}
+            />
+          </group>
         </group>
       )
     }

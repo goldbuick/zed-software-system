@@ -143,6 +143,12 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
     }
     case LAYER_TYPE.SPRITES: {
       const rr = 8 / 14
+      const othersprites = layer.sprites.filter(
+        (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISSWIM,
+      )
+      const watersprites = layer.sprites.filter(
+        (sprite) => (sprite.stat as COLLISION) === COLLISION.ISSWIM,
+      )
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
@@ -161,12 +167,17 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
             ))}
           </Instances>
           <Sprites
-            sprites={[...layer.sprites].filter(
-              (sprite) => sprite.pid !== player,
-            )}
+            sprites={othersprites.filter((sprite) => sprite.pid !== player)}
             withbillboards={true}
             fliptexture={false}
           />
+          <group position-z={drawheight * -0.5}>
+            <Sprites
+              sprites={watersprites.filter((sprite) => sprite.pid !== player)}
+              withbillboards={true}
+              fliptexture={false}
+            />
+          </group>
         </group>
       )
     }
