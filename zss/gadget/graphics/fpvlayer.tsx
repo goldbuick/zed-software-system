@@ -105,7 +105,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                             (pt.y + 0.5) * drawheight,
                             drawheight * 0.5,
                           ]}
-                          scale={[0.99, 0.99, 0.99]}
+                          scale={[0.98, 0.98, 0.98]}
                           color={[177, COLOR.DKGRAY, COLOR.BLACK]}
                         />
                       )
@@ -162,7 +162,6 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
             sprites={[...layer.sprites].filter(
               (sprite) => sprite.pid !== player,
             )}
-            // scale={0.95}
             withbillboards={true}
             fliptexture={false}
           />

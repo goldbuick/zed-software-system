@@ -1,12 +1,17 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp3, dampE } from 'maath/easing'
+import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
+import {
+  LAYER,
+  LAYER_TYPE,
+  VIEWSCALE,
+  layersreadcontrol,
+} from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -33,6 +38,18 @@ function maptolayerz(layer: LAYER): number {
       return 1
   }
   return 0
+}
+
+function maptofov(viewscale: VIEWSCALE): number {
+  switch (viewscale) {
+    case VIEWSCALE.NEAR:
+      return 45
+    default:
+    case VIEWSCALE.MID:
+      return 75
+    case VIEWSCALE.FAR:
+      return 100
+  }
 }
 
 export function FPVGraphics({ width, height }: GraphicsProps) {
@@ -112,12 +129,16 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     )
 
     // tilt camera
-    dampE(cameraref.current.rotation, [0.2, 0, 0], animrate, delta)
+    dampE(cameraref.current.rotation, [0.3, 0, 0], animrate, delta)
 
     // move camera
     damp3(
       pivotref.current.position,
-      [state.size.width * 0.5 - fx, state.size.height * 0.5, fy],
+      [
+        state.size.width * 0.5 - fx,
+        state.size.height * 0.5 - drawheight * 0.25 + 1,
+        fy,
+      ],
       animrate,
       delta,
     )
@@ -127,7 +148,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     depthoffield.current.cocMaterial.worldFocusRange = 1200
     depthoffield.current.cocMaterial.worldFocusDistance = 100
 
-    // update matrix
+    // update fov & matrix
+    damp(cameraref.current, 'fov', 45) //maptofov(control.viewscale))
     cameraref.current.updateProjectionMatrix()
   })
 
@@ -153,8 +175,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       <group ref={pivotref}>
         <perspectiveCamera
           ref={cameraref}
-          near={0.1}
-          far={6000}
+          near={1}
+          far={3000}
           aspect={-viewwidth / viewheight}
         />
       </group>
