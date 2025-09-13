@@ -30,7 +30,7 @@ export function ShadowMesh() {
 
   // create buffer geo attributes
   const { position, uv } = useMemo(
-    () => createTilemapBufferGeometryAttributes(1, 1 * (8 / 14)),
+    () => createTilemapBufferGeometryAttributes(1, 1),
     [],
   )
 

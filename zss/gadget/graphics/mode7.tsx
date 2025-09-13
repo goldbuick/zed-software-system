@@ -6,7 +6,12 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import {
+  LAYER,
+  LAYER_TYPE,
+  VIEWSCALE,
+  layersreadcontrol,
+} from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -21,6 +26,18 @@ import { RenderLayer } from './renderlayer'
 type GraphicsProps = {
   width: number
   height: number
+}
+
+function maptolayerz(layer: LAYER): number {
+  switch (layer.type) {
+    case LAYER_TYPE.TILES:
+      return 0
+    case LAYER_TYPE.DITHER:
+      return RUNTIME.DRAW_CHAR_HEIGHT() + 1
+    case LAYER_TYPE.SPRITES:
+      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5
+  }
+  return 0
 }
 
 function mapviewtoy(viewscale: number, viewheight: number) {
@@ -172,7 +189,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 600
+        depthoffield.current.cocMaterial.worldFocusRange = 1000
         depthoffield.current.cocMaterial.worldFocusDistance = 1100
         break
     }
@@ -231,7 +248,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                       key={layer.id}
                       id={layer.id}
                       from="layers"
-                      z={0}
+                      z={maptolayerz(layer)}
                     />
                   ))}
                 </group>

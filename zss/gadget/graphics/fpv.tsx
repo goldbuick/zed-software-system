@@ -35,20 +35,44 @@ function maptolayerz(layer: LAYER): number {
     case LAYER_TYPE.DITHER:
       return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
-      return 1
+      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5
   }
   return 0
+}
+
+function maptotilt(viewscale: VIEWSCALE): number {
+  switch (viewscale) {
+    case VIEWSCALE.NEAR:
+      return 0.1
+    default:
+    case VIEWSCALE.MID:
+      return 0.2
+    case VIEWSCALE.FAR:
+      return 0.3
+  }
+}
+
+function maptobackup(viewscale: VIEWSCALE): number {
+  switch (viewscale) {
+    case VIEWSCALE.NEAR:
+      return 64
+    default:
+    case VIEWSCALE.MID:
+      return 16
+    case VIEWSCALE.FAR:
+      return 0
+  }
 }
 
 function maptofov(viewscale: VIEWSCALE): number {
   switch (viewscale) {
     case VIEWSCALE.NEAR:
-      return 45
+      return 25
     default:
     case VIEWSCALE.MID:
-      return 75
+      return 45
     case VIEWSCALE.FAR:
-      return 100
+      return 90
   }
 }
 
@@ -129,7 +153,12 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     )
 
     // tilt camera
-    dampE(cameraref.current.rotation, [0.3, 0, 0], animrate, delta)
+    dampE(
+      cameraref.current.rotation,
+      [maptotilt(control.viewscale), 0, 0],
+      animrate,
+      delta,
+    )
 
     // move camera
     damp3(
@@ -143,13 +172,23 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       delta,
     )
 
+    damp3(
+      cameraref.current.position,
+      [0, 0, maptobackup(control.viewscale)],
+      animrate,
+      delta,
+    )
+    //
+
     // update effect
     depthoffield.current.bokehScale = 5
     depthoffield.current.cocMaterial.worldFocusRange = 1200
     depthoffield.current.cocMaterial.worldFocusDistance = 100
 
     // update fov & matrix
-    damp(cameraref.current, 'fov', 45) //maptofov(control.viewscale))
+    damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
+
+    //
     cameraref.current.updateProjectionMatrix()
   })
 
