@@ -56,7 +56,7 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
         composer.setSize(width, height)
         composer.render(delta)
         gl.autoClear = currentAutoClear
-      }, 1)
+      }, 2)
 
       const group = useRef<Group>(null!)
       useLayoutEffect(() => {

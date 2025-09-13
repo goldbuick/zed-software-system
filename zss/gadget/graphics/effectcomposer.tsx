@@ -52,13 +52,11 @@ export const EffectComposer = /* @__PURE__ */ memo(
         return [effectComposer]
       }, [camera, gl, scene])
 
-      useFrame((_, delta) => {
-        const currentAutoClear = gl.autoClear
-        gl.autoClear = true
+      useFrame((state, delta) => {
+        state.gl.clear(true, true, true)
         composer.setSize(width, height)
         composer.render(delta)
-        gl.autoClear = currentAutoClear
-      }, -1)
+      }, 1)
 
       const group = useRef<Group>(null!)
       useLayoutEffect(() => {
