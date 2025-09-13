@@ -740,6 +740,7 @@ export function memorymoveobject(
   board: MAYBE<BOARD>,
   element: MAYBE<BOARD_ELEMENT>,
   dest: PT,
+  didpush: Record<string, boolean> = {},
 ) {
   if (!ispresent(element?.id)) {
     return false
@@ -757,7 +758,9 @@ export function memorymoveobject(
     const ispushable = memoryelementcheckpushable(element, blocked)
 
     // player cannot push items
-    if (ispushable && (!elementisplayer || !isitem)) {
+    const blockedid = blocked.id ?? ''
+    if (ispushable && (!elementisplayer || !isitem) && !didpush[blockedid]) {
+      didpush[blockedid] = true
       const bumpdir = dirfrompts({ x: element.x ?? 0, y: element.y ?? 0 }, dest)
       const bump = ptapplydir({ x: blocked.x ?? 0, y: blocked.y ?? 0 }, bumpdir)
       memorymoveobject(book, board, blocked, bump)
