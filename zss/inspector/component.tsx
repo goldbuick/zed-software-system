@@ -59,12 +59,13 @@ export function TapeTerminalInspector() {
       {inspector ? (
         <Rect
           visible
+          opacity={0}
+          color="black"
           x={0}
           y={0}
           z={-1}
           width={BOARD_WIDTH}
           height={BOARD_HEIGHT}
-          color="black"
           cursor="pointer"
           onPointerDown={(e: ThreeEvent<PointerEvent>) => {
             e.intersections[0].object.worldToLocal(
@@ -93,12 +94,13 @@ export function TapeTerminalInspector() {
       ) : (
         <Rect
           visible
+          opacity={0}
+          color="blue"
           x={0}
           y={0}
           z={-1}
           width={BOARD_WIDTH}
           height={BOARD_HEIGHT}
-          color="black"
         />
       )}
       {ispresent(cursor) && (

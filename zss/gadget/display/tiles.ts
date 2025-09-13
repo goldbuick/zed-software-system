@@ -1,6 +1,4 @@
 import {
-  BufferAttribute,
-  BufferGeometry,
   DataTexture,
   DoubleSide,
   RGBAIntegerFormat,
@@ -26,28 +24,28 @@ import { createbitmaptexture } from './textures'
 type TILE_CHARS = MAYBE<number>[]
 type TILE_COLORS = MAYBE<number>[]
 
-const BOTTOM_LEFT = [0, 1, 0]
-const BOTTOM_RIGHT = [1, 1, 0]
-const TOP_RIGHT = [1, 0, 0]
-const TOP_LEFT = [0, 0, 0]
+const QUAD_BOTTOM_LEFT = [0, 1, 0]
+const QUAD_BOTTOM_RIGHT = [1, 1, 0]
+const QUAD_TOP_RIGHT = [1, 0, 0]
+const QUAD_TOP_LEFT = [0, 0, 0]
 
 const QUAD_POSITIONS = new Float32Array([
-  ...BOTTOM_LEFT,
-  ...TOP_RIGHT,
-  ...BOTTOM_RIGHT,
-  ...BOTTOM_LEFT,
-  ...TOP_LEFT,
-  ...TOP_RIGHT,
+  ...QUAD_BOTTOM_LEFT,
+  ...QUAD_TOP_RIGHT,
+  ...QUAD_BOTTOM_RIGHT,
+  ...QUAD_BOTTOM_LEFT,
+  ...QUAD_TOP_LEFT,
+  ...QUAD_TOP_RIGHT,
 ])
 
 const QUAD_UVS = new Float32Array([
-  ...BOTTOM_LEFT.slice(0, 2),
-  ...TOP_RIGHT.slice(0, 2),
-  ...BOTTOM_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_RIGHT.slice(0, 2),
 
-  ...BOTTOM_LEFT.slice(0, 2),
-  ...TOP_LEFT.slice(0, 2),
-  ...TOP_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
 ])
 
 export function updateTilemapDataTexture(
@@ -84,8 +82,7 @@ export function createTilemapDataTexture(width: number, height: number) {
   return texture
 }
 
-export function createTilemapBufferGeometry(
-  bg: BufferGeometry,
+export function createTilemapBufferGeometryAttributes(
   width: number,
   height: number,
 ) {
@@ -102,11 +99,105 @@ export function createTilemapBufferGeometry(
     }
   })
 
-  bg.setAttribute('position', new BufferAttribute(positions, 3))
-  bg.setAttribute('uv', new BufferAttribute(QUAD_UVS, 2))
+  return {
+    position: positions,
+    uv: QUAD_UVS,
+  }
+}
 
-  bg.computeBoundingBox()
-  bg.computeBoundingSphere()
+const CAP_BOTTOM_LEFT = [0, 1, 1]
+const CAP_BOTTOM_RIGHT = [1, 1, 1]
+const CAP_TOP_RIGHT = [1, 0, 1]
+const CAP_TOP_LEFT = [0, 0, 1]
+
+const CAP_POSITIONS = new Float32Array([
+  // front
+  ...QUAD_BOTTOM_LEFT,
+  ...CAP_BOTTOM_RIGHT,
+  ...QUAD_BOTTOM_RIGHT,
+  ...QUAD_BOTTOM_LEFT,
+  ...CAP_BOTTOM_LEFT,
+  ...CAP_BOTTOM_RIGHT,
+  // back
+  ...QUAD_TOP_LEFT,
+  ...CAP_TOP_RIGHT,
+  ...QUAD_TOP_RIGHT,
+  ...QUAD_TOP_LEFT,
+  ...CAP_TOP_LEFT,
+  ...CAP_TOP_RIGHT,
+  // right
+  ...QUAD_BOTTOM_RIGHT,
+  ...CAP_TOP_RIGHT,
+  ...QUAD_TOP_RIGHT,
+  ...QUAD_BOTTOM_RIGHT,
+  ...CAP_BOTTOM_RIGHT,
+  ...CAP_TOP_RIGHT,
+  // left
+  ...QUAD_BOTTOM_LEFT,
+  ...CAP_TOP_LEFT,
+  ...QUAD_TOP_LEFT,
+  ...QUAD_BOTTOM_LEFT,
+  ...CAP_BOTTOM_LEFT,
+  ...CAP_TOP_LEFT,
+  // ...QUAD_BOTTOM_LEFT,
+  // ...QUAD_TOP_RIGHT,
+  // ...QUAD_BOTTOM_RIGHT,
+  // ...QUAD_BOTTOM_LEFT,
+  // ...QUAD_TOP_LEFT,
+  // ...QUAD_TOP_RIGHT,
+])
+
+const CAP_UVS = new Float32Array([
+  // front
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+  // back
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+  // right
+  ...QUAD_BOTTOM_RIGHT.slice(0, 2),
+  ...QUAD_TOP_LEFT.slice(0, 2),
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_BOTTOM_RIGHT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+  ...QUAD_TOP_LEFT.slice(0, 2),
+  // left
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_RIGHT.slice(0, 2),
+  ...QUAD_BOTTOM_LEFT.slice(0, 2),
+  ...QUAD_TOP_LEFT.slice(0, 2),
+  ...QUAD_TOP_RIGHT.slice(0, 2),
+])
+
+export function createPillarBufferGeometryAttributes(
+  width: number,
+  height: number,
+) {
+  const drawwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const positions = CAP_POSITIONS.map((v, index) => {
+    switch (index % 3) {
+      case 0: // x
+        return v * drawwidth
+      case 1: // y
+        return v * drawheight
+      default: // z
+        return v * drawheight
+    }
+  })
+  return {
+    position: positions,
+    uv: CAP_UVS,
+  }
 }
 
 const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
@@ -131,7 +222,11 @@ const tilemapMaterial = new ShaderMaterial({
   vertexShader: `
     varying vec2 vUv;
     void main() {
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vec4 mvPosition = vec4(position, 1.0);
+      #ifdef USE_INSTANCING
+      	mvPosition = instanceMatrix * mvPosition;
+      #endif        
+      mvPosition = modelViewMatrix * mvPosition;
       gl_Position = projectionMatrix * mvPosition;
       vUv = uv;
     }

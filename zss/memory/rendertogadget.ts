@@ -347,7 +347,7 @@ export function memoryconverttogadgetlayers(
     tiles.char[i] = display.char
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
-    tiles.wall[i] = collision === COLLISION.ISSOLID ? 1 : 0
+    tiles.stats[i] = collision
   }
 
   const boardobjects = Object.values(board.objects ?? {})
@@ -388,6 +388,8 @@ export function memoryconverttogadgetlayers(
     sprite.char = display.char
     sprite.color = display.color
     sprite.bg = display.bg
+    sprite.stat = collision
+    sprite.pid = ispid(id) ? id : undefined
     objects.sprites.push(sprite)
 
     // write lighting if needed
@@ -541,6 +543,7 @@ export function memoryconverttogadgetlayers(
     sprite.char = display.char
     sprite.color = display.color
     sprite.bg = display.bg
+    sprite.stat = collision
     objects.sprites.push(sprite)
   }
 

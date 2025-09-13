@@ -1,15 +1,19 @@
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
-import { useRef } from 'react'
-import { Group } from 'three'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { layersreadcontrol } from 'zss/gadget/data/types'
 import { TapeTerminalInspector } from 'zss/inspector/component'
 import { ispresent } from 'zss/mapping/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+
+import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { MediaLayer } from './medialayer'
+import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
   width: number
@@ -17,20 +21,28 @@ type GraphicsProps = {
 }
 
 export function FlatGraphics({ width, height }: GraphicsProps) {
+  const screensize = useScreenSize()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
+  const cameraref = useRef<OrthographicCameraImpl>(null)
   const cornerref = useRef<Group>(null)
-  const panref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
-  const recenterref = useRef<Group>(null)
+  const inspectref = useRef<Group>(null)
+  const inspectscaleref = useRef<Group>(null)
 
-  useFrame((_, delta) => {
+  const [, setcameraready] = useState(false)
+  useLayoutEffect(() => {
+    setcameraready(true)
+  }, [])
+
+  useFrame((state, delta) => {
     if (
+      !cameraref.current ||
       !cornerref.current ||
-      !panref.current ||
       !zoomref.current ||
-      !recenterref.current
+      !inspectref.current ||
+      !inspectscaleref.current
     ) {
       return
     }
@@ -41,201 +53,153 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     )
 
     // setup tracking state
-    if (!ispresent(panref.current.userData.focusx)) {
-      zoomref.current.scale.setScalar(control.viewscale)
-      panref.current.userData = {
+    if (!ispresent(cameraref.current.userData.focusx)) {
+      cameraref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
         tfocusx: control.focusx,
         tfocusy: control.focusy,
         facing: control.facing,
       }
-      panref.current.position.set(
-        -control.focusx * RUNTIME.DRAW_CHAR_WIDTH(),
-        -control.focusy * RUNTIME.DRAW_CHAR_HEIGHT(),
-        0,
-      )
+      zoomref.current.scale.setScalar(control.viewscale)
     }
+
+    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const boarddrawwidth = BOARD_WIDTH * drawwidth
+    const boarddrawheight = BOARD_HEIGHT * drawheight
 
     const animrate = 0.25
-    const focusx = panref.current.userData.focusx
-    const focusy = panref.current.userData.focusy
-    const fx = focusx * RUNTIME.DRAW_CHAR_WIDTH()
-    const fy = focusy * RUNTIME.DRAW_CHAR_HEIGHT()
+    damp3(zoomref.current.scale, control.viewscale, animrate, delta)
+
+    const viewscale = zoomref.current.scale.x
+    const focusx = cameraref.current.userData.focusx + 0.5
+    const focusy = cameraref.current.userData.focusy + 0.5
+    const fx = focusx * drawwidth * viewscale + boarddrawwidth * -0.5
+    const fy = focusy * drawheight * viewscale + boarddrawheight * -0.5
 
     // pan
-    damp3(panref.current.position, [-fx, -fy, 0], animrate, delta)
+    damp3(cornerref.current.position, [-fx, -fy, 0], 0.05, delta)
 
-    // scale
-    const dfocusx = Math.abs(
-      panref.current.userData.focusx - panref.current.userData.tfocusx,
-    )
-    const dfocusy = Math.abs(
-      panref.current.userData.focusy - panref.current.userData.tfocusy,
-    )
-    if (dfocusx < 1 && dfocusy < 1) {
-      damp3(zoomref.current.scale, control.viewscale, animrate, delta)
-    }
-    const viewscale = zoomref.current.scale.x
-    const invviewscale = 1 / viewscale
-    const scaledelta = Math.abs(viewscale - control.viewscale)
-    const isscaling = scaledelta > 0.01
-    const isnear = viewscale < (VIEWSCALE.MID as number)
-
-    const sfx = viewscale * RUNTIME.DRAW_CHAR_WIDTH()
-    const dfx = sfx - RUNTIME.DRAW_CHAR_WIDTH()
-    const ofx = dfx * invviewscale
-    const rfx = RUNTIME.DRAW_CHAR_WIDTH() + ofx
-
-    const sfy = viewscale * RUNTIME.DRAW_CHAR_HEIGHT()
-    const dfy = sfy - RUNTIME.DRAW_CHAR_HEIGHT()
-    const ofy = dfy * invviewscale
-    const rfy = RUNTIME.DRAW_CHAR_HEIGHT() + ofy
-
-    // re-center should be zero when scale is 1
-    recenterref.current.position.set(fx - focusx * rfx, fy - focusy * rfy, 0)
-
-    // smooth viewscale
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH() * viewscale
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT() * viewscale
-    const cols = viewwidth / drawwidth
-    const rows = viewheight / drawheight
-
-    if (isscaling) {
-      // snap to player when zooming
-      panref.current.userData.tfocusx = control.focusx + 0.5
-      panref.current.userData.tfocusy = control.focusy + 0.5
-    }
-
-    // framing
-    cornerref.current.position.set(viewwidth * 0.5, viewheight * 0.5, 0)
-
-    if (!isscaling) {
-      if (isnear) {
-        // centered
-        panref.current.userData.tfocusx = control.focusx + 0.5
-        panref.current.userData.tfocusy = control.focusy + 0.5
-      } else {
-        // panning
-        const zonex = Math.round(cols * 0.25)
-        const zoney = Math.round(rows * 0.25)
-
-        const dx = Math.round(panref.current.userData.tfocusx - control.focusx)
-        if (Math.abs(dx) >= zonex) {
-          const step = dx < 0 ? zonex : -zonex
-          panref.current.userData.tfocusx += step * 2
-        }
-
-        const dy = Math.round(panref.current.userData.tfocusy - control.focusy)
-        if (Math.abs(dy) >= zoney) {
-          const step = dy < 0 ? zoney : -zoney
-          panref.current.userData.tfocusy += step * 2
-        }
-      }
-    }
-
-    // edge clamp
-    const left = Math.round(cols * 0.5)
-    const top = Math.round(rows * 0.5)
-    const right = control.width - cols * 0.5
-    const bottom = control.height - rows * 0.5
-    const marginx = -Math.round((cols - control.width) * 0.5)
-    const marginy = -Math.round((rows - control.height) * 0.5)
-
-    if (marginx >= 0) {
-      if (panref.current.userData.tfocusx < left) {
-        if (isscaling) {
-          panref.current.userData.focusx = left
-        }
-        panref.current.userData.tfocusx = left
-      }
-      if (panref.current.userData.tfocusx > right) {
-        if (isscaling) {
-          panref.current.userData.focusx = right
-        }
-        panref.current.userData.tfocusx = right
-      }
+    // center when margins
+    if (viewwidth > boarddrawwidth * viewscale) {
+      cameraref.current.userData.tfocusx = BOARD_WIDTH * 0.5
     } else {
-      panref.current.userData.tfocusx = left + marginx
+      cameraref.current.userData.tfocusx = control.focusx
     }
 
-    if (marginy >= 0) {
-      if (panref.current.userData.tfocusy < top) {
-        if (isscaling) {
-          panref.current.userData.focusy = top
-        }
-        panref.current.userData.tfocusy = top
-      }
-      if (panref.current.userData.tfocusy > bottom) {
-        if (isscaling) {
-          panref.current.userData.focusy = bottom
-        }
-        panref.current.userData.tfocusy = bottom
-      }
+    if (viewheight > boarddrawheight * viewscale) {
+      cameraref.current.userData.tfocusy = BOARD_HEIGHT * 0.5
     } else {
-      panref.current.userData.tfocusy = top + marginy
+      cameraref.current.userData.tfocusy = control.focusy
     }
 
     // smoothed change in focus
     damp(
-      panref.current.userData,
+      cameraref.current.userData,
       'focusx',
-      panref.current.userData.tfocusx,
+      cameraref.current.userData.tfocusx,
       animrate,
     )
     damp(
-      panref.current.userData,
+      cameraref.current.userData,
       'focusy',
-      panref.current.userData.tfocusy,
+      cameraref.current.userData.tfocusy,
       animrate,
     )
+
+    // keep inspector in place
+    inspectref.current.position.x =
+      viewwidth * 0.5 - boarddrawwidth * 0.5 + cornerref.current.position.x
+    inspectref.current.position.y =
+      viewheight * 0.5 - boarddrawheight * 0.5 + cornerref.current.position.y
+
+    // keep inspector the same size
+    inspectscaleref.current.scale.setScalar(viewscale)
+
+    // center camera
+    cameraref.current.position.x = state.size.width * 0.5
+    cameraref.current.position.y = state.size.height * 0.5
+    cameraref.current.updateProjectionMatrix()
   })
 
   // re-render only when layer count changes
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+
   const {
     over = [],
     under = [],
     layers = [],
   } = useGadgetClient.getState().gadget
 
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
+  const centerx = boarddrawwidth * -0.5 + screensize.marginx
+  const centery = boarddrawheight * -0.5 - screensize.marginy
+
   return (
-    <group ref={cornerref}>
-      <group ref={panref}>
-        <group ref={zoomref}>
-          <group ref={recenterref}>
-            <TapeTerminalInspector />
-            {under.map((layer, i) => (
-              <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
-            ))}
-            {layers.map((layer) => (
-              <MediaLayer
-                key={`media${layer.id}`}
-                id={layer.id}
-                from="layers"
-              />
-            ))}
-            {layers.map((layer, i) => (
-              <FlatLayer
-                key={layer.id}
-                from="layers"
-                id={layer.id}
-                z={under.length + i * 2}
-              />
-            ))}
-            {over.map((layer, i) => (
-              <FlatLayer
-                key={layer.id}
-                from="over"
-                id={layer.id}
-                z={under.length + layers.length + i * 2}
-              />
-            ))}
-          </group>
+    <>
+      {layers.map((layer) => (
+        <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
+      ))}
+      <group ref={inspectref}>
+        <group ref={inspectscaleref}>
+          <TapeTerminalInspector />
         </group>
       </group>
-    </group>
+      <orthographicCamera
+        ref={cameraref}
+        left={viewwidth * -0.5}
+        right={viewwidth * 0.5}
+        top={viewheight * -0.5}
+        bottom={viewheight * 0.5}
+        near={1}
+        far={2000}
+        position={[0, 0, 1000]}
+      />
+      {cameraref.current && (
+        <RenderLayer
+          camera={cameraref.current}
+          viewwidth={viewwidth}
+          viewheight={viewheight}
+          effects={<></>}
+        >
+          <group position={[centerx, centery, 0]}>
+            <group ref={cornerref}>
+              <group ref={zoomref}>
+                {under.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="under"
+                    id={layer.id}
+                    z={i * 2}
+                  />
+                ))}
+                {layers.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="layers"
+                    id={layer.id}
+                    z={under.length + i * 2}
+                  />
+                ))}
+                {over.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="over"
+                    id={layer.id}
+                    z={under.length + layers.length + i * 2}
+                  />
+                ))}
+              </group>
+            </group>
+          </group>
+        </RenderLayer>
+      )}
+    </>
   )
 }

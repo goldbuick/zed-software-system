@@ -1,8 +1,8 @@
-import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
-import { degToRad } from 'maath/misc'
-import { useRef } from 'react'
+import { DepthOfFieldEffect } from 'postprocessing'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -15,6 +15,8 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+
+import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { FPVLayer } from './fpvlayer'
@@ -29,40 +31,53 @@ type GraphicsProps = {
 function maptolayerz(layer: LAYER): number {
   switch (layer.type) {
     case LAYER_TYPE.TILES:
-      if (layer.tag === 'tickers') {
-        return RUNTIME.DRAW_CHAR_HEIGHT() + 1
-      }
-      break
+      return 0
     case LAYER_TYPE.DITHER:
       return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.25
+      return 1
   }
   return 0
 }
 
-function maptoscale(viewscale: VIEWSCALE): number {
+function maptofov(viewscale: VIEWSCALE): number {
   switch (viewscale) {
     case VIEWSCALE.NEAR:
-      return 10
+      return 45
     default:
     case VIEWSCALE.MID:
-      return 4
+      return 75
     case VIEWSCALE.FAR:
-      return 1.5
+      return 100
   }
 }
 
 export function FPVGraphics({ width, height }: GraphicsProps) {
-  const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-  const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const screensize = useScreenSize()
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const viewwidth = width * drawwidth
+  const viewheight = height * drawheight
 
+  const pivotref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
+  const depthoffield = useRef<DepthOfFieldEffect>(null)
 
-  useFrame((_, delta) => {
-    if (!overref.current || !underref.current || !cameraref.current) {
+  const [, setcameraready] = useState(false)
+  useLayoutEffect(() => {
+    setcameraready(true)
+  }, [])
+
+  useFrame((state, delta) => {
+    if (
+      !pivotref.current ||
+      !overref.current ||
+      !underref.current ||
+      !cameraref.current ||
+      !depthoffield.current
+    ) {
       return
     }
 
@@ -71,122 +86,134 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    // viewsize
-    const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-    const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
-
     // drawsize
-    const drawwidth = BOARD_WIDTH * RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = BOARD_HEIGHT * RUNTIME.DRAW_CHAR_HEIGHT()
+    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const boarddrawwidth = BOARD_WIDTH * drawwidth
+    const boarddrawheight = BOARD_HEIGHT * drawheight
+
+    // viewsize
+    const viewwidth = width * drawwidth
+    const viewheight = height * drawheight
 
     // setup tracking state
-    // if (!ispresent(cameraref.current.userData.focusx)) {
-    //   cameraref.current.userData = {
-    //     focusx: control.focusx,
-    //     focusy: control.focusy,
-    //     focuslx: control.focusx,
-    //     focusly: control.focusy,
-    //     focusvx: 0,
-    //     focusvy: 0,
-    //     facing: control.facing,
-    //     focusz: 0,
-    //   }
-    // }
+    if (!ispresent(cameraref.current.userData.focusx)) {
+      cameraref.current.userData = {
+        focusx: control.focusx,
+      }
+    }
 
     // framing
     overref.current.position.x = 0
-    overref.current.position.y = viewheight - drawheight
+    overref.current.position.y = viewheight - boarddrawheight
 
-    const rscale = clamp(viewwidth / drawwidth, 1.0, 10.0)
-    underref.current.position.x = viewwidth - drawwidth * rscale
+    const rscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
+    underref.current.position.x = viewwidth - boarddrawwidth * rscale
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
 
-    const animrate = 0.125
-    // const { focusx, focusy, focuslx, focusly } = focusref.current.userData
+    const animrate = 0.05
 
-    // --
+    // calc focus
+    let fx = control.focusx - 0.5
+    let fy = control.focusy + 0.5
+    fx *= -drawwidth
+    fy *= -drawheight
 
-    // bump focus by velocity
-    // const deltax = control.focusx - focuslx
-    // const deltay = control.focusy - focusly
-
-    // pivot focus
-    // const slead = 0.1
-    // const xlead = mapviewtolead(control.viewscale) * slead
-    // const uplead = mapviewtouplead(control.viewscale) * slead
-    // const downlead = mapviewtodownlead(control.viewscale) * slead
-    // if (deltay < 0) {
-    //   focusref.current.userData.focusvx = 0
-    //   focusref.current.userData.focusvy -= uplead
-    // } else if (deltay > 0) {
-    //   focusref.current.userData.focusvx = 0
-    //   focusref.current.userData.focusvy += downlead
-    // } else if (deltax < 0) {
-    //   focusref.current.userData.focusvx -= xlead
-    //   focusref.current.userData.focusvy = 0
-    // } else if (deltax > 0) {
-    //   focusref.current.userData.focusvx += xlead
-    //   focusref.current.userData.focusvy = 0
-    // }
-
-    const drawcharwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawcharheight = RUNTIME.DRAW_CHAR_HEIGHT()
-
-    // smooth this
+    // turn camera
     dampE(
-      cameraref.current.rotation,
-      [Math.PI * -0.5, control.facing, 0],
+      pivotref.current.rotation,
+      [0, Math.PI + control.facing, 0],
       animrate,
       delta,
     )
 
-    // snap this
-    cameraref.current.position.x = (control.focusx + 0.5) * drawcharwidth
-    cameraref.current.position.y = (control.focusy + 0.5) * drawcharheight
-    cameraref.current.position.z = RUNTIME.DRAW_CHAR_HEIGHT() * 0.75
+    // tilt camera
+    dampE(cameraref.current.rotation, [0.3, 0, 0], animrate, delta)
+
+    // move camera
+    damp3(
+      pivotref.current.position,
+      [
+        state.size.width * 0.5 - fx,
+        state.size.height * 0.5 - drawheight * 0.25 + 1,
+        fy,
+      ],
+      animrate,
+      delta,
+    )
+
+    // update effect
+    depthoffield.current.bokehScale = 5
+    depthoffield.current.cocMaterial.worldFocusRange = 1200
+    depthoffield.current.cocMaterial.worldFocusDistance = 100
+
+    // update fov & matrix
+    damp(cameraref.current, 'fov', 45) //maptofov(control.viewscale))
+    cameraref.current.updateProjectionMatrix()
   })
 
   // re-render only when layer count changes
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+
   const {
     over = [],
     under = [],
     layers = [],
   } = useGadgetClient.getState().gadget
+
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
+
   return (
     <>
-      <group position-z={layersindex}>
-        {layers.map((layer) => (
-          <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
-        ))}
-        <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
-          <PerspectiveCamera
-            ref={cameraref}
-            makeDefault
-            near={1}
-            far={2000}
-            rotation={[Math.PI * -0.5, 0, 0]}
-            position={[0, 0, 200]}
-          />
-          {layers.map((layer) => (
-            <FPVLayer
-              key={layer.id}
-              id={layer.id}
-              from="layers"
-              z={maptolayerz(layer)}
-            />
-          ))}
-        </RenderLayer>
+      {layers.map((layer) => (
+        <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
+      ))}
+      <group ref={pivotref}>
+        <perspectiveCamera
+          ref={cameraref}
+          near={1}
+          far={3000}
+          aspect={-viewwidth / viewheight}
+        />
       </group>
       <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
         ))}
+      </group>
+      <group position-z={layersindex}>
+        {cameraref.current && (
+          <RenderLayer
+            camera={cameraref.current}
+            viewwidth={viewwidth}
+            viewheight={viewheight}
+            effects={
+              <>
+                <DepthOfField ref={depthoffield} />
+              </>
+            }
+          >
+            <group position={[-screensize.marginx, -screensize.marginy, -512]}>
+              <group
+                rotation={[Math.PI * -0.5, 0, 0]}
+                position={[0, drawheight * -0.75, 0]}
+              >
+                {layers.map((layer) => (
+                  <FPVLayer
+                    key={layer.id}
+                    id={layer.id}
+                    from="layers"
+                    z={maptolayerz(layer)}
+                  />
+                ))}
+              </group>
+            </group>
+          </RenderLayer>
+        )}
       </group>
       <group ref={overref} position-z={overindex}>
         {over.map((layer, i) => (

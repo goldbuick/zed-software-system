@@ -1,5 +1,5 @@
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-import { COLOR, WORD } from 'zss/words/types'
+import { COLLISION, COLOR, WORD } from 'zss/words/types'
 
 export const FILE_BYTES_PER_CHAR = 14
 export const FILE_BYTES_PER_COLOR = 3
@@ -28,6 +28,8 @@ export type SPRITE = {
   char: number
   color: number
   bg: number
+  stat: number
+  pid?: string
 }
 
 export enum LAYER_TYPE {
@@ -53,7 +55,7 @@ export type LAYER_TILES = {
   char: number[]
   color: number[]
   bg: number[]
-  wall: number[]
+  stats: number[]
 }
 
 export type LAYER_SPRITES = {
@@ -124,7 +126,7 @@ export function createtiles(
     char: arrayof(size, 0),
     color: arrayof(size, 0),
     bg: arrayof(size, bg),
-    wall: arrayof(size, 0),
+    stats: arrayof(size, 0),
   }
 }
 
@@ -142,6 +144,7 @@ export function createsprite(
     char,
     color,
     bg: COLOR.ONCLEAR,
+    stat: 0,
   }
 }
 
@@ -197,7 +200,15 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
   }
 }
 
-export function layersreadcontrol(layers: LAYER[]) {
+export function layersreadcontrol(layers: LAYER[]): {
+  width: number
+  height: number
+  focusx: number
+  focusy: number
+  viewscale: VIEWSCALE
+  graphics: string
+  facing: number
+} {
   let width = 0
   let height = 0
   let focusx = BOARD_WIDTH * 0.5

@@ -36,7 +36,11 @@ const ditherMaterial = new ShaderMaterial({
       varying vec2 vUv;
     
       void main() {
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vec4 mvPosition = vec4(position, 1.0);
+        #ifdef USE_INSTANCING
+        	mvPosition = instanceMatrix * mvPosition;
+        #endif        
+        mvPosition = modelViewMatrix * mvPosition;
         gl_Position = projectionMatrix * mvPosition;
         
         vUv = uv;

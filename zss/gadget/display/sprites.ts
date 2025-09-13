@@ -147,7 +147,11 @@ const spritesMaterial = new ShaderMaterial({
       animPosition += pointSize * 0.5;
       animPosition.x -= 1.0;
 
-      vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
+      vec4 mvPosition = vec4(animPosition, 0.0, 1.0);
+      #ifdef USE_INSTANCING
+      	mvPosition = instanceMatrix * mvPosition;
+      #endif        
+      mvPosition = modelViewMatrix * mvPosition;
       gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled

@@ -1,6 +1,5 @@
 /* eslint-disable react/no-unknown-property */
 /* eslint-disable react-refresh/only-export-components */
-import { OrthographicCamera } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
 import { RUNTIME } from 'zss/config'
@@ -9,7 +8,12 @@ import { useDeviceData } from './hooks'
 import { TouchUI } from './touchui/component'
 
 // screensize in chars
-const Screensize = createContext({ cols: 1, rows: 1 })
+const Screensize = createContext({
+  cols: 1,
+  rows: 1,
+  marginx: 1,
+  marginy: 1,
+})
 
 export function useScreenSize() {
   return useContext(Screensize)
@@ -58,13 +62,7 @@ export function UserScreen({ children }: UserScreenProps) {
   }, [insetcols, insetrows])
 
   return (
-    <Screensize.Provider value={{ cols, rows }}>
-      <OrthographicCamera
-        makeDefault
-        near={1}
-        far={2000}
-        position={[0, 0, 1000]}
-      />
+    <Screensize.Provider value={{ cols, rows, marginx, marginy }}>
       {cols >= 10 && rows >= 10 && (
         <group scale-x={-1} rotation-z={Math.PI}>
           <group
