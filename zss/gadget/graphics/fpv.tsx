@@ -35,7 +35,7 @@ function maptolayerz(layer: LAYER): number {
     case LAYER_TYPE.DITHER:
       return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5 + 1
+      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5
   }
   return 0
 }
@@ -49,6 +49,18 @@ function maptotilt(viewscale: VIEWSCALE): number {
       return 0.2
     case VIEWSCALE.FAR:
       return 0.3
+  }
+}
+
+function maptobackup(viewscale: VIEWSCALE): number {
+  switch (viewscale) {
+    case VIEWSCALE.NEAR:
+      return 64
+    default:
+    case VIEWSCALE.MID:
+      return 16
+    case VIEWSCALE.FAR:
+      return 0
   }
 }
 
@@ -127,7 +139,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     const animrate = 0.05
 
     // calc focus
-    let fx = control.focusx + 0.5
+    let fx = control.focusx - 0.5
     let fy = control.focusy + 0.5
     fx *= -drawwidth
     fy *= -drawheight
@@ -159,6 +171,14 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       animrate,
       delta,
     )
+
+    damp3(
+      cameraref.current.position,
+      [0, 0, maptobackup(control.viewscale)],
+      animrate,
+      delta,
+    )
+    //
 
     // update effect
     depthoffield.current.bokehScale = 5

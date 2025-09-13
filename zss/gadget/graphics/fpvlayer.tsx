@@ -142,6 +142,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
+      const rr = 8 / 14
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
@@ -150,10 +151,11 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
             {layer.sprites.map((sprite, idx) => (
               <Instance
                 key={idx}
+                scale={[1, rr, 1]}
                 position={[
                   sprite.x * drawwidth,
-                  (sprite.y + 0.25) * drawheight,
-                  drawheight * -0.5,
+                  (sprite.y - rr + 0.5 + 0.25) * drawheight,
+                  drawheight * -0.5 + 0.5,
                 ]}
               />
             ))}

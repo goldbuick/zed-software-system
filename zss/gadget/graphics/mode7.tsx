@@ -35,7 +35,7 @@ function maptolayerz(layer: LAYER): number {
     case LAYER_TYPE.DITHER:
       return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5 + 1
+      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5
   }
   return 0
 }
@@ -189,7 +189,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 600
+        depthoffield.current.cocMaterial.worldFocusRange = 1000
         depthoffield.current.cocMaterial.worldFocusDistance = 1100
         break
     }

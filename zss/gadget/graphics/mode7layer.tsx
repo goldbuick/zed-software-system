@@ -1,10 +1,12 @@
 import { Instance, Instances } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
+import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -21,6 +23,13 @@ type Mode7LayerProps = {
 
 export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
   const meshes = useRef<InstancedMesh>(null)
+
+  useFrame(() => {
+    if (ispresent(meshes.current)) {
+      meshes.current.computeBoundingBox()
+      meshes.current.computeBoundingSphere()
+    }
+  })
 
   const layer = useGadgetClient(
     useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
@@ -49,6 +58,7 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
+      const rr = 8 / 14
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
@@ -57,10 +67,11 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
             {layer.sprites.map((sprite, idx) => (
               <Instance
                 key={idx}
+                scale={[1, rr, 1]}
                 position={[
                   sprite.x * drawwidth,
-                  (sprite.y + 0.25) * drawheight,
-                  drawheight * -1,
+                  (sprite.y + 0.5) * drawheight,
+                  drawheight * -0.5 + 0.5,
                 ]}
               />
             ))}
