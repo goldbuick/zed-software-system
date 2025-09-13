@@ -105,7 +105,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                             (pt.y + 0.5) * drawheight,
                             drawheight * 0.5,
                           ]}
-                          scale={[0.98, 0.98, 0.98]}
+                          scale={[0.9, 0.9, 0.9]}
                           color={[177, COLOR.DKGRAY, COLOR.BLACK]}
                         />
                       )
@@ -151,9 +151,9 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
               <Instance
                 key={idx}
                 position={[
-                  (sprite.x + 0.0) * drawwidth,
+                  sprite.x * drawwidth,
                   (sprite.y + 0.25) * drawheight,
-                  0,
+                  drawheight * -0.5,
                 ]}
               />
             ))}

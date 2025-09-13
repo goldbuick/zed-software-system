@@ -65,6 +65,8 @@ const billboardsMaterial = new ShaderMaterial({
 
     ${noiseutilshader}
 
+    float PI = radians(180.0);
+
     float rand(float co) {
       return fract(sin(co*(91.3458)) * 47453.5453);
     }
@@ -166,12 +168,12 @@ const billboardsMaterial = new ShaderMaterial({
       gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      float ptaspect = (screenwidth / screenheight);
-      float ptsize = pointSize.y + ptaspect;
-      
-      gl_PointSize = (screenheight * ptsize) / gl_Position.w;
-      gl_PointSize *= dpr;
-      gl_Position.y -= ptsize - ptaspect;
+      gl_PointSize = pointSize.y;
+
+      // yes
+      float fov = 2.0 * atan(1.0 / projectionMatrix[1][1]) * 180.0 / PI;
+      float heightOfNearPlane = screenheight / (2.0 * tan(0.5 * fov * PI / 180.0));
+      gl_PointSize = (heightOfNearPlane * gl_PointSize) / gl_Position.w;
     }
   `,
   // fragment shader
@@ -196,9 +198,11 @@ const billboardsMaterial = new ShaderMaterial({
       float xscale = pointSize.y / pointSize.x;
       float xpadding = (pointSize.y - pointSize.x) / pointSize.y;
       float px = gl_PointCoord.x * xscale - xpadding;      
+      
       if (vVisible == 0.0 || px < 0.0 || px > 1.0) {
         discard;
       }
+      
       float py = gl_PointCoord.y;
       if (flip) {
         py = 1.0 - py;

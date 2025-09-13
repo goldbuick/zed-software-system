@@ -1,10 +1,14 @@
+import { Instance, Instances } from '@react-three/drei'
+import { useRef } from 'react'
+import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { ShadowMesh } from './blocks'
 import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
@@ -16,9 +20,14 @@ type Mode7LayerProps = {
 }
 
 export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
+  const meshes = useRef<InstancedMesh>(null)
+
   const layer = useGadgetClient(
     useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
   )
+
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
 
   switch (layer?.type) {
     default:
@@ -43,6 +52,19 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
+          <Instances ref={meshes} limit={BOARD_SIZE}>
+            <ShadowMesh />
+            {layer.sprites.map((sprite, idx) => (
+              <Instance
+                key={idx}
+                position={[
+                  sprite.x * drawwidth,
+                  (sprite.y + 0.25) * drawheight,
+                  drawheight * -1,
+                ]}
+              />
+            ))}
+          </Instances>
           <Sprites
             sprites={[...layer.sprites]}
             withbillboards={true}

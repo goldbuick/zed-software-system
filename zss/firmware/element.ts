@@ -139,11 +139,9 @@ function readinput(
     case INPUT.MOVE_RIGHT: {
       const inputdir = readinputmap[input - INPUT.MOVE_UP]
       if (isstring(graphics) && graphics === 'fpv' && isnumber(facing)) {
-        if (facing < 0 || facing > 360) {
-          facing = (facing + 36000) % 360
-        }
         const mappedfacing = Math.round(facing / 90)
         switch (mappedfacing) {
+          default:
           case 0: // north
             // no-op
             flags.inputmove = [inputdir]
@@ -412,8 +410,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // pass-through to player flag
       case 'camera':
       case 'graphics':
-      case 'facing':
         break
+      case 'facing': {
+        // constrain facing to 360 degrees
+        if (value < 0 || value > 360) {
+          value = (value + 360) % 360
+        }
+        break
+      }
       // writable
       case 'isdark':
         if (ispresent(READ_CONTEXT.board)) {
