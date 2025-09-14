@@ -161,19 +161,16 @@ const billboardsMaterial = new ShaderMaterial({
       vec4 mvPosition = vec4(animPosition, 0.0, 1.0);
       #ifdef USE_INSTANCING
       	mvPosition = instanceMatrix * mvPosition;
-      #endif        
+      #endif
       mvPosition = modelViewMatrix * mvPosition;
-
+  
       // transform to screenspace 
       gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      gl_PointSize = pointSize.y;
-
-      // yes
       float fov = 2.0 * atan(1.0 / projectionMatrix[1][1]) * 180.0 / PI;
       float heightOfNearPlane = screenheight / (2.0 * tan(0.5 * fov * PI / 180.0));
-      gl_PointSize = (heightOfNearPlane * gl_PointSize) / gl_Position.w;
+      gl_PointSize = (heightOfNearPlane * pointSize.y) / gl_Position.w;
     }
   `,
   // fragment shader

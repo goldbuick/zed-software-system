@@ -200,6 +200,42 @@ export function createPillarBufferGeometryAttributes(
   }
 }
 
+const BILL_BOTTOM_LEFT = [0, 0, 0]
+const BILL_BOTTOM_RIGHT = [1, 0, 0]
+const BILL_TOP_RIGHT = [1, 0, 1]
+const BILL_TOP_LEFT = [0, 0, 1]
+
+const BILL_POSITIONS = new Float32Array([
+  ...BILL_BOTTOM_LEFT,
+  ...BILL_TOP_RIGHT,
+  ...BILL_BOTTOM_RIGHT,
+  ...BILL_BOTTOM_LEFT,
+  ...BILL_TOP_LEFT,
+  ...BILL_TOP_RIGHT,
+])
+
+export function createBillboardBufferGeometryAttributes(
+  width: number,
+  height: number,
+) {
+  const drawwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const positions = BILL_POSITIONS.map((v, index) => {
+    switch (index % 3) {
+      case 0: // x
+        return v * drawwidth
+      case 1: // y
+        return v * drawheight
+      default: // z
+        return v * drawheight
+    }
+  })
+  return {
+    position: positions,
+    uv: QUAD_UVS,
+  }
+}
+
 const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
