@@ -31,7 +31,6 @@ const blocksMaterial = new ShaderMaterial({
   vertexShader: `
     uniform float time;
     uniform float interval;
-    uniform float size;
 
     varying vec2 vUv;
     varying vec3 vColor;
@@ -44,6 +43,7 @@ const blocksMaterial = new ShaderMaterial({
       #ifdef USE_INSTANCING
       	mvPosition = instanceMatrix * mvPosition;
       #endif        
+      
       mvPosition = modelViewMatrix * mvPosition;
       gl_Position = projectionMatrix * mvPosition;
     }

@@ -161,7 +161,7 @@ const billboardsMaterial = new ShaderMaterial({
       vec4 mvPosition = vec4(animPosition, 0.0, 1.0);
       #ifdef USE_INSTANCING
       	mvPosition = instanceMatrix * mvPosition;
-      #endif        
+      #endif
       mvPosition = modelViewMatrix * mvPosition;
   
       // transform to screenspace 

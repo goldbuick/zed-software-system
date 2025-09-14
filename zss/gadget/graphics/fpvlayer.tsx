@@ -5,7 +5,7 @@ import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
@@ -21,7 +21,6 @@ import {
   filterlayer2water,
 } from './blocks'
 import { Dither } from './dither'
-import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
@@ -57,6 +56,10 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
 
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+
+  const control = layersreadcontrol(
+    useGadgetClient.getState().gadget.layers ?? [],
+  )
 
   switch (layer?.type) {
     default:
@@ -180,9 +183,10 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                 return (
                   <Instance
                     key={idx}
+                    rotation={[0, 0, control.facing]}
                     position={[
-                      sprite.x * drawwidth,
-                      sprite.y * drawheight,
+                      (sprite.x + 1) * drawwidth,
+                      (sprite.y - rr + 0.5 + 0.25) * drawheight,
                       drawheight * -0.5,
                     ]}
                     color={[sprite.char, sprite.color, sprite.bg]}
@@ -208,18 +212,6 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                 )
               })}
           </Instances>
-          {/* <Sprites
-            sprites={}
-            withbillboards={true}
-            fliptexture={false}
-          />
-          <group position-z={drawheight * -0.5}>
-            <Sprites
-              sprites={watersprites.filter((sprite) => sprite.pid !== player)}
-              withbillboards={true}
-              fliptexture={false}
-            />
-          </group> */}
         </group>
       )
     }
