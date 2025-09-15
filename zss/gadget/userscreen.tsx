@@ -5,7 +5,7 @@ import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
 import { RUNTIME } from 'zss/config'
 
 import { useDeviceData } from './hooks'
-import { TouchUI } from './touchui/component'
+import { TouchUI } from '../screens/touchui/component'
 
 // screensize in chars
 const Screensize = createContext({

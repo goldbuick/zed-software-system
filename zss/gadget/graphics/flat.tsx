@@ -5,9 +5,9 @@ import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
-import { TapeTerminalInspector } from 'zss/gadget/inspector/component'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { TapeTerminalInspector } from 'zss/screens/inspector/component'
 
 import { useScreenSize } from '../userscreen'
 
