@@ -11,7 +11,7 @@ import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { doasync } from 'zss/mapping/func'
-import { Tape } from 'zss/tape/component'
+import { Tape } from 'zss/gadget/tape/component'
 import { islinux } from 'zss/words/system'
 
 import { Scanlines } from './fx/scanlines'

@@ -12,12 +12,12 @@ import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
-import { BackPlate } from 'zss/tape/backplate'
+import { BackPlate } from 'zss/gadget/tape/backplate'
 import {
   findcursorinrows,
   findmaxwidthinrows,
   splitcoderows,
-} from 'zss/tape/common'
+} from 'zss/gadget/tape/common'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 

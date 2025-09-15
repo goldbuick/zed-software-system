@@ -1,5 +1,5 @@
 import { RUNTIME } from 'zss/config'
-import { Blinker } from 'zss/tape/blinker'
+import { Blinker } from 'zss/gadget/tape/blinker'
 
 import { resetDither, useDither, writeDither } from '../gadget/hooks'
 import { DitherData, DitherRender } from '../gadget/usedither'

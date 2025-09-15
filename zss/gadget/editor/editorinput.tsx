@@ -20,7 +20,7 @@ import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { EDITOR_CODE_ROW } from 'zss/tape/common'
+import { EDITOR_CODE_ROW } from 'zss/gadget/tape/common'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,

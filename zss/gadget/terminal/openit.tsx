@@ -6,9 +6,9 @@ import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { doasync } from 'zss/mapping/func'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useWriteText } from '../gadget/hooks'
-import { inputcolor } from '../gadget/panel/common'
-import { UserInput } from '../gadget/userinput'
+import { useWriteText } from '../hooks'
+import { inputcolor } from '../panel/common'
+import { UserInput } from '../userinput'
 import { TapeTerminalItemInputProps, setuplogitem } from '../tape/common'
 
 export function TapeTerminalOpenIt({

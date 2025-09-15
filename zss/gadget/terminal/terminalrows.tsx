@@ -5,7 +5,7 @@ import {
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { WriteTextContext, useWriteText } from '../gadget/hooks'
+import { WriteTextContext, useWriteText } from '../hooks'
 
 import { TapeTerminalActiveItem, TapeTerminalItem } from './item'
 

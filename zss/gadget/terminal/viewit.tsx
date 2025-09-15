@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useMedia, useWriteText } from '../gadget/hooks'
-import { inputcolor } from '../gadget/panel/common'
-import { UserInput } from '../gadget/userinput'
+import { useMedia, useWriteText } from '../hooks'
+import { inputcolor } from '../panel/common'
+import { UserInput } from '../userinput'
 import { TapeTerminalItemInputProps, setuplogitem } from '../tape/common'
 
 export function TapeTerminalViewIt({

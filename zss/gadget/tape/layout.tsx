@@ -6,7 +6,7 @@ import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { deepcopy } from 'zss/mapping/types'
-import { TapeTerminal } from 'zss/terminal/component'
+import { TapeTerminal } from 'zss/gadget/terminal/component'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,

@@ -14,7 +14,7 @@ import {
   FG_SELECTED,
   bgcolor,
   setupeditoritem,
-} from 'zss/tape/common'
+} from 'zss/gadget/tape/common'
 import { statformat, stattypestring } from 'zss/words/stats'
 import {
   clippedapplybgtoindexes,
