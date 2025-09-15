@@ -1,5 +1,5 @@
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-import { COLLISION, COLOR, WORD } from 'zss/words/types'
+import { COLOR, WORD } from 'zss/words/types'
 
 export const FILE_BYTES_PER_CHAR = 14
 export const FILE_BYTES_PER_COLOR = 3

@@ -5,10 +5,8 @@ import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
 import { Fragment, ReactNode, useEffect, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, WebGLRenderTarget } from 'three'
-import { RUNTIME } from 'zss/config'
 
 import { useMedia } from '../hooks'
-import { Rect } from '../rect'
 
 import { EffectComposer } from './effectcomposer'
 import { RenderTexture } from './rendertexture'
@@ -107,15 +105,6 @@ export function RenderLayer({
           </RenderTexture>
         </meshBasicMaterial>
       </mesh>
-      {/* <group
-        position={[
-          hvw - RUNTIME.DRAW_CHAR_WIDTH() * 0.5,
-          hvh - RUNTIME.DRAW_CHAR_HEIGHT() * 0.5,
-          1,
-        ]}
-      >
-        <Rect color="blue" opacity={0.4} x={0} y={0} width={1} height={1} />
-      </group> */}
     </>
   )
 }

@@ -445,10 +445,7 @@ export const BOARD_FIRMWARE = createfirmware()
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
-    if (
-      boardelementisobject(maybetarget) &&
-      !!memoryelementstatread(maybetarget, 'pushable')
-    ) {
+    if (boardelementisobject(maybetarget)) {
       const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
       const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
       memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
