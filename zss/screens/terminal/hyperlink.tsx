@@ -1,9 +1,9 @@
 import { useCallback, useContext } from 'react'
+import { useWriteText } from 'zss/gadget/hooks'
+import { UserInput } from 'zss/gadget/userinput'
+import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useWriteText } from '../hooks'
-import { inputcolor } from '../panel/common'
-import { UserInput } from '../userinput'
 import {
   TapeTerminalContext,
   TapeTerminalItemInputProps,

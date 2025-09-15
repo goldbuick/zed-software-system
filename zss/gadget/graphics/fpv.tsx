@@ -1,7 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
-import { degToRad } from 'maath/misc'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'

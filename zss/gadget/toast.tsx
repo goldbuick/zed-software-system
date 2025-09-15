@@ -1,10 +1,9 @@
+import { Marquee } from 'zss/screens/scroll/marquee'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
-
-import { Marquee } from '../scroll/marquee'
 
 import { useTape } from './data/state'
 import { ShadeBoxDither } from './graphics/dither'

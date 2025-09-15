@@ -1,11 +1,10 @@
 import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
+import { Rect } from 'zss/gadget/rect'
 import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
-
-import { Rect } from '../rect'
 
 import {
   PanelItemProps,

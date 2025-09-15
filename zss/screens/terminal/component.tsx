@@ -3,17 +3,17 @@ import { vm_cli } from 'zss/device/api'
 import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
+import { BackPlate } from 'zss/screens/tape/backplate'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useWriteText } from '../hooks'
-import { BackPlate } from '../tape/backplate'
 import { TapeTerminalContext, terminalsplit } from '../tape/common'
 
 import { TapeTerminalInput } from './input'

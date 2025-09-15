@@ -12,11 +12,13 @@ import { user, withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { checkforword, updateindex } from 'zss/feature/t9'
 import { useTapeTerminal } from 'zss/gadget/data/state'
+import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
 import { MAYBE, ispresent, isstring, noop } from 'zss/mapping/types'
+import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
   applycolortoindexes,
   applystrtoindex,
@@ -25,9 +27,6 @@ import {
   writeplaintext,
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
-
-import { useBlink, useWriteText } from '../hooks'
-import { bgcolor, setuplogitem } from '../tape/common'
 
 type TapeTerminalInputProps = {
   quickterminal: boolean

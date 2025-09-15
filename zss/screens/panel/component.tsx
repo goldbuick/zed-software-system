@@ -1,11 +1,10 @@
+import { PANEL_ITEM } from 'zss/gadget/data/types'
+import { WriteTextContext, resetTiles, useTiles } from 'zss/gadget/hooks'
+import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
-
-import { PANEL_ITEM } from '../data/types'
-import { WriteTextContext, resetTiles, useTiles } from '../hooks'
-import { TilesData, TilesRender } from '../usetiles'
 
 import { PanelItem } from './panelitem'
 

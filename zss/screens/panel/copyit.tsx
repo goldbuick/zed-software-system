@@ -3,11 +3,10 @@ import { api_toast } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
+import { UserInput } from 'zss/gadget/userinput'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
-
-import { UserInput } from '../userinput'
 
 import {
   PanelItemProps,

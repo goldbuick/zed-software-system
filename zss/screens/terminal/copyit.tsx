@@ -3,13 +3,15 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { writetext } from 'zss/feature/writeui'
+import { useWriteText } from 'zss/gadget/hooks'
+import { UserInput } from 'zss/gadget/userinput'
 import { ispresent } from 'zss/mapping/types'
+import { inputcolor } from 'zss/screens/panel/common'
+import {
+  TapeTerminalItemInputProps,
+  setuplogitem,
+} from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
-
-import { useWriteText } from '../hooks'
-import { inputcolor } from '../panel/common'
-import { UserInput } from '../userinput'
-import { TapeTerminalItemInputProps, setuplogitem } from '../tape/common'
 
 export function TapeTerminalCopyIt({
   active,
