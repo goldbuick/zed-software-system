@@ -1,8 +1,7 @@
 import { useCallback, useContext } from 'react'
+import { UserInput } from 'zss/gadget/userinput'
 import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
-
-import { UserInput } from '../userinput'
 
 import {
   PanelItemProps,

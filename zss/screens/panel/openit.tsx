@@ -3,10 +3,9 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
+import { UserInput } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
-
-import { UserInput } from '../userinput'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
