@@ -122,17 +122,21 @@ export function Engine() {
           <TapeViewImage />
         </UserScreen>
       </UserFocus>
-      {shouldcrt && (
-        <EffectComposerMain width={viewwidth} height={viewheight}>
-          <>{scanlines && <Scanlines />}</>
-          <Vignette
-            technique={VignetteTechnique.ESKIL}
-            offset={0.89}
-            darkness={0.911}
-          />
-          <CRTShape viewheight={viewheight} />
-        </EffectComposerMain>
-      )}
+      <EffectComposerMain width={viewwidth} height={viewheight}>
+        <>
+          {shouldcrt && (
+            <>
+              {scanlines && <Scanlines />}
+              <Vignette
+                technique={VignetteTechnique.ESKIL}
+                offset={0.89}
+                darkness={0.911}
+              />
+              <CRTShape viewheight={viewheight} />
+            </>
+          )}
+        </>
+      </EffectComposerMain>
     </>
   )
 }
