@@ -206,10 +206,18 @@ export function readexpr(index: number): [any, number] {
           ])
 
           if (dir.targets.length) {
+            const [maybename, maybecolor] = match
             const matchlist: BOARD_ELEMENT[] = []
             for (let i = 0; i < dir.targets.length; ++i) {
               const target = dir.targets[i]
-              const anyexpr = ['any', 'at', target.x, target.y, ...match]
+              const anyexpr = [
+                'any',
+                'at',
+                target.x,
+                target.y,
+                maybecolor,
+                maybename,
+              ].filter((v) => v !== undefined)
               const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
               if (isarray(found) && found.length) {
                 matchlist.push(...found)
@@ -278,9 +286,17 @@ export function readexpr(index: number): [any, number] {
 
           if (dir.targets.length) {
             let matchcount = 0
+            const [maybename, maybecolor] = match
             for (let i = 0; i < dir.targets.length; ++i) {
               const target = dir.targets[i]
-              const anyexpr = ['countof', 'at', target.x, target.y, ...match]
+              const anyexpr = [
+                'countof',
+                'at',
+                target.x,
+                target.y,
+                maybecolor,
+                maybename,
+              ].filter((v) => v !== undefined)
               const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
               if (isnumber(found)) {
                 matchcount += found
@@ -322,6 +338,7 @@ export function readexpr(index: number): [any, number] {
               return [1, iii]
             }
           }
+
           return [0, iii]
         }
 
