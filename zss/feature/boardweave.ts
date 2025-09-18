@@ -136,9 +136,60 @@ export function boardweavegroup(
     self,
     targetgroup,
   )
+
   // if we get __nothing__ we should bail
   if (terrainelements.length === 0 && objectelements.length === 0) {
     return
+  }
+
+  // order based on delta
+  if (delta.x < 0) {
+    terrainelements.sort((a, b) => {
+      const ax = a.x ?? 0
+      const bx = b.x ?? 0
+      return ax - bx
+    })
+    objectelements.sort((a, b) => {
+      const ax = a.x ?? 0
+      const bx = b.x ?? 0
+      return ax - bx
+    })
+  }
+  if (delta.x > 0) {
+    terrainelements.sort((a, b) => {
+      const ax = a.x ?? 0
+      const bx = b.x ?? 0
+      return bx - ax
+    })
+    objectelements.sort((a, b) => {
+      const ax = a.x ?? 0
+      const bx = b.x ?? 0
+      return bx - ax
+    })
+  }
+  if (delta.y < 0) {
+    terrainelements.sort((a, b) => {
+      const ay = a.y ?? 0
+      const by = b.y ?? 0
+      return ay - by
+    })
+    objectelements.sort((a, b) => {
+      const ay = a.y ?? 0
+      const by = b.y ?? 0
+      return ay - by
+    })
+  }
+  if (delta.y > 0) {
+    terrainelements.sort((a, b) => {
+      const ay = a.y ?? 0
+      const by = b.y ?? 0
+      return by - ay
+    })
+    objectelements.sort((a, b) => {
+      const ay = a.y ?? 0
+      const by = b.y ?? 0
+      return by - ay
+    })
   }
 
   // define included ids and indexes
@@ -316,12 +367,6 @@ export function boardweavegroup(
   // bail as early as possible
   if (didcollide) {
     return
-  }
-
-  // detect the need for reverse order, ie: delta.x > 0 || delta.y > 0
-  const isreversed = delta.x > 0 || delta.y > 0
-  if (isreversed) {
-    terrainelements.reverse()
   }
 
   // apply transform to terrain

@@ -132,6 +132,9 @@ export function boardmoveobject(
 
   if (movingelementcollision === COLLISION.ISGHOST) {
     // skip ghost
+    // update object location
+    movingelement.x = dest.x
+    movingelement.y = dest.y
     return undefined
   }
 
