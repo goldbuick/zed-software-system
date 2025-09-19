@@ -19,12 +19,14 @@ import {
   vm_fork,
   vm_itchiopublish,
   vm_loader,
+  vm_logout,
   vm_restart,
   vm_zztrandom,
   vm_zztsearch,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
+import { romparse, romprint, romread } from 'zss/feature/rom'
 import {
   write,
   writebbar,
@@ -74,7 +76,6 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
-import { romparse, romprint, romread } from 'zss/feature/rom'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
 import { stattypestring } from 'zss/words/stats'
@@ -122,6 +123,10 @@ function handlesend(send: SEND_META) {
 }
 
 export const CLI_FIRMWARE = createfirmware()
+  .command('endgame', () => {
+    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
   .command('shortsend', (_, words) => {
     const send = parsesend(words)
     handlesend(send)

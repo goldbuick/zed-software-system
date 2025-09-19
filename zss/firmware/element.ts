@@ -536,7 +536,15 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // notfound
     return [false, value]
   },
-  everytick() {
+  everytick(chip) {
+    // are we player? and is our health number zero or below
+    if (READ_CONTEXT.elementisplayer) {
+      const health = chip.get('health')
+      if (isnumber(health) && health <= 0) {
+        // time to re-log
+        vm_logout(SOFTWARE, READ_CONTEXT.elementid)
+      }
+    }
     // handle walk movement
     if (
       !READ_CONTEXT.element?.removed &&
@@ -740,10 +748,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
   .command('dieonend', () => {
     handledie()
     // skip halt execution
-    return 0
-  })
-  .command('endgame', () => {
-    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('run', (_, words) => {
