@@ -541,6 +541,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
     if (READ_CONTEXT.elementisplayer) {
       const health = chip.get('health')
       if (isnumber(health) && health <= 0) {
+        // halt program
+        chip.endofprogram()
         // time to re-log
         vm_logout(SOFTWARE, READ_CONTEXT.elementid)
       }
