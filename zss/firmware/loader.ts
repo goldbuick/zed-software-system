@@ -80,6 +80,10 @@ export const LOADER_FIRMWARE = createfirmware({
     return [false, undefined]
   },
 })
+  .command('endgame', () => {
+    // no-op when called in loaders
+    return 0
+  })
   .command('shortsend', (_, words) => {
     const send = parsesend(words)
     handlesend(send)

@@ -159,6 +159,10 @@ export const RUNTIME_FIRMWARE = createfirmware({
     }
   },
 })
+  .command('endgame', (chip) => {
+    chip.set('health', 0)
+    return 0
+  })
   .command('shortsend', (chip, words) => {
     const send = parsesend(words)
     handlesend(chip, send)
