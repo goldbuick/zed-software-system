@@ -9,6 +9,7 @@ import {
   readzipfilelistitem,
 } from 'zss/feature/parse/file'
 import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
+import { romparse, romread, romscroll } from 'zss/feature/rom'
 import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
@@ -82,7 +83,6 @@ import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryinspectremixcommand } from 'zss/memory/inspectremix'
 import { memoryloader } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { romparse, romread, romscroll } from 'zss/feature/rom'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
@@ -245,6 +245,16 @@ const vm = createdevice(
             'restartonzap',
             'norestartonzap',
             'maxplayershots',
+            'b1',
+            'b2',
+            'b3',
+            'b4',
+            'b5',
+            'b6',
+            'b7',
+            'b8',
+            'b9',
+            'b10',
             // helper stats
             'playerid',
             'playerx',
@@ -252,6 +262,7 @@ const vm = createdevice(
             'thisid',
             'thisx',
             'thisy',
+            // sender helpers
             'senderid',
             'senderx',
             'sendery',
@@ -296,8 +307,7 @@ const vm = createdevice(
             'shooty',
             'light',
             'lightdir',
-            // messages & run
-            'sender',
+            // set on runwith
             'arg',
           ],
           // object codepage kinds
