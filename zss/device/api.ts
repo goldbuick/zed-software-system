@@ -517,6 +517,14 @@ export function vm_copyjsonfile(
   device.emit(player, 'vm:copyjsonfile', path)
 }
 
+export function vm_makeitscroll(
+  device: DEVICELIKE,
+  player: string,
+  makeit: string,
+) {
+  device.emit(player, 'vm:makeitscroll', makeit)
+}
+
 export function vm_refscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
 }

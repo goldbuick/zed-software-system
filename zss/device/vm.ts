@@ -82,6 +82,7 @@ import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspect'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryinspectremixcommand } from 'zss/memory/inspectremix'
 import { memoryloader } from 'zss/memory/loader'
+import { makeitscroll } from 'zss/memory/makeit'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -586,6 +587,11 @@ const vm = createdevice(
               )
             }
           }
+        }
+        break
+      case 'makeitscroll':
+        if (isstring(message.data)) {
+          makeitscroll(message.player, message.data)
         }
         break
       case 'refscroll': {
