@@ -237,12 +237,25 @@ function raycheck(
   }
 }
 
-export function memoryconverttogadgetlayers(
+export function memoryconverttogadgetcontrollayer(
   player: string,
   index: number,
   board: MAYBE<BOARD>,
+): LAYER {
+  const control = createcachedcontrol(player, index)
+  const maybeobject = boardobjectread(board, player)
+  if (ispresent(maybeobject)) {
+    control.focusid = maybeobject.id ?? ''
+    control.focusx = maybeobject.x ?? 0
+    control.focusy = maybeobject.y ?? 0
+  }
+  return control
+}
+
+export function memoryconverttogadgetlayers(
+  index: number,
+  board: MAYBE<BOARD>,
   tickers: string[],
-  isprimary: boolean,
   isbaseboard: boolean,
 ): LAYER[] {
   if (
@@ -256,12 +269,13 @@ export function memoryconverttogadgetlayers(
   const layers: LAYER[] = []
 
   let iiii = index
+  const boardid = board.id
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
 
   const tiles = createcachedtiles(
-    player,
+    boardid,
     iiii++,
     'terrain',
     boardwidth,
@@ -271,69 +285,70 @@ export function memoryconverttogadgetlayers(
   layers.push(tiles)
 
   const objectindex = iiii++
-  const objects = createcachedsprites(player, objectindex)
+  const objects = createcachedsprites(boardid, objectindex)
   objects.sprites = []
   layers.push(objects)
 
   const isdark = board.isdark ? 1 : 0
   const lighting = createcacheddither(
-    player,
+    boardid,
     iiii++,
     boardwidth,
     boardheight,
     isdark,
   )
   layers.push(lighting)
+
   // reset
   lighting.alphas.fill(isdark)
 
-  const control = createcachedcontrol(player, iiii++)
+  // const control = createcachedcontrol(boardid, iiii++)
 
-  // hack to keep only one control layer
-  if (isprimary) {
-    // todo, add control layers for the local1, ...local3 players
-    layers.push(control)
-    const { graphics, camera, facing } = memoryreadflags(player)
+  // // hack to keep only one control layer
+  // if (isprimary) {
+  //   // todo, add control layers for the local1, ...local3 players
+  //   layers.push(control)
+  //   const { graphics, camera, facing } = memoryreadflags(boardid)
 
-    // board stats take preference over play flags
-    const withgraphics = board.graphics ?? graphics ?? ''
-    const withcamera = board.camera ?? camera ?? ''
-    const withfacing = board.facing ?? facing ?? ''
+  //   // board stats take preference over play flags
+  //   const withgraphics = board.graphics ?? graphics ?? ''
+  //   const withcamera = board.camera ?? camera ?? ''
+  //   const withfacing = board.facing ?? facing ?? ''
 
-    if (isstring(withgraphics)) {
-      const graphics = NAME(withgraphics)
-      switch (graphics) {
-        case 'fpv':
-        case 'iso':
-        case 'flat':
-        case 'mode7':
-          control.graphics = graphics
-          break
-        default:
-          control.graphics = 'flat'
-          break
-      }
-    }
+  //   if (isstring(withgraphics)) {
+  //     const graphics = NAME(withgraphics)
+  //     switch (graphics) {
+  //       case 'fpv':
+  //       case 'iso':
+  //       case 'flat':
+  //       case 'mode7':
+  //         control.graphics = graphics
+  //         break
+  //       default:
+  //         control.graphics = 'flat'
+  //         break
+  //     }
+  //   }
 
-    if (isstring(withcamera)) {
-      switch (NAME(withcamera)) {
-        default:
-        case 'mid':
-          control.viewscale = VIEWSCALE.MID
-          break
-        case 'near':
-          control.viewscale = VIEWSCALE.NEAR
-          break
-        case 'far':
-          control.viewscale = VIEWSCALE.FAR
-          break
-      }
-    }
+  //   if (isstring(withcamera)) {
+  //     switch (NAME(withcamera)) {
+  //       default:
+  //       case 'mid':
+  //         control.viewscale = VIEWSCALE.MID
+  //         break
+  //       case 'near':
+  //         control.viewscale = VIEWSCALE.NEAR
+  //         break
+  //       case 'far':
+  //         control.viewscale = VIEWSCALE.FAR
+  //         break
+  //     }
+  //   }
 
-    if (isnumber(withfacing)) {
-      control.facing = degToRad(withfacing % 360)
-    }
-  }
+  //   if (isnumber(withfacing)) {
+  //     control.facing = degToRad(withfacing % 360)
+  //   }
+  // }
 
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
@@ -380,7 +395,7 @@ export function memoryconverttogadgetlayers(
     }
 
     const display = bookelementdisplayread(object)
-    const sprite = createcachedsprite(player, objectindex, id, i)
+    const sprite = createcachedsprite(boardid, objectindex, id, i)
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -518,11 +533,11 @@ export function memoryconverttogadgetlayers(
     }
 
     // inform control layer where to focus
-    if (id === player) {
-      control.focusx = sprite.x
-      control.focusy = sprite.y
-      control.focusid = id
-    }
+    // if (id === player) {
+    //   control.focusx = sprite.x
+    //   control.focusy = sprite.y
+    //   control.focusid = id
+    // }
   }
 
   // process isghost objects
@@ -535,7 +550,7 @@ export function memoryconverttogadgetlayers(
 
     const id = object.id ?? ''
     const display = bookelementdisplayread(object)
-    const sprite = createcachedsprite(player, objectindex, id, i)
+    const sprite = createcachedsprite(boardid, objectindex, id, i)
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -565,7 +580,7 @@ export function memoryconverttogadgetlayers(
 
   // set mood
   layers.push(
-    createcachedmedia(player, iiii++, 'text/mood', isdark ? 'dark' : 'bright'),
+    createcachedmedia(boardid, iiii++, 'text/mood', isdark ? 'dark' : 'bright'),
   )
 
   // check for display media
@@ -582,7 +597,7 @@ export function memoryconverttogadgetlayers(
     if (ispresent(palette?.bits)) {
       layers.push(
         createcachedmedia(
-          player,
+          boardid,
           iiii++,
           'image/palette',
           Array.from(palette.bits),
@@ -601,7 +616,7 @@ export function memoryconverttogadgetlayers(
     if (ispresent(charset?.bits)) {
       layers.push(
         createcachedmedia(
-          player,
+          boardid,
           iiii++,
           'image/charset',
           Array.from(charset.bits),
@@ -612,7 +627,9 @@ export function memoryconverttogadgetlayers(
 
   // add media layer to list peer ids
   const pids = Object.keys(board.objects).filter(ispid)
-  layers.push(createcachedmedia(player, iiii++, 'text/players', pids.join(',')))
+  layers.push(
+    createcachedmedia(boardid, iiii++, 'text/players', pids.join(',')),
+  )
 
   // return result
   return layers
