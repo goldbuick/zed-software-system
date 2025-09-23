@@ -58,10 +58,7 @@ import {
 } from './bookplayer'
 import { codepagereaddata, codepagereadstat } from './codepage'
 import { memoryloaderarg } from './loader'
-import {
-  memoryconverttogadgetcontrollayer,
-  memoryconverttogadgetlayers,
-} from './rendertogadget'
+import { memoryconverttogadgetlayers } from './rendertogadget'
 import {
   BOARD,
   BOARD_ELEMENT,

@@ -29,6 +29,11 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
           let didnotpass: any
           try {
             didnotpass = validate(message.data, state.gadget)
+            const applied = applypatch(state.gadget, message.data, true, false)
+            return {
+              ...state,
+              gadget: applied.newDocument,
+            }
           } catch (err) {
             didnotpass = err
           }
@@ -42,11 +47,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
             }
           }
 
-          const applied = applypatch(state.gadget, message.data, true, false)
-          return {
-            ...state,
-            gadget: applied.newDocument,
-          }
+          return state
         })
       }
       break
