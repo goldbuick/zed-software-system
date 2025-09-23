@@ -179,7 +179,7 @@ function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
     }
     gadgethyperlink(player, 'zztbridge', entry.filename, [
       'zztimport',
-      'hyperlink',
+      '',
       `${entry.letter}/${entry.filename}`,
     ])
     gadgettext(player, ' ')
@@ -864,8 +864,9 @@ const vm = createdevice(
             break
           case 'zztbridge':
             doasync(vm, message.player, async () => {
-              if (isstring(message.data)) {
-                await museumofzztdownload(message.player, message.data)
+              if (isarray(message.data)) {
+                const [filename] = message.data
+                await museumofzztdownload(message.player, filename)
               }
             })
             break
