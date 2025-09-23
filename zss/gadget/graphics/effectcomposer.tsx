@@ -52,8 +52,7 @@ export const EffectComposer = /* @__PURE__ */ memo(
         return [effectComposer]
       }, [camera, gl, scene])
 
-      useFrame((state, delta) => {
-        state.gl.clear(true, true, true)
+      useFrame((_, delta) => {
         composer.setSize(width, height)
         composer.render(delta)
       }, 1)
