@@ -348,7 +348,7 @@ export function synth_record(
 }
 
 export function synth_flush(device: DEVICELIKE, player: string) {
-  device.emit(player, 'synth:flush', filename)
+  device.emit(player, 'synth:flush')
 }
 
 export function register_refresh(device: DEVICELIKE, player: string) {
@@ -515,6 +515,14 @@ export function vm_copyjsonfile(
   path: string[],
 ) {
   device.emit(player, 'vm:copyjsonfile', path)
+}
+
+export function vm_makeitscroll(
+  device: DEVICELIKE,
+  player: string,
+  makeit: string,
+) {
+  device.emit(player, 'vm:makeitscroll', makeit)
 }
 
 export function vm_refscroll(device: DEVICELIKE, player: string) {

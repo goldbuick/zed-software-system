@@ -20,6 +20,7 @@ import {
   vm_itchiopublish,
   vm_loader,
   vm_logout,
+  vm_makeitscroll,
   vm_restart,
   vm_zztrandom,
   vm_zztsearch,
@@ -137,91 +138,12 @@ export const CLI_FIRMWARE = createfirmware()
     handlesend(send)
     return 0
   })
-  .command('stat', (chip, words) => {
-    const [maybetype, ...args] = words.map(maptostring)
-    const maybename = args.join(' ')
-
-    function openeditor(codepage: MAYBE<CODE_PAGE>, didcreate: boolean) {
-      if (ispresent(codepage)) {
-        chip.command('pageopen', codepage.id)
-        if (didcreate) {
-          const name = codepagereadname(codepage)
-          const type = codepagereadtypetostring(codepage)
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
-          )
-        }
-      }
-    }
-
-    // attempt to check first word as codepage type to create
-    switch (NAME(maybetype)) {
-      case stattypestring(STAT_TYPE.LOADER): {
-        const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.MAIN,
-          maybename,
-          CODE_PAGE_TYPE.LOADER,
-        )
-        openeditor(codepage, didcreate)
-        break
-      }
-      default: {
-        const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.MAIN,
-          [maybetype, ...args].join(' '),
-          CODE_PAGE_TYPE.OBJECT,
-        )
-        openeditor(codepage, didcreate)
-        break
-      }
-      case stattypestring(STAT_TYPE.BOARD): {
-        const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.MAIN,
-          maybename,
-          CODE_PAGE_TYPE.BOARD,
-        )
-        openeditor(codepage, didcreate)
-        break
-      }
-      case stattypestring(STAT_TYPE.OBJECT): {
-        const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.MAIN,
-          maybename,
-          CODE_PAGE_TYPE.OBJECT,
-        )
-        openeditor(codepage, didcreate)
-        break
-      }
-      case stattypestring(STAT_TYPE.TERRAIN): {
-        const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.MAIN,
-          maybename,
-          CODE_PAGE_TYPE.TERRAIN,
-        )
-        openeditor(codepage, didcreate)
-        break
-      }
-      case stattypestring(STAT_TYPE.CHARSET): {
-        const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.MAIN,
-          maybename,
-          CODE_PAGE_TYPE.CHARSET,
-        )
-        openeditor(codepage, didcreate)
-        break
-      }
-      case stattypestring(STAT_TYPE.PALETTE): {
-        const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.MAIN,
-          maybename,
-          CODE_PAGE_TYPE.PALETTE,
-        )
-        openeditor(codepage, didcreate)
-        break
-      }
-    }
+  .command('stat', (_, words) => {
+    vm_makeitscroll(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      words.map(maptostring).join(' '),
+    )
     return 0
   })
   .command('text', (_, words) => {

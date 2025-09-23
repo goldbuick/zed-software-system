@@ -61,6 +61,16 @@ enum BOARD_KEYS {
   maxplayershots,
   camera,
   graphics,
+  b1,
+  b2,
+  b3,
+  b4,
+  b5,
+  b6,
+  b7,
+  b8,
+  b9,
+  b10,
 }
 
 export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {

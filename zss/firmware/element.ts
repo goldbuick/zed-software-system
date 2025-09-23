@@ -91,8 +91,7 @@ const STANDARD_STAT_NAMES = new Set([
   'shooty',
   'light',
   'lightdir',
-  // messages & run
-  'sender',
+  // run & with arg
   'arg',
 ])
 
@@ -350,6 +349,26 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.board?.restartonzap ?? 0]
       case 'maxplayershots':
         return [true, READ_CONTEXT.board?.maxplayershots ?? 0]
+      case 'b1':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b2':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b3':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b4':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b5':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b6':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b7':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b8':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b9':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
+      case 'b10':
+        return [true, READ_CONTEXT.board?.b1 ?? 0]
       // read only
       case 'currenttick':
         return [true, READ_CONTEXT.timestamp]
@@ -369,6 +388,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.element?.x ?? -1]
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
+      case 'sender':
       case 'senderid':
         return [true, senderid]
       case 'senderx':
@@ -489,31 +509,75 @@ export const ELEMENT_FIRMWARE = createfirmware({
           ]
         }
         break
+      case 'b1':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b1 = maptonumber(value, 0))]
+        }
+        break
+      case 'b2':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b2 = maptonumber(value, 0))]
+        }
+        break
+      case 'b3':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b3 = maptonumber(value, 0))]
+        }
+        break
+      case 'b4':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b4 = maptonumber(value, 0))]
+        }
+        break
+      case 'b5':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b5 = maptonumber(value, 0))]
+        }
+        break
+      case 'b6':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b6 = maptonumber(value, 0))]
+        }
+        break
+      case 'b7':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b7 = maptonumber(value, 0))]
+        }
+        break
+      case 'b8':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b8 = maptonumber(value, 0))]
+        }
+        break
+      case 'b9':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b9 = maptonumber(value, 0))]
+        }
+        break
+      case 'b10':
+        if (ispresent(READ_CONTEXT.board)) {
+          return [true, (READ_CONTEXT.board.b10 = maptonumber(value, 0))]
+        }
+        break
       // read only
-      case 'currenttick':
-        return [false, value] // readonly
-      case 'boardid':
-        return [false, value] // readonly
       // env stats
+      case 'currenttick':
+      case 'boardid':
+        return [true, value] // readonly
       case 'playerid':
-        return [false, value] // readonly
       case 'playerx':
-        return [false, value] // readonly
       case 'playery':
-        return [false, value] // readonly
+        return [true, value] // readonly
       // object only
       case 'thisid':
-        return [false, value] // readonly
       case 'thisx':
-        return [false, value] // readonly
       case 'thisy':
-        return [false, value] // readonly
+        return [true, value] // readonly
+      // sender info
       case 'senderid':
-        return [false, value] // readonly
       case 'senderx':
-        return [false, value] // readonly
       case 'sendery':
-        return [false, value] // readonly
+        return [true, value] // readonly
       default: {
         // we have to check the object's stats first
         if (STANDARD_STAT_NAMES.has(name)) {
