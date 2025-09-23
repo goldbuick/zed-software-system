@@ -9,6 +9,7 @@ import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { TapeTerminalInspector } from 'zss/screens/inspector/component'
 
+import { Rect } from '../rect'
 import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
@@ -134,6 +135,8 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     layers = [],
   } = useGadgetClient.getState().gadget
 
+  const nounderlayers = under.length === 0
+
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const boarddrawwidth = BOARD_WIDTH * drawwidth
@@ -171,6 +174,13 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
           <group position={[centerx, centery, 0]}>
             <group ref={cornerref}>
               <group ref={zoomref}>
+                {nounderlayers && (
+                  <Rect
+                    color="black"
+                    width={BOARD_WIDTH}
+                    height={BOARD_HEIGHT}
+                  />
+                )}
                 {under.map((layer, i) => (
                   <FlatLayer
                     key={layer.id}
