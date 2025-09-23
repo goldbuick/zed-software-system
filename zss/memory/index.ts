@@ -58,7 +58,10 @@ import {
 } from './bookplayer'
 import { codepagereaddata, codepagereadstat } from './codepage'
 import { memoryloaderarg } from './loader'
-import { memoryconverttogadgetlayers } from './rendertogadget'
+import {
+  memoryconverttogadgetcontrollayer,
+  memoryconverttogadgetlayers,
+} from './rendertogadget'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -1295,55 +1298,50 @@ export function memoryrun(address: string) {
   })
 }
 
-export function memoryreadgadgetlayers(player: string): {
+export type MEMORY_RENDER_LAYERS = {
   board: string
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
   tickers: string[]
-} {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const playerboard = memoryreadplayerboard(player)
+}
 
+export function memoryreadgadgetlayers(
+  board: MAYBE<BOARD>,
+): MEMORY_RENDER_LAYERS {
   const over: LAYER[] = []
   const under: LAYER[] = []
   const layers: LAYER[] = []
   const tickers: string[] = []
-  if (!ispresent(mainbook) || !ispresent(playerboard)) {
+  if (!ispresent(board)) {
     return { board: '', over, under, layers, tickers }
   }
 
   // read graphics mode
-  const graphics = playerboard.graphics ?? 'flat'
+  const graphics = board.graphics ?? 'flat'
 
   // read over / under
-  const overboard = memoryboardread(playerboard.overboard ?? '')
-  const underboard = memoryboardread(playerboard.underboard ?? '')
+  const overboard = memoryboardread(board.overboard ?? '')
+  const underboard = memoryboardread(board.underboard ?? '')
 
   // compose layers
-  under.push(
-    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, false, true),
-  )
+  under.push(...memoryconverttogadgetlayers(0, underboard, tickers, true))
   layers.push(
     ...memoryconverttogadgetlayers(
-      player,
       under.length,
-      playerboard,
+      board,
       tickers,
-      true,
       graphics === 'flat' ? false : true,
     ),
   )
   over.push(
     ...memoryconverttogadgetlayers(
-      player,
       under.length + layers.length,
       overboard,
       tickers,
       false,
-      false,
     ),
   )
 
-  return { board: playerboard.id, over, under, layers, tickers }
+  return { board: board.id, over, under, layers, tickers }
 }

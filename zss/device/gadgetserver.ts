@@ -7,14 +7,17 @@ import {
   initstate,
 } from 'zss/gadget/data/api'
 import { ispid } from 'zss/mapping/guid'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
+  MEMORY_RENDER_LAYERS,
   memoryreadbookbysoftware,
   memoryreadgadgetlayers,
   memoryreadoperator,
+  memoryreadplayerboard,
 } from 'zss/memory'
 import { bookreadflags } from 'zss/memory/book'
+import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendertogadget'
 
 import { gadgetclient_paint, gadgetclient_patch } from './api'
 
@@ -48,20 +51,38 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
   const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
   switch (message.target) {
     case 'tock': {
+      const layercache = new Map<string, MEMORY_RENDER_LAYERS>()
       for (let i = 0; i < activelistvalues.length; ++i) {
         const player = activelistvalues[i]
+        const playerboard = memoryreadplayerboard(player)
 
-        // update gadget layers from player's current board
-        const { board, over, under, layers, tickers } =
-          memoryreadgadgetlayers(player)
+        // check layer cache
+        let renderlayers: MAYBE<MEMORY_RENDER_LAYERS>
+        if (ispresent(playerboard)) {
+          if (layercache.has(playerboard.id)) {
+            renderlayers = layercache.get(playerboard.id)
+          } else {
+            // create layers if needed
+            renderlayers = memoryreadgadgetlayers(playerboard)
+            layercache.set(playerboard.id, renderlayers)
+          }
+        }
+
+        const control = memoryconverttogadgetcontrollayer(
+          player,
+          1000,
+          playerboard,
+        )
 
         // get current state
         const gadget = gadgetstate(player)
-        gadget.board = board
-        gadget.over = over
-        gadget.under = under
-        gadget.layers = layers
-        gadget.tickers = tickers
+        if (ispresent(renderlayers)) {
+          gadget.board = renderlayers.board
+          gadget.over = renderlayers.over
+          gadget.under = renderlayers.under
+          gadget.layers = [...renderlayers.layers, control]
+          gadget.tickers = renderlayers.tickers
+        }
 
         // write patch
         const previous = gadgetsync[player] ?? {}
