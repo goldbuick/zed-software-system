@@ -15,7 +15,7 @@ export type PanelItemProps = {
 }
 
 type ScrollContextState = {
-  sendmessage: (target: string, data?: any) => void
+  sendmessage: (target: string, data: any[]) => void
   sendclose: () => void
   didclose: () => void
 }

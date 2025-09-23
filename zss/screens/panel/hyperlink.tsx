@@ -22,7 +22,8 @@ export function PanelItemHyperlink({
 }: PanelItemProps) {
   setuppanelitem(sidebar, row, context)
 
-  const [target, data] = [maptovalue(args[0], ''), args[1]]
+  const words = args.map((v) => maptovalue(v, ''))
+  const [target, ...data] = words
 
   const tcolor = inputcolor(active)
   tokenizeandwritetextformat(`  $purple$16 ${tcolor}${label}\n`, context, true)
