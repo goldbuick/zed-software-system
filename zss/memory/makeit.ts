@@ -38,9 +38,12 @@ function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
 function checkforcodepage(name: string, player: string) {
   // first check for existing codepage with matching name or id
   const books = memoryreadbooklist()
+
   let nomatch = true
   for (let i = 0; i < books.length; ++i) {
+    // note: we should change this to return all matches by name
     const maybecodepage = bookreadcodepagebyaddress(books[i], name)
+    // we should denote __which__ book these pages are from
     if (ispresent(maybecodepage)) {
       nomatch = false
       gadgethyperlink(
@@ -49,6 +52,7 @@ function checkforcodepage(name: string, player: string) {
         `edit @${codepagereadtypetostring(maybecodepage)} ${codepagereadname(maybecodepage)}`,
         ['edit', '', maybecodepage.id],
       )
+      // We should show the first 5 lines of the codepage here
     }
   }
 
@@ -84,12 +88,13 @@ export function memorymakeitscroll(makeit: string, player: string) {
         if (statvalue.values[0].toLowerCase() === 'object') {
           const values = statvalue.values.slice(1)
           const value = values.join(' ')
-          gadgethyperlink(player, 'makeit', `create @${value}`, [
+          gadgethyperlink(player, 'makeit', `create object @${value}`, [
             'create',
             '',
             'object',
             value,
           ])
+          gadgettext(player, '$green    object - moving board elements')
         } else {
           const value = statvalue.values.join(' ')
           switch (statvalue.type) {
@@ -100,6 +105,7 @@ export function memorymakeitscroll(makeit: string, player: string) {
                 'object',
                 value,
               ])
+              gadgettext(player, '$green    object - moving board elements')
               if (statvalue.values.length === 1) {
                 gadgethyperlink(player, 'makeit', `create @terrain ${value}`, [
                   'create',
@@ -107,38 +113,50 @@ export function memorymakeitscroll(makeit: string, player: string) {
                   'terrain',
                   value,
                 ])
+                gadgettext(
+                  player,
+                  '$green    terrain - walkable, walls, or water',
+                )
                 gadgethyperlink(player, 'makeit', `create @board ${value}`, [
                   'create',
                   '',
                   'board',
                   value,
                 ])
+                gadgettext(
+                  player,
+                  '$green    board - 60 x 25 area of terrain & object',
+                )
                 gadgethyperlink(player, 'makeit', `create @loader ${value}`, [
                   'create',
                   '',
                   'loader',
                   value,
                 ])
+                gadgettext(player, '$green    loader - run code on @event(s)')
                 gadgethyperlink(player, 'makeit', `create @palette ${value}`, [
                   'create',
                   '',
                   'palette',
                   value,
                 ])
+                gadgettext(player, '$green    palette - custom 16 colors')
                 gadgethyperlink(player, 'makeit', `create @charset ${value}`, [
                   'create',
                   '',
                   'charset',
                   value,
                 ])
+                gadgettext(player, '$green    charset - custom ascii font')
               }
               gadgettext(player, '$green')
+              gadgettext(player, '$green  if you typed in @char 12 or similar')
               gadgettext(
                 player,
-                '$greenif you typed in @char 12 or something similar',
+                '$green  try using #set <stat> <value> instead',
               )
-              gadgettext(player, '$greentry using #set <stat> <value> instead')
-              gadgettext(player, '$greenor you can edit the @player codepage')
+              gadgettext(player, '$green  or you can edit the @player codepage')
+              gadgettext(player, '$green  to make changes to player stats')
               checkforcodepage('player', player)
               break
             case STAT_TYPE.RANGE:

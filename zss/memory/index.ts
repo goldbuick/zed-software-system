@@ -1298,7 +1298,7 @@ export function memoryrun(address: string) {
   })
 }
 
-export type MEMORY_RENDER_LAYERS = {
+export type MEMORY_GADGET_LAYERS = {
   board: string
   over: LAYER[]
   under: LAYER[]
@@ -1308,7 +1308,7 @@ export type MEMORY_RENDER_LAYERS = {
 
 export function memoryreadgadgetlayers(
   board: MAYBE<BOARD>,
-): MEMORY_RENDER_LAYERS {
+): MEMORY_GADGET_LAYERS {
   const over: LAYER[] = []
   const under: LAYER[] = []
   const layers: LAYER[] = []

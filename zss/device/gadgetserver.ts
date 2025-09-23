@@ -9,8 +9,8 @@ import {
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import {
+  MEMORY_GADGET_LAYERS,
   MEMORY_LABEL,
-  MEMORY_RENDER_LAYERS,
   memoryreadbookbysoftware,
   memoryreadgadgetlayers,
   memoryreadoperator,
@@ -51,20 +51,20 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
   const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
   switch (message.target) {
     case 'tock': {
-      const layercache = new Map<string, MEMORY_RENDER_LAYERS>()
+      const layercache = new Map<string, MEMORY_GADGET_LAYERS>()
       for (let i = 0; i < activelistvalues.length; ++i) {
         const player = activelistvalues[i]
         const playerboard = memoryreadplayerboard(player)
 
         // check layer cache
-        let renderlayers: MAYBE<MEMORY_RENDER_LAYERS>
+        let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
         if (ispresent(playerboard)) {
           if (layercache.has(playerboard.id)) {
-            renderlayers = layercache.get(playerboard.id)
+            gadgetlayers = layercache.get(playerboard.id)
           } else {
             // create layers if needed
-            renderlayers = memoryreadgadgetlayers(playerboard)
-            layercache.set(playerboard.id, renderlayers)
+            gadgetlayers = memoryreadgadgetlayers(playerboard)
+            layercache.set(playerboard.id, gadgetlayers)
           }
         }
 
@@ -76,12 +76,12 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
         // get current state
         const gadget = gadgetstate(player)
-        if (ispresent(renderlayers)) {
-          gadget.board = renderlayers.board
-          gadget.over = renderlayers.over
-          gadget.under = renderlayers.under
-          gadget.layers = [...renderlayers.layers, control]
-          gadget.tickers = renderlayers.tickers
+        if (ispresent(gadgetlayers)) {
+          gadget.board = gadgetlayers.board
+          gadget.over = gadgetlayers.over
+          gadget.under = gadgetlayers.under
+          gadget.layers = [...gadgetlayers.layers, control]
+          gadget.tickers = gadgetlayers.tickers
         }
 
         // write patch
