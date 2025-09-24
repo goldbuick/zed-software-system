@@ -6,8 +6,9 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
+import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
-import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { deepcopy, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_GADGET_LAYERS,
   MEMORY_LABEL,
@@ -19,11 +20,7 @@ import {
 import { bookreadflags } from 'zss/memory/book'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendertogadget'
 
-import {
-  gadgetclient_paint,
-  gadgetclient_patch,
-  gadgetserver_desync,
-} from './api'
+import { gadgetclient_paint, gadgetclient_patch } from './api'
 
 gadgetstateprovider((element) => {
   if (ispid(element)) {
@@ -59,15 +56,18 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       for (let i = 0; i < activelistvalues.length; ++i) {
         const player = activelistvalues[i]
         const playerboard = memoryreadplayerboard(player)
+        if (!ispresent(playerboard)) {
+          continue
+        }
 
         // check layer cache
-        let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
-        if (ispresent(playerboard)) {
+        if (!layercache.has(playerboard.id)) {
           // create layers if needed
-          if (!layercache.has(playerboard.id)) {
-            layercache.set(playerboard.id, memoryreadgadgetlayers(playerboard))
-          }
-          gadgetlayers = deepcopy(layercache.get(playerboard.id))
+          layercache.set(playerboard.id, memoryreadgadgetlayers(playerboard))
+        }
+        const gadgetlayers = deepcopy(layercache.get(playerboard.id))
+        if (!ispresent(gadgetlayers)) {
+          continue
         }
 
         const control = memoryconverttogadgetcontrollayer(
@@ -78,31 +78,33 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
         // get current state
         const gadget = gadgetstate(player)
-        if (ispresent(gadgetlayers)) {
-          gadget.board = gadgetlayers.board
-          gadget.over = gadgetlayers.over
-          gadget.under = gadgetlayers.under
-          // merged
-          gadget.layers = [...gadgetlayers.layers, ...control]
-          gadget.tickers = gadgetlayers.tickers
-        } else {
-          gadget.board = ''
-          gadget.over = []
-          gadget.under = []
-          gadget.layers = []
-          gadget.tickers = []
+
+        // set rendered gadget layers
+        gadget.board = gadgetlayers.board
+        gadget.over = gadgetlayers.over
+        gadget.under = gadgetlayers.under
+        gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
+        gadget.tickers = gadgetlayers.tickers
+
+        // create compressed json from gadget
+        const slim = exportgadgetstate(gadget)
+        if (!ispresent(slim)) {
+          continue
         }
 
         // write patch
-        const previous = gadgetsync[player] ?? {}
-        const patch = compare(previous, gadget)
+        const previous = gadgetsync[player] ?? []
+
+        // this should be the compressed json
+        const patch = compare(previous, slim)
 
         // reset sync
-        gadgetsync[player] = deepcopy(gadget)
+        // this should be the compressed json
+        gadgetsync[player] = deepcopy(slim)
 
         if (patch.length > 1024) {
           // send paint when we have a huge number of operations
-          gadgetclient_paint(gadgetserver, player, gadget)
+          gadgetclient_paint(gadgetserver, player, slim)
         } else if (patch.length) {
           // send patch
           gadgetclient_patch(gadgetserver, player, patch)
@@ -110,14 +112,18 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       }
       break
     }
-    case 'desync':
-      // send paint
-      gadgetclient_paint(
-        gadgetserver,
-        message.player,
-        gadgetsync[message.player],
-      )
+    case 'desync': {
+      // get current state
+      const gadget = gadgetstate(message.player)
+      // create compressed json from gadget
+      const slim = exportgadgetstate(gadget)
+      if (!ispresent(slim)) {
+        break
+      }
+      // this should be the compressed json
+      gadgetclient_paint(gadgetserver, message.player, slim)
       break
+    }
     case 'clearscroll':
       gadgetclearscroll(message.player)
       break
