@@ -46,7 +46,7 @@ export function PanelItemText({
 
   // prefix
   tokenizeandwritetextformat(
-    `$green  $20 ${tcolor}${tlabel} $green`,
+    `$green $20 ${tcolor}${tlabel} $green`,
     context,
     false,
   )
@@ -58,7 +58,6 @@ export function PanelItemText({
   context.writefullwidth = 32
   tokenizeandwritetextformat(`${tvalue}`, context, false)
   context.writefullwidth = undefined
-  tokenizeandwritetextformat(`\n`, context, false)
 
   // input state
   const hasselection = ispresent(selection)

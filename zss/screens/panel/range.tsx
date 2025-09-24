@@ -50,7 +50,7 @@ export function PanelItemRange({
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
-  tokenizeandwritetextformat(` $red $29 ${tcolor}${tlabel} `, context, false)
+  tokenizeandwritetextformat(`$red $29 ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '$4'
@@ -59,7 +59,7 @@ export function PanelItemRange({
     .replaceAll(':', '$9')
 
   tokenizeandwritetextformat(
-    `${tcolor}${labelmin}${bar}${labelmax} $green${state + 1}\n`,
+    `${tcolor}${labelmin}${bar}${labelmax} $green${state + 1}`,
     context,
     false,
   )

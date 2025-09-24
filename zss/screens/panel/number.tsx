@@ -66,12 +66,11 @@ export function PanelItemNumber({
 
   context.writefullwidth = 32
   tokenizeandwritetextformat(
-    `  # ${tcolor}${tlabel} $green${tvalue}`,
+    ` # ${tcolor}${tlabel} $green${tvalue}`,
     context,
     false,
   )
   context.writefullwidth = undefined
-  tokenizeandwritetextformat(`\n`, context, false)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {

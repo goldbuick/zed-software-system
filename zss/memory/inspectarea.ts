@@ -196,6 +196,13 @@ export function memoryinspectarea(
       ` 3 `,
       'next',
     ])
+    gadgethyperlink(player, 'batch', 'paste style', [
+      `style:${area}`,
+      'hk',
+      '4',
+      ` 4 `,
+      'next',
+    ])
   }
   gadgethyperlink(player, 'batch', 'copy coords', [
     `copycoords:${area}`,
