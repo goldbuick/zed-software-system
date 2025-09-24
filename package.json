@@ -21,6 +21,7 @@
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
     "@breezystack/lamejs": "^1.2.7",
+    "@henrygd/queue": "^1.0.7",
     "@jest/globals": "^29.7.0",
     "@lobehub/tts": "^1.25.8",
     "@metrichor/jmespath": "^0.3.1",

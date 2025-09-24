@@ -900,6 +900,11 @@
   dependencies:
     giscus "^1.6.0"
 
+"@henrygd/queue@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.npmjs.org/@henrygd/queue/-/queue-1.0.7.tgz#1cb863d94b4b2ff5996727afc17224ce9dc1923f"
+  integrity sha512-Jmt/iO6yDlz9UYGILkm/Qzi/ckkEiTNZcqDvt3QFLE4OThPeiCj6tKsynHFm/ppl8RumWXAx1dZPBPiRPaaGig==
+
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
   resolved "https://registry.npmjs.org/@humanwhocodes/config-array/-/config-array-0.13.0.tgz#fb907624df3256d04b9aa2df50d7aa97ec648748"
