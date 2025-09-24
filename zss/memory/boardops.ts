@@ -236,52 +236,94 @@ export function boardtick(board: MAYBE<BOARD>, timestamp: number) {
   board.lookup = undefined
   boardsetlookup(board)
 
-  // iterate through objects
-  const objects = Object.values(board.objects)
-  for (let i = 0; i < objects.length; ++i) {
-    const object = objects[i]
+  function processlist(list: BOARD_ELEMENT[]) {
+    for (let i = 0; i < list.length; ++i) {
+      const object = list[i]
 
-    // check that we have an id
-    if (!ispresent(object.id)) {
-      continue
-    }
-
-    // track last position
-    object.lx = object.x
-    object.ly = object.y
-
-    // lookup kind
-    const kind = memoryelementkindread(object)
-
-    // object code is composed of kind code + object code
-    const code = `${kind?.code ?? ''}\n${object.code ?? ''}`
-
-    // check that we have code to execute
-    if (!code) {
-      continue
-    }
-
-    // only run if not removed
-    // edge case is removed with a pending thud
-    // essentially this affords objects that were forcibly removed
-    // a single tick before execution ends
-    if (object.removed) {
-      const delta = timestamp - object.removed
-      const cycle = memoryelementstatread(object, 'cycle')
-      if (delta > cycle) {
+      // check that we have an id
+      if (!ispresent(object.id)) {
         continue
       }
-    }
 
-    // signal id & code
-    args.push({
-      id: object.id,
-      type: CODE_PAGE_TYPE.OBJECT,
-      code,
-      object,
-      terrain: undefined,
-    })
+      // track last position
+      object.lx = object.x
+      object.ly = object.y
+
+      // lookup kind
+      const kind = memoryelementkindread(object)
+
+      // object code is composed of kind code + object code
+      const code = `${kind?.code ?? ''}\n${object.code ?? ''}`
+
+      // check that we have code to execute
+      if (!code) {
+        continue
+      }
+
+      // only run if not removed
+      // edge case is removed with a pending thud
+      // essentially this affords objects that were forcibly removed
+      // a single tick before execution ends
+      if (object.removed) {
+        const delta = timestamp - object.removed
+        const cycle = memoryelementstatread(object, 'cycle')
+        if (delta > cycle) {
+          continue
+        }
+      }
+
+      // signal id & code
+      args.push({
+        id: object.id,
+        type: CODE_PAGE_TYPE.OBJECT,
+        code,
+        object,
+        terrain: undefined,
+      })
+    }
   }
+
+  // iterate through objects
+  const objects = Object.values(board.objects)
+
+  // execution lists
+  const otherlist: BOARD_ELEMENT[] = []
+  const ghostlist: BOARD_ELEMENT[] = []
+  const playerlist: BOARD_ELEMENT[] = []
+  const bulletwaterlist: BOARD_ELEMENT[] = []
+
+  // filter into categories
+  for (let i = 0; i < objects.length; ++i) {
+    const el = objects[i]
+    if (ispid(el.id)) {
+      playerlist.push(el)
+    } else {
+      switch (memoryelementstatread(el, 'collision')) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISBULLET:
+          bulletwaterlist.push(el)
+          break
+        case COLLISION.ISGHOST:
+          ghostlist.push(el)
+          break
+        default:
+          otherlist.push(el)
+          break
+      }
+    }
+  }
+
+  // bullet & water run first
+  processlist(bulletwaterlist)
+
+  // players run next
+  processlist(playerlist)
+
+  // non-ghost run next
+  processlist(otherlist)
+
+  // ghosts run last
+  processlist(ghostlist)
 
   // cleanup objects flagged for deletion
   const stopids = boardcleanup(board, timestamp)
