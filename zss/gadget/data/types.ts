@@ -118,7 +118,7 @@ export function createtiles(
 ): LAYER_TILES {
   const size = width * height
   return {
-    id: `tiles:${player}:${index}`,
+    id: `t:${player}:${index}`,
     type: LAYER_TYPE.TILES,
     width,
     height,
@@ -137,7 +137,7 @@ export function createsprite(
   color = 15,
 ): SPRITE {
   return {
-    id: `sprites:${player}:${index}:${id}`,
+    id: `s:${player}:${index}:${id}`,
     x: 0,
     y: 0,
     char,
@@ -149,7 +149,7 @@ export function createsprite(
 
 export function createsprites(player: string, index: number): LAYER_SPRITES {
   return {
-    id: `sprites:${player}:${index}`,
+    id: `${player}:${index}`,
     type: LAYER_TYPE.SPRITES,
     sprites: [],
   }
@@ -164,7 +164,7 @@ export function createdither(
 ): LAYER_DITHER {
   const size = width * height
   return {
-    id: `dither:${player}:${index}`,
+    id: `d:${player}:${index}`,
     type: LAYER_TYPE.DITHER,
     width,
     height,
@@ -179,7 +179,7 @@ export function createmedia(
   media: string | number[],
 ): LAYER_MEDIA {
   return {
-    id: `media:${player}:${index}`,
+    id: `m:${player}:${index}`,
     type: LAYER_TYPE.MEDIA,
     mime,
     media,
@@ -188,7 +188,7 @@ export function createmedia(
 
 export function createcontrol(player: string, index: number): LAYER_CONTROL {
   return {
-    id: `control:${player}:${index}`,
+    id: `c:${player}:${index}`,
     type: LAYER_TYPE.CONTROL,
     focusx: 0,
     focusy: 0,

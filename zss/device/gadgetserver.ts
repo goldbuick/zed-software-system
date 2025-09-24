@@ -8,7 +8,7 @@ import {
 } from 'zss/gadget/data/api'
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_GADGET_LAYERS,
   MEMORY_LABEL,
@@ -56,18 +56,15 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       for (let i = 0; i < activelistvalues.length; ++i) {
         const player = activelistvalues[i]
         const playerboard = memoryreadplayerboard(player)
-        if (!ispresent(playerboard)) {
-          continue
-        }
 
         // check layer cache
-        if (!layercache.has(playerboard.id)) {
-          // create layers if needed
-          layercache.set(playerboard.id, memoryreadgadgetlayers(playerboard))
-        }
-        const gadgetlayers = deepcopy(layercache.get(playerboard.id))
-        if (!ispresent(gadgetlayers)) {
-          continue
+        let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
+        if (ispresent(playerboard)) {
+          if (!layercache.has(playerboard.id)) {
+            // create layers if needed
+            layercache.set(playerboard.id, memoryreadgadgetlayers(playerboard))
+          }
+          gadgetlayers = deepcopy(layercache.get(playerboard.id))
         }
 
         const control = memoryconverttogadgetcontrollayer(
@@ -79,12 +76,14 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
         // get current state
         const gadget = gadgetstate(player)
 
-        // set rendered gadget layers
-        gadget.board = gadgetlayers.board
-        gadget.over = gadgetlayers.over
-        gadget.under = gadgetlayers.under
-        gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
-        gadget.tickers = gadgetlayers.tickers
+        // set rendered gadget layers to apply
+        if (ispresent(gadgetlayers)) {
+          gadget.board = gadgetlayers.board
+          gadget.over = gadgetlayers.over
+          gadget.under = gadgetlayers.under
+          gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
+          gadget.tickers = gadgetlayers.tickers
+        }
 
         // create compressed json from gadget
         const slim = exportgadgetstate(gadget)
@@ -98,15 +97,11 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
         // this should be the compressed json
         const patch = compare(previous, slim)
 
-        // reset sync
-        // this should be the compressed json
-        gadgetsync[player] = deepcopy(slim)
-
-        if (patch.length > 1024) {
-          // send paint when we have a huge number of operations
-          gadgetclient_paint(gadgetserver, player, slim)
-        } else if (patch.length) {
-          // send patch
+        // only send when we have changes
+        if (patch.length) {
+          // reset sync
+          gadgetsync[player] = deepcopy(slim)
+          // this should be the patch for compressed json
           gadgetclient_patch(gadgetserver, player, patch)
         }
       }
