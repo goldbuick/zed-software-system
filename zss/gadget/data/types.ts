@@ -1,3 +1,5 @@
+import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
+import { MAYBE } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
 
@@ -49,7 +51,6 @@ export type LAYER_BLANK = {
 export type LAYER_TILES = {
   id: string
   type: LAYER_TYPE.TILES
-  tag: string
   width: number
   height: number
   char: number[]
@@ -111,16 +112,14 @@ function arrayof(size: number, fill: number): number[] {
 export function createtiles(
   player: string,
   index: number,
-  tag: string,
   width: number,
   height: number,
   bg = 0,
 ): LAYER_TILES {
   const size = width * height
   return {
-    id: `tiles:${player}:${index}`,
+    id: `t:${player}:${index}`,
     type: LAYER_TYPE.TILES,
-    tag,
     width,
     height,
     char: arrayof(size, 0),
@@ -138,7 +137,7 @@ export function createsprite(
   color = 15,
 ): SPRITE {
   return {
-    id: `sprites:${player}:${index}:${id}`,
+    id: `s:${player}:${index}:${id}`,
     x: 0,
     y: 0,
     char,
@@ -150,7 +149,7 @@ export function createsprite(
 
 export function createsprites(player: string, index: number): LAYER_SPRITES {
   return {
-    id: `sprites:${player}:${index}`,
+    id: `${player}:${index}`,
     type: LAYER_TYPE.SPRITES,
     sprites: [],
   }
@@ -165,7 +164,7 @@ export function createdither(
 ): LAYER_DITHER {
   const size = width * height
   return {
-    id: `dither:${player}:${index}`,
+    id: `d:${player}:${index}`,
     type: LAYER_TYPE.DITHER,
     width,
     height,
@@ -180,7 +179,7 @@ export function createmedia(
   media: string | number[],
 ): LAYER_MEDIA {
   return {
-    id: `media:${player}:${index}`,
+    id: `m:${player}:${index}`,
     type: LAYER_TYPE.MEDIA,
     mime,
     media,
@@ -189,7 +188,7 @@ export function createmedia(
 
 export function createcontrol(player: string, index: number): LAYER_CONTROL {
   return {
-    id: `control:${player}:${index}`,
+    id: `c:${player}:${index}`,
     type: LAYER_TYPE.CONTROL,
     focusx: 0,
     focusy: 0,

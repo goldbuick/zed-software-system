@@ -48,14 +48,13 @@ const SPRITE_CACHE: Record<string, SPRITE> = {}
 function createcachedtiles(
   player: string,
   index: number,
-  tag: string,
   width: number,
   height: number,
   bg = 0,
 ): LAYER_TILES {
   const id = `tiles:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createtiles(player, index, tag, width, height, bg)
+    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
   }
   return LAYER_CACHE[id] as LAYER_TILES
 }
@@ -241,15 +240,59 @@ export function memoryconverttogadgetcontrollayer(
   player: string,
   index: number,
   board: MAYBE<BOARD>,
-): LAYER {
+): LAYER[] {
   const control = createcachedcontrol(player, index)
   const maybeobject = boardobjectread(board, player)
-  if (ispresent(maybeobject)) {
-    control.focusid = maybeobject.id ?? ''
-    control.focusx = maybeobject.x ?? 0
-    control.focusy = maybeobject.y ?? 0
+  if (!ispresent(board) || !ispresent(maybeobject)) {
+    return []
   }
-  return control
+
+  // setup focus
+  control.focusid = maybeobject.id ?? ''
+  control.focusx = maybeobject.x ?? 0
+  control.focusy = maybeobject.y ?? 0
+
+  // player flags, then board flags
+  const { graphics, camera, facing } = memoryreadflags(player)
+  const withgraphics = graphics ?? board.graphics ?? ''
+  const withcamera = camera ?? board.camera ?? ''
+  const withfacing = facing ?? board.facing ?? ''
+
+  if (isstring(withgraphics)) {
+    const graphics = NAME(withgraphics)
+    switch (graphics) {
+      case 'fpv':
+      case 'iso':
+      case 'flat':
+      case 'mode7':
+        control.graphics = graphics
+        break
+      default:
+        control.graphics = 'flat'
+        break
+    }
+  }
+
+  if (isstring(withcamera)) {
+    switch (NAME(withcamera)) {
+      default:
+      case 'mid':
+        control.viewscale = VIEWSCALE.MID
+        break
+      case 'near':
+        control.viewscale = VIEWSCALE.NEAR
+        break
+      case 'far':
+        control.viewscale = VIEWSCALE.FAR
+        break
+    }
+  }
+
+  if (isnumber(withfacing)) {
+    control.facing = degToRad(withfacing)
+  }
+
+  return [control]
 }
 
 export function memoryconverttogadgetlayers(
@@ -277,7 +320,6 @@ export function memoryconverttogadgetlayers(
   const tiles = createcachedtiles(
     boardid,
     iiii++,
-    'terrain',
     boardwidth,
     boardheight,
     defaultcolor,
@@ -301,54 +343,6 @@ export function memoryconverttogadgetlayers(
 
   // reset
   lighting.alphas.fill(isdark)
-
-  // const control = createcachedcontrol(boardid, iiii++)
-
-  // // hack to keep only one control layer
-  // if (isprimary) {
-  //   // todo, add control layers for the local1, ...local3 players
-  //   layers.push(control)
-  //   const { graphics, camera, facing } = memoryreadflags(boardid)
-
-  //   // board stats take preference over play flags
-  //   const withgraphics = board.graphics ?? graphics ?? ''
-  //   const withcamera = board.camera ?? camera ?? ''
-  //   const withfacing = board.facing ?? facing ?? ''
-
-  //   if (isstring(withgraphics)) {
-  //     const graphics = NAME(withgraphics)
-  //     switch (graphics) {
-  //       case 'fpv':
-  //       case 'iso':
-  //       case 'flat':
-  //       case 'mode7':
-  //         control.graphics = graphics
-  //         break
-  //       default:
-  //         control.graphics = 'flat'
-  //         break
-  //     }
-  //   }
-
-  //   if (isstring(withcamera)) {
-  //     switch (NAME(withcamera)) {
-  //       default:
-  //       case 'mid':
-  //         control.viewscale = VIEWSCALE.MID
-  //         break
-  //       case 'near':
-  //         control.viewscale = VIEWSCALE.NEAR
-  //         break
-  //       case 'far':
-  //         control.viewscale = VIEWSCALE.FAR
-  //         break
-  //     }
-  //   }
-
-  //   if (isnumber(withfacing)) {
-  //     control.facing = degToRad(withfacing % 360)
-  //   }
-  // }
 
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
@@ -531,13 +525,6 @@ export function memoryconverttogadgetlayers(
         lighting.alphas[index] = 0
       }
     }
-
-    // inform control layer where to focus
-    // if (id === player) {
-    //   control.focusx = sprite.x
-    //   control.focusy = sprite.y
-    //   control.focusid = id
-    // }
   }
 
   // process isghost objects

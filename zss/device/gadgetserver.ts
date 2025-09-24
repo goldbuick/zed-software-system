@@ -6,6 +6,7 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
+import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import {
@@ -59,13 +60,11 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
         // check layer cache
         let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
         if (ispresent(playerboard)) {
-          if (layercache.has(playerboard.id)) {
-            gadgetlayers = layercache.get(playerboard.id)
-          } else {
+          if (!layercache.has(playerboard.id)) {
             // create layers if needed
-            gadgetlayers = memoryreadgadgetlayers(playerboard)
-            layercache.set(playerboard.id, gadgetlayers)
+            layercache.set(playerboard.id, memoryreadgadgetlayers(playerboard))
           }
+          gadgetlayers = deepcopy(layercache.get(playerboard.id))
         }
 
         const control = memoryconverttogadgetcontrollayer(
@@ -76,31 +75,50 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
         // get current state
         const gadget = gadgetstate(player)
+
+        // set rendered gadget layers to apply
         if (ispresent(gadgetlayers)) {
           gadget.board = gadgetlayers.board
           gadget.over = gadgetlayers.over
           gadget.under = gadgetlayers.under
-          gadget.layers = [...gadgetlayers.layers, control]
+          gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
           gadget.tickers = gadgetlayers.tickers
         }
 
+        // create compressed json from gadget
+        const slim = exportgadgetstate(gadget)
+        if (!ispresent(slim)) {
+          continue
+        }
+
         // write patch
-        const previous = gadgetsync[player] ?? {}
-        const patch = compare(previous, gadget)
+        const previous = gadgetsync[player] ?? []
+
+        // this should be the compressed json
+        const patch = compare(previous, slim)
+
+        // only send when we have changes
         if (patch.length) {
-          gadgetsync[player] = deepcopy(gadget)
+          // reset sync
+          gadgetsync[player] = deepcopy(slim)
+          // this should be the patch for compressed json
           gadgetclient_patch(gadgetserver, player, patch)
         }
       }
       break
     }
-    case 'desync':
-      gadgetclient_paint(
-        gadgetserver,
-        message.player,
-        gadgetstate(message.player),
-      )
+    case 'desync': {
+      // get current state
+      const gadget = gadgetstate(message.player)
+      // create compressed json from gadget
+      const slim = exportgadgetstate(gadget)
+      if (!ispresent(slim)) {
+        break
+      }
+      // this should be the compressed json
+      gadgetclient_paint(gadgetserver, message.player, slim)
       break
+    }
     case 'clearscroll':
       gadgetclearscroll(message.player)
       break

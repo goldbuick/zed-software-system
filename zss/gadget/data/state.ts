@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { FORMAT_OBJECT } from 'zss/feature/format'
 import { islocked } from 'zss/feature/url'
 import { MAYBE, isequal } from 'zss/mapping/types'
 import { create } from 'zustand'
@@ -22,6 +23,7 @@ export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
 export const useGadgetClient = create<{
   desync: boolean
   gadget: GADGET_STATE
+  slim: FORMAT_OBJECT
   zsswords: {
     cli: string[]
     loader: string[]
@@ -59,6 +61,7 @@ export const useGadgetClient = create<{
     scroll: [],
     sidebar: [],
   },
+  slim: [],
 }))
 
 export type TAPE_ROW = [string, string, ...any[]]

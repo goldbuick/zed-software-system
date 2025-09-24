@@ -47,7 +47,8 @@ type FramedProps = {
 export function Framed({ width, height }: FramedProps) {
   const player = registerreadplayer()
 
-  // re-render only when layer count changes or graphics
+  // re-render only when layer count, board, or graphics changes
+  useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
 
   // handle graphics modes

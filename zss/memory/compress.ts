@@ -1,9 +1,9 @@
 import { compress, decompress, init } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
+import { packformat, unpackformat } from 'zss/feature/format'
 import { ispresent } from 'zss/mapping/types'
 
 import { exportbook, importbook } from './book'
-import { packformat, unpackformat } from './format'
 import { BOOK } from './types'
 
 let zstdenabled = false

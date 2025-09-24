@@ -315,12 +315,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // board stats
       case 'camera':
       case 'graphics':
-      case 'facing':
-        // pass-through to player flag if not defined
-        if (ispresent(READ_CONTEXT.board?.[name])) {
-          return [true, READ_CONTEXT.board?.[name]]
-        }
-        break
+      case 'facing': {
+        // read player flag
+        const value = memoryreadflags(playerid)[name]
+        return [
+          true,
+          ispresent(value)
+            ? // player flags checked first
+              value
+            : // fallback to board
+              (READ_CONTEXT.board?.[name] ?? 0),
+        ]
+      }
       // writable
       case 'isdark':
         return [true, READ_CONTEXT.board?.isdark ? 1 : 0]
@@ -416,10 +422,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
   },
   set(_, name, value) {
     // check player's flags
+    const focuspt = {
+      x: READ_CONTEXT.element?.x ?? -1,
+      y: READ_CONTEXT.element?.y ?? -1,
+    }
     // >>> this <<< uses focus
     const focus = findplayerforelement(
       READ_CONTEXT.board,
-      { x: READ_CONTEXT.element?.x ?? -1, y: READ_CONTEXT.element?.y ?? -1 },
+      focuspt,
       READ_CONTEXT.elementfocus,
     )
     const player = focus?.id ?? READ_CONTEXT.elementfocus
@@ -431,13 +441,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'camera':
       case 'graphics':
         break
-      case 'facing': {
+      case 'facing':
         // constrain facing to 360 degrees
-        if (value < 0 || value > 360) {
-          value = (value + 360) % 360
-        }
+        value = ((value % 360) + 360) % 360
         break
-      }
       // writable
       case 'isdark':
         if (ispresent(READ_CONTEXT.board)) {

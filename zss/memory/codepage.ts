@@ -2,6 +2,12 @@ import { Color } from 'three'
 import { objectKeys } from 'ts-extras'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
+import {
+  FORMAT_OBJECT,
+  FORMAT_SKIP,
+  formatobject,
+  unformatobject,
+} from 'zss/feature/format'
 import { PALETTE } from 'zss/feature/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
@@ -32,12 +38,6 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import {
-  FORMAT_OBJECT,
-  FORMAT_SKIP,
-  formatobject,
-  unformatobject,
-} from './format'
 import {
   BOARD_ELEMENT,
   CODE_PAGE,

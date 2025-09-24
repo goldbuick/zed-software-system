@@ -1,3 +1,9 @@
+import {
+  FORMAT_OBJECT,
+  FORMAT_SKIP,
+  formatobject,
+  unformatobject,
+} from 'zss/feature/format'
 import { indextopt, ptdist, ptwithin } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
@@ -22,12 +28,6 @@ import {
 } from './boardlookup'
 import { boardreadpath } from './boardpathing'
 import { bookelementdisplayread } from './book'
-import {
-  FORMAT_OBJECT,
-  FORMAT_SKIP,
-  formatobject,
-  unformatobject,
-} from './format'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 import { memoryelementstatread } from '.'

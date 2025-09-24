@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.64.259",
+  "version": "0.65.4",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc zss",
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
     "@breezystack/lamejs": "^1.2.7",
+    "@henrygd/queue": "^1.0.7",
     "@jest/globals": "^29.7.0",
     "@lobehub/tts": "^1.25.8",
     "@metrichor/jmespath": "^0.3.1",

@@ -1,3 +1,4 @@
+import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
 import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
@@ -13,7 +14,6 @@ import {
   exportcodepage,
   importcodepage,
 } from './codepage'
-import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
   BOARD,
   BOARD_ELEMENT,
