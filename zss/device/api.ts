@@ -2,8 +2,7 @@
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
-import { FORMAT_OBJECT } from 'zss/feature/format'
-import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
+import { INPUT } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
