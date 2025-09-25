@@ -9,13 +9,24 @@ import { AUDIO_SYNTH } from './synth'
 // get MicrosoftSpeechTTS instance
 let tts: MAYBE<EdgeSpeechTTS>
 
-async function requestaudiobuffer(voice: string, input: string) {
-  if (!ispresent(tts)) {
-    tts = new EdgeSpeechTTS({ locale: 'en-US' })
-  }
-  return tts.createAudio({
-    input,
-    options: { voice },
+async function requestaudiobuffer(
+  voice: string,
+  input: string,
+): Promise<MAYBE<AudioBuffer>> {
+  return new Promise((resolve, reject) => {
+    if (!ispresent(tts)) {
+      tts = new EdgeSpeechTTS({ locale: 'en-US' })
+    }
+    const timer = setTimeout(reject, 5000)
+    tts
+      .createAudio({
+        input,
+        options: { voice },
+      })
+      .then((audiobuffer) => {
+        clearTimeout(timer)
+        resolve(audiobuffer)
+      })
   })
 }
 
@@ -29,7 +40,9 @@ export async function ttsplay(
   }
   // play the audio
   const audiobuffer = await requestaudiobuffer(voice, input)
-  synth.addttsaudiobuffer(audiobuffer)
+  if (ispresent(audiobuffer)) {
+    synth.addttsaudiobuffer(audiobuffer)
+  }
 }
 
 // audio playback queue
@@ -52,7 +65,7 @@ async function audioplaytask(
 }
 
 // audio buffer request queue
-const audiobufferqueue = newQueue(3)
+const audiobufferqueue = newQueue(1)
 
 async function audiobuffertask(
   synth: MAYBE<AUDIO_SYNTH>,
@@ -61,7 +74,9 @@ async function audiobuffertask(
 ): Promise<void> {
   const audiobuffer = await requestaudiobuffer(voice, input)
   audioplayqueue.add(async () => {
-    await audioplaytask(synth, audiobuffer)
+    if (ispresent(audiobuffer)) {
+      await audioplaytask(synth, audiobuffer)
+    }
   })
 }
 

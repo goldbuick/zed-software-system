@@ -19,6 +19,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   const { desync } = useGadgetClient.getState()
   switch (message.target) {
     case 'paint': {
+      console.info('gadgetclient', message.target, message.data)
       const gadget = importgadgetstate(message.data)
       // expect compressed json
       useGadgetClient.setState({
@@ -29,10 +30,12 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
       break
     }
     case 'patch':
+      console.info('gadgetclient', 1, message.target, message.data)
       if (!desync) {
         useGadgetClient.setState((state) => {
           let didnotpass: any
           try {
+            console.info('gadgetclient', 2, message.target, message.data)
             // apply patch to compressed json
             const applied = applypatch(
               deepcopy(state.slim),

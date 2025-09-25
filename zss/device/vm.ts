@@ -382,6 +382,8 @@ const vm = createdevice(
         }
         break
       case 'logout':
+        // clear terminal
+        gadgetserver_clearplayer(vm, message.player)
         // logout player
         memoryplayerlogout(message.player)
         // stop tracking
@@ -393,8 +395,6 @@ const vm = createdevice(
       case 'login':
         // attempt login
         if (memoryplayerlogin(message.player)) {
-          // clear terminal
-          gadgetserver_clearplayer(vm, message.player)
           // start tracking
           tracking[message.player] = 0
           api_log(vm, memoryreadoperator(), `login from ${message.player}`)
@@ -595,6 +595,7 @@ const vm = createdevice(
         }
         break
       case 'refscroll': {
+        console.info('refscroll for player', message.player)
         romparse(romread(`refscroll:menu`), (line) =>
           romscroll(message.player, line),
         )

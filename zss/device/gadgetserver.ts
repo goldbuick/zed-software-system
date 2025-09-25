@@ -67,22 +67,27 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
           gadgetlayers = deepcopy(layercache.get(playerboard.id))
         }
 
-        const control = memoryconverttogadgetcontrollayer(
-          player,
-          1000,
-          playerboard,
-        )
-
         // get current state
         const gadget = gadgetstate(player)
 
         // set rendered gadget layers to apply
         if (ispresent(gadgetlayers)) {
+          const control = memoryconverttogadgetcontrollayer(
+            player,
+            1000,
+            playerboard,
+          )
           gadget.board = gadgetlayers.board
           gadget.over = gadgetlayers.over
           gadget.under = gadgetlayers.under
           gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
           gadget.tickers = gadgetlayers.tickers
+        } else {
+          gadget.board = 'void'
+          gadget.over = []
+          gadget.under = []
+          gadget.layers = []
+          gadget.tickers = []
         }
 
         // create compressed json from gadget
@@ -99,6 +104,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
         // only send when we have changes
         if (patch.length) {
+          console.info('gadgetserver', 'patch', patch)
           // reset sync
           gadgetsync[player] = deepcopy(slim)
           // this should be the patch for compressed json
@@ -115,6 +121,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       if (!ispresent(slim)) {
         break
       }
+      console.info('gadgetserver', 'paint', slim)
       // this should be the compressed json
       gadgetclient_paint(gadgetserver, message.player, slim)
       break
@@ -127,6 +134,10 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       delete gadgetstore[message.player]
       const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC)
       delete gadgetsync[message.player]
+      const slim: any[] = []
+      console.info('gadgetserver', 'paint', slim)
+      // signal empty state
+      gadgetclient_paint(gadgetserver, message.player, slim)
       break
     }
   }

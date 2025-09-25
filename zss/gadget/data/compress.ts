@@ -1,5 +1,5 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
-import { MAYBE } from 'zss/mapping/types'
+import { MAYBE, deepcopy } from 'zss/mapping/types'
 
 import { GADGET_STATE, LAYER, SPRITE } from './types'
 
@@ -71,6 +71,7 @@ enum GADGET_STATE_KEYS {
 export function exportgadgetstate(
   gadget: MAYBE<GADGET_STATE>,
 ): MAYBE<FORMAT_OBJECT> {
+  console.info('export', deepcopy(gadget))
   return formatobject(gadget, GADGET_STATE_KEYS, {
     layers: (layers) => layers.map(exportlayer),
   })
