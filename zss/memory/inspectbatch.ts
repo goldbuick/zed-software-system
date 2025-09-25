@@ -91,7 +91,12 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       await memoryinspectpaste(player, p1, p2, batch.target)
       break
     case 'style':
-      memoryinspectstylemenu(player, p1, p2)
+      await memoryinspectstylemenu(player, p1, p2)
+      break
+    case 'styleall':
+    case 'styleobjects':
+    case 'styleterrain':
+      await memoryinspectstyle(player, p1, p2, batch.target)
       break
     case 'empty':
       memoryinspectemptymenu(player, p1, p2)
@@ -121,20 +126,9 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         vm_cli(SOFTWARE, player, `#pageopen ${batch.path}`)
       })
       break
-    default: {
-      const alts = parsetarget(batch.path)
-      switch (alts.target) {
-        case 'styleall':
-        case 'styleobjects':
-        case 'styleterrain':
-          console.info('style op!', alts)
-          break
-        default:
-          console.info('unknown batch', batch)
-          break
-      }
+    default:
+      console.info('unknown batch', batch)
       break
-    }
   }
 }
 

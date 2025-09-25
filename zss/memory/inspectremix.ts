@@ -86,30 +86,21 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
   gadgettext(player, DIVIDER)
 
   function get(name: string) {
-    const { target } = parsetarget(name)
-    return remixconfig[target as keyof REMIX_CONFIG]
+    return remixconfig[name as keyof REMIX_CONFIG]
   }
   function set(name: string, value: WORD) {
     if (isnumber(value) || isstring(value)) {
-      const { target } = parsetarget(name)
       // @ts-expect-error bah
-      remixconfig[target as keyof REMIX_CONFIG] = value
+      remixconfig[name as keyof REMIX_CONFIG] = value
     }
   }
 
-  gadgethyperlink(
-    player,
-    'remix',
-    'source board',
-    [`stat:${area}`, 'text'],
-    get,
-    set,
-  )
+  gadgethyperlink(player, 'remix', 'source board', [`stat`, 'text'], get, set)
   gadgethyperlink(
     player,
     'remix',
     'patternsize',
-    [`patternsize:${area}`, 'number', '1', '5'],
+    [`patternsize`, 'number', '1', '5'],
     get,
     set,
   )
@@ -117,7 +108,7 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
     player,
     'remix',
     'mirror',
-    [`mirror:${area}`, 'number', '1', '8'],
+    [`mirror`, 'number', '1', '8'],
     get,
     set,
   )

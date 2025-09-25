@@ -196,13 +196,6 @@ export function memoryinspectarea(
       ` 3 `,
       'next',
     ])
-    gadgethyperlink(player, 'batch', 'paste style', [
-      `style:${area}`,
-      'hk',
-      '4',
-      ` 4 `,
-      'next',
-    ])
   }
   gadgethyperlink(player, 'batch', 'copy coords', [
     `copycoords:${area}`,
@@ -210,6 +203,15 @@ export function memoryinspectarea(
     '5',
     ` 5 `,
   ])
+  if (hassecretheap) {
+    gadgethyperlink(player, 'batch', 'style transfer', [
+      `style:${area}`,
+      'hk',
+      's',
+      ` S `,
+      'next',
+    ])
+  }
   gadgethyperlink(player, 'remix', 'remix coords', [
     `remix:${area}`,
     'hk',

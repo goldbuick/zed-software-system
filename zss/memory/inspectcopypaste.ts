@@ -42,7 +42,9 @@ type BOARD_ELEMENT_BUFFER = {
 
 // read / write from indexdb
 
-async function readsecretheap(): Promise<BOARD_ELEMENT_BUFFER | undefined> {
+export async function readsecretheap(): Promise<
+  BOARD_ELEMENT_BUFFER | undefined
+> {
   return idbget('secretheap')
 }
 
