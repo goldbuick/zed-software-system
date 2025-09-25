@@ -47,7 +47,7 @@ export function PanelItemSelect({
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
-  tokenizeandwritetextformat(` $dkred ? ${tcolor}${tlabel} `, context, false)
+  tokenizeandwritetextformat(`$dkred ? ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '/'
@@ -65,7 +65,6 @@ export function PanelItemSelect({
     false,
   )
   context.writefullwidth = undefined
-  tokenizeandwritetextformat(`\n`, context, false)
 
   const up = useCallback<UserInputHandler>(() => {
     const next = Math.min(0, stateindex - 1)

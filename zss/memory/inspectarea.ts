@@ -203,6 +203,15 @@ export function memoryinspectarea(
     '5',
     ` 5 `,
   ])
+  if (hassecretheap) {
+    gadgethyperlink(player, 'batch', 'style transfer', [
+      `style:${area}`,
+      'hk',
+      's',
+      ` S `,
+      'next',
+    ])
+  }
   gadgethyperlink(player, 'remix', 'remix coords', [
     `remix:${area}`,
     'hk',

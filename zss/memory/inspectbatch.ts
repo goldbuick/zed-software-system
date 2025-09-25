@@ -22,6 +22,7 @@ import {
   memoryinspectpaste,
   memoryinspectpastemenu,
 } from './inspectcopypaste'
+import { memoryinspectstyle, memoryinspectstylemenu } from './inspectstyle'
 
 import { memoryreadplayerboard } from '.'
 
@@ -89,6 +90,14 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
     case 'pasteterraintiled':
       await memoryinspectpaste(player, p1, p2, batch.target)
       break
+    case 'style':
+      await memoryinspectstylemenu(player, p1, p2)
+      break
+    case 'styleall':
+    case 'styleobjects':
+    case 'styleterrain':
+      await memoryinspectstyle(player, p1, p2, batch.target)
+      break
     case 'empty':
       memoryinspectemptymenu(player, p1, p2)
       break
@@ -122,3 +131,9 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       break
   }
 }
+
+// case 'styleall':
+// case 'styleobjects':
+// case 'styleterrain':
+//   await memoryinspectstyle(player, p1, p2, batch.target)
+//   break
