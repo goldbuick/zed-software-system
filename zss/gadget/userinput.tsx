@@ -194,6 +194,14 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
 }
 
 window.addEventListener(
+  'wheel',
+  (event) => {
+    event.preventDefault()
+  },
+  { passive: false },
+)
+
+window.addEventListener(
   'keydown',
   (event) => {
     const key = NAME(event.key)
