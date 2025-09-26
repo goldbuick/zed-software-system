@@ -471,8 +471,6 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         } else {
           codepage.board.over = stats.over
         }
-        // reset lookup
-        codepage.board.overboard = undefined
       }
       if (isstring(stats.under)) {
         if (NAME(stats.under) === 'empty') {
@@ -480,8 +478,6 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         } else {
           codepage.board.under = stats.under
         }
-        // reset lookup
-        codepage.board.underboard = undefined
       }
 
       if (isstring(stats.camera)) {

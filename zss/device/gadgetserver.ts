@@ -64,14 +64,12 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
           // check layer cache
           let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
           if (ispresent(playerboard)) {
-            if (!layercache.has(playerboard.id)) {
-              // create layers if needed
-              layercache.set(
-                playerboard.id,
-                memoryreadgadgetlayers(playerboard),
-              )
+            gadgetlayers = layercache.get(playerboard.id)
+            // create layers if needed
+            if (!ispresent(gadgetlayers)) {
+              gadgetlayers = memoryreadgadgetlayers(playerboard)
+              layercache.set(playerboard.id, gadgetlayers)
             }
-            gadgetlayers = deepcopy(layercache.get(playerboard.id))
           }
 
           // get current state
