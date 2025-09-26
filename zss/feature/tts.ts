@@ -13,11 +13,11 @@ async function requestaudiobuffer(
   voice: string,
   input: string,
 ): Promise<MAYBE<AudioBuffer>> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!ispresent(tts)) {
       tts = new EdgeSpeechTTS({ locale: 'en-US' })
     }
-    const timer = setTimeout(reject, 5000)
+    const timer = setTimeout(() => resolve(undefined), 5000)
     tts
       .createAudio({
         input,
