@@ -209,7 +209,45 @@ window.addEventListener(
     const player = registerreadplayer()
 
     // block default browser behavior that messes with things
-    event.preventDefault()
+    switch (key) {
+      case 's': // override default behavior
+      case 'r':
+      case 'j':
+      case 'o':
+      case 'f':
+      case 'z':
+      case 'y':
+      case 'e':
+      case 'k':
+      case 'p': // prevent default behavior
+      case 'h':
+      case '[':
+      case ']':
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case 'delete':
+      case 'backspace':
+        if (mods.alt || mods.ctrl || mods.shift) {
+          event.preventDefault()
+        }
+        break
+      case 'tab':
+      case 'arrowleft':
+      case 'arrowright':
+      case 'arrowup':
+      case 'arrowdown':
+      case '/': // << for firefox :<
+        event.preventDefault()
+        break
+    }
 
     if (mods.alt) {
       inputdown(0, INPUT.ALT)
