@@ -92,7 +92,6 @@ import { NAME, PT } from 'zss/words/types'
 
 import {
   api_log,
-  gadgetserver_clearplayer,
   platform_ready,
   register_copy,
   register_copyjsonfile,
@@ -382,8 +381,6 @@ const vm = createdevice(
         }
         break
       case 'logout':
-        // clear terminal
-        gadgetserver_clearplayer(vm, message.player)
         // logout player
         memoryplayerlogout(message.player)
         // stop tracking
@@ -595,7 +592,6 @@ const vm = createdevice(
         }
         break
       case 'refscroll': {
-        console.info('refscroll for player', message.player)
         romparse(romread(`refscroll:menu`), (line) =>
           romscroll(message.player, line),
         )

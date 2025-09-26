@@ -65,11 +65,17 @@ export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
 }
 
 export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
-  return unformatobject(bookentry, BOOK_KEYS, {
+  const book: MAYBE<BOOK> = unformatobject(bookentry, BOOK_KEYS, {
     pages: (pages) => pages.map(importcodepage),
   })
+  if (ispresent(book)) {
+    // remove old data
+    delete book.flags.gadgetsync
+  }
+  return book
 }
 
+// gadgetsync
 export function bookupdatetoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.token = `${createshortnameid()}${randominteger(1111, 9999)}`

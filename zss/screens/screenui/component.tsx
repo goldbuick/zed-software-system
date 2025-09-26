@@ -174,8 +174,6 @@ export function ScreenUI() {
   // add the frame to display the game
   rects.unshift(frame)
 
-  console.info('screenui', isscrollempty, scroll, hasscroll)
-
   const player = registerreadplayer()
 
   return (
