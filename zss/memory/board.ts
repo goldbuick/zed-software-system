@@ -42,6 +42,7 @@ export function createboard(fn = noop<BOARD>) {
     objects: {},
     // runtime
     id: '',
+    name: '',
   }
   return fn(board)
 }
@@ -81,6 +82,7 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
         .filter((boardelement) => !boardelement.removed)
         .map(exportboardelement),
     id: FORMAT_SKIP,
+    name: FORMAT_SKIP,
     named: FORMAT_SKIP,
     lookup: FORMAT_SKIP,
     codepage: FORMAT_SKIP,

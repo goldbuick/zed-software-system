@@ -234,10 +234,12 @@ document.addEventListener(
         if (mods.alt || mods.ctrl || mods.shift) {
           event.preventDefault()
         }
+        event.stopPropagation()
         break
       case 'tab':
       case '/': // << for firefox :<
         event.preventDefault()
+        event.stopPropagation()
         break
     }
 

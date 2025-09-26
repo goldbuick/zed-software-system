@@ -436,6 +436,10 @@ export function vm_operator(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:operator')
 }
 
+export function vm_admin(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:admin')
+}
+
 export function vm_zztsearch(
   device: DEVICELIKE,
   player: string,

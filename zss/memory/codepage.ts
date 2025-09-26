@@ -445,7 +445,10 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.board)) {
         codepage.board = createboard()
       }
+
       codepage.board.id = codepage.id
+      codepage.board.name = codepagereadname(codepage)
+
       const stats = codepagereadstatdefaults(codepage)
 
       if (ispresent(stats.isdark)) {

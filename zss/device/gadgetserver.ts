@@ -49,16 +49,16 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
   // get list of active players
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const activelist = [...(mainbook?.activelist ?? []), memoryreadoperator()]
-  const activelistvalues = [...new Set(activelist.values())]
-  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE)
+  const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
+  activelistvalues.add(memoryreadoperator())
+  const activelist = [...activelistvalues]
 
   switch (message.target) {
     case 'tock':
       if (memoryreadoperator()) {
         const layercache = new Map<string, MEMORY_GADGET_LAYERS>()
-        for (let i = 0; i < activelistvalues.length; ++i) {
-          const player = activelistvalues[i]
+        for (let i = 0; i < activelist.length; ++i) {
+          const player = activelist[i]
           const playerboard = memoryreadplayerboard(player)
 
           // check layer cache

@@ -106,6 +106,10 @@ export function memoryreadoperator() {
   return MEMORY.operator
 }
 
+export function memoryisoperator(player: string) {
+  return MEMORY.operator === player
+}
+
 export function memorywriteoperator(operator: string) {
   MEMORY.operator = operator
 }
@@ -631,6 +635,17 @@ export function memoryreadplayeractive(player: string) {
 
 export function memoryplayerscan(players: Record<string, number>) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+
+  // ensure we're tracking all ids listed in book
+  const activelist = mainbook?.activelist ?? []
+  for (let i = 0; i < activelist.length; ++i) {
+    const objectid = activelist[i]
+    if (!ispresent(players[objectid])) {
+      players[objectid] = 0
+    }
+  }
+
+  // ensure we're tracking any orphaned player elements
   const boards = bookplayerreadboards(mainbook)
   for (let i = 0; i < boards.length; ++i) {
     const board = boards[i]
