@@ -17,6 +17,7 @@ import {
   museumofzztscreenshoturl,
   museumofzztsearch,
 } from 'zss/feature/url'
+import { DIVIDER } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
   gadgetcheckqueue,
@@ -40,6 +41,7 @@ import {
   memorycli,
   memoryclirepeatlast,
   memoryhasflags,
+  memoryisoperator,
   memorymessage,
   memoryplayerlogin,
   memoryplayerlogout,
@@ -51,6 +53,7 @@ import {
   memoryreadhalt,
   memoryreadoperator,
   memoryreadplayeractive,
+  memoryreadplayerboard,
   memoryreadsession,
   memoryresetbooks,
   memoryresetchipafteredit,
@@ -63,11 +66,15 @@ import {
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
+  bookelementdisplayread,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
   bookwritecodepage,
 } from 'zss/memory/book'
-import { bookplayerreadboards } from 'zss/memory/bookplayer'
+import {
+  bookplayermovetoboard,
+  bookplayerreadboards,
+} from 'zss/memory/bookplayer'
 import {
   codepageapplyelementstats,
   codepagereaddata,
@@ -88,7 +95,7 @@ import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
 import { dirconsts } from 'zss/words/dir'
-import { NAME, PT } from 'zss/words/types'
+import { COLOR, NAME, PT } from 'zss/words/types'
 
 import {
   api_log,
@@ -207,6 +214,46 @@ const vm = createdevice(
         // ack
         vm.replynext(message, 'ackoperator', true)
         break
+      case 'admin': {
+        // get list of active players
+        const isop = memoryisoperator(message.player)
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
+        activelistvalues.add(memoryreadoperator())
+        const activelist = [...activelistvalues]
+
+        // build userlist
+        gadgettext(message.player, `active player list`)
+        gadgettext(message.player, DIVIDER)
+        for (let i = 0; i < activelist.length; ++i) {
+          const player = activelist[i]
+          const { user } = memoryreadflags(player)
+          const withuser = isstring(user) ? user : 'player'
+          const playerboard = memoryreadplayerboard(player)
+          const playerelement = boardobjectread(playerboard, player)
+          const icon = bookelementdisplayread(playerelement)
+          const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
+          const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
+          if (isop && ispresent(playerboard)) {
+            gadgethyperlink(
+              message.player,
+              'admingoto',
+              `${icontext} ${withuser} ${location}`,
+              [player],
+            )
+          } else {
+            gadgettext(
+              message.player,
+              `${icontext} ${withuser} ${isop ? location : ''}`,
+            )
+          }
+        }
+
+        const shared = gadgetstate(message.player)
+        shared.scrollname = 'cpu admin'
+        shared.scroll = gadgetcheckqueue(message.player)
+        break
+      }
       case 'zsswords': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
         vm.replynext(message, `ackzsswords`, {
@@ -761,6 +808,26 @@ const vm = createdevice(
       default: {
         const { target, path } = parsetarget(message.target)
         switch (NAME(target)) {
+          case 'admingoto': {
+            // path is player id
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            const playerboard = memoryreadplayerboard(path)
+            const playerelement = boardobjectread(playerboard, path)
+            if (ispresent(playerboard) && ispresent(playerelement)) {
+              const dest = {
+                x: playerelement.x ?? 0,
+                y: playerelement.y ?? 0,
+              }
+              bookplayermovetoboard(
+                mainbook,
+                message.player,
+                playerboard.id,
+                dest,
+                true,
+              )
+            }
+            break
+          }
           case 'refscroll':
             switch (path) {
               case 'charscroll': {

@@ -104,6 +104,7 @@ export type BOARD = {
   b10?: number
   // runtime only
   id: string
+  name: string
   named?: Record<string, Set<string | number>>
   lookup?: MAYBE<string>[]
   distmaps?: Record<string, number[]>

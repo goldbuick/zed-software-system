@@ -4,6 +4,8 @@ import {
   api_error,
   api_log,
   bridge_start,
+  bridge_streamstart,
+  bridge_streamstop,
   bridge_tab,
   register_config,
   register_configshow,
@@ -14,6 +16,7 @@ import {
   register_inspector,
   register_nuke,
   register_share,
+  vm_admin,
   vm_codeaddress,
   vm_flush,
   vm_fork,
@@ -46,7 +49,6 @@ import {
   memoryclearbook,
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
-  memoryensuresoftwarecodepage,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
@@ -79,8 +81,7 @@ import {
 } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
-import { stattypestring } from 'zss/words/stats'
-import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
+import { COLOR } from 'zss/words/types'
 
 function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())
@@ -342,6 +343,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('help', (chip, words) => {
+    // update this to pull wiki content
     const text = words.map(maptostring).join(' ') || 'menu'
     chip.command(`help${text}`)
     return 0
@@ -649,6 +651,10 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- multiplayer related commands
+  .command('admin', () => {
+    vm_admin(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
   .command('joincode', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     bridge_start(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
@@ -657,6 +663,15 @@ export const CLI_FIRMWARE = createfirmware()
   .command('jointab', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     bridge_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    return 0
+  })
+  .command('broadcast', (_, words) => {
+    const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    if (streamkey) {
+      bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
+    } else {
+      bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
     return 0
   })
   // -- display related commands

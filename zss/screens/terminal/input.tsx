@@ -4,6 +4,7 @@ import {
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
+  vm_clirepeatlast,
   vm_loader,
 } from 'zss/device/api'
 import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
@@ -445,6 +446,9 @@ export function TapeTerminalInput({
                 switch (lkey) {
                   case 'e':
                     vm_cli(SOFTWARE, player, '#export')
+                    break
+                  case 'p':
+                    vm_clirepeatlast(SOFTWARE, player)
                     break
                   case 'a':
                     useTapeTerminal.setState({

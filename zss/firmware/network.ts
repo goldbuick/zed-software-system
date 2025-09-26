@@ -1,10 +1,4 @@
-import {
-  bridge_chatstart,
-  bridge_chatstop,
-  bridge_fetch,
-  bridge_streamstart,
-  bridge_streamstop,
-} from 'zss/device/api'
+import { bridge_chatstart, bridge_chatstop, bridge_fetch } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -84,15 +78,6 @@ export const NETWORK_FIRMWARE = createfirmware()
       bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
     } else {
       bridge_chatstop(SOFTWARE, READ_CONTEXT.elementfocus)
-    }
-    return 0
-  })
-  .command('broadcast', (_, words) => {
-    const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    if (streamkey) {
-      bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
-    } else {
-      bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0
   })
