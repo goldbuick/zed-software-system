@@ -92,7 +92,6 @@ import { NAME, PT } from 'zss/words/types'
 
 import {
   api_log,
-  gadgetserver_clearplayer,
   platform_ready,
   register_copy,
   register_copyjsonfile,
@@ -393,8 +392,6 @@ const vm = createdevice(
       case 'login':
         // attempt login
         if (memoryplayerlogin(message.player)) {
-          // clear terminal
-          gadgetserver_clearplayer(vm, message.player)
           // start tracking
           tracking[message.player] = 0
           api_log(vm, memoryreadoperator(), `login from ${message.player}`)

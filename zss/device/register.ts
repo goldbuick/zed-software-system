@@ -400,6 +400,17 @@ const register = createdevice(
           useTapeEditor.getState().reset()
           useTapeTerminal.getState().reset()
           useTapeInspector.getState().reset()
+          useGadgetClient.setState({
+            gadget: {
+              id: '',
+              board: '',
+              layers: [],
+              tickers: [],
+              scrollname: '',
+              scroll: [],
+              sidebar: [],
+            },
+          })
           await waitfor(512)
           // signal refresh and resume active
           useDeviceData.setState((state) => ({

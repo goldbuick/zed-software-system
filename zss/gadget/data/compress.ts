@@ -1,5 +1,5 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
-import { MAYBE } from 'zss/mapping/types'
+import { MAYBE, deepcopy } from 'zss/mapping/types'
 
 import { GADGET_STATE, LAYER, SPRITE } from './types'
 
