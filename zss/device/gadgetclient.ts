@@ -37,7 +37,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
         useGadgetClient.setState((state) => {
           let didnotpass: any
           try {
-            // convert to binary encoding
+            // convert FROM binary encoding
             const data = patchdecoder.decode(message.data)
             const json = jsonencode(data)
 
