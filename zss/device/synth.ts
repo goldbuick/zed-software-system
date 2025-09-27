@@ -116,9 +116,9 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'bpm':
       if (isnumber(message.data)) {
-        const bpm = message.data
+        const bpm = Math.round(message.data)
+        synth.setbpm(bpm)
         setAltInterval(bpm)
-        getTransport().bpm.setValueAtTime(bpm, getTransport().now())
       }
       break
     case 'playvolume':
