@@ -112,6 +112,7 @@ import {
   vm_local,
   vm_logout,
 } from './api'
+import { gadgetserverclearplayer } from './gadgetserver'
 import { modemobservevaluestring } from './modem'
 
 // tracking active player ids
@@ -213,6 +214,8 @@ const vm = createdevice(
         api_log(vm, message.player, `operator set to ${message.player}`)
         // ack
         vm.replynext(message, 'ackoperator', true)
+        // clear gadget state
+        gadgetserverclearplayer(message.player)
         break
       case 'admin': {
         // get list of active players
@@ -444,6 +447,8 @@ const vm = createdevice(
           api_log(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack
           vm.replynext(message, 'acklogin', true)
+          // clear gadget state
+          gadgetserverclearplayer(message.player)
         } else {
           // signal failure
           register_loginfail(vm, message.player)
