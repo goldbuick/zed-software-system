@@ -234,6 +234,12 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
       .join('\n')
   }
 
+  function colorsfromzztelement(elm: ZZT_ELEMENT) {
+    const color = elm.color & 15
+    const bg = (elm.color & 240) >> 4
+    return { color, bg }
+  }
+
   function writefromzztelement(
     board: BOARD,
     x: number,
@@ -241,11 +247,13 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     element: ZZT_ELEMENT,
     stats: ZZT_STAT[],
   ) {
-    const color = element.color % 16
-    const bg = Math.floor(element.color / 16) % 8
+    const elem = colorsfromzztelement(element)
 
-    const strcolor: STR_COLOR = mapcolortostrcolor(color, bg)
-    const strcolorflipped: STR_COLOR = mapcolortostrcolor((bg + 8) % 16, color)
+    const strcolor: STR_COLOR = mapcolortostrcolor(elem.color, elem.bg)
+    const strcolorflipped: STR_COLOR = mapcolortostrcolor(
+      (elem.bg + 8) % 16,
+      elem.color,
+    )
 
     const addstats: BOARD_ELEMENT = {}
     const elementstat = stats.find((stat) => stat.x === x && stat.y === y)
