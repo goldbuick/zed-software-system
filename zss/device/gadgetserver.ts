@@ -9,7 +9,7 @@ import {
 } from 'zss/gadget/data/api'
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_GADGET_LAYERS,
   MEMORY_LABEL,
@@ -71,14 +71,14 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
           const playerboard = memoryreadplayerboard(player)
 
           // check layer cache
-          let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
-          if (ispresent(playerboard)) {
-            gadgetlayers = layercache.get(playerboard.id)
-            // create layers if needed
-            if (!ispresent(gadgetlayers)) {
-              gadgetlayers = memoryreadgadgetlayers(playerboard)
-              layercache.set(playerboard.id, gadgetlayers)
-            }
+          let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS> = layercache.get(
+            playerboard?.id ?? '',
+          )
+
+          // create layers if needed
+          if (ispresent(playerboard) && !ispresent(gadgetlayers)) {
+            gadgetlayers = deepcopy(memoryreadgadgetlayers(playerboard))
+            layercache.set(playerboard.id, gadgetlayers)
           }
 
           // get current state
