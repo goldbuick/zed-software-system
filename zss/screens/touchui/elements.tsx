@@ -1,5 +1,4 @@
 import { Vector2 } from 'three'
-import { useTape } from 'zss/gadget/data/state'
 import {
   resetTiles,
   useDeviceData,
@@ -9,9 +8,6 @@ import {
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { KeyboardAlt } from './keyboardalt'
-import { KeyboardCtrl } from './keyboardctrl'
-import { KeyboardDev } from './keyboarddev'
 import { KeyboardGame } from './keyboardgame'
 import { ThumbStick } from './thumbstick'
 import { TouchPlane } from './touchplane'
@@ -29,10 +25,6 @@ const BG = COLOR.DKPURPLE
 
 export function Elements({ width, height, onReset }: ElementsProps) {
   const context = useWriteText()
-  const isopen = useTape(
-    (state) => state.editor.open || state.terminal.open || state.quickterminal,
-  )
-  const { keyboardalt, keyboardctrl } = useDeviceData()
 
   resetTiles(context, DECO, FG, BG)
 
@@ -59,15 +51,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           }))
         }}
       />
-      {isopen ? (
-        <>
-          {keyboardalt && <KeyboardAlt width={width} />}
-          {keyboardctrl && <KeyboardCtrl width={width} />}
-          {!keyboardalt && !keyboardctrl && <KeyboardDev width={width} />}
-        </>
-      ) : (
-        <KeyboardGame width={width} />
-      )}
+      <KeyboardGame width={width} />
       <ThumbStick
         width={width}
         height={height}

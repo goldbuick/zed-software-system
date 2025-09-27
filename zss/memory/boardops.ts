@@ -36,7 +36,14 @@ export function boardcheckblockedobject(
     dest.y < 0 ||
     dest.y >= BOARD_HEIGHT
   ) {
-    return undefined
+    // for sending interaction messages
+    return {
+      name: 'edge',
+      kind: 'edge',
+      collision: COLLISION.ISSOLID,
+      x: dest.x,
+      y: dest.y,
+    }
   }
 
   // gather meta for move
