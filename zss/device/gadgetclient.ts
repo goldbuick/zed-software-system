@@ -1,10 +1,14 @@
 import { applyPatch as applypatch } from 'fast-json-patch'
+import { Decoder as BinDecoder } from 'json-joy/esm/json-patch/codec/binary'
+import { encode as jsonencode } from 'json-joy/esm/json-patch/codec/json'
 import { createdevice } from 'zss/device'
 import { importgadgetstate } from 'zss/gadget/data/compress'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 
 import { registerreadplayer } from './register'
+
+const patchdecoder = new BinDecoder({})
 
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   if (!gadgetclientdevice.session(message)) {
@@ -33,10 +37,14 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
         useGadgetClient.setState((state) => {
           let didnotpass: any
           try {
+            // convert FROM binary encoding
+            const data = patchdecoder.decode(message.data)
+            const json = jsonencode(data)
+
             // apply patch to compressed json
             const applied = applypatch(
               deepcopy(state.slim),
-              message.data,
+              json as any,
               true,
               true,
             )
