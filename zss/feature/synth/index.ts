@@ -244,7 +244,7 @@ export function createsynth() {
   const drum = createsynthdrums(drumvolume, drumaction)
 
   // @ts-expect-error please ignore
-  const pacer = new Part(synthtick)
+  let pacer = new Part(synthtick)
   let recordlastpercent = 0
   let recordisrendering = 0
   let recordedticks: SYNTH_NOTE_ENTRY[] = []
@@ -479,6 +479,7 @@ export function createsynth() {
     // reset note offset
     if (pacertime === -1) {
       pacertime = getTransport().now()
+      pacer.start(0)
     }
 
     // update count
@@ -505,14 +506,18 @@ export function createsynth() {
     }
   }
 
-  // start it
-  pacer.start(0)
-
   // stop playback
   function stopplay() {
     pacer.clear()
     pacertime = -1
     pacercount = 0
+  }
+
+  function setbpm(bpm: number) {
+    stopplay()
+    getTransport().bpm.setValueAtTime(bpm, 0)
+    // @ts-expect-error please ignore
+    pacer = new Part(synthtick)
   }
 
   // adjust main volumes
@@ -556,6 +561,7 @@ export function createsynth() {
     synthflush,
     synthreplay,
     addttsaudiobuffer,
+    setbpm,
     setplayvolume,
     setbgplayvolume,
     setttsvolume,

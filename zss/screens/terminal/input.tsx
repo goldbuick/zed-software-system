@@ -11,7 +11,6 @@ import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { user, withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
-import { checkforword, updateindex } from 'zss/feature/t9'
 import { useTapeTerminal } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
@@ -230,24 +229,6 @@ export function TapeTerminalInput({
       )
     }
   }
-
-  useEffect(() => {
-    if (tapeterminal.ycursor === 0) {
-      // eval for t9 / alt keys
-      const maybechar = checkforword(inputstate, tapeterminal.xcursor, player)
-      if (isstring(maybechar) && maybechar) {
-        inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
-      }
-    } else {
-      updateindex(`${tapeterminal.ycursor}`, player)
-    }
-  }, [
-    inputstate,
-    tapeterminal.xcursor,
-    player,
-    tapeterminal.ycursor,
-    inputstatesetsplice,
-  ])
 
   useEffect(() => {
     let listener: MAYBE<SpeechToText>

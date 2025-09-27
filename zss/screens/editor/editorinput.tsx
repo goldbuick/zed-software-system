@@ -12,13 +12,12 @@ import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import {
@@ -209,14 +208,6 @@ export function EditorInput({
     },
     [codeend, rows, rowsend, xcursor, ycursor],
   )
-
-  useEffect(() => {
-    // eval for t9 / alt keys
-    const maybechar = checkforword(strvalue, tapeeditor.cursor, player)
-    if (isstring(maybechar) && maybechar) {
-      strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
-    }
-  }, [strvalue, tapeeditor.cursor, player, strvaluesplice])
 
   const undomanager = useMemo(() => {
     return codepage ? new Y.UndoManager(codepage) : undefined

@@ -5,7 +5,6 @@ import { PT } from 'zss/words/types'
 import { LIST_LEFT } from './common'
 import { NumKey } from './numkey'
 import { ToggleKey } from './togglekey'
-import { WordPlane } from './wordplane'
 
 type KeyboardDevProps = {
   width: number
@@ -41,16 +40,6 @@ export function KeyboardDev({ width }: KeyboardDevProps) {
           <NumKey x={1} y={4} letters="BKSPC" digit="[Backspace]" />
           <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
           <NumKey x={1} y={12} letters="$26" digit="[ArrowRight]" usealt />
-          {wordlist.map((word) => {
-            const at = deepcopy(corner)
-            const wordwidth = word.length + 3
-            corner.x += wordwidth
-            if (corner.x > left - 4) {
-              corner.x = LIST_LEFT
-              corner.y += 3
-            }
-            return <WordPlane key={word} x={at.x} y={at.y} letters={word} />
-          })}
         </>
       ) : (
         <>

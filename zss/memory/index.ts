@@ -438,6 +438,60 @@ export function memoryboardread(address: string): MAYBE<BOARD> {
   return codepagereaddata<CODE_PAGE_TYPE.BOARD>(maybeboard)
 }
 
+export function memoryoverboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
+  if (!ispresent(board)) {
+    return
+  }
+  // no over stat
+  if (!isstring(board.over)) {
+    delete board.overboard
+    return undefined
+  }
+  // validate overboard value
+  if (isstring(board.overboard)) {
+    const maybeover = memoryboardread(board.overboard)
+    if (ispresent(maybeover)) {
+      return maybeover
+    }
+    delete board.overboard
+    return undefined
+  }
+  // no overboard value
+  const maybeover = memoryboardread(board.over)
+  if (ispresent(maybeover)) {
+    board.overboard = maybeover.id
+    return maybeover
+  }
+  return undefined
+}
+
+export function memoryunderboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
+  if (!ispresent(board)) {
+    return
+  }
+  // no under stat
+  if (!isstring(board.under)) {
+    delete board.underboard
+    return undefined
+  }
+  // validate underboard value
+  if (isstring(board.underboard)) {
+    const maybeunder = memoryboardread(board.underboard)
+    if (ispresent(maybeunder)) {
+      return maybeunder
+    }
+    delete board.underboard
+    return undefined
+  }
+  // no underboard value
+  const maybeunder = memoryboardread(board.under)
+  if (ispresent(maybeunder)) {
+    board.underboard = maybeunder.id
+    return maybeunder
+  }
+  return undefined
+}
+
 export function memoryreadflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   return bookreadflags(mainbook, id)
@@ -1332,8 +1386,8 @@ export function memoryreadgadgetlayers(
   const graphics = board.graphics ?? 'flat'
 
   // read over / under
-  const overboard = memoryboardread(board.overboard ?? '')
-  const underboard = memoryboardread(board.underboard ?? '')
+  const overboard = memoryoverboardread(board)
+  const underboard = memoryunderboardread(board)
 
   // compose layers
   under.push(...memoryconverttogadgetlayers(0, underboard, tickers, true))

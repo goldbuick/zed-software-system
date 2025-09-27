@@ -9,7 +9,6 @@ import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
-import { setup } from 'zss/feature/t9'
 import { isjoin, islocked, shorturl } from 'zss/feature/url'
 import {
   writecopyit,
@@ -33,7 +32,6 @@ import {
   MAYBE,
   isarray,
   isboolean,
-  isequal,
   ispresent,
   isstring,
 } from 'zss/mapping/types'
@@ -459,7 +457,6 @@ const register = createdevice(
         for (let i = 0; i < words.length; ++i) {
           dynamicwords.push(...words[i])
         }
-        setup(dynamicwords)
         break
       }
       case 'copy':
@@ -757,35 +754,6 @@ const register = createdevice(
             open: false,
           },
         }))
-        break
-      case 't9words':
-        doasync(register, message.player, async () => {
-          await waitfor(1)
-          if (isarray(message.data)) {
-            const [checknumbers, wordlist] = message.data as [string, string[]]
-            if (
-              checknumbers != useDeviceData.getState().checknumbers ||
-              isequal(wordlist, useDeviceData.getState().wordlist) === false
-            ) {
-              useDeviceData.setState(() => ({
-                checknumbers,
-                wordlist,
-              }))
-            }
-          }
-        })
-        break
-      case 't9wordsflag':
-        doasync(register, message.player, async () => {
-          await waitfor(1)
-          if (isstring(message.data)) {
-            if (message.data != useDeviceData.getState().wordlistflag) {
-              useDeviceData.setState(() => ({
-                wordlistflag: message.data,
-              }))
-            }
-          }
-        })
         break
     }
   },
