@@ -9,7 +9,7 @@ import {
 } from 'zss/gadget/data/api'
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
-import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_GADGET_LAYERS,
   MEMORY_LABEL,
@@ -41,6 +41,15 @@ gadgetstateprovider((element) => {
 
 // we don't store sync state
 const gadgetsync = new Map<string, FORMAT_OBJECT>()
+
+export function gadgetserverclearplayer(player: string) {
+  // clear sync
+  gadgetsync.delete(player)
+  // clear gadget state for player
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
+  delete gadgetstore[player]
+}
 
 const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
   if (!gadgetserver.session(message)) {
@@ -87,6 +96,13 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
             gadget.under = gadgetlayers.under
             gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
             gadget.tickers = gadgetlayers.tickers
+          } else {
+            gadget.board = ''
+            gadget.over = []
+            gadget.under = []
+            gadget.layers = []
+            gadget.tickers = []
+            gadget.sidebar = []
           }
 
           // create compressed json from gadget
