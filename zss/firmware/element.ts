@@ -618,12 +618,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // halt program
         chip.endofprogram()
         // signal outcome
-        if (ispresent(READ_CONTEXT.element)) {
-          READ_CONTEXT.element.tickertext = '[ GAMEOVER ]'
-          READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-          // time to re-log
-          vm_logout(SOFTWARE, READ_CONTEXT.elementid)
-        }
+        vm_logout(SOFTWARE, READ_CONTEXT.elementid)
       }
     }
     // handle walk movement
