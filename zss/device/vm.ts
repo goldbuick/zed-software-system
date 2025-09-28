@@ -38,6 +38,7 @@ import {
 } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
+  memoryclearflags,
   memorycli,
   memoryclirepeatlast,
   memoryhasflags,
@@ -460,6 +461,9 @@ const vm = createdevice(
           api_log(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack
           vm.replynext(message, 'acklogin', true)
+          // prepare for merge
+          const flags = memoryreadflags(`merge_${message.player}`)
+          Object.assign(flags, message.data)
         } else {
           // signal failure
           register_loginfail(vm, message.player)
@@ -615,6 +619,7 @@ const vm = createdevice(
           ++tracking[players[i]]
         }
 
+        // check for timeouts
         for (let i = 0; i < players.length; ++i) {
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
@@ -638,6 +643,18 @@ const vm = createdevice(
           doasync(vm, message.player, async () => {
             await savestate(true)
           })
+        }
+
+        // check for merges
+        for (let i = 0; i < players.length; ++i) {
+          const player = players[i]
+          const idx = `merge_${player}`
+          const merge = memoryreadflags(idx)
+          if (Object.keys(merge).length) {
+            const flags = memoryreadflags(player)
+            Object.assign(flags, merge)
+            memoryclearflags(idx)
+          }
         }
         break
       }
