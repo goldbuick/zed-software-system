@@ -114,7 +114,6 @@ import {
   vm_local,
   vm_logout,
 } from './api'
-import { gadgetserverclearplayer } from './gadgetserver'
 import { modemobservevaluestring } from './modem'
 
 // tracking active player ids
@@ -217,8 +216,6 @@ const vm = createdevice(
     const operator = memoryreadoperator()
     switch (message.target) {
       case 'operator':
-        // clear gadget state
-        gadgetserverclearplayer(message.player)
         // setup op
         memorywriteoperator(message.player)
         api_log(vm, message.player, `operator set to ${message.player}`)
@@ -441,8 +438,6 @@ const vm = createdevice(
         }
         break
       case 'logout':
-        // clear gadget state
-        gadgetserverclearplayer(message.player)
         // logout player
         memoryplayerlogout(message.player)
         // stop tracking
@@ -452,8 +447,6 @@ const vm = createdevice(
         register_loginready(vm, message.player)
         break
       case 'login':
-        // clear gadget state
-        gadgetserverclearplayer(message.player)
         // attempt login
         if (memoryplayerlogin(message.player)) {
           // start tracking
