@@ -46,15 +46,6 @@ gadgetstateprovider((element) => {
 // we don't store sync state
 const gadgetsync = new Map<string, FORMAT_OBJECT>()
 
-export function gadgetserverclearplayer(player: string) {
-  // clear sync
-  gadgetsync.delete(player)
-  // clear gadget state for player
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-  delete gadgetstore[player]
-}
-
 const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
   if (!gadgetserver.session(message)) {
     return
