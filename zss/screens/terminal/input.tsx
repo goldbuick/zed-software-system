@@ -233,7 +233,7 @@ export function TapeTerminalInput({
   useEffect(() => {
     let listener: MAYBE<SpeechToText>
 
-    // #config voice2text on, use # or T to open terminal to start
+    // #config voice2text on, use # or C to open terminal to start
     if (!voice2text || !quickterminal) {
       return
     }
@@ -241,6 +241,10 @@ export function TapeTerminalInput({
     // track starting input
     const { buffer, bufferindex } = useTapeTerminal.getState()
     const inputstart = buffer[bufferindex]
+
+    if (inputstart.includes('#')) {
+      return
+    }
 
     // handlers
     function onFinalised(value: string) {

@@ -107,6 +107,7 @@ import {
   register_loginfail,
   register_loginready,
   register_savemem,
+  register_storage,
   vm_codeaddress,
   vm_flush,
   vm_local,
@@ -124,6 +125,11 @@ const trackinglastlog: Record<string, number> = {}
 // this __should__ autosave every minute
 const FLUSH_RATE = 60
 let flushtick = 0
+
+// control how fast we persist to the register
+// this __should__ autosave every 10 seconds
+const STORAGE_RATE = 10
+let storagetick = 0
 
 // track watched memory
 const watching: Record<string, Set<string>> = {}
@@ -416,12 +422,11 @@ const vm = createdevice(
       case 'books':
         if (message.player === operator) {
           doasync(vm, message.player, async () => {
-            if (isarray(message.data)) {
-              const [maybebooks, maybeselect] = message.data as [string, string]
+            if (isstring(message.data)) {
               // unpack books
-              const books = await decompressbooks(maybebooks)
+              const books = await decompressbooks(message.data)
               const booknames = books.map((item) => item.name)
-              memoryresetbooks(books, maybeselect)
+              memoryresetbooks(books)
               api_log(vm, message.player, `loading ${booknames.join(', ')}`)
               // ack
               register_loginready(vm, message.player)
@@ -610,11 +615,20 @@ const vm = createdevice(
           ++tracking[players[i]]
         }
 
-        // drop lagged players from tracking
         for (let i = 0; i < players.length; ++i) {
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
+            // drop lagged players from tracking
             vm_logout(vm, player)
+          }
+        }
+
+        // autosave flags to players
+        if (++storagetick >= STORAGE_RATE) {
+          storagetick = 0
+          for (let i = 0; i < players.length; ++i) {
+            const player = players[i]
+            register_storage(vm, player, memoryreadflags(player))
           }
         }
 

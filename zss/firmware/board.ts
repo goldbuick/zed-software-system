@@ -404,9 +404,9 @@ export const BOARD_FIRMWARE = createfirmware()
         scan.y += deltay
         // scan until board edge
         if (
-          scan.x < 0 &&
-          scan.x >= BOARD_WIDTH &&
-          scan.y < 0 &&
+          scan.x < 0 ||
+          scan.x >= BOARD_WIDTH ||
+          scan.y < 0 ||
           scan.y >= BOARD_HEIGHT
         ) {
           break
@@ -434,6 +434,12 @@ export const BOARD_FIRMWARE = createfirmware()
           }
         }
       }
+      if (placing) {
+        memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybeobject, {
+          x: READ_CONTEXT.element.x + deltax,
+          y: READ_CONTEXT.element.y + deltay,
+        })
+      }
     }
 
     return 0
@@ -446,6 +452,27 @@ export const BOARD_FIRMWARE = createfirmware()
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
     if (boardelementisobject(maybetarget)) {
+      const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
+      const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
+      memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
+        x: shovex,
+        y: shovey,
+      })
+    }
+    return 0
+  })
+  .command('push', (_, words) => {
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    // shove target at dir, in the direction of the given dir
+    // but only if target is pushable
+    const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+    const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
+    if (
+      boardelementisobject(maybetarget) &&
+      memoryelementstatread(maybetarget, 'pushable')
+    ) {
       const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
       const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
       memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {

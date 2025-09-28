@@ -351,6 +351,14 @@ export function register_refresh(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:refresh')
 }
 
+export function register_storage(
+  device: DEVICELIKE,
+  player: string,
+  storage: Record<string, any>,
+) {
+  device.emit(player, 'register:storage', storage)
+}
+
 export function register_config(
   device: DEVICELIKE,
   player: string,
@@ -444,21 +452,20 @@ export function vm_halt(device: DEVICELIKE, player: string, halt: boolean) {
   device.emit(player, 'vm:halt', halt)
 }
 
-export function vm_books(
-  device: DEVICELIKE,
-  player: string,
-  books: string,
-  select: string,
-) {
-  device.emit(player, 'vm:books', [books, select])
+export function vm_books(device: DEVICELIKE, player: string, books: string) {
+  device.emit(player, 'vm:books', books)
 }
 
 export function vm_search(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:search')
 }
 
-export function vm_login(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:login')
+export function vm_login(
+  device: DEVICELIKE,
+  player: string,
+  storage: Record<string, any>,
+) {
+  device.emit(player, 'vm:login', storage)
 }
 
 export function vm_local(device: DEVICELIKE, player: string) {

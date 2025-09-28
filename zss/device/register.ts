@@ -212,8 +212,7 @@ async function loadmem(books: string) {
     return
   }
   // init vm with content
-  const selectedid = (await readconfig('selected')) ?? ''
-  vm_books(register, myplayerid, books, selectedid)
+  vm_books(register, myplayerid, books)
 }
 
 let currenturlhash = ''
@@ -278,7 +277,6 @@ async function readconfigall() {
   const lookup = [
     'config_crt',
     'config_lowrez',
-    'config_selected',
     'config_scanlines',
     'config_voice2text',
   ]
@@ -431,8 +429,11 @@ const register = createdevice(
         })
         break
       case 'loginready':
-        vm_login(register, myplayerid)
-        vm_zsswords(register, myplayerid)
+        doasync(register, message.player, async () => {
+          const storage = await readidb<Record<string, any>>('storage')
+          vm_login(register, myplayerid, storage ?? {})
+          vm_zsswords(register, myplayerid)
+        })
         break
       case 'loginfail':
         doasync(register, message.player, async () => {
@@ -459,6 +460,13 @@ const register = createdevice(
         }
         break
       }
+      case 'storage':
+        doasync(register, message.player, async () => {
+          if (ispresent(message.data)) {
+            await writeidb('storage', () => message.data)
+          }
+        })
+        break
       case 'copy':
         if (isstring(message.data)) {
           if (ispresent(withclipboard())) {

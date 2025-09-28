@@ -512,7 +512,7 @@ export function memoryclearflags(id: string) {
   return bookclearflags(mainbook, id)
 }
 
-export function memoryresetbooks(books: BOOK[], select: string) {
+export function memoryresetbooks(books: BOOK[]) {
   // clear all books
   MEMORY.books.clear()
 
@@ -524,12 +524,6 @@ export function memoryresetbooks(books: BOOK[], select: string) {
       MEMORY.software.main = book.id
     }
   })
-
-  // try select
-  const book = memoryreadbookbyaddress(select)
-  if (ispresent(book)) {
-    MEMORY.software.main = book.id
-  }
 
   // select first book as main
   if (!MEMORY.software.main) {
