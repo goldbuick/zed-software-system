@@ -479,7 +479,6 @@ export function createsynth() {
     // reset note offset
     if (pacertime === -1) {
       pacertime = getTransport().now()
-      pacer.start(0)
     }
 
     // update count
@@ -518,6 +517,7 @@ export function createsynth() {
     getTransport().bpm.setValueAtTime(bpm, 0)
     // @ts-expect-error please ignore
     pacer = new Part(synthtick)
+    pacer.start(0)
   }
 
   // adjust main volumes
@@ -542,6 +542,9 @@ export function createsynth() {
   setttsvolume(25)
   setplayvolume(80)
   setbgplayvolume(100)
+
+  // start pacer
+  pacer.start(0)
 
   function destroy() {
     SOURCE.forEach((item) => item.destroy())

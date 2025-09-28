@@ -28,7 +28,6 @@ import {
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
-import { qrlines } from 'zss/mapping/qr'
 import { totarget } from 'zss/mapping/string'
 import {
   MAYBE,
