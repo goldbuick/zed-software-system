@@ -142,6 +142,8 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       if (!ispresent(slim)) {
         break
       }
+      // reset sync
+      gadgetsync.set(message.player, slim)
       // this should be the compressed json
       gadgetclient_paint(gadgetserver, message.player, slim)
       break

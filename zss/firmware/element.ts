@@ -308,7 +308,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
       READ_CONTEXT.board,
       isstring(maybesender) ? maybesender : '',
     )
-    const senderid = sender?.id ?? ''
 
     // read stat
     switch (name) {
@@ -394,9 +393,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.element?.x ?? -1]
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
-      case 'sender':
       case 'senderid':
-        return [true, senderid]
+        return [true, sender?.id ?? '']
       case 'senderx':
         return [true, sender?.x ?? -1]
       case 'sendery':
@@ -582,6 +580,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, value] // readonly
       // sender info
       case 'senderid':
+        if (ispresent(READ_CONTEXT.element)) {
+          // yes this means you can write #set senderid <something>
+          READ_CONTEXT.element.sender = value
+        }
+        return [true, value]
       case 'senderx':
       case 'sendery':
         return [true, value] // readonly
@@ -614,7 +617,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       if (isnumber(health) && health <= 0) {
         // halt program
         chip.endofprogram()
-        // time to re-log
+        // signal outcome
         vm_logout(SOFTWARE, READ_CONTEXT.elementid)
       }
     }

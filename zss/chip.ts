@@ -354,7 +354,7 @@ export function createchip(
         ]
 
         // update chip state based on incoming message
-        chip.set('sender', sender)
+        chip.set('senderid', sender)
         if (ispresent(arg)) {
           chip.set('arg', arg)
         }

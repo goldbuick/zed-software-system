@@ -1,5 +1,5 @@
-import { renderUnicodeCompact } from 'uqr'
 import { DEVICELIKE, api_info, register_terminal_full } from 'zss/device/api'
+import { qrlines } from 'zss/mapping/qr'
 
 /**
  * what is writeui ?
@@ -78,25 +78,11 @@ export function writecopyit(
   showqr = true,
 ) {
   if (showqr) {
-    const ascii = renderUnicodeCompact(content).split('\n')
-    const rendermap: Record<number, number> = {
-      [32]: 32, // space
-      [9600]: 223, // top half
-      [9604]: 220, // bottom half
-      [9608]: 219, // full
-    }
-
+    const ascii = qrlines(content)
     for (let i = 0; i < ascii.length; i++) {
-      const lineascii = [...ascii[i]]
-        .map((c) => {
-          const chr = rendermap[c.charCodeAt(0)]
-          return `$${chr}`
-        })
-        .join('')
-      write(device, player, lineascii)
+      write(device, player, ascii[i])
     }
   }
-
   write(device, player, `!copyit ${content};${label}`)
   register_terminal_full(device, player)
 }

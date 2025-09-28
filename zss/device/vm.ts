@@ -107,6 +107,7 @@ import {
   register_loginfail,
   register_loginready,
   register_savemem,
+  register_storage,
   vm_codeaddress,
   vm_flush,
   vm_local,
@@ -124,6 +125,11 @@ const trackinglastlog: Record<string, number> = {}
 // this __should__ autosave every minute
 const FLUSH_RATE = 60
 let flushtick = 0
+
+// control how fast we persist to the register
+// this __should__ autosave every 10 seconds
+const STORAGE_RATE = 10
+let storagetick = 0
 
 // track watched memory
 const watching: Record<string, Set<string>> = {}
@@ -210,12 +216,13 @@ const vm = createdevice(
     const operator = memoryreadoperator()
     switch (message.target) {
       case 'operator':
+        // clear gadget state
+        gadgetserverclearplayer(message.player)
+        // setup op
         memorywriteoperator(message.player)
         api_log(vm, message.player, `operator set to ${message.player}`)
         // ack
         vm.replynext(message, 'ackoperator', true)
-        // clear gadget state
-        gadgetserverclearplayer(message.player)
         break
       case 'admin': {
         // get list of active players
@@ -251,6 +258,9 @@ const vm = createdevice(
             )
           }
         }
+
+        // build qr code
+        // qrlines()
 
         const shared = gadgetstate(message.player)
         shared.scrollname = 'cpu admin'
@@ -412,12 +422,11 @@ const vm = createdevice(
       case 'books':
         if (message.player === operator) {
           doasync(vm, message.player, async () => {
-            if (isarray(message.data)) {
-              const [maybebooks, maybeselect] = message.data as [string, string]
+            if (isstring(message.data)) {
               // unpack books
-              const books = await decompressbooks(maybebooks)
+              const books = await decompressbooks(message.data)
               const booknames = books.map((item) => item.name)
-              memoryresetbooks(books, maybeselect)
+              memoryresetbooks(books)
               api_log(vm, message.player, `loading ${booknames.join(', ')}`)
               // ack
               register_loginready(vm, message.player)
@@ -431,6 +440,8 @@ const vm = createdevice(
         }
         break
       case 'logout':
+        // clear gadget state
+        gadgetserverclearplayer(message.player)
         // logout player
         memoryplayerlogout(message.player)
         // stop tracking
@@ -440,6 +451,8 @@ const vm = createdevice(
         register_loginready(vm, message.player)
         break
       case 'login':
+        // clear gadget state
+        gadgetserverclearplayer(message.player)
         // attempt login
         if (memoryplayerlogin(message.player)) {
           // start tracking
@@ -447,8 +460,6 @@ const vm = createdevice(
           api_log(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack
           vm.replynext(message, 'acklogin', true)
-          // clear gadget state
-          gadgetserverclearplayer(message.player)
         } else {
           // signal failure
           register_loginfail(vm, message.player)
@@ -604,11 +615,20 @@ const vm = createdevice(
           ++tracking[players[i]]
         }
 
-        // drop lagged players from tracking
         for (let i = 0; i < players.length; ++i) {
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
+            // drop lagged players from tracking
             vm_logout(vm, player)
+          }
+        }
+
+        // autosave flags to players
+        if (++storagetick >= STORAGE_RATE) {
+          storagetick = 0
+          for (let i = 0; i < players.length; ++i) {
+            const player = players[i]
+            register_storage(vm, player, memoryreadflags(player))
           }
         }
 
