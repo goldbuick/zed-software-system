@@ -387,15 +387,7 @@ const register = createdevice(
       }
       case 'refresh':
         doasync(register, message.player, async () => {
-          // signal device not active
-          useDeviceData.setState({ active: false })
-          await waitfor(512)
-          // reset state
-          useTape.getState().reset()
-          useMedia.getState().reset()
-          useTapeEditor.getState().reset()
-          useTapeTerminal.getState().reset()
-          useTapeInspector.getState().reset()
+          // reset gadget
           useGadgetClient.setState({
             gadget: {
               id: '',
@@ -407,12 +399,18 @@ const register = createdevice(
               sidebar: [],
             },
           })
+          // signal device not active
+          useDeviceData.setState({ active: false })
+          await waitfor(512)
+          // reset state
+          useTape.getState().reset()
+          useMedia.getState().reset()
+          useTapeEditor.getState().reset()
+          useTapeTerminal.getState().reset()
+          useTapeInspector.getState().reset()
           await waitfor(512)
           // signal refresh and resume active
-          useDeviceData.setState((state) => ({
-            active: true,
-            refresh: state.refresh + 1,
-          }))
+          useDeviceData.setState({ active: true })
         })
         break
       case 'ackoperator':
@@ -433,6 +431,8 @@ const register = createdevice(
           const storage = await readidb<Record<string, any>>('storage')
           vm_login(register, myplayerid, storage ?? {})
           vm_zsswords(register, myplayerid)
+          // reset display
+          gadgetserver_desync(register, myplayerid)
         })
         break
       case 'loginfail':
@@ -444,8 +444,6 @@ const register = createdevice(
         })
         break
       case 'acklogin':
-        // reset display
-        gadgetserver_desync(register, myplayerid)
         // hide terminal
         register_terminal_close(register, myplayerid)
         break
