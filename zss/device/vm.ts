@@ -626,7 +626,12 @@ const vm = createdevice(
           storagetick = 0
           for (let i = 0; i < players.length; ++i) {
             const player = players[i]
-            register_storage(vm, player, memoryreadflags(player))
+            const flags = memoryreadflags(player)
+            register_storage(vm, player, {
+              // any flags that carryover between games
+              // go here
+              user: flags.user,
+            })
           }
         }
 

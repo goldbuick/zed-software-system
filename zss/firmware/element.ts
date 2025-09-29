@@ -466,13 +466,24 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // uses content slot book
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.over = maptostring(value)
-          return [true, READ_CONTEXT.board.over]
+          const valuestr = maptostring(value)
+          // reset lookup
+          if (READ_CONTEXT.board.over !== valuestr) {
+            READ_CONTEXT.board.overboard = undefined
+          }
+          READ_CONTEXT.board.over = valuestr
+          return [true, valuestr]
         }
         break
       case 'under':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.under = maptostring(value))]
+          const valuestr = maptostring(value)
+          // reset lookup
+          if (READ_CONTEXT.board.under !== valuestr) {
+            READ_CONTEXT.board.underboard = undefined
+          }
+          READ_CONTEXT.board.under = valuestr
+          return [true, valuestr]
         }
         break
       // common stats

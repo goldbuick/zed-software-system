@@ -1376,12 +1376,18 @@ export function memoryreadgadgetlayers(
     return { board: '', over, under, layers, tickers }
   }
 
+  // composite id
+  let id4all = `${board.id}`
+
   // read graphics mode
   const graphics = board.graphics ?? 'flat'
 
   // read over / under
   const overboard = memoryoverboardread(board)
+  id4all += `${overboard?.id ?? ''}`
+
   const underboard = memoryunderboardread(board)
+  id4all += `${underboard?.id ?? ''}`
 
   // compose layers
   under.push(...memoryconverttogadgetlayers(0, underboard, tickers, true))
@@ -1402,5 +1408,5 @@ export function memoryreadgadgetlayers(
     ),
   )
 
-  return { board: board.id, over, under, layers, tickers }
+  return { board: id4all, over, under, layers, tickers }
 }
