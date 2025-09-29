@@ -387,6 +387,15 @@ const register = createdevice(
       }
       case 'refresh':
         doasync(register, message.player, async () => {
+          // signal device not active
+          useDeviceData.setState({ active: false })
+          await waitfor(512)
+          // reset state
+          useTape.getState().reset()
+          useMedia.getState().reset()
+          useTapeEditor.getState().reset()
+          useTapeTerminal.getState().reset()
+          useTapeInspector.getState().reset()
           // reset gadget
           useGadgetClient.setState({
             gadget: {
@@ -399,15 +408,6 @@ const register = createdevice(
               sidebar: [],
             },
           })
-          // signal device not active
-          useDeviceData.setState({ active: false })
-          await waitfor(512)
-          // reset state
-          useTape.getState().reset()
-          useMedia.getState().reset()
-          useTapeEditor.getState().reset()
-          useTapeTerminal.getState().reset()
-          useTapeInspector.getState().reset()
           await waitfor(512)
           // signal refresh and resume active
           useDeviceData.setState({ active: true })
