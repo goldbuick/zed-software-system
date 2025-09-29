@@ -414,6 +414,9 @@ const register = createdevice(
         })
         break
       case 'ackoperator':
+        // reset display
+        gadgetserver_desync(register, myplayerid)
+        // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await readurlcontent()
           if (isjoin()) {
@@ -431,8 +434,6 @@ const register = createdevice(
           const storage = await readidb<Record<string, any>>('storage')
           vm_login(register, myplayerid, storage ?? {})
           vm_zsswords(register, myplayerid)
-          // reset display
-          gadgetserver_desync(register, myplayerid)
         })
         break
       case 'loginfail':
