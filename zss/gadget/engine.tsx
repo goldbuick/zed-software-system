@@ -9,8 +9,10 @@ import { OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME, STATS_DEV } from 'zss/config'
 import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { isjoin } from 'zss/feature/url'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { doasync } from 'zss/mapping/func'
+import { createplatform, haltplatform } from 'zss/platform'
 import { ScreenUI } from 'zss/screens/screenui/component'
 import { Tape } from 'zss/screens/tape/component'
 import { islinux } from 'zss/words/system'
@@ -29,6 +31,14 @@ import 'zss/userspace'
 export function Engine() {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
+
+  // runs the SIM
+  useEffect(() => {
+    createplatform(isjoin())
+    return () => {
+      haltplatform()
+    }
+  }, [])
 
   // handle showing render stats
   const [stats] = useState(() => new Stats())
