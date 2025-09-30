@@ -116,6 +116,7 @@ import {
   register_storage,
   vm_codeaddress,
   vm_flush,
+  vm_loader,
   vm_local,
   vm_logout,
 } from './api'
@@ -433,6 +434,8 @@ const vm = createdevice(
               api_log(vm, message.player, `loading ${booknames.join(', ')}`)
               // ack
               register_loginready(vm, message.player)
+              // signal mem load
+              vm_loader(vm, message.player, undefined, 'text', 'sim:load', '')
             }
           })
         }
