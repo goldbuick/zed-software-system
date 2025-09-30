@@ -86,12 +86,14 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
               1000,
               playerboard,
             )
+            gadget.id = gadgetlayers.id
             gadget.board = gadgetlayers.board
             gadget.over = gadgetlayers.over
             gadget.under = gadgetlayers.under
             gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
             gadget.tickers = gadgetlayers.tickers
           } else {
+            gadget.id = ''
             gadget.board = ''
             gadget.over = []
             gadget.under = []
