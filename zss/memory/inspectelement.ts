@@ -12,13 +12,13 @@ import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex } from './board'
 import { codepagereadname, codepagereadstatdefaults } from './codepage'
-import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
+import { BOARD, BOARD_ELEMENT, CODE_PAGE } from './types'
 
 import {
   MEMORY_LABEL,
   memoryelementstatread,
   memoryensuresoftwarebook,
-  memorypickcodepagewithtype,
   memoryreadplayerboard,
 } from '.'
 
@@ -269,20 +269,16 @@ export function memoryinspectelement(
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, chip, `make empty`, ['empty', 'hk', '0'], get, set)
 
-  // codepage links
+  // add gadget scripts
   gadgettext(player, DIVIDER)
+  inspectgadgetloaders(player, p1, p1)
+
+  // codepage links
+  gadgettext(player, `codepages:`)
   gadgethyperlink(player, 'batch', `edit @${codepagereadname(codepage)}`, [
     `pageopen:${codepage.id}`,
   ])
 
   // board info
-  const boardcodepage = memorypickcodepagewithtype(
-    CODE_PAGE_TYPE.BOARD,
-    board.id,
-  )
-  gadgettext(player, codepagereadname(boardcodepage))
-  gadgethyperlink(player, 'batch', `id ${board.id}`, ['', 'copyit', board.id])
-  gadgethyperlink(player, 'batch', `edit @board codepage`, [
-    `pageopen:${board.id}`,
-  ])
+  inspectgadgetboard(player, board.id)
 }

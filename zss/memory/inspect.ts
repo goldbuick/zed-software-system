@@ -29,7 +29,6 @@ import {
 import { boardelementisobject } from './boardelement'
 import { boardsetlookup } from './boardlookup'
 import { bookboardelementreadcodepage } from './book'
-import { codepagereadname } from './codepage'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
 import {
@@ -37,13 +36,11 @@ import {
   memoryinspectcolor,
   memoryinspectelement,
 } from './inspectelement'
-import { memoryloadermatches } from './loader'
-import { CODE_PAGE_TYPE } from './types'
+import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
 
 import {
   MEMORY_LABEL,
   memoryensuresoftwarebook,
-  memorypickcodepagewithtype,
   memoryreadbookbysoftware,
   memoryreadoperator,
   memoryreadplayerboard,
@@ -177,29 +174,14 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
         ` 5 `,
       ])
 
+      // add gadget scripts
+      inspectgadgetloaders(player, p1, p2)
+
       // board info
-      const boardcodepage = memorypickcodepagewithtype(
-        CODE_PAGE_TYPE.BOARD,
-        board.id,
-      )
-      gadgettext(player, codepagereadname(boardcodepage))
-      gadgethyperlink(player, 'batch', `id ${board.id}`, [
-        '',
-        'copyit',
-        board.id,
-      ])
-      gadgethyperlink(player, 'batch', `edit @board codepage`, [
-        `pageopen:${board.id}`,
-      ])
+      inspectgadgetboard(player, board.id)
     }
   } else {
     memoryinspectarea(player, p1, p2, showpaste)
-  }
-
-  // add matching loaders
-  const loaders = memoryloadermatches('text', 'gadget:action')
-  for (let i = 0; i < loaders.length; ++i) {
-    //
   }
 
   // send to player as a scroll
