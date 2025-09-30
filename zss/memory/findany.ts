@@ -1,4 +1,6 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
+import { vm_cli } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
@@ -11,7 +13,7 @@ import { WORD } from 'zss/words/types'
 
 import { memoryreadplayerboard } from '.'
 
-type FINDANY_CONFIG = {
+export type FINDANY_CONFIG = {
   expr1: string
   expr2: string
   expr3: string
@@ -37,7 +39,7 @@ let findanyconfig: FINDANY_CONFIG = {
   expr4: '',
 }
 
-export async function memoryfindany(player: string) {
+export async function memoryfindanymenu(player: string) {
   const config = await readfindanyconfig()
   findanyconfig = {
     ...findanyconfig,
@@ -73,13 +75,33 @@ export async function memoryfindany(player: string) {
     'c',
     ` C `,
   ])
-  gadgethyperlink(player, 'findany', 'find 1', ['find1', 'hk', '1', ` 1 `])
-  gadgethyperlink(player, 'findany', 'find 2', ['find2', 'hk', '2', ` 2 `])
-  gadgethyperlink(player, 'findany', 'find 3', ['find3', 'hk', '3', ` 3 `])
-  gadgethyperlink(player, 'findany', 'find 4', ['find4', 'hk', '4', ` 4 `])
+  gadgethyperlink(player, 'findany', 'find 1', ['expr1', 'hk', '1', ` 1 `])
+  gadgethyperlink(player, 'findany', 'find 2', ['expr2', 'hk', '2', ` 2 `])
+  gadgethyperlink(player, 'findany', 'find 3', ['expr3', 'hk', '3', ` 3 `])
+  gadgethyperlink(player, 'findany', 'find 4', ['expr4', 'hk', '4', ` 4 `])
 
   // send to player as a scroll
   const shared = gadgetstate(player)
   shared.scrollname = 'findany'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memoryfindany(
+  path: keyof typeof findanyconfig,
+  player: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  await writefindanyconfig(() => findanyconfig)
+
+  const expr: string = findanyconfig[path] ?? ''
+  if (ispresent(expr)) {
+    vm_cli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
+  } else {
+    // clear case
+    vm_cli(SOFTWARE, player, `#findany`)
+  }
 }

@@ -86,7 +86,11 @@ import {
   codepageresetstats,
 } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
-import { memoryfindany } from 'zss/memory/findany'
+import {
+  FINDANY_CONFIG,
+  memoryfindany,
+  memoryfindanymenu,
+} from 'zss/memory/findany'
 import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspect'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryinspectremixcommand } from 'zss/memory/inspectremix'
@@ -800,7 +804,7 @@ const vm = createdevice(
         break
       case 'findany':
         doasync(vm, message.player, async () => {
-          await memoryfindany(message.player)
+          await memoryfindanymenu(message.player)
         })
         break
       case 'loader':
@@ -953,6 +957,11 @@ const vm = createdevice(
           }
           case 'inspect':
             memoryinspectcommand(path, message.player)
+            break
+          case 'findany':
+            doasync(vm, message.player, async () => {
+              await memoryfindany(path as keyof FINDANY_CONFIG, message.player)
+            })
             break
           case 'makeit':
             memorymakeitcommand(path, message.data ?? '', message.player)

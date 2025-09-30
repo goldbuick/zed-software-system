@@ -376,6 +376,14 @@ export function register_inspector(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:inspector')
 }
 
+export function register_findany(
+  device: DEVICELIKE,
+  player: string,
+  pts: PT[],
+) {
+  device.emit(player, 'register:findany', pts)
+}
+
 export function register_terminal_open(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:open')
 }
@@ -528,10 +536,6 @@ export function vm_inspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
 }
 
 export function vm_findany(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:findany')
-}
-
-export function vm_findanyselect(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:findany')
 }
 

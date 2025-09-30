@@ -663,6 +663,13 @@ const register = createdevice(
           }
         })
         break
+      case 'findany':
+        if (isarray(message.data)) {
+          useTapeInspector.setState({
+            pts: message.data,
+          })
+        }
+        break
       case 'log':
         terminaladdlog(message)
         break
