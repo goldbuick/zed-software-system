@@ -13,6 +13,7 @@ import {
   register_downloadjsonfile,
   register_editor_open,
   register_enterar,
+  register_findany,
   register_inspector,
   register_nuke,
   register_share,
@@ -41,7 +42,13 @@ import {
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { randominteger } from 'zss/mapping/number'
-import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isarray,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
@@ -79,6 +86,7 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
+import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
 import { COLOR } from 'zss/words/types'
@@ -644,6 +652,16 @@ export const CLI_FIRMWARE = createfirmware()
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
     register_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('findany', (_, words) => {
+    const [maybeselection] = readargs(words, 0, [ARG_TYPE.ANY])
+    if (isarray(maybeselection)) {
+      const pts = maybeselection.filter(ispt)
+      register_findany(SOFTWARE, READ_CONTEXT.elementfocus, pts)
+    } else {
+      register_findany(SOFTWARE, READ_CONTEXT.elementfocus, [])
+    }
     return 0
   })
   .command('zztsearch', (_, words) => {

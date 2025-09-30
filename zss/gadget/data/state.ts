@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { FORMAT_OBJECT } from 'zss/feature/format'
 import { islocked } from 'zss/feature/url'
 import { MAYBE, isequal } from 'zss/mapping/types'
+import { PT } from 'zss/words/types'
 import { create } from 'zustand'
 
 import { GADGET_STATE } from './types'
@@ -120,7 +121,6 @@ export const useTape = create<{
       toast: '',
       terminal: {
         open: true,
-        info: [],
         logs: [],
       },
       editor: {
@@ -196,15 +196,19 @@ export const useTapeEditor = create<{
 }))
 
 export const useTapeInspector = create<{
+  pts: PT[]
   cursor: MAYBE<number>
   select: MAYBE<number>
   reset: () => void
 }>((set) => ({
+  // matches from findany
+  pts: [],
   // cursor position & selection board indexes
   cursor: undefined,
   select: undefined,
   reset() {
     set({
+      pts: [],
       cursor: undefined,
       select: undefined,
     })
