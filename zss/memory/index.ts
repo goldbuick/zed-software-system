@@ -1358,6 +1358,7 @@ export function memoryrun(address: string) {
 }
 
 export type MEMORY_GADGET_LAYERS = {
+  id: string
   board: string
   over: LAYER[]
   under: LAYER[]
@@ -1373,21 +1374,25 @@ export function memoryreadgadgetlayers(
   const layers: LAYER[] = []
   const tickers: string[] = []
   if (!ispresent(board)) {
-    return { board: '', over, under, layers, tickers }
+    return { id: '', board: '', over, under, layers, tickers }
   }
 
   // composite id
-  let id4all = `${board.id}`
+  const id4all: string[] = [`${board.id}`]
 
   // read graphics mode
   const graphics = board.graphics ?? 'flat'
 
   // read over / under
   const overboard = memoryoverboardread(board)
-  id4all += `${overboard?.id ?? ''}`
+  if (overboard?.id) {
+    id4all.push(overboard.id)
+  }
 
   const underboard = memoryunderboardread(board)
-  id4all += `${underboard?.id ?? ''}`
+  if (underboard?.id) {
+    id4all.push(underboard.id)
+  }
 
   // compose layers
   under.push(...memoryconverttogadgetlayers(0, underboard, tickers, true))
@@ -1408,5 +1413,5 @@ export function memoryreadgadgetlayers(
     ),
   )
 
-  return { board: id4all, over, under, layers, tickers }
+  return { id: id4all.join('|'), board: board.id, over, under, layers, tickers }
 }
