@@ -37,6 +37,7 @@ import {
   memoryinspectcolor,
   memoryinspectelement,
 } from './inspectelement'
+import { memoryloadermatches } from './loader'
 import { CODE_PAGE_TYPE } from './types'
 
 import {
@@ -193,6 +194,12 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
     }
   } else {
     memoryinspectarea(player, p1, p2, showpaste)
+  }
+
+  // add matching loaders
+  const loaders = memoryloadermatches('text', 'gadget:action')
+  for (let i = 0; i < loaders.length; ++i) {
+    //
   }
 
   // send to player as a scroll

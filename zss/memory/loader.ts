@@ -4,7 +4,7 @@ import { WORD } from 'zss/words/types'
 
 import { bookreadcodepagesbytype } from './book'
 import { codepagereadstats } from './codepage'
-import { CODE_PAGE_TYPE } from './types'
+import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 import { MEMORY_LABEL, memoryreadbookbysoftware, memorystartloader } from '.'
 
@@ -37,17 +37,14 @@ export function memoryloaderplayer(id: string): MAYBE<string> {
   return LOADER_REFS[id]?.player
 }
 
-export function memoryloader(
-  arg: any,
+export function memoryloadermatches(
   format: string,
   eventname: string,
-  content: any,
-  player: string,
-) {
+): CODE_PAGE[] {
   // we scan main book for loaders
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
-    return
+    return []
   }
 
   const loaders = bookreadcodepagesbytype(
@@ -92,6 +89,18 @@ export function memoryloader(
     return false
   })
 
+  // return matched loaders
+  return loaders
+}
+
+export function memoryloader(
+  arg: any,
+  format: string,
+  eventname: string,
+  content: any,
+  player: string,
+) {
+  const loaders = memoryloadermatches(format, eventname)
   // run matched loaders
   for (let i = 0; i < loaders.length; ++i) {
     const id = `${createsid()}_loader`
