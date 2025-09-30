@@ -49,6 +49,7 @@ import {
   vm_cli,
   vm_doot,
   vm_halt,
+  vm_loader,
   vm_login,
   vm_operator,
   vm_zsswords,
@@ -442,11 +443,15 @@ const register = createdevice(
           writepages()
           // full open on login fail
           register_terminal_full(register, myplayerid)
+          // signal sim loaded
+          vm_loader(register, message.player, undefined, 'text', 'sim:load', '')
         })
         break
       case 'acklogin':
         // hide terminal
         register_terminal_close(register, myplayerid)
+        // signal sim loaded
+        vm_loader(register, message.player, undefined, 'text', 'sim:load', '')
         break
       case 'ackzsswords': {
         useGadgetClient.setState({

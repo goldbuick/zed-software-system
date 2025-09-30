@@ -100,7 +100,7 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    api_log(SOFTWARE, READ_CONTEXT.elementfocus, '$175', text)
+    api_log(SOFTWARE, READ_CONTEXT.elementfocus, '$GREEN', text)
     return 0
   })
   .command('hyperlink', (_, args) => {
@@ -111,8 +111,7 @@ export const LOADER_FIRMWARE = createfirmware({
       api_log(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
-        '$175',
-        `!${send.targetname}${send.label};${linktext}`,
+        `!${send.targetname}:${send.label};${linktext}`,
       )
     }
     return 0

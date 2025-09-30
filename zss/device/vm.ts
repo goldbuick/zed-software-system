@@ -434,8 +434,6 @@ const vm = createdevice(
               api_log(vm, message.player, `loading ${booknames.join(', ')}`)
               // ack
               register_loginready(vm, message.player)
-              // signal mem load
-              vm_loader(vm, message.player, undefined, 'text', 'sim:load', '')
             }
           })
         }
