@@ -86,6 +86,7 @@ import {
   codepageresetstats,
 } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
+import { memoryfindany } from 'zss/memory/findany'
 import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspect'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryinspectremixcommand } from 'zss/memory/inspectremix'
@@ -795,6 +796,11 @@ const vm = createdevice(
             const [p1, p2] = message.data as [PT, PT]
             await memoryinspect(message.player, p1, p2)
           }
+        })
+        break
+      case 'findany':
+        doasync(vm, message.player, async () => {
+          await memoryfindany(message.player)
         })
         break
       case 'loader':

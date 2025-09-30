@@ -1,6 +1,7 @@
 import {
   register_terminal_quickopen,
   vm_clirepeatlast,
+  vm_findany,
   vm_input,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -83,6 +84,11 @@ export function Framed({ width, height }: FramedProps) {
             case 'p':
               if (mods.ctrl) {
                 vm_clirepeatlast(SOFTWARE, player)
+              }
+              break
+            case 'a':
+              if (mods.ctrl) {
+                vm_findany(SOFTWARE, player)
               }
               break
           }
