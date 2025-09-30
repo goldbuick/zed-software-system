@@ -21,7 +21,7 @@ export function Pts() {
   for (let i = 0; i < pts.length; ++i) {
     const pt = pts[i]
     writeTile(tiles, BOARD_WIDTH, BOARD_HEIGHT, pt.x, pt.y, {
-      char: 176,
+      char: 177,
     })
   }
 
