@@ -33,7 +33,7 @@ export async function writefindanyconfig(
 }
 
 let findanyconfig: FINDANY_CONFIG = {
-  expr1: 'object',
+  expr1: 'player',
   expr2: '',
   expr3: '',
   expr4: '',
