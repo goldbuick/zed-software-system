@@ -1390,6 +1390,75 @@ class ScriptVisitor
     if (ctx.token_onclear) {
       value = 'onclear'
     }
+    if (ctx.token_blblack) {
+      value = 'blblack'
+    }
+    if (ctx.token_bldkblue) {
+      value = 'blblue'
+    }
+    if (ctx.token_bldkgreen) {
+      value = 'blgreen'
+    }
+    if (ctx.token_bldkcyan) {
+      value = 'bldkcyan'
+    }
+    if (ctx.token_bldkred) {
+      value = 'bldkred'
+    }
+    if (ctx.token_bldkpurple) {
+      value = 'bldkpurple'
+    }
+    if (ctx.token_bldkyellow) {
+      value = 'bldkyellow'
+    }
+    if (ctx.token_blltgray) {
+      value = 'blltgray'
+    }
+    if (ctx.token_bldkgray) {
+      value = 'bldkgray'
+    }
+    if (ctx.token_blblue) {
+      value = 'blblue'
+    }
+    if (ctx.token_blgreen) {
+      value = 'blgreen'
+    }
+    if (ctx.token_blcyan) {
+      value = 'blcyan'
+    }
+    if (ctx.token_blred) {
+      value = 'blred'
+    }
+    if (ctx.token_blpurple) {
+      value = 'blpurple'
+    }
+    if (ctx.token_blyellow) {
+      value = 'blyellow'
+    }
+    if (ctx.token_blwhite) {
+      value = 'blwhite'
+    }
+    if (ctx.token_blbrown) {
+      value = 'blbrown'
+    }
+    if (ctx.token_bldkwhite) {
+      value = 'bldkwhite'
+    }
+    if (ctx.token_blltgrey) {
+      value = 'blltgrey'
+    }
+    if (ctx.token_blgray) {
+      value = 'blgray'
+    }
+    if (ctx.token_blgrey) {
+      value = 'blgrey'
+    }
+    if (ctx.token_bldkgrey) {
+      value = 'bldkgrey'
+    }
+    if (ctx.token_blltblack) {
+      value = 'blltblack'
+    }
     return this.createcodenode(location, {
       type: NODE.LITERAL,
       literal: LITERAL.STRING,

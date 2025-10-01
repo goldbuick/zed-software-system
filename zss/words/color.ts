@@ -219,7 +219,7 @@ export function mapstrcolortoattributes(strcolor: STR_COLOR) {
     const attr = strcolor[i]
     const value = COLOR[attr]
     if (ispresent(value)) {
-      if (value < COLOR.ONBLACK) {
+      if (value < COLOR.ONBLACK || value > COLOR.ONCLEAR) {
         attributes.color = value
       } else {
         attributes.bg = colortobg(value)
