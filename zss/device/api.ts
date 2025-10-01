@@ -644,7 +644,7 @@ export function vm_loader(
   player: string,
   arg: any,
   format: 'file' | 'text' | 'json' | 'binary', // maybe add xml ?
-  eventname: string,
+  idoreventname: string,
   content: any,
 ) {
   let withcontent: any
@@ -653,16 +653,16 @@ export function vm_loader(
       withcontent = content
       break
     case 'text':
-      withcontent = createtextreader(eventname, content)
+      withcontent = createtextreader(idoreventname, content)
       break
     case 'json':
-      withcontent = createjsonreader(eventname, content)
+      withcontent = createjsonreader(idoreventname, content)
       break
     case 'binary':
-      withcontent = createbinaryreader(eventname, content)
+      withcontent = createbinaryreader(idoreventname, content)
       break
   }
   setTimeout(() => {
-    device.emit(player, 'vm:loader', [arg, format, eventname, withcontent])
+    device.emit(player, 'vm:loader', [arg, format, idoreventname, withcontent])
   }, 1)
 }

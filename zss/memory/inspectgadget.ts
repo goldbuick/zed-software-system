@@ -19,14 +19,11 @@ export function inspectgadgetloaders(player: string, p1: PT, p2: PT) {
   for (let i = 0; i < loaders.length; ++i) {
     const codepage = loaders[i]
     const name = codepagereadname(codepage)
-    gadgethyperlink(player, 'batch', `run ${name}`, [
-      `action:${area}`,
+    gadgethyperlink(player, 'gadget', `run ${name}`, [
+      'action',
       '',
       codepage.id,
-      p1.x,
-      p1.y,
-      p2.x,
-      p2.y,
+      area,
     ])
   }
 }

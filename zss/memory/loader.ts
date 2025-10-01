@@ -2,11 +2,16 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
-import { bookreadcodepagesbytype } from './book'
+import { bookreadcodepagebyaddress, bookreadcodepagesbytype } from './book'
 import { codepagereadstats } from './codepage'
 import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
-import { MEMORY_LABEL, memoryreadbookbysoftware, memorystartloader } from '.'
+import {
+  MEMORY_LABEL,
+  memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
+  memorystartloader,
+} from '.'
 
 type LOADER_ENTRY = {
   arg: any
@@ -39,12 +44,18 @@ export function memoryloaderplayer(id: string): MAYBE<string> {
 
 export function memoryloadermatches(
   format: string,
-  eventname: string,
+  idoreventname: string,
 ): CODE_PAGE[] {
   // we scan main book for loaders
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return []
+  }
+
+  // first check for id match
+  const maybecodepage = bookreadcodepagebyaddress(mainbook, idoreventname)
+  if (ispresent(maybecodepage)) {
+    return [maybecodepage]
   }
 
   const loaders = bookreadcodepagesbytype(
@@ -70,7 +81,7 @@ export function memoryloadermatches(
 
     const eventstat = stats.event
     const eventstatmatch = isstring(eventstat)
-      ? new RegExp(eventstat).test(eventname)
+      ? new RegExp(eventstat).test(idoreventname)
       : false
 
     // we have to
@@ -96,11 +107,11 @@ export function memoryloadermatches(
 export function memoryloader(
   arg: any,
   format: string,
-  eventname: string,
+  idoreventname: string,
   content: any,
   player: string,
 ) {
-  const loaders = memoryloadermatches(format, eventname)
+  const loaders = memoryloadermatches(format, idoreventname)
   // run matched loaders
   for (let i = 0; i < loaders.length; ++i) {
     const id = `${createsid()}_loader`

@@ -131,9 +131,3 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       break
   }
 }
-
-// case 'styleall':
-// case 'styleobjects':
-// case 'styleterrain':
-//   await memoryinspectstyle(player, p1, p2, batch.target)
-//   break
