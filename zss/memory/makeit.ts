@@ -1,6 +1,6 @@
 import { vm_cli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { write } from 'zss/feature/writeui'
+import { DIVIDER, write } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
@@ -14,7 +14,11 @@ import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
 import { bookreadcodepagebyaddress } from './book'
-import { codepagereadname, codepagereadtypetostring } from './codepage'
+import {
+  codepagereadname,
+  codepagereadtype,
+  codepagereadtypetostring,
+} from './codepage'
 import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 import {
@@ -35,6 +39,29 @@ function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
   return undefined
 }
 
+function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
+  switch (type) {
+    case CODE_PAGE_TYPE.OBJECT:
+      gadgettext(player, '$green  object - moving board elements')
+      break
+    case CODE_PAGE_TYPE.TERRAIN:
+      gadgettext(player, '$green  terrain - walkable, walls, or water')
+      break
+    case CODE_PAGE_TYPE.BOARD:
+      gadgettext(player, '$green  board - 60 x 25 area of terrain & object')
+      break
+    case CODE_PAGE_TYPE.LOADER:
+      gadgettext(player, '$green  loader - run code on @event(s)')
+      break
+    case CODE_PAGE_TYPE.PALETTE:
+      gadgettext(player, '$green  palette - custom 16 colors')
+      break
+    case CODE_PAGE_TYPE.CHARSET:
+      gadgettext(player, '$green  charset - custom ascii font')
+      break
+  }
+}
+
 function checkforcodepage(name: string, player: string) {
   // first check for existing codepage with matching name or id
   const books = memoryreadbooklist()
@@ -46,13 +73,19 @@ function checkforcodepage(name: string, player: string) {
     // we should denote __which__ book these pages are from
     if (ispresent(maybecodepage)) {
       nomatch = false
+      const type = codepagereadtype(maybecodepage)
+      makecodepagedesc(type, player)
       gadgethyperlink(
         player,
         'makeit',
         `edit @${codepagereadtypetostring(maybecodepage)} ${codepagereadname(maybecodepage)}`,
         ['edit', '', maybecodepage.id],
       )
+      gadgettext(player, '')
+      gadgettext(player, DIVIDER)
       // We should show the first 5 lines of the codepage here
+      const lines = maybecodepage.code.split('\n').slice(0, 5)
+      lines.forEach((line) => gadgettext(player, `$WHITE  ${line}`))
     }
   }
 
@@ -69,39 +102,32 @@ export function memorymakeitscroll(makeit: string, player: string) {
     const typename = stattypestring(type)
     switch (type) {
       case STAT_TYPE.OBJECT:
-        gadgettext(player, '$green  object - moving board elements')
+        makecodepagedesc(CODE_PAGE_TYPE.OBJECT, player)
         break
       case STAT_TYPE.TERRAIN:
-        gadgettext(player, '$green  terrain - walkable, walls, or water')
+        makecodepagedesc(CODE_PAGE_TYPE.TERRAIN, player)
         break
       case STAT_TYPE.BOARD:
-        gadgettext(player, '$green  board - 60 x 25 area of terrain & object')
+        makecodepagedesc(CODE_PAGE_TYPE.BOARD, player)
         break
       case STAT_TYPE.LOADER:
-        gadgettext(player, '$green  loader - run code on @event(s)')
+        makecodepagedesc(CODE_PAGE_TYPE.LOADER, player)
         break
       case STAT_TYPE.PALETTE:
-        gadgettext(player, '$green  palette - custom 16 colors')
+        makecodepagedesc(CODE_PAGE_TYPE.PALETTE, player)
         break
       case STAT_TYPE.CHARSET:
-        gadgettext(player, '$green  charset - custom ascii font')
+        makecodepagedesc(CODE_PAGE_TYPE.CHARSET, player)
         break
     }
-    if (type !== STAT_TYPE.OBJECT) {
-      gadgethyperlink(player, 'makeit', `create @${typename} ${name}`, [
-        'create',
-        '',
-        typename,
-        name,
-      ])
-    } else {
-      gadgethyperlink(player, 'makeit', `create object @${name}`, [
-        'create',
-        '',
-        typename,
-        name,
-      ])
-    }
+    gadgethyperlink(
+      player,
+      'makeit',
+      type !== STAT_TYPE.OBJECT
+        ? `create @${typename} ${name}`
+        : `create object @${name}`,
+      ['create', '', typename, name],
+    )
     gadgettext(player, '')
   }
 
