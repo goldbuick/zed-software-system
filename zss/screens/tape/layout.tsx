@@ -47,6 +47,7 @@ function forkonedge(
 type TapeLayoutTilesProps = {
   quickterminal: boolean
   top: number
+  left: number
   width: number
   height: number
   children: ReactNode
@@ -55,6 +56,7 @@ type TapeLayoutTilesProps = {
 function TapeLayoutTiles({
   quickterminal,
   top,
+  left,
   width,
   height,
   children,
@@ -62,10 +64,10 @@ function TapeLayoutTiles({
   const BG = bgcolor(quickterminal)
   const store = useTiles(width, height, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = useMemo(() => {
-    return forkonedge(0, 0, width - 1, height - 1, {
+    return {
       ...createwritetextcontext(width, height, FG, BG),
       ...store.getState(),
-    })
+    }
   }, [BG, width, height, store])
   return (
     <TilesData store={store}>
@@ -73,7 +75,13 @@ function TapeLayoutTiles({
         <BackPlate />
         {children}
       </WriteTextContext.Provider>
-      <group position={[0, top * RUNTIME.DRAW_CHAR_HEIGHT(), 0]}>
+      <group
+        position={[
+          left * RUNTIME.DRAW_CHAR_WIDTH(),
+          top * RUNTIME.DRAW_CHAR_HEIGHT(),
+          0,
+        ]}
+      >
         <TilesRender width={width} height={height} />
       </group>
     </TilesData>
@@ -96,26 +104,30 @@ export function TapeLayout({
   const [layout, editoropen] = useTape(
     useShallow((state) => [state.layout, state.editor.open]),
   )
+
   if (editoropen) {
     switch (layout) {
       case TAPE_DISPLAY.SPLIT_X: {
+        const mid = editorsplit(width)
         return (
           <Fragment key="layout">
             <TapeLayoutTiles
               quickterminal={quickterminal}
               top={top}
-              width={Math.round(width * 1.5)}
+              left={0}
+              width={mid}
               height={height}
             >
-              <TapeTerminal />
+              <TapeEditor />
             </TapeLayoutTiles>
             <TapeLayoutTiles
               quickterminal={quickterminal}
               top={top}
-              width={editorsplit(width)}
+              left={mid}
+              width={width - mid}
               height={height}
             >
-              <TapeEditor />
+              <TapeTerminal />
             </TapeLayoutTiles>
           </Fragment>
         )
@@ -126,6 +138,7 @@ export function TapeLayout({
             key="layout"
             quickterminal={quickterminal}
             top={top}
+            left={0}
             width={width}
             height={height}
           >
@@ -140,7 +153,8 @@ export function TapeLayout({
       key="layout"
       quickterminal={quickterminal}
       top={top}
-      width={Math.round(width * 1.5)}
+      left={0}
+      width={width}
       height={height}
     >
       <TapeTerminal />
