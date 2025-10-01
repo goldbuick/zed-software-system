@@ -12,6 +12,7 @@ import { PT, WORD } from 'zss/words/types'
 import { boardelementread } from './board'
 import { bookboardelementreadcodepage } from './book'
 import { codepagereadname } from './codepage'
+import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
 import { BOARD_ELEMENT, CODE_PAGE_TYPE } from './types'
 
 import {
@@ -252,8 +253,11 @@ export function memoryinspectarea(
     'next',
   ])
 
-  // codepage links
+  // add gadget scripts
   gadgettext(player, DIVIDER)
+  inspectgadgetloaders(player, p1, p2)
+
+  // codepage links
   gadgettext(player, `codepages:`)
 
   // scan board for codepages
@@ -279,13 +283,5 @@ export function memoryinspectarea(
   }
 
   // board info
-  const boardcodepage = memorypickcodepagewithtype(
-    CODE_PAGE_TYPE.BOARD,
-    board.id,
-  )
-  gadgettext(player, codepagereadname(boardcodepage))
-  gadgethyperlink(player, 'batch', `id ${board.id}`, ['', 'copyit', board.id])
-  gadgethyperlink(player, 'batch', `edit @board codepage`, [
-    `pageopen:${board.id}`,
-  ])
+  inspectgadgetboard(player, board.id)
 }

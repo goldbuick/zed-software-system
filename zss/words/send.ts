@@ -8,47 +8,54 @@ export type SEND_META = {
   targetdir?: EVAL_DIR
   targetname?: string
   label: string
+  args: WORD[]
 }
 
 export function parsesend(words: WORD[], candirsend = false): SEND_META {
-  const [first] = readargs(words, 0, [ARG_TYPE.ANY])
+  const [first, aa] = readargs(words, 0, [ARG_TYPE.ANY])
   if (candirsend && isstrdir(first)) {
-    const [targetdir, maybelabel, ii] = readargs(words, 0, [
+    const [targetdir, label, bb] = readargs(words, 0, [
       ARG_TYPE.DIR, // target
-      ARG_TYPE.MAYBE_NAME, // label
+      ARG_TYPE.NAME, // label
     ])
-    if (isstring(maybelabel) && maybelabel.startsWith(':')) {
+    // <dir> :label [args]
+    if (label.startsWith(':')) {
       return {
         targetdir,
-        label: [maybelabel.substring(1).trim(), ...words.slice(ii)].join(' '),
+        label: label.substring(1).trim(),
+        args: words.slice(bb),
       }
     }
+    // <dir> label [args]
     return {
       targetdir,
-      label: words.slice(ii - 1).join(' '),
+      label,
+      args: words.slice(bb),
     }
   } else if (isstring(first)) {
-    const [targetname, maybelabel, ii] = readargs(words, 0, [
+    const [targetname, maybelabel, cc] = readargs(words, 0, [
       ARG_TYPE.NAME, // maybe target name
-      ARG_TYPE.MAYBE_NAME, // maybe label name
+      ARG_TYPE.ANY, // maybe label name
     ])
+    // target:label [args]
     if (isstring(maybelabel) && maybelabel.startsWith(':')) {
-      // target:label
-      const labelparts = [maybelabel.substring(1).trim(), ...words.slice(ii)]
+      console.info(maybelabel, '??')
       return {
         targetname,
-        label: labelparts.join(' '),
+        label: maybelabel.substring(1).trim(),
+        args: words.slice(cc),
       }
     }
-    // only label
-    const labelparts = [targetname, ...words.slice(ii - 1)]
+    // label [args]
     return {
       targetname: 'self',
-      label: labelparts.join(' '),
+      label: targetname,
+      args: words.slice(aa),
     }
   }
   return {
     targetname: '',
     label: '',
+    args: [],
   }
 }

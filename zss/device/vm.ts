@@ -116,6 +116,7 @@ import {
   register_storage,
   vm_codeaddress,
   vm_flush,
+  vm_loader,
   vm_local,
   vm_logout,
 } from './api'
@@ -957,6 +958,12 @@ const vm = createdevice(
           }
           case 'inspect':
             memoryinspectcommand(path, message.player)
+            break
+          case 'gadget':
+            if (isarray(message.data)) {
+              const [id, area] = message.data as [string, string]
+              vm_loader(vm, message.player, undefined, 'text', id, area)
+            }
             break
           case 'findany':
             doasync(vm, message.player, async () => {

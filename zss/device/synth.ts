@@ -109,7 +109,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           message.player,
           undefined,
           'text',
-          'audioenabled',
+          'audio:enabled',
           '',
         )
       })

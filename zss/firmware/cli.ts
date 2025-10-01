@@ -140,16 +140,19 @@ export const CLI_FIRMWARE = createfirmware()
   .command('shortsend', (_, words) => {
     const send = parsesend(words)
     handlesend(send)
-    // #funfact - loader fallback
-    const [name, ...args] = words.map(maptostring)
-    vm_loader(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      undefined,
-      'text',
-      `cli:${name}`,
-      args.join(' '),
-    )
+
+    if (send.targetname === 'self') {
+      // #funfact - loader fallback
+      vm_loader(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        undefined,
+        'text',
+        `cli:${send.label}`,
+        send.args.join(' '),
+      )
+    }
+
     return 0
   })
   .command('send', (_, words) => {
