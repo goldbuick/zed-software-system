@@ -338,6 +338,7 @@ export const dir_e = createWordToken('e')
 
 export const dir_over = createWordToken('over')
 export const dir_under = createWordToken('under')
+export const dir_ground = createWordToken('ground')
 export const dir_within = createWordToken('within')
 export const dir_awayby = createWordToken('awayby')
 
@@ -627,6 +628,7 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     dir_east,
     dir_over,
     dir_under,
+    dir_ground,
     expr_aligned,
     expr_contact,
     expr_blocked,

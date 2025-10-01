@@ -1493,6 +1493,10 @@ class ScriptVisitor
     if (ctx.token_under) {
       value = 'under'
     }
+    if (ctx.token_ground) {
+      value = 'ground'
+    }
+
     return this.createcodenode(location, {
       type: NODE.LITERAL,
       literal: LITERAL.STRING,

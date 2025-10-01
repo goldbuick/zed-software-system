@@ -98,6 +98,7 @@ export enum DIR {
   MID,
   OVER,
   UNDER,
+  GROUND, // this is like weave's UNDER
   // distance specifiers
   WITHIN,
   AWAYBY,

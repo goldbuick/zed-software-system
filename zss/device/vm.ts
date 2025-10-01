@@ -273,6 +273,19 @@ const vm = createdevice(
       }
       case 'zsswords': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const dirmods = [
+          'cw',
+          'ccw',
+          'oop',
+          'rndp',
+          'to',
+          'mid',
+          'over',
+          'under',
+          'ground',
+          'within',
+          'awayby',
+        ]
         vm.replynext(message, `ackzsswords`, {
           cli: firmwarelistcommands(DRIVER_TYPE.CLI),
           loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
@@ -392,10 +405,10 @@ const vm = createdevice(
           colors: [...objectKeys(colorconsts)],
           dirs: [
             ...objectKeys(dirconsts).filter(
-              (item) => ['cw', 'ccw', 'oop', 'rndp'].includes(item) === false,
+              (item) => dirmods.includes(item) === false,
             ),
           ],
-          dirmods: ['cw', 'ccw', 'oop', 'rndp', ...objectKeys(collisionconsts)],
+          dirmods: [...dirmods, ...objectKeys(collisionconsts)],
           exprs: [
             'aligned',
             'alligned',
