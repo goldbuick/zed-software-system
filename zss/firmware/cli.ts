@@ -61,6 +61,7 @@ import {
   memoryreadbooklist,
   memoryreadflags,
   memoryreadoperator,
+  memoryreadplayerboard,
   memorysendtoboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
@@ -688,7 +689,17 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('joincode', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    bridge_start(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    const playerboard = memoryreadplayerboard(READ_CONTEXT.elementfocus)
+    if (ispresent(playerboard)) {
+      bridge_start(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    } else {
+      api_error(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'multiplayer',
+        'need to have an active player on a board in order to start multiplayer',
+      )
+    }
     return 0
   })
   .command('jointab', (_, words) => {
