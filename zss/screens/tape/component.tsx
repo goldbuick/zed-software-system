@@ -59,12 +59,12 @@ export function Tape() {
       )}
       {showterminal ? (
         <UserFocus blockhotkeys>
-            <TapeLayout
-              quickterminal={quickterminal}
-              top={top}
-              width={screensize.cols}
-              height={height}
-            />
+          <TapeLayout
+            quickterminal={quickterminal}
+            top={top}
+            width={screensize.cols}
+            height={height}
+          />
         </UserFocus>
       ) : (
         <UserHotkey hotkey="Shift+?" althotkey="/">

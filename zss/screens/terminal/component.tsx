@@ -14,7 +14,7 @@ import {
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { TapeTerminalContext, terminalsplit } from '../tape/common'
+import { TapeTerminalContext } from '../tape/common'
 
 import { TapeTerminalInput } from './input'
 import { TerminalRows } from './terminalrows'
@@ -46,12 +46,11 @@ export function TapeTerminal() {
   const context = useWriteText()
   const tapeterminal = useTapeTerminal()
 
-  // wide terminal
+  // terminal edges
   const edge = textformatreadedges(context)
-  const xstep = terminalsplit(context.width)
 
   // measure rows
-  const logssize = context.width - xstep - 1
+  const logssize = context.width - 1
   const logsrowheights: number[] = terminallogs.map((item) => {
     return measurerow(item, logssize, edge.height)
   })
