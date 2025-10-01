@@ -65,6 +65,46 @@ export function memorymakeitscroll(makeit: string, player: string) {
   const statname = statformat(maybelabel, words, true)
   const statvalue = statformat(maybelabel, words, false)
 
+  function createmakecodepage(type: STAT_TYPE, name: string) {
+    const typename = stattypestring(type)
+    switch (type) {
+      case STAT_TYPE.OBJECT:
+        gadgettext(player, '$green  object - moving board elements')
+        break
+      case STAT_TYPE.TERRAIN:
+        gadgettext(player, '$green  terrain - walkable, walls, or water')
+        break
+      case STAT_TYPE.BOARD:
+        gadgettext(player, '$green  board - 60 x 25 area of terrain & object')
+        break
+      case STAT_TYPE.LOADER:
+        gadgettext(player, '$green  loader - run code on @event(s)')
+        break
+      case STAT_TYPE.PALETTE:
+        gadgettext(player, '$green  palette - custom 16 colors')
+        break
+      case STAT_TYPE.CHARSET:
+        gadgettext(player, '$green  charset - custom ascii font')
+        break
+    }
+    if (type !== STAT_TYPE.OBJECT) {
+      gadgethyperlink(player, 'makeit', `create @${typename} ${name}`, [
+        'create',
+        '',
+        typename,
+        name,
+      ])
+    } else {
+      gadgethyperlink(player, 'makeit', `create object @${name}`, [
+        'create',
+        '',
+        typename,
+        name,
+      ])
+    }
+    gadgettext(player, '')
+  }
+
   // first check for existing codepage with matching name or id
   const nomatch = checkforcodepage(maybestat, player)
   if (nomatch) {
@@ -74,82 +114,27 @@ export function memorymakeitscroll(makeit: string, player: string) {
       case STAT_TYPE.TERRAIN:
       case STAT_TYPE.CHARSET:
       case STAT_TYPE.PALETTE: {
-        const typename = stattypestring(statname.type)
         const value = statname.values.join(' ')
-        gadgethyperlink(player, 'makeit', `create @${typename} ${value}`, [
-          `create`,
-          '',
-          typename,
-          value,
-        ])
+        createmakecodepage(statname.type, value)
         break
       }
       case STAT_TYPE.OBJECT:
         if (statvalue.values[0].toLowerCase() === 'object') {
           const values = statvalue.values.slice(1)
           const value = values.join(' ')
-          gadgethyperlink(player, 'makeit', `create object @${value}`, [
-            'create',
-            '',
-            'object',
-            value,
-          ])
-          gadgettext(player, '$green    object - moving board elements')
+          createmakecodepage(statname.type, value)
         } else {
           const value = statvalue.values.join(' ')
           switch (statvalue.type) {
             case STAT_TYPE.CONST:
-              gadgethyperlink(player, 'makeit', `create object @${value}`, [
-                'create',
-                '',
-                'object',
-                value,
-              ])
-              gadgettext(player, '$green    object - moving board elements')
+              createmakecodepage(STAT_TYPE.OBJECT, value)
               if (statvalue.values.length === 1) {
-                gadgethyperlink(player, 'makeit', `create @terrain ${value}`, [
-                  'create',
-                  '',
-                  'terrain',
-                  value,
-                ])
-                gadgettext(
-                  player,
-                  '$green    terrain - walkable, walls, or water',
-                )
-                gadgethyperlink(player, 'makeit', `create @board ${value}`, [
-                  'create',
-                  '',
-                  'board',
-                  value,
-                ])
-                gadgettext(
-                  player,
-                  '$green    board - 60 x 25 area of terrain & object',
-                )
-                gadgethyperlink(player, 'makeit', `create @loader ${value}`, [
-                  'create',
-                  '',
-                  'loader',
-                  value,
-                ])
-                gadgettext(player, '$green    loader - run code on @event(s)')
-                gadgethyperlink(player, 'makeit', `create @palette ${value}`, [
-                  'create',
-                  '',
-                  'palette',
-                  value,
-                ])
-                gadgettext(player, '$green    palette - custom 16 colors')
-                gadgethyperlink(player, 'makeit', `create @charset ${value}`, [
-                  'create',
-                  '',
-                  'charset',
-                  value,
-                ])
-                gadgettext(player, '$green    charset - custom ascii font')
+                createmakecodepage(STAT_TYPE.TERRAIN, value)
+                createmakecodepage(STAT_TYPE.BOARD, value)
+                createmakecodepage(STAT_TYPE.LOADER, value)
+                createmakecodepage(STAT_TYPE.PALETTE, value)
+                createmakecodepage(STAT_TYPE.CHARSET, value)
               }
-              gadgettext(player, '$green')
               gadgettext(player, '$green  if you typed in @char 12 or similar')
               gadgettext(
                 player,
