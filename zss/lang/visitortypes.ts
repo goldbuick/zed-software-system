@@ -635,6 +635,7 @@ export type Dir_modCstChildren = {
   token_rndp?: IToken[]
   token_over?: IToken[]
   token_under?: IToken[]
+  token_ground?: IToken[]
   dir_within?: Dir_withinCstNode[]
   dir_awayby?: Dir_awaybyCstNode[]
 }

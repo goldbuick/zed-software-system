@@ -551,6 +551,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.dir_rndp) },
       { ALT: () => this.CONSUME(lexer.dir_over) },
       { ALT: () => this.CONSUME(lexer.dir_under) },
+      { ALT: () => this.CONSUME(lexer.dir_ground) },
       { ALT: () => this.SUBRULE(this.dir_within) },
       { ALT: () => this.SUBRULE(this.dir_awayby) },
     ])

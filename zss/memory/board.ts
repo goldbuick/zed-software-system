@@ -581,8 +581,10 @@ export function boardevaldir(
         break
       }
       // layers
+      case DIR.MID:
       case DIR.OVER:
-      case DIR.UNDER: {
+      case DIR.UNDER:
+      case DIR.GROUND: {
         const modeval = boardevaldir(
           board,
           element,

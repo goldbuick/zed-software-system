@@ -1,6 +1,12 @@
 import { pick, pickwith } from 'zss/mapping/array'
 import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
-import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
 import {
   findplayerforelement,
@@ -227,10 +233,16 @@ export function readexpr(index: number): [any, number] {
           }
 
           // grab dest element from DIR
-          const maybelement =
-            dir.layer === DIR.MID
-              ? boardelementread(READ_CONTEXT.board, dir.destpt)
-              : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+          let maybelement: MAYBE<BOARD_ELEMENT>
+          switch (dir.layer) {
+            default:
+            case DIR.MID:
+              boardelementread(READ_CONTEXT.board, dir.destpt)
+              break
+            case DIR.GROUND:
+              boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+              break
+          }
 
           if (ispresent(maybelement)) {
             const display = bookelementdisplayread(maybelement)
@@ -306,10 +318,16 @@ export function readexpr(index: number): [any, number] {
           }
 
           // grab dest element from DIR
-          const maybelement =
-            dir.layer === DIR.MID
-              ? boardelementread(READ_CONTEXT.board, dir.destpt)
-              : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+          let maybelement: MAYBE<BOARD_ELEMENT>
+          switch (dir.layer) {
+            default:
+            case DIR.MID:
+              boardelementread(READ_CONTEXT.board, dir.destpt)
+              break
+            case DIR.GROUND:
+              boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+              break
+          }
 
           if (ispresent(maybelement)) {
             const display = bookelementdisplayread(maybelement)
