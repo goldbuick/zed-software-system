@@ -9,7 +9,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { user, withclipboard } from 'zss/feature/keyboard'
+import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { useTapeTerminal } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
@@ -250,7 +250,8 @@ export function TapeTerminalInput({
     function onFinalised(value: string) {
       inputstatereplace(`${inputstart}${value}`)
       setTimeout(() => {
-        user.keyboard('[Enter]').catch(noop)
+        // this needs to be a vm_input invoke
+        // user.keyboard('[Enter]').catch(noop)
       }, 512)
     }
 
