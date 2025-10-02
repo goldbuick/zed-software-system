@@ -100,7 +100,7 @@ async function bootup() {
     dpr: 1,
     shadows: false,
     gl: {
-      alpha: false,
+      alpha: true,
       stencil: false,
       antialias: false,
       preserveDrawingBuffer: true,

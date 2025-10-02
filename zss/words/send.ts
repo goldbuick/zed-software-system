@@ -39,7 +39,6 @@ export function parsesend(words: WORD[], candirsend = false): SEND_META {
     ])
     // target:label [args]
     if (isstring(maybelabel) && maybelabel.startsWith(':')) {
-      console.info(maybelabel, '??')
       return {
         targetname,
         label: maybelabel.substring(1).trim(),
