@@ -21,6 +21,7 @@ import { Mode7Graphics } from 'zss/gadget/graphics/mode7'
 import { UserInput, UserInputMods, modsfromevent } from 'zss/gadget/userinput'
 import { ispid } from 'zss/mapping/guid'
 import { NAME } from 'zss/words/types'
+import { useShallow } from 'zustand/react/shallow'
 
 import { TickerText } from './tickertext'
 
@@ -49,8 +50,13 @@ export function Framed({ width, height }: FramedProps) {
   const player = registerreadplayer()
 
   // re-render only when layer count, board render id, or graphics changes
-  useGadgetClient((state) => state.gadget.id)
-  useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+  useGadgetClient(
+    useShallow((state) => [
+      state.gadget.id,
+      state.gadget.board,
+      state.gadget.layers?.length ?? 0,
+    ]),
+  )
 
   // handle graphics modes
   const graphics = useGadgetClient((state) => {

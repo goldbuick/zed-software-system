@@ -1,6 +1,4 @@
-import { user } from 'zss/feature/keyboard'
 import { useDeviceData } from 'zss/gadget/hooks'
-import { noop } from 'zss/mapping/types'
 
 export function handlestickdir(snapdir: number) {
   const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceData.getState()
@@ -63,5 +61,6 @@ export function handlestickdir(snapdir: number) {
     keypress += `{/Shift}`
   }
 
-  user.keyboard(keypress).catch(noop)
+  // TODO, trigger vm_input messages instead
+  // user.keyboard(keypress).catch(noop)
 }

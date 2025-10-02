@@ -186,7 +186,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
                     key={layer.id}
                     from="under"
                     id={layer.id}
-                    z={i * 2}
+                    z={1 + i * 2}
                   />
                 ))}
                 {layers.map((layer, i) => (
@@ -194,7 +194,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
                     key={layer.id}
                     from="layers"
                     id={layer.id}
-                    z={under.length + i * 2}
+                    z={1 + under.length + i * 2}
                   />
                 ))}
                 {over.map((layer, i) => (
@@ -202,7 +202,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
                     key={layer.id}
                     from="over"
                     id={layer.id}
-                    z={under.length + layers.length + i * 2}
+                    z={1 + under.length + layers.length + i * 2}
                   />
                 ))}
               </group>

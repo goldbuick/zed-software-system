@@ -1,9 +1,6 @@
-import { user } from 'zss/feature/keyboard'
 import { useDeviceData, useWriteText } from 'zss/gadget/hooks'
-import { noop } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { NumKey } from './numkey'
 import { ToggleKey } from './togglekey'
 import { TouchPlane } from './touchplane'
 
@@ -38,7 +35,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
   tokenizeandwritetextformat(letters, context, false)
 
   function clearshift() {
-    user.keyboard('{/Shift}').catch(noop)
+    // user.keyboard('{/Shift}').catch(noop)
   }
 
   return (
@@ -72,7 +69,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={0}
         letters="menu"
         onToggle={() => {
-          user.keyboard('[Tab]').catch(noop)
+          // user.keyboard('[Tab]').catch(noop)
         }}
       />
       <ToggleKey
@@ -80,7 +77,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={1}
         letters="okay"
         onToggle={() => {
-          user.keyboard('[Enter]').catch(noop)
+          // user.keyboard('[Enter]').catch(noop)
         }}
       />
       <ToggleKey
@@ -88,7 +85,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={0}
         letters="cancel"
         onToggle={() => {
-          user.keyboard('[Escape]').catch(noop)
+          // user.keyboard('[Escape]').catch(noop)
         }}
       />
       <ToggleKey
@@ -96,7 +93,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={12}
         letters="?"
         onToggle={() => {
-          user.keyboard('{Shift>}?{/Shift}').catch(noop)
+          // user.keyboard('{Shift>}?{/Shift}').catch(noop)
         }}
       />
       <ToggleKey
@@ -104,7 +101,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={13}
         letters="#"
         onToggle={() => {
-          user.keyboard('3').catch(noop)
+          // user.keyboard('3').catch(noop)
         }}
       />
       <ToggleKey
@@ -112,11 +109,11 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={12}
         letters="c"
         onToggle={() => {
-          user.keyboard('c').catch(noop)
+          // user.keyboard('c').catch(noop)
         }}
       />
 
-      <NumKey x={center} y={0} letters="$24" digit="[ArrowUp]" usealt />
+      {/* <NumKey x={center} y={0} letters="$24" digit="[ArrowUp]" usealt />
       <NumKey x={center} y={13} letters="$25" digit="[ArrowDown]" usealt />
       <NumKey
         x={width - 6}
@@ -126,7 +123,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         usealt
         usectrl
       />
-      <NumKey x={0} y={6} letters="$27" digit="[ArrowLeft]" usealt usectrl />
+      <NumKey x={0} y={6} letters="$27" digit="[ArrowLeft]" usealt usectrl /> */}
 
       <TouchPlane
         x={right}
@@ -134,7 +131,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         width={5}
         height={3}
         onPointerDown={() => {
-          user.keyboard('{Shift>}').catch(noop)
+          // user.keyboard('{Shift>}').catch(noop)
         }}
         onPointerUp={clearshift}
         onPointerLeave={clearshift}

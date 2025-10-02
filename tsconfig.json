@@ -33,8 +33,7 @@
   },
   "include": [
     "zss",
-    "cafe",
-    "words.js"
+    "cafe"
   ],
   "references": [
     {
