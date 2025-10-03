@@ -13,7 +13,6 @@ import { Rect } from '../rect'
 import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
-import { MediaLayers } from './medialayer'
 import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
@@ -146,7 +145,6 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
 
   return (
     <>
-      <MediaLayers />
       <group ref={inspectref}>
         <group ref={inspectscaleref}>
           <TapeTerminalInspector />

@@ -19,7 +19,6 @@ import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { IsoLayer } from './isolayer'
-import { MediaLayers } from './medialayer'
 import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
@@ -178,7 +177,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   return (
     <>
       <group position-z={layersindex}>
-        <MediaLayers />
         <orthographicCamera
           ref={cameraref}
           left={viewwidth * -0.5}

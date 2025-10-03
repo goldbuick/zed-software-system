@@ -20,7 +20,6 @@ import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { FPVLayer } from './fpvlayer'
-import { MediaLayers } from './medialayer'
 import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
@@ -208,7 +207,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
 
   return (
     <>
-      <MediaLayers />
       <group ref={pivotref}>
         <perspectiveCamera
           ref={cameraref}

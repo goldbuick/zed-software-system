@@ -21,8 +21,9 @@ const defaultpalette = loadpalettefrombytes(PALETTE)
 const defaultcharset = loadcharsetfrombytes(CHARSET)
 
 export function MediaLayers() {
-  const layers = useGadgetClient((state) => state.gadget.layers)
+  const id = useGadgetClient((state) => state.gadget.id)
   useEffect(() => {
+    const layers = useGadgetClient.getState().gadget.layers ?? []
     let usepalette = defaultpalette
     let usecharset = defaultcharset
     let usealtcharset: MAYBE<BITMAP>
@@ -33,7 +34,6 @@ export function MediaLayers() {
         switch (layer.mime) {
           case 'image/palette':
             if (isarray(layer.media)) {
-              console.info('found pal')
               usepalette = createbitmapfromarray(
                 FILE_BYTES_PER_COLOR,
                 PALETTE_COLORS,
@@ -43,7 +43,6 @@ export function MediaLayers() {
             break
           case 'image/charset':
             if (isarray(layer.media)) {
-              console.info('found chr')
               usecharset = createbitmapfromarray(
                 CHARS_PER_ROW * CHAR_WIDTH,
                 CHARS_TOTAL_ROWS * CHAR_HEIGHT,
@@ -76,6 +75,6 @@ export function MediaLayers() {
       media.setcharset(usecharset)
       media.setaltcharset(usealtcharset)
     }
-  }, [layers])
+  }, [id])
   return null
 }

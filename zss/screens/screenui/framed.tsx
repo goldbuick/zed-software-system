@@ -17,6 +17,7 @@ import {
 import { FlatGraphics } from 'zss/gadget/graphics/flat'
 import { FPVGraphics } from 'zss/gadget/graphics/fpv'
 import { IsoGraphics } from 'zss/gadget/graphics/iso'
+import { MediaLayers } from 'zss/gadget/graphics/medialayer'
 import { Mode7Graphics } from 'zss/gadget/graphics/mode7'
 import { UserInput, UserInputMods, modsfromevent } from 'zss/gadget/userinput'
 import { ispid } from 'zss/mapping/guid'
@@ -100,6 +101,7 @@ export function Framed({ width, height }: FramedProps) {
           }
         }}
       />
+      <MediaLayers />
       {graphics === 'flat' && <FlatGraphics width={width} height={height} />}
       {graphics === 'mode7' && <Mode7Graphics width={width} height={height} />}
       {graphics === 'iso' && <IsoGraphics width={width} height={height} />}
