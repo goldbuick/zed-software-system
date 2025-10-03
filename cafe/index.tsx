@@ -87,6 +87,17 @@ function applyconfig(innerwidth: number, innerheight: number) {
         width,
         height,
       },
+      events: eventManagerFactory,
+      dpr: 1,
+      flat: true,
+      linear: true,
+      shadows: false,
+      gl: {
+        alpha: true,
+        stencil: false,
+        antialias: false,
+        preserveDrawingBuffer: true,
+      },
     })
     .catch(console.error)
 }
@@ -95,9 +106,9 @@ const handleresize = debounce(applyconfig, 256)
 async function bootup() {
   await root.configure({
     events: eventManagerFactory,
+    dpr: 1,
     flat: true,
     linear: true,
-    dpr: 1,
     shadows: false,
     gl: {
       alpha: true,
