@@ -575,14 +575,12 @@ export function memoryconverttogadgetlayers(
   )
 
   // check for display media
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const bookflags = bookreadflags(mainbook, MEMORY_LABEL.MAIN)
 
   // check for palette
-  if (isstring(bookflags.palette)) {
+  if (isstring(board.palettepage)) {
     const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.PALETTE,
-      bookflags.palette,
+      board.palettepage,
     )
     const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
     if (ispresent(palette?.bits)) {
@@ -598,10 +596,10 @@ export function memoryconverttogadgetlayers(
   }
 
   // check for charset
-  if (isstring(bookflags.charset)) {
+  if (isstring(board.charsetpage)) {
     const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.CHARSET,
-      bookflags.charset,
+      board.charsetpage,
     )
     const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
     if (ispresent(charset?.bits)) {

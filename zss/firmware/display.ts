@@ -3,7 +3,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorypickcodepagewithtype, memoryreadbookflags } from 'zss/memory'
+import { memorypickcodepagewithtype } from 'zss/memory'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
@@ -21,13 +21,12 @@ export const DISPLAY_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('palette', (_, words) => {
+  .command('palette', (chip, words) => {
     const [target] = readargs(words, 0, [ARG_TYPE.NAME])
-    const bookflags = memoryreadbookflags()
     const palette = memorypickcodepagewithtype(CODE_PAGE_TYPE.PALETTE, target)
     if (ispresent(palette)) {
-      bookflags.palette = palette.id
-      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `loaded palette ${target}`)
+      chip.set('palette', palette.id)
+      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `set palette ${target}`)
     } else {
       api_error(
         SOFTWARE,
@@ -38,13 +37,12 @@ export const DISPLAY_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('charset', (_, words) => {
+  .command('charset', (chip, words) => {
     const [target] = readargs(words, 0, [ARG_TYPE.NAME])
-    const bookflags = memoryreadbookflags()
     const charset = memorypickcodepagewithtype(CODE_PAGE_TYPE.CHARSET, target)
     if (ispresent(charset)) {
-      bookflags.charset = charset.id
-      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `loaded charset ${target}`)
+      chip.set('charset', charset.id)
+      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `set charset ${target}`)
     } else {
       api_error(
         SOFTWARE,

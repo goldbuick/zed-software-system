@@ -83,6 +83,9 @@ export type BOARD = {
   // control graphics mode
   graphics?: string
   facing?: number
+  // control visuals
+  charset?: string
+  palette?: string
   // common stats
   exitnorth?: string
   exitsouth?: string
@@ -110,6 +113,8 @@ export type BOARD = {
   distmaps?: Record<string, number[]>
   overboard?: string
   underboard?: string
+  charsetpage?: string
+  palettepage?: string
 }
 
 export const BOARD_WIDTH = 60

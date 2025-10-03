@@ -501,11 +501,6 @@ export function memoryhasflags(id: string) {
   return bookhasflags(mainbook, id)
 }
 
-export function memoryreadbookflags() {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  return bookreadflags(mainbook, MEMORY_LABEL.MAIN)
-}
-
 export function memoryclearflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   return bookclearflags(mainbook, id)

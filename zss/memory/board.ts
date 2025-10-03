@@ -8,7 +8,14 @@ import { indextopt, ptdist, ptwithin } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isnumber,
+  ispresent,
+  isstring,
+  noop,
+} from 'zss/mapping/types'
 import {
   EVAL_DIR,
   STR_DIR,
@@ -28,9 +35,19 @@ import {
 } from './boardlookup'
 import { boardreadpath } from './boardpathing'
 import { bookelementdisplayread } from './book'
-import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE_TYPE,
+} from './types'
 
-import { memoryelementstatread } from '.'
+import {
+  memoryboardread,
+  memoryelementstatread,
+  memorypickcodepagewithtype,
+} from '.'
 
 function createempty() {
   return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
@@ -72,6 +89,8 @@ enum BOARD_KEYS {
   b8,
   b9,
   b10,
+  charset,
+  palette,
 }
 
 export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
@@ -89,6 +108,8 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
     distmaps: FORMAT_SKIP,
     overboard: FORMAT_SKIP,
     underboard: FORMAT_SKIP,
+    charsetpage: FORMAT_SKIP,
+    palettepage: FORMAT_SKIP,
   })
 }
 
@@ -686,4 +707,96 @@ export function boardevaldir(
 
   // result
   return { dir, startpt, destpt: pt, layer, targets: [] }
+}
+
+export function boardvisualsupdate(board: MAYBE<BOARD>) {
+  if (!ispresent(board)) {
+    return
+  }
+
+  // see if we have an over board
+  if (isstring(board.over)) {
+    if (isstring(board.overboard)) {
+      // validate cached resolve is still valid
+      const over = memoryboardread(board.overboard)
+      if (!ispresent(over)) {
+        delete board.overboard
+      }
+    } else {
+      // check to see if board.over is a stat
+      const maybeboard = memoryboardread(board.over)
+      if (ispresent(maybeboard)) {
+        board.overboard = maybeboard.id
+      }
+    }
+  } else if (isstring(board.overboard)) {
+    // over stat is no longer set
+    delete board.overboard
+  }
+
+  // see if we have an under board
+  if (isstring(board.under)) {
+    if (isstring(board.underboard)) {
+      // validate cached resolve is still valid
+      const under = memoryboardread(board.underboard)
+      if (!ispresent(under)) {
+        delete board.underboard
+      }
+    } else {
+      // check to see if board.under is a stat
+      const maybeboard = memoryboardread(board.under)
+      if (ispresent(maybeboard)) {
+        board.underboard = maybeboard.id
+      }
+    }
+  } else if (isstring(board.underboard)) {
+    // under stat is no longer set
+    delete board.underboard
+  }
+
+  // see if we have a valid charset
+  if (isstring(board.charset)) {
+    if (isstring(board.charsetpage)) {
+      const charset = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.CHARSET,
+        board.charset,
+      )
+      if (!ispresent(charset)) {
+        delete board.charsetpage
+      }
+    } else {
+      const maybecharset = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.CHARSET,
+        board.charset,
+      )
+      if (ispresent(maybecharset)) {
+        board.charsetpage = maybecharset.id
+      }
+    }
+  } else if (isstring(board.charsetpage)) {
+    delete board.charsetpage
+  }
+
+  // see if we have a valid palette
+  if (isstring(board.palette)) {
+    if (isstring(board.palettepage)) {
+      const palette = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.PALETTE,
+        board.palette,
+      )
+      if (!ispresent(palette)) {
+        delete board.palettepage
+      }
+    } else {
+      const maybepalette = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.PALETTE,
+        board.palette,
+      )
+      if (ispresent(maybepalette)) {
+        board.palettepage = maybepalette.id
+      }
+    }
+  } else if (isstring(board.palettepage)) {
+    delete board.palettepage
+  }
 }
