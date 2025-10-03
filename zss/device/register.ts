@@ -141,7 +141,7 @@ function renderrow(content: string[]) {
   if (ishyperlink) {
     return `!${messagetext}`
   }
-  return `${messagetext}`
+  return `$onclear$blue${messagetext}`
 }
 
 const countregex = /\((\d+)\)/
