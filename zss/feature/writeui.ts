@@ -1,4 +1,4 @@
-import { DEVICELIKE, api_info, register_terminal_full } from 'zss/device/api'
+import { DEVICELIKE, api_log, register_terminal_full } from 'zss/device/api'
 import { qrlines } from 'zss/mapping/qr'
 
 /**
@@ -15,7 +15,7 @@ const CHR_BM = '$205'
 export const DIVIDER = '$yellow$205$205$205$196'
 
 export function write(device: DEVICELIKE, player: string, text: string) {
-  api_info(device, player, text)
+  api_log(device, player, text)
 }
 
 export function writetbar(device: DEVICELIKE, player: string, width: number) {

@@ -42,17 +42,8 @@ export function api_error(
   kind: string,
   ...message: any[]
 ) {
-  device.emit(player, 'error', [`$red${kind}$blue>>`, ...message])
+  device.emit(player, 'log', [`$red${kind}$blue>>`, ...message])
   return false
-}
-
-export function api_info(
-  device: DEVICELIKE,
-  player: string,
-  ...message: any[]
-) {
-  device.emit(player, 'info', message)
-  return true
 }
 
 export function api_log(device: DEVICELIKE, player: string, ...message: any[]) {

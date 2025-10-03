@@ -23,6 +23,7 @@ import {
   applycolortoindexes,
   applystrtoindex,
   textformatreadedges,
+  tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
   writeplaintext,
 } from 'zss/words/textformat'
@@ -168,9 +169,10 @@ export function TapeTerminalInput({
   if (!quickterminal) {
     // write hint
     setuplogitem(false, 0, 0, context)
-    const hint = `${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} - if lost try #help`
-    context.x = 1
-    tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
+    const hint = `$DKCYAN${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} ${import.meta.env.ZSS_COMMIT_MESSAGE}`
+    const measured = tokenizeandmeasuretextformat(hint, edge.width, 1)
+    context.x = edge.width - (measured?.measuredwidth ?? 0) - 1
+    tokenizeandwritetextformat(hint, context, true)
   }
 
   // draw divider
