@@ -282,7 +282,6 @@ export function memoryconverttogadgetcontrollayer(
   if (isstring(withcamera)) {
     switch (NAME(withcamera)) {
       default:
-      case 'mid':
         control.viewscale = VIEWSCALE.MID
         break
       case 'near':

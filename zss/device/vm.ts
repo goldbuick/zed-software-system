@@ -279,7 +279,6 @@ const vm = createdevice(
           'oop',
           'rndp',
           'to',
-          'mid',
           'over',
           'under',
           'ground',
