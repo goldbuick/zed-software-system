@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
+import { CHARSET } from 'zss/feature/charset'
+import { PALETTE } from 'zss/feature/palette'
 import {
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,
@@ -9,72 +11,71 @@ import {
   LAYER_TYPE,
   PALETTE_COLORS,
 } from 'zss/gadget/data/types'
-import { isarray, isstring } from 'zss/mapping/types'
-import { useShallow } from 'zustand/react/shallow'
+import { MAYBE, isarray, isstring } from 'zss/mapping/types'
 
-import { createbitmapfromarray } from '../data/bitmap'
+import { BITMAP, createbitmapfromarray } from '../data/bitmap'
+import { useGadgetClient } from '../data/state'
 import { useMedia } from '../hooks'
 
-type MediaLayerProps = {
-  id: string
-  from: 'under' | 'over' | 'layers'
-}
+const defaultpalette = loadpalettefrombytes(PALETTE)
+const defaultcharset = loadcharsetfrombytes(CHARSET)
 
-export function MediaLayer({ id, from }: MediaLayerProps) {
-  const media = useMedia()
-  const layer = useGadgetClient(
-    useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
-  )
-
-  // special case for media elements
-  const medialayer = layer?.type === LAYER_TYPE.MEDIA ? layer : undefined
+export function MediaLayers() {
+  const layers = useGadgetClient((state) => state.gadget.layers)
   useEffect(() => {
-    switch (medialayer?.mime) {
-      case 'image/palette':
-        if (isarray(medialayer.media)) {
-          media.setpalette(
-            createbitmapfromarray(
-              FILE_BYTES_PER_COLOR,
-              PALETTE_COLORS,
-              medialayer.media,
-            ),
-          )
+    let usepalette = defaultpalette
+    let usecharset = defaultcharset
+    let usealtcharset: MAYBE<BITMAP>
+    const media = useMedia.getState()
+    for (let i = 0; layers && i < layers.length; ++i) {
+      const layer = layers[i]
+      if (layer.type === LAYER_TYPE.MEDIA) {
+        switch (layer.mime) {
+          case 'image/palette':
+            if (isarray(layer.media)) {
+              console.info('found pal')
+              usepalette = createbitmapfromarray(
+                FILE_BYTES_PER_COLOR,
+                PALETTE_COLORS,
+                layer.media,
+              )
+            }
+            break
+          case 'image/charset':
+            if (isarray(layer.media)) {
+              console.info('found chr')
+              usecharset = createbitmapfromarray(
+                CHARS_PER_ROW * CHAR_WIDTH,
+                CHARS_TOTAL_ROWS * CHAR_HEIGHT,
+                layer.media,
+              )
+            }
+            break
+          case 'image/altcharset':
+            if (isarray(layer.media)) {
+              usealtcharset = createbitmapfromarray(
+                CHARS_PER_ROW * CHAR_WIDTH,
+                CHARS_TOTAL_ROWS * CHAR_HEIGHT,
+                layer.media,
+              )
+            }
+            break
+          case 'text/mood':
+            if (isstring(layer.media)) {
+              media.setmood(layer.media)
+            }
+            break
+          case 'text/players':
+            if (isstring(layer.media)) {
+              //
+            }
+            break
         }
-        break
-      case 'image/charset':
-        if (isarray(medialayer.media)) {
-          media.setcharset(
-            createbitmapfromarray(
-              CHARS_PER_ROW * CHAR_WIDTH,
-              CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-              medialayer.media,
-            ),
-          )
-        }
-        break
-      case 'image/altcharset':
-        if (isarray(medialayer.media)) {
-          media.setaltcharset(
-            createbitmapfromarray(
-              CHARS_PER_ROW * CHAR_WIDTH,
-              CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-              medialayer.media,
-            ),
-          )
-        }
-        break
-      case 'text/mood':
-        if (isstring(medialayer.media)) {
-          media.setmood(medialayer.media)
-        }
-        break
-      case 'text/players':
-        if (isstring(medialayer.media)) {
-          //
-        }
-        break
+      }
+      media.setpalette(usepalette)
+      media.setcharset(usecharset)
+      media.setaltcharset(usealtcharset)
     }
-  }, [media, medialayer])
-
+  }, [layers])
   return null
 }

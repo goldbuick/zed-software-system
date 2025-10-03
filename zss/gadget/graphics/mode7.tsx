@@ -19,7 +19,7 @@ import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
-import { MediaLayer } from './medialayer'
+import { MediaLayers } from './medialayer'
 import { Mode7Layer } from './mode7layer'
 import { RenderLayer } from './renderlayer'
 
@@ -219,9 +219,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
 
   return (
     <>
-      {layers.map((layer) => (
-        <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
-      ))}
+      <MediaLayers />
       <perspectiveCamera
         ref={cameraref}
         near={1}
