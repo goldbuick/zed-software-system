@@ -6,8 +6,9 @@ import {
   FILE_BYTES_PER_CHAR,
   FILE_BYTES_PER_COLOR,
 } from 'zss/gadget/data/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
-export function loadpalettefrombytes(bytes: Uint8Array): BITMAP | undefined {
+export function loadpalettefrombytes(bytes: Uint8Array): MAYBE<BITMAP> {
   const count = Math.floor(bytes.length / FILE_BYTES_PER_COLOR)
 
   // data must be multiples of 3
@@ -28,11 +29,11 @@ function isBitOn(value: number, index: number) {
   return value & (1 << index) ? 255 : 0
 }
 
-export function loadcharsetfrombytes(data: Uint8Array): BITMAP | undefined {
-  const count = Math.floor(data.length / FILE_BYTES_PER_CHAR)
+export function loadcharsetfrombytes(bytes: Uint8Array): MAYBE<BITMAP> {
+  const count = Math.floor(bytes.length / FILE_BYTES_PER_CHAR)
 
   // data must be multiples of 14
-  if (count * FILE_BYTES_PER_CHAR !== data.length) {
+  if (count * FILE_BYTES_PER_CHAR !== bytes.length) {
     return undefined
   }
 
@@ -44,10 +45,10 @@ export function loadcharsetfrombytes(data: Uint8Array): BITMAP | undefined {
   let cx = 0
   let cy = 0
   let ri = 0
-  for (let i = 0; i < data.length; ++i) {
+  for (let i = 0; i < bytes.length; ++i) {
     const y = cy * CHAR_HEIGHT + ri
 
-    const value = data[i]
+    const value = bytes[i]
     for (let b = 0; b < CHAR_WIDTH; ++b) {
       const x = cx * CHAR_WIDTH + b
       bitmap.bits[x + y * rowWidth] = isBitOn(value, 7 - b)
@@ -65,4 +66,35 @@ export function loadcharsetfrombytes(data: Uint8Array): BITMAP | undefined {
   }
 
   return bitmap
+}
+
+export function writecharfrombytes(
+  bytes: Uint8Array,
+  charset: MAYBE<BITMAP>,
+  idx: number,
+) {
+  if (!ispresent(charset)) {
+    return undefined
+  }
+  // bytes should be 14 in length & charset must be multiples of 14
+  const count = Math.floor(charset.bits.length / FILE_BYTES_PER_CHAR)
+  if (
+    idx < 0 ||
+    idx > 255 ||
+    bytes.length === FILE_BYTES_PER_CHAR ||
+    count * FILE_BYTES_PER_CHAR !== charset.bits.length
+  ) {
+    return undefined
+  }
+  const rowwidth = CHAR_WIDTH * CHARS_PER_ROW
+  const cx = (idx % CHARS_PER_ROW) * CHAR_WIDTH
+  const cy = Math.floor(idx / CHARS_PER_ROW) * CHAR_HEIGHT
+  const i = 0
+  for (let y = 0; y < CHAR_HEIGHT; ++y) {
+    for (let x = 0; x < CHAR_WIDTH; ++x) {
+      const px = cx + x
+      const py = cy + y
+      charset.bits[px + py * rowwidth] = bytes[i] ? 255 : 0
+    }
+  }
 }
