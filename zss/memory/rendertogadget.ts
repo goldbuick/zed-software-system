@@ -26,7 +26,12 @@ import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
-import { boardelementindex, boardevaldir, boardobjectread } from './board'
+import {
+  boardelementindex,
+  boardevaldir,
+  boardobjectread,
+  boardvisualsupdate,
+} from './board'
 import { boardsetlookup } from './boardlookup'
 import { bookelementdisplayread, bookreadflags } from './book'
 import { codepagereaddata } from './codepage'
@@ -312,6 +317,9 @@ export function memoryconverttogadgetlayers(
 
   // make sure lookup is created
   boardsetlookup(board)
+
+  // update resolve caches
+  boardvisualsupdate(board)
 
   const layers: LAYER[] = []
 

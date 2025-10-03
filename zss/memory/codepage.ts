@@ -520,6 +520,20 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (isstring(stats.facing) && NAME(stats.facing) === 'empty') {
         codepage.board.facing = undefined
       }
+      if (isstring(stats.charset)) {
+        if (NAME(stats.charset) === 'empty') {
+          codepage.board.charset = undefined
+        } else {
+          codepage.board.charset = stats.charset
+        }
+      }
+      if (isstring(stats.palette)) {
+        if (NAME(stats.palette) === 'empty') {
+          codepage.board.palette = undefined
+        } else {
+          codepage.board.palette = stats.palette
+        }
+      }
 
       if (isstring(stats.exitnorth)) {
         codepage.board.exitnorth = stats.exitnorth

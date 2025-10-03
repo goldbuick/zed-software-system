@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
+import { CHARSET } from 'zss/feature/charset'
+import { PALETTE } from 'zss/feature/palette'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
   createTilemapBufferGeometryAttributes,
@@ -7,7 +10,12 @@ import {
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
 
+import { convertpalettetocolors } from '../data/palette'
+import { createbitmaptexture } from '../display/textures'
 import { useMedia } from '../hooks'
+
+const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
+const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
 type TilesProps = {
   width: number
@@ -16,6 +24,7 @@ type TilesProps = {
   color: number[]
   bg: number[]
   fliptexture?: boolean
+  alwaysdefaults?: boolean
 }
 
 export function Tiles({
@@ -25,10 +34,14 @@ export function Tiles({
   color,
   bg,
   fliptexture = true,
+  alwaysdefaults = false,
 }: TilesProps) {
-  const palette = useMedia((state) => state.palettedata)
-  const charset = useMedia((state) => state.charsetdata)
-  const altcharset = useMedia((state) => state.altcharsetdata)
+  const mediapalette = useMedia((state) => state.palettedata)
+  const mediacharset = useMedia((state) => state.charsetdata)
+  const mediaaltcharset = useMedia((state) => state.altcharsetdata)
+  const palette = alwaysdefaults ? defaultpalette : mediapalette
+  const charset = alwaysdefaults ? defaultcharset : mediacharset
+  const altcharset = alwaysdefaults ? defaultcharset : mediaaltcharset
 
   const [material] = useState(() => createTilemapMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
