@@ -1,5 +1,3 @@
-import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
-import { MAYBE } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
 

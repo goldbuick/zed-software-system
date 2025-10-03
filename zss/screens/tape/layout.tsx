@@ -4,7 +4,6 @@ import { RUNTIME } from 'zss/config'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
-import { deepcopy } from 'zss/mapping/types'
 import { TapeEditor } from 'zss/screens/editor/component'
 import { TapeTerminal } from 'zss/screens/terminal/component'
 import {
@@ -15,34 +14,6 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { BackPlate } from './backplate'
 import { FG, bgcolor, editorsplit } from './common'
-
-function forkonedge(
-  leftedge: number,
-  topedge: number,
-  rightedge: number,
-  bottomedge: number,
-  context: WRITE_TEXT_CONTEXT,
-) {
-  return {
-    ...context,
-    x: leftedge,
-    y: topedge,
-    reset: {
-      ...deepcopy(context.reset),
-      topedge,
-      leftedge,
-      rightedge,
-      bottomedge,
-    },
-    active: {
-      ...deepcopy(context.active),
-      topedge,
-      leftedge,
-      rightedge,
-      bottomedge,
-    },
-  }
-}
 
 type TapeLayoutTilesProps = {
   quickterminal: boolean

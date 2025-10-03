@@ -42,6 +42,7 @@ import {
   BOARD_ELEMENT,
   CODE_PAGE,
   CODE_PAGE_STATS,
+  CODE_PAGE_STAT_LIST,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
@@ -130,7 +131,7 @@ export function codepagehasmatch(
 export function codepagereadstatdefaults(
   codepage: MAYBE<CODE_PAGE>,
 ): CODE_PAGE_STATS {
-  const stats = { ...codepagereadstats(codepage) }
+  const stats = { ...codepagereadstats(codepage).flat }
 
   // extract defaults
   Object.keys(stats).forEach((key) => {
@@ -154,12 +155,16 @@ export function codepageresetstats(
     return {}
   }
   codepage.stats = undefined
-  return codepagereadstats(codepage)
+  return codepagereadstats(codepage).flat
 }
 
-export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
+export function codepagereadstatsfromtext(content: string): {
+  flat: CODE_PAGE_STATS
+  list: CODE_PAGE_STAT_LIST
+} {
   const parse = tokenize(content)
-  const stats: CODE_PAGE_STATS = {}
+  const flat: CODE_PAGE_STATS = {}
+  const list: CODE_PAGE_STAT_LIST = {}
 
   // extract @stat lines
   let isfirst = true
@@ -174,28 +179,28 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
       isfirst = false
       switch (stat.type) {
         case STAT_TYPE.LOADER:
-          stats.type = CODE_PAGE_TYPE.LOADER
-          stats.name = maybename
+          flat.type = CODE_PAGE_TYPE.LOADER
+          flat.name = maybename
           break
         case STAT_TYPE.BOARD:
-          stats.type = CODE_PAGE_TYPE.BOARD
-          stats.name = maybename
+          flat.type = CODE_PAGE_TYPE.BOARD
+          flat.name = maybename
           break
         case STAT_TYPE.OBJECT:
-          stats.type = CODE_PAGE_TYPE.OBJECT
-          stats.name = maybename || 'object'
+          flat.type = CODE_PAGE_TYPE.OBJECT
+          flat.name = maybename || 'object'
           break
         case STAT_TYPE.TERRAIN:
-          stats.type = CODE_PAGE_TYPE.TERRAIN
-          stats.name = maybename
+          flat.type = CODE_PAGE_TYPE.TERRAIN
+          flat.name = maybename
           break
         case STAT_TYPE.CHARSET:
-          stats.type = CODE_PAGE_TYPE.CHARSET
-          stats.name = maybename
+          flat.type = CODE_PAGE_TYPE.CHARSET
+          flat.name = maybename
           break
         case STAT_TYPE.PALETTE:
-          stats.type = CODE_PAGE_TYPE.PALETTE
-          stats.name = maybename
+          flat.type = CODE_PAGE_TYPE.PALETTE
+          flat.name = maybename
           break
         case STAT_TYPE.CONST: {
           const [maybename, ...maybevalues] = stat.values
@@ -204,10 +209,15 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
             const maybevalue = maybevalues.join(' ')
             if (isstring(maybevalue)) {
               const numbervalue = parseFloat(maybevalue)
-              stats[name] = isnumber(numbervalue) ? numbervalue : maybevalue
+              flat[name] = isnumber(numbervalue) ? numbervalue : maybevalue
             } else {
-              stats[name] = 1
+              flat[name] = 1
             }
+            // case for @char0 bytes
+            if (!ispresent(list[name])) {
+              list[name] = []
+            }
+            list[name].push(flat[name])
           }
           break
         }
@@ -222,27 +232,33 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
           const [maybename, ...args] = stat.values
           if (isstring(maybename)) {
             const name = NAME(maybename)
-            stats[name] = [stattypestring(stat.type), ...args]
+            flat[name] = [stattypestring(stat.type), ...args]
           }
           break
         }
       }
     }
   }
-  return stats
+  return { flat, list }
 }
 
-export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
+export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): {
+  flat: CODE_PAGE_STATS
+  list: CODE_PAGE_STAT_LIST
+} {
+  const flat: CODE_PAGE_STATS = {}
+  const list: CODE_PAGE_STAT_LIST = {}
   if (!ispresent(codepage)) {
-    return {}
+    return { flat, list }
   }
 
   // cached results !
   if (ispresent(codepage.stats?.type)) {
-    return codepage.stats
+    return { flat: codepage.stats, list }
   }
 
-  codepage.stats = codepagereadstatsfromtext(codepage.code)
+  const parsed = codepagereadstatsfromtext(codepage.code)
+  codepage.stats = parsed.flat
 
   // default to object type
   if (!ispresent(codepage.stats.type)) {
@@ -250,7 +266,7 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
   }
 
   // results !
-  return codepage.stats
+  return parsed
 }
 
 export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
@@ -274,7 +290,7 @@ export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
 }
 
 export function codepagereadtype(codepage: MAYBE<CODE_PAGE>) {
-  const stats = codepagereadstats(codepage)
+  const stats = codepagereadstats(codepage).flat
   return stats.type ?? CODE_PAGE_TYPE.ERROR
 }
 
@@ -283,12 +299,12 @@ export function codepagereadtypetostring(codepage: MAYBE<CODE_PAGE>) {
 }
 
 export function codepagereadname(codepage: MAYBE<CODE_PAGE>) {
-  const stats = codepagereadstats(codepage)
+  const stats = codepagereadstats(codepage).flat
   return stats.name ?? ''
 }
 
 export function codepagereadstat(codepage: MAYBE<CODE_PAGE>, stat: string) {
-  const stats = codepagereadstats(codepage)
+  const stats = codepagereadstats(codepage).flat
   return stats[stat]
 }
 

@@ -48,7 +48,7 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       // read code to get name
       if (isstring(object.code) && !ispresent(object.name)) {
         codepageapplyelementstats(
-          codepagereadstatsfromtext(object.code),
+          codepagereadstatsfromtext(object.code).flat,
           object,
         )
       }

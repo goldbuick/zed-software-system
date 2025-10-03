@@ -54,7 +54,7 @@ export function Scrollable({
         y={y}
         width={width}
         height={height}
-        onWheel={(event) => {
+        onWheel={(event: any) => {
           if (disabled || !lethargy.check(event)) {
             return
           }

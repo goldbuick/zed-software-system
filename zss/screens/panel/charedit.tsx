@@ -119,7 +119,7 @@ export function PanelItemCharEdit({
             visible={false}
             width={EDIT_WIDTH}
             height={EDIT_HEIGHT}
-            onClick={(e) => {
+            onClick={(e: any) => {
               e.intersections[0].object.worldToLocal(
                 point.copy(e.intersections[0].point),
               )

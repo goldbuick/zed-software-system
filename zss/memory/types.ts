@@ -134,6 +134,8 @@ export type CODE_PAGE_STATS = {
   [key: string]: WORD
 }
 
+export type CODE_PAGE_STAT_LIST = Record<string, WORD[]>
+
 export type CODE_PAGE = {
   // all pages have id & code
   id: string

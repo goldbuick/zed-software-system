@@ -16,7 +16,7 @@ export function parsezztobj(player: string, filename: string, content: string) {
   }
 
   // pre-parse for stats
-  const stats = codepagereadstatsfromtext(content)
+  const stats = codepagereadstatsfromtext(content).flat
 
   const withcode = stats.name
     ? content

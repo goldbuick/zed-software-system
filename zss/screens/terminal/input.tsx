@@ -17,7 +17,7 @@ import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { MAYBE, ispresent, isstring, noop } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
   applycolortoindexes,

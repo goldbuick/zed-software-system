@@ -114,7 +114,7 @@ function createreader(content: Uint8Array) {
 
 type READER = ReturnType<typeof createreader>
 
-function readboardbytes(player: string, reader: READER) {
+function readboardbytes(reader: READER) {
   const boardsize = reader.readint16()
   const start = reader.index()
 
@@ -662,7 +662,7 @@ export function parsebrd(player: string, content: Uint8Array) {
     return
   }
   const reader = createreader(content)
-  const board = readboardbytes(player, reader)
+  const board = readboardbytes(reader)
   processboards(contentbook, -1, [board])
   api_toast(
     SOFTWARE,
@@ -723,7 +723,7 @@ export function parsezzt(player: string, content: Uint8Array) {
   const zztboards: ZZT_BOARD[] = []
   for (let i = 0; i <= numberofboards; ++i) {
     // add to list
-    const board = readboardbytes(player, reader)
+    const board = readboardbytes(reader)
     zztboards.push(board)
   }
 
