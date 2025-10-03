@@ -135,21 +135,20 @@ function writepages() {
   vm_cli(register, myplayerid, '#pages')
 }
 
-function renderrow(maybelevel: string, content: string[]) {
-  const level = maybelevel === 'error' ? '$red' : '$blue'
+function renderrow(content: string[]) {
   const messagetext = content.map((v) => `${v}`).join(' ')
   const ishyperlink = messagetext.startsWith('!')
   if (ishyperlink) {
     return `!${messagetext}`
   }
-  return `$onclear${level}${messagetext}`
+  return `${messagetext}`
 }
 
 const countregex = /\((\d+)\)/
 
 function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
-  const row = renderrow(message.target, message.data)
+  const row = renderrow(message.data)
   const [firstrow = ''] = terminal.logs
   const logs = [...terminal.logs]
 
