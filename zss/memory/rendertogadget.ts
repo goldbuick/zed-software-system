@@ -304,7 +304,7 @@ export function memoryconverttogadgetlayers(
   index: number,
   board: MAYBE<BOARD>,
   tickers: string[],
-  isbaseboard: boolean,
+  includemedia: boolean,
 ): LAYER[] {
   if (
     !ispresent(board) ||
@@ -326,7 +326,7 @@ export function memoryconverttogadgetlayers(
   const boardid = board.id
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
-  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
+  const defaultcolor = COLOR.ONCLEAR
 
   const tiles = createcachedtiles(
     boardid,
@@ -357,12 +357,7 @@ export function memoryconverttogadgetlayers(
 
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
-    const display = bookelementdisplayread(
-      tile,
-      0,
-      COLOR.WHITE,
-      isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
-    )
+    const display = bookelementdisplayread(tile, 0, COLOR.WHITE, COLOR.ONCLEAR)
     const collision = memoryelementstatread(tile, 'collision')
     tiles.char[i] = display.char
     tiles.color[i] = display.color
@@ -584,7 +579,7 @@ export function memoryconverttogadgetlayers(
   // check for display media
 
   // check for palette
-  if (isstring(board.palettepage)) {
+  if (includemedia && isstring(board.palettepage)) {
     const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.PALETTE,
       board.palettepage,
@@ -603,7 +598,7 @@ export function memoryconverttogadgetlayers(
   }
 
   // check for charset
-  if (isstring(board.charsetpage)) {
+  if (includemedia && isstring(board.charsetpage)) {
     const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.CHARSET,
       board.charsetpage,

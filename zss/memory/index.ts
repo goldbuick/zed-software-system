@@ -4,7 +4,7 @@ import { RUNTIME } from 'zss/config'
 import { MESSAGE, api_error, api_log, vm_touched } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { LAYER } from 'zss/gadget/data/types'
+import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -1377,9 +1377,6 @@ export function memoryreadgadgetlayers(
   // composite id
   const id4all: string[] = [`${board.id}`]
 
-  // read graphics mode
-  const graphics = board.graphics ?? 'flat'
-
   // read over / under
   const overboard = memoryoverboardread(board)
   if (overboard?.id) {
@@ -1392,14 +1389,9 @@ export function memoryreadgadgetlayers(
   }
 
   // compose layers
-  under.push(...memoryconverttogadgetlayers(0, underboard, tickers, true))
+  under.push(...memoryconverttogadgetlayers(0, underboard, tickers, false))
   layers.push(
-    ...memoryconverttogadgetlayers(
-      under.length,
-      board,
-      tickers,
-      graphics === 'flat' ? false : true,
-    ),
+    ...memoryconverttogadgetlayers(under.length, board, tickers, true),
   )
   over.push(
     ...memoryconverttogadgetlayers(
@@ -1409,6 +1401,14 @@ export function memoryreadgadgetlayers(
       false,
     ),
   )
+
+  // scan for media layers
+  for (let i = 0; i < layers.length; ++i) {
+    const layer = layers[i]
+    if (layer.type === LAYER_TYPE.MEDIA) {
+      id4all.push(layer.id)
+    }
+  }
 
   return { id: id4all.join('|'), board: board.id, over, under, layers, tickers }
 }
