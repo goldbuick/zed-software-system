@@ -1,19 +1,8 @@
 import { BINARY_READER } from 'zss/device/api'
-import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { FIRMWARE_COMMAND } from 'zss/firmware'
-import {
-  CHARS_PER_ROW,
-  CHARS_TOTAL_ROWS,
-  FILE_BYTES_PER_CHAR,
-  FILE_BYTES_PER_COLOR,
-  PALETTE_COLORS,
-} from 'zss/gadget/data/types'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { bookensurecodepagewithtype } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent } from 'zss/memory/loader'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 function readbin(binaryreader: BINARY_READER, kind: string): MAYBE<number> {
@@ -143,55 +132,6 @@ export const loaderbinary: FIRMWARE_COMMAND = (chip, words) => {
         const value = decoder.decode(bytes)
         chip.set(target, value)
         binaryreader.cursor += length
-      }
-      break
-    }
-    case 'palette': {
-      const [target] = readargs(words, ii, [ARG_TYPE.NAME])
-      const [codepage] = bookensurecodepagewithtype(
-        READ_CONTEXT.book,
-        CODE_PAGE_TYPE.PALETTE,
-        target,
-      )
-      const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
-      if (ispresent(palette)) {
-        const numberofbytes = PALETTE_COLORS * FILE_BYTES_PER_COLOR
-        const bitmap = loadpalettefrombytes(
-          new Uint8Array(
-            binaryreader.bytes.buffer,
-            binaryreader.cursor,
-            numberofbytes,
-          ),
-        )
-        if (ispresent(bitmap)) {
-          palette.bits = bitmap.bits
-        }
-        binaryreader.cursor += numberofbytes
-      }
-      break
-    }
-    case 'charset': {
-      const [target] = readargs(words, ii, [ARG_TYPE.NAME])
-      const [codepage] = bookensurecodepagewithtype(
-        READ_CONTEXT.book,
-        CODE_PAGE_TYPE.CHARSET,
-        target,
-      )
-      const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
-      if (ispresent(charset)) {
-        const numberofbytes =
-          CHARS_PER_ROW * CHARS_TOTAL_ROWS * FILE_BYTES_PER_CHAR
-        const bitmap = loadcharsetfrombytes(
-          new Uint8Array(
-            binaryreader.bytes.buffer,
-            binaryreader.cursor,
-            numberofbytes,
-          ),
-        )
-        if (ispresent(bitmap)) {
-          charset.bits = bitmap.bits
-        }
-        binaryreader.cursor += numberofbytes
       }
       break
     }

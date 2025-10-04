@@ -1,11 +1,9 @@
-import { api_error, api_log, api_toast } from 'zss/device/api'
+import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorypickcodepagewithtype } from 'zss/memory'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT } from 'zss/words/reader'
 
 export const DISPLAY_FIRMWARE = createfirmware()
   .command('toast', (_, words) => {
@@ -18,38 +16,6 @@ export const DISPLAY_FIRMWARE = createfirmware()
     if (ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = text
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-    }
-    return 0
-  })
-  .command('palette', (chip, words) => {
-    const [target] = readargs(words, 0, [ARG_TYPE.NAME])
-    const palette = memorypickcodepagewithtype(CODE_PAGE_TYPE.PALETTE, target)
-    if (ispresent(palette)) {
-      chip.set('palette', palette.id)
-      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `set palette ${target}`)
-    } else {
-      api_error(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        'not-found',
-        `unabled to find palette ${target}`,
-      )
-    }
-    return 0
-  })
-  .command('charset', (chip, words) => {
-    const [target] = readargs(words, 0, [ARG_TYPE.NAME])
-    const charset = memorypickcodepagewithtype(CODE_PAGE_TYPE.CHARSET, target)
-    if (ispresent(charset)) {
-      chip.set('charset', charset.id)
-      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `set charset ${target}`)
-    } else {
-      api_error(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        'not-found',
-        `unabled to find charset ${target}`,
-      )
     }
     return 0
   })
