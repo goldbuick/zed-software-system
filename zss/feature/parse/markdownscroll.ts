@@ -1,5 +1,4 @@
 import { Token, marked } from 'marked'
-import { SOFTWARE } from 'zss/device/session'
 import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
 import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'

@@ -91,7 +91,6 @@ export const dirconsts = {
   east: 'EAST',
   e: 'EAST',
   // layer specifier
-  mid: 'MID',
   over: 'OVER',
   under: 'UNDER',
   ground: 'GROUND',

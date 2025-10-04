@@ -26,7 +26,12 @@ import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
-import { boardelementindex, boardevaldir, boardobjectread } from './board'
+import {
+  boardelementindex,
+  boardevaldir,
+  boardobjectread,
+  boardvisualsupdate,
+} from './board'
 import { boardsetlookup } from './boardlookup'
 import { bookelementdisplayread, bookreadflags } from './book'
 import { codepagereaddata } from './codepage'
@@ -277,7 +282,6 @@ export function memoryconverttogadgetcontrollayer(
   if (isstring(withcamera)) {
     switch (NAME(withcamera)) {
       default:
-      case 'mid':
         control.viewscale = VIEWSCALE.MID
         break
       case 'near':
@@ -300,7 +304,7 @@ export function memoryconverttogadgetlayers(
   index: number,
   board: MAYBE<BOARD>,
   tickers: string[],
-  isbaseboard: boolean,
+  includemedia: boolean,
 ): LAYER[] {
   if (
     !ispresent(board) ||
@@ -313,13 +317,16 @@ export function memoryconverttogadgetlayers(
   // make sure lookup is created
   boardsetlookup(board)
 
+  // update resolve caches
+  boardvisualsupdate(board)
+
   const layers: LAYER[] = []
 
   let iiii = index
   const boardid = board.id
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
-  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
+  const defaultcolor = COLOR.ONCLEAR
 
   const tiles = createcachedtiles(
     boardid,
@@ -350,12 +357,7 @@ export function memoryconverttogadgetlayers(
 
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
-    const display = bookelementdisplayread(
-      tile,
-      0,
-      COLOR.WHITE,
-      isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
-    )
+    const display = bookelementdisplayread(tile, 0, COLOR.WHITE, COLOR.ONCLEAR)
     const collision = memoryelementstatread(tile, 'collision')
     tiles.char[i] = display.char
     tiles.color[i] = display.color
@@ -575,14 +577,12 @@ export function memoryconverttogadgetlayers(
   )
 
   // check for display media
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const bookflags = bookreadflags(mainbook, MEMORY_LABEL.MAIN)
 
   // check for palette
-  if (isstring(bookflags.palette)) {
+  if (includemedia && isstring(board.palettepage)) {
     const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.PALETTE,
-      bookflags.palette,
+      board.palettepage,
     )
     const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
     if (ispresent(palette?.bits)) {
@@ -598,10 +598,10 @@ export function memoryconverttogadgetlayers(
   }
 
   // check for charset
-  if (isstring(bookflags.charset)) {
+  if (includemedia && isstring(board.charsetpage)) {
     const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.CHARSET,
-      bookflags.charset,
+      board.charsetpage,
     )
     const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
     if (ispresent(charset?.bits)) {

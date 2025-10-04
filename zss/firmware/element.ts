@@ -339,6 +339,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.board?.over ?? '']
       case 'under':
         return [true, READ_CONTEXT.board?.under ?? '']
+      case 'palette':
+        return [true, READ_CONTEXT.board?.palette ?? '']
+      case 'charset':
+        return [true, READ_CONTEXT.board?.charset ?? '']
       // common stats
       case 'exitnorth':
         return [true, READ_CONTEXT.board?.exitnorth ?? '']
@@ -483,6 +487,28 @@ export const ELEMENT_FIRMWARE = createfirmware({
             READ_CONTEXT.board.underboard = undefined
           }
           READ_CONTEXT.board.under = valuestr
+          return [true, valuestr]
+        }
+        break
+      case 'palette':
+        if (ispresent(READ_CONTEXT.board)) {
+          const valuestr = maptostring(value)
+          // reset lookup
+          if (READ_CONTEXT.board.palette !== valuestr) {
+            READ_CONTEXT.board.palettepage = undefined
+          }
+          READ_CONTEXT.board.palette = valuestr
+          return [true, valuestr]
+        }
+        break
+      case 'charset':
+        if (ispresent(READ_CONTEXT.board)) {
+          const valuestr = maptostring(value)
+          // reset lookup
+          if (READ_CONTEXT.board.charset !== valuestr) {
+            READ_CONTEXT.board.charsetpage = undefined
+          }
+          READ_CONTEXT.board.charset = valuestr
           return [true, valuestr]
         }
         break

@@ -12,8 +12,6 @@ import {
   MEMORY_LABEL,
   memoryboardread,
   memoryreadbookbysoftware,
-  memoryreadflags,
-  memoryreadoperator,
   memorysendtoboards,
 } from 'zss/memory'
 import { bookplayerreadboards } from 'zss/memory/bookplayer'

@@ -1,5 +1,4 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
-import { parsetarget } from 'zss/device'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,

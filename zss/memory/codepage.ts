@@ -1,6 +1,10 @@
 import { Color } from 'three'
 import { objectKeys } from 'ts-extras'
-import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
+import {
+  loadcharsetfrombytes,
+  loadpalettefrombytes,
+  writecharfrombytes,
+} from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import {
   FORMAT_OBJECT,
@@ -21,6 +25,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { mapstrcolor } from 'zss/words/color'
 import { statformat, stattypestring } from 'zss/words/stats'
 import {
@@ -204,7 +209,11 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
             const maybevalue = maybevalues.join(' ')
             if (isstring(maybevalue)) {
               const numbervalue = parseFloat(maybevalue)
-              stats[name] = isnumber(numbervalue) ? numbervalue : maybevalue
+              if (isnumber(numbervalue)) {
+                stats[name] = numbervalue
+              } else {
+                stats[name] = `${maptostring(stats[name])}${maybevalue}`
+              }
             } else {
               stats[name] = 1
             }
@@ -229,6 +238,7 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
       }
     }
   }
+
   return stats
 }
 
@@ -500,6 +510,20 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (isstring(stats.facing) && NAME(stats.facing) === 'empty') {
         codepage.board.facing = undefined
       }
+      if (isstring(stats.charset)) {
+        if (NAME(stats.charset) === 'empty') {
+          codepage.board.charset = undefined
+        } else {
+          codepage.board.charset = stats.charset
+        }
+      }
+      if (isstring(stats.palette)) {
+        if (NAME(stats.palette) === 'empty') {
+          codepage.board.palette = undefined
+        } else {
+          codepage.board.palette = stats.palette
+        }
+      }
 
       if (isstring(stats.exitnorth)) {
         codepage.board.exitnorth = stats.exitnorth
@@ -594,6 +618,34 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.charset)) {
         // clone default
         codepage.charset = loadcharsetfrombytes(CHARSET)
+      }
+      if (ispresent(codepage.charset?.bits)) {
+        const stats = codepagereadstatdefaults(codepage)
+        const statnames = objectKeys(stats)
+        for (let i = 0; i < statnames.length; ++i) {
+          const statname = statnames[i].toLowerCase()
+          const statvalue = stats[statname]
+          if (statname.startsWith('char') && isstring(statvalue)) {
+            const idx = parseFloat(statname.replace('char', ''))
+            if (idx >= 0 && idx <= 255) {
+              const SIZE = 8 * 14
+              const pixels: number[] = []
+              for (let i = 0; i < SIZE; ++i) {
+                const pixel = statvalue[i]
+                switch (pixel) {
+                  case '-':
+                  case undefined:
+                    pixels.push(0)
+                    break
+                  default:
+                    pixels.push(128)
+                    break
+                }
+              }
+              writecharfrombytes(Uint8Array.from(pixels), codepage.charset, idx)
+            }
+          }
+        }
       }
       return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }

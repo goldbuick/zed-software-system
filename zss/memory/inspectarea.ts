@@ -13,12 +13,11 @@ import { boardelementread } from './board'
 import { bookboardelementreadcodepage } from './book'
 import { codepagereadname } from './codepage'
 import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
-import { BOARD_ELEMENT, CODE_PAGE_TYPE } from './types'
+import { BOARD_ELEMENT } from './types'
 
 import {
   MEMORY_LABEL,
   memoryensuresoftwarebook,
-  memorypickcodepagewithtype,
   memoryreadplayerboard,
 } from '.'
 

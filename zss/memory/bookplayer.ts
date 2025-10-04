@@ -2,7 +2,7 @@ import { unique } from 'zss/mapping/array'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { boardobjectread } from './board'
+import { boardobjectread, boardvisualsupdate } from './board'
 import { boardelementisobject } from './boardelement'
 import {
   boardnamedwrite,
@@ -130,51 +130,21 @@ export function bookplayerreadboards(book: MAYBE<BOOK>) {
     const board = memoryboardread(ids[i])
     // only process once
     if (ispresent(board) && !addedids.has(board.id)) {
+      // update resolve caches
+      boardvisualsupdate(board)
+
       // see if we have an over board
       // it runs first
-      if (isstring(board.over)) {
-        if (isstring(board.overboard)) {
-          const over = memoryboardread(board.overboard)
-          if (ispresent(over)) {
-            // only add once
-            if (!addedids.has(over.id)) {
-              mainboards.push(over)
-            }
-          } else {
-            delete board.overboard
-          }
-        } else {
-          // check to see if board.over is a stat
-          const maybeboard = memoryboardread(board.over)
-          if (ispresent(maybeboard)) {
-            board.overboard = maybeboard.id
-          }
+      const over = memoryboardread(board.overboard ?? '')
+      if (ispresent(over)) {
+        // only add once
+        if (!addedids.has(over.id)) {
+          mainboards.push(over)
         }
-      } else if (isstring(board.overboard)) {
-        delete board.overboard
       }
 
       // followed by the mainboard
       mainboards.push(board)
-
-      // see if we have an under board
-      // it is not run
-      if (isstring(board.under)) {
-        if (isstring(board.underboard)) {
-          const under = memoryboardread(board.underboard)
-          if (!ispresent(under)) {
-            delete board.underboard
-          }
-        } else {
-          // check to see if board.under is a stat
-          const maybeboard = memoryboardread(board.under)
-          if (ispresent(maybeboard)) {
-            board.underboard = maybeboard.id
-          }
-        }
-      } else if (isstring(board.underboard)) {
-        delete board.underboard
-      }
     }
   }
   return mainboards
