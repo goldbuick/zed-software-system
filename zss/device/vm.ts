@@ -549,7 +549,7 @@ const vm = createdevice(
                     // TODO parse code for stats and update element name
                     object.code = value
                     codepageapplyelementstats(
-                      codepagereadstatsfromtext(value).flat,
+                      codepagereadstatsfromtext(value),
                       object,
                     )
                   }

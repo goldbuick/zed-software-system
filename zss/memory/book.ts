@@ -170,7 +170,7 @@ export function bookreadcodepagesbytypeandstat(
   const result = book.pages
     .filter((item) => codepagereadtype(item) === type)
     .filter((codepage) => {
-      const stats = codepagereadstats(codepage).flat
+      const stats = codepagereadstats(codepage)
       const codepagename = NAME(codepagereadname(codepage))
       return (
         codepage.id === statname ||

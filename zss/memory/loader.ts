@@ -57,7 +57,7 @@ export function memoryloadermatches(
     mainbook,
     CODE_PAGE_TYPE.LOADER,
   ).filter((codepage) => {
-    const stats = codepagereadstats(codepage).flat
+    const stats = codepagereadstats(codepage)
 
     /*
     we match against format & event stats
