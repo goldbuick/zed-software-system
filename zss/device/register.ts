@@ -463,10 +463,14 @@ const register = createdevice(
         }
         break
       }
-      case 'storage':
+      case 'store':
         doasync(register, message.player, async () => {
-          if (ispresent(message.data)) {
-            await writeidb('storage', () => message.data)
+          if (isarray(message.data)) {
+            const [name, value] = message.data
+            const storage =
+              (await readidb<Record<string, any>>('storage')) ?? {}
+            storage[name] = value
+            await writeidb('storage', () => storage)
           }
         })
         break

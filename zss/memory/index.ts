@@ -47,6 +47,7 @@ import {
   bookreadcodepagesbytypeandstat,
   bookreadflag,
   bookreadflags,
+  bookreadsortedcodepages,
   bookwriteflag,
   createbook,
 } from './book'
@@ -56,7 +57,11 @@ import {
   bookplayerreadboards,
   bookplayersetboard,
 } from './bookplayer'
-import { codepagereaddata, codepagereadstat } from './codepage'
+import {
+  codepagereaddata,
+  codepagereadstat,
+  codepagereadtype,
+} from './codepage'
 import { memoryloaderarg, memoryloaderplayer } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import {
@@ -259,6 +264,27 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
     }
   }
   return undefined
+}
+
+export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(
+  type: T,
+): CODE_PAGE[] {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const found = bookreadsortedcodepages(mainbook).filter(
+    (codepage) => codepagereadtype(codepage) === type,
+  )
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    if (book.id !== mainbook?.id) {
+      found.push(
+        ...bookreadsortedcodepages(book).filter(
+          (codepage) => codepagereadtype(codepage) === type,
+        ),
+      )
+    }
+  }
+  return found
 }
 
 export function memoryelementkindread(

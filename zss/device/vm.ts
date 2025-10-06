@@ -43,7 +43,9 @@ import {
   memoryclirepeatlast,
   memoryhasflags,
   memoryisoperator,
+  memorylistcodepagewithtype,
   memorymessage,
+  memorypickcodepagewithtype,
   memoryplayerlogin,
   memoryplayerlogout,
   memoryplayerscan,
@@ -113,7 +115,6 @@ import {
   register_loginfail,
   register_loginready,
   register_savemem,
-  register_storage,
   vm_codeaddress,
   vm_flush,
   vm_loader,
@@ -131,11 +132,6 @@ const trackinglastlog: Record<string, number> = {}
 // this __should__ autosave every minute
 const FLUSH_RATE = 60
 let flushtick = 0
-
-// control how fast we persist to the register
-// this __should__ autosave every 10 seconds
-const STORAGE_RATE = 10
-let storagetick = 0
 
 // track watched memory
 const watching: Record<string, Set<string>> = {}
@@ -641,20 +637,6 @@ const vm = createdevice(
           }
         }
 
-        // autosave flags to players
-        if (++storagetick >= STORAGE_RATE) {
-          storagetick = 0
-          for (let i = 0; i < players.length; ++i) {
-            const player = players[i]
-            const flags = memoryreadflags(player)
-            register_storage(vm, player, {
-              // any flags that carryover between games
-              // go here
-              user: flags.user,
-            })
-          }
-        }
-
         // autosave to url
         if (++flushtick >= FLUSH_RATE) {
           flushtick = 0
@@ -895,6 +877,43 @@ const vm = createdevice(
           }
           case 'refscroll':
             switch (path) {
+              case 'objectlistscroll': {
+                const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
+                for (let i = 0; i < pages.length; ++i) {
+                  const codepage = pages[i]
+                  const name = codepagereadname(codepage)
+                  const lines = codepage.code.split('\n').slice(0, 2)
+                  gadgethyperlink(
+                    message.player,
+                    'list',
+                    `@${name}$ltgrey ${lines[1] ?? ''}`,
+                    ['', 'copyit', name],
+                  )
+                }
+                const shared = gadgetstate(message.player)
+                shared.scrollname = 'object list'
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+              }
+              case 'terrainlistscroll': {
+                const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.TERRAIN)
+                for (let i = 0; i < pages.length; ++i) {
+                  const codepage = pages[i]
+                  const name = codepagereadname(codepage)
+                  const lines = codepage.code.split('\n').slice(0, 2)
+                  gadgethyperlink(
+                    message.player,
+                    'list',
+                    `@${name}$ltgrey ${lines[1] ?? ''}`,
+                    ['', 'copyit', name],
+                  )
+                }
+                const shared = gadgetstate(message.player)
+                shared.scrollname = 'terrain list'
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+                break
+              }
               case 'charscroll': {
                 gadgethyperlink(message.player, 'refscroll', 'char', [
                   'char',
