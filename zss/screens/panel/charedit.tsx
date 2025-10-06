@@ -1,7 +1,10 @@
 import { useCallback, useContext, useLayoutEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
+import { register_copy } from 'zss/device/api'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { paneladdress } from 'zss/gadget/data/types'
 import { useBlink } from 'zss/gadget/hooks'
 import { Rect } from 'zss/gadget/rect'
@@ -70,6 +73,10 @@ export function PanelItemCharEdit({
       chars.push(`$${i}`)
     }
   }
+  chars.push(`\n\n`)
+  chars.push(`$greenpress C to copy ${state}`)
+  chars.push(`\n\n`)
+  chars.push(`$greenpress B to copy bits of ${state}`)
 
   const charpanel = chars.join('')
   tokenizeandwritetextformat(charpanel, context, true)
@@ -137,6 +144,18 @@ export function PanelItemCharEdit({
             MOVE_DOWN={down}
             OK_BUTTON={done}
             CANCEL_BUTTON={done}
+            keydown={(event) => {
+              const lkey = event.key.toLowerCase()
+              switch (lkey) {
+                case 'c':
+                  register_copy(SOFTWARE, registerreadplayer(), `${state}`)
+                  break
+                case 'b':
+                  // copy as @char1 XXXX stats
+                  // register_copy(SOFTWARE, registerreadplayer(), `${state}`)
+                  break
+              }
+            }}
           />
         </UserFocus>
       )}
