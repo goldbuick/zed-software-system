@@ -64,13 +64,13 @@ async function runnetworkfetch(
   switch (contenttype) {
     case 'text/plain': {
       const content = await response.text()
-      api_log(SOFTWARE, player, JSON.stringify(content))
+      // api_log(SOFTWARE, player, JSON.stringify(content))
       vm_loader(SOFTWARE, player, arg, 'text', eventname, content)
       break
     }
     case 'application/json': {
       const content = await response.json()
-      api_log(SOFTWARE, player, JSON.stringify(content))
+      // api_log(SOFTWARE, player, JSON.stringify(content))
       vm_loader(SOFTWARE, player, arg, 'json', eventname, content)
       break
     }
