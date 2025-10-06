@@ -860,13 +860,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('die', (chip) => {
     handledie()
-    // halt execution
-    chip.endofprogram()
-    return 0
-  })
-  .command('dieonend', () => {
-    handledie()
-    // skip halt execution
+    if (!memoryelementstatread(READ_CONTEXT.element, 'item')) {
+      // halt execution
+      chip.endofprogram()
+    }
     return 0
   })
   .command('run', (_, words) => {
