@@ -1,4 +1,6 @@
-section;helper scrolls
+
+!objectlistscroll hk 2 2 next;object elements
+!terrainlistscroll hk 3 3 next;terrain elements
 !termscroll hk t T next;terminal commands
 !dictionary hk d D next;dictionary of commands
 !charscroll hk a A next;char

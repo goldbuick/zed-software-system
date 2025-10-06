@@ -43,7 +43,9 @@ import {
   memoryclirepeatlast,
   memoryhasflags,
   memoryisoperator,
+  memorylistcodepagewithtype,
   memorymessage,
+  memorypickcodepagewithtype,
   memoryplayerlogin,
   memoryplayerlogout,
   memoryplayerscan,
@@ -895,6 +897,43 @@ const vm = createdevice(
           }
           case 'refscroll':
             switch (path) {
+              case 'objectlistscroll': {
+                const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
+                for (let i = 0; i < pages.length; ++i) {
+                  const codepage = pages[i]
+                  const name = codepagereadname(codepage)
+                  const lines = codepage.code.split('\n').slice(0, 2)
+                  gadgethyperlink(
+                    message.player,
+                    'list',
+                    `@${name}$ltgrey ${lines[1] ?? ''}`,
+                    ['', 'copyit', name],
+                  )
+                }
+                const shared = gadgetstate(message.player)
+                shared.scrollname = 'object list'
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+              }
+              case 'terrainlistscroll': {
+                const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.TERRAIN)
+                for (let i = 0; i < pages.length; ++i) {
+                  const codepage = pages[i]
+                  const name = codepagereadname(codepage)
+                  const lines = codepage.code.split('\n').slice(0, 2)
+                  gadgethyperlink(
+                    message.player,
+                    'list',
+                    `@${name}$ltgrey ${lines[1] ?? ''}`,
+                    ['', 'copyit', name],
+                  )
+                }
+                const shared = gadgetstate(message.player)
+                shared.scrollname = 'terrain list'
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+                break
+              }
               case 'charscroll': {
                 gadgethyperlink(message.player, 'refscroll', 'char', [
                   'char',
