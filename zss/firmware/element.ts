@@ -1,4 +1,4 @@
-import { vm_logout } from 'zss/device/api'
+import { register_store, vm_logout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -641,6 +641,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const flags = memoryreadflags(player)
     if (ispresent(flags)) {
       flags[name] = value
+      // sticky flags
+      switch (name) {
+        case 'user':
+          register_store(SOFTWARE, player, name, value)
+          break
+      }
       return [true, value]
     }
 

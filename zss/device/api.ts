@@ -342,12 +342,13 @@ export function register_refresh(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:refresh')
 }
 
-export function register_storage(
+export function register_store(
   device: DEVICELIKE,
   player: string,
-  storage: Record<string, any>,
+  name: string,
+  value: any,
 ) {
-  device.emit(player, 'register:storage', storage)
+  device.emit(player, 'register:store', [name, value])
 }
 
 export function register_config(

@@ -115,7 +115,6 @@ import {
   register_loginfail,
   register_loginready,
   register_savemem,
-  register_storage,
   vm_codeaddress,
   vm_flush,
   vm_loader,
@@ -133,11 +132,6 @@ const trackinglastlog: Record<string, number> = {}
 // this __should__ autosave every minute
 const FLUSH_RATE = 60
 let flushtick = 0
-
-// control how fast we persist to the register
-// this __should__ autosave every 10 seconds
-const STORAGE_RATE = 10
-let storagetick = 0
 
 // track watched memory
 const watching: Record<string, Set<string>> = {}
@@ -640,20 +634,6 @@ const vm = createdevice(
           if (tracking[player] >= SECOND_TIMEOUT) {
             // drop lagged players from tracking
             vm_logout(vm, player)
-          }
-        }
-
-        // autosave flags to players
-        if (++storagetick >= STORAGE_RATE) {
-          storagetick = 0
-          for (let i = 0; i < players.length; ++i) {
-            const player = players[i]
-            const flags = memoryreadflags(player)
-            register_storage(vm, player, {
-              // any flags that carryover between games
-              // go here
-              user: flags.user,
-            })
           }
         }
 
