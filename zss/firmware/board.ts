@@ -41,7 +41,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
+import { COLLISION, COLOR, DIR, NAME, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -74,6 +74,16 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // read direction + what to shoot
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND])
+
+  // handle player case
+  const [maybename] = kind ?? []
+  if (NAME(maybename) === 'player') {
+    // NOT ALLOWED
+    chip.set('didshoot', 0)
+    // yield after shoot
+    chip.yield()
+    return 0
+  }
 
   // track shoot direction
   READ_CONTEXT.element.shootx = clamp(dir.destpt.x - dir.startpt.x, -1, 1)
@@ -135,6 +145,13 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
   // read
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
+
+  // handle player case
+  const [maybename] = kind
+  if (NAME(maybename) === 'player') {
+    // NOT ALLOWED
+    return 0
+  }
 
   // list of target points to put
   if (dir.targets.length) {
@@ -235,6 +252,13 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
   const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
   const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
   if (ispresent(maybetarget) && ispresent(maybetarget.kind)) {
+    // handle player case
+    const [maybename] = maybetarget.kind
+    if (NAME(maybename) === 'player') {
+      // NOT ALLOWED
+      return 1
+    }
+
     const collision = memoryelementstatread(maybetarget, 'collision')
     const blocked = boardcheckblockedobject(
       READ_CONTEXT.board,
@@ -578,6 +602,17 @@ export const BOARD_FIRMWARE = createfirmware()
 
     // read
     const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
+
+    // handle player case
+    const [maybetargetname] = target
+    const [maybeintoname] = into
+    if (
+      NAME(maybetargetname) === 'player' ||
+      NAME(maybeintoname) === 'player'
+    ) {
+      // NOT ALLOWED
+      return 0
+    }
 
     // begin filtering
     const targetname = readstrkindname(target) ?? ''
