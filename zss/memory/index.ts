@@ -10,6 +10,7 @@ import { pick } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { maptonumber } from 'zss/mapping/value'
 import { createos } from 'zss/os'
 import {
   dirfrompts,
@@ -644,9 +645,19 @@ export function memoryplayerlogin(player: string): boolean {
   if (ispresent(obj?.id)) {
     // all players self-aggro
     obj.player = player
-    // track current board, and enterx entery
-    bookwriteflag(mainbook, player, 'enterx', px)
-    bookwriteflag(mainbook, player, 'entery', py)
+
+    // setup flags
+    const flags = bookreadflags(mainbook, player)
+    flags.enterx = px
+    flags.entery = py
+    if (!ispresent(flags.deaths)) {
+      flags.deaths = 0
+    }
+    if (!ispresent(flags.highscore)) {
+      flags.highscore = 0
+    }
+
+    // track current board
     bookplayersetboard(mainbook, player, currentboard.id)
     return true
   }
@@ -654,7 +665,7 @@ export function memoryplayerlogin(player: string): boolean {
   return false
 }
 
-export function memoryplayerlogout(player: string) {
+export function memoryplayerlogout(player: string, isendgame: boolean) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -671,6 +682,21 @@ export function memoryplayerlogout(player: string) {
   const board = memoryreadplayerboard(player)
   for (let i = 0; i < removelist.length; ++i) {
     const remove = removelist[i]
+
+    // get current flags
+    const flags = bookreadflags(mainbook, remove)
+
+    // capture carry-over values
+    const saveflags: Record<string, any> = {}
+    if (isendgame) {
+      // we track deaths & highscore
+      saveflags.deaths = maptonumber(flags.deaths, 0) + 1
+      saveflags.highscore = Math.max(
+        maptonumber(flags.score, 0),
+        maptonumber(flags.highscore, 0),
+      )
+    }
+
     // clear from active list
     bookplayersetboard(mainbook, remove, '')
 
@@ -683,6 +709,12 @@ export function memoryplayerlogout(player: string) {
 
     // clear memory
     bookclearflags(mainbook, remove)
+
+    // set carry-over values
+    if (isendgame) {
+      const newflags = bookreadflags(mainbook, remove)
+      Object.assign(newflags, saveflags)
+    }
   }
 }
 

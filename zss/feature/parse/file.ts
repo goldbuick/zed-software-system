@@ -144,7 +144,7 @@ export async function parsezipfilelist(player: string) {
   }
   // re-login after import
   await waitfor(2000)
-  vm_logout(SOFTWARE, player)
+  vm_logout(SOFTWARE, player, false)
 }
 
 export async function parsebinaryfile(

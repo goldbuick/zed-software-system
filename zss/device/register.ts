@@ -168,6 +168,15 @@ function terminaladdlog(message: MESSAGE) {
     }
   } else {
     logs.unshift(row)
+    // need to adjust cursor row here
+    if (useTapeTerminal.getState().ycursor > 0) {
+      useTapeTerminal.setState((state) => {
+        return {
+          ycursor: state.ycursor + 1,
+          yselect: state.yselect ? state.yselect + 1 : undefined,
+        }
+      })
+    }
   }
 
   useTape.setState((state) => ({
