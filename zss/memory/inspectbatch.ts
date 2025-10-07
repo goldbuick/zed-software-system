@@ -70,7 +70,11 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         content += '\n'
       }
       register_copy(SOFTWARE, player, content)
-      api_toast(SOFTWARE, player, 'copied chars')
+      api_toast(
+        SOFTWARE,
+        player,
+        `copied! chars ${p1x},${p1y} to ${p2x},${p2y}`,
+      )
       break
     }
     case 'cut':

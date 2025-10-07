@@ -1,9 +1,12 @@
 import { useCallback, useContext, useLayoutEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
+import { register_copy } from 'zss/device/api'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { paneladdress } from 'zss/gadget/data/types'
-import { useBlink } from 'zss/gadget/hooks'
+import { useBlink, useMedia } from 'zss/gadget/hooks'
 import { Rect } from 'zss/gadget/rect'
 import { UserFocus, UserInput } from 'zss/gadget/userinput'
 import { pttoindex } from 'zss/mapping/2d'
@@ -94,29 +97,33 @@ export function PanelItemColorEdit({
   const cx = context.x - 1
   const cy = context.y + 2
 
-  const chars: string[] = [
+  const colors: string[] = [
     `$green${tlabel} ${tvalue} ${tcolor}${tcoloralts}\n$white`,
   ]
   for (let i = 0; i < withlist.length; ++i) {
     if (i % EDIT_WIDTH === 0) {
-      chars.push(`\n`)
+      colors.push(`\n`)
     }
     const c = withlist[i]
     const ccolor = (COLOR[c] || COLOR[COLOR.BLACK]).toLowerCase()
     if (c === state) {
       if (blink) {
         const alt = i % 16 < 8 ? `white` : `black`
-        chars.push(c > 32 ? `$onwhite$219` : `$${alt}$219`)
+        colors.push(c > 32 ? `$onwhite$219` : `$${alt}$219`)
       } else {
-        chars.push(`$onblack$${ccolor}$219`)
+        colors.push(`$onblack$${ccolor}$219`)
       }
     } else {
-      chars.push(`$onblack$${ccolor}$219`)
+      colors.push(`$onblack$${ccolor}$219`)
     }
   }
-  chars.push(`$white`)
+  colors.push(`$white`)
+  colors.push(`\n\n`)
+  colors.push(`$greenpress C to copy ${tvalue}`)
+  colors.push(`\n\n`)
+  colors.push(`$greenpress B to copy bits of ${tvalue}`)
 
-  tokenizeandwritetextformat(chars.join(''), context, true)
+  tokenizeandwritetextformat(colors.join(''), context, true)
 
   const scroll = useContext(ScrollContext)
 
@@ -182,6 +189,32 @@ export function PanelItemColorEdit({
             MOVE_DOWN={down}
             OK_BUTTON={done}
             CANCEL_BUTTON={done}
+            keydown={(event) => {
+              const lkey = event.key.toLowerCase()
+              switch (lkey) {
+                case 'c':
+                  register_copy(SOFTWARE, registerreadplayer(), `${state}`)
+                  scroll.sendclose()
+                  break
+                case 'b': {
+                  if (state !== (COLOR.ONCLEAR as number)) {
+                    const idx =
+                      state < (COLOR.ONCLEAR as number)
+                        ? state
+                        : state - (COLOR.BLBLACK as number)
+                    const color = useMedia.getState().palettedata?.[idx]
+                    const r = Math.round((color?.r ?? 0) * 255)
+                    const g = Math.round((color?.g ?? 0) * 255)
+                    const b = Math.round((color?.b ?? 0) * 255)
+                    const content = `@color${idx} ${r} ${g} ${b}`
+                    // copy as @color1 XXXX stats
+                    register_copy(SOFTWARE, registerreadplayer(), content)
+                    scroll.sendclose()
+                  }
+                  break
+                }
+              }
+            }}
           />
         </UserFocus>
       )}

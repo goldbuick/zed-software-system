@@ -32,7 +32,11 @@ export function PanelItemCopyIt({
       withclipboard()
         .writeText(content)
         .then(() => {
-          api_toast(SOFTWARE, registerreadplayer(), `copied! ${content}`)
+          api_toast(
+            SOFTWARE,
+            registerreadplayer(),
+            `copied! ${content.slice(0, 20)}`,
+          )
           scroll.sendclose()
         })
         .catch((err) => console.error(err))

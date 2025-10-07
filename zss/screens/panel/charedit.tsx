@@ -1,9 +1,13 @@
 import { useCallback, useContext, useLayoutEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
+import { register_copy } from 'zss/device/api'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
+import { readcharfrombytes } from 'zss/feature/bytes'
 import { paneladdress } from 'zss/gadget/data/types'
-import { useBlink } from 'zss/gadget/hooks'
+import { useBlink, useMedia } from 'zss/gadget/hooks'
 import { Rect } from 'zss/gadget/rect'
 import { UserFocus, UserInput } from 'zss/gadget/userinput'
 import { pttoindex } from 'zss/mapping/2d'
@@ -70,6 +74,10 @@ export function PanelItemCharEdit({
       chars.push(`$${i}`)
     }
   }
+  chars.push(`\n\n`)
+  chars.push(`$greenpress C to copy ${tvalue}`)
+  chars.push(`\n\n`)
+  chars.push(`$greenpress B to copy bits of ${tvalue}`)
 
   const charpanel = chars.join('')
   tokenizeandwritetextformat(charpanel, context, true)
@@ -137,6 +145,33 @@ export function PanelItemCharEdit({
             MOVE_DOWN={down}
             OK_BUTTON={done}
             CANCEL_BUTTON={done}
+            keydown={(event) => {
+              const lkey = event.key.toLowerCase()
+              switch (lkey) {
+                case 'c':
+                  register_copy(SOFTWARE, registerreadplayer(), `${state}`)
+                  scroll.sendclose()
+                  break
+                case 'b': {
+                  const { charset } = useMedia.getState()
+                  let content = ''
+                  const bits = readcharfrombytes(charset, state)
+                  for (let i = 0; i < bits.length; ++i) {
+                    if (i % 8 === 0) {
+                      content += `@char${state} `
+                    }
+                    content += bits[i] ? 'X' : '-'
+                    if (i % 8 === 7) {
+                      content += '\n'
+                    }
+                  }
+                  // copy as @char1 XXXX stats
+                  register_copy(SOFTWARE, registerreadplayer(), content)
+                  scroll.sendclose()
+                  break
+                }
+              }
+            }}
           />
         </UserFocus>
       )}

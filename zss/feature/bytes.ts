@@ -98,3 +98,36 @@ export function writecharfrombytes(
     }
   }
 }
+
+export function readcharfrombytes(
+  charset: MAYBE<BITMAP>,
+  idx: number,
+): Uint8Array {
+  const bits: number[] = []
+  if (!ispresent(charset)) {
+    return Uint8Array.from(bits)
+  }
+
+  // bytes should be 14 in length & charset must be multiples of 14
+  const count = Math.floor(charset.bits.length / FILE_BYTES_PER_CHAR)
+  if (
+    idx < 0 ||
+    idx > 255 ||
+    count * FILE_BYTES_PER_CHAR !== charset.bits.length
+  ) {
+    return Uint8Array.from(bits)
+  }
+
+  const rowwidth = CHAR_WIDTH * CHARS_PER_ROW
+  const cx = (idx % CHARS_PER_ROW) * CHAR_WIDTH
+  const cy = Math.floor(idx / CHARS_PER_ROW) * CHAR_HEIGHT
+  for (let y = 0; y < CHAR_HEIGHT; ++y) {
+    for (let x = 0; x < CHAR_WIDTH; ++x) {
+      const px = cx + x
+      const py = cy + y
+      bits.push(charset.bits[px + py * rowwidth])
+    }
+  }
+
+  return Uint8Array.from(bits)
+}

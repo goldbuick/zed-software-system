@@ -10,12 +10,7 @@ import { withclipboard } from 'zss/feature/keyboard'
 import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { isjoin, islocked, shorturl } from 'zss/feature/url'
-import {
-  writecopyit,
-  writeheader,
-  writeoption,
-  writetext,
-} from 'zss/feature/writeui'
+import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
   useGadgetClient,
@@ -41,6 +36,7 @@ import {
   MESSAGE,
   api_error,
   api_log,
+  api_toast,
   bridge_join,
   gadgetserver_desync,
   register_terminal_close,
@@ -479,7 +475,13 @@ const register = createdevice(
           if (ispresent(withclipboard())) {
             withclipboard()
               .writeText(message.data)
-              .then(() => writetext(register, message.player, `copied!`))
+              .then(() =>
+                api_toast(
+                  register,
+                  message.player,
+                  `copied! ${message.data.slice(0, 20)}`,
+                ),
+              )
               .catch((err) => console.error(err))
           }
         }
@@ -505,7 +507,7 @@ const register = createdevice(
             )
             withclipboard()
               .write([new ClipboardItem({ [blob.type]: blob })])
-              .then(() => writetext(register, message.player, `copied!`))
+              .then(() => api_toast(register, message.player, `copied! json`))
               .catch((err) => console.error(err))
           }
         }
