@@ -455,7 +455,7 @@ const vm = createdevice(
         break
       case 'logout':
         // logout player
-        memoryplayerlogout(message.player)
+        memoryplayerlogout(message.player, !!message.data)
         // stop tracking
         delete tracking[message.player]
         api_log(vm, operator, `player ${message.player} logout`)
@@ -633,7 +633,7 @@ const vm = createdevice(
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
             // drop lagged players from tracking
-            vm_logout(vm, player)
+            vm_logout(vm, player, false)
           }
         }
 

@@ -472,8 +472,12 @@ export function vm_local(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:local')
 }
 
-export function vm_logout(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:logout')
+export function vm_logout(
+  device: DEVICELIKE,
+  player: string,
+  isendgame: boolean,
+) {
+  device.emit(player, 'vm:logout', isendgame)
 }
 
 export function vm_doot(device: DEVICELIKE, player: string) {

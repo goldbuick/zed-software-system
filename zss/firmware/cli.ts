@@ -135,7 +135,7 @@ function handlesend(send: SEND_META) {
 
 export const CLI_FIRMWARE = createfirmware()
   .command('endgame', () => {
-    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus)
+    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus, false)
     return 0
   })
   .command('shortsend', (_, words) => {
