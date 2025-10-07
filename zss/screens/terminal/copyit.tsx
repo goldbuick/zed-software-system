@@ -29,7 +29,13 @@ export function TapeTerminalCopyIt({
         const content = values.join(' ')
         withclipboard()
           .writeText(content)
-          .then(() => writetext(SOFTWARE, registerreadplayer(), `copied!`))
+          .then(() =>
+            writetext(
+              SOFTWARE,
+              registerreadplayer(),
+              `copied! ${content.slice(0, 20)}`,
+            ),
+          )
           .catch((err) => console.error(err))
       }
     }, 100)

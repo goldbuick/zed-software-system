@@ -5,9 +5,8 @@ import { register_copy } from 'zss/device/api'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { withclipboard } from 'zss/feature/keyboard'
 import { paneladdress } from 'zss/gadget/data/types'
-import { useBlink } from 'zss/gadget/hooks'
+import { useBlink, useMedia } from 'zss/gadget/hooks'
 import { Rect } from 'zss/gadget/rect'
 import { UserFocus, UserInput } from 'zss/gadget/userinput'
 import { pttoindex } from 'zss/mapping/2d'
@@ -120,9 +119,9 @@ export function PanelItemColorEdit({
   }
   colors.push(`$white`)
   colors.push(`\n\n`)
-  colors.push(`$greenpress C to copy ${state}`)
+  colors.push(`$greenpress C to copy ${tvalue}`)
   colors.push(`\n\n`)
-  colors.push(`$greenpress B to copy bits of ${state}`)
+  colors.push(`$greenpress B to copy bits of ${tvalue}`)
 
   tokenizeandwritetextformat(colors.join(''), context, true)
 
@@ -195,11 +194,25 @@ export function PanelItemColorEdit({
               switch (lkey) {
                 case 'c':
                   register_copy(SOFTWARE, registerreadplayer(), `${state}`)
+                  scroll.sendclose()
                   break
-                case 'b':
-                  // copy as @color1 XXXX stats
-                  // register_copy(SOFTWARE, registerreadplayer(), `${state}`)
+                case 'b': {
+                  if (state !== (COLOR.ONCLEAR as number)) {
+                    const idx =
+                      state < (COLOR.ONCLEAR as number)
+                        ? state
+                        : state - (COLOR.BLBLACK as number)
+                    const color = useMedia.getState().palettedata?.[idx]
+                    const r = Math.round((color?.r ?? 0) * 255)
+                    const g = Math.round((color?.g ?? 0) * 255)
+                    const b = Math.round((color?.b ?? 0) * 255)
+                    const content = `@color${idx} ${r} ${g} ${b}`
+                    // copy as @color1 XXXX stats
+                    register_copy(SOFTWARE, registerreadplayer(), content)
+                    scroll.sendclose()
+                  }
                   break
+                }
               }
             }}
           />
