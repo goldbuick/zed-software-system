@@ -72,6 +72,7 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
+  BOOK_FLAGS,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
@@ -567,7 +568,10 @@ export function memoryclearbook(address: string) {
   }
 }
 
-export function memoryplayerlogin(player: string): boolean {
+export function memoryplayerlogin(
+  player: string,
+  stickyflags: BOOK_FLAGS,
+): boolean {
   if (!isstring(player) || !player) {
     return api_error(
       SOFTWARE,
@@ -648,14 +652,13 @@ export function memoryplayerlogin(player: string): boolean {
 
     // setup flags
     const flags = bookreadflags(mainbook, player)
+    // assign stick flags
+    Object.assign(flags, stickyflags)
+    // good values
     flags.enterx = px
     flags.entery = py
-    if (!ispresent(flags.deaths)) {
-      flags.deaths = 0
-    }
-    if (!ispresent(flags.highscore)) {
-      flags.highscore = 0
-    }
+    flags.deaths = flags.deaths ?? 0
+    flags.highscore = flags.highscore ?? 0
 
     // track current board
     bookplayersetboard(mainbook, player, currentboard.id)
