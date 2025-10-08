@@ -75,7 +75,7 @@ export function TapeTerminalInput({
 
   // update state
   const inputstatesetsplice = useCallback(
-    function (index: number, count: number, insert?: string) {
+    (index: number, count: number, insert?: string) => {
       // we are trying to modify historical entries
       if (tapeterminal.bufferindex > 0) {
         // blank inputslot and snap index to 0
@@ -94,7 +94,7 @@ export function TapeTerminalInput({
   )
 
   const inputstatereplace = useCallback(
-    function (replacewith: string) {
+    (replacewith: string) => {
       // we are trying to modify historical entries
       if (tapeterminal.bufferindex > 0) {
         // blank inputslot and snap index to 0
@@ -153,7 +153,7 @@ export function TapeTerminalInput({
     }
   }
 
-  function resettoend() {
+  const resettoend = useCallback(() => {
     useTapeTerminal.setState({
       scroll: 0,
       xcursor: inputstate.length,
@@ -161,7 +161,7 @@ export function TapeTerminalInput({
       xselect: undefined,
       yselect: undefined,
     })
-  }
+  }, [inputstate.length])
 
   // reset color & bg
   context.reset.bg = bgcolor(quickterminal)
@@ -252,8 +252,26 @@ export function TapeTerminalInput({
     function onFinalised(value: string) {
       inputstatereplace(`${inputstart}${value}`)
       setTimeout(() => {
-        // this needs to be a vm_input invoke
-        // user.keyboard('[Enter]').catch(noop)
+        const { buffer, bufferindex } = useTapeTerminal.getState()
+        const inputstate = buffer[bufferindex]
+        const historybuffer: string[] = [
+          '',
+          inputstate,
+          ...buffer.slice(1).filter((item) => item !== inputstate),
+        ].filter((item) => item.includes('#broadcast') === false)
+        // cache history
+        writehistorybuffer(historybuffer).catch((err) =>
+          api_error(SOFTWARE, player, 'terminalinput', err.message),
+        )
+        useTapeTerminal.setState({
+          xcursor: 0,
+          bufferindex: 0,
+          xselect: undefined,
+          yselect: undefined,
+          buffer: historybuffer,
+        })
+        vm_cli(SOFTWARE, player, inputstate)
+        register_terminal_close(SOFTWARE, player)
       }, 512)
     }
 
@@ -281,7 +299,8 @@ export function TapeTerminalInput({
       listener?.stopListening()
       listener = undefined
     }
-  }, [voice2text, quickterminal, inputstatereplace])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <>
@@ -370,12 +389,11 @@ export function TapeTerminalInput({
               const invoke = hasselection ? inputstateselected : inputstate
               if (invoke.length) {
                 if (inputstateactive) {
+                  const { buffer } = useTapeTerminal.getState()
                   const historybuffer: string[] = [
                     '',
                     invoke,
-                    ...tapeterminal.buffer
-                      .slice(1)
-                      .filter((item) => item !== invoke),
+                    ...buffer.slice(1).filter((item) => item !== invoke),
                   ].filter((item) => item.includes('#broadcast') === false)
                   // cache history
                   writehistorybuffer(historybuffer).catch((err) =>
