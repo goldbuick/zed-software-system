@@ -7,6 +7,7 @@ import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
+import { MAYBE } from 'zss/mapping/types'
 import { BackPlate } from 'zss/screens/tape/backplate'
 import {
   textformatreadedges,
@@ -33,13 +34,11 @@ export function TapeTerminal() {
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
   const terminallogs = useTape(useShallow((state) => state.terminal.logs))
 
-  const [voice2text, setvoice2text] = useState(false)
+  const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
       const voice2text = await readconfig('voice2text')
-      if (voice2text === 'on') {
-        setvoice2text(true)
-      }
+      setvoice2text(voice2text === 'on')
     })
   }, [])
 
@@ -109,7 +108,7 @@ export function TapeTerminal() {
         }}
       >
         <TerminalRows />
-        {!editoropen && (
+        {!editoropen && voice2text !== undefined && (
           <TapeTerminalInput
             quickterminal={quickterminal}
             voice2text={voice2text}
