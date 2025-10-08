@@ -199,21 +199,17 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('hyperlink', (_, args) => {
-    const [linkword, ...words] = args
-    const linktext = maptostring(linkword)
-    const send = parsesend(words)
-    if (ispresent(send.targetname)) {
-      const { user } = memoryreadflags(READ_CONTEXT.elementid)
-      const withuser = isstring(user) ? user : 'player'
-      const icon = bookelementdisplayread(READ_CONTEXT.element)
-      const line = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${linktext}`
-      api_log(
-        SOFTWARE,
-        READ_CONTEXT.elementid,
-        `!${send.targetname}:${send.label};${line}`,
-      )
-    }
+  .command('hyperlink', (chip, args) => {
+    const [label, ...words] = args
+    const { user } = memoryreadflags(READ_CONTEXT.elementid)
+    const withuser = isstring(user) ? user : 'player'
+    const icon = bookelementdisplayread(READ_CONTEXT.element)
+    const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
+    api_log(
+      SOFTWARE,
+      READ_CONTEXT.elementid,
+      `!${chip.template(words)};${player}${maptostring(label)}`,
+    )
     return 0
   })
   // ---

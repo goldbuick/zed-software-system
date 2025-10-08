@@ -101,17 +101,13 @@ export const LOADER_FIRMWARE = createfirmware({
     api_log(SOFTWARE, READ_CONTEXT.elementfocus, '$GREEN', text)
     return 0
   })
-  .command('hyperlink', (_, args) => {
-    const [linkword, ...words] = args
-    const linktext = maptostring(linkword)
-    const send = parsesend(words)
-    if (ispresent(send.targetname)) {
-      api_log(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `!${send.targetname}:${send.label};${linktext}`,
-      )
-    }
+  .command('hyperlink', (chip, args) => {
+    const [label, ...words] = args
+    api_log(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      `!${chip.template(words)};${maptostring(label)}`,
+    )
     return 0
   })
   .command('readline', loadertext)

@@ -24,6 +24,7 @@ import {
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
+import { MaybeFlag, tokenize } from './words/textformat'
 import { NAME, WORD, WORD_RESULT } from './words/types'
 
 // may need to expand on this to encapsulate more complex values
@@ -62,6 +63,7 @@ export type CHIP = {
   text: (...words: WORD[]) => void
   stat: (...words: WORD[]) => void
   hyperlink: (...words: WORD[]) => void
+  template: (words: WORD[]) => string
 
   // logic api
   command: (...words: WORD[]) => WORD_RESULT
@@ -413,6 +415,20 @@ export function createchip(
     },
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
+    },
+    template(words) {
+      const result = tokenize(words.join(' '), true)
+      return result.tokens
+        .map((token) => {
+          if (token.tokenType === MaybeFlag) {
+            const maybevalue = chip.get(token.image.substring(1))
+            if (ispresent(maybevalue)) {
+              return maybevalue
+            }
+          }
+          return token.image
+        })
+        .join(' ')
     },
     command(...words) {
       // 0 - continue
