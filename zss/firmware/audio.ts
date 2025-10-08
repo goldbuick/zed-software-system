@@ -74,7 +74,7 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
 }
 
 function handlebgplay(words: WORD[], quantize: string) {
-  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
   synth_bgplay(
     SOFTWARE,
     READ_CONTEXT.elementfocus,
@@ -124,7 +124,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('play', (_, words) => {
-    const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
     synth_play(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
