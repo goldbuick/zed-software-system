@@ -105,7 +105,7 @@ export const LOADER_FIRMWARE = createfirmware({
     const [label, ...words] = args
     api_log(
       SOFTWARE,
-      READ_CONTEXT.elementid,
+      READ_CONTEXT.elementfocus,
       `!${chip.template(words)};${maptostring(label)}`,
     )
     return 0
