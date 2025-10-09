@@ -4,8 +4,6 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { UserInput } from 'zss/gadget/userinput'
-import { ispresent } from 'zss/mapping/types'
-import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import {
@@ -25,23 +23,19 @@ export function PanelItemCopyIt({
 }: PanelItemProps) {
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    if (ispresent(withclipboard())) {
-      // todo fix this
-      const words = [maptovalue(args[0], ''), args[1]]
-      const [, ...values] = words
-      const content = values.join(' ')
-      withclipboard()
-        .writeText(content)
-        .then(() => {
-          api_toast(
-            SOFTWARE,
-            registerreadplayer(),
-            `copied! ${content.slice(0, 20)}`,
-          )
-          scroll.sendclose()
-        })
-        .catch((err) => console.error(err))
-    }
+    const [, ...words] = args
+    const content = words.join(' ')
+    withclipboard()
+      .writeText(content)
+      .then(() => {
+        api_toast(
+          SOFTWARE,
+          registerreadplayer(),
+          `copied! ${content.slice(0, 20)}`,
+        )
+        scroll.sendclose()
+      })
+      .catch((err) => console.error(err))
   }, [args, scroll])
 
   const tcolor = inputcolor(!!active)
