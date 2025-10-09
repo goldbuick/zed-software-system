@@ -1,3 +1,4 @@
+import { CHIP } from 'zss/chip'
 import {
   synth_bgplay,
   synth_bgplayvolume,
@@ -14,7 +15,11 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
-import { isnumber } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { mapstrcategory } from 'zss/words/category'
+import { mapstrcollision } from 'zss/words/collision'
+import { mapstrcolor } from 'zss/words/color'
+import { mapstrdir } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
@@ -73,13 +78,30 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
   }
 }
 
-function handlebgplay(words: WORD[], quantize: string) {
-  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+function handleplaystr(chip: CHIP, words: WORD[]) {
+  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+  let withbuffer = ''
+  if (isstring(buffer)) {
+    const maybebuffer = chip.get(buffer)
+    withbuffer =
+      isstring(maybebuffer) &&
+      !ispresent(mapstrcategory(maybebuffer)) &&
+      !ispresent(mapstrcollision(maybebuffer)) &&
+      !ispresent(mapstrcolor(maybebuffer)) &&
+      !ispresent(mapstrdir(maybebuffer))
+        ? maybebuffer
+        : buffer
+  }
+  console.info({ buffer, withbuffer })
+  return withbuffer
+}
+
+function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
   synth_bgplay(
     SOFTWARE,
     READ_CONTEXT.elementfocus,
     READ_CONTEXT.board?.id ?? '',
-    buffer ?? '',
+    handleplaystr(chip, words),
     quantize,
   )
 }
@@ -123,46 +145,45 @@ export const AUDIO_FIRMWARE = createfirmware()
     synth_ttsvolume(SOFTWARE, READ_CONTEXT.elementfocus, volume)
     return 0
   })
-  .command('play', (_, words) => {
-    const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+  .command('play', (chip, words) => {
     synth_play(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
       READ_CONTEXT.board?.id ?? '',
-      buffer ?? '',
+      handleplaystr(chip, words),
     )
     return 0
   })
-  .command('bgplay', (_, words) => {
-    handlebgplay(words, '')
+  .command('bgplay', (chip, words) => {
+    handlebgplay(chip, words, '')
     return 0
   })
-  .command('bgplayon64n', (_, words) => {
-    handlebgplay(words, '@64n')
+  .command('bgplayon64n', (chip, words) => {
+    handlebgplay(chip, words, '@64n')
     return 0
   })
-  .command('bgplayon32n', (_, words) => {
-    handlebgplay(words, '@32n')
+  .command('bgplayon32n', (chip, words) => {
+    handlebgplay(chip, words, '@32n')
     return 0
   })
-  .command('bgplayon16n', (_, words) => {
-    handlebgplay(words, '@16n')
+  .command('bgplayon16n', (chip, words) => {
+    handlebgplay(chip, words, '@16n')
     return 0
   })
-  .command('bgplayon8n', (_, words) => {
-    handlebgplay(words, '@8n')
+  .command('bgplayon8n', (chip, words) => {
+    handlebgplay(chip, words, '@8n')
     return 0
   })
-  .command('bgplayon4n', (_, words) => {
-    handlebgplay(words, '@4n')
+  .command('bgplayon4n', (chip, words) => {
+    handlebgplay(chip, words, '@4n')
     return 0
   })
-  .command('bgplayon2n', (_, words) => {
-    handlebgplay(words, '@2n')
+  .command('bgplayon2n', (chip, words) => {
+    handlebgplay(chip, words, '@2n')
     return 0
   })
-  .command('bgplayon1n', (_, words) => {
-    handlebgplay(words, '@1m')
+  .command('bgplayon1n', (chip, words) => {
+    handlebgplay(chip, words, '@1m')
     return 0
   })
   .command('synth', (_, words) => {
