@@ -553,52 +553,52 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'b1':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b1 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b1 = value)]
         }
         break
       case 'b2':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b2 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b2 = value)]
         }
         break
       case 'b3':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b3 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b3 = value)]
         }
         break
       case 'b4':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b4 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b4 = value)]
         }
         break
       case 'b5':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b5 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b5 = value)]
         }
         break
       case 'b6':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b6 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b6 = value)]
         }
         break
       case 'b7':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b7 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b7 = value)]
         }
         break
       case 'b8':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b8 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b8 = value)]
         }
         break
       case 'b9':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b9 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b9 = value)]
         }
         break
       case 'b10':
         if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.b10 = maptonumber(value, 0))]
+          return [true, (READ_CONTEXT.board.b10 = value)]
         }
         break
       // read only
