@@ -103,10 +103,11 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('hyperlink', (chip, args) => {
     const [label, ...words] = args
+    const labelstr = chip.template(maptostring(label).split(' '))
     api_log(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
-      `!${chip.template(words)};${maptostring(label)}`,
+      `!${chip.template(words)};${labelstr}`,
     )
     return 0
   })

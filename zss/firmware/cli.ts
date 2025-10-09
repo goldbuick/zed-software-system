@@ -205,10 +205,11 @@ export const CLI_FIRMWARE = createfirmware()
     const withuser = isstring(user) ? user : 'player'
     const icon = bookelementdisplayread(READ_CONTEXT.element)
     const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
+    const labelstr = chip.template(maptostring(label).split(' '))
     api_log(
       SOFTWARE,
       READ_CONTEXT.elementid,
-      `!${chip.template(words)};${player}${maptostring(label)}`,
+      `!${chip.template(words)};${player}${labelstr}`,
     )
     return 0
   })

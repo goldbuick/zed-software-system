@@ -9,6 +9,7 @@ import {
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring, noop } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { hascenter } from 'zss/words/textformat'
 import { NAME, WORD } from 'zss/words/types'
@@ -142,6 +143,16 @@ export function gadgethyperlink(
   get: (name: string) => WORD = () => 0,
   set: (name: string, value: WORD) => void = noop,
 ) {
+  // pad target-less hyperlinks
+  const targetcheck = NAME(maptostring(words[0]))
+  switch (targetcheck) {
+    case 'copyit':
+    case 'openit':
+    case 'viewit':
+      words.unshift('istargetless')
+      break
+  }
+
   // package into a panel item
   const hyperlink: WORD[] = [chip, label, ...words]
   // chip, label, target, [type], [...args]

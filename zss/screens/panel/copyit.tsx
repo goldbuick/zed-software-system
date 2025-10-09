@@ -26,6 +26,7 @@ export function PanelItemCopyIt({
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
     if (ispresent(withclipboard())) {
+      // todo fix this
       const words = [maptovalue(args[0], ''), args[1]]
       const [, ...values] = words
       const content = values.join(' ')
