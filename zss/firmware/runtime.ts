@@ -184,12 +184,14 @@ export const RUNTIME_FIRMWARE = createfirmware({
   })
   .command('hyperlink', (chip, args) => {
     const [label, ...words] = args
+    const labelstr = chip.template(maptostring(label).split(' '))
+    const wordsstr = chip.template(words)
     // need to detect maybe flags in words
     gadgethyperlink(
       READ_CONTEXT.elementid,
       chip.id(),
-      maptostring(label),
-      chip.template(words).split(' '),
+      labelstr,
+      wordsstr.split(' '),
       chip.get,
       chip.set,
     )

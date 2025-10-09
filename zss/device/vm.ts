@@ -187,7 +187,6 @@ function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
     gadgettext(player, `$purple  ${pubtag}`)
     if (entry.screenshot) {
       gadgethyperlink(player, 'zztbridge', entry.screenshot, [
-        'screenshot',
         'viewit',
         museumofzztscreenshoturl(entry.screenshot),
       ])
@@ -872,7 +871,7 @@ const vm = createdevice(
                     message.player,
                     'list',
                     `@${name}$ltgrey ${lines[1] ?? ''}`,
-                    ['', 'copyit', name],
+                    ['copyit', name],
                   )
                 }
                 const shared = gadgetstate(message.player)
@@ -890,7 +889,7 @@ const vm = createdevice(
                     message.player,
                     'list',
                     `@${name}$ltgrey ${lines[1] ?? ''}`,
-                    ['', 'copyit', name],
+                    ['copyit', name],
                   )
                 }
                 const shared = gadgetstate(message.player)
