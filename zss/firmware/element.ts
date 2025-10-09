@@ -361,23 +361,23 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'b1':
         return [true, READ_CONTEXT.board?.b1 ?? 0]
       case 'b2':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b2 ?? 0]
       case 'b3':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b3 ?? 0]
       case 'b4':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b4 ?? 0]
       case 'b5':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b5 ?? 0]
       case 'b6':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b6 ?? 0]
       case 'b7':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b7 ?? 0]
       case 'b8':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b8 ?? 0]
       case 'b9':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b9 ?? 0]
       case 'b10':
-        return [true, READ_CONTEXT.board?.b1 ?? 0]
+        return [true, READ_CONTEXT.board?.b10 ?? 0]
       // read only
       case 'currenttick':
         return [true, READ_CONTEXT.timestamp]
