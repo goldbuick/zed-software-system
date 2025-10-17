@@ -91,6 +91,16 @@ export function statformat(label: string, words: string[], first = true) {
           type: STAT_TYPE.OPENIT,
           values,
         }
+      case 'viewit':
+        return {
+          type: STAT_TYPE.VIEWIT,
+          values,
+        }
+      case 'runit':
+        return {
+          type: STAT_TYPE.RUNIT,
+          values,
+        }
       case 'zssedit':
         return {
           type: STAT_TYPE.ZSSEDIT,
@@ -142,6 +152,8 @@ export function stattypestring(type: STAT_TYPE) {
       return 'openit'
     case STAT_TYPE.VIEWIT:
       return 'viewit'
+    case STAT_TYPE.RUNIT:
+      return 'runit'
     case STAT_TYPE.ZSSEDIT:
       return 'zssedit'
     case STAT_TYPE.CHAREDIT:

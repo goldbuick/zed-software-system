@@ -376,8 +376,12 @@ export function register_findany(
   device.emit(player, 'register:findany', pts)
 }
 
-export function register_terminal_open(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:terminal:open')
+export function register_terminal_open(
+  device: DEVICELIKE,
+  player: string,
+  openwith?: string,
+) {
+  device.emit(player, 'register:terminal:open', openwith)
 }
 
 export function register_terminal_quickopen(

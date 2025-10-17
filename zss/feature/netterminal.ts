@@ -332,7 +332,15 @@ function netterminalcreate(topic: string) {
       `netterminal`,
       `lost connection to netterminal`,
     )
-    netterminalhalt()
+    setTimeout(() => {
+      api_error(
+        SOFTWARE,
+        registerreadplayer(),
+        `netterminal`,
+        `retrying the connection to netterminal`,
+      )
+      networkpeer?.reconnect()
+    }, 5000)
   })
 
   networkpeer.on('error', (err) => {

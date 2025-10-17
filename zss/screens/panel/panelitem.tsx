@@ -14,6 +14,7 @@ import { PanelItemHyperlink } from './hyperlink'
 import { PanelItemNumber } from './number'
 import { PanelItemOpenIt } from './openit'
 import { PanelItemRange } from './range'
+import { PanelItemRunIt } from './runit'
 import { PanelItemSelect } from './select'
 import { PanelItemText } from './text'
 import { PanelItemViewIt } from './viewit'
@@ -97,6 +98,8 @@ export function PanelItem({
         return <PanelItemOpenIt {...props} />
       case 'viewit':
         return <PanelItemViewIt {...props} />
+      case 'runit':
+        return <PanelItemRunIt {...props} />
       case 'zssedit':
         return <PanelItemZSSEdit {...props} />
       case 'charedit':
