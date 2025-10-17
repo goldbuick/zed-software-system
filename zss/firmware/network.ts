@@ -1,4 +1,4 @@
-import { bridge_chatstart, bridge_chatstop, bridge_fetch } from 'zss/device/api'
+import { bridge_fetch } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -70,14 +70,5 @@ export const NETWORK_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
     fetchcommand(arg, label, url, maybemethod, words, ii)
-    return 0
-  })
-  .command('chat', (_, words) => {
-    const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    if (channel) {
-      bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
-    } else {
-      bridge_chatstop(SOFTWARE, READ_CONTEXT.elementfocus)
-    }
     return 0
   })

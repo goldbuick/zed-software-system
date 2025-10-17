@@ -3,6 +3,8 @@ import {
   api_chat,
   api_error,
   api_log,
+  bridge_chatstart,
+  bridge_chatstop,
   bridge_start,
   bridge_streamstart,
   bridge_streamstop,
@@ -134,10 +136,6 @@ function handlesend(send: SEND_META) {
 }
 
 export const CLI_FIRMWARE = createfirmware()
-  .command('endgame', () => {
-    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus, false)
-    return 0
-  })
   .command('shortsend', (_, words) => {
     const send = parsesend(words)
     handlesend(send)
@@ -213,19 +211,7 @@ export const CLI_FIRMWARE = createfirmware()
     )
     return 0
   })
-  // ---
-  .command('config', (_, words) => {
-    const [name, value] = readargs(words, 0, [
-      ARG_TYPE.MAYBE_NAME,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-    if (isstring(name) && isstring(value)) {
-      register_config(SOFTWARE, READ_CONTEXT.elementfocus, name, value)
-    } else {
-      register_configshow(SOFTWARE, READ_CONTEXT.elementfocus)
-    }
-    return 0
-  })
+  // --- book & pages commands
   .command('bookcreate', (chip, words) => {
     const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
 
@@ -547,7 +533,19 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  // -- content related commands
+  // -- game state related commands
+  .command('config', (_, words) => {
+    const [name, value] = readargs(words, 0, [
+      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+    if (isstring(name) && isstring(value)) {
+      register_config(SOFTWARE, READ_CONTEXT.elementfocus, name, value)
+    } else {
+      register_configshow(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
+    return 0
+  })
   .command('dev', () => {
     vm_flush_op()
     register_dev(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -566,12 +564,12 @@ export const CLI_FIRMWARE = createfirmware()
     vm_fork(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('itchiopublish', () => {
-    vm_itchiopublish(SOFTWARE, READ_CONTEXT.elementfocus)
-    return 0
-  })
   .command('nuke', () => {
     register_nuke(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('endgame', () => {
+    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus, false)
     return 0
   })
   .command('restart', () => {
@@ -579,6 +577,7 @@ export const CLI_FIRMWARE = createfirmware()
     vm_flush_op()
     return 0
   })
+  // -- export content related commands
   .command('export', () => {
     writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
@@ -650,6 +649,11 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
+  .command('itchiopublish', () => {
+    vm_itchiopublish(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  // -- editing related commands
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
     register_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -665,6 +669,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
+  // -- import content related commands
   .command('zztsearch', (_, words) => {
     const [maybefield, maybetext] = readargs(words, 0, [
       ARG_TYPE.NAME,
@@ -702,6 +707,16 @@ export const CLI_FIRMWARE = createfirmware()
   .command('jointab', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     bridge_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    return 0
+  })
+  // -- audience related commands
+  .command('chat', (_, words) => {
+    const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    if (channel) {
+      bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
+    } else {
+      bridge_chatstop(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
     return 0
   })
   .command('broadcast', (_, words) => {
