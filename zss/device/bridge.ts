@@ -162,12 +162,16 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'start':
-      netterminalhost()
+      doasync(bridge, message.player, async () => {
+        await netterminalhost()
+      })
       // show join code
       bridge_showjoincode(SOFTWARE, message.player, !!message.data)
       break
     case 'tab':
-      netterminalhost()
+      doasync(bridge, message.player, async () => {
+        await netterminalhost()
+      })
       // open a join tab
       bridge_tabopen(SOFTWARE, message.player)
       break

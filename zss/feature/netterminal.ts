@@ -1,3 +1,4 @@
+import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { KademliaTable } from 'kademlia-table'
 import Peer, { DataConnection } from 'peerjs'
 import { hex2arr } from 'uint8-util'
@@ -14,6 +15,18 @@ import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash, createsid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+
+// read / write from indexdb
+
+async function readpeerid(): Promise<string | undefined> {
+  return idbget('peerid')
+}
+
+async function writepeerid(
+  updater: (oldValue: string | undefined) => string,
+): Promise<void> {
+  return idbupdate('peerid', updater)
+}
 
 type ROUTING_NODE = {
   peer: string
@@ -280,13 +293,12 @@ function handledataconnection(dataconnection: DataConnection) {
   handleopen()
 }
 
-function netterminalcreate(topic: string) {
+function netterminalcreate(topic: string, selftopic: string) {
   // setup topic
   subscribetopic = topic
 
   // create peer
   const player = registerreadplayer()
-  const selftopic = netterminaltopic(player)
   networkpeer = new Peer(selftopic, { debug: 2 })
 
   // attempt disconnect on page close
@@ -347,6 +359,12 @@ function netterminalcreate(topic: string) {
     switch (err.type) {
       case 'peer-unavailable':
         return
+      case 'invalid-id':
+      case 'unavailable-id':
+        doasync(SOFTWARE, player, async () => {
+          await writepeerid(() => '')
+        })
+        return
     }
     api_error(
       SOFTWARE,
@@ -357,15 +375,23 @@ function netterminalcreate(topic: string) {
   })
 }
 
-export function netterminalhost() {
+export async function netterminalhost() {
   const player = registerreadplayer()
   if (ispresent(networkpeer)) {
     api_log(SOFTWARE, player, `netterminal already active`)
     return
   }
 
+  // read cached id
+  let maybepeerid = await readpeerid()
+  maybepeerid ??= player
+
+  // write id to cache
+  await writepeerid(() => maybepeerid ?? '')
+
   // startup peerjs
-  netterminalcreate(netterminaltopic(player))
+  const withtopic = netterminaltopic(maybepeerid)
+  netterminalcreate(withtopic, withtopic)
 
   // open bridge between peers
   topicbridge = createforward((message) => {
@@ -388,13 +414,14 @@ export function netterminalhost() {
 }
 
 export function netterminaljoin(topic: string) {
+  const player = registerreadplayer()
   if (ispresent(networkpeer)) {
-    api_log(SOFTWARE, registerreadplayer(), `netterminal already active`)
+    api_log(SOFTWARE, player, `netterminal already active`)
     return
   }
 
   // startup peerjs
-  netterminalcreate(topic)
+  netterminalcreate(topic, netterminaltopic(player))
 
   // open bridge between peers
   topicbridge = createforward((message) => {
@@ -426,7 +453,8 @@ export function netterminaljoin(topic: string) {
 let seektimer: any
 let seekrate = 16
 function netterminalseek() {
-  doasync(SOFTWARE, registerreadplayer(), async () => {
+  const player = registerreadplayer()
+  doasync(SOFTWARE, player, async () => {
     if (
       !ispresent(networkpeer) ||
       !ispresent(routingtable) ||
@@ -434,8 +462,6 @@ function netterminalseek() {
     ) {
       return
     }
-
-    const player = registerreadplayer()
 
     // list our id as active
     const formData = new FormData()
