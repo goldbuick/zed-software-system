@@ -1,11 +1,16 @@
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { register_terminal_quickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { PanelItemProps, inputcolor, setuppanelitem } from './common'
+import {
+  PanelItemProps,
+  ScrollContext,
+  inputcolor,
+  setuppanelitem,
+} from './common'
 
 export function PanelItemRunIt({
   sidebar,
@@ -15,14 +20,18 @@ export function PanelItemRunIt({
   args,
   context,
 }: PanelItemProps) {
+  const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
     const [, ...values] = args
-    register_terminal_quickopen(
-      SOFTWARE,
-      registerreadplayer(),
-      values.join(' '),
-    )
-  }, [args])
+    scroll.sendclose()
+    setTimeout(() => {
+      register_terminal_quickopen(
+        SOFTWARE,
+        registerreadplayer(),
+        values.join(' '),
+      )
+    }, 1000)
+  }, [args, scroll])
 
   const tcolor = inputcolor(!!active)
 

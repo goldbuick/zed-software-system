@@ -712,6 +712,19 @@ const register = createdevice(
         }))
         break
       case 'terminal:open':
+        if (isstring(message.data)) {
+          // write state
+          const buffer = useTapeTerminal.getState().buffer
+          buffer[0] = message.data
+          useTapeTerminal.setState({
+            buffer,
+            bufferindex: 0,
+            xcursor: message.data.length,
+            ycursor: 0,
+            xselect: undefined,
+            yselect: undefined,
+          })
+        }
         useTape.setState((state) => ({
           terminal: {
             ...state.terminal,
@@ -720,7 +733,7 @@ const register = createdevice(
         }))
         break
       case 'terminal:quickopen':
-        if (message.data && isstring(message.data)) {
+        if (isstring(message.data)) {
           // write state
           const buffer = useTapeTerminal.getState().buffer
           buffer[0] = message.data

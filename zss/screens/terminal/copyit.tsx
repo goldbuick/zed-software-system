@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
+import { register_copy } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { withclipboard } from 'zss/feature/keyboard'
-import { writetext } from 'zss/feature/writeui'
 import { useWriteText } from 'zss/gadget/hooks'
 import { UserInput } from 'zss/gadget/userinput'
 import { inputcolor } from 'zss/screens/panel/common'
@@ -22,20 +21,8 @@ export function TapeTerminalCopyIt({
   const context = useWriteText()
 
   const invoke = useCallback(() => {
-    setTimeout(() => {
-      const [, ...values] = words
-      const content = values.join(' ')
-      withclipboard()
-        .writeText(content)
-        .then(() => {
-          writetext(
-            SOFTWARE,
-            registerreadplayer(),
-            `copied! ${content.slice(0, 20)}`,
-          )
-        })
-        .catch((err) => console.error(err))
-    }, 100)
+    const [, ...values] = words
+    register_copy(SOFTWARE, registerreadplayer(), values.join(' '))
   }, [words])
 
   const tcolor = inputcolor(!!active)
