@@ -375,6 +375,7 @@ function netterminalcreate(topic: string, selftopic: string) {
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function netterminalhost() {
   const player = registerreadplayer()
   if (ispresent(networkpeer)) {
@@ -383,14 +384,14 @@ export async function netterminalhost() {
   }
 
   // read cached id
-  let maybepeerid = await readpeerid()
-  maybepeerid ??= player
+  // let maybepeerid = await readpeerid()
+  // maybepeerid ??= player
 
-  // write id to cache
-  await writepeerid(() => maybepeerid ?? '')
+  // // write id to cache
+  // await writepeerid(() => maybepeerid ?? '')
 
   // startup peerjs
-  const withtopic = netterminaltopic(maybepeerid)
+  const withtopic = netterminaltopic(player)
   netterminalcreate(withtopic, withtopic)
 
   // open bridge between peers
