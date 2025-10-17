@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { register_copy } from 'zss/device/api'
+import { register_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useWriteText } from 'zss/gadget/hooks'
@@ -11,7 +11,7 @@ import {
 } from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-export function TapeTerminalCopyIt({
+export function TapeTerminalRunIt({
   active,
   prefix,
   label,
@@ -22,7 +22,7 @@ export function TapeTerminalCopyIt({
 
   const invoke = useCallback(() => {
     const [, ...values] = words
-    register_copy(SOFTWARE, registerreadplayer(), values.join(' '))
+    register_terminal_open(SOFTWARE, registerreadplayer(), values.join(' '))
   }, [words])
 
   const tcolor = inputcolor(!!active)
@@ -30,7 +30,7 @@ export function TapeTerminalCopyIt({
   // render output
   setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(
-    `${prefix} $purple$16 $yellowCOPYIT ${tcolor}${label}`,
+    `${prefix} $purple$16 $CYANRUNIT ${tcolor}${label}`,
     context,
     true,
   )

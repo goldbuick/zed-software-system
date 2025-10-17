@@ -121,6 +121,7 @@ export enum STAT_TYPE {
   COPYIT, //    only useful in hyperlinks, used to copy into the clipboard
   OPENIT, //    only useful in hyperlinks, used to open a url in a new tab
   VIEWIT, //    only useful in hyperlinks, used to view a given url
+  RUNIT, //     only useful in hyperlinks, used to quick open the terminal with the given text
   //            used in inspector
   ZSSEDIT, //   @code zssedit, affords the user to write local code
   CHAREDIT, //  @char charedit, affords the user to pick char

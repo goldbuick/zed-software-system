@@ -1,20 +1,15 @@
-import { Lethargy } from 'lethargy-ts'
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import { clamp } from 'zss/mapping/number'
 import { ismac } from 'zss/words/system'
 
 import { Rect } from './rect'
 
-const lethargy = new Lethargy({
-  sensitivity: ismac ? 7 : 2,
-})
-
 const STEP_COUNT_MAX = 4
-const STEP_SCALE = 0.75
+const STEP_SCALE = ismac ? 0.25 : 0.5
 
 function mapdeltay(deltay: number) {
   const value = clamp(deltay, -STEP_COUNT_MAX, STEP_COUNT_MAX)
-  return Math.round(value * STEP_SCALE)
+  return Math.floor(value * STEP_SCALE)
 }
 
 type Props = {
@@ -55,7 +50,7 @@ export function Scrollable({
         width={width}
         height={height}
         onWheel={(event: any) => {
-          if (disabled || !lethargy.check(event)) {
+          if (disabled) {
             return
           }
           onScroll?.(mapdeltay(event.deltaY))

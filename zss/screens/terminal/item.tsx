@@ -22,6 +22,7 @@ import { NAME } from 'zss/words/types'
 import { TapeTerminalCopyIt } from './copyit'
 import { TapeTerminalHyperlink } from './hyperlink'
 import { TapeTerminalOpenIt } from './openit'
+import { TapeTerminalRunIt } from './runit'
 import { TapeTerminalViewIt } from './viewit'
 
 export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
@@ -95,6 +96,8 @@ export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
         return <TapeTerminalOpenIt {...props} words={words} />
       case 'viewit':
         return <TapeTerminalViewIt {...props} words={words} />
+      case 'runit':
+        return <TapeTerminalRunIt {...props} words={words} />
       default:
       case 'hyperlink':
         return <TapeTerminalHyperlink {...props} words={words} />

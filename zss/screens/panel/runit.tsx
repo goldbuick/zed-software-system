@@ -1,5 +1,5 @@
 import { useCallback, useContext } from 'react'
-import { register_copy } from 'zss/device/api'
+import { register_terminal_quickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput'
@@ -12,7 +12,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemCopyIt({
+export function PanelItemRunIt({
   sidebar,
   row,
   active,
@@ -22,9 +22,15 @@ export function PanelItemCopyIt({
 }: PanelItemProps) {
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    const [, ...words] = args
-    register_copy(SOFTWARE, registerreadplayer(), words.join(' '))
+    const [, ...values] = args
     scroll.sendclose()
+    setTimeout(() => {
+      register_terminal_quickopen(
+        SOFTWARE,
+        registerreadplayer(),
+        values.join(' '),
+      )
+    }, 1000)
   }, [args, scroll])
 
   const tcolor = inputcolor(!!active)
@@ -32,10 +38,12 @@ export function PanelItemCopyIt({
   // render output
   setuppanelitem(sidebar, row, context)
   tokenizeandwritetextformat(
-    `  $purple$16 $yellowCOPYIT ${tcolor}${label}`,
+    `  $purple$16 $cyanRUNIT ${tcolor}${label}`,
     context,
     true,
   )
 
   return active && <UserInput OK_BUTTON={invoke} />
 }
+
+//

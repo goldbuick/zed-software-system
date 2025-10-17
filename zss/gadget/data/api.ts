@@ -149,6 +149,7 @@ export function gadgethyperlink(
     case 'copyit':
     case 'openit':
     case 'viewit':
+    case 'runit':
       words.unshift('istargetless')
       break
   }

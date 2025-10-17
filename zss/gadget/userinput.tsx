@@ -292,7 +292,11 @@ window.addEventListener(
         break
       case 'r':
         if (mods.ctrl) {
-          register_refresh(SOFTWARE, player)
+          if (mods.shift) {
+            window.location.reload()
+          } else {
+            register_refresh(SOFTWARE, player)
+          }
         }
         break
       case 's':
