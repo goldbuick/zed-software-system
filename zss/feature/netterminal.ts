@@ -13,19 +13,24 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
-import { createinfohash, createsid } from 'zss/mapping/guid'
+import {
+  createinfohash,
+  createpid,
+  createsid,
+  createtopic,
+} from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 
 // read / write from indexdb
 
-async function readpeerid(): Promise<string | undefined> {
-  return idbget('peerid')
+async function readstickytopic(): Promise<string | undefined> {
+  return idbget('topic')
 }
 
-async function writepeerid(
+async function writesticktopic(
   updater: (oldValue: string | undefined) => string,
 ): Promise<void> {
-  return idbupdate('peerid', updater)
+  return idbupdate('topic', updater)
 }
 
 type ROUTING_NODE = {
@@ -62,7 +67,12 @@ type ROUTING_MESSAGE =
       gme?: MESSAGE
     }
 
+let ishost = false
 let subscribetopic = ''
+export function readsubscribetopic() {
+  return subscribetopic
+}
+
 let networkpeer: MAYBE<Peer>
 let topicbridge: MAYBE<ReturnType<typeof createforward>>
 let routingtable: MAYBE<KademliaTable<ROUTING_NODE>>
@@ -87,7 +97,7 @@ export function netterminaltopic(player: string) {
 let searchping: any
 function uplinkstart() {
   // already searching OR if we are the host, skip it
-  if (ispresent(searchping) || networkpeer?.id === subscribetopic) {
+  if (ispresent(searchping) || ishost) {
     return
   }
 
@@ -267,7 +277,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
 
       // are we the host to this topic ?
-      if (msg.topic === networkpeer.id) {
+      if (msg.topic === subscribetopic) {
         if (ispresent(msg.gme)) {
           topicbridgeforward(msg.gme)
         }
@@ -293,13 +303,14 @@ function handledataconnection(dataconnection: DataConnection) {
   handleopen()
 }
 
-function netterminalcreate(topic: string, selftopic: string) {
+function netterminalcreate(topic: string) {
   // setup topic
   subscribetopic = topic
 
   // create peer
   const player = registerreadplayer()
-  networkpeer = new Peer(selftopic, { debug: 2 })
+  const peerid = netterminaltopic(player)
+  networkpeer = new Peer(peerid, { debug: 2 })
 
   // attempt disconnect on page close
   window.addEventListener('unload', () => {
@@ -307,7 +318,7 @@ function netterminalcreate(topic: string, selftopic: string) {
     networkpeer = undefined
   })
 
-  api_log(SOFTWARE, player, `netterminal for ${selftopic}`)
+  api_log(SOFTWARE, player, `netterminal for ${peerid}`)
   api_log(SOFTWARE, player, `session topic ${subscribetopic}`)
 
   // track possible peerids
@@ -359,12 +370,6 @@ function netterminalcreate(topic: string, selftopic: string) {
     switch (err.type) {
       case 'peer-unavailable':
         return
-      case 'invalid-id':
-      case 'unavailable-id':
-        doasync(SOFTWARE, player, async () => {
-          await writepeerid(() => '')
-        })
-        return
     }
     api_error(
       SOFTWARE,
@@ -383,16 +388,17 @@ export async function netterminalhost() {
     return
   }
 
-  // read cached id
-  // let maybepeerid = await readpeerid()
-  // maybepeerid ??= player
+  // read cached topic
+  let stickytopic = await readstickytopic()
+  stickytopic ??= createtopic()
 
-  // // write id to cache
-  // await writepeerid(() => maybepeerid ?? '')
+  // write topic to cache
+  await writesticktopic(() => stickytopic ?? '')
 
   // startup peerjs
-  const withtopic = netterminaltopic(player)
-  netterminalcreate(withtopic, withtopic)
+  ishost = true
+  const withtopic = netterminaltopic(stickytopic)
+  netterminalcreate(withtopic)
 
   // open bridge between peers
   topicbridge = createforward((message) => {
@@ -406,7 +412,7 @@ export async function netterminalhost() {
       const netmsg: ROUTING_MESSAGE = {
         id: createsid(),
         topic: subscribetopic,
-        pub: networkpeer.id,
+        pub: subscribetopic,
         gme: message,
       }
       topiclastseenforward(netmsg)
@@ -422,7 +428,8 @@ export function netterminaljoin(topic: string) {
   }
 
   // startup peerjs
-  netterminalcreate(topic, netterminaltopic(player))
+  ishost = false
+  netterminalcreate(topic)
 
   // open bridge between peers
   topicbridge = createforward((message) => {

@@ -7,6 +7,7 @@ import {
   netterminalhost,
   netterminaljoin,
   netterminaltopic,
+  readsubscribetopic,
 } from 'zss/feature/netterminal'
 import { shorturl } from 'zss/feature/url'
 import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
@@ -89,8 +90,8 @@ async function runnetworkfetch(
   }
 }
 
-function joinurlread(player: string) {
-  const joinurl = `${location.origin}/join/#${netterminaltopic(player)}`
+function joinurlread() {
+  const joinurl = `${location.origin}/join/#${readsubscribetopic()}`
   // also copy joinurl
   if (ispresent(withclipboard())) {
     withclipboard()
@@ -178,7 +179,7 @@ const bridge = createdevice('bridge', [], (message) => {
     case 'tabopen':
       doasync(bridge, message.player, async () => {
         await waitfor(1000)
-        const joinurl = joinurlread(message.player)
+        const joinurl = joinurlread()
         window.open(joinurl, '_blank', 'noopener,noreferrer')
       })
       break
@@ -189,7 +190,7 @@ const bridge = createdevice('bridge', [], (message) => {
       break
     case 'showjoincode':
       doasync(bridge, message.player, async () => {
-        const joinurl = joinurlread(message.player)
+        const joinurl = joinurlread()
         const url = await shorturl(joinurl)
         if (message.data) {
           writecopyit(bridge, message.player, url, `secret join url`, false)

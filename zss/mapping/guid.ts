@@ -20,6 +20,10 @@ export function createpid() {
   return `pid_${justNumberChars()}_${mixedChars()}`
 }
 
+export function createtopic() {
+  return nanoid()
+}
+
 export function ispid(id: MAYBE<string>): id is string {
   return id?.startsWith('pid_') ?? false
 }
