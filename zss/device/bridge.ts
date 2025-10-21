@@ -6,7 +6,6 @@ import { withclipboard } from 'zss/feature/keyboard'
 import {
   netterminalhost,
   netterminaljoin,
-  netterminaltopic,
   readsubscribetopic,
 } from 'zss/feature/netterminal'
 import { shorturl } from 'zss/feature/url'
