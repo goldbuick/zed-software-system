@@ -14,7 +14,8 @@
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
-    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build"
+    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
+    "tauri": "tauri"
   },
   "dependencies": {},
   "devDependencies": {
@@ -28,6 +29,7 @@
     "@react-three/fiber": "^9.1.2",
     "@react-three/postprocessing": "^3.0.4",
     "@react-three/xr": "^6.6.22",
+    "@tauri-apps/cli": "^2",
     "@twurple/auth": "^7.4.0",
     "@twurple/chat": "^7.4.0",
     "@types/audioworklet": "^0.0.72",
