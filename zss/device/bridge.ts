@@ -164,24 +164,22 @@ const bridge = createdevice('bridge', [], (message) => {
     case 'start':
       doasync(bridge, message.player, async () => {
         await netterminalhost()
+        // show join code
+        bridge_showjoincode(SOFTWARE, message.player, !!message.data)
       })
-      // show join code
-      bridge_showjoincode(SOFTWARE, message.player, !!message.data)
       break
     case 'tab':
       doasync(bridge, message.player, async () => {
         await netterminalhost()
-      })
-      // open a join tab
-      bridge_tabopen(SOFTWARE, message.player)
-      break
-    case 'tabopen':
-      doasync(bridge, message.player, async () => {
-        await waitfor(1000)
-        const joinurl = joinurlread()
-        window.open(joinurl, '_blank', 'noopener,noreferrer')
+        // open a join tab
+        bridge_tabopen(SOFTWARE, message.player)
       })
       break
+    case 'tabopen': {
+      const joinurl = joinurlread()
+      window.open(joinurl, '_blank', 'noopener,noreferrer')
+      break
+    }
     case 'join':
       if (isstring(message.data)) {
         netterminaljoin(message.data)
