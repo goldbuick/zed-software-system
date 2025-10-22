@@ -72,6 +72,7 @@ export const dirconsts = {
   // pathfinding
   away: 'AWAY',
   toward: 'TOWARD',
+  atindex: 'ATINDEX',
   find: 'FIND',
   flee: 'FLEE',
   // combinations
@@ -191,8 +192,11 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         ii = iii
         break
       }
+      case 'ATINDEX':
       case 'FLEE':
       case 'FIND': {
+        // TODO: this should work kind or idx
+        //
         const [kind, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
         // strdir.push(dir.destpt.x, dir.destpt.y)
         console.info('kind', kind)

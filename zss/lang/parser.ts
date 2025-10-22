@@ -581,14 +581,28 @@ class ScriptParser extends CstParser {
     this.SUBRULE2(this.simple_token)
   })
 
+  dir_atindex = this.RULED('dir_atindex', () => {
+    this.CONSUME(lexer.dir_atindex)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.kind) },
+      { ALT: () => this.CONSUME(lexer.numberliteral) },
+    ])
+  })
+
   dir_find = this.RULED('dir_find', () => {
     this.CONSUME(lexer.dir_find)
-    this.SUBRULE1(this.kind)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.kind) },
+      { ALT: () => this.CONSUME(lexer.numberliteral) },
+    ])
   })
 
   dir_flee = this.RULED('dir_flee', () => {
     this.CONSUME(lexer.dir_flee)
-    this.SUBRULE1(this.kind)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.kind) },
+      { ALT: () => this.CONSUME(lexer.numberliteral) },
+    ])
   })
 
   dir_to = this.RULED('dir_to', () => {
@@ -615,6 +629,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.dir_down) },
       { ALT: () => this.CONSUME(lexer.dir_left) },
       { ALT: () => this.CONSUME(lexer.dir_right) },
+      { ALT: () => this.SUBRULE(this.dir_atindex) },
       { ALT: () => this.SUBRULE(this.dir_by) },
       { ALT: () => this.SUBRULE(this.dir_at) },
       { ALT: () => this.SUBRULE(this.dir_away) },

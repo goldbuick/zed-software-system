@@ -527,8 +527,16 @@ export function boardevaldir(
         return { dir, startpt, destpt: pt, layer, targets: [] }
       }
       // pathfinding
+      case DIR.ATINDEX: {
+        // translate index into [x, y]
+        break
+      }
       case DIR.FLEE: {
         // run away from nearest kind
+        break
+      }
+      case DIR.FIND: {
+        // seek nearest kind
         break
       }
       case DIR.AWAY: {
@@ -562,10 +570,6 @@ export function boardevaldir(
         }
         // need to skip args
         i += 2
-        break
-      }
-      case DIR.FIND: {
-        // seek nearest kind
         break
       }
       case DIR.TOWARD: {
