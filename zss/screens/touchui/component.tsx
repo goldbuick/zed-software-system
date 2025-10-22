@@ -18,7 +18,7 @@ export type TouchUIProps = {
 export function TouchUI({ width, height }: TouchUIProps) {
   const [reset, setreset] = useState(0)
   const screensize = useScreenSize()
-  const DECO = 177
+  const DECO = 176
   const FG = COLOR.WHITE
   const BG = COLOR.DKPURPLE
   const store = useTiles(width, height, DECO, FG, BG)

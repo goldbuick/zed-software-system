@@ -15,6 +15,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
+  z-index: 1;
   position: fixed;
 }
 
@@ -24,4 +25,10 @@ canvas {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   image-rendering: pixelated;
+}
+
+#touchtext {
+  left: 0;
+  bottom: -100px;
+  position: fixed;
 }

@@ -83,9 +83,9 @@ function applyconfig(innerwidth: number, innerheight: number) {
     .configure({
       size: {
         top: 0,
-        left: 0,
-        width,
         height,
+        left: 1,
+        width: width - 2,
       },
       events: eventManagerFactory,
       dpr: 1,

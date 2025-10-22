@@ -2,47 +2,45 @@ import { useDeviceData, useWriteText } from 'zss/gadget/hooks'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { ToggleKey } from './togglekey'
-import { TouchPlane } from './touchplane'
 
 type KeyboardGameProps = {
   width: number
+  height: number
 }
 
-export function KeyboardGame({ width }: KeyboardGameProps) {
+export function KeyboardGame({ width, height }: KeyboardGameProps) {
   const context = useWriteText()
   const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData()
   const left = width - 18
   const mid = width - 12
   const right = width - 6
 
+  const top = 1
+  const bottom = height - 5
+
+  const x = right - 5
+  const y = bottom - 2
   const center = Math.round(width * 0.5) - 3
-  const x = right
-  const y = 12
 
-  context.x = x
-  context.y = y
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
-  context.x = x
-  context.y = y + 1
-  tokenizeandwritetextformat(`$178$177$177$177$178`, context, false)
-  context.x = x
-  context.y = y + 2
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
-
-  const letters = 'shoot'
-  context.x = x + Math.round(2.5 - letters.length * 0.5)
-  context.y = y
-  tokenizeandwritetextformat(letters, context, false)
-
-  function clearshift() {
-    // user.keyboard('{/Shift}').catch(noop)
+  for (let i = 0; i < 5; ++i) {
+    context.x = x
+    context.y = y + i
+    tokenizeandwritetextformat(
+      `$178$178$178$178$178$178$178$178$178`,
+      context,
+      false,
+    )
   }
+
+  context.x = x + 2
+  context.y = y
+  tokenizeandwritetextformat('shoot', context, false)
 
   return (
     <>
       <ToggleKey
         x={1}
-        y={0}
+        y={top}
         letters={keyboardctrl ? 'CTRL' : 'ctrl'}
         onToggle={() => {
           useDeviceData.setState({ keyboardctrl: !keyboardctrl })
@@ -50,7 +48,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={7}
-        y={1}
+        y={top + 1}
         letters={keyboardalt ? 'ALT' : 'alt'}
         onToggle={() => {
           useDeviceData.setState({ keyboardalt: !keyboardalt })
@@ -58,7 +56,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={13}
-        y={0}
+        y={top}
         letters={keyboardshift ? 'SHIFT' : 'shift'}
         onToggle={() => {
           useDeviceData.setState({ keyboardshift: !keyboardshift })
@@ -66,7 +64,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={left}
-        y={0}
+        y={top}
         letters="menu"
         onToggle={() => {
           // user.keyboard('[Tab]').catch(noop)
@@ -74,7 +72,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={mid}
-        y={1}
+        y={top + 1}
         letters="okay"
         onToggle={() => {
           // user.keyboard('[Enter]').catch(noop)
@@ -82,7 +80,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={right}
-        y={0}
+        y={top}
         letters="cancel"
         onToggle={() => {
           // user.keyboard('[Escape]').catch(noop)
@@ -90,7 +88,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={1}
-        y={12}
+        y={bottom - 1}
         letters="?"
         onToggle={() => {
           // user.keyboard('{Shift>}?{/Shift}').catch(noop)
@@ -98,7 +96,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={7}
-        y={13}
+        y={bottom}
         letters="#"
         onToggle={() => {
           // user.keyboard('3').catch(noop)
@@ -106,36 +104,43 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
       />
       <ToggleKey
         x={13}
-        y={12}
+        y={bottom - 1}
         letters="c"
         onToggle={() => {
           // user.keyboard('c').catch(noop)
         }}
       />
-
-      {/* <NumKey x={center} y={0} letters="$24" digit="[ArrowUp]" usealt />
-      <NumKey x={center} y={13} letters="$25" digit="[ArrowDown]" usealt />
-      <NumKey
+      <ToggleKey
+        x={center}
+        y={top}
+        letters="$24"
+        onToggle={() => {
+          // user.keyboard('c').catch(noop)
+        }}
+      />
+      <ToggleKey
+        x={center}
+        y={bottom}
+        letters="$25"
+        onToggle={() => {
+          // user.keyboard('c').catch(noop)
+        }}
+      />
+      <ToggleKey
         x={width - 6}
         y={6}
         letters="$26"
-        digit="[ArrowRight]"
-        usealt
-        usectrl
-      />
-      <NumKey x={0} y={6} letters="$27" digit="[ArrowLeft]" usealt usectrl /> */}
-
-      <TouchPlane
-        x={right}
-        y={12}
-        width={5}
-        height={3}
-        onPointerDown={() => {
-          // user.keyboard('{Shift>}').catch(noop)
+        onToggle={() => {
+          // user.keyboard('c').catch(noop)
         }}
-        onPointerUp={clearshift}
-        onPointerLeave={clearshift}
-        onPointerCancel={clearshift}
+      />
+      <ToggleKey
+        x={0}
+        y={6}
+        letters="$27"
+        onToggle={() => {
+          // user.keyboard('c').catch(noop)
+        }}
       />
     </>
   )
