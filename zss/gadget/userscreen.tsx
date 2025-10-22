@@ -3,9 +3,9 @@
 import { useThree } from '@react-three/fiber'
 import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
 import { RUNTIME } from 'zss/config'
+import { TouchUI } from 'zss/screens/touchui/component'
 
 import { useDeviceData } from './hooks'
-import { TouchUI } from '../screens/touchui/component'
 
 // screensize in chars
 const Screensize = createContext({
@@ -47,7 +47,7 @@ export function UserScreen({ children }: UserScreenProps) {
       insetx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
-      rows = Math.floor(rrows) - 16
+      rows = Math.floor(rrows * 0.55) - 1
       insetrows -= rows
       insety = rows * RUNTIME.DRAW_CHAR_HEIGHT()
     }

@@ -98,7 +98,7 @@ export function Engine() {
     !showtouchcontrols &&
     crt === true &&
     gputier &&
-    gputier.tier > 2 &&
+    (gputier.tier > 2 || gputier.gpu?.includes('apple gpu')) &&
     !gputier.isMobile
 
   // update device config

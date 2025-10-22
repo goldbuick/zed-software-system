@@ -1,141 +1,179 @@
+import {
+  register_terminal_open,
+  register_terminal_quickopen,
+} from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
+import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData, useWriteText } from 'zss/gadget/hooks'
+import { inputdown, inputup } from 'zss/gadget/userinput'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { ToggleKey } from './togglekey'
-import { TouchPlane } from './touchplane'
 
 type KeyboardGameProps = {
   width: number
+  height: number
 }
 
-export function KeyboardGame({ width }: KeyboardGameProps) {
+export function KeyboardGame({ width, height }: KeyboardGameProps) {
   const context = useWriteText()
   const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData()
   const left = width - 18
   const mid = width - 12
   const right = width - 6
 
+  const top = 1
+  const ycenter = Math.floor(height * 0.5) - 2
+  const bottom = height - 5
+
+  const x = right - 5
+  const y = bottom - 2
   const center = Math.round(width * 0.5) - 3
-  const x = right
-  const y = 12
 
-  context.x = x
-  context.y = y
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
-  context.x = x
-  context.y = y + 1
-  tokenizeandwritetextformat(`$178$177$177$177$178`, context, false)
-  context.x = x
-  context.y = y + 2
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
-
-  const letters = 'shoot'
-  context.x = x + Math.round(2.5 - letters.length * 0.5)
-  context.y = y
-  tokenizeandwritetextformat(letters, context, false)
-
-  function clearshift() {
-    // user.keyboard('{/Shift}').catch(noop)
+  for (let i = 0; i < 5; ++i) {
+    context.x = x
+    context.y = y + i
+    tokenizeandwritetextformat(
+      `$178$178$178$178$178$178$178$178$178`,
+      context,
+      false,
+    )
   }
+
+  context.x = x + 2
+  context.y = y
+  tokenizeandwritetextformat('shoot', context, false)
+
+  const player = registerreadplayer()
 
   return (
     <>
       <ToggleKey
         x={1}
-        y={0}
+        y={top}
         letters={keyboardctrl ? 'CTRL' : 'ctrl'}
         onToggle={() => {
+          if (keyboardctrl) {
+            inputup(0, INPUT.CTRL)
+          } else {
+            inputdown(0, INPUT.CTRL)
+          }
           useDeviceData.setState({ keyboardctrl: !keyboardctrl })
         }}
       />
       <ToggleKey
         x={7}
-        y={1}
+        y={top + 1}
         letters={keyboardalt ? 'ALT' : 'alt'}
         onToggle={() => {
+          if (keyboardalt) {
+            inputup(0, INPUT.ALT)
+          } else {
+            inputdown(0, INPUT.ALT)
+          }
           useDeviceData.setState({ keyboardalt: !keyboardalt })
         }}
       />
       <ToggleKey
         x={13}
-        y={0}
+        y={top}
         letters={keyboardshift ? 'SHIFT' : 'shift'}
         onToggle={() => {
+          if (keyboardshift) {
+            inputup(0, INPUT.SHIFT)
+          } else {
+            inputdown(0, INPUT.SHIFT)
+          }
           useDeviceData.setState({ keyboardshift: !keyboardshift })
         }}
       />
       <ToggleKey
         x={left}
-        y={0}
-        letters="menu"
+        y={top}
+        letters="tab"
         onToggle={() => {
-          // user.keyboard('[Tab]').catch(noop)
+          inputdown(0, INPUT.MENU_BUTTON)
+          inputup(0, INPUT.MENU_BUTTON)
         }}
       />
       <ToggleKey
         x={mid}
-        y={1}
-        letters="okay"
+        y={top + 1}
+        letters="enter"
         onToggle={() => {
-          // user.keyboard('[Enter]').catch(noop)
+          inputdown(0, INPUT.OK_BUTTON)
+          inputup(0, INPUT.OK_BUTTON)
         }}
       />
       <ToggleKey
         x={right}
-        y={0}
-        letters="cancel"
+        y={top}
+        letters="esc"
         onToggle={() => {
-          // user.keyboard('[Escape]').catch(noop)
+          inputdown(0, INPUT.CANCEL_BUTTON)
+          inputup(0, INPUT.CANCEL_BUTTON)
         }}
       />
       <ToggleKey
         x={1}
-        y={12}
+        y={bottom - 1}
         letters="?"
         onToggle={() => {
-          // user.keyboard('{Shift>}?{/Shift}').catch(noop)
+          register_terminal_open(SOFTWARE, player)
         }}
       />
       <ToggleKey
         x={7}
-        y={13}
+        y={bottom}
         letters="#"
         onToggle={() => {
-          // user.keyboard('3').catch(noop)
+          register_terminal_quickopen(SOFTWARE, player, '#')
         }}
       />
       <ToggleKey
         x={13}
-        y={12}
+        y={bottom - 1}
         letters="c"
         onToggle={() => {
-          // user.keyboard('c').catch(noop)
+          register_terminal_quickopen(SOFTWARE, player, '')
         }}
       />
-
-      {/* <NumKey x={center} y={0} letters="$24" digit="[ArrowUp]" usealt />
-      <NumKey x={center} y={13} letters="$25" digit="[ArrowDown]" usealt />
-      <NumKey
-        x={width - 6}
-        y={6}
+      <ToggleKey
+        x={center}
+        y={top}
+        letters="$24"
+        onToggle={() => {
+          inputdown(0, INPUT.MOVE_UP)
+          inputup(0, INPUT.MOVE_UP)
+        }}
+      />
+      <ToggleKey
+        x={center}
+        y={bottom}
+        letters="$25"
+        onToggle={() => {
+          inputdown(0, INPUT.MOVE_DOWN)
+          inputup(0, INPUT.MOVE_DOWN)
+        }}
+      />
+      <ToggleKey
+        x={width - 5}
+        y={ycenter}
         letters="$26"
-        digit="[ArrowRight]"
-        usealt
-        usectrl
-      />
-      <NumKey x={0} y={6} letters="$27" digit="[ArrowLeft]" usealt usectrl /> */}
-
-      <TouchPlane
-        x={right}
-        y={12}
-        width={5}
-        height={3}
-        onPointerDown={() => {
-          // user.keyboard('{Shift>}').catch(noop)
+        onToggle={() => {
+          inputdown(0, INPUT.MOVE_RIGHT)
+          inputup(0, INPUT.MOVE_RIGHT)
         }}
-        onPointerUp={clearshift}
-        onPointerLeave={clearshift}
-        onPointerCancel={clearshift}
+      />
+      <ToggleKey
+        x={0}
+        y={ycenter}
+        letters="$27"
+        onToggle={() => {
+          inputdown(0, INPUT.MOVE_LEFT)
+          inputup(0, INPUT.MOVE_LEFT)
+        }}
       />
     </>
   )

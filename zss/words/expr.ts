@@ -200,6 +200,18 @@ export function readexpr(index: number): [any, number] {
         return [isblocked ? 1 : 0, iii]
       }
       case 'any': {
+        // we have to make the list returned actionable
+        // how do we represent an address that we can use for
+        // dir inputs, shove/push inputs, as well as #send atindex
+        // so simplest return should be a list of matched indexes
+        // then add a new dir type similar to at / by
+        // ie ?atindex 33
+        // #shove atindex 33 up
+        // #send atindex 33 attack
+        // #set p7 pick any red fish
+        // ?find p7
+        // #send atindex p7 activate
+        //
         // ANY <kind>
         // ANY <color>
         // ANY <dir> <kind>

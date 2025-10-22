@@ -35,17 +35,10 @@ type RECT = {
 
 type LayoutRectProps = {
   rect: RECT
-  islandscape?: boolean
-  sidebaropen?: boolean
   shouldclose?: boolean
 }
 
-function LayoutRect({
-  rect,
-  islandscape = true,
-  sidebaropen = true,
-  shouldclose = false,
-}: LayoutRectProps) {
+function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
   switch (rect.type) {
     case RECT_TYPE.PANEL:
       return (
@@ -56,8 +49,7 @@ function LayoutRect({
             color={14}
             bg={1}
             text={rect.text}
-            xmargin={islandscape ? 1 : sidebaropen ? 3 : 10}
-            ymargin={islandscape && !sidebaropen ? 6 : 0}
+            ymargin={0}
           />
         </group>
       )
@@ -82,8 +74,7 @@ const SIDEBAR_SIZE = 20
 
 export function ScreenUI() {
   const screensize = useScreenSize()
-  const { islandscape, sidebaropen, insetrows, showtouchcontrols } =
-    useDeviceData()
+  const { islandscape, sidebaropen, showtouchcontrols } = useDeviceData()
 
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0
@@ -139,15 +130,15 @@ export function ScreenUI() {
       frame.width -= inset
       rects.push(rect)
     } else {
-      const panelheight = sidebaropen ? insetrows - 7 : insetrows
-      const inset = sidebaropen ? panelheight : 4
+      const height = 15
+      const inset = sidebaropen ? height : 4
       const rect = {
         name: 'sidebar',
         type: RECT_TYPE.PANEL,
         x: 0,
         y: frame.y + frame.height - inset,
         width: frame.width,
-        height: panelheight,
+        height: height,
         text: sidebar,
       }
       frame.height -= inset
@@ -219,11 +210,7 @@ export function ScreenUI() {
                 0,
               ]}
             >
-              <LayoutRect
-                islandscape={!showtouchcontrols || islandscape}
-                sidebaropen={!showtouchcontrols || sidebaropen}
-                rect={rect}
-              />
+              <LayoutRect rect={rect} />
             </group>
           )
         })}

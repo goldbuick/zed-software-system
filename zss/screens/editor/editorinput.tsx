@@ -239,9 +239,63 @@ export function EditorInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
+        onClick={() => {
+          document.getElementById('touchtext')?.focus()
+        }}
         onScroll={(ydelta: number) => movecursor(ydelta * 0.75)}
       />
       <UserInput
+        MOVE_LEFT={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
+            useTapeEditor.setState({ cursor: coderow.start })
+          } else {
+            const cursor = tapeeditor.cursor - (mods.alt ? 10 : 1)
+            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
+          }
+        }}
+        MOVE_RIGHT={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
+            useTapeEditor.setState({ cursor: coderow.end })
+          } else {
+            const cursor = tapeeditor.cursor + (mods.alt ? 10 : 1)
+            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
+          }
+        }}
+        MOVE_UP={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
+            useTapeEditor.setState({ cursor: 0 })
+          } else {
+            movecursor(mods.alt ? -10 : -1)
+          }
+        }}
+        MOVE_DOWN={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
+            useTapeEditor.setState({ cursor: codeend })
+          } else {
+            movecursor(mods.alt ? 10 : 1)
+          }
+        }}
+        OK_BUTTON={() => {
+          if (ispresent(codepage)) {
+            // insert newline !
+            codepage.insert(tapeeditor.cursor, `\n`)
+            useTapeEditor.setState({ cursor: tapeeditor.cursor + 1 })
+          }
+        }}
+        CANCEL_BUTTON={(mods) => {
+          if (mods.shift || mods.alt || mods.ctrl) {
+            register_terminal_close(SOFTWARE, player)
+          } else {
+            register_editor_close(SOFTWARE, player)
+          }
+        }}
+        MENU_BUTTON={(mods) => {
+          register_terminal_inclayout(SOFTWARE, player, !mods.shift)
+        }}
         keydown={(event) => {
           if (!ispresent(codepage)) {
             return
@@ -252,58 +306,6 @@ export function EditorInput({
           const mods = modsfromevent(event)
 
           switch (lkey) {
-            case 'arrowleft':
-              trackselection(mods.shift)
-              if (mods.ctrl) {
-                useTapeEditor.setState({ cursor: coderow.start })
-              } else {
-                const cursor = tapeeditor.cursor - (mods.alt ? 10 : 1)
-                useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
-              }
-              break
-            case 'arrowright':
-              trackselection(mods.shift)
-              if (mods.ctrl) {
-                useTapeEditor.setState({ cursor: coderow.end })
-              } else {
-                const cursor = tapeeditor.cursor + (mods.alt ? 10 : 1)
-                useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
-              }
-              break
-            case 'arrowup':
-              trackselection(mods.shift)
-              if (mods.ctrl) {
-                useTapeEditor.setState({ cursor: 0 })
-              } else {
-                movecursor(mods.alt ? -10 : -1)
-              }
-              break
-            case 'arrowdown':
-              trackselection(mods.shift)
-              if (mods.ctrl) {
-                useTapeEditor.setState({ cursor: codeend })
-              } else {
-                movecursor(mods.alt ? 10 : 1)
-              }
-              break
-            case 'enter':
-              if (ispresent(codepage)) {
-                // insert newline !
-                codepage.insert(tapeeditor.cursor, `\n`)
-                useTapeEditor.setState({ cursor: tapeeditor.cursor + 1 })
-              }
-              break
-            case 'esc':
-            case 'escape':
-              if (mods.shift || mods.alt || mods.ctrl) {
-                register_terminal_close(SOFTWARE, player)
-              } else {
-                register_editor_close(SOFTWARE, player)
-              }
-              break
-            case 'tab':
-              register_terminal_inclayout(SOFTWARE, player, !mods.shift)
-              break
             case 'delete':
               if (hasselection) {
                 deleteselection()

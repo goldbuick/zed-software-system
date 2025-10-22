@@ -23,6 +23,7 @@ type Props = {
   width?: number
   height?: number
   children?: ReactNode
+  onClick?: () => void
   onScroll?: (deltay: number) => void
 } & JSX.IntrinsicElements['group']
 
@@ -36,6 +37,7 @@ export function Scrollable({
   width = 30,
   height = 10,
   children,
+  onClick,
   onScroll,
   ...props
 }: Props) {
@@ -49,6 +51,7 @@ export function Scrollable({
         y={y}
         width={width}
         height={height}
+        onClick={onClick}
         onWheel={(event: any) => {
           if (disabled) {
             return

@@ -31,6 +31,7 @@ import {
   ComparisonCstChildren,
   DirCstChildren,
   Dir_atCstChildren,
+  Dir_atindexCstChildren,
   Dir_awayCstChildren,
   Dir_awaybyCstChildren,
   Dir_byCstChildren,
@@ -1515,6 +1516,28 @@ class ScriptVisitor
     ]
   }
 
+  dir_atindex(ctx: Dir_atindexCstChildren, location: CstNodeLocation) {
+    const args: CodeNode[] = this.go(ctx.kind)
+    if (ctx.token_numberliteral) {
+      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
+      args.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.NUMBER,
+          value,
+        }),
+      )
+    }
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'atindex',
+      }),
+      ...args,
+    ]
+  }
+
   dir_at(ctx: Dir_atCstChildren, location: CstNodeLocation) {
     return [
       ...this.createcodenode(location, {
@@ -1549,24 +1572,46 @@ class ScriptVisitor
   }
 
   dir_find(ctx: Dir_findCstChildren, location: CstNodeLocation) {
+    const args: CodeNode[] = this.go(ctx.kind)
+    if (ctx.token_numberliteral) {
+      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
+      args.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.NUMBER,
+          value,
+        }),
+      )
+    }
     return [
       ...this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
         value: 'find',
       }),
-      ...this.go(ctx.kind),
+      ...args,
     ]
   }
 
   dir_flee(ctx: Dir_fleeCstChildren, location: CstNodeLocation) {
+    const args: CodeNode[] = this.go(ctx.kind)
+    if (ctx.token_numberliteral) {
+      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
+      args.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.NUMBER,
+          value,
+        }),
+      )
+    }
     return [
       ...this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
         value: 'flee',
       }),
-      ...this.go(ctx.kind),
+      ...args,
     ]
   }
 

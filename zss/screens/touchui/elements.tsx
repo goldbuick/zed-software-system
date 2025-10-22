@@ -1,4 +1,6 @@
 import { Vector2 } from 'three'
+import { RUNTIME } from 'zss/config'
+import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import {
   resetTiles,
   useDeviceData,
@@ -38,6 +40,17 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
   return (
     <>
+      <group position-y={-5 * RUNTIME.DRAW_CHAR_HEIGHT()}>
+        <ShadeBoxDither
+          width={width}
+          height={5}
+          left={0}
+          top={6}
+          right={width - 1}
+          bottom={6}
+          alpha={0.45}
+        />
+      </group>
       <TouchPlane
         x={0}
         y={-3}
@@ -51,7 +64,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           }))
         }}
       />
-      <KeyboardGame width={width} />
+      <KeyboardGame width={width} height={height} />
       <ThumbStick
         width={width}
         height={height}

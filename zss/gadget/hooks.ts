@@ -330,8 +330,8 @@ export type DEVICE_DATA = {
 
 export const useDeviceData = create<DEVICE_DATA>(() => ({
   active: true,
-  insetcols: 20,
-  insetrows: 20,
+  insetcols: 1,
+  insetrows: 1,
   islowrez: false,
   islandscape: true,
   sidebaropen: true,
