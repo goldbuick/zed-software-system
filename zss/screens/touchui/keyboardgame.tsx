@@ -16,6 +16,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
   const right = width - 6
 
   const top = 1
+  const ycenter = Math.floor(height * 0.5) - 2
   const bottom = height - 5
 
   const x = right - 5
@@ -128,7 +129,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
       />
       <ToggleKey
         x={width - 6}
-        y={6}
+        y={ycenter}
         letters="$26"
         onToggle={() => {
           // user.keyboard('c').catch(noop)
@@ -136,7 +137,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
       />
       <ToggleKey
         x={0}
-        y={6}
+        y={ycenter}
         letters="$27"
         onToggle={() => {
           // user.keyboard('c').catch(noop)

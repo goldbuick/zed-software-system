@@ -74,8 +74,7 @@ const SIDEBAR_SIZE = 20
 
 export function ScreenUI() {
   const screensize = useScreenSize()
-  const { islandscape, sidebaropen, insetrows, showtouchcontrols } =
-    useDeviceData()
+  const { islandscape, sidebaropen, showtouchcontrols } = useDeviceData()
 
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0

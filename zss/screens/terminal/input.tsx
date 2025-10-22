@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useLayoutEffect } from 'react'
 import {
   api_error,
   register_terminal_close,
@@ -310,6 +310,9 @@ export function TapeTerminalInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
+        onClick={() => {
+          document.getElementById('touchtext')?.focus()
+        }}
         onScroll={(deltay: number) => {
           trackselection(false)
           useTapeTerminal.setState({

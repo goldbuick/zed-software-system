@@ -29,6 +29,6 @@ canvas {
 
 #touchtext {
   left: 0;
-  bottom: -100px;
+  top: -100px;
   position: fixed;
 }

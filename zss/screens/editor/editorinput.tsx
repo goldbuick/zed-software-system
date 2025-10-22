@@ -239,6 +239,9 @@ export function EditorInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
+        onClick={() => {
+          document.getElementById('touchtext')?.focus()
+        }}
         onScroll={(ydelta: number) => movecursor(ydelta * 0.75)}
       />
       <UserInput
