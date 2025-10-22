@@ -130,7 +130,7 @@ function readinput(index: number): INPUT_STATE {
   return inputstates[index]
 }
 
-function inputdown(index: number, input: INPUT) {
+export function inputdown(index: number, input: INPUT) {
   const inputstate = readinput(index)
   // make sure to trigger input event
   // when we change from false to true state
@@ -148,7 +148,7 @@ function inputdown(index: number, input: INPUT) {
   inputstate[input] = true
 }
 
-function inputup(index: number, input: INPUT) {
+export function inputup(index: number, input: INPUT) {
   const inputstate = readinput(index)
   inputstate[input] = false
 }
@@ -534,17 +534,17 @@ gamepads.on('gamepad:button', (event: any) => {
       inputup(index, INPUT.MOVE_LEFT)
       inputup(index, INPUT.MOVE_RIGHT)
       if (event.detail.value) {
-        inputdown(event.detail.index, INPUT.SHIFT)
-        inputdown(event.detail.index, buttonlookup[event.detail.button])
+        inputdown(index, INPUT.SHIFT)
+        inputdown(index, buttonlookup[event.detail.button])
       } else {
-        inputup(event.detail.index, INPUT.SHIFT)
+        inputup(index, INPUT.SHIFT)
       }
       break
     default:
       if (event.detail.value) {
-        inputdown(event.detail.index, buttonlookup[event.detail.button])
+        inputdown(index, buttonlookup[event.detail.button])
       } else {
-        inputup(event.detail.index, buttonlookup[event.detail.button])
+        inputup(index, buttonlookup[event.detail.button])
       }
       break
   }

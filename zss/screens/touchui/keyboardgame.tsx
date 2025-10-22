@@ -1,4 +1,12 @@
+import {
+  register_terminal_open,
+  register_terminal_quickopen,
+} from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
+import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData, useWriteText } from 'zss/gadget/hooks'
+import { inputdown, inputup } from 'zss/gadget/userinput'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { ToggleKey } from './togglekey'
@@ -37,6 +45,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
   context.y = y
   tokenizeandwritetextformat('shoot', context, false)
 
+  const player = registerreadplayer()
+
   return (
     <>
       <ToggleKey
@@ -44,6 +54,11 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={top}
         letters={keyboardctrl ? 'CTRL' : 'ctrl'}
         onToggle={() => {
+          if (keyboardctrl) {
+            inputup(0, INPUT.CTRL)
+          } else {
+            inputdown(0, INPUT.CTRL)
+          }
           useDeviceData.setState({ keyboardctrl: !keyboardctrl })
         }}
       />
@@ -52,6 +67,11 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={top + 1}
         letters={keyboardalt ? 'ALT' : 'alt'}
         onToggle={() => {
+          if (keyboardalt) {
+            inputup(0, INPUT.ALT)
+          } else {
+            inputdown(0, INPUT.ALT)
+          }
           useDeviceData.setState({ keyboardalt: !keyboardalt })
         }}
       />
@@ -60,31 +80,39 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={top}
         letters={keyboardshift ? 'SHIFT' : 'shift'}
         onToggle={() => {
+          if (keyboardshift) {
+            inputup(0, INPUT.SHIFT)
+          } else {
+            inputdown(0, INPUT.SHIFT)
+          }
           useDeviceData.setState({ keyboardshift: !keyboardshift })
         }}
       />
       <ToggleKey
         x={left}
         y={top}
-        letters="menu"
+        letters="tab"
         onToggle={() => {
-          // user.keyboard('[Tab]').catch(noop)
+          inputdown(0, INPUT.MENU_BUTTON)
+          inputup(0, INPUT.MENU_BUTTON)
         }}
       />
       <ToggleKey
         x={mid}
         y={top + 1}
-        letters="okay"
+        letters="enter"
         onToggle={() => {
-          // user.keyboard('[Enter]').catch(noop)
+          inputdown(0, INPUT.OK_BUTTON)
+          inputup(0, INPUT.OK_BUTTON)
         }}
       />
       <ToggleKey
         x={right}
         y={top}
-        letters="cancel"
+        letters="esc"
         onToggle={() => {
-          // user.keyboard('[Escape]').catch(noop)
+          inputdown(0, INPUT.CANCEL_BUTTON)
+          inputup(0, INPUT.CANCEL_BUTTON)
         }}
       />
       <ToggleKey
@@ -92,7 +120,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom - 1}
         letters="?"
         onToggle={() => {
-          // user.keyboard('{Shift>}?{/Shift}').catch(noop)
+          register_terminal_open(SOFTWARE, player)
         }}
       />
       <ToggleKey
@@ -100,7 +128,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom}
         letters="#"
         onToggle={() => {
-          // user.keyboard('3').catch(noop)
+          register_terminal_quickopen(SOFTWARE, player, '#')
         }}
       />
       <ToggleKey
@@ -108,7 +136,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom - 1}
         letters="c"
         onToggle={() => {
-          // user.keyboard('c').catch(noop)
+          register_terminal_quickopen(SOFTWARE, player, '')
         }}
       />
       <ToggleKey
@@ -116,7 +144,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={top}
         letters="$24"
         onToggle={() => {
-          // user.keyboard('c').catch(noop)
+          inputdown(0, INPUT.MOVE_UP)
+          inputup(0, INPUT.MOVE_UP)
         }}
       />
       <ToggleKey
@@ -124,15 +153,17 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom}
         letters="$25"
         onToggle={() => {
-          // user.keyboard('c').catch(noop)
+          inputdown(0, INPUT.MOVE_DOWN)
+          inputup(0, INPUT.MOVE_DOWN)
         }}
       />
       <ToggleKey
-        x={width - 6}
+        x={width - 5}
         y={ycenter}
         letters="$26"
         onToggle={() => {
-          // user.keyboard('c').catch(noop)
+          inputdown(0, INPUT.MOVE_RIGHT)
+          inputup(0, INPUT.MOVE_RIGHT)
         }}
       />
       <ToggleKey
@@ -140,7 +171,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={ycenter}
         letters="$27"
         onToggle={() => {
-          // user.keyboard('c').catch(noop)
+          inputdown(0, INPUT.MOVE_LEFT)
+          inputup(0, INPUT.MOVE_LEFT)
         }}
       />
     </>
