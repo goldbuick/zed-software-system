@@ -232,10 +232,6 @@ export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:nuke', undefined)
 }
 
-export function register_enterar(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:enterar', undefined)
-}
-
 export function synth_audioenabled(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:audioenabled', undefined)
 }
