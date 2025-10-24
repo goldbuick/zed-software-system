@@ -112,7 +112,7 @@ export function ThumbStick({
           const { cx, cy } = coords(width, height)
           // calc angle
           motion.set(movestick.startx - cx, movestick.starty - cy)
-          if (motion.length() > DEAD_ZONE * 0.25) {
+          if (motion.length() > DEAD_ZONE) {
             // track for visuals
             movestick.tipx = cx
             movestick.tipy = cy

@@ -360,10 +360,10 @@ window.addEventListener(
     switch (key) {
       case 'meta':
         // special case for macos cmd + arrow keys
-        inputup(0, INPUT.MOVE_LEFT)
-        inputup(0, INPUT.MOVE_RIGHT)
-        inputup(0, INPUT.MOVE_UP)
-        inputup(0, INPUT.MOVE_DOWN)
+        // inputup(0, INPUT.MOVE_LEFT)
+        // inputup(0, INPUT.MOVE_RIGHT)
+        // inputup(0, INPUT.MOVE_UP)
+        // inputup(0, INPUT.MOVE_DOWN)
         break
       case 'arrowleft':
         inputup(0, INPUT.MOVE_LEFT)

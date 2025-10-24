@@ -19,13 +19,13 @@ type KeyboardGameProps = {
 export function KeyboardGame({ width, height }: KeyboardGameProps) {
   const context = useWriteText()
   const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData()
-  const left = width - 18
-  const mid = width - 12
-  const right = width - 6
+  const left = width - 19
+  const mid = width - 13
+  const right = width - 7
 
   const top = 1
   const ycenter = Math.floor(height * 0.5) - 2
-  const bottom = height - 4
+  const bottom = height - 5
 
   const x = right - 5
   const y = bottom - 2
@@ -158,7 +158,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={width - 6}
+        x={width - 7}
         y={ycenter}
         letters="$26"
         onToggle={() => {
