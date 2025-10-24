@@ -130,7 +130,10 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   // create peer
   const player = registerreadplayer()
   const peerid = selfpeerid ?? topicpeerid
-  networkpeer = new Peer(peerid, { debug: 2 })
+  networkpeer = new Peer(peerid, {
+    debug: 2,
+    host: 'terminal.zed.cafe',
+  })
 
   // attempt disconnect on page close
   window.addEventListener('unload', () => {

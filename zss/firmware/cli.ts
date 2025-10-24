@@ -14,7 +14,6 @@ import {
   register_dev,
   register_downloadjsonfile,
   register_editor_open,
-  register_enterar,
   register_findany,
   register_inspector,
   register_nuke,
@@ -93,6 +92,10 @@ import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
 import { COLOR } from 'zss/words/types'
+
+function isoperator(player: string) {
+  return player === memoryreadoperator()
+}
 
 function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())
@@ -213,6 +216,9 @@ export const CLI_FIRMWARE = createfirmware()
   })
   // --- book & pages commands
   .command('bookcreate', (chip, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
 
     const book = memorycreatesoftwarebook(maybename)
@@ -222,6 +228,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('bookopen', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [name] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const book = memoryreadbookbyaddress(name)
@@ -240,6 +249,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('booktrash', (chip, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -329,6 +341,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('pagetrash', (chip, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [page] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
@@ -354,6 +369,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('books', () => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
     const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     writeoption(
@@ -501,6 +519,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('trash', () => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `$REDTRASH`)
     writetext(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
     const list = memoryreadbooklist()
@@ -547,25 +568,45 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('dev', () => {
-    vm_flush_op()
-    register_dev(SOFTWARE, READ_CONTEXT.elementfocus)
+    if (isoperator(READ_CONTEXT.elementfocus)) {
+      vm_flush_op()
+      register_dev(SOFTWARE, READ_CONTEXT.elementfocus)
+    } else {
+      // no-op
+    }
     return 0
   })
   .command('share', () => {
-    vm_flush_op()
-    register_share(SOFTWARE, READ_CONTEXT.elementfocus)
+    if (isoperator(READ_CONTEXT.elementfocus)) {
+      vm_flush_op()
+      register_share(SOFTWARE, READ_CONTEXT.elementfocus)
+    } else {
+      // no-op
+    }
     return 0
   })
   .command('save', () => {
-    vm_flush_op()
+    if (isoperator(READ_CONTEXT.elementfocus)) {
+      vm_flush_op()
+    } else {
+      // no-op
+    }
     return 0
   })
   .command('fork', () => {
-    vm_fork(SOFTWARE, READ_CONTEXT.elementfocus)
+    if (isoperator(READ_CONTEXT.elementfocus)) {
+      vm_fork(SOFTWARE, READ_CONTEXT.elementfocus)
+    } else {
+      // no-op
+    }
     return 0
   })
   .command('nuke', () => {
-    register_nuke(SOFTWARE, READ_CONTEXT.elementfocus)
+    if (isoperator(READ_CONTEXT.elementfocus)) {
+      register_nuke(SOFTWARE, READ_CONTEXT.elementfocus)
+    } else {
+      // no-op
+    }
     return 0
   })
   .command('endgame', () => {
@@ -573,12 +614,19 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('restart', () => {
-    vm_restart(SOFTWARE, READ_CONTEXT.elementfocus)
-    vm_flush_op()
+    if (isoperator(READ_CONTEXT.elementfocus)) {
+      vm_restart(SOFTWARE, READ_CONTEXT.elementfocus)
+      vm_flush_op()
+    } else {
+      // no-op
+    }
     return 0
   })
   // -- export content related commands
   .command('export', () => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
     const list = memoryreadbooklist()
@@ -594,6 +642,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('bookexport', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
     const book = memoryreadbookbyaddress(address)
     if (ispresent(book)) {
@@ -622,6 +673,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('bookallexport', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
     const book = memoryreadbookbyaddress(address)
     if (ispresent(book)) {
@@ -635,6 +689,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('pageexport', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
     const { target, path } = parsetarget(address)
     const book = memoryreadbookbyaddress(target)
@@ -650,6 +707,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('itchiopublish', () => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     vm_itchiopublish(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
@@ -690,6 +750,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('joincode', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     const playerboard = memoryreadplayerboard(READ_CONTEXT.elementfocus)
     if (ispresent(playerboard)) {
@@ -705,12 +768,18 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('jointab', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     bridge_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
     return 0
   })
   // -- audience related commands
   .command('chat', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     if (channel) {
       bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
@@ -720,16 +789,14 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('broadcast', (_, words) => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
     const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     if (streamkey) {
       bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
     } else {
       bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
     }
-    return 0
-  })
-  // -- display related commands
-  .command('startlookingglass', () => {
-    register_enterar(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })

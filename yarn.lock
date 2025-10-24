@@ -7860,7 +7860,7 @@ peerjs-js-binarypack@^2.1.0:
 
 peerjs@^1.5.5:
   version "1.5.5"
-  resolved "https://registry.yarnpkg.com/peerjs/-/peerjs-1.5.5.tgz#71095595151961566688b9b79eafcb0ab93bcfc2"
+  resolved "https://registry.npmjs.org/peerjs/-/peerjs-1.5.5.tgz#71095595151961566688b9b79eafcb0ab93bcfc2"
   integrity sha512-viMUCPDL6CSfOu0ZqVcFqbWRXNHIbv2lPqNbrBIjbFYrflebOjItJ4hPfhjnuUCstqciHVu9vVJ7jFqqKi/EuQ==
   dependencies:
     "@msgpack/msgpack" "^2.8.0"
