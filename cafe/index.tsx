@@ -81,16 +81,15 @@ const root = createRoot(document.getElementById('frame'))
 function applyconfig() {
   const innerwidth = window.innerWidth
   const innerheight = window.innerHeight
-  if (window.visualViewport) {
-    const safeheight = Math.min(
-      window.innerHeight,
-      window.visualViewport.height,
-    )
-    const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
-    useDeviceData.setState({ saferows })
-  }
   const width = makeeven(innerwidth)
   const height = makeeven(innerheight)
+  const safeheight = window.visualViewport
+    ? Math.min(innerheight, window.visualViewport.height)
+    : innerheight
+  const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
+  useDeviceData.setState({
+    saferows,
+  })
   root
     .configure({
       size: {

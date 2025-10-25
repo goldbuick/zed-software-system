@@ -92,7 +92,6 @@ function handleplaystr(chip: CHIP, words: WORD[]) {
         ? maybebuffer
         : buffer
   }
-  console.info({ buffer, withbuffer })
   return withbuffer
 }
 
