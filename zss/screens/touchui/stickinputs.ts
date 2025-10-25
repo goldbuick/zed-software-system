@@ -1,66 +1,75 @@
+import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/hooks'
+import { inputdown, inputup } from 'zss/gadget/userinput'
+
+export function handlestickclear() {
+  inputup(0, INPUT.MOVE_UP)
+  inputup(0, INPUT.MOVE_DOWN)
+  inputup(0, INPUT.MOVE_LEFT)
+  inputup(0, INPUT.MOVE_RIGHT)
+}
 
 export function handlestickdir(snapdir: number) {
   const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceData.getState()
 
-  let keypress = ''
   if (keyboardalt) {
-    keypress += `{Alt>}`
+    inputdown(0, INPUT.ALT)
+  } else {
+    inputup(0, INPUT.ALT)
   }
   if (keyboardctrl) {
-    keypress += `{Ctrl>}`
+    inputdown(0, INPUT.CTRL)
+  } else {
+    inputup(0, INPUT.CTRL)
   }
   if (keyboardshift) {
-    keypress += `{Shift>}`
+    inputdown(0, INPUT.SHIFT)
+  } else {
+    inputup(0, INPUT.SHIFT)
   }
+
+  handlestickclear()
+
   switch (snapdir) {
     case 0:
       // left
-      keypress += '[ArrowLeft]'
+      inputdown(0, INPUT.MOVE_LEFT)
       break
     case 45:
       // left up
-      keypress += '[ArrowLeft][ArrowUp]'
+      inputdown(0, INPUT.MOVE_UP)
+      inputdown(0, INPUT.MOVE_LEFT)
       break
     case 90:
       // up
-      keypress += '[ArrowUp]'
+      inputdown(0, INPUT.MOVE_UP)
       break
     case 135:
       // up right
-      keypress += '[ArrowRight][ArrowUp]'
+      inputdown(0, INPUT.MOVE_UP)
+      inputdown(0, INPUT.MOVE_RIGHT)
       break
     case 180:
       // right
-      keypress += '[ArrowRight]'
+      inputdown(0, INPUT.MOVE_RIGHT)
       break
     case 225:
       // right down
-      keypress += '[ArrowRight][ArrowDown]'
+      inputdown(0, INPUT.MOVE_DOWN)
+      inputdown(0, INPUT.MOVE_RIGHT)
       break
     case 270:
       // down
-      keypress += '[ArrowDown]'
+      inputdown(0, INPUT.MOVE_DOWN)
       break
     case 315:
       // down left
-      keypress += '[ArrowLeft][ArrowDown]'
+      inputdown(0, INPUT.MOVE_DOWN)
+      inputdown(0, INPUT.MOVE_LEFT)
       break
     case 360:
       // left
-      keypress += '[ArrowLeft]'
+      inputdown(0, INPUT.MOVE_LEFT)
       break
   }
-  if (keyboardalt) {
-    keypress += `{/Alt}`
-  }
-  if (keyboardctrl) {
-    keypress += `{/Ctrl}`
-  }
-  if (keyboardshift) {
-    keypress += `{/Shift}`
-  }
-
-  // TODO, trigger vm_input messages instead
-  // user.keyboard(keypress).catch(noop)
 }

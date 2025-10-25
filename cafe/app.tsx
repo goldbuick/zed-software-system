@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { vm_loader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 export function App() {
-  useEffect(() => window.focus(), [])
+  useLayoutEffect(() => window.focus(), [])
   const active = useDeviceData((state) => state.active)
   return active && <Engine />
 }
