@@ -1,3 +1,4 @@
+import { degToRad, radToDeg } from 'maath/misc'
 import { Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
@@ -7,6 +8,7 @@ import {
   useWriteText,
   writeTile,
 } from 'zss/gadget/hooks'
+import { snap } from 'zss/mapping/number'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -70,23 +72,27 @@ export function Elements({ width, height, onReset }: ElementsProps) {
         height={height}
         onUp={onReset}
         onDrawStick={(startx, starty, tipx, tipy) => {
-          for (let i = 0; i < 5; ++i) {
-            context.x = startx - 3
-            context.y = starty - 2 + i
+          for (let i = 0; i < 11; ++i) {
+            context.x = startx - 5
+            context.y = starty - 5 + i
             tokenizeandwritetextformat(
-              `$dkblue$177$177$177$177$177$177$177`,
+              `$dkblue$177$177$177$177$177$177$177$177$177$177$177`,
               context,
               false,
             )
           }
           // limit knob range
+          const raddist = 4
           motion.x = tipx - startx
           motion.y = tipy - starty
-          motion.normalize().multiplyScalar(4)
+          const snapdir = snap(radToDeg(motion.angle()), 45)
+          const raddir = degToRad(snapdir)
+          motion.x = Math.cos(raddir) * raddist
+          motion.y = Math.sin(raddir) * raddist
           for (let i = 0; i < 3; ++i) {
             context.x = startx + Math.round(motion.x) - 1
             context.y = starty + Math.round(motion.y) - 1 + i
-            tokenizeandwritetextformat(`$blue$219$219$219`, context, false)
+            tokenizeandwritetextformat(`$dkblue$219$219$219`, context, false)
           }
         }}
       />

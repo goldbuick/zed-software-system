@@ -314,6 +314,7 @@ useMedia.getState().reset()
 
 export type DEVICE_DATA = {
   active: boolean
+  saferows: number
   insetcols: number
   insetrows: number
   islowrez: boolean
@@ -330,6 +331,7 @@ export type DEVICE_DATA = {
 
 export const useDeviceData = create<DEVICE_DATA>(() => ({
   active: true,
+  saferows: 1,
   insetcols: 1,
   insetrows: 1,
   islowrez: false,

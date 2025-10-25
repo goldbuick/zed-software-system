@@ -5,9 +5,8 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
-import { useDeviceData, useWriteText } from 'zss/gadget/hooks'
+import { useDeviceData } from 'zss/gadget/hooks'
 import { inputdown, inputup } from 'zss/gadget/userinput'
-import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { ToggleKey } from './togglekey'
 
@@ -17,36 +16,15 @@ type KeyboardGameProps = {
 }
 
 export function KeyboardGame({ width, height }: KeyboardGameProps) {
-  const context = useWriteText()
   const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData()
-  const left = width - 19
-  const mid = width - 13
-  const right = width - 7
-
-  const top = 1
+  const left = width - 18
+  const mid = width - 12
+  const right = width - 6
+  const top = 0
   const ycenter = Math.floor(height * 0.5) - 2
-  const bottom = height - 5
-
-  const x = right - 5
-  const y = bottom - 2
+  const bottom = height - 4
   const center = Math.round(width * 0.5) - 3
-
-  for (let i = 0; i < 5; ++i) {
-    context.x = x
-    context.y = y + i
-    tokenizeandwritetextformat(
-      `$178$178$178$178$178$178$178$178$178`,
-      context,
-      false,
-    )
-  }
-
-  context.x = x + 2
-  context.y = y
-  tokenizeandwritetextformat('shoot', context, false)
-
   const player = registerreadplayer()
-
   return (
     <>
       <ToggleKey
@@ -158,7 +136,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={width - 7}
+        x={width - 5}
         y={ycenter}
         letters="$26"
         onToggle={() => {
@@ -167,7 +145,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={1}
+        x={0}
         y={ycenter}
         letters="$27"
         onToggle={() => {

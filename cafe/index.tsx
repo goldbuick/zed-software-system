@@ -15,6 +15,8 @@ import {
   PlaneGeometry,
   Points,
 } from 'three'
+import { RUNTIME } from 'zss/config'
+import { useDeviceData } from 'zss/gadget/hooks'
 import { makeeven } from 'zss/mapping/number'
 
 import { App } from './app'
@@ -76,16 +78,26 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
 // @ts-expect-error fuuuu
 const root = createRoot(document.getElementById('frame'))
 
-function applyconfig(innerwidth: number, innerheight: number) {
+function applyconfig() {
+  const innerwidth = window.innerWidth
+  const innerheight = window.innerHeight
+  if (window.visualViewport) {
+    const safeheight = Math.min(
+      window.innerHeight,
+      window.visualViewport.height,
+    )
+    const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
+    useDeviceData.setState({ saferows })
+  }
   const width = makeeven(innerwidth)
   const height = makeeven(innerheight)
   root
     .configure({
       size: {
+        left: 0,
         top: 0,
+        width,
         height,
-        left: 1,
-        width: width - 2,
       },
       events: eventManagerFactory,
       dpr: 1,
@@ -118,10 +130,16 @@ async function bootup() {
     },
   })
 
-  window.addEventListener('resize', () => {
-    handleresize(window.innerWidth, window.innerHeight)
-  })
-  handleresize(window.innerWidth, window.innerHeight)
+  window.addEventListener('resize', handleresize)
+  handleresize()
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleresize)
+    window.visualViewport.addEventListener('scroll', handleresize)
+  }
+
+  // Initial check
+  handleresize()
 
   root.render(<App />)
 }

@@ -24,14 +24,16 @@ type UserScreenProps = PropsWithChildren<any>
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
-  const { islandscape, showtouchcontrols } = useDeviceData()
+  const { saferows, islandscape, showtouchcontrols } = useDeviceData()
 
   // cols
   const rcols = viewwidth / RUNTIME.DRAW_CHAR_WIDTH()
   let cols = Math.floor(rcols)
+
   // rows
   const rrows = viewheight / RUNTIME.DRAW_CHAR_HEIGHT()
   let rows = Math.floor(rrows)
+
   // margins
   const marginx = (viewwidth - cols * RUNTIME.DRAW_CHAR_WIDTH()) * 0.5
   const marginy = (viewheight - rows * RUNTIME.DRAW_CHAR_HEIGHT()) * 0.5
@@ -47,7 +49,11 @@ export function UserScreen({ children }: UserScreenProps) {
       insetx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
-      rows = Math.floor(rrows * 0.55) - 1
+      if (saferows < rows) {
+        rows = saferows
+      } else {
+        rows = rows - 20
+      }
       insetrows -= rows
       insety = rows * RUNTIME.DRAW_CHAR_HEIGHT()
     }
