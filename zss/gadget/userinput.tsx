@@ -270,15 +270,27 @@ window.addEventListener(
     switch (key) {
       case 'arrowleft':
         inputdown(0, INPUT.MOVE_LEFT)
+        if (event.metaKey) {
+          inputup(0, INPUT.MOVE_LEFT)
+        }
         break
       case 'arrowright':
         inputdown(0, INPUT.MOVE_RIGHT)
+        if (event.metaKey) {
+          inputup(0, INPUT.MOVE_RIGHT)
+        }
         break
       case 'arrowup':
         inputdown(0, INPUT.MOVE_UP)
+        if (event.metaKey) {
+          inputup(0, INPUT.MOVE_UP)
+        }
         break
       case 'arrowdown':
         inputdown(0, INPUT.MOVE_DOWN)
+        if (event.metaKey) {
+          inputup(0, INPUT.MOVE_DOWN)
+        }
         break
       case 'enter':
         inputdown(0, INPUT.OK_BUTTON)
