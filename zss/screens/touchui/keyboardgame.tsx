@@ -1,6 +1,7 @@
 import {
   register_terminal_open,
   register_terminal_quickopen,
+  vm_clirepeatlast,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -117,6 +118,15 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
           register_terminal_quickopen(SOFTWARE, player, '')
         }}
       />
+      <ToggleKey
+        x={right}
+        y={bottom - 1}
+        letters="ctrl+p"
+        onToggle={() => {
+          vm_clirepeatlast(SOFTWARE, player)
+        }}
+      />
+
       <ToggleKey
         x={center}
         y={top}
