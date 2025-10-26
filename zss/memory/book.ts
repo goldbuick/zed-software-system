@@ -75,7 +75,12 @@ export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   return book
 }
 
-// gadgetsync
+export function bookupdatename(book: MAYBE<BOOK>) {
+  if (ispresent(book)) {
+    book.name = createnameid()
+  }
+}
+
 export function bookupdatetoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.token = `${createshortnameid()}${randominteger(1111, 9999)}`

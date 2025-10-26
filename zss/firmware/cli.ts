@@ -71,6 +71,7 @@ import {
   bookelementdisplayread,
   bookreadcodepagebyaddress,
   bookreadsortedcodepages,
+  bookupdatename,
 } from 'zss/memory/book'
 import {
   bookplayermovetoboard,
@@ -215,6 +216,24 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // --- book & pages commands
+  .command('bookrename', () => {
+    if (!isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    }
+
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    bookupdatename(mainbook)
+    if (ispresent(mainbook)) {
+      writeoption(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'main',
+        `${mainbook?.name ?? 'empty'} $GREEN${mainbook?.id ?? ''}`,
+      )
+    }
+
+    return 0
+  })
   .command('bookcreate', (chip, words) => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
