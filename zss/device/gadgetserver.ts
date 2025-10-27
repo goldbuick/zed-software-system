@@ -23,7 +23,7 @@ import {
 import { bookreadflags } from 'zss/memory/book'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendertogadget'
 
-import { gadgetclient_paint, gadgetclient_patch } from './api'
+import { gadgetclient_paint, gadgetclient_patch, vm_clearscroll } from './api'
 
 const patchencoder = new BinEncoder()
 
@@ -143,6 +143,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
     }
     case 'clearscroll':
       gadgetclearscroll(message.player)
+      vm_clearscroll(gadgetserver, message.player)
       break
   }
 })

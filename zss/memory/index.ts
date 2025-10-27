@@ -49,7 +49,6 @@ import {
   bookreadflag,
   bookreadflags,
   bookreadsortedcodepages,
-  bookwriteflag,
   createbook,
 } from './book'
 import {
@@ -1166,6 +1165,10 @@ export function memorytickobject(
 
 export function memorystartloader(id: string, code: string) {
   MEMORY.loaders.set(id, code)
+}
+
+export function memoryscrollunlock(id: string, player: string) {
+  os.scrollunlock(id, player)
 }
 
 export function memoryresetchipafteredit(object: string) {

@@ -51,6 +51,8 @@ export type CHIP = {
   send: (player: string, chipid: string, message: string, data?: any) => void
   lock: (allowed: string) => void
   unlock: () => void
+  scrolllock: (player: string) => void
+  scrollunlock: (player: string) => void
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -134,8 +136,10 @@ export function createchip(
   if (!isarray(flags.lb) || flags.lb.length !== labels.length) {
     // entry point state
     flags.lb = labels
-    // incoming message state
+    // lock states
     flags.lk = ''
+    // scroll lock, gets cleared when player closes the scroll
+    flags.sk = ''
     // we leave message unset
     flags.mg = undefined
     // we track where we are in execution
@@ -235,7 +239,7 @@ export function createchip(
       return flags.ps === 1
     },
     shouldtick() {
-      return flags.es === 0 || chip.hm() !== 0
+      return !flags.sk && (flags.es === 0 || chip.hm() !== 0)
     },
     shouldhalt() {
       if (isnumber(flags.lc)) {
@@ -290,9 +294,17 @@ export function createchip(
     unlock() {
       flags.lk = ''
     },
+    scrolllock(player) {
+      flags.sk = player
+    },
+    scrollunlock(player) {
+      if (flags.sk === player) {
+        flags.sk = ''
+      }
+    },
     message(incoming) {
       // internal messages while locked are allowed
-      if (flags.lk && incoming.sender !== flags.lk) {
+      if (flags.sk || (flags.lk && incoming.sender !== flags.lk)) {
         return
       }
       // validate we have given label

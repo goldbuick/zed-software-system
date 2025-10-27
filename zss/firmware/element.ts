@@ -1,4 +1,4 @@
-import { register_store, vm_endgame, vm_logout } from 'zss/device/api'
+import { register_store, vm_logout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {

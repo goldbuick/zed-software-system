@@ -125,7 +125,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
     // return has unhandled
     return [false, undefined]
   },
-  aftertick() {
+  aftertick(chip) {
     const queue = gadgetcheckqueue(READ_CONTEXT.elementid)
     const [ticker] = queue
     if (queue.length === 1 && isstring(ticker)) {
@@ -148,8 +148,11 @@ export const RUNTIME_FIRMWARE = createfirmware({
         const shared = gadgetstate(READ_CONTEXT.elementid)
         shared.sidebar = gadgetaddcenterpadding(queue)
       } else {
+        // element scroll locks until we get scrollclear
+        const player = READ_CONTEXT.elementfocus
+        chip.scrolllock(player)
         // element sending a scroll to a player
-        const shared = gadgetstate(READ_CONTEXT.elementfocus)
+        const shared = gadgetstate(player)
         shared.scrollname =
           READ_CONTEXT.element?.name ??
           READ_CONTEXT.element?.kinddata?.name ??
