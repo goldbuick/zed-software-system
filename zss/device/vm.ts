@@ -38,14 +38,12 @@ import {
 } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
-  memoryclearflags,
   memorycli,
   memoryclirepeatlast,
   memoryhasflags,
   memoryisoperator,
   memorylistcodepagewithtype,
   memorymessage,
-  memorypickcodepagewithtype,
   memoryplayerlogin,
   memoryplayerlogout,
   memoryplayerscan,
@@ -61,6 +59,7 @@ import {
   memoryresetbooks,
   memoryresetchipafteredit,
   memoryrestartallchipsandflags,
+  memoryscrollunlock,
   memorysendtoboards,
   memorysetbook,
   memorytick,
@@ -115,6 +114,7 @@ import {
   register_loginfail,
   register_loginready,
   register_savemem,
+  vm_clearscroll,
   vm_codeaddress,
   vm_flush,
   vm_loader,
@@ -453,6 +453,8 @@ const vm = createdevice(
         }
         break
       case 'logout':
+        // clear scroll locks
+        vm_clearscroll(vm, message.player)
         // logout player
         memoryplayerlogout(message.player, !!message.data)
         // stop tracking
@@ -579,6 +581,16 @@ const vm = createdevice(
           }
         }
         break
+      case 'clearscroll': {
+        const maybeboard = memoryreadplayerboard(message.player)
+        if (ispresent(maybeboard)) {
+          const objids = Object.keys(maybeboard.objects)
+          for (let i = 0; i < objids.length; ++i) {
+            memoryscrollunlock(objids[i], message.player)
+          }
+        }
+        break
+      }
       case 'halt':
         if (message.player === operator && isboolean(message.data)) {
           memorywritehalt(message.data)

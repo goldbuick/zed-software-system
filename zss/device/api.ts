@@ -562,6 +562,10 @@ export function vm_coderelease(
   device.emit(player, 'vm:coderelease', [book, path])
 }
 
+export function vm_clearscroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:clearscroll')
+}
+
 export function vm_cli(device: DEVICELIKE, player: string, input: string) {
   device.emit(player, 'vm:cli', input)
 }

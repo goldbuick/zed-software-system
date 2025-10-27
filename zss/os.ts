@@ -10,6 +10,7 @@ import { memoryreadoperator } from './memory'
 export type OS = {
   ids: () => string[]
   isended: (id: string) => boolean
+  scrollunlock: (id: string, player: string) => void
   halt: (id: string) => boolean
   gc: () => void
   arg: (id: string, value: any) => void
@@ -46,6 +47,12 @@ export function createos() {
         return chip.isended()
       }
       return true
+    },
+    scrollunlock(id, player) {
+      const chip = chips[id]
+      if (ispresent(chip)) {
+        chip.scrollunlock(player)
+      }
     },
     halt(id) {
       const chip = chips[id]
