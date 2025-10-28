@@ -32,7 +32,7 @@ export function parsesend(words: WORD[], candirsend = false): SEND_META {
       label,
       args: words.slice(bb),
     }
-  } else if (isstring(first)) {
+  } else {
     const [targetname, maybelabel, cc] = readargs(words, 0, [
       ARG_TYPE.NAME, // maybe target name
       ARG_TYPE.ANY, // maybe label name
