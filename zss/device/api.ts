@@ -160,6 +160,15 @@ export function platform_ready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }
 
+export function register_input(
+  device: DEVICELIKE,
+  player: string,
+  input: INPUT,
+  shift: boolean,
+) {
+  device.emit(player, 'register:input', [input, shift])
+}
+
 export function register_loginfail(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:loginfail')
 }
