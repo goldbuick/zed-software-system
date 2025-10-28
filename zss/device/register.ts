@@ -19,7 +19,9 @@ import {
   useTapeInspector,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
+import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData, useMedia } from 'zss/gadget/hooks'
+import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
@@ -473,6 +475,20 @@ const register = createdevice(
         }
         break
       }
+      case 'input':
+        if (isarray(message.data)) {
+          const [input, shift] = message.data as [INPUT, boolean]
+          if (shift) {
+            inputdown(0, INPUT.SHIFT)
+            inputdown(0, input)
+            inputup(0, input)
+            inputup(0, INPUT.SHIFT)
+          } else {
+            inputdown(0, input)
+            inputup(0, input)
+          }
+        }
+        break
       case 'store':
         doasync(register, message.player, async () => {
           if (isarray(message.data)) {
