@@ -575,6 +575,7 @@ export function createchip(
         ARG_TYPE.NUMBER,
         ARG_TYPE.MAYBE_NUMBER,
       ])
+      // TODO, afford iterating over a list if maybemin is an array of values
 
       let min = Math.min(maybemin, maybemax)
       let max = Math.max(maybemin, maybemax)

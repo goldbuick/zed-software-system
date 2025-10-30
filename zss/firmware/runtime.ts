@@ -40,7 +40,7 @@ function handlesendelement(chip: CHIP, element: BOARD_ELEMENT, label: string) {
   }
 }
 
-function handlesend(chip: CHIP, send: SEND_META) {
+export function handlesend(chip: CHIP, send: SEND_META) {
   if (ispresent(send.targetname)) {
     const objectids = Object.keys(READ_CONTEXT.board?.objects ?? {})
     switch (send.targetname) {
