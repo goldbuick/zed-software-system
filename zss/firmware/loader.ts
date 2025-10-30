@@ -11,33 +11,17 @@ import { INPUT } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import {
-  MEMORY_LABEL,
-  memoryboardread,
-  memoryreadbookbysoftware,
-  memoryreadoperator,
-  memorysendtoboards,
-} from 'zss/memory'
+import { memoryboardread, memoryreadoperator } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
-import { bookplayerreadboards } from 'zss/memory/bookplayer'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { SEND_META, parsesend } from 'zss/words/send'
+import { parsesend } from 'zss/words/send'
 import { NAME } from 'zss/words/types'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
 import { loadertext } from './loadertext'
-
-function handlesend(send: SEND_META) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const boards = bookplayerreadboards(mainbook)
-  if (ispresent(send.targetdir)) {
-    memorysendtoboards(send.targetdir.destpt, send.label, undefined, boards)
-  } else if (ispresent(send.targetname)) {
-    memorysendtoboards(send.targetname, send.label, undefined, boards)
-  }
-}
+import { handlesend } from './runtime'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -88,14 +72,14 @@ export const LOADER_FIRMWARE = createfirmware({
     // no-op when called in loaders
     return 0
   })
-  .command('shortsend', (_, words) => {
+  .command('shortsend', (chip, words) => {
     const send = parsesend(words)
-    handlesend(send)
+    handlesend(chip, send)
     return 0
   })
-  .command('send', (_, words) => {
+  .command('send', (chip, words) => {
     const send = parsesend(words, true)
-    handlesend(send)
+    handlesend(chip, send)
     return 0
   })
   .command('stat', () => {
@@ -192,7 +176,3 @@ export const LOADER_FIRMWARE = createfirmware({
     }
     return 0
   })
-/*
-TODO: add a #userinput loader command
-to afford chat to control scrolls AND the player
-*/
