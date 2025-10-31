@@ -210,7 +210,6 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.DIR,
             ARG_TYPE.COLOR_OR_KIND,
           ])
-
           if (dir.targets.length) {
             const [maybename, maybecolor] = match
             const matchlist: BOARD_ELEMENT[] = []
@@ -237,10 +236,14 @@ export function readexpr(index: number): [any, number] {
           switch (dir.layer) {
             default:
             case DIR.MID:
-              boardelementread(READ_CONTEXT.board, dir.destpt)
+              maybelement = boardelementread(READ_CONTEXT.board, dir.destpt)
               break
             case DIR.GROUND:
-              boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+              maybelement = boardgetterrain(
+                READ_CONTEXT.board,
+                dir.destpt.x,
+                dir.destpt.y,
+              )
               break
           }
 
@@ -322,10 +325,14 @@ export function readexpr(index: number): [any, number] {
           switch (dir.layer) {
             default:
             case DIR.MID:
-              boardelementread(READ_CONTEXT.board, dir.destpt)
+              maybelement = boardelementread(READ_CONTEXT.board, dir.destpt)
               break
             case DIR.GROUND:
-              boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+              maybelement = boardgetterrain(
+                READ_CONTEXT.board,
+                dir.destpt.x,
+                dir.destpt.y,
+              )
               break
           }
 
