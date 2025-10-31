@@ -527,10 +527,6 @@ export function boardevaldir(
         return { dir, startpt, destpt: pt, layer, targets: [] }
       }
       // pathfinding
-      case DIR.ATINDEX: {
-        // translate index into [x, y]
-        break
-      }
       case DIR.FLEE: {
         // run away from nearest kind
         break
@@ -553,14 +549,12 @@ export function boardevaldir(
             const collision = memoryelementstatread(element, 'collision')
             const maybept = boardreadpath(board, collision, pt, dest, true)
             // check dest spot for blocked
-            if (
-              ispresent(maybept) &&
-              maybept.x !== x &&
-              maybept.y !== y &&
-              !boardobjectreadbypt(board, maybept)
-            ) {
-              pt.x = maybept.x
-              pt.y = maybept.y
+            if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
+              const step = boardobjectreadbypt(board, maybept)
+              if (!ispresent(step)) {
+                pt.x = maybept.x
+                pt.y = maybept.y
+              }
             }
           } else {
             // no pathing needed
@@ -586,14 +580,12 @@ export function boardevaldir(
             const collision = memoryelementstatread(element, 'collision')
             const maybept = boardreadpath(board, collision, pt, dest, false)
             // check dest spot for blocked
-            if (
-              ispresent(maybept) &&
-              maybept.x !== x &&
-              maybept.y !== y &&
-              !boardobjectreadbypt(board, maybept)
-            ) {
-              pt.x = maybept.x
-              pt.y = maybept.y
+            if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
+              const step = boardobjectreadbypt(board, maybept)
+              if (!ispresent(step)) {
+                pt.x = maybept.x
+                pt.y = maybept.y
+              }
             }
           } else {
             // no pathing needed

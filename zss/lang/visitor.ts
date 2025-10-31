@@ -31,7 +31,6 @@ import {
   ComparisonCstChildren,
   DirCstChildren,
   Dir_atCstChildren,
-  Dir_atindexCstChildren,
   Dir_awayCstChildren,
   Dir_awaybyCstChildren,
   Dir_byCstChildren,
@@ -1513,28 +1512,6 @@ class ScriptVisitor
         value: 'by',
       }),
       ...this.go(ctx.simple_token),
-    ]
-  }
-
-  dir_atindex(ctx: Dir_atindexCstChildren, location: CstNodeLocation) {
-    const args: CodeNode[] = this.go(ctx.kind)
-    if (ctx.token_numberliteral) {
-      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
-      args.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.NUMBER,
-          value,
-        }),
-      )
-    }
-    return [
-      ...this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value: 'atindex',
-      }),
-      ...args,
     ]
   }
 

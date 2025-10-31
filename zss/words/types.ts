@@ -90,7 +90,6 @@ export enum DIR {
   // pathfinding
   AWAY,
   TOWARD,
-  ATINDEX,
   FIND,
   FLEE,
   // combinations
