@@ -680,17 +680,6 @@ export type Dir_towardCstChildren = {
   simple_token: Simple_tokenCstNode[]
 }
 
-export type Dir_atindexCstNode = {
-  name: 'dir_atindex'
-  children: Dir_atindexCstChildren
-} & CstNode
-
-export type Dir_atindexCstChildren = {
-  token_dir_atindex: IToken[]
-  kind?: KindCstNode[]
-  token_numberliteral?: IToken[]
-}
-
 export type Dir_findCstNode = {
   name: 'dir_find'
   children: Dir_findCstChildren
@@ -755,7 +744,6 @@ export type DirCstChildren = {
   token_down?: IToken[]
   token_left?: IToken[]
   token_right?: IToken[]
-  dir_atindex?: Dir_atindexCstNode[]
   dir_by?: Dir_byCstNode[]
   dir_at?: Dir_atCstNode[]
   dir_away?: Dir_awayCstNode[]
@@ -1082,7 +1070,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   dir_at(children: Dir_atCstChildren, param?: IN): OUT
   dir_away(children: Dir_awayCstChildren, param?: IN): OUT
   dir_toward(children: Dir_towardCstChildren, param?: IN): OUT
-  dir_atindex(children: Dir_atindexCstChildren, param?: IN): OUT
   dir_find(children: Dir_findCstChildren, param?: IN): OUT
   dir_flee(children: Dir_fleeCstChildren, param?: IN): OUT
   dir_to(children: Dir_toCstChildren, param?: IN): OUT

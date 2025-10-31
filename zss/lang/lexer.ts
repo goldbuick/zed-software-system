@@ -304,7 +304,6 @@ export const dir_left = createWordToken('left')
 export const dir_right = createWordToken('right')
 export const dir_by = createWordToken('by')
 export const dir_at = createWordToken('at')
-export const dir_atindex = createWordToken('dir_atindex')
 export const dir_flow = createWordToken('flow')
 export const dir_seek = createWordToken('seek')
 export const dir_rndns = createWordToken('rndns')
@@ -606,7 +605,6 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     dir_left,
     dir_right,
     dir_by,
-    dir_atindex,
     dir_at,
     dir_flow,
     dir_seek,
