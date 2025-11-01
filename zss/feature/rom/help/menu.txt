@@ -7,7 +7,7 @@ option;up or down arrow keys;navigate terminal items
 option;left or right arrow keys;change terminal items
 option;enter;activate terminal items
 option;alt + arrow keys;skip words and terminal lines
-option;ctrl + up / down arrow keys;input history
+option;$meta + up / down arrow keys;input history
 $32
 option;controls;zss controls and inputs
 !helpcontrols;read help controls

@@ -10,7 +10,12 @@ import { withclipboard } from 'zss/feature/keyboard'
 import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { isjoin, islocked, shorturl } from 'zss/feature/url'
-import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
+import {
+  writecopyit,
+  writeheader,
+  writeoption,
+  writetext,
+} from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
   useGadgetClient,
@@ -456,6 +461,13 @@ const register = createdevice(
           register_terminal_full(register, myplayerid)
           // signal sim loaded
           vm_loader(register, message.player, undefined, 'text', 'sim:load', '')
+          // drop a hint
+          await waitfor(1000)
+          writetext(
+            register,
+            message.player,
+            `try typing $green#help$blue and pressing enter!`,
+          )
         })
         break
       case 'acklogin':

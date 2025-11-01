@@ -332,7 +332,7 @@ window.addEventListener(
           vm_cli(SOFTWARE, player, '#fork')
         }
         break
-      case 'k':
+      case 'h':
         if (mods.ctrl) {
           vm_refscroll(SOFTWARE, player)
         }

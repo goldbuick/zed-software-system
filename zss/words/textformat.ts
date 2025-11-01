@@ -5,6 +5,8 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { colorconsts, colortobg, colortofg } from 'zss/words/color'
 import { COLOR } from 'zss/words/types'
 
+import { metakey } from './system'
+
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
 export const Whitespace = createToken({
@@ -39,12 +41,19 @@ export const StringLiteralDouble = createToken({
 export const EscapedDollar = createToken({
   name: 'EscapedDollar',
   pattern: '$$',
+  start_chars_hint: ['$'],
 })
 
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
   pattern: /\$[^-0-9"!;@#/?\s]+[^-"!;@#/?\s]*/,
-  // pattern: /\$[^ $\r\n]+/,
+  start_chars_hint: ['$'],
+})
+
+export const MetaKey = createToken({
+  name: 'MetaKey',
+  pattern: /\$META/i,
+  start_chars_hint: ['$'],
 })
 
 export const NumberLiteral = createToken({
@@ -77,6 +86,7 @@ export const allTokens = [
   NumberLiteral,
   EscapedDollar,
   HyperLinkText,
+  MetaKey,
   MaybeFlag,
 ]
 
@@ -95,6 +105,7 @@ const scriptLexerNoWhitespace = new Lexer(
     NumberLiteral,
     EscapedDollar,
     HyperLinkText,
+    MetaKey,
     MaybeFlag,
   ],
   {
@@ -283,6 +294,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       case Newline: {
         context.x = context.active.leftedge ?? 0
         ++context.y
+        break
+      }
+
+      case MetaKey: {
+        writeStr(metakey)
         break
       }
 

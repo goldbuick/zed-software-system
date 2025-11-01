@@ -26,6 +26,7 @@ import {
   vm_loader,
   vm_logout,
   vm_makeitscroll,
+  vm_refscroll,
   vm_restart,
   vm_zztrandom,
   vm_zztsearch,
@@ -102,40 +103,13 @@ function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())
 }
 
-function helpprint(address: string) {
-  romparse(romread(`help:${address}`), (line) =>
-    romprint(READ_CONTEXT.elementfocus, line),
-  )
-}
-
 function handlesend(send: SEND_META) {
-  switch (send.label) {
-    // help messages
-    case 'helpmenu':
-      helpprint('menu')
-      break
-    case 'helpcontrols':
-      helpprint('controls')
-      break
-    case 'helptext':
-      helpprint('text')
-      break
-    case 'helpdeveloper':
-      helpprint('developer')
-      break
-    case 'helpplayer':
-      helpprint('player')
-      break
-    default: {
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-      const boards = bookplayerreadboards(mainbook)
-      if (ispresent(send.targetname)) {
-        memorysendtoboards(send.targetname, send.label, undefined, boards)
-      } else if (ispresent(send.targetdir)) {
-        memorysendtoboards(send.targetdir.destpt, send.label, undefined, boards)
-      }
-      break
-    }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const boards = bookplayerreadboards(mainbook)
+  if (ispresent(send.targetname)) {
+    memorysendtoboards(send.targetname, send.label, undefined, boards)
+  } else if (ispresent(send.targetdir)) {
+    memorysendtoboards(send.targetdir.destpt, send.label, undefined, boards)
   }
 }
 
@@ -381,10 +355,8 @@ export const CLI_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('help', (chip, words) => {
-    // update this to pull wiki content
-    const text = words.map(maptostring).join(' ') || 'menu'
-    chip.command(`help${text}`)
+  .command('help', () => {
+    vm_refscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('books', () => {
@@ -447,7 +419,9 @@ export const CLI_FIRMWARE = createfirmware()
       })
     } else {
       write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-      helpprint('nopages')
+      romparse(romread(`help:nopages`), (line) =>
+        romprint(READ_CONTEXT.elementfocus, line),
+      )
     }
 
     const booklist = memoryreadbooklist()

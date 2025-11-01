@@ -1,4 +1,5 @@
 import { CHIP } from 'zss/chip'
+import { vm_refscroll } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -198,5 +199,9 @@ export const RUNTIME_FIRMWARE = createfirmware({
       chip.get,
       chip.set,
     )
+    return 0
+  })
+  .command('help', () => {
+    vm_refscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })

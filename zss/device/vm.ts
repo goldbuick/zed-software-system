@@ -681,7 +681,7 @@ const vm = createdevice(
           romscroll(message.player, line),
         )
         const shared = gadgetstate(message.player)
-        shared.scrollname = 'refscroll'
+        shared.scrollname = '#help or $meta+h'
         shared.scroll = gadgetcheckqueue(message.player)
         break
       }
