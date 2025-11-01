@@ -134,6 +134,15 @@ async function writewikilink() {
   parsemarkdownforwriteui(myplayerid, markdowntext)
 }
 
+async function writehelphint() {
+  await waitfor(1000)
+  writetext(
+    register,
+    myplayerid,
+    `try typing $green#help$blue and pressing enter!`,
+  )
+}
+
 function writepages() {
   vm_cli(register, myplayerid, '#pages')
 }
@@ -221,6 +230,7 @@ async function loadmem(books: string) {
     await writewikilink()
     vm_zsswords(register, myplayerid)
     register_terminal_full(register, myplayerid)
+    await writehelphint()
     return
   }
   // init vm with content
@@ -461,13 +471,7 @@ const register = createdevice(
           register_terminal_full(register, myplayerid)
           // signal sim loaded
           vm_loader(register, message.player, undefined, 'text', 'sim:load', '')
-          // drop a hint
-          await waitfor(1000)
-          writetext(
-            register,
-            message.player,
-            `try typing $green#help$blue and pressing enter!`,
-          )
+          await writehelphint()
         })
         break
       case 'acklogin':
