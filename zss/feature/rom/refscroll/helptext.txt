@@ -1,20 +1,53 @@
 section;typography
 plain text
-use "@quoted strings for special chars"
+use $34@quoted strings for special chars$34
 $$0-255 for ascii chars $159$176$240
-use color names like $RED$$red$BLUE to
- change foreground color
-use color names like $ONGREEN$$ongreen$ONCLEAR to
- change background color
-use onclear $WHITE$$onclear$BLUE
- to change background to transparent
+use color names like $RED$$red$yellow to change
+ foreground color
+use color names like $black$ONGREEN$$ongreen$ONCLEAR$yellow to change
+ background color
+use onclear $WHITE$$onclear$yellow to change
+ background to transparent
 section;hyperlinks
-option;!label hotkey <shortcut> [shortcutword];
-send the given #label when the <shortcut> is pressed
-!openit https://github.com/ianstormtaylor/is-hotkey ;uses is-hotkey
-option;!flag range [minword] [maxword];
+"
+option;!message$59 Label;
+send the given #message when the
+<hyperlink> is pressed
+"
+option;!message hotkey <shortcut>$59 Label;
+option;!message hk <shortcut>$59 Label;
+send the given #message when the <shortcut>
+is pressed. is-hotkey listens for <shortcut>
+!openit https://github.com/ianstormtaylor/is-hotkey;$whiteis-hotkey on https://github.com/
+"
+option;!flagorstat range [minword] [maxword]$59 Label;
+option;!flagorstat rn [minword] [maxword]$59 Label;
 uses the standard 1 to 9 values input range
-option;!flag select ...list of <word> <value> pairs;
-gives a user a way to cycle through preset values
-option;!flag text;
-write user text input into a flag
+[minword] is the label for value 1
+[maxword] is the label for value 9
+write user range input into a flagorstat
+"
+option;!flagorstat select <choices>$59 Label;
+option;!flagorstat sl <choices>$59 Label;
+<choices> is a list of <word> <value> pairs
+select gives a user a way to cycle through
+preset choices
+write user select input into a flagorstat
+"
+option;!flagorstat number$59 Label;
+option;!flagorstat nm$59 Label;
+write user number input into a flagorstat
+"
+option;!flagorstat text$59 Label;
+option;!flagorstat tx$59 Label;
+write user text input into a flagorstat
+"
+option;!copyit content goes here$59 Label;
+copies given content into the clipboard
+"
+option;!openit url$59 Label;
+opens the given url in a new browser tab
+"
+option;!runit content goes here$59 Label;
+opens the cli, with the input filled out with 
+the given content

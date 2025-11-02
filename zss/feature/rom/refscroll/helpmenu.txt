@@ -1,7 +1,5 @@
 !helpcontrols hk c C next;read help on controls
 !helptext hk t T next;read help on text and inputs
-!cliscroll hk d D next;read help developer
-!helpplayer hk p P next;read help player
 "
 keyboard input
 option;? or /;$greenopen cli
