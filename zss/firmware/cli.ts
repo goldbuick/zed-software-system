@@ -9,8 +9,6 @@ import {
   bridge_streamstart,
   bridge_streamstop,
   bridge_tab,
-  register_config,
-  register_configshow,
   register_dev,
   register_downloadjsonfile,
   register_editor_open,
@@ -56,7 +54,6 @@ import {
   MEMORY_LABEL,
   memoryboardread,
   memoryclearbook,
-  memorycreatesoftwarebook,
   memoryensuresoftwarebook,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
@@ -203,39 +200,6 @@ export const CLI_FIRMWARE = createfirmware()
         READ_CONTEXT.elementfocus,
         'main',
         `${mainbook?.name ?? 'empty'} $GREEN${mainbook?.id ?? ''}`,
-      )
-    }
-
-    return 0
-  })
-  .command('bookcreate', (chip, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-    const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-
-    const book = memorycreatesoftwarebook(maybename)
-    if (ispresent(book)) {
-      chip.command('bookopen', book.id)
-    }
-    return 0
-  })
-  .command('bookopen', (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-    const [name] = readargs(words, 0, [ARG_TYPE.NAME])
-
-    const book = memoryreadbookbyaddress(name)
-    if (ispresent(book)) {
-      register_config(SOFTWARE, READ_CONTEXT.elementfocus, 'selected', book.id)
-      vm_flush_op()
-    } else {
-      api_error(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        'bookopen',
-        `book ${name} not found`,
       )
     }
 
