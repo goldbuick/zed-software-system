@@ -163,9 +163,11 @@ export function Scroll({
             leftedge={0}
             rightedge={width}
             line={`
-   up/down$white.SCROLL UP/DOWN   $blue
-esc/cancel$white.CLOSE SCROLL   $blue
-alt+up/down$white.JUMP 10 LINES   $blue
+keys: $whiteup/down$green.SCROLL UP/DOWN 
+$whiteesc/cancel$green.CLOSE SCROLL 
+$whiteenter$green.ACTION ON SELECTED LINE 
+$whitealt+up/down$green.JUMP 10 LINES 
+$white$meta+up/down$green.JUMP TOP/BOTTOM $blue
 `}
             context={context}
           />

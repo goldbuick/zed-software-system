@@ -81,22 +81,22 @@ export function EditorFrame() {
       leftedge={0}
       rightedge={edge.width - 1}
       line={`
-    esc/cancel$white.CLOSE   $blue
-    tab$white.CHANGE LAYOUT   $blue
-    hold shift$white.SELECT TEXT   $blue
-    alt+up/down$white.JUMP 10 LINES   $blue
-    alt+left/right$white.JUMP 10 COLS   $blue
-    ${metakey}+up/down$white.JUMP TOP/BOTTOM   $blue
-    ${metakey}+left/right$white.JUMP TO START/END OF LINE   $blue
-    ${metakey}+a$white.SELECT ALL   $blue
-    ${metakey}+c$white.COPY   $blue
-    ${metakey}+x$white.CUT   $blue
-    ${metakey}+v$white.PASTE   $blue
-    ${metakey}+z$white.UNDO   $blue
-    ${metaundo}$white.REDO   $blue
-    ${metakey}+p$white.TEST SELECTED CODE   $blue
-    ${metakey}+h$white.OPEN HELPSCROLL   $blue
-    ${metakey}+e$white.COPY CODEPAGE TO CLIPBOARD AS JSON   $blue
+keys: $whiteesc/cancel$green.CLOSE 
+$whitetab$green.CHANGE LAYOUT 
+$whitehold shift$green.SELECT TEXT 
+$whitealt+up/down$green.JUMP 10 LINES 
+$whitealt+left/right$green.JUMP 10 COLS 
+$white$meta+up/down$green.JUMP TOP/BOTTOM 
+$white$meta+left/right$green.JUMP TO START/END OF LINE 
+$white$meta+a$green.SELECT ALL 
+$white$meta+c$green.COPY 
+$white$meta+x$green.CUT 
+$white$meta+v$green.PASTE 
+$white$meta+z$green.UNDO 
+$white${metaundo}$green.REDO 
+$white$meta+p$green.TEST SELECTED CODE 
+$white$meta+h$green.OPEN HELPSCROLL 
+$white$meta+e$green.COPY CODEPAGE TO CLIPBOARD AS JSON $blue
     `}
       context={context}
     />
