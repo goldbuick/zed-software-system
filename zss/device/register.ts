@@ -290,7 +290,7 @@ export async function readconfig(name: string) {
   return value && value !== 'off' ? 'on' : 'off'
 }
 
-export async function writeconfig(name: string, value: string) {
+async function writeconfig(name: string, value: string) {
   api_log(register, myplayerid, `writing config ${name}`)
   return writeidb(`config_${name}`, () => value)
 }

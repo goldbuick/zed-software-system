@@ -66,6 +66,7 @@ import {
   memorywritehalt,
   memorywriteoperator,
 } from 'zss/memory'
+import { memoryadminmenu } from 'zss/memory/admin'
 import { boardobjectread } from 'zss/memory/board'
 import {
   bookelementdisplayread,
@@ -223,49 +224,11 @@ const vm = createdevice(
         // ack
         vm.replynext(message, 'ackoperator', true)
         break
-      case 'admin': {
-        // get list of active players
-        const isop = memoryisoperator(message.player)
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
-        activelistvalues.add(memoryreadoperator())
-        const activelist = [...activelistvalues]
-
-        // build userlist
-        gadgettext(message.player, `active player list`)
-        gadgettext(message.player, DIVIDER)
-        for (let i = 0; i < activelist.length; ++i) {
-          const player = activelist[i]
-          const { user } = memoryreadflags(player)
-          const withuser = isstring(user) ? user : 'player'
-          const playerboard = memoryreadplayerboard(player)
-          const playerelement = boardobjectread(playerboard, player)
-          const icon = bookelementdisplayread(playerelement)
-          const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
-          const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
-          if (isop && ispresent(playerboard)) {
-            gadgethyperlink(
-              message.player,
-              'admingoto',
-              `${icontext} ${withuser} ${location}`,
-              [player],
-            )
-          } else {
-            gadgettext(
-              message.player,
-              `${icontext} ${withuser} ${isop ? location : ''}`,
-            )
-          }
-        }
-
-        // build qr code
-        // qrlines()
-
-        const shared = gadgetstate(message.player)
-        shared.scrollname = 'cpu admin'
-        shared.scroll = gadgetcheckqueue(message.player)
+      case 'admin':
+        doasync(vm, message.player, async () => {
+          await memoryadminmenu(message.player)
+        })
         break
-      }
       case 'zsswords': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
         const dirmods = [
