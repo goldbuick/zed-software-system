@@ -548,18 +548,6 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- game state related commands
-  .command('config', (_, words) => {
-    const [name, value] = readargs(words, 0, [
-      ARG_TYPE.MAYBE_NAME,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-    if (isstring(name) && isstring(value)) {
-      register_config(SOFTWARE, READ_CONTEXT.elementfocus, name, value)
-    } else {
-      register_configshow(SOFTWARE, READ_CONTEXT.elementfocus)
-    }
-    return 0
-  })
   .command('dev', () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vm_flush_op()

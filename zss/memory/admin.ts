@@ -123,22 +123,18 @@ export async function memoryadminmenu(player: string) {
     const [key, value] = configlist[i]
     gadgethyperlink(
       player,
-      '',
+      'configselect',
       key,
-      [key, 'select', 'on', 'on', 'off', 'off'],
+      [key, 'select', 'off', '0', 'on', '1'],
       (name) => {
         const newval = configstate[name] ?? value ?? readconfigdefault(name)
-        console.info('get', name, newval)
-        return newval
+        return newval === 'on' ? 1 : 0
       },
       (name, value) => {
-        console.info('set', name, value)
-        if (isstring(value)) {
-          configstate[name] = value
-          doasync(SOFTWARE, player, async () => {
-            await writeconfig(name, value)
-          })
-        }
+        configstate[name] = value ? 'on' : 'off'
+        doasync(SOFTWARE, player, async () => {
+          await writeconfig(name, configstate[name])
+        })
       },
     )
   }
