@@ -1,2 +1,0 @@
-header;player settings
-#set user "name goes here"

@@ -8,6 +8,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/hooks'
 import { inputdown, inputup } from 'zss/gadget/userinput'
+import { metakey } from 'zss/words/system'
 
 import { ToggleKey } from './togglekey'
 
@@ -31,7 +32,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
       <ToggleKey
         x={1}
         y={top}
-        letters={keyboardctrl ? 'CTRL' : 'ctrl'}
+        letters={keyboardctrl ? metakey.toUpperCase() : metakey.toLowerCase()}
         onToggle={() => {
           if (keyboardctrl) {
             inputup(0, INPUT.CTRL)
@@ -121,7 +122,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
       <ToggleKey
         x={right}
         y={bottom - 1}
-        letters="ctrl+p"
+        letters="$meta+p"
         onToggle={() => {
           vm_clirepeatlast(SOFTWARE, player)
         }}

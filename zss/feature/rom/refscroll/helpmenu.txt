@@ -1,0 +1,12 @@
+!helpcontrols hk c C next;read help on controls
+!helptext hk t T next;read help on text and inputs
+"
+keyboard input
+option;? or /;$greenopen cli
+option;esc;$greenclose cli, scroll, or editor
+option;tab;$greenchange layout
+option;up or down arrow keys;$greennavigate cli lines
+option;left or right arrow keys;$greenchange cli lines
+option;enter;$greenaction on selected line
+option;alt + arrow keys;$greenskip words and cli lines
+option;$meta + up / down arrow keys;$greeninput history

@@ -1,16 +1,17 @@
 import humanid from 'human-id'
-import {
-  get as idbget,
-  getMany as idbgetmany,
-  update as idbupdate,
-} from 'idb-keyval'
+import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice } from 'zss/device'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { isjoin, islocked, shorturl } from 'zss/feature/url'
-import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
+import {
+  writecopyit,
+  writeheader,
+  writeoption,
+  writetext,
+} from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
   useGadgetClient,
@@ -129,6 +130,15 @@ async function writewikilink() {
   parsemarkdownforwriteui(myplayerid, markdowntext)
 }
 
+async function writehelphint() {
+  await waitfor(1000)
+  writetext(
+    register,
+    myplayerid,
+    `try typing $green#help$blue and pressing enter!`,
+  )
+}
+
 function writepages() {
   vm_cli(register, myplayerid, '#pages')
 }
@@ -216,6 +226,7 @@ async function loadmem(books: string) {
     await writewikilink()
     vm_zsswords(register, myplayerid)
     register_terminal_full(register, myplayerid)
+    await writehelphint()
     return
   }
   // init vm with content
@@ -273,29 +284,6 @@ export async function readconfig(name: string) {
   }
 
   return value && value !== 'off' ? 'on' : 'off'
-}
-
-export async function writeconfig(name: string, value: string) {
-  api_log(register, myplayerid, `writing config ${name}`)
-  return writeidb(`config_${name}`, () => value)
-}
-
-async function readconfigall() {
-  const lookup = [
-    'config_crt',
-    'config_lowrez',
-    'config_scanlines',
-    'config_voice2text',
-  ]
-  const configs = await idbgetmany<string>(lookup)
-  return configs.map((value, index) => {
-    const key = lookup[index]
-    const keyname = key.replace('config_', '')
-    if (!value) {
-      return [keyname, readconfigdefault(keyname)]
-    }
-    return [keyname, value && value !== 'off' ? 'on' : 'off']
-  })
 }
 
 export async function readhistorybuffer() {
@@ -456,6 +444,7 @@ const register = createdevice(
           register_terminal_full(register, myplayerid)
           // signal sim loaded
           vm_loader(register, message.player, undefined, 'text', 'sim:load', '')
+          await writehelphint()
         })
         break
       case 'acklogin':
@@ -654,23 +643,6 @@ const register = createdevice(
               // save zipfile
               await itchiopublish(maybename, maybecontent)
             }
-          }
-        })
-        break
-      case 'config':
-        doasync(register, message.player, async () => {
-          if (isarray(message.data)) {
-            const [name, value] = message.data as [string, string]
-            await writeconfig(name, value)
-          }
-        })
-        break
-      case 'configshow':
-        doasync(register, message.player, async () => {
-          const all = await readconfigall()
-          writeheader(register, message.player, 'config')
-          for (let i = 0; i < all.length; ++i) {
-            writeoption(register, message.player, all[i][0], all[i][1])
           }
         })
         break

@@ -1,0 +1,2 @@
+player settings
+$white#set user "name goes here"

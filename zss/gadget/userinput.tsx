@@ -332,7 +332,7 @@ window.addEventListener(
           vm_cli(SOFTWARE, player, '#fork')
         }
         break
-      case 'k':
+      case 'h':
         if (mods.ctrl) {
           vm_refscroll(SOFTWARE, player)
         }
@@ -440,10 +440,10 @@ const buttonlookup: Record<number, INPUT> = {
   [BUTTON_A]: INPUT.MOVE_DOWN,
   [BUTTON_X]: INPUT.MOVE_LEFT,
   [BUTTON_B]: INPUT.MOVE_RIGHT,
-  [BUTTON_LEFT_SHOULDER]: INPUT.OK_BUTTON,
-  [BUTTON_RIGHT_SHOULDER]: INPUT.CANCEL_BUTTON,
-  [BUTTON_LEFT_TRIGGER]: INPUT.SHIFT,
-  [BUTTON_RIGHT_TRIGGER]: INPUT.SHIFT,
+  [BUTTON_LEFT_SHOULDER]: INPUT.CANCEL_BUTTON,
+  [BUTTON_RIGHT_SHOULDER]: INPUT.OK_BUTTON,
+  [BUTTON_LEFT_TRIGGER]: INPUT.ALT,
+  [BUTTON_RIGHT_TRIGGER]: INPUT.CTRL,
   [BUTTON_MENU]: INPUT.MENU_BUTTON,
   [BUTTON_UP]: INPUT.MOVE_UP,
   [BUTTON_DOWN]: INPUT.MOVE_DOWN,

@@ -31,7 +31,7 @@ export function Marquee({
 
   // measure line
   const strcolor = COLOR[color] ?? ''
-  const content = `$${strcolor.toLowerCase()} ${line.replaceAll('\n', '').trim()} --=--`
+  const content = `$${strcolor.toLowerCase()}${line.replaceAll('\n', '').trim()}`
   const measure = tokenizeandmeasuretextformat(content, 10000, 1)
   const contentmax = measure?.measuredwidth ?? 1
 

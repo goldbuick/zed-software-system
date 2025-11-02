@@ -1,0 +1,19 @@
+section;keyboard input
+option;arrow keys;$greenmove
+option;shift + arrow keys;$greenshoot
+option;enter;$greenok / accept
+option;escape;$greencancel / close
+option;tab;$greenmenu / layout
+section;controller input
+option;left stick;$greenmove
+option;right stick;$greenshoot
+option;left trigger;$greenalt
+option;right trigger;$green$meta
+option;left shoulder;$greencancel / close
+option;right shoulder;$greenok / accept
+option;d-pad;$greenmove
+option;a X;$greenshoot down
+option;b $9;$greenshoot right
+option;x $254;$greenshoot left
+option;y $30;$greenshoot up
+option;menu;$greenmenu / change layout

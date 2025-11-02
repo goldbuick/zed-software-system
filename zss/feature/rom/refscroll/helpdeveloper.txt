@@ -1,4 +1,3 @@
-header;developer commands
 option;#books;list books in memory
 option;#pages;list pages in opened book
 option;@[pagetype:]page name;create & edit a new codepage in the currently opened book

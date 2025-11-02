@@ -190,17 +190,12 @@ export function gadgethyperlink(
     // setup tracking if needed
     if (panelshared[chip][target] === undefined) {
       const address = paneladdress(chip, target)
-
-      // this will init the value only if not already setup
-      if (isnumber(current)) {
-        modemwriteinitnumber(address, current)
-      }
-      if (isstring(current)) {
-        modemwriteinitstring(address, current)
-      }
-
       // observe by hyperlink type
       if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
+        // this will init the value only if not already setup
+        if (isstring(current)) {
+          modemwriteinitstring(address, current)
+        }
         panelshared[chip][target] = modemobservevaluestring(
           address,
           (value) => {
@@ -208,6 +203,10 @@ export function gadgethyperlink(
           },
         )
       } else {
+        // this will init the value only if not already setup
+        if (isnumber(current)) {
+          modemwriteinitnumber(address, current)
+        }
         panelshared[chip][target] = modemobservevaluenumber(
           address,
           (value) => {

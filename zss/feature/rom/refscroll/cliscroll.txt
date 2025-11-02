@@ -10,7 +10,7 @@ $white searches the museumofzzt api for zzt games
 section;multi-player
 #set user <name>
 $white sets your display name when talking to others
-#joincode OR ctrl+O 
+#joincode OR $meta+O 
 $white starts a multi-player session showing a
 $white QR code. It also provides are sharable link
 $white you can give to other to join the game.
