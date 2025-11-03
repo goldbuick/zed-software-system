@@ -5,7 +5,7 @@ import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
-import { isjoin, islocked, shorturl } from 'zss/feature/url'
+import { isjoin, shorturl } from 'zss/feature/url'
 import {
   writecopyit,
   writeheader,
@@ -47,7 +47,6 @@ import {
   vm_books,
   vm_cli,
   vm_doot,
-  vm_halt,
   vm_loader,
   vm_login,
   vm_operator,
@@ -422,8 +421,6 @@ const register = createdevice(
           if (isjoin()) {
             bridge_join(register, myplayerid, urlcontent)
           } else {
-            // signal halting state
-            vm_halt(register, myplayerid, islocked())
             // pull data && init
             await loadmem(urlcontent)
           }
@@ -564,19 +561,6 @@ const register = createdevice(
           }
         }
         break
-      case 'dev':
-        doasync(register, message.player, async function () {
-          if (islocked()) {
-            writeheader(register, message.player, `unlocking terminal`)
-            await waitfor(100)
-            location.href = location.href.replace(`/locked/#`, `/#`)
-          } else {
-            writeheader(register, message.player, `creating locked terminal`)
-            await waitfor(100)
-            location.href = location.href.replace(`/#`, `/locked/#`)
-          }
-        })
-        break
       case 'share':
         doasync(register, message.player, async function () {
           // unpack short url before sharing
@@ -627,9 +611,7 @@ const register = createdevice(
           if (isstring(maybecontent)) {
             // launch fork url
             window.open(
-              location.href
-                .replace(`/locked/#`, `/#`)
-                .replace(/#.*/, `#${maybecontent}`),
+              location.href.replace(/#.*/, `#${maybecontent}`),
               '_blank',
             )
           }

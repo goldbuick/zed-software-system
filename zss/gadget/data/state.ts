@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { FORMAT_OBJECT } from 'zss/feature/format'
-import { islocked } from 'zss/feature/url'
 import { MAYBE, isequal } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
@@ -98,7 +97,7 @@ export const useTape = create<{
   reset: () => void
 }>((set) => ({
   layout: TAPE_DISPLAY.TOP,
-  inspector: islocked(),
+  inspector: false,
   quickterminal: false,
   toast: '',
   terminal: {
@@ -116,7 +115,7 @@ export const useTape = create<{
   reset() {
     set({
       layout: TAPE_DISPLAY.TOP,
-      inspector: islocked(),
+      inspector: false,
       quickterminal: false,
       toast: '',
       terminal: {

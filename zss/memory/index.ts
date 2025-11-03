@@ -101,6 +101,8 @@ const MEMORY = {
   books: new Map<string, BOOK>(),
   // running loaders
   loaders: new Map<string, string>(),
+  // active multiplayer session
+  topic: '',
 }
 
 export function memoryreadsession() {
@@ -117,6 +119,14 @@ export function memoryisoperator(player: string) {
 
 export function memorywriteoperator(operator: string) {
   MEMORY.operator = operator
+}
+
+export function memoryreadtopic() {
+  return MEMORY.topic
+}
+
+export function memorywritetopic(topic: string) {
+  MEMORY.topic = topic
 }
 
 export function memorywritehalt(halt: boolean) {

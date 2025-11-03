@@ -360,8 +360,12 @@ export function register_store(
   device.emit(player, 'register:store', [name, value])
 }
 
-export function register_inspector(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:inspector')
+export function register_inspector(
+  device: DEVICELIKE,
+  player: string,
+  forcevalue: MAYBE<boolean>,
+) {
+  device.emit(player, 'register:inspector', forcevalue)
 }
 
 export function register_findany(
@@ -448,8 +452,12 @@ export function vm_zsswords(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:zsswords')
 }
 
-export function vm_halt(device: DEVICELIKE, player: string, halt: boolean) {
-  device.emit(player, 'vm:halt', halt)
+export function vm_halt(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:halt')
+}
+
+export function vm_topic(device: DEVICELIKE, player: string, topic: string) {
+  device.emit(player, 'vm:topic')
 }
 
 export function vm_books(device: DEVICELIKE, player: string, books: string) {

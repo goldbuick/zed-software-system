@@ -20,6 +20,7 @@ import {
   vm_codeaddress,
   vm_flush,
   vm_fork,
+  vm_halt,
   vm_itchiopublish,
   vm_loader,
   vm_logout,
@@ -515,7 +516,7 @@ export const CLI_FIRMWARE = createfirmware()
   .command('dev', () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vm_flush_op()
-      register_dev(SOFTWARE, READ_CONTEXT.elementfocus)
+      vm_halt(SOFTWARE, READ_CONTEXT.elementfocus)
     } else {
       // no-op
     }

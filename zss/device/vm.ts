@@ -17,7 +17,6 @@ import {
   museumofzztscreenshoturl,
   museumofzztsearch,
 } from 'zss/feature/url'
-import { DIVIDER } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
   gadgetcheckqueue,
@@ -29,19 +28,12 @@ import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
-import {
-  MAYBE,
-  isarray,
-  isboolean,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
   memorycli,
   memoryclirepeatlast,
   memoryhasflags,
-  memoryisoperator,
   memorylistcodepagewithtype,
   memorymessage,
   memoryplayerlogin,
@@ -65,11 +57,11 @@ import {
   memorytick,
   memorywritehalt,
   memorywriteoperator,
+  memorywritetopic,
 } from 'zss/memory'
 import { memoryadminmenu } from 'zss/memory/admin'
 import { boardobjectread } from 'zss/memory/board'
 import {
-  bookelementdisplayread,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
   bookwritecodepage,
@@ -111,6 +103,7 @@ import {
   register_copy,
   register_copyjsonfile,
   register_forkmem,
+  register_inspector,
   register_itchiopublishmem,
   register_loginfail,
   register_loginready,
@@ -118,6 +111,7 @@ import {
   vm_clearscroll,
   vm_codeaddress,
   vm_flush,
+  vm_halt,
   vm_loader,
   vm_local,
   vm_logout,
@@ -223,6 +217,11 @@ const vm = createdevice(
         api_log(vm, message.player, `operator set to ${message.player}`)
         // ack
         vm.replynext(message, 'ackoperator', true)
+        break
+      case 'topic':
+        if (isstring(message.data)) {
+          memorywritetopic(message.data)
+        }
         break
       case 'admin':
         doasync(vm, message.player, async () => {
@@ -555,8 +554,15 @@ const vm = createdevice(
         break
       }
       case 'halt':
-        if (message.player === operator && isboolean(message.data)) {
-          memorywritehalt(message.data)
+        if (message.player === operator) {
+          const halt = memoryreadhalt() ? false : true
+          memorywritehalt(halt)
+          api_log(
+            vm,
+            message.player,
+            `#dev mode is ${halt ? '$greenon' : '$redoff'}`,
+          )
+          register_inspector(vm, message.player, halt)
         }
         break
       case 'tick': {
@@ -814,6 +820,17 @@ const vm = createdevice(
       default: {
         const { target, path } = parsetarget(message.target)
         switch (NAME(target)) {
+          case 'adminop': {
+            switch (path) {
+              case 'gadget':
+                register_inspector(vm, message.player, undefined)
+                break
+              case 'dev':
+                vm_halt(vm, message.player)
+                break
+            }
+            break
+          }
           case 'admingoto': {
             // path is player id
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -836,6 +853,11 @@ const vm = createdevice(
           }
           case 'refscroll':
             switch (path) {
+              case 'adminscroll':
+                doasync(vm, message.player, async () => {
+                  await memoryadminmenu(message.player)
+                })
+                break
               case 'objectlistscroll': {
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
                 for (let i = 0; i < pages.length; ++i) {

@@ -1,6 +1,12 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import Peer, { DataConnection } from 'peerjs'
-import { MESSAGE, api_error, api_log, vm_search } from 'zss/device/api'
+import {
+  MESSAGE,
+  api_error,
+  api_log,
+  vm_search,
+  vm_topic,
+} from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,
@@ -126,6 +132,7 @@ function handledataconnection(dataconnection: DataConnection) {
 function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   // setup topic
   subscribetopic = topicpeerid
+  vm_topic(SOFTWARE, registerreadplayer(), subscribetopic)
 
   // create peer
   const player = registerreadplayer()
@@ -233,6 +240,7 @@ export function netterminalhalt() {
   }
   // clear topic info
   subscribetopic = ''
+  vm_topic(SOFTWARE, registerreadplayer(), subscribetopic)
   // clear coms
   networkpeer.destroy()
   networkpeer = undefined

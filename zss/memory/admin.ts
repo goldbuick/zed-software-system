@@ -12,6 +12,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { doasync } from 'zss/mapping/func'
+import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
@@ -23,15 +24,13 @@ import {
   memoryisoperator,
   memoryreadbookbysoftware,
   memoryreadflags,
+  memoryreadhalt,
   memoryreadoperator,
   memoryreadplayerboard,
+  memoryreadtopic,
 } from '.'
 
 // read / write from indexdb
-
-async function readidb<T>(key: string): Promise<T | undefined> {
-  return idbget(key)
-}
 
 async function writeidb<T>(
   key: string,
@@ -47,16 +46,6 @@ function readconfigdefault(name: string) {
     default:
       return 'off'
   }
-}
-
-async function readconfig(name: string) {
-  const value = await readidb<string>(`config_${name}`)
-
-  if (!value) {
-    return readconfigdefault(name)
-  }
-
-  return value && value !== 'off' ? 'on' : 'off'
 }
 
 async function writeconfig(name: string, value: string) {
@@ -113,6 +102,22 @@ export async function memoryadminmenu(player: string) {
     }
   }
 
+  // build util list
+  gadgettext(player, ``)
+  gadgettext(player, `util list`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'adminop', 'toggle #gadget inspector', ['gadget'])
+  const halt = memoryreadhalt()
+  gadgettext(player, `#dev mode is ${halt ? 'on' : 'off'}`)
+  if (isop) {
+    gadgethyperlink(
+      player,
+      'adminop',
+      `turn ${halt ? 'off' : 'on'} #dev mode`,
+      ['dev'],
+    )
+  }
+
   // build config list
   const configlist = await readconfigall()
   const configstate: Record<string, string> = {}
@@ -123,7 +128,7 @@ export async function memoryadminmenu(player: string) {
     const [key, value] = configlist[i]
     gadgethyperlink(
       player,
-      'configselect',
+      'admin',
       key,
       [key, 'select', 'off', '0', 'on', '1'],
       (name) => {
@@ -140,9 +145,22 @@ export async function memoryadminmenu(player: string) {
   }
 
   // build qr code
-  // qrlines()
+  gadgettext(player, ``)
+  gadgettext(player, `multiplayer`)
+  gadgettext(player, DIVIDER)
+  const topic = memoryreadtopic()
+  if (topic) {
+    const joinurl = `${location.origin}/join/#${topic}`
+    const ascii = qrlines(joinurl)
+    for (let i = 0; i < ascii.length; i++) {
+      gadgettext(player, ascii[i])
+    }
+  } else {
+    gadgettext(player, `session not active`)
+  }
+  gadgettext(player, ``)
 
   const shared = gadgetstate(player)
-  shared.scrollname = 'cpu admin'
+  shared.scrollname = 'cpu #admin'
   shared.scroll = gadgetcheckqueue(player)
 }
