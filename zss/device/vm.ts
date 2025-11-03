@@ -836,6 +836,11 @@ const vm = createdevice(
           }
           case 'refscroll':
             switch (path) {
+              case 'adminscroll':
+                doasync(vm, message.player, async () => {
+                  await memoryadminmenu(message.player)
+                })
+                break
               case 'objectlistscroll': {
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
                 for (let i = 0; i < pages.length; ++i) {
