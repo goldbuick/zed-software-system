@@ -18,10 +18,6 @@ export function isjoin() {
   return window.location.href.includes(`/join/`)
 }
 
-export function islocked() {
-  return window.location.href.includes(`/locked/`)
-}
-
 export type MOSTLY_ZZT_META = {
   title: string
   letter: string

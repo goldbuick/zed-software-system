@@ -12,6 +12,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { doasync } from 'zss/mapping/func'
+import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
@@ -23,8 +24,10 @@ import {
   memoryisoperator,
   memoryreadbookbysoftware,
   memoryreadflags,
+  memoryreadhalt,
   memoryreadoperator,
   memoryreadplayerboard,
+  memoryreadtopic,
 } from '.'
 
 // read / write from indexdb
@@ -103,8 +106,17 @@ export async function memoryadminmenu(player: string) {
   gadgettext(player, ``)
   gadgettext(player, `util list`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'admin', 'turn on #gadget inspector', ['gadget'])
-  gadgethyperlink(player, 'admin', 'turn on #dev mode', ['dev'])
+  gadgethyperlink(player, 'adminop', 'toggle #gadget inspector', ['gadget'])
+  const halt = memoryreadhalt()
+  gadgettext(player, `#dev mode is ${halt ? 'on' : 'off'}`)
+  if (isop) {
+    gadgethyperlink(
+      player,
+      'adminop',
+      `turn ${halt ? 'off' : 'on'} #dev mode`,
+      ['dev'],
+    )
+  }
 
   // build config list
   const configlist = await readconfigall()
@@ -133,7 +145,20 @@ export async function memoryadminmenu(player: string) {
   }
 
   // build qr code
-  // qrlines()
+  gadgettext(player, ``)
+  gadgettext(player, `multiplayer`)
+  gadgettext(player, DIVIDER)
+  const topic = memoryreadtopic()
+  if (topic) {
+    const joinurl = `${location.origin}/join/#${topic}`
+    const ascii = qrlines(joinurl)
+    for (let i = 0; i < ascii.length; i++) {
+      gadgettext(player, ascii[i])
+    }
+  } else {
+    gadgettext(player, `session not active`)
+  }
+  gadgettext(player, ``)
 
   const shared = gadgetstate(player)
   shared.scrollname = 'cpu #admin'

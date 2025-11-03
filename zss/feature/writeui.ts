@@ -70,6 +70,13 @@ export function writehyperlink(
   write(device, player, `!${hyperlink};${label}`)
 }
 
+export function writeqr(device: DEVICELIKE, player: string, content: string) {
+  const ascii = qrlines(content)
+  for (let i = 0; i < ascii.length; i++) {
+    write(device, player, ascii[i])
+  }
+}
+
 export function writecopyit(
   device: DEVICELIKE,
   player: string,
@@ -78,10 +85,7 @@ export function writecopyit(
   showqr = true,
 ) {
   if (showqr) {
-    const ascii = qrlines(content)
-    for (let i = 0; i < ascii.length; i++) {
-      write(device, player, ascii[i])
-    }
+    writeqr(device, player, content)
   }
   write(device, player, `!copyit ${content};${label}`)
   register_terminal_full(device, player)
