@@ -20,6 +20,7 @@ import {
   isequal,
   isnumber,
   ispresent,
+  isstring,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
@@ -65,6 +66,7 @@ export type CHIP = {
   text: (...words: WORD[]) => void
   stat: (...words: WORD[]) => void
   hyperlink: (...words: WORD[]) => void
+  print: (name: string) => string
   template: (words: WORD[]) => string
 
   // logic api
@@ -427,6 +429,15 @@ export function createchip(
     },
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
+    },
+    print(value) {
+      if (isarray(value)) {
+        return `array ${value.length} ${value.length === 1 ? 'item' : 'items'}`
+      }
+      if (typeof value === 'object') {
+        return `obj ${Object.keys(value).join(', ')}`
+      }
+      return value
     },
     template(words) {
       const result = tokenize(words.join(' '), true)

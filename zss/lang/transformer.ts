@@ -55,7 +55,7 @@ function writeTemplateString(value: string): string {
       if (NAME(name) === 'center') {
         return `$CENTER`
       }
-      return `', api.get('${name}'), '`
+      return `', api.print(api.get('${name}')), '`
     }
     return escapestring(token.image)
   })

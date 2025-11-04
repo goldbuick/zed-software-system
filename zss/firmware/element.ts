@@ -828,11 +828,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.endofprogram()
     return 0
   })
-  .command('endwith', (chip, words) => {
-    const [maybearg] = readargs(words, 0, [ARG_TYPE.ANY])
-    chip.set('arg', maybearg)
-    return chip.command('end')
-  })
   .command('lock', (chip) => {
     chip.lock(chip.id())
     return 0
@@ -875,5 +870,28 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const [arg, func] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.NAME])
     chip.set('arg', arg)
     memoryrun(func)
+    return 0
+  })
+  .command('array', (chip, words) => {
+    const values: any[] = []
+    const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+    for (let i = ii; i < words.length; ) {
+      const [val, iii] = readargs(words, i, [ARG_TYPE.ANY])
+      values.push(val)
+      i = iii
+    }
+    chip.set(name, values)
+    return 0
+  })
+  .command('read', (chip, words) => {
+    const [from, prop, name] = readargs(words, 0, [
+      ARG_TYPE.ANY,
+      ARG_TYPE.NUMBER_OR_STRING,
+      ARG_TYPE.NAME,
+    ])
+    if (ispresent(from)) {
+      const value = from[prop]
+      chip.set(name, value)
+    }
     return 0
   })
