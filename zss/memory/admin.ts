@@ -1,9 +1,6 @@
-import {
-  get as idbget,
-  getMany as idbgetmany,
-  update as idbupdate,
-} from 'idb-keyval'
+import { getMany as idbgetmany, update as idbupdate } from 'idb-keyval'
 import { SOFTWARE } from 'zss/device/session'
+import { isjoin } from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
@@ -150,15 +147,24 @@ export async function memoryadminmenu(player: string) {
   gadgettext(player, DIVIDER)
   const topic = memoryreadtopic()
   if (topic) {
-    const joinurl = `${location.origin}/join/#${topic}`
+    const joinurl = isjoin()
+      ? location.href
+      : `${location.origin}/join/#${topic}`
+    gadgethyperlink(player, 'adminop', joinurl, ['copyit', joinurl])
+    gadgettext(player, ``)
     const ascii = qrlines(joinurl)
     for (let i = 0; i < ascii.length; i++) {
       gadgettext(player, ascii[i])
     }
   } else {
     gadgettext(player, `session not active`)
+    if (!isjoin()) {
+      gadgethyperlink(player, 'adminop', 'open multiplayer session', [
+        'joincode',
+      ])
+    }
+    gadgettext(player, ``)
   }
-  gadgettext(player, ``)
 
   const shared = gadgetstate(player)
   shared.scrollname = 'cpu #admin'

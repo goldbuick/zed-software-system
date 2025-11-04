@@ -95,7 +95,7 @@ import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
 import { dirconsts } from 'zss/words/dir'
-import { COLOR, NAME, PT } from 'zss/words/types'
+import { NAME, PT } from 'zss/words/types'
 
 import {
   api_log,
@@ -109,9 +109,9 @@ import {
   register_loginready,
   register_savemem,
   vm_clearscroll,
+  vm_cli,
   vm_codeaddress,
   vm_flush,
-  vm_halt,
   vm_loader,
   vm_local,
   vm_logout,
@@ -822,11 +822,14 @@ const vm = createdevice(
         switch (NAME(target)) {
           case 'adminop': {
             switch (path) {
-              case 'gadget':
-                register_inspector(vm, message.player, undefined)
-                break
               case 'dev':
-                vm_halt(vm, message.player)
+                vm_cli(vm, message.player, '#dev')
+                break
+              case 'gadget':
+                vm_cli(vm, message.player, '#gadget')
+                break
+              case 'joincode':
+                vm_cli(vm, message.player, '#joincode')
                 break
             }
             break
