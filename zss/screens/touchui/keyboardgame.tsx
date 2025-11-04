@@ -22,7 +22,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
   const left = width - 18
   const mid = width - 12
   const right = width - 6
-  const top = 0
+  const top = 1
   const ycenter = Math.floor(height * 0.5) - 2
   const bottom = height - 4
   const center = Math.round(width * 0.5) - 3
@@ -30,7 +30,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
   return (
     <>
       <ToggleKey
-        x={1}
+        x={0}
         y={top}
         letters={keyboardctrl ? metakey.toUpperCase() : metakey.toLowerCase()}
         onToggle={() => {
@@ -43,7 +43,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={7}
+        x={6}
         y={top + 1}
         letters={keyboardalt ? 'ALT' : 'alt'}
         onToggle={() => {
@@ -56,7 +56,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={13}
+        x={12}
         y={top}
         letters={keyboardshift ? 'SHIFT' : 'shift'}
         onToggle={() => {
