@@ -152,7 +152,7 @@ export function ScreenUI() {
     x: 0,
     y: 0,
     width: clamp(50, 24, frame.width - 2),
-    height: clamp(18, 8, frame.height - 8),
+    height: clamp(20, 8, frame.height - 2),
     text: scroll,
   }
   scrollrect.x = frame.x + Math.floor((frame.width - scrollrect.width) * 0.5)
