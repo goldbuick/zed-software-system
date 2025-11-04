@@ -18,12 +18,9 @@ export type TouchUIProps = {
 export function TouchUI({ width, height }: TouchUIProps) {
   const [reset, setreset] = useState(0)
   const screensize = useScreenSize()
-  const DECO = 176
-  const FG = COLOR.WHITE
-  const BG = COLOR.DKPURPLE
-  const store = useTiles(width, height, DECO, FG, BG)
+  const store = useTiles(width, height, 32, COLOR.WHITE, COLOR.DKPURPLE)
   const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, FG, BG),
+    ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.DKPURPLE),
     ...store.getState(),
   }
 
@@ -40,7 +37,6 @@ export function TouchUI({ width, height }: TouchUIProps) {
           width={width}
           height={height}
           onReset={() => {
-            resetTiles(context, DECO, FG, BG)
             setreset(Math.random())
           }}
         />

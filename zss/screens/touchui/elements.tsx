@@ -26,6 +26,7 @@ const motion = new Vector2()
 const DECO = 177
 const FG = COLOR.WHITE
 const BG = COLOR.DKPURPLE
+const LABEL = 'tap to toggle '
 
 export function Elements({ width, height, onReset }: ElementsProps) {
   const context = useWriteText()
@@ -34,15 +35,23 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
   const leftedge = Math.floor(width * 0.333)
   const rightedge = Math.round(width * 0.666)
-  for (let y = 0; y < height; ++y) {
+  for (let y = 1; y < height; ++y) {
     for (let x = leftedge; x <= rightedge; ++x) {
       writeTile(context, width, height, x, y, { char: 176 })
     }
   }
+  for (let x = 0; x < width; ++x) {
+    const i = x - (width - LABEL.length)
+    writeTile(context, width, height, x, 0, {
+      char: i < 0 ? 32 : LABEL.charCodeAt(i),
+      color: COLOR.WHITE,
+      bg: COLOR.ONCLEAR,
+    })
+  }
 
   return (
     <>
-      <group position-y={-5 * RUNTIME.DRAW_CHAR_HEIGHT()}>
+      <group position={[0, -4 * RUNTIME.DRAW_CHAR_HEIGHT(), -1]}>
         <ShadeBoxDither
           width={width}
           height={5}
@@ -57,7 +66,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
         x={0}
         y={-3}
         width={width}
-        height={3}
+        height={4}
         onPointerDown={() => {
           // toggle sidebar
           useDeviceData.setState((state) => ({

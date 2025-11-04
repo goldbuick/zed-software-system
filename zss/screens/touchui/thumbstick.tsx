@@ -69,11 +69,14 @@ export function ThumbStick({
 
   useFrame((_, delta) => {
     movestick.inputacc += delta
-    if (movestick.inputacc >= INPUT_RATE_SECONDS && movestick.pointerid > -1) {
+    if (
+      movestick.inputacc >= INPUT_RATE_SECONDS &&
+      movestick.pointerid !== -1
+    ) {
       movestick.inputacc = 0
       const { cx, cy } = coords(width, height)
       motion.set(movestick.startx - cx, movestick.starty - cy)
-      if (movestick.pointerid !== -1 || motion.length() > DEAD_ZONE) {
+      if (motion.length() > DEAD_ZONE) {
         const snapdir = snap(radToDeg(motion.angle()), 45)
         handlestickdir(snapdir)
       }
