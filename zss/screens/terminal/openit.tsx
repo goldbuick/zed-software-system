@@ -25,8 +25,8 @@ export function TapeTerminalOpenIt({
   const invoke = useCallback(() => {
     const [, openmethod, ...values] = words
     const content = values.join(' ')
+    const player = registerreadplayer()
     setTimeout(() => {
-      const player = registerreadplayer()
       switch (openmethod) {
         case 'wiki':
           doasync(SOFTWARE, player, async () => {
