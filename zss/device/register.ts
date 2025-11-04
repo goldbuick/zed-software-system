@@ -495,7 +495,7 @@ const register = createdevice(
                 api_toast(
                   register,
                   message.player,
-                  `copied! ${message.data.slice(0, 20)}`,
+                  `copied! ${message.data.slice(0, 200)}`,
                 ),
               )
               .catch((err) => console.error(err))
