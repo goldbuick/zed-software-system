@@ -457,7 +457,7 @@ export function vm_halt(device: DEVICELIKE, player: string) {
 }
 
 export function vm_topic(device: DEVICELIKE, player: string, topic: string) {
-  device.emit(player, 'vm:topic')
+  device.emit(player, 'vm:topic', topic)
 }
 
 export function vm_books(device: DEVICELIKE, player: string, books: string) {
