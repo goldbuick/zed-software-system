@@ -1,4 +1,4 @@
-import { DEVICELIKE, api_log, register_terminal_full } from 'zss/device/api'
+import { DEVICELIKE, api_log } from 'zss/device/api'
 import { qrlines } from 'zss/mapping/qr'
 
 /**
@@ -88,7 +88,6 @@ export function writecopyit(
     writeqr(device, player, content)
   }
   write(device, player, `!copyit ${content};${label}`)
-  register_terminal_full(device, player)
 }
 
 export function writeopenit(

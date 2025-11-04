@@ -8,7 +8,6 @@ import {
   netterminaljoin,
   readsubscribetopic,
 } from 'zss/feature/netterminal'
-import { shorturl } from 'zss/feature/url'
 import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
@@ -185,17 +184,15 @@ const bridge = createdevice('bridge', [], (message) => {
         netterminaljoin(message.data)
       }
       break
-    case 'showjoincode':
-      doasync(bridge, message.player, async () => {
-        const joinurl = joinurlread()
-        const url = await shorturl(joinurl)
-        if (message.data) {
-          writecopyit(bridge, message.player, url, `secret join url`, false)
-        } else {
-          writecopyit(bridge, message.player, url, url)
-        }
-      })
+    case 'showjoincode': {
+      const joinurl = joinurlread()
+      if (message.data) {
+        writecopyit(bridge, message.player, joinurl, `secret join url`, false)
+      } else {
+        writecopyit(bridge, message.player, joinurl, joinurl)
+      }
       break
+    }
     case 'chatstart':
       if (ispresent(twitchchatclient)) {
         api_error(bridge, message.player, 'bridge', 'chat is already started')

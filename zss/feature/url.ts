@@ -15,7 +15,7 @@ export async function shorturl(url: string) {
 
 // assess what mode we're running in
 export function isjoin() {
-  return window.location.href.includes(`/join/`)
+  return location.href.includes(`/join/`)
 }
 
 export type MOSTLY_ZZT_META = {
