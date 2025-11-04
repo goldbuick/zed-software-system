@@ -128,34 +128,21 @@ export function romscroll(player: string, line: string[]) {
     default:
       if (op.trimStart().startsWith('!')) {
         const parts = op.trimStart().slice(1).split(' ')
-        const start = NAME(parts[0] ?? '')
-        switch (start) {
-          case 'copyit':
+        const second = NAME(parts[1] ?? '')
+        switch (second) {
+          case 'hk':
+          case 'hotkey':
             gadgethyperlink(player, 'refscroll', arg1, [
-              '',
               parts[0] ?? '',
               parts[1] ?? '',
+              parts[2] ?? '',
+              ` ${parts[3] ?? ''} `,
+              parts[4] ?? '',
             ])
             break
-          default: {
-            const second = NAME(parts[1] ?? '')
-            switch (second) {
-              case 'hk':
-              case 'hotkey':
-                gadgethyperlink(player, 'refscroll', arg1, [
-                  parts[0] ?? '',
-                  parts[1] ?? '',
-                  parts[2] ?? '',
-                  ` ${parts[3] ?? ''} `,
-                  parts[4] ?? '',
-                ])
-                break
-              default:
-                gadgethyperlink(player, 'refscroll', arg1, [parts[0] ?? ''])
-                break
-            }
+          default:
+            gadgethyperlink(player, 'refscroll', arg1, parts)
             break
-          }
         }
       } else if (op.trimStart().startsWith('"')) {
         gadgettext(player, op.trimStart().slice(1))

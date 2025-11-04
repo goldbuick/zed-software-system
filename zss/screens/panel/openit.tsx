@@ -21,20 +21,22 @@ export function PanelItemOpenIt({
     const [, openmethod, ...values] = args
     const content = values.join(' ')
     const player = registerreadplayer()
-    switch (openmethod) {
-      case 'wiki':
-        doasync(SOFTWARE, player, async () => {
-          const markdowntext = await fetchwiki(content)
-          parsemarkdownforwriteui(player, markdowntext)
-        })
-        break
-      case 'inline':
-        window.location.href = content
-        break
-      default:
-        window.open(`${openmethod as string} ${content}`.trim(), '_blank')
-        break
-    }
+    setTimeout(() => {
+      switch (openmethod) {
+        case 'wiki':
+          doasync(SOFTWARE, player, async () => {
+            const markdowntext = await fetchwiki(content)
+            parsemarkdownforwriteui(player, markdowntext)
+          })
+          break
+        case 'inline':
+          window.location.href = content
+          break
+        default:
+          window.open(`${openmethod as string} ${content}`.trim(), '_blank')
+          break
+      }
+    }, 100)
   }, [args])
 
   const tcolor = inputcolor(!!active)
