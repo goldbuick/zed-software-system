@@ -1,4 +1,4 @@
-!helpmenu hk 1 1 next;controls && start here
+!helpmenu hk 1 1 next;controls and $greenstart here
 !objectlistscroll hk 2 2 next;list object elements
 !terrainlistscroll hk 3 3 next;list terrain elements
 !adminscroll hk 4 4 next;cpu #admin
