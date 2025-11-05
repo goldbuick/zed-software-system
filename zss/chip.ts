@@ -580,31 +580,55 @@ export function createchip(
       return result ? 1 : 0
     },
     foreachstart(_, ...words) {
-      const [name, maybemin, maybemax, maybestep] = readargs(words, 0, [
+      const [name, maybevalues] = readargs(words, 0, [
         ARG_TYPE.NAME,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.ANY,
       ])
-      // TODO, afford iterating over a list if maybemin is an array of values
+      if (isarray(maybevalues)) {
+        const namevalues = `${name}_values`
+        const allvalues = deepcopy(maybevalues)
 
-      let min = Math.min(maybemin, maybemax)
-      let max = Math.max(maybemin, maybemax)
+        // set init state
+        chip.set(name, allvalues.shift())
+        chip.set(namevalues, allvalues)
+      } else {
+        const [, maybemin, maybemax, maybestep] = readargs(words, 0, [
+          ARG_TYPE.NAME,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+        ])
+        let min = Math.min(maybemin, maybemax)
+        let max = Math.max(maybemin, maybemax)
 
-      // step 0 is invalid, force to 1
-      const step = (maybestep ?? 0) || 1
-      if (step < 0) {
-        const t = min
-        min = max
-        max = t
+        // step 0 is invalid, force to 1
+        const step = (maybestep ?? 0) || 1
+        if (step < 0) {
+          const t = min
+          min = max
+          max = t
+        }
+
+        // set init state
+        chip.set(name, min - step)
       }
-
-      // set init state
-      chip.set(name, min - step)
       return 0
     },
     foreach(_, ...words) {
-      const [name, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
+      const [name, maybevalues] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.ANY,
+      ])
+
+      if (isarray(maybevalues)) {
+        const namevalues = `${name}_values`
+        const allvalues = chip.get(namevalues)
+        const nextvalue = allvalues.shift()
+        chip.set(name, nextvalue)
+        return allvalues.length > 0 ? 1 : 0
+      }
+
+      const [, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
         ARG_TYPE.NAME,
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
