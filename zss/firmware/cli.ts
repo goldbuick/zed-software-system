@@ -9,7 +9,6 @@ import {
   bridge_streamstart,
   bridge_streamstop,
   bridge_tab,
-  register_dev,
   register_downloadjsonfile,
   register_editor_open,
   register_findany,
@@ -91,7 +90,10 @@ import {
 import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
-import { COLOR } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
+
+const bbsemail = ''
+const bbscode = ''
 
 function isoperator(player: string) {
   return player === memoryreadoperator()
@@ -662,7 +664,7 @@ export const CLI_FIRMWARE = createfirmware()
   // -- editing related commands
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
-    register_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
+    register_inspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
     return 0
   })
   .command('findany', (_, words) => {
@@ -746,3 +748,43 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
+  .command('bbs', (_, words) => {
+    const [action, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+    switch (NAME(action)) {
+      default:
+        // login logic
+        if (!bbsemail) {
+          // <email> <tag>
+        } else if (!bbscode) {
+          // <code>
+        } else {
+          // we're logged in
+        }
+        break
+      case 'list':
+        break
+      case 'pub':
+      case 'publish':
+        // filename [tag1 tag2 ....]
+        break
+      case 'del':
+      case 'delete':
+        // filename
+        break
+    }
+    return 0
+  })
+
+/*
+' logged out state
+#bbs <email>
+#bbs <code>
+' logged in state
+#bbs list
+' pick your tag
+#bbs tag <tag> 
+#bbs publish filename [tag1 tag2 ....]
+#bbs delete filename
+' list tag
+https://bbs.zed.cafe/tag
+  */
