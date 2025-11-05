@@ -150,7 +150,7 @@ export async function memoryadminmenu(player: string) {
     const joinurl = isjoin()
       ? location.href
       : `${location.origin}/join/#${topic}`
-    gadgethyperlink(player, 'adminop', joinurl, ['copyit', joinurl])
+    gadgethyperlink(player, 'adminop', topic, ['copyit', joinurl])
     gadgettext(player, ``)
     const ascii = qrlines(joinurl)
     for (let i = 0; i < ascii.length; i++) {
