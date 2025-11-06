@@ -1,5 +1,7 @@
 import { parsewebfile } from './parse/file'
 
+// bytes api
+
 export async function shorturl(url: string) {
   const formData = new FormData()
   formData.append('url', url)
@@ -17,6 +19,8 @@ export async function shorturl(url: string) {
 export function isjoin() {
   return location.href.includes(`/join/`)
 }
+
+// bridge api
 
 export type MOSTLY_ZZT_META = {
   title: string
@@ -65,4 +69,83 @@ export async function museumofzztdownload(
   const zipdata = await response.arrayBuffer()
   const file = new File([zipdata], content)
   parsewebfile(player, file)
+}
+
+// bbs api
+
+export async function bbslogin(email: string, tag: string) {
+  const formData = new FormData()
+  formData.append('email', email)
+  formData.append('tag', tag)
+  const request = new Request('https://bbs.zed.cafe/api/login', {
+    method: 'POST',
+    body: formData,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
+}
+
+export async function bbslogincode(email: string, code: string) {
+  const formData = new FormData()
+  formData.append('email', email)
+  formData.append('code', code)
+  const request = new Request('https://bbs.zed.cafe/api/code', {
+    method: 'POST',
+    body: formData,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
+}
+
+export async function bbslist(email: string, code: string) {
+  const formData = new FormData()
+  formData.append('email', email)
+  formData.append('code', code)
+  const request = new Request('https://bbs.zed.cafe/api/list', {
+    method: 'POST',
+    body: formData,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
+}
+
+export async function bbspublish(
+  email: string,
+  code: string,
+  filename: string,
+  url: string,
+  tags: string[],
+) {
+  const formData = new FormData()
+  formData.append('email', email)
+  formData.append('code', code)
+  formData.append('filename', filename)
+  formData.append('url', url)
+  for (let i = 0; i < tags.length; ++i) {
+    formData.append('tags', tags[i])
+  }
+  const request = new Request('https://bbs.zed.cafe/api/publish', {
+    method: 'POST',
+    body: formData,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
+}
+
+export async function bbsdelete(email: string, code: string, filename: string) {
+  const formData = new FormData()
+  formData.append('email', email)
+  formData.append('code', code)
+  formData.append('filename', filename)
+  const request = new Request('https://bbs.zed.cafe/api/delete', {
+    method: 'POST',
+    body: formData,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
 }
