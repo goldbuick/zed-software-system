@@ -124,9 +124,7 @@ export async function bbspublish(
   formData.append('code', code)
   formData.append('filename', filename)
   formData.append('url', url)
-  for (let i = 0; i < tags.length; ++i) {
-    formData.append('tags', tags[i])
-  }
+  formData.append('tags', tags.join(','))
   const request = new Request('https://bbs.zed.cafe/api/publish', {
     method: 'POST',
     body: formData,

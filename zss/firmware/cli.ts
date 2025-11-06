@@ -848,11 +848,7 @@ export const CLI_FIRMWARE = createfirmware()
                   metadata.url,
                   metadata.filename,
                 )
-                writetext(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  metadata.tags.join(' '),
-                )
+                writetext(SOFTWARE, READ_CONTEXT.elementfocus, metadata.tags)
               }
             }
           })
