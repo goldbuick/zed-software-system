@@ -9,12 +9,12 @@ import {
   bridge_streamstart,
   bridge_streamstop,
   bridge_tab,
-  register_dev,
   register_downloadjsonfile,
   register_editor_open,
   register_findany,
   register_inspector,
   register_nuke,
+  register_publishmem,
   register_share,
   vm_admin,
   vm_codeaddress,
@@ -33,15 +33,18 @@ import {
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { romparse, romprint, romread } from 'zss/feature/rom'
+import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import {
   write,
   writebbar,
   writeheader,
+  writeopenit,
   writeoption,
   writesection,
   writetext,
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
+import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import {
   MAYBE,
@@ -91,7 +94,16 @@ import {
 import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
-import { COLOR } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
+
+let bbscode = ''
+let bbsemail = ''
+
+function isemail(email: string) {
+  return /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.exec(
+    String(email).toLowerCase(),
+  )
+}
 
 function isoperator(player: string) {
   return player === memoryreadoperator()
@@ -662,7 +674,7 @@ export const CLI_FIRMWARE = createfirmware()
   // -- editing related commands
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
-    register_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
+    register_inspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
     return 0
   })
   .command('findany', (_, words) => {
@@ -743,6 +755,158 @@ export const CLI_FIRMWARE = createfirmware()
       bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
     } else {
       bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
+    return 0
+  })
+  .command('bbs', (_, words) => {
+    const [action, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    switch (NAME(action)) {
+      default:
+        // login logic
+        if (!bbsemail) {
+          const [maybeemail, maybetag] = readargs(words, 0, [
+            ARG_TYPE.NAME,
+            ARG_TYPE.NAME,
+          ])
+          if (isemail(maybeemail) && maybetag) {
+            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+              writetext(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `starting login with $green${maybeemail} ${maybetag}`,
+              )
+              const result = await bbslogin(maybeemail, maybetag)
+              if (result.success) {
+                bbsemail = maybeemail
+                writetext(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  `check your email for #bbs <code>`,
+                )
+              }
+            })
+          } else {
+            writetext(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `please login with $green#bbs <email> <tag>`,
+            )
+          }
+        } else if (!bbscode) {
+          doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+            writetext(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `confirming login with $green${action}`,
+            )
+            const result = await bbslogincode(bbsemail, action)
+            if (result.success) {
+              bbscode = `${action}`
+              writetext(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `$green${bbsemail} has been logged in`,
+              )
+            }
+          })
+        } else {
+          // we're logged in
+          writetext(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `you are already logged in, use #bbs restart to login again`,
+          )
+        }
+        break
+      case 'restart':
+        bbsemail = ''
+        bbscode = ''
+        writetext(SOFTWARE, READ_CONTEXT.elementfocus, `bbs restarted`)
+        writetext(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `please login with $green#bbs <email> <tag>`,
+        )
+        break
+      case 'list':
+        if (!bbsemail || !bbscode) {
+          writetext(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `please login with $green#bbs <email> <tag>$blue first`,
+          )
+        } else {
+          doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+            writetext(SOFTWARE, READ_CONTEXT.elementfocus, `listing files`)
+            const result = await bbslist(bbsemail, bbscode)
+            if (result.success) {
+              for (let i = 0; i < result.list.length; ++i) {
+                const { metadata } = result.list[i]
+                writeopenit(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  metadata.url,
+                  metadata.filename,
+                )
+                writetext(SOFTWARE, READ_CONTEXT.elementfocus, metadata.tags)
+              }
+            }
+          })
+        }
+        break
+      case 'pub':
+      case 'publish':
+        if (!bbsemail || !bbscode) {
+          writetext(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `please login with $green#bbs <email> <tag>$blue first`,
+          )
+        } else {
+          const [filename, iii] = readargs(words, ii, [ARG_TYPE.NAME])
+          const tags: string[] = []
+          for (let iiii = iii; iiii < words.length; ) {
+            const [tag, iiiii] = readargs(words, iiii, [ARG_TYPE.NAME])
+            iiii = iiiii
+            tags.push(tag)
+          }
+          register_publishmem(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            bbsemail,
+            bbscode,
+            filename,
+            tags,
+          )
+        }
+        break
+      case 'del':
+      case 'delete':
+        if (!bbsemail || !bbscode) {
+          writetext(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `please login with $green#bbs <email> <tag>$blue first`,
+          )
+        } else {
+          const [filename] = readargs(words, ii, [ARG_TYPE.NAME])
+          doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+            writetext(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `deleting ${filename}`,
+            )
+            const result = await bbsdelete(bbsemail, bbscode, filename)
+            if (result.success) {
+              writetext(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `$red${filename} has been deleted`,
+              )
+            }
+          })
+        }
+        break
     }
     return 0
   })

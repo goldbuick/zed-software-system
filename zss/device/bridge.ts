@@ -245,11 +245,14 @@ const bridge = createdevice('bridge', [], (message) => {
           api_error(bridge, message.player, 'bridge', 'stream is already open')
         } else {
           const isportrait = window.innerHeight > window.innerWidth
+          const streamconfig = isportrait
+            ? IVSBroadcastClient.STANDARD_PORTRAIT
+            : IVSBroadcastClient.STANDARD_LANDSCAPE
           broadcastclient = IVSBroadcastClient.create({
-            streamConfig: isportrait
-              ? IVSBroadcastClient.STANDARD_PORTRAIT
-              : IVSBroadcastClient.STANDARD_LANDSCAPE,
-            logLevel: IVSBroadcastClient.LOG_LEVEL.DEBUG,
+            streamConfig: {
+              ...streamconfig,
+              maxFramerate: 60, // attempt smoother broadcasting
+            },
           })
 
           // event handlers

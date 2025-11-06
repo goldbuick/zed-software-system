@@ -203,6 +203,17 @@ export function register_itchiopublishmem(
   device.emit(player, 'register:itchiopublishmem', [name, books])
 }
 
+export function register_publishmem(
+  device: DEVICELIKE,
+  player: string,
+  email: string,
+  code: string,
+  filename: string,
+  tags: string[],
+) {
+  device.emit(player, 'register:publishmem', [email, code, filename, ...tags])
+}
+
 export function register_copy(
   device: DEVICELIKE,
   player: string,

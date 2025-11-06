@@ -5,7 +5,7 @@ import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
-import { isjoin, shorturl } from 'zss/feature/url'
+import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import {
   writecopyit,
   writeheader,
@@ -616,6 +616,33 @@ const register = createdevice(
             )
           }
         }
+        break
+      case 'publishmem':
+        doasync(register, message.player, async () => {
+          if (isarray(message.data)) {
+            // publish info
+            const [bbsemail, bbscode, filename, ...tags] = message.data
+            writetext(register, message.player, `publishing ${filename}`)
+            // share full content
+            const urlcontent = await readurlcontent()
+            // gen global shorturl
+            const url = await shorturl(`${location.origin}/#${urlcontent}`)
+            const result = await bbspublish(
+              bbsemail,
+              bbscode,
+              filename,
+              url,
+              tags,
+            )
+            if (result.success) {
+              writetext(
+                register,
+                message.player,
+                `$green${filename} has been published`,
+              )
+            }
+          }
+        })
         break
       case 'itchiopublishmem':
         doasync(register, message.player, async () => {
