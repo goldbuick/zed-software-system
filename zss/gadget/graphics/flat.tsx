@@ -1,10 +1,11 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
+import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { TapeTerminalInspector } from 'zss/screens/inspector/component'
@@ -21,6 +22,7 @@ type GraphicsProps = {
 }
 
 export function FlatGraphics({ width, height }: GraphicsProps) {
+  const { viewport } = useThree()
   const screensize = useScreenSize()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
@@ -29,20 +31,20 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   const cornerref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
   const inspectref = useRef<Group>(null)
-  const inspectscaleref = useRef<Group>(null)
+  const inspectzoomref = useRef<Group>(null)
 
   const [, setcameraready] = useState(false)
   useLayoutEffect(() => {
     setcameraready(true)
   }, [])
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (
       !cameraref.current ||
-      !cornerref.current ||
-      !zoomref.current ||
       !inspectref.current ||
-      !inspectscaleref.current
+      !zoomref.current ||
+      !cornerref.current ||
+      !inspectzoomref.current
     ) {
       return
     }
@@ -52,6 +54,12 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
+    const currentboard = useGadgetClient.getState().gadget.board
+
+    const animrate = 0.05
+    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
       cameraref.current.userData = {
@@ -60,67 +68,62 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         tfocusx: control.focusx,
         tfocusy: control.focusy,
         facing: control.facing,
+        currentboard: currentboard,
       }
       zoomref.current.scale.setScalar(control.viewscale)
     }
 
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const userData = cameraref.current.userData ?? {}
+    const fx = (userData.focusx + 0.5) * drawwidth
+    const fy = (userData.focusy + 0.5) * drawheight
+
+    damp3(zoomref.current.scale, control.viewscale, animrate, delta)
+
+    // pan
+    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
+
+    // edge clamping
+    const viewscale = zoomref.current.scale.x
     const boarddrawwidth = BOARD_WIDTH * drawwidth
     const boarddrawheight = BOARD_HEIGHT * drawheight
 
-    const animrate = 0.25
-    damp3(zoomref.current.scale, control.viewscale, animrate, delta)
-
-    const viewscale = zoomref.current.scale.x
-    const focusx = cameraref.current.userData.focusx + 0.5
-    const focusy = cameraref.current.userData.focusy + 0.5
-    const fx = focusx * drawwidth * viewscale + boarddrawwidth * -0.5
-    const fy = focusy * drawheight * viewscale + boarddrawheight * -0.5
-
-    // pan
-    damp3(cornerref.current.position, [-fx, -fy, 0], 0.05, delta)
-
-    // center when margins
     if (viewwidth > boarddrawwidth * viewscale) {
-      cameraref.current.userData.tfocusx = BOARD_WIDTH * 0.5
+      userData.tfocusx = BOARD_WIDTH * 0.5
     } else {
-      cameraref.current.userData.tfocusx = control.focusx
+      const leftedge = (viewwidth * 0.5) / (drawwidth * viewscale)
+      const rightedge = BOARD_WIDTH - leftedge
+      userData.tfocusx = clamp(control.focusx, leftedge - 0.5, rightedge - 0.5)
     }
 
     if (viewheight > boarddrawheight * viewscale) {
-      cameraref.current.userData.tfocusy = BOARD_HEIGHT * 0.5
+      userData.tfocusy = BOARD_HEIGHT * 0.5
     } else {
-      cameraref.current.userData.tfocusy = control.focusy
+      const topedge = (viewheight * 0.5) / (drawheight * viewscale)
+      const bottomedge = BOARD_HEIGHT - topedge
+      userData.tfocusy = clamp(control.focusy, topedge - 0.5, bottomedge - 0.5)
     }
 
     // smoothed change in focus
-    damp(
-      cameraref.current.userData,
-      'focusx',
-      cameraref.current.userData.tfocusx,
-      animrate,
-    )
-    damp(
-      cameraref.current.userData,
-      'focusy',
-      cameraref.current.userData.tfocusy,
-      animrate,
-    )
+    if (currentboard !== userData.currentboard) {
+      userData.focusx = userData.tfocusx
+      userData.focusy = userData.tfocusy
+      userData.currentboard = currentboard
+      cornerref.current.position.set(
+        -(userData.focusx + 0.5) * drawwidth,
+        -(userData.focusy + 0.5) * drawheight,
+        0,
+      )
+    } else {
+      damp(userData, 'focusx', userData.tfocusx, animrate)
+      damp(userData, 'focusy', userData.tfocusy, animrate)
+    }
 
     // keep inspector in place
-    inspectref.current.position.x =
-      viewwidth * 0.5 - boarddrawwidth * 0.5 + cornerref.current.position.x
-    inspectref.current.position.y =
-      viewheight * 0.5 - boarddrawheight * 0.5 + cornerref.current.position.y
+    inspectref.current.position.x = cornerref.current.position.x
+    inspectref.current.position.y = cornerref.current.position.y
 
     // keep inspector the same size
-    inspectscaleref.current.scale.setScalar(viewscale)
-
-    // center camera
-    cameraref.current.position.x = state.size.width * 0.5
-    cameraref.current.position.y = state.size.height * 0.5
-    cameraref.current.updateProjectionMatrix()
+    inspectzoomref.current.scale.setScalar(viewscale)
   })
 
   // re-render only when layer count changes
@@ -135,19 +138,17 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   } = useGadgetClient.getState().gadget
 
   const nounderlayers = under.length === 0
-
-  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-  const boarddrawwidth = BOARD_WIDTH * drawwidth
-  const boarddrawheight = BOARD_HEIGHT * drawheight
-  const centerx = boarddrawwidth * -0.5 + screensize.marginx
-  const centery = boarddrawheight * -0.5 - screensize.marginy
-
+  const xmargin = viewport.width - viewwidth
+  const ymargin = viewport.height - viewheight
+  const centerx = viewwidth * -0.5 + xmargin * -0.5 + screensize.marginx
+  const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
   return (
     <>
-      <group ref={inspectref}>
-        <group ref={inspectscaleref}>
-          <TapeTerminalInspector />
+      <group position={[viewwidth * 0.5, viewheight * 0.5, 1]}>
+        <group ref={inspectzoomref}>
+          <group ref={inspectref}>
+            <TapeTerminalInspector />
+          </group>
         </group>
       </group>
       <orthographicCamera
@@ -156,9 +157,10 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         right={viewwidth * 0.5}
         top={viewheight * -0.5}
         bottom={viewheight * 0.5}
-        near={1}
+        near={0.1}
         far={2000}
         position={[0, 0, 1000]}
+        onUpdate={(c) => c.updateProjectionMatrix()}
       />
       {cameraref.current && (
         <RenderLayer
@@ -168,8 +170,8 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
           effects={<></>}
         >
           <group position={[centerx, centery, 0]}>
-            <group ref={cornerref}>
-              <group ref={zoomref}>
+            <group ref={zoomref}>
+              <group ref={cornerref}>
                 {nounderlayers && (
                   <Rect
                     color="black"
