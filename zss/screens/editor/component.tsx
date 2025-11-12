@@ -5,20 +5,13 @@ import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
-import { useWriteText } from 'zss/gadget/hooks'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
-import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { BackPlate } from 'zss/screens/tape/backplate'
-import {
-  findcursorinrows,
-  findmaxwidthinrows,
-  splitcoderows,
-} from 'zss/screens/tape/common'
-import { textformatreadedges } from 'zss/words/textformat'
+import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -159,12 +152,10 @@ export function TapeEditor() {
     wordsexprs,
   ])
 
-  const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(
     vm_codeaddress(editor.book, editor.path),
   )
-  const edge = textformatreadedges(context)
 
   useEffect(() => {
     vm_codewatch(SOFTWARE, player, editor.book, editor.path)
@@ -182,9 +173,6 @@ export function TapeEditor() {
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
-
-  // figure out longest line of code
-  const maxwidth = findmaxwidthinrows(rows)
 
   // tokenize code
   const parsed = compileast(strvalue)
@@ -264,61 +252,6 @@ export function TapeEditor() {
     xoffset: -4 + tapeeditor.xscroll,
     yoffset: tapeeditor.yscroll,
   }
-
-  const chunkstep = 32
-  const xmaxscroll = (Math.round(maxwidth / chunkstep) + 1) * chunkstep
-  const ymaxscroll = rows.length
-
-  useEffect(() => {
-    setTimeout(() => {
-      useTapeEditor.setState((state) => {
-        let xscroll = state.xscroll
-        const xdelta = xcursor - xscroll
-        const xwidth = edge.width - 3
-
-        let xstep = Math.round(clamp(Math.abs(xdelta) * 0.5, 1, chunkstep))
-        if (xstep < 8) {
-          xstep = 1
-        }
-        if (xdelta > xwidth - 8) {
-          xscroll += xstep
-        }
-        if (xdelta < 8) {
-          xscroll -= xstep
-        }
-
-        let yscroll = state.yscroll
-        const ydelta = ycursor - yscroll
-        const yheight = edge.height - 4
-        const ymaxstep = Math.round(yheight * 0.5)
-
-        let ystep = Math.round(clamp(Math.abs(ydelta) * 0.25, 1, ymaxstep))
-        if (ystep < 8) {
-          ystep = 1
-        }
-        if (ydelta > yheight - 4) {
-          yscroll += ystep
-        }
-        if (ydelta < 4) {
-          yscroll -= ystep
-        }
-
-        return {
-          xscroll: Math.round(clamp(xscroll, 0, xmaxscroll)),
-          yscroll: Math.round(clamp(yscroll, 0, ymaxscroll)),
-        }
-      })
-    }, 16)
-  }, [
-    xcursor,
-    xmaxscroll,
-    tapeeditor.xscroll,
-    ycursor,
-    ymaxscroll,
-    tapeeditor.yscroll,
-    edge.width,
-    edge.height,
-  ])
 
   return (
     <>
