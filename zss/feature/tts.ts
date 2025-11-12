@@ -89,3 +89,7 @@ export function ttsqueue(
     await audiobuffertask(synth, voice, input)
   })
 }
+
+export function ttsclearqueue() {
+  audiobufferqueue.clear()
+}
