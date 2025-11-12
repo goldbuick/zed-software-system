@@ -11,7 +11,7 @@ import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
-import { useTapeTerminal } from 'zss/gadget/data/state'
+import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
@@ -28,6 +28,7 @@ import {
   writeplaintext,
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
+import { useShallow } from 'zustand/react/shallow'
 
 type TapeTerminalInputProps = {
   quickterminal: boolean
@@ -45,6 +46,8 @@ export function TapeTerminalInput({
   const blink = useBlink()
   const context = useWriteText()
   const tapeterminal = useTapeTerminal()
+  const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
+
   const player = registerreadplayer()
   const edge = textformatreadedges(context)
 
@@ -112,12 +115,36 @@ export function TapeTerminalInput({
     [tapeterminal.buffer, tapeterminal.bufferindex],
   )
 
+  const visiblerows = edge.bottom - edge.top - (editoropen ? 0 : 2)
+  const inputstateycursor = useCallback(
+    (moveby: number) => {
+      useTapeTerminal.setState((state) => {
+        const ycursor = clamp(
+          Math.round(state.ycursor + moveby),
+          0,
+          logrowtotalheight,
+        )
+        const scroll = clamp(
+          ycursor - Math.round(visiblerows * 0.5),
+          0,
+          logrowtotalheight - visiblerows,
+        )
+        return {
+          ycursor,
+          scroll,
+        }
+      })
+    },
+    [logrowtotalheight, visiblerows],
+  )
+
   // navigate input history
   function inputstateswitch(switchto: number) {
     const ir = tapeterminal.buffer.length - 1
     const index = clamp(switchto, 0, ir)
     useTapeTerminal.setState({
       bufferindex: index,
+      scroll: 0,
       xcursor: tapeterminal.buffer[index].length,
       ycursor: 0,
       xselect: undefined,
@@ -232,6 +259,7 @@ export function TapeTerminalInput({
     }
   }
 
+  // handle speech to text
   useEffect(() => {
     let listener: MAYBE<SpeechToText>
 
@@ -315,13 +343,7 @@ export function TapeTerminalInput({
         }}
         onScroll={(deltay: number) => {
           trackselection(false)
-          useTapeTerminal.setState({
-            ycursor: clamp(
-              Math.round(tapeterminal.ycursor - deltay),
-              0,
-              logrowtotalheight,
-            ),
-          })
+          inputstateycursor(-deltay)
         }}
       />
       <UserInput
@@ -360,13 +382,7 @@ export function TapeTerminalInput({
             inputstateswitch(tapeterminal.bufferindex + 1)
           } else {
             trackselection(mods.shift)
-            useTapeTerminal.setState({
-              ycursor: clamp(
-                Math.round(tapeterminal.ycursor + (mods.alt ? 10 : 1)),
-                0,
-                logrowtotalheight,
-              ),
-            })
+            inputstateycursor(mods.alt ? 10 : 1)
           }
         }}
         MOVE_DOWN={(mods) => {
@@ -374,13 +390,7 @@ export function TapeTerminalInput({
             inputstateswitch(tapeterminal.bufferindex - 1)
           } else {
             trackselection(mods.shift)
-            useTapeTerminal.setState({
-              ycursor: clamp(
-                Math.round(tapeterminal.ycursor - (mods.alt ? 10 : 1)),
-                0,
-                logrowtotalheight,
-              ),
-            })
+            inputstateycursor(-(mods.alt ? 10 : 1))
           }
         }}
         OK_BUTTON={() => {

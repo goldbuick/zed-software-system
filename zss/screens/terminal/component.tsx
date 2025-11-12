@@ -1,11 +1,10 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { vm_cli } from 'zss/device/api'
 import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
-import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { BackPlate } from 'zss/screens/tape/backplate'
@@ -54,9 +53,6 @@ export function TapeTerminal() {
     return measurerow(item, logssize, edge.height)
   })
 
-  // baseline
-  const baseline = edge.bottom - edge.top - (editoropen ? 0 : 2)
-
   // ycoords for rows
   let logsrowtotalheight = 0
   logsrowheights.forEach((rowheight) => {
@@ -66,30 +62,6 @@ export function TapeTerminal() {
 
   // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
-
-  // iterative scroll
-  useEffect(() => {
-    setTimeout(() => {
-      useTapeTerminal.setState((state) => {
-        const ycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
-        let scroll = state.scroll
-        if (ycursor < 5) {
-          scroll++
-        }
-        if (ycursor > edge.bottom - 10) {
-          scroll--
-        }
-        scroll = Math.round(clamp(scroll, 0, logsrowtotalheight - baseline))
-        return { scroll }
-      })
-    }, 16)
-  }, [
-    baseline,
-    edge.bottom,
-    logsrowtotalheight,
-    tapeterminal.scroll,
-    tapeterminal.ycursor,
-  ])
 
   return (
     <>
