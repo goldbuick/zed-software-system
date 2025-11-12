@@ -275,7 +275,7 @@ export function synth_ttsqueue(
 }
 
 export function synth_ttsclearqueue(device: DEVICELIKE, player: string) {
-  device.emit(player, 'synth:ttsqueue')
+  device.emit(player, 'synth:ttsclearqueue')
 }
 
 export function synth_play(

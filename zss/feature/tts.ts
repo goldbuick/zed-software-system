@@ -91,5 +91,6 @@ export function ttsqueue(
 }
 
 export function ttsclearqueue() {
+  audioplayqueue.clear()
   audiobufferqueue.clear()
 }
