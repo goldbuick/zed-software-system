@@ -5,7 +5,6 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boarddeleteobject, boardelementindex, boardobjectread } from './board'
-import { boardsetlookup } from './boardlookup'
 import { bookelementdisplayread } from './book'
 import {
   BOARD,
@@ -238,10 +237,6 @@ export function boardtick(board: MAYBE<BOARD>, timestamp: number) {
   if (!ispresent(board)) {
     return args
   }
-
-  // force build object lookup pre-tick
-  board.lookup = undefined
-  boardsetlookup(board)
 
   function processlist(list: BOARD_ELEMENT[]) {
     for (let i = 0; i < list.length; ++i) {

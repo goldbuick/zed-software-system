@@ -607,13 +607,13 @@ const register = createdevice(
         break
       case 'forkmem':
         if (isarray(message.data)) {
-          const [maybecontent] = message.data
-          if (isstring(maybecontent)) {
+          const [maybecontent, maybeaddress] = message.data
+          if (isstring(maybecontent) && isstring(maybeaddress)) {
+            const url = maybeaddress
+              ? `https://${maybeaddress}/#${maybecontent}`
+              : location.href.replace(/#.*/, `#${maybecontent}`)
             // launch fork url
-            window.open(
-              location.href.replace(/#.*/, `#${maybecontent}`),
-              '_blank',
-            )
+            window.open(url, '_blank')
           }
         }
         break

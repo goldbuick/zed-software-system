@@ -144,12 +144,12 @@ async function savestate(autosave?: boolean) {
 }
 
 // fork state
-async function forkstate() {
+async function forkstate(transfer: string) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    register_forkmem(vm, memoryreadoperator(), content)
+    register_forkmem(vm, memoryreadoperator(), content, transfer)
   }
 }
 
@@ -689,7 +689,7 @@ const vm = createdevice(
       case 'fork':
         if (message.player === operator) {
           doasync(vm, message.player, async () => {
-            await forkstate()
+            await forkstate(message.data)
           })
         }
         break

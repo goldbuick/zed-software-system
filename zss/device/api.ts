@@ -190,8 +190,9 @@ export function register_forkmem(
   device: DEVICELIKE,
   player: string,
   books: string,
+  transfer: string,
 ) {
-  device.emit(player, 'register:forkmem', [books])
+  device.emit(player, 'register:forkmem', [books, transfer])
 }
 
 export function register_itchiopublishmem(
@@ -609,8 +610,8 @@ export function vm_flush(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:flush')
 }
 
-export function vm_fork(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:fork')
+export function vm_fork(device: DEVICELIKE, player: string, transfer: string) {
+  device.emit(player, 'vm:fork', transfer)
 }
 
 export function vm_itchiopublish(device: DEVICELIKE, player: string) {
