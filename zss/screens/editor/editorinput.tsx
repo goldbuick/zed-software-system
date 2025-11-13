@@ -18,7 +18,11 @@ import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
+import {
+  EDITOR_CODE_ROW,
+  findcursorinrows,
+  findmaxwidthinrows,
+} from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -26,6 +30,8 @@ import {
   textformatreadedges,
 } from 'zss/words/textformat'
 import { COLOR, NAME, PT } from 'zss/words/types'
+
+const CHUNK_STEP = 32
 
 export type EditorInputProps = {
   xcursor: number
@@ -113,6 +119,41 @@ export function EditorInput({
     }
   }
 
+  const updatescrolling = useCallback(
+    function (cursor: number) {
+      useTapeEditor.setState((state) => {
+        const edge = textformatreadedges(context)
+
+        // figure out longest line of code
+        const maxwidth = findmaxwidthinrows(rows)
+        const xmaxscroll = (Math.round(maxwidth / CHUNK_STEP) + 1) * CHUNK_STEP
+        const ymaxscroll = rows.length
+
+        // cursor placement
+        const ycursor2 = findcursorinrows(cursor, rows)
+        const xcursor2 = cursor - rows[ycursor2].start
+
+        // deltas
+        const xview = edge.width - 8
+        const yview = edge.height - 4
+        const xstep = Math.round(xview * 0.5)
+        const ystep = Math.round(yview * 0.5)
+        const hxstep = Math.round(xview * 0.25)
+        const xdelta = Math.abs(xcursor2 - (state.xscroll + xstep))
+
+        // panning scroll
+        const xscroll = xdelta < hxstep ? state.xscroll : xcursor2 - xstep
+        const yscroll = ycursor2 - ystep
+
+        return {
+          xscroll: Math.round(clamp(xscroll, 0, xmaxscroll)),
+          yscroll: Math.round(clamp(yscroll, 0, ymaxscroll)),
+        }
+      })
+    },
+    [context, rows],
+  )
+
   const strvaluesplice = useCallback(
     function (index: number, count: number, insert?: string) {
       if (count > 0) {
@@ -121,12 +162,14 @@ export function EditorInput({
       if (ispresent(insert)) {
         codepage?.insert(index, insert)
       }
+      const cursor = index + (insert ?? '').length
+      updatescrolling(cursor)
       useTapeEditor.setState({
-        cursor: index + (insert ?? '').length,
+        cursor,
         select: undefined,
       })
     },
-    [codepage],
+    [codepage, updatescrolling],
   )
 
   const strvaluespliceonly = useCallback(
@@ -137,11 +180,11 @@ export function EditorInput({
       if (ispresent(insert)) {
         codepage?.insert(index, insert)
       }
-      useTapeEditor.setState({
-        cursor: index + (insert ?? '').length,
-      })
+      const cursor = index + (insert ?? '').length
+      updatescrolling(cursor)
+      useTapeEditor.setState({ cursor })
     },
-    [codepage],
+    [codepage, updatescrolling],
   )
 
   function strtogglecomments() {
@@ -183,30 +226,46 @@ export function EditorInput({
 
   function deleteselection() {
     if (hasselection) {
+      updatescrolling(ii1)
       useTapeEditor.setState({ cursor: ii1 })
       strvaluesplice(ii1, iic)
     }
   }
 
   function resettoend() {
+    updatescrolling(codeend)
     useTapeEditor.setState({ cursor: codeend, select: undefined })
   }
 
-  const movecursor = useCallback(
-    function (inc: number) {
-      const ycheck = Math.round(ycursor + inc)
-      if (ycheck < 0) {
-        useTapeEditor.setState({ cursor: 0 })
-      } else if (ycheck > rowsend) {
-        useTapeEditor.setState({ cursor: codeend })
-      } else {
-        const row = rows[ycheck]
-        useTapeEditor.setState({
-          cursor: row.start + Math.min(xcursor, row.code.length - 1),
-        })
-      }
+  const movexcursor = useCallback(
+    function (newcursor: number) {
+      useTapeEditor.setState(() => {
+        const cursor = clamp(newcursor, 0, codeend)
+        updatescrolling(cursor)
+        return { cursor }
+      })
     },
-    [codeend, rows, rowsend, xcursor, ycursor],
+    [codeend, updatescrolling],
+  )
+
+  const moveycursor = useCallback(
+    function (inc: number) {
+      useTapeEditor.setState(() => {
+        let cursor = 0
+        const yoffset = Math.round(ycursor + inc)
+        if (yoffset < 0) {
+          cursor = 0
+        } else if (yoffset > rowsend) {
+          cursor = codeend
+        } else {
+          const row = rows[yoffset]
+          cursor = row.start + Math.min(xcursor, row.code.length - 1)
+        }
+        updatescrolling(cursor)
+        return { cursor }
+      })
+    },
+    [codeend, rows, rowsend, xcursor, ycursor, updatescrolling],
   )
 
   const undomanager = useMemo(() => {
@@ -242,48 +301,48 @@ export function EditorInput({
         onClick={() => {
           document.getElementById('touchtext')?.focus()
         }}
-        onScroll={(ydelta: number) => movecursor(ydelta * 0.75)}
+        onScroll={(ydelta: number) => moveycursor(ydelta * 0.75)}
       />
       <UserInput
         MOVE_LEFT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: coderow.start })
+            movexcursor(coderow.start)
           } else {
-            const cursor = tapeeditor.cursor - (mods.alt ? 10 : 1)
-            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
+            movexcursor(tapeeditor.cursor - (mods.alt ? 10 : 1))
           }
         }}
         MOVE_RIGHT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: coderow.end })
+            movexcursor(coderow.end)
           } else {
-            const cursor = tapeeditor.cursor + (mods.alt ? 10 : 1)
-            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
+            movexcursor(tapeeditor.cursor + (mods.alt ? 10 : 1))
           }
         }}
         MOVE_UP={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: 0 })
+            movexcursor(0)
           } else {
-            movecursor(mods.alt ? -10 : -1)
+            moveycursor(mods.alt ? -10 : -1)
           }
         }}
         MOVE_DOWN={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: codeend })
+            movexcursor(codeend)
           } else {
-            movecursor(mods.alt ? 10 : 1)
+            moveycursor(mods.alt ? 10 : 1)
           }
         }}
         OK_BUTTON={() => {
           if (ispresent(codepage)) {
             // insert newline !
             codepage.insert(tapeeditor.cursor, `\n`)
-            useTapeEditor.setState({ cursor: tapeeditor.cursor + 1 })
+            const cursor = tapeeditor.cursor + 1
+            updatescrolling(cursor)
+            useTapeEditor.setState({ cursor })
           }
         }}
         CANCEL_BUTTON={(mods) => {
@@ -339,6 +398,7 @@ export function EditorInput({
                     }
                     break
                   case 'a':
+                    updatescrolling(codeend)
                     useTapeEditor.setState({ cursor: codeend, select: 0 })
                     break
                   case 'c':
