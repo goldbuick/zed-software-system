@@ -38,6 +38,7 @@ import {
   boardnamedwrite,
   boardobjectlookupwrite,
   boardobjectnamedlookupdelete,
+  boardresetlookups,
 } from './boardlookup'
 import { boardmoveobject, boardtick } from './boardops'
 import {
@@ -1201,6 +1202,27 @@ export function memoryrestartallchipsandflags() {
   mainbook.flags = {}
 }
 
+export function memoryboardinit(board: MAYBE<BOARD>) {
+  if (!ispresent(board)) {
+    return
+  }
+
+  // terrain setup
+  for (let i = 0; i < board.terrain.length; ++i) {
+    memoryelementkindread(board.terrain[i])
+  }
+
+  // object setup
+  const oids = Object.keys(board.objects)
+  for (let i = 0; i < oids.length; ++i) {
+    const id = oids[i]
+    memoryelementkindread(board.objects[id])
+  }
+
+  // force build object lookup pre-tick
+  boardresetlookups(board)
+}
+
 export function memorytick(playeronly = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -1264,19 +1286,8 @@ export function memorytick(playeronly = false) {
   const boards = bookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
-
-    // terrain setup
-    for (let i = 0; i < board.terrain.length; ++i) {
-      memoryelementkindread(board.terrain[i])
-    }
-
-    // object setup
-    const oids = Object.keys(board.objects)
-    for (let i = 0; i < oids.length; ++i) {
-      const id = oids[i]
-      memoryelementkindread(board.objects[id])
-    }
-
+    // init kinds
+    memoryboardinit(board)
     // iterate code needed to update given board
     const run = boardtick(board, timestamp)
     for (let i = 0; i < run.length; ++i) {

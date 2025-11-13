@@ -9,6 +9,8 @@ import {
   createcodepage,
 } from 'zss/memory/codepage'
 
+import { zztoop } from './zztoop'
+
 export function parsezztobj(player: string, filename: string, content: string) {
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {
@@ -22,7 +24,7 @@ export function parsezztobj(player: string, filename: string, content: string) {
     ? content
     : `@${filename.toLowerCase().replace('.obj', '')}\n${content}`
 
-  const codepage = createcodepage(withcode, {})
+  const codepage = createcodepage(zztoop(withcode), {})
   const codepagename = codepagereadname(codepage)
 
   bookwritecodepage(contentbook, codepage)

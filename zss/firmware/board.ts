@@ -6,6 +6,7 @@ import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
+  memoryboardinit,
   memoryboardread,
   memoryelementkindread,
   memoryelementstatread,
@@ -340,6 +341,9 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(targetboard)) {
       return 0
     }
+
+    // init board kinds
+    memoryboardinit(targetboard)
 
     // read entry pt
     const destpt: PT = {

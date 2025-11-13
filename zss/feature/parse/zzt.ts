@@ -16,6 +16,8 @@ import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { PT } from 'zss/words/types'
 
+import { zztoop } from './zztoop'
+
 type ZZT_ELEMENT = {
   element: number
   color: number
@@ -208,32 +210,6 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     }
   }
 
-  function scrubinlinechars(str: string) {
-    let scrubbed = ''
-    for (let i = 0; i < str.length; ++i) {
-      const code = str.charCodeAt(i)
-      if (code < 32 || code > 127) {
-        scrubbed += `$${code}`
-      } else {
-        scrubbed += str[i]
-      }
-    }
-    return scrubbed
-  }
-
-  function normalizedlines(str: string) {
-    // check for inline $ text rows (thanks WiL)
-    // also check for inlined ascii chars WHEE
-    // need to check for do labels and messages
-    // can also handle case SENSITIVE labels and messages ??
-    return str
-      .replaceAll(/\r?\n|\r/g, '\n')
-      .split('\n')
-      .map((line) => line.replace('$', '$CENTER '))
-      .map(scrubinlinechars)
-      .join('\n')
-  }
-
   function colorsfromzztelement(elm: ZZT_ELEMENT) {
     const color = elm.color & 15
     const bg = (elm.color & 240) >> 4
@@ -271,7 +247,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
         addstats.p3 = elementstat.p3
       }
       if (ispresent(elementstat.code) && elementstat.code) {
-        addstats.code = normalizedlines(elementstat.code)
+        addstats.code = zztoop(elementstat.code)
       }
       if (ispresent(elementstat.stepx)) {
         addstats.stepx = elementstat.stepx
@@ -282,7 +258,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
       if (ispresent(elementstat.bind) && elementstat.bind > 0) {
         const maybecopy = stats[elementstat.bind]
         if (ispresent(maybecopy?.code) && isstring(maybecopy.code)) {
-          addstats.code = normalizedlines(maybecopy.code)
+          addstats.code = zztoop(maybecopy.code)
         }
       }
     }

@@ -1,9 +1,9 @@
 import humanid from 'human-id'
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice } from 'zss/device'
+import { fetchwiki } from 'zss/feature/fetchwiki'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
-import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import {
@@ -607,13 +607,13 @@ const register = createdevice(
         break
       case 'forkmem':
         if (isarray(message.data)) {
-          const [maybecontent] = message.data
-          if (isstring(maybecontent)) {
+          const [maybecontent, maybeaddress] = message.data
+          if (isstring(maybecontent) && isstring(maybeaddress)) {
+            const url = maybeaddress
+              ? `https://${maybeaddress}/#${maybecontent}`
+              : location.href.replace(/#.*/, `#${maybecontent}`)
             // launch fork url
-            window.open(
-              location.href.replace(/#.*/, `#${maybecontent}`),
-              '_blank',
-            )
+            window.open(url, '_blank')
           }
         }
         break

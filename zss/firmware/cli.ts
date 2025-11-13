@@ -551,9 +551,10 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('fork', () => {
+  .command('fork', (_, words) => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
-      vm_fork(SOFTWARE, READ_CONTEXT.elementfocus)
+      const [address] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      vm_fork(SOFTWARE, READ_CONTEXT.elementfocus, address ?? '')
     } else {
       // no-op
     }
