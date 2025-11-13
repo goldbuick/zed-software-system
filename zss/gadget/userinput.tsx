@@ -29,7 +29,6 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
-import { TICK_FPS } from 'zss/mapping/tick'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
@@ -57,7 +56,8 @@ const DOOT_RATE = 10 * 100
 const acc: Record<number, number> = {}
 let localtick = 0
 let previous = performance.now()
-export const INPUT_RATE = TICK_FPS * 10
+
+export const INPUT_RATE = 100
 
 const INPUT_OPS = [
   INPUT.MOVE_UP,

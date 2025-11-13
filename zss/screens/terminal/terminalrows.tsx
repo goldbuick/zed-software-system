@@ -44,22 +44,35 @@ export function TerminalRows() {
 
   // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
+
+  // filter to visible rows
+  const visiblelogs = terminallogs
+    .map((text, index) => {
+      const y = logsrowycoords[index] + tapeterminal.scroll
+      const yheight = logsrowheights[index]
+      const ybottom = y + yheight
+      if (ybottom < 0 || y < 0 || y > baseline) {
+        return null
+      }
+      return [
+        index,
+        text,
+        y,
+        !editoropen && tapeycursor >= y && tapeycursor < ybottom,
+      ] as [number, string, number, boolean]
+    })
+    .filter((item) => item !== null)
+
   return (
     <>
       <WriteTextContext.Provider value={context}>
-        {terminallogs.map((text, index) => {
-          const y = logsrowycoords[index] + tapeterminal.scroll
-          const yheight = logsrowheights[index]
-          const ybottom = y + yheight
-          if (ybottom < 0 || y < 0 || y > baseline) {
-            return null
-          }
-          return !editoropen && tapeycursor >= y && tapeycursor < ybottom ? (
+        {visiblelogs.map(([index, text, y, active]) =>
+          active ? (
             <TapeTerminalActiveItem key={index} active text={text} y={y} />
           ) : (
             <TapeTerminalItem key={index} text={text} y={y} />
-          )
-        })}
+          ),
+        )}
       </WriteTextContext.Provider>
     </>
   )

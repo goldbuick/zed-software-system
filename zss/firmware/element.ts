@@ -1,3 +1,4 @@
+import { MathUtils } from 'three'
 import { register_store, vm_logout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -445,7 +446,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'facing':
         // constrain facing to 360 degrees
-        value = ((value % 360) + 360) % 360
+        value = MathUtils.euclideanModulo(value, 360)
         break
       // writable
       case 'isdark':

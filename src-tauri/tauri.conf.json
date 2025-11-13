@@ -9,6 +9,16 @@
     "beforeDevCommand": "yarn dev",
     "beforeBuildCommand": "yarn build"
   },
+  "permissions": [
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$APPDATA/archive/*"
+        }
+      ]
+    }
+  ],
   "app": {
     "windows": [
       {
