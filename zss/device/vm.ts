@@ -1,6 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
-import { fetchwiki } from 'zss/feature/parse/fetchwiki'
+import { fetchwiki } from 'zss/feature/fetchwiki'
 import {
   markzipfilelistitem,
   parsewebfile,

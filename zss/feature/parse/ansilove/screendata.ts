@@ -1,6 +1,6 @@
 // ScreenData class for AnsiLove
 
-import type { Font, ScreenData as ScreenDataType } from "./types"
+import type { Font, ScreenData as ScreenDataType } from './types'
 
 export class ScreenData implements ScreenDataType {
   private imageData: Uint8Array
@@ -24,12 +24,21 @@ export class ScreenData implements ScreenDataType {
   }
 
   private extendImageData(y: number): void {
-    const newImageData = new Uint8Array(this.columns * (y + 1000) * 10 + this.imageData.length)
+    const newImageData = new Uint8Array(
+      this.columns * (y + 1000) * 10 + this.imageData.length,
+    )
     newImageData.set(this.imageData, 0)
     this.imageData = newImageData
   }
 
-  set(x: number, y: number, charCode: number, trueColor: boolean, fg: number | Uint8Array, bg: number | Uint8Array): void {
+  set(
+    x: number,
+    y: number,
+    charCode: number,
+    trueColor: boolean,
+    fg: number | Uint8Array,
+    bg: number | Uint8Array,
+  ): void {
     this.pos = (y * this.columns + x) * 10
     if (this.pos >= this.imageData.length) {
       this.extendImageData(y)
@@ -70,7 +79,11 @@ export class ScreenData implements ScreenDataType {
     ++maxX
 
     const newImageData = new Uint8Array((maxX + 1) * height * 10)
-    for (let i = 0, j = 0; i < newImageData.length; i += maxX * 10, j += this.columns * 10) {
+    for (
+      let i = 0, j = 0;
+      i < newImageData.length;
+      i += maxX * 10, j += this.columns * 10
+    ) {
       newImageData.set(this.imageData.subarray(j, j + this.columns * 10), i)
     }
     this.imageData = newImageData

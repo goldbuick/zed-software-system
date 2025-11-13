@@ -1,9 +1,9 @@
 import humanid from 'human-id'
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice } from 'zss/device'
+import { fetchwiki } from 'zss/feature/fetchwiki'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
-import { fetchwiki } from 'zss/feature/parse/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import {
