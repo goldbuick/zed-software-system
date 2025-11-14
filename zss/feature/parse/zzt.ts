@@ -19,7 +19,7 @@ import { PT } from 'zss/words/types'
 import { zztoop } from './zztoop'
 
 type ZZT_ELEMENT = {
-  element: number
+  type: number
   color: number
 }
 
@@ -117,9 +117,9 @@ function createreader(content: Uint8Array) {
 type READER = ReturnType<typeof createreader>
 
 function readboardbytes(reader: READER) {
-  const boardsize = reader.readint16()
   const start = reader.index()
 
+  const boardsize = reader.readint16()
   const boardnamelength = reader.readuint8()
   const boardname = reader.readstring(50).slice(0, boardnamelength)
 
@@ -133,12 +133,12 @@ function readboardbytes(reader: READER) {
   while (board.elements.length < ZZT_BOARD_SIZE) {
     let count = reader.readuint8()
     if (count === 0) {
-      count = 255
+      count = 1500
     }
     const element = reader.readuint8()
     const color = reader.readuint8()
     for (let r = 0; r < count; ++r) {
-      board.elements.push({ element, color })
+      board.elements.push({ type: element, color })
     }
   }
 
@@ -175,8 +175,8 @@ function readboardbytes(reader: READER) {
     stat.undercolor = reader.readuint8()
     stat.pointer = reader.readint32()
     stat.currentinstruction = reader.readint16()
-    const length = reader.readint16()
 
+    const length = reader.readint16()
     reader.seek(reader.index() + 8) // skip
     if (length < 0) {
       // copy code from
@@ -189,7 +189,7 @@ function readboardbytes(reader: READER) {
     board.stats.push(stat)
   }
 
-  reader.seek(start + boardsize)
+  reader.seek(start + boardsize + 2)
   return board
 }
 
@@ -210,9 +210,9 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     }
   }
 
-  function colorsfromzztelement(elm: ZZT_ELEMENT) {
-    const color = elm.color & 15
-    const bg = (elm.color & 240) >> 4
+  function colorsfromzztcolor(zcolor: number) {
+    const color = zcolor % 16
+    const bg = Math.floor(zcolor / 16)
     return { color, bg }
   }
 
@@ -223,12 +223,14 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     element: ZZT_ELEMENT,
     stats: ZZT_STAT[],
   ) {
-    const elem = colorsfromzztelement(element)
-
-    const strcolor: STR_COLOR = mapcolortostrcolor(elem.color, elem.bg)
+    const maincolor = colorsfromzztcolor(element.color)
+    const strcolor: STR_COLOR = mapcolortostrcolor(
+      maincolor.color,
+      maincolor.bg,
+    )
     const strcolorflipped: STR_COLOR = mapcolortostrcolor(
-      (elem.bg + 8) % 16,
-      elem.color,
+      (maincolor.bg + 8) % 16,
+      maincolor.color,
     )
 
     const addstats: BOARD_ELEMENT = {}
@@ -262,12 +264,13 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
         }
       }
     }
-    switch (element.element) {
+    switch (element.type) {
       case 0:
       case 1:
       case 2:
       case 3:
         // skip empty, board edge, messenger, and monitor
+        // console.info('low', elementstat, element.element, element.color)
         break
       case 4:
         // player
@@ -482,67 +485,36 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
       case 46:
         // empty ???
         break
-      case 47:
-        writefromkind(
-          board,
-          ['text', ['WHITE', 'ONDKBLUE']],
-          { x, y },
-          { ...addstats, char: element.color },
-        )
-        break
-      case 48:
-        writefromkind(
-          board,
-          ['text', ['WHITE', 'ONDKGREEN']],
-          { x, y },
-          { ...addstats, char: element.color },
-        )
-        break
-      case 49:
-        writefromkind(
-          board,
-          ['text', ['WHITE', 'ONDKCYAN']],
-          { x, y },
-          { ...addstats, char: element.color },
-        )
-        break
-      case 50:
-        writefromkind(
-          board,
-          ['text', ['WHITE', 'ONDKRED']],
-          { x, y },
-          { ...addstats, char: element.color },
-        )
-        break
-      case 51:
-        writefromkind(
-          board,
-          ['text', ['WHITE', 'ONDKPURPLE']],
-          {
-            x,
-            y,
-          },
-          { ...addstats, char: element.color },
-        )
-        break
-      case 52:
-        writefromkind(
-          board,
-          ['text', ['WHITE', 'ONDKYELLOW']],
-          {
-            x,
-            y,
-          },
-          { ...addstats, char: element.color },
-        )
-        break
-      case 53:
-        writefromkind(
-          board,
-          ['text', ['WHITE', 'ONBLACK']],
-          { x, y },
-          { ...addstats, char: element.color },
-        )
+      default:
+        if (element.type >= 47 && element.type <= 53) {
+          const altcolor = colorsfromzztcolor(
+            element.type === 53 ? 15 : (element.type - 46) * 16 + 15,
+          )
+          const straltcolor: STR_COLOR = mapcolortostrcolor(
+            altcolor.color,
+            altcolor.bg % 8,
+          )
+          writefromkind(
+            board,
+            ['text', straltcolor],
+            { x, y },
+            { ...addstats, char: element.color },
+          )
+        } else if (element.type >= 128) {
+          const altcolor = colorsfromzztcolor(element.type)
+          const straltcolor: STR_COLOR = mapcolortostrcolor(
+            altcolor.color,
+            altcolor.bg % 8,
+          )
+          writefromkind(
+            board,
+            ['fake', straltcolor],
+            { x, y },
+            { ...addstats, char: element.color },
+          )
+        } else {
+          // console.info('element', elementstat, element.type, element.color)
+        }
         break
     }
   }
@@ -567,7 +539,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     }
 
     for (let e = 0; e < zztboard.elements.length; ++e) {
-      if (zztboard.elements[e].element === 4) {
+      if (zztboard.elements[e].type === 4) {
         codepagestats.push(`@startx ${indextox(e, ZZT_BOARD_WIDTH)}`)
         codepagestats.push(`@starty ${indextoy(e, ZZT_BOARD_WIDTH)}`)
       }
@@ -649,12 +621,12 @@ export function parsebrd(player: string, content: Uint8Array) {
 
 export function parsezzt(player: string, content: Uint8Array) {
   const reader = createreader(content)
+
   const worldfileid = reader.readint16()
   if (worldfileid != -1) {
     return
   }
-
-  const numberofboards = reader.readint16()
+  const numberofboards = reader.readint16() + 1
   const playerammo = reader.readint16()
   const playergems = reader.readint16()
   const keys = reader.readstring(7)
@@ -669,7 +641,7 @@ export function parsezzt(player: string, content: Uint8Array) {
   const worldname = reader.readstring(20).slice(0, worldnamelength)
 
   const flags: string[] = []
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < 10; i++) {
     const flagnamelength = reader.readuint8()
     const flagname = reader.readstring(20).slice(0, flagnamelength)
     flags.push(flagname)
@@ -678,6 +650,7 @@ export function parsezzt(player: string, content: Uint8Array) {
   const timepassed = reader.readint16()
   const timepassedticks = reader.readint16()
   const locked = reader.readuint8()
+
   console.info(
     playerammo,
     playergems,
@@ -697,7 +670,7 @@ export function parsezzt(player: string, content: Uint8Array) {
   reader.seek(512) // skip bytes
 
   const zztboards: ZZT_BOARD[] = []
-  for (let i = 0; i <= numberofboards; ++i) {
+  for (let i = 0; i < numberofboards; ++i) {
     // add to list
     const board = readboardbytes(reader)
     zztboards.push(board)

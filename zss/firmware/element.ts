@@ -251,33 +251,6 @@ function maptoconst(value: string) {
   return undefined
 }
 
-function handledie() {
-  boardsafedelete(
-    READ_CONTEXT.board,
-    READ_CONTEXT.element,
-    READ_CONTEXT.timestamp,
-  )
-
-  // yoink player if item
-  const isitem = !!memoryelementstatread(READ_CONTEXT.element, 'item')
-  if (isitem) {
-    // find focused on player
-    const from: PT = {
-      x: READ_CONTEXT.element?.x ?? -1,
-      y: READ_CONTEXT.element?.y ?? -1,
-    }
-    const focus = findplayerforelement(
-      READ_CONTEXT.board,
-      from,
-      READ_CONTEXT.elementfocus,
-    )
-    if (ispresent(focus)) {
-      focus.x = from.x
-      focus.y = from.y
-    }
-  }
-}
-
 export const ELEMENT_FIRMWARE = createfirmware({
   get(chip, name) {
     // check consts first (data normalization)
@@ -859,9 +832,36 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
-    handledie()
-    if (!memoryelementstatread(READ_CONTEXT.element, 'item')) {
-      // halt execution
+    boardsafedelete(
+      READ_CONTEXT.board,
+      READ_CONTEXT.element,
+      READ_CONTEXT.timestamp,
+    )
+
+    // special case for items
+    if (memoryelementstatread(READ_CONTEXT.element, 'item')) {
+      // yoink player if item
+      // find focused on player
+      const from: PT = {
+        x: READ_CONTEXT.element?.x ?? -1,
+        y: READ_CONTEXT.element?.y ?? -1,
+      }
+      const focus = findplayerforelement(
+        READ_CONTEXT.board,
+        from,
+        READ_CONTEXT.elementfocus,
+      )
+      if (
+        ispresent(focus?.x) &&
+        ispresent(focus.y) &&
+        // need to be in contact to yoink
+        Math.abs(focus.x - from.x) + Math.abs(focus.y - from.y) < 2
+      ) {
+        focus.x = from.x
+        focus.y = from.y
+      }
+    } else {
+      // for all non items halt execution
       chip.endofprogram()
     }
     return 0

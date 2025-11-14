@@ -83,7 +83,7 @@ export function zztoop(content: string) {
         scrubbed.includes('done') ||
         scrubbed.includes('load')
       ) {
-        console.info('>>>', scrubbed)
+        // console.info('>>>', scrubbed)
       }
 
       return scrubbed
