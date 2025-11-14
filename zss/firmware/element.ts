@@ -21,6 +21,7 @@ import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
   memoryelementstatread,
   memorymoveobject,
+  memorypickcodepagewithtype,
   memoryreadflags,
   memoryreadoperator,
   memoryresetchipafteredit,
@@ -33,20 +34,23 @@ import {
   boardelementreadbyidorindex,
   boardsafedelete,
 } from 'zss/memory/board'
-import { boardelementapplycolor } from 'zss/memory/boardelement'
+import {
+  boardelementapplycolor,
+  boardelementisobject,
+} from 'zss/memory/boardelement'
 import {
   boardobjectnamedlookupdelete,
   boardsetlookup,
 } from 'zss/memory/boardlookup'
 import { bookelementdisplayread } from 'zss/memory/book'
-import { BOARD_ELEMENT } from 'zss/memory/types'
+import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts, mapcolortostrcolor } from 'zss/words/color'
 import { dirconsts, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { PT } from 'zss/words/types'
+import { NAME, PT } from 'zss/words/types'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',
@@ -894,5 +898,43 @@ export const ELEMENT_FIRMWARE = createfirmware({
       const value = from[prop]
       chip.set(name, value)
     }
+    return 0
+  })
+  .command('load', (_, words) => {
+    const [dir, maybeaction, ii] = readargs(words, 0, [
+      ARG_TYPE.DIR,
+      ARG_TYPE.NAME,
+    ])
+
+    const maybeobject = boardelementread(READ_CONTEXT.board, dir.destpt)
+    if (ispresent(maybeobject) && boardelementisobject(maybeobject)) {
+      // update .code of object to the codepage content of kindname
+      switch (NAME(maybeaction)) {
+        case 'append': {
+          const [kindname] = readargs(words, ii, [ARG_TYPE.NAME])
+          const codepage = memorypickcodepagewithtype(
+            CODE_PAGE_TYPE.OBJECT,
+            kindname,
+          )
+          if (ispresent(codepage)) {
+            maybeobject.code += codepage.code
+            memoryresetchipafteredit(maybeobject.id ?? '')
+          }
+          break
+        }
+        default: {
+          const codepage = memorypickcodepagewithtype(
+            CODE_PAGE_TYPE.OBJECT,
+            maybeaction,
+          )
+          if (ispresent(codepage)) {
+            maybeobject.code = codepage.code
+            memoryresetchipafteredit(maybeobject.id ?? '')
+          }
+          break
+        }
+      }
+    }
+
     return 0
   })
