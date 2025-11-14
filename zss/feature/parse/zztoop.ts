@@ -2,7 +2,7 @@ function mapkeyword(line: string, keyword: string) {
   let scrubbed = line
 
   // label check
-  if (scrubbed.startsWith(`:${keyword}`)) {
+  if (scrubbed.trim() === `:${keyword}`) {
     scrubbed = scrubbed.replace(`:${keyword}`, `:_${keyword}`)
   }
 
@@ -77,7 +77,12 @@ export function zztoop(content: string) {
       // handle weave commands that map to zss
       scrubbed = mapcommand(scrubbed, 'fgplay', 'play')
 
-      if (scrubbed.includes('do') || scrubbed.includes('done')) {
+      if (
+        scrubbed.includes('do') ||
+        scrubbed.includes('run') ||
+        scrubbed.includes('done') ||
+        scrubbed.includes('load')
+      ) {
         console.info('>>>', scrubbed)
       }
 
