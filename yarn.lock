@@ -1050,10 +1050,10 @@
     polished "^4.3.1"
     react-layout-kit "^2.0.0"
 
-"@lobehub/tts@^1.25.8":
-  version "1.29.0"
-  resolved "https://registry.npmjs.org/@lobehub/tts/-/tts-1.29.0.tgz#1ddca59727b3b7c0532870f5c5c12048dda1d768"
-  integrity sha512-c+Q6PhT8x8Yo9qMFwDwWYGdfftWpTWY9HjBJFnwyFXMv4KjkYXhwBajnGBWKMbfi80jqqirfoCzvQwPZFYXmTw==
+"@lobehub/tts@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@lobehub/tts/-/tts-2.0.1.tgz#5d5d76dad6d4c0df5f7f6c8465a21bab28a3860c"
+  integrity sha512-NVQoHUI0NdlVXTze5n657X/pk2vIK6C7c/ZJpfzjyuUJ+zkQX9JY+byNgO25HsuJIhHvmmzZSVlr6iJGNpIEjg==
   dependencies:
     "@lobehub/ui" v2.0.0
     antd-style "^3.7.1"

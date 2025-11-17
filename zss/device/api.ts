@@ -266,6 +266,15 @@ export function synth_tts(
   device.emit(player, 'synth:tts', [voice, phrase])
 }
 
+export function synth_ttsengine(
+  device: DEVICELIKE,
+  player: string,
+  engine: string,
+  apikey: string,
+) {
+  device.emit(player, 'synth:ttsengine', [engine, apikey])
+}
+
 export function synth_ttsqueue(
   device: DEVICELIKE,
   player: string,

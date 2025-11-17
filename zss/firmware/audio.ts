@@ -9,6 +9,7 @@ import {
   synth_record,
   synth_tts,
   synth_ttsclearqueue,
+  synth_ttsengine,
   synth_ttsqueue,
   synth_ttsvolume,
   synth_voice,
@@ -108,19 +109,27 @@ function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
 
 export const AUDIO_FIRMWARE = createfirmware()
   .command('tts', (_, words) => {
-    const [voice, phrase] = readargs(words, 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.STRING,
-    ])
+    const [voice, phrase] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
     // look at voicescroll
     synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
   })
-  .command('ttsqueue', (_, words) => {
-    const [voice, phrase] = readargs(words, 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.STRING,
+  .command('ttsengine', (_, words) => {
+    const [engine, maybeapikey] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_NAME,
     ])
+    // look at voicescroll
+    synth_ttsengine(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      engine,
+      maybeapikey ?? '',
+    )
+    return 0
+  })
+  .command('ttsqueue', (_, words) => {
+    const [voice, phrase] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
     // look at voicescroll
     synth_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0

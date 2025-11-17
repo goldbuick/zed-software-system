@@ -23,7 +23,7 @@
     "@bokuweb/zstd-wasm": "^0.0.27",
     "@breezystack/lamejs": "^1.2.7",
     "@henrygd/queue": "^1.0.7",
-    "@lobehub/tts": "^1.25.8",
+    "@lobehub/tts": "^2.0.1",
     "@metrichor/jmespath": "^0.3.1",
     "@react-three/drei": "^10.7.7",
     "@react-three/eslint-plugin": "^0.1.2",
