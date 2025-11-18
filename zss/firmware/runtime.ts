@@ -46,6 +46,7 @@ function handlesendelement(chip: CHIP, element: BOARD_ELEMENT, label: string) {
 export function handlesend(chip: CHIP, send: SEND_META) {
   if (ispresent(send.targetname)) {
     const objectids = Object.keys(READ_CONTEXT.board?.objects ?? {})
+
     switch (send.targetname) {
       case 'all':
         for (let i = 0; i < objectids.length; ++i) {
