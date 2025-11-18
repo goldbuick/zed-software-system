@@ -273,7 +273,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
         // console.info('low', elementstat, element.element, element.color)
         break
       case 4:
-        // player
+        // skip player
         break
       case 5:
         // ammo
@@ -483,7 +483,13 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
         writefromkind(board, ['segment', strcolor], { x, y }, addstats)
         break
       case 46:
-        // empty ???
+        // weave customtext
+        writefromkind(
+          board,
+          ['customtext'],
+          { x, y },
+          { ...addstats, char: element.color },
+        )
         break
       default:
         if (element.type >= 47 && element.type <= 53) {
@@ -501,6 +507,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
             { ...addstats, char: element.color },
           )
         } else if (element.type >= 128) {
+          // weave fancy text
           const altcolor = colorsfromzztcolor(element.type)
           const straltcolor: STR_COLOR = mapcolortostrcolor(
             altcolor.color,
@@ -508,7 +515,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
           )
           writefromkind(
             board,
-            ['fake', straltcolor],
+            ['text', straltcolor],
             { x, y },
             { ...addstats, char: element.color },
           )
