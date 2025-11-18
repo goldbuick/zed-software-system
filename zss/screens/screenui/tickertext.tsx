@@ -27,7 +27,7 @@ export function TickerText({ width, height }: TickerTextProps) {
 
   if (ispresent(tickers)) {
     context.x = 0
-    context.y = 2
+    context.y = height - 1
     context.disablewrap = true
     const state = store.getState()
     resetTiles(state, 0, COLOR.WHITE, COLOR.ONCLEAR)
@@ -35,7 +35,7 @@ export function TickerText({ width, height }: TickerTextProps) {
       const line = tickers[i]
       tokenizeandwritetextformat(line, context, false)
       context.x = 0
-      context.y++
+      context.y--
     }
   }
 
