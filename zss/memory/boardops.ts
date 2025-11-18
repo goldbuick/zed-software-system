@@ -5,6 +5,7 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boarddeleteobject, boardelementindex, boardobjectread } from './board'
+import { boardelementisobject } from './boardelement'
 import { bookelementdisplayread } from './book'
 import {
   BOARD,
@@ -388,7 +389,8 @@ export function boardreadgroup(
   const allobjectelements = Object.values(board.objects)
   for (let i = 0; i < allobjectelements.length; ++i) {
     const el = allobjectelements[i]
-    if (checkelement(el, false)) {
+    // skip removed objects
+    if (!el.removed && checkelement(el, false)) {
       objectelements.push(el)
     }
   }
