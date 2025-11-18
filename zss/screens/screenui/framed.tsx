@@ -65,7 +65,6 @@ export function Framed({ width, height }: FramedProps) {
     return control.graphics
   })
 
-  const tscale = 1.2
   return (
     <>
       <UserInput
@@ -106,11 +105,8 @@ export function Framed({ width, height }: FramedProps) {
       {graphics === 'mode7' && <Mode7Graphics width={width} height={height} />}
       {graphics === 'iso' && <IsoGraphics width={width} height={height} />}
       {graphics === 'fpv' && <FPVGraphics width={width} height={height} />}
-      <group position-z={512} scale={[tscale, tscale, tscale]}>
-        <TickerText
-          width={Math.floor(width / tscale)}
-          height={Math.floor(height / tscale)}
-        />
+      <group position-z={512}>
+        <TickerText width={Math.floor(width)} height={Math.floor(height)} />
       </group>
     </>
   )
