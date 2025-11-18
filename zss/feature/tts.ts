@@ -68,7 +68,8 @@ export async function selectttsengine(
         const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${config}`
         pipertts = await PiperTTS.from_pretrained(baseurl, `${baseurl}.json`)
       } else {
-        pipertts = await PiperTTS.from_pretrained()
+        const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
+        pipertts = await PiperTTS.from_pretrained(baseurl, `${baseurl}.json`)
       }
       break
   }
@@ -133,7 +134,7 @@ async function requestaudiobuffer(
       streamer.push(input)
       streamer.close()
 
-      const stream = pipertts.stream(streamer)
+      const stream = pipertts.stream(streamer, { speakerId: parseFloat(voice) })
       doasync(SOFTWARE, registerreadplayer(), async () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _ of stream) {

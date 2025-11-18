@@ -211,16 +211,18 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'tts':
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
-          const [voice, phrase] = message.data as [string, string]
+          const [voice, phrase] = message.data as [any, string]
           await ttsplay(synth, voice, phrase)
         }
       })
       break
     case 'ttsengine':
-      if (isarray(message.data)) {
-        const [engine, apikey] = message.data as [any, string]
-        selectttsengine(engine, apikey)
-      }
+      doasync(synthdevice, message.player, async () => {
+        if (isarray(message.data)) {
+          const [engine, apikey] = message.data as [any, string]
+          await selectttsengine(engine, apikey)
+        }
+      })
       break
     case 'ttsqueue':
       if (isarray(message.data)) {
