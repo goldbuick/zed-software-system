@@ -53,10 +53,10 @@ export function createfx() {
     })
     phaser.set({
       ...resetphaser,
-      wet: 1,
-      frequency: 5,
-      octaves: 0.5,
-      baseFrequency: 400,
+      // wet: 1,
+      frequency: 15,
+      octaves: 5,
+      baseFrequency: 1000,
     })
     distortion.set({
       ...resetdistortion,

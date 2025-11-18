@@ -46,11 +46,18 @@ import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
-import { colorconsts, mapcolortostrcolor } from 'zss/words/color'
+import {
+  colorconsts,
+  isstrcolor,
+  mapcolortostrcolor,
+  mapstrcolortoattributes,
+  readstrbg,
+  readstrcolor,
+} from 'zss/words/color'
 import { dirconsts, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME, PT } from 'zss/words/types'
+import { COLOR, NAME, PT } from 'zss/words/types'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',
@@ -607,7 +614,62 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // we have to check the object's stats first
         if (STANDARD_STAT_NAMES.has(name)) {
           if (ispresent(READ_CONTEXT.element)) {
-            READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
+            switch (name) {
+              case 'color':
+                if (isstrcolor(value)) {
+                  const { color, bg } = mapstrcolortoattributes(value)
+                  if (ispresent(color)) {
+                    READ_CONTEXT.element.color = color
+                  }
+                  if (ispresent(bg)) {
+                    READ_CONTEXT.element.bg = bg
+                  }
+                } else if (isnumber(value)) {
+                  READ_CONTEXT.element.color = value
+                } else {
+                  // error ?
+                }
+                break
+              case 'bg':
+                if (isstrcolor(value)) {
+                  const { color, bg } = mapstrcolortoattributes(value)
+                  READ_CONTEXT.element.bg = color ?? bg ?? COLOR.PURPLE
+                } else if (isnumber(value)) {
+                  READ_CONTEXT.element.bg = value
+                } else {
+                  // error ?
+                }
+                break
+              case 'displaycolor':
+                if (isstrcolor(value)) {
+                  const { color, bg } = mapstrcolortoattributes(value)
+                  if (ispresent(color)) {
+                    READ_CONTEXT.element.displaycolor = color
+                  }
+                  if (ispresent(bg)) {
+                    READ_CONTEXT.element.displaybg = bg
+                  }
+                } else if (isnumber(value)) {
+                  READ_CONTEXT.element.displaycolor = value
+                } else {
+                  // error ?
+                }
+                break
+              case 'displaybg': {
+                if (isstrcolor(value)) {
+                  const { color, bg } = mapstrcolortoattributes(value)
+                  READ_CONTEXT.element.displaybg = color ?? bg ?? COLOR.PURPLE
+                } else if (isnumber(value)) {
+                  READ_CONTEXT.element.displaybg = value
+                } else {
+                  // error ?
+                }
+                break
+              }
+              default:
+                READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
+                break
+            }
           }
           return [true, value]
         }

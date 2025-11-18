@@ -1,32 +1,70 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { newQueue } from '@henrygd/queue'
-import { EdgeSpeechTTS } from '@lobehub/tts'
+import { EdgeSpeechTTS, OpenAITTS } from '@lobehub/tts'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
 
-// get MicrosoftSpeechTTS instance
-let tts: MAYBE<EdgeSpeechTTS>
+// yap instances
+let edgetts: MAYBE<EdgeSpeechTTS>
+let openaitts: MAYBE<OpenAITTS>
+
+function haltttsengine() {
+  if (edgetts) {
+    edgetts = undefined
+  }
+  if (openaitts) {
+    openaitts = undefined
+  }
+}
+
+export function selectttsengine(engine: 'edge' | 'openai', apikey: string) {
+  haltttsengine()
+  switch (engine) {
+    case 'edge':
+      edgetts = new EdgeSpeechTTS({ locale: 'en-US' })
+      break
+    case 'openai':
+      openaitts = new OpenAITTS({ OPENAI_API_KEY: apikey })
+      break
+  }
+}
 
 async function requestaudiobuffer(
   voice: string,
   input: string,
 ): Promise<MAYBE<AudioBuffer>> {
   return new Promise((resolve) => {
-    if (!ispresent(tts)) {
-      tts = new EdgeSpeechTTS({ locale: 'en-US' })
+    if (ispresent(edgetts)) {
+      const timer = setTimeout(() => resolve(undefined), 5000)
+      edgetts
+        .createAudio({
+          input,
+          options: { voice },
+        })
+        .then((audiobuffer) => {
+          clearTimeout(timer)
+          resolve(audiobuffer)
+        })
+    } else if (ispresent(openaitts)) {
+      const timer = setTimeout(() => resolve(undefined), 10000)
+      openaitts
+        .createAudio({
+          input,
+          options: {
+            model: 'tts-1',
+            voice: voice as any,
+          },
+        })
+        .then((audiobuffer) => {
+          clearTimeout(timer)
+          resolve(audiobuffer)
+        })
+    } else {
+      selectttsengine('edge', '')
+      requestaudiobuffer(voice, input).then(resolve)
     }
-    const timer = setTimeout(() => resolve(undefined), 5000)
-    tts
-      .createAudio({
-        input,
-        options: { voice },
-      })
-      .then((audiobuffer) => {
-        clearTimeout(timer)
-        resolve(audiobuffer)
-      })
   })
 }
 
