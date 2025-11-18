@@ -17,9 +17,11 @@ import { memoryelementstatread } from 'zss/memory'
 import { listelementsbyidnameorpts } from 'zss/memory/atomics'
 import {
   boardelementread,
+  boardelementreadbyidorindex,
   boardobjectread,
   boardsafedelete,
 } from 'zss/memory/board'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
@@ -63,6 +65,17 @@ export function handlesend(chip: CHIP, send: SEND_META) {
           }
         }
         break
+      case 'sender': {
+        // sender info
+        const sender = boardelementreadbyidorindex(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element?.sender ?? '',
+        )
+        if (ispresent(sender) && boardelementisobject(sender)) {
+          handlesendelement(chip, sender, send.label)
+        }
+        break
+      }
       case 'self':
         // check if we are sending shot / bombed to a breakable
         if (READ_CONTEXT.elementid !== chip.id()) {
