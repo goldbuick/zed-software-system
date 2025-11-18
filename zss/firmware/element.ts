@@ -51,8 +51,6 @@ import {
   isstrcolor,
   mapcolortostrcolor,
   mapstrcolortoattributes,
-  readstrbg,
-  readstrcolor,
 } from 'zss/words/color'
 import { dirconsts, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
