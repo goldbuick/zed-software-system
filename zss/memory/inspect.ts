@@ -27,7 +27,6 @@ import {
   boardsetterrain,
 } from './board'
 import { boardelementisobject } from './boardelement'
-import { boardsetlookup } from './boardlookup'
 import { bookboardelementreadcodepage } from './book'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
@@ -40,6 +39,7 @@ import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
 
 import {
   MEMORY_LABEL,
+  memoryboardinit,
   memoryensuresoftwarebook,
   memoryreadbookbysoftware,
   memoryreadoperator,
@@ -146,7 +146,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
   }
 
   // ensure lookup
-  boardsetlookup(board)
+  memoryboardinit(board)
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {

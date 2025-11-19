@@ -38,10 +38,7 @@ import {
   boardelementapplycolor,
   boardelementisobject,
 } from 'zss/memory/boardelement'
-import {
-  boardobjectnamedlookupdelete,
-  boardsetlookup,
-} from 'zss/memory/boardlookup'
+import { boardobjectnamedlookupdelete } from 'zss/memory/boardlookup'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
@@ -737,8 +734,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
   .command('become', (chip, words) => {
     // read
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
-    // make sure lookup is created
-    boardsetlookup(READ_CONTEXT.board)
 
     // read current display
     const display = bookelementdisplayread(READ_CONTEXT.element)

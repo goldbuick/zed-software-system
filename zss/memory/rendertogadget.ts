@@ -32,17 +32,15 @@ import {
   boardobjectread,
   boardvisualsupdate,
 } from './board'
-import { boardsetlookup } from './boardlookup'
-import { bookelementdisplayread, bookreadflags } from './book'
+import { bookelementdisplayread } from './book'
 import { codepagereaddata } from './codepage'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from './types'
 
 import {
-  MEMORY_LABEL,
+  memoryboardinit,
   memoryelementkindread,
   memoryelementstatread,
   memorypickcodepagewithtype,
-  memoryreadbookbysoftware,
   memoryreadflags,
 } from '.'
 
@@ -315,7 +313,7 @@ export function memoryconverttogadgetlayers(
   }
 
   // make sure lookup is created
-  boardsetlookup(board)
+  memoryboardinit(board)
 
   // update resolve caches
   boardvisualsupdate(board)

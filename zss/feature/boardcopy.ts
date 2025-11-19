@@ -1,6 +1,10 @@
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-import { memoryelementstatread, memorywritefromkind } from 'zss/memory'
+import {
+  memoryboardinit,
+  memoryelementstatread,
+  memorywritefromkind,
+} from 'zss/memory'
 import {
   boardelementread,
   boardgetterrain,
@@ -8,7 +12,6 @@ import {
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { boardresetlookups, boardsetlookup } from 'zss/memory/boardlookup'
 import { boardreadgroup } from 'zss/memory/boardops'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
@@ -135,8 +138,8 @@ export function boardcopy(
   }
 
   // make sure lookup is created
-  boardsetlookup(sourceboard)
-  boardsetlookup(targetboard)
+  memoryboardinit(sourceboard)
+  memoryboardinit(targetboard)
 
   let isgroup = false
   if (ispresent(sourceboard) && ispresent(targetboard)) {
@@ -216,7 +219,7 @@ export function boardcopy(
     }
 
     // rebuild lookups
-    boardresetlookups(targetboard)
+    memoryboardinit(targetboard)
   }
 }
 
@@ -253,8 +256,8 @@ export function boardcopygroup(
   }
 
   // make sure lookup is created
-  boardsetlookup(sourceboard)
-  boardsetlookup(targetboard)
+  memoryboardinit(sourceboard)
+  memoryboardinit(targetboard)
 
   if (ispresent(sourceboard) && ispresent(targetboard)) {
     // read target group
@@ -320,6 +323,6 @@ export function boardcopygroup(
     }
 
     // rebuild lookups
-    boardresetlookups(targetboard)
+    memoryboardinit(targetboard)
   }
 }
