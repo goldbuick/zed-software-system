@@ -260,7 +260,7 @@ export function synth_audioenabled(device: DEVICELIKE, player: string) {
 export function synth_tts(
   device: DEVICELIKE,
   player: string,
-  voice: string,
+  voice: string | number,
   phrase: string,
 ) {
   device.emit(player, 'synth:tts', [voice, phrase])
@@ -278,7 +278,7 @@ export function synth_ttsengine(
 export function synth_ttsqueue(
   device: DEVICELIKE,
   player: string,
-  voice: string,
+  voice: string | number,
   phrase: string,
 ) {
   device.emit(player, 'synth:ttsqueue', [voice, phrase])

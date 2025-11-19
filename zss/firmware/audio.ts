@@ -109,7 +109,10 @@ function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
 
 export const AUDIO_FIRMWARE = createfirmware()
   .command('tts', (_, words) => {
-    const [voice, phrase] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
+    const [voice, phrase] = readargs(words, 0, [
+      ARG_TYPE.NUMBER_OR_STRING,
+      ARG_TYPE.NAME,
+    ])
     // look at voicescroll
     synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
@@ -129,7 +132,10 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('ttsqueue', (_, words) => {
-    const [voice, phrase] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
+    const [voice, phrase] = readargs(words, 0, [
+      ARG_TYPE.NUMBER_OR_STRING,
+      ARG_TYPE.NAME,
+    ])
     // look at voicescroll
     synth_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
