@@ -4,11 +4,11 @@ import { SOFTWARE } from 'zss/device/session'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
+  memoryboardinit,
   memoryreadfirstcontentbook,
   memorysetbook,
   memorywritefromkind,
 } from 'zss/memory'
-import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -607,7 +607,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     }
 
     // create lookups before processing stats
-    boardsetlookup(board)
+    memoryboardinit(board)
   }
 }
 

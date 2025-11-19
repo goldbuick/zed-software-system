@@ -1,6 +1,7 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import {
+  memoryboardinit,
   memoryelementcheckpushable,
   memoryelementstatread,
   memorymoveobject,
@@ -14,7 +15,6 @@ import {
   ptwithinboard,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { boardresetlookups, boardsetlookup } from 'zss/memory/boardlookup'
 import { boardreadgroup } from 'zss/memory/boardops'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
@@ -57,7 +57,7 @@ export function boardweave(
   const tmpboard = createboard()
 
   // make sure lookup is created
-  boardsetlookup(targetboard)
+  memoryboardinit(targetboard)
 
   // apply weave
   for (let y = p1.y; y <= p2.y; ++y) {
@@ -104,7 +104,7 @@ export function boardweave(
   }
 
   // reset all lookups
-  boardresetlookups(targetboard)
+  memoryboardinit(targetboard)
 }
 
 export function boardweavegroup(
@@ -128,7 +128,7 @@ export function boardweavegroup(
   }
 
   // make sure lookup is created
-  boardsetlookup(targetboard)
+  memoryboardinit(targetboard)
 
   // read target group
   const { terrainelements, objectelements } = boardreadgroup(
@@ -398,7 +398,7 @@ export function boardweavegroup(
     }
   }
 
-  boardresetlookups(targetboard)
+  memoryboardinit(targetboard)
 
   // apply transform to objects
   for (let i = 0; i < objectelements.length; ++i) {
@@ -410,5 +410,5 @@ export function boardweavegroup(
     }
   }
 
-  boardresetlookups(targetboard)
+  memoryboardinit(targetboard)
 }

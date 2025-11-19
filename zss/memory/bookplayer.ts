@@ -8,13 +8,13 @@ import {
   boardnamedwrite,
   boardobjectlookupwrite,
   boardobjectnamedlookupdelete,
-  boardsetlookup,
 } from './boardlookup'
 import { boardcheckblockedobject } from './boardops'
 import { bookreadflag, bookwriteflag } from './book'
 import { BOARD, BOOK } from './types'
 
 import {
+  memoryboardinit,
   memoryboardread,
   memoryelementstatread,
   memoryreadplayerboard,
@@ -75,7 +75,7 @@ export function bookplayermovetoboard(
   }
 
   // make sure lookup is created
-  boardsetlookup(destboard)
+  memoryboardinit(destboard)
 
   // read target spot
   const maybeobject = boardcheckblockedobject(

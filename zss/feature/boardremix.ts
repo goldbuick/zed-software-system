@@ -3,6 +3,7 @@ import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import {
+  memoryboardinit,
   memoryelementkindread,
   memoryelementstatread,
   memorywritefromkind,
@@ -15,7 +16,6 @@ import {
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
@@ -61,8 +61,8 @@ export function boardremix(
   }
 
   // make sure lookup is created
-  boardsetlookup(targetboard)
-  boardsetlookup(sourceboard)
+  memoryboardinit(targetboard)
+  memoryboardinit(sourceboard)
 
   // element map
   let akind = 0 // kind
