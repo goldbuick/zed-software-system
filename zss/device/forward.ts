@@ -38,7 +38,6 @@ export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
     case 'tick':
     case 'tock':
     case 'ready':
-      // console.info('shouldnotforwardonpeerserver', message.target)
       return true
   }
   return false
@@ -59,6 +58,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'vm':
+        case 'heavy':
         case 'synth':
         case 'modem':
         case 'bridge':
@@ -68,6 +68,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       }
       switch (route.path) {
         case 'sync':
+        case 'heavy':
         case 'joinack':
         case 'acklogin':
         case 'ackoperator':
@@ -87,7 +88,6 @@ export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
     case 'tick':
     case 'tock':
     case 'second':
-      // console.info('shouldnotforwardonpeerclient', message.target)
       return true
   }
   return false
@@ -109,4 +109,32 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
       return true
   }
   return false
+}
+
+// heavy worker messages
+
+// create client -> heavy forward
+export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'tick':
+    case 'tock':
+    case 'second':
+      return false
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'heavy':
+          return true
+      }
+    }
+  }
+  return false
+}
+
+// create heavy -> client forward
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function shouldforwardheavytoclient(_message: MESSAGE): boolean {
+  return true
 }

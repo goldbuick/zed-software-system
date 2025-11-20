@@ -140,7 +140,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     synth_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
   })
-  .command('ttsclearqueue', () => {
+  .command('ttsrestart', () => {
     synth_ttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })

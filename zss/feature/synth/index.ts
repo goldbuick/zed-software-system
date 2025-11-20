@@ -529,7 +529,7 @@ export function createsynth() {
   }
 
   // tts output
-  function addttsaudiobuffer(audiobuffer: AudioBuffer | ToneAudioBuffer) {
+  function addaudiobuffer(audiobuffer: AudioBuffer | ToneAudioBuffer) {
     const player = new Player(audiobuffer).connect(ttsvolume)
     player.start(0)
   }
@@ -563,7 +563,7 @@ export function createsynth() {
     synthrecord,
     synthflush,
     synthreplay,
-    addttsaudiobuffer,
+    addaudiobuffer,
     setbpm,
     setplayvolume,
     setbgplayvolume,
