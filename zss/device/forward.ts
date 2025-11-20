@@ -59,6 +59,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'vm':
+        case 'heavy':
         case 'synth':
         case 'modem':
         case 'bridge':
@@ -106,6 +107,34 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'sync':
     case 'desync':
     case 'joinack':
+      return true
+  }
+  return false
+}
+
+// heavy worker messages
+
+// create client -> heavy forward
+export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'heavy':
+          return true
+      }
+    }
+  }
+  return false
+}
+
+// create heavy -> client forward
+export function shouldforwardheavytoclient(message: MESSAGE): boolean {
+  const route = parsetarget(message.target)
+  switch (route.target) {
+    case 'synth':
       return true
   }
   return false
