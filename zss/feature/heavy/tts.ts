@@ -1,18 +1,16 @@
-import {
-  KittenTTS,
-  RawAudio as PipeRawAudio,
-  PiperTTS,
-  TextSplitterStream,
-} from 'tts-pipelines'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+
+import { KittenTTS } from './kittentts'
+import { PiperTTS } from './pipertts'
+import { RawAudio, TextSplitterStream } from './utils'
 
 // yap instances
 let kittentts: MAYBE<KittenTTS>
 let pipertts: MAYBE<PiperTTS>
 
-function convertarraybytes(rawaudio: PipeRawAudio) {
+function convertarraybytes(rawaudio: RawAudio) {
   return rawaudio.encodeWAV(rawaudio.audio, rawaudio.sampling_rate)
 }
 
