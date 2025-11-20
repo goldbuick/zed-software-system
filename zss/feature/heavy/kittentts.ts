@@ -3,6 +3,7 @@ import { InferenceSession, Tensor, env } from 'onnxruntime-web'
 
 import { cachedFetch } from './modelcache'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
+import { phonemize } from './phonemizer.js';
 
 // KittenTTS class for local model
 
@@ -145,8 +146,6 @@ export class KittenTTS {
 
   // Convert text to phonemes using the phonemizer package
   async textToPhonemes(text: any) {
-    // Import the phonemizer package
-    const { phonemize } = await import('phonemizer')
     const phonemes = await phonemize(text, 'en-us')
     return phonemes
   }

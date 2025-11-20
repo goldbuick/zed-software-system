@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
-import { phonemize } from 'phonemizer'
+import { phonemize } from './phonemizer.js'
 
 import { cachedFetch } from './modelcache'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
