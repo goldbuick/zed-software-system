@@ -10059,13 +10059,6 @@ tslib@^2.0.0, tslib@^2.0.3, tslib@^2.3.1, tslib@^2.4.0, tslib@^2.4.1, tslib@^2.5
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
 
-tts-pipelines@^0.2.8:
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/tts-pipelines/-/tts-pipelines-0.2.8.tgz#01434ba742a1d5f75f391832af59b352dae9f2a7"
-  integrity sha512-epNBPlzAZFixDLavXl6PTsVP/FOQtrXpVCquP5fzKuw5iFq6iArYIhdTI7xgrPQ/5EeT+uCVVOYNpn7fTdEy2w==
-  dependencies:
-    phonemizer "^1.2.1"
-
 tty-browserify@0.0.1:
   version "0.0.1"
   resolved "https://registry.npmjs.org/tty-browserify/-/tty-browserify-0.0.1.tgz#3f05251ee17904dfd0677546670db9651682b811"

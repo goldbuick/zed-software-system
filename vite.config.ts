@@ -60,8 +60,5 @@ export default defineConfig(({ mode }) => {
         target: 'es2020',
       },
     },
-    worker: {
-      format: 'es',
-    },
   }
 })
