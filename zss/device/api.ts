@@ -156,35 +156,15 @@ export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:clearscroll')
 }
 
-export function heavy_tts(
+export function heavy_ttsrequest(
   device: DEVICELIKE,
   player: string,
+  engine: 'kitten' | 'piper',
+  config: string,
   voice: string | number,
   phrase: string,
 ) {
-  device.emit(player, 'heavy:tts', [voice, phrase])
-}
-
-export function heavy_ttsengine(
-  device: DEVICELIKE,
-  player: string,
-  engine: string,
-  apikey: string,
-) {
-  device.emit(player, 'heavy:ttsengine', [engine, apikey])
-}
-
-export function heavy_ttsqueue(
-  device: DEVICELIKE,
-  player: string,
-  voice: string | number,
-  phrase: string,
-) {
-  device.emit(player, 'heavy:ttsqueue', [voice, phrase])
-}
-
-export function heavy_ttsclearqueue(device: DEVICELIKE, player: string) {
-  device.emit(player, 'heavy:ttsclearqueue')
+  device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
 }
 
 export function platform_ready(device: DEVICELIKE) {
@@ -296,14 +276,6 @@ export function synth_audiobuffer(
   device.emit(player, 'synth:audiobuffer', audiobuffer)
 }
 
-export function synth_audiobytes(
-  device: DEVICELIKE,
-  player: string,
-  audiobytes: ArrayBuffer,
-) {
-  device.emit(player, 'synth:audiobytes', audiobytes)
-}
-
 export function synth_play(
   device: DEVICELIKE,
   player: string,
@@ -349,6 +321,37 @@ export function synth_ttsvolume(
   volume: number,
 ) {
   device.emit(player, 'synth:ttsvolume', volume)
+}
+
+export function synth_ttsengine(
+  device: DEVICELIKE,
+  player: string,
+  engine: string,
+  config: string,
+) {
+  device.emit(player, 'synth:ttsengine', [engine, config])
+}
+
+export function synth_tts(
+  device: DEVICELIKE,
+  player: string,
+  voice: string | number,
+  phrase: string,
+) {
+  device.emit(player, 'synth:tts', [voice, phrase])
+}
+
+export function synth_ttsqueue(
+  device: DEVICELIKE,
+  player: string,
+  voice: string | number,
+  phrase: string,
+) {
+  device.emit(player, 'synth:ttsqueue', [voice, phrase])
+}
+
+export function synth_ttsclearqueue(device: DEVICELIKE, player: string) {
+  device.emit(player, 'synth:ttsclearqueue')
 }
 
 export function synth_voice(

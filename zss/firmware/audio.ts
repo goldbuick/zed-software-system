@@ -1,9 +1,5 @@
 import { CHIP } from 'zss/chip'
 import {
-  heavy_tts,
-  heavy_ttsclearqueue,
-  heavy_ttsengine,
-  heavy_ttsqueue,
   synth_bgplay,
   synth_bgplayvolume,
   synth_bpm,
@@ -11,6 +7,10 @@ import {
   synth_play,
   synth_playvolume,
   synth_record,
+  synth_tts,
+  synth_ttsclearqueue,
+  synth_ttsengine,
+  synth_ttsqueue,
   synth_ttsvolume,
   synth_voice,
   synth_voicefx,
@@ -114,7 +114,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.NAME,
     ])
     // look at voicescroll
-    heavy_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+    synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
   })
   .command('ttsengine', (_, words) => {
@@ -123,7 +123,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NAME,
     ])
     // look at voicescroll
-    heavy_ttsengine(
+    synth_ttsengine(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
       engine,
@@ -137,11 +137,11 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.NAME,
     ])
     // look at voicescroll
-    heavy_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+    synth_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
   })
-  .command('ttsclearqueue', () => {
-    heavy_ttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
+  .command('ttsrestart', () => {
+    synth_ttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('bpm', (_, words) => {

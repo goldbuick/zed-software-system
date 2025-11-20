@@ -38,7 +38,6 @@ export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
     case 'tick':
     case 'tock':
     case 'ready':
-      // console.info('shouldnotforwardonpeerserver', message.target)
       return true
   }
   return false
@@ -69,6 +68,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       }
       switch (route.path) {
         case 'sync':
+        case 'heavy':
         case 'joinack':
         case 'acklogin':
         case 'ackoperator':
@@ -88,7 +88,6 @@ export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
     case 'tick':
     case 'tock':
     case 'second':
-      // console.info('shouldnotforwardonpeerclient', message.target)
       return true
   }
   return false
@@ -117,6 +116,10 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
 // create client -> heavy forward
 export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
+    case 'tick':
+    case 'tock':
+    case 'second':
+      return false
     case 'ready':
       return true
     default: {
@@ -131,11 +134,7 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
 }
 
 // create heavy -> client forward
-export function shouldforwardheavytoclient(message: MESSAGE): boolean {
-  const route = parsetarget(message.target)
-  switch (route.target) {
-    case 'synth':
-      return true
-  }
-  return false
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function shouldforwardheavytoclient(_message: MESSAGE): boolean {
+  return true
 }

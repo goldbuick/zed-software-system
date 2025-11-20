@@ -1,8 +1,14 @@
-import { Context, getContext, getTransport, setContext, start } from 'tone'
+import { Context, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth, setupsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synth/voiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefxconfig'
+import {
+  selectttsengine,
+  ttsclearqueue,
+  ttsplay,
+  ttsqueue,
+} from 'zss/feature/tts'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
@@ -135,14 +141,6 @@ const synthdevice = createdevice('synth', [], (message) => {
         synth.setttsvolume(message.data)
       }
       break
-    case 'audiobytes':
-      doasync(synthdevice, message.player, async () => {
-        if (ispresent(message.data)) {
-          const audiobuffer = await getContext().decodeAudioData(message.data)
-          synth?.addaudiobuffer(audiobuffer)
-        }
-      })
-      break
     case 'audiobuffer':
       if (ispresent(message.data)) {
         synth.addaudiobuffer(message.data)
@@ -214,6 +212,29 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'flush':
       synth.synthflush()
+      break
+    case 'tts':
+      doasync(synthdevice, message.player, async () => {
+        if (isarray(message.data)) {
+          const [voice, phrase] = message.data as [any, string]
+          await ttsplay(message.player, voice, phrase)
+        }
+      })
+      break
+    case 'ttsengine':
+      if (isarray(message.data)) {
+        const [engine, apikey] = message.data as [any, string]
+        selectttsengine(engine, apikey)
+      }
+      break
+    case 'ttsqueue':
+      if (isarray(message.data)) {
+        const [voice, phrase] = message.data as [string, string]
+        ttsqueue(message.player, voice, phrase)
+      }
+      break
+    case 'ttsclearqueue':
+      ttsclearqueue()
       break
   }
 })
