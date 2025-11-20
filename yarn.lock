@@ -8066,11 +8066,6 @@ openai@^4.93.0:
     formdata-node "^4.3.2"
     node-fetch "^2.6.7"
 
-openai@^6.9.1:
-  version "6.9.1"
-  resolved "https://registry.yarnpkg.com/openai/-/openai-6.9.1.tgz#a591118d79d14ac01870d29efe869743e9b64167"
-  integrity sha512-vQ5Rlt0ZgB3/BNmTa7bIijYFhz3YBceAA3Z4JuoMSBftBF9YqFHIEhZakSs+O/Ad7EaoEimZvHxD5ylRjN11Lg==
-
 option-resolver.js@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/option-resolver.js/-/option-resolver.js-1.1.0.tgz#d24e8890b9d049056e9cc33b5232ecd4b6e4f0fb"

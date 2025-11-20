@@ -1,5 +1,5 @@
 import { newQueue } from '@henrygd/queue'
-import { EdgeSpeechTTS, OpenAITTS } from '@lobehub/tts'
+import { EdgeSpeechTTS } from '@lobehub/tts'
 import { getContext } from 'tone'
 import { createdevice } from 'zss/device'
 import { heavy_ttsrequest, synth_audiobuffer } from 'zss/device/api'
@@ -12,14 +12,13 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 // yap instances
 let edgetts: MAYBE<EdgeSpeechTTS>
-let openaitts: MAYBE<OpenAITTS>
 
 // engine config
-let ttsengine: 'edge' | 'openai' | 'piper' | 'kitten' = 'edge'
+let ttsengine: 'edge' | 'piper' | 'kitten' = 'edge'
 let ttsconfig = ''
 
 export function selectttsengine(
-  engine: 'edge' | 'openai' | 'piper' | 'kitten',
+  engine: 'edge' | 'piper' | 'kitten',
   config: string,
 ) {
   ttsengine = engine
@@ -58,23 +57,6 @@ export async function requestaudiobuffer(
             const audiobuffer = await edgetts.createAudio({
               input,
               options: { voice },
-            })
-            clearTimeout(timer)
-            resolve(audiobuffer)
-          }
-          break
-        case 'openai':
-          if (!ispresent(openaitts)) {
-            openaitts = new OpenAITTS({ OPENAI_API_KEY: ttsconfig })
-          }
-          if (ispresent(openaitts)) {
-            const timer = setTimeout(() => resolve(undefined), 5000)
-            const audiobuffer = await openaitts.createAudio({
-              input,
-              options: {
-                model: 'tts-1',
-                voice: voice as any,
-              },
             })
             clearTimeout(timer)
             resolve(audiobuffer)
