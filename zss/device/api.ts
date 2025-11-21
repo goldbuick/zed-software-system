@@ -209,11 +209,10 @@ export function register_forkmem(
 export function register_publishmem(
   device: DEVICELIKE,
   player: string,
-  name: string,
   books: string,
   ...args: string[]
 ) {
-  device.emit(player, 'register:publishmem', [name, books, ...args])
+  device.emit(player, 'register:publishmem', [books, ...args])
 }
 
 export function register_copy(

@@ -703,18 +703,9 @@ const vm = createdevice(
         break
       case 'publish':
         doasync(vm, message.player, async () => {
-          if (message.player === operator) {
-            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-            if (ispresent(mainbook) && isarray(message.data)) {
-              const content = await compressedbookstate()
-              register_publishmem(
-                vm,
-                message.player,
-                mainbook.name,
-                content,
-                ...message.data,
-              )
-            }
+          if (message.player === operator && isarray(message.data)) {
+            const content = await compressedbookstate()
+            register_publishmem(vm, message.player, content, ...message.data)
           }
         })
         break

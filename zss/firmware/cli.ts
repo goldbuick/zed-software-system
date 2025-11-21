@@ -14,7 +14,6 @@ import {
   register_findany,
   register_inspector,
   register_nuke,
-  register_publishmem,
   register_share,
   vm_admin,
   vm_codeaddress,
@@ -669,7 +668,13 @@ export const CLI_FIRMWARE = createfirmware()
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
-    vm_publish(SOFTWARE, READ_CONTEXT.elementfocus, 'itchio')
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    vm_publish(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      'itchio',
+      mainbook?.name ?? '',
+    )
     return 0
   })
   // -- editing related commands
