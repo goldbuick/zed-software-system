@@ -21,10 +21,10 @@ import {
   vm_flush,
   vm_fork,
   vm_halt,
-  vm_itchiopublish,
   vm_loader,
   vm_logout,
   vm_makeitscroll,
+  vm_publish,
   vm_refscroll,
   vm_restart,
   vm_zztrandom,
@@ -669,7 +669,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
-    vm_itchiopublish(SOFTWARE, READ_CONTEXT.elementfocus)
+    vm_publish(SOFTWARE, READ_CONTEXT.elementfocus, 'itchio')
     return 0
   })
   // -- editing related commands
@@ -871,13 +871,14 @@ export const CLI_FIRMWARE = createfirmware()
             iiii = iiiii
             tags.push(tag)
           }
-          register_publishmem(
+          vm_publish(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
+            'bbs',
             bbsemail,
             bbscode,
             filename,
-            tags,
+            ...tags,
           )
         }
         break

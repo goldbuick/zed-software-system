@@ -104,9 +104,9 @@ import {
   register_copyjsonfile,
   register_forkmem,
   register_inspector,
-  register_itchiopublishmem,
   register_loginfail,
   register_loginready,
+  register_publishmem,
   register_savemem,
   vm_clearscroll,
   vm_cli,
@@ -701,17 +701,18 @@ const vm = createdevice(
           writezztcontentlinks(list, message.player)
         })
         break
-      case 'itchiopublish':
+      case 'publish':
         doasync(vm, message.player, async () => {
           if (message.player === operator) {
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-            if (ispresent(mainbook)) {
+            if (ispresent(mainbook) && isarray(message.data)) {
               const content = await compressedbookstate()
-              register_itchiopublishmem(
+              register_publishmem(
                 vm,
                 message.player,
                 mainbook.name,
                 content,
+                ...message.data,
               )
             }
           }

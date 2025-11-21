@@ -218,10 +218,11 @@ window.addEventListener(
       case 'z':
       case 'y':
       case 'e':
-      case 'k':
       case 'a':
-      case 'p': // prevent default behavior
+      case 'p':
       case 'h':
+      case 'n': // prevent default behavior
+      case 'k':
       case '[':
       case ']':
       case '0':
