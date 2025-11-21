@@ -574,24 +574,6 @@ const vm = createdevice(
         }
         break
       }
-      case 'synthsend':
-        if (isstring(message.data)) {
-          const messagestr = message.data
-          // throttle synthsends because multipla players
-          const [target, label] = totarget(messagestr)
-          const signal = synthdebounce[messagestr]
-          if (!ispresent(signal) || signal <= 0) {
-            synthdebounce[messagestr] = 2
-            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-            memorysendtoboards(
-              target,
-              label,
-              undefined,
-              bookplayerreadboards(mainbook),
-            )
-          }
-        }
-        break
       case 'second': {
         // ensure player ids are added to tracking
         // this manages restoring from saved or transfered state
