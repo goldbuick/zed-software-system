@@ -275,17 +275,13 @@ export function parseplay(play: string): SYNTH_INVOKE[] {
   for (let p = 0; p < invokes.length; ++p) {
     const ops: SYNTH_OP[] = []
     const invoke = invokes[p]
-    if (invoke.startsWith('#')) {
-      playops.push(invoke)
-    } else {
-      for (let i = 0; i < invoke.length; ++i) {
-        const op = CHAR_OP_MAP[invoke[i] as keyof typeof CHAR_OP_MAP]
-        if (ispresent(op)) {
-          ops.push(op)
-        }
+    for (let i = 0; i < invoke.length; ++i) {
+      const op = CHAR_OP_MAP[invoke[i] as keyof typeof CHAR_OP_MAP]
+      if (ispresent(op)) {
+        ops.push(op)
       }
-      playops.push(ops)
     }
+    playops.push(ops)
   }
 
   return playops

@@ -15,10 +15,9 @@ import {
   Volume,
   getContext,
   getDestination,
-  getDraw,
   getTransport,
 } from 'tone'
-import { api_error, vm_synthsend } from 'zss/device/api'
+import { api_error } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { createnameid } from 'zss/mapping/guid'
@@ -357,34 +356,27 @@ export function createsynth() {
     const [chan, duration, note] = value
     const f = mapindextofx(chan)
     if (isstring(note) && ispresent(SOURCE[chan]) && ispresent(FX[f])) {
-      if (note.startsWith('#')) {
-        getDraw().schedule(
-          () => vm_synthsend(SOFTWARE, '', note.slice(1)),
-          time,
-        )
-      } else {
-        // razzle dazzle code
-        switch (SOURCE[chan].source.type) {
-          case SOURCE_TYPE.BELLS:
-            SOURCE[chan].source.synth.detune.value = randominteger(-3, 3)
-            SOURCE[chan].source.sparkle.triggerAttackRelease(
-              Note.transposeOctaves(note, 2),
-              duration,
-              time,
-            )
-            break
-          default:
-            break
-        }
-        SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
-        const sduration = SOURCE[chan].source.synth.toSeconds(duration)
-        const reset = '128n'
-        const rampreset = SOURCE[chan].source.synth.toSeconds(reset)
-        FXCHAIN.vibrato.depth.rampTo(1, '2n', time)
-        FXCHAIN.vibrato.depth.rampTo(0, reset, time + sduration - rampreset)
-        FXCHAIN.vibrato.frequency.rampTo(5, '4n', time)
-        FXCHAIN.vibrato.frequency.rampTo(1, reset, time + sduration - rampreset)
+      // razzle dazzle code
+      switch (SOURCE[chan].source.type) {
+        case SOURCE_TYPE.BELLS:
+          SOURCE[chan].source.synth.detune.value = randominteger(-3, 3)
+          SOURCE[chan].source.sparkle.triggerAttackRelease(
+            Note.transposeOctaves(note, 2),
+            duration,
+            time,
+          )
+          break
+        default:
+          break
       }
+      SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
+      const sduration = SOURCE[chan].source.synth.toSeconds(duration)
+      const reset = '128n'
+      const rampreset = SOURCE[chan].source.synth.toSeconds(reset)
+      FXCHAIN.vibrato.depth.rampTo(1, '2n', time)
+      FXCHAIN.vibrato.depth.rampTo(0, reset, time + sduration - rampreset)
+      FXCHAIN.vibrato.frequency.rampTo(5, '4n', time)
+      FXCHAIN.vibrato.frequency.rampTo(1, reset, time + sduration - rampreset)
     }
     if (isnumber(note)) {
       switch (note) {

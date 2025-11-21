@@ -626,14 +626,6 @@ export function vm_restart(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:restart')
 }
 
-export function vm_synthsend(
-  device: DEVICELIKE,
-  player: string,
-  message: string,
-) {
-  device.emit(player, 'vm:synthsend', message)
-}
-
 export function vm_flush(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:flush')
 }
