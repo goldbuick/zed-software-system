@@ -108,40 +108,32 @@ function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
 }
 
 export const AUDIO_FIRMWARE = createfirmware()
-  .command('tts', (_, words) => {
-    const [voice, phrase] = readargs(words, 0, [
-      ARG_TYPE.NUMBER_OR_STRING,
-      ARG_TYPE.NAME,
+  .command('ttsengine', (_, words) => {
+    const [engine, config] = readargs(words, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_STRING,
     ])
-    // look at voicescroll
-    synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+    synth_ttsengine(SOFTWARE, READ_CONTEXT.elementfocus, engine, config ?? '')
     return 0
   })
-  .command('ttsengine', (_, words) => {
-    const [engine, maybeapikey] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_NAME,
+  .command('tts', (_, words) => {
+    const [voice, phrase] = readargs(words, 0, [
+      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+      ARG_TYPE.MAYBE_STRING,
     ])
-    // look at voicescroll
-    synth_ttsengine(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      engine,
-      maybeapikey ?? '',
-    )
+    if (ispresent(voice) && ispresent(phrase)) {
+      synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+    } else {
+      synth_ttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
     return 0
   })
   .command('ttsqueue', (_, words) => {
     const [voice, phrase] = readargs(words, 0, [
       ARG_TYPE.NUMBER_OR_STRING,
-      ARG_TYPE.NAME,
+      ARG_TYPE.STRING,
     ])
-    // look at voicescroll
     synth_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
-    return 0
-  })
-  .command('ttsrestart', () => {
-    synth_ttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('bpm', (_, words) => {
