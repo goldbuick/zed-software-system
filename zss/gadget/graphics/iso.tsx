@@ -88,9 +88,8 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    const currentboard = useGadgetClient.getState().gadget.board
-
     const animrate = 0.05
+    const currentboard = useGadgetClient.getState().gadget.board
 
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
