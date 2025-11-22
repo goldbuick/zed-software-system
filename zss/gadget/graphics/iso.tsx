@@ -14,6 +14,7 @@ import {
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { useScreenSize } from '../userscreen'
 
@@ -41,20 +42,22 @@ function maptolayerz(layer: LAYER): number {
 function maptoscale(viewscale: VIEWSCALE): number {
   switch (viewscale) {
     case VIEWSCALE.NEAR:
-      return 6
+      return 3
     default:
     case VIEWSCALE.MID:
-      return 3
+      return 2
     case VIEWSCALE.FAR:
-      return 1.2
+      return 1
   }
 }
 
 export function IsoGraphics({ width, height }: GraphicsProps) {
   const { viewport } = useThree()
   const screensize = useScreenSize()
-  const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-  const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const viewwidth = width * drawwidth
+  const viewheight = height * drawheight
 
   const zoomref = useRef<Group>(null)
   const overref = useRef<Group>(null)
@@ -88,8 +91,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     const currentboard = useGadgetClient.getState().gadget.board
 
     const animrate = 0.05
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
 
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
@@ -130,20 +131,20 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     // update dof
     switch (control.viewscale) {
       case VIEWSCALE.NEAR:
-        depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 600
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
+        depthoffield.current.bokehScale = 5
+        depthoffield.current.cocMaterial.worldFocusRange = 1000
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
         break
       default:
       case VIEWSCALE.MID:
-        depthoffield.current.bokehScale = 10
+        depthoffield.current.bokehScale = 5
         depthoffield.current.cocMaterial.worldFocusRange = 1000
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
         break
       case VIEWSCALE.FAR:
-        depthoffield.current.bokehScale = 1
+        depthoffield.current.bokehScale = 5
         depthoffield.current.cocMaterial.worldFocusRange = 1500
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
         break
     }
 
@@ -167,6 +168,16 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
 
   const { gadget, gadgetlayercache } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
+  const exiteast = gadgetlayercache[gadget.exiteast] ?? []
+  const exitwest = gadgetlayercache[gadget.exitwest] ?? []
+  const exitnorth = gadgetlayercache[gadget.exitnorth] ?? []
+  const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
+  console.info({
+    exiteast: exiteast.length,
+    exitwest: exitwest.length,
+    exitnorth: exitnorth.length,
+    exitsouth: exitsouth.length,
+  })
 
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
@@ -211,6 +222,54 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                         z={maptolayerz(layer)}
                       />
                     ))}
+                    {exiteast.length && (
+                      <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
+                        {exiteast.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exiteast}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
+                    {exitwest.length && (
+                      <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
+                        {exitwest.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exitwest}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
+                    {exitnorth.length && (
+                      <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
+                        {exitnorth.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exitnorth}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
+                    {exitsouth.length && (
+                      <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
+                        {exitsouth.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exitsouth}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
                   </group>
                 </group>
               </group>
