@@ -172,12 +172,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   const exitwest = gadgetlayercache[gadget.exitwest] ?? []
   const exitnorth = gadgetlayercache[gadget.exitnorth] ?? []
   const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
-  console.info({
-    exiteast: exiteast.length,
-    exitwest: exitwest.length,
-    exitnorth: exitnorth.length,
-    exitsouth: exitsouth.length,
-  })
 
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
