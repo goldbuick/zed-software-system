@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -14,6 +14,7 @@ import {
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { useScreenSize } from '../userscreen'
 
@@ -41,24 +42,27 @@ function maptolayerz(layer: LAYER): number {
 function maptoscale(viewscale: VIEWSCALE): number {
   switch (viewscale) {
     case VIEWSCALE.NEAR:
-      return 6
+      return 3
     default:
     case VIEWSCALE.MID:
-      return 3
+      return 2
     case VIEWSCALE.FAR:
-      return 1.2
+      return 1
   }
 }
 
 export function IsoGraphics({ width, height }: GraphicsProps) {
+  const { viewport } = useThree()
   const screensize = useScreenSize()
-  const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-  const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const viewwidth = width * drawwidth
+  const viewheight = height * drawheight
 
   const zoomref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
-  const focusref = useRef<Group>(null)
+  const cornerref = useRef<Group>(null)
   const cameraref = useRef<OrthographicCameraImpl>(null)
   const depthoffield = useRef<DepthOfFieldEffect>(null)
 
@@ -67,12 +71,12 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     setcameraready(true)
   }, [])
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (
       !zoomref.current ||
       !overref.current ||
       !underref.current ||
-      !focusref.current ||
+      !cornerref.current ||
       !cameraref.current ||
       !depthoffield.current
     ) {
@@ -84,27 +88,64 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    // drawsize
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const currentboard = useGadgetClient.getState().gadget.board
 
-    // viewsize
-    const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-    const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+    const animrate = 0.05
 
     // setup tracking state
-    if (!ispresent(focusref.current.userData.focusx)) {
-      zoomref.current.scale.setScalar(control.viewscale)
-      focusref.current.userData = {
+    if (!ispresent(cameraref.current.userData.focusx)) {
+      cameraref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
-        focuslx: control.focusx,
-        focusly: control.focusy,
-        focusvx: 0,
-        focusvy: 0,
         facing: control.facing,
-        focusz: 0,
+        currentboard,
       }
+      zoomref.current.scale.setScalar(control.viewscale)
+    }
+
+    const userData = cameraref.current.userData ?? {}
+    const fx = (userData.focusx + 0.5) * drawwidth
+    const fy = (userData.focusy + 0.5) * drawheight
+
+    // zoom
+    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
+
+    // pan
+    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
+
+    // smoothed change in focus
+    if (currentboard !== userData.currentboard) {
+      userData.focusx = control.focusx
+      userData.focusy = control.focusy
+      userData.currentboard = currentboard
+      cornerref.current.position.set(
+        -((userData.focusx + 0.5) * drawwidth),
+        -((userData.focusy + 0.5) * drawheight),
+        0,
+      )
+    } else {
+      damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
+      damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
+    }
+
+    // update dof
+    switch (control.viewscale) {
+      case VIEWSCALE.NEAR:
+        depthoffield.current.bokehScale = 5
+        depthoffield.current.cocMaterial.worldFocusRange = 1000
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        break
+      default:
+      case VIEWSCALE.MID:
+        depthoffield.current.bokehScale = 5
+        depthoffield.current.cocMaterial.worldFocusRange = 1000
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        break
+      case VIEWSCALE.FAR:
+        depthoffield.current.bokehScale = 5
+        depthoffield.current.cocMaterial.worldFocusRange = 1500
+        depthoffield.current.cocMaterial.worldFocusDistance = 500
+        break
     }
 
     // framing
@@ -116,48 +157,8 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
 
-    const animrate = 0.125
-
-    // calc focus
-    const focusx = focusref.current.userData.focusx + 0.5
-    const focusy = focusref.current.userData.focusy + 0.5
-    const fx = focusx * drawwidth
-    const fy = focusy * drawheight
-
-    // zoom
-    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
-
-    // focus
-    damp3(focusref.current.position, [-fx, -fy, 0], animrate, delta)
-
-    // smoothed change in focus
-    damp(focusref.current.userData, 'focusx', control.focusx, animrate)
-    damp(focusref.current.userData, 'focusy', control.focusy, animrate)
-
-    // center camera
-    cameraref.current.position.x = state.size.width * 0.5
-    cameraref.current.position.y = state.size.height * 0.5
+    // camera changes
     cameraref.current.updateProjectionMatrix()
-
-    // update dof
-    switch (control.viewscale) {
-      case VIEWSCALE.NEAR:
-        depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 600
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
-        break
-      default:
-      case VIEWSCALE.MID:
-        depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1000
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
-        break
-      case VIEWSCALE.FAR:
-        depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1500
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
-        break
-    }
   })
 
   // re-render only when layer count changes
@@ -165,15 +166,20 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
 
-  const {
-    over = [],
-    under = [],
-    layers = [],
-  } = useGadgetClient.getState().gadget
+  const { gadget, gadgetlayercache } = useGadgetClient.getState()
+  const { over = [], under = [], layers = [] } = gadget
+  const exiteast = gadgetlayercache[gadget.exiteast] ?? []
+  const exitwest = gadgetlayercache[gadget.exitwest] ?? []
+  const exitnorth = gadgetlayercache[gadget.exitnorth] ?? []
+  const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
 
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
 
+  const xmargin = viewport.width - viewwidth
+  const ymargin = viewport.height - viewheight
+  const centerx = viewwidth * -0.5 + xmargin * -0.5 + screensize.marginx
+  const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
   return (
     <>
       <group position-z={layersindex}>
@@ -183,7 +189,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
           right={viewwidth * 0.5}
           top={viewheight * -0.5}
           bottom={viewheight * 0.5}
-          near={1}
+          near={0.1}
           far={2000}
           position={[0, 0, 1000]}
         />
@@ -198,10 +204,10 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
               </>
             }
           >
-            <group position={[screensize.marginx, screensize.marginy, -500]}>
+            <group position={[centerx, centery, 0]}>
               <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
                 <group ref={zoomref}>
-                  <group ref={focusref}>
+                  <group ref={cornerref}>
                     {layers.map((layer) => (
                       <IsoLayer
                         key={layer.id}
@@ -210,6 +216,54 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                         z={maptolayerz(layer)}
                       />
                     ))}
+                    {exiteast.length && (
+                      <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
+                        {exiteast.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exiteast}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
+                    {exitwest.length && (
+                      <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
+                        {exitwest.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exitwest}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
+                    {exitnorth.length && (
+                      <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
+                        {exitnorth.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exitnorth}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
+                    {exitsouth.length && (
+                      <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
+                        {exitsouth.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={exitsouth}
+                            z={maptolayerz(layer)}
+                          />
+                        ))}
+                      </group>
+                    )}
                   </group>
                 </group>
               </group>

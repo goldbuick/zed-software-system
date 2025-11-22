@@ -88,6 +88,10 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
             )
             gadget.id = gadgetlayers.id
             gadget.board = gadgetlayers.board
+            gadget.exiteast = gadgetlayers.exiteast
+            gadget.exitwest = gadgetlayers.exitwest
+            gadget.exitnorth = gadgetlayers.exitnorth
+            gadget.exitsouth = gadgetlayers.exitsouth
             gadget.over = gadgetlayers.over
             gadget.under = gadgetlayers.under
             gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
@@ -95,6 +99,10 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
           } else {
             gadget.id = ''
             gadget.board = ''
+            gadget.exiteast = ''
+            gadget.exitwest = ''
+            gadget.exitnorth = ''
+            gadget.exitsouth = ''
             gadget.over = []
             gadget.under = []
             gadget.layers = []

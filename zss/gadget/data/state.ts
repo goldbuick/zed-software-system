@@ -4,7 +4,7 @@ import { MAYBE, isequal } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
 
-import { GADGET_STATE } from './types'
+import { GADGET_STATE, LAYER } from './types'
 
 export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
   const prev = useRef<U>(null as U)
@@ -23,6 +23,7 @@ export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
 export const useGadgetClient = create<{
   desync: boolean
   gadget: GADGET_STATE
+  gadgetlayercache: Record<string, LAYER[]>
   slim: FORMAT_OBJECT
   zsswords: {
     cli: string[]
@@ -55,12 +56,17 @@ export const useGadgetClient = create<{
   gadget: {
     id: '',
     board: '',
+    exiteast: '',
+    exitwest: '',
+    exitnorth: '',
+    exitsouth: '',
     layers: [],
     tickers: [],
     scrollname: '',
     scroll: [],
     sidebar: [],
   },
+  gadgetlayercache: {},
   slim: [],
 }))
 

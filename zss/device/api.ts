@@ -206,24 +206,13 @@ export function register_forkmem(
   device.emit(player, 'register:forkmem', [books, transfer])
 }
 
-export function register_itchiopublishmem(
-  device: DEVICELIKE,
-  player: string,
-  name: string,
-  books: string,
-) {
-  device.emit(player, 'register:itchiopublishmem', [name, books])
-}
-
 export function register_publishmem(
   device: DEVICELIKE,
   player: string,
-  email: string,
-  code: string,
-  filename: string,
-  tags: string[],
+  books: string,
+  ...args: string[]
 ) {
-  device.emit(player, 'register:publishmem', [email, code, filename, ...tags])
+  device.emit(player, 'register:publishmem', [books, ...args])
 }
 
 export function register_copy(
@@ -634,8 +623,13 @@ export function vm_fork(device: DEVICELIKE, player: string, transfer: string) {
   device.emit(player, 'vm:fork', transfer)
 }
 
-export function vm_itchiopublish(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:itchiopublish')
+export function vm_publish(
+  device: DEVICELIKE,
+  player: string,
+  target: string,
+  ...args: string[]
+) {
+  device.emit(player, 'vm:publish', [target, ...args])
 }
 
 export type TEXT_READER = {

@@ -249,6 +249,10 @@ export function paneladdress(chip: string, target: string) {
 export type GADGET_STATE = {
   id: string
   board: string
+  exiteast: string
+  exitwest: string
+  exitnorth: string
+  exitsouth: string
   over?: LAYER[]
   under?: LAYER[]
   layers?: LAYER[]

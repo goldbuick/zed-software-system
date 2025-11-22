@@ -1442,6 +1442,10 @@ export function memoryrun(address: string) {
 export type MEMORY_GADGET_LAYERS = {
   id: string
   board: string
+  exiteast: string
+  exitwest: string
+  exitnorth: string
+  exitsouth: string
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
@@ -1456,7 +1460,18 @@ export function memoryreadgadgetlayers(
   const layers: LAYER[] = []
   const tickers: string[] = []
   if (!ispresent(board)) {
-    return { id: '', board: '', over, under, layers, tickers }
+    return {
+      id: '',
+      board: '',
+      exiteast: '',
+      exitwest: '',
+      exitnorth: '',
+      exitsouth: '',
+      over,
+      under,
+      layers,
+      tickers,
+    }
   }
 
   // composite id
@@ -1495,5 +1510,16 @@ export function memoryreadgadgetlayers(
     }
   }
 
-  return { id: id4all.join('|'), board: board.id, over, under, layers, tickers }
+  return {
+    id: id4all.join('|'),
+    board: board.id,
+    exiteast: memoryboardread(board.exiteast ?? '')?.id ?? '',
+    exitwest: memoryboardread(board.exitwest ?? '')?.id ?? '',
+    exitnorth: memoryboardread(board.exitnorth ?? '')?.id ?? '',
+    exitsouth: memoryboardread(board.exitsouth ?? '')?.id ?? '',
+    over,
+    under,
+    layers,
+    tickers,
+  }
 }

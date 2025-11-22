@@ -34,6 +34,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { tokenizeandstriptextformat } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import {
   MESSAGE,
@@ -620,37 +621,59 @@ const register = createdevice(
       case 'publishmem':
         doasync(register, message.player, async () => {
           if (isarray(message.data)) {
-            // publish info
-            const [bbsemail, bbscode, filename, ...tags] = message.data
-            writetext(register, message.player, `publishing ${filename}`)
-            // share full content
-            const urlcontent = await readurlcontent()
-            // gen global shorturl
-            const url = await shorturl(`${location.origin}/#${urlcontent}`)
-            const result = await bbspublish(
-              bbsemail,
-              bbscode,
-              filename,
-              url,
-              tags,
-            )
-            if (result.success) {
-              writetext(
-                register,
-                message.player,
-                `$green${filename} has been published`,
-              )
-            }
-          }
-        })
-        break
-      case 'itchiopublishmem':
-        doasync(register, message.player, async () => {
-          if (isarray(message.data)) {
-            const [maybename, maybecontent] = message.data
-            if (isstring(maybename) && isstring(maybecontent)) {
-              // save zipfile
-              await itchiopublish(maybename, maybecontent)
+            const [content, method] = message.data
+            switch (method) {
+              case 'itchio': {
+                // publish info
+                const [, , name] = message.data
+                if (isstring(content) && isstring(name)) {
+                  writetext(register, message.player, `publishing ${name}`)
+                  // save zipfile
+                  await itchiopublish(name, content)
+                  writetext(
+                    register,
+                    message.player,
+                    `$green${name} has been exported for upload to itch.io`,
+                  )
+                }
+                break
+              }
+              case 'bbs': {
+                // publish info
+                const [, , bbsemail, bbscode, filename, ...tags] = message.data
+                if (
+                  isstring(content) &&
+                  isstring(bbsemail) &&
+                  isstring(bbscode) &&
+                  isstring(filename)
+                ) {
+                  writetext(register, message.player, `publishing ${filename}`)
+                  const url = await shorturl(`${location.origin}/#${content}`)
+                  const result = await bbspublish(
+                    bbsemail,
+                    bbscode,
+                    filename,
+                    url,
+                    tags,
+                  )
+                  if (result.success) {
+                    writetext(
+                      register,
+                      message.player,
+                      `$green${filename} has been published to bbs`,
+                    )
+                  }
+                }
+                break
+              }
+              default:
+                api_error(
+                  register,
+                  message.player,
+                  'publish',
+                  `unknown publish method ${method}`,
+                )
+                break
             }
           }
         })
