@@ -27,7 +27,6 @@ import {
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
-import { totarget } from 'zss/mapping/string'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
