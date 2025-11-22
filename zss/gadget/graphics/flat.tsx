@@ -67,8 +67,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
         focusy: control.focusy,
         tfocusx: control.focusx,
         tfocusy: control.focusy,
-        facing: control.facing,
-        currentboard: currentboard,
+        currentboard,
       }
       zoomref.current.scale.setScalar(control.viewscale)
     }
@@ -77,6 +76,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     const fx = (userData.focusx + 0.5) * drawwidth
     const fy = (userData.focusy + 0.5) * drawheight
 
+    // zoom
     damp3(zoomref.current.scale, control.viewscale, animrate, delta)
 
     // pan
@@ -109,8 +109,8 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
       userData.focusy = userData.tfocusy
       userData.currentboard = currentboard
       cornerref.current.position.set(
-        -(userData.focusx + 0.5) * drawwidth,
-        -(userData.focusy + 0.5) * drawheight,
+        -((userData.focusx + 0.5) * drawwidth),
+        -((userData.focusy + 0.5) * drawheight),
         0,
       )
     } else {
