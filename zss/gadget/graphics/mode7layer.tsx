@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
@@ -24,10 +24,11 @@ import { Tiles } from './tiles'
 type Mode7LayerProps = {
   id: string
   z: number
-  from: 'under' | 'over' | 'layers'
+  from?: 'under' | 'over' | 'layers'
+  layers?: LAYER[]
 }
 
-export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
+export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
   const meshes = useRef<InstancedMesh>(null)
 
   useFrame(() => {
@@ -38,7 +39,15 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
   })
 
   const layer = useGadgetClient(
-    useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
+    useShallow((state) => {
+      if (ispresent(from)) {
+        return state.gadget[from]?.find((item) => item.id === id)
+      }
+      if (ispresent(layers)) {
+        return layers.find((item) => item.id === id)
+      }
+      return undefined
+    }),
   )
 
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
@@ -101,11 +110,16 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
     }
     case LAYER_TYPE.SPRITES: {
       const rr = 8 / 14
+      const hideplayer = ispresent(layers)
       const othersprites = layer.sprites.filter(
-        (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISSWIM,
+        (sprite) =>
+          (sprite.stat as COLLISION) !== COLLISION.ISSWIM &&
+          (!hideplayer || !sprite.pid),
       )
       const watersprites = layer.sprites.filter(
-        (sprite) => (sprite.stat as COLLISION) === COLLISION.ISSWIM,
+        (sprite) =>
+          (sprite.stat as COLLISION) === COLLISION.ISSWIM &&
+          (!hideplayer || !sprite.pid),
       )
       return (
         // eslint-disable-next-line react/no-unknown-property
