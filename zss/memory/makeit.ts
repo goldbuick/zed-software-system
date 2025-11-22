@@ -120,15 +120,21 @@ export function memorymakeitscroll(makeit: string, player: string) {
         makecodepagedesc(CODE_PAGE_TYPE.CHARSET, player)
         break
     }
-    gadgethyperlink(
-      player,
-      'makeit',
-      type !== STAT_TYPE.OBJECT
-        ? `create @${typename} ${name}`
-        : `create object @${name}`,
-      ['create', '', typename, name],
-    )
-    gadgettext(player, '')
+    if (type === STAT_TYPE.OBJECT) {
+      gadgethyperlink(player, 'makeit', `create object @${name}`, [
+        'create',
+        '',
+        typename,
+        name,
+      ])
+    } else {
+      gadgethyperlink(player, 'makeit', `create @${typename} ${name}`, [
+        'create',
+        '',
+        typename,
+        name,
+      ])
+    }
   }
 
   // first check for existing codepage with matching name or id
@@ -161,13 +167,17 @@ export function memorymakeitscroll(makeit: string, player: string) {
                 createmakecodepage(STAT_TYPE.PALETTE, value)
                 createmakecodepage(STAT_TYPE.CHARSET, value)
               }
-              gadgettext(player, '$green  if you typed in @char 12 or similar')
+              gadgettext(player, '')
+              gadgettext(player, '$purple  if you typed in @char 12 or similar')
               gadgettext(
                 player,
-                '$green  try using #set <stat> <value> instead',
+                '$purple  try using #set <stat> <value> instead',
               )
-              gadgettext(player, '$green  or you can edit the @player codepage')
-              gadgettext(player, '$green  to make changes to player stats')
+              gadgettext(
+                player,
+                '$purple  or you can edit the @player codepage',
+              )
+              gadgettext(player, '$purple  to make changes to player stats')
               checkforcodepage('player', player)
               break
             case STAT_TYPE.RANGE:

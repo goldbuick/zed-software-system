@@ -39,18 +39,6 @@ function maptolayerz(layer: LAYER): number {
   return 0
 }
 
-function mapviewtoy(viewscale: number, viewheight: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return viewheight * 0.0
-    default:
-    case VIEWSCALE.MID:
-      return viewheight * 0.0
-    case VIEWSCALE.FAR:
-      return viewheight * 0.0
-  }
-}
-
 function mapviewtoz(viewscale: number) {
   switch (viewscale as VIEWSCALE) {
     case VIEWSCALE.NEAR:
@@ -131,11 +119,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     // zoom
     damp3(
       cameraref.current.position,
-      [
-        0,
-        mapviewtoy(control.viewscale, viewheight),
-        mapviewtoz(control.viewscale),
-      ],
+      [0, 0, mapviewtoz(control.viewscale)],
       animrate,
       delta,
     )
