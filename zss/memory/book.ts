@@ -113,6 +113,26 @@ export function bookreadcodepagebyaddress(
   return codepage
 }
 
+export function bookreadcodepagesbystat(
+  book: MAYBE<BOOK>,
+  statname: string,
+): CODE_PAGE[] {
+  if (!ispresent(book)) {
+    return []
+  }
+  const maybename = NAME(statname)
+  const result = book.pages.filter((codepage) => {
+    const stats = codepagereadstats(codepage)
+    const codepagename = NAME(codepagereadname(codepage))
+    return (
+      codepage.id === statname ||
+      maybename === codepagename ||
+      ispresent(stats[statname])
+    )
+  })
+  return result
+}
+
 export function bookreadcodepagewithtype(
   book: MAYBE<BOOK>,
   type: CODE_PAGE_TYPE,

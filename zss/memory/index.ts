@@ -422,11 +422,8 @@ export function memorywritefromkind(
       boardelementapplycolor(object, maybecolor)
       // update named (terrain & objects)
       memoryelementkindread(object)
-      if (memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST) {
-        // update lookup (only objects)
-        boardobjectlookupwrite(board, object)
-        boardnamedwrite(board, object)
-      }
+      boardobjectlookupwrite(board, object)
+      boardnamedwrite(board, object)
       return object
     }
   }

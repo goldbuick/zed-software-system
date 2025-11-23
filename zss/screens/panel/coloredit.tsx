@@ -29,8 +29,8 @@ function coords() {
   const px = Math.floor(point.x / cw)
   const py = Math.floor(point.y / ch)
   return {
-    x: EDIT_WIDTH * 0.5 + px,
-    y: EDIT_HEIGHT * 0.5 + py,
+    x: Math.round(EDIT_WIDTH * 0.5 + px),
+    y: Math.round(EDIT_HEIGHT * 0.5 + py),
   }
 }
 
@@ -166,8 +166,10 @@ export function PanelItemColorEdit({
       {focus && (
         <UserFocus blockhotkeys>
           <Rect
+            x={1}
             blocking
             visible={false}
+            cursor="pointer"
             width={EDIT_WIDTH}
             height={EDIT_HEIGHT}
             onClick={(e: any) => {

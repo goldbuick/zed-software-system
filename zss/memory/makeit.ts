@@ -13,7 +13,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
-import { bookreadcodepagebyaddress } from './book'
+import { bookreadcodepagebyaddress, bookreadcodepagesbystat } from './book'
 import {
   codepagereadname,
   codepagereadtype,
@@ -62,30 +62,31 @@ function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
   }
 }
 
+function previewcodepage(codepage: CODE_PAGE, player: string) {
+  const type = codepagereadtype(codepage)
+  makecodepagedesc(type, player)
+  gadgethyperlink(
+    player,
+    'makeit',
+    `edit @${codepagereadtypetostring(codepage)} ${codepagereadname(codepage)}`,
+    ['edit', '', codepage.id],
+  )
+  // We should show the first 5 lines of the codepage here
+  const lines = codepage.code.split('\n').slice(1, 6)
+  lines.forEach((line) => gadgettext(player, `$WHITE  ${line}`))
+}
+
 function checkforcodepage(name: string, player: string) {
   // first check for existing codepage with matching name or id
   const books = memoryreadbooklist()
 
   let nomatch = true
   for (let i = 0; i < books.length; ++i) {
-    // note: we should change this to return all matches by name
-    const maybecodepage = bookreadcodepagebyaddress(books[i], name)
-    // we should denote __which__ book these pages are from
-    if (ispresent(maybecodepage)) {
+    // scan for id / name / stat matches
+    const codepages = bookreadcodepagesbystat(books[i], name)
+    for (let c = 0; c < codepages.length; ++c) {
       nomatch = false
-      const type = codepagereadtype(maybecodepage)
-      makecodepagedesc(type, player)
-      gadgethyperlink(
-        player,
-        'makeit',
-        `edit @${codepagereadtypetostring(maybecodepage)} ${codepagereadname(maybecodepage)}`,
-        ['edit', '', maybecodepage.id],
-      )
-      gadgettext(player, '')
-      gadgettext(player, DIVIDER)
-      // We should show the first 5 lines of the codepage here
-      const lines = maybecodepage.code.split('\n').slice(0, 5)
-      lines.forEach((line) => gadgettext(player, `$WHITE  ${line}`))
+      previewcodepage(codepages[c], player)
     }
   }
 
@@ -178,7 +179,6 @@ export function memorymakeitscroll(makeit: string, player: string) {
                 '$purple  or you can edit the @player codepage',
               )
               gadgettext(player, '$purple  to make changes to player stats')
-              checkforcodepage('player', player)
               break
             case STAT_TYPE.RANGE:
             case STAT_TYPE.SELECT:
@@ -191,11 +191,6 @@ export function memorymakeitscroll(makeit: string, player: string) {
             case STAT_TYPE.ZSSEDIT:
             case STAT_TYPE.CHAREDIT:
             case STAT_TYPE.COLOREDIT:
-              gadgettext(
-                player,
-                '$greenyou can try editing the @player codepage',
-              )
-              checkforcodepage('player', player)
               break
           }
         }

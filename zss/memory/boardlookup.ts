@@ -36,14 +36,15 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       ispresent(object.x) &&
       ispresent(object.y) &&
       ispresent(object.id) &&
-      !ispresent(object.removed) &&
-      memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST
+      !ispresent(object.removed)
     ) {
       // add category
       object.category = CATEGORY.ISOBJECT
 
       // update lookup
-      lookup[object.x + object.y * BOARD_WIDTH] = object.id
+      if (memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST) {
+        lookup[object.x + object.y * BOARD_WIDTH] = object.id
+      }
 
       // read code to get name
       if (isstring(object.code) && !ispresent(object.name)) {
