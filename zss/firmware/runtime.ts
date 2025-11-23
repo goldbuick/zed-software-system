@@ -13,7 +13,12 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memoryelementstatread } from 'zss/memory'
+import {
+  MEMORY_LABEL,
+  memoryelementstatread,
+  memoryreadbookbysoftware,
+  memorysendtoboards,
+} from 'zss/memory'
 import { listelementsbyidnameorpts } from 'zss/memory/atomics'
 import {
   boardelementread,
@@ -22,6 +27,7 @@ import {
   boardsafedelete,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
+import { bookplayerreadboards } from 'zss/memory/bookplayer'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
@@ -96,6 +102,13 @@ export function handlesend(chip: CHIP, send: SEND_META) {
           })
         }
         break
+      case 'ping': {
+        debugger
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const boards = bookplayerreadboards(mainbook)
+        memorysendtoboards('all', send.label, undefined, boards)
+        break
+      }
       default: {
         // target named elements
         const elements = listelementsbyidnameorpts(READ_CONTEXT.board, [

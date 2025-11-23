@@ -24,7 +24,10 @@ import {
   boardsetterrain,
   createboard,
 } from 'zss/memory/board'
-import { boardelementisobject } from 'zss/memory/boardelement'
+import {
+  boardelementapplycolor,
+  boardelementisobject,
+} from 'zss/memory/boardelement'
 import { boardcheckblockedobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
@@ -192,8 +195,10 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
   // check if we are blocked by a pushable object element
   let target = boardelementread(READ_CONTEXT.board, dir.destpt)
-  const targetpushable = memoryelementstatread(target, 'pushable')
-  if (targetpushable) {
+  if (
+    boardelementisobject(target) &&
+    memoryelementstatread(target, 'pushable')
+  ) {
     // attempt to shove it away
     const pivot = deepcopy(dir.destpt)
     const pt = ptapplydir(pivot, dirfrompts(from, pivot))
@@ -205,6 +210,14 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // handle put empty case
   if (kindname === 'empty') {
     boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
+    return 0
+  }
+
+  // check for type match
+  if (target?.kind === kindname) {
+    // apply color and return
+    const [, maybecolor] = kind
+    boardelementapplycolor(target, maybecolor)
     return 0
   }
 
