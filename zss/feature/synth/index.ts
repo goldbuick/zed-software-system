@@ -64,24 +64,24 @@ export function createsynth() {
 
   const razzledazzle = new Vibrato({
     maxDelay: 0.005, // subtle pitch modulation
-    frequency: 1.5, // speed of the warble
-    depth: 0.2, // amount of pitch variation
-    type: 'sine', // waveform type
-    wet: 0.6, // mix level
+    frequency: 0.125, // speed of the warble
+    depth: 0.3, // amount of pitch variation
+    type: 'square', // waveform type
+    wet: 0.1, // mix level
   })
 
   const razzlechorus = new Chorus({
     frequency: 0.01,
     delayTime: 7,
     depth: 0.7,
-    type: 'sine',
+    type: 'sawtooth',
     spread: 128,
     wet: 0.5,
   })
   razzlechorus.start()
 
   // tape hiss
-  const hiss = new Noise({ type: 'pink', volume: -42 })
+  const hiss = new Noise({ type: 'pink', volume: -36 })
   const hissvolume = new Volume()
 
   // hiss mod
