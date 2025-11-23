@@ -64,7 +64,6 @@ import {
   memoryreadflags,
   memoryreadoperator,
   memoryreadplayerboard,
-  memorysendtoboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import {
@@ -74,10 +73,7 @@ import {
   bookreadsortedcodepages,
   bookupdatename,
 } from 'zss/memory/book'
-import {
-  bookplayermovetoboard,
-  bookplayerreadboards,
-} from 'zss/memory/bookplayer'
+import { bookplayermovetoboard } from 'zss/memory/bookplayer'
 import {
   codepagereadname,
   codepagereadtype,
@@ -92,8 +88,10 @@ import {
 } from 'zss/memory/types'
 import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { SEND_META, parsesend } from 'zss/words/send'
+import { parsesend } from 'zss/words/send'
 import { COLOR, NAME } from 'zss/words/types'
+
+import { handlesend } from './runtime'
 
 let bbscode = ''
 let bbsemail = ''
@@ -112,23 +110,12 @@ function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())
 }
 
-function handlesend(send: SEND_META) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const boards = bookplayerreadboards(mainbook)
-  if (ispresent(send.targetname)) {
-    memorysendtoboards(send.targetname, send.label, undefined, boards)
-  } else if (ispresent(send.targetdir)) {
-    memorysendtoboards(send.targetdir.destpt, send.label, undefined, boards)
-  }
-}
-
 export const CLI_FIRMWARE = createfirmware()
-  .command('shortsend', (_, words) => {
+  .command('shortsend', (chip, words) => {
     const send = parsesend(words)
-    handlesend(send)
-
+    handlesend(chip, send)
+    // #funfact - loader fallback
     if (send.targetname === 'self') {
-      // #funfact - loader fallback
       vm_loader(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
@@ -138,12 +125,11 @@ export const CLI_FIRMWARE = createfirmware()
         send.args.join(' '),
       )
     }
-
     return 0
   })
-  .command('send', (_, words) => {
+  .command('send', (chip, words) => {
     const send = parsesend(words, true)
-    handlesend(send)
+    handlesend(chip, send)
     return 0
   })
   .command('stat', (_, words) => {
