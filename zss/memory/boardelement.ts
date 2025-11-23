@@ -108,7 +108,7 @@ export function boardelementisobject(element: MAYBE<BOARD_ELEMENT>): boolean {
 
 export function boardelementapplycolor(
   element: MAYBE<BOARD_ELEMENT>,
-  strcolor: STR_COLOR | undefined,
+  strcolor: MAYBE<STR_COLOR>,
 ) {
   if (!ispresent(element) || !isstrcolor(strcolor)) {
     return
