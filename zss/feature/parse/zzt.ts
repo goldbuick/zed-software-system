@@ -423,8 +423,8 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
         writefromkind(board, ['ricochet', strcolor], { x, y }, addstats)
         break
       case 33:
-        // blinkns
-        writefromkind(board, ['blinkns', strcolor], { x, y }, addstats)
+        // blinkew
+        writefromkind(board, ['blinkew', strcolor], { x, y }, addstats)
         break
       case 34:
         // bear
