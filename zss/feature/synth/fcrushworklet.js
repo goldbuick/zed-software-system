@@ -27,24 +27,26 @@ class SynthFCrushWorkletProcessor extends AudioWorkletProcessor {
     const input = inputs[0]
     const output = outputs[0]
 
-    // if there is anything to process
-    if (input.length > 0) {
-      // for the length of the sample array (generally 128)
-      for (let i = 0; i < input[0].length; i++) {
-        // for every channel
-        for (let channel = 0; channel < input.length; ++channel) {
-          // if counter equals 0, sample and hold
-          if (this.count % parameters.rate === 0) {
-            this.sah[channel] = input[channel][i]
-          }
-          // output the currently held sample
-          output[channel][i] = this.sah[channel]
-        }
-        // increment sample counter
-        this.count++
-      }
+    // check for data
+    if (!input[0] || !input[1] || !output[0] || !output[1]) {
+      return true
     }
 
+    // for the length of the sample array (generally 128)
+    const rate = parameters.rate[0]
+    for (let i = 0; i < input[0].length; i++) {
+      // for every channel
+      for (let channel = 0; channel < input.length; ++channel) {
+        // if counter equals 0, sample and hold
+        if (this.count % rate === 0) {
+          this.sah[channel] = input[channel][i]
+        }
+        // output the currently held sample
+        output[channel][i] = this.sah[channel]
+      }
+      // increment sample counter
+      this.count++
+    }
     return true
   }
 }

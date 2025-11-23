@@ -60,7 +60,7 @@ export function createsynth() {
     mainvolume.connect(broadcastdestination)
   }
 
-  const razzlegain = new Gain(10)
+  const razzlegain = new Gain()
 
   const razzledazzle = new Vibrato({
     maxDelay: 0.005, // subtle pitch modulation
@@ -71,13 +71,14 @@ export function createsynth() {
   })
 
   const razzlechorus = new Chorus({
-    frequency: 0.6,
+    frequency: 0.01,
     delayTime: 7,
     depth: 0.7,
     type: 'sine',
     spread: 128,
     wet: 0.5,
   })
+  razzlechorus.start()
 
   // tape hiss
   const hiss = new Noise({ type: 'pink', volume: -42 })
@@ -95,10 +96,10 @@ export function createsynth() {
   razzledazzle.chain(razzlechorus, mainvolume)
 
   const maincompressor = new Compressor({
-    threshold: -24,
+    threshold: -28,
     ratio: 4,
     attack: 0.003,
-    release: 0.25,
+    release: 0.15,
     knee: 30,
   })
   razzlegain.chain(maincompressor, razzledazzle)
@@ -118,6 +119,7 @@ export function createsynth() {
 
   const playvolume = new Volume(volumetodb(20))
   playvolume.connect(sidechaincompressor)
+  // playvolume.connect(razzlegain)
 
   const drumvolume = new Volume(volumetodb(100))
   drumvolume.connect(razzlegain)
@@ -134,7 +136,7 @@ export function createsynth() {
   altaction.connect(sidechaincompressor.sidechain)
   drumaction.connect(sidechaincompressor.sidechain)
 
-  // 8tracks
+  // 8track SYNTH
   const SOURCE = [
     createsource(SOURCE_TYPE.SYNTH),
     createsource(SOURCE_TYPE.SYNTH),
@@ -149,30 +151,30 @@ export function createsynth() {
   // config fx
   // single fx chain
   const FXCHAIN = createfx()
-
-  // 0 FX - play
   // 1 FX - play
-  // 2 FX - bgplay
+  // 2 FX - play
+  // 3 FX - bgplay
+  // 4 FX - tts
+  const FX = [
+    createfxchannels(1),
+    createfxchannels(2),
+    createfxchannels(3),
+    createfxchannels(4),
+  ]
   // this affords controlling the wet 0/1 ratio sent to effects
-  const FX = [createfxchannels(1), createfxchannels(2), createfxchannels(3)]
   for (let i = 0; i < FX.length; ++i) {
     const f = FX[i]
-    f.fc.connect(FXCHAIN.fc)
-    f.echo.connect(FXCHAIN.echo)
-    f.reverb.connect(FXCHAIN.reverb)
-    f.phaser.connect(FXCHAIN.phaser)
-    f.vibrato.connect(FXCHAIN.vibrato)
-    f.distortion.connect(FXCHAIN.distortion)
-    f.autowah.connect(FXCHAIN.autowah)
     const isplay = i < 2
     const dest = isplay ? playvolume : bgplayvolume
-    FXCHAIN.fc.connect(dest)
-    FXCHAIN.echo.connect(dest)
-    FXCHAIN.reverb.connect(dest)
-    FXCHAIN.phaser.connect(dest)
-    FXCHAIN.vibrato.connect(dest)
-    FXCHAIN.distortion.connect(dest)
-    FXCHAIN.autowah.connect(dest)
+    // wire up fx & input to dest
+    f.sendtofx.connect(dest)
+    f.fc.chain(FXCHAIN.fc, dest)
+    f.echo.chain(FXCHAIN.echo, dest)
+    f.reverb.chain(FXCHAIN.reverb, dest)
+    f.phaser.chain(FXCHAIN.phaser, dest)
+    f.vibrato.chain(FXCHAIN.vibrato, dest)
+    f.distortion.chain(FXCHAIN.distortion, dest)
+    f.autowah.chain(FXCHAIN.autowah, dest)
   }
 
   function mapindextofx(index: number) {
@@ -181,11 +183,12 @@ export function createsynth() {
 
   function connectsource(index: number) {
     const f = mapindextofx(index)
-    const isplay = index < 4
-    const dest = isplay ? playvolume : bgplayvolume
+    if (!ispresent(SOURCE[index])) {
+      return
+    }
 
     // everything not noise
-    switch (SOURCE[index]?.source.type) {
+    switch (SOURCE[index].source.type) {
       case SOURCE_TYPE.RETRO_NOISE:
       case SOURCE_TYPE.BUZZ_NOISE:
       case SOURCE_TYPE.CLANG_NOISE:
@@ -194,33 +197,26 @@ export function createsynth() {
         break
       default:
         // connect synth
-        SOURCE[index]?.source.synth.connect(dest)
-        SOURCE[index]?.source.synth.connect(FX[f].sendtofx)
+        SOURCE[index].source.synth.connect(FX[f].sendtofx)
         break
     }
 
     // noise & bells
-    switch (SOURCE[index]?.source.type) {
+    switch (SOURCE[index].source.type) {
       case SOURCE_TYPE.RETRO_NOISE:
       case SOURCE_TYPE.BUZZ_NOISE:
       case SOURCE_TYPE.CLANG_NOISE:
       case SOURCE_TYPE.METALLIC_NOISE:
         // filtered synth
-        SOURCE[index]?.source.synth.chain(
-          SOURCE[index]?.source.filter1,
-          SOURCE[index]?.source.filter2,
-          dest,
-        )
-        SOURCE[index]?.source.synth.chain(
-          SOURCE[index]?.source.filter1,
-          SOURCE[index]?.source.filter2,
+        SOURCE[index].source.synth.chain(
+          SOURCE[index].source.filter1,
+          SOURCE[index].source.filter2,
           FX[f].sendtofx,
         )
         break
       case SOURCE_TYPE.BELLS: {
         // second synth
-        SOURCE[index]?.source.sparkle.connect(dest)
-        SOURCE[index]?.source.sparkle.connect(FX[f].sendtofx)
+        SOURCE[index].source.sparkle.connect(FX[f].sendtofx)
         break
       }
     }

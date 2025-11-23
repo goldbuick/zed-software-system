@@ -84,30 +84,43 @@ class SidechainCompressorProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    this.threshold = parameters.threshold[0]
-    this.ratio = parameters.ratio[0]
-    this.release_time = parameters.release[0]
-    this.attack_time = parameters.attack[0]
-    this.makeupGain = parameters.makeupGain[0]
-    const mix = parameters.mix[0]
-
     const input = inputs[0]
-    const output = outputs[0]
     const sidechain = inputs[1]
+    const output = outputs[0]
 
-    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-    if (input[0] && sidechain && sidechain[0]) {
-      for (let i = 0; i < input[0].length; ++i) {
-        const sidechainMono = 0.5 * (sidechain[0][i] + sidechain[1][i])
-        this.update(sidechainMono)
-        const inputL = input[0][i]
-        const inputR = input[1][i]
-        const compressedL = inputL * this.gain_linear
-        const compressedR = inputR * this.gain_linear
-        output[0][i] = inputL * (1 - mix) + compressedL * mix
-        output[1][i] = inputR * (1 - mix) + compressedR * mix
-      }
+    // check for data
+    if (
+      !input[0] ||
+      !input[1] ||
+      !output[0] ||
+      !output[1] ||
+      !sidechain[0] ||
+      !sidechain[1]
+    ) {
+      return true
     }
+
+    const mix = parameters.mix[0]
+    this.ratio = parameters.ratio[0]
+    this.attack_time = parameters.attack[0]
+    this.threshold = parameters.threshold[0]
+    this.release_time = parameters.release[0]
+    this.makeupGain = parameters.makeupGain[0]
+
+    // apply filter
+    for (let i = 0; i < input[0].length; ++i) {
+      const inputL = input[0][i]
+      const inputR = input[1][i]
+      const compressedL = inputL * this.gain_linear
+      const compressedR = inputR * this.gain_linear
+      output[0][i] = inputL * (1 - mix) + compressedL * mix
+      output[1][i] = inputR * (1 - mix) + compressedR * mix
+
+      // process sidechain input
+      const sidechainMono = 0.5 * (sidechain[0][i] + sidechain[1][i])
+      this.update(sidechainMono)
+    }
+
     return true
   }
 
