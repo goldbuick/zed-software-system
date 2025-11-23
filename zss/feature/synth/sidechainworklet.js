@@ -95,7 +95,8 @@ class SidechainCompressorProcessor extends AudioWorkletProcessor {
     const output = outputs[0]
     const sidechain = inputs[1]
 
-    if (input[0] && sidechain?.[0]) {
+    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+    if (input[0] && sidechain && sidechain[0]) {
       for (let i = 0; i < input[0].length; ++i) {
         const sidechainMono = 0.5 * (sidechain[0][i] + sidechain[1][i])
         this.update(sidechainMono)

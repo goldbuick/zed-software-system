@@ -53,7 +53,7 @@ export function createfx() {
     })
     phaser.set({
       ...resetphaser,
-      // wet: 1,
+      wet: 1,
       frequency: 15,
       octaves: 5,
       baseFrequency: 1000,
