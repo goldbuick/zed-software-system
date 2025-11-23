@@ -50,6 +50,12 @@ export const MaybeFlag = createToken({
   start_chars_hint: ['$'],
 })
 
+export const Center = createToken({
+  name: 'Center',
+  pattern: /\$CENTER/i,
+  start_chars_hint: ['$'],
+})
+
 export const MetaKey = createToken({
   name: 'MetaKey',
   pattern: /\$META/i,
@@ -86,6 +92,7 @@ export const allTokens = [
   NumberLiteral,
   EscapedDollar,
   HyperLinkText,
+  Center,
   MetaKey,
   MaybeFlag,
 ]
@@ -105,6 +112,7 @@ const scriptLexerNoWhitespace = new Lexer(
     NumberLiteral,
     EscapedDollar,
     HyperLinkText,
+    Center,
     MetaKey,
     MaybeFlag,
   ],
@@ -294,6 +302,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       case Newline: {
         context.x = context.active.leftedge ?? 0
         ++context.y
+        break
+      }
+
+      case Center: {
+        // skip
         break
       }
 
