@@ -122,13 +122,6 @@ export function EditorInput({
   const updatescrolling = useCallback(
     function (cursor: number) {
       useTapeEditor.setState((state) => {
-        const edge = textformatreadedges(context)
-
-        // figure out longest line of code
-        const maxwidth = findmaxwidthinrows(rows)
-        const xmaxscroll = (Math.round(maxwidth / CHUNK_STEP) + 1) * CHUNK_STEP
-        const ymaxscroll = rows.length
-
         // cursor placement
         const ycursor2 = findcursorinrows(cursor, rows)
         const xcursor2 = cursor - rows[ycursor2].start
@@ -145,13 +138,18 @@ export function EditorInput({
         const xscroll = xdelta < hxstep ? state.xscroll : xcursor2 - xstep
         const yscroll = ycursor2 - ystep
 
+        // figure out longest line of code
+        const maxwidth = findmaxwidthinrows(rows)
+        const xmaxscroll = (Math.round(maxwidth / CHUNK_STEP) + 1) * CHUNK_STEP
+        const ymaxscroll = rows.length - yview
+
         return {
           xscroll: Math.round(clamp(xscroll, 0, xmaxscroll)),
           yscroll: Math.round(clamp(yscroll, 0, ymaxscroll)),
         }
       })
     },
-    [context, rows],
+    [rows, edge.width, edge.height],
   )
 
   const strvaluesplice = useCallback(
@@ -279,6 +277,7 @@ export function EditorInput({
     function handlepopped(arg0: any) {
       if (arg0.stackItem.meta.has('cursor')) {
         const cursor = arg0.stackItem.meta.get('cursor')
+        updatescrolling(cursor)
         useTapeEditor.setState({ cursor })
       }
     }
@@ -480,9 +479,8 @@ export function EditorInput({
                 } else {
                   const cursor = tapeeditor.cursor + event.key.length
                   codepage.insert(tapeeditor.cursor, event.key)
-                  useTapeEditor.setState({
-                    cursor,
-                  })
+                  updatescrolling(cursor)
+                  useTapeEditor.setState({ cursor })
                 }
               }
               break

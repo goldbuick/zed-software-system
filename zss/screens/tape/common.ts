@@ -128,5 +128,5 @@ export function findcursorinrows(cursor: number, rows: EDITOR_CODE_ROW[]) {
       return i
     }
   }
-  return 0
+  return rows.length - 1
 }
