@@ -4,7 +4,7 @@ import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { COLLISION, COLOR } from 'zss/words/types'
 
-import { createBlocksMaterial } from '../display/blocks'
+import { createBlocksMaterial, createdarknessmaterial } from '../display/blocks'
 import {
   createDitherDataTexture,
   createDitherMaterial,
@@ -150,6 +150,18 @@ export function BlockMesh() {
     material.needsUpdate = true
   }, [palette, charset, altcharset, material, imageWidth, imageHeight])
 
+  return (
+    <>
+      <boxGeometry args={[drawwidth, drawheight, drawheight]} />
+      <primitive object={material} attach="material" />
+    </>
+  )
+}
+
+export function DarknessMesh() {
+  const [material] = useState(() => createdarknessmaterial())
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   return (
     <>
       <boxGeometry args={[drawwidth, drawheight, drawheight]} />

@@ -1,4 +1,4 @@
-import { DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
+import { Color, DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
@@ -31,10 +31,6 @@ const blocksMaterial = new ShaderMaterial({
     precision highp float;
     uniform float time;
     uniform float interval;
-
-    attribute float zchar;
-    attribute float zcolor;
-    attribute float zbg;
 
     varying vec2 vUv;
     varying vec3 vColor;
@@ -125,4 +121,62 @@ const blocksMaterial = new ShaderMaterial({
 
 export function createBlocksMaterial() {
   return cloneMaterial(blocksMaterial)
+}
+
+const darknessMaterial = new ShaderMaterial({
+  // settings
+  transparent: false,
+  side: DoubleSide,
+  uniforms: {
+    color: { value: new Color(0, 0, 0) },
+    data: { value: null },
+  },
+  // vertex shader
+  vertexShader: `
+      precision highp float;
+      varying float vAlpha;
+    
+      void main() {
+        vec4 mvPosition = vec4(position, 1.0);
+        #ifdef USE_INSTANCING
+          vAlpha = instanceColor.x;
+          mvPosition = instanceMatrix * mvPosition;
+        #endif        
+        mvPosition = modelViewMatrix * mvPosition;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+  // fragment shader
+  fragmentShader: `
+      uniform vec3 color;
+      uniform sampler2D data;
+  
+      varying float vAlpha;
+
+      // adapted from https://www.shadertoy.com/view/Mlt3z8
+      float bayerDither2x2( vec2 v ) {
+        return mod( 3.0 * v.y + 2.0 * v.x, 4.0 );
+      }
+
+      float bayerDither4x4( vec2 v ) {
+        vec2 P1 = mod( v, 2.0 );
+        vec2 P2 = mod( floor( 0.5  * v ), 2.0 );
+        return 4.0 * bayerDither2x2( P1 ) + bayerDither2x2( P2 );
+      }
+
+      void main() {
+        if (vAlpha < 1.0) {
+          vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
+          if ( bayerDither4x4( ditherCoord ) / 16.0 >= vAlpha ) {
+            discard;
+          }
+        }
+
+        gl_FragColor.rgba = vec4(color.xyz, 1.0);
+      }
+    `,
+})
+
+export function createdarknessmaterial() {
+  return cloneMaterial(darknessMaterial)
 }
