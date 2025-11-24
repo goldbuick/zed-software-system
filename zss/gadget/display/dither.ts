@@ -33,6 +33,7 @@ const ditherMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
+      precision highp float;
       varying vec2 vUv;
     
       void main() {

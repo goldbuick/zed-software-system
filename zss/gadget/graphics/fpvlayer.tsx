@@ -1,7 +1,7 @@
 import { Instance, Instances } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
-import { InstancedMesh } from 'three'
+import { Color, InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -99,30 +99,6 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            {/* <Instances ref={meshes2} limit={BOARD_SIZE}>
-              <BlockMesh />
-              {layer.stats
-                .map((collision, idx) => {
-                  const pt = indextopt(idx, BOARD_WIDTH)
-                  switch (collision as COLLISION) {
-                    case COLLISION.ISSOLID:
-                      return (
-                        <Instance
-                          key={idx}
-                          position={[
-                            (pt.x + 0.5) * drawwidth,
-                            (pt.y + 0.5) * drawheight,
-                            drawheight * 0.5,
-                          ]}
-                          scale={[0.9, 0.9, 0.9]}
-                          color={[177, COLOR.DKGRAY, COLOR.BLACK]}
-                        />
-                      )
-                  }
-                  return null
-                })
-                .filter((el) => el)}
-            </Instances> */}
             <Instances ref={meshes} limit={BOARD_SIZE}>
               <PillarMesh />
               {layer.stats
@@ -151,7 +127,6 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
-      return null
       const rr = 8 / 14
       const othersprites = layer.sprites.filter(
         (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISSWIM,
@@ -164,14 +139,14 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
         <group key={layer.id} position={[0, 0, z]}>
           <Instances ref={meshes} limit={BOARD_SIZE}>
             <ShadowMesh />
-            {layer.sprites.map((sprite, idx) => (
+            {othersprites.map((sprite, idx) => (
               <Instance
                 key={idx}
                 scale={[1, rr, 1]}
                 position={[
                   sprite.x * drawwidth,
-                  (sprite.y - rr + 0.5 + 0.25) * drawheight,
-                  drawheight * -0.5 + 0.5,
+                  (sprite.y + 0.5 - rr * 0.5) * drawheight,
+                  drawheight * -0.5 + 0.1,
                 ]}
               />
             ))}
@@ -186,8 +161,8 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                     key={idx}
                     rotation={[0, 0, control.facing]}
                     position={[
-                      (sprite.x + 1) * drawwidth,
-                      (sprite.y - rr + 0.5 + 0.25) * drawheight,
+                      (sprite.x + 0.5) * drawwidth,
+                      (sprite.y + 0.5) * drawheight,
                       drawheight * -0.5,
                     ]}
                     color={[sprite.char, sprite.color, sprite.bg]}
@@ -204,9 +179,9 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                   <Instance
                     key={idx}
                     position={[
-                      sprite.x * drawwidth,
-                      sprite.y * drawheight,
-                      drawheight * -0.5,
+                      (sprite.x + 0.5) * drawwidth,
+                      (sprite.y - 0.5) * drawheight,
+                      drawheight * -0.25,
                     ]}
                     color={[sprite.char, sprite.color, sprite.bg]}
                   />

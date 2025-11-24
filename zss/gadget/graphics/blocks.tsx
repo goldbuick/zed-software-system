@@ -52,8 +52,6 @@ export function PillarMesh() {
   const altcharset = useMedia((state) => state.altcharsetdata)
   const [material] = useState(() => createBlocksMaterial())
 
-  // const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-  // const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
 
@@ -65,7 +63,6 @@ export function PillarMesh() {
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
     material.uniforms.cols.value = imageCols
-    material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
     material.needsUpdate = true
@@ -107,7 +104,6 @@ export function BillboardMesh() {
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
     material.uniforms.cols.value = imageCols
-    material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
     material.needsUpdate = true
@@ -115,7 +111,7 @@ export function BillboardMesh() {
 
   // create buffer geo attributes
   const { position, uv } = useMemo(
-    () => createBillboardBufferGeometryAttributes(1, 1),
+    () => createBillboardBufferGeometryAttributes(),
     [],
   )
 
@@ -149,7 +145,6 @@ export function BlockMesh() {
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
     material.uniforms.cols.value = imageCols
-    material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
     material.needsUpdate = true

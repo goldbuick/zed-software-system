@@ -145,7 +145,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       userData.focusx = control.focusx
       userData.focusy = control.focusy
       userData.currentboard = currentboard
-      cameraref.current.position.set(
+      pivotref.current.position.set(
         -((userData.focusx + 0.5) * drawwidth),
         -((userData.focusy + 0.5) * drawheight),
         0,
@@ -179,11 +179,12 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
 
-  const {
-    over = [],
-    under = [],
-    layers = [],
-  } = useGadgetClient.getState().gadget
+  const { gadget, gadgetlayercache } = useGadgetClient.getState()
+  const { over = [], under = [], layers = [] } = gadget
+  const exiteast = gadgetlayercache[gadget.exiteast] ?? []
+  const exitwest = gadgetlayercache[gadget.exitwest] ?? []
+  const exitnorth = gadgetlayercache[gadget.exitnorth] ?? []
+  const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
 
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2

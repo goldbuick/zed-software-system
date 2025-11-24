@@ -40,6 +40,7 @@ const billboardsMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
+    precision highp float;
     attribute float visible;
     attribute vec4 charData;
     attribute vec3 lastPosition;

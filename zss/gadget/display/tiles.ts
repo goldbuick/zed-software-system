@@ -139,12 +139,6 @@ const CAP_POSITIONS = new Float32Array([
   ...QUAD_BOTTOM_LEFT,
   ...CAP_BOTTOM_LEFT,
   ...CAP_TOP_LEFT,
-  // ...QUAD_BOTTOM_LEFT,
-  // ...QUAD_TOP_RIGHT,
-  // ...QUAD_BOTTOM_RIGHT,
-  // ...QUAD_BOTTOM_LEFT,
-  // ...QUAD_TOP_LEFT,
-  // ...QUAD_TOP_RIGHT,
 ])
 
 const CAP_UVS = new Float32Array([
@@ -200,10 +194,10 @@ export function createPillarBufferGeometryAttributes(
   }
 }
 
-const BILL_BOTTOM_LEFT = [0, 0, 0]
-const BILL_BOTTOM_RIGHT = [1, 0, 0]
-const BILL_TOP_RIGHT = [1, 0, 1]
-const BILL_TOP_LEFT = [0, 0, 1]
+const BILL_BOTTOM_LEFT = [-0.5, 0, 0]
+const BILL_BOTTOM_RIGHT = [0.5, 0, 0]
+const BILL_TOP_RIGHT = [0.5, 0, 1]
+const BILL_TOP_LEFT = [-0.5, 0, 1]
 
 const BILL_POSITIONS = new Float32Array([
   ...BILL_BOTTOM_LEFT,
@@ -214,12 +208,9 @@ const BILL_POSITIONS = new Float32Array([
   ...BILL_TOP_RIGHT,
 ])
 
-export function createBillboardBufferGeometryAttributes(
-  width: number,
-  height: number,
-) {
-  const drawwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
-  const drawheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+export function createBillboardBufferGeometryAttributes() {
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const positions = BILL_POSITIONS.map((v, index) => {
     switch (index % 3) {
       case 0: // x
@@ -256,6 +247,7 @@ const tilemapMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
+    precision highp float;
     varying vec2 vUv;
     void main() {
       vec4 mvPosition = vec4(position, 1.0);

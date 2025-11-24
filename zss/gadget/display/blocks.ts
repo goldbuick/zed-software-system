@@ -24,23 +24,27 @@ const blocksMaterial = new ShaderMaterial({
     map: new Uniform(charset),
     alt: new Uniform(charset),
     cols: new Uniform(1),
-    rows: new Uniform(1),
     step: new Uniform(new Vector2()),
   },
   // vertex shader
   vertexShader: `
+    precision highp float;
     uniform float time;
     uniform float interval;
+
+    attribute float zchar;
+    attribute float zcolor;
+    attribute float zbg;
 
     varying vec2 vUv;
     varying vec3 vColor;
 
     void main() {
       vUv = uv;
-      vColor.xyz = instanceColor.xyz;
-      
+    
       vec4 mvPosition = vec4(position, 1.0);
       #ifdef USE_INSTANCING
+        vColor.xyz = instanceColor.xyz;
       	mvPosition = instanceMatrix * mvPosition;
       #endif        
       
@@ -50,6 +54,7 @@ const blocksMaterial = new ShaderMaterial({
   `,
   // fragment shader
   fragmentShader: `
+    precision mediump float;
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
@@ -57,7 +62,6 @@ const blocksMaterial = new ShaderMaterial({
     uniform vec3 palette[16];
     uniform vec2 step;
     uniform float cols;
-    uniform float rows;
 
     varying vec2 vUv;
     varying vec3 vColor;
@@ -80,13 +84,13 @@ const blocksMaterial = new ShaderMaterial({
       
     void main() {
       // r = char, g = color, b = bg
-      int tc = int(cols);
-      int ti = int(vColor.r);
+      int tc = int(round(cols));
+      int ti = int(round(vColor.r));
       float tx = float(ti % tc);
-      float ty = rows - floor(vColor.r / cols);
+      float ty = floor(float(ti) / cols);
 
-      int colori = int(vColor.g);
-      int bgi = int(vColor.b);
+      int colori = int(round(vColor.g));
+      int bgi = int(round(vColor.b));
 
       vec3 color;
       if (colori > 31) {
@@ -101,6 +105,8 @@ const blocksMaterial = new ShaderMaterial({
       vec3 bg = palette[bgi];
 
       vec2 uv = vUv * step + vec2(tx * step.x, ty * step.y);
+      uv.y = 1.0 - uv.y;
+
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
 

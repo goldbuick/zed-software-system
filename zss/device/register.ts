@@ -380,39 +380,6 @@ const register = createdevice(
         })
         break
       }
-      case 'refresh':
-        if (message.data) {
-          writesession('PLAYER', undefined)
-          window.location.reload()
-        } else {
-          doasync(register, message.player, async () => {
-            // signal device not active
-            useDeviceData.setState({ active: false })
-            await waitfor(512)
-            // reset state
-            useTape.getState().reset()
-            useMedia.getState().reset()
-            useTapeEditor.getState().reset()
-            useTapeTerminal.getState().reset()
-            useTapeInspector.getState().reset()
-            // reset gadget
-            useGadgetClient.setState({
-              gadget: {
-                id: '',
-                board: '',
-                layers: [],
-                tickers: [],
-                scrollname: '',
-                scroll: [],
-                sidebar: [],
-              },
-            })
-            await waitfor(512)
-            // signal refresh and resume active
-            useDeviceData.setState({ active: true })
-          })
-        }
-        break
       case 'ackoperator':
         // reset display
         gadgetserver_desync(register, myplayerid)
