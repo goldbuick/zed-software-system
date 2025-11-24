@@ -376,14 +376,6 @@ export function synth_flush(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:flush')
 }
 
-export function register_refresh(
-  device: DEVICELIKE,
-  player: string,
-  full: boolean,
-) {
-  device.emit(player, 'register:refresh', full)
-}
-
 export function register_store(
   device: DEVICELIKE,
   player: string,
