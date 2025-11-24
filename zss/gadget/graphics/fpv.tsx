@@ -232,6 +232,54 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                     z={maptolayerz(layer)}
                   />
                 ))}
+                {exiteast.length && (
+                  <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
+                    {exiteast.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exiteast}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </group>
+                )}
+                {exitwest.length && (
+                  <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
+                    {exitwest.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exitwest}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </group>
+                )}
+                {exitnorth.length && (
+                  <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
+                    {exitnorth.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exitnorth}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </group>
+                )}
+                {exitsouth.length && (
+                  <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
+                    {exitsouth.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exitsouth}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </group>
+                )}
               </group>
             </group>
           </RenderLayer>

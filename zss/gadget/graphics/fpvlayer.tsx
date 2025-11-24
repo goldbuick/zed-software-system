@@ -14,20 +14,18 @@ import { useShallow } from 'zustand/react/shallow'
 
 import {
   BillboardMesh,
-  BlockMesh,
   DarknessMesh,
   PillarMesh,
   ShadowMesh,
   filterlayer2floor,
   filterlayer2water,
 } from './blocks'
-import { Dither } from './dither'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
   id: string
   z: number
-  from: 'under' | 'over' | 'layers'
+  from?: 'under' | 'over' | 'layers'
   layers?: LAYER[]
 }
 
@@ -142,6 +140,8 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
+      // --
+
       const rr = 8 / 14
       const othersprites = layer.sprites.filter((sprite) => {
         switch (sprite.stat as COLLISION) {
