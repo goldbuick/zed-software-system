@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -76,11 +76,14 @@ function maptofov(viewscale: VIEWSCALE): number {
 }
 
 export function FPVGraphics({ width, height }: GraphicsProps) {
+  const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
   const viewheight = height * drawheight
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
 
   const pivotref = useRef<Group>(null)
   const overref = useRef<Group>(null)
@@ -93,7 +96,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     setcameraready(true)
   }, [])
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (
       !pivotref.current ||
       !overref.current ||
@@ -109,22 +112,57 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    // drawsize
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-    const boarddrawwidth = BOARD_WIDTH * drawwidth
-    const boarddrawheight = BOARD_HEIGHT * drawheight
-
-    // viewsize
-    const viewwidth = width * drawwidth
-    const viewheight = height * drawheight
+    const animrate = 0.05
+    const currentboard = useGadgetClient.getState().gadget.board
 
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
       cameraref.current.userData = {
         focusx: control.focusx,
+        focusy: control.focusy,
+        facing: control.facing,
+        currentboard,
       }
     }
+
+    const userData = cameraref.current.userData ?? {}
+    const fx = (userData.focusx + 0.5) * drawwidth
+    const fy = (userData.focusy + 0.5) * drawheight
+
+    // position camera
+    damp3(pivotref.current.position, [-fx, fy, 0], animrate, delta)
+
+    // point camera
+    dampE(
+      cameraref.current.rotation,
+      [Math.PI * -0.5, control.facing, 0],
+      animrate,
+      delta,
+    )
+
+    // smoothed change in focus
+    if (currentboard !== userData.currentboard) {
+      userData.focusx = control.focusx
+      userData.focusy = control.focusy
+      userData.currentboard = currentboard
+      cameraref.current.position.set(
+        -((userData.focusx + 0.5) * drawwidth),
+        -((userData.focusy + 0.5) * drawheight),
+        0,
+      )
+    } else {
+      damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
+      damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
+    }
+
+    // // update effect
+    // depthoffield.current.bokehScale = 5
+    // depthoffield.current.cocMaterial.worldFocusRange = 1200
+    // depthoffield.current.cocMaterial.worldFocusDistance = 100
+
+    // update fov & matrix
+    damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
+    cameraref.current.updateProjectionMatrix()
 
     // framing
     overref.current.position.x = 0
@@ -134,61 +172,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     underref.current.position.x = viewwidth - boarddrawwidth * rscale
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
-
-    const animrate = 0.05
-
-    // calc focus
-    let fx = control.focusx - 0.5
-    let fy = control.focusy + 0.5
-    fx *= -drawwidth
-    fy *= -drawheight
-
-    // turn camera
-    dampE(
-      pivotref.current.rotation,
-      [0, Math.PI + control.facing, 0],
-      animrate,
-      delta,
-    )
-
-    // tilt camera
-    dampE(
-      cameraref.current.rotation,
-      [maptotilt(control.viewscale), 0, 0],
-      animrate,
-      delta,
-    )
-
-    // move camera
-    damp3(
-      pivotref.current.position,
-      [
-        state.size.width * 0.5 - fx,
-        state.size.height * 0.5 - drawheight * 0.25 + 1,
-        fy,
-      ],
-      animrate,
-      delta,
-    )
-
-    damp3(
-      cameraref.current.position,
-      [0, 0, maptobackup(control.viewscale)],
-      animrate,
-      delta,
-    )
-    //
-
-    // update effect
-    depthoffield.current.bokehScale = 5
-    depthoffield.current.cocMaterial.worldFocusRange = 1200
-    depthoffield.current.cocMaterial.worldFocusDistance = 100
-
-    // update fov & matrix
-    damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
-
-    //
-    cameraref.current.updateProjectionMatrix()
   })
 
   // re-render only when layer count changes
@@ -205,14 +188,20 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
 
+  const xmargin = viewport.width - viewwidth
+  const ymargin = viewport.height - viewheight
+  const centerx = viewwidth * -0.5 + xmargin * -0.5 + screensize.marginx
+  const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
   return (
     <>
       <group ref={pivotref}>
         <perspectiveCamera
           ref={cameraref}
-          near={1}
+          near={0.1}
           far={3000}
           aspect={-viewwidth / viewheight}
+          rotation={[Math.PI * -0.5, 0, 0]}
+          position={[0, 0, 512 + drawheight * 0.5]}
         />
       </group>
       <group ref={underref}>
@@ -232,11 +221,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
               </>
             }
           >
-            <group position={[-screensize.marginx, -screensize.marginy, -512]}>
-              <group
-                rotation={[Math.PI * -0.5, 0, 0]}
-                position={[0, drawheight * -0.75, 0]}
-              >
+            <group position={[centerx, centery, 0]}>
+              <group rotation={[0, 0, Math.PI]}>
                 {layers.map((layer) => (
                   <FPVLayer
                     key={layer.id}

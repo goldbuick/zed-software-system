@@ -1450,6 +1450,7 @@ export type MEMORY_GADGET_LAYERS = {
 }
 
 export function memoryreadgadgetlayers(
+  player: string,
   board: MAYBE<BOARD>,
 ): MEMORY_GADGET_LAYERS {
   const over: LAYER[] = []
@@ -1486,12 +1487,15 @@ export function memoryreadgadgetlayers(
   }
 
   // compose layers
-  under.push(...memoryconverttogadgetlayers(0, underboard, tickers, false))
+  under.push(
+    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, false),
+  )
   layers.push(
-    ...memoryconverttogadgetlayers(under.length, board, tickers, true),
+    ...memoryconverttogadgetlayers(player, under.length, board, tickers, true),
   )
   over.push(
     ...memoryconverttogadgetlayers(
+      player,
       under.length + layers.length,
       overboard,
       tickers,

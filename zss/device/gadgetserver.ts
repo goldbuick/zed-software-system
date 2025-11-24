@@ -72,7 +72,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
           // create layers if needed
           if (ispresent(playerboard) && !ispresent(gadgetlayers)) {
-            gadgetlayers = deepcopy(memoryreadgadgetlayers(playerboard))
+            gadgetlayers = deepcopy(memoryreadgadgetlayers(player, playerboard))
             layercache.set(playerboard.id, gadgetlayers)
           }
 

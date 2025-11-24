@@ -90,7 +90,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
               color={floor.color}
               bg={floor.bg}
             />
-            <group position-z={drawheight * -0.5}>
+            <group position-z={drawheight * -0.25}>
               <Tiles
                 width={layer.width}
                 height={layer.height}
@@ -99,7 +99,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <Instances ref={meshes2} limit={BOARD_SIZE}>
+            {/* <Instances ref={meshes2} limit={BOARD_SIZE}>
               <BlockMesh />
               {layer.stats
                 .map((collision, idx) => {
@@ -122,7 +122,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                   return null
                 })
                 .filter((el) => el)}
-            </Instances>
+            </Instances> */}
             <Instances ref={meshes} limit={BOARD_SIZE}>
               <PillarMesh />
               {layer.stats
@@ -151,6 +151,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
+      return null
       const rr = 8 / 14
       const othersprites = layer.sprites.filter(
         (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISSWIM,
@@ -217,6 +218,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
     }
     case LAYER_TYPE.DITHER: {
       return (
+        // todo, volumetric dither ??
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <Dither
