@@ -130,15 +130,10 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     const fy = (userData.focusy + 0.5) * drawheight
 
     // position camera
-    damp3(pivotref.current.position, [-fx, fy, 0], animrate, delta)
+    damp3(pivotref.current.position, [fx, 0, 0], animrate, delta)
 
     // point camera
-    dampE(
-      cameraref.current.rotation,
-      [Math.PI * -0.5, control.facing, 0],
-      animrate,
-      delta,
-    )
+    dampE(cameraref.current.rotation, [0, control.facing, 0], animrate, delta)
 
     // smoothed change in focus
     if (currentboard !== userData.currentboard) {
@@ -201,8 +196,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
           near={0.1}
           far={3000}
           aspect={-viewwidth / viewheight}
-          rotation={[Math.PI * -0.5, 0, 0]}
-          position={[0, 0, 512 + drawheight * 0.5]}
+          // rotation={[Math.PI * -0.5, 0, 0]}
+          position={[0, drawheight * -0.5, 0]}
         />
       </group>
       <group ref={underref}>
@@ -223,7 +218,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
             }
           >
             <group position={[centerx, centery, 0]}>
-              <group rotation={[0, 0, Math.PI]}>
+              <group rotation={[Math.PI * -0.5, 0, 0]}>
                 {layers.map((layer) => (
                   <FPVLayer
                     key={layer.id}
