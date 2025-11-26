@@ -310,7 +310,10 @@ export function createchip(
     },
     message(incoming) {
       // internal messages while locked are allowed
-      if (flags.sk || (flags.lk && incoming.sender !== flags.lk)) {
+      if (
+        (flags.sk && incoming.player !== flags.sk) ||
+        (flags.lk && incoming.sender !== flags.lk)
+      ) {
         return
       }
       // validate we have given label
