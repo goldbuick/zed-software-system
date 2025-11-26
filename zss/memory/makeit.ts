@@ -68,7 +68,7 @@ function previewcodepage(codepage: CODE_PAGE, player: string) {
   gadgethyperlink(
     player,
     'makeit',
-    `edit @${codepagereadtypetostring(codepage)} ${codepagereadname(codepage)}`,
+    `edit$CYAN @${codepagereadtypetostring(codepage)} ${codepagereadname(codepage)}`,
     ['edit', '', codepage.id],
   )
   // We should show the first 5 lines of the codepage here
@@ -122,14 +122,14 @@ export function memorymakeitscroll(makeit: string, player: string) {
         break
     }
     if (type === STAT_TYPE.OBJECT) {
-      gadgethyperlink(player, 'makeit', `create object @${name}`, [
+      gadgethyperlink(player, 'makeit', `create object$CYAN @${name}`, [
         'create',
         '',
         typename,
         name,
       ])
     } else {
-      gadgethyperlink(player, 'makeit', `create @${typename} ${name}`, [
+      gadgethyperlink(player, 'makeit', `create$CYAN @${typename} ${name}`, [
         'create',
         '',
         typename,
