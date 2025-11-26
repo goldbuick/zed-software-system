@@ -81,7 +81,7 @@ export function createsynth() {
   razzlechorus.start()
 
   // tape hiss
-  const hiss = new Noise({ type: 'pink', volume: -36 })
+  const hiss = new Noise({ type: 'pink', volume: -50 })
   const hissvolume = new Volume()
 
   // hiss mod
