@@ -177,6 +177,16 @@ export function createfxchannels(index: number) {
     autowah.volume.value = replay.autowah
   }
 
+  function applyreset() {
+    fc.volume.value = volumetodb(0)
+    echo.volume.value = volumetodb(0)
+    reverb.volume.value = volumetodb(0)
+    phaser.volume.value = volumetodb(0)
+    vibrato.volume.value = volumetodb(0)
+    distortion.volume.value = volumetodb(0)
+    autowah.volume.value = volumetodb(0)
+  }
+
   function destroy() {
     fc.dispose()
     echo.dispose()
@@ -202,6 +212,7 @@ export function createfxchannels(index: number) {
     distort: distortion,
     getreplay,
     setreplay,
+    applyreset,
     destroy,
   }
 }
