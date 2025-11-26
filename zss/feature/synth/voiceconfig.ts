@@ -1,4 +1,3 @@
-import { Channel } from 'tone'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -10,7 +9,6 @@ import {
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { volumetodb } from './fx'
 import { SOURCE_TYPE } from './source'
 
 import { AUDIO_SYNTH } from '.'
