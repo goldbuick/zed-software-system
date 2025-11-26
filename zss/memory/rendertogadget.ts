@@ -240,6 +240,19 @@ function raycheck(
   }
 }
 
+function readgraphics(player: string, board: BOARD) {
+  // player flags, then board flags
+  const { graphics, camera, facing } = memoryreadflags(player)
+  const withgraphics = graphics ?? board.graphics ?? ''
+  const withcamera = camera ?? board.camera ?? ''
+  const withfacing = facing ?? board.facing ?? ''
+  return {
+    graphics: withgraphics,
+    camera: withcamera,
+    facing: withfacing,
+  }
+}
+
 export function memoryconverttogadgetcontrollayer(
   player: string,
   index: number,
@@ -257,19 +270,15 @@ export function memoryconverttogadgetcontrollayer(
   control.focusy = maybeobject.y ?? 0
 
   // player flags, then board flags
-  const { graphics, camera, facing } = memoryreadflags(player)
-  const withgraphics = graphics ?? board.graphics ?? ''
-  const withcamera = camera ?? board.camera ?? ''
-  const withfacing = facing ?? board.facing ?? ''
-
-  if (isstring(withgraphics)) {
-    const graphics = NAME(withgraphics)
+  const { graphics, camera, facing } = readgraphics(player, board)
+  if (isstring(graphics)) {
+    const withgraphics = NAME(graphics)
     switch (graphics) {
       case 'fpv':
       case 'iso':
       case 'flat':
       case 'mode7':
-        control.graphics = graphics
+        control.graphics = withgraphics
         break
       default:
         control.graphics = 'flat'
@@ -277,8 +286,8 @@ export function memoryconverttogadgetcontrollayer(
     }
   }
 
-  if (isstring(withcamera)) {
-    switch (NAME(withcamera)) {
+  if (isstring(camera)) {
+    switch (NAME(camera)) {
       default:
         control.viewscale = VIEWSCALE.MID
         break
@@ -291,14 +300,15 @@ export function memoryconverttogadgetcontrollayer(
     }
   }
 
-  if (isnumber(withfacing)) {
-    control.facing = degToRad(withfacing)
+  if (isnumber(facing)) {
+    control.facing = degToRad(facing)
   }
 
   return [control]
 }
 
 export function memoryconverttogadgetlayers(
+  player: string,
   index: number,
   board: MAYBE<BOARD>,
   tickers: string[],
@@ -318,6 +328,7 @@ export function memoryconverttogadgetlayers(
   // update resolve caches
   boardvisualsupdate(board)
 
+  const withgraphics = NAME(readgraphics(player, board).graphics)
   const layers: LAYER[] = []
 
   let iiii = index
@@ -355,7 +366,12 @@ export function memoryconverttogadgetlayers(
 
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
-    const display = bookelementdisplayread(tile, 0, COLOR.WHITE, COLOR.ONCLEAR)
+    const display = bookelementdisplayread(
+      tile,
+      0,
+      COLOR.WHITE,
+      withgraphics !== 'flat' ? COLOR.BLACK : COLOR.ONCLEAR,
+    )
     const collision = memoryelementstatread(tile, 'collision')
     tiles.char[i] = display.char
     tiles.color[i] = display.color

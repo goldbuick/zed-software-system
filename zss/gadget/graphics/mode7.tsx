@@ -70,6 +70,8 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
   const viewheight = height * drawheight
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
 
   const tiltref = useRef<Group>(null)
   const overref = useRef<Group>(null)
@@ -176,10 +178,10 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
 
     // framing
     overref.current.position.x = 0
-    overref.current.position.y = viewheight - drawheight
+    overref.current.position.y = viewheight - boarddrawheight
 
-    const rscale = clamp(viewwidth / drawwidth, 1.0, 10.0)
-    underref.current.position.x = viewwidth - drawwidth * rscale
+    const rscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
+    underref.current.position.x = viewwidth - boarddrawwidth * rscale
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
   })

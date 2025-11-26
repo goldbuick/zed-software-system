@@ -1,4 +1,4 @@
-import { DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
+import { Color, DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
@@ -24,11 +24,11 @@ const blocksMaterial = new ShaderMaterial({
     map: new Uniform(charset),
     alt: new Uniform(charset),
     cols: new Uniform(1),
-    rows: new Uniform(1),
     step: new Uniform(new Vector2()),
   },
   // vertex shader
   vertexShader: `
+    precision highp float;
     uniform float time;
     uniform float interval;
 
@@ -37,10 +37,10 @@ const blocksMaterial = new ShaderMaterial({
 
     void main() {
       vUv = uv;
-      vColor.xyz = instanceColor.xyz;
-      
+    
       vec4 mvPosition = vec4(position, 1.0);
       #ifdef USE_INSTANCING
+        vColor.xyz = instanceColor.xyz;
       	mvPosition = instanceMatrix * mvPosition;
       #endif        
       
@@ -50,6 +50,7 @@ const blocksMaterial = new ShaderMaterial({
   `,
   // fragment shader
   fragmentShader: `
+    precision mediump float;
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
@@ -57,7 +58,6 @@ const blocksMaterial = new ShaderMaterial({
     uniform vec3 palette[16];
     uniform vec2 step;
     uniform float cols;
-    uniform float rows;
 
     varying vec2 vUv;
     varying vec3 vColor;
@@ -80,13 +80,13 @@ const blocksMaterial = new ShaderMaterial({
       
     void main() {
       // r = char, g = color, b = bg
-      int tc = int(cols);
-      int ti = int(vColor.r);
+      int tc = int(round(cols));
+      int ti = int(round(vColor.r));
       float tx = float(ti % tc);
-      float ty = rows - floor(vColor.r / cols);
+      float ty = floor(float(ti) / cols);
 
-      int colori = int(vColor.g);
-      int bgi = int(vColor.b);
+      int colori = int(round(vColor.g));
+      int bgi = int(round(vColor.b));
 
       vec3 color;
       if (colori > 31) {
@@ -101,6 +101,8 @@ const blocksMaterial = new ShaderMaterial({
       vec3 bg = palette[bgi];
 
       vec2 uv = vUv * step + vec2(tx * step.x, ty * step.y);
+      uv.y = 1.0 - uv.y;
+
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
 
@@ -119,4 +121,62 @@ const blocksMaterial = new ShaderMaterial({
 
 export function createBlocksMaterial() {
   return cloneMaterial(blocksMaterial)
+}
+
+const darknessMaterial = new ShaderMaterial({
+  // settings
+  transparent: false,
+  side: DoubleSide,
+  uniforms: {
+    color: { value: new Color(0, 0, 0) },
+    data: { value: null },
+  },
+  // vertex shader
+  vertexShader: `
+      precision highp float;
+      varying float vAlpha;
+    
+      void main() {
+        vec4 mvPosition = vec4(position, 1.0);
+        #ifdef USE_INSTANCING
+          vAlpha = instanceColor.x;
+          mvPosition = instanceMatrix * mvPosition;
+        #endif        
+        mvPosition = modelViewMatrix * mvPosition;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+  // fragment shader
+  fragmentShader: `
+      uniform vec3 color;
+      uniform sampler2D data;
+  
+      varying float vAlpha;
+
+      // adapted from https://www.shadertoy.com/view/Mlt3z8
+      float bayerDither2x2( vec2 v ) {
+        return mod( 3.0 * v.y + 2.0 * v.x, 4.0 );
+      }
+
+      float bayerDither4x4( vec2 v ) {
+        vec2 P1 = mod( v, 2.0 );
+        vec2 P2 = mod( floor( 0.5  * v ), 2.0 );
+        return 4.0 * bayerDither2x2( P1 ) + bayerDither2x2( P2 );
+      }
+
+      void main() {
+        if (vAlpha < 1.0) {
+          vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
+          if ( bayerDither4x4( ditherCoord ) / 16.0 >= vAlpha ) {
+            discard;
+          }
+        }
+
+        gl_FragColor.rgba = vec4(color.xyz, 1.0);
+      }
+    `,
+})
+
+export function createdarknessmaterial() {
+  return cloneMaterial(darknessMaterial)
 }

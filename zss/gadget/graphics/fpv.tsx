@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -39,50 +39,28 @@ function maptolayerz(layer: LAYER): number {
   return 0
 }
 
-function maptotilt(viewscale: VIEWSCALE): number {
-  switch (viewscale) {
-    case VIEWSCALE.NEAR:
-      return 0.1
-    default:
-    case VIEWSCALE.MID:
-      return 0.2
-    case VIEWSCALE.FAR:
-      return 0.3
-  }
-}
-
-function maptobackup(viewscale: VIEWSCALE): number {
-  switch (viewscale) {
-    case VIEWSCALE.NEAR:
-      return 64
-    default:
-    case VIEWSCALE.MID:
-      return 16
-    case VIEWSCALE.FAR:
-      return 0
-  }
-}
-
 function maptofov(viewscale: VIEWSCALE): number {
   switch (viewscale) {
     case VIEWSCALE.NEAR:
       return 25
     default:
     case VIEWSCALE.MID:
-      return 45
+      return 75
     case VIEWSCALE.FAR:
-      return 90
+      return 110
   }
 }
 
 export function FPVGraphics({ width, height }: GraphicsProps) {
+  const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
   const viewheight = height * drawheight
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
 
-  const pivotref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
@@ -93,9 +71,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     setcameraready(true)
   }, [])
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (
-      !pivotref.current ||
       !overref.current ||
       !underref.current ||
       !cameraref.current ||
@@ -109,22 +86,60 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    // drawsize
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-    const boarddrawwidth = BOARD_WIDTH * drawwidth
-    const boarddrawheight = BOARD_HEIGHT * drawheight
-
-    // viewsize
-    const viewwidth = width * drawwidth
-    const viewheight = height * drawheight
+    const animrate = 0.05
+    const currentboard = useGadgetClient.getState().gadget.board
 
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
       cameraref.current.userData = {
         focusx: control.focusx,
+        focusy: control.focusy,
+        facing: control.facing,
+        currentboard,
       }
     }
+
+    const userData = cameraref.current.userData ?? {}
+    const fx = (userData.focusx + 0.5) * drawwidth
+    const fy = (userData.focusy + 0.5) * drawheight
+
+    // position camera
+    damp3(
+      cameraref.current.position,
+      [fx, -fy, 512 + drawheight * 0.55],
+      animrate,
+      delta,
+    )
+
+    // point camera
+    dampE(
+      cameraref.current.rotation,
+      [Math.PI * -0.5, control.facing + Math.PI, 0],
+      animrate,
+      delta,
+    )
+
+    // smoothed change in focus
+    if (currentboard !== userData.currentboard) {
+      userData.focusx = control.focusx
+      userData.focusy = control.focusy
+      userData.currentboard = currentboard
+      const ffx = (userData.focusx + 0.5) * drawwidth
+      const ffy = (userData.focusy + 0.5) * drawheight
+      cameraref.current.position.set(ffx, -ffy, 512 + drawheight * 0.5)
+    } else {
+      damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
+      damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
+    }
+
+    // update effect
+    depthoffield.current.bokehScale = 5
+    depthoffield.current.cocMaterial.worldFocusRange = 1200
+    depthoffield.current.cocMaterial.worldFocusDistance = 100
+
+    // update fov & matrix
+    damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
+    cameraref.current.updateProjectionMatrix()
 
     // framing
     overref.current.position.x = 0
@@ -134,61 +149,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     underref.current.position.x = viewwidth - boarddrawwidth * rscale
     underref.current.position.y = 0
     underref.current.scale.setScalar(rscale)
-
-    const animrate = 0.05
-
-    // calc focus
-    let fx = control.focusx - 0.5
-    let fy = control.focusy + 0.5
-    fx *= -drawwidth
-    fy *= -drawheight
-
-    // turn camera
-    dampE(
-      pivotref.current.rotation,
-      [0, Math.PI + control.facing, 0],
-      animrate,
-      delta,
-    )
-
-    // tilt camera
-    dampE(
-      cameraref.current.rotation,
-      [maptotilt(control.viewscale), 0, 0],
-      animrate,
-      delta,
-    )
-
-    // move camera
-    damp3(
-      pivotref.current.position,
-      [
-        state.size.width * 0.5 - fx,
-        state.size.height * 0.5 - drawheight * 0.25 + 1,
-        fy,
-      ],
-      animrate,
-      delta,
-    )
-
-    damp3(
-      cameraref.current.position,
-      [0, 0, maptobackup(control.viewscale)],
-      animrate,
-      delta,
-    )
-    //
-
-    // update effect
-    depthoffield.current.bokehScale = 5
-    depthoffield.current.cocMaterial.worldFocusRange = 1200
-    depthoffield.current.cocMaterial.worldFocusDistance = 100
-
-    // update fov & matrix
-    damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
-
-    //
-    cameraref.current.updateProjectionMatrix()
   })
 
   // re-render only when layer count changes
@@ -196,25 +156,29 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
 
-  const {
-    over = [],
-    under = [],
-    layers = [],
-  } = useGadgetClient.getState().gadget
+  const { gadget, gadgetlayercache } = useGadgetClient.getState()
+  const { over = [], under = [], layers = [] } = gadget
+  const exiteast = gadgetlayercache[gadget.exiteast] ?? []
+  const exitwest = gadgetlayercache[gadget.exitwest] ?? []
+  const exitnorth = gadgetlayercache[gadget.exitnorth] ?? []
+  const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
 
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
 
+  const xmargin = viewport.width - viewwidth
+  const ymargin = viewport.height - viewheight
+  const centerx = viewwidth * -0.5 + xmargin * -0.5 + screensize.marginx
+  const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
   return (
     <>
-      <group ref={pivotref}>
-        <perspectiveCamera
-          ref={cameraref}
-          near={1}
-          far={3000}
-          aspect={-viewwidth / viewheight}
-        />
-      </group>
+      <perspectiveCamera
+        ref={cameraref}
+        near={0.1}
+        far={3000}
+        aspect={-viewwidth / viewheight}
+        position={[0, drawheight * -0.5, 0]}
+      />
       <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
@@ -232,20 +196,63 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
               </>
             }
           >
-            <group position={[-screensize.marginx, -screensize.marginy, -512]}>
-              <group
-                rotation={[Math.PI * -0.5, 0, 0]}
-                position={[0, drawheight * -0.75, 0]}
-              >
-                {layers.map((layer) => (
-                  <FPVLayer
-                    key={layer.id}
-                    id={layer.id}
-                    from="layers"
-                    z={maptolayerz(layer)}
-                  />
-                ))}
-              </group>
+            <group position={[centerx, centery, 0]}>
+              {layers.map((layer) => (
+                <FPVLayer
+                  key={layer.id}
+                  id={layer.id}
+                  from="layers"
+                  z={maptolayerz(layer)}
+                />
+              ))}
+              {exiteast.length && (
+                <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
+                  {exiteast.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exiteast}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
+              {exitwest.length && (
+                <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
+                  {exitwest.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exitwest}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
+              {exitnorth.length && (
+                <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
+                  {exitnorth.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exitnorth}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
+              {exitsouth.length && (
+                <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
+                  {exitsouth.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exitsouth}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
             </group>
           </RenderLayer>
         )}

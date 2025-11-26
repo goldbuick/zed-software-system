@@ -5,35 +5,36 @@ import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
+import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
-import { COLLISION, COLOR } from 'zss/words/types'
+import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
   BillboardMesh,
-  BlockMesh,
+  DarknessMesh,
   PillarMesh,
   ShadowMesh,
   filterlayer2floor,
   filterlayer2water,
 } from './blocks'
-import { Dither } from './dither'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
   id: string
   z: number
-  from: 'under' | 'over' | 'layers'
+  from?: 'under' | 'over' | 'layers'
+  layers?: LAYER[]
 }
 
-export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
+export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
   const player = registerreadplayer()
   const meshes = useRef<InstancedMesh>(null)
   const meshes2 = useRef<InstancedMesh>(null)
   const meshes3 = useRef<InstancedMesh>(null)
+  const meshes4 = useRef<InstancedMesh>(null)
 
   useFrame(() => {
     if (ispresent(meshes.current)) {
@@ -48,10 +49,22 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
       meshes3.current.computeBoundingBox()
       meshes3.current.computeBoundingSphere()
     }
+    if (ispresent(meshes4.current)) {
+      meshes4.current.computeBoundingBox()
+      meshes4.current.computeBoundingSphere()
+    }
   })
 
   const layer = useGadgetClient(
-    useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
+    useShallow((state) => {
+      if (ispresent(from)) {
+        return state.gadget[from]?.find((item) => item.id === id)
+      }
+      if (ispresent(layers)) {
+        return layers.find((item) => item.id === id)
+      }
+      return undefined
+    }),
   )
 
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
@@ -90,7 +103,7 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
               color={floor.color}
               bg={floor.bg}
             />
-            <group position-z={drawheight * -0.5}>
+            <group position-z={drawheight * -0.25}>
               <Tiles
                 width={layer.width}
                 height={layer.height}
@@ -99,30 +112,6 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <Instances ref={meshes2} limit={BOARD_SIZE}>
-              <BlockMesh />
-              {layer.stats
-                .map((collision, idx) => {
-                  const pt = indextopt(idx, BOARD_WIDTH)
-                  switch (collision as COLLISION) {
-                    case COLLISION.ISSOLID:
-                      return (
-                        <Instance
-                          key={idx}
-                          position={[
-                            (pt.x + 0.5) * drawwidth,
-                            (pt.y + 0.5) * drawheight,
-                            drawheight * 0.5,
-                          ]}
-                          scale={[0.9, 0.9, 0.9]}
-                          color={[177, COLOR.DKGRAY, COLOR.BLACK]}
-                        />
-                      )
-                  }
-                  return null
-                })
-                .filter((el) => el)}
-            </Instances>
             <Instances ref={meshes} limit={BOARD_SIZE}>
               <PillarMesh />
               {layer.stats
@@ -151,9 +140,20 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
+      // --
+
       const rr = 8 / 14
-      const othersprites = layer.sprites.filter(
-        (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISSWIM,
+      const othersprites = layer.sprites.filter((sprite) => {
+        switch (sprite.stat as COLLISION) {
+          case COLLISION.ISSWIM:
+          case COLLISION.ISBULLET:
+            return false
+          default:
+            return true
+        }
+      })
+      const bulletsprites = layer.sprites.filter(
+        (sprite) => (sprite.stat as COLLISION) === COLLISION.ISBULLET,
       )
       const watersprites = layer.sprites.filter(
         (sprite) => (sprite.stat as COLLISION) === COLLISION.ISSWIM,
@@ -163,14 +163,14 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
         <group key={layer.id} position={[0, 0, z]}>
           <Instances ref={meshes} limit={BOARD_SIZE}>
             <ShadowMesh />
-            {layer.sprites.map((sprite, idx) => (
+            {othersprites.map((sprite, idx) => (
               <Instance
                 key={idx}
                 scale={[1, rr, 1]}
                 position={[
                   sprite.x * drawwidth,
-                  (sprite.y - rr + 0.5 + 0.25) * drawheight,
-                  drawheight * -0.5 + 0.5,
+                  (sprite.y + 0.5 - rr * 0.5) * drawheight,
+                  drawheight * -0.5 + 0.1,
                 ]}
               />
             ))}
@@ -185,9 +185,28 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                     key={idx}
                     rotation={[0, 0, control.facing]}
                     position={[
-                      (sprite.x + 1) * drawwidth,
-                      (sprite.y - rr + 0.5 + 0.25) * drawheight,
+                      (sprite.x + 0.5) * drawwidth,
+                      (sprite.y + 0.5) * drawheight,
                       drawheight * -0.5,
+                    ]}
+                    color={[sprite.char, sprite.color, sprite.bg]}
+                  />
+                )
+              })}
+          </Instances>
+          <Instances ref={meshes2} limit={BOARD_SIZE}>
+            <BillboardMesh />
+            {bulletsprites
+              .filter((sprite) => sprite.pid !== player)
+              .map((sprite, idx) => {
+                return (
+                  <Instance
+                    key={idx}
+                    rotation={[0, 0, control.facing]}
+                    position={[
+                      (sprite.x + 0.5) * drawwidth,
+                      (sprite.y + 0.5) * drawheight,
+                      drawheight * -0.75,
                     ]}
                     color={[sprite.char, sprite.color, sprite.bg]}
                   />
@@ -203,9 +222,9 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
                   <Instance
                     key={idx}
                     position={[
-                      sprite.x * drawwidth,
-                      sprite.y * drawheight,
-                      drawheight * -0.5,
+                      (sprite.x + 0.5) * drawwidth,
+                      (sprite.y - 0.5) * drawheight,
+                      drawheight * -1.25,
                     ]}
                     color={[sprite.char, sprite.color, sprite.bg]}
                   />
@@ -219,11 +238,23 @@ export function FPVLayer({ id, z, from }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Dither
-            width={layer.width}
-            height={layer.height}
-            alphas={[...layer.alphas]}
-          />
+          <Instances ref={meshes4} limit={BOARD_SIZE}>
+            <DarknessMesh />
+            {layer.alphas.map((alpha, idx) => {
+              const pt = indextopt(idx, BOARD_WIDTH)
+              return (
+                <Instance
+                  key={idx}
+                  position={[
+                    pt.x * drawwidth,
+                    pt.y * drawheight,
+                    drawheight * -0.5,
+                  ]}
+                  color={[alpha, 0, 0]}
+                />
+              )
+            })}
+          </Instances>
         </group>
       )
     }

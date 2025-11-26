@@ -14,7 +14,6 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   api_log,
-  register_refresh,
   vm_cli,
   vm_doot,
   vm_input,
@@ -211,7 +210,6 @@ window.addEventListener(
     // block default browser behavior that messes with things
     switch (key) {
       case 's': // override default behavior
-      case 'r':
       case 'j':
       case 'o':
       case 'f':
@@ -302,11 +300,6 @@ window.addEventListener(
         break
       case 'tab':
         inputdown(0, INPUT.MENU_BUTTON)
-        break
-      case 'r':
-        if (mods.ctrl) {
-          register_refresh(SOFTWARE, player, mods.shift)
-        }
         break
       case 's':
         if (mods.ctrl) {
