@@ -4,7 +4,7 @@ import { api_error } from './device/api'
 import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
-import { ispresent, isstring } from './mapping/types'
+import { MAYBE, ispresent, isstring } from './mapping/types'
 import { memoryreadoperator } from './memory'
 
 export type OS = {
@@ -14,6 +14,12 @@ export type OS = {
   halt: (id: string) => boolean
   gc: () => void
   arg: (id: string, value: any) => void
+  boot: (
+    id: string,
+    driver: DRIVER_TYPE,
+    name: string,
+    code: string,
+  ) => MAYBE<CHIP>
   tick: (
     id: string,
     driver: DRIVER_TYPE,
@@ -21,7 +27,7 @@ export type OS = {
     name: string,
     code: string,
   ) => boolean
-  once: (id: string, driver: DRIVER_TYPE, name: string, code: string) => boolean
+  once: (id: string, driver: DRIVER_TYPE, name: string, code: string) => void
   message: MESSAGE_FUNC
 }
 
@@ -76,7 +82,7 @@ export function createos() {
         chip.set('arg', value)
       }
     },
-    tick(id, driver, cycle, name, code) {
+    boot(id, driver, name, code) {
       let chip = chips[id]
 
       // attempt to create chip
@@ -135,16 +141,19 @@ export function createos() {
 
           const preamble = primary.message.split('\n').slice(0, 4).join(' ')
           api_error(SOFTWARE, memoryreadoperator(), 'build', preamble)
-          return false
+          return undefined
         }
       }
-
-      // run it
-      return !!chip?.tick(cycle)
+      return chip
+    },
+    tick(id, driver, cycle, name, code) {
+      // boot and tick it
+      return !!os.boot(id, driver, name, code)?.tick(cycle)
     },
     once(id, driver, name, code) {
-      const result = os.tick(id, driver, 1, name, code)
-      return os.halt(id) && result
+      // boot and run once
+      os.boot(id, driver, name, code)?.once()
+      os.halt(id)
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
