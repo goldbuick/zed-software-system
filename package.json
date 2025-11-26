@@ -1,10 +1,10 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.79.17",
+  "version": "0.79.18",
   "type": "module",
   "scripts": {
-    "sloc": "npx sloc zss",
+    "sloc": "npx sloc -e .js zss",
     "test": "yarn jest",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "clear": "rimraf dist && rimraf dist-ssr && rimraf node_modules/.vite",
