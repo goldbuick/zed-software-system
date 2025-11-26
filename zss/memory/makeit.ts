@@ -1,6 +1,6 @@
 import { vm_cli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { DIVIDER, write } from 'zss/feature/writeui'
+import { write } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,

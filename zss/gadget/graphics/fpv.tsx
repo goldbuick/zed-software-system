@@ -39,39 +39,15 @@ function maptolayerz(layer: LAYER): number {
   return 0
 }
 
-function maptotilt(viewscale: VIEWSCALE): number {
-  switch (viewscale) {
-    case VIEWSCALE.NEAR:
-      return 0.1
-    default:
-    case VIEWSCALE.MID:
-      return 0.2
-    case VIEWSCALE.FAR:
-      return 0.3
-  }
-}
-
-function maptobackup(viewscale: VIEWSCALE): number {
-  switch (viewscale) {
-    case VIEWSCALE.NEAR:
-      return 64
-    default:
-    case VIEWSCALE.MID:
-      return 16
-    case VIEWSCALE.FAR:
-      return 0
-  }
-}
-
 function maptofov(viewscale: VIEWSCALE): number {
   switch (viewscale) {
     case VIEWSCALE.NEAR:
       return 25
     default:
     case VIEWSCALE.MID:
-      return 45
+      return 75
     case VIEWSCALE.FAR:
-      return 90
+      return 110
   }
 }
 
@@ -85,7 +61,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
 
-  const pivotref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
@@ -98,7 +73,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
 
   useFrame((_, delta) => {
     if (
-      !pivotref.current ||
       !overref.current ||
       !underref.current ||
       !cameraref.current ||
@@ -130,30 +104,38 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     const fy = (userData.focusy + 0.5) * drawheight
 
     // position camera
-    damp3(pivotref.current.position, [fx, 0, 0], animrate, delta)
+    damp3(
+      cameraref.current.position,
+      [fx, -fy, 512 + drawheight * 0.55],
+      animrate,
+      delta,
+    )
 
     // point camera
-    dampE(cameraref.current.rotation, [0, control.facing, 0], animrate, delta)
+    dampE(
+      cameraref.current.rotation,
+      [Math.PI * -0.5, control.facing + Math.PI, 0],
+      animrate,
+      delta,
+    )
 
     // smoothed change in focus
     if (currentboard !== userData.currentboard) {
       userData.focusx = control.focusx
       userData.focusy = control.focusy
       userData.currentboard = currentboard
-      pivotref.current.position.set(
-        -((userData.focusx + 0.5) * drawwidth),
-        -((userData.focusy + 0.5) * drawheight),
-        0,
-      )
+      const ffx = (userData.focusx + 0.5) * drawwidth
+      const ffy = (userData.focusy + 0.5) * drawheight
+      cameraref.current.position.set(ffx, -ffy, 512 + drawheight * 0.5)
     } else {
       damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
       damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
     }
 
-    // // update effect
-    // depthoffield.current.bokehScale = 5
-    // depthoffield.current.cocMaterial.worldFocusRange = 1200
-    // depthoffield.current.cocMaterial.worldFocusDistance = 100
+    // update effect
+    depthoffield.current.bokehScale = 5
+    depthoffield.current.cocMaterial.worldFocusRange = 1200
+    depthoffield.current.cocMaterial.worldFocusDistance = 100
 
     // update fov & matrix
     damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
@@ -190,16 +172,13 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
   return (
     <>
-      <group ref={pivotref}>
-        <perspectiveCamera
-          ref={cameraref}
-          near={0.1}
-          far={3000}
-          aspect={-viewwidth / viewheight}
-          // rotation={[Math.PI * -0.5, 0, 0]}
-          position={[0, drawheight * -0.5, 0]}
-        />
-      </group>
+      <perspectiveCamera
+        ref={cameraref}
+        near={0.1}
+        far={3000}
+        aspect={-viewwidth / viewheight}
+        position={[0, drawheight * -0.5, 0]}
+      />
       <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
@@ -218,64 +197,62 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
             }
           >
             <group position={[centerx, centery, 0]}>
-              <group rotation={[Math.PI * -0.5, 0, 0]}>
-                {layers.map((layer) => (
-                  <FPVLayer
-                    key={layer.id}
-                    id={layer.id}
-                    from="layers"
-                    z={maptolayerz(layer)}
-                  />
-                ))}
-                {exiteast.length && (
-                  <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                    {exiteast.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={exiteast}
-                        z={maptolayerz(layer)}
-                      />
-                    ))}
-                  </group>
-                )}
-                {exitwest.length && (
-                  <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                    {exitwest.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={exitwest}
-                        z={maptolayerz(layer)}
-                      />
-                    ))}
-                  </group>
-                )}
-                {exitnorth.length && (
-                  <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                    {exitnorth.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={exitnorth}
-                        z={maptolayerz(layer)}
-                      />
-                    ))}
-                  </group>
-                )}
-                {exitsouth.length && (
-                  <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                    {exitsouth.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={exitsouth}
-                        z={maptolayerz(layer)}
-                      />
-                    ))}
-                  </group>
-                )}
-              </group>
+              {layers.map((layer) => (
+                <FPVLayer
+                  key={layer.id}
+                  id={layer.id}
+                  from="layers"
+                  z={maptolayerz(layer)}
+                />
+              ))}
+              {exiteast.length && (
+                <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
+                  {exiteast.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exiteast}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
+              {exitwest.length && (
+                <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
+                  {exitwest.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exitwest}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
+              {exitnorth.length && (
+                <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
+                  {exitnorth.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exitnorth}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
+              {exitsouth.length && (
+                <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
+                  {exitsouth.map((layer) => (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      layers={exitsouth}
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              )}
             </group>
           </RenderLayer>
         )}
