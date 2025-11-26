@@ -70,10 +70,12 @@ export function synthvoiceconfig(
   }
 
   switch (config) {
-    case 'reset':
-    case 'restart':
+    case 'restart': {
       voice.applyreset()
+      synth.FXCHAIN.applyreset()
+      synth.FX[index].applyreset()
       return
+    }
     case 'vol':
     case 'volume':
       if (isnumber(value)) {
