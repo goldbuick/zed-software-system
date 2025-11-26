@@ -39,6 +39,7 @@ export type CHIP = {
   get: (name: string) => any
 
   // lifecycle api
+  once: () => void
   tick: (cycle: number) => boolean
   isended: () => boolean
   isfirstpulse: () => boolean
@@ -195,6 +196,24 @@ export function createchip(
     },
 
     // lifecycle api
+    once() {
+      // reset state
+      flags.lc = 0
+      flags.ys = 0
+
+      // setup read context get
+      READ_CONTEXT.get = chip.get
+
+      // invoke logic impl
+      try {
+        if (!logic?.(chip)) {
+          flags.es = 1
+        }
+      } catch (err: any) {
+        api_error(SOFTWARE, READ_CONTEXT.elementfocus, 'crash', err.message)
+        flags.es = 1
+      }
+    },
     tick(cycle) {
       // update execution frequency
       const pulse = isnumber(flags.ps) ? flags.ps : 0
@@ -212,22 +231,7 @@ export function createchip(
       // chip is yield / ended state
       const shouldtick = chip.shouldtick()
       if (shouldtick) {
-        // reset state
-        flags.lc = 0
-        flags.ys = 0
-
-        // setup read context get
-        READ_CONTEXT.get = chip.get
-
-        // invoke generator
-        try {
-          if (!logic?.(chip)) {
-            flags.es = 1
-          }
-        } catch (err: any) {
-          api_error(SOFTWARE, READ_CONTEXT.elementfocus, 'crash', err.message)
-          flags.es = 1
-        }
+        chip.once()
       }
 
       // cleanup

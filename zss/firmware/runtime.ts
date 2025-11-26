@@ -103,7 +103,6 @@ export function handlesend(chip: CHIP, send: SEND_META) {
         }
         break
       case 'ping': {
-        debugger
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
         const boards = bookplayerreadboards(mainbook)
         memorysendtoboards('all', send.label, undefined, boards)
