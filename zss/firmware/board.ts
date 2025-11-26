@@ -233,24 +233,14 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
   // handle object put
   if (boardelementisobject(kindelement)) {
-    // validate placement works
-    const blocked = boardcheckblockedobject(
+    const element = memorywritefromkind(
       READ_CONTEXT.board,
-      kindcollision,
+      kind,
       dir.destpt,
+      id,
     )
-
-    // write new element
-    if (!ispresent(blocked)) {
-      const element = memorywritefromkind(
-        READ_CONTEXT.board,
-        kind,
-        dir.destpt,
-        id,
-      )
-      if (ispresent(element) && ispresent(arg)) {
-        element.arg = arg
-      }
+    if (ispresent(element) && ispresent(arg)) {
+      element.arg = arg
     }
   }
 
