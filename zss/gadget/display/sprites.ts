@@ -114,8 +114,8 @@ const spritesMaterial = new ShaderMaterial({
       animPosition.y -= smoothstep(0.0, 1.0, deltaBounce);
 
       float deltaColor = animDelta(lastColor.y, smoothrate, 1.0);
-      int sourceColori = int(lastColor.x);
-      int destColori = int(charData.z);
+      int sourceColori = int(round(lastColor.x));
+      int destColori = int(round(charData.z));
 
       vec3 sourceColor;
       if (sourceColori > 32) {
