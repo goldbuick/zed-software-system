@@ -197,10 +197,6 @@ function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
-// when we have multiple players, hearing music, we get multiple synth sends
-// so we have to debounce to X number of ticks ?
-const synthdebounce: Record<string, number> = {}
-
 const vm = createdevice(
   'vm',
   ['tick', 'second'],
@@ -566,11 +562,6 @@ const vm = createdevice(
         break
       case 'tick': {
         memorytick(memoryreadhalt())
-        const signals = objectKeys(synthdebounce)
-        for (let i = 0; i < signals.length; ++i) {
-          const key = signals[i]
-          --synthdebounce[key]
-        }
         break
       }
       case 'second': {

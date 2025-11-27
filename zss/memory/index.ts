@@ -1229,10 +1229,6 @@ export function memorytick(playeronly = false) {
   // inc timestamp
   const timestamp = mainbook.timestamp + 1
 
-  // loaders get more processing time
-  const resethalt = RUNTIME.HALT_AT_COUNT
-  RUNTIME.HALT_AT_COUNT = resethalt * 2
-
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
     // cache context
@@ -1271,9 +1267,6 @@ export function memorytick(playeronly = false) {
       READ_CONTEXT[key] = OLD_CONTEXT[key]
     })
   })
-
-  // reset
-  RUNTIME.HALT_AT_COUNT = resethalt
 
   // track tick
   mainbook.timestamp = timestamp
@@ -1388,10 +1381,6 @@ export function memorycli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
 
-  // cli invokes get more processing time
-  const resethalt = RUNTIME.HALT_AT_COUNT
-  RUNTIME.HALT_AT_COUNT = resethalt * 8
-
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
@@ -1401,9 +1390,6 @@ export function memorycli(player: string, cli: string, tracking = true) {
     // track value of invoke
     flags.playbuffer = cli
   }
-
-  // reset to normal halt rate
-  RUNTIME.HALT_AT_COUNT = resethalt
 }
 
 export function memoryrun(address: string) {
