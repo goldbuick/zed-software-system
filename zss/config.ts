@@ -14,7 +14,7 @@ const FORCE_TOUCH_UI = !!JSON.parse(import.meta.env.ZSS_FORCE_TOUCH_UI)
 // runtime config
 export const RUNTIME = {
   // adjust time spent on code
-  HALT_AT_COUNT: 256,
+  HALT_AT_COUNT: 1024 + 128,
   // render
   DRAW_CHAR_SCALE: 2,
   DRAW_CHAR_WIDTH() {
