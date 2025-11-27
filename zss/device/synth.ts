@@ -177,6 +177,9 @@ const synthdevice = createdevice('synth', [], (message) => {
         synth.addbgplay(buffer, quantize)
       }
       break
+    case 'restart':
+      synth?.applyreset()
+      break
     case 'voice':
       if (isarray(message.data)) {
         const [index, config, value] = message.data as [

@@ -71,9 +71,7 @@ export function synthvoiceconfig(
 
   switch (config) {
     case 'restart': {
-      voice.applyreset()
-      synth.FXCHAIN.applyreset()
-      synth.FX[index].applyreset()
+      synth.applyreset()
       return
     }
     case 'vol':
