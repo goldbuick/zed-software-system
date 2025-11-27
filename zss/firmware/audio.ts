@@ -7,6 +7,7 @@ import {
   synth_play,
   synth_playvolume,
   synth_record,
+  synth_restart,
   synth_tts,
   synth_ttsclearqueue,
   synth_ttsengine,
@@ -198,6 +199,10 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('synth', (_, words) => {
+    if (words.length === 0) {
+      synth_restart(SOFTWARE, READ_CONTEXT.elementfocus)
+      return 0
+    }
     // multi-voice changes only apply to #play
     for (let i = 0; i < 4; ++i) {
       handlesynthvoice(READ_CONTEXT.elementfocus, i, words)

@@ -257,6 +257,10 @@ export function synth_audioenabled(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:audioenabled', undefined)
 }
 
+export function synth_restart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'synth:restart', undefined)
+}
+
 export function synth_audiobuffer(
   device: DEVICELIKE,
   player: string,

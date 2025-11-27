@@ -534,6 +534,20 @@ export function createsynth() {
   // start pacer
   pacer.start(0)
 
+  function applyreset() {
+    SOURCE.forEach((item, index) => {
+      changesource(index, SOURCE_TYPE.SYNTH)
+      item.applyreset()
+      item.source.synth.set({
+        oscillator: {
+          type: 'square',
+        },
+      })
+    })
+    FX.forEach((item) => item.applyreset())
+    FXCHAIN.applyreset()
+  }
+
   function destroy() {
     SOURCE.forEach((item) => item.destroy())
     FX.forEach((item) => item.destroy())
@@ -547,6 +561,7 @@ export function createsynth() {
     addplay,
     addbgplay,
     stopplay,
+    applyreset,
     applyreplay,
     synthrecord,
     synthflush,
