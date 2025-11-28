@@ -59,19 +59,19 @@ export function bookplayermovetoboard(
   // current board
   const currentboard = memoryreadplayerboard(player)
   if (!ispresent(book) || !ispresent(currentboard)) {
-    return
+    return false
   }
 
   // player element
   const element = boardobjectread(currentboard, player)
   if (!boardelementisobject(element) || !element?.id) {
-    return
+    return false
   }
 
   // dest board
   const destboard = memoryboardread(board)
   if (!ispresent(destboard)) {
-    return
+    return false
   }
 
   // make sure lookup is created
@@ -89,7 +89,7 @@ export function bookplayermovetoboard(
       memorysendinteraction(player, element, maybeobject, 'touch')
     } else {
       // blocked by non-item
-      return
+      return false
     }
   }
 
@@ -111,6 +111,7 @@ export function bookplayermovetoboard(
   bookwriteflag(book, player, 'enterx', dest.x)
   bookwriteflag(book, player, 'entery', dest.y)
   bookplayersetboard(book, player, destboard.id)
+  return true
 }
 
 function bookplayerreadboardids(book: MAYBE<BOOK>) {
