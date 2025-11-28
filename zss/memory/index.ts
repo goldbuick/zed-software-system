@@ -811,7 +811,7 @@ function playerblockedbyedge(
     // exit west
     const destboard = memoryboardread(board?.exitwest ?? '')
     if (ispresent(destboard)) {
-      bookplayermovetoboard(book, elementid, destboard.id, {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
         x: BOARD_WIDTH - 1,
         y: dest.y,
       })
@@ -820,7 +820,7 @@ function playerblockedbyedge(
     // exit east
     const destboard = memoryboardread(board?.exiteast ?? '')
     if (ispresent(destboard)) {
-      bookplayermovetoboard(book, elementid, destboard.id, {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
         x: 0,
         y: dest.y,
       })
@@ -829,7 +829,7 @@ function playerblockedbyedge(
     // exit north
     const destboard = memoryboardread(board?.exitnorth ?? '')
     if (ispresent(destboard)) {
-      bookplayermovetoboard(book, elementid, destboard.id, {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
         x: dest.x,
         y: BOARD_HEIGHT - 1,
       })
@@ -838,12 +838,13 @@ function playerblockedbyedge(
     // exit south
     const destboard = memoryboardread(board?.exitsouth ?? '')
     if (ispresent(destboard)) {
-      bookplayermovetoboard(book, elementid, destboard.id, {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
         x: dest.x,
         y: 0,
       })
     }
   }
+  return false
 }
 
 function playerwaszapped(
@@ -926,7 +927,14 @@ export function memorymoveobject(
     }
 
     if (elementisplayer && blockedbykind === 'edge') {
-      playerblockedbyedge(book, board, element, dest)
+      if (!playerblockedbyedge(book, board, element, dest)) {
+        memorysendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          'thud',
+        )
+      }
     } else if (elementisplayer) {
       if (blockedbyplayer) {
         // same party touch
