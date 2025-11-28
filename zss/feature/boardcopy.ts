@@ -2,6 +2,7 @@ import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import {
   memoryboardinit,
+  memoryboardread,
   memoryelementstatread,
   memorywritefromkind,
 } from 'zss/memory'
@@ -13,15 +14,12 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import { boardreadgroup } from 'zss/memory/boardops'
-import { bookreadcodepagewithtype } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
-  CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
@@ -117,22 +115,12 @@ export function boardcopy(
   }
   const book = READ_CONTEXT.book
 
-  const sourcecodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    source,
-  )
-  const sourceboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(sourcecodepage)
+  const sourceboard = memoryboardread(source)
   if (!ispresent(sourceboard)) {
     return
   }
 
-  const targetcodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  const targetboard = memoryboardread(target)
   if (!ispresent(targetboard)) {
     return
   }
@@ -235,22 +223,12 @@ export function boardcopygroup(
   }
   const book = READ_CONTEXT.book
 
-  const sourcecodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    source,
-  )
-  const sourceboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(sourcecodepage)
+  const sourceboard = memoryboardread(source)
   if (!ispresent(sourceboard)) {
     return
   }
 
-  const targetcodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  const targetboard = memoryboardread(target)
   if (!ispresent(targetboard)) {
     return
   }

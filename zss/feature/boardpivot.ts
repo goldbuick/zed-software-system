@@ -1,10 +1,8 @@
 import { linepoints } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { memoryboardinit } from 'zss/memory'
+import { memoryboardinit, memoryboardread } from 'zss/memory'
 import { createboard } from 'zss/memory/board'
-import { bookreadcodepagewithtype } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -18,14 +16,7 @@ export function boardpivot(
   if (!ispresent(READ_CONTEXT.book)) {
     return
   }
-  const book = READ_CONTEXT.book
-
-  const targetcodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  const targetboard = memoryboardread(target)
   if (!ispresent(targetboard)) {
     return
   }

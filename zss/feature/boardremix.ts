@@ -4,6 +4,7 @@ import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import {
   memoryboardinit,
+  memoryboardread,
   memoryelementkindread,
   memoryelementstatread,
   memorywritefromkind,
@@ -16,14 +17,7 @@ import {
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { bookreadcodepagewithtype } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
-import {
-  BOARD_HEIGHT,
-  BOARD_SIZE,
-  BOARD_WIDTH,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, PT } from 'zss/words/types'
 
@@ -44,19 +38,13 @@ export function boardremix(
   }
   const book = READ_CONTEXT.book
 
-  const targetcodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const sourcecodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    source,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
-  const sourceboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(sourcecodepage)
-  if (!ispresent(targetboard) || !ispresent(sourceboard)) {
+  const targetboard = memoryboardread(target)
+  if (!ispresent(targetboard)) {
+    return false
+  }
+
+  const sourceboard = memoryboardread(source)
+  if (!ispresent(sourceboard)) {
     return false
   }
 

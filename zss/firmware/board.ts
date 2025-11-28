@@ -1,15 +1,17 @@
 import { CHIP } from 'zss/chip'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
-import { ispid } from 'zss/mapping/guid'
+import { createsid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
+  MEMORY_LABEL,
   memoryboardinit,
   memoryboardread,
   memoryelementkindread,
   memoryelementstatread,
+  memoryensuresoftwarecodepage,
   memorymoveobject,
   memorytickobject,
   memorywritebullet,
@@ -31,7 +33,8 @@ import {
 import { boardcheckblockedobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { codepagereaddata } from 'zss/memory/codepage'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -311,21 +314,48 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
 
-    const createdboard = createboard()
-    if (ispresent(createdboard)) {
-      // attempt to clone existing board
-      if (isstring(maybesource)) {
-        const sourceboard = memoryboardread(maybesource)
-        if (ispresent(sourceboard)) {
-          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
-        }
-      }
-
-      // update stat with created board id
-      // todo, how do we write to board exit stats ??
-      chip.set(stat, createdboard.id)
+    const [codepage] = memoryensuresoftwarecodepage(
+      MEMORY_LABEL.TEMP,
+      createsid(),
+      CODE_PAGE_TYPE.BOARD,
+    )
+    if (!ispresent(codepage)) {
+      return 0
     }
 
+    const createdboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+    if (!ispresent(createdboard)) {
+      return 0
+    }
+
+    // attempt to clone existing board
+    if (isstring(maybesource)) {
+      const sourceboard = memoryboardread(maybesource)
+      if (ispresent(sourceboard)) {
+        boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+        // when building out border boards, make sure to link back
+        // to current board
+        switch (NAME(stat)) {
+          case 'exitwest':
+            createdboard.exiteast = READ_CONTEXT.board.id
+            break
+          case 'exiteast':
+            createdboard.exitwest = READ_CONTEXT.board.id
+            break
+          case 'exitnorth':
+            createdboard.exitsouth = READ_CONTEXT.board.id
+            break
+          case 'exitsouth':
+            createdboard.exitnorth = READ_CONTEXT.board.id
+            break
+          default:
+            break
+        }
+      }
+    }
+
+    // update stat with created board id
+    chip.set(stat, createdboard.id)
     return 0
   })
   .command('goto', (_, words) => {

@@ -82,6 +82,7 @@ const os = createos()
 
 export enum MEMORY_LABEL {
   MAIN = 'main',
+  TEMP = 'temp',
   TITLE = 'title',
   PLAYER = 'player',
   GADGETSTORE = 'gadgetstore',
@@ -97,7 +98,7 @@ const MEMORY = {
   // active software
   software: {
     main: '',
-    content: '',
+    temp: '',
   },
   books: new Map<string, BOOK>(),
   // running loaders
