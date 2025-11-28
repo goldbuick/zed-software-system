@@ -2,6 +2,7 @@ import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import {
   memoryboardinit,
+  memoryboardread,
   memoryelementcheckpushable,
   memoryelementstatread,
   memorymoveobject,
@@ -16,9 +17,7 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import { boardreadgroup } from 'zss/memory/boardops'
-import { bookreadcodepagewithtype } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
@@ -41,14 +40,8 @@ export function boardweave(
   if (!ispresent(READ_CONTEXT.book)) {
     return
   }
-  const book = READ_CONTEXT.book
 
-  const targetcodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  const targetboard = memoryboardread(target)
   if (!ispresent(targetboard)) {
     return
   }
@@ -117,12 +110,7 @@ export function boardweavegroup(
     return
   }
   const book = READ_CONTEXT.book
-  const targetcodepage = bookreadcodepagewithtype(
-    book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  const targetboard = memoryboardread(target)
   if (!ispresent(targetboard)) {
     return
   }
