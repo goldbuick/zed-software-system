@@ -638,6 +638,7 @@ export type Dir_modCstChildren = {
   token_ground?: IToken[]
   dir_within?: Dir_withinCstNode[]
   dir_awayby?: Dir_awaybyCstNode[]
+  token_elements?: IToken[]
 }
 
 export type Dir_byCstNode = {

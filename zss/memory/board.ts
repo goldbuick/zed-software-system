@@ -698,6 +698,29 @@ export function boardevaldir(
 
         return modeval
       }
+      case DIR.ELEMENTS: {
+        const modeval = boardevaldir(
+          board,
+          element,
+          player,
+          dir.slice(i + 1),
+          startpt,
+        )
+        // reset to startpt
+        pt.x = startpt.x
+        pt.y = startpt.y
+        modeval.targets = []
+        // get walking direction
+        const inline = dirfrompts(modeval.startpt, modeval.destpt)
+        for (let ii = 0; ii < BOARD_HEIGHT; ++ii) {
+          ptapplydir(pt, inline)
+          if (!ptwithinboard(pt)) {
+            break
+          }
+          modeval.targets.push({ x: pt.x, y: pt.y })
+        }
+        break
+      }
     }
   }
 

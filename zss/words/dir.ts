@@ -97,6 +97,7 @@ export const dirconsts = {
   // distance specifiers
   within: 'WITHIN',
   awayby: 'AWAYBY',
+  elements: 'ELEMENTS',
 } as const
 
 export type STR_DIR_TYPE = typeof dirconsts
@@ -242,6 +243,7 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'UNDER':
       case 'WITHIN':
       case 'AWAYBY':
+      case 'ELEMENTS':
         break
       default:
         return [strdir, ii]

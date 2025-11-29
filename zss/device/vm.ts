@@ -236,6 +236,7 @@ const vm = createdevice(
           'ground',
           'within',
           'awayby',
+          'elements',
         ]
         vm.replynext(message, `ackzsswords`, {
           cli: firmwarelistcommands(DRIVER_TYPE.CLI),
