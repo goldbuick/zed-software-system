@@ -12,7 +12,7 @@ export async function itchiopublish(filename: string, exportedbooks: string) {
       <title>...adding bytes</title>
       </head>
       <body>
-      <script>top.location = 'https://zed.cafe/#${exportedbooks}';</script>
+      <script>location = 'https://zed.cafe/#${exportedbooks}';</script>
       </body>
     </html>`,
   )
