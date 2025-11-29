@@ -99,9 +99,10 @@ export enum DIR {
   OVER,
   UNDER,
   GROUND, // this is like weave's UNDER
-  // distance specifiers
+  // multi-target specifiers
   WITHIN,
   AWAYBY,
+  ELEMENTS,
 }
 
 export enum STAT_TYPE {

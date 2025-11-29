@@ -220,7 +220,7 @@ export function readexpr(index: number): [any, number] {
                 'at',
                 target.x,
                 target.y,
-                maybecolor,
+                ...(isarray(maybecolor) ? maybecolor : []),
                 maybename,
               ].filter((v) => v !== undefined)
               const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
@@ -309,7 +309,7 @@ export function readexpr(index: number): [any, number] {
                 'at',
                 target.x,
                 target.y,
-                maybecolor,
+                ...(isarray(maybecolor) ? maybecolor : []),
                 maybename,
               ].filter((v) => v !== undefined)
               const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
