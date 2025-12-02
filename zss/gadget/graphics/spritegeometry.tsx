@@ -6,7 +6,7 @@ import {
 } from 'three'
 import { CHARS_PER_ROW, SPRITE } from 'zss/gadget/data/types'
 import { time } from 'zss/gadget/display/anim'
-import { ispresent } from 'zss/mapping/types'
+import { useSpritePool } from 'zss/gadget/display/spritepool'
 
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
@@ -18,63 +18,11 @@ const SPRITE_COUNT = 2048
 
 export function SpriteGeometry({ sprites }: SpritesProps) {
   const bgRef = useRef<BufferGeometry>(null)
-  const spritepool = useRef<SPRITE[]>([])
-
-  useMemo(() => {
-    // setup sprite pool
-    if (spritepool.current.length === 0) {
-      spritepool.current = Array.from({ length: SPRITE_COUNT }, () => ({
-        id: '',
-        x: 0,
-        y: 0,
-        char: 0,
-        color: 0,
-        bg: 0,
-        stat: 0,
-      }))
-    }
-
-    // build lookups
-    const spritesbyid: Record<string, SPRITE> = {}
-    for (let i = 0; i < sprites.length; ++i) {
-      spritesbyid[sprites[i].id] = sprites[i]
-    }
-    const activeids = new Set(spritepool.current.map((s) => s.id))
-
-    // update sprite pool
-    let cursor = 0
-    for (let i = 0; i < SPRITE_COUNT; ++i) {
-      if (spritepool.current[i].id) {
-        // validate id is still in use
-        const activesprite = spritesbyid[spritepool.current[i].id]
-        if (ispresent(activesprite)) {
-          // update sprite
-          spritepool.current[i] = {
-            ...activesprite,
-          }
-        } else {
-          // clear sprite
-          spritepool.current[i].id = ''
-        }
-      } else if (cursor < sprites.length) {
-        // scan for sprites that need slotted
-        while (activeids.has(sprites[cursor]?.id) === true) {
-          ++cursor
-        }
-        // slot sprite
-        if (cursor < sprites.length) {
-          spritepool.current[i] = {
-            ...sprites[cursor++],
-          }
-        }
-      }
-    }
-  }, [sprites])
+  const [spritepool] = useSpritePool(sprites, SPRITE_COUNT)
 
   useEffect(() => {
     const { current } = bgRef
-    const { current: sprites } = spritepool
-    if (!current || !sprites) {
+    if (!current) {
       return
     }
 
@@ -183,9 +131,6 @@ export function SpriteGeometry({ sprites }: SpritesProps) {
           charData.needsUpdate = true
         }
 
-        // todo, detect ??
-        // animBounce & animShake triggers
-
         const ncharu = sprite.char % CHARS_PER_ROW
         const ncharv = Math.floor(sprite.char / CHARS_PER_ROW)
         if (ccharu !== ncharu || ccharv !== ncharv) {
@@ -194,10 +139,9 @@ export function SpriteGeometry({ sprites }: SpritesProps) {
         }
       }
     }
-
     current.computeBoundingBox()
     current.computeBoundingSphere()
-  }, [sprites])
+  }, [sprites, spritepool])
 
   return <bufferGeometry ref={bgRef} />
 }

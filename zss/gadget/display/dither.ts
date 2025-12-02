@@ -92,19 +92,20 @@ const blockditherMaterial = new ShaderMaterial({
     time,
     smoothrate: new Uniform(TICK_FPS),
     color: { value: new Color(0, 0, 0) },
-    data: { value: null },
+    alpha: { value: 1 },
   },
   // vertex shader
   vertexShader: `
       precision highp float;
+      attribute float visible;
       attribute vec3 nowposition;
       attribute mat4 lastmatrix;
       
       uniform float smoothrate;
       uniform float time;
-
-      varying vec2 vUv;
-
+   
+      varying float vVisible;
+   
       void main() {       
         vec4 mvPosition = vec4(position, 1.0);
         
@@ -117,15 +118,15 @@ const blockditherMaterial = new ShaderMaterial({
         mvPosition = modelViewMatrix * mvPosition;
         gl_Position = projectionMatrix * mvPosition;
         
-        vUv = uv;
+        vVisible = visible;
       }
     `,
   // fragment shader
   fragmentShader: `
       uniform vec3 color;
-      uniform sampler2D data;
+      uniform float alpha;
   
-      varying vec2 vUv;
+      varying float vVisible;
 
       // adapted from https://www.shadertoy.com/view/Mlt3z8
       float bayerDither2x2( vec2 v ) {
@@ -139,7 +140,9 @@ const blockditherMaterial = new ShaderMaterial({
       }
 
       void main() {
-        float alpha = texture2D(data, vUv).r;
+        if (vVisible < 1.0) {
+          discard;
+        }
         if (alpha < 1.0) {
           vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
           if ( bayerDither4x4( ditherCoord ) / 16.0 >= alpha ) {

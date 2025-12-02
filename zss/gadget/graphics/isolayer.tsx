@@ -1,21 +1,18 @@
-import { Instance, Instances } from '@react-three/drei'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
-import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
-import { COLLISION, COLOR } from 'zss/words/types'
+import { BOARD_SIZE } from 'zss/memory/types'
+import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
-  BlockMesh,
-  BlockShadowMeshes,
   filterlayer2floor,
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
 import { Dither } from './dither'
+import { BlockShadowMeshes } from './shadow'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
@@ -137,20 +134,6 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          {/* <Instances ref={meshes} limit={BOARD_SIZE}>
-            <ShadowMesh />
-            {layer.sprites.map((sprite, idx) => (
-              <Instance
-                key={idx}
-                scale={[1, rr, 1]}
-                position={[
-                  sprite.x * drawwidth,
-                  (sprite.y + 0.25) * drawheight,
-                  drawheight * -0.75 + 0.5,
-                ]}
-              />
-            ))}
-          </Instances> */}
           <BlockShadowMeshes sprites={othersprites} limit={BOARD_SIZE} />
           <Sprites
             sprites={[...othersprites]}
