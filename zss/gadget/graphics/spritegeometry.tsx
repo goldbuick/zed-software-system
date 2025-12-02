@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   BufferAttribute,
   BufferGeometry,
@@ -7,6 +7,7 @@ import {
 import { CHARS_PER_ROW, SPRITE } from 'zss/gadget/data/types'
 import { time } from 'zss/gadget/display/anim'
 import { useSpritePool } from 'zss/gadget/display/spritepool'
+import { ispresent } from 'zss/mapping/types'
 
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
@@ -17,25 +18,24 @@ type SpritesProps = {
 const SPRITE_COUNT = 2048
 
 export function SpriteGeometry({ sprites }: SpritesProps) {
-  const bgRef = useRef<BufferGeometry>(null)
+  const [bg, setbg] = useState<BufferGeometry>()
   const [spritepool] = useSpritePool(sprites, SPRITE_COUNT)
 
   useEffect(() => {
-    const { current } = bgRef
-    if (!current) {
+    if (!ispresent(bg)) {
       return
     }
 
     // get data
-    let visible: MaybeBufferAttr = current.getAttribute('visible')
-    let lastVisible: MaybeBufferAttr = current.getAttribute('lastVisible')
-    let position: MaybeBufferAttr = current.getAttribute('position')
-    let charData: MaybeBufferAttr = current.getAttribute('charData')
-    let lastPosition: MaybeBufferAttr = current.getAttribute('lastPosition')
-    let lastColor: MaybeBufferAttr = current.getAttribute('lastColor')
-    let lastBg: MaybeBufferAttr = current.getAttribute('lastBg')
-    let animShake: MaybeBufferAttr = current.getAttribute('animShake')
-    let animBounce: MaybeBufferAttr = current.getAttribute('animBounce')
+    let visible: MaybeBufferAttr = bg.getAttribute('visible')
+    let lastVisible: MaybeBufferAttr = bg.getAttribute('lastVisible')
+    let position: MaybeBufferAttr = bg.getAttribute('position')
+    let charData: MaybeBufferAttr = bg.getAttribute('charData')
+    let lastPosition: MaybeBufferAttr = bg.getAttribute('lastPosition')
+    let lastColor: MaybeBufferAttr = bg.getAttribute('lastColor')
+    let lastBg: MaybeBufferAttr = bg.getAttribute('lastBg')
+    let animShake: MaybeBufferAttr = bg.getAttribute('animShake')
+    let animBounce: MaybeBufferAttr = bg.getAttribute('animBounce')
 
     // create
     if (!visible || visible.count !== sprites.length) {
@@ -73,15 +73,15 @@ export function SpriteGeometry({ sprites }: SpritesProps) {
         animBounce.setXY(i, 0, time.value - 1000000)
       }
 
-      current.setAttribute('visible', visible)
-      current.setAttribute('lastVisible', lastVisible)
-      current.setAttribute('position', position)
-      current.setAttribute('charData', charData)
-      current.setAttribute('lastPosition', lastPosition)
-      current.setAttribute('lastColor', lastColor)
-      current.setAttribute('lastBg', lastBg)
-      current.setAttribute('animShake', animShake)
-      current.setAttribute('animBounce', animBounce)
+      bg.setAttribute('visible', visible)
+      bg.setAttribute('lastVisible', lastVisible)
+      bg.setAttribute('position', position)
+      bg.setAttribute('charData', charData)
+      bg.setAttribute('lastPosition', lastPosition)
+      bg.setAttribute('lastColor', lastColor)
+      bg.setAttribute('lastBg', lastBg)
+      bg.setAttribute('animShake', animShake)
+      bg.setAttribute('animBounce', animBounce)
     } else {
       // update data
       for (let i = 0; i < sprites.length; ++i) {
@@ -139,9 +139,9 @@ export function SpriteGeometry({ sprites }: SpritesProps) {
         }
       }
     }
-    current.computeBoundingBox()
-    current.computeBoundingSphere()
-  }, [sprites, spritepool])
+    bg.computeBoundingBox()
+    bg.computeBoundingSphere()
+  }, [bg, sprites, spritepool])
 
-  return <bufferGeometry ref={bgRef} />
+  return <bufferGeometry ref={setbg} />
 }

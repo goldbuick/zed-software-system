@@ -3,7 +3,6 @@ import {
   DynamicDrawUsage,
   InstancedBufferAttribute,
   InstancedMesh,
-  Matrix4,
   Object3D,
 } from 'three'
 import { RUNTIME } from 'zss/config'
@@ -21,7 +20,6 @@ type BlockShadowMeshesProps = {
 }
 
 const dummy = new Object3D()
-const dummymat = new Matrix4()
 
 export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
   const [meshes, setMeshes] = useState<InstancedMesh>()
@@ -70,12 +68,27 @@ export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
         const nowy = (sprite.y + 0.25) * drawheight
 
         // animate movement
-        if (nowposition.getX(i) !== nowx || nowposition.getY(i) !== nowy) {
+        const firstframe = visible.getX(i) === 0
+        if (firstframe) {
+          dummy.scale.set(1, rr, 1)
+          dummy.position.set(nowx, nowy, drawheight * -0.75 + 0.5)
+          dummy.updateMatrix()
+          meshes.setMatrixAt(i, dummy.matrix)
+
+          lastmatrix.set(dummy.matrix.toArray(), i * 16)
+          lastmatrix.needsUpdate = true
+
+          nowposition.setXYZ(i, nowx, nowy, time.value)
+          nowposition.needsUpdate = true
+
           visible.setX(i, 1)
           visible.needsUpdate = true
-
-          meshes.getMatrixAt(i, dummymat)
-          lastmatrix.set(dummymat.toArray(), i * 16)
+        } else if (
+          nowposition.getX(i) !== nowx ||
+          nowposition.getY(i) !== nowy
+        ) {
+          meshes.getMatrixAt(i, dummy.matrix)
+          lastmatrix.set(dummy.matrix.toArray(), i * 16)
           lastmatrix.needsUpdate = true
 
           nowposition.setXYZ(i, nowx, nowy, time.value)
@@ -84,10 +97,12 @@ export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
           dummy.scale.set(1, rr, 1)
           dummy.position.set(nowx, nowy, drawheight * -0.75 + 0.5)
           dummy.updateMatrix()
-
           meshes.setMatrixAt(i, dummy.matrix)
         }
       } else {
+        meshes.getMatrixAt(i, dummy.matrix)
+        lastmatrix.set(dummy.matrix.toArray(), i * 16)
+        lastmatrix.needsUpdate = true
         visible.setX(i, 0)
         visible.needsUpdate = true
       }
