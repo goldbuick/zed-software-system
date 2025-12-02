@@ -1,7 +1,4 @@
 import { Instance, Instances } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
@@ -13,7 +10,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import {
   BlockMesh,
-  ShadowMesh,
+  BlockShadowMeshes,
   filterlayer2floor,
   filterlayer2walls,
   filterlayer2water,
@@ -30,15 +27,6 @@ type GraphicsLayerProps = {
 }
 
 export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
-  const meshes = useRef<InstancedMesh>(null)
-
-  useFrame(() => {
-    if (ispresent(meshes.current)) {
-      meshes.current.computeBoundingBox()
-      meshes.current.computeBoundingSphere()
-    }
-  })
-
   const layer = useGadgetClient(
     useShallow((state) => {
       if (ispresent(from)) {
@@ -97,7 +85,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <Instances ref={meshes} limit={BOARD_SIZE}>
+            {/* <Instances ref={meshes} limit={BOARD_SIZE}>
               <BlockMesh />
               {layer.stats
                 .map((collision, idx) => {
@@ -119,7 +107,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                   return null
                 })
                 .filter((el) => el)}
-            </Instances>
+            </Instances> */}
             <group position-z={drawheight + 1}>
               <Tiles
                 width={layer.width}
@@ -149,7 +137,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes} limit={BOARD_SIZE}>
+          {/* <Instances ref={meshes} limit={BOARD_SIZE}>
             <ShadowMesh />
             {layer.sprites.map((sprite, idx) => (
               <Instance
@@ -162,7 +150,8 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 ]}
               />
             ))}
-          </Instances>
+          </Instances> */}
+          <BlockShadowMeshes sprites={othersprites} limit={BOARD_SIZE} />
           <Sprites
             sprites={[...othersprites]}
             scale={1.5}

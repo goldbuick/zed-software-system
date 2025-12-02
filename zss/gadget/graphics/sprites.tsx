@@ -19,7 +19,6 @@ type SpritesProps = {
 export function Sprites({
   sprites,
   scale = 1,
-  fliptexture = true,
   withbillboards = false,
 }: SpritesProps) {
   const { viewport } = useThree()
@@ -58,7 +57,7 @@ export function Sprites({
     material.uniforms.pixel.value.y = 1 / imageHeight
     material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
     material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
-    material.uniforms.flip.value = fliptexture
+    material.uniforms.flip.value = false
     material.needsUpdate = true
   }, [
     palette,
@@ -67,7 +66,6 @@ export function Sprites({
     material,
     imageWidth,
     imageHeight,
-    fliptexture,
     viewport.width,
     viewport.height,
     scale,
