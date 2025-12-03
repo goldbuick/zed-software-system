@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { InstancedBufferAttribute, InstancedMesh, Object3D } from 'three'
+import {
+  DynamicDrawUsage,
+  InstancedBufferAttribute,
+  InstancedMesh,
+  Object3D,
+} from 'three'
+import { ispresent } from 'zss/mapping/types'
 
-import { SPRITE } from '../data/types'
+import { CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
 import { createBlocksMaterial } from '../display/blocks'
+import { useSpritePool } from '../display/spritepool'
 import { createBillboardBufferGeometryAttributes } from '../display/tiles'
 import { useMedia } from '../hooks'
 
@@ -23,6 +30,7 @@ export function BillboardMeshes({
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
   const [material] = useState(() => createBlocksMaterial())
+  const [spritepool, range] = useSpritePool(sprites, limit)
 
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
@@ -40,33 +48,86 @@ export function BillboardMeshes({
     material.needsUpdate = true
   }, [palette, charset, altcharset, material, imageWidth, imageHeight])
 
-  const [meshes, setMeshes] = useState<InstancedMesh>()
-  const [visible, setvisible] = useState<InstancedBufferAttribute>()
-  const [nowposition, setnowposition] = useState<InstancedBufferAttribute>()
-  const [lastmatrix, setlastmatrix] = useState<InstancedBufferAttribute>()
-  const [material] = useState(() => createBlockDitherMaterial())
-  const [spritepool, range] = useSpritePool(sprites, limit)
-
-  // export function Mesh() {
-
   // create buffer geo attributes
   const { position, uv } = useMemo(
     () => createBillboardBufferGeometryAttributes(),
     [],
   )
 
-  //   return (
-  //     <>
-  //       <bufferGeometry>
-  //         <bufferAttribute attach="attributes-position" args={[position, 3]} />
-  //         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
-  //       </bufferGeometry>
-  //       <primitive object={material} attach="material" />
-  //     </>
-  //   )
+  const [meshes, setmeshes] = useState<InstancedMesh>()
+  const visiblearray = useMemo(() => new Uint8Array(limit), [limit])
+  const nowpositionarray = useMemo(() => new Float32Array(limit * 3), [limit])
+  const lastmatrixarray = useMemo(() => new Float32Array(limit * 16), [limit])
+  const displayarray = useMemo(() => new Float32Array(limit * 4), [limit])
+  const lastcolorarray = useMemo(() => new Float32Array(limit * 2), [limit])
+  const lastbgarray = useMemo(() => new Float32Array(limit * 2), [limit])
+
+  const [visible, setvisible] = useState<InstancedBufferAttribute>()
+  const [nowposition, setnowposition] = useState<InstancedBufferAttribute>()
+  const [lastmatrix, setlastmatrix] = useState<InstancedBufferAttribute>()
+  const [display, setdisplay] = useState<InstancedBufferAttribute>()
+  const [lastcolor, setlastcolor] = useState<InstancedBufferAttribute>()
+  const [lastbg, setlastbg] = useState<InstancedBufferAttribute>()
+
+  // process sprites
+  useEffect(() => {
+    if (
+      !ispresent(meshes) ||
+      !ispresent(visible) ||
+      !ispresent(nowposition) ||
+      !ispresent(lastmatrix) ||
+      !ispresent(display) ||
+      !ispresent(lastcolor) ||
+      !ispresent(lastbg)
+    ) {
+      return
+    }
+    // const rr = 8 / 14
+    for (let i = 0; i < spritepool.length; ++i) {
+      const sprite = spritepool[i]
+      if (sprite.id) {
+        // write current pos
+        const [nx, ny, nz] = children(sprite.x, sprite.y)
+        // animate movement
+        const firstframe = visible.getX(i) === 0
+        if (firstframe) {
+          // dummy.scale.set(1, rr, 1)
+          // dummy.position.set(nx, ny, nz)
+          // dummy.updateMatrix()
+          // meshes.setMatrixAt(i, dummy.matrix)
+
+          // lastmatrix.set(dummy.matrix.toArray(), i * 16)
+          // lastmatrix.needsUpdate = true
+
+          // nowposition.setXYZ(i, nx, ny, time.value)
+          // nowposition.needsUpdate = true
+
+          visible.setX(i, 1)
+          visible.needsUpdate = true
+        } else if (nowposition.getX(i) !== nx || nowposition.getY(i) !== ny) {
+          // meshes.getMatrixAt(i, dummy.matrix)
+          // lastmatrix.set(dummy.matrix.toArray(), i * 16)
+          // lastmatrix.needsUpdate = true
+          // nowposition.setXYZ(i, nx, ny, time.value)
+          // nowposition.needsUpdate = true
+          // dummy.scale.set(1, rr, 1)
+          // dummy.position.set(nx, ny, nz)
+          // dummy.updateMatrix()
+          // meshes.setMatrixAt(i, dummy.matrix)
+        }
+      } else if (visible.getX(i)) {
+        visible.setX(i, 0)
+        visible.needsUpdate = true
+      }
+    }
+    meshes.instanceMatrix.needsUpdate = true
+    meshes.computeBoundingBox()
+    meshes.computeBoundingSphere()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sprites, spritepool, range, meshes, visible, lastmatrix])
 
   return (
-    <instancedMesh ref={setMeshes} args={[null, null, limit]}>
+    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
@@ -90,6 +151,27 @@ export function BillboardMeshes({
           usage={DynamicDrawUsage}
           attach="attributes-lastmatrix"
           args={[lastmatrixarray, 16]}
+        />
+        <instancedBufferAttribute
+          ref={setdisplay}
+          name="display"
+          usage={DynamicDrawUsage}
+          attach="attributes-display"
+          args={[displayarray, 4]}
+        />
+        <instancedBufferAttribute
+          ref={setlastcolor}
+          name="lastcolor"
+          usage={DynamicDrawUsage}
+          attach="attributes-lastcolor"
+          args={[lastcolorarray, 2]}
+        />
+        <instancedBufferAttribute
+          ref={setlastbg}
+          name="lastbg"
+          usage={DynamicDrawUsage}
+          attach="attributes-lastbg"
+          args={[lastbgarray, 2]}
         />
       </bufferGeometry>
       <primitive object={material} attach="material" />

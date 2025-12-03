@@ -22,7 +22,7 @@ type ShadowMeshesProps = {
 const dummy = new Object3D()
 
 export function ShadowMeshes({ sprites, limit, children }: ShadowMeshesProps) {
-  const [meshes, setMeshes] = useState<InstancedMesh>()
+  const [meshes, setmeshes] = useState<InstancedMesh>()
   const [visible, setvisible] = useState<InstancedBufferAttribute>()
   const [nowposition, setnowposition] = useState<InstancedBufferAttribute>()
   const [lastmatrix, setlastmatrix] = useState<InstancedBufferAttribute>()
@@ -101,7 +101,7 @@ export function ShadowMeshes({ sprites, limit, children }: ShadowMeshesProps) {
   }, [sprites, spritepool, range, meshes, visible, nowposition, lastmatrix])
 
   return (
-    <instancedMesh ref={setMeshes} args={[null, null, limit]}>
+    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
