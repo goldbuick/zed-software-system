@@ -17,11 +17,12 @@ import { createTilemapBufferGeometryAttributes } from '../display/tiles'
 type ShadowMeshesProps = {
   sprites: SPRITE[]
   limit: number
+  children: (x: number, y: number) => [number, number, number]
 }
 
 const dummy = new Object3D()
 
-export function ShadowMeshes({ sprites, limit }: ShadowMeshesProps) {
+export function ShadowMeshes({ sprites, limit, children }: ShadowMeshesProps) {
   const [meshes, setMeshes] = useState<InstancedMesh>()
   const [visible, setvisible] = useState<InstancedBufferAttribute>()
   const [nowposition, setnowposition] = useState<InstancedBufferAttribute>()
@@ -55,45 +56,37 @@ export function ShadowMeshes({ sprites, limit }: ShadowMeshesProps) {
       return
     }
     const rr = 8 / 14
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-    meshes.count = range
-
     for (let i = 0; i < spritepool.length; ++i) {
       const sprite = spritepool[i]
       if (sprite.id) {
         // write current pos
-        const nowx = sprite.x * drawwidth
-        const nowy = (sprite.y + 0.25) * drawheight
+        const [nx, ny, nz] = children(sprite.x, sprite.y)
         // animate movement
         const firstframe = visible.getX(i) === 0
         if (firstframe) {
           dummy.scale.set(1, rr, 1)
-          dummy.position.set(nowx, nowy, drawheight * -0.75 + 0.5)
+          dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
 
           lastmatrix.set(dummy.matrix.toArray(), i * 16)
           lastmatrix.needsUpdate = true
 
-          nowposition.setXYZ(i, nowx, nowy, time.value)
+          nowposition.setXYZ(i, nx, ny, time.value)
           nowposition.needsUpdate = true
 
           visible.setX(i, 1)
           visible.needsUpdate = true
-        } else if (
-          nowposition.getX(i) !== nowx ||
-          nowposition.getY(i) !== nowy
-        ) {
+        } else if (nowposition.getX(i) !== nx || nowposition.getY(i) !== ny) {
           meshes.getMatrixAt(i, dummy.matrix)
           lastmatrix.set(dummy.matrix.toArray(), i * 16)
           lastmatrix.needsUpdate = true
 
-          nowposition.setXYZ(i, nowx, nowy, time.value)
+          nowposition.setXYZ(i, nx, ny, time.value)
           nowposition.needsUpdate = true
 
           dummy.scale.set(1, rr, 1)
-          dummy.position.set(nowx, nowy, drawheight * -0.75 + 0.5)
+          dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
         }

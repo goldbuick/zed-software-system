@@ -1,4 +1,3 @@
-import { Instance, Instances } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { InstancedMesh } from 'three'
@@ -12,12 +11,12 @@ import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
-  ShadowMesh,
   filterlayer2floor,
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
 import { Dither } from './dither'
+import { ShadowMeshes } from './shadow'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
@@ -29,15 +28,6 @@ type Mode7LayerProps = {
 }
 
 export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
-  const meshes = useRef<InstancedMesh>(null)
-
-  useFrame(() => {
-    if (ispresent(meshes.current)) {
-      meshes.current.computeBoundingBox()
-      meshes.current.computeBoundingSphere()
-    }
-  })
-
   const layer = useGadgetClient(
     useShallow((state) => {
       if (ispresent(from)) {
@@ -109,7 +99,6 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
-      const rr = 8 / 14
       const hideplayer = ispresent(layers)
       const othersprites = layer.sprites.filter(
         (sprite) =>
@@ -124,20 +113,13 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes} limit={BOARD_SIZE}>
-            <ShadowMesh />
-            {layer.sprites.map((sprite, idx) => (
-              <Instance
-                key={idx}
-                scale={[1, rr, 1]}
-                position={[
-                  sprite.x * drawwidth,
-                  (sprite.y + 0.5) * drawheight,
-                  drawheight * -0.5 + 0.5,
-                ]}
-              />
-            ))}
-          </Instances>
+          <ShadowMeshes sprites={othersprites} limit={BOARD_SIZE}>
+            {(ix, iy) => [
+              ix * drawwidth,
+              (iy + 0.5) * drawheight,
+              drawheight * -0.5 + 0.5,
+            ]}
+          </ShadowMeshes>
           <Sprites sprites={[...othersprites]} withbillboards={true} />
           <group position-z={drawheight * -0.5}>
             <Sprites sprites={[...watersprites]} withbillboards={true} />
@@ -166,7 +148,6 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
         border[pttoindex({ x: 0, y: 1 + y }, BOARD_WIDTH + 2)] = y1
         border[pttoindex({ x: BOARD_WIDTH, y: 1 + y }, BOARD_WIDTH + 2)] = y2
       }
-      // border[0] =
       const gap = RUNTIME.DRAW_CHAR_HEIGHT()
       return (
         <>
