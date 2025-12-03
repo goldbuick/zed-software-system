@@ -8,8 +8,10 @@ import {
   CHAR_WIDTH,
   SPRITE,
 } from 'zss/gadget/data/types'
-import { createBillboardsMaterial } from 'zss/gadget/display/billboards'
-import { createSpritesMaterial } from 'zss/gadget/display/sprites'
+import {
+  createBillboardsMaterial,
+  createSpritesMaterial,
+} from 'zss/gadget/display/sprites'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 

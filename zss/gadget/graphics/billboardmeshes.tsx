@@ -7,8 +7,9 @@ import {
 } from 'three'
 import { ispresent } from 'zss/mapping/types'
 
-import { CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
-import { createBlocksMaterial } from '../display/blocks'
+import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
+import { time } from '../display/anim'
+import { createBlocksBillboardMaterial } from '../display/billboards'
 import { useSpritePool } from '../display/spritepool'
 import { createBillboardBufferGeometryAttributes } from '../display/tiles'
 import { useMedia } from '../hooks'
@@ -29,7 +30,7 @@ export function BillboardMeshes({
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
-  const [material] = useState(() => createBlocksMaterial())
+  const [material] = useState(() => createBlocksBillboardMaterial())
   const [spritepool, range] = useSpritePool(sprites, limit)
 
   const { width: imageWidth = 0, height: imageHeight = 0 } =
@@ -82,7 +83,6 @@ export function BillboardMeshes({
     ) {
       return
     }
-    // const rr = 8 / 14
     for (let i = 0; i < spritepool.length; ++i) {
       const sprite = spritepool[i]
       if (sprite.id) {
@@ -91,29 +91,58 @@ export function BillboardMeshes({
         // animate movement
         const firstframe = visible.getX(i) === 0
         if (firstframe) {
-          // dummy.scale.set(1, rr, 1)
-          // dummy.position.set(nx, ny, nz)
-          // dummy.updateMatrix()
-          // meshes.setMatrixAt(i, dummy.matrix)
-
-          // lastmatrix.set(dummy.matrix.toArray(), i * 16)
-          // lastmatrix.needsUpdate = true
-
-          // nowposition.setXYZ(i, nx, ny, time.value)
-          // nowposition.needsUpdate = true
-
+          dummy.position.set(nx, ny, nz)
+          dummy.updateMatrix()
+          meshes.setMatrixAt(i, dummy.matrix)
+          lastmatrix.set(dummy.matrix.toArray(), i * 16)
+          nowposition.setXYZ(i, nx, ny, time.value)
+          display.setXYZW(
+            i,
+            sprite.char % CHARS_PER_ROW,
+            Math.floor(sprite.char / CHARS_PER_ROW),
+            sprite.color,
+            sprite.bg,
+          )
+          lastcolor.setXY(i, sprite.color, time.value)
+          lastbg.setXY(i, sprite.bg, time.value)
           visible.setX(i, 1)
           visible.needsUpdate = true
-        } else if (nowposition.getX(i) !== nx || nowposition.getY(i) !== ny) {
-          // meshes.getMatrixAt(i, dummy.matrix)
-          // lastmatrix.set(dummy.matrix.toArray(), i * 16)
-          // lastmatrix.needsUpdate = true
-          // nowposition.setXYZ(i, nx, ny, time.value)
-          // nowposition.needsUpdate = true
-          // dummy.scale.set(1, rr, 1)
-          // dummy.position.set(nx, ny, nz)
-          // dummy.updateMatrix()
-          // meshes.setMatrixAt(i, dummy.matrix)
+          lastmatrix.needsUpdate = true
+          display.needsUpdate = true
+          lastcolor.needsUpdate = true
+          lastbg.needsUpdate = true
+        } else {
+          if (nowposition.getX(i) !== nx || nowposition.getY(i) !== ny) {
+            meshes.getMatrixAt(i, dummy.matrix)
+
+            lastmatrix.set(dummy.matrix.toArray(), i * 16)
+            lastmatrix.needsUpdate = true
+
+            nowposition.setXYZ(i, nx, ny, time.value)
+            nowposition.needsUpdate = true
+
+            dummy.position.set(nx, ny, nz)
+            dummy.updateMatrix()
+            meshes.setMatrixAt(i, dummy.matrix)
+          }
+          const ncharu = sprite.char % CHARS_PER_ROW
+          const ncharv = Math.floor(sprite.char / CHARS_PER_ROW)
+          if (display.getX(i) !== ncharu || display.getY(i) !== ncharv) {
+            display.setXY(i, ncharu, ncharv)
+            display.needsUpdate = true
+          }
+          if (display.getZ(i) !== sprite.color) {
+            lastcolor.setXY(i, display.getZ(i), time.value)
+            display.setZ(i, sprite.color)
+            lastcolor.needsUpdate = true
+            display.needsUpdate = true
+          }
+          if (display.getW(i) !== sprite.bg) {
+            lastbg.setXY(i, display.getW(i), time.value)
+            display.setW(i, sprite.bg)
+            lastbg.needsUpdate = true
+            display.needsUpdate = true
+          }
         }
       } else if (visible.getX(i)) {
         visible.setX(i, 0)

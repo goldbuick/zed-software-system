@@ -20,7 +20,7 @@ import {
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
-import { PillarwMeshes } from './pillar'
+import { PillarwMeshes } from './pillarmeshes'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {

@@ -3,7 +3,7 @@ import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Dither } from './dither'
-import { Sprites } from './sprites'
+import { Sprites } from './spritemeshes'
 import { Tiles } from './tiles'
 
 type FlatLayerProps = {

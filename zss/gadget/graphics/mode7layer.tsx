@@ -16,8 +16,8 @@ import {
   filterlayer2water,
 } from './blocks'
 import { Dither } from './dither'
-import { ShadowMeshes } from './shadow'
-import { Sprites } from './sprites'
+import { ShadowMeshes } from './shadowmeshes'
+import { Sprites } from './spritemeshes'
 import { Tiles } from './tiles'
 
 type Mode7LayerProps = {

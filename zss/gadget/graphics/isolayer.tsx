@@ -12,9 +12,9 @@ import {
   filterlayer2water,
 } from './blocks'
 import { Dither } from './dither'
-import { PillarwMeshes } from './pillar'
-import { ShadowMeshes } from './shadow'
-import { Sprites } from './sprites'
+import { PillarwMeshes } from './pillarmeshes'
+import { ShadowMeshes } from './shadowmeshes'
+import { Sprites } from './spritemeshes'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
