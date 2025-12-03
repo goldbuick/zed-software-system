@@ -2,6 +2,7 @@ import { Color, DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
+import { TICK_FPS } from 'zss/mapping/tick'
 import { COLOR } from 'zss/words/types'
 
 import { convertpalettetocolors } from '../data/palette'
@@ -130,6 +131,7 @@ const blocksBillboardMaterial = new ShaderMaterial({
   uniforms: {
     time,
     interval,
+    smoothrate: new Uniform(TICK_FPS),
     palette: new Uniform(palette),
     map: new Uniform(charset),
     alt: new Uniform(charset),
@@ -139,23 +141,104 @@ const blocksBillboardMaterial = new ShaderMaterial({
   // vertex shader
   vertexShader: `
     precision highp float;
+    attribute float visible;
+    attribute vec3 nowposition;
+    attribute mat4 lastmatrix;
+    attribute vec4 display;
+    attribute vec2 lastcolor;
+    attribute vec2 lastbg;
+
+    uniform float smoothrate;
     uniform float time;
     uniform float interval;
+    uniform vec3 palette[16];
 
-    varying vec2 vUv;
+    varying float vVisible;
+    varying vec2 vDisplay;
     varying vec3 vColor;
+    varying vec4 vBg;
+    varying vec2 vUv;
 
-    void main() {
-      vUv = uv;
-    
-      vec4 mvPosition = vec4(position, 1.0);
-      #ifdef USE_INSTANCING
-        vColor.xyz = instanceColor.xyz;
-        mvPosition = instanceMatrix * mvPosition;
-      #endif        
+    ${noiseutilshader}
+
+    vec4 bgFromIndex(float index) {
+      vec4 bg;
+      if (int(round(index)) >= 16) {
+        return vec4(0.0, 0.0, 0.0, 0.0);
+      }
+      bg.rgb = palette[int(round(index))];
+      bg.a = 1.0;
+      return bg;
+    }
+
+    float animDelta(float startTime, float deltaMod, float maxDelta) {
+      float delta = time - startTime;
+      if (delta < 0.0) {
+        return maxDelta;
+      }
+      return clamp(delta * deltaMod, 0.0, maxDelta);
+    }
+
+    float exponentialInOut(float t) {
+      return t == 0.0 || t == 1.0
+        ? t
+        : t < 0.5
+          ? +0.5 * pow(2.0, (20.0 * t) - 10.0)
+          : -0.5 * pow(2.0, 10.0 - (t * 20.0)) + 1.0;
+    }
+
+    float cyclefromtime() {
+      float flux = snoise(vDisplay.xy * 5.0) * 0.05;
+      float cycle = mod(time * 2.5 + flux, interval * 2.0) / interval;
+      return exponentialInOut(abs(cycle - 1.0));
+    }
       
+    void main() {
+      vec4 mvPosition = vec4(position, 1.0);
+      
+      vec4 mvNowPosition = instanceMatrix * mvPosition;
+      vec4 mvLastPosition = lastmatrix * mvPosition;
+
+      float deltaPosition = clamp((time - nowposition.z) * smoothrate, 0.0, 1.0);
+      mvPosition = mix(mvLastPosition, mvNowPosition, deltaPosition);
+
       mvPosition = modelViewMatrix * mvPosition;
       gl_Position = projectionMatrix * mvPosition;
+
+      vUv = uv;
+    
+      float deltaColor = animDelta(lastcolor.y, smoothrate, 1.0);
+      int sourceColori = int(round(lastcolor.x));
+      int destColori = int(round(display.z));
+
+      vec3 sourceColor;
+      if (sourceColori > 32) {
+        sourceColor = palette[sourceColori - 33];
+      } else {
+        sourceColor = palette[sourceColori % 16];
+      }
+
+      vec3 destColor;
+      if (destColori > 32) {
+        destColor = palette[destColori - 33];
+      } else {
+        destColor = palette[destColori % 16];
+      }
+
+      vColor = mix(sourceColor, destColor, deltaColor);
+
+      float deltaBg = animDelta(lastbg.y, smoothrate, 1.0);
+      vec4 sourceBg = bgFromIndex(lastbg.x);
+      vec4 destBg = bgFromIndex(display.w);
+      vBg = mix(sourceBg, destBg, deltaBg);
+
+      if (destColori > 31) {
+        vColor = mix(vBg.rgb, vColor, cyclefromtime());
+      }
+
+      vDisplay.xy = display.xy;
+
+      vVisible = visible;
     }
   `,
   // fragment shader
@@ -169,61 +252,32 @@ const blocksBillboardMaterial = new ShaderMaterial({
     uniform vec2 step;
     uniform float cols;
 
-    varying vec2 vUv;
+    varying float vVisible;
+    varying vec2 vDisplay;
     varying vec3 vColor;
-
-    ${noiseutilshader}
-
-    float exponentialInOut(float t) {
-      return t == 0.0 || t == 1.0
-        ? t
-        : t < 0.5
-          ? +0.5 * pow(2.0, (20.0 * t) - 10.0)
-          : -0.5 * pow(2.0, 10.0 - (t * 20.0)) + 1.0;
-    }
-
-    float cyclefromtime() {
-      float flux = snoise(gl_FragCoord.xy * 5.0) * 0.05;
-      float cycle = mod(time * 2.5 + flux, interval * 2.0) / interval;
-      return exponentialInOut(abs(cycle - 1.0));
-    }
+    varying vec4 vBg;
+    varying vec2 vUv;
       
     void main() {
-      // r = char, g = color, b = bg
-      int tc = int(round(cols));
-      int ti = int(round(vColor.r));
-      float tx = float(ti % tc);
-      float ty = floor(float(ti) / cols);
-
-      int colori = int(round(vColor.g));
-      int bgi = int(round(vColor.b));
-
-      vec3 color;
-      if (colori > 31) {
-        vec3 bg = palette[bgi];
-        color = palette[colori - 33];
-        float cycle = mod(time * 2.5, interval * 2.0) / interval;
-        color = mix(bg, color, cyclefromtime());
-      } else {
-        color = palette[colori % 16];
+      if (vVisible < 1.0) {
+        discard;
       }
 
-      vec3 bg = palette[bgi];
-
-      vec2 uv = vUv * step + vec2(tx * step.x, ty * step.y);
+      vec2 uv = vUv * step + vec2(vDisplay.x * step.x, vDisplay.y * step.y);
       uv.y = 1.0 - uv.y;
 
       bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
+      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (bgi >= ${COLOR.ONCLEAR}) {
+        if (vBg.a < 0.001) {
           discard;
+        } else {
+          gl_FragColor = vBg;
         }
-        color = palette[bgi];
+      } else {
+        gl_FragColor.rgb = vColor;
       }
-
-      gl_FragColor.rgb = color;
       gl_FragColor.a = 1.0;
     }
   `,

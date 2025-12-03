@@ -57,10 +57,6 @@ const spritesMaterial = new ShaderMaterial({
 
     ${noiseutilshader}
 
-    float rand(float co) {
-      return fract(sin(co*(91.3458)) * 47453.5453);
-    }
-
     vec4 bgFromIndex(float index) {
       vec4 bg;
       if (int(index) >= 16) {
@@ -250,10 +246,6 @@ const billboardsMaterial = new ShaderMaterial({
     ${noiseutilshader}
 
     float PI = radians(180.0);
-
-    float rand(float co) {
-      return fract(sin(co*(91.3458)) * 47453.5453);
-    }
 
     vec3 colorFromIndex(float index) {
       return palette[int(index)];

@@ -6,6 +6,7 @@ import {
   Object3D,
 } from 'three'
 import { ispresent } from 'zss/mapping/types'
+import { BOARD_SIZE } from 'zss/memory/types'
 
 import { SPRITE } from '../data/types'
 import { time } from '../display/anim'
@@ -15,13 +16,17 @@ import { createTilemapBufferGeometryAttributes } from '../display/tiles'
 
 type ShadowMeshesProps = {
   sprites: SPRITE[]
-  limit: number
+  limit?: number
   children: (x: number, y: number) => [number, number, number]
 }
 
 const dummy = new Object3D()
 
-export function ShadowMeshes({ sprites, limit, children }: ShadowMeshesProps) {
+export function ShadowMeshes({
+  sprites,
+  children,
+  limit = BOARD_SIZE,
+}: ShadowMeshesProps) {
   const [meshes, setmeshes] = useState<InstancedMesh>()
   const [visible, setvisible] = useState<InstancedBufferAttribute>()
   const [nowposition, setnowposition] = useState<InstancedBufferAttribute>()

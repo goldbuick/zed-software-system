@@ -6,17 +6,18 @@ import {
   Object3D,
 } from 'three'
 import { ispresent } from 'zss/mapping/types'
+import { BOARD_SIZE } from 'zss/memory/types'
 
 import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
 import { time } from '../display/anim'
-import { createBlocksBillboardMaterial } from '../display/billboards'
+import { createBlocksBillboardMaterial } from '../display/blocks'
 import { useSpritePool } from '../display/spritepool'
 import { createBillboardBufferGeometryAttributes } from '../display/tiles'
 import { useMedia } from '../hooks'
 
 type BillboardMeshesProps = {
   sprites: SPRITE[]
-  limit: number
+  limit?: number
   children: (x: number, y: number) => [number, number, number]
 }
 
@@ -24,8 +25,8 @@ const dummy = new Object3D()
 
 export function BillboardMeshes({
   sprites,
-  limit,
   children,
+  limit = BOARD_SIZE,
 }: BillboardMeshesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
