@@ -20,7 +20,6 @@ import { useMedia } from '../hooks'
 type SpritesProps = {
   sprites: SPRITE[]
   scale?: number
-  fliptexture?: boolean
   withbillboards?: boolean
 }
 
@@ -169,8 +168,8 @@ export function Sprites({
         visible.needsUpdate = true
       }
     }
-    // buffer.computeBoundingBox()
-    // buffer.computeBoundingSphere()
+    buffer.computeBoundingBox()
+    buffer.computeBoundingSphere()
   }, [
     buffer,
     sprites,

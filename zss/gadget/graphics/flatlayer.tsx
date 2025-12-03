@@ -40,7 +40,7 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Sprites sprites={[...layer.sprites]} fliptexture={false} />
+          <Sprites sprites={[...layer.sprites]} />
         </group>
       )
     }

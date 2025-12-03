@@ -138,17 +138,9 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
               />
             ))}
           </Instances>
-          <Sprites
-            sprites={[...othersprites]}
-            withbillboards={true}
-            fliptexture={false}
-          />
+          <Sprites sprites={[...othersprites]} withbillboards={true} />
           <group position-z={drawheight * -0.5}>
-            <Sprites
-              sprites={[...watersprites]}
-              withbillboards={true}
-              fliptexture={false}
-            />
+            <Sprites sprites={[...watersprites]} withbillboards={true} />
           </group>
         </group>
       )

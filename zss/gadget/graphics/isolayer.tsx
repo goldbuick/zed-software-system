@@ -135,17 +135,9 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <BlockShadowMeshes sprites={othersprites} limit={BOARD_SIZE} />
-          <Sprites
-            sprites={[...othersprites]}
-            scale={1.5}
-            fliptexture={false}
-          />
+          <Sprites sprites={[...othersprites]} scale={1.5} />
           <group position-z={drawheight * -0.5}>
-            <Sprites
-              sprites={[...watersprites]}
-              scale={1.5}
-              fliptexture={false}
-            />
+            <Sprites sprites={[...watersprites]} scale={1.5} />
           </group>
         </group>
       )
