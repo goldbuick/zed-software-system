@@ -15,7 +15,6 @@ import { useShallow } from 'zustand/react/shallow'
 import {
   BillboardMesh,
   DarknessMesh,
-  PillarMesh,
   ShadowMesh,
   filterlayer2floor,
   filterlayer2walls,
@@ -126,29 +125,6 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
               color={walls.color}
               bg={walls.bg}
             />
-            {/* <Instances ref={meshes} limit={BOARD_SIZE}>
-              <PillarMesh />
-              {layer.stats
-                .map((collision, idx) => {
-                  const pt = indextopt(idx, BOARD_WIDTH)
-                  switch (collision as COLLISION) {
-                    case COLLISION.ISSOLID:
-                      return (
-                        <Instance
-                          key={idx}
-                          position={[pt.x * drawwidth, pt.y * drawheight, 0]}
-                          color={[
-                            layer.char[idx],
-                            layer.color[idx],
-                            layer.bg[idx],
-                          ]}
-                        />
-                      )
-                  }
-                  return null
-                })
-                .filter((el) => el)}
-            </Instances> */}
           </group>
         </>
       )

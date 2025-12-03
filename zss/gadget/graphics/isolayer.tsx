@@ -132,6 +132,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.DITHER: {
+      // TODO replace this with the darkness meshes instances
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>

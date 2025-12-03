@@ -128,6 +128,7 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
       )
     }
     case LAYER_TYPE.DITHER: {
+      // TODO replace this with the darkness meshes instances
       // generate border
       const border: number[] = new Array(
         (layer.width + 2) * (layer.height + 2),
