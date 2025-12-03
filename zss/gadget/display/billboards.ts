@@ -163,6 +163,7 @@ const billboardsMaterial = new ShaderMaterial({
   `,
   // fragment shader
   fragmentShader: `
+    precision highp float;
     uniform float time;
     uniform float interval;
     uniform sampler2D map;

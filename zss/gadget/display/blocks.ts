@@ -50,7 +50,7 @@ const blocksMaterial = new ShaderMaterial({
   `,
   // fragment shader
   fragmentShader: `
-    precision mediump float;
+    precision highp float;
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
@@ -133,47 +133,48 @@ const darknessMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
-      precision highp float;
-      varying float vAlpha;
-    
-      void main() {
-        vec4 mvPosition = vec4(position, 1.0);
-        #ifdef USE_INSTANCING
-          vAlpha = instanceColor.x;
-          mvPosition = instanceMatrix * mvPosition;
-        #endif        
-        mvPosition = modelViewMatrix * mvPosition;
-        gl_Position = projectionMatrix * mvPosition;
-      }
+    precision highp float;
+    varying float vAlpha;
+  
+    void main() {
+      vec4 mvPosition = vec4(position, 1.0);
+      #ifdef USE_INSTANCING
+        vAlpha = instanceColor.x;
+        mvPosition = instanceMatrix * mvPosition;
+      #endif        
+      mvPosition = modelViewMatrix * mvPosition;
+      gl_Position = projectionMatrix * mvPosition;
+    }
     `,
   // fragment shader
   fragmentShader: `
-      uniform vec3 color;
-      uniform sampler2D data;
-  
-      varying float vAlpha;
+    precision highp float;
+    uniform vec3 color;
+    uniform sampler2D data;
 
-      // adapted from https://www.shadertoy.com/view/Mlt3z8
-      float bayerDither2x2( vec2 v ) {
-        return mod( 3.0 * v.y + 2.0 * v.x, 4.0 );
-      }
+    varying float vAlpha;
 
-      float bayerDither4x4( vec2 v ) {
-        vec2 P1 = mod( v, 2.0 );
-        vec2 P2 = mod( floor( 0.5  * v ), 2.0 );
-        return 4.0 * bayerDither2x2( P1 ) + bayerDither2x2( P2 );
-      }
+    // adapted from https://www.shadertoy.com/view/Mlt3z8
+    float bayerDither2x2( vec2 v ) {
+      return mod( 3.0 * v.y + 2.0 * v.x, 4.0 );
+    }
 
-      void main() {
-        if (vAlpha < 1.0) {
-          vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
-          if ( bayerDither4x4( ditherCoord ) / 16.0 >= vAlpha ) {
-            discard;
-          }
+    float bayerDither4x4( vec2 v ) {
+      vec2 P1 = mod( v, 2.0 );
+      vec2 P2 = mod( floor( 0.5  * v ), 2.0 );
+      return 4.0 * bayerDither2x2( P1 ) + bayerDither2x2( P2 );
+    }
+
+    void main() {
+      if (vAlpha < 1.0) {
+        vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
+        if ( bayerDither4x4( ditherCoord ) / 16.0 >= vAlpha ) {
+          discard;
         }
-
-        gl_FragColor.rgba = vec4(color.xyz, 1.0);
       }
+
+      gl_FragColor.rgba = vec4(color.xyz, 1.0);
+    }
     `,
 })
 
