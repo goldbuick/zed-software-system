@@ -29,7 +29,7 @@ export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
   const [material] = useState(() => createBlockDitherMaterial())
   const [spritepool, range] = useSpritePool(sprites, limit)
 
-  // set data texture
+  // set alpha
   useLayoutEffect(() => {
     material.uniforms.alpha.value = 0.5
   }, [material])
@@ -57,16 +57,14 @@ export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
     const rr = 8 / 14
     const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-    meshes.count = range
+    // meshes.count = range
 
-    for (let i = 0; i < range; ++i) {
+    for (let i = 0; i < spritepool.length; ++i) {
       const sprite = spritepool[i]
-
       if (sprite.id) {
         // write current pos
         const nowx = sprite.x * drawwidth
         const nowy = (sprite.y + 0.25) * drawheight
-
         // animate movement
         const firstframe = visible.getX(i) === 0
         if (firstframe) {
@@ -99,10 +97,7 @@ export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
         }
-      } else {
-        meshes.getMatrixAt(i, dummy.matrix)
-        lastmatrix.set(dummy.matrix.toArray(), i * 16)
-        lastmatrix.needsUpdate = true
+      } else if (visible.getX(i)) {
         visible.setX(i, 0)
         visible.needsUpdate = true
       }

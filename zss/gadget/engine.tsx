@@ -48,7 +48,7 @@ export function Engine() {
     }
     document.body.appendChild(stats.dom)
     stats.showPanel(0)
-    stats.dom.style.cssText = 'position:fixed;bottom:0;left:0;'
+    stats.dom.style.cssText = 'position:fixed;bottom:0;left:0;z-index:2;'
     const begin = addEffect(() => stats.begin())
     const end = addAfterEffect(() => stats.end())
     return () => {

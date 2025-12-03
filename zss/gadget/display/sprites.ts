@@ -38,12 +38,10 @@ const spritesMaterial = new ShaderMaterial({
   vertexShader: `
     precision highp float;
     attribute float visible;
-    attribute vec4 charData;
-    attribute vec3 lastPosition;
-    attribute vec2 lastColor;
-    attribute vec2 lastBg;
-    attribute vec2 animShake;
-    attribute vec2 animBounce;
+    attribute vec4 display;
+    attribute vec3 lastposition;
+    attribute vec2 lastcolor;
+    attribute vec2 lastbg;
 
     uniform float smoothrate;
     uniform float time;
@@ -54,7 +52,7 @@ const spritesMaterial = new ShaderMaterial({
     uniform float tindex;
 
     varying float vVisible;
-    varying vec2 vCharData;
+    varying vec2 vDisplay;
     varying vec3 vColor;
     varying vec4 vBg;
 
@@ -91,7 +89,7 @@ const spritesMaterial = new ShaderMaterial({
     }
 
     float cyclefromtime() {
-      float flux = snoise(vCharData.xy * 5.0) * 0.05;
+      float flux = snoise(vDisplay.xy * 5.0) * 0.05;
       float cycle = mod(time * 2.5 + flux, interval * 2.0) / interval;
       return exponentialInOut(abs(cycle - 1.0));
     }
@@ -99,21 +97,12 @@ const spritesMaterial = new ShaderMaterial({
     void main() {
       vVisible = visible;
 
-      float deltaPosition = clamp((time - lastPosition.z) * smoothrate, 0.0, 1.0);
-      vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition);
+      float deltaPosition = animDelta(lastposition.z, smoothrate, 1.0);
+      vec2 animPosition = mix(lastposition.xy, position.xy, deltaPosition);
 
-      float deltaShake = 1.0 - animDelta(animShake.y, smoothrate * 0.5, 1.0); 
-      animPosition += vec2(
-        deltaShake - rand(cos(time) + animShake.x) * deltaShake * 2.0,
-        deltaShake - rand(sin(time) + animShake.x) * deltaShake * 2.0
-      ) * 0.5;
-
-      float deltaBounce = 1.0 - abs(1.0 - animDelta(animBounce.y, smoothrate, 2.0));
-      animPosition.y -= smoothstep(0.0, 1.0, deltaBounce);
-
-      float deltaColor = animDelta(lastColor.y, smoothrate, 1.0);
-      int sourceColori = int(round(lastColor.x));
-      int destColori = int(round(charData.z));
+      float deltaColor = animDelta(lastcolor.y, smoothrate, 1.0);
+      int sourceColori = int(round(lastcolor.x));
+      int destColori = int(round(display.z));
 
       vec3 sourceColor;
       if (sourceColori > 32) {
@@ -131,16 +120,16 @@ const spritesMaterial = new ShaderMaterial({
 
       vColor = mix(sourceColor, destColor, deltaColor);
 
-      float deltaBg = animDelta(lastBg.y, smoothrate, 1.0);
-      vec4 sourceBg = bgFromIndex(lastBg.x);
-      vec4 destBg = bgFromIndex(charData.w);
+      float deltaBg = animDelta(lastbg.y, smoothrate, 1.0);
+      vec4 sourceBg = bgFromIndex(lastbg.x);
+      vec4 destBg = bgFromIndex(display.w);
       vBg = mix(sourceBg, destBg, deltaBg);
 
       if (destColori > 31) {
         vColor = mix(vBg.rgb, vColor, cyclefromtime());
       }
 
-      vCharData.xy = charData.xy;
+      vDisplay.xy = display.xy;
 
       animPosition *= pointSize;
       animPosition += pointSize * 0.5;
@@ -171,7 +160,7 @@ const spritesMaterial = new ShaderMaterial({
     uniform bool flip;
 
     varying float vVisible;
-    varying vec2 vCharData;
+    varying vec2 vDisplay;
     varying vec3 vColor;
     varying vec4 vBg;
 
@@ -188,7 +177,7 @@ const spritesMaterial = new ShaderMaterial({
       }
 
       vec2 idx = vec2(px, py) * size * pixel;
-      vec2 lookup = vec2(vCharData.x, rows - vCharData.y) * step * pixel;
+      vec2 lookup = vec2(vDisplay.x, rows - vDisplay.y) * step * pixel;
       vec2 uv = lookup + idx + vec2(1.0, 1.0) * pixel;
 
       bool useAlt = mod(time, interval * 2.0) > interval;
