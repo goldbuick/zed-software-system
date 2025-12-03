@@ -49,7 +49,6 @@ const spritesMaterial = new ShaderMaterial({
     uniform vec2 pointSize;
     uniform vec3 palette[16];
     uniform float dpr;
-    uniform float tindex;
 
     varying float vVisible;
     varying vec2 vDisplay;
@@ -242,7 +241,6 @@ const billboardsMaterial = new ShaderMaterial({
     uniform float dpr;
     uniform float screenwidth;
     uniform float screenheight;
-    uniform float tindex;
 
     varying float vVisible;
     varying vec2 vDisplay;
