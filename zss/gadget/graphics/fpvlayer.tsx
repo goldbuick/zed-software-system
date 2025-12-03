@@ -88,13 +88,15 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
-            <Tiles
-              width={layer.width}
-              height={layer.height}
-              char={floor.char}
-              color={floor.color}
-              bg={floor.bg}
-            />
+            <group position-z={-0.25}>
+              <Tiles
+                width={layer.width}
+                height={layer.height}
+                char={floor.char}
+                color={floor.color}
+                bg={floor.bg}
+              />
+            </group>
             <group position-z={drawheight * -0.25}>
               <Tiles
                 width={layer.width}
@@ -142,31 +144,31 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <ShadowMeshes sprites={shadowsprites}>
+          <ShadowMeshes sprites={shadowsprites} alpha={0.8}>
             {(ix, iy) => [
               ix * drawwidth,
               (iy + 0.5 - rr * 0.5) * drawheight,
-              drawheight * -0.5 + 0.1,
+              drawheight * -0.5,
             ]}
           </ShadowMeshes>
-          <BillboardMeshes sprites={othersprites}>
+          <BillboardMeshes sprites={othersprites} facing={control.facing}>
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,
               drawheight * -0.5,
             ]}
           </BillboardMeshes>
-          <BillboardMeshes sprites={bulletsprites}>
+          <BillboardMeshes sprites={bulletsprites} facing={control.facing}>
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,
               drawheight * -0.75,
             ]}
           </BillboardMeshes>
-          <BillboardMeshes sprites={watersprites}>
+          <BillboardMeshes sprites={watersprites} facing={control.facing}>
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
-              (iy - 0.5) * drawheight,
+              (iy + 0.5) * drawheight,
               drawheight * -1.25,
             ]}
           </BillboardMeshes>

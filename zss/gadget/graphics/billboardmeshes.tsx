@@ -17,6 +17,7 @@ import { useMedia } from '../hooks'
 
 type BillboardMeshesProps = {
   sprites: SPRITE[]
+  facing: number
   limit?: number
   children: (x: number, y: number) => [number, number, number]
 }
@@ -25,6 +26,7 @@ const dummy = new Object3D()
 
 export function BillboardMeshes({
   sprites,
+  facing,
   children,
   limit = BOARD_SIZE,
 }: BillboardMeshesProps) {
@@ -92,6 +94,7 @@ export function BillboardMeshes({
         // animate movement
         const firstframe = visible.getX(i) === 0
         if (firstframe) {
+          dummy.rotation.set(0, facing, 0)
           dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
@@ -108,23 +111,24 @@ export function BillboardMeshes({
           lastbg.setXY(i, sprite.bg, time.value)
           visible.setX(i, 1)
           visible.needsUpdate = true
+          nowposition.needsUpdate = true
           lastmatrix.needsUpdate = true
           display.needsUpdate = true
           lastcolor.needsUpdate = true
           lastbg.needsUpdate = true
+          meshes.instanceMatrix.needsUpdate = true
         } else {
           if (nowposition.getX(i) !== nx || nowposition.getY(i) !== ny) {
             meshes.getMatrixAt(i, dummy.matrix)
-
             lastmatrix.set(dummy.matrix.toArray(), i * 16)
-            lastmatrix.needsUpdate = true
-
             nowposition.setXYZ(i, nx, ny, time.value)
-            nowposition.needsUpdate = true
-
+            dummy.rotation.set(0, 0, facing)
             dummy.position.set(nx, ny, nz)
             dummy.updateMatrix()
             meshes.setMatrixAt(i, dummy.matrix)
+            lastmatrix.needsUpdate = true
+            nowposition.needsUpdate = true
+            meshes.instanceMatrix.needsUpdate = true
           }
           const ncharu = sprite.char % CHARS_PER_ROW
           const ncharv = Math.floor(sprite.char / CHARS_PER_ROW)
@@ -150,14 +154,17 @@ export function BillboardMeshes({
         visible.needsUpdate = true
       }
     }
-    meshes.instanceMatrix.needsUpdate = true
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sprites, spritepool, range, meshes, visible, lastmatrix])
 
   return (
-    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
+    <instancedMesh
+      ref={setmeshes}
+      args={[null, null, limit]}
+      frustumCulled={false}
+    >
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />

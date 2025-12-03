@@ -16,6 +16,7 @@ import { createTilemapBufferGeometryAttributes } from '../display/tiles'
 
 type ShadowMeshesProps = {
   sprites: SPRITE[]
+  alpha?: number
   limit?: number
   children: (x: number, y: number) => [number, number, number]
 }
@@ -25,6 +26,7 @@ const dummy = new Object3D()
 export function ShadowMeshes({
   sprites,
   children,
+  alpha = 0.5,
   limit = BOARD_SIZE,
 }: ShadowMeshesProps) {
   const [meshes, setmeshes] = useState<InstancedMesh>()
@@ -36,8 +38,8 @@ export function ShadowMeshes({
 
   // set alpha
   useLayoutEffect(() => {
-    material.uniforms.alpha.value = 0.5
-  }, [material])
+    material.uniforms.alpha.value = alpha
+  }, [material, alpha])
 
   // create buffer geo attributes
   const { position, uv } = useMemo(

@@ -3,6 +3,7 @@ import { Color, InstancedMesh, Object3D } from 'three'
 import { RUNTIME } from 'zss/config'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
+import { COLOR } from 'zss/words/types'
 
 import { CHAR_HEIGHT, CHAR_WIDTH } from '../data/types'
 import { createBlocksMaterial } from '../display/blocks'
@@ -64,15 +65,21 @@ export function PillarwMeshes({
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
     let x = 0
     let y = 0
-    meshes.count = char.length
+    let c = 0
     for (let i = 0; i < char.length; ++i) {
-      // update position
-      dummy.position.set(x * drawwidth, y * drawheight, 0)
-      dummy.updateMatrix()
-      meshes.setMatrixAt(i, dummy.matrix)
-      // update char drawn
-      dummycolor.set(char[i], color[i], bg[i])
-      meshes.setColorAt(i, dummycolor)
+      if (char[i] === 0 && bg[i] === (COLOR.ONCLEAR as number)) {
+        // skip
+      } else {
+        // update position
+        dummy.position.set(x * drawwidth, y * drawheight, 0)
+        dummy.updateMatrix()
+        meshes.setMatrixAt(c, dummy.matrix)
+        // update char drawn
+        dummycolor.set(char[i], color[i], bg[i])
+        meshes.setColorAt(c, dummycolor)
+        // update cursor
+        ++c
+      }
       // next
       ++x
       if (x >= width) {
@@ -80,6 +87,7 @@ export function PillarwMeshes({
         ++y
       }
     }
+    meshes.count = c
 
     // meshes.instanceMatrix.needsUpdate = true
     meshes.computeBoundingBox()
