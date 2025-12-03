@@ -21,12 +21,14 @@ type SpritesProps = {
   sprites: SPRITE[]
   scale?: number
   withbillboards?: boolean
+  limit?: number
 }
 
 export function Sprites({
   sprites,
   scale = 1,
   withbillboards = false,
+  limit = BOARD_SIZE,
 }: SpritesProps) {
   const { viewport } = useThree()
   const palette = useMedia((state) => state.palettedata)
@@ -79,14 +81,14 @@ export function Sprites({
   ])
 
   const [buffer, setbuffer] = useState<BufferGeometry>()
-  const [spritepool, range] = useSpritePool(sprites, BOARD_SIZE)
+  const [spritepool, range] = useSpritePool(sprites, limit)
 
-  const visiblearray = useMemo(() => new Uint8Array(BOARD_SIZE), [])
-  const positionarray = useMemo(() => new Float32Array(BOARD_SIZE * 3), [])
-  const lastpositionarray = useMemo(() => new Float32Array(BOARD_SIZE * 3), [])
-  const displayarray = useMemo(() => new Float32Array(BOARD_SIZE * 4), [])
-  const lastcolorarray = useMemo(() => new Float32Array(BOARD_SIZE * 2), [])
-  const lastbgarray = useMemo(() => new Float32Array(BOARD_SIZE * 2), [])
+  const visiblearray = useMemo(() => new Uint8Array(limit), [limit])
+  const positionarray = useMemo(() => new Float32Array(limit * 3), [limit])
+  const lastpositionarray = useMemo(() => new Float32Array(limit * 3), [limit])
+  const displayarray = useMemo(() => new Float32Array(limit * 4), [limit])
+  const lastcolorarray = useMemo(() => new Float32Array(limit * 2), [limit])
+  const lastbgarray = useMemo(() => new Float32Array(limit * 2), [limit])
 
   const [visible, setvisible] = useState<BufferAttribute>()
   const [position, setposition] = useState<BufferAttribute>()

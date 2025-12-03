@@ -14,14 +14,14 @@ import { createBlockDitherMaterial } from '../display/dither'
 import { useSpritePool } from '../display/spritepool'
 import { createTilemapBufferGeometryAttributes } from '../display/tiles'
 
-type BlockShadowMeshesProps = {
+type ShadowMeshesProps = {
   sprites: SPRITE[]
   limit: number
 }
 
 const dummy = new Object3D()
 
-export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
+export function ShadowMeshes({ sprites, limit }: ShadowMeshesProps) {
   const [meshes, setMeshes] = useState<InstancedMesh>()
   const [visible, setvisible] = useState<InstancedBufferAttribute>()
   const [nowposition, setnowposition] = useState<InstancedBufferAttribute>()
@@ -57,7 +57,7 @@ export function BlockShadowMeshes({ sprites, limit }: BlockShadowMeshesProps) {
     const rr = 8 / 14
     const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-    // meshes.count = range
+    meshes.count = range
 
     for (let i = 0; i < spritepool.length; ++i) {
       const sprite = spritepool[i]

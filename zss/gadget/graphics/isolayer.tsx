@@ -2,7 +2,7 @@ import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
-import { BOARD_SIZE } from 'zss/memory/types'
+import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -12,7 +12,8 @@ import {
   filterlayer2water,
 } from './blocks'
 import { Dither } from './dither'
-import { BlockShadowMeshes } from './shadow'
+import { PillarwMeshes } from './pillar'
+import { ShadowMeshes } from './shadow'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
@@ -82,29 +83,12 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            {/* <Instances ref={meshes} limit={BOARD_SIZE}>
-              <BlockMesh />
-              {layer.stats
-                .map((collision, idx) => {
-                  const pt = indextopt(idx, BOARD_WIDTH)
-                  switch (collision as COLLISION) {
-                    case COLLISION.ISSOLID:
-                      return (
-                        <Instance
-                          key={idx}
-                          position={[
-                            (pt.x + 0.5) * drawwidth,
-                            (pt.y + 0.5) * drawheight,
-                            drawheight * 0.5,
-                          ]}
-                          color={[177, COLOR.DKGRAY, COLOR.BLACK]}
-                        />
-                      )
-                  }
-                  return null
-                })
-                .filter((el) => el)}
-            </Instances> */}
+            <PillarwMeshes
+              width={BOARD_WIDTH}
+              char={walls.char.map((c) => (c !== 0 ? 219 : 0))}
+              color={walls.color}
+              bg={walls.bg}
+            />
             <group position-z={drawheight + 1}>
               <Tiles
                 width={layer.width}
@@ -119,7 +103,6 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
-      const rr = 8 / 14
       const hideplayer = ispresent(layers)
       const othersprites = layer.sprites.filter(
         (sprite) =>
@@ -134,7 +117,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <BlockShadowMeshes sprites={othersprites} limit={BOARD_SIZE} />
+          <ShadowMeshes sprites={othersprites} limit={BOARD_SIZE} />
           <Sprites sprites={[...othersprites]} scale={1.5} />
           <group position-z={drawheight * -0.5}>
             <Sprites sprites={[...watersprites]} scale={1.5} />
