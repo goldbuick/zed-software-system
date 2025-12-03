@@ -18,8 +18,10 @@ import {
   PillarMesh,
   ShadowMesh,
   filterlayer2floor,
+  filterlayer2walls,
   filterlayer2water,
 } from './blocks'
+import { PillarwMeshes } from './pillar'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
@@ -86,6 +88,12 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
         layer.bg,
         layer.stats,
       )
+      const walls = filterlayer2walls(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       const water = filterlayer2water(
         layer.char,
         layer.color,
@@ -112,7 +120,13 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <Instances ref={meshes} limit={BOARD_SIZE}>
+            <PillarwMeshes
+              width={BOARD_WIDTH}
+              char={walls.char}
+              color={walls.color}
+              bg={walls.bg}
+            />
+            {/* <Instances ref={meshes} limit={BOARD_SIZE}>
               <PillarMesh />
               {layer.stats
                 .map((collision, idx) => {
@@ -134,14 +148,12 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                   return null
                 })
                 .filter((el) => el)}
-            </Instances>
+            </Instances> */}
           </group>
         </>
       )
     }
     case LAYER_TYPE.SPRITES: {
-      // --
-
       const rr = 8 / 14
       const othersprites = layer.sprites.filter((sprite) => {
         switch (sprite.stat as COLLISION) {

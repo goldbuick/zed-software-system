@@ -91,8 +91,6 @@ export function BillboardMesh() {
   const altcharset = useMedia((state) => state.altcharsetdata)
   const [material] = useState(() => createBlocksMaterial())
 
-  // const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-  // const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
 

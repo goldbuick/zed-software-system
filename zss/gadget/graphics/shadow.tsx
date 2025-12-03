@@ -5,7 +5,6 @@ import {
   InstancedMesh,
   Object3D,
 } from 'three'
-import { RUNTIME } from 'zss/config'
 import { ispresent } from 'zss/mapping/types'
 
 import { SPRITE } from '../data/types'
@@ -98,6 +97,7 @@ export function ShadowMeshes({ sprites, limit, children }: ShadowMeshesProps) {
     meshes.instanceMatrix.needsUpdate = true
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sprites, spritepool, range, meshes, visible, nowposition, lastmatrix])
 
   return (
