@@ -29,9 +29,9 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
           <Tiles
             width={layer.width}
             height={layer.height}
-            char={[...layer.char]}
-            color={[...layer.color]}
-            bg={[...layer.bg]}
+            char={layer.char}
+            color={layer.color}
+            bg={layer.bg}
           />
         </group>
       )
@@ -40,7 +40,7 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <SpriteMeshes sprites={[...layer.sprites]} />
+          <SpriteMeshes sprites={layer.sprites} />
         </group>
       )
     }
@@ -51,7 +51,7 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
           <Dither
             width={layer.width}
             height={layer.height}
-            alphas={[...layer.alphas]}
+            alphas={layer.alphas}
           />
         </group>
       )

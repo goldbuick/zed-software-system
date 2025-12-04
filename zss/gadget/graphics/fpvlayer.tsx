@@ -11,6 +11,7 @@ import { BillboardMeshes } from './billboardmeshes'
 import {
   filterlayer2floor,
   filterlayer2ground,
+  filterlayer2sky,
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
@@ -78,6 +79,12 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
         layer.bg,
         layer.stats,
       )
+      const sky = filterlayer2sky(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       // filter tiles
       return (
         <>
@@ -104,6 +111,15 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 char={ground.char}
                 color={ground.color}
                 bg={ground.bg}
+              />
+            </group>
+            <group position-z={drawheight}>
+              <Tiles
+                width={layer.width}
+                height={layer.height}
+                char={sky.char}
+                color={sky.color}
+                bg={sky.bg}
               />
             </group>
             <PillarwMeshes

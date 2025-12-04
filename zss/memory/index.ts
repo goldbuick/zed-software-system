@@ -334,17 +334,17 @@ export function memoryelementkindread(
 
 export function memoryelementstatread(
   element: MAYBE<BOARD_ELEMENT>,
-  stat: BOARD_ELEMENT_STAT,
+  stat: BOARD_ELEMENT_STAT | 'sky',
 ) {
   const kind = element?.kinddata
   const kindid = kind?.id ?? ''
 
-  const elementstat = element?.[stat]
+  const elementstat = element?.[stat as keyof BOARD_ELEMENT]
   if (ispresent(elementstat)) {
     return elementstat
   }
 
-  const kindstat = kind?.[stat]
+  const kindstat = kind?.[stat as keyof BOARD_ELEMENT]
   if (ispresent(kindstat)) {
     return kindstat
   }

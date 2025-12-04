@@ -116,9 +116,9 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
               drawheight * -0.5 + 0.5,
             ]}
           </ShadowMeshes>
-          <SpriteMeshes sprites={[...othersprites]} withbillboards={true} />
+          <SpriteMeshes sprites={othersprites} withbillboards={true} />
           <group position-z={drawheight * -0.5}>
-            <SpriteMeshes sprites={[...watersprites]} withbillboards={true} />
+            <SpriteMeshes sprites={watersprites} withbillboards={true} />
           </group>
         </group>
       )

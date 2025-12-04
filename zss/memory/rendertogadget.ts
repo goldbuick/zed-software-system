@@ -226,7 +226,7 @@ function raycheck(
   const object = boardobjectread(board, board.lookup?.[idx] ?? '')
   if (ispresent(object)) {
     // half blocked
-    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.25]
+    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
     nextblocked.push(range)
   }
 
@@ -377,6 +377,15 @@ export function memoryconverttogadgetlayers(
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
     tiles.stats[i] = collision
+  }
+  if (withgraphics === 'fpv') {
+    for (let i = 0; i < board.terrain.length; ++i) {
+      const tile = board.terrain[i]
+      const sky = memoryelementstatread(tile, 'sky')
+      if (sky) {
+        tiles.char[i] = -tiles.char[i]
+      }
+    }
   }
 
   const boardobjects = Object.values(board.objects ?? {})
