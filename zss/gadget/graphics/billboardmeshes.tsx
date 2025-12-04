@@ -165,11 +165,7 @@ export function BillboardMeshes({
   }, [sprites, spritepool, facing, range, meshes, visible, lastmatrix])
 
   return (
-    <instancedMesh
-      ref={setmeshes}
-      args={[null, null, limit]}
-      frustumCulled={false}
-    >
+    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />

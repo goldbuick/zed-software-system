@@ -142,13 +142,6 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <ShadowMeshes sprites={shadowsprites} alpha={0.8}>
-            {(ix, iy) => [
-              ix * drawwidth,
-              (iy + 0.5 - rr * 0.5) * drawheight,
-              drawheight * -0.5 + 1,
-            ]}
-          </ShadowMeshes>
           <BillboardMeshes sprites={othersprites} facing={control.facing}>
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
@@ -170,6 +163,13 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
               drawheight * -1.25,
             ]}
           </BillboardMeshes>
+          <ShadowMeshes sprites={shadowsprites} alpha={0.8}>
+            {(ix, iy) => [
+              ix * drawwidth,
+              (iy + 0.5 - rr * 0.5) * drawheight,
+              drawheight * -0.5 + 0.5,
+            ]}
+          </ShadowMeshes>
         </group>
       )
     }
