@@ -1,6 +1,7 @@
 import { type Instance, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
+  DepthPass,
   Effect,
   EffectAttribute,
   EffectComposer as EffectComposerImpl,
@@ -48,6 +49,11 @@ export const EffectComposer = /* @__PURE__ */ memo(
 
         // Add render pass
         effectComposer.addPass(new RenderPass(scene, camera))
+
+        // get z depth
+        const depthPass = new DepthPass(scene, camera)
+        depthPass.enabled = true
+        effectComposer.addPass(depthPass)
 
         return [effectComposer]
       }, [camera, gl, scene])

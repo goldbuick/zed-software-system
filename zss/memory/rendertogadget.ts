@@ -378,11 +378,12 @@ export function memoryconverttogadgetlayers(
     tiles.bg[i] = display.bg
     tiles.stats[i] = collision
   }
+
   if (withgraphics === 'fpv') {
     for (let i = 0; i < board.terrain.length; ++i) {
       const tile = board.terrain[i]
       const sky = memoryelementstatread(tile, 'sky')
-      if (sky) {
+      if (ispresent(sky)) {
         tiles.char[i] = -tiles.char[i]
       }
     }

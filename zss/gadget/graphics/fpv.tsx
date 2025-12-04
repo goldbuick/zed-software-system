@@ -16,6 +16,7 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
+import { DepthFog } from '../fx/depthfog'
 import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
@@ -134,7 +135,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
 
     // update effect
     depthoffield.current.bokehScale = 5
-    depthoffield.current.cocMaterial.worldFocusRange = 1200
+    depthoffield.current.cocMaterial.worldFocusRange = 2000
     depthoffield.current.cocMaterial.worldFocusDistance = 100
 
     // update fov & matrix
@@ -193,6 +194,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
             effects={
               <>
                 <DepthOfField ref={depthoffield} />
+                <DepthFog />
               </>
             }
           >

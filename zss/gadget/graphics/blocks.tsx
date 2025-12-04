@@ -26,8 +26,9 @@ export function filterlayer2floor(
     bg: bg.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSWIM:
-        case COLLISION.ISSOLID:
           return COLOR.ONCLEAR
+        case COLLISION.ISSOLID:
+          return COLOR.BLACK
       }
       return v
     }),
@@ -147,7 +148,10 @@ export function filterlayer2sky(
       return v
     }),
     bg: bg.map((v, idx) => {
-      if (char[idx] < 0 || stats[idx] === (COLLISION.ISSOLID as number)) {
+      if (stats[idx] === (COLLISION.ISSOLID as number)) {
+        return 0
+      }
+      if (char[idx] < 0) {
         return COLOR.ONCLEAR
       }
       return v
