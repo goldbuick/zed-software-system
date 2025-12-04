@@ -1,25 +1,21 @@
-import { Instance, Instances } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
-import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
-import { COLLISION, COLOR } from 'zss/words/types'
+import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
-  BlockMesh,
-  ShadowMesh,
   filterlayer2floor,
+  filterlayer2ground,
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
-import { Dither } from './dither'
-import { Sprites } from './sprites'
+import { DarknessMeshes } from './darknessmeshes'
+import { PillarwMeshes } from './pillarmeshes'
+import { ShadowMeshes } from './shadowmeshes'
+import { SpriteMeshes } from './spritemeshes'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
@@ -30,15 +26,6 @@ type GraphicsLayerProps = {
 }
 
 export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
-  const meshes = useRef<InstancedMesh>(null)
-
-  useFrame(() => {
-    if (ispresent(meshes.current)) {
-      meshes.current.computeBoundingBox()
-      meshes.current.computeBoundingSphere()
-    }
-  })
-
   const layer = useGadgetClient(
     useShallow((state) => {
       if (ispresent(from)) {
@@ -78,6 +65,12 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
         layer.bg,
         layer.stats,
       )
+      const ground = filterlayer2ground(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
@@ -97,29 +90,20 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <Instances ref={meshes} limit={BOARD_SIZE}>
-              <BlockMesh />
-              {layer.stats
-                .map((collision, idx) => {
-                  const pt = indextopt(idx, BOARD_WIDTH)
-                  switch (collision as COLLISION) {
-                    case COLLISION.ISSOLID:
-                      return (
-                        <Instance
-                          key={idx}
-                          position={[
-                            (pt.x + 0.5) * drawwidth,
-                            (pt.y + 0.5) * drawheight,
-                            drawheight * 0.5,
-                          ]}
-                          color={[177, COLOR.DKGRAY, COLOR.BLACK]}
-                        />
-                      )
-                  }
-                  return null
-                })
-                .filter((el) => el)}
-            </Instances>
+            <group position-z={drawheight * -1}>
+              <PillarwMeshes
+                width={BOARD_WIDTH}
+                char={ground.char}
+                color={ground.color}
+                bg={ground.bg}
+              />
+            </group>
+            <PillarwMeshes
+              width={BOARD_WIDTH}
+              char={walls.char.map((c) => (c !== 0 ? 219 : 0))}
+              color={walls.color}
+              bg={walls.bg}
+            />
             <group position-z={drawheight + 1}>
               <Tiles
                 width={layer.width}
@@ -134,7 +118,6 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
-      const rr = 8 / 14
       const hideplayer = ispresent(layers)
       const othersprites = layer.sprites.filter(
         (sprite) =>
@@ -149,44 +132,26 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes} limit={BOARD_SIZE}>
-            <ShadowMesh />
-            {layer.sprites.map((sprite, idx) => (
-              <Instance
-                key={idx}
-                scale={[1, rr, 1]}
-                position={[
-                  sprite.x * drawwidth,
-                  (sprite.y + 0.25) * drawheight,
-                  drawheight * -0.75 + 0.5,
-                ]}
-              />
-            ))}
-          </Instances>
-          <Sprites
-            sprites={[...othersprites]}
-            scale={1.5}
-            fliptexture={false}
-          />
+          <ShadowMeshes sprites={othersprites} limit={BOARD_SIZE}>
+            {(ix, iy) => [
+              ix * drawwidth,
+              (iy + 0.25) * drawheight,
+              drawheight * -0.75 + 0.5,
+            ]}
+          </ShadowMeshes>
+          <SpriteMeshes sprites={[...othersprites]} scale={1.5} />
           <group position-z={drawheight * -0.5}>
-            <Sprites
-              sprites={[...watersprites]}
-              scale={1.5}
-              fliptexture={false}
-            />
+            <SpriteMeshes sprites={[...watersprites]} scale={1.5} />
           </group>
         </group>
       )
     }
     case LAYER_TYPE.DITHER: {
+      // TODO replace this with the darkness meshes instances
       return (
         // eslint-disable-next-line react/no-unknown-property
-        <group key={layer.id} position={[0, 0, z]}>
-          <Dither
-            width={layer.width}
-            height={layer.height}
-            alphas={[...layer.alphas]}
-          />
+        <group key={layer.id} position={[0, 0, z + 1]}>
+          <DarknessMeshes alphas={layer.alphas} width={BOARD_WIDTH} />
         </group>
       )
     }

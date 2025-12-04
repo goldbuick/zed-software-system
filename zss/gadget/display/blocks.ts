@@ -2,6 +2,7 @@ import { Color, DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
+import { TICK_FPS } from 'zss/mapping/tick'
 import { COLOR } from 'zss/words/types'
 
 import { convertpalettetocolors } from '../data/palette'
@@ -50,7 +51,7 @@ const blocksMaterial = new ShaderMaterial({
   `,
   // fragment shader
   fragmentShader: `
-    precision mediump float;
+    precision highp float;
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
@@ -123,6 +124,173 @@ export function createBlocksMaterial() {
   return cloneMaterial(blocksMaterial)
 }
 
+const blocksBillboardMaterial = new ShaderMaterial({
+  // settings
+  transparent: false,
+  side: DoubleSide,
+  uniforms: {
+    time,
+    interval,
+    smoothrate: new Uniform(TICK_FPS),
+    palette: new Uniform(palette),
+    map: new Uniform(charset),
+    alt: new Uniform(charset),
+    cols: new Uniform(1),
+    step: new Uniform(new Vector2()),
+    flip: new Uniform(true),
+  },
+  // vertex shader
+  vertexShader: `
+    precision highp float;
+    attribute float visible;
+    attribute vec3 nowposition;
+    attribute mat4 lastmatrix;
+    attribute vec4 display;
+    attribute vec2 lastcolor;
+    attribute vec2 lastbg;
+
+    uniform float smoothrate;
+    uniform float time;
+    uniform float interval;
+    uniform vec3 palette[16];
+
+    varying float vVisible;
+    varying vec2 vDisplay;
+    varying vec3 vColor;
+    varying vec4 vBg;
+    varying vec2 vUv;
+
+    ${noiseutilshader}
+
+    vec4 bgFromIndex(float index) {
+      vec4 bg;
+      if (int(round(index)) >= 16) {
+        return vec4(0.0, 0.0, 0.0, 0.0);
+      }
+      bg.rgb = palette[int(round(index))];
+      bg.a = 1.0;
+      return bg;
+    }
+
+    float animDelta(float startTime, float deltaMod, float maxDelta) {
+      float delta = time - startTime;
+      if (delta < 0.0) {
+        return maxDelta;
+      }
+      return clamp(delta * deltaMod, 0.0, maxDelta);
+    }
+
+    float exponentialInOut(float t) {
+      return t == 0.0 || t == 1.0
+        ? t
+        : t < 0.5
+          ? +0.5 * pow(2.0, (20.0 * t) - 10.0)
+          : -0.5 * pow(2.0, 10.0 - (t * 20.0)) + 1.0;
+    }
+
+    float cyclefromtime() {
+      float flux = snoise(vDisplay.xy * 5.0) * 0.05;
+      float cycle = mod(time * 2.5 + flux, interval * 2.0) / interval;
+      return exponentialInOut(abs(cycle - 1.0));
+    }
+      
+    void main() {
+      vec4 mvPosition = vec4(position, 1.0);
+      
+      vec4 mvNowPosition = instanceMatrix * mvPosition;
+      vec4 mvLastPosition = lastmatrix * mvPosition;
+
+      float deltaPosition = clamp((time - nowposition.z) * smoothrate, 0.0, 1.0);
+      mvPosition = mix(mvLastPosition, mvNowPosition, deltaPosition);
+
+      mvPosition = modelViewMatrix * mvPosition;
+      gl_Position = projectionMatrix * mvPosition;
+
+      vUv = uv;
+    
+      float deltaColor = animDelta(lastcolor.y, smoothrate, 1.0);
+      int sourceColori = int(round(lastcolor.x));
+      int destColori = int(round(display.z));
+
+      vec3 sourceColor;
+      if (sourceColori > 32) {
+        sourceColor = palette[sourceColori - 33];
+      } else {
+        sourceColor = palette[sourceColori % 16];
+      }
+
+      vec3 destColor;
+      if (destColori > 32) {
+        destColor = palette[destColori - 33];
+      } else {
+        destColor = palette[destColori % 16];
+      }
+
+      vColor = mix(sourceColor, destColor, deltaColor);
+
+      float deltaBg = animDelta(lastbg.y, smoothrate, 1.0);
+      vec4 sourceBg = bgFromIndex(lastbg.x);
+      vec4 destBg = bgFromIndex(display.w);
+      vBg = mix(sourceBg, destBg, deltaBg);
+
+      if (destColori > 31) {
+        vColor = mix(vBg.rgb, vColor, cyclefromtime());
+      }
+
+      vDisplay.xy = vec2(round(display.x), round(display.y));
+
+      vVisible = visible;
+    }
+  `,
+  // fragment shader
+  fragmentShader: `
+    precision highp float;
+    uniform float time;
+    uniform float interval;
+    uniform sampler2D map;
+    uniform sampler2D alt;
+    uniform vec3 palette[16];
+    uniform vec2 step;
+    uniform float cols;
+    uniform bool flip;
+
+    varying float vVisible;
+    varying vec2 vDisplay;
+    varying vec3 vColor;
+    varying vec4 vBg;
+    varying vec2 vUv;
+      
+    void main() {
+      if (vVisible == 0.0) {
+        discard;
+      }
+
+      vec2 uv = vUv * step + vec2(vDisplay.x * step.x, vDisplay.y * step.y);
+      if (flip) {
+        uv.y = 1.0 - uv.y;
+      }
+
+      bool useAlt = mod(time, interval * 2.0) > interval;
+      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+
+      if (blip.r == 0.0) {
+        if (vBg.a < 0.001) {
+          discard;
+        } else {
+          gl_FragColor = vBg;
+        }
+      } else {
+        gl_FragColor.rgb = vColor;
+      }
+      gl_FragColor.a = 1.0;
+    }
+  `,
+})
+
+export function createBlocksBillboardMaterial() {
+  return cloneMaterial(blocksBillboardMaterial)
+}
+
 const darknessMaterial = new ShaderMaterial({
   // settings
   transparent: false,
@@ -133,47 +301,48 @@ const darknessMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
-      precision highp float;
-      varying float vAlpha;
-    
-      void main() {
-        vec4 mvPosition = vec4(position, 1.0);
-        #ifdef USE_INSTANCING
-          vAlpha = instanceColor.x;
-          mvPosition = instanceMatrix * mvPosition;
-        #endif        
-        mvPosition = modelViewMatrix * mvPosition;
-        gl_Position = projectionMatrix * mvPosition;
-      }
+    precision highp float;
+    varying float vAlpha;
+  
+    void main() {
+      vec4 mvPosition = vec4(position, 1.0);
+      #ifdef USE_INSTANCING
+        vAlpha = instanceColor.x;
+        mvPosition = instanceMatrix * mvPosition;
+      #endif        
+      mvPosition = modelViewMatrix * mvPosition;
+      gl_Position = projectionMatrix * mvPosition;
+    }
     `,
   // fragment shader
   fragmentShader: `
-      uniform vec3 color;
-      uniform sampler2D data;
-  
-      varying float vAlpha;
+    precision highp float;
+    uniform vec3 color;
+    uniform sampler2D data;
 
-      // adapted from https://www.shadertoy.com/view/Mlt3z8
-      float bayerDither2x2( vec2 v ) {
-        return mod( 3.0 * v.y + 2.0 * v.x, 4.0 );
-      }
+    varying float vAlpha;
 
-      float bayerDither4x4( vec2 v ) {
-        vec2 P1 = mod( v, 2.0 );
-        vec2 P2 = mod( floor( 0.5  * v ), 2.0 );
-        return 4.0 * bayerDither2x2( P1 ) + bayerDither2x2( P2 );
-      }
+    // adapted from https://www.shadertoy.com/view/Mlt3z8
+    float bayerDither2x2( vec2 v ) {
+      return mod( 3.0 * v.y + 2.0 * v.x, 4.0 );
+    }
 
-      void main() {
-        if (vAlpha < 1.0) {
-          vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
-          if ( bayerDither4x4( ditherCoord ) / 16.0 >= vAlpha ) {
-            discard;
-          }
+    float bayerDither4x4( vec2 v ) {
+      vec2 P1 = mod( v, 2.0 );
+      vec2 P2 = mod( floor( 0.5  * v ), 2.0 );
+      return 4.0 * bayerDither2x2( P1 ) + bayerDither2x2( P2 );
+    }
+
+    void main() {
+      if (vAlpha < 1.0) {
+        vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
+        if ( bayerDither4x4( ditherCoord ) / 16.0 >= vAlpha ) {
+          discard;
         }
-
-        gl_FragColor.rgba = vec4(color.xyz, 1.0);
       }
+
+      gl_FragColor.rgba = vec4(color.xyz, 1.0);
+    }
     `,
 })
 

@@ -1,25 +1,22 @@
-import { Instance, Instances } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
-import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { BillboardMeshes } from './billboardmeshes'
 import {
-  BillboardMesh,
-  DarknessMesh,
-  PillarMesh,
-  ShadowMesh,
   filterlayer2floor,
+  filterlayer2ground,
+  filterlayer2walls,
   filterlayer2water,
 } from './blocks'
+import { DarknessMeshes } from './darknessmeshes'
+import { PillarwMeshes } from './pillarmeshes'
+import { ShadowMeshes } from './shadowmeshes'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
@@ -31,29 +28,6 @@ type GraphicsLayerProps = {
 
 export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
   const player = registerreadplayer()
-  const meshes = useRef<InstancedMesh>(null)
-  const meshes2 = useRef<InstancedMesh>(null)
-  const meshes3 = useRef<InstancedMesh>(null)
-  const meshes4 = useRef<InstancedMesh>(null)
-
-  useFrame(() => {
-    if (ispresent(meshes.current)) {
-      meshes.current.computeBoundingBox()
-      meshes.current.computeBoundingSphere()
-    }
-    if (ispresent(meshes2.current)) {
-      meshes2.current.computeBoundingBox()
-      meshes2.current.computeBoundingSphere()
-    }
-    if (ispresent(meshes3.current)) {
-      meshes3.current.computeBoundingBox()
-      meshes3.current.computeBoundingSphere()
-    }
-    if (ispresent(meshes4.current)) {
-      meshes4.current.computeBoundingBox()
-      meshes4.current.computeBoundingSphere()
-    }
-  })
 
   const layer = useGadgetClient(
     useShallow((state) => {
@@ -86,7 +60,19 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
         layer.bg,
         layer.stats,
       )
+      const walls = filterlayer2walls(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       const water = filterlayer2water(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
+      const ground = filterlayer2ground(
         layer.char,
         layer.color,
         layer.bg,
@@ -112,36 +98,25 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <Instances ref={meshes} limit={BOARD_SIZE}>
-              <PillarMesh />
-              {layer.stats
-                .map((collision, idx) => {
-                  const pt = indextopt(idx, BOARD_WIDTH)
-                  switch (collision as COLLISION) {
-                    case COLLISION.ISSOLID:
-                      return (
-                        <Instance
-                          key={idx}
-                          position={[pt.x * drawwidth, pt.y * drawheight, 0]}
-                          color={[
-                            layer.char[idx],
-                            layer.color[idx],
-                            layer.bg[idx],
-                          ]}
-                        />
-                      )
-                  }
-                  return null
-                })
-                .filter((el) => el)}
-            </Instances>
+            <group position-z={drawheight * -1}>
+              <PillarwMeshes
+                width={BOARD_WIDTH}
+                char={ground.char}
+                color={ground.color}
+                bg={ground.bg}
+              />
+            </group>
+            <PillarwMeshes
+              width={BOARD_WIDTH}
+              char={walls.char}
+              color={walls.color}
+              bg={walls.bg}
+            />
           </group>
         </>
       )
     }
     case LAYER_TYPE.SPRITES: {
-      // --
-
       const rr = 8 / 14
       const othersprites = layer.sprites.filter((sprite) => {
         switch (sprite.stat as COLLISION) {
@@ -149,7 +124,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
           case COLLISION.ISBULLET:
             return false
           default:
-            return true
+            return sprite.pid !== player
         }
       })
       const bulletsprites = layer.sprites.filter(
@@ -158,79 +133,45 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       const watersprites = layer.sprites.filter(
         (sprite) => (sprite.stat as COLLISION) === COLLISION.ISSWIM,
       )
+      const shadowsprites = layer.sprites.filter((sprite) => {
+        switch (sprite.stat as COLLISION) {
+          case COLLISION.ISSWIM:
+            return false
+          default:
+            return sprite.pid !== player
+        }
+      })
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes} limit={BOARD_SIZE}>
-            <ShadowMesh />
-            {othersprites.map((sprite, idx) => (
-              <Instance
-                key={idx}
-                scale={[1, rr, 1]}
-                position={[
-                  sprite.x * drawwidth,
-                  (sprite.y + 0.5 - rr * 0.5) * drawheight,
-                  drawheight * -0.5 + 0.1,
-                ]}
-              />
-            ))}
-          </Instances>
-          <Instances ref={meshes2} limit={BOARD_SIZE}>
-            <BillboardMesh />
-            {othersprites
-              .filter((sprite) => sprite.pid !== player)
-              .map((sprite, idx) => {
-                return (
-                  <Instance
-                    key={idx}
-                    rotation={[0, 0, control.facing]}
-                    position={[
-                      (sprite.x + 0.5) * drawwidth,
-                      (sprite.y + 0.5) * drawheight,
-                      drawheight * -0.5,
-                    ]}
-                    color={[sprite.char, sprite.color, sprite.bg]}
-                  />
-                )
-              })}
-          </Instances>
-          <Instances ref={meshes2} limit={BOARD_SIZE}>
-            <BillboardMesh />
-            {bulletsprites
-              .filter((sprite) => sprite.pid !== player)
-              .map((sprite, idx) => {
-                return (
-                  <Instance
-                    key={idx}
-                    rotation={[0, 0, control.facing]}
-                    position={[
-                      (sprite.x + 0.5) * drawwidth,
-                      (sprite.y + 0.5) * drawheight,
-                      drawheight * -0.75,
-                    ]}
-                    color={[sprite.char, sprite.color, sprite.bg]}
-                  />
-                )
-              })}
-          </Instances>
-          <Instances ref={meshes3} limit={BOARD_SIZE}>
-            <BillboardMesh />
-            {watersprites
-              .filter((sprite) => sprite.pid !== player)
-              .map((sprite, idx) => {
-                return (
-                  <Instance
-                    key={idx}
-                    position={[
-                      (sprite.x + 0.5) * drawwidth,
-                      (sprite.y - 0.5) * drawheight,
-                      drawheight * -1.25,
-                    ]}
-                    color={[sprite.char, sprite.color, sprite.bg]}
-                  />
-                )
-              })}
-          </Instances>
+          <BillboardMeshes sprites={othersprites} facing={control.facing}>
+            {(ix, iy) => [
+              (ix + 0.5) * drawwidth,
+              (iy + 0.5) * drawheight,
+              drawheight * -0.5,
+            ]}
+          </BillboardMeshes>
+          <BillboardMeshes sprites={bulletsprites} facing={control.facing}>
+            {(ix, iy) => [
+              (ix + 0.5) * drawwidth,
+              (iy + 0.5) * drawheight,
+              drawheight * -0.75,
+            ]}
+          </BillboardMeshes>
+          <BillboardMeshes sprites={watersprites} facing={control.facing}>
+            {(ix, iy) => [
+              (ix + 0.5) * drawwidth,
+              (iy + 0.5) * drawheight,
+              drawheight * -1.25,
+            ]}
+          </BillboardMeshes>
+          <ShadowMeshes sprites={shadowsprites}>
+            {(ix, iy) => [
+              ix * drawwidth,
+              (iy + 0.5 - rr * 0.5) * drawheight,
+              drawheight * -0.5 + 0.5,
+            ]}
+          </ShadowMeshes>
         </group>
       )
     }
@@ -238,23 +179,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes4} limit={BOARD_SIZE}>
-            <DarknessMesh />
-            {layer.alphas.map((alpha, idx) => {
-              const pt = indextopt(idx, BOARD_WIDTH)
-              return (
-                <Instance
-                  key={idx}
-                  position={[
-                    pt.x * drawwidth,
-                    pt.y * drawheight,
-                    drawheight * -0.5,
-                  ]}
-                  color={[alpha, 0, 0]}
-                />
-              )
-            })}
-          </Instances>
+          <DarknessMeshes alphas={layer.alphas} width={BOARD_WIDTH} />
         </group>
       )
     }

@@ -3,7 +3,7 @@ import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Dither } from './dither'
-import { Sprites } from './sprites'
+import { SpriteMeshes } from './spritemeshes'
 import { Tiles } from './tiles'
 
 type FlatLayerProps = {
@@ -40,7 +40,7 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Sprites sprites={[...layer.sprites]} fliptexture={false} />
+          <SpriteMeshes sprites={[...layer.sprites]} />
         </group>
       )
     }
