@@ -1,6 +1,3 @@
-import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { InstancedMesh } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -31,14 +28,6 @@ type GraphicsLayerProps = {
 
 export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
   const player = registerreadplayer()
-  const meshes4 = useRef<InstancedMesh>(null)
-
-  useFrame(() => {
-    if (ispresent(meshes4.current)) {
-      meshes4.current.computeBoundingBox()
-      meshes4.current.computeBoundingSphere()
-    }
-  })
 
   const layer = useGadgetClient(
     useShallow((state) => {
