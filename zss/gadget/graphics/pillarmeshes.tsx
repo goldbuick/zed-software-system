@@ -88,8 +88,10 @@ export function PillarwMeshes({
       }
     }
     meshes.count = c
-
-    // meshes.instanceMatrix.needsUpdate = true
+    meshes.instanceMatrix.needsUpdate = true
+    if (ispresent(meshes.instanceColor)) {
+      meshes.instanceColor.needsUpdate = true
+    }
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
   }, [meshes, char, color, bg, width])

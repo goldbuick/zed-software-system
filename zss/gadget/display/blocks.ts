@@ -261,7 +261,7 @@ const blocksBillboardMaterial = new ShaderMaterial({
     varying vec2 vUv;
       
     void main() {
-      if (vVisible < 1.0) {
+      if (vVisible == 0.0) {
         discard;
       }
 

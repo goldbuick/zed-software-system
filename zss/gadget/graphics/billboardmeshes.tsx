@@ -5,6 +5,7 @@ import {
   InstancedMesh,
   Object3D,
 } from 'three'
+import { RUNTIME } from 'zss/config'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 
@@ -86,6 +87,7 @@ export function BillboardMeshes({
     ) {
       return
     }
+    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
     for (let i = 0; i < spritepool.length; ++i) {
       const sprite = spritepool[i]
       if (sprite.id) {
@@ -98,7 +100,11 @@ export function BillboardMeshes({
           dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
+
+          dummy.position.set(nx, ny, nz + drawheight * -0.8)
+          dummy.updateMatrix()
           lastmatrix.set(dummy.matrix.toArray(), i * 16)
+
           nowposition.setXYZ(i, nx, ny, time.value)
           display.setXYZW(
             i,
@@ -110,6 +116,7 @@ export function BillboardMeshes({
           lastcolor.setXY(i, sprite.color, time.value)
           lastbg.setXY(i, sprite.bg, time.value)
           visible.setX(i, 1)
+
           visible.needsUpdate = true
           nowposition.needsUpdate = true
           lastmatrix.needsUpdate = true

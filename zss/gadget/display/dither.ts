@@ -142,7 +142,7 @@ const blockditherMaterial = new ShaderMaterial({
     }
 
     void main() {
-      if (vVisible < 1.0) {
+      if (vVisible == 0.0) {
         discard;
       }
       if (alpha < 1.0) {

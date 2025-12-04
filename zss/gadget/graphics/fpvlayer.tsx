@@ -19,6 +19,7 @@ import {
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
+import { DarknessMeshes } from './darknessmeshes'
 import { PillarwMeshes } from './pillarmeshes'
 import { ShadowMeshes } from './shadowmeshes'
 import { Tiles } from './tiles'
@@ -163,7 +164,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
               drawheight * -1.25,
             ]}
           </BillboardMeshes>
-          <ShadowMeshes sprites={shadowsprites} alpha={0.8}>
+          <ShadowMeshes sprites={shadowsprites}>
             {(ix, iy) => [
               ix * drawwidth,
               (iy + 0.5 - rr * 0.5) * drawheight,
@@ -177,23 +178,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Instances ref={meshes4} limit={BOARD_SIZE}>
-            <DarknessMesh />
-            {layer.alphas.map((alpha, idx) => {
-              const pt = indextopt(idx, BOARD_WIDTH)
-              return (
-                <Instance
-                  key={idx}
-                  position={[
-                    pt.x * drawwidth,
-                    pt.y * drawheight,
-                    drawheight * -0.5,
-                  ]}
-                  color={[alpha, 0, 0]}
-                />
-              )
-            })}
-          </Instances>
+          <DarknessMeshes alphas={layer.alphas} width={BOARD_WIDTH} />
         </group>
       )
     }
