@@ -8,10 +8,11 @@ import { useShallow } from 'zustand/react/shallow'
 
 import {
   filterlayer2floor,
+  filterlayer2ground,
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
-import { Dither } from './dither'
+import { DarknessMeshes } from './darknessmeshes'
 import { PillarwMeshes } from './pillarmeshes'
 import { ShadowMeshes } from './shadowmeshes'
 import { Sprites } from './spritemeshes'
@@ -64,6 +65,12 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
         layer.bg,
         layer.stats,
       )
+      const ground = filterlayer2ground(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
@@ -81,6 +88,14 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 char={water.char}
                 color={water.color}
                 bg={water.bg}
+              />
+            </group>
+            <group position-z={drawheight * -1}>
+              <PillarwMeshes
+                width={BOARD_WIDTH}
+                char={ground.char}
+                color={ground.color}
+                bg={ground.bg}
               />
             </group>
             <PillarwMeshes
@@ -135,12 +150,8 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       // TODO replace this with the darkness meshes instances
       return (
         // eslint-disable-next-line react/no-unknown-property
-        <group key={layer.id} position={[0, 0, z]}>
-          <Dither
-            width={layer.width}
-            height={layer.height}
-            alphas={[...layer.alphas]}
-          />
+        <group key={layer.id} position={[0, 0, z + 1]}>
+          <DarknessMeshes alphas={layer.alphas} width={BOARD_WIDTH} />
         </group>
       )
     }

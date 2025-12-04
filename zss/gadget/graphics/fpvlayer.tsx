@@ -1,4 +1,3 @@
-import { Instance, Instances } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { InstancedMesh } from 'three'
@@ -6,15 +5,13 @@ import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
-import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { BillboardMeshes } from './billboardmeshes'
 import {
-  DarknessMesh,
   filterlayer2floor,
   filterlayer2ground,
   filterlayer2walls,
