@@ -88,15 +88,13 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
-            <group position-z={-0.25}>
-              <Tiles
-                width={layer.width}
-                height={layer.height}
-                char={floor.char}
-                color={floor.color}
-                bg={floor.bg}
-              />
-            </group>
+            <Tiles
+              width={layer.width}
+              height={layer.height}
+              char={floor.char}
+              color={floor.color}
+              bg={floor.bg}
+            />
             <group position-z={drawheight * -0.25}>
               <Tiles
                 width={layer.width}
@@ -148,7 +146,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
             {(ix, iy) => [
               ix * drawwidth,
               (iy + 0.5 - rr * 0.5) * drawheight,
-              drawheight * -0.5,
+              drawheight * -0.5 + 1,
             ]}
           </ShadowMeshes>
           <BillboardMeshes sprites={othersprites} facing={control.facing}>

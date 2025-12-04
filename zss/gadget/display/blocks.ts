@@ -137,6 +137,7 @@ const blocksBillboardMaterial = new ShaderMaterial({
     alt: new Uniform(charset),
     cols: new Uniform(1),
     step: new Uniform(new Vector2()),
+    flip: new Uniform(true),
   },
   // vertex shader
   vertexShader: `
@@ -236,7 +237,7 @@ const blocksBillboardMaterial = new ShaderMaterial({
         vColor = mix(vBg.rgb, vColor, cyclefromtime());
       }
 
-      vDisplay.xy = display.xy;
+      vDisplay.xy = vec2(round(display.x), round(display.y));
 
       vVisible = visible;
     }
@@ -251,6 +252,7 @@ const blocksBillboardMaterial = new ShaderMaterial({
     uniform vec3 palette[16];
     uniform vec2 step;
     uniform float cols;
+    uniform bool flip;
 
     varying float vVisible;
     varying vec2 vDisplay;
@@ -264,7 +266,9 @@ const blocksBillboardMaterial = new ShaderMaterial({
       }
 
       vec2 uv = vUv * step + vec2(vDisplay.x * step.x, vDisplay.y * step.y);
-      uv.y = 1.0 - uv.y;
+      if (flip) {
+        uv.y = 1.0 - uv.y;
+      }
 
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;

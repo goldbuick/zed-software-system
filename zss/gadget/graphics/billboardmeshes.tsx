@@ -94,7 +94,7 @@ export function BillboardMeshes({
         // animate movement
         const firstframe = visible.getX(i) === 0
         if (firstframe) {
-          dummy.rotation.set(0, facing, 0)
+          dummy.rotation.set(0, 0, facing)
           dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
@@ -118,7 +118,11 @@ export function BillboardMeshes({
           lastbg.needsUpdate = true
           meshes.instanceMatrix.needsUpdate = true
         } else {
-          if (nowposition.getX(i) !== nx || nowposition.getY(i) !== ny) {
+          if (
+            nowposition.getX(i) !== nx ||
+            nowposition.getY(i) !== ny ||
+            meshes.userData.facing !== facing
+          ) {
             meshes.getMatrixAt(i, dummy.matrix)
             lastmatrix.set(dummy.matrix.toArray(), i * 16)
             nowposition.setXYZ(i, nx, ny, time.value)
@@ -154,10 +158,11 @@ export function BillboardMeshes({
         visible.needsUpdate = true
       }
     }
+    meshes.userData.facing = facing
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sprites, spritepool, range, meshes, visible, lastmatrix])
+  }, [sprites, spritepool, facing, range, meshes, visible, lastmatrix])
 
   return (
     <instancedMesh
