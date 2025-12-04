@@ -112,3 +112,34 @@ export function filterlayer2water(
     }),
   }
 }
+
+export function filterlayer2ground(
+  char: number[],
+  color: number[],
+  bg: number[],
+  stats: number[],
+) {
+  return {
+    char: char.map((_, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+          return 0
+      }
+      return 176
+    }),
+    color: color.map((_, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+          return 0
+      }
+      return COLOR.DKGRAY
+    }),
+    bg: bg.map((_, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+          return COLOR.ONCLEAR
+      }
+      return COLOR.BLACK
+    }),
+  }
+}
