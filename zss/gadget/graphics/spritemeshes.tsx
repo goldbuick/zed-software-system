@@ -26,7 +26,7 @@ type SpritesProps = {
   limit?: number
 }
 
-export function Sprites({
+export function SpriteMeshes({
   sprites,
   scale = 1,
   withbillboards = false,

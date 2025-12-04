@@ -13,7 +13,7 @@ import {
 } from './blocks'
 import { DarknessMeshes } from './darknessmeshes'
 import { ShadowMeshes } from './shadowmeshes'
-import { Sprites } from './spritemeshes'
+import { SpriteMeshes } from './spritemeshes'
 import { Tiles } from './tiles'
 
 type Mode7LayerProps = {
@@ -116,9 +116,9 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
               drawheight * -0.5 + 0.5,
             ]}
           </ShadowMeshes>
-          <Sprites sprites={[...othersprites]} withbillboards={true} />
+          <SpriteMeshes sprites={[...othersprites]} withbillboards={true} />
           <group position-z={drawheight * -0.5}>
-            <Sprites sprites={[...watersprites]} withbillboards={true} />
+            <SpriteMeshes sprites={[...watersprites]} withbillboards={true} />
           </group>
         </group>
       )

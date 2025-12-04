@@ -15,7 +15,7 @@ import {
 import { DarknessMeshes } from './darknessmeshes'
 import { PillarwMeshes } from './pillarmeshes'
 import { ShadowMeshes } from './shadowmeshes'
-import { Sprites } from './spritemeshes'
+import { SpriteMeshes } from './spritemeshes'
 import { Tiles } from './tiles'
 
 type GraphicsLayerProps = {
@@ -139,9 +139,9 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
               drawheight * -0.75 + 0.5,
             ]}
           </ShadowMeshes>
-          <Sprites sprites={[...othersprites]} scale={1.5} />
+          <SpriteMeshes sprites={[...othersprites]} scale={1.5} />
           <group position-z={drawheight * -0.5}>
-            <Sprites sprites={[...watersprites]} scale={1.5} />
+            <SpriteMeshes sprites={[...watersprites]} scale={1.5} />
           </group>
         </group>
       )
