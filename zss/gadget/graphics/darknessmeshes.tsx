@@ -37,8 +37,8 @@ export function DarknessMeshes({
       const alpha = alphas[i]
       if (alpha !== 0) {
         dummy.position.set(
-          (pt.x + 0.5) * drawwidth + rr,
-          (pt.y + 0.5) * drawheight - 1,
+          (pt.x + 0.5) * drawwidth - (1.0 - rr),
+          (pt.y + 0.5) * drawheight,
           drawheight * -0.5,
         )
         dummy.updateMatrix()
@@ -60,7 +60,7 @@ export function DarknessMeshes({
 
   return (
     <instancedMesh ref={setmeshes} args={[null, null, limit]}>
-      <boxGeometry args={[drawwidth, drawheight, drawheight]} />
+      <boxGeometry args={[drawwidth, drawheight, drawheight * 1.2]} />
       <primitive object={material} attach="material" />
     </instancedMesh>
   )
