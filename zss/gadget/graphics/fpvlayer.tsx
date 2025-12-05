@@ -121,13 +121,27 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={walls.bg}
               />
             </group>
-            <group position-z={drawheight + 1}>
+            <group position-z={drawheight + 0.5}>
               <Tiles
                 width={layer.width}
                 height={layer.height}
                 char={sky.char}
                 color={sky.color}
                 bg={sky.bg}
+              />
+            </group>
+            <group position-z={drawheight + 0.5}>
+              <PillarwMeshes
+                width={BOARD_WIDTH}
+                char={ground.char}
+                color={ground.color}
+                bg={ground.bg}
+              />
+              <PillarwMeshes
+                width={BOARD_WIDTH}
+                char={walls.char}
+                color={walls.color}
+                bg={walls.bg}
               />
             </group>
           </group>
