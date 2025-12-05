@@ -139,9 +139,9 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
               drawheight * -0.75 + 0.5,
             ]}
           </ShadowMeshes>
-          <SpriteMeshes sprites={[...othersprites]} scale={1.5} />
+          <SpriteMeshes sprites={othersprites} scale={1.5} />
           <group position-z={drawheight * -0.5}>
-            <SpriteMeshes sprites={[...watersprites]} scale={1.5} />
+            <SpriteMeshes sprites={watersprites} scale={1.5} />
           </group>
         </group>
       )

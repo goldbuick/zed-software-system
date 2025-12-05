@@ -13,7 +13,7 @@ export function filterlayer2floor(
         case COLLISION.ISSOLID:
           return 0
       }
-      return v
+      return Math.abs(v)
     }),
     color: color.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
@@ -26,8 +26,9 @@ export function filterlayer2floor(
     bg: bg.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSWIM:
-        case COLLISION.ISSOLID:
           return COLOR.ONCLEAR
+        case COLLISION.ISSOLID:
+          return COLOR.BLACK
       }
       return v
     }),
@@ -44,17 +45,11 @@ export function filterlayer2walls(
     char: char.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSOLID:
-          return v
+          return Math.abs(v)
       }
       return 0
     }),
-    color: color.map((v, idx) => {
-      switch (stats[idx] as COLLISION) {
-        case COLLISION.ISSOLID:
-          return v
-      }
-      return 0
-    }),
+    color,
     bg: bg.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSOLID:
@@ -75,17 +70,11 @@ export function filterlayer2water(
     char: char.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSWIM:
-          return v
+          return Math.abs(v)
       }
       return 0
     }),
-    color: color.map((v, idx) => {
-      switch (stats[idx] as COLLISION) {
-        case COLLISION.ISSWIM:
-          return v
-      }
-      return 0
-    }),
+    color,
     bg: bg.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSWIM:
@@ -123,6 +112,39 @@ export function filterlayer2ground(
           return COLOR.ONCLEAR
       }
       return COLOR.BLACK
+    }),
+  }
+}
+
+export function filterlayer2sky(
+  char: number[],
+  color: number[],
+  bg: number[],
+  stats: number[],
+) {
+  return {
+    char: char.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return 0
+      }
+      if (char[idx] < 0) {
+        return 0
+      }
+      return v
+    }),
+    color,
+    bg: bg.map((v, idx) => {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return COLOR.ONCLEAR
+      }
+      if (char[idx] < 0) {
+        return COLOR.ONCLEAR
+      }
+      return v
     }),
   }
 }

@@ -94,6 +94,7 @@ export function PillarwMeshes({
     }
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
+    meshes.visible = !!meshes.count
   }, [meshes, char, color, bg, width])
 
   return (

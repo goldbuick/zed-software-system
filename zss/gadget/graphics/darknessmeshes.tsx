@@ -55,6 +55,7 @@ export function DarknessMeshes({
     }
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
+    meshes.visible = !!meshes.count
   }, [meshes, alphas, width, drawwidth, drawheight])
 
   return (

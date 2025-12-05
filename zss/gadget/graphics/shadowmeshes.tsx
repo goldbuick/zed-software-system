@@ -74,36 +74,35 @@ export function ShadowMeshes({
           dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
-
           lastmatrix.set(dummy.matrix.toArray(), i * 16)
-          lastmatrix.needsUpdate = true
-
           nowposition.setXYZ(i, nx, ny, time.value)
-          nowposition.needsUpdate = true
-
           visible.setX(i, 1)
+
+          lastmatrix.needsUpdate = true
+          nowposition.needsUpdate = true
           visible.needsUpdate = true
+          meshes.instanceMatrix.needsUpdate = true
         } else if (nowposition.getX(i) !== nx || nowposition.getY(i) !== ny) {
           meshes.getMatrixAt(i, dummy.matrix)
           lastmatrix.set(dummy.matrix.toArray(), i * 16)
-          lastmatrix.needsUpdate = true
-
           nowposition.setXYZ(i, nx, ny, time.value)
-          nowposition.needsUpdate = true
-
           dummy.scale.set(1, rr, 1)
           dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
+
+          lastmatrix.needsUpdate = true
+          nowposition.needsUpdate = true
+          meshes.instanceMatrix.needsUpdate = true
         }
       } else if (visible.getX(i)) {
         visible.setX(i, 0)
         visible.needsUpdate = true
       }
     }
-    meshes.instanceMatrix.needsUpdate = true
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
+    meshes.visible = !!meshes.count
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sprites, spritepool, range, meshes, visible, nowposition, lastmatrix])
 
