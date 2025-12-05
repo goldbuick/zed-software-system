@@ -113,7 +113,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={ground.bg}
               />
             </group>
-            <group position-z={1}>
+            <group position-z={0.5}>
               <PillarwMeshes
                 width={BOARD_WIDTH}
                 char={walls.char}
@@ -121,7 +121,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={walls.bg}
               />
             </group>
-            <group position-z={drawheight + 2}>
+            <group position-z={drawheight + 1}>
               <Tiles
                 width={layer.width}
                 height={layer.height}

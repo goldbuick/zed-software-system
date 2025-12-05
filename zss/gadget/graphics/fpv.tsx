@@ -74,10 +74,10 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
 
   useFrame((_, delta) => {
     if (
+      !depthoffield.current ||
       !overref.current ||
       !underref.current ||
-      !cameraref.current ||
-      !depthoffield.current
+      !cameraref.current
     ) {
       return
     }
@@ -193,8 +193,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
             viewheight={viewheight}
             effects={
               <>
-                <DepthOfField ref={depthoffield} />
                 <DepthFog />
+                <DepthOfField ref={depthoffield} />
               </>
             }
           >

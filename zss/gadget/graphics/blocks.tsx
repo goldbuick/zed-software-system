@@ -49,13 +49,7 @@ export function filterlayer2walls(
       }
       return 0
     }),
-    color: color.map((v, idx) => {
-      switch (stats[idx] as COLLISION) {
-        case COLLISION.ISSOLID:
-          return v
-      }
-      return 0
-    }),
+    color,
     bg: bg.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSOLID:
@@ -80,13 +74,7 @@ export function filterlayer2water(
       }
       return 0
     }),
-    color: color.map((v, idx) => {
-      switch (stats[idx] as COLLISION) {
-        case COLLISION.ISSWIM:
-          return v
-      }
-      return 0
-    }),
+    color,
     bg: bg.map((v, idx) => {
       switch (stats[idx] as COLLISION) {
         case COLLISION.ISSWIM:
@@ -136,20 +124,22 @@ export function filterlayer2sky(
 ) {
   return {
     char: char.map((v, idx) => {
-      if (char[idx] < 0 || stats[idx] === (COLLISION.ISSOLID as number)) {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return 0
+      }
+      if (char[idx] < 0) {
         return 0
       }
       return v
     }),
-    color: color.map((v, idx) => {
-      if (char[idx] < 0 || stats[idx] === (COLLISION.ISSOLID as number)) {
-        return COLOR.ONCLEAR
-      }
-      return v
-    }),
+    color,
     bg: bg.map((v, idx) => {
-      if (stats[idx] === (COLLISION.ISSOLID as number)) {
-        return 0
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return COLOR.ONCLEAR
       }
       if (char[idx] < 0) {
         return COLOR.ONCLEAR
