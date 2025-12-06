@@ -28,7 +28,6 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
 
   return (
     <>
-      {effects}
       {mood.includes('dark') && (
         <Fragment key="mood">
           <Glitch
@@ -57,6 +56,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
           />
         </Fragment>
       )}
+      {effects}
       <primitive object={copyPass} dispose={null} />
     </>
   )

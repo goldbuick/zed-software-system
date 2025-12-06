@@ -144,7 +144,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 char={skyedge.char}
                 color={skyedge.color}
                 bg={skyedge.bg}
-                partial={0.25}
+                partial={0.5}
               />
               <PillarwMeshes
                 width={BOARD_WIDTH}

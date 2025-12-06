@@ -23,17 +23,18 @@ import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, NAME, PT } from 'zss/words/types'
 
-import { listelementsbyidnameorpts } from './atomics'
+import { checkdoescollide, listelementsbyidnameorpts } from './atomics'
 import {
   boarddeleteobject,
   boardelementread,
+  boardgetterrain,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsafedelete,
   boardsetterrain,
   boardterrainsetfromkind,
 } from './board'
-import { boardelementapplycolor } from './boardelement'
+import { boardelementapplycolor, boardelementisobject } from './boardelement'
 import {
   boardnamedwrite,
   boardobjectlookupwrite,
@@ -875,25 +876,44 @@ export function memorymoveobject(
   let blocked = boardmoveobject(board, element, dest)
   const collision = memoryelementstatread(element, 'collision')
 
-  // check pushable AND bullets can't PUSH
-  if (ispresent(blocked) && collision !== COLLISION.ISBULLET) {
-    const elementisplayer = ispid(element?.id)
+  // bullets can't PUSH, and you can only push object elements
+  if (
+    collision !== COLLISION.ISBULLET &&
+    ispresent(blocked) &&
+    boardelementisobject(blocked)
+  ) {
+    // check terrain __under__ blocked
+    const mayberterrain = boardgetterrain(
+      board,
+      blocked.x ?? -1,
+      blocked.y ?? -1,
+    )
+    const terraincollision = memoryelementstatread(mayberterrain, 'collision')
+    if (!checkdoescollide(collision, terraincollision)) {
+      const elementisplayer = ispid(element?.id)
 
-    // is blocked pushable ?
-    const isitem = !!memoryelementstatread(blocked, 'item')
-    const ispushable = memoryelementcheckpushable(element, blocked)
+      // is blocked pushable ?
+      const isitem = !!memoryelementstatread(blocked, 'item')
+      const ispushable = memoryelementcheckpushable(element, blocked)
 
-    // player cannot push items
-    const blockedid = blocked.id ?? ''
-    if (ispushable && (!elementisplayer || !isitem) && !didpush[blockedid]) {
-      didpush[blockedid] = true
-      const bumpdir = dirfrompts({ x: element.x ?? 0, y: element.y ?? 0 }, dest)
-      const bump = ptapplydir({ x: blocked.x ?? 0, y: blocked.y ?? 0 }, bumpdir)
-      memorymoveobject(book, board, blocked, bump)
+      // player cannot push items
+      const blockedid = blocked.id ?? ''
+      if (ispushable && (!elementisplayer || !isitem) && !didpush[blockedid]) {
+        didpush[blockedid] = true
+        const bumpdir = dirfrompts(
+          { x: element.x ?? 0, y: element.y ?? 0 },
+          dest,
+        )
+        const bump = ptapplydir(
+          { x: blocked.x ?? 0, y: blocked.y ?? 0 },
+          bumpdir,
+        )
+        memorymoveobject(book, board, blocked, bump)
+      }
+
+      // update blocked by element
+      blocked = boardmoveobject(board, element, dest)
     }
-
-    // update blocked by element
-    blocked = boardmoveobject(board, element, dest)
   }
 
   if (ispresent(blocked)) {

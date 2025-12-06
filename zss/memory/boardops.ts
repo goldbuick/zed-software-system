@@ -167,10 +167,8 @@ export function boardmoveobject(
 
   // blocked by terrain
   const mayberterrain = board.terrain[destidx]
-  const terraincollision =
-    mayberterrain?.collision ??
-    mayberterrain?.kinddata?.collision ??
-    COLLISION.ISWALK
+  const terraincollision = memoryelementstatread(mayberterrain, 'collision')
+
   // if blocked by terrain, bail
   if (checkdoescollide(movingelementcollision, terraincollision)) {
     // for sending interaction messages
