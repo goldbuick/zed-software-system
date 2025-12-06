@@ -358,6 +358,11 @@ export function boardreadgroup(
   }
 
   function checkelement(el: BOARD_ELEMENT, isterrain: boolean) {
+    // skip removed elements
+    if (el.removed) {
+      return false
+    }
+
     // special groups
     switch (targetgroup) {
       case 'all':
@@ -385,19 +390,23 @@ export function boardreadgroup(
     )
   }
 
-  // read target group
-  const allobjectelements = Object.values(board.objects)
-  for (let i = 0; i < allobjectelements.length; ++i) {
-    const el = allobjectelements[i]
-    // skip removed objects
-    if (!el.removed && checkelement(el, false)) {
-      objectelements.push(el)
-    }
-  }
+  // match elements
   for (let i = 0; i < BOARD_SIZE; ++i) {
-    const el = board.terrain[i]
-    if (ispresent(el) && checkelement(el, true)) {
-      terrainelements.push(el)
+    const maybeterrain: MAYBE<BOARD_ELEMENT> = board.terrain[i]
+    const maybeobject: MAYBE<BOARD_ELEMENT> =
+      board.objects[board.lookup?.[i] ?? '']
+    if (ispresent(maybeterrain) && checkelement(maybeterrain, true)) {
+      terrainelements.push(maybeterrain)
+      // check for magic carpet
+      const maybeobject = board.objects[board.lookup?.[i] ?? '']
+      if (ispresent(maybeobject) && boardelementisobject(maybeobject)) {
+        objectelements.push(maybeobject)
+      }
+    } else if (
+      boardelementisobject(maybeobject) &&
+      checkelement(maybeobject, false)
+    ) {
+      objectelements.push(maybeobject)
     }
   }
 

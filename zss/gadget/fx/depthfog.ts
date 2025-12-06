@@ -9,8 +9,7 @@ float exponentialIn(float t) {
 void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth, out vec4 outputColor) {
 	float viewZ = perspectiveDepthToViewZ(depth, cameraNear, cameraFar);
 	float linearDepth = 1.0 - viewZToOrthographicDepth(viewZ, cameraNear, cameraFar);
-  float shade = clamp(exponentialIn(linearDepth) + 0.2, 0.0, 1.0);
-
+  float shade = clamp(exponentialIn(linearDepth), 0.0, 1.0);
   vec3 color = vec3(shade);
   outputColor = vec4(color, inputColor.a);
 }
