@@ -458,101 +458,69 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
 
       codepage.board.id = codepage.id
       codepage.board.name = codepagereadname(codepage)
-
+      // unpack stats into board data
       const stats = codepagereadstatdefaults(codepage)
-
-      if (ispresent(stats.isdark)) {
-        codepage.board.isdark = 1
-      }
-      if (ispresent(stats.notdark)) {
-        codepage.board.isdark = 0
-      }
-
-      if (isnumber(stats.startx)) {
-        codepage.board.startx = stats.startx
-      }
-      if (isnumber(stats.starty)) {
-        codepage.board.starty = stats.starty
-      }
-
-      if (isstring(stats.over)) {
-        if (NAME(stats.over) === 'empty') {
-          codepage.board.over = undefined
-        } else {
-          codepage.board.over = stats.over
+      const keys = Object.keys(stats)
+      for (let i = 0; i < keys.length; ++i) {
+        const key = keys[i]
+        const value = stats[key]
+        switch (key) {
+          case 'isdark':
+            codepage.board.isdark = 1
+            break
+          case 'notdark':
+            codepage.board.isdark = 0
+            break
+          case 'restartonzap':
+            codepage.board.restartonzap = 1
+            break
+          case 'norestartonzap':
+            codepage.board.restartonzap = 0
+            break
+          case 'startx':
+          case 'starty':
+          case 'facing':
+          case 'timelimit':
+          case 'maxplayershots':
+            if (isnumber(value)) {
+              codepage.board[key] = value
+            }
+            break
+          case 'over':
+          case 'under':
+          case 'camera':
+          case 'graphics':
+          case 'charset':
+          case 'palette':
+          case 'exitnorth':
+          case 'exitsouth':
+          case 'exitwest':
+          case 'exiteast':
+            if (isstring(value)) {
+              if (NAME(value) === 'empty') {
+                codepage.board[key] = undefined
+              } else {
+                codepage.board[key] = value
+              }
+            }
+            break
+          case 'b1':
+          case 'b2':
+          case 'b3':
+          case 'b4':
+          case 'b5':
+          case 'b6':
+          case 'b7':
+          case 'b8':
+          case 'b9':
+          case 'b10':
+            if (ispresent(value)) {
+              // @ts-expect-error yes
+              codepage.board[key] = mapstrtoconsts(value) ?? value
+            }
+            break
         }
       }
-      if (isstring(stats.under)) {
-        if (NAME(stats.under) === 'empty') {
-          codepage.board.under = undefined
-        } else {
-          codepage.board.under = stats.under
-        }
-      }
-
-      if (isstring(stats.camera)) {
-        if (NAME(stats.camera) === 'empty') {
-          codepage.board.camera = undefined
-        } else {
-          codepage.board.camera = stats.camera
-        }
-      }
-      if (isstring(stats.graphics)) {
-        if (NAME(stats.graphics) === 'empty') {
-          codepage.board.graphics = undefined
-        } else {
-          codepage.board.graphics = stats.graphics
-        }
-      }
-      if (isnumber(stats.facing)) {
-        codepage.board.facing = stats.facing
-      }
-      if (isstring(stats.facing) && NAME(stats.facing) === 'empty') {
-        codepage.board.facing = undefined
-      }
-      if (isstring(stats.charset)) {
-        if (NAME(stats.charset) === 'empty') {
-          codepage.board.charset = undefined
-        } else {
-          codepage.board.charset = stats.charset
-        }
-      }
-      if (isstring(stats.palette)) {
-        if (NAME(stats.palette) === 'empty') {
-          codepage.board.palette = undefined
-        } else {
-          codepage.board.palette = stats.palette
-        }
-      }
-
-      if (isstring(stats.exitnorth)) {
-        codepage.board.exitnorth = stats.exitnorth
-      }
-      if (isstring(stats.exitsouth)) {
-        codepage.board.exitsouth = stats.exitsouth
-      }
-      if (isstring(stats.exitwest)) {
-        codepage.board.exitwest = stats.exitwest
-      }
-      if (isstring(stats.exiteast)) {
-        codepage.board.exiteast = stats.exiteast
-      }
-
-      if (isnumber(stats.timelimit)) {
-        codepage.board.timelimit = stats.timelimit
-      }
-
-      if (ispresent(stats.restartonzap)) {
-        codepage.board.restartonzap = 1
-      }
-      if (ispresent(stats.norestartonzap)) {
-        codepage.board.restartonzap = 0
-      }
-
-      if (isnumber(stats.maxplayershots)) {
-        codepage.board.maxplayershots = stats.maxplayershots
-      }
-
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
