@@ -333,6 +333,30 @@ export const BOARD_FIRMWARE = createfirmware()
       const sourceboard = memoryboardread(maybesource)
       if (ispresent(sourceboard)) {
         boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+        // make sure to copy board stats as well
+        createdboard.isdark = sourceboard.isdark
+        createdboard.startx = sourceboard.startx
+        createdboard.starty = sourceboard.starty
+        createdboard.over = sourceboard.over
+        createdboard.under = sourceboard.under
+        createdboard.camera = sourceboard.camera
+        createdboard.graphics = sourceboard.graphics
+        createdboard.facing = sourceboard.facing
+        createdboard.charset = sourceboard.charset
+        createdboard.palette = sourceboard.palette
+        createdboard.timelimit = sourceboard.timelimit
+        createdboard.restartonzap = sourceboard.restartonzap
+        createdboard.maxplayershots = sourceboard.maxplayershots
+        createdboard.b1 = sourceboard.b1
+        createdboard.b2 = sourceboard.b2
+        createdboard.b3 = sourceboard.b3
+        createdboard.b4 = sourceboard.b4
+        createdboard.b5 = sourceboard.b5
+        createdboard.b6 = sourceboard.b6
+        createdboard.b7 = sourceboard.b7
+        createdboard.b8 = sourceboard.b8
+        createdboard.b9 = sourceboard.b9
+        createdboard.b10 = sourceboard.b10
         // when building out border boards, make sure to link back
         // to current board
         switch (NAME(stat)) {

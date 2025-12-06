@@ -95,16 +95,16 @@ export type BOARD = {
   restartonzap?: number
   maxplayershots?: number
   // board params
-  b1?: number
-  b2?: number
-  b3?: number
-  b4?: number
-  b5?: number
-  b6?: number
-  b7?: number
-  b8?: number
-  b9?: number
-  b10?: number
+  b1?: number | string
+  b2?: number | string
+  b3?: number | string
+  b4?: number | string
+  b5?: number | string
+  b6?: number | string
+  b7?: number | string
+  b8?: number | string
+  b9?: number | string
+  b10?: number | string
   // runtime only
   id: string
   name: string
