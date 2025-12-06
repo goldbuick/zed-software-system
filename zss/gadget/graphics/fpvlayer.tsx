@@ -177,6 +177,7 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
       const shadowsprites = layer.sprites.filter((sprite) => {
         switch (sprite.stat as COLLISION) {
           case COLLISION.ISSWIM:
+          case COLLISION.ISGHOST:
             return false
           default:
             return sprite.pid !== player
