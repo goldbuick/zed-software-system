@@ -1,7 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
-import { DepthOfFieldEffect } from 'postprocessing'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
@@ -65,7 +64,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
-  const depthoffield = useRef<DepthOfFieldEffect>(null)
 
   const [, setcameraready] = useState(false)
   useLayoutEffect(() => {
@@ -73,12 +71,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   }, [])
 
   useFrame((_, delta) => {
-    if (
-      !depthoffield.current ||
-      !overref.current ||
-      !underref.current ||
-      !cameraref.current
-    ) {
+    if (!overref.current || !underref.current || !cameraref.current) {
       return
     }
 
@@ -132,11 +125,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
       damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
     }
-
-    // update effect
-    depthoffield.current.bokehScale = 5
-    depthoffield.current.cocMaterial.worldFocusRange = 2000
-    depthoffield.current.cocMaterial.worldFocusDistance = 100
 
     // update fov & matrix
     damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
@@ -193,8 +181,12 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
             viewheight={viewheight}
             effects={
               <>
+                <DepthOfField
+                  worldFocusDistance={200}
+                  worldFocusRange={500}
+                  bokehScale={3}
+                />
                 <DepthFog />
-                <DepthOfField ref={depthoffield} />
               </>
             }
           >

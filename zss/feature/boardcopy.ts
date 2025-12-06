@@ -77,6 +77,10 @@ export function mapelementcopy(
   maybenew.p4 = from.p4
   maybenew.p5 = from.p5
   maybenew.p6 = from.p6
+  maybenew.p7 = from.p7
+  maybenew.p8 = from.p8
+  maybenew.p9 = from.p9
+  maybenew.p10 = from.p10
   maybenew.code = from.code
   maybenew.item = from.item
   maybenew.group = from.group

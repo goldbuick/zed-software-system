@@ -106,10 +106,13 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
           (sprite.stat as COLLISION) === COLLISION.ISSWIM &&
           (!hideplayer || !sprite.pid),
       )
+      const shadowsprites = othersprites.filter(
+        (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISGHOST,
+      )
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <ShadowMeshes sprites={othersprites} limit={BOARD_SIZE}>
+          <ShadowMeshes sprites={shadowsprites} limit={BOARD_SIZE}>
             {(ix, iy) => [
               ix * drawwidth,
               (iy + 0.5) * drawheight,
