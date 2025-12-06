@@ -15,6 +15,7 @@ type PillarwMeshesProps = {
   char: number[]
   color: number[]
   bg: number[]
+  partial?: number
   limit?: number
 }
 
@@ -26,6 +27,7 @@ export function PillarwMeshes({
   char,
   color,
   bg,
+  partial,
   limit = BOARD_SIZE,
 }: PillarwMeshesProps) {
   const palette = useMedia((state) => state.palettedata)
@@ -50,10 +52,16 @@ export function PillarwMeshes({
   }, [palette, charset, altcharset, material, imageWidth, imageHeight])
 
   // create buffer geo attributes
-  const { position, uv } = useMemo(
-    () => createPillarBufferGeometryAttributes(1, 1),
-    [],
-  )
+  const { position, uv } = useMemo(() => {
+    const shape = createPillarBufferGeometryAttributes(1, 1)
+    if (partial) {
+      shape.position = shape.position.map((v, index) =>
+        index % 3 === 2 ? v * partial : v,
+      )
+      shape.uv = shape.uv.map((v, index) => (index % 2 === 1 ? v * partial : v))
+    }
+    return shape
+  }, [partial])
 
   const [meshes, setmeshes] = useState<InstancedMesh>()
   // process tiles

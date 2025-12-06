@@ -8,7 +8,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import {
   filterlayer2floor,
-  filterlayer2ground,
+  filterlayer2flooredge,
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
@@ -65,7 +65,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
         layer.bg,
         layer.stats,
       )
-      const ground = filterlayer2ground(
+      const ground = filterlayer2flooredge(
         layer.char,
         layer.color,
         layer.bg,

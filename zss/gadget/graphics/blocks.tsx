@@ -85,37 +85,6 @@ export function filterlayer2water(
   }
 }
 
-export function filterlayer2ground(
-  char: number[],
-  color: number[],
-  bg: number[],
-  stats: number[],
-) {
-  return {
-    char: char.map((_, idx) => {
-      switch (stats[idx] as COLLISION) {
-        case COLLISION.ISSWIM:
-          return 0
-      }
-      return 176
-    }),
-    color: color.map((_, idx) => {
-      switch (stats[idx] as COLLISION) {
-        case COLLISION.ISSWIM:
-          return 0
-      }
-      return COLOR.DKGRAY
-    }),
-    bg: bg.map((_, idx) => {
-      switch (stats[idx] as COLLISION) {
-        case COLLISION.ISSWIM:
-          return COLOR.ONCLEAR
-      }
-      return COLOR.BLACK
-    }),
-  }
-}
-
 export function filterlayer2sky(
   char: number[],
   color: number[],
@@ -145,6 +114,62 @@ export function filterlayer2sky(
         return COLOR.ONCLEAR
       }
       return v
+    }),
+  }
+}
+
+export function filterlayer2flooredge(
+  char: number[],
+  color: number[],
+  bg: number[],
+  stats: number[],
+) {
+  return {
+    char: char.map((_, idx) => {
+      if ((stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+        return 0
+      }
+      return 176
+    }),
+    color: color.map((_, idx) => {
+      if ((stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+        return 0
+      }
+      return COLOR.DKGRAY
+    }),
+    bg: bg.map((_, idx) => {
+      if ((stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+        return COLOR.ONCLEAR
+      }
+      return COLOR.BLACK
+    }),
+  }
+}
+
+export function filterlayer2skyedge(
+  char: number[],
+  color: number[],
+  bg: number[],
+  stats: number[],
+) {
+  return {
+    char: char.map((_, idx) => {
+      if (char[idx] < 0 || (stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+        return 0
+      }
+      return 176
+    }),
+    color: color.map((_, idx) => {
+      if (char[idx] < 0 || (stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+        return 0
+      }
+      return COLOR.DKGRAY
+    }),
+    bg: bg.map((_, idx) => {
+      if (char[idx] < 0 || (stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+        return COLOR.ONCLEAR
+      }
+      return COLOR.BLACK
     }),
   }
 }

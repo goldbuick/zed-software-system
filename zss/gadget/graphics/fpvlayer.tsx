@@ -10,8 +10,9 @@ import { useShallow } from 'zustand/react/shallow'
 import { BillboardMeshes } from './billboardmeshes'
 import {
   filterlayer2floor,
-  filterlayer2ground,
+  filterlayer2flooredge,
   filterlayer2sky,
+  filterlayer2skyedge,
   filterlayer2walls,
   filterlayer2water,
 } from './blocks'
@@ -73,13 +74,19 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
         layer.bg,
         layer.stats,
       )
-      const ground = filterlayer2ground(
+      const sky = filterlayer2sky(
         layer.char,
         layer.color,
         layer.bg,
         layer.stats,
       )
-      const sky = filterlayer2sky(
+      const flooredge = filterlayer2flooredge(
+        layer.char,
+        layer.color,
+        layer.bg,
+        layer.stats,
+      )
+      const skyedge = filterlayer2skyedge(
         layer.char,
         layer.color,
         layer.bg,
@@ -105,12 +112,13 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <group position-z={drawheight * -1}>
+            <group position-z={drawheight * -0.25}>
               <PillarwMeshes
                 width={BOARD_WIDTH}
-                char={ground.char}
-                color={ground.color}
-                bg={ground.bg}
+                char={flooredge.char}
+                color={flooredge.color}
+                bg={flooredge.bg}
+                partial={0.25}
               />
             </group>
             <group position-z={0.5}>
@@ -133,9 +141,10 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
             <group position-z={drawheight + 0.5}>
               <PillarwMeshes
                 width={BOARD_WIDTH}
-                char={ground.char}
-                color={ground.color}
-                bg={ground.bg}
+                char={skyedge.char}
+                color={skyedge.color}
+                bg={skyedge.bg}
+                partial={0.25}
               />
               <PillarwMeshes
                 width={BOARD_WIDTH}
