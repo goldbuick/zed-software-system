@@ -89,6 +89,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     )
 
     const animrate = 0.05
+    const animrateslow = 0.111
     const currentboard = useGadgetClient.getState().gadget.board
 
     // setup tracking state
@@ -96,7 +97,13 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       cameraref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
+        lfocusx: control.focusx,
+        lfocusy: control.focusy,
         facing: control.facing,
+        sway: 0,
+        vsway: 0,
+        lean: 0,
+        vlean: 0,
         currentboard,
       }
     }
@@ -104,6 +111,39 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     const userData = cameraref.current.userData ?? {}
     const fx = (userData.focusx + 0.5) * drawwidth
     const fy = (userData.focusy + 0.5) * drawheight
+
+    // track movement
+    if (
+      userData.lfocusx !== control.focusx ||
+      userData.lfocusy !== control.focusy
+    ) {
+      const swayscale = 7
+      const leanscale = 0.02
+      const dx = userData.lfocusx - control.focusx
+      const dy = userData.lfocusy - control.focusy
+      const mappedfacing = Math.round(control.facing / (Math.PI * 0.5))
+      switch (mappedfacing) {
+        default:
+        case 0: // north
+          userData.vsway = dy * swayscale
+          userData.vlean = dx * leanscale
+          break
+        case 1: // east
+          userData.vsway = -dx * swayscale
+          userData.vlean = dy * leanscale
+          break
+        case 2: // south
+          userData.vsway = -dy * swayscale
+          userData.vlean = -dx * leanscale
+          break
+        case 3: // west
+          userData.vsway = dx * swayscale
+          userData.vlean = -dy * leanscale
+          break
+      }
+      userData.lfocusx = control.focusx
+      userData.lfocusy = control.focusy
+    }
 
     // position camera
     damp3(
@@ -122,19 +162,46 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     )
 
     // tilt camera
-    dampE(cameraref.current.rotation, [Math.PI * -0.49, 0, 0], animrate, delta)
-    // x looks left/right
-    // z leans left/right
-    damp3(cameraref.current.position, [0, 0, -1], animrate, delta)
+    dampE(
+      cameraref.current.rotation,
+      [Math.PI * -0.49, 0, userData.lean],
+      animrate,
+      delta,
+    )
+
+    // pull back from pivot point
+    const srange = 1.2
+    const swx = Math.sin(userData.sway) * srange
+    const swy = Math.abs(Math.sin(userData.sway) * srange)
+    damp3(cameraref.current.position, [swx, 0, swy], animrate, delta)
+
+    // smoothed sway
+    userData.sway += userData.vsway * delta
+    damp(cameraref.current.userData, 'vsway', 0, animrateslow)
+
+    // smoothed lean
+    damp(cameraref.current.userData, 'lean', userData.vlean, animrateslow)
+    damp(cameraref.current.userData, 'vlean', 0, animrateslow)
 
     // smoothed change in focus
     if (currentboard !== userData.currentboard) {
+      // hard reset
+      userData.sway = 0
+      userData.vsway = 0
+      userData.lean = 0
+      userData.vlean = 0
       userData.focusx = control.focusx
       userData.focusy = control.focusy
+      userData.lfocusx = userData.focusx
+      userData.lfocusy = userData.focusy
       userData.currentboard = currentboard
       const ffx = (userData.focusx + 0.5) * drawwidth
       const ffy = (userData.focusy + 0.5) * drawheight
       positionref.current.position.set(ffx, -ffy, 512 + drawheight * 0.5)
+      const swx = Math.sin(userData.sway) * srange
+      const swy = Math.abs(Math.sin(userData.sway) * srange)
+      cameraref.current.position.set(swx, 0, swy)
+      cameraref.current.rotation.set(Math.PI * -0.49, 0, userData.lean)
     } else {
       damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
       damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
