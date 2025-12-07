@@ -4,7 +4,7 @@ import { RUNTIME } from 'zss/config'
 import { MESSAGE, api_error, api_log, vm_touched } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
+import { LAYER, LAYER_TYPE, layersreadmedia } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -1519,10 +1519,14 @@ export function memoryreadgadgetlayers(
   )
 
   // scan for media layers
-  for (let i = 0; i < layers.length; ++i) {
-    const layer = layers[i]
+  const media = layersreadmedia(layers)
+  for (let i = 0; i < media.length; ++i) {
+    const layer = media[i]
     if (layer.type === LAYER_TYPE.MEDIA) {
       id4all.push(layer.id)
+      if (isstring(layer.media)) {
+        id4all.push(layer.media)
+      }
     }
   }
 

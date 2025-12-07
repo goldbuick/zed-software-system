@@ -83,6 +83,10 @@ export function Framed({ width, height }: FramedProps) {
             case 'c':
               register_terminal_quickopen(SOFTWARE, player, '')
               break
+            case '@':
+            case '2':
+              register_terminal_quickopen(SOFTWARE, player, '@')
+              break
             case '#':
             case '3':
               register_terminal_quickopen(SOFTWARE, player, '#')
