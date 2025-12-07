@@ -62,7 +62,7 @@ export function DarknessMeshes({
   return (
     <instancedMesh ref={setmeshes} args={[null, null, limit]}>
       <boxGeometry
-        args={[drawwidth - shave, drawheight - shave, drawheight + shave]}
+        args={[drawwidth - shave, drawheight - shave, drawheight * 2.5]}
       />
       <primitive object={material} attach="material" />
     </instancedMesh>

@@ -154,19 +154,34 @@ export function filterlayer2skyedge(
 ) {
   return {
     char: char.map((_, idx) => {
-      if (char[idx] < 0 || (stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return 0
+      }
+      if (char[idx] < 0) {
         return 0
       }
       return 176
     }),
     color: color.map((_, idx) => {
-      if (char[idx] < 0 || (stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return 0
+      }
+      if (char[idx] < 0) {
         return 0
       }
       return COLOR.DKGRAY
     }),
     bg: bg.map((_, idx) => {
-      if (char[idx] < 0 || (stats[idx] as COLLISION) === COLLISION.ISSWIM) {
+      switch (stats[idx] as COLLISION) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISSOLID:
+          return COLOR.ONCLEAR
+      }
+      if (char[idx] < 0) {
         return COLOR.ONCLEAR
       }
       return COLOR.BLACK

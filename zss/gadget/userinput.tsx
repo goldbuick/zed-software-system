@@ -244,7 +244,10 @@ window.addEventListener(
       case 'arrowright':
       case 'arrowup':
       case 'arrowdown':
-      case '/': // << for firefox :<
+      case `'`:
+      case '"':
+      case '/':
+        // << for firefox :<
         event.preventDefault()
         break
     }

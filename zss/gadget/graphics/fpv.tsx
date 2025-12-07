@@ -61,6 +61,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
 
+  const positionref = useRef<Group>(null)
+  const tiltref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
@@ -71,7 +73,13 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   }, [])
 
   useFrame((_, delta) => {
-    if (!overref.current || !underref.current || !cameraref.current) {
+    if (
+      !positionref.current ||
+      !tiltref.current ||
+      !overref.current ||
+      !underref.current ||
+      !cameraref.current
+    ) {
       return
     }
 
@@ -99,7 +107,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
 
     // position camera
     damp3(
-      cameraref.current.position,
+      positionref.current.position,
       [fx, -fy, 512 + drawheight * 0.55],
       animrate,
       delta,
@@ -107,11 +115,17 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
 
     // point camera
     dampE(
-      cameraref.current.rotation,
-      [Math.PI * -0.5, control.facing + Math.PI, 0],
+      tiltref.current.rotation,
+      [0, 0, Math.PI - control.facing],
       animrate,
       delta,
     )
+
+    // tilt camera
+    dampE(cameraref.current.rotation, [Math.PI * -0.49, 0, 0], animrate, delta)
+    // x looks left/right
+    // z leans left/right
+    damp3(cameraref.current.position, [0, 0, -1], animrate, delta)
 
     // smoothed change in focus
     if (currentboard !== userData.currentboard) {
@@ -120,7 +134,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       userData.currentboard = currentboard
       const ffx = (userData.focusx + 0.5) * drawwidth
       const ffy = (userData.focusy + 0.5) * drawheight
-      cameraref.current.position.set(ffx, -ffy, 512 + drawheight * 0.5)
+      positionref.current.position.set(ffx, -ffy, 512 + drawheight * 0.5)
     } else {
       damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
       damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
@@ -161,13 +175,17 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
   return (
     <>
-      <perspectiveCamera
-        ref={cameraref}
-        near={0.1}
-        far={3000}
-        aspect={-viewwidth / viewheight}
-        position={[0, drawheight * -0.5, 0]}
-      />
+      <group ref={positionref}>
+        <group ref={tiltref}>
+          <perspectiveCamera
+            ref={cameraref}
+            near={0.1}
+            far={3000}
+            aspect={-viewwidth / viewheight}
+            position={[0, drawheight * -0.5, 0]}
+          />
+        </group>
+      </group>
       <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
