@@ -184,6 +184,10 @@ export function createmedia(
   }
 }
 
+export function layersreadmedia(layers: LAYER[]): LAYER[] {
+  return layers.filter((layer) => layer.type === LAYER_TYPE.MEDIA)
+}
+
 export function createcontrol(player: string, index: number): LAYER_CONTROL {
   return {
     id: `c:${player}:${index}`,
