@@ -120,6 +120,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
         lfocusx: control.focusx,
         lfocusy: control.focusy,
         facing: control.facing,
+        lfacing: control.facing,
         sway: 0,
         vsway: 0,
         lean: 0,
@@ -163,6 +164,19 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       }
       userData.lfocusx = control.focusx
       userData.lfocusy = control.focusy
+    }
+
+    // track turning
+    if (userData.lfacing !== control.facing) {
+      let df = control.facing - userData.lfacing
+      if (df < -Math.PI) {
+        df += Math.PI * 2
+      } else if (df > Math.PI) {
+        df += Math.PI * -2
+      }
+      const leanscale = 0.02
+      userData.vlean = df * leanscale
+      userData.lfacing = control.facing
     }
 
     // position camera
