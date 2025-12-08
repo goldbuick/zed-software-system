@@ -14,12 +14,14 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { COLOR } from 'zss/words/types'
 
 import { DepthFog } from '../fx/depthfog'
 import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { FPVLayer } from './fpvlayer'
+import { PillarwMeshes } from './pillarmeshes'
 import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
@@ -48,6 +50,24 @@ function maptofov(viewscale: VIEWSCALE): number {
       return 75
     case VIEWSCALE.FAR:
       return 110
+  }
+}
+
+// board edge meshes
+const edgechars: number[] = []
+const edgecolors: number[] = []
+const edgebgs: number[] = []
+for (let y = 0; y < BOARD_HEIGHT; ++y) {
+  for (let x = 0; x < BOARD_WIDTH; ++x) {
+    if (x === 0 || x === BOARD_WIDTH - 1 || y === 0 || y === BOARD_HEIGHT - 1) {
+      edgechars.push(221)
+      edgecolors.push(COLOR.DKGRAY)
+      edgebgs.push(COLOR.BLACK)
+    } else {
+      edgechars.push(0)
+      edgecolors.push(0)
+      edgebgs.push(COLOR.ONCLEAR)
+    }
   }
 }
 
@@ -284,54 +304,98 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                   z={maptolayerz(layer)}
                 />
               ))}
-              {exiteast.length && (
-                <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                  {exiteast.map((layer) => (
-                    <FPVLayer
-                      key={layer.id}
-                      id={layer.id}
-                      layers={exiteast}
-                      z={maptolayerz(layer)}
+              <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
+                {exiteast.length ? (
+                  <>
+                    {exiteast.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exiteast}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <group scale-z={2}>
+                    <PillarwMeshes
+                      width={BOARD_WIDTH}
+                      char={edgechars}
+                      color={edgecolors}
+                      bg={edgebgs}
                     />
-                  ))}
-                </group>
-              )}
-              {exitwest.length && (
-                <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                  {exitwest.map((layer) => (
-                    <FPVLayer
-                      key={layer.id}
-                      id={layer.id}
-                      layers={exitwest}
-                      z={maptolayerz(layer)}
+                  </group>
+                )}
+              </group>
+              <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
+                {exitwest.length ? (
+                  <>
+                    {exitwest.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exitwest}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <group scale-z={2}>
+                    <PillarwMeshes
+                      width={BOARD_WIDTH}
+                      char={edgechars}
+                      color={edgecolors}
+                      bg={edgebgs}
                     />
-                  ))}
-                </group>
-              )}
-              {exitnorth.length && (
-                <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                  {exitnorth.map((layer) => (
-                    <FPVLayer
-                      key={layer.id}
-                      id={layer.id}
-                      layers={exitnorth}
-                      z={maptolayerz(layer)}
+                  </group>
+                )}
+              </group>
+              <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
+                {exitnorth.length ? (
+                  <>
+                    {exitnorth.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exitnorth}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <group scale-z={2}>
+                    <PillarwMeshes
+                      width={BOARD_WIDTH}
+                      char={edgechars}
+                      color={edgecolors}
+                      bg={edgebgs}
                     />
-                  ))}
-                </group>
-              )}
-              {exitsouth.length && (
-                <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                  {exitsouth.map((layer) => (
-                    <FPVLayer
-                      key={layer.id}
-                      id={layer.id}
-                      layers={exitsouth}
-                      z={maptolayerz(layer)}
+                  </group>
+                )}
+              </group>
+              <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
+                {exitsouth.length ? (
+                  <>
+                    {exitsouth.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={exitsouth}
+                        z={maptolayerz(layer)}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <group scale-z={2}>
+                    <PillarwMeshes
+                      width={BOARD_WIDTH}
+                      char={edgechars}
+                      color={edgecolors}
+                      bg={edgebgs}
                     />
-                  ))}
-                </group>
-              )}
+                  </group>
+                )}
+              </group>
             </group>
           </RenderLayer>
         )}
