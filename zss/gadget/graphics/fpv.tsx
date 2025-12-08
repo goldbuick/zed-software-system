@@ -60,8 +60,8 @@ const edgebgs: number[] = []
 for (let y = 0; y < BOARD_HEIGHT; ++y) {
   for (let x = 0; x < BOARD_WIDTH; ++x) {
     if (x === 0 || x === BOARD_WIDTH - 1 || y === 0 || y === BOARD_HEIGHT - 1) {
-      edgechars.push(221)
-      edgecolors.push(COLOR.DKGRAY)
+      edgechars.push(32)
+      edgecolors.push(COLOR.BLACK)
       edgebgs.push(COLOR.BLACK)
     } else {
       edgechars.push(0)
