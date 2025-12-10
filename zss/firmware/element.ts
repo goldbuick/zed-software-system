@@ -857,7 +857,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.yield()
     return 0
   })
-  .command('end', (chip) => {
+  .command('end', (chip, words) => {
+    const [result] = readargs(words, 0, [ARG_TYPE.ANY])
+    if (ispresent(result)) {
+      chip.set('arg', result)
+    }
     chip.endofprogram()
     return 0
   })
