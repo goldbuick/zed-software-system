@@ -33,7 +33,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
           <Glitch
             delay={[10, 60 * 2]} // min and max glitch delay
             duration={[0.1, 3.0]} // min and max glitch duration
-            strength={[0, 1]} // min and max glitch strength
+            strength={[0, 0.15]} // min and max glitch strength
             mode={GlitchMode.SPORADIC} // glitch mode
             active // turn on/off the effect (switches between "mode" prop and GlitchMode.DISABLED)
             ratio={0.5} // Threshold for strong glitches, 0 - no weak glitches, 1 - no strong glitches.
