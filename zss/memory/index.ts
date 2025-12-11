@@ -1,5 +1,5 @@
 import { objectKeys } from 'ts-extras'
-import { senderid } from 'zss/chip'
+import { CHIP, senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { MESSAGE, api_error, api_log, vm_touched } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -66,6 +66,7 @@ import {
 } from './codepage'
 import { memoryloaderarg, memoryloaderplayer } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
+import { memorysendtoelement, memorysendtoelements } from './send'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -781,56 +782,15 @@ export function memorymessage(message: MESSAGE) {
   os.message(message)
 }
 
-// switch (blockedbykind) {
-//   case 'object':
-//   case 'scroll':
-//     // object & scroll kinds can be shot by everything
-//     break
-//   default:
-//     // everything else handles shot differently
-//     memorysendinteraction(elementplayer, element, blocked, 'shot')
-//     break
-// }
-
-// delete breakable elements
-// if (elementisbullet && memoryelementstatread(blocked, 'breakable')) {
-//   if (ispresent(blocked?.id)) {
-//     const maybeobject = boardelementread(board, {
-//       x: blocked.x ?? -1,
-//       y: blocked.y ?? -1,
-//     })
-//     if (ispresent(maybeobject)) {
-//       // mark target for deletion
-//       boardsafedelete(
-//         READ_CONTEXT.board,
-//         maybeobject,
-//         READ_CONTEXT.timestamp,
-//       )
-//     }
-//   } else {
-//     // overwrite terrain with empty
-//     boardsetterrain(board, { x: dest.x, y: dest.y })
-//   }
-// }
-
 export function memorysendinteraction(
-  player: string,
   fromelement: BOARD_ELEMENT,
   toelement: BOARD_ELEMENT,
   message: string,
 ) {
-  if (!isstring(toelement.id)) {
+  if (!isstring(fromelement.id)) {
     return
   }
-  if (isstring(fromelement.id)) {
-    vm_touched(SOFTWARE, player, fromelement.id, toelement.id, message)
-  } else {
-    const idx = `${pttoindex(
-      { x: fromelement.x ?? 0, y: fromelement.y ?? 0 },
-      BOARD_WIDTH,
-    )}`
-    vm_touched(SOFTWARE, player, idx, toelement.id, message)
-  }
+  memorysendtoelement(fromelement, toelement, message)
 }
 
 function playerblockedbyedge(
@@ -954,7 +914,7 @@ export function memorymoveobject(
           bumpdir,
         )
         if (!memorymoveobject(book, board, blocked, bump)) {
-          memorysendinteraction(elementplayer, element, blocked, 'touch')
+          memorysendinteraction(element, blocked, 'touch')
         }
       }
 
@@ -981,39 +941,39 @@ export function memorymoveobject(
     if (elementisplayer) {
       if (blockedbykind === 'edge') {
         if (!playerblockedbyedge(book, board, element, dest)) {
-          memorysendinteraction(blockedplayer, blocked, element, 'thud')
+          memorysendinteraction(blocked, element, 'thud')
         }
       } else if (blockedisbullet) {
         if (board?.restartonzap) {
           playerwaszapped(book, board, element, elementplayer)
         }
-        memorysendinteraction(blockedplayer, blocked, element, 'shot')
-        memorysendinteraction(elementplayer, element, blocked, 'thud')
+        memorysendinteraction(blocked, element, 'shot')
+        memorysendinteraction(element, blocked, 'thud')
       } else {
-        memorysendinteraction(blockedplayer, blocked, element, 'touch')
-        memorysendinteraction(elementplayer, element, blocked, 'touch')
+        memorysendinteraction(blocked, element, 'touch')
+        memorysendinteraction(element, blocked, 'touch')
       }
     } else if (elementisbullet) {
       if (blockedisbullet) {
-        memorysendinteraction(blockedplayer, blocked, element, 'thud')
-        memorysendinteraction(elementplayer, element, blocked, 'thud')
+        memorysendinteraction(blocked, element, 'thud')
+        memorysendinteraction(element, blocked, 'thud')
       } else {
         if (blockedbyplayer && board?.restartonzap) {
           playerwaszapped(book, board, blocked, blockedplayer)
         }
-        memorysendinteraction(blockedplayer, blocked, element, 'thud')
-        memorysendinteraction(elementplayer, element, blocked, 'shot')
+        memorysendinteraction(blocked, element, 'thud')
+        memorysendinteraction(element, blocked, 'shot')
       }
     } else {
       if (blockedbyplayer) {
-        memorysendinteraction(blockedplayer, blocked, element, 'touch')
-        memorysendinteraction(elementplayer, element, blocked, 'touch')
+        memorysendinteraction(blocked, element, 'touch')
+        memorysendinteraction(element, blocked, 'touch')
       } else if (blockedisbullet) {
-        memorysendinteraction(blockedplayer, blocked, element, 'shot')
-        memorysendinteraction(elementplayer, element, blocked, 'thud')
+        memorysendinteraction(blocked, element, 'shot')
+        memorysendinteraction(element, blocked, 'thud')
       } else {
-        memorysendinteraction(blockedplayer, blocked, element, 'bump')
-        memorysendinteraction(elementplayer, element, blocked, 'thud')
+        memorysendinteraction(blocked, element, 'bump')
+        memorysendinteraction(element, blocked, 'thud')
       }
     }
 

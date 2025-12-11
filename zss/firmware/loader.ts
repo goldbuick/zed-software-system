@@ -14,6 +14,7 @@ import { maptostring } from 'zss/mapping/value'
 import { memoryboardread, memoryreadoperator } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
+import { memorysendtoelements } from 'zss/memory/send'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { NAME } from 'zss/words/types'
@@ -21,7 +22,6 @@ import { NAME } from 'zss/words/types'
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
 import { loadertext } from './loadertext'
-import { handlesend } from './runtime'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -74,12 +74,12 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('shortsend', (chip, words) => {
     const send = parsesend(words)
-    handlesend(chip, send)
+    memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
   .command('send', (chip, words) => {
     const send = parsesend(words, true)
-    handlesend(chip, send)
+    memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
   .command('stat', () => {

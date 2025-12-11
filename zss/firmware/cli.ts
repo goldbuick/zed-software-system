@@ -79,6 +79,7 @@ import {
   codepagereadtype,
   codepagereadtypetostring,
 } from 'zss/memory/codepage'
+import { memorysendtoelements } from 'zss/memory/send'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -90,8 +91,6 @@ import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { COLOR, NAME } from 'zss/words/types'
-
-import { handlesend } from './runtime'
 
 let bbscode = ''
 let bbsemail = ''
@@ -113,7 +112,6 @@ function vm_flush_op() {
 export const CLI_FIRMWARE = createfirmware()
   .command('shortsend', (chip, words) => {
     const send = parsesend(words)
-    handlesend(chip, send)
     // #funfact - loader fallback
     if (send.targetname === 'self') {
       vm_loader(
@@ -124,12 +122,14 @@ export const CLI_FIRMWARE = createfirmware()
         `cli:${send.label}`,
         send.args.join(' '),
       )
+    } else {
+      memorysendtoelements(chip, READ_CONTEXT.element, send)
     }
     return 0
   })
   .command('send', (chip, words) => {
     const send = parsesend(words, true)
-    handlesend(chip, send)
+    memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
   .command('stat', (_, words) => {

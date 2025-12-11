@@ -13,13 +13,7 @@ import { boardcheckblockedobject } from './boardops'
 import { bookreadflag, bookwriteflag } from './book'
 import { BOARD, BOOK } from './types'
 
-import {
-  memoryboardinit,
-  memoryboardread,
-  memoryelementstatread,
-  memoryreadplayerboard,
-  memorysendinteraction,
-} from '.'
+import { memoryboardinit, memoryboardread, memoryreadplayerboard } from '.'
 
 export function bookplayerreadactive(book: MAYBE<BOOK>, player: string) {
   return book?.activelist.includes(player) ?? false
@@ -54,7 +48,6 @@ export function bookplayermovetoboard(
   player: string,
   board: string,
   dest: PT,
-  skipblockedchecked = false,
 ) {
   // current board
   const currentboard = memoryreadplayerboard(player)
@@ -84,13 +77,10 @@ export function bookplayermovetoboard(
     dest,
     true,
   )
-  if (skipblockedchecked === false && ispresent(maybeobject)) {
-    if (memoryelementstatread(maybeobject, 'item')) {
-      memorysendinteraction(player, element, maybeobject, 'touch')
-    } else {
-      // blocked by non-item
-      return false
-    }
+
+  // blocked by non-object
+  if (!ispresent(maybeobject) && !boardelementisobject(maybeobject)) {
+    return false
   }
 
   // remove from current board lookups
