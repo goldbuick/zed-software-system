@@ -2,6 +2,7 @@ import { unique } from 'zss/mapping/array'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
+import { checkdoescollide } from './atomics'
 import { boardobjectread, boardvisualsupdate } from './board'
 import { boardelementisobject } from './boardelement'
 import {
@@ -13,7 +14,12 @@ import { boardcheckblockedobject } from './boardops'
 import { bookreadflag, bookwriteflag } from './book'
 import { BOARD, BOOK } from './types'
 
-import { memoryboardinit, memoryboardread, memoryreadplayerboard } from '.'
+import {
+  memoryboardinit,
+  memoryboardread,
+  memoryelementstatread,
+  memoryreadplayerboard,
+} from '.'
 
 export function bookplayerreadactive(book: MAYBE<BOOK>, player: string) {
   return book?.activelist.includes(player) ?? false
@@ -80,7 +86,8 @@ export function bookplayermovetoboard(
 
   // blocked by non-object
   if (!ispresent(maybeobject) && !boardelementisobject(maybeobject)) {
-    return false
+    const terraincollision = memoryelementstatread(maybeobject, 'collision')
+    return checkdoescollide(COLLISION.ISWALK, terraincollision) === false
   }
 
   // remove from current board lookups
@@ -101,6 +108,8 @@ export function bookplayermovetoboard(
   bookwriteflag(book, player, 'enterx', dest.x)
   bookwriteflag(book, player, 'entery', dest.y)
   bookplayersetboard(book, player, destboard.id)
+
+  // we did move
   return true
 }
 

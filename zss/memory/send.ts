@@ -2,7 +2,7 @@ import { LowpassCombFilter } from 'tone'
 import { CHIP } from 'zss/chip'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
-import { createsid } from 'zss/mapping/guid'
+import { createsid, ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
@@ -27,15 +27,47 @@ import { SEND_META } from 'zss/words/send'
 export function memorysendtoelement(
   fromelement: MAYBE<BOARD_ELEMENT>,
   toelement: BOARD_ELEMENT,
-  player: string,
   label: string,
 ) {
   if (!ispresent(READ_CONTEXT.board) || !ispresent(fromelement)) {
     return
   }
 
+  let withlabel = label
+  let withplayer = ''
+
+  if (label === 'shot') {
+    const fromelementisplayer = ispid(fromelement.id)
+    const fromelementpartyisplayer = ispid(fromelement.party ?? fromelement.id)
+    const fromelementisobjecorscroll =
+      fromelement.kind === 'object' || fromelement.kind === 'scroll'
+
+    let fromelementplayer = ''
+    if (fromelement.party && fromelementpartyisplayer) {
+      fromelementplayer = fromelement.party
+    }
+    if (fromelementisplayer) {
+      fromelementplayer = fromelement.id ?? ''
+    }
+
+    const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
+    const toelementisobjectorscroll =
+      toelement.kind === 'object' || toelement.kind === 'scroll'
+
+    const sameparty =
+      fromelementpartyisplayer === toelementpartyisplayer &&
+      !toelementisobjectorscroll &&
+      !fromelementisobjecorscroll
+
+    if (sameparty) {
+      withlabel = 'partyshot'
+    } else {
+      withplayer = fromelementplayer
+    }
+  }
+
   // delete breakable elements if shot
-  if (label === 'shot' && memoryelementstatread(toelement, 'breakable')) {
+  if (withlabel === 'shot' && memoryelementstatread(toelement, 'breakable')) {
     boardsafedelete(READ_CONTEXT.board, toelement, READ_CONTEXT.timestamp)
   }
 
@@ -53,9 +85,9 @@ export function memorysendtoelement(
     memorymessage({
       id: createsid(),
       session: SOFTWARE.session(),
-      player,
+      player: withplayer,
       sender: senderidorindex,
-      target: `${toelement.id}:${label}`,
+      target: `${toelement.id}:${withlabel}`,
       data: undefined,
     })
   }
@@ -75,7 +107,7 @@ export function memorysendtoelements(
           const id = objectids[i]
           const object = boardobjectread(READ_CONTEXT.board, id)
           if (ispresent(object)) {
-            memorysendtoelement(fromelement, object, '', send.label)
+            memorysendtoelement(fromelement, object, send.label)
           }
         }
         break
@@ -84,7 +116,7 @@ export function memorysendtoelements(
           const id = objectids[i]
           const object = boardobjectread(READ_CONTEXT.board, id)
           if (id !== chip.id() && ispresent(object)) {
-            memorysendtoelement(fromelement, object, '', send.label)
+            memorysendtoelement(fromelement, object, send.label)
           }
         }
         break
@@ -95,7 +127,7 @@ export function memorysendtoelements(
           READ_CONTEXT.element?.sender ?? '',
         )
         if (ispresent(sender) && boardelementisobject(sender)) {
-          memorysendtoelement(fromelement, sender, '', send.label)
+          memorysendtoelement(fromelement, sender, send.label)
         }
         break
       }
@@ -109,7 +141,7 @@ export function memorysendtoelements(
             send.label,
           )
         } else if (ispresent(READ_CONTEXT.element)) {
-          memorysendtoelement(fromelement, READ_CONTEXT.element, '', send.label)
+          memorysendtoelement(fromelement, READ_CONTEXT.element, send.label)
         }
         break
       case 'ping': {
@@ -126,7 +158,7 @@ export function memorysendtoelements(
         for (let i = 0; i < elements.length; ++i) {
           const element = elements[i]
           if (ispresent(element)) {
-            memorysendtoelement(fromelement, element, '', send.label)
+            memorysendtoelement(fromelement, element, send.label)
           }
         }
         break
@@ -140,7 +172,7 @@ export function memorysendtoelements(
           send.targetdir.targets[i],
         )
         if (ispresent(element)) {
-          memorysendtoelement(fromelement, element, '', send.label)
+          memorysendtoelement(fromelement, element, send.label)
         }
       }
     } else {
@@ -149,7 +181,7 @@ export function memorysendtoelements(
         send.targetdir.destpt,
       )
       if (ispresent(element)) {
-        memorysendtoelement(fromelement, element, '', send.label)
+        memorysendtoelement(fromelement, element, send.label)
       }
     }
   }
