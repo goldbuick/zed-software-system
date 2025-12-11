@@ -781,6 +781,38 @@ export function memorymessage(message: MESSAGE) {
   os.message(message)
 }
 
+// switch (blockedbykind) {
+//   case 'object':
+//   case 'scroll':
+//     // object & scroll kinds can be shot by everything
+//     break
+//   default:
+//     // everything else handles shot differently
+//     memorysendinteraction(elementplayer, element, blocked, 'shot')
+//     break
+// }
+
+// delete breakable elements
+// if (elementisbullet && memoryelementstatread(blocked, 'breakable')) {
+//   if (ispresent(blocked?.id)) {
+//     const maybeobject = boardelementread(board, {
+//       x: blocked.x ?? -1,
+//       y: blocked.y ?? -1,
+//     })
+//     if (ispresent(maybeobject)) {
+//       // mark target for deletion
+//       boardsafedelete(
+//         READ_CONTEXT.board,
+//         maybeobject,
+//         READ_CONTEXT.timestamp,
+//       )
+//     }
+//   } else {
+//     // overwrite terrain with empty
+//     boardsetterrain(board, { x: dest.x, y: dest.y })
+//   }
+// }
+
 export function memorysendinteraction(
   player: string,
   fromelement: BOARD_ELEMENT,
@@ -876,6 +908,19 @@ export function memorymoveobject(
   let blocked = boardmoveobject(board, element, dest)
   const collision = memoryelementstatread(element, 'collision')
 
+  const elementisplayer = ispid(element.id)
+  const elementpartyisplayer = ispid(element.party ?? element.id)
+  const elementisbullet =
+    memoryelementstatread(element, 'collision') === COLLISION.ISBULLET
+
+  let elementplayer = ''
+  if (element.party && elementpartyisplayer) {
+    elementplayer = element.party
+  }
+  if (elementisplayer) {
+    elementplayer = element.id
+  }
+
   // bullets can't PUSH, and you can only push object elements
   if (
     collision !== COLLISION.ISBULLET &&
@@ -908,7 +953,9 @@ export function memorymoveobject(
           { x: blocked.x ?? 0, y: blocked.y ?? 0 },
           bumpdir,
         )
-        memorymoveobject(book, board, blocked, bump)
+        if (!memorymoveobject(book, board, blocked, bump)) {
+          memorysendinteraction(elementplayer, element, blocked, 'touch')
+        }
       }
 
       // update blocked by element
@@ -917,27 +964,11 @@ export function memorymoveobject(
   }
 
   if (ispresent(blocked)) {
-    const elementisplayer = ispid(element.id)
-    const elementpartyisplayer = ispid(element.party ?? element.id)
-    const elementisbullet =
-      memoryelementstatread(element, 'collision') === COLLISION.ISBULLET
-    const elementiskind = element.kind ?? ''
-
-    let elementplayer = ''
-    if (element.party && elementpartyisplayer) {
-      elementplayer = element.party
-    }
-    if (elementisplayer) {
-      elementplayer = element.id
-    }
-
     const blockedbyplayer = ispid(blocked.id)
     const blockedpartyisplayer = ispid(blocked.party ?? blocked.id)
     const blockedisbullet =
       memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
     const blockedbykind = blocked.kind ?? ''
-
-    const samemparty = elementpartyisplayer === blockedpartyisplayer
 
     let blockedplayer = ''
     if (blocked.party && blockedpartyisplayer) {
@@ -947,190 +978,42 @@ export function memorymoveobject(
       blockedplayer = blocked.id ?? ''
     }
 
-    if (elementisplayer && blockedbykind === 'edge') {
-      if (!playerblockedbyedge(book, board, element, dest)) {
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-      }
-    } else if (elementisplayer) {
-      if (blockedbyplayer) {
-        // same party touch
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          'bump',
-        )
+    if (elementisplayer) {
+      if (blockedbykind === 'edge') {
+        if (!playerblockedbyedge(book, board, element, dest)) {
+          memorysendinteraction(blockedplayer, blocked, element, 'thud')
+        }
       } else if (blockedisbullet) {
         if (board?.restartonzap) {
           playerwaszapped(book, board, element, elementplayer)
         }
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          samemparty ? 'partyshot' : 'shot',
-        )
+        memorysendinteraction(blockedplayer, blocked, element, 'shot')
         memorysendinteraction(elementplayer, element, blocked, 'thud')
       } else {
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          'touch',
-        )
+        memorysendinteraction(blockedplayer, blocked, element, 'touch')
+        memorysendinteraction(elementplayer, element, blocked, 'touch')
       }
     } else if (elementisbullet) {
-      if (blockedbyplayer) {
-        if (board?.restartonzap) {
+      if (blockedisbullet) {
+        memorysendinteraction(blockedplayer, blocked, element, 'thud')
+        memorysendinteraction(elementplayer, element, blocked, 'thud')
+      } else {
+        if (blockedbyplayer && board?.restartonzap) {
           playerwaszapped(book, board, blocked, blockedplayer)
         }
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          samemparty ? 'partyshot' : 'shot',
-        )
-      } else if (blockedisbullet) {
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          'thud',
-        )
-      } else {
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-        switch (blockedbykind) {
-          case 'object':
-          case 'scroll':
-            // object & scroll kinds can be shot by everything
-            memorysendinteraction(
-              samemparty ? '' : elementplayer,
-              element,
-              blocked,
-              'shot',
-            )
-            break
-          default:
-            // everything else handles shot differently
-            memorysendinteraction(
-              samemparty ? '' : elementplayer,
-              element,
-              blocked,
-              samemparty ? 'partyshot' : 'shot',
-            )
-            break
-        }
+        memorysendinteraction(blockedplayer, blocked, element, 'thud')
+        memorysendinteraction(elementplayer, element, blocked, 'shot')
       }
     } else {
       if (blockedbyplayer) {
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          'bump',
-        )
+        memorysendinteraction(blockedplayer, blocked, element, 'touch')
+        memorysendinteraction(elementplayer, element, blocked, 'touch')
       } else if (blockedisbullet) {
-        switch (elementiskind) {
-          case 'object':
-          case 'scroll':
-            // object & scroll kinds can be shot by everything
-            memorysendinteraction(
-              samemparty ? '' : elementplayer,
-              element,
-              blocked,
-              'shot',
-            )
-            break
-          default:
-            // everything else handles shot differently
-            memorysendinteraction(
-              samemparty ? '' : elementplayer,
-              element,
-              blocked,
-              samemparty ? 'partyshot' : 'shot',
-            )
-            break
-        }
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          'thud',
-        )
+        memorysendinteraction(blockedplayer, blocked, element, 'shot')
+        memorysendinteraction(elementplayer, element, blocked, 'thud')
       } else {
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          'thud',
-        )
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          'bump',
-        )
-      }
-    }
-
-    // delete breakable elements
-    if (elementisbullet && memoryelementstatread(blocked, 'breakable')) {
-      if (ispresent(blocked?.id)) {
-        const maybeobject = boardelementread(board, {
-          x: blocked.x ?? -1,
-          y: blocked.y ?? -1,
-        })
-        if (ispresent(maybeobject)) {
-          // mark target for deletion
-          boardsafedelete(
-            READ_CONTEXT.board,
-            maybeobject,
-            READ_CONTEXT.timestamp,
-          )
-        }
-      } else {
-        // overwrite terrain with empty
-        boardsetterrain(board, { x: dest.x, y: dest.y })
+        memorysendinteraction(blockedplayer, blocked, element, 'bump')
+        memorysendinteraction(elementplayer, element, blocked, 'thud')
       }
     }
 

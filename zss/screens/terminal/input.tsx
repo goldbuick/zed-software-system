@@ -272,7 +272,7 @@ export function TapeTerminalInput({
     const { buffer, bufferindex } = useTapeTerminal.getState()
     const inputstart = buffer[bufferindex]
 
-    if (inputstart.includes('#')) {
+    if (inputstart !== '') {
       return
     }
 
