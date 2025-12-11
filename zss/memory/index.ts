@@ -782,17 +782,6 @@ export function memorymessage(message: MESSAGE) {
   os.message(message)
 }
 
-export function memorysendinteraction(
-  fromelement: BOARD_ELEMENT,
-  toelement: BOARD_ELEMENT,
-  message: string,
-) {
-  if (!isstring(fromelement.id)) {
-    return
-  }
-  memorysendtoelement(fromelement, toelement, message)
-}
-
 function playerblockedbyedge(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -913,8 +902,8 @@ export function memorymoveobject(
           { x: blocked.x ?? 0, y: blocked.y ?? 0 },
           bumpdir,
         )
-        if (!memorymoveobject(book, board, blocked, bump)) {
-          memorysendinteraction(element, blocked, 'touch')
+        if (!memorymoveobject(book, board, blocked, bump) && elementisplayer) {
+          memorysendtoelement(element, blocked, 'touch')
         }
       }
 
@@ -941,39 +930,39 @@ export function memorymoveobject(
     if (elementisplayer) {
       if (blockedbykind === 'edge') {
         if (!playerblockedbyedge(book, board, element, dest)) {
-          memorysendinteraction(blocked, element, 'thud')
+          memorysendtoelement(blocked, element, 'thud')
         }
       } else if (blockedisbullet) {
         if (board?.restartonzap) {
           playerwaszapped(book, board, element, elementplayer)
         }
-        memorysendinteraction(blocked, element, 'shot')
-        memorysendinteraction(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, 'shot')
+        memorysendtoelement(element, blocked, 'thud')
       } else {
-        memorysendinteraction(blocked, element, 'touch')
-        memorysendinteraction(element, blocked, 'touch')
+        memorysendtoelement(blocked, element, 'touch')
+        memorysendtoelement(element, blocked, 'touch')
       }
     } else if (elementisbullet) {
       if (blockedisbullet) {
-        memorysendinteraction(blocked, element, 'thud')
-        memorysendinteraction(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, 'thud')
+        memorysendtoelement(element, blocked, 'thud')
       } else {
         if (blockedbyplayer && board?.restartonzap) {
           playerwaszapped(book, board, blocked, blockedplayer)
         }
-        memorysendinteraction(blocked, element, 'thud')
-        memorysendinteraction(element, blocked, 'shot')
+        memorysendtoelement(blocked, element, 'thud')
+        memorysendtoelement(element, blocked, 'shot')
       }
     } else {
       if (blockedbyplayer) {
-        memorysendinteraction(blocked, element, 'touch')
-        memorysendinteraction(element, blocked, 'touch')
+        memorysendtoelement(blocked, element, 'touch')
+        memorysendtoelement(element, blocked, 'touch')
       } else if (blockedisbullet) {
-        memorysendinteraction(blocked, element, 'shot')
-        memorysendinteraction(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, 'shot')
+        memorysendtoelement(element, blocked, 'thud')
       } else {
-        memorysendinteraction(blocked, element, 'bump')
-        memorysendinteraction(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, 'bump')
+        memorysendtoelement(element, blocked, 'thud')
       }
     }
 

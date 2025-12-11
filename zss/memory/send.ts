@@ -23,81 +23,72 @@ import { BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 
-// switch (blockedbykind) {
-//   case 'object':
-//   case 'scroll':
-//     // object & scroll kinds can be shot by everything
-//     break
-//   default:
-//     // everything else handles shot differently
-//     memorysendinteraction(elementplayer, element, blocked, 'shot')
-//     break
-// }
-
-// delete breakable elements
-// if (elementisbullet && memoryelementstatread(blocked, 'breakable')) {
-//   if (ispresent(blocked?.id)) {
-//     const maybeobject = boardelementread(board, {
-//       x: blocked.x ?? -1,
-//       y: blocked.y ?? -1,
-//     })
-//     if (ispresent(maybeobject)) {
-//       // mark target for deletion
-//       boardsafedelete(
-//         READ_CONTEXT.board,
-//         maybeobject,
-//         READ_CONTEXT.timestamp,
-//       )
-//     }
-//   } else {
-//     // overwrite terrain with empty
-//     boardsetterrain(board, { x: dest.x, y: dest.y })
-//   }
-// }
-
 export function memorysendtoelement(
   fromelement: MAYBE<BOARD_ELEMENT>,
   toelement: BOARD_ELEMENT,
   label: string,
 ) {
-  if (!ispresent(READ_CONTEXT.board) || !ispresent(fromelement?.id)) {
+  if (!ispresent(READ_CONTEXT.board) || !ispresent(fromelement)) {
     return
   }
-
-  const fromelementisplayer = ispid(fromelement.id)
-  const fromelementpartyisplayer = ispid(fromelement.party ?? fromelement.id)
-
-  let fromelementplayer = ''
-  if (fromelement.party && fromelementpartyisplayer) {
-    fromelementplayer = fromelement.party
-  }
-  if (fromelementisplayer) {
-    fromelementplayer = fromelement.id
-  }
-
-  const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
 
   let withlabel = label
   let withplayer = ''
   switch (label) {
-    case 'shot':
+    case 'shot': {
+      const fromelementisplayer = ispid(fromelement.id)
+      const fromelementpartyisplayer = ispid(
+        fromelement.party ?? fromelement.id,
+      )
+      const toelementisplayer = ispid(toelement.id)
+      const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
+      const toelementisobjectorscroll =
+        toelement.kind === 'object' || toelement.kind === 'scroll'
       // filter based on party -> partyshot
-      if (fromelementpartyisplayer === toelementpartyisplayer) {
+      if (
+        !toelementisobjectorscroll &&
+        fromelementpartyisplayer === toelementpartyisplayer
+      ) {
         withlabel = 'partyshot'
-      } else {
-        withplayer = fromelementplayer
+      } else if (!toelementisplayer) {
+        if (fromelement.party && fromelementpartyisplayer) {
+          withplayer = fromelement.party
+        }
+        if (fromelementisplayer) {
+          withplayer = fromelement.id ?? ''
+        }
       }
       break
-    case 'touch':
-      // filter based on party -> bump
-      break
-    case 'bombed':
-      if (memoryelementstatread(toelement, 'breakable')) {
-        boardsafedelete(READ_CONTEXT.board, toelement, READ_CONTEXT.timestamp)
+    }
+    case 'touch': {
+      const fromelementisplayer = ispid(fromelement.id)
+      const fromelementpartyisplayer = ispid(
+        fromelement.party ?? fromelement.id,
+      )
+      const toelementisplayer = ispid(toelement.id)
+      const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
+      // only change aggro if different party
+      if (
+        !toelementisplayer &&
+        fromelementpartyisplayer !== toelementpartyisplayer
+      ) {
+        if (fromelement.party && fromelementpartyisplayer) {
+          withplayer = fromelement.party
+        }
+        if (fromelementisplayer) {
+          withplayer = fromelement.id ?? ''
+        }
       }
       break
+    }
   }
 
+  // delete breakable elements if shot
+  if (withlabel === 'shot' && memoryelementstatread(toelement, 'breakable')) {
+    boardsafedelete(READ_CONTEXT.board, toelement, READ_CONTEXT.timestamp)
+  }
+
+  // send message
   if (ispresent(toelement?.id)) {
     let senderidorindex = ''
     if (ispresent(fromelement?.id)) {
@@ -166,14 +157,8 @@ export function memorysendtoelements(
             READ_CONTEXT.elementid,
             send.label,
           )
-        } else {
-          chip.message({
-            id: createsid(),
-            session: SOFTWARE.session(),
-            player: READ_CONTEXT.elementfocus,
-            sender: READ_CONTEXT.elementid,
-            target: send.label,
-          })
+        } else if (ispresent(READ_CONTEXT.element)) {
+          memorysendtoelement(fromelement, READ_CONTEXT.element, send.label)
         }
         break
       case 'ping': {
