@@ -814,7 +814,6 @@ const vm = createdevice(
                 message.player,
                 playerboard.id,
                 dest,
-                true,
               )
             }
             break

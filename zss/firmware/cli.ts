@@ -241,7 +241,6 @@ export const CLI_FIRMWARE = createfirmware()
           x: randominteger(0, BOARD_WIDTH - 1),
           y: randominteger(0, BOARD_HEIGHT - 1),
         },
-        true,
       )
     }
 

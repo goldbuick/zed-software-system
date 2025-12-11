@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   api_error,
   register_terminal_close,

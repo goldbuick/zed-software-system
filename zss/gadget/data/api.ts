@@ -26,6 +26,10 @@ export function initstate(): GADGET_STATE {
     layers: [],
     scroll: [],
     sidebar: [],
+    exiteast: '',
+    exitwest: '',
+    exitnorth: '',
+    exitsouth: '',
   }
 }
 

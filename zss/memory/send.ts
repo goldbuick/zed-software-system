@@ -1,4 +1,3 @@
-import { LowpassCombFilter } from 'tone'
 import { CHIP } from 'zss/chip'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
