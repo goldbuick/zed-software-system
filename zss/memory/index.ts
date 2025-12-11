@@ -1,7 +1,6 @@
 import { objectKeys } from 'ts-extras'
-import { CHIP, senderid } from 'zss/chip'
-import { RUNTIME } from 'zss/config'
-import { MESSAGE, api_error, api_log, vm_touched } from 'zss/device/api'
+import { senderid } from 'zss/chip'
+import { MESSAGE, api_error, api_log } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER, LAYER_TYPE, layersreadmedia } from 'zss/gadget/data/types'
@@ -30,8 +29,6 @@ import {
   boardgetterrain,
   boardobjectcreatefromkind,
   boardobjectread,
-  boardsafedelete,
-  boardsetterrain,
   boardterrainsetfromkind,
 } from './board'
 import { boardelementapplycolor, boardelementisobject } from './boardelement'
