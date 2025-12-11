@@ -16,12 +16,10 @@ import {
   TAPE_DISPLAY,
   useGadgetClient,
   useTape,
-  useTapeEditor,
   useTapeInspector,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
 import { INPUT } from 'zss/gadget/data/types'
-import { useDeviceData, useMedia } from 'zss/gadget/hooks'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
@@ -34,7 +32,6 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { tokenizeandstriptextformat } from 'zss/words/textformat'
-import { NAME } from 'zss/words/types'
 
 import {
   MESSAGE,

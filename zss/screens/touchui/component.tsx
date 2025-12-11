@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { WriteTextContext, resetTiles, useTiles } from 'zss/gadget/hooks'
+import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import {

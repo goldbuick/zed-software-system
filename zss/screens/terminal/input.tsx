@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   api_error,
   register_terminal_close,
@@ -272,7 +272,7 @@ export function TapeTerminalInput({
     const { buffer, bufferindex } = useTapeTerminal.getState()
     const inputstart = buffer[bufferindex]
 
-    if (inputstart.includes('#')) {
+    if (inputstart !== '') {
       return
     }
 

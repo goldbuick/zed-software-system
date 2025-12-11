@@ -1,4 +1,3 @@
-import { CHIP } from 'zss/chip'
 import { vm_refscroll } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -10,140 +9,11 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import {
-  MEMORY_LABEL,
-  memoryelementstatread,
-  memoryreadbookbysoftware,
-  memorysendtoboards,
-} from 'zss/memory'
-import { listelementsbyidnameorpts } from 'zss/memory/atomics'
-import {
-  boardelementread,
-  boardelementreadbyidorindex,
-  boardobjectread,
-  boardsafedelete,
-} from 'zss/memory/board'
-import { boardelementisobject } from 'zss/memory/boardelement'
-import { bookplayerreadboards } from 'zss/memory/bookplayer'
-import { BOARD_ELEMENT } from 'zss/memory/types'
+import { memorysendtoelements } from 'zss/memory/send'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { SEND_META, parsesend } from 'zss/words/send'
-
-function handlesendelement(chip: CHIP, element: BOARD_ELEMENT, label: string) {
-  if (!ispresent(READ_CONTEXT.board)) {
-    return
-  }
-  switch (label) {
-    case 'shot':
-    case 'bombed':
-      if (memoryelementstatread(element, 'breakable')) {
-        boardsafedelete(READ_CONTEXT.board, element, READ_CONTEXT.timestamp)
-      }
-      break
-  }
-  if (ispresent(element?.id)) {
-    chip.send(READ_CONTEXT.elementfocus, element.id, label)
-  }
-}
-
-export function handlesend(chip: CHIP, send: SEND_META) {
-  if (ispresent(send.targetname)) {
-    const objectids = Object.keys(READ_CONTEXT.board?.objects ?? {})
-
-    switch (send.targetname) {
-      case 'all':
-        for (let i = 0; i < objectids.length; ++i) {
-          const id = objectids[i]
-          const object = boardobjectread(READ_CONTEXT.board, id)
-          if (ispresent(object)) {
-            handlesendelement(chip, object, send.label)
-          }
-        }
-        break
-      case 'others':
-        for (let i = 0; i < objectids.length; ++i) {
-          const id = objectids[i]
-          const object = boardobjectread(READ_CONTEXT.board, id)
-          if (id !== chip.id() && ispresent(object)) {
-            handlesendelement(chip, object, send.label)
-          }
-        }
-        break
-      case 'sender': {
-        // sender info
-        const sender = boardelementreadbyidorindex(
-          READ_CONTEXT.board,
-          READ_CONTEXT.element?.sender ?? '',
-        )
-        if (ispresent(sender) && boardelementisobject(sender)) {
-          handlesendelement(chip, sender, send.label)
-        }
-        break
-      }
-      case 'self':
-        // check if we are sending shot / bombed to a breakable
-        if (READ_CONTEXT.elementid !== chip.id()) {
-          // detect messages from run & runwith
-          chip.send(
-            READ_CONTEXT.elementfocus,
-            READ_CONTEXT.elementid,
-            send.label,
-          )
-        } else {
-          chip.message({
-            session: SOFTWARE.session(),
-            player: READ_CONTEXT.elementfocus,
-            id: createsid(),
-            sender: READ_CONTEXT.elementid,
-            target: send.label,
-          })
-        }
-        break
-      case 'ping': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const boards = bookplayerreadboards(mainbook)
-        memorysendtoboards('all', send.label, undefined, boards)
-        break
-      }
-      default: {
-        // target named elements
-        const elements = listelementsbyidnameorpts(READ_CONTEXT.board, [
-          send.targetname,
-        ])
-        for (let i = 0; i < elements.length; ++i) {
-          const element = elements[i]
-          if (ispresent(element)) {
-            handlesendelement(chip, element, send.label)
-          }
-        }
-        break
-      }
-    }
-  } else if (ispresent(send.targetdir)) {
-    if (send.targetdir.targets.length) {
-      for (let i = 0; i < send.targetdir.targets.length; ++i) {
-        const element = boardelementread(
-          READ_CONTEXT.board,
-          send.targetdir.targets[i],
-        )
-        if (ispresent(element)) {
-          handlesendelement(chip, element, send.label)
-        }
-      }
-    } else {
-      const element = boardelementread(
-        READ_CONTEXT.board,
-        send.targetdir.destpt,
-      )
-      if (ispresent(element)) {
-        handlesendelement(chip, element, send.label)
-      }
-    }
-  }
-}
+import { parsesend } from 'zss/words/send'
 
 export const RUNTIME_FIRMWARE = createfirmware({
   set(chip, name, value) {
@@ -195,12 +65,12 @@ export const RUNTIME_FIRMWARE = createfirmware({
   })
   .command('shortsend', (chip, words) => {
     const send = parsesend(words)
-    handlesend(chip, send)
+    memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
   .command('send', (chip, words) => {
     const send = parsesend(words, true)
-    handlesend(chip, send)
+    memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
   .command('stat', () => {

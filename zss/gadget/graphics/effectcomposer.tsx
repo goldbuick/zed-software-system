@@ -1,7 +1,6 @@
 import { type Instance, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
-  DepthPass,
   Effect,
   EffectAttribute,
   EffectComposer as EffectComposerImpl,

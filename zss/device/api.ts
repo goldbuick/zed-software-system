@@ -521,16 +521,6 @@ export function vm_doot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
 }
 
-export function vm_touched(
-  device: DEVICELIKE,
-  player: string,
-  senderidorindex: string,
-  toelementid: string,
-  message: string,
-) {
-  device.emit(player, 'vm:touched', [senderidorindex, toelementid, message])
-}
-
 export function vm_input(
   device: DEVICELIKE,
   player: string,

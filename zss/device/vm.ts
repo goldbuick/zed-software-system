@@ -814,7 +814,6 @@ const vm = createdevice(
                 message.player,
                 playerboard.id,
                 dest,
-                true,
               )
             }
             break
@@ -954,21 +953,6 @@ const vm = createdevice(
             break
           case 'makeit':
             memorymakeitcommand(path, message.data ?? '', message.player)
-            break
-          case 'touched':
-            if (isarray(message.data)) {
-              const [senderidorindex, toelementid, target] = message.data as [
-                string,
-                string,
-                string,
-              ]
-              memorymessage({
-                ...message,
-                target: `${toelementid}:${target}`,
-                data: undefined,
-                sender: senderidorindex,
-              })
-            }
             break
           case 'zztbridge':
             doasync(vm, message.player, async () => {

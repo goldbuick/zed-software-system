@@ -783,11 +783,24 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.NUMBER,
       ])
+      // handle multi-target dirs
+      if (dest.targets.length) {
+        for (let i = 0; i < dest.targets.length; ++i) {
+          const target = dest.targets[i]
+          const element = boardelementread(READ_CONTEXT.board, target)
+          if (ispresent(element)) {
+            element.char = charvalue
+          }
+        }
+        return 0
+      }
+      // handle single-target dirs
       const element = boardelementread(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         element.char = charvalue
       }
     } else if (ispresent(READ_CONTEXT.element) && isnumber(value)) {
+      // self char update
       READ_CONTEXT.element.char = value
     }
     return 0
@@ -799,17 +812,29 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.COLOR,
       ])
+      // handle multi-target dirs
+      if (dest.targets.length) {
+        for (let i = 0; i < dest.targets.length; ++i) {
+          const target = dest.targets[i]
+          const element = boardelementread(READ_CONTEXT.board, target)
+          if (ispresent(element)) {
+            boardelementapplycolor(element, colorvalue ?? COLOR.PURPLE)
+          }
+        }
+        return 0
+      }
+      // handle single-target dirs
       const element = boardelementread(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
-        boardelementapplycolor(READ_CONTEXT.element, colorvalue)
+        boardelementapplycolor(element, colorvalue ?? COLOR.PURPLE)
       }
     } else {
-      const [value] = readargs(words, 0, [ARG_TYPE.COLOR])
-      if (ispresent(READ_CONTEXT.element) && ispresent(value)) {
-        boardelementapplycolor(READ_CONTEXT.element, value)
+      // self color update
+      const [colorvalue] = readargs(words, 0, [ARG_TYPE.COLOR])
+      if (ispresent(READ_CONTEXT.element) && ispresent(colorvalue)) {
+        boardelementapplycolor(READ_CONTEXT.element, colorvalue)
       }
     }
-
     return 0
   })
   .command('go', (chip, words) => {
@@ -857,7 +882,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.yield()
     return 0
   })
-  .command('end', (chip) => {
+  .command('end', (chip, words) => {
+    const [result] = readargs(words, 0, [ARG_TYPE.ANY])
+    if (ispresent(result)) {
+      chip.set('arg', result)
+    }
     chip.endofprogram()
     return 0
   })
