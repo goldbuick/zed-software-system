@@ -66,7 +66,7 @@ import {
 } from './codepage'
 import { memoryloaderarg, memoryloaderplayer } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
-import { memorysendtoelement, memorysendtoelements } from './send'
+import { memorysendtoelement } from './send'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -861,6 +861,8 @@ export function memorymoveobject(
   const elementpartyisplayer = ispid(element.party ?? element.id)
   const elementisbullet =
     memoryelementstatread(element, 'collision') === COLLISION.ISBULLET
+  const elementisobjectorscroll =
+    element.kind === 'object' || element.kind === 'scroll'
 
   let elementplayer = ''
   if (element.party && elementpartyisplayer) {
@@ -903,7 +905,7 @@ export function memorymoveobject(
           bumpdir,
         )
         if (!memorymoveobject(book, board, blocked, bump) && elementisplayer) {
-          memorysendtoelement(element, blocked, 'touch')
+          memorysendtoelement(element, blocked, elementplayer, 'touch')
         }
       }
 
@@ -917,7 +919,9 @@ export function memorymoveobject(
     const blockedpartyisplayer = ispid(blocked.party ?? blocked.id)
     const blockedisbullet =
       memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
-    const blockedbykind = blocked.kind ?? ''
+    const blockedisedge = blocked.kind === 'edge'
+    const blockedisobjectorscroll =
+      blocked.kind === 'object' || blocked.kind === 'scroll'
 
     let blockedplayer = ''
     if (blocked.party && blockedpartyisplayer) {
@@ -927,42 +931,57 @@ export function memorymoveobject(
       blockedplayer = blocked.id ?? ''
     }
 
+    const sameparty =
+      elementpartyisplayer === blockedpartyisplayer &&
+      !elementisobjectorscroll &&
+      !blockedisobjectorscroll
+
     if (elementisplayer) {
-      if (blockedbykind === 'edge') {
+      if (blockedisedge) {
         if (!playerblockedbyedge(book, board, element, dest)) {
-          memorysendtoelement(blocked, element, 'thud')
+          memorysendtoelement(blocked, element, '', 'thud')
         }
       } else if (blockedisbullet) {
         if (board?.restartonzap) {
           playerwaszapped(book, board, element, elementplayer)
         }
-        memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
+        memorysendtoelement(
+          blocked,
+          element,
+          '',
+          sameparty ? 'partyshot' : 'shot',
+        )
+        memorysendtoelement(element, blocked, elementplayer, 'thud')
       } else {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
+        memorysendtoelement(blocked, element, blockedplayer, 'touch')
+        memorysendtoelement(element, blocked, elementplayer, 'touch')
       }
     } else if (elementisbullet) {
       if (blockedisbullet) {
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, '', 'thud')
+        memorysendtoelement(element, blocked, '', 'thud')
       } else {
         if (blockedbyplayer && board?.restartonzap) {
           playerwaszapped(book, board, blocked, blockedplayer)
         }
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'shot')
+        memorysendtoelement(blocked, element, '', 'thud')
+        memorysendtoelement(
+          element,
+          blocked,
+          sameparty ? '' : elementplayer,
+          sameparty ? 'partyshot' : 'shot',
+        )
       }
     } else {
       if (blockedbyplayer) {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
+        memorysendtoelement(blocked, element, blockedplayer, 'touch')
+        memorysendtoelement(element, blocked, '', 'touch')
       } else if (blockedisbullet) {
-        memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, blockedplayer, 'shot')
+        memorysendtoelement(element, blocked, elementplayer, 'thud')
       } else {
-        memorysendtoelement(blocked, element, 'bump')
-        memorysendtoelement(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, blockedplayer, 'bump')
+        memorysendtoelement(element, blocked, elementplayer, 'thud')
       }
     }
 
