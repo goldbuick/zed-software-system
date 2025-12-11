@@ -24,7 +24,6 @@ import {
   boardobjectsread,
   boardsafedelete,
   boardsetterrain,
-  createboard,
 } from 'zss/memory/board'
 import {
   boardelementapplycolor,
@@ -242,6 +241,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       dir.destpt,
       id,
     )
+    // write arg info
     if (ispresent(element) && ispresent(arg)) {
       element.arg = arg
     }

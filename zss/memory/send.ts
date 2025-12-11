@@ -24,6 +24,35 @@ import { BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 
+function playerpartyinteraction(
+  fromelement: BOARD_ELEMENT,
+  toelement: BOARD_ELEMENT,
+) {
+  const fromelementisplayer = ispid(fromelement.id)
+  const fromelementpartyisplayer = ispid(fromelement.party ?? fromelement.id)
+  const fromelementisobjecorscroll =
+    fromelement.kind === 'object' || fromelement.kind === 'scroll'
+
+  let fromelementplayer = ''
+  if (fromelement.party && fromelementpartyisplayer) {
+    fromelementplayer = fromelement.party
+  }
+  if (fromelementisplayer) {
+    fromelementplayer = fromelement.id ?? ''
+  }
+
+  const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
+  const toelementisobjectorscroll =
+    toelement.kind === 'object' || toelement.kind === 'scroll'
+
+  const sameparty =
+    fromelementpartyisplayer === toelementpartyisplayer &&
+    !toelementisobjectorscroll &&
+    !fromelementisobjecorscroll
+
+  return { sameparty, fromelementplayer }
+}
+
 export function memorysendtoelement(
   fromelement: MAYBE<BOARD_ELEMENT>,
   toelement: BOARD_ELEMENT,
@@ -36,33 +65,30 @@ export function memorysendtoelement(
   let withlabel = label
   let withplayer = ''
 
-  if (label === 'shot') {
-    const fromelementisplayer = ispid(fromelement.id)
-    const fromelementpartyisplayer = ispid(fromelement.party ?? fromelement.id)
-    const fromelementisobjecorscroll =
-      fromelement.kind === 'object' || fromelement.kind === 'scroll'
-
-    let fromelementplayer = ''
-    if (fromelement.party && fromelementpartyisplayer) {
-      fromelementplayer = fromelement.party
+  switch (label) {
+    case 'shot': {
+      const { sameparty, fromelementplayer } = playerpartyinteraction(
+        fromelement,
+        toelement,
+      )
+      if (sameparty && boardelementisobject(toelement)) {
+        withlabel = 'partyshot'
+      } else {
+        withplayer = fromelementplayer
+      }
+      break
     }
-    if (fromelementisplayer) {
-      fromelementplayer = fromelement.id ?? ''
-    }
-
-    const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
-    const toelementisobjectorscroll =
-      toelement.kind === 'object' || toelement.kind === 'scroll'
-
-    const sameparty =
-      fromelementpartyisplayer === toelementpartyisplayer &&
-      !toelementisobjectorscroll &&
-      !fromelementisobjecorscroll
-
-    if (sameparty) {
-      withlabel = 'partyshot'
-    } else {
-      withplayer = fromelementplayer
+    case 'touch': {
+      const { sameparty, fromelementplayer } = playerpartyinteraction(
+        fromelement,
+        toelement,
+      )
+      if (sameparty) {
+        withlabel = 'bump'
+      } else {
+        withplayer = fromelementplayer
+      }
+      break
     }
   }
 

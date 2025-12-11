@@ -87,7 +87,9 @@ export function bookplayermovetoboard(
   // blocked by non-object
   if (!ispresent(maybeobject) && !boardelementisobject(maybeobject)) {
     const terraincollision = memoryelementstatread(maybeobject, 'collision')
-    return checkdoescollide(COLLISION.ISWALK, terraincollision) === false
+    if (checkdoescollide(COLLISION.ISWALK, terraincollision)) {
+      return false
+    }
   }
 
   // remove from current board lookups
