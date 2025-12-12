@@ -937,8 +937,8 @@ export function memorymoveobject(
         memorysendtoelement(blocked, element, 'shot')
         memorysendtoelement(element, blocked, 'thud')
       } else {
-        memorysendtoelement(blocked, element, 'bump')
-        memorysendtoelement(element, blocked, 'thud')
+        memorysendtoelement(blocked, element, 'thud')
+        memorysendtoelement(element, blocked, 'bump')
       }
     }
 

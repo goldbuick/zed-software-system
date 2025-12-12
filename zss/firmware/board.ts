@@ -111,7 +111,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     // always cycle 1
     bullet.cycle = 1
     // write party info
-    bullet.party = READ_CONTEXT.elementid
+    bullet.party = READ_CONTEXT.element.party ?? READ_CONTEXT.element.id ?? ''
     // ensure correct collection type
     bullet.collision = COLLISION.ISBULLET
     // ensure breakable
