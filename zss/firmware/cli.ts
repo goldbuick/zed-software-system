@@ -155,7 +155,7 @@ export const CLI_FIRMWARE = createfirmware()
         READ_CONTEXT.elementid,
         undefined,
         'text',
-        `chat:message`,
+        `chat:message:${READ_CONTEXT.board?.id ?? ''}`,
         `${withuser}:${ticker}`,
       )
     }
