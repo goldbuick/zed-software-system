@@ -21,7 +21,7 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import { bookplayerreadboards } from 'zss/memory/bookplayer'
-import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 import { COLOR } from 'zss/words/types'
@@ -41,7 +41,9 @@ export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
     withname = isstring(user) ? user : 'player'
   }
 
-  return `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN ${withname}:$WHITE `
+  const color = `${COLOR[icon.color]}`
+  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
+  return `$${color}$ON${bg}$${icon.char}$ONCLEAR$CYAN ${withname}:$WHITE `
 }
 
 export function memorysendtolog(
