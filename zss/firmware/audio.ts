@@ -123,7 +123,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
     if (ispresent(voice) && ispresent(phrase)) {
-      synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+      synth_tts(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        voice,
+        phrase,
+      )
     } else {
       synth_ttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
     }
@@ -134,7 +140,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.STRING,
     ])
-    synth_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+    synth_ttsqueue(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      voice,
+      phrase,
+    )
     return 0
   })
   .command('bpm', (_, words) => {

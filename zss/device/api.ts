@@ -51,12 +51,8 @@ export function api_log(device: DEVICELIKE, player: string, ...message: any[]) {
   return true
 }
 
-export function api_chat(
-  device: DEVICELIKE,
-  player: string,
-  ...message: any[]
-) {
-  device.emit(player, 'chat', message)
+export function api_chat(device: DEVICELIKE, board: string, ...message: any[]) {
+  device.emit(board, 'chat', message)
   return true
 }
 
@@ -328,19 +324,21 @@ export function synth_ttsengine(
 export function synth_tts(
   device: DEVICELIKE,
   player: string,
+  board: string,
   voice: string | number,
   phrase: string,
 ) {
-  device.emit(player, 'synth:tts', [voice, phrase])
+  device.emit(player, 'synth:tts', [board, voice, phrase])
 }
 
 export function synth_ttsqueue(
   device: DEVICELIKE,
   player: string,
+  board: string,
   voice: string | number,
   phrase: string,
 ) {
-  device.emit(player, 'synth:ttsqueue', [voice, phrase])
+  device.emit(player, 'synth:ttsqueue', [board, voice, phrase])
 }
 
 export function synth_ttsclearqueue(device: DEVICELIKE, player: string) {

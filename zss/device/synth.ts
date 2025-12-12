@@ -219,8 +219,10 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'tts':
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
-          const [voice, phrase] = message.data as [any, string]
-          await ttsplay(message.player, voice, phrase)
+          const [board, voice, phrase] = message.data as [string, any, string]
+          if (board === synthfocus) {
+            await ttsplay(message.player, voice, phrase)
+          }
         }
       })
       break
@@ -232,8 +234,10 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'ttsqueue':
       if (isarray(message.data)) {
-        const [voice, phrase] = message.data as [string, string]
-        ttsqueue(message.player, voice, phrase)
+        const [board, voice, phrase] = message.data as [string, any, string]
+        if (board === synthfocus) {
+          ttsqueue(message.player, voice, phrase)
+        }
       }
       break
     case 'ttsclearqueue':

@@ -1,13 +1,15 @@
 import { CHIP } from 'zss/chip'
+import { api_chat } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
   memoryelementstatread,
   memorymessage,
   memoryreadbookbysoftware,
+  memoryreadflags,
   memorysendtoboards,
 } from 'zss/memory'
 import { listelementsbyidnameorpts } from 'zss/memory/atomics'
@@ -19,9 +21,39 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import { bookplayerreadboards } from 'zss/memory/bookplayer'
-import { BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
+import { COLOR } from 'zss/words/types'
+
+import { bookelementdisplayread } from './book'
+
+export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
+  if (!ispresent(element?.id)) {
+    return ''
+  }
+
+  const icon = bookelementdisplayread(element)
+
+  let withname = icon.name
+  if (element.kind === 'player') {
+    const { user } = memoryreadflags(element.id)
+    withname = isstring(user) ? user : 'player'
+  }
+
+  return `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN ${withname}:$WHITE `
+}
+
+export function memorysendtolog(
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  text: string,
+) {
+  if (!ispresent(board?.id) || !ispresent(element?.id)) {
+    return
+  }
+  api_chat(SOFTWARE, board.id, `${memoryelementtologprefix(element)}${text}`)
+}
 
 function playerpartyinteraction(
   fromelement: BOARD_ELEMENT,

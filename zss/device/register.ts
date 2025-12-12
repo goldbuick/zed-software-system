@@ -679,9 +679,16 @@ const register = createdevice(
         }
         break
       case 'log':
-      case 'chat':
         terminaladdlog(message)
         break
+      case 'chat': {
+        // use gadget state to get board filter for chat
+        const currentboard = useGadgetClient.getState().gadget.board
+        if (message.player === currentboard) {
+          terminaladdlog(message)
+        }
+        break
+      }
       case 'toast':
         if (ispresent(message.data)) {
           clearTimeout(toasttimer)
