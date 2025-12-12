@@ -61,7 +61,7 @@ import {
   codepagereadstat,
   codepagereadtype,
 } from './codepage'
-import { memoryloaderarg, memoryloaderplayer } from './loader'
+import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import { memorysendtoelement } from './send'
 import {
@@ -1071,17 +1071,14 @@ export function memorytick(playeronly = false) {
     // cache context
     const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
-    // loaders use the player that invoked them as a point of reference
-    const player = memoryloaderplayer(id) ?? ''
-
-    // write context
+    // write context, all blank except for book and timestamp
     READ_CONTEXT.timestamp = mainbook.timestamp
     READ_CONTEXT.book = mainbook
-    READ_CONTEXT.board = memoryreadplayerboard(player)
-    READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
-    READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
-    READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-    READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
+    READ_CONTEXT.board = undefined
+    READ_CONTEXT.element = undefined
+    READ_CONTEXT.elementid = ''
+    READ_CONTEXT.elementisplayer = false
+    READ_CONTEXT.elementfocus = ''
 
     // set chip
     const maybearg = memoryloaderarg(id)

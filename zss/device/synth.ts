@@ -102,8 +102,8 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
   }
 
-  // use gadget state to get board filter for synth
-  const synthfocus = useGadgetClient.getState().gadget.board
+  // use gadget state to current board
+  const currentboard = useGadgetClient.getState().gadget.board
   switch (message.target) {
     case 'audioenabled':
       api_log(synthdevice, message.player, 'audio is enabled!')
@@ -149,16 +149,14 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'play':
       if (isarray(message.data)) {
         const [board, buffer] = message.data as [string, string]
-        // board audio filter
-        if (board && board !== synthfocus) {
-          return
-        }
-        if (buffer.trim() === '') {
-          // stop playback
-          synth.stopplay()
-        } else {
-          // add to playback
-          synth.addplay(buffer)
+        if (board === '' || board === currentboard) {
+          if (buffer.trim() === '') {
+            // stop playback
+            synth.stopplay()
+          } else {
+            // add to playback
+            synth.addplay(buffer)
+          }
         }
       }
       break
@@ -169,12 +167,10 @@ const synthdevice = createdevice('synth', [], (message) => {
           string,
           string,
         ]
-        // board audio filter
-        if (board && board !== synthfocus) {
-          return
+        // filter by board
+        if (board === '' || board === currentboard) {
+          synth.addbgplay(buffer, quantize)
         }
-        // add to playback
-        synth.addbgplay(buffer, quantize)
       }
       break
     case 'restart':
@@ -219,8 +215,10 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'tts':
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
-          const [voice, phrase] = message.data as [any, string]
-          await ttsplay(message.player, voice, phrase)
+          const [board, voice, phrase] = message.data as [string, any, string]
+          if (board === '' || board === currentboard) {
+            await ttsplay(message.player, voice, phrase)
+          }
         }
       })
       break
@@ -232,8 +230,10 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'ttsqueue':
       if (isarray(message.data)) {
-        const [voice, phrase] = message.data as [string, string]
-        ttsqueue(message.player, voice, phrase)
+        const [board, voice, phrase] = message.data as [string, any, string]
+        if (board === '' || board === currentboard) {
+          ttsqueue(message.player, voice, phrase)
+        }
       }
       break
     case 'ttsclearqueue':

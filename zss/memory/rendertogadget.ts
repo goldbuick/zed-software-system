@@ -34,6 +34,7 @@ import {
 } from './board'
 import { bookelementdisplayread } from './book'
 import { codepagereaddata } from './codepage'
+import { memoryelementtologprefix } from './send'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from './types'
 
 import {
@@ -588,10 +589,7 @@ export function memoryconverttogadgetlayers(
       isnumber(object.tickertime) &&
       object.tickertext.length
     ) {
-      const icon = bookelementdisplayread(object)
-      const withname = object.kind !== 'player' ? `${icon.name}:$WHITE ` : ''
-      const content = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN ${withname}${object.tickertext}`
-      tickers.push(content)
+      tickers.push(`${memoryelementtologprefix(object)}${object.tickertext}`)
     }
   }
 

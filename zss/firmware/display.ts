@@ -3,6 +3,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
+import { memorysendtolog } from 'zss/memory/send'
 import { READ_CONTEXT } from 'zss/words/reader'
 
 export const DISPLAY_FIRMWARE = createfirmware()
@@ -16,6 +17,8 @@ export const DISPLAY_FIRMWARE = createfirmware()
     if (ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = text
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      // log text
+      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, text)
     }
     return 0
   })

@@ -9,12 +9,14 @@ import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { INPUT } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
+import { randominteger, randomnumber } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryboardread, memoryreadoperator } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { memorysendtoelements } from 'zss/memory/send'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { NAME } from 'zss/words/types'
@@ -111,10 +113,9 @@ export const LOADER_FIRMWARE = createfirmware({
     const target = memoryboardread(stat)
     if (ispresent(target)) {
       READ_CONTEXT.board = target
-      // -1, -1 means RANDOM
       READ_CONTEXT.element = {
-        x: -1,
-        y: -1,
+        x: randominteger(0, BOARD_WIDTH - 1),
+        y: randominteger(0, BOARD_HEIGHT - 1),
       }
     }
     return 0

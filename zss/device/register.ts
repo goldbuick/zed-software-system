@@ -357,6 +357,8 @@ const register = createdevice(
         break
     }
 
+    // use gadget state to current board
+    const currentboard = useGadgetClient.getState().gadget.board
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
@@ -679,9 +681,14 @@ const register = createdevice(
         }
         break
       case 'log':
-      case 'chat':
         terminaladdlog(message)
         break
+      case 'chat': {
+        if (message.player === '' || message.player === currentboard) {
+          terminaladdlog(message)
+        }
+        break
+      }
       case 'toast':
         if (ispresent(message.data)) {
           clearTimeout(toasttimer)

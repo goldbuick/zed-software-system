@@ -1,6 +1,5 @@
 import { parsetarget } from 'zss/device'
 import {
-  api_chat,
   api_error,
   api_log,
   bridge_chatstart,
@@ -79,7 +78,7 @@ import {
   codepagereadtype,
   codepagereadtypetostring,
 } from 'zss/memory/codepage'
-import { memorysendtoelements } from 'zss/memory/send'
+import { memorysendtoelements, memorysendtolog } from 'zss/memory/send'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -141,31 +140,23 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('text', (_, words) => {
-    const text = words.map(maptostring).join(' ')
+    const ticker = words.map(maptostring).join(' ')
     if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
       // update player element ticker
+      READ_CONTEXT.element.tickertext = ticker
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      // log text
+      memorysendtolog('', READ_CONTEXT.element, ticker)
+      // raise event
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
-      // $WOBBLE $BOUNCE $SPIN
-      READ_CONTEXT.element.tickertext = `${withuser}:$WHITE ${text}`
-      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-
-      // log text
-      const icon = bookelementdisplayread(READ_CONTEXT.element)
-      api_chat(
-        SOFTWARE,
-        READ_CONTEXT.elementid,
-        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN ${withuser}:$WHITE ${text}`,
-      )
-
-      // raise event
       vm_loader(
         SOFTWARE,
         READ_CONTEXT.elementid,
         undefined,
         'text',
-        `chat:message:game`,
-        `${withuser}:${text}`,
+        `chat:message`,
+        `${withuser}:${ticker}`,
       )
     }
     return 0

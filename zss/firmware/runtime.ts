@@ -11,7 +11,7 @@ import {
 } from 'zss/gadget/data/api'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorysendtoelements } from 'zss/memory/send'
+import { memorysendtoelements, memorysendtolog } from 'zss/memory/send'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 
@@ -33,10 +33,10 @@ export const RUNTIME_FIRMWARE = createfirmware({
           const shared = gadgetstate(READ_CONTEXT.elementid)
           shared.sidebar = []
         } else {
-          // could we trigger sprite animations with ticker text ??
-          // $WOBBLE $BOUNCE $SPIN
           READ_CONTEXT.element.tickertext = ticker
           READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+          // log text
+          memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, ticker)
         }
       }
     } else if (queue.length > 1) {
