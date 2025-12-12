@@ -18,7 +18,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
       READ_CONTEXT.element.tickertext = text
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // log text
-      memorysendtolog(READ_CONTEXT.board, READ_CONTEXT.element, text)
+      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, text)
     }
     return 0
   })

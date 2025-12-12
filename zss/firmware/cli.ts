@@ -140,14 +140,13 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('text', (_, words) => {
-    const text = words.map(maptostring).join(' ')
+    const ticker = words.map(maptostring).join(' ')
     if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
       // update player element ticker
-      READ_CONTEXT.element.tickertext = text
+      READ_CONTEXT.element.tickertext = ticker
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // log text
-      memorysendtolog(READ_CONTEXT.board, READ_CONTEXT.element, text)
-
+      memorysendtolog('', READ_CONTEXT.element, ticker)
       // raise event
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
@@ -157,7 +156,7 @@ export const CLI_FIRMWARE = createfirmware()
         undefined,
         'text',
         `chat:message`,
-        `${withuser}:${text}`,
+        `${withuser}:${ticker}`,
       )
     }
     return 0

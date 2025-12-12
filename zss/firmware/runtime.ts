@@ -36,7 +36,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
           READ_CONTEXT.element.tickertext = ticker
           READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
           // log text
-          memorysendtolog(READ_CONTEXT.board, READ_CONTEXT.element, ticker)
+          memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, ticker)
         }
       }
     } else if (queue.length > 1) {

@@ -102,8 +102,8 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
   }
 
-  // use gadget state to get board filter for synth
-  const synthfocus = useGadgetClient.getState().gadget.board
+  // use gadget state to current board
+  const currentboard = useGadgetClient.getState().gadget.board
   switch (message.target) {
     case 'audioenabled':
       api_log(synthdevice, message.player, 'audio is enabled!')
@@ -150,7 +150,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       if (isarray(message.data)) {
         const [board, buffer] = message.data as [string, string]
         // board audio filter
-        if (board && board !== synthfocus) {
+        if (board && board !== currentboard) {
           return
         }
         if (buffer.trim() === '') {
@@ -170,7 +170,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           string,
         ]
         // board audio filter
-        if (board && board !== synthfocus) {
+        if (board && board !== currentboard) {
           return
         }
         // add to playback
@@ -220,7 +220,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
           const [board, voice, phrase] = message.data as [string, any, string]
-          if (board === synthfocus) {
+          if (board === currentboard) {
             await ttsplay(message.player, voice, phrase)
           }
         }
@@ -235,7 +235,7 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'ttsqueue':
       if (isarray(message.data)) {
         const [board, voice, phrase] = message.data as [string, any, string]
-        if (board === synthfocus) {
+        if (board === currentboard) {
           ttsqueue(message.player, voice, phrase)
         }
       }

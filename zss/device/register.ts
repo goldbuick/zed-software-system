@@ -357,6 +357,8 @@ const register = createdevice(
         break
     }
 
+    // use gadget state to current board
+    const currentboard = useGadgetClient.getState().gadget.board
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
@@ -682,9 +684,7 @@ const register = createdevice(
         terminaladdlog(message)
         break
       case 'chat': {
-        // use gadget state to get board filter for chat
-        const currentboard = useGadgetClient.getState().gadget.board
-        if (message.player === currentboard) {
+        if (message.player === '' || message.player === currentboard) {
           terminaladdlog(message)
         }
         break

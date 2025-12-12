@@ -45,14 +45,14 @@ export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
 }
 
 export function memorysendtolog(
-  board: MAYBE<BOARD>,
+  board: MAYBE<string>,
   element: MAYBE<BOARD_ELEMENT>,
   text: string,
 ) {
-  if (!ispresent(board?.id) || !ispresent(element?.id)) {
+  if (!ispresent(board) || !ispresent(element?.id)) {
     return
   }
-  api_chat(SOFTWARE, board.id, `${memoryelementtologprefix(element)}${text}`)
+  api_chat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
 }
 
 function playerpartyinteraction(
