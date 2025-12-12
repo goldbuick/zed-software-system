@@ -136,6 +136,7 @@ export function memorymakeitscroll(makeit: string, player: string) {
         name,
       ])
     }
+    gadgettext(player, '')
   }
 
   // first check for existing codepage with matching name or id
