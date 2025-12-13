@@ -1078,7 +1078,7 @@ export function memorytick(playeronly = false) {
     READ_CONTEXT.element = undefined
     READ_CONTEXT.elementid = ''
     READ_CONTEXT.elementisplayer = false
-    READ_CONTEXT.elementfocus = ''
+    READ_CONTEXT.elementfocus = memoryreadoperator()
 
     // set chip
     const maybearg = memoryloaderarg(id)
