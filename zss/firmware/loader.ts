@@ -3,14 +3,13 @@ import {
   JSON_READER,
   TEXT_READER,
   api_chat,
-  api_log,
   register_input,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { INPUT } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
-import { randominteger, randomnumber } from 'zss/mapping/number'
+import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryboardread, memoryreadoperator } from 'zss/memory'
