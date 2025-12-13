@@ -2,6 +2,7 @@ import {
   BINARY_READER,
   JSON_READER,
   TEXT_READER,
+  api_chat,
   api_log,
   register_input,
 } from 'zss/device/api'
@@ -90,17 +91,13 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    api_log(SOFTWARE, READ_CONTEXT.elementfocus, '$GREEN', text)
+    api_chat(SOFTWARE, '', '$GREEN', text)
     return 0
   })
   .command('hyperlink', (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
-    api_log(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      `!${chip.template(words)};${labelstr}`,
-    )
+    api_chat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
     return 0
   })
   .command('readline', loadertext)
