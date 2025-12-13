@@ -42,22 +42,22 @@ function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
 function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
   switch (type) {
     case CODE_PAGE_TYPE.OBJECT:
-      gadgettext(player, '$green  object - moving board elements')
+      gadgettext(player, '$greenobject - moving board elements')
       break
     case CODE_PAGE_TYPE.TERRAIN:
-      gadgettext(player, '$green  terrain - walkable, walls, or water')
+      gadgettext(player, '$greenterrain - walkable, walls, or water')
       break
     case CODE_PAGE_TYPE.BOARD:
-      gadgettext(player, '$green  board - 60 x 25 area of terrain & object')
+      gadgettext(player, '$greenboard - 60 x 25 area of terrain & object')
       break
     case CODE_PAGE_TYPE.LOADER:
-      gadgettext(player, '$green  loader - run code on @event(s)')
+      gadgettext(player, '$greenloader - run code on @event(s)')
       break
     case CODE_PAGE_TYPE.PALETTE:
-      gadgettext(player, '$green  palette - custom 16 colors')
+      gadgettext(player, '$greenpalette - custom 16 colors')
       break
     case CODE_PAGE_TYPE.CHARSET:
-      gadgettext(player, '$green  charset - custom ascii font')
+      gadgettext(player, '$greencharset - custom ascii font')
       break
   }
 }
@@ -121,20 +121,73 @@ export function memorymakeitscroll(makeit: string, player: string) {
         makecodepagedesc(CODE_PAGE_TYPE.CHARSET, player)
         break
     }
-    if (type === STAT_TYPE.OBJECT) {
-      gadgethyperlink(player, 'makeit', `create object$CYAN @${name}`, [
-        'create',
-        '',
-        typename,
-        name,
-      ])
-    } else {
-      gadgethyperlink(player, 'makeit', `create$CYAN @${typename} ${name}`, [
-        'create',
-        '',
-        typename,
-        name,
-      ])
+    switch (type) {
+      case STAT_TYPE.OBJECT:
+        gadgethyperlink(player, 'makeit', `create object$CYAN @${name}`, [
+          'create',
+          'hk',
+          'o',
+          '',
+          '',
+          typename,
+          name,
+        ])
+        break
+      case STAT_TYPE.TERRAIN:
+        gadgethyperlink(player, 'makeit', `create$CYAN @terrain ${name}`, [
+          'create',
+          'hk',
+          't',
+          '',
+          '',
+          typename,
+          name,
+        ])
+        break
+      case STAT_TYPE.BOARD:
+        gadgethyperlink(player, 'makeit', `create$CYAN @board ${name}`, [
+          'create',
+          'hk',
+          'b',
+          '',
+          '',
+          typename,
+          name,
+        ])
+        break
+      case STAT_TYPE.LOADER:
+        gadgethyperlink(player, 'makeit', `create$CYAN @loader ${name}`, [
+          'create',
+          'hk',
+          'l',
+          '',
+          '',
+          typename,
+          name,
+        ])
+        break
+      case STAT_TYPE.PALETTE:
+        gadgethyperlink(player, 'makeit', `create$CYAN @palette ${name}`, [
+          'create',
+          'hk',
+          'p',
+          '',
+          '',
+          typename,
+          name,
+        ])
+        break
+      case STAT_TYPE.CHARSET:
+        gadgethyperlink(player, 'makeit', `create$CYAN @charset ${name}`, [
+          'create',
+          'hk',
+          'c',
+          '',
+          '',
+          typename,
+          name,
+        ])
+        break
     }
     gadgettext(player, '')
   }
@@ -169,7 +222,6 @@ export function memorymakeitscroll(makeit: string, player: string) {
                 createmakecodepage(STAT_TYPE.PALETTE, value)
                 createmakecodepage(STAT_TYPE.CHARSET, value)
               }
-              gadgettext(player, '')
               gadgettext(player, '$purple  if you typed in @char 12 or similar')
               gadgettext(
                 player,
