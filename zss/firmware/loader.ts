@@ -2,14 +2,14 @@ import {
   BINARY_READER,
   JSON_READER,
   TEXT_READER,
-  api_log,
+  api_chat,
   register_input,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { INPUT } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
-import { randominteger, randomnumber } from 'zss/mapping/number'
+import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryboardread, memoryreadoperator } from 'zss/memory'
@@ -90,17 +90,13 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    api_log(SOFTWARE, READ_CONTEXT.elementfocus, '$GREEN', text)
+    api_chat(SOFTWARE, '', '$GREEN', text)
     return 0
   })
   .command('hyperlink', (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
-    api_log(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      `!${chip.template(words)};${labelstr}`,
-    )
+    api_chat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
     return 0
   })
   .command('readline', loadertext)
