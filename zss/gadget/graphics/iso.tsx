@@ -156,9 +156,13 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     overref.current.position.x = 0
     overref.current.position.y = viewheight - boarddrawheight
 
-    const rscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
-    underref.current.position.x = viewwidth - boarddrawwidth * rscale
-    underref.current.position.y = 0
+    const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
+    const yscale = clamp(viewheight / boarddrawheight, 1.0, 10.0)
+    const rscale = Math.max(xscale, yscale)
+    const rwidth = boarddrawwidth * rscale
+    const rheight = boarddrawheight * rscale
+    underref.current.position.x = viewwidth - rwidth
+    underref.current.position.y = viewheight - rheight
     underref.current.scale.setScalar(rscale)
   })
 
