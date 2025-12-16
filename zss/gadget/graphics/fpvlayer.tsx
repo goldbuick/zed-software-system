@@ -26,9 +26,16 @@ type GraphicsLayerProps = {
   z: number
   from?: 'under' | 'over' | 'layers'
   layers?: LAYER[]
+  multi?: boolean
 }
 
-export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
+export function FPVLayer({
+  id,
+  z,
+  from,
+  layers,
+  multi = false,
+}: GraphicsLayerProps) {
   const player = registerreadplayer()
 
   const layer = useGadgetClient(
@@ -112,15 +119,17 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <group position-z={drawheight * -0.25}>
-              <PillarwMeshes
-                width={BOARD_WIDTH}
-                char={flooredge.char}
-                color={flooredge.color}
-                bg={flooredge.bg}
-                partial={0.25}
-              />
-            </group>
+            {!multi && (
+              <group position-z={drawheight * -0.25}>
+                <PillarwMeshes
+                  width={BOARD_WIDTH}
+                  char={flooredge.char}
+                  color={flooredge.color}
+                  bg={flooredge.bg}
+                  partial={0.25}
+                />
+              </group>
+            )}
             <group position-z={0.5}>
               <PillarwMeshes
                 width={BOARD_WIDTH}
@@ -138,21 +147,23 @@ export function FPVLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={sky.bg}
               />
             </group>
-            <group position-z={drawheight + 0.5}>
-              <PillarwMeshes
-                width={BOARD_WIDTH}
-                char={skyedge.char}
-                color={skyedge.color}
-                bg={skyedge.bg}
-                partial={0.5}
-              />
-              <PillarwMeshes
-                width={BOARD_WIDTH}
-                char={walls.char}
-                color={walls.color}
-                bg={walls.bg}
-              />
-            </group>
+            {!multi && (
+              <group position-z={drawheight + 0.5}>
+                <PillarwMeshes
+                  width={BOARD_WIDTH}
+                  char={skyedge.char}
+                  color={skyedge.color}
+                  bg={skyedge.bg}
+                  partial={0.5}
+                />
+                <PillarwMeshes
+                  width={BOARD_WIDTH}
+                  char={walls.char}
+                  color={walls.color}
+                  bg={walls.bg}
+                />
+              </group>
+            )}
           </group>
         </>
       )

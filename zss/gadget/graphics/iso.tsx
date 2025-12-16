@@ -32,7 +32,7 @@ function maptolayerz(layer: LAYER): number {
     case LAYER_TYPE.TILES:
       return 0
     case LAYER_TYPE.DITHER:
-      return RUNTIME.DRAW_CHAR_HEIGHT() + 1
+      return RUNTIME.DRAW_CHAR_HEIGHT()
     case LAYER_TYPE.SPRITES:
       return RUNTIME.DRAW_CHAR_HEIGHT() * 0.75
   }
@@ -45,7 +45,7 @@ function maptoscale(viewscale: VIEWSCALE): number {
       return 3
     default:
     case VIEWSCALE.MID:
-      return 2
+      return 1.75
     case VIEWSCALE.FAR:
       return 1
   }
@@ -62,7 +62,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   const boarddrawheight = BOARD_HEIGHT * drawheight
 
   const zoomref = useRef<Group>(null)
-  const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cornerref = useRef<Group>(null)
   const cameraref = useRef<OrthographicCameraImpl>(null)
@@ -76,7 +75,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
   useFrame((_, delta) => {
     if (
       !zoomref.current ||
-      !overref.current ||
       !underref.current ||
       !cornerref.current ||
       !cameraref.current ||
@@ -153,9 +151,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     cameraref.current.updateProjectionMatrix()
 
     // framing
-    overref.current.position.x = 0
-    overref.current.position.y = viewheight - boarddrawheight
-
     const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
     const yscale = clamp(viewheight / boarddrawheight, 1.0, 10.0)
     const rscale = Math.max(xscale, yscale)
@@ -221,6 +216,14 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                         z={maptolayerz(layer)}
                       />
                     ))}
+                    {over.map((layer) => (
+                      <IsoLayer
+                        key={layer.id}
+                        from="over"
+                        id={layer.id}
+                        z={maptolayerz(layer) + drawheight + 1}
+                      />
+                    ))}
                     {exiteast.length && (
                       <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
                         {exiteast.map((layer) => (
@@ -279,11 +282,6 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
       <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
-        ))}
-      </group>
-      <group ref={overref} position-z={overindex}>
-        {over.map((layer, i) => (
-          <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
         ))}
       </group>
     </>
