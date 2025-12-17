@@ -90,14 +90,16 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 bg={water.bg}
               />
             </group>
-            <group position-z={drawheight * -1}>
-              <PillarwMeshes
-                width={BOARD_WIDTH}
-                char={ground.char}
-                color={ground.color}
-                bg={ground.bg}
-              />
-            </group>
+            {from !== 'over' && (
+              <group position-z={drawheight * -1}>
+                <PillarwMeshes
+                  width={BOARD_WIDTH}
+                  char={ground.char}
+                  color={ground.color}
+                  bg={ground.bg}
+                />
+              </group>
+            )}
             <PillarwMeshes
               width={BOARD_WIDTH}
               char={walls.char.map((c) => (c !== 0 ? 219 : 0))}
@@ -142,9 +144,9 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
               drawheight * -0.75 + 0.5,
             ]}
           </ShadowMeshes>
-          <SpriteMeshes sprites={othersprites} scale={1.5} />
-          <group position-z={drawheight * -0.5}>
-            <SpriteMeshes sprites={watersprites} scale={1.5} />
+          <SpriteMeshes sprites={othersprites} scale={1.25} />
+          <group position-z={drawheight * -1}>
+            <SpriteMeshes sprites={watersprites} scale={1.25} />
           </group>
         </group>
       )
@@ -153,7 +155,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       // TODO replace this with the darkness meshes instances
       return (
         // eslint-disable-next-line react/no-unknown-property
-        <group key={layer.id} position={[0, 0, z + 1]}>
+        <group key={layer.id} position={[0, 0, z]}>
           <DarknessMeshes alphas={layer.alphas} width={BOARD_WIDTH} />
         </group>
       )

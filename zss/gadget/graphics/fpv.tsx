@@ -83,7 +83,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
 
   const positionref = useRef<Group>(null)
   const tiltref = useRef<Group>(null)
-  const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
 
@@ -96,7 +95,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     if (
       !positionref.current ||
       !tiltref.current ||
-      !overref.current ||
       !underref.current ||
       !cameraref.current
     ) {
@@ -246,9 +244,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     cameraref.current.updateProjectionMatrix()
 
     // framing
-    overref.current.position.x = 0
-    overref.current.position.y = viewheight - boarddrawheight
-
     const rscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
     underref.current.position.x = viewwidth - boarddrawwidth * rscale
     underref.current.position.y = 0
@@ -268,7 +263,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
 
   const layersindex = under.length * 2 + 2
-  const overindex = layersindex + 2
+  const multi = over.length > 0
 
   const xmargin = viewport.width - viewwidth
   const ymargin = viewport.height - viewheight
@@ -316,6 +311,16 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                   id={layer.id}
                   from="layers"
                   z={maptolayerz(layer)}
+                  multi={multi}
+                />
+              ))}
+              {over.map((layer) => (
+                <FPVLayer
+                  key={layer.id}
+                  from="over"
+                  id={layer.id}
+                  z={maptolayerz(layer) + drawheight + 1}
+                  multi={multi}
                 />
               ))}
               <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
@@ -327,6 +332,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         id={layer.id}
                         layers={exiteast}
                         z={maptolayerz(layer)}
+                        multi={multi}
                       />
                     ))}
                   </>
@@ -350,6 +356,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         id={layer.id}
                         layers={exitwest}
                         z={maptolayerz(layer)}
+                        multi={multi}
                       />
                     ))}
                   </>
@@ -373,6 +380,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         id={layer.id}
                         layers={exitnorth}
                         z={maptolayerz(layer)}
+                        multi={multi}
                       />
                     ))}
                   </>
@@ -396,6 +404,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         id={layer.id}
                         layers={exitsouth}
                         z={maptolayerz(layer)}
+                        multi={multi}
                       />
                     ))}
                   </>
@@ -413,11 +422,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
             </group>
           </RenderLayer>
         )}
-      </group>
-      <group ref={overref} position-z={overindex}>
-        {over.map((layer, i) => (
-          <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
-        ))}
       </group>
     </>
   )

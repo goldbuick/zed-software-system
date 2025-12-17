@@ -20,7 +20,7 @@ import {
 } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { COLLISION, NAME, PT } from 'zss/words/types'
+import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide, listelementsbyidnameorpts } from './atomics'
 import {
@@ -1308,10 +1308,18 @@ export function memoryreadgadgetlayers(
 
   // compose layers
   under.push(
-    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, false),
+    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, DIR.UNDER),
   )
+  const multi = ispresent(overboard)
   layers.push(
-    ...memoryconverttogadgetlayers(player, under.length, board, tickers, true),
+    ...memoryconverttogadgetlayers(
+      player,
+      under.length,
+      board,
+      tickers,
+      DIR.MID,
+      multi,
+    ),
   )
   over.push(
     ...memoryconverttogadgetlayers(
@@ -1319,7 +1327,8 @@ export function memoryreadgadgetlayers(
       under.length + layers.length,
       overboard,
       tickers,
-      false,
+      DIR.OVER,
+      multi,
     ),
   )
 

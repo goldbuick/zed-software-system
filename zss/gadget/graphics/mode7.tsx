@@ -74,7 +74,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
   const boarddrawheight = BOARD_HEIGHT * drawheight
 
   const tiltref = useRef<Group>(null)
-  const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cornerref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
@@ -88,7 +87,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
   useFrame((_, delta) => {
     if (
       !tiltref.current ||
-      !overref.current ||
       !underref.current ||
       !cornerref.current ||
       !cameraref.current ||
@@ -177,9 +175,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     cameraref.current.updateProjectionMatrix()
 
     // framing
-    overref.current.position.x = 0
-    overref.current.position.y = viewheight - boarddrawheight
-
     const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
     const yscale = clamp(viewheight / boarddrawheight, 1.0, 10.0)
     const rscale = Math.max(xscale, yscale)
@@ -240,6 +235,14 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                       z={maptolayerz(layer)}
                     />
                   ))}
+                  {over.map((layer) => (
+                    <FlatLayer
+                      key={layer.id}
+                      from="over"
+                      id={layer.id}
+                      z={maptolayerz(layer) + drawheight * 1.125}
+                    />
+                  ))}
                   {exiteast.length && (
                     <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
                       {exiteast.map((layer) => (
@@ -297,11 +300,6 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
-        ))}
-      </group>
-      <group ref={overref} position-z={overindex}>
-        {over.map((layer, i) => (
-          <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
         ))}
       </group>
     </>

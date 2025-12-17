@@ -313,7 +313,8 @@ export function memoryconverttogadgetlayers(
   index: number,
   board: MAYBE<BOARD>,
   tickers: string[],
-  includemedia: boolean,
+  whichlayer: DIR.UNDER | DIR.MID | DIR.OVER,
+  multi = false,
 ): LAYER[] {
   if (
     !ispresent(board) ||
@@ -336,14 +337,12 @@ export function memoryconverttogadgetlayers(
   const boardid = board.id
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
-  const defaultcolor = COLOR.ONCLEAR
-
   const tiles = createcachedtiles(
     boardid,
     iiii++,
     boardwidth,
     boardheight,
-    defaultcolor,
+    COLOR.BLACK,
   )
   layers.push(tiles)
 
@@ -371,7 +370,7 @@ export function memoryconverttogadgetlayers(
       tile,
       0,
       COLOR.WHITE,
-      withgraphics !== 'flat' ? COLOR.BLACK : COLOR.ONCLEAR,
+      whichlayer === DIR.OVER ? COLOR.ONCLEAR : COLOR.BLACK,
     )
     const collision = memoryelementstatread(tile, 'collision')
     tiles.char[i] = display.char
@@ -383,8 +382,7 @@ export function memoryconverttogadgetlayers(
   if (withgraphics === 'fpv') {
     for (let i = 0; i < board.terrain.length; ++i) {
       const tile = board.terrain[i]
-      const sky = memoryelementstatread(tile, 'sky')
-      if (ispresent(sky)) {
+      if (multi || ispresent(memoryelementstatread(tile, 'sky'))) {
         tiles.char[i] = -tiles.char[i]
       }
     }
@@ -593,56 +591,60 @@ export function memoryconverttogadgetlayers(
     }
   }
 
-  // set mood
-  layers.push(
-    createcachedmedia(boardid, iiii++, 'text/mood', isdark ? 'dark' : 'bright'),
-  )
-
-  // check for display media
-
-  // check for palette
-  if (includemedia && isstring(board.palettepage)) {
-    const codepage = memorypickcodepagewithtype(
-      CODE_PAGE_TYPE.PALETTE,
-      board.palettepage,
+  // layers for display media
+  if (whichlayer === DIR.MID) {
+    // set mood
+    layers.push(
+      createcachedmedia(
+        boardid,
+        iiii++,
+        'text/mood',
+        isdark ? 'dark' : 'bright',
+      ),
     )
-    const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
-    if (ispresent(palette?.bits)) {
-      layers.push(
-        createcachedmedia(
-          boardid,
-          iiii++,
-          'image/palette',
-          Array.from(palette.bits),
-        ),
-      )
-    }
-  }
 
-  // check for charset
-  if (includemedia && isstring(board.charsetpage)) {
-    const codepage = memorypickcodepagewithtype(
-      CODE_PAGE_TYPE.CHARSET,
-      board.charsetpage,
+    // check for palette
+    if (isstring(board.palettepage)) {
+      const codepage = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.PALETTE,
+        board.palettepage,
+      )
+      const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
+      if (ispresent(palette?.bits)) {
+        layers.push(
+          createcachedmedia(
+            boardid,
+            iiii++,
+            'image/palette',
+            Array.from(palette.bits),
+          ),
+        )
+      }
+    }
+    // check for charset
+    if (isstring(board.charsetpage)) {
+      const codepage = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.CHARSET,
+        board.charsetpage,
+      )
+      const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
+      if (ispresent(charset?.bits)) {
+        layers.push(
+          createcachedmedia(
+            boardid,
+            iiii++,
+            'image/charset',
+            Array.from(charset.bits),
+          ),
+        )
+      }
+    }
+    // add media layer to list peer ids
+    const pids = Object.keys(board.objects).filter(ispid)
+    layers.push(
+      createcachedmedia(boardid, iiii++, 'text/players', pids.join(',')),
     )
-    const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
-    if (ispresent(charset?.bits)) {
-      layers.push(
-        createcachedmedia(
-          boardid,
-          iiii++,
-          'image/charset',
-          Array.from(charset.bits),
-        ),
-      )
-    }
   }
-
-  // add media layer to list peer ids
-  const pids = Object.keys(board.objects).filter(ispid)
-  layers.push(
-    createcachedmedia(boardid, iiii++, 'text/players', pids.join(',')),
-  )
 
   // return result
   return layers

@@ -78,7 +78,11 @@ import {
   codepagereadtype,
   codepagereadtypetostring,
 } from 'zss/memory/codepage'
-import { memorysendtoelements, memorysendtolog } from 'zss/memory/send'
+import {
+  memorycodepagetoprefix,
+  memorysendtoelements,
+  memorysendtolog,
+} from 'zss/memory/send'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -266,13 +270,16 @@ export const CLI_FIRMWARE = createfirmware()
 
       // tell tape to open a code editor for given page
       const type = codepagereadtypetostring(codepage)
+
+      // codepage details
+      const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
       register_editor_open(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         codepagebook.id,
         path,
         type,
-        `${name} - ${codepagebook.name}`,
+        title,
       )
     } else {
       api_error(
@@ -363,10 +370,11 @@ export const CLI_FIRMWARE = createfirmware()
       sorted.forEach((page) => {
         const name = codepagereadname(page)
         const type = codepagereadtypetostring(page)
+        const prefix = memorycodepagetoprefix(page)
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `!pageopen ${page.id};$blue[${type}]$white ${name}`,
+          `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}`,
         )
       })
     } else {
@@ -489,10 +497,12 @@ export const CLI_FIRMWARE = createfirmware()
       )
       book.pages.forEach((page) => {
         const name = codepagereadname(page)
+        const type = codepagereadtypetostring(page)
+        const prefix = memorycodepagetoprefix(page)
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `!pagetrash ${page.id};$REDTRASH ${name}`,
+          `!pagetrash ${page.id};$REDTRASH [${type}] ${prefix}${name}`,
         )
       })
       write(SOFTWARE, READ_CONTEXT.elementfocus, '')
@@ -590,15 +600,16 @@ export const CLI_FIRMWARE = createfirmware()
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `!bookallexport ${address};$blue[all]$white export book`,
+            `!bookallexport ${address};$blue[all] $whiteexport book`,
           )
           sorted.forEach((page) => {
             const name = codepagereadname(page)
             const type = codepagereadtypetostring(page)
+            const prefix = memorycodepagetoprefix(page)
             write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `!pageexport ${address}:${page.id};$blue[${type}]$white ${name}`,
+              `!pageexport ${address}:${page.id};$blue[${type}] ${prefix}$white${name}`,
             )
           })
         }
