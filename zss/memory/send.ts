@@ -6,6 +6,7 @@ import { createsid, ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
+  memoryelementkindread,
   memoryelementstatread,
   memorymessage,
   memoryreadbookbysoftware,
@@ -21,29 +22,52 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import { bookplayerreadboards } from 'zss/memory/bookplayer'
-import { BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
+import {
+  BOARD_ELEMENT,
+  BOARD_WIDTH,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 import { COLOR } from 'zss/words/types'
 
 import { bookelementdisplayread } from './book'
+import { codepagereadname, codepagereadtype } from './codepage'
+
+export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
+  if (
+    codepagereadtype(codepage) !== CODE_PAGE_TYPE.TERRAIN &&
+    codepagereadtype(codepage) !== CODE_PAGE_TYPE.OBJECT
+  ) {
+    return ''
+  }
+  const name = codepagereadname(codepage)
+  const stub: BOARD_ELEMENT = { kind: name }
+  memoryelementkindread(stub)
+  return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
+}
+
+export function memoryelementtodisplayprefix(element: MAYBE<BOARD_ELEMENT>) {
+  const icon = bookelementdisplayread(element)
+  const color = `${COLOR[icon.color]}`
+  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
+  return `$${color}$ON${bg}$${icon.char}`
+}
 
 export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
   if (!ispresent(element?.id)) {
     return ''
   }
 
-  const icon = bookelementdisplayread(element)
-
-  let withname = icon.name
+  let withname = bookelementdisplayread(element).name
   if (element.kind === 'player') {
     const { user } = memoryreadflags(element.id)
     withname = isstring(user) ? user : 'player'
   }
 
-  const color = `${COLOR[icon.color]}`
-  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
-  return `$${color}$ON${bg}$${icon.char}$ONCLEAR$CYAN ${withname}:$WHITE `
+  const displayprefix = memoryelementtodisplayprefix(element)
+  return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
 }
 
 export function memorysendtolog(

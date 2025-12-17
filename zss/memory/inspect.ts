@@ -27,7 +27,7 @@ import {
   boardsetterrain,
 } from './board'
 import { boardelementisobject } from './boardelement'
-import { bookboardelementreadcodepage } from './book'
+import { bookboardelementreadcodepage, bookelementdisplayread } from './book'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
 import {
@@ -36,6 +36,7 @@ import {
   memoryinspectelement,
 } from './inspectelement'
 import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
+import { memoryelementtodisplayprefix, memoryelementtologprefix } from './send'
 
 import {
   MEMORY_LABEL,
@@ -242,13 +243,15 @@ export function memoryinspectcommand(path: string, player: string) {
         await waitfor(800)
 
         // open code editor
+        const prefix = memoryelementtodisplayprefix(element)
+        const title = `${prefix}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${mainbook.name}`
         register_editor_open(
           SOFTWARE,
           player,
           mainbook.id,
           path,
           pagetype,
-          `${element.name ?? element.kind ?? '??'} - ${mainbook.name}`,
+          title,
         )
       })
       break
