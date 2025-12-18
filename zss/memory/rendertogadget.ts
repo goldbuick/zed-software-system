@@ -25,7 +25,7 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
-import { checkdoescollide } from './atomics'
+import { boardcheckcollide } from './atomics'
 import {
   boardelementindex,
   boardevaldir,
@@ -234,7 +234,7 @@ function raycheck(
   const maybeterrain = board.terrain[idx]
   const terrainkind = memoryelementkindread(maybeterrain)
   const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
-  if (checkdoescollide(COLLISION.ISBULLET, terraincollision)) {
+  if (boardcheckcollide(COLLISION.ISBULLET, terraincollision)) {
     // fully blocked
     const range: [number, number, number] = [...mixmaxrange(sprite, pt), 1]
     nextblocked.push(range)

@@ -82,7 +82,7 @@ export function createdevice(
       }
 
       // we got a reset
-      if (itarget === 'session_reset') {
+      if (itarget === 'sessionreset') {
         session = ''
       }
 

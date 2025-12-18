@@ -1,5 +1,5 @@
 import { Channel } from 'tone'
-import { api_error } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
@@ -30,7 +30,7 @@ export function synthvoicefxconfig(
     return
   }
   if (index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
+    apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const fx = synth.FX[index][fxname] as Channel
@@ -86,5 +86,5 @@ export function synthvoicefxconfig(
     }
     return
   }
-  api_error(SOFTWARE, player, `synth`, `unknown fx ${fxname}`)
+  apierror(SOFTWARE, player, `synth`, `unknown fx ${fxname}`)
 }

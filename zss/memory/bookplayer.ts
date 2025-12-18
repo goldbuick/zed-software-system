@@ -2,7 +2,7 @@ import { unique } from 'zss/mapping/array'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { checkdoescollide } from './atomics'
+import { boardcheckcollide } from './atomics'
 import { boardobjectread, boardvisualsupdate } from './board'
 import { boardelementisobject } from './boardelement'
 import {
@@ -87,7 +87,7 @@ export function bookplayermovetoboard(
   // blocked by non-object
   if (!ispresent(maybeobject) && !boardelementisobject(maybeobject)) {
     const terraincollision = memoryelementstatread(maybeobject, 'collision')
-    if (checkdoescollide(COLLISION.ISWALK, terraincollision)) {
+    if (boardcheckcollide(COLLISION.ISWALK, terraincollision)) {
       return false
     }
   }

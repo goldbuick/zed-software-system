@@ -28,7 +28,7 @@ import {
 // list returns a list, input can be anything
 // pick returns a single item FROM a list
 
-export function checkdoescollide(
+export function boardcheckcollide(
   maybesource: MAYBE<COLLISION>,
   maybedest: MAYBE<COLLISION>,
 ) {
@@ -50,7 +50,7 @@ export function checkdoescollide(
   }
 }
 
-export function findplayerforelement(
+export function boardfindplayerforelement(
   board: MAYBE<BOARD>,
   elementpt: MAYBE<PT>,
   player: string,
@@ -61,7 +61,7 @@ export function findplayerforelement(
     return maybelplayer
   }
 
-  const players = listnamedelements(board, 'player')
+  const players = boardlistnamedelements(board, 'player')
   // find nearest player to element
   if (ispresent(elementpt)) {
     if (elementpt.x < 0) {
@@ -70,14 +70,14 @@ export function findplayerforelement(
     if (elementpt.y < 0) {
       elementpt.y = randominteger(0, BOARD_HEIGHT - 1)
     }
-    return picknearestpt(elementpt, players)
+    return boardpicknearestpt(elementpt, players)
   }
 
   // return rand
   return pick(...players)
 }
 
-export function listelementsbyempty(board: MAYBE<BOARD>): PT[] {
+export function boardlistelementsbyempty(board: MAYBE<BOARD>): PT[] {
   const pts: PT[] = []
   // returns a list of points where empties are
   for (let i = 0; i < BOARD_SIZE; ++i) {
@@ -89,7 +89,7 @@ export function listelementsbyempty(board: MAYBE<BOARD>): PT[] {
   return pts
 }
 
-export function listnamedelements(
+export function boardlistnamedelements(
   board: MAYBE<BOARD>,
   name: string,
 ): BOARD_ELEMENT[] {
@@ -108,7 +108,7 @@ export function listnamedelements(
     .filter(ispresent)
 }
 
-export function listptsbyempty(board: MAYBE<BOARD>): PT[] {
+export function boardlistptsbyempty(board: MAYBE<BOARD>): PT[] {
   const pts: PT[] = []
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
@@ -144,19 +144,19 @@ function filterelement(
   return true
 }
 
-export function listelementsbykind(
+export function boardlistelementsbykind(
   board: MAYBE<BOARD>,
   kind: STR_KIND,
 ): BOARD_ELEMENT[] {
   const name = readstrkindname(kind)
   const color = readstrkindcolor(kind)
   const bg = readstrkindbg(kind)
-  return listnamedelements(board, name ?? '').filter((element) =>
+  return boardlistnamedelements(board, name ?? '').filter((element) =>
     filterelement(element, name, color, bg),
   )
 }
 
-export function listelementsbycolor(
+export function boardlistelementsbycolor(
   board: MAYBE<BOARD>,
   strcolor: STR_COLOR,
 ): BOARD_ELEMENT[] {
@@ -181,7 +181,7 @@ export function listelementsbycolor(
   return elements
 }
 
-export function listelementsbyidnameorpts(
+export function boardlistelementsbyidnameorpts(
   board: MAYBE<BOARD>,
   idnameorpts: any[],
 ): BOARD_ELEMENT[] {
@@ -197,7 +197,7 @@ export function listelementsbyidnameorpts(
           return maybebyid
         }
         // check by name
-        const maybebyname = listnamedelements(board, NAME(idnameorpt))
+        const maybebyname = boardlistnamedelements(board, NAME(idnameorpt))
         if (maybebyname.length) {
           return maybebyname
         }
@@ -221,7 +221,7 @@ export function listelementsbyidnameorpts(
     .filter(ispresent)
 }
 
-export function picknearestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
+export function boardpicknearestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
   let ndist = 0
   let nearest: MAYBE<BOARD_ELEMENT>
 
@@ -241,7 +241,7 @@ export function picknearestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
   return nearest
 }
 
-export function pickfarthestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
+export function boardpickfarthestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
   let ndist = 0
   let nearest: MAYBE<BOARD_ELEMENT>
 

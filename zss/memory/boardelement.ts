@@ -67,7 +67,7 @@ enum BOARD_ELEMENT_KEYS {
 }
 
 // safe to serialize copy of boardelement
-export function exportboardelement(
+export function boardelementexport(
   boardelement: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<FORMAT_OBJECT> {
   if (ispresent(boardelement?.id)) {
@@ -96,7 +96,7 @@ export function exportboardelement(
 }
 
 // import json into boardelement
-export function importboardelement(
+export function boardelementimport(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
   return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)

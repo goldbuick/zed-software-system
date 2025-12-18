@@ -1,5 +1,5 @@
 import getSimilarColor, { IDefaultColor } from 'get-similar-color/dist'
-import { api_toast } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { createnameid } from 'zss/mapping/guid'
@@ -124,7 +124,7 @@ export function parseansi(
         }
       }
 
-      api_toast(
+      apitoast(
         SOFTWARE,
         player,
         `imported ansi file ${patchworkname} into ${contentbook.name} book`,

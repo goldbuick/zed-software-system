@@ -1,4 +1,4 @@
-import { DEVICELIKE, api_log, register_terminal_full } from 'zss/device/api'
+import { DEVICELIKE, apilog, registerterminalfull } from 'zss/device/api'
 import { qrlines } from 'zss/mapping/qr'
 
 /**
@@ -15,7 +15,7 @@ const CHR_BM = '$205'
 export const DIVIDER = '$yellow$205$205$205$196'
 
 export function write(device: DEVICELIKE, player: string, text: string) {
-  api_log(device, player, text)
+  apilog(device, player, text)
 }
 
 export function writetbar(device: DEVICELIKE, player: string, width: number) {
@@ -86,7 +86,7 @@ export function writecopyit(
 ) {
   if (showqr) {
     writeqr(device, player, content)
-    setTimeout(() => register_terminal_full(device, player), 2000)
+    setTimeout(() => registerterminalfull(device, player), 2000)
   }
   write(device, player, `!copyit ${content};${label}`)
 }

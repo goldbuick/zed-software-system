@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
-import { gadgetserver_clearscroll } from 'zss/device/api'
+import { gadgetserverclearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
@@ -176,7 +176,7 @@ export function ScreenUI() {
         },
         sendclose() {
           // send a message to trigger the close
-          gadgetserver_clearscroll(SOFTWARE, player)
+          gadgetserverclearscroll(SOFTWARE, player)
         },
         didclose() {
           sethasscroll(false)

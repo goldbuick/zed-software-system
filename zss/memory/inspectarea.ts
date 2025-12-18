@@ -12,7 +12,7 @@ import { PT, WORD } from 'zss/words/types'
 import { boardelementread } from './board'
 import { bookboardelementreadcodepage } from './book'
 import { codepagereadname } from './codepage'
-import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
+import { gadgetinspectboard, gadgetinspectloaders } from './inspectgadget'
 import { BOARD_ELEMENT } from './types'
 
 import {
@@ -254,7 +254,7 @@ export function memoryinspectarea(
 
   // add gadget scripts
   gadgettext(player, DIVIDER)
-  inspectgadgetloaders(player, p1, p2)
+  gadgetinspectloaders(player, p1, p2)
 
   // codepage links
   gadgettext(player, `codepages:`)
@@ -282,5 +282,5 @@ export function memoryinspectarea(
   }
 
   // board info
-  inspectgadgetboard(player, board.id)
+  gadgetinspectboard(player, board.id)
 }

@@ -1,5 +1,5 @@
 import { CHIP } from 'zss/chip'
-import { api_chat } from 'zss/device/api'
+import { apichat } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -13,7 +13,7 @@ import {
   memoryreadflags,
   memorysendtoboards,
 } from 'zss/memory'
-import { listelementsbyidnameorpts } from 'zss/memory/atomics'
+import { boardlistelementsbyidnameorpts } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardelementreadbyidorindex,
@@ -78,7 +78,7 @@ export function memorysendtolog(
   if (!ispresent(board) || !ispresent(element?.id)) {
     return
   }
-  api_chat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
+  apichat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
 }
 
 function playerpartyinteraction(
@@ -235,7 +235,7 @@ export function memorysendtoelements(
       }
       default: {
         // target named elements
-        const elements = listelementsbyidnameorpts(READ_CONTEXT.board, [
+        const elements = boardlistelementsbyidnameorpts(READ_CONTEXT.board, [
           send.targetname,
         ])
         for (let i = 0; i < elements.length; ++i) {

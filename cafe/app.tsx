@@ -1,4 +1,4 @@
-import { vm_loader } from 'zss/device/api'
+import { vmloader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
@@ -35,7 +35,7 @@ window.addEventListener('paste', (event) => {
   // read files from clipboardData
   const files = [...event.clipboardData.files]
   files.forEach((file) =>
-    vm_loader(
+    vmloader(
       SOFTWARE,
       registerreadplayer(),
       undefined,
@@ -58,7 +58,7 @@ window.addEventListener('drop', (event) => {
       if (item.kind === 'file') {
         const file = item.getAsFile()
         if (ispresent(file)) {
-          vm_loader(
+          vmloader(
             SOFTWARE,
             registerreadplayer(),
             undefined,
@@ -73,7 +73,7 @@ window.addEventListener('drop', (event) => {
     // Use DataTransfer interface to access the file(s)
     const files = [...(event.dataTransfer?.files ?? [])]
     files.forEach((file) =>
-      vm_loader(
+      vmloader(
         SOFTWARE,
         registerreadplayer(),
         undefined,

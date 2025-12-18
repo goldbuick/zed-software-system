@@ -1,4 +1,4 @@
-import { api_toast } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
@@ -9,7 +9,7 @@ import { READ_CONTEXT } from 'zss/words/reader'
 export const DISPLAY_FIRMWARE = createfirmware()
   .command('toast', (_, words) => {
     const text = words.map(maptostring).join('')
-    api_toast(SOFTWARE, READ_CONTEXT.elementfocus, text)
+    apitoast(SOFTWARE, READ_CONTEXT.elementfocus, text)
     return 0
   })
   .command('ticker', (_, words) => {

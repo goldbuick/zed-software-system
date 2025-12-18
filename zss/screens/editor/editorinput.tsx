@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
-  api_error,
-  api_log,
-  register_editor_close,
-  register_terminal_close,
-  register_terminal_inclayout,
-  vm_cli,
-  vm_copyjsonfile,
+  apierror,
+  apilog,
+  registereditorclose,
+  registerterminalclose,
+  registerterminalinclayout,
+  vmcli,
+  vmcopyjsonfile,
 } from 'zss/device/api'
 import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
@@ -346,13 +346,13 @@ export function EditorInput({
         }}
         CANCEL_BUTTON={(mods) => {
           if (mods.shift || mods.alt || mods.ctrl) {
-            register_terminal_close(SOFTWARE, player)
+            registerterminalclose(SOFTWARE, player)
           } else {
-            register_editor_close(SOFTWARE, player)
+            registereditorclose(SOFTWARE, player)
           }
         }}
         MENU_BUTTON={(mods) => {
-          register_terminal_inclayout(SOFTWARE, player, !mods.shift)
+          registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
           if (!ispresent(codepage)) {
@@ -382,7 +382,7 @@ export function EditorInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'e':
-                    vm_copyjsonfile(SOFTWARE, player, editorpath)
+                    vmcopyjsonfile(SOFTWARE, player, editorpath)
                     break
                   case 'z':
                     if (ismac && mods.shift) {
@@ -405,7 +405,7 @@ export function EditorInput({
                       withclipboard()
                         .writeText(strvalueselected)
                         .catch((err) =>
-                          api_error(SOFTWARE, player, 'clipboard', err),
+                          apierror(SOFTWARE, player, 'clipboard', err),
                         )
                     } else {
                       resettoend()
@@ -424,7 +424,7 @@ export function EditorInput({
                           }
                         })
                         .catch((err) =>
-                          api_error(SOFTWARE, player, 'clipboard', err),
+                          apierror(SOFTWARE, player, 'clipboard', err),
                         )
                     } else {
                       resettoend()
@@ -436,7 +436,7 @@ export function EditorInput({
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
                         .catch((err) =>
-                          api_error(SOFTWARE, player, 'clipboard', err),
+                          apierror(SOFTWARE, player, 'clipboard', err),
                         )
                     } else {
                       resettoend()
@@ -444,16 +444,16 @@ export function EditorInput({
                     break
                   case 'p':
                     if (hasselection) {
-                      vm_cli(SOFTWARE, player, strvalueselected)
-                      api_log(
+                      vmcli(SOFTWARE, player, strvalueselected)
+                      apilog(
                         SOFTWARE,
                         player,
                         `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
                       )
                     } else {
                       // run current line
-                      vm_cli(SOFTWARE, player, coderow.code)
-                      api_log(
+                      vmcli(SOFTWARE, player, coderow.code)
+                      apilog(
                         SOFTWARE,
                         player,
                         `running $WHITE${coderow.code.substring(0, 16)}...$BLUE`,

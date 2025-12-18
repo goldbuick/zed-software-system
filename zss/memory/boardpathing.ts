@@ -2,7 +2,7 @@ import { pttoindex } from 'zss/mapping/2d'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { checkdoescollide } from './atomics'
+import { boardcheckcollide } from './atomics'
 import { boardgetterrain, ptwithinboard } from './board'
 import { BOARD, BOARD_SIZE, BOARD_WIDTH } from './types'
 
@@ -44,7 +44,7 @@ function boardreaddistmap(
           // check terrain if its passible
           const terrain = boardgetterrain(board, check.x, check.y)
           if (
-            !checkdoescollide(
+            !boardcheckcollide(
               forcollision,
               memoryelementstatread(terrain, 'collision'),
             )

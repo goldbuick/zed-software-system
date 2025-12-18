@@ -1,20 +1,20 @@
 import { CHIP } from 'zss/chip'
 import {
-  synth_bgplay,
-  synth_bgplayvolume,
-  synth_bpm,
-  synth_flush,
-  synth_play,
-  synth_playvolume,
-  synth_record,
-  synth_restart,
-  synth_tts,
-  synth_ttsclearqueue,
-  synth_ttsengine,
-  synth_ttsqueue,
-  synth_ttsvolume,
-  synth_voice,
-  synth_voicefx,
+  synthbgplay,
+  synthbgplayvolume,
+  synthbpm,
+  synthflush,
+  synthplay,
+  synthplayvolume,
+  synthrecord,
+  synthrestart,
+  synthtts,
+  synthttsclearqueue,
+  synthttsengine,
+  synthttsqueue,
+  synthttsvolume,
+  synthvoice,
+  synthvoicefx,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -36,7 +36,7 @@ function handlesynthvoicefx(
     ARG_TYPE.NUMBER_OR_STRING,
     ARG_TYPE.MAYBE_NUMBER_OR_STRING,
   ])
-  synth_voicefx(SOFTWARE, player, idx, fx, maybeconfig, maybevalue)
+  synthvoicefx(SOFTWARE, player, idx, fx, maybeconfig, maybevalue)
 }
 
 const isfx = [
@@ -53,13 +53,13 @@ const isfx = [
 function handlesynthvoice(player: string, idx: number, words: WORD[]) {
   const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
   if (isnumber(voiceorfx)) {
-    synth_voice(SOFTWARE, player, idx, 'volume', voiceorfx)
+    synthvoice(SOFTWARE, player, idx, 'volume', voiceorfx)
   } else if (isfx.includes(NAME(voiceorfx))) {
     const [maybeconfig, maybevalue] = readargs(words, ii, [
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
     ])
-    synth_voicefx(SOFTWARE, player, idx, voiceorfx, maybeconfig, maybevalue)
+    synthvoicefx(SOFTWARE, player, idx, voiceorfx, maybeconfig, maybevalue)
   } else {
     // check for a list of numbers
     const [configorpartials] = readargs(words, ii, [
@@ -71,12 +71,12 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
       // @ts-expect-error argtypes ?
       const partials = readargs(words, ii, argtypes).slice(0, count)
       const maybevalue = partials.length === 1 ? partials[0] : partials
-      synth_voice(SOFTWARE, player, idx, voiceorfx, maybevalue)
+      synthvoice(SOFTWARE, player, idx, voiceorfx, maybevalue)
     } else {
       const [maybevalue] = readargs(words, ii, [
         ARG_TYPE.MAYBE_NUMBER_OR_STRING,
       ])
-      synth_voice(SOFTWARE, player, idx, voiceorfx, maybevalue)
+      synthvoice(SOFTWARE, player, idx, voiceorfx, maybevalue)
     }
   }
 }
@@ -99,7 +99,7 @@ function handleplaystr(chip: CHIP, words: WORD[]) {
 }
 
 function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
-  synth_bgplay(
+  synthbgplay(
     SOFTWARE,
     READ_CONTEXT.elementfocus,
     READ_CONTEXT.board?.id ?? '',
@@ -114,7 +114,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
-    synth_ttsengine(SOFTWARE, READ_CONTEXT.elementfocus, engine, config ?? '')
+    synthttsengine(SOFTWARE, READ_CONTEXT.elementfocus, engine, config ?? '')
     return 0
   })
   .command('tts', (_, words) => {
@@ -123,7 +123,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
     if (ispresent(voice) && ispresent(phrase)) {
-      synth_tts(
+      synthtts(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
@@ -131,7 +131,7 @@ export const AUDIO_FIRMWARE = createfirmware()
         phrase,
       )
     } else {
-      synth_ttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
+      synthttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0
   })
@@ -140,7 +140,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.STRING,
     ])
-    synth_ttsqueue(
+    synthttsqueue(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
       READ_CONTEXT.board?.id ?? '',
@@ -151,26 +151,26 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('bpm', (_, words) => {
     const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_bpm(SOFTWARE, READ_CONTEXT.elementfocus, bpm)
+    synthbpm(SOFTWARE, READ_CONTEXT.elementfocus, bpm)
     return 0
   })
   .command('vol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_playvolume(SOFTWARE, READ_CONTEXT.elementfocus, volume)
+    synthplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, volume)
     return 0
   })
   .command('bgvol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_bgplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, volume)
+    synthbgplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, volume)
     return 0
   })
   .command('ttsvol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_ttsvolume(SOFTWARE, READ_CONTEXT.elementfocus, volume)
+    synthttsvolume(SOFTWARE, READ_CONTEXT.elementfocus, volume)
     return 0
   })
   .command('play', (chip, words) => {
-    synth_play(
+    synthplay(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
       READ_CONTEXT.board?.id ?? '',
@@ -212,7 +212,7 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('synth', (_, words) => {
     if (words.length === 0) {
-      synth_restart(SOFTWARE, READ_CONTEXT.elementfocus)
+      synthrestart(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0
     }
     // multi-voice changes only apply to #play
@@ -223,11 +223,11 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('synthrecord', (_, words) => {
     const [filename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-    synth_record(SOFTWARE, READ_CONTEXT.elementfocus, filename ?? '')
+    synthrecord(SOFTWARE, READ_CONTEXT.elementfocus, filename ?? '')
     return 0
   })
   .command('synthflush', () => {
-    synth_flush(SOFTWARE, READ_CONTEXT.elementfocus)
+    synthflush(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('echo', (_, words) => {

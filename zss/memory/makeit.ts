@@ -1,4 +1,4 @@
-import { vm_cli } from 'zss/device/api'
+import { vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import {
@@ -277,7 +277,7 @@ export function memorymakeitcommand(
         // wait a little
         await waitfor(800)
         // open codepage
-        vm_cli(SOFTWARE, player, `#pageopen ${codepage.id}`)
+        vmcli(SOFTWARE, player, `#pageopen ${codepage.id}`)
       }
     })
   }

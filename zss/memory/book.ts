@@ -5,14 +5,14 @@ import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
+  codepageexport,
+  codepageimport,
   codepagereaddata,
   codepagereadname,
   codepagereadstats,
   codepagereadtype,
   codepagetypetostring,
   createcodepage,
-  exportcodepage,
-  importcodepage,
 } from './codepage'
 import {
   BOARD,
@@ -47,9 +47,9 @@ enum BOOK_KEYS {
   token,
 }
 
-export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
+export function bookexport(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   return formatobject(book, BOOK_KEYS, {
-    pages: (pages) => pages.map(exportcodepage),
+    pages: (pages) => pages.map(codepageexport),
     flags: (flags: Record<string, BOOK_FLAGS>) => {
       const ids = Object.keys(flags)
       for (let i = 0; i < ids.length; ++i) {
@@ -64,9 +64,9 @@ export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   })
 }
 
-export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
+export function bookimport(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   const book: MAYBE<BOOK> = unformatobject(bookentry, BOOK_KEYS, {
-    pages: (pages) => pages.map(importcodepage),
+    pages: (pages) => pages.map(codepageimport),
   })
   if (ispresent(book)) {
     // remove old data

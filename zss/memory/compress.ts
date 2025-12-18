@@ -3,7 +3,7 @@ import JSZip, { JSZipObject } from 'jszip'
 import { packformat, unpackformat } from 'zss/feature/format'
 import { ispresent } from 'zss/mapping/types'
 
-import { exportbook, importbook } from './book'
+import { bookexport, bookimport } from './book'
 import { BOOK } from './types'
 
 let zstdenabled = false
@@ -38,7 +38,7 @@ export async function compressbooks(books: BOOK[]) {
   const zip = new JSZip()
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
-    const exportedbook = exportbook(book)
+    const exportedbook = bookexport(book)
     if (exportedbook) {
       // convert to bin
       const bin = packformat(exportedbook)
@@ -78,7 +78,7 @@ export async function decompressbooks(base64bytes: string) {
     const str = await file.async('string')
     const maybebookfromstr = unpackformat(str)
     if (ispresent(maybebookfromstr)) {
-      const book = importbook(maybebookfromstr)
+      const book = bookimport(maybebookfromstr)
       if (ispresent(book)) {
         books.push(book)
         continue
@@ -89,7 +89,7 @@ export async function decompressbooks(base64bytes: string) {
     const bin = await file.async('uint8array')
     const maybebookfrombin = unpackformat(bin)
     if (ispresent(maybebookfrombin)) {
-      const book = importbook(maybebookfrombin)
+      const book = bookimport(maybebookfrombin)
       if (ispresent(book)) {
         books.push(book)
         continue
@@ -100,7 +100,7 @@ export async function decompressbooks(base64bytes: string) {
     const ubin = decompress(bin)
     const maybebookfromubin = unpackformat(ubin)
     if (ispresent(maybebookfromubin)) {
-      const book = importbook(maybebookfromubin)
+      const book = bookimport(maybebookfromubin)
       if (ispresent(book)) {
         books.push(book)
       }

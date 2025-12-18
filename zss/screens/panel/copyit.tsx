@@ -1,5 +1,5 @@
 import { useCallback, useContext } from 'react'
-import { register_copy } from 'zss/device/api'
+import { registercopy } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput'
@@ -23,7 +23,7 @@ export function PanelItemCopyIt({
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
     const [, ...words] = args
-    register_copy(SOFTWARE, registerreadplayer(), words.join(' '))
+    registercopy(SOFTWARE, registerreadplayer(), words.join(' '))
     scroll.sendclose()
   }, [args, scroll])
 

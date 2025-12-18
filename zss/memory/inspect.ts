@@ -1,9 +1,9 @@
 import { parsetarget } from 'zss/device'
 import {
-  gadgetserver_clearscroll,
-  register_copy,
-  register_editor_open,
-  vm_codeaddress,
+  gadgetserverclearscroll,
+  registercopy,
+  registereditoropen,
+  vmcodeaddress,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -27,7 +27,7 @@ import {
   boardsetterrain,
 } from './board'
 import { boardelementisobject } from './boardelement'
-import { bookboardelementreadcodepage, bookelementdisplayread } from './book'
+import { bookboardelementreadcodepage } from './book'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
 import {
@@ -35,8 +35,8 @@ import {
   memoryinspectcolor,
   memoryinspectelement,
 } from './inspectelement'
-import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
-import { memoryelementtodisplayprefix, memoryelementtologprefix } from './send'
+import { gadgetinspectboard, gadgetinspectloaders } from './inspectgadget'
+import { memoryelementtodisplayprefix } from './send'
 
 import {
   MEMORY_LABEL,
@@ -176,10 +176,10 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
       ])
 
       // add gadget scripts
-      inspectgadgetloaders(player, p1, p2)
+      gadgetinspectloaders(player, p1, p2)
 
       // board info
-      inspectgadgetboard(player, board.id)
+      gadgetinspectboard(player, board.id)
     }
   } else {
     memoryinspectarea(player, p1, p2, showpaste)
@@ -207,7 +207,7 @@ export function memoryinspectcommand(path: string, player: string) {
   }
   switch (inspect.path) {
     case 'copycoords':
-      register_copy(
+      registercopy(
         SOFTWARE,
         memoryreadoperator(),
         [element.x ?? 0, element.y ?? 0].join(' '),
@@ -232,12 +232,12 @@ export function memoryinspectcommand(path: string, player: string) {
 
         // write to modem
         modemwriteinitstring(
-          vm_codeaddress(mainbook.id, path),
+          vmcodeaddress(mainbook.id, path),
           element.code ?? '',
         )
 
         // close scroll
-        gadgetserver_clearscroll(SOFTWARE, player)
+        gadgetserverclearscroll(SOFTWARE, player)
 
         // wait a little
         await waitfor(800)
@@ -245,14 +245,7 @@ export function memoryinspectcommand(path: string, player: string) {
         // open code editor
         const prefix = memoryelementtodisplayprefix(element)
         const title = `${prefix}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${mainbook.name}`
-        register_editor_open(
-          SOFTWARE,
-          player,
-          mainbook.id,
-          path,
-          pagetype,
-          title,
-        )
+        registereditoropen(SOFTWARE, player, mainbook.id, path, pagetype, title)
       })
       break
     default:

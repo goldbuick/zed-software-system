@@ -9,9 +9,9 @@ import {
 } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
 import {
-  findplayerforelement,
-  listelementsbycolor,
-  listelementsbykind,
+  boardfindplayerforelement,
+  boardlistelementsbycolor,
+  boardlistelementsbykind,
 } from 'zss/memory/atomics'
 import { boardelementread, boardgetterrain } from 'zss/memory/board'
 import { boardcheckmoveobject } from 'zss/memory/boardops'
@@ -146,7 +146,7 @@ export function readexpr(index: number): [any, number] {
       case 'alligned': {
         // ALLIGNED
         // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
-        const maybeplayer = findplayerforelement(
+        const maybeplayer = boardfindplayerforelement(
           READ_CONTEXT.board,
           {
             x: READ_CONTEXT.element?.x ?? -1,
@@ -168,7 +168,7 @@ export function readexpr(index: number): [any, number] {
       case 'contact': {
         // CONTACT
         // This flag is SET whenever the object is adjacent to (touching) the player.
-        const maybeplayer = findplayerforelement(
+        const maybeplayer = boardfindplayerforelement(
           READ_CONTEXT.board,
           {
             x: READ_CONTEXT.element?.x ?? -1,
@@ -279,12 +279,18 @@ export function readexpr(index: number): [any, number] {
 
         // color check
         if (isstrcolor(match)) {
-          const matchedelements = listelementsbycolor(READ_CONTEXT.board, match)
+          const matchedelements = boardlistelementsbycolor(
+            READ_CONTEXT.board,
+            match,
+          )
           return [matchedelements, iii]
         }
 
         // kind check
-        const matchedelements = listelementsbykind(READ_CONTEXT.board, match)
+        const matchedelements = boardlistelementsbykind(
+          READ_CONTEXT.board,
+          match,
+        )
         return [matchedelements, iii]
       }
       case 'countof': {
@@ -374,12 +380,18 @@ export function readexpr(index: number): [any, number] {
 
         // color check
         if (isstrcolor(match)) {
-          const matchedelements = listelementsbycolor(READ_CONTEXT.board, match)
+          const matchedelements = boardlistelementsbycolor(
+            READ_CONTEXT.board,
+            match,
+          )
           return [matchedelements.length, iii]
         }
 
         // kind check
-        const matchedelements = listelementsbykind(READ_CONTEXT.board, match)
+        const matchedelements = boardlistelementsbykind(
+          READ_CONTEXT.board,
+          match,
+        )
         return [matchedelements.length, iii]
       }
       // zss

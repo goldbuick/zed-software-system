@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { objectKeys } from 'ts-extras'
-import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
+import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -154,13 +154,13 @@ export function TapeEditor() {
 
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(
-    vm_codeaddress(editor.book, editor.path),
+    vmcodeaddress(editor.book, editor.path),
   )
 
   useEffect(() => {
-    vm_codewatch(SOFTWARE, player, editor.book, editor.path)
+    vmcodewatch(SOFTWARE, player, editor.book, editor.path)
     return () => {
-      vm_coderelease(SOFTWARE, player, editor.book, editor.path)
+      vmcoderelease(SOFTWARE, player, editor.book, editor.path)
     }
   }, [editor.book, editor.path, player])
 

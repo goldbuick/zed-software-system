@@ -37,11 +37,11 @@ import {
   STAT_TYPE,
 } from 'zss/words/types'
 
-import { createboard, exportboard, importboard } from './board'
+import { boardexport, boardimport, createboard } from './board'
 import {
+  boardelementexport,
+  boardelementimport,
   createboardelement,
-  exportboardelement,
-  importboardelement,
 } from './boardelement'
 import {
   BOARD_ELEMENT,
@@ -57,13 +57,13 @@ enum BITMAP_KEYS {
   bits,
 }
 
-export function exportbitmap(bitmap: MAYBE<BITMAP>): MAYBE<FORMAT_OBJECT> {
+export function bitmapexport(bitmap: MAYBE<BITMAP>): MAYBE<FORMAT_OBJECT> {
   return formatobject(bitmap, BITMAP_KEYS, {
     bits: (bits: Uint8Array) => Array.from(bits),
   })
 }
 
-export function importbitmap(bitmapentry: MAYBE<FORMAT_OBJECT>): MAYBE<BITMAP> {
+export function bitmapimport(bitmapentry: MAYBE<FORMAT_OBJECT>): MAYBE<BITMAP> {
   return unformatobject(bitmapentry, BITMAP_KEYS, {
     bits: (bits: number[]) => new Uint8Array(bits),
   })
@@ -92,29 +92,29 @@ enum CODE_PAGE_KEYS {
 }
 
 // safe to serialize copy of codepage
-export function exportcodepage(
+export function codepageexport(
   codepage: MAYBE<CODE_PAGE>,
 ): MAYBE<FORMAT_OBJECT> {
   return formatobject(codepage, CODE_PAGE_KEYS, {
-    board: exportboard,
-    object: exportboardelement,
-    terrain: exportboardelement,
-    charset: exportbitmap,
-    palette: exportbitmap,
+    board: boardexport,
+    object: boardelementexport,
+    terrain: boardelementexport,
+    charset: bitmapexport,
+    palette: bitmapexport,
     stats: FORMAT_SKIP,
   })
 }
 
 // safe to serialize copy of codepage
-export function importcodepage(
+export function codepageimport(
   codepageentry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<CODE_PAGE> {
   return unformatobject<CODE_PAGE>(codepageentry, CODE_PAGE_KEYS, {
-    board: importboard,
-    object: importboardelement,
-    terrain: importboardelement,
-    charset: importbitmap,
-    palette: importbitmap,
+    board: boardimport,
+    object: boardelementimport,
+    terrain: boardelementimport,
+    charset: bitmapimport,
+    palette: bitmapimport,
   })
 }
 

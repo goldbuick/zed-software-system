@@ -1,11 +1,11 @@
 import { useCallback, useEffect } from 'react'
 import {
-  api_error,
-  register_terminal_close,
-  register_terminal_inclayout,
-  vm_cli,
-  vm_clirepeatlast,
-  vm_loader,
+  apierror,
+  registerterminalclose,
+  registerterminalinclayout,
+  vmcli,
+  vmclirepeatlast,
+  vmloader,
 } from 'zss/device/api'
 import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -289,7 +289,7 @@ export function TapeTerminalInput({
         ].filter((item) => item.includes('#broadcast') === false)
         // cache history
         writehistorybuffer(historybuffer).catch((err) =>
-          api_error(SOFTWARE, player, 'terminalinput', err.message),
+          apierror(SOFTWARE, player, 'terminalinput', err.message),
         )
         useTapeTerminal.setState({
           xcursor: 0,
@@ -298,8 +298,8 @@ export function TapeTerminalInput({
           yselect: undefined,
           buffer: historybuffer,
         })
-        vm_cli(SOFTWARE, player, inputstate)
-        register_terminal_close(SOFTWARE, player)
+        vmcli(SOFTWARE, player, inputstate)
+        registerterminalclose(SOFTWARE, player)
       }, 512)
     }
 
@@ -405,7 +405,7 @@ export function TapeTerminalInput({
               ].filter((item) => item.includes('#broadcast') === false)
               // cache history
               writehistorybuffer(historybuffer).catch((err) =>
-                api_error(SOFTWARE, player, 'terminalinput', err.message),
+                apierror(SOFTWARE, player, 'terminalinput', err.message),
               )
               useTapeTerminal.setState({
                 xcursor: 0,
@@ -414,9 +414,9 @@ export function TapeTerminalInput({
                 yselect: undefined,
                 buffer: historybuffer,
               })
-              vm_cli(SOFTWARE, player, invoke)
+              vmcli(SOFTWARE, player, invoke)
               if (quickterminal) {
-                register_terminal_close(SOFTWARE, player)
+                registerterminalclose(SOFTWARE, player)
               }
             } else {
               resettoend()
@@ -424,10 +424,10 @@ export function TapeTerminalInput({
           }
         }}
         CANCEL_BUTTON={() => {
-          register_terminal_close(SOFTWARE, player)
+          registerterminalclose(SOFTWARE, player)
         }}
         MENU_BUTTON={(mods) => {
-          register_terminal_inclayout(SOFTWARE, player, !mods.shift)
+          registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
           const { key } = event
@@ -462,10 +462,10 @@ export function TapeTerminalInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'e':
-                    vm_cli(SOFTWARE, player, '#export')
+                    vmcli(SOFTWARE, player, '#export')
                     break
                   case 'p':
-                    vm_clirepeatlast(SOFTWARE, player)
+                    vmclirepeatlast(SOFTWARE, player)
                     break
                   case 'a':
                     useTapeTerminal.setState({
@@ -499,7 +499,7 @@ export function TapeTerminalInput({
                               isstring(json.exported) &&
                               ispresent(json.data)
                             ) {
-                              vm_loader(
+                              vmloader(
                                 SOFTWARE,
                                 player,
                                 undefined,

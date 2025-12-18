@@ -1,5 +1,5 @@
 import { MathUtils } from 'three'
-import { register_store, vm_logout } from 'zss/device/api'
+import { registerstore, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -28,7 +28,10 @@ import {
   memoryrun,
   memorywritefromkind,
 } from 'zss/memory'
-import { findplayerforelement, listnamedelements } from 'zss/memory/atomics'
+import {
+  boardfindplayerforelement,
+  boardlistnamedelements,
+} from 'zss/memory/atomics'
 import {
   boardelementread,
   boardelementreadbyidorindex,
@@ -272,7 +275,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // find focused on player
-    const focus = findplayerforelement(
+    const focus = boardfindplayerforelement(
       READ_CONTEXT.board,
       { x: READ_CONTEXT.element?.x ?? -1, y: READ_CONTEXT.element?.y ?? -1 },
       READ_CONTEXT.elementfocus,
@@ -409,7 +412,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       y: READ_CONTEXT.element?.y ?? -1,
     }
     // >>> this <<< uses focus
-    const focus = findplayerforelement(
+    const focus = boardfindplayerforelement(
       READ_CONTEXT.board,
       focuspt,
       READ_CONTEXT.elementfocus,
@@ -679,7 +682,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // sticky flags
       switch (name) {
         case 'user':
-          register_store(SOFTWARE, player, name, value)
+          registerstore(SOFTWARE, player, name, value)
           break
       }
       return [true, value]
@@ -696,7 +699,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // halt program
         chip.endofprogram()
         // signal outcome
-        vm_logout(SOFTWARE, READ_CONTEXT.elementid, true)
+        vmlogout(SOFTWARE, READ_CONTEXT.elementid, true)
       }
     }
     // handle walk movement
@@ -769,7 +772,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   .command('bind', (_, words) => {
     // zed cafe simply copies the code from the given named element
     const [name] = readargs(words, 0, [ARG_TYPE.NAME])
-    const elements = listnamedelements(READ_CONTEXT.board, name)
+    const elements = boardlistnamedelements(READ_CONTEXT.board, name)
     if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
       READ_CONTEXT.element.code = pick(...elements).code ?? ''
       memoryresetchipafteredit(READ_CONTEXT.elementid)
@@ -930,7 +933,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         x: READ_CONTEXT.element?.x ?? -1,
         y: READ_CONTEXT.element?.y ?? -1,
       }
-      const focus = findplayerforelement(
+      const focus = boardfindplayerforelement(
         READ_CONTEXT.board,
         from,
         READ_CONTEXT.elementfocus,

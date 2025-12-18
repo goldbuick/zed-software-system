@@ -32,11 +32,11 @@ export function ismessage(value: any): value is MESSAGE {
   )
 }
 
-export function session_reset(device: DEVICELIKE) {
-  device.emit('', 'session_reset')
+export function sessionreset(device: DEVICELIKE) {
+  device.emit('', 'sessionreset')
 }
 
-export function api_error(
+export function apierror(
   device: DEVICELIKE,
   player: string,
   kind: string,
@@ -46,21 +46,21 @@ export function api_error(
   return false
 }
 
-export function api_log(device: DEVICELIKE, player: string, ...message: any[]) {
+export function apilog(device: DEVICELIKE, player: string, ...message: any[]) {
   device.emit(player, 'log', message)
   return true
 }
 
-export function api_chat(device: DEVICELIKE, board: string, ...message: any[]) {
+export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
   device.emit(board, 'chat', message)
   return true
 }
 
-export function api_toast(device: DEVICELIKE, player: string, toast: string) {
+export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-export function bridge_streamstart(
+export function bridgestreamstart(
   device: DEVICELIKE,
   player: string,
   streamkey: string,
@@ -68,11 +68,11 @@ export function bridge_streamstart(
   device.emit(player, 'bridge:streamstart', streamkey)
 }
 
-export function bridge_streamstop(device: DEVICELIKE, player: string) {
+export function bridgestreamstop(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:streamstop', undefined)
 }
 
-export function bridge_chatstart(
+export function bridgechatstart(
   device: DEVICELIKE,
   player: string,
   channel: string,
@@ -80,11 +80,11 @@ export function bridge_chatstart(
   device.emit(player, 'bridge:chatstart', channel)
 }
 
-export function bridge_chatstop(device: DEVICELIKE, player: string) {
+export function bridgechatstop(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:chatstop')
 }
 
-export function bridge_fetch(
+export function bridgefetch(
   device: DEVICELIKE,
   player: string,
   arg: any,
@@ -96,11 +96,11 @@ export function bridge_fetch(
   device.emit(player, 'bridge:fetch', [arg, label, url, method, words])
 }
 
-export function bridge_join(device: DEVICELIKE, player: string, topic: string) {
+export function bridgejoin(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'bridge:join', topic)
 }
 
-export function bridge_start(
+export function bridgestart(
   device: DEVICELIKE,
   player: string,
   hidden: boolean,
@@ -108,19 +108,15 @@ export function bridge_start(
   device.emit(player, 'bridge:start', hidden)
 }
 
-export function bridge_tab(
-  device: DEVICELIKE,
-  player: string,
-  hidden: boolean,
-) {
+export function bridgetab(device: DEVICELIKE, player: string, hidden: boolean) {
   device.emit(player, 'bridge:tab', hidden)
 }
 
-export function bridge_tabopen(device: DEVICELIKE, player: string) {
+export function bridgetabopen(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:tabopen')
 }
 
-export function bridge_showjoincode(
+export function bridgeshowjoincode(
   device: DEVICELIKE,
   player: string,
   hidden: boolean,
@@ -128,7 +124,7 @@ export function bridge_showjoincode(
   device.emit(player, 'bridge:showjoincode', hidden)
 }
 
-export function gadgetclient_paint(
+export function gadgetclientpaint(
   device: DEVICELIKE,
   player: string,
   json: any,
@@ -136,7 +132,7 @@ export function gadgetclient_paint(
   device.emit(player, 'gadgetclient:paint', json)
 }
 
-export function gadgetclient_patch(
+export function gadgetclientpatch(
   device: DEVICELIKE,
   player: string,
   json: any,
@@ -144,15 +140,15 @@ export function gadgetclient_patch(
   device.emit(player, 'gadgetclient:patch', json)
 }
 
-export function gadgetserver_desync(device: DEVICELIKE, player: string) {
+export function gadgetserverdesync(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:desync')
 }
 
-export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
+export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:clearscroll')
 }
 
-export function heavy_ttsrequest(
+export function heavyttsrequest(
   device: DEVICELIKE,
   player: string,
   engine: 'kitten' | 'piper',
@@ -163,11 +159,11 @@ export function heavy_ttsrequest(
   device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
 }
 
-export function platform_ready(device: DEVICELIKE) {
+export function platformready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }
 
-export function register_input(
+export function registerinput(
   device: DEVICELIKE,
   player: string,
   input: INPUT,
@@ -176,15 +172,15 @@ export function register_input(
   device.emit(player, 'register:input', [input, shift])
 }
 
-export function register_loginfail(device: DEVICELIKE, player: string) {
+export function registerloginfail(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:loginfail')
 }
 
-export function register_loginready(device: DEVICELIKE, player: string) {
+export function registerloginready(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:loginready', true)
 }
 
-export function register_savemem(
+export function registersavemem(
   device: DEVICELIKE,
   player: string,
   historylabel: string,
@@ -193,7 +189,7 @@ export function register_savemem(
   device.emit(player, 'register:savemem', [historylabel, books])
 }
 
-export function register_forkmem(
+export function registerforkmem(
   device: DEVICELIKE,
   player: string,
   books: string,
@@ -202,7 +198,7 @@ export function register_forkmem(
   device.emit(player, 'register:forkmem', [books, transfer])
 }
 
-export function register_publishmem(
+export function registerpublishmem(
   device: DEVICELIKE,
   player: string,
   books: string,
@@ -211,7 +207,7 @@ export function register_publishmem(
   device.emit(player, 'register:publishmem', [books, ...args])
 }
 
-export function register_copy(
+export function registercopy(
   device: DEVICELIKE,
   player: string,
   content: string,
@@ -219,7 +215,7 @@ export function register_copy(
   device.emit(player, 'register:copy', content)
 }
 
-export function register_copyjsonfile(
+export function registercopyjsonfile(
   device: DEVICELIKE,
   player: string,
   data: any,
@@ -228,7 +224,7 @@ export function register_copyjsonfile(
   device.emit(player, 'register:copyjsonfile', [data, filename])
 }
 
-export function register_downloadjsonfile(
+export function registerdownloadjsonfile(
   device: DEVICELIKE,
   player: string,
   data: any,
@@ -237,27 +233,27 @@ export function register_downloadjsonfile(
   device.emit(player, 'register:downloadjsonfile', [data, filename])
 }
 
-export function register_dev(device: DEVICELIKE, player: string) {
+export function registerdev(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:dev', undefined)
 }
 
-export function register_share(device: DEVICELIKE, player: string) {
+export function registershare(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:share', undefined)
 }
 
-export function register_nuke(device: DEVICELIKE, player: string) {
+export function registernuke(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:nuke', undefined)
 }
 
-export function synth_audioenabled(device: DEVICELIKE, player: string) {
+export function synthaudioenabled(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:audioenabled', undefined)
 }
 
-export function synth_restart(device: DEVICELIKE, player: string) {
+export function synthrestart(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:restart', undefined)
 }
 
-export function synth_audiobuffer(
+export function synthaudiobuffer(
   device: DEVICELIKE,
   player: string,
   audiobuffer: AudioBuffer,
@@ -265,7 +261,7 @@ export function synth_audiobuffer(
   device.emit(player, 'synth:audiobuffer', audiobuffer)
 }
 
-export function synth_play(
+export function synthplay(
   device: DEVICELIKE,
   player: string,
   board: string,
@@ -274,7 +270,7 @@ export function synth_play(
   device.emit(player, 'synth:play', [board, buffer])
 }
 
-export function synth_bgplay(
+export function synthbgplay(
   device: DEVICELIKE,
   player: string,
   board: string,
@@ -284,11 +280,11 @@ export function synth_bgplay(
   device.emit(player, 'synth:bgplay', [board, buffer, quantize])
 }
 
-export function synth_bpm(device: DEVICELIKE, player: string, bpm: number) {
+export function synthbpm(device: DEVICELIKE, player: string, bpm: number) {
   device.emit(player, 'synth:bpm', bpm)
 }
 
-export function synth_playvolume(
+export function synthplayvolume(
   device: DEVICELIKE,
   player: string,
   volume: number,
@@ -296,7 +292,7 @@ export function synth_playvolume(
   device.emit(player, 'synth:playvolume', volume)
 }
 
-export function synth_bgplayvolume(
+export function synthbgplayvolume(
   device: DEVICELIKE,
   player: string,
   volume: number,
@@ -304,7 +300,7 @@ export function synth_bgplayvolume(
   device.emit(player, 'synth:bgplayvolume', volume)
 }
 
-export function synth_ttsvolume(
+export function synthttsvolume(
   device: DEVICELIKE,
   player: string,
   volume: number,
@@ -312,7 +308,7 @@ export function synth_ttsvolume(
   device.emit(player, 'synth:ttsvolume', volume)
 }
 
-export function synth_ttsengine(
+export function synthttsengine(
   device: DEVICELIKE,
   player: string,
   engine: string,
@@ -321,7 +317,7 @@ export function synth_ttsengine(
   device.emit(player, 'synth:ttsengine', [engine, config])
 }
 
-export function synth_tts(
+export function synthtts(
   device: DEVICELIKE,
   player: string,
   board: string,
@@ -331,7 +327,7 @@ export function synth_tts(
   device.emit(player, 'synth:tts', [board, voice, phrase])
 }
 
-export function synth_ttsqueue(
+export function synthttsqueue(
   device: DEVICELIKE,
   player: string,
   board: string,
@@ -341,11 +337,11 @@ export function synth_ttsqueue(
   device.emit(player, 'synth:ttsqueue', [board, voice, phrase])
 }
 
-export function synth_ttsclearqueue(device: DEVICELIKE, player: string) {
+export function synthttsclearqueue(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:ttsclearqueue')
 }
 
-export function synth_voice(
+export function synthvoice(
   device: DEVICELIKE,
   player: string,
   idx: number,
@@ -355,7 +351,7 @@ export function synth_voice(
   device.emit(player, 'synth:voice', [idx, config, value])
 }
 
-export function synth_voicefx(
+export function synthvoicefx(
   device: DEVICELIKE,
   player: string,
   idx: number,
@@ -366,7 +362,7 @@ export function synth_voicefx(
   device.emit(player, 'synth:voicefx', [idx, fx, config, value])
 }
 
-export function synth_record(
+export function synthrecord(
   device: DEVICELIKE,
   player: string,
   filename: string,
@@ -374,11 +370,11 @@ export function synth_record(
   device.emit(player, 'synth:record', filename)
 }
 
-export function synth_flush(device: DEVICELIKE, player: string) {
+export function synthflush(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:flush')
 }
 
-export function register_store(
+export function registerstore(
   device: DEVICELIKE,
   player: string,
   name: string,
@@ -387,7 +383,7 @@ export function register_store(
   device.emit(player, 'register:store', [name, value])
 }
 
-export function register_inspector(
+export function registerinspector(
   device: DEVICELIKE,
   player: string,
   forcevalue: MAYBE<boolean>,
@@ -395,15 +391,11 @@ export function register_inspector(
   device.emit(player, 'register:inspector', forcevalue)
 }
 
-export function register_findany(
-  device: DEVICELIKE,
-  player: string,
-  pts: PT[],
-) {
+export function registerfindany(device: DEVICELIKE, player: string, pts: PT[]) {
   device.emit(player, 'register:findany', pts)
 }
 
-export function register_terminal_open(
+export function registerterminalopen(
   device: DEVICELIKE,
   player: string,
   openwith?: string,
@@ -411,7 +403,7 @@ export function register_terminal_open(
   device.emit(player, 'register:terminal:open', openwith)
 }
 
-export function register_terminal_quickopen(
+export function registerterminalquickopen(
   device: DEVICELIKE,
   player: string,
   openwith: string,
@@ -419,15 +411,15 @@ export function register_terminal_quickopen(
   device.emit(player, 'register:terminal:quickopen', openwith)
 }
 
-export function register_terminal_close(device: DEVICELIKE, player: string) {
+export function registerterminalclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:close')
 }
 
-export function register_terminal_toggle(device: DEVICELIKE, player: string) {
+export function registerterminaltoggle(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:toggle')
 }
 
-export function register_terminal_inclayout(
+export function registerterminalinclayout(
   device: DEVICELIKE,
   player: string,
   inc: boolean,
@@ -435,11 +427,11 @@ export function register_terminal_inclayout(
   device.emit(player, 'register:terminal:inclayout', inc)
 }
 
-export function register_terminal_full(device: DEVICELIKE, player: string) {
+export function registerterminalfull(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:full')
 }
 
-export function register_editor_open(
+export function registereditoropen(
   device: DEVICELIKE,
   player: string,
   book: string,
@@ -450,19 +442,19 @@ export function register_editor_open(
   device.emit(player, 'register:editor:open', [book, path, type, title])
 }
 
-export function register_editor_close(device: DEVICELIKE, player: string) {
+export function registereditorclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:editor:close')
 }
 
-export function vm_operator(device: DEVICELIKE, player: string) {
+export function vmoperator(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:operator')
 }
 
-export function vm_admin(device: DEVICELIKE, player: string) {
+export function vmadmin(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:admin')
 }
 
-export function vm_zztsearch(
+export function vmzztsearch(
   device: DEVICELIKE,
   player: string,
   field: string,
@@ -471,31 +463,31 @@ export function vm_zztsearch(
   device.emit(player, 'vm:zztsearch', [field, text])
 }
 
-export function vm_zztrandom(device: DEVICELIKE, player: string) {
+export function vmzztrandom(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:zztrandom')
 }
 
-export function vm_zsswords(device: DEVICELIKE, player: string) {
+export function vmzsswords(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:zsswords')
 }
 
-export function vm_halt(device: DEVICELIKE, player: string) {
+export function vmhalt(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:halt')
 }
 
-export function vm_topic(device: DEVICELIKE, player: string, topic: string) {
+export function vmtopic(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'vm:topic', topic)
 }
 
-export function vm_books(device: DEVICELIKE, player: string, books: string) {
+export function vmbooks(device: DEVICELIKE, player: string, books: string) {
   device.emit(player, 'vm:books', books)
 }
 
-export function vm_search(device: DEVICELIKE, player: string) {
+export function vmsearch(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:search')
 }
 
-export function vm_login(
+export function vmlogin(
   device: DEVICELIKE,
   player: string,
   storage: Record<string, any>,
@@ -503,11 +495,11 @@ export function vm_login(
   device.emit(player, 'vm:login', storage)
 }
 
-export function vm_local(device: DEVICELIKE, player: string) {
+export function vmlocal(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:local')
 }
 
-export function vm_logout(
+export function vmlogout(
   device: DEVICELIKE,
   player: string,
   isendgame: boolean,
@@ -515,11 +507,11 @@ export function vm_logout(
   device.emit(player, 'vm:logout', isendgame)
 }
 
-export function vm_doot(device: DEVICELIKE, player: string) {
+export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
 }
 
-export function vm_input(
+export function vminput(
   device: DEVICELIKE,
   player: string,
   input: INPUT,
@@ -528,7 +520,7 @@ export function vm_input(
   device.emit(player, 'vm:input', [input, mods])
 }
 
-export function vm_copyjsonfile(
+export function vmcopyjsonfile(
   device: DEVICELIKE,
   player: string,
   path: string[],
@@ -536,7 +528,7 @@ export function vm_copyjsonfile(
   device.emit(player, 'vm:copyjsonfile', path)
 }
 
-export function vm_makeitscroll(
+export function vmmakeitscroll(
   device: DEVICELIKE,
   player: string,
   makeit: string,
@@ -544,28 +536,28 @@ export function vm_makeitscroll(
   device.emit(player, 'vm:makeitscroll', makeit)
 }
 
-export function vm_refscroll(device: DEVICELIKE, player: string) {
+export function vmrefscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
 }
 
-export function vm_readzipfilelist(device: DEVICELIKE, player: string) {
+export function vmreadzipfilelist(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:readzipfilelist')
 }
 
-export function vm_inspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
+export function vminspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
   device.emit(player, 'vm:inspect', [p1, p2])
 }
 
-export function vm_findany(device: DEVICELIKE, player: string) {
+export function vmfindany(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:findany')
 }
 
-export function vm_codeaddress(book: string, path: MAYBE<string>[]) {
+export function vmcodeaddress(book: string, path: MAYBE<string>[]) {
   const [main, element] = path
   return `${book}:${[main, element].filter(ispresent).join(':')}`
 }
 
-export function vm_codewatch(
+export function vmcodewatch(
   device: DEVICELIKE,
   player: string,
   book: string,
@@ -574,7 +566,7 @@ export function vm_codewatch(
   device.emit(player, 'vm:codewatch', [book, path])
 }
 
-export function vm_coderelease(
+export function vmcoderelease(
   device: DEVICELIKE,
   player: string,
   book: string,
@@ -583,31 +575,31 @@ export function vm_coderelease(
   device.emit(player, 'vm:coderelease', [book, path])
 }
 
-export function vm_clearscroll(device: DEVICELIKE, player: string) {
+export function vmclearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:clearscroll')
 }
 
-export function vm_cli(device: DEVICELIKE, player: string, input: string) {
+export function vmcli(device: DEVICELIKE, player: string, input: string) {
   device.emit(player, 'vm:cli', input)
 }
 
-export function vm_clirepeatlast(device: DEVICELIKE, player: string) {
+export function vmclirepeatlast(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:clirepeatlast')
 }
 
-export function vm_restart(device: DEVICELIKE, player: string) {
+export function vmrestart(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:restart')
 }
 
-export function vm_flush(device: DEVICELIKE, player: string) {
+export function vmflush(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:flush')
 }
 
-export function vm_fork(device: DEVICELIKE, player: string, transfer: string) {
+export function vmfork(device: DEVICELIKE, player: string, transfer: string) {
   device.emit(player, 'vm:fork', transfer)
 }
 
-export function vm_publish(
+export function vmpublish(
   device: DEVICELIKE,
   player: string,
   target: string,
@@ -661,7 +653,7 @@ export function createbinaryreader(
   }
 }
 
-export function vm_loader(
+export function vmloader(
   device: DEVICELIKE,
   player: string,
   arg: any,

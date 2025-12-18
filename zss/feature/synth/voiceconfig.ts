@@ -1,4 +1,4 @@
-import { api_error } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
   MAYBE,
@@ -65,7 +65,7 @@ export function synthvoiceconfig(
   // validate index
   const voice = synth.SOURCE[index]
   if (!ispresent(voice)) {
-    api_error(SOFTWARE, player, `synth`, `unknown voice ${index}`)
+    apierror(SOFTWARE, player, `synth`, `unknown voice ${index}`)
     return
   }
 
@@ -88,7 +88,7 @@ export function synthvoiceconfig(
             voice.source.synth.portamento = value
             break
           case SOURCE_TYPE.RETRO_NOISE:
-            api_error(
+            apierror(
               SOFTWARE,
               player,
               `synth`,
@@ -356,7 +356,7 @@ export function synthvoiceconfig(
           }
         }
 
-        api_error(SOFTWARE, player, `synth`, `unknown config ${config}`)
+        apierror(SOFTWARE, player, `synth`, `unknown config ${config}`)
       }
       break
   }

@@ -1,32 +1,32 @@
 import { parsetarget } from 'zss/device'
 import {
-  api_error,
-  api_log,
-  bridge_chatstart,
-  bridge_chatstop,
-  bridge_start,
-  bridge_streamstart,
-  bridge_streamstop,
-  bridge_tab,
-  register_downloadjsonfile,
-  register_editor_open,
-  register_findany,
-  register_inspector,
-  register_nuke,
-  register_share,
-  vm_admin,
-  vm_codeaddress,
-  vm_flush,
-  vm_fork,
-  vm_halt,
-  vm_loader,
-  vm_logout,
-  vm_makeitscroll,
-  vm_publish,
-  vm_refscroll,
-  vm_restart,
-  vm_zztrandom,
-  vm_zztsearch,
+  apierror,
+  apilog,
+  bridgechatstart,
+  bridgechatstop,
+  bridgestart,
+  bridgestreamstart,
+  bridgestreamstop,
+  bridgetab,
+  registerdownloadjsonfile,
+  registereditoropen,
+  registerfindany,
+  registerinspector,
+  registernuke,
+  registershare,
+  vmadmin,
+  vmcodeaddress,
+  vmflush,
+  vmfork,
+  vmhalt,
+  vmloader,
+  vmlogout,
+  vmmakeitscroll,
+  vmpublish,
+  vmrefscroll,
+  vmrestart,
+  vmzztrandom,
+  vmzztsearch,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -108,8 +108,8 @@ function isoperator(player: string) {
   return player === memoryreadoperator()
 }
 
-function vm_flush_op() {
-  vm_flush(SOFTWARE, memoryreadoperator())
+function vmflushop() {
+  vmflush(SOFTWARE, memoryreadoperator())
 }
 
 export const CLI_FIRMWARE = createfirmware()
@@ -117,7 +117,7 @@ export const CLI_FIRMWARE = createfirmware()
     const send = parsesend(words)
     // #funfact - loader fallback
     if (send.targetname === 'self') {
-      vm_loader(
+      vmloader(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         undefined,
@@ -136,7 +136,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('stat', (_, words) => {
-    vm_makeitscroll(
+    vmmakeitscroll(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
       words.map(maptostring).join(' '),
@@ -154,7 +154,7 @@ export const CLI_FIRMWARE = createfirmware()
       // raise event
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
-      vm_loader(
+      vmloader(
         SOFTWARE,
         READ_CONTEXT.elementid,
         undefined,
@@ -172,7 +172,7 @@ export const CLI_FIRMWARE = createfirmware()
     const icon = bookelementdisplayread(READ_CONTEXT.element)
     const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
     const labelstr = chip.template(maptostring(label).split(' '))
-    api_log(
+    apilog(
       SOFTWARE,
       READ_CONTEXT.elementid,
       `!${chip.template(words)};${player}${labelstr}`,
@@ -213,12 +213,8 @@ export const CLI_FIRMWARE = createfirmware()
       }
       // clear book
       memoryclearbook(address)
-      api_log(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `trashed [book] ${book.name}`,
-      )
-      vm_flush_op()
+      apilog(SOFTWARE, READ_CONTEXT.elementfocus, `trashed [book] ${book.name}`)
+      vmflushop()
       // reset to good state
       chip.command('pages')
     }
@@ -266,14 +262,14 @@ export const CLI_FIRMWARE = createfirmware()
       const path = [codepage.id, maybeobject]
 
       // write to modem
-      modemwriteinitstring(vm_codeaddress(codepagebook.id, path), codepage.code)
+      modemwriteinitstring(vmcodeaddress(codepagebook.id, path), codepage.code)
 
       // tell tape to open a code editor for given page
       const type = codepagereadtypetostring(codepage)
 
       // codepage details
       const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
-      register_editor_open(
+      registereditoropen(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         codepagebook.id,
@@ -282,7 +278,7 @@ export const CLI_FIRMWARE = createfirmware()
         title,
       )
     } else {
-      api_error(
+      apierror(
         SOFTWARE,
         'pageopen',
         `page ${page} not found`,
@@ -303,19 +299,19 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(page)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
-      api_log(
+      apilog(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         `trashed [${pagetype}] ${name}`,
       )
-      vm_flush_op()
+      vmflushop()
       chip.command('pages')
     }
 
     return 0
   })
   .command('help', () => {
-    vm_refscroll(SOFTWARE, READ_CONTEXT.elementfocus)
+    vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('books', () => {
@@ -512,8 +508,8 @@ export const CLI_FIRMWARE = createfirmware()
   // -- game state related commands
   .command('dev', () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
-      vm_flush_op()
-      vm_halt(SOFTWARE, READ_CONTEXT.elementfocus)
+      vmflushop()
+      vmhalt(SOFTWARE, READ_CONTEXT.elementfocus)
     } else {
       // no-op
     }
@@ -521,8 +517,8 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('share', () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
-      vm_flush_op()
-      register_share(SOFTWARE, READ_CONTEXT.elementfocus)
+      vmflushop()
+      registershare(SOFTWARE, READ_CONTEXT.elementfocus)
     } else {
       // no-op
     }
@@ -530,7 +526,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('save', () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
-      vm_flush_op()
+      vmflushop()
     } else {
       // no-op
     }
@@ -539,7 +535,7 @@ export const CLI_FIRMWARE = createfirmware()
   .command('fork', (_, words) => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       const [address] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-      vm_fork(SOFTWARE, READ_CONTEXT.elementfocus, address ?? '')
+      vmfork(SOFTWARE, READ_CONTEXT.elementfocus, address ?? '')
     } else {
       // no-op
     }
@@ -547,20 +543,20 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('nuke', () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
-      register_nuke(SOFTWARE, READ_CONTEXT.elementfocus)
+      registernuke(SOFTWARE, READ_CONTEXT.elementfocus)
     } else {
       // no-op
     }
     return 0
   })
   .command('endgame', () => {
-    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus, false)
+    vmlogout(SOFTWARE, READ_CONTEXT.elementfocus, false)
     return 0
   })
   .command('restart', () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
-      vm_restart(SOFTWARE, READ_CONTEXT.elementfocus)
-      vm_flush_op()
+      vmrestart(SOFTWARE, READ_CONTEXT.elementfocus)
+      vmflushop()
     } else {
       // no-op
     }
@@ -624,7 +620,7 @@ export const CLI_FIRMWARE = createfirmware()
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
     const book = memoryreadbookbyaddress(address)
     if (ispresent(book)) {
-      register_downloadjsonfile(
+      registerdownloadjsonfile(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         deepcopy(book),
@@ -642,7 +638,7 @@ export const CLI_FIRMWARE = createfirmware()
     const book = memoryreadbookbyaddress(target)
     const codepage = bookreadcodepagebyaddress(book, path)
     if (ispresent(codepage)) {
-      register_downloadjsonfile(
+      registerdownloadjsonfile(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         deepcopy(codepage),
@@ -656,7 +652,7 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     }
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    vm_publish(
+    vmpublish(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
       'itchio',
@@ -667,16 +663,16 @@ export const CLI_FIRMWARE = createfirmware()
   // -- editing related commands
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
-    register_inspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
+    registerinspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
     return 0
   })
   .command('findany', (_, words) => {
     const [maybeselection] = readargs(words, 0, [ARG_TYPE.ANY])
     if (isarray(maybeselection)) {
       const pts = maybeselection.filter(ispt)
-      register_findany(SOFTWARE, READ_CONTEXT.elementfocus, pts)
+      registerfindany(SOFTWARE, READ_CONTEXT.elementfocus, pts)
     } else {
-      register_findany(SOFTWARE, READ_CONTEXT.elementfocus, [])
+      registerfindany(SOFTWARE, READ_CONTEXT.elementfocus, [])
     }
     return 0
   })
@@ -688,16 +684,16 @@ export const CLI_FIRMWARE = createfirmware()
     ])
     const field = ispresent(maybetext) ? maybefield : 'title'
     const text = ispresent(maybetext) ? maybetext : maybefield
-    vm_zztsearch(SOFTWARE, READ_CONTEXT.elementfocus, field, text)
+    vmzztsearch(SOFTWARE, READ_CONTEXT.elementfocus, field, text)
     return 0
   })
   .command('zztrandom', () => {
-    vm_zztrandom(SOFTWARE, READ_CONTEXT.elementfocus)
+    vmzztrandom(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands
   .command('admin', () => {
-    vm_admin(SOFTWARE, READ_CONTEXT.elementfocus)
+    vmadmin(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('joincode', (_, words) => {
@@ -707,9 +703,9 @@ export const CLI_FIRMWARE = createfirmware()
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     const playerboard = memoryreadplayerboard(READ_CONTEXT.elementfocus)
     if (ispresent(playerboard)) {
-      bridge_start(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+      bridgestart(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
     } else {
-      api_error(
+      apierror(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         'multiplayer',
@@ -723,7 +719,7 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     }
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    bridge_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    bridgetab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
     return 0
   })
   // -- audience related commands
@@ -733,9 +729,9 @@ export const CLI_FIRMWARE = createfirmware()
     }
     const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     if (channel) {
-      bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
+      bridgechatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
     } else {
-      bridge_chatstop(SOFTWARE, READ_CONTEXT.elementfocus)
+      bridgechatstop(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0
   })
@@ -745,9 +741,9 @@ export const CLI_FIRMWARE = createfirmware()
     }
     const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     if (streamkey) {
-      bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
+      bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
     } else {
-      bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
+      bridgestreamstop(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0
   })
@@ -863,7 +859,7 @@ export const CLI_FIRMWARE = createfirmware()
             iiii = iiiii
             tags.push(tag)
           }
-          vm_publish(
+          vmpublish(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
             'bbs',

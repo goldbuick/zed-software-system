@@ -1,4 +1,4 @@
-import { api_error } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
@@ -12,7 +12,7 @@ export function synthvoicefxdistortionconfig(
   value: number | string,
 ) {
   if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
+    apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const distortion = synth.FXCHAIN.distortion
@@ -30,7 +30,7 @@ export function synthvoicefxdistortionconfig(
       }
       break
   }
-  api_error(
+  apierror(
     SOFTWARE,
     player,
     `kind`,

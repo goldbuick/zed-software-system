@@ -2,10 +2,10 @@ import { get as idbget, update as idbupdate } from 'idb-keyval'
 import Peer, { DataConnection } from 'peerjs'
 import {
   MESSAGE,
-  api_error,
-  api_log,
-  vm_search,
-  vm_topic,
+  apierror,
+  apilog,
+  vmsearch,
+  vmtopic,
 } from 'zss/device/api'
 import {
   createforward,
@@ -80,14 +80,14 @@ function handledataconnection(dataconnection: DataConnection) {
       }
     })
     // signal ready to login
-    vm_search(SOFTWARE, player)
+    vmsearch(SOFTWARE, player)
   }
 
   function handleopen() {
     if (!dataconnection.open) {
       return
     }
-    api_log(SOFTWARE, player, `connection ${dataconnection.peer} open`)
+    apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
     if (ishost()) {
       hostbridge()
     } else {
@@ -100,7 +100,7 @@ function handledataconnection(dataconnection: DataConnection) {
   dataconnection.on('close', () => {
     topicbridge?.disconnect()
     if (ispresent(networkpeer)) {
-      api_log(SOFTWARE, player, `disconnection from ${dataconnection.peer}`)
+      apilog(SOFTWARE, player, `disconnection from ${dataconnection.peer}`)
     }
   })
 
@@ -118,7 +118,7 @@ function handledataconnection(dataconnection: DataConnection) {
   })
 
   dataconnection.on('error', (err) => {
-    api_error(
+    apierror(
       SOFTWARE,
       player,
       `netterminal`,
@@ -132,7 +132,7 @@ function handledataconnection(dataconnection: DataConnection) {
 function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   // setup topic
   subscribetopic = topicpeerid
-  vm_topic(SOFTWARE, registerreadplayer(), subscribetopic)
+  vmtopic(SOFTWARE, registerreadplayer(), subscribetopic)
 
   // create peer
   const player = registerreadplayer()
@@ -148,12 +148,12 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     networkpeer = undefined
   })
 
-  api_log(SOFTWARE, player, `netterminal for ${peerid}`)
+  apilog(SOFTWARE, player, `netterminal for ${peerid}`)
 
   networkpeer.on('open', () => {
-    api_log(SOFTWARE, player, `connected to netterminal`)
+    apilog(SOFTWARE, player, `connected to netterminal`)
     if (topicpeerid !== peerid) {
-      api_log(SOFTWARE, player, `joining topic ${subscribetopic}`)
+      apilog(SOFTWARE, player, `joining topic ${subscribetopic}`)
       const maybedataconnection = networkpeer?.connect(topicpeerid, {
         reliable: true,
       })
@@ -161,16 +161,16 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         handledataconnection(maybedataconnection)
       }
     } else {
-      api_log(SOFTWARE, player, `hosting topic ${subscribetopic}`)
+      apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)
     }
   })
 
   networkpeer.on('connection', handledataconnection)
 
   networkpeer.on('disconnected', () => {
-    api_error(SOFTWARE, player, `netterminal`, `lost connection to netterminal`)
+    apierror(SOFTWARE, player, `netterminal`, `lost connection to netterminal`)
     setTimeout(() => {
-      api_error(
+      apierror(
         SOFTWARE,
         player,
         `netterminal`,
@@ -192,7 +192,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         })
         return
     }
-    api_error(
+    apierror(
       SOFTWARE,
       player,
       `netterminal`,
@@ -204,7 +204,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
 export async function netterminalhost() {
   const player = registerreadplayer()
   if (ispresent(networkpeer)) {
-    api_log(SOFTWARE, player, `netterminal already active`)
+    apilog(SOFTWARE, player, `netterminal already active`)
     return
   }
 
@@ -225,7 +225,7 @@ export async function netterminalhost() {
 export function netterminaljoin(topicpeerid: string) {
   const player = registerreadplayer()
   if (ispresent(networkpeer)) {
-    api_log(SOFTWARE, player, `netterminal already active`)
+    apilog(SOFTWARE, player, `netterminal already active`)
     return
   }
 
@@ -240,7 +240,7 @@ export function netterminalhalt() {
   }
   // clear topic info
   subscribetopic = ''
-  vm_topic(SOFTWARE, registerreadplayer(), subscribetopic)
+  vmtopic(SOFTWARE, registerreadplayer(), subscribetopic)
   // clear coms
   networkpeer.destroy()
   networkpeer = undefined

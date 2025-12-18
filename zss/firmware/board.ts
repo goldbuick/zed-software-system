@@ -17,7 +17,10 @@ import {
   memorywritebullet,
   memorywritefromkind,
 } from 'zss/memory'
-import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
+import {
+  boardlistelementsbykind,
+  boardlistptsbyempty,
+} from 'zss/memory/atomics'
 import {
   boardelementread,
   boardobjectread,
@@ -413,7 +416,7 @@ export const BOARD_FIRMWARE = createfirmware()
       const color = memoryelementstatread(READ_CONTEXT.element, 'color')
       const bg = memoryelementstatread(READ_CONTEXT.element, 'bg')
       const findcolor = mapcolortostrcolor(color, bg)
-      const gotoelements = listelementsbykind(targetboard, [
+      const gotoelements = boardlistelementsbykind(targetboard, [
         display.name,
         findcolor,
       ])
@@ -678,7 +681,7 @@ export const BOARD_FIRMWARE = createfirmware()
     const targetname = readstrkindname(target) ?? ''
     if (targetname === 'empty') {
       // empty into something becomes a put
-      listptsbyempty(READ_CONTEXT.board).forEach((pt) => {
+      boardlistptsbyempty(READ_CONTEXT.board).forEach((pt) => {
         memorywritefromkind(READ_CONTEXT.board, into, pt)
       })
     }
@@ -687,7 +690,7 @@ export const BOARD_FIRMWARE = createfirmware()
     const intoname = readstrkindname(into)
     const intocolor = readstrkindcolor(into)
     const intobg = readstrkindbg(into)
-    listelementsbykind(READ_CONTEXT.board, target).forEach((element) => {
+    boardlistelementsbykind(READ_CONTEXT.board, target).forEach((element) => {
       // modify existing elements
       if (ispresent(intocolor)) {
         element.color = intocolor

@@ -1,4 +1,4 @@
-import { api_error } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
@@ -12,7 +12,7 @@ export function synthvoicefxechoconfig(
   value: number | string,
 ) {
   if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
+    apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const echo = synth.FXCHAIN.echo
@@ -30,5 +30,5 @@ export function synthvoicefxechoconfig(
       }
       break
   }
-  api_error(SOFTWARE, player, `kind`, `unknown echo ${config} or ${value}`)
+  apierror(SOFTWARE, player, `kind`, `unknown echo ${config} or ${value}`)
 }

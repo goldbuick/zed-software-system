@@ -1,6 +1,6 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
-import { api_error } from './device/api'
+import { apierror } from './device/api'
 import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
@@ -104,7 +104,7 @@ export function createos() {
           const precode = codelines.slice(errorline - 2, errorline)
           for (let i = 0; i < precode.length; ++i) {
             const [line, index] = precode[i]
-            api_error(
+            apierror(
               SOFTWARE,
               memoryreadoperator(),
               'build',
@@ -120,7 +120,7 @@ export function createos() {
             const a = hlinepadded.substring(0, start)
             const b = hlinepadded.substring(start, end)
             const c = hlinepadded.substring(end)
-            api_error(
+            apierror(
               SOFTWARE,
               memoryreadoperator(),
               'build',
@@ -131,7 +131,7 @@ export function createos() {
           const postcode = codelines.slice(errorline + 1, errorline + 3)
           for (let i = 0; i < postcode.length; ++i) {
             const [line, index] = postcode[i]
-            api_error(
+            apierror(
               SOFTWARE,
               memoryreadoperator(),
               'build',
@@ -140,7 +140,7 @@ export function createos() {
           }
 
           const preamble = primary.message.split('\n').slice(0, 4).join(' ')
-          api_error(SOFTWARE, memoryreadoperator(), 'build', preamble)
+          apierror(SOFTWARE, memoryreadoperator(), 'build', preamble)
           return undefined
         }
       }

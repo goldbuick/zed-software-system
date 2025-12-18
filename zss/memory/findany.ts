@@ -1,5 +1,5 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
-import { vm_cli } from 'zss/device/api'
+import { vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
@@ -99,9 +99,9 @@ export async function memoryfindany(
 
   const expr: string = findanyconfig[path] ?? ''
   if (ispresent(expr)) {
-    vm_cli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
+    vmcli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
   } else {
     // clear case
-    vm_cli(SOFTWARE, player, `#findany`)
+    vmcli(SOFTWARE, player, `#findany`)
   }
 }

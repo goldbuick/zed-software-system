@@ -1,4 +1,4 @@
-import { bridge_fetch } from 'zss/device/api'
+import { bridgefetch } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -38,7 +38,7 @@ function fetchcommand(
   switch (NAME(method)) {
     case 'get':
     case 'post:json':
-      bridge_fetch(
+      bridgefetch(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         arg,

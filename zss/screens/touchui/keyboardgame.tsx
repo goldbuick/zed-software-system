@@ -1,7 +1,7 @@
 import {
-  register_terminal_open,
-  register_terminal_quickopen,
-  vm_clirepeatlast,
+  registerterminalopen,
+  registerterminalquickopen,
+  vmclirepeatlast,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -100,7 +100,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom - 1}
         letters="?"
         onToggle={() => {
-          register_terminal_open(SOFTWARE, player)
+          registerterminalopen(SOFTWARE, player)
         }}
       />
       <ToggleKey
@@ -108,7 +108,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom}
         letters="#"
         onToggle={() => {
-          register_terminal_quickopen(SOFTWARE, player, '#')
+          registerterminalquickopen(SOFTWARE, player, '#')
         }}
       />
       <ToggleKey
@@ -116,7 +116,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom - 1}
         letters="c"
         onToggle={() => {
-          register_terminal_quickopen(SOFTWARE, player, '')
+          registerterminalquickopen(SOFTWARE, player, '')
         }}
       />
       <ToggleKey
@@ -124,7 +124,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom - 1}
         letters="$meta+p"
         onToggle={() => {
-          vm_clirepeatlast(SOFTWARE, player)
+          vmclirepeatlast(SOFTWARE, player)
         }}
       />
 

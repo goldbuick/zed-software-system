@@ -1,4 +1,4 @@
-import { MESSAGE, session_reset } from './device/api'
+import { MESSAGE, sessionreset } from './device/api'
 import {
   createforward,
   shouldforwardclienttoheavy,
@@ -19,7 +19,7 @@ export function createplatform(isstub = false) {
     return
   }
   // reset session
-  session_reset(SOFTWARE)
+  sessionreset(SOFTWARE)
 
   // create heavy worker
   heavy = new heavyspace()

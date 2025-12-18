@@ -97,23 +97,23 @@ import { dirconsts } from 'zss/words/dir'
 import { NAME, PT } from 'zss/words/types'
 
 import {
-  api_log,
-  platform_ready,
-  register_copy,
-  register_copyjsonfile,
-  register_forkmem,
-  register_inspector,
-  register_loginfail,
-  register_loginready,
-  register_publishmem,
-  register_savemem,
-  vm_clearscroll,
-  vm_cli,
-  vm_codeaddress,
-  vm_flush,
-  vm_loader,
-  vm_local,
-  vm_logout,
+  apilog,
+  platformready,
+  registercopy,
+  registercopyjsonfile,
+  registerforkmem,
+  registerinspector,
+  registerloginfail,
+  registerloginready,
+  registerpublishmem,
+  registersavemem,
+  vmclearscroll,
+  vmcli,
+  vmcodeaddress,
+  vmflush,
+  vmloader,
+  vmlocal,
+  vmlogout,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -138,7 +138,7 @@ async function savestate(autosave?: boolean) {
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
     const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
-    register_savemem(vm, memoryreadoperator(), historylabel, content)
+    registersavemem(vm, memoryreadoperator(), historylabel, content)
   }
 }
 
@@ -148,7 +148,7 @@ async function forkstate(transfer: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    register_forkmem(vm, memoryreadoperator(), content, transfer)
+    registerforkmem(vm, memoryreadoperator(), content, transfer)
   }
 }
 
@@ -209,7 +209,7 @@ const vm = createdevice(
       case 'operator':
         // setup op
         memorywriteoperator(message.player)
-        api_log(vm, message.player, `operator set to ${message.player}`)
+        apilog(vm, message.player, `operator set to ${message.player}`)
         // ack
         vm.replynext(message, 'ackoperator', true)
         break
@@ -398,40 +398,40 @@ const vm = createdevice(
               const books = await decompressbooks(message.data)
               const booknames = books.map((item) => item.name)
               memoryresetbooks(books)
-              api_log(vm, message.player, `loading ${booknames.join(', ')}`)
+              apilog(vm, message.player, `loading ${booknames.join(', ')}`)
               // ack
-              register_loginready(vm, message.player)
+              registerloginready(vm, message.player)
             }
           })
         }
         break
       case 'search':
         if (!memoryreadplayeractive(message.player)) {
-          register_loginready(vm, message.player)
+          registerloginready(vm, message.player)
         }
         break
       case 'logout':
         // clear scroll locks
-        vm_clearscroll(vm, message.player)
+        vmclearscroll(vm, message.player)
         // logout player
         memoryplayerlogout(message.player, !!message.data)
         // stop tracking
         delete tracking[message.player]
-        api_log(vm, operator, `player ${message.player} logout`)
+        apilog(vm, operator, `player ${message.player} logout`)
         // ack
-        register_loginready(vm, message.player)
+        registerloginready(vm, message.player)
         break
       case 'login':
         // attempt login
         if (memoryplayerlogin(message.player, message.data)) {
           // start tracking
           tracking[message.player] = 0
-          api_log(vm, memoryreadoperator(), `login from ${message.player}`)
+          apilog(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack
           vm.replynext(message, 'acklogin', true)
         } else {
           // signal failure
-          register_loginfail(vm, message.player)
+          registerloginfail(vm, message.player)
         }
         break
       case 'local':
@@ -439,10 +439,10 @@ const vm = createdevice(
         if (memoryplayerlogin(message.player, {})) {
           // start tracking
           tracking[message.player] = 0
-          api_log(vm, memoryreadoperator(), `login from ${message.player}`)
+          apilog(vm, memoryreadoperator(), `login from ${message.player}`)
         } else {
           // signal failure
-          register_loginfail(vm, message.player)
+          registerloginfail(vm, message.player)
         }
         break
       case 'doot':
@@ -450,7 +450,7 @@ const vm = createdevice(
         tracking[message.player] = 0
         trackinglastlog[message.player] = trackinglastlog[message.player] ?? 0
         if (trackinglastlog[message.player] % 32 === 0) {
-          api_log(vm, message.player, `$whiteactive $blue${message.player}`)
+          apilog(vm, message.player, `$whiteactive $blue${message.player}`)
         }
         ++trackinglastlog[message.player]
         break
@@ -459,7 +459,7 @@ const vm = createdevice(
           message.player.includes('local') &&
           !memoryhasflags(message.player)
         ) {
-          vm_local(vm, message.player)
+          vmlocal(vm, message.player)
         }
         if (
           !message.player.includes('local') ||
@@ -481,7 +481,7 @@ const vm = createdevice(
       case 'codewatch':
         if (isarray(message.data)) {
           const [book, path] = message.data
-          const address = vm_codeaddress(book, path)
+          const address = vmcodeaddress(book, path)
           // start watching
           if (!ispresent(observers[address])) {
             observers[address] = modemobservevaluestring(address, (value) => {
@@ -523,7 +523,7 @@ const vm = createdevice(
           const [book, path] = message.data
           // parse path
           const [, maybeobject] = path
-          const address = vm_codeaddress(book, path)
+          const address = vmcodeaddress(book, path)
           // stop watching
           if (ispresent(watching[address])) {
             watching[address].delete(message.player)
@@ -553,12 +553,12 @@ const vm = createdevice(
         if (message.player === operator) {
           const halt = memoryreadhalt() ? false : true
           memorywritehalt(halt)
-          api_log(
+          apilog(
             vm,
             message.player,
             `#dev mode is ${halt ? '$greenon' : '$redoff'}`,
           )
-          register_inspector(vm, message.player, halt)
+          registerinspector(vm, message.player, halt)
         }
         break
       case 'tick': {
@@ -583,7 +583,7 @@ const vm = createdevice(
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
             // drop lagged players from tracking
-            vm_logout(vm, player, false)
+            vmlogout(vm, player, false)
           }
         }
 
@@ -603,7 +603,7 @@ const vm = createdevice(
             const [address] = message.data
             const codepage = bookreadcodepagebyaddress(mainbook, address)
             if (ispresent(codepage)) {
-              register_copyjsonfile(
+              registercopyjsonfile(
                 vm,
                 operator,
                 codepage,
@@ -696,7 +696,7 @@ const vm = createdevice(
         doasync(vm, message.player, async () => {
           if (message.player === operator && isarray(message.data)) {
             const content = await compressedbookstate()
-            register_publishmem(vm, message.player, content, ...message.data)
+            registerpublishmem(vm, message.player, content, ...message.data)
           }
         })
         break
@@ -718,7 +718,7 @@ const vm = createdevice(
       case 'restart':
         if (message.player === operator) {
           memoryrestartallchipsandflags()
-          vm_flush(vm, message.player)
+          vmflush(vm, message.player)
         }
         break
       case 'inspect':
@@ -746,7 +746,7 @@ const vm = createdevice(
             case 'json':
               if (/file:.*\.book.json/.test(eventname)) {
                 // import exported book
-                api_log(vm, message.player, `loading ${eventname}`)
+                apilog(vm, message.player, `loading ${eventname}`)
                 const json = JSON.parse(content.json)
                 // const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
                 if (
@@ -755,11 +755,11 @@ const vm = createdevice(
                   isstring(json.exported)
                 ) {
                   memorysetbook(json.data)
-                  api_log(vm, message.player, `loaded ${json.exported}`)
+                  apilog(vm, message.player, `loaded ${json.exported}`)
                 }
               } else if (/file:.*\..*\.codepage.json/.test(eventname)) {
                 // import exported codepage
-                api_log(vm, message.player, `loading ${eventname}`)
+                apilog(vm, message.player, `loading ${eventname}`)
                 const json = JSON.parse(content.json)
                 const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
                 if (
@@ -768,7 +768,7 @@ const vm = createdevice(
                   isstring(json.exported)
                 ) {
                   bookwritecodepage(mainbook, json.data)
-                  api_log(vm, message.player, `loaded ${json.exported}`)
+                  apilog(vm, message.player, `loaded ${json.exported}`)
                 }
               } else {
                 // everything else
@@ -788,13 +788,13 @@ const vm = createdevice(
           case 'adminop': {
             switch (path) {
               case 'dev':
-                vm_cli(vm, message.player, '#dev')
+                vmcli(vm, message.player, '#dev')
                 break
               case 'gadget':
-                vm_cli(vm, message.player, '#gadget')
+                vmcli(vm, message.player, '#gadget')
                 break
               case 'joincode':
-                vm_cli(vm, message.player, '#joincode')
+                vmcli(vm, message.player, '#joincode')
                 break
             }
             break
@@ -928,7 +928,7 @@ const vm = createdevice(
             const empty = parsetarget(path)
             switch (empty.target) {
               case 'copycoords':
-                register_copy(
+                registercopy(
                   vm,
                   memoryreadoperator(),
                   empty.path.split(',').join(' '),
@@ -943,7 +943,7 @@ const vm = createdevice(
           case 'gadget':
             if (isarray(message.data)) {
               const [id, area] = message.data as [string, string]
-              vm_loader(vm, message.player, undefined, 'text', id, area)
+              vmloader(vm, message.player, undefined, 'text', id, area)
             }
             break
           case 'findany':
@@ -995,5 +995,5 @@ const vm = createdevice(
 
 export function started() {
   // signal ready state
-  platform_ready(vm)
+  platformready(vm)
 }

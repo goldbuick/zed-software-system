@@ -7,7 +7,7 @@ import {
   memoryelementstatread,
   memorymoveobject,
 } from 'zss/memory'
-import { checkdoescollide } from 'zss/memory/atomics'
+import { boardcheckcollide } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardgetterrain,
@@ -342,7 +342,7 @@ export function boardweavegroup(
           didcollide = true
         }
       } else if (
-        checkdoescollide(fromollision, destcollision) &&
+        boardcheckcollide(fromollision, destcollision) &&
         targetgroup !== destgroup
       ) {
         didcollide = true

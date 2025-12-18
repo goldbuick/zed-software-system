@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import { createsid } from 'zss/mapping/guid'
 
-import { api_log, platform_ready } from './api'
+import { apilog, platformready } from './api'
 
 let stuboperator = ''
 const stubsession = createsid()
@@ -16,7 +16,7 @@ const stub = createdevice(
     switch (message.target) {
       case 'operator':
         stuboperator = message.player
-        api_log(stub, message.player, `operator set to ${stuboperator}`)
+        apilog(stub, message.player, `operator set to ${stuboperator}`)
         // ack
         stub.reply(message, 'ackoperator', true)
         break
@@ -27,5 +27,5 @@ const stub = createdevice(
 
 export function started() {
   // signal ready state
-  platform_ready(stub)
+  platformready(stub)
 }
