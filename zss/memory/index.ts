@@ -22,7 +22,7 @@ import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
 
-import { checkdoescollide, listelementsbyidnameorpts } from './atomics'
+import { boardcheckcollide, boardlistelementsbyidnameorpts } from './atomics'
 import {
   boarddeleteobject,
   boardelementread,
@@ -869,7 +869,7 @@ export function memorymoveobject(
       blocked.y ?? -1,
     )
     const terraincollision = memoryelementstatread(mayberterrain, 'collision')
-    if (!checkdoescollide(elementcollision, terraincollision)) {
+    if (!boardcheckcollide(elementcollision, terraincollision)) {
       const elementisplayer = ispid(element?.id)
 
       // is blocked pushable ?
@@ -1174,7 +1174,7 @@ export function memorysendtoboards(
       }
       default: {
         // check named elements first
-        sendtoelements(listelementsbyidnameorpts(board, [target]))
+        sendtoelements(boardlistelementsbyidnameorpts(board, [target]))
         break
       }
     }

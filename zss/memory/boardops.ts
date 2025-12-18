@@ -3,7 +3,7 @@ import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { checkdoescollide } from './atomics'
+import { boardcheckcollide } from './atomics'
 import { boarddeleteobject, boardelementindex, boardobjectread } from './board'
 import { boardelementisobject } from './boardelement'
 import { bookelementdisplayread } from './book'
@@ -66,7 +66,7 @@ export function boardcheckblockedobject(
   const maybeterrain = board.terrain[targetidx]
   if (
     ispresent(maybeterrain) &&
-    checkdoescollide(
+    boardcheckcollide(
       collision,
       memoryelementstatread(maybeterrain, 'collision'),
     )
@@ -170,7 +170,7 @@ export function boardmoveobject(
   const terraincollision = memoryelementstatread(mayberterrain, 'collision')
 
   // if blocked by terrain, bail
-  if (checkdoescollide(movingelementcollision, terraincollision)) {
+  if (boardcheckcollide(movingelementcollision, terraincollision)) {
     // for sending interaction messages
     return { ...mayberterrain, x: dest.x, y: dest.y }
   }

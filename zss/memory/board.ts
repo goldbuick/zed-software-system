@@ -27,8 +27,8 @@ import {
 } from 'zss/words/dir'
 import { DIR, PT } from 'zss/words/types'
 
-import { listnamedelements, picknearestpt } from './atomics'
-import { exportboardelement, importboardelement } from './boardelement'
+import { boardlistnamedelements, boardpicknearestpt } from './atomics'
+import { boardelementexport, boardelementimport } from './boardelement'
 import {
   boardobjectnamedlookupdelete,
   boardterrainnameddelete,
@@ -93,13 +93,13 @@ enum BOARD_KEYS {
   palette,
 }
 
-export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
+export function boardexport(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   return formatobject(board, BOARD_KEYS, {
-    terrain: (terrain) => terrain.map(exportboardelement),
+    terrain: (terrain) => terrain.map(boardelementexport),
     objects: (objects) =>
       Object.values<BOARD_ELEMENT>(objects)
         .filter((boardelement) => !boardelement.removed)
-        .map(exportboardelement),
+        .map(boardelementexport),
     id: FORMAT_SKIP,
     name: FORMAT_SKIP,
     named: FORMAT_SKIP,
@@ -113,13 +113,13 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   })
 }
 
-export function importboard(boardentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOARD> {
+export function boardimport(boardentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOARD> {
   return unformatobject(boardentry, BOARD_KEYS, {
-    terrain: (terrain) => terrain.map(importboardelement),
+    terrain: (terrain) => terrain.map(boardelementimport),
     objects: (elements) => {
       const objects: Record<string, BOARD_ELEMENT> = {}
       for (let i = 0; i < elements.length; ++i) {
-        const obj = importboardelement(elements[i])
+        const obj = boardelementimport(elements[i])
         if (ispresent(obj?.id)) {
           objects[obj.id] = obj
         }
@@ -351,7 +351,7 @@ export function boardfindplayer(
   }
 
   // nearest player to target
-  return picknearestpt(target, listnamedelements(board, 'player'))
+  return boardpicknearestpt(target, boardlistnamedelements(board, 'player'))
 }
 
 // evals directions into a PT

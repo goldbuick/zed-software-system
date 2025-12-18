@@ -8,7 +8,7 @@ import { CODE_PAGE_TYPE } from './types'
 
 import { memorypickcodepagewithtype } from '.'
 
-export function inspectgadgetloaders(player: string, p1: PT, p2: PT) {
+export function gadgetinspectloaders(player: string, p1: PT, p2: PT) {
   // add matching loaders
   const loaders = memoryloadermatches('text', 'gadget:action')
   if (loaders.length) {
@@ -28,7 +28,7 @@ export function inspectgadgetloaders(player: string, p1: PT, p2: PT) {
   }
 }
 
-export function inspectgadgetboard(player: string, board: string) {
+export function gadgetinspectboard(player: string, board: string) {
   const boardcodepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, board)
   gadgettext(player, `board ${codepagereadname(boardcodepage)}:`)
   gadgethyperlink(player, 'batch', `board id ${board}`, ['copyit', board])

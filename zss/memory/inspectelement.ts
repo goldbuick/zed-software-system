@@ -12,7 +12,7 @@ import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex } from './board'
 import { codepagereadname, codepagereadstatdefaults } from './codepage'
-import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
+import { gadgetinspectboard, gadgetinspectloaders } from './inspectgadget'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE } from './types'
 
 import {
@@ -271,7 +271,7 @@ export function memoryinspectelement(
 
   // add gadget scripts
   gadgettext(player, DIVIDER)
-  inspectgadgetloaders(player, p1, p1)
+  gadgetinspectloaders(player, p1, p1)
 
   // codepage links
   gadgettext(player, `codepages:`)
@@ -280,5 +280,5 @@ export function memoryinspectelement(
   ])
 
   // board info
-  inspectgadgetboard(player, board.id)
+  gadgetinspectboard(player, board.id)
 }

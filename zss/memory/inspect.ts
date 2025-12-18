@@ -35,7 +35,7 @@ import {
   memoryinspectcolor,
   memoryinspectelement,
 } from './inspectelement'
-import { inspectgadgetboard, inspectgadgetloaders } from './inspectgadget'
+import { gadgetinspectboard, gadgetinspectloaders } from './inspectgadget'
 import { memoryelementtodisplayprefix } from './send'
 
 import {
@@ -176,10 +176,10 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
       ])
 
       // add gadget scripts
-      inspectgadgetloaders(player, p1, p2)
+      gadgetinspectloaders(player, p1, p2)
 
       // board info
-      inspectgadgetboard(player, board.id)
+      gadgetinspectboard(player, board.id)
     }
   } else {
     memoryinspectarea(player, p1, p2, showpaste)

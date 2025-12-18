@@ -9,7 +9,7 @@ import {
   memoryelementstatread,
   memorywritefromkind,
 } from 'zss/memory'
-import { listnamedelements } from 'zss/memory/atomics'
+import { boardlistnamedelements } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardgetterrain,
@@ -206,7 +206,7 @@ export function boardremix(
       // sample if element category is object
       if (boardelementisobject(maybenew)) {
         // sample t board example of 'kind'
-        const sample = pick(listnamedelements(sourceboard, maybekind))
+        const sample = pick(boardlistnamedelements(sourceboard, maybekind))
         if (ispresent(sample)) {
           // copy terrain element from under sample
           boardsetterrain(targetboard, {

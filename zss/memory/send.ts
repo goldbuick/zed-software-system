@@ -13,7 +13,7 @@ import {
   memoryreadflags,
   memorysendtoboards,
 } from 'zss/memory'
-import { listelementsbyidnameorpts } from 'zss/memory/atomics'
+import { boardlistelementsbyidnameorpts } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardelementreadbyidorindex,
@@ -235,7 +235,7 @@ export function memorysendtoelements(
       }
       default: {
         // target named elements
-        const elements = listelementsbyidnameorpts(READ_CONTEXT.board, [
+        const elements = boardlistelementsbyidnameorpts(READ_CONTEXT.board, [
           send.targetname,
         ])
         for (let i = 0; i < elements.length; ++i) {
