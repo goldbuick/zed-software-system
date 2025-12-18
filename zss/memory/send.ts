@@ -1,5 +1,5 @@
 import { CHIP } from 'zss/chip'
-import { api_chat } from 'zss/device/api'
+import { apichat } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -78,7 +78,7 @@ export function memorysendtolog(
   if (!ispresent(board) || !ispresent(element?.id)) {
     return
   }
-  api_chat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
+  apichat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
 }
 
 function playerpartyinteraction(

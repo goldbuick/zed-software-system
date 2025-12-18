@@ -1,5 +1,5 @@
 import { parsetarget } from 'zss/device'
-import { api_toast, register_copy, vm_cli } from 'zss/device/api'
+import { apitoast, registercopy, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
@@ -69,8 +69,8 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         }
         content += '\n'
       }
-      register_copy(SOFTWARE, player, content)
-      api_toast(
+      registercopy(SOFTWARE, player, content)
+      apitoast(
         SOFTWARE,
         player,
         `copied! chars ${p1x},${p1y} to ${p2x},${p2y}`,
@@ -120,14 +120,14 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       memoryinspectbgarea(player, p1, p2, 'bg')
       break
     case 'copycoords':
-      register_copy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
+      registercopy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
       break
     case 'pageopen':
       doasync(SOFTWARE, player, async () => {
         // wait a little
         await waitfor(800)
         // open codepage
-        vm_cli(SOFTWARE, player, `#pageopen ${batch.path}`)
+        vmcli(SOFTWARE, player, `#pageopen ${batch.path}`)
       })
       break
     default:

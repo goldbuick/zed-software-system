@@ -1,4 +1,4 @@
-import { register_terminal_open } from 'zss/device/api'
+import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
@@ -69,10 +69,10 @@ export function Tape() {
       ) : (
         <>
           <UserHotkey hotkey="Shift+?" althotkey="/">
-            {() => register_terminal_open(SOFTWARE, player)}
+            {() => registerterminalopen(SOFTWARE, player)}
           </UserHotkey>
           <UserHotkey hotkey="`">
-            {() => register_terminal_open(SOFTWARE, player)}
+            {() => registerterminalopen(SOFTWARE, player)}
           </UserHotkey>
         </>
       )}

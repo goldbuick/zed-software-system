@@ -1,5 +1,5 @@
 import { objectKeys } from 'ts-extras'
-import { api_toast } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -619,7 +619,7 @@ export function parsebrd(player: string, content: Uint8Array) {
   const reader = createreader(content)
   const board = readboardbytes(reader)
   processboards(contentbook, -1, [board])
-  api_toast(
+  apitoast(
     SOFTWARE,
     player,
     `imported zzt brd ${board.boardname} into ${contentbook.name} book`,
@@ -689,5 +689,5 @@ export function parsezzt(player: string, content: Uint8Array) {
   processboards(book, playerboard, zztboards)
 
   memorysetbook(book)
-  api_toast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
+  apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
 }

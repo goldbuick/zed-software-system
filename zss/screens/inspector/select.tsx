@@ -1,7 +1,7 @@
 import { ThreeEvent } from '@react-three/fiber'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { vm_inspect } from 'zss/device/api'
+import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeInspector } from 'zss/gadget/data/state'
@@ -46,7 +46,7 @@ export function Select() {
   // track selection state
   function completeselection() {
     if (isnumber(useTapeInspector.getState().cursor)) {
-      vm_inspect(SOFTWARE, registerreadplayer(), selectstart, selectend)
+      vminspect(SOFTWARE, registerreadplayer(), selectstart, selectend)
     }
     useTapeInspector.setState(() => ({
       cursor: undefined,

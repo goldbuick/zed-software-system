@@ -35,20 +35,20 @@ import { tokenizeandstriptextformat } from 'zss/words/textformat'
 
 import {
   MESSAGE,
-  api_error,
-  api_log,
-  api_toast,
-  bridge_join,
-  gadgetserver_desync,
-  register_terminal_close,
-  register_terminal_full,
-  vm_books,
-  vm_cli,
-  vm_doot,
-  vm_loader,
-  vm_login,
-  vm_operator,
-  vm_zsswords,
+  apierror,
+  apilog,
+  apitoast,
+  bridgejoin,
+  gadgetserverdesync,
+  registerterminalclose,
+  registerterminalfull,
+  vmbooks,
+  vmcli,
+  vmdoot,
+  vmloader,
+  vmlogin,
+  vmoperator,
+  vmzsswords,
 } from './api'
 
 // read / write from indexdb
@@ -70,7 +70,7 @@ function readsession(key: string): MAYBE<string> {
   try {
     return sessionStorage.getItem(key) ?? undefined
   } catch (err: any) {
-    api_error(register, myplayerid, `readsession ${key}`, err.message)
+    apierror(register, myplayerid, `readsession ${key}`, err.message)
   }
   return undefined
 }
@@ -83,7 +83,7 @@ function writesession(key: string, value: MAYBE<string>) {
       sessionStorage.removeItem(key)
     }
   } catch (err: any) {
-    api_error(
+    apierror(
       register,
       myplayerid,
       `writesession ${key} <- ${value}`,
@@ -101,7 +101,7 @@ function readurlhash() {
       return hash
     }
   } catch (err: any) {
-    api_error(register, myplayerid, 'crash', err.message)
+    apierror(register, myplayerid, 'crash', err.message)
   }
   return ''
 }
@@ -137,7 +137,7 @@ async function writehelphint() {
 }
 
 function writepages() {
-  vm_cli(register, myplayerid, '#pages')
+  vmcli(register, myplayerid, '#pages')
 }
 
 function renderrow(content: string[]) {
@@ -219,15 +219,15 @@ function terminalinclayout(inc: boolean) {
 
 async function loadmem(books: string) {
   if (books.length === 0) {
-    api_error(register, myplayerid, 'content', 'no content found')
+    apierror(register, myplayerid, 'content', 'no content found')
     await writewikilink()
-    vm_zsswords(register, myplayerid)
-    register_terminal_full(register, myplayerid)
+    vmzsswords(register, myplayerid)
+    registerterminalfull(register, myplayerid)
     await writehelphint()
     return
   }
   // init vm with content
-  vm_books(register, myplayerid, books)
+  vmbooks(register, myplayerid, books)
 }
 
 let currenturlhash = ''
@@ -258,7 +258,7 @@ async function writeurlcontent(
     location.hash = newurlhash
     const msg = `wrote ${fullcontent.length} chars [${fullcontent.slice(0, 8)}...${fullcontent.slice(-8)}]`
     if (!label.includes('autosave')) {
-      api_log(register, myplayerid, msg)
+      apilog(register, myplayerid, msg)
     }
     document.title = label
   }
@@ -374,19 +374,19 @@ const register = createdevice(
           }
           // signal init
           await waitfor(256)
-          api_log(register, myplayerid, `myplayerid ${myplayerid}`)
-          vm_operator(register, myplayerid)
+          apilog(register, myplayerid, `myplayerid ${myplayerid}`)
+          vmoperator(register, myplayerid)
         })
         break
       }
       case 'ackoperator':
         // reset display
-        gadgetserver_desync(register, myplayerid)
+        gadgetserverdesync(register, myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await readurlcontent()
           if (isjoin()) {
-            bridge_join(register, myplayerid, urlcontent)
+            bridgejoin(register, myplayerid, urlcontent)
           } else {
             // pull data && init
             await loadmem(urlcontent)
@@ -396,8 +396,8 @@ const register = createdevice(
       case 'loginready':
         doasync(register, message.player, async () => {
           const storage = await readidb<Record<string, any>>('storage')
-          vm_login(register, myplayerid, storage ?? {})
-          vm_zsswords(register, myplayerid)
+          vmlogin(register, myplayerid, storage ?? {})
+          vmzsswords(register, myplayerid)
         })
         break
       case 'loginfail':
@@ -405,17 +405,17 @@ const register = createdevice(
           await writewikilink()
           writepages()
           // full open on login fail
-          register_terminal_full(register, myplayerid)
+          registerterminalfull(register, myplayerid)
           // signal sim loaded
-          vm_loader(register, message.player, undefined, 'text', 'sim:load', '')
+          vmloader(register, message.player, undefined, 'text', 'sim:load', '')
           await writehelphint()
         })
         break
       case 'acklogin':
         // hide terminal
-        register_terminal_close(register, myplayerid)
+        registerterminalclose(register, myplayerid)
         // signal sim loaded
-        vm_loader(register, message.player, undefined, 'text', 'sim:load', '')
+        vmloader(register, message.player, undefined, 'text', 'sim:load', '')
         break
       case 'ackzsswords': {
         useGadgetClient.setState({
@@ -459,7 +459,7 @@ const register = createdevice(
             withclipboard()
               .writeText(message.data)
               .then(() =>
-                api_toast(
+                apitoast(
                   register,
                   message.player,
                   `copied! ${message.data.slice(0, 200)}`,
@@ -490,7 +490,7 @@ const register = createdevice(
             )
             withclipboard()
               .write([new ClipboardItem({ [blob.type]: blob })])
-              .then(() => api_toast(register, message.player, `copied! json`))
+              .then(() => apitoast(register, message.player, `copied! json`))
               .catch((err) => console.error(err))
           }
         }
@@ -633,7 +633,7 @@ const register = createdevice(
                 break
               }
               default:
-                api_error(
+                apierror(
                   register,
                   message.player,
                   'publish',
@@ -648,7 +648,7 @@ const register = createdevice(
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
-          vm_doot(register, myplayerid)
+          vmdoot(register, myplayerid)
         }
         break
       case 'inspector':
@@ -656,13 +656,13 @@ const register = createdevice(
           const enabled = ispresent(message.data)
             ? !!message.data
             : !state.inspector
-          api_log(
+          apilog(
             register,
             message.player,
             `gadget inspector ${enabled ? '$greenon' : '$redoff'}`,
           )
           if (enabled) {
-            api_log(
+            apilog(
               register,
               message.player,
               `mouse click or tap elements to inspect`,

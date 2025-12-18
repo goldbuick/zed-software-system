@@ -1,5 +1,5 @@
 import { useCallback, useContext } from 'react'
-import { register_terminal_quickopen } from 'zss/device/api'
+import { registerterminalquickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput'
@@ -25,7 +25,7 @@ export function PanelItemRunIt({
     const [, ...values] = args
     scroll.sendclose()
     setTimeout(() => {
-      register_terminal_quickopen(
+      registerterminalquickopen(
         SOFTWARE,
         registerreadplayer(),
         values.join(' '),

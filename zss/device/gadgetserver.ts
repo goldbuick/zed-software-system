@@ -23,7 +23,7 @@ import {
 import { bookreadflags } from 'zss/memory/book'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendertogadget'
 
-import { gadgetclient_paint, gadgetclient_patch, vm_clearscroll } from './api'
+import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
 
 const patchencoder = new BinEncoder()
 
@@ -130,7 +130,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
             // convert to binary encoding
             const data = patchencoder.encode(jsondecode(patch as any, {}))
             // this should be the patch for compressed json
-            gadgetclient_patch(gadgetserver, player, data)
+            gadgetclientpatch(gadgetserver, player, data)
           }
         }
       }
@@ -146,12 +146,12 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       // reset sync
       gadgetsync.set(message.player, slim)
       // this should be the compressed json
-      gadgetclient_paint(gadgetserver, message.player, slim)
+      gadgetclientpaint(gadgetserver, message.player, slim)
       break
     }
     case 'clearscroll':
       gadgetclearscroll(message.player)
-      vm_clearscroll(gadgetserver, message.player)
+      vmclearscroll(gadgetserver, message.player)
       break
   }
 })

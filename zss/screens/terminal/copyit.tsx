@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { register_copy } from 'zss/device/api'
+import { registercopy } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useWriteText } from 'zss/gadget/hooks'
@@ -22,7 +22,7 @@ export function TapeTerminalCopyIt({
 
   const invoke = useCallback(() => {
     const [, ...values] = words
-    register_copy(SOFTWARE, registerreadplayer(), values.join(' '))
+    registercopy(SOFTWARE, registerreadplayer(), values.join(' '))
   }, [words])
 
   const tcolor = inputcolor(!!active)

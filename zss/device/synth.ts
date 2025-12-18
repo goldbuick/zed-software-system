@@ -21,7 +21,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 
-import { api_error, api_log, synth_audioenabled, vm_loader } from './api'
+import { apierror, apilog, synthaudioenabled, vmloader } from './api'
 import { registerreadplayer } from './register'
 
 type CustomNavigator = {
@@ -62,13 +62,13 @@ export function enableaudio() {
           // lets rolling
           locked = false
           enabled = true
-          synth_audioenabled(synthdevice, registerreadplayer())
+          synthaudioenabled(synthdevice, registerreadplayer())
         })
       }
     })
     .catch((err: any) => {
       locked = false
-      api_error(synthdevice, registerreadplayer(), 'audio', err.toString())
+      apierror(synthdevice, registerreadplayer(), 'audio', err.toString())
     })
 }
 
@@ -106,10 +106,10 @@ const synthdevice = createdevice('synth', [], (message) => {
   const currentboard = useGadgetClient.getState().gadget.board
   switch (message.target) {
     case 'audioenabled':
-      api_log(synthdevice, message.player, 'audio is enabled!')
+      apilog(synthdevice, message.player, 'audio is enabled!')
       doasync(synthdevice, message.player, async () => {
         await waitfor(2000)
-        vm_loader(
+        vmloader(
           synthdevice,
           message.player,
           undefined,

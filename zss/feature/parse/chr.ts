@@ -1,4 +1,4 @@
-import { api_toast } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
@@ -32,7 +32,7 @@ export function parsechr(
   if (ispresent(charset) && ispresent(codepagecharset)) {
     Object.assign(codepagecharset, charset)
     bookwritecodepage(contentbook, codepage)
-    api_toast(
+    apitoast(
       SOFTWARE,
       player,
       `imported chr file ${codepagename} into ${contentbook.name} book`,

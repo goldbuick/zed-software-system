@@ -1,5 +1,5 @@
 import { pack, unpack } from 'msgpackr'
-import { api_error } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
@@ -80,7 +80,7 @@ export function unformatobject<T>(
 
     return obj as T
   } catch (err: any) {
-    api_error(SOFTWARE, '', 'format', err.message)
+    apierror(SOFTWARE, '', 'format', err.message)
   }
 }
 
@@ -92,7 +92,7 @@ export function packformat(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
     // console.info('write', data)
     return data
   } catch (err: any) {
-    api_error(SOFTWARE, '', 'format', err.message)
+    apierror(SOFTWARE, '', 'format', err.message)
   }
 }
 
@@ -105,7 +105,7 @@ export function unpackformat(
       // console.info('read', deepcopy(unpacked))
       return data
     } catch (err: any) {
-      api_error(SOFTWARE, '', 'format', err.message)
+      apierror(SOFTWARE, '', 'format', err.message)
     }
     return undefined
   }
@@ -113,7 +113,7 @@ export function unpackformat(
     const data = unpack(content)
     return data
   } catch (err: any) {
-    api_error(SOFTWARE, '', 'format', err.message)
+    apierror(SOFTWARE, '', 'format', err.message)
   }
   return undefined
 }

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { register_terminal_open } from 'zss/device/api'
+import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useWriteText } from 'zss/gadget/hooks'
@@ -22,7 +22,7 @@ export function TapeTerminalRunIt({
 
   const invoke = useCallback(() => {
     const [, ...values] = words
-    register_terminal_open(SOFTWARE, registerreadplayer(), values.join(' '))
+    registerterminalopen(SOFTWARE, registerreadplayer(), values.join(' '))
   }, [words])
 
   const tcolor = inputcolor(!!active)

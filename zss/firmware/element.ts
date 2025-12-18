@@ -1,5 +1,5 @@
 import { MathUtils } from 'three'
-import { register_store, vm_logout } from 'zss/device/api'
+import { registerstore, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -679,7 +679,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // sticky flags
       switch (name) {
         case 'user':
-          register_store(SOFTWARE, player, name, value)
+          registerstore(SOFTWARE, player, name, value)
           break
       }
       return [true, value]
@@ -696,7 +696,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // halt program
         chip.endofprogram()
         // signal outcome
-        vm_logout(SOFTWARE, READ_CONTEXT.elementid, true)
+        vmlogout(SOFTWARE, READ_CONTEXT.elementid, true)
       }
     }
     // handle walk movement

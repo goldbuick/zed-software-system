@@ -2,8 +2,8 @@ import {
   BINARY_READER,
   JSON_READER,
   TEXT_READER,
-  api_chat,
-  register_input,
+  apichat,
+  registerinput,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -90,13 +90,13 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    api_chat(SOFTWARE, '', '$GREEN', text)
+    apichat(SOFTWARE, '', '$GREEN', text)
     return 0
   })
   .command('hyperlink', (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
-    api_chat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
+    apichat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
     return 0
   })
   .command('readline', loadertext)
@@ -141,34 +141,34 @@ export const LOADER_FIRMWARE = createfirmware({
     const player = memoryreadoperator()
     switch (NAME(action)) {
       case 'up':
-        register_input(SOFTWARE, player, INPUT.MOVE_UP, false)
+        registerinput(SOFTWARE, player, INPUT.MOVE_UP, false)
         break
       case 'down':
-        register_input(SOFTWARE, player, INPUT.MOVE_DOWN, false)
+        registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, false)
         break
       case 'left':
-        register_input(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
+        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
         break
       case 'right':
-        register_input(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
+        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
         break
       case 'shootup':
-        register_input(SOFTWARE, player, INPUT.MOVE_UP, true)
+        registerinput(SOFTWARE, player, INPUT.MOVE_UP, true)
         break
       case 'shootdown':
-        register_input(SOFTWARE, player, INPUT.MOVE_DOWN, true)
+        registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, true)
         break
       case 'shootleft':
-        register_input(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
+        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
         break
       case 'shootright':
-        register_input(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
+        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
         break
       case 'ok':
-        register_input(SOFTWARE, player, INPUT.OK_BUTTON, false)
+        registerinput(SOFTWARE, player, INPUT.OK_BUTTON, false)
         break
       case 'cancel':
-        register_input(SOFTWARE, player, INPUT.CANCEL_BUTTON, false)
+        registerinput(SOFTWARE, player, INPUT.CANCEL_BUTTON, false)
         break
     }
     return 0

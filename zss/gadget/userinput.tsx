@@ -13,12 +13,12 @@ import {
 import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
-  api_log,
-  vm_cli,
-  vm_doot,
-  vm_input,
-  vm_local,
-  vm_refscroll,
+  apilog,
+  vmcli,
+  vmdoot,
+  vminput,
+  vmlocal,
+  vmrefscroll,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -106,7 +106,7 @@ function pollinput() {
     // skip main player
     for (let i = 1; i < idx.length; ++i) {
       const index = parseFloat(idx[i])
-      vm_doot(SOFTWARE, playerlocal(index))
+      vmdoot(SOFTWARE, playerlocal(index))
     }
   }
 }
@@ -188,7 +188,7 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
     if (mods.shift) {
       bits |= INPUT_SHIFT
     }
-    vm_input(SOFTWARE, player, input, bits)
+    vminput(SOFTWARE, player, input, bits)
   }
 }
 
@@ -306,17 +306,17 @@ window.addEventListener(
         break
       case 's':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, player, '#save')
+          vmcli(SOFTWARE, player, '#save')
         }
         break
       case 'j':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, player, mods.shift ? '#jointab hush' : '#jointab')
+          vmcli(SOFTWARE, player, mods.shift ? '#jointab hush' : '#jointab')
         }
         break
       case 'o':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, player, mods.shift ? '#joincode hush' : '#joincode')
+          vmcli(SOFTWARE, player, mods.shift ? '#joincode hush' : '#joincode')
         }
         break
       case 'l':
@@ -326,12 +326,12 @@ window.addEventListener(
         break
       case 'f':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, player, '#fork')
+          vmcli(SOFTWARE, player, '#fork')
         }
         break
       case 'h':
         if (mods.ctrl) {
-          vm_refscroll(SOFTWARE, player)
+          vmrefscroll(SOFTWARE, player)
         }
     }
     user.root.emit('keydown', event)
@@ -513,15 +513,15 @@ const gamepads = new GamepadListener({
 })
 gamepads.on('gamepad:connected', (event: any) => {
   const player = registerreadplayer()
-  api_log(SOFTWARE, player, `connected ${event.detail.gamepad.id}`)
+  apilog(SOFTWARE, player, `connected ${event.detail.gamepad.id}`)
   readinput(event.detail.index)
   if (event.detail.index > 0) {
-    vm_local(SOFTWARE, playerlocal(event.detail.index))
+    vmlocal(SOFTWARE, playerlocal(event.detail.index))
   }
 })
 gamepads.on('gamepad:disconnected', (event: any) => {
   const player = registerreadplayer()
-  api_log(SOFTWARE, player, `disconnected gamepad ${event.detail.index}`)
+  apilog(SOFTWARE, player, `disconnected gamepad ${event.detail.index}`)
   delete inputstates[event.detail.index]
 })
 gamepads.on('gamepad:axis', (event: any) => {

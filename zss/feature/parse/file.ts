@@ -1,11 +1,11 @@
 import JSZip, { JSZipObject } from 'jszip'
 import mime from 'mime/lite'
 import {
-  api_error,
-  api_log,
-  vm_loader,
-  vm_logout,
-  vm_readzipfilelist,
+  apierror,
+  apilog,
+  vmloader,
+  vmlogout,
+  vmreadzipfilelist,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
@@ -90,7 +90,7 @@ let zipfilemarks: Record<string, boolean> = {}
 
 export async function parsezipfile(player: string, file: File) {
   try {
-    api_log(SOFTWARE, player, 'parsezipfile', file.name)
+    apilog(SOFTWARE, player, 'parsezipfile', file.name)
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)
@@ -108,9 +108,9 @@ export async function parsezipfile(player: string, file: File) {
       zipfilelist.push(zipfile)
     }
     // signal scroll to open
-    vm_readzipfilelist(SOFTWARE, player)
+    vmreadzipfilelist(SOFTWARE, player)
   } catch (err: any) {
-    api_error(SOFTWARE, player, 'crash', err.message)
+    apierror(SOFTWARE, player, 'crash', err.message)
   }
 }
 
@@ -144,7 +144,7 @@ export async function parsezipfilelist(player: string) {
   }
   // re-login after import
   await waitfor(2000)
-  vm_logout(SOFTWARE, player, false)
+  vmlogout(SOFTWARE, player, false)
 }
 
 export async function parsebinaryfile(
@@ -153,11 +153,11 @@ export async function parsebinaryfile(
   onbuffer: (buffer: Uint8Array) => void,
 ) {
   try {
-    api_log(SOFTWARE, player, 'parsebinaryfile', file.name)
+    apilog(SOFTWARE, player, 'parsebinaryfile', file.name)
     const arraybuffer = await file.arrayBuffer()
     onbuffer(new Uint8Array(arraybuffer))
   } catch (err: any) {
-    api_error(SOFTWARE, player, 'crash', err.message)
+    apierror(SOFTWARE, player, 'crash', err.message)
   }
 }
 
@@ -171,13 +171,13 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .text()
         .then((content) => parsezztobj(player, file.name, content))
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'txt':
       file
         .text()
         .then((content) =>
-          vm_loader(
+          vmloader(
             SOFTWARE,
             player,
             undefined,
@@ -186,13 +186,13 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
             content,
           ),
         )
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'json':
       file
         .text()
         .then((content) =>
-          vm_loader(
+          vmloader(
             SOFTWARE,
             player,
             undefined,
@@ -201,11 +201,11 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
             content,
           ),
         )
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'zip':
       parsezipfile(player, file).catch((err) =>
-        api_error(SOFTWARE, player, 'crash', err.message),
+        apierror(SOFTWARE, player, 'crash', err.message),
       )
       break
     case 'zzt':
@@ -214,7 +214,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .then((arraybuffer) => {
           parsezzt(player, new Uint8Array(arraybuffer))
         })
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'brd':
       file
@@ -222,7 +222,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .then((arraybuffer) => {
           parsebrd(player, new Uint8Array(arraybuffer))
         })
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'chr':
       file
@@ -230,7 +230,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .then((arraybuffer) => {
           parsechr(player, file.name, new Uint8Array(arraybuffer))
         })
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'zzm':
       file
@@ -238,7 +238,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .then((content) => {
           parsezzm(player, content)
         })
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'ans':
     case 'adf':
@@ -252,7 +252,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .then((arraybuffer) => {
           parseansi(player, file.name, filetype, new Uint8Array(arraybuffer))
         })
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     default:
       if (!type) {
@@ -266,7 +266,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
             if (type) {
               handlefiletype(player, type, file)
             } else {
-              return api_error(
+              return apierror(
                 SOFTWARE,
                 player,
                 'parsewebfile',
@@ -274,7 +274,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
               )
             }
           })
-          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+          .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       }
       return
   }

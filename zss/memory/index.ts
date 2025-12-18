@@ -1,6 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
-import { MESSAGE, api_error, api_log } from 'zss/device/api'
+import { MESSAGE, apierror, apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER, LAYER_TYPE, layersreadmedia } from 'zss/gadget/data/types'
@@ -184,7 +184,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  api_log(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
+  apilog(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 
@@ -195,7 +195,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  api_log(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
+  apilog(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 
@@ -221,7 +221,7 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      api_log(
+      apilog(
         SOFTWARE,
         MEMORY.operator,
         `opened [book] ${book.name} for ${slot}`,
@@ -580,7 +580,7 @@ export function memoryplayerlogin(
   stickyflags: BOOK_FLAGS,
 ): boolean {
   if (!isstring(player) || !player) {
-    return api_error(
+    return apierror(
       SOFTWARE,
       player,
       'login',
@@ -590,7 +590,7 @@ export function memoryplayerlogin(
 
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
-    return api_error(
+    return apierror(
       SOFTWARE,
       player,
       'login:main',
@@ -617,7 +617,7 @@ export function memoryplayerlogin(
 
   // unable to find board
   if (!ispresent(currentboard)) {
-    return api_error(
+    return apierror(
       SOFTWARE,
       player,
       'login:title',
@@ -631,7 +631,7 @@ export function memoryplayerlogin(
     MEMORY_LABEL.PLAYER,
   )
   if (!ispresent(playerkind)) {
-    return api_error(
+    return apierror(
       SOFTWARE,
       player,
       'login:player',

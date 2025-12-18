@@ -2,7 +2,7 @@ import { newQueue } from '@henrygd/queue'
 import { EdgeSpeechTTS } from '@lobehub/tts'
 import { getContext } from 'tone'
 import { createdevice } from 'zss/device'
-import { heavy_ttsrequest, synth_audiobuffer } from 'zss/device/api'
+import { heavyttsrequest, synthaudiobuffer } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { hub } from 'zss/hub'
 import { doasync } from 'zss/mapping/func'
@@ -63,10 +63,10 @@ export async function requestaudiobuffer(
           }
           break
         case 'piper':
-          heavy_ttsrequest(once, player, 'piper', ttsconfig, voice, input)
+          heavyttsrequest(once, player, 'piper', ttsconfig, voice, input)
           break
         case 'kitten':
-          heavy_ttsrequest(once, player, 'kitten', ttsconfig, voice, input)
+          heavyttsrequest(once, player, 'kitten', ttsconfig, voice, input)
           break
       }
     })
@@ -84,7 +84,7 @@ export async function ttsplay(
   // play the audio
   const audiobuffer = await requestaudiobuffer(player, voice, input)
   if (ispresent(audiobuffer)) {
-    synth_audiobuffer(SOFTWARE, player, audiobuffer)
+    synthaudiobuffer(SOFTWARE, player, audiobuffer)
   }
 }
 
@@ -96,7 +96,7 @@ async function audioplaytask(
   audiobuffer: AudioBuffer,
 ): Promise<void> {
   // play the audio
-  synth_audiobuffer(SOFTWARE, player, audiobuffer)
+  synthaudiobuffer(SOFTWARE, player, audiobuffer)
   // wait audio duration before playing next audio
   const waittime = Math.max(1000, Math.round(audiobuffer.duration * 1000))
   await waitfor(waittime)

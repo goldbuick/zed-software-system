@@ -3,7 +3,7 @@ import { requestaudiobytes } from 'zss/feature/heavy/tts'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 
-import { api_error } from './api'
+import { apierror } from './api'
 
 const heavy = createdevice('heavy', [], (message) => {
   if (!heavy.session(message)) {
@@ -33,7 +33,7 @@ const heavy = createdevice('heavy', [], (message) => {
       })
       break
     default:
-      api_error(
+      apierror(
         heavy,
         message.player,
         'heavy',

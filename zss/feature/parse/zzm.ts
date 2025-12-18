@@ -1,4 +1,4 @@
-import { api_toast } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
@@ -139,7 +139,7 @@ ${song.lines.map((line) => `#play ${line}`).join('\n')}
   const codepagename = codepagereadname(codepage)
 
   bookwritecodepage(contentbook, codepage)
-  api_toast(
+  apitoast(
     SOFTWARE,
     player,
     `imported zzt zzm file ${codepagename} into ${contentbook.name} book`,

@@ -1,8 +1,8 @@
 import {
-  register_terminal_quickopen,
-  vm_clirepeatlast,
-  vm_findany,
-  vm_input,
+  registerterminalquickopen,
+  vmclirepeatlast,
+  vmfindany,
+  vminput,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -38,7 +38,7 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
     bits |= INPUT_SHIFT
   }
   if (ispid(player)) {
-    vm_input(SOFTWARE, player, input, bits)
+    vminput(SOFTWARE, player, input, bits)
   }
 }
 
@@ -81,24 +81,24 @@ export function Framed({ width, height }: FramedProps) {
           const player = registerreadplayer()
           switch (key) {
             case 'c':
-              register_terminal_quickopen(SOFTWARE, player, '')
+              registerterminalquickopen(SOFTWARE, player, '')
               break
             case '@':
             case '2':
-              register_terminal_quickopen(SOFTWARE, player, '@')
+              registerterminalquickopen(SOFTWARE, player, '@')
               break
             case '#':
             case '3':
-              register_terminal_quickopen(SOFTWARE, player, '#')
+              registerterminalquickopen(SOFTWARE, player, '#')
               break
             case 'p':
               if (mods.ctrl) {
-                vm_clirepeatlast(SOFTWARE, player)
+                vmclirepeatlast(SOFTWARE, player)
               }
               break
             case 'a':
               if (mods.ctrl) {
-                vm_findany(SOFTWARE, player)
+                vmfindany(SOFTWARE, player)
               }
               break
           }

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from 'react'
-import { vm_cli } from 'zss/device/api'
+import { vmcli } from 'zss/device/api'
 import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
@@ -72,7 +72,7 @@ export function TapeTerminal() {
             const [target, message] = totarget(maybetarget)
             if (target === 'self') {
               const input = `#${message} ${data.join(' ')}`
-              vm_cli(SOFTWARE, player, input)
+              vmcli(SOFTWARE, player, input)
             } else {
               SOFTWARE.emit(player, `${target}:${message}`, data)
             }

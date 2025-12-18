@@ -1,7 +1,7 @@
 import { useCallback, useContext, useLayoutEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { register_copy } from 'zss/device/api'
+import { registercopy } from 'zss/device/api'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -195,7 +195,7 @@ export function PanelItemColorEdit({
               const lkey = event.key.toLowerCase()
               switch (lkey) {
                 case 'c':
-                  register_copy(SOFTWARE, registerreadplayer(), `${state}`)
+                  registercopy(SOFTWARE, registerreadplayer(), `${state}`)
                   scroll.sendclose()
                   break
                 case 'b': {
@@ -210,7 +210,7 @@ export function PanelItemColorEdit({
                     const b = Math.round((color?.b ?? 0) * 255)
                     const content = `@color${idx} ${r} ${g} ${b}`
                     // copy as @color1 XXXX stats
-                    register_copy(SOFTWARE, registerreadplayer(), content)
+                    registercopy(SOFTWARE, registerreadplayer(), content)
                     scroll.sendclose()
                   }
                   break

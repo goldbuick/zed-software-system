@@ -1,4 +1,4 @@
-import { api_error } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
@@ -15,7 +15,7 @@ export function synthvoicefxvibratoconfig(
     return
   }
   if (index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
+    apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const vibrato = synth.FXCHAIN.vibrato
@@ -27,7 +27,7 @@ export function synthvoicefxvibratoconfig(
       }
       break
   }
-  api_error(
+  apierror(
     SOFTWARE,
     player,
     `synth`,

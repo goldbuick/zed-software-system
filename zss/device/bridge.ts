@@ -15,11 +15,11 @@ import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import {
-  api_error,
-  api_log,
-  bridge_showjoincode,
-  bridge_tabopen,
-  vm_loader,
+  apierror,
+  apilog,
+  bridgeshowjoincode,
+  bridgetabopen,
+  vmloader,
 } from './api'
 import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
@@ -63,19 +63,19 @@ async function runnetworkfetch(
   switch (contenttype) {
     case 'text/plain': {
       const content = await response.text()
-      // api_log(SOFTWARE, player, JSON.stringify(content))
-      vm_loader(SOFTWARE, player, arg, 'text', eventname, content)
+      // apilog(SOFTWARE, player, JSON.stringify(content))
+      vmloader(SOFTWARE, player, arg, 'text', eventname, content)
       break
     }
     case 'application/json': {
       const content = await response.json()
-      // api_log(SOFTWARE, player, JSON.stringify(content))
-      vm_loader(SOFTWARE, player, arg, 'json', eventname, content)
+      // apilog(SOFTWARE, player, JSON.stringify(content))
+      vmloader(SOFTWARE, player, arg, 'json', eventname, content)
       break
     }
     case 'application/octet-stream': {
       const content = await response.arrayBuffer()
-      vm_loader(
+      vmloader(
         SOFTWARE,
         player,
         arg,
@@ -164,14 +164,14 @@ const bridge = createdevice('bridge', [], (message) => {
       doasync(bridge, message.player, async () => {
         await netterminalhost()
         // show join code
-        bridge_showjoincode(SOFTWARE, message.player, !!message.data)
+        bridgeshowjoincode(SOFTWARE, message.player, !!message.data)
       })
       break
     case 'tab':
       doasync(bridge, message.player, async () => {
         await netterminalhost()
         // open a join tab
-        bridge_tabopen(SOFTWARE, message.player)
+        bridgetabopen(SOFTWARE, message.player)
       })
       break
     case 'tabopen': {
@@ -195,20 +195,20 @@ const bridge = createdevice('bridge', [], (message) => {
     }
     case 'chatstart':
       if (ispresent(twitchchatclient)) {
-        api_error(bridge, message.player, 'bridge', 'chat is already started')
+        apierror(bridge, message.player, 'bridge', 'chat is already started')
       } else if (isstring(message.data)) {
-        api_log(bridge, message.player, `connecting to ${message.data}`)
+        apilog(bridge, message.player, `connecting to ${message.data}`)
         twitchchatclient = new ChatClient({ channels: [message.data] })
         twitchchatclient.connect()
         twitchchatclient.onConnect(() => {
-          api_log(bridge, message.player, 'connected')
+          apilog(bridge, message.player, 'connected')
         })
         twitchchatclient.onDisconnect(() => {
-          api_log(bridge, message.player, 'disconnected')
+          apilog(bridge, message.player, 'disconnected')
         })
         twitchchatclient.onMessage((_, user, __, msg) => {
           const simpletext = striptext(msg)
-          vm_loader(
+          vmloader(
             bridge,
             message.player,
             undefined,
@@ -219,7 +219,7 @@ const bridge = createdevice('bridge', [], (message) => {
         })
         twitchchatclient.onAction((_, user, __, msg) => {
           const simpletext = striptext(msg)
-          vm_loader(
+          vmloader(
             bridge,
             message.player,
             undefined,
@@ -234,15 +234,15 @@ const bridge = createdevice('bridge', [], (message) => {
       if (ispresent(twitchchatclient)) {
         twitchchatclient.quit()
         twitchchatclient = undefined
-        api_log(bridge, message.player, 'chat stopped')
+        apilog(bridge, message.player, 'chat stopped')
       } else {
-        api_error(bridge, message.player, 'bridge', 'chat is already stoped')
+        apierror(bridge, message.player, 'bridge', 'chat is already stoped')
       }
       break
     case 'streamstart':
       doasync(bridge, message.player, async () => {
         if (ispresent(broadcastclient)) {
-          api_error(bridge, message.player, 'bridge', 'stream is already open')
+          apierror(bridge, message.player, 'bridge', 'stream is already open')
         } else {
           const isportrait = window.innerHeight > window.innerWidth
           const streamconfig = isportrait
@@ -267,14 +267,14 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.CONNECTION_STATE_CHANGE,
             function (state: string) {
-              api_log(bridge, message.player, state)
+              apilog(bridge, message.player, state)
             } as Callback,
           )
 
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.ERROR,
             function (error: string) {
-              api_error(bridge, message.player, 'bridge', error)
+              apierror(bridge, message.player, 'bridge', error)
               broadcastclient = undefined
             } as Callback,
           )
@@ -284,7 +284,7 @@ const bridge = createdevice('bridge', [], (message) => {
           if (ispresent(video)) {
             await broadcastclient.addImageSource(video, 'video', { index: 1 })
           } else {
-            api_error(
+            apierror(
               bridge,
               message.player,
               'video',
@@ -299,7 +299,7 @@ const bridge = createdevice('bridge', [], (message) => {
           if (ispresent(audio)) {
             await broadcastclient.addAudioInputDevice(audio.stream, 'audio')
           } else {
-            api_error(
+            apierror(
               bridge,
               message.player,
               'video',
@@ -310,7 +310,7 @@ const bridge = createdevice('bridge', [], (message) => {
           }
 
           // signal success
-          api_log(bridge, message.player, `created client`)
+          apilog(bridge, message.player, `created client`)
         }
         if (isstring(message.data) && ispresent(broadcastclient)) {
           writeheader(bridge, message.player, 'broadcasting in')
@@ -333,9 +333,9 @@ const bridge = createdevice('bridge', [], (message) => {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()
         broadcastclient = undefined
-        api_log(bridge, message.player, `stream stopped`)
+        apilog(bridge, message.player, `stream stopped`)
       } else {
-        api_error(bridge, message.player, 'bridge', 'stream already stopped')
+        apierror(bridge, message.player, 'bridge', 'stream already stopped')
       }
       break
   }

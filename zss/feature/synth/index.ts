@@ -17,7 +17,7 @@ import {
   getDestination,
   getTransport,
 } from 'tone'
-import { api_error } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { createnameid } from 'zss/mapping/guid'
@@ -328,7 +328,7 @@ export function createsynth() {
           audio?.destroy()
         })
         .catch((err) => {
-          api_error(SOFTWARE, player, 'synthrecord', err)
+          apierror(SOFTWARE, player, 'synthrecord', err)
         })
     }
 

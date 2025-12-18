@@ -1,4 +1,4 @@
-import { DEVICELIKE, api_error } from 'zss/device/api'
+import { DEVICELIKE, apierror } from 'zss/device/api'
 
 export function doasync(
   device: DEVICELIKE,
@@ -7,6 +7,6 @@ export function doasync(
 ) {
   asyncfunc().catch((error) => {
     console.error(error)
-    api_error(device, player, 'crash', error?.message)
+    apierror(device, player, 'crash', error?.message)
   })
 }
