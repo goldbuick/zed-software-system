@@ -140,8 +140,8 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   const nounderlayers = under.length === 0
   const xmargin = viewport.width - viewwidth
   const ymargin = viewport.height - viewheight
-  const centerx = viewwidth * -0.5 + xmargin * -0.5 + screensize.marginx
-  const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
+  const centerx = viewwidth * -0.5 + xmargin * 0.5 + screensize.marginx
+  const centery = viewheight * 0.5 + ymargin * 0.5 + screensize.marginy
   return (
     <>
       <group position={[viewwidth * 0.5, viewheight * 0.5, 1]}>
