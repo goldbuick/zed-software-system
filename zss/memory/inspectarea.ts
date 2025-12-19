@@ -6,6 +6,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { ptstoarea, rectpoints } from 'zss/mapping/2d'
+import { range } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
@@ -171,6 +172,27 @@ export function memoryinspectarea(
     return
   }
 
+  let group = 0
+  function get(name: string): WORD {
+    if (name === 'group') {
+      return group
+    }
+    return 0
+  }
+  function set(name: string, value: WORD) {
+    if (name === 'group') {
+      if (isnumber(value)) {
+        group = value
+        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+          const el = boardelementread(board, pt)
+          if (ispresent(el)) {
+            el[name as keyof BOARD_ELEMENT] = `group${value}`
+          }
+        })
+      }
+    }
+  }
+
   const area = ptstoarea(p1, p2)
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
@@ -242,6 +264,22 @@ export function memoryinspectarea(
     ' B ',
     'next',
   ])
+  gadgethyperlink(
+    player,
+    `groups:${area}`,
+    'group',
+    [
+      'group',
+      'select',
+      'none',
+      '0',
+      ...range(1, 127)
+        .map((i) => [`group${i}`, `${i}`])
+        .flat(),
+    ],
+    get,
+    set,
+  )
 
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', 'make empty', [

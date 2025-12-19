@@ -67,7 +67,7 @@ export function PanelItemSelect({
   context.writefullwidth = undefined
 
   const up = useCallback<UserInputHandler>(() => {
-    const next = Math.min(0, stateindex - 1)
+    const next = Math.max(0, stateindex - 1)
     const nextvalue = parseFloat(values[next] as string)
     if (Number.isInteger(nextvalue)) {
       modemwritevaluenumber(address, nextvalue)
@@ -76,7 +76,7 @@ export function PanelItemSelect({
   }, [stateindex, address])
 
   const down = useCallback<UserInputHandler>(() => {
-    const next = Math.max(values.length - 1, stateindex + 1)
+    const next = Math.min(values.length - 1, stateindex + 1)
     const nextvalue = parseFloat(values[next] as string)
     if (Number.isInteger(nextvalue)) {
       modemwritevaluenumber(address, nextvalue)

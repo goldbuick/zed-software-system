@@ -70,11 +70,7 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         content += '\n'
       }
       registercopy(SOFTWARE, player, content)
-      apitoast(
-        SOFTWARE,
-        player,
-        `copied! chars ${p1x},${p1y} to ${p2x},${p2y}`,
-      )
+      apitoast(SOFTWARE, player, `copied! chars ${p1x},${p1y} to ${p2x},${p2y}`)
       break
     }
     case 'cut':
