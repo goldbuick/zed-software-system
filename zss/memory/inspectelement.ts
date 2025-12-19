@@ -6,6 +6,7 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
+import { range } from 'zss/mapping/array'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
@@ -133,12 +134,19 @@ export function memoryinspectelement(
     const value =
       element?.[name as keyof BOARD_ELEMENT] ??
       element?.kinddata?.[name as keyof BOARD_ELEMENT]
+
+    if (name === 'group') {
+      return parseFloat(element.group?.replace('group', '') ?? '0')
+    }
+
     // ensure proper defaults
     if (!ispresent(value)) {
       switch (name) {
         case 'color':
           return 15
         case 'bg':
+          return 0
+        case 'group':
           return 0
         case 'cycle':
           return CYCLE_DEFAULT
@@ -150,11 +158,16 @@ export function memoryinspectelement(
           return 0
       }
     }
+
     return value
   }
   function set(name: string, value: WORD) {
     if (ispresent(element)) {
-      element[name as keyof BOARD_ELEMENT] = value
+      if (name === 'group') {
+        element.group = `group${value as number}`
+      } else {
+        element[name as keyof BOARD_ELEMENT] = value
+      }
     }
   }
 
@@ -215,6 +228,7 @@ export function memoryinspectelement(
       case 'cycle':
       case 'color':
       case 'bg':
+      case 'group':
       case 'collision':
       case 'pushable':
       case 'breakable':
@@ -262,6 +276,22 @@ export function memoryinspectelement(
     chip,
     `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
     ['bg', 'hk', 'b', ' B ', 'next'],
+    get,
+    set,
+  )
+  gadgethyperlink(
+    player,
+    chip,
+    'group',
+    [
+      'group',
+      'select',
+      'none',
+      '0',
+      ...range(1, 127)
+        .map((i) => [`group${i}`, `${i}`])
+        .flat(),
+    ],
     get,
     set,
   )
