@@ -138,14 +138,14 @@ export function createsynth() {
 
   // 8track SYNTH
   const SOURCE = [
-    createsource(SOURCE_TYPE.SYNTH),
-    createsource(SOURCE_TYPE.SYNTH),
-    createsource(SOURCE_TYPE.SYNTH),
-    createsource(SOURCE_TYPE.SYNTH),
-    createsource(SOURCE_TYPE.SYNTH),
-    createsource(SOURCE_TYPE.SYNTH),
-    createsource(SOURCE_TYPE.SYNTH),
-    createsource(SOURCE_TYPE.SYNTH),
+    createsource(SOURCE_TYPE.SYNTH, 0),
+    createsource(SOURCE_TYPE.SYNTH, 0),
+    createsource(SOURCE_TYPE.SYNTH, 0),
+    createsource(SOURCE_TYPE.SYNTH, 0),
+    createsource(SOURCE_TYPE.SYNTH, 0),
+    createsource(SOURCE_TYPE.SYNTH, 0),
+    createsource(SOURCE_TYPE.SYNTH, 0),
+    createsource(SOURCE_TYPE.SYNTH, 0),
   ]
 
   // config fx
@@ -226,12 +226,12 @@ export function createsynth() {
     connectsource(i)
   }
 
-  function changesource(index: number, type: SOURCE_TYPE) {
+  function changesource(index: number, type: SOURCE_TYPE, algo: number) {
     if (SOURCE[index]?.source.type === type) {
       return
     }
     SOURCE[index]?.source.synth.dispose()
-    SOURCE[index] = createsource(type)
+    SOURCE[index] = createsource(type, algo)
     connectsource(index)
   }
 
@@ -246,7 +246,7 @@ export function createsynth() {
 
   function applyreplay(source: any[], fxchain: any, fx: any[]) {
     source.forEach((item, index) => {
-      changesource(index, item.type)
+      changesource(index, item.type, item.algo)
       SOURCE[index].setreplay(item)
     })
     FXCHAIN.setreplay(fxchain)

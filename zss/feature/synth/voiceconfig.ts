@@ -41,6 +41,14 @@ function validatesynthtype(
       case 'metallic':
       case 'bells':
       case 'doot':
+      case 'algo0':
+      case 'algo1':
+      case 'algo2':
+      case 'algo3':
+      case 'algo4':
+      case 'algo5':
+      case 'algo6':
+      case 'algo7':
         return true
       default:
         return SYNTH_VARIANTS.test(type)
@@ -118,25 +126,49 @@ export function synthvoiceconfig(
         if (validatesynthtype(config, value)) {
           switch (config) {
             case 'retro':
-              synth.changesource(index, SOURCE_TYPE.RETRO_NOISE)
+              synth.changesource(index, SOURCE_TYPE.RETRO_NOISE, 0)
               break
             case 'buzz':
-              synth.changesource(index, SOURCE_TYPE.BUZZ_NOISE)
+              synth.changesource(index, SOURCE_TYPE.BUZZ_NOISE, 0)
               break
             case 'clang':
-              synth.changesource(index, SOURCE_TYPE.CLANG_NOISE)
+              synth.changesource(index, SOURCE_TYPE.CLANG_NOISE, 0)
               break
             case 'metallic':
-              synth.changesource(index, SOURCE_TYPE.METALLIC_NOISE)
+              synth.changesource(index, SOURCE_TYPE.METALLIC_NOISE, 0)
               break
             case 'bells':
-              synth.changesource(index, SOURCE_TYPE.BELLS)
+              synth.changesource(index, SOURCE_TYPE.BELLS, 0)
               break
             case 'doot':
-              synth.changesource(index, SOURCE_TYPE.DOOT)
+              synth.changesource(index, SOURCE_TYPE.DOOT, 0)
+              break
+            case 'algo0':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 0)
+              break
+            case 'algo1':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 1)
+              break
+            case 'algo2':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 2)
+              break
+            case 'algo3':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 3)
+              break
+            case 'algo4':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 4)
+              break
+            case 'algo5':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 5)
+              break
+            case 'algo6':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 6)
+              break
+            case 'algo7':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 7)
               break
             default:
-              synth.changesource(index, SOURCE_TYPE.SYNTH)
+              synth.changesource(index, SOURCE_TYPE.SYNTH, 0)
               voice.source.synth.set({
                 oscillator: {
                   // @ts-expect-error should be type
@@ -349,6 +381,18 @@ export function synthvoiceconfig(
                       return
                     }
                     break
+                }
+                break
+            }
+            return
+          }
+          case SOURCE_TYPE.ALGO_SYNTH: {
+            switch (config) {
+              case 'algorithm':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    algorithm: value,
+                  })
                 }
                 break
             }
