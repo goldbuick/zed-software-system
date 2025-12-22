@@ -17,7 +17,7 @@ export function Pts() {
 
   const tiles = store.getState()
 
-  resetTiles(tiles, 0, COLOR.BLBLACK, COLOR.ONCLEAR)
+  resetTiles(tiles, 32, COLOR.BLBLACK, COLOR.ONCLEAR)
   for (let i = 0; i < pts.length; ++i) {
     const pt = pts[i]
     writeTile(tiles, BOARD_WIDTH, BOARD_HEIGHT, pt.x, pt.y, {
