@@ -9,6 +9,8 @@ import {
 } from 'tone'
 import { MAYBE, deepcopy } from 'zss/mapping/types'
 
+import { AlgoSynth } from './algosynth'
+
 export enum SOURCE_TYPE {
   SYNTH,
   RETRO_NOISE,
@@ -17,6 +19,7 @@ export enum SOURCE_TYPE {
   METALLIC_NOISE,
   BELLS,
   DOOT,
+  ALGO_SYNTH,
 }
 
 const RETRO_SAMPLE_COUNT = 131072
@@ -81,8 +84,13 @@ export type SOURCE =
       type: SOURCE_TYPE.DOOT
       synth: MembraneSynth
     }
+  | {
+      type: SOURCE_TYPE.ALGO_SYNTH
+      synth: AlgoSynth
+      algo: number
+    }
 
-export function createsource(sourcetype: SOURCE_TYPE) {
+export function createsource(sourcetype: SOURCE_TYPE, algo: number) {
   let source: MAYBE<SOURCE>
   let resetvalues: any
 
@@ -142,6 +150,12 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         break
       }
       case SOURCE_TYPE.DOOT: {
+        source.synth.set({
+          ...resetvalues,
+        })
+        break
+      }
+      case SOURCE_TYPE.ALGO_SYNTH: {
         source.synth.set({
           ...resetvalues,
         })
@@ -241,6 +255,22 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       source = {
         type: sourcetype,
         synth: new MembraneSynth(),
+      }
+      resetvalues = deepcopy(source.synth.get())
+      applyreset()
+      return {
+        source,
+        applyreset,
+        getreplay,
+        setreplay,
+        destroy,
+      }
+    }
+    case SOURCE_TYPE.ALGO_SYNTH: {
+      source = {
+        type: sourcetype,
+        synth: new AlgoSynth({ algorithm: algo }),
+        algo: algo,
       }
       resetvalues = deepcopy(source.synth.get())
       applyreset()

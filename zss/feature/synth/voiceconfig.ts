@@ -41,6 +41,14 @@ function validatesynthtype(
       case 'metallic':
       case 'bells':
       case 'doot':
+      case 'algo0':
+      case 'algo1':
+      case 'algo2':
+      case 'algo3':
+      case 'algo4':
+      case 'algo5':
+      case 'algo6':
+      case 'algo7':
         return true
       default:
         return SYNTH_VARIANTS.test(type)
@@ -118,25 +126,49 @@ export function synthvoiceconfig(
         if (validatesynthtype(config, value)) {
           switch (config) {
             case 'retro':
-              synth.changesource(index, SOURCE_TYPE.RETRO_NOISE)
+              synth.changesource(index, SOURCE_TYPE.RETRO_NOISE, 0)
               break
             case 'buzz':
-              synth.changesource(index, SOURCE_TYPE.BUZZ_NOISE)
+              synth.changesource(index, SOURCE_TYPE.BUZZ_NOISE, 0)
               break
             case 'clang':
-              synth.changesource(index, SOURCE_TYPE.CLANG_NOISE)
+              synth.changesource(index, SOURCE_TYPE.CLANG_NOISE, 0)
               break
             case 'metallic':
-              synth.changesource(index, SOURCE_TYPE.METALLIC_NOISE)
+              synth.changesource(index, SOURCE_TYPE.METALLIC_NOISE, 0)
               break
             case 'bells':
-              synth.changesource(index, SOURCE_TYPE.BELLS)
+              synth.changesource(index, SOURCE_TYPE.BELLS, 0)
               break
             case 'doot':
-              synth.changesource(index, SOURCE_TYPE.DOOT)
+              synth.changesource(index, SOURCE_TYPE.DOOT, 0)
+              break
+            case 'algo0':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 0)
+              break
+            case 'algo1':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 1)
+              break
+            case 'algo2':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 2)
+              break
+            case 'algo3':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 3)
+              break
+            case 'algo4':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 4)
+              break
+            case 'algo5':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 5)
+              break
+            case 'algo6':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 6)
+              break
+            case 'algo7':
+              synth.changesource(index, SOURCE_TYPE.ALGO_SYNTH, 7)
               break
             default:
-              synth.changesource(index, SOURCE_TYPE.SYNTH)
+              synth.changesource(index, SOURCE_TYPE.SYNTH, 0)
               voice.source.synth.set({
                 oscillator: {
                   // @ts-expect-error should be type
@@ -349,6 +381,131 @@ export function synthvoiceconfig(
                       return
                     }
                     break
+                }
+                break
+            }
+            return
+          }
+          case SOURCE_TYPE.ALGO_SYNTH: {
+            switch (config) {
+              case 'harmonicity':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    harmonicity: value,
+                  })
+                  return
+                }
+                break
+              case 'modindex':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    modulationIndex: value,
+                  })
+                  return
+                }
+                break
+              case 'osc1':
+                if (isstring(value)) {
+                  voice.source.synth.set({
+                    oscillator1: {
+                      // @ts-expect-error should be type
+                      type: value,
+                    },
+                  })
+                  return
+                }
+                break
+              case 'osc2':
+                if (isstring(value)) {
+                  voice.source.synth.set({
+                    oscillator2: {
+                      // @ts-expect-error should be type
+                      type: value,
+                    },
+                  })
+                  return
+                }
+                break
+              case 'osc3':
+                if (isstring(value)) {
+                  voice.source.synth.set({
+                    oscillator3: {
+                      // @ts-expect-error should be type
+                      type: value,
+                    },
+                  })
+                  return
+                }
+                break
+              case 'osc4':
+                if (isstring(value)) {
+                  voice.source.synth.set({
+                    oscillator4: {
+                      // @ts-expect-error should be type
+                      type: value,
+                    },
+                  })
+                  return
+                }
+                break
+              case 'env1':
+              case 'envelope1':
+                if (isarray(value)) {
+                  const [attack, decay, sustain, release] = value
+                  voice.source.synth.set({
+                    envelope1: {
+                      attack,
+                      decay,
+                      sustain,
+                      release,
+                    },
+                  })
+                  return
+                }
+                break
+              case 'env2':
+              case 'envelope2':
+                if (isarray(value)) {
+                  const [attack, decay, sustain, release] = value
+                  voice.source.synth.set({
+                    envelope2: {
+                      attack,
+                      decay,
+                      sustain,
+                      release,
+                    },
+                  })
+                  return
+                }
+                break
+              case 'env3':
+              case 'envelope3':
+                if (isarray(value)) {
+                  const [attack, decay, sustain, release] = value
+                  voice.source.synth.set({
+                    envelope3: {
+                      attack,
+                      decay,
+                      sustain,
+                      release,
+                    },
+                  })
+                  return
+                }
+                break
+              case 'env4':
+              case 'envelope4':
+                if (isarray(value)) {
+                  const [attack, decay, sustain, release] = value
+                  voice.source.synth.set({
+                    envelope4: {
+                      attack,
+                      decay,
+                      sustain,
+                      release,
+                    },
+                  })
+                  return
                 }
                 break
             }
