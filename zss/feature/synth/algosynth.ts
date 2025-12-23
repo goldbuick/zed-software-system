@@ -181,28 +181,34 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
         this.frequency.chain(this.harmonicity, this._operator1.frequency)
         this.frequency.chain(this.harmonicity, this._operator2.frequency)
         this.frequency.chain(this.harmonicity, this._operator3.frequency)
+        // operator 4 is the carrier
         break
       case 4:
         this.frequency.chain(this.harmonicity, this._operator1.frequency)
-        this.frequency.connect(this._operator2.frequency)
         this.frequency.chain(this.harmonicity, this._operator3.frequency)
+        // operator 2 and 4 are carriers
+        this.frequency.connect(this._operator2.frequency)
         break
       case 5:
         this.frequency.chain(this.harmonicity, this._operator1.frequency)
+        // last 3 operators are carriers
         this.frequency.connect(this._operator2.frequency)
         this.frequency.connect(this._operator3.frequency)
         break
       case 6:
         this.frequency.chain(this.harmonicity, this._operator1.frequency)
+        // last 3 operators are carriers
         this.frequency.connect(this._operator2.frequency)
         this.frequency.connect(this._operator3.frequency)
         break
       case 7:
+        // all operators are carriers
         this.frequency.connect(this._operator1.frequency)
         this.frequency.connect(this._operator2.frequency)
         this.frequency.connect(this._operator3.frequency)
         break
     }
+    // operator 4 is always a carrier
     this.frequency.connect(this._operator4.frequency)
 
     // tweak the gain of the modulators
@@ -256,7 +262,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
       case 3:
         // 1
         this._operator1.connect(this._modulation1.gain)
-        this._modulation1.connect(this._operator2.frequency)
+        this._modulation1.connect(this._operator4.frequency)
         // 2
         this._operator2.connect(this._modulation2.gain)
         this._modulation2.connect(this._operator4.frequency)
