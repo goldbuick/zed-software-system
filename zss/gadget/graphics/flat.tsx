@@ -10,7 +10,6 @@ import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { TapeTerminalInspector } from 'zss/screens/inspector/component'
 
-import { Rect } from '../rect'
 import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
@@ -24,6 +23,9 @@ type GraphicsProps = {
 export function FlatGraphics({ width, height }: GraphicsProps) {
   const { viewport } = useThree()
   const screensize = useScreenSize()
+
+  const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
@@ -34,9 +36,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
   const inspectzoomref = useRef<Group>(null)
 
   const [, setcameraready] = useState(false)
-  useLayoutEffect(() => {
-    setcameraready(true)
-  }, [])
+  useLayoutEffect(() => setcameraready(true), [])
 
   useFrame((_, delta) => {
     if (
@@ -54,11 +54,8 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    const currentboard = useGadgetClient.getState().gadget.board
-
     const animrate = 0.05
-    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
-    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+    const currentboard = useGadgetClient.getState().gadget.board
 
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
@@ -92,7 +89,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     } else {
       const leftedge = (viewwidth * 0.5) / (drawwidth * viewscale)
       const rightedge = BOARD_WIDTH - leftedge
-      userData.tfocusx = clamp(control.focusx, leftedge - 0.5, rightedge)
+      userData.tfocusx = clamp(control.focusx, leftedge - 1, rightedge)
     }
 
     if (viewheight > boarddrawheight * viewscale) {
@@ -137,20 +134,11 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     layers = [],
   } = useGadgetClient.getState().gadget
 
-  const nounderlayers = under.length === 0
-  const xmargin = viewport.width - viewwidth
-  const ymargin = viewport.height - viewheight
-  const centerx = viewwidth * -0.5 + screensize.marginx * 0.5 + xmargin * 0.5
-  const centery = viewheight * 0.5 + screensize.marginy * 0.5 + ymargin * 0.5
+  const centerx = viewport.width * -0.5 + screensize.marginx
+  const centery = viewport.height * 0.5 - screensize.marginy
   return (
     <>
-      <group
-        position={[
-          viewwidth * 0.5 + screensize.marginx * 0.5 + xmargin * 0.5,
-          viewheight * 0.5 + screensize.marginy * 0.5 + ymargin * 0.5,
-          1,
-        ]}
-      >
+      <group position={[viewwidth * 0.5, viewheight * 0.5, 1]}>
         <group ref={inspectzoomref}>
           <group ref={inspectref}>
             <TapeTerminalInspector />
@@ -178,13 +166,6 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
           <group position={[centerx, centery, 0]}>
             <group ref={zoomref}>
               <group ref={cornerref}>
-                {nounderlayers && (
-                  <Rect
-                    color="black"
-                    width={BOARD_WIDTH}
-                    height={BOARD_HEIGHT}
-                  />
-                )}
                 {under.map((layer, i) => (
                   <FlatLayer
                     key={layer.id}
