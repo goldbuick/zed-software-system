@@ -262,13 +262,10 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const exitnorth = gadgetlayercache[gadget.exitnorth] ?? []
   const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
 
-  const layersindex = under.length * 2 + 2
   const multi = over.length > 0
-
-  const xmargin = viewport.width - viewwidth
-  const ymargin = viewport.height - viewheight
-  const centerx = viewwidth * -0.5 + xmargin * -0.5 + screensize.marginx
-  const centery = viewheight * 0.5 + ymargin * 0.5 - screensize.marginy
+  const layersindex = under.length * 2 + 2
+  const centerx = viewport.width * -0.5 + screensize.marginx
+  const centery = viewport.height * 0.5 - screensize.marginy
   return (
     <>
       <group ref={positionref}>
