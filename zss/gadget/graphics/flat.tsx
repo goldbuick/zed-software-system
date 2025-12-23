@@ -89,7 +89,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     } else {
       const leftedge = (viewwidth * 0.5) / (drawwidth * viewscale)
       const rightedge = BOARD_WIDTH - leftedge
-      userData.tfocusx = clamp(control.focusx, leftedge - 1, rightedge)
+      userData.tfocusx = clamp(control.focusx, leftedge - 1, rightedge + 0.25)
     }
 
     if (viewheight > boarddrawheight * viewscale) {
@@ -97,7 +97,7 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     } else {
       const topedge = (viewheight * 0.5) / (drawheight * viewscale)
       const bottomedge = BOARD_HEIGHT - topedge
-      userData.tfocusy = clamp(control.focusy, topedge - 0.5, bottomedge)
+      userData.tfocusy = clamp(control.focusy, topedge - 1, bottomedge)
     }
 
     // smoothed change in focus
