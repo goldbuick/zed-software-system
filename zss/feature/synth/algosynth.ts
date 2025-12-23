@@ -24,10 +24,10 @@ export type AlgoSynthOptions = {
   algorithm: number
   harmonicity: Unit.Positive
   modulationIndex: Unit.Positive
-  operator1: OmniOscillatorSynthOptions
-  operator2: OmniOscillatorSynthOptions
-  operator3: OmniOscillatorSynthOptions
-  operator4: OmniOscillatorSynthOptions
+  oscillator1: OmniOscillatorSynthOptions
+  oscillator2: OmniOscillatorSynthOptions
+  oscillator3: OmniOscillatorSynthOptions
+  oscillator4: OmniOscillatorSynthOptions
   envelope1: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
   envelope2: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
   envelope3: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
@@ -105,7 +105,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     // create operators
     this._operator1 = new Synth({
       context: this.context,
-      oscillator: options.operator1,
+      oscillator: options.oscillator1,
       envelope: options.envelope1,
       volume: -10,
     })
@@ -114,7 +114,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
 
     this._operator2 = new Synth({
       context: this.context,
-      oscillator: options.operator2,
+      oscillator: options.oscillator2,
       envelope: options.envelope2,
       volume: -10,
     })
@@ -123,7 +123,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
 
     this._operator3 = new Synth({
       context: this.context,
-      oscillator: options.operator3,
+      oscillator: options.oscillator3,
       envelope: options.envelope3,
       volume: -10,
     })
@@ -132,7 +132,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
 
     this._operator4 = new Synth({
       context: this.context,
-      oscillator: options.operator4,
+      oscillator: options.oscillator4,
       envelope: options.envelope4,
       onsilence: () => this.onsilence(this),
       volume: -10,
@@ -275,7 +275,13 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
       case 5:
         // 1
         this._operator1.connect(this._modulation1.gain)
-        this._modulation1.connect(this._operator3.frequency)
+        this._modulation1.connect(this._operator2.frequency)
+        // 2
+        this._operator1.connect(this._modulation2.gain)
+        this._modulation2.connect(this._operator3.frequency)
+        // 3
+        this._operator1.connect(this._modulation3.gain)
+        this._modulation3.connect(this._operator4.frequency)
         break
       case 6:
         // 1
@@ -311,10 +317,10 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     }
 
     readOnly(this, [
-      'operator1',
-      'operator2',
-      'operator3',
-      'operator4',
+      'oscillator1',
+      'oscillator2',
+      'oscillator3',
+      'oscillator4',
       'envelope1',
       'envelope2',
       'envelope3',
@@ -328,9 +334,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
   static getDefaults(): AlgoSynthOptions {
     return Object.assign(Monophonic.getDefaults(), {
       algorithm: 0,
-      harmonicity: 3,
-      modulationIndex: 10,
-      operator1: Object.assign(
+      harmonicity: 2,
+      modulationIndex: 1,
+      oscillator1: Object.assign(
         omitFromObject(OmniOscillator.getDefaults(), [
           ...Object.keys(Source.getDefaults()),
           'frequency',
@@ -340,7 +346,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
           type: 'sine',
         },
       ) as OmniOscillatorSynthOptions,
-      operator2: Object.assign(
+      oscillator2: Object.assign(
         omitFromObject(OmniOscillator.getDefaults(), [
           ...Object.keys(Source.getDefaults()),
           'frequency',
@@ -350,7 +356,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
           type: 'sine',
         },
       ) as OmniOscillatorSynthOptions,
-      operator3: Object.assign(
+      oscillator3: Object.assign(
         omitFromObject(OmniOscillator.getDefaults(), [
           ...Object.keys(Source.getDefaults()),
           'frequency',
@@ -360,7 +366,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
           type: 'sine',
         },
       ) as OmniOscillatorSynthOptions,
-      operator4: Object.assign(
+      oscillator4: Object.assign(
         omitFromObject(OmniOscillator.getDefaults(), [
           ...Object.keys(Source.getDefaults()),
           'frequency',

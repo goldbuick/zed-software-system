@@ -227,7 +227,12 @@ export function createsynth() {
   }
 
   function changesource(index: number, type: SOURCE_TYPE, algo: number) {
-    if (SOURCE[index]?.source.type === type) {
+    const currentalgo =
+      SOURCE[index]?.source.type === SOURCE_TYPE.ALGO_SYNTH
+        ? SOURCE[index]?.source.algo
+        : 0
+    // same type and algo, do nothing
+    if (SOURCE[index]?.source.type === type && currentalgo === algo) {
       return
     }
     SOURCE[index]?.source.synth.dispose()
