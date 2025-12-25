@@ -7,6 +7,8 @@ $white Controls the intensity of the filter.
 $white The rate of oscilation of the effect.
 #autofilter octaves <number>
 $white Controls the range of the effect.
+#autofilter q <number>
+$white Sets the intensity of the effect.
 #autofilter type <lowpass, highpass, ...>
 $white Sets the behavior of the filter.
 !openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type;filter types

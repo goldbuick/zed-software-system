@@ -397,6 +397,19 @@ window.addEventListener(
   { capture: true },
 )
 
+window.addEventListener('blur', () => {
+  inputup(0, INPUT.ALT)
+  inputup(0, INPUT.CTRL)
+  inputup(0, INPUT.SHIFT)
+  inputup(0, INPUT.MOVE_UP)
+  inputup(0, INPUT.MOVE_DOWN)
+  inputup(0, INPUT.MOVE_LEFT)
+  inputup(0, INPUT.MOVE_RIGHT)
+  inputup(0, INPUT.OK_BUTTON)
+  inputup(0, INPUT.CANCEL_BUTTON)
+  inputup(0, INPUT.MENU_BUTTON)
+})
+
 createdevice('userinput', [], (message) => {
   switch (message.target) {
     case 'up':
