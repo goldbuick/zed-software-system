@@ -1,0 +1,9 @@
+section;#autofilter on
+#autofilter <number>
+$white 0-100, 0 is off, 100 is full volume
+#autofilter depth <number>
+$white Controls the intensity of the filter.
+#autofilter frequency <number>
+$white The rate of oscilation of the effect.
+#autofilter octaves <number>
+$white Controls the range of the effect.

@@ -4,7 +4,7 @@ import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from '.'
 
-export function synthvoicefxphaserconfig(
+export function synthvoicefxautofilterconfig(
   player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
@@ -15,23 +15,26 @@ export function synthvoicefxphaserconfig(
     apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const phaser = synth.FXCHAIN.phaser
+  const autofilter = synth.FXCHAIN.autofilter
   switch (config) {
+    case 'depth':
+      if (isnumber(value)) {
+        autofilter.set({ depth: value })
+        return
+      }
+      break
     case 'frequency':
       if (isnumber(value)) {
-        phaser.set({ frequency: value })
+        autofilter.set({ frequency: value })
         return
       }
       break
     case 'octaves':
       if (isnumber(value)) {
-        phaser.set({ octaves: value })
+        autofilter.set({ octaves: value })
         return
       }
       break
-    case 'basefrequency':
-      phaser.set({ baseFrequency: value })
-      return
   }
-  apierror(SOFTWARE, player, `kind`, `unknown phaser ${config} or ${value}`)
+  apierror(SOFTWARE, player, `kind`, `unknown autofilter ${config} or ${value}`)
 }

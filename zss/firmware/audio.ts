@@ -42,7 +42,7 @@ function handlesynthvoicefx(
 const isfx = [
   'echo',
   'reverb',
-  'phaser',
+  'autofilter',
   'distortion',
   'vibrato',
   'fc',
@@ -244,10 +244,10 @@ export const AUDIO_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('phaser', (_, words) => {
+  .command('autofilter', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'phaser', words)
+      handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'autofilter', words)
     }
     return 0
   })
@@ -308,8 +308,8 @@ for (let i = 0; i < 3; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'fcrush', words)
       return 0
     })
-    .command(`phaser${idx}`, (_, words) => {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'phaser', words)
+    .command(`autofilter${idx}`, (_, words) => {
+      handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'autofilter', words)
       return 0
     })
     .command(`reverb${idx}`, (_, words) => {

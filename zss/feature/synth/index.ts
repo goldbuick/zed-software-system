@@ -171,7 +171,7 @@ export function createsynth() {
     f.fc.chain(FXCHAIN.fc, dest)
     f.echo.chain(FXCHAIN.echo, dest)
     f.reverb.chain(FXCHAIN.reverb, dest)
-    f.phaser.chain(FXCHAIN.phaser, dest)
+    f.autofilter.chain(FXCHAIN.autofilter, dest)
     f.vibrato.chain(FXCHAIN.vibrato, dest)
     f.distortion.chain(FXCHAIN.distortion, dest)
     f.autowah.chain(FXCHAIN.autowah, dest)
@@ -539,9 +539,14 @@ export function createsynth() {
   // start pacer
   pacer.start(0)
 
+  // start fx
+  FXCHAIN.autofilter.start()
+
   function applyreset() {
     SOURCE.forEach((item, index) => {
-      changesource(index, SOURCE_TYPE.SYNTH)
+      const algo =
+        item.source.type === SOURCE_TYPE.ALGO_SYNTH ? item.source.algo : 0
+      changesource(index, SOURCE_TYPE.SYNTH, algo)
       item.applyreset()
       item.source.synth.set({
         oscillator: {
