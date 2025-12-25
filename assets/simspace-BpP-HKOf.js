@@ -196,7 +196,11 @@ $white Controls the intensity of the filter.
 $white The rate of oscilation of the effect.
 #autofilter octaves <number>
 $white Controls the range of the effect.
-`,cU=Object.freeze({__proto__:null,default:aU}),lU=`section;#autowah on
+#autofilter q <number>
+$white Sets the intensity of the effect.
+#autofilter type <lowpass, highpass, ...>
+$white Sets the behavior of the filter.
+!openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type;filter types`,cU=Object.freeze({__proto__:null,default:aU}),lU=`section;#autowah on
 #autowah <number>
 $white 0-100, 0 is off, 100 is full volume
 #autowah basefrequency <frequency>
@@ -426,6 +430,8 @@ $white The duration of the reverb.
 #synth <sine, square, triangle, sawtooth> 
 #synth <pwm, pulse, bells, doot>
 #synth <retro, buzz, clang, metallic>
+#synth <retro, buzz, clang, metallic>
+#synth <algo0, algo1, ... ,algo7> 
 
 voice settings
 #synth restart - resets voice to default
@@ -436,7 +442,9 @@ voice settings
 voice specific 
 !oscscroll hk o O next;sine, square, triangle, sawtooth
 !pwmscroll hk m M next;pwm
-!pulsescroll hk p P next;pulse`,$U=Object.freeze({__proto__:null,default:UU}),FU=`section;#vibrato on
+!pulsescroll hk p P next;pulse
+!algoscroll hk a A next;
+`,$U=Object.freeze({__proto__:null,default:UU}),FU=`section;#vibrato on
 #vibrato <number>
 $white 0-100, 0 is off, 100 is full volume
 #vibrato maxdelay <seconds>
