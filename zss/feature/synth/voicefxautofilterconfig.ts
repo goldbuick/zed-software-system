@@ -1,6 +1,6 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from '.'
 
@@ -17,6 +17,18 @@ export function synthvoicefxautofilterconfig(
   }
   const autofilter = synth.FXCHAIN.autofilter
   switch (config) {
+    case 'type':
+      if (isstring(value)) {
+        autofilter.set({ filter: { type: value as BiquadFilterType } })
+        return
+      }
+      break
+    case 'q':
+      if (isnumber(value)) {
+        autofilter.set({ filter: { Q: value } })
+        return
+      }
+      break
     case 'depth':
       if (isnumber(value)) {
         autofilter.set({ depth: value })
