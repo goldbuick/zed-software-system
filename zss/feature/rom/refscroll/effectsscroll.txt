@@ -1,7 +1,7 @@
-!fcrushscroll hk f F next;#fcrush on
+!fcrushscroll hk c C next;#fcrush on
 !echoscroll hk e E next;#echo on
 !reverbscroll hk r R next;#reverb on
-!phaserscroll hk p P next;#phaser on
+!autofilterscroll hk f F next;#autofilter on
 !distortscroll hk d D next;#distort on
 !vibratoscroll hk v V next;#vibrato on
-!autowahscroll hk a A next;#autowah on
+!autowahscroll hk w W next;#autowah on

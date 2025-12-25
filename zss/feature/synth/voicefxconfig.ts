@@ -4,11 +4,11 @@ import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
 import { volumetodb } from './fx'
+import { synthvoicefxautofilterconfig } from './voicefxautofilterconfig'
 import { synthvoicefxautowahconfig } from './voicefxautowah'
 import { synthvoicefxdistortionconfig } from './voicefxdistortconfig'
 import { synthvoicefxechoconfig } from './voicefxechoconfig'
 import { synthvoicefxfcrushconfig } from './voicefxfcrushconfig'
-import { synthvoicefxphaserconfig } from './voicefxphaserconfig'
 import { synthvoicefxreverbconfig } from './voicefxreverbconfig'
 import { synthvoicefxvibratoconfig } from './voicefxvibratoconfig'
 
@@ -40,10 +40,11 @@ export function synthvoicefxconfig(
         // default on value(s)
         switch (fxname) {
           case 'vibrato':
+          case 'autofilter':
             fx.volume.value = volumetodb(80)
             break
           default:
-            fx.volume.value = volumetodb(20)
+            fx.volume.value = volumetodb(30)
             break
         }
         break
@@ -64,8 +65,8 @@ export function synthvoicefxconfig(
             case 'echo':
               synthvoicefxechoconfig(player, synth, index, config, value)
               break
-            case 'phaser':
-              synthvoicefxphaserconfig(player, synth, index, config, value)
+            case 'autofilter':
+              synthvoicefxautofilterconfig(player, synth, index, config, value)
               break
             case 'reverb':
               synthvoicefxreverbconfig(player, synth, index, config, value)

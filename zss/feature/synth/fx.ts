@@ -1,9 +1,9 @@
 import {
+  AutoFilter,
   AutoWah,
   Channel,
   Distortion,
   FeedbackDelay,
-  Phaser,
   Reverb,
   Vibrato,
   getContext,
@@ -24,8 +24,8 @@ export function createfx() {
   const echo = new FeedbackDelay()
   const resetecho = deepcopy(echo.get())
 
-  const phaser = new Phaser()
-  const resetphaser = deepcopy(phaser.get())
+  const autofilter = new AutoFilter()
+  const resetautofilter = deepcopy(autofilter.get())
 
   const distortion = new Distortion()
   const resetdistortion = deepcopy(distortion.get())
@@ -51,12 +51,12 @@ export function createfx() {
       maxDelay: '8n',
       feedback: 0.666,
     })
-    phaser.set({
-      ...resetphaser,
+    autofilter.set({
+      ...resetautofilter,
       wet: 1,
-      frequency: 15,
+      depth: 0.5,
+      frequency: 3,
       octaves: 5,
-      baseFrequency: 1000,
     })
     distortion.set({
       ...resetdistortion,
@@ -85,7 +85,7 @@ export function createfx() {
       fc: deepcopy(fc.get()),
       echo: deepcopy(echo.get()),
       reverb: deepcopy(reverb.get()),
-      phaser: deepcopy(phaser.get()),
+      autofilter: deepcopy(autofilter.get()),
       vibrato: deepcopy(vibrato.get()),
       distortion: deepcopy(distortion.get()),
     }
@@ -95,7 +95,7 @@ export function createfx() {
     fc.set(replay.fc)
     echo.set(replay.echo)
     reverb.set(replay.reverb)
-    phaser.set(replay.phaser)
+    autofilter.set(replay.autofilter)
     vibrato.set(replay.vibrato)
     distortion.set(replay.distortion)
   }
@@ -104,7 +104,7 @@ export function createfx() {
     fc.dispose()
     echo.dispose()
     reverb.dispose()
-    phaser.dispose()
+    autofilter.dispose()
     vibrato.dispose()
     distortion.dispose()
   }
@@ -115,7 +115,7 @@ export function createfx() {
     fc,
     echo,
     reverb,
-    phaser,
+    autofilter,
     vibrato,
     distortion,
     applyreset,
@@ -134,14 +134,14 @@ export function createfxchannels(index: number) {
   const fc = new Channel(volumetodb(0))
   const echo = new Channel(volumetodb(0))
   const reverb = new Channel(volumetodb(0))
-  const phaser = new Channel(volumetodb(0))
+  const autofilter = new Channel(volumetodb(0))
   const vibrato = new Channel(volumetodb(0))
   const distortion = new Channel(volumetodb(0))
   const autowah = new Channel(volumetodb(0))
   fc.receive(`${prefix}fc${index}`)
   echo.receive(`${prefix}echo${index}`)
   reverb.receive(`${prefix}reverb${index}`)
-  phaser.receive(`${prefix}phaser${index}`)
+  autofilter.receive(`${prefix}autofilter${index}`)
   vibrato.receive(`${prefix}vibrato${index}`)
   distortion.receive(`${prefix}distortion${index}`)
   autowah.receive(`${prefix}autowah${index}`)
@@ -150,7 +150,7 @@ export function createfxchannels(index: number) {
   sendtofx.send(`${prefix}fc${index}`)
   sendtofx.send(`${prefix}echo${index}`)
   sendtofx.send(`${prefix}reverb${index}`)
-  sendtofx.send(`${prefix}phaser${index}`)
+  sendtofx.send(`${prefix}autofilter${index}`)
   sendtofx.send(`${prefix}vibrato${index}`)
   sendtofx.send(`${prefix}distortion${index}`)
   sendtofx.send(`${prefix}autowah${index}`)
@@ -160,7 +160,7 @@ export function createfxchannels(index: number) {
       fc: fc.volume.value,
       echo: echo.volume.value,
       reverb: reverb.volume.value,
-      phaser: phaser.volume.value,
+      autofilter: autofilter.volume.value,
       vibrato: vibrato.volume.value,
       distortion: distortion.volume.value,
       autowah: autowah.volume.value,
@@ -171,7 +171,7 @@ export function createfxchannels(index: number) {
     fc.volume.value = replay.fc
     echo.volume.value = replay.echo
     reverb.volume.value = replay.reverb
-    phaser.volume.value = replay.phaser
+    autofilter.volume.value = replay.autofilter
     vibrato.volume.value = replay.vibrato
     distortion.volume.value = replay.distortion
     autowah.volume.value = replay.autowah
@@ -181,7 +181,7 @@ export function createfxchannels(index: number) {
     fc.volume.value = volumetodb(0)
     echo.volume.value = volumetodb(0)
     reverb.volume.value = volumetodb(0)
-    phaser.volume.value = volumetodb(0)
+    autofilter.volume.value = volumetodb(0)
     vibrato.volume.value = volumetodb(0)
     distortion.volume.value = volumetodb(0)
     autowah.volume.value = volumetodb(0)
@@ -191,7 +191,7 @@ export function createfxchannels(index: number) {
     fc.dispose()
     echo.dispose()
     reverb.dispose()
-    phaser.dispose()
+    autofilter.dispose()
     vibrato.dispose()
     distortion.dispose()
     autowah.dispose()
@@ -203,7 +203,7 @@ export function createfxchannels(index: number) {
     fc,
     echo,
     reverb,
-    phaser,
+    autofilter,
     vibrato,
     distortion,
     autowah,
