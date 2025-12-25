@@ -23,7 +23,9 @@ import { MAYBE } from 'zss/mapping/types'
 export type AlgoSynthOptions = {
   algorithm: number
   harmonicity: Unit.Positive
-  modulationIndex: Unit.Positive
+  modulationindex1: Unit.Positive
+  modulationindex2: Unit.Positive
+  modulationindex3: Unit.Positive
   oscillator1: OmniOscillatorSynthOptions
   oscillator2: OmniOscillatorSynthOptions
   oscillator3: OmniOscillatorSynthOptions
@@ -83,7 +85,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
    * ratio of the frequency of the modulating signal (mf) to the amplitude of the
    * modulating signal (ma) -- as in ma/mf.
    */
-  readonly modulationIndex: Multiply
+  readonly modulationindex1: Multiply
+  readonly modulationindex2: Multiply
+  readonly modulationindex3: Multiply
 
   /**
    * Harmonicity is the ratio between the two voices. A harmonicity of
@@ -149,9 +153,17 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
       value: options.detune,
       units: 'cents',
     })
-    this.modulationIndex = new Multiply({
+    this.modulationindex1 = new Multiply({
       context: this.context,
-      value: options.modulationIndex,
+      value: options.modulationindex1,
+    })
+    this.modulationindex2 = new Multiply({
+      context: this.context,
+      value: options.modulationindex2,
+    })
+    this.modulationindex3 = new Multiply({
+      context: this.context,
+      value: options.modulationindex3,
     })
     this.harmonicity = new Multiply({
       context: this.context,
@@ -212,9 +224,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     this.frequency.connect(this._operator4.frequency)
 
     // tweak the gain of the modulators
-    this.frequency.chain(this.modulationIndex, this._modulation1)
-    this.frequency.chain(this.modulationIndex, this._modulation2)
-    this.frequency.chain(this.modulationIndex, this._modulation3)
+    this.frequency.chain(this.modulationindex1, this._modulation1)
+    this.frequency.chain(this.modulationindex2, this._modulation2)
+    this.frequency.chain(this.modulationindex3, this._modulation3)
 
     // wire up detune
     this.detune.fan(
@@ -323,6 +335,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     }
 
     readOnly(this, [
+      'modulationindex1',
+      'modulationindex2',
+      'modulationindex3',
       'oscillator1',
       'oscillator2',
       'oscillator3',
@@ -341,7 +356,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     return Object.assign(Monophonic.getDefaults(), {
       algorithm: 0,
       harmonicity: 2,
-      modulationIndex: 1,
+      modulationindex1: 1,
+      modulationindex2: 1,
+      modulationindex3: 1,
       oscillator1: Object.assign(
         omitFromObject(OmniOscillator.getDefaults(), [
           ...Object.keys(Source.getDefaults()),

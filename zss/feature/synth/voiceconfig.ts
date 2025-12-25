@@ -399,7 +399,33 @@ export function synthvoiceconfig(
               case 'modindex':
                 if (isnumber(value)) {
                   voice.source.synth.set({
-                    modulationIndex: value,
+                    modulationindex1: value,
+                    modulationindex2: value,
+                    modulationindex3: value,
+                  })
+                  return
+                }
+                break
+              case 'modindex1':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    modulationindex1: value,
+                  })
+                  return
+                }
+                break
+              case 'modindex2':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    modulationindex2: value,
+                  })
+                  return
+                }
+                break
+              case 'modindex3':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    modulationindex3: value,
                   })
                   return
                 }
