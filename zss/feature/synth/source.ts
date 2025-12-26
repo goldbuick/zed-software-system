@@ -168,6 +168,7 @@ export function createsource(sourcetype: SOURCE_TYPE, algo: number) {
     return {
       type: source?.type,
       synth: source?.synth.get() as any,
+      algo: source?.type === SOURCE_TYPE.ALGO_SYNTH ? source?.algo : 0,
     }
   }
 
