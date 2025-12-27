@@ -4,7 +4,7 @@
 
 ### Format
 
-All function names use **camelCase without separators** - all lowercase, concatenated words with no underscores or hyphens.
+All function names use **lowercase without separators** - all lowercase, concatenated words with no underscores or hyphens.
 
 ✅ **Correct:**
 

@@ -1,1 +1,1 @@
-desc;$DKGRAYadmin
+desc;$REDopens admin scroll
