@@ -45,8 +45,11 @@ function parsestatformat(image: string) {
 let lookup: MAYBE<ROM_LOOKUP>
 function setlookup(address: string) {
   const maybelookup = romintolookup(romread(address))
-  if (Object.keys(maybelookup).length) {
+  const keys = Object.keys(maybelookup).filter((key) => !!key)
+  if (keys.length) {
     lookup = maybelookup
+  } else {
+    console.error(address)
   }
 }
 
@@ -124,10 +127,11 @@ export function EditorRows({
     const leftedge = baseleft - xoffset
     context.x = leftedge
     context.iseven = context.y % 2 === 0
+    context.active.color = COLOR.WHITE
     context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
     context.disablewrap = true
     context.active.rightedge = rightedge
-    const [maybeerror] = row.errors ?? []
+
     const linenumber = `${i + 1}`.padStart(3, ' ')
     writeplaintext(
       `${i < rows.length ? linenumber : '   '} ${text} `,
@@ -140,7 +144,7 @@ export function EditorRows({
     clippedapplycolortoindexes(
       index,
       edge.right,
-      -xoffset - 3,
+      -xoffset - 4,
       -xoffset,
       ZSS_TYPE_LINE,
       context.active.bg,
@@ -341,6 +345,7 @@ export function EditorRows({
           node = row.asts.find((el) => cursorcolumn <= (el.endColumn ?? 0))
         }
       }
+
       lookup = undefined as MAYBE<ROM_LOOKUP>
       // scan for hint category indicator
       for (let c = activetokenidx; c >= 0; --c) {
@@ -435,6 +440,7 @@ export function EditorRows({
     }
 
     // apply error and info meta
+    const [maybeerror] = row.errors ?? []
     if (pactive && ispresent(prow.errors)) {
       context.x = leftedge
       const [maybeperror] = prow.errors

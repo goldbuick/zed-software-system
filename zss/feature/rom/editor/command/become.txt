@@ -1,1 +1,1 @@
-desc;changes object into specified element
+desc;$DKGRAYchanges object into specified element
