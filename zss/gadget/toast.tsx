@@ -54,7 +54,7 @@ export function TapeToast() {
             y={0}
             leftedge={0}
             rightedge={rightedge}
-            line={`${toast} $29 `}
+            line={`${toast}$32$29$32`}
             context={context}
           />
           <group position={[0, 0, 998]}>
