@@ -41,7 +41,7 @@ export function Panel({
       bg,
       ymargin,
       xmargin,
-      width - xmargin,
+      width - xmargin - 1,
       height - ymargin,
     ),
     ...store.getState(),
