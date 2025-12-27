@@ -1,1 +1,1 @@
-desc;$DKGRAYcompletes an if-do-done block
+desc;completes an if-do-done block

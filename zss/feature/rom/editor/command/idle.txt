@@ -1,1 +1,1 @@
-desc;$DKGRAYhalt until the next cycle
+desc;halt until the next cycle

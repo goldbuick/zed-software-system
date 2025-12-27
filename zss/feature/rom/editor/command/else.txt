@@ -1,1 +1,1 @@
-desc;$DKGRAYelse logic in an if-do-done block
+desc;else logic in an if-do-done block
