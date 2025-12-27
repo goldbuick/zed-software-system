@@ -4,15 +4,7 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## cli.ts (CLI_FIRMWARE)
 
-**Total: 50 commands**
-
-### Communication & Display
-
-- `shortsend` - Send message with loader fallback for 'self' target
-- `send` - Send message to elements
-- `stat` - Make text scroll in UI
-- `text` - Update player element ticker and log text
-- `hyperlink` - Create hyperlink with label and words
+**Total: 45 commands**
 
 ### Book & Page Management
 
@@ -211,14 +203,9 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## runtime.ts (RUNTIME_FIRMWARE)
 
-**Total: 7 commands**
+**Total: 2 commands**
 
 - `endgame` - Set health to 0
-- `shortsend` - Send message to elements
-- `send` - Send message to elements (with full parsing)
-- `stat` - No-op
-- `text` - Display text in gadget
-- `hyperlink` - Create hyperlink in gadget
 - `help` - Show reference scroll
 
 ---
@@ -234,16 +221,11 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## loader.ts (LOADER_FIRMWARE)
 
-**Total: 12 commands**
+**Total: 7 commands**
 
 ### Basic Commands (No-op or simplified versions)
 
 - `endgame` - No-op in loaders
-- `shortsend` - Send message to elements
-- `send` - Send message to elements
-- `stat` - No-op
-- `text` - Chat text
-- `hyperlink` - Chat hyperlink
 
 ### Loading
 
@@ -270,16 +252,16 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## Summary Statistics
 
-- **Total unique commands across all firmware files: ~143**
+- **Total unique commands across all firmware files: ~138**
 - **Files with most commands:**
-  1. cli.ts - 50 commands
+  1. cli.ts - 45 commands
   2. audio.ts - 42 commands
   3. element.ts - 20 commands
   4. board.ts - 20 commands
-  5. loader.ts - 12 commands
-  6. runtime.ts - 7 commands
+  5. loader.ts - 7 commands
+  6. runtime.ts - 2 commands
   7. transforms.ts - 6 commands
   8. network.ts - 2 commands
   9. display.ts - 2 commands
 
-Note: Some commands appear in multiple firmware files (e.g., `endgame`, `shortsend`, `send`, `stat`, `text`, `hyperlink`) with different implementations for different contexts.
+Note: Some commands appear in multiple firmware files (e.g., `endgame`) with different implementations for different contexts.
