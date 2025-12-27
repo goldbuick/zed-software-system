@@ -43,7 +43,7 @@ export type CHIP = {
   isended: () => boolean
   isfirstpulse: () => boolean
   shouldtick: () => boolean
-  shouldhalt: () => boolean
+  checkcount: () => boolean
   haslabel: (label: string) => boolean
   hm: () => number
   yield: () => void
@@ -246,9 +246,12 @@ export function createchip(
     shouldtick() {
       return !flags.sk && (flags.es === 0 || chip.hm() !== 0)
     },
-    shouldhalt() {
+    checkcount() {
       if (isnumber(flags.lc)) {
-        return ++flags.lc > RUNTIME.HALT_AT_COUNT
+        if (flags.lc > 500) {
+          debugger
+        }
+        return ++flags.lc > RUNTIME.YIELD_AT_COUNT
       }
       return true
     },
@@ -288,7 +291,7 @@ export function createchip(
       flags.ec = line
     },
     sy() {
-      return !!flags.ys || chip.shouldhalt()
+      return !!flags.ys || chip.checkcount()
     },
     send(player, chipid, message, data) {
       SOFTWARE.emit(player, `${senderid(chipid)}:${message}`, data)
