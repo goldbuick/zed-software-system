@@ -10,14 +10,14 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 - `bookrename` - Rename the main book (operator only)
 - `booktrash` - Trash a book by address (operator only)
-- `boardopen` - Open a board by stat name
+- `boardopen` - Used to move player to board
 - `pageopen` - Open a code page editor
 - `pagetrash` - Trash a code page (operator only)
 - `help` - Show reference scroll
 - `books` - List all books
 - `pages` - List all pages in main book
-- `boards` - List all boards
-- `trash` - Show trash view (operator only)
+- `boards` - List all boards as goto hyperlinks
+- `trash` - List books/codepages to delete (operator only)
 
 ### Game State
 
@@ -25,13 +25,14 @@ This document lists all `.command('name', ...` invocations organized by firmware
 - `share` - Register share (operator only)
 - `save` - Flush operator changes (operator only)
 - `fork` - Fork software (operator only)
-- `nuke` - Register nuke (operator only)
+- `nuke` - Does a countdown and reloads into an empty state (operator only)
 - `endgame` - Logout player
-- `restart` - Restart software (operator only)
+- `restart` - Restart software, deletes all chip and player state (operator only)
 
 ### Export
 
 - `export` - Show export menu (operator only)
+- `bbs` - BBS login/publish actions
 - `bookexport` - Show book export options (operator only)
 - `bookallexport` - Export entire book as JSON (operator only)
 - `pageexport` - Export code page as JSON (operator only)
@@ -40,7 +41,7 @@ This document lists all `.command('name', ...` invocations organized by firmware
 ### Editing & Search
 
 - `gadget` - Toggle built-in inspector
-- `findany` - Register find any with selection points
+- `findany` - Highlight matched elements
 - `zztsearch` - Search ZZT content by field and text
 - `zztrandom` - Get random ZZT content
 
@@ -51,7 +52,6 @@ This document lists all `.command('name', ...` invocations organized by firmware
 - `jointab` - Join via tab (operator only)
 - `chat` - Start/stop chat channel (operator only)
 - `broadcast` - Start/stop stream broadcast (operator only)
-- `bbs` - BBS login/logout/actions
 
 ---
 
@@ -94,23 +94,23 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ### Effects (Multi-voice, applies to #play)
 
-- `echo` - Apply echo effect to voices 0-1
-- `fcrush` - Apply frequency crush to voices 0-1
-- `autofilter` - Apply autofilter to voices 0-1
-- `reverb` - Apply reverb to voices 0-1
-- `distort` - Apply distortion to voices 0-1
-- `vibrato` - Apply vibrato to voices 0-1
-- `autowah` - Apply autowah to voices 0-1
+- `echo` - Apply echo effect to fx 0-1
+- `fcrush` - Apply frequency crush to fx 0-1
+- `autofilter` - Apply autofilter to fx 0-1
+- `reverb` - Apply reverb to fx 0-1
+- `distort` - Apply distortion to fx 0-1
+- `vibrato` - Apply vibrato to fx 0-1
+- `autowah` - Apply autowah to fx 0-1
 
 ### Individual Voice Effects
 
-- `echo1`, `echo2`, `echo3` - Echo for voices 0, 1, 2
-- `fcrush1`, `fcrush2`, `fcrush3` - Frequency crush for voices 0, 1, 2
-- `autofilter1`, `autofilter2`, `autofilter3` - Autofilter for voices 0, 1, 2
-- `reverb1`, `reverb2`, `reverb3` - Reverb for voices 0, 1, 2
-- `distort1`, `distort2`, `distort3` - Distortion for voices 0, 1, 2
-- `vibrato1`, `vibrato2`, `vibrato3` - Vibrato for voices 0, 1, 2
-- `autowah1`, `autowah2`, `autowah3` - Autowah for voices 0, 1, 2
+- `echo1`, `echo2`, `echo3` - Echo for fx 0, 1, 2
+- `fcrush1`, `fcrush2`, `fcrush3` - Frequency crush for fx 0, 1, 2
+- `autofilter1`, `autofilter2`, `autofilter3` - Autofilter for fx 0, 1, 2
+- `reverb1`, `reverb2`, `reverb3` - Reverb for fx 0, 1, 2
+- `distort1`, `distort2`, `distort3` - Distortion for fx 0, 1, 2
+- `vibrato1`, `vibrato2`, `vibrato3` - Vibrato for fx 0, 1, 2
+- `autowah1`, `autowah2`, `autowah3` - Autowah for fx 0, 1, 2
 
 ---
 
@@ -124,7 +124,7 @@ This document lists all `.command('name', ...` invocations organized by firmware
 - `set` - Set variable to value
 - `array` - Create array variable
 - `read` - Read property from object into variable
-- `load` - Load code from object at direction
+- `load` - Load code from object codepage into object at given direction
 
 ### Element Transformation
 
@@ -135,23 +135,23 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ### Movement
 
-- `go` - Move element in direction (returns 0 if moved, 1 if blocked)
-- `walk` - Set step direction for element
-- `idle` - Yield execution
+- `go` - Move element in direction
+- `walk` - Will cause element to move in direction each tick
+- `idle` - Yield execution until next tick
 
 ### Control Flow
 
 - `end` - End program (optionally set 'arg' variable)
-- `lock` - Lock chip execution
-- `restore` - Restore chip state
-- `unlock` - Unlock chip execution
-- `zap` - Zap variable
+- `lock` - Lock against external messages
+- `restore` - Restore all labels of given name
+- `unlock` - Unlock against messages from others
+- `zap` - De-activate first label of given name
 - `cycle` - Set element cycle value (1-255)
-- `die` - Delete element (halt execution unless item)
+- `die` - Delete element (halt execution unless @isitem)
 
 ### Execution
 
-- `run` - Run function by name
+- `run` - Run object codepage of given name
 - `runwith` - Run function with argument
 
 ---
@@ -163,27 +163,27 @@ This document lists all `.command('name', ...` invocations organized by firmware
 ### Board Creation & Navigation
 
 - `build` - Create new board and write id to stat
-- `goto` - Teleport player to board by stat
-- `transport` - Transport object via transporter elements
+- `goto` - Teleport player to board by stat with optional x, y
+- `transport` - Move element across board with transporter logic
 
 ### Object Manipulation
 
 - `shove` - Shove target object in direction
-- `push` - Push pushable target object in direction
-- `duplicate` / `dupe` - Duplicate element at direction
+- `push` - Shove target object in direction ONLY if pushable
+- `duplicate` / `dupe` - Duplicate element at direction in given direction
 - `duplicatewith` / `dupewith` - Duplicate element with argument
 - `write` - Write text to board at direction
 - `change` - Change elements of one kind to another
-- `put` - Put element at direction
+- `put` - Put element in direction
 - `putwith` - Put element with argument
-- `oneof` - Put element only if mark doesn't exist
-- `oneofwith` - Put element with argument only if mark doesn't exist
+- `oneof` - Uses given id to ensure only one element of given kind is made
+- `oneofwith` - Put element with argument and oneof logic
 
 ### Projectiles
 
-- `shoot` - Shoot projectile
+- `shoot` - Shoot projectile, with optional kind
 - `shootwith` - Shoot projectile with argument
-- `throwstar` - Throw star projectile
+- `throwstar` - Throw star projectile, shorthand for `#shoot <dir> star`
 - `throwstarwith` - Throw star with argument
 
 ---
@@ -193,11 +193,11 @@ This document lists all `.command('name', ...` invocations organized by firmware
 **Total: 6 commands**
 
 - `snapshot` - Create board snapshot
-- `revert` - Revert board to snapshot
-- `copy` - Copy board region from source to current board
-- `remix` - Remix board with pattern size and mirror
-- `weave` - Weave board pattern in direction
-- `pivot` - Rotate board region by degrees
+- `revert` - Revert board to snapshot state
+- `copy` - Copy region from source to current board
+- `remix` - Remix from source with pattern size and mirror to current board
+- `weave` - Weave board elements in direction
+- `pivot` - Rotate board elements by degrees
 
 ---
 
@@ -215,7 +215,7 @@ This document lists all `.command('name', ...` invocations organized by firmware
 **Total: 2 commands**
 
 - `toast` - Show toast notification
-- `ticker` - Set element ticker text and log
+- `ticker` - Sets element ticker text
 
 ---
 
@@ -227,17 +227,17 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 - `endgame` - No-op in loaders
 
-### Loading
+### Reading Content
 
-- `readline` - Load text line by line
-- `readjson` - Load JSON data
-- `readbin` - Load binary data
+- `readline` - Parse text data
+- `readjson` - Parse JSON data
+- `readbin` - Parse binary data
 
 ### Context Switching
 
-- `withboard` - Switch READ_CONTEXT to target board
-- `withobject` - Switch READ_CONTEXT to target object
-- `userinput` - Handle user input actions (up/down/left/right/etc)
+- `withboard` - Switch to target board by id, name, or stat
+- `withobject` - Switch to target object id
+- `userinput` - Automate user input actions (up/down/left/right/etc)
 
 ---
 
