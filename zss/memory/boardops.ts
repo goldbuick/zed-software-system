@@ -53,7 +53,7 @@ export function boardcheckblockedobject(
   const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '404')
   if (ispresent(maybeobject)) {
     if (isplayer) {
-      // players do not block layers
+      // players do not block players
       if (ispid(maybeobject.id)) {
         return undefined
       }
@@ -74,6 +74,7 @@ export function boardcheckblockedobject(
     return maybeterrain
   }
 
+  // no interaction
   return undefined
 }
 
@@ -91,7 +92,8 @@ export function boardcheckmoveobject(
     return true
   }
   const collsion = memoryelementstatread(object, 'collision')
-  return ispresent(boardcheckblockedobject(board, collsion, dest))
+  const blockedby = boardcheckblockedobject(board, collsion, dest)
+  return ispresent(blockedby)
 }
 
 export function boardmoveobject(
