@@ -22,7 +22,9 @@ import { MAYBE } from 'zss/mapping/types'
 
 export type AlgoSynthOptions = {
   algorithm: number
-  harmonicity: Unit.Positive
+  harmonicity1: Unit.Positive
+  harmonicity2: Unit.Positive
+  harmonicity3: Unit.Positive
   modulationindex1: Unit.Positive
   modulationindex2: Unit.Positive
   modulationindex3: Unit.Positive
@@ -98,7 +100,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
    * amSynth.harmonicity.value = 0.5;
    * amSynth.triggerAttackRelease("C5", "4n");
    */
-  readonly harmonicity: Multiply
+  readonly harmonicity1: Multiply
+  readonly harmonicity2: Multiply
+  readonly harmonicity3: Multiply
 
   constructor(options?: RecursivePartial<AlgoSynthOptions>)
   constructor() {
@@ -153,6 +157,23 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
       value: options.detune,
       units: 'cents',
     })
+
+    this.harmonicity1 = new Multiply({
+      context: this.context,
+      value: options.harmonicity1,
+      minValue: 0,
+    })
+    this.harmonicity2 = new Multiply({
+      context: this.context,
+      value: options.harmonicity2,
+      minValue: 0,
+    })
+    this.harmonicity3 = new Multiply({
+      context: this.context,
+      value: options.harmonicity3,
+      minValue: 0,
+    })
+
     this.modulationindex1 = new Multiply({
       context: this.context,
       value: options.modulationindex1,
@@ -164,11 +185,6 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     this.modulationindex3 = new Multiply({
       context: this.context,
       value: options.modulationindex3,
-    })
-    this.harmonicity = new Multiply({
-      context: this.context,
-      value: options.harmonicity,
-      minValue: 0,
     })
 
     this._modulation1 = new Gain({
@@ -185,41 +201,10 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     })
 
     // wire up frequency
-    switch (options.algorithm) {
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-        this.frequency.chain(this.harmonicity, this._operator1.frequency)
-        this.frequency.chain(this.harmonicity, this._operator2.frequency)
-        this.frequency.chain(this.harmonicity, this._operator3.frequency)
-        // operator 4 is the carrier
-        break
-      case 4:
-        this.frequency.chain(this.harmonicity, this._operator1.frequency)
-        this.frequency.chain(this.harmonicity, this._operator3.frequency)
-        // operator 2 and 4 are carriers
-        this.frequency.connect(this._operator2.frequency)
-        break
-      case 5:
-        this.frequency.chain(this.harmonicity, this._operator1.frequency)
-        // last 3 operators are carriers
-        this.frequency.connect(this._operator2.frequency)
-        this.frequency.connect(this._operator3.frequency)
-        break
-      case 6:
-        this.frequency.chain(this.harmonicity, this._operator1.frequency)
-        // last 3 operators are carriers
-        this.frequency.connect(this._operator2.frequency)
-        this.frequency.connect(this._operator3.frequency)
-        break
-      case 7:
-        // all operators are carriers
-        this.frequency.connect(this._operator1.frequency)
-        this.frequency.connect(this._operator2.frequency)
-        this.frequency.connect(this._operator3.frequency)
-        break
-    }
+    // first 3 operators get alterted by harmonicity
+    this.frequency.chain(this.harmonicity1, this._operator1.frequency)
+    this.frequency.chain(this.harmonicity2, this._operator2.frequency)
+    this.frequency.chain(this.harmonicity3, this._operator3.frequency)
     // operator 4 is always a carrier
     this.frequency.connect(this._operator4.frequency)
 
@@ -335,6 +320,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     }
 
     readOnly(this, [
+      'harmonicity1',
+      'harmonicity2',
+      'harmonicity3',
       'modulationindex1',
       'modulationindex2',
       'modulationindex3',
@@ -347,7 +335,6 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
       'envelope3',
       'envelope4',
       'frequency',
-      'harmonicity',
       'detune',
     ])
   }
@@ -355,7 +342,9 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
   static getDefaults(): AlgoSynthOptions {
     return Object.assign(Monophonic.getDefaults(), {
       algorithm: 0,
-      harmonicity: 2,
+      harmonicity1: 2,
+      harmonicity2: 2,
+      harmonicity3: 2,
       modulationindex1: 1,
       modulationindex2: 1,
       modulationindex3: 1,
@@ -486,6 +475,12 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
 
   dispose(): this {
     super.dispose()
+    this.harmonicity1.dispose()
+    this.harmonicity2.dispose()
+    this.harmonicity3.dispose()
+    this.modulationindex1.dispose()
+    this.modulationindex2.dispose()
+    this.modulationindex3.dispose()
     this._operator1.dispose()
     this._operator2.dispose()
     this._operator3.dispose()
@@ -495,7 +490,6 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     this._modulation3?.dispose()
     this.frequency.dispose()
     this.detune.dispose()
-    this.harmonicity.dispose()
     return this
   }
 }
