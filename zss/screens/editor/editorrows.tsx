@@ -151,6 +151,34 @@ export function EditorRows({
       context,
     )
 
+    // apply helper ranges
+    // sidebar can be 20 characters wide
+    clippedapplybgtoindexes(
+      index,
+      edge.right,
+      -xoffset + 20,
+      -xoffset + 20,
+      COLOR.DKCYAN,
+      context,
+    )
+    // scroll can be 40 to 50 characters wide
+    clippedapplybgtoindexes(
+      index,
+      edge.right,
+      -xoffset + 36,
+      -xoffset + 36,
+      COLOR.DKCYAN,
+      context,
+    )
+    clippedapplybgtoindexes(
+      index,
+      edge.right,
+      -xoffset + 46,
+      -xoffset + 46,
+      COLOR.DKCYAN,
+      context,
+    )
+
     // apply token colors
     let activetokenidx = -1
     const cursorcolumn = clamp(

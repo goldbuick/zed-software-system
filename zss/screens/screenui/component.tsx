@@ -151,7 +151,7 @@ export function ScreenUI() {
     type: RECT_TYPE.SCROLL,
     x: 0,
     y: 0,
-    width: clamp(50, 24, frame.width - 2),
+    width: clamp(50, 40, frame.width - 2),
     height: clamp(20, 8, frame.height - 2),
     text: scroll,
   }
