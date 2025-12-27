@@ -6,10 +6,6 @@ import { Engine } from 'zss/gadget/engine'
 import { useDeviceData } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 
-document.addEventListener('keydown', () => {
-  enableaudio()
-})
-
 window.addEventListener('click', () => {
   enableaudio()
 })

@@ -7,7 +7,6 @@ import {
 import { indextopt, ptdist, ptwithin } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
-import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
   deepcopy,
@@ -378,8 +377,6 @@ export function boardevaldir(
 
   // we need to know current flow etc..
   const flow = dirfrompts(pt, step)
-  const BOARD_MAX_X = BOARD_WIDTH - 1
-  const BOARD_MAX_Y = BOARD_HEIGHT - 1
   for (let i = 0; i < dir.length; ++i) {
     const dirconst = mapstrdirtoconst(dir[i])
     switch (dirconst) {
@@ -396,8 +393,8 @@ export function boardevaldir(
         // BY <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          pt.x = clamp(pt.x + x, 0, BOARD_MAX_X)
-          pt.y = clamp(pt.y + y, 0, BOARD_MAX_Y)
+          pt.x += x
+          pt.y += y
         }
         // need to skip args
         i += 2
@@ -407,8 +404,8 @@ export function boardevaldir(
         // TO <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          pt.x = clamp(x, 0, BOARD_MAX_X)
-          pt.y = clamp(y, 0, BOARD_MAX_Y)
+          pt.x = x
+          pt.y = y
         }
         // need to skip args
         i += 2
@@ -418,8 +415,8 @@ export function boardevaldir(
         // AT <dir> + <dir>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          pt.x = clamp(x, 0, BOARD_MAX_X)
-          pt.y = clamp(y, 0, BOARD_MAX_Y)
+          pt.x = x
+          pt.y = y
         }
         // need to skip args
         i += 2
@@ -540,8 +537,8 @@ export function boardevaldir(
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
           const dest = {
-            x: clamp(x, 0, BOARD_MAX_X),
-            y: clamp(y, 0, BOARD_MAX_Y),
+            x,
+            y,
           }
           const dx = dest.x - pt.x
           const dy = dest.y - pt.y
@@ -571,8 +568,8 @@ export function boardevaldir(
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
           const dest = {
-            x: clamp(x, 0, BOARD_MAX_X),
-            y: clamp(y, 0, BOARD_MAX_Y),
+            x,
+            y,
           }
           const dx = dest.x - pt.x
           const dy = dest.y - pt.y

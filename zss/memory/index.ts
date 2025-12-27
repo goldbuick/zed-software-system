@@ -1230,11 +1230,7 @@ export function memoryrun(address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   const codepage = bookreadcodepagebyaddress(mainbook, address)
-  if (
-    !ispresent(mainbook) ||
-    !ispresent(codepage) ||
-    !ispresent(READ_CONTEXT.element)
-  ) {
+  if (!ispresent(mainbook) || !ispresent(codepage)) {
     return
   }
 
@@ -1242,12 +1238,12 @@ export function memoryrun(address: string) {
   const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
   const id = `${address}_run`
-  const itemname = NAME(
-    READ_CONTEXT.element.name ?? READ_CONTEXT.element.kinddata?.name ?? '',
-  )
+  const itemname =
+    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
   const itemcode = codepage?.code ?? ''
+
   // set arg to value on chip with id = id
-  os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)
+  os.once(id, DRIVER_TYPE.RUNTIME, NAME(itemname), itemcode)
 
   // restore context
   objectKeys(OLD_CONTEXT).forEach((key) => {
