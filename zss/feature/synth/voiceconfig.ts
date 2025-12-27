@@ -95,6 +95,9 @@ export function synthvoiceconfig(
           case SOURCE_TYPE.SYNTH:
             voice.source.synth.portamento = value
             break
+          case SOURCE_TYPE.ALGO_SYNTH:
+            voice.source.synth.portamento = value
+            break
           case SOURCE_TYPE.RETRO_NOISE:
             apierror(
               SOFTWARE,
@@ -391,7 +394,33 @@ export function synthvoiceconfig(
               case 'harmonicity':
                 if (isnumber(value)) {
                   voice.source.synth.set({
-                    harmonicity: value,
+                    harmonicity1: value,
+                    harmonicity2: value,
+                    harmonicity3: value,
+                  })
+                  return
+                }
+                break
+              case 'harmonicity1':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    harmonicity1: value,
+                  })
+                  return
+                }
+                break
+              case 'harmonicity2':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    harmonicity2: value,
+                  })
+                  return
+                }
+                break
+              case 'harmonicity3':
+                if (isnumber(value)) {
+                  voice.source.synth.set({
+                    harmonicity3: value,
                   })
                   return
                 }
