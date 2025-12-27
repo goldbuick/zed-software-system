@@ -1,1 +1,1 @@
-desc;gadget
+desc;$DKGRAYgadget

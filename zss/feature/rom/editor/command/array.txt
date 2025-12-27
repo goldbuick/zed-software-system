@@ -1,1 +1,1 @@
-desc;array
+desc;$DKGRAYarray

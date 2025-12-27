@@ -1,1 +1,1 @@
-desc;<name> <value>
+desc;$DKGRAY<name> <value>

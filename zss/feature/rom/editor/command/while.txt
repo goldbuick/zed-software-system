@@ -1,1 +1,1 @@
-desc;looping do-done block
+desc;$DKGRAYlooping do-done block

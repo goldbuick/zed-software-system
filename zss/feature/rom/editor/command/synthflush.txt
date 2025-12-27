@@ -1,1 +1,1 @@
-desc;synthflush
+desc;$DKGRAYsynthflush

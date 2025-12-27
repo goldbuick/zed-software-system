@@ -1,1 +1,1 @@
-desc;restart
+desc;$DKGRAYrestart

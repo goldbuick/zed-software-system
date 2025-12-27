@@ -1,1 +1,1 @@
-desc;<board>
+desc;$DKGRAY<board>

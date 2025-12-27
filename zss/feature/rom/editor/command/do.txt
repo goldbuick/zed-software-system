@@ -1,1 +1,1 @@
-desc;starts a section of an if-do-done block
+desc;$DKGRAYstarts a do-done block

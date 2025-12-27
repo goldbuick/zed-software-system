@@ -1,1 +1,1 @@
-desc;hyperlink
+desc;$DKGRAYhyperlink

@@ -1,1 +1,1 @@
-desc;booktrash
+desc;$DKGRAYbooktrash

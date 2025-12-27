@@ -1,1 +1,1 @@
-desc;share
+desc;$DKGRAYshare

@@ -1,1 +1,1 @@
-desc;bookrename
+desc;$DKGRAYbookrename

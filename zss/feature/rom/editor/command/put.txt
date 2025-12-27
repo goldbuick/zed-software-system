@@ -1,1 +1,1 @@
-desc;<dir> <kind>
+desc;$DKGRAY<dir> <kind>

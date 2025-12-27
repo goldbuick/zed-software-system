@@ -1,1 +1,1 @@
-desc;goto
+desc;$DKGRAYgoto

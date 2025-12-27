@@ -1,1 +1,1 @@
-desc;load
+desc;$DKGRAYload

@@ -1,1 +1,1 @@
-desc;like #play but for sound effects
+desc;$DKGRAYlike #play but for sound effects

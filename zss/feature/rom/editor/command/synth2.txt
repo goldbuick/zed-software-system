@@ -1,1 +1,1 @@
-desc;synth2
+desc;$DKGRAYsynth2

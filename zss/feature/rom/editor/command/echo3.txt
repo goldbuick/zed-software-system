@@ -1,1 +1,1 @@
-desc;echo3
+desc;$DKGRAYecho3

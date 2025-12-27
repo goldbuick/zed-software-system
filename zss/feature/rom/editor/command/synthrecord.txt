@@ -1,1 +1,1 @@
-desc;synthrecord
+desc;$DKGRAYsynthrecord

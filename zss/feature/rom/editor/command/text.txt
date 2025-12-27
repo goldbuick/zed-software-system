@@ -1,1 +1,1 @@
-desc;text
+desc;$DKGRAYtext

@@ -1,1 +1,1 @@
-desc;chat
+desc;$DKGRAYchat

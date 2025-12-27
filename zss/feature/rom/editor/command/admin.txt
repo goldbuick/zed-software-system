@@ -1,1 +1,1 @@
-desc;admin
+desc;$DKGRAYadmin
