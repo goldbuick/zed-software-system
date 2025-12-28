@@ -27,81 +27,446 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { NAME, WORD, WORD_RESULT } from './words/types'
 
-// may need to expand on this to encapsulate more complex values
+/**
+ * CHIP represents a virtual machine instance that executes compiled code.
+ * It provides APIs for lifecycle management, state management, messaging,
+ * control flow, and logic operations. May need to expand on this to encapsulate more complex values.
+ */
 export type CHIP = {
+  /**
+   * Halts the chip and clears all memory flags.
+   */
   halt: () => void
-  // id
+
+  /**
+   * Returns the unique identifier of this chip.
+   * @returns The chip's ID string
+   */
   id: () => string
 
-  // state api
+  /**
+   * Sets a named state value in the chip's memory.
+   * @param name - The name of the state variable
+   * @param value - The value to set
+   * @returns The result value if the set operation succeeded, undefined otherwise
+   */
   set: (name: string, value: any) => any
+
+  /**
+   * Gets a named state value from the chip's memory.
+   * @param name - The name of the state variable
+   * @returns The value if found, undefined otherwise
+   */
   get: (name: string) => any
 
-  // lifecycle api
+  /**
+   * Executes one cycle of the chip's logic. Resets loop counter and yield state,
+   * then invokes the compiled generator function.
+   */
   once: () => void
+
+  /**
+   * Executes a tick of the chip's execution cycle. Handles execution frequency,
+   * runs firmware hooks, and executes the chip logic if conditions are met.
+   * @param cycle - The cycle number for frequency calculation
+   * @returns True if the chip executed this tick, false otherwise
+   */
   tick: (cycle: number) => boolean
+
+  /**
+   * Checks if the chip is in an ended state.
+   * @returns True if the chip has ended execution
+   */
   isended: () => boolean
+
+  /**
+   * Checks if this is the first pulse/cycle of execution.
+   * @returns True if this is the first pulse
+   */
   isfirstpulse: () => boolean
+
+  /**
+   * Determines if the chip should execute this tick.
+   * @returns True if the chip should tick (not scroll-locked and either not ended or has pending messages)
+   */
   shouldtick: () => boolean
+
+  /**
+   * Checks the loop counter to prevent infinite loops. Increments counter and
+   * returns true if the counter exceeds the yield threshold.
+   * @returns True if the loop count exceeds the yield threshold
+   */
   checkcount: () => boolean
+
+  /**
+   * Checks if the chip has an active (unzapped) label with the given name.
+   * @param label - The label name to check
+   * @returns True if an active label exists
+   */
   haslabel: (label: string) => boolean
+
+  /**
+   * Returns the line number of the first active label matching the pending message target.
+   * @returns The line number if a matching label is found, 0 otherwise
+   */
   hm: () => number
+
+  /**
+   * Yields execution, pausing the chip until the next tick.
+   */
   yield: () => void
+
+  /**
+   * Jumps execution to a specific line number.
+   * @param line - The line number to jump to
+   */
   jump: (line: number) => void
+
+  /**
+   * Checks if the chip should yield (either explicitly yielded or loop count exceeded).
+   * @returns True if the chip should yield
+   */
   sy: () => boolean
+
+  /**
+   * Sends a message to another chip.
+   * @param player - The player identifier
+   * @param chipid - The target chip ID
+   * @param message - The message name
+   * @param data - Optional message data
+   */
   send: (player: string, chipid: string, message: string, data?: any) => void
+
+  /**
+   * Locks the chip to only accept messages from the specified sender.
+   * @param allowed - The allowed sender ID
+   */
   lock: (allowed: string) => void
+
+  /**
+   * Unlocks the chip, allowing messages from any sender.
+   */
   unlock: () => void
+
+  /**
+   * Locks the chip's scroll to a specific player, preventing execution until unlocked.
+   * @param player - The player identifier to lock to
+   */
   scrolllock: (player: string) => void
+
+  /**
+   * Unlocks the chip's scroll for a specific player.
+   * @param player - The player identifier to unlock
+   */
   scrollunlock: (player: string) => void
+
+  /**
+   * Processes an incoming message. Validates locks and stores the message if valid.
+   * @param incoming - The incoming message object
+   */
   message: (incoming: MESSAGE) => void
+
+  /**
+   * Zaps (deactivates) the first active label with the given name by negating its line number.
+   * @param label - The label name to zap
+   */
   zap: (label: string) => void
+
+  /**
+   * Restores all zapped labels with the given name by making their line numbers positive again.
+   * @param label - The label name to restore
+   */
   restore: (label: string) => void
+
+  /**
+   * Gets the current execution case (line number). Processes pending messages if any,
+   * updating chip state and execution cursor accordingly.
+   * @returns The current execution cursor line number
+   */
   getcase: () => number
+
+  /**
+   * Advances to the next execution case by incrementing the execution cursor.
+   * @returns The new execution cursor line number
+   */
   nextcase: () => void
+
+  /**
+   * Marks the chip as ended and yields execution.
+   */
   endofprogram: () => void
+
+  /**
+   * Parses an error stack trace and returns the line/column information from the generated code.
+   * @param error - The error object to parse
+   * @returns An object with line and column numbers, or zeros if not found
+   */
   stacktrace: (error: Error) => void
 
-  // output / config
+  /**
+   * Outputs text to the display.
+   * @param words - The words to output as text
+   */
   text: (...words: WORD[]) => void
+
+  /**
+   * Outputs a stat to the display.
+   * @param words - The words to output as a stat
+   */
   stat: (...words: WORD[]) => void
+
+  /**
+   * Outputs a hyperlink to the display.
+   * @param words - The words to output as a hyperlink
+   */
   hyperlink: (...words: WORD[]) => void
+
+  /**
+   * Formats a value for printing/display.
+   * @param name - The value to print
+   * @returns A formatted string representation of the value
+   */
   print: (name: string) => string
+
+  /**
+   * Processes a template string, replacing variables (prefixed with special characters) with their values.
+   * @param words - The words to process as a template
+   * @returns The processed template string
+   */
   template: (words: WORD[]) => string
 
-  // logic api
+  /**
+   * Executes a command by name with the given arguments.
+   * @param words - Command name followed by arguments
+   * @returns 0 to continue, 1 to retry
+   */
   command: (...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Conditional execution: executes the command if the condition is truthy.
+   * @param words - Condition value followed by command words
+   * @returns 1 if condition was truthy, 0 otherwise
+   */
   if: (...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Tries to execute a movement command, then executes the fallback command if successful.
+   * @param words - Direction followed by fallback command words
+   * @returns 1 if movement succeeded, 0 otherwise
+   */
   try: (...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Decrements a named value. Executes fail branch if value is unset, non-numeric, or would go negative.
+   * @param words - Variable name, optional decrement amount, and optional fail branch command
+   * @returns 1 if take failed, 0 if successful
+   */
   take: (...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Increments a named value. Executes fail branch if value is unset.
+   * @param words - Variable name, optional increment amount, and optional fail branch command
+   * @returns 1 if value was unset, 0 otherwise
+   */
   give: (...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Executes the duplicate command.
+   * @param words - Command arguments
+   * @returns The command result
+   */
   duplicate: (...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Initializes a repeat loop with the given count and command words.
+   * @param index - The unique index for this repeat loop
+   * @param words - Repeat count followed by command words to repeat
+   */
   repeatstart: (index: number, ...words: WORD[]) => void
+
+  /**
+   * Executes one iteration of a repeat loop. Decrements counter and executes commands if count > 0.
+   * @param index - The unique index of the repeat loop
+   * @returns 1 if loop continues, 0 if loop is complete
+   */
   repeat: (index: number) => WORD_RESULT
+
+  /**
+   * Initializes a foreach loop. Supports array iteration or numeric range iteration.
+   * @param index - The unique index for this foreach loop (unused)
+   * @param words - Variable name, array/range values, and optional step for numeric ranges
+   * @returns 0
+   */
   foreachstart: (index: number, ...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Executes one iteration of a foreach loop. Advances to next value and executes command if available.
+   * @param index - The unique index of the foreach loop (unused)
+   * @param words - Variable name, array/range values, optional step, and optional command
+   * @returns 1 if loop continues, 0 if loop is complete
+   */
   foreach: (index: number, ...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Waits for a condition to become truthy. Yields if condition is false.
+   * @param words - The condition to wait for
+   * @returns 1 if condition is truthy, 0 otherwise (and yields)
+   */
   waitfor: (...words: WORD[]) => WORD_RESULT
+
+  /**
+   * Logical OR operation. Returns the first truthy value, or the last value if all are falsy.
+   * @param words - Values to evaluate
+   * @returns The first truthy value or the last value
+   */
   or: (...words: WORD[]) => WORD
+
+  /**
+   * Logical AND operation. Returns the first falsy value, or the last value if all are truthy.
+   * @param words - Values to evaluate
+   * @returns The first falsy value or the last value
+   */
   and: (...words: WORD[]) => WORD
+
+  /**
+   * Logical NOT operation. Inverts the truthiness of the value.
+   * @param words - The value to negate
+   * @returns 1 if value is falsy, 0 if value is truthy
+   */
   not: (...words: WORD[]) => WORD
+
+  /**
+   * Evaluates an expression and returns its value.
+   * @param value - The expression to evaluate
+   * @returns The evaluated value
+   */
   expr: (value: WORD) => WORD
+
+  /**
+   * Equality comparison. Uses deep equality for objects.
+   * @param lhs - Left-hand side value
+   * @param rhs - Right-hand side value
+   * @returns 1 if equal, 0 otherwise
+   */
   isEq: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Inequality comparison.
+   * @param lhs - Left-hand side value
+   * @param rhs - Right-hand side value
+   * @returns 1 if not equal, 0 otherwise
+   */
   isNotEq: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Less-than comparison for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns 1 if lhs < rhs, 0 otherwise
+   */
   isLessThan: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Greater-than comparison for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns 1 if lhs > rhs, 0 otherwise
+   */
   isGreaterThan: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Less-than-or-equal comparison for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns 1 if lhs <= rhs, 0 otherwise
+   */
   isLessThanOrEq: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Greater-than-or-equal comparison for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns 1 if lhs >= rhs, 0 otherwise
+   */
   isGreaterThanOrEq: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Addition operator. Supports both numbers and string concatenation.
+   * @param lhs - Left-hand side value
+   * @param rhs - Right-hand side value
+   * @returns The sum or concatenation result
+   */
   opPlus: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Subtraction operator for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns The difference
+   */
   opMinus: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Exponentiation operator (power).
+   * @param lhs - Base number
+   * @param rhs - Exponent number
+   * @returns lhs raised to the power of rhs
+   */
   opPower: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Multiplication operator for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns The product
+   */
   opMultiply: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Division operator for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns The quotient
+   */
   opDivide: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Modulo (remainder) operator for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns The remainder of lhs / rhs
+   */
   opModDivide: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Floor division operator for numbers.
+   * @param lhs - Left-hand side number
+   * @param rhs - Right-hand side number
+   * @returns The floor of lhs / rhs
+   */
   opFloorDivide: (lhs: WORD, rhs: WORD) => WORD
-  opUniPlus: (lhs: WORD, rhs: WORD) => WORD
-  opUniMinus: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Unary plus operator (converts to number).
+   * @param rhs - The value to convert
+   * @returns The numeric value
+   */
+  opUniPlus: (rhs: WORD) => WORD
+
+  /**
+   * Unary minus operator (negates the number).
+   * @param rhs - The number to negate
+   * @returns The negated value
+   */
+  opUniMinus: (rhs: WORD) => WORD
 }
 
+/**
+ * Converts a value to a result (truthy/falsy representation).
+ * Arrays are truthy if they have length > 0, otherwise uses the value or 0.
+ * @param value - The value to convert
+ * @returns 1 if truthy, 0 if falsy
+ */
 function maptoresult(value: WORD): WORD {
   if (isarray(value)) {
     return value.length > 0 ? 1 : 0
@@ -109,15 +474,34 @@ function maptoresult(value: WORD): WORD {
   return value ?? 0
 }
 
+/**
+ * Creates a chip memory identifier by appending '_chip' to the given ID.
+ * @param id - The base chip identifier
+ * @returns The formatted chip memory identifier
+ */
 export function createchipid(id: string) {
   return `${id}_chip`
 }
 
+/**
+ * Creates a sender identifier in the format 'vm:<id>'.
+ * @param maybeid - Optional sender ID (defaults to empty string)
+ * @returns The formatted sender identifier
+ */
 export function senderid(maybeid = '') {
   return `vm:${maybeid ?? ''}`
 }
 
-// lifecycle and control flow api
+/**
+ * Creates a new chip instance with the given ID, driver, and compiled build.
+ * Initializes chip memory, labels, and execution state. Returns a CHIP object
+ * with all lifecycle, state management, messaging, and logic APIs.
+ *
+ * @param id - Unique identifier for this chip
+ * @param driver - The firmware driver type for hardware abstraction
+ * @param build - The compiled generator build containing code and labels
+ * @returns A fully configured CHIP instance ready for execution
+ */
 export function createchip(
   id: string,
   driver: DRIVER_TYPE,
@@ -156,6 +540,13 @@ export function createchip(
     flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
 
+  /**
+   * Invokes a firmware command by name with the given arguments.
+   * Falls back to 'shortsend' if the command is not found (unless command is 'send').
+   * @param command - The command name to invoke
+   * @param args - The command arguments
+   * @returns 0 if command failed, 1 if command succeeded
+   */
   function invokecommand(command: string, args: WORD[]): 0 | 1 {
     READ_CONTEXT.words = args
     const commandinvoke = firmwaregetcommand(driver, command)
@@ -248,9 +639,6 @@ export function createchip(
     },
     checkcount() {
       if (isnumber(flags.lc)) {
-        if (flags.lc > 500) {
-          debugger
-        }
         return ++flags.lc > RUNTIME.YIELD_AT_COUNT
       }
       return true
