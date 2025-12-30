@@ -12,11 +12,10 @@ import {
   VIEWSCALE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-
-import { useScreenSize } from 'zss/gadget/userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { Mode7Layer } from './mode7layer'

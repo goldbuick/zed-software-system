@@ -72,14 +72,14 @@ import {
   bookreadsortedcodepages,
   bookupdatename,
 } from 'zss/memory/bookoperations'
-import { bookplayermovetoboard } from 'zss/memory/playermanagement'
 import {
   codepagereadname,
   codepagereadtype,
   codepagereadtypetostring,
 } from 'zss/memory/codepageoperations'
-import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gameloop'
+import { bookplayermovetoboard } from 'zss/memory/playermanagement'
+import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,

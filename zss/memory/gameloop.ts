@@ -13,8 +13,8 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 import { NAME, PT } from 'zss/words/types'
 
+import { boardelementisobject } from './boardelement'
 import {
-  boardelementisobject,
   boardelementread,
   boardelementreadbyidorindex,
   boardobjectread,

@@ -5,7 +5,6 @@ import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
 import { Fragment, ReactNode, useEffect, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, Vector2, WebGLRenderTarget } from 'three'
-
 import { useMedia } from 'zss/gadget/hooks'
 
 import { EffectComposer } from './effectcomposer'

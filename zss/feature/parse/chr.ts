@@ -1,5 +1,6 @@
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { loadcharsetfrombytes } from 'zss/feature/bytes'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { bookwritecodepage } from 'zss/memory/bookoperations'
@@ -9,8 +10,6 @@ import {
   createcodepage,
 } from 'zss/memory/codepageoperations'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
-
-import { loadcharsetfrombytes } from 'zss/feature/bytes'
 
 export function parsechr(
   player: string,

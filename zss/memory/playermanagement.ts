@@ -7,14 +7,16 @@ import { maptonumber } from 'zss/mapping/value'
 import { createos } from 'zss/os'
 import { COLLISION, PT } from 'zss/words/types'
 
+import { boardelementisobject } from './boardelement'
 import {
-  boardcheckblockedobject,
-  boarddeleteobject,
-  boardelementisobject,
   boardnamedwrite,
-  boardobjectcreatefromkind,
   boardobjectlookupwrite,
   boardobjectnamedlookupdelete,
+} from './boardlookup'
+import { boardcheckblockedobject } from './boardmovement'
+import {
+  boarddeleteobject,
+  boardobjectcreatefromkind,
   boardobjectread,
   boardvisualsupdate,
 } from './boardoperations'

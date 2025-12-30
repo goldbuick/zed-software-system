@@ -1,12 +1,6 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import Peer, { DataConnection } from 'peerjs'
-import {
-  MESSAGE,
-  apierror,
-  apilog,
-  vmsearch,
-  vmtopic,
-} from 'zss/device/api'
+import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,

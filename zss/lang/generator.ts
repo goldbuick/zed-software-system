@@ -9,7 +9,6 @@ import { LANG_ERROR } from './lexer'
 import { transformast } from './transformer'
 import { CodeNode } from './visitor'
 
-
 export type GeneratorFunc = (api: CHIP) => 0 | 1
 
 export type GeneratorBuild = {

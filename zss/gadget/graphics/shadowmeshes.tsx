@@ -5,14 +5,13 @@ import {
   InstancedMesh,
   Object3D,
 } from 'three'
-import { ispresent } from 'zss/mapping/types'
-import { BOARD_SIZE } from 'zss/memory/types'
-
 import { SPRITE } from 'zss/gadget/data/types'
 import { time } from 'zss/gadget/display/anim'
 import { createBlockDitherMaterial } from 'zss/gadget/display/dither'
 import { useSpritePool } from 'zss/gadget/display/spritepool'
 import { createTilemapBufferGeometryAttributes } from 'zss/gadget/display/tiles'
+import { ispresent } from 'zss/mapping/types'
+import { BOARD_SIZE } from 'zss/memory/types'
 
 type ShadowMeshesProps = {
   sprites: SPRITE[]

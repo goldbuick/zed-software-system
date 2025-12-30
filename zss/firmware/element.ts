@@ -29,20 +29,20 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import {
-  boardfindplayerforelement,
-  boardlistnamedelements,
-} from 'zss/memory/spatialqueries'
+  boardelementapplycolor,
+  boardelementisobject,
+} from 'zss/memory/boardelement'
+import { boardobjectnamedlookupdelete } from 'zss/memory/boardlookup'
 import {
   boardelementread,
   boardelementreadbyidorindex,
   boardsafedelete,
 } from 'zss/memory/boardoperations'
-import {
-  boardelementapplycolor,
-  boardelementisobject,
-} from 'zss/memory/boardoperations'
-import { boardobjectnamedlookupdelete } from 'zss/memory/boardoperations'
 import { bookelementdisplayread } from 'zss/memory/bookoperations'
+import {
+  boardfindplayerforelement,
+  boardlistnamedelements,
+} from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'

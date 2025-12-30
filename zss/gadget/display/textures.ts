@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { CanvasTexture, NearestFilter, Texture } from 'three'
-import { MAYBE, ispresent } from 'zss/mapping/types'
-
 import { BITMAP, bitmapToCanvas } from 'zss/gadget/data/bitmap'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 export function updateTexture<T extends Texture | CanvasTexture>(texture: T) {
   texture.generateMipmaps = false

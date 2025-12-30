@@ -7,16 +7,16 @@ import {
   memoryelementstatread,
   memorymoveobject,
 } from 'zss/memory'
-import { boardcheckcollide } from 'zss/memory/spatialqueries'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import {
   boardelementread,
   boardgetterrain,
+  boardreadgroup,
   boardsetterrain,
   createboard,
   ptwithinboard,
 } from 'zss/memory/boardoperations'
-import { boardelementisobject } from 'zss/memory/boardoperations'
-import { boardreadgroup } from 'zss/memory/boardoperations'
+import { boardcheckcollide } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'

@@ -58,17 +58,12 @@ import {
   memorywriteoperator,
   memorywritetopic,
 } from 'zss/memory'
-import { memoryadminmenu } from 'zss/memory/utilities'
 import { boardobjectread } from 'zss/memory/boardoperations'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
   bookwritecodepage,
 } from 'zss/memory/bookoperations'
-import {
-  bookplayermovetoboard,
-  bookplayerreadboards,
-} from 'zss/memory/playermanagement'
 import {
   codepageapplyelementstats,
   codepagereaddata,
@@ -78,18 +73,29 @@ import {
   codepagereadtypetostring,
   codepageresetstats,
 } from 'zss/memory/codepageoperations'
-import { compressbooks, decompressbooks } from 'zss/memory/utilities'
+import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspection'
+import { memoryinspectbatchcommand } from 'zss/memory/inspectionbatch'
 import {
   FINDANY_CONFIG,
   memoryfindany,
   memoryfindanymenu,
-} from 'zss/memory/inspection'
-import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspection'
-import { memoryinspectbatchcommand } from 'zss/memory/inspection'
-import { memoryinspectremixcommand } from 'zss/memory/inspection'
+} from 'zss/memory/inspectionfind'
+import {
+  memorymakeitcommand,
+  memorymakeitscroll,
+} from 'zss/memory/inspectionmakeit'
+import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import { memoryloader } from 'zss/memory/loader'
-import { memorymakeitcommand, memorymakeitscroll } from 'zss/memory/inspection'
+import {
+  bookplayermovetoboard,
+  bookplayerreadboards,
+} from 'zss/memory/playermanagement'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  compressbooks,
+  decompressbooks,
+  memoryadminmenu,
+} from 'zss/memory/utilities'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'

@@ -18,9 +18,10 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import {
-  boardlistelementsbykind,
-  boardlistptsbyempty,
-} from 'zss/memory/spatialqueries'
+  boardelementapplycolor,
+  boardelementisobject,
+} from 'zss/memory/boardelement'
+import { boardcheckblockedobject } from 'zss/memory/boardmovement'
 import {
   boardelementread,
   boardobjectread,
@@ -28,14 +29,13 @@ import {
   boardsafedelete,
   boardsetterrain,
 } from 'zss/memory/boardoperations'
-import {
-  boardelementapplycolor,
-  boardelementisobject,
-} from 'zss/memory/boardoperations'
-import { boardcheckblockedobject } from 'zss/memory/boardoperations'
 import { bookelementdisplayread } from 'zss/memory/bookoperations'
-import { bookplayermovetoboard } from 'zss/memory/playermanagement'
 import { codepagereaddata } from 'zss/memory/codepageoperations'
+import { bookplayermovetoboard } from 'zss/memory/playermanagement'
+import {
+  boardlistelementsbykind,
+  boardlistptsbyempty,
+} from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'

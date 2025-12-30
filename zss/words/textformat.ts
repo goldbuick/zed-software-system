@@ -1,5 +1,4 @@
 import { IToken, Lexer, createToken, createTokenInstance } from 'chevrotain'
-
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
 import { MAYBE, ispresent } from 'zss/mapping/types'

@@ -1,0 +1,351 @@
+import { ispid } from 'zss/mapping/guid'
+import { TICK_FPS } from 'zss/mapping/tick'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { dirfrompts, ptapplydir } from 'zss/words/dir'
+import { COLLISION, PT } from 'zss/words/types'
+
+import { boardelementisobject } from './boardelement'
+import {
+  boarddeleteobject,
+  boardelementindex,
+  boardgetterrain,
+  boardobjectread,
+  playerblockedbyedge,
+  playerwaszapped,
+} from './boardoperations'
+import { memorysendtoelement } from './gameloop'
+import { boardcheckcollide } from './spatialqueries'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE_TYPE,
+} from './types'
+
+import { memoryelementcheckpushable, memoryelementstatread } from '.'
+
+// Movement and collision check operations
+export function boardcheckblockedobject(
+  board: MAYBE<BOARD>,
+  collision: MAYBE<COLLISION>,
+  dest: PT,
+  isplayer = false,
+): MAYBE<BOARD_ELEMENT> {
+  // first pass clipping
+  if (
+    !ispresent(board) ||
+    !ispresent(board.lookup) ||
+    dest.x < 0 ||
+    dest.x >= BOARD_WIDTH ||
+    dest.y < 0 ||
+    dest.y >= BOARD_HEIGHT
+  ) {
+    // for sending interaction messages
+    return {
+      name: 'edge',
+      kind: 'edge',
+      collision: COLLISION.ISSOLID,
+      x: dest.x,
+      y: dest.y,
+    }
+  }
+
+  // gather meta for move
+  const targetidx = dest.x + dest.y * BOARD_WIDTH
+
+  // blocked by an object
+  const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '404')
+  if (ispresent(maybeobject)) {
+    if (isplayer) {
+      // players do not block players
+      if (ispid(maybeobject.id)) {
+        return undefined
+      }
+    }
+    // for sending interaction messages
+    return maybeobject
+  }
+
+  // blocked by terrain
+  const maybeterrain = board.terrain[targetidx]
+  if (
+    ispresent(maybeterrain) &&
+    boardcheckcollide(
+      collision,
+      memoryelementstatread(maybeterrain, 'collision'),
+    )
+  ) {
+    return maybeterrain
+  }
+
+  // no interaction
+  return undefined
+}
+
+export function boardcheckmoveobject(
+  board: MAYBE<BOARD>,
+  target: MAYBE<BOARD_ELEMENT>,
+  dest: PT,
+): boolean {
+  const object = boardobjectread(board, target?.id ?? '')
+  const objectx = object?.x ?? -1
+  const objecty = object?.y ?? -1
+  // first pass, are we actually trying to move ?
+  if (objectx - dest.x === 0 && objecty - dest.y === 0) {
+    // no interaction due to no movement
+    return true
+  }
+  const collsion = memoryelementstatread(object, 'collision')
+  const blockedby = boardcheckblockedobject(board, collsion, dest)
+  return ispresent(blockedby)
+}
+
+export function boardmoveobject(
+  board: MAYBE<BOARD>,
+  elementtomove: MAYBE<BOARD_ELEMENT>,
+  dest: PT,
+): MAYBE<BOARD_ELEMENT> {
+  const movingelement = boardobjectread(board, elementtomove?.id ?? '')
+
+  // first pass clipping
+  if (
+    !ispresent(board) ||
+    !ispresent(movingelement) ||
+    !ispresent(movingelement.x) ||
+    !ispresent(movingelement.y) ||
+    !ispresent(board.lookup) ||
+    dest.x < 0 ||
+    dest.x >= BOARD_WIDTH ||
+    dest.y < 0 ||
+    dest.y >= BOARD_HEIGHT
+  ) {
+    // for sending interaction messages
+    return {
+      name: 'edge',
+      kind: 'edge',
+      collision: COLLISION.ISSOLID,
+      x: dest.x,
+      y: dest.y,
+    }
+  }
+
+  // second pass, are we actually trying to move ?
+  if (movingelement.x - dest.x === 0 && movingelement.y - dest.y === 0) {
+    // no interaction due to no movement
+    return undefined
+  }
+
+  // gather meta for move
+  const startidx = boardelementindex(board, movingelement)
+  const destidx = boardelementindex(board, dest)
+  const movingelementcollision = memoryelementstatread(
+    movingelement,
+    'collision',
+  )
+
+  if (movingelementcollision === COLLISION.ISGHOST) {
+    // skip ghost
+    // update object location
+    movingelement.x = dest.x
+    movingelement.y = dest.y
+    return undefined
+  }
+
+  const movingelementisplayer = ispid(movingelement?.id)
+
+  // blocked by an object
+  const maybeobject = boardobjectread(board, board.lookup[destidx] ?? '')
+  if (memoryelementstatread(maybeobject, 'collision') === COLLISION.ISGHOST) {
+    // skip ghost
+    return undefined
+  }
+
+  const maybeobjectisplayer = ispid(maybeobject?.id ?? '')
+  if (
+    // we are blocked by an object
+    ispresent(maybeobject) &&
+    // and we are both NOT players
+    (!movingelementisplayer || !maybeobjectisplayer)
+  ) {
+    // for sending interaction messages
+    return { ...maybeobject }
+  }
+
+  // blocked by terrain
+  const mayberterrain = board.terrain[destidx]
+  const terraincollision = memoryelementstatread(mayberterrain, 'collision')
+
+  // if blocked by terrain, bail
+  if (boardcheckcollide(movingelementcollision, terraincollision)) {
+    // for sending interaction messages
+    return { ...mayberterrain, x: dest.x, y: dest.y }
+  }
+
+  // update object location
+  movingelement.x = dest.x
+  movingelement.y = dest.y
+
+  // if not removed, update lookup
+  if (!ispresent(movingelement.removed)) {
+    // blank current lookup
+    board.lookup[startidx] = undefined
+    // update lookup at dest
+    board.lookup[destidx] = movingelement.id ?? ''
+  }
+
+  // no interaction
+  return undefined
+}
+
+export function boardcleanup(board: MAYBE<BOARD>, timestamp: number) {
+  const ids: string[] = []
+  if (!ispresent(board)) {
+    return ids
+  }
+  // iterate through objects
+  const targets = Object.values(board.objects)
+  for (let i = 0; i < targets.length; ++i) {
+    const target = targets[i]
+    // check that we have an id and are marked for removal
+    // 5 seconds after marked for removal
+    if (ispresent(target.id) && ispresent(target.removed)) {
+      const delta = timestamp - target.removed
+      if (delta > TICK_FPS * 5) {
+        // track dropped ids
+        ids.push(target.id)
+        // drop from board
+        boarddeleteobject(board, target.id)
+      }
+    }
+  }
+  return ids
+}
+
+// update board
+
+type BOOK_RUN_CODE_TARGETS = {
+  object: MAYBE<BOARD_ELEMENT>
+  terrain: MAYBE<BOARD_ELEMENT>
+}
+
+type BOOK_RUN_CODE = {
+  id: string
+  code: string
+  type: CODE_PAGE_TYPE
+}
+
+export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE
+
+// Object movement
+
+export function memorymoveobject(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  dest: PT,
+  didpush: Record<string, boolean> = {},
+) {
+  if (!ispresent(element?.id)) {
+    return false
+  }
+
+  let blocked = boardmoveobject(board, element, dest)
+  const elementcollision = memoryelementstatread(element, 'collision')
+  const elementisplayer = ispid(element.id)
+  const elementisbullet = elementcollision === COLLISION.ISBULLET
+
+  // bullets can't PUSH, and you can only push object elements
+  if (
+    elementcollision !== COLLISION.ISBULLET &&
+    ispresent(blocked) &&
+    boardelementisobject(blocked)
+  ) {
+    // check terrain __under__ blocked
+    const mayberterrain = boardgetterrain(
+      board,
+      blocked.x ?? -1,
+      blocked.y ?? -1,
+    )
+    const terraincollision = memoryelementstatread(mayberterrain, 'collision')
+    if (!boardcheckcollide(elementcollision, terraincollision)) {
+      const elementisplayer = ispid(element?.id)
+
+      // is blocked pushable ?
+      const isitem = !!memoryelementstatread(blocked, 'item')
+      const ispushable = memoryelementcheckpushable(element, blocked)
+
+      // player cannot push items
+      const blockedid = blocked.id ?? ''
+      if (ispushable && (!elementisplayer || !isitem) && !didpush[blockedid]) {
+        didpush[blockedid] = true
+        const bumpdir = dirfrompts(
+          { x: element.x ?? 0, y: element.y ?? 0 },
+          dest,
+        )
+        const bump = ptapplydir(
+          { x: blocked.x ?? 0, y: blocked.y ?? 0 },
+          bumpdir,
+        )
+        if (!memorymoveobject(book, board, blocked, bump) && elementisplayer) {
+          memorysendtoelement(element, blocked, 'touch')
+        }
+      }
+
+      // update blocked by element
+      blocked = boardmoveobject(board, element, dest)
+    }
+  }
+
+  if (ispresent(blocked)) {
+    const blockedbyplayer = ispid(blocked.id)
+    const blockedisbullet =
+      memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
+    const blockedisedge = blocked.kind === 'edge'
+    if (elementisplayer) {
+      if (blockedisedge) {
+        if (!playerblockedbyedge(book, board, element, dest)) {
+          memorysendtoelement(blocked, element, 'thud')
+        }
+      } else if (blockedisbullet) {
+        if (board?.restartonzap) {
+          playerwaszapped(book, board, element, element.id ?? '')
+        }
+        memorysendtoelement(blocked, element, 'shot')
+        memorysendtoelement(element, blocked, 'thud')
+      } else {
+        memorysendtoelement(blocked, element, 'touch')
+        memorysendtoelement(element, blocked, 'touch')
+      }
+    } else if (elementisbullet) {
+      if (blockedisbullet) {
+        memorysendtoelement(blocked, element, 'thud')
+        memorysendtoelement(element, blocked, 'thud')
+      } else {
+        if (blockedbyplayer && board?.restartonzap) {
+          playerwaszapped(book, board, blocked, blocked.id ?? '')
+        }
+        memorysendtoelement(blocked, element, 'thud')
+        memorysendtoelement(element, blocked, 'shot')
+      }
+    } else {
+      if (blockedbyplayer) {
+        memorysendtoelement(blocked, element, 'touch')
+        memorysendtoelement(element, blocked, 'touch')
+      } else if (blockedisbullet) {
+        memorysendtoelement(blocked, element, 'shot')
+        memorysendtoelement(element, blocked, 'thud')
+      } else {
+        memorysendtoelement(blocked, element, 'thud')
+        memorysendtoelement(element, blocked, 'bump')
+      }
+    }
+
+    // blocked
+    return false
+  }
+
+  // we are allowed to move!
+  return true
+}

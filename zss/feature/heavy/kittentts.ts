@@ -1,9 +1,8 @@
-/* eslint-disable no-undef */
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
 
 import { cachedFetch } from './modelcache'
+import { phonemize } from './phonemizer.js'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
-import { phonemize } from './phonemizer.js';
 
 // KittenTTS class for local model
 

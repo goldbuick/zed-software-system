@@ -40,11 +40,9 @@ import {
 import {
   boardelementexport,
   boardelementimport,
-  boardexport,
-  boardimport,
-  createboard,
   createboardelement,
-} from './boardoperations'
+} from './boardelement'
+import { boardexport, boardimport, createboard } from './boardoperations'
 import {
   BOARD_ELEMENT,
   CODE_PAGE,

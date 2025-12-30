@@ -9,14 +9,14 @@ import {
   memoryelementstatread,
   memorywritefromkind,
 } from 'zss/memory'
-import { boardlistnamedelements } from 'zss/memory/spatialqueries'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import {
   boardelementread,
   boardgetterrain,
   boardsafedelete,
   boardsetterrain,
 } from 'zss/memory/boardoperations'
-import { boardelementisobject } from 'zss/memory/boardoperations'
+import { boardlistnamedelements } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, PT } from 'zss/words/types'

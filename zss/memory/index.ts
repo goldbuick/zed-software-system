@@ -9,12 +9,14 @@ import { dirfrompts, mapstrdir, mapstrdirtoconst } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { COLLISION, NAME, PT } from 'zss/words/types'
 
+import { boardelementapplycolor } from './boardelement'
 import {
-  boardelementapplycolor,
   boardnamedwrite,
-  boardobjectcreatefromkind,
   boardobjectlookupwrite,
   boardresetlookups,
+} from './boardlookup'
+import {
+  boardobjectcreatefromkind,
   boardterrainsetfromkind,
 } from './boardoperations'
 import {
@@ -61,7 +63,7 @@ export {
 } from './playermanagement'
 export { memorytick, memorytickobject } from './gameloop'
 export { memorymessage, memorysendtoboards } from './gameloop'
-export { memorymoveobject } from './boardoperations'
+export { memorymoveobject } from './boardmovement'
 export { memoryreadgadgetlayers, type MEMORY_GADGET_LAYERS } from './rendering'
 
 export enum MEMORY_LABEL {
