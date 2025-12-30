@@ -56,6 +56,10 @@
 - **memoryreadplayerboard(player)** - Gets the board a player is currently on
 - **memoryreadplayeractive(player)** - Checks if a player is active and on a board
 - **memoryplayerscan(players)** - Scans and tracks all player IDs across boards
+- **bookplayerreadactive(book, player)** - Checks if player is in active list
+- **bookplayersetboard(book, player, board)** - Sets player's current board
+- **bookplayermovetoboard(book, player, board, dest)** - Moves player to a different board
+- **bookplayerreadboards(book)** - Gets all boards with active players
 
 ## Game Loop & Execution
 
@@ -101,14 +105,25 @@
 - **boardobjectcreatefromkind(board, pt, kind, id?)** - Creates object from kind string
 - **boardsafedelete(board, element, timestamp)** - Safely deletes an element (marks for cleanup)
 - **boarddeleteobject(board, id)** - Deletes an object from a board
+- **createboardelement()** - Creates a new board element
+- **boardelementexport(boardelement)** - Exports element to serializable format
+- **boardelementimport(boardelemententry)** - Imports element from serialized format
+- **boardelementisobject(element)** - Checks if element is an object (not terrain)
+- **boardelementapplycolor(element, strcolor)** - Applies color string to element
 
 ### Board Utilities
 - **ptwithinboard(pt)** - Checks if a point is within board bounds
 - **boardfindplayer(board, target, player)** - Finds a player element for targeting
 - **boardevaldir(board, element, player, dir, startpt)** - Evaluates direction commands into destination points
-
-### Board Groups
 - **boardreadgroup(board, self, targetgroup)** - Reads elements matching a group specification
+
+### Board Lookup & Indexing
+- **boardsetlookup(board)** - Builds lookup tables for a board
+- **boardresetlookups(board)** - Resets and rebuilds lookup tables
+- **boardnamedwrite(board, element, index?)** - Adds element to named lookup
+- **boardobjectlookupwrite(board, object)** - Updates object in position lookup
+- **boardterrainnameddelete(board, terrain)** - Removes terrain from named lookup
+- **boardobjectnamedlookupdelete(board, object)** - Removes object from lookups
 
 ## Code Page Operations
 
@@ -173,36 +188,7 @@
 ### Element Display
 - **bookelementdisplayread(element, defaultchar?, defaultcolor?, defaultbg?)** - Gets display properties for an element
 
-## Player Board Management
-
-- **bookplayerreadactive(book, player)** - Checks if player is in active list
-- **bookplayersetboard(book, player, board)** - Sets player's current board
-- **bookplayermovetoboard(book, player, board, dest)** - Moves player to a different board
-- **bookplayerreadboards(book)** - Gets all boards with active players
-
-## Board Element Operations
-
-### Element Creation
-- **createboardelement()** - Creates a new board element
-
-### Element Serialization
-- **boardelementexport(boardelement)** - Exports element to serializable format
-- **boardelementimport(boardelemententry)** - Imports element from serialized format
-
-### Element Utilities
-- **boardelementisobject(element)** - Checks if element is an object (not terrain)
-- **boardelementapplycolor(element, strcolor)** - Applies color string to element
-
-## Board Lookup & Indexing
-
-- **boardsetlookup(board)** - Builds lookup tables for a board
-- **boardresetlookups(board)** - Resets and rebuilds lookup tables
-- **boardnamedwrite(board, element, index?)** - Adds element to named lookup
-- **boardobjectlookupwrite(board, object)** - Updates object in position lookup
-- **boardterrainnameddelete(board, terrain)** - Removes terrain from named lookup
-- **boardobjectnamedlookupdelete(board, object)** - Removes object from lookups
-
-## Atomic Operations (Spatial Queries)
+## Spatial Queries & Pathfinding
 
 ### Collision
 - **boardcheckcollide(source, dest)** - Checks if two collision types collide
@@ -220,16 +206,21 @@
 - **boardlistelementsbycolor(board, strcolor)** - Lists elements matching a color
 - **boardlistelementsbyidnameorpts(board, idnameorpts)** - Lists elements by ID, name, or points
 
-## Pathfinding
-
+### Pathfinding
 - **boardreadpath(board, forcollision, frompt, topt, flee)** - Calculates path between two points using distance maps
 
-## Rendering & Gadget Conversion
+## Rendering & Display
 
+### Rendering & Gadget Conversion
 - **memoryconverttogadgetlayers(player, index, board, tickers, whichlayer, multi?)** - Converts board to gadget render layers
 - **memoryconverttogadgetcontrollayer(player, index, board)** - Creates control layer for gadget rendering
 - **memoryreadgadgetlayers(player, board)** - Reads complete gadget layer data for a board
 - **createcachedsprite(player, index, id, spriteindex)** - Creates a cached sprite for rendering
+
+### Display & Formatting
+- **memorycodepagetoprefix(codepage)** - Gets display prefix for a code page
+- **memoryelementtodisplayprefix(element)** - Gets display prefix for an element
+- **memoryelementtologprefix(element)** - Gets log prefix for an element
 
 ## Inspection & Editing
 
@@ -277,15 +268,13 @@
 - **gadgetinspectloaders(player, p1, p2)** - Shows gadget action loaders
 - **gadgetinspectboard(player, board)** - Shows board information in gadget
 
-## Find Operations
-
+### Find Operations
 - **memoryfindanymenu(player)** - Shows find menu with configurable search slots
 - **memoryfindany(path, player)** - Executes find operation
 - **readfindanyconfig()** - Reads find configuration
 - **writefindanyconfig(updater)** - Writes find configuration
 
-## Make It (Code Page Creation)
-
+### Make It (Code Page Creation)
 - **memorymakeitscroll(makeit, player)** - Shows code page creation scroll
 - **memorymakeitcommand(path, data, player)** - Handles code page creation commands
 
@@ -302,36 +291,28 @@
 
 ## CLI & Runtime
 
+### CLI Operations
 - **memorycli(player, cli, tracking?)** - Executes CLI command for a player
 - **memoryclirepeatlast(player)** - Repeats last CLI command
 - **memoryrun(address)** - Runs a code page once
 
-## System Operations
-
+### System Operations
 - **memorycleanup()** - Performs garbage collection
 - **memoryrestartallchipsandflags()** - Halts all chips and clears flags
 - **memoryresetchipafteredit(object)** - Halts a chip after editing
 - **memoryscrollunlock(id, player)** - Unlocks scroll for a player
 
-## Compression & Serialization
+## Utilities
 
+### Compression & Serialization
 - **compressbooks(books)** - Compresses books to base64 URL string
 - **decompressbooks(base64bytes)** - Decompresses books from base64 URL string
 
-## Display & Formatting
-
-- **memorycodepagetoprefix(codepage)** - Gets display prefix for a code page
-- **memoryelementtodisplayprefix(element)** - Gets display prefix for an element
-- **memoryelementtologprefix(element)** - Gets log prefix for an element
-
-## Admin Operations
-
+### Admin Operations
 - **memoryadminmenu(player)** - Shows admin menu with player list and utilities
 
-## Types & Enums
-
+### Types & Enums
 - **MEMORY_LABEL** (enum) - Labels for memory slots (MAIN, TEMP, TITLE, PLAYER, GADGETSTORE)
 - **MEMORY_GADGET_LAYERS** (type) - Type for gadget layer data
 - **FINDANY_CONFIG** (type) - Configuration for find operations
 - **BOOK_RUN_ARGS** (type) - Arguments for board tick execution
-

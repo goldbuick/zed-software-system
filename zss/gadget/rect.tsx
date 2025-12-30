@@ -1,18 +1,15 @@
 import React from 'react'
-import { Color, Mesh } from 'three'
+import { Color, Mesh, PlaneGeometry } from 'three'
 import { RUNTIME } from 'zss/config'
 
 function noop() {}
 
-type Args<T> = T extends new (...args: any) => any
-  ? ConstructorParameters<T>
-  : T
-type ShapeProps<T> = Omit<JSX.IntrinsicElements['mesh'], 'args'> & {
-  args?: Args<T>
+type ShapeProps = Omit<React.JSX.IntrinsicElements['mesh'], 'args'> & {
+  args?: ConstructorParameters<typeof PlaneGeometry>
 }
 
 const PlaneComponent = React.forwardRef(function Plane(
-  { args, children, ...props }: ShapeProps<typeof Plane>,
+  { args, children, ...props }: ShapeProps,
   fref: React.ForwardedRef<Mesh>,
 ) {
   const ref = React.useRef<Mesh>(null!)
@@ -38,7 +35,7 @@ type Props = {
   color?: Color | string
 } & React.ComponentProps<typeof PlaneComponent>
 
-export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
+export const Rect = React.forwardRef<Mesh, Props>(
   function Rect(
     {
       blocking = false,

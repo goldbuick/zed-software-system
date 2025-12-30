@@ -9,8 +9,8 @@ import {
   memorysetbook,
   memorywritefromkind,
 } from 'zss/memory'
-import { bookwritecodepage, createbook } from 'zss/memory/book'
-import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
+import { bookwritecodepage, createbook } from 'zss/memory/bookoperations'
+import { codepagereaddata, createcodepage } from 'zss/memory/codepageoperations'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'

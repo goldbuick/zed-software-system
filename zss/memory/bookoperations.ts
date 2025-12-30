@@ -13,7 +13,7 @@ import {
   codepagereadtype,
   codepagetypetostring,
   createcodepage,
-} from './codepage'
+} from './codepageoperations'
 import {
   BOARD,
   BOARD_ELEMENT,

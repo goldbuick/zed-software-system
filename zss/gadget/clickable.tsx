@@ -12,7 +12,7 @@ type Props = {
   height?: number
   children?: ReactNode
   onClick?: () => void
-} & JSX.IntrinsicElements['group']
+} & React.JSX.IntrinsicElements['group']
 
 export function Clickable({
   debug = false,

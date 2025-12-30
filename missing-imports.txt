@@ -1,0 +1,1333 @@
+
+✗ Found 553 missing import(s) across 112 unique file(s):
+
+Missing file: zss/feature/device
+  Imported from: zss/feature/rom/index.ts
+    Import path: ../device
+
+Missing file: zss/feature/device/api
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../device/api
+  Imported from: zss/feature/parse/chr.ts
+    Import path: ../device/api
+  Imported from: zss/feature/parse/zzm.ts
+    Import path: ../device/api
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../device/api
+  Imported from: zss/feature/parse/zztobj.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/index.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voiceconfig.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxautofilterconfig.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxautowah.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxconfig.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxdistortconfig.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxechoconfig.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxfcrushconfig.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxreverbconfig.ts
+    Import path: ../device/api
+  Imported from: zss/feature/synth/voicefxvibratoconfig.ts
+    Import path: ../device/api
+
+Missing file: zss/feature/device/register
+  Imported from: zss/feature/synth/index.ts
+    Import path: ../device/register
+  Imported from: zss/feature/synth/mp3.ts
+    Import path: ../device/register
+
+Missing file: zss/feature/device/session
+  Imported from: zss/feature/heavy/tts.ts
+    Import path: ../device/session
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../device/session
+  Imported from: zss/feature/parse/chr.ts
+    Import path: ../device/session
+  Imported from: zss/feature/parse/file.ts
+    Import path: ../device/session
+  Imported from: zss/feature/parse/markdownwriteui.ts
+    Import path: ../device/session
+  Imported from: zss/feature/parse/zzm.ts
+    Import path: ../device/session
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../device/session
+  Imported from: zss/feature/parse/zztobj.ts
+    Import path: ../device/session
+  Imported from: zss/feature/rom/index.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/index.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/mp3.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voiceconfig.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxautofilterconfig.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxautowah.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxconfig.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxdistortconfig.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxechoconfig.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxfcrushconfig.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxreverbconfig.ts
+    Import path: ../device/session
+  Imported from: zss/feature/synth/voicefxvibratoconfig.ts
+    Import path: ../device/session
+
+Missing file: zss/feature/gadget/data/api
+  Imported from: zss/feature/parse/markdownscroll.ts
+    Import path: ../gadget/data/api
+  Imported from: zss/feature/rom/index.ts
+    Import path: ../gadget/data/api
+
+Missing file: zss/feature/gadget/data/palette
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../gadget/data/palette
+
+Missing file: zss/feature/mapping/2d
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../mapping/2d
+
+Missing file: zss/feature/mapping/func
+  Imported from: zss/feature/heavy/tts.ts
+    Import path: ../mapping/func
+
+Missing file: zss/feature/mapping/guid
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../mapping/guid
+  Imported from: zss/feature/synth/index.ts
+    Import path: ../mapping/guid
+
+Missing file: zss/feature/mapping/number
+  Imported from: zss/feature/synth/index.ts
+    Import path: ../mapping/number
+
+Missing file: zss/feature/mapping/tick
+  Imported from: zss/feature/parse/file.ts
+    Import path: ../mapping/tick
+  Imported from: zss/feature/synth/index.ts
+    Import path: ../mapping/tick
+  Imported from: zss/feature/synth/mp3.ts
+    Import path: ../mapping/tick
+
+Missing file: zss/feature/mapping/types
+  Imported from: zss/feature/heavy/tts.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/chr.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/file.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/markdownscroll.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/markdownwriteui.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/zzm.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/parse/zztobj.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/rom/index.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/algosynth.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/fx.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/index.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/playnotation.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/source.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxautofilterconfig.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxautowah.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxconfig.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxdistortconfig.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxechoconfig.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxfcrushconfig.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxreverbconfig.ts
+    Import path: ../mapping/types
+  Imported from: zss/feature/synth/voicefxvibratoconfig.ts
+    Import path: ../mapping/types
+
+Missing file: zss/feature/memory
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../memory
+  Imported from: zss/feature/parse/chr.ts
+    Import path: ../memory
+  Imported from: zss/feature/parse/zzm.ts
+    Import path: ../memory
+  Imported from: zss/feature/parse/zztobj.ts
+    Import path: ../memory
+
+Missing file: zss/feature/memory/board
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../memory/board
+
+Missing file: zss/feature/memory/book
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../memory/book
+  Imported from: zss/feature/parse/chr.ts
+    Import path: ../memory/book
+  Imported from: zss/feature/parse/zzm.ts
+    Import path: ../memory/book
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../memory/book
+  Imported from: zss/feature/parse/zztobj.ts
+    Import path: ../memory/book
+
+Missing file: zss/feature/memory/codepage
+  Imported from: zss/feature/parse/ansi.ts
+    Import path: ../memory/codepage
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../memory/codepage
+
+Missing file: zss/feature/memory/types
+  Imported from: zss/feature/parse/chr.ts
+    Import path: ../memory/types
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../memory/types
+
+Missing file: zss/feature/words/color
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../words/color
+
+Missing file: zss/feature/words/kind
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../words/kind
+
+Missing file: zss/feature/words/types
+  Imported from: zss/feature/parse/markdownscroll.ts
+    Import path: ../words/types
+  Imported from: zss/feature/parse/zzm.ts
+    Import path: ../words/types
+  Imported from: zss/feature/parse/zzt.ts
+    Import path: ../words/types
+  Imported from: zss/feature/rom/index.ts
+    Import path: ../words/types
+  Imported from: zss/feature/synth/voiceconfig.ts
+    Import path: ../words/types
+
+Missing file: zss/gadget/chip
+  Imported from: zss/gadget/data/api.ts
+    Import path: ../chip
+
+Missing file: zss/gadget/config
+  Imported from: zss/gadget/display/tiles.ts
+    Import path: ../config
+  Imported from: zss/gadget/graphics/billboardmeshes.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/darknessmeshes.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/flat.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/fpv.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/fpvlayer.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/iso.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/isolayer.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/mode7.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/mode7layer.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/pillarmeshes.tsx
+    Import path: ../config
+  Imported from: zss/gadget/graphics/spritemeshes.tsx
+    Import path: ../config
+
+Missing file: zss/gadget/device/register
+  Imported from: zss/gadget/graphics/fpvlayer.tsx
+    Import path: ../device/register
+
+Missing file: zss/gadget/feature/bytes
+  Imported from: zss/gadget/display/blocks.ts
+    Import path: ../feature/bytes
+  Imported from: zss/gadget/display/sprites.ts
+    Import path: ../feature/bytes
+  Imported from: zss/gadget/display/tiles.ts
+    Import path: ../feature/bytes
+  Imported from: zss/gadget/graphics/medialayer.tsx
+    Import path: ../feature/bytes
+  Imported from: zss/gadget/graphics/tiles.tsx
+    Import path: ../feature/bytes
+
+Missing file: zss/gadget/feature/charset
+  Imported from: zss/gadget/display/blocks.ts
+    Import path: ../feature/charset
+  Imported from: zss/gadget/display/sprites.ts
+    Import path: ../feature/charset
+  Imported from: zss/gadget/display/tiles.ts
+    Import path: ../feature/charset
+  Imported from: zss/gadget/graphics/medialayer.tsx
+    Import path: ../feature/charset
+  Imported from: zss/gadget/graphics/tiles.tsx
+    Import path: ../feature/charset
+
+Missing file: zss/gadget/feature/format
+  Imported from: zss/gadget/data/compress.ts
+    Import path: ../feature/format
+  Imported from: zss/gadget/data/state.ts
+    Import path: ../feature/format
+
+Missing file: zss/gadget/feature/palette
+  Imported from: zss/gadget/display/blocks.ts
+    Import path: ../feature/palette
+  Imported from: zss/gadget/display/sprites.ts
+    Import path: ../feature/palette
+  Imported from: zss/gadget/display/tiles.ts
+    Import path: ../feature/palette
+  Imported from: zss/gadget/graphics/medialayer.tsx
+    Import path: ../feature/palette
+  Imported from: zss/gadget/graphics/tiles.tsx
+    Import path: ../feature/palette
+
+Missing file: zss/gadget/gadget/data/state
+  Imported from: zss/gadget/graphics/flat.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/gadget/graphics/flatlayer.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/gadget/graphics/fpv.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/gadget/graphics/fpvlayer.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/gadget/graphics/iso.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/gadget/graphics/isolayer.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/gadget/graphics/mode7.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/gadget/graphics/mode7layer.tsx
+    Import path: ../gadget/data/state
+
+Missing file: zss/gadget/gadget/data/types
+  Imported from: zss/gadget/display/spritepool.ts
+    Import path: ../gadget/data/types
+  Imported from: zss/gadget/graphics/flat.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/gadget/graphics/flatlayer.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/gadget/graphics/fpvlayer.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/gadget/graphics/isolayer.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/gadget/graphics/mode7layer.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/gadget/graphics/tiles.tsx
+    Import path: ../gadget/data/types
+
+Missing file: zss/gadget/gadget/display/tiles
+  Imported from: zss/gadget/graphics/dither.tsx
+    Import path: ../gadget/display/tiles
+
+Missing file: zss/gadget/mapping/2d
+  Imported from: zss/gadget/graphics/darknessmeshes.tsx
+    Import path: ../mapping/2d
+
+Missing file: zss/gadget/mapping/array
+  Imported from: zss/gadget/data/palette.ts
+    Import path: ../mapping/array
+
+Missing file: zss/gadget/mapping/guid
+  Imported from: zss/gadget/data/api.ts
+    Import path: ../mapping/guid
+
+Missing file: zss/gadget/mapping/number
+  Imported from: zss/gadget/graphics/flat.tsx
+    Import path: ../mapping/number
+  Imported from: zss/gadget/graphics/fpv.tsx
+    Import path: ../mapping/number
+  Imported from: zss/gadget/graphics/iso.tsx
+    Import path: ../mapping/number
+  Imported from: zss/gadget/graphics/mode7.tsx
+    Import path: ../mapping/number
+
+Missing file: zss/gadget/mapping/tick
+  Imported from: zss/gadget/display/blocks.ts
+    Import path: ../mapping/tick
+  Imported from: zss/gadget/display/dither.ts
+    Import path: ../mapping/tick
+  Imported from: zss/gadget/display/sprites.ts
+    Import path: ../mapping/tick
+
+Missing file: zss/gadget/mapping/types
+  Imported from: zss/gadget/data/api.ts
+    Import path: ../mapping/types
+  Imported from: zss/gadget/data/bitmap.ts
+    Import path: ../mapping/types
+  Imported from: zss/gadget/data/compress.ts
+    Import path: ../mapping/types
+  Imported from: zss/gadget/data/state.ts
+    Import path: ../mapping/types
+  Imported from: zss/gadget/display/spritepool.ts
+    Import path: ../mapping/types
+  Imported from: zss/gadget/display/textures.ts
+    Import path: ../mapping/types
+  Imported from: zss/gadget/display/tiles.ts
+    Import path: ../mapping/types
+  Imported from: zss/gadget/fx/crt.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/billboardmeshes.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/darknessmeshes.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/flat.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/fpv.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/fpvlayer.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/iso.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/isolayer.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/medialayer.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/mode7.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/mode7layer.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/pillarmeshes.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/shadowmeshes.tsx
+    Import path: ../mapping/types
+  Imported from: zss/gadget/graphics/spritemeshes.tsx
+    Import path: ../mapping/types
+
+Missing file: zss/gadget/mapping/value
+  Imported from: zss/gadget/data/api.ts
+    Import path: ../mapping/value
+
+Missing file: zss/gadget/memory/types
+  Imported from: zss/gadget/data/types.ts
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/billboardmeshes.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/darknessmeshes.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/flat.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/fpv.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/fpvlayer.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/iso.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/isolayer.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/mode7.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/mode7layer.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/pillarmeshes.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/shadowmeshes.tsx
+    Import path: ../memory/types
+  Imported from: zss/gadget/graphics/spritemeshes.tsx
+    Import path: ../memory/types
+
+Missing file: zss/gadget/screens/inspector/component
+  Imported from: zss/gadget/graphics/flat.tsx
+    Import path: ../screens/inspector/component
+
+Missing file: zss/gadget/words/reader
+  Imported from: zss/gadget/data/api.ts
+    Import path: ../words/reader
+
+Missing file: zss/gadget/words/textformat
+  Imported from: zss/gadget/data/api.ts
+    Import path: ../words/textformat
+
+Missing file: zss/gadget/words/types
+  Imported from: zss/gadget/data/api.ts
+    Import path: ../words/types
+  Imported from: zss/gadget/data/state.ts
+    Import path: ../words/types
+  Imported from: zss/gadget/data/types.ts
+    Import path: ../words/types
+  Imported from: zss/gadget/display/blocks.ts
+    Import path: ../words/types
+  Imported from: zss/gadget/display/tiles.ts
+    Import path: ../words/types
+  Imported from: zss/gadget/graphics/blocks.tsx
+    Import path: ../words/types
+  Imported from: zss/gadget/graphics/fpv.tsx
+    Import path: ../words/types
+  Imported from: zss/gadget/graphics/fpvlayer.tsx
+    Import path: ../words/types
+  Imported from: zss/gadget/graphics/isolayer.tsx
+    Import path: ../words/types
+  Imported from: zss/gadget/graphics/mode7layer.tsx
+    Import path: ../words/types
+  Imported from: zss/gadget/graphics/pillarmeshes.tsx
+    Import path: ../words/types
+
+Missing file: zss/memory/admin
+  Imported from: zss/device/vm.ts
+    Import path: zss/memory/admin
+
+Missing file: zss/memory/atomics
+  Imported from: zss/feature/boardremix.ts
+    Import path: ../memory/atomics
+  Imported from: zss/feature/boardweave.ts
+    Import path: ../memory/atomics
+
+Missing file: zss/memory/board
+  Imported from: zss/device/vm.ts
+    Import path: zss/memory/board
+  Imported from: zss/feature/boardpivot.ts
+    Import path: ../memory/board
+  Imported from: zss/firmware/loader.ts
+    Import path: zss/memory/board
+  Imported from: zss/words/expr.ts
+    Import path: ../memory/board
+  Imported from: zss/words/reader.ts
+    Import path: ../memory/board
+
+Missing file: zss/memory/boardelement
+  Imported from: zss/feature/boardcopy.ts
+    Import path: ../memory/boardelement
+  Imported from: zss/feature/boardremix.ts
+    Import path: ../memory/boardelement
+  Imported from: zss/feature/boardweave.ts
+    Import path: ../memory/boardelement
+
+Missing file: zss/memory/boardlookup
+  Imported from: zss/firmware/element.ts
+    Import path: zss/memory/boardlookup
+
+Missing file: zss/memory/boardops
+  Imported from: zss/feature/boardcopy.ts
+    Import path: ../memory/boardops
+  Imported from: zss/feature/boardweave.ts
+    Import path: ../memory/boardops
+  Imported from: zss/firmware/board.ts
+    Import path: zss/memory/boardops
+  Imported from: zss/words/expr.ts
+    Import path: ../memory/boardops
+
+Missing file: zss/memory/book
+  Imported from: zss/device/gadgetserver.ts
+    Import path: zss/memory/book
+  Imported from: zss/feature/boardsnapshot.ts
+    Import path: ../memory/book
+  Imported from: zss/firmware/board.ts
+    Import path: zss/memory/book
+  Imported from: zss/firmware/element.ts
+    Import path: zss/memory/book
+  Imported from: zss/firmware/transforms.ts
+    Import path: zss/memory/book
+  Imported from: zss/words/expr.ts
+    Import path: ../memory/book
+
+Missing file: zss/memory/bookplayer
+  Imported from: zss/firmware/board.ts
+    Import path: zss/memory/bookplayer
+  Imported from: zss/firmware/cli.ts
+    Import path: zss/memory/bookplayer
+
+Missing file: zss/memory/codepage
+  Imported from: zss/firmware/board.ts
+    Import path: zss/memory/codepage
+
+Missing file: zss/memory/compress
+  Imported from: zss/device/vm.ts
+    Import path: zss/memory/compress
+
+Missing file: zss/memory/display
+  Imported from: zss/firmware/cli.ts
+    Import path: zss/memory/display
+
+Missing file: zss/memory/inspect
+  Imported from: zss/device/vm.ts
+    Import path: zss/memory/inspect
+
+Missing file: zss/memory/inspectbatch
+  Imported from: zss/device/vm.ts
+    Import path: zss/memory/inspectbatch
+
+Missing file: zss/memory/inspectremix
+  Imported from: zss/device/vm.ts
+    Import path: zss/memory/inspectremix
+
+Missing file: zss/memory/makeit
+  Imported from: zss/device/vm.ts
+    Import path: zss/memory/makeit
+
+Missing file: zss/memory/rendertogadget
+  Imported from: zss/device/gadgetserver.ts
+    Import path: zss/memory/rendertogadget
+
+Missing file: zss/memory/send
+  Imported from: zss/firmware/cli.ts
+    Import path: zss/memory/send
+  Imported from: zss/firmware/display.ts
+    Import path: zss/memory/send
+  Imported from: zss/firmware/loader.ts
+    Import path: zss/memory/send
+  Imported from: zss/firmware/runtime.ts
+    Import path: zss/memory/send
+
+Missing file: zss/screens/config
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../config
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../config
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../config
+  Imported from: zss/screens/panel/hotkey.tsx
+    Import path: ../config
+  Imported from: zss/screens/panel/zssedit.tsx
+    Import path: ../config
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../config
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../config
+  Imported from: zss/screens/scroll/controls.tsx
+    Import path: ../config
+  Imported from: zss/screens/tape/layout.tsx
+    Import path: ../config
+  Imported from: zss/screens/touchui/elements.tsx
+    Import path: ../config
+  Imported from: zss/screens/touchui/thumbstick.tsx
+    Import path: ../config
+  Imported from: zss/screens/touchui/touchplane.tsx
+    Import path: ../config
+
+Missing file: zss/screens/device/api
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/panel/copyit.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/panel/runit.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/tape/component.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/terminal/copyit.tsx
+    Import path: ../device/api
+  Imported from: zss/screens/terminal/runit.tsx
+    Import path: ../device/api
+
+Missing file: zss/screens/device/modem
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/panel/number.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/panel/range.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/panel/select.tsx
+    Import path: ../device/modem
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../device/modem
+
+Missing file: zss/screens/device/register
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/panel/copyit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/panel/openit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/panel/panelitem.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/panel/runit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/tape/component.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/terminal/copyit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/terminal/runit.tsx
+    Import path: ../device/register
+  Imported from: zss/screens/touchui/keyboardgame.tsx
+    Import path: ../device/register
+
+Missing file: zss/screens/device/session
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/panel/copyit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/panel/openit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/panel/runit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/tape/component.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/terminal/copyit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/terminal/runit.tsx
+    Import path: ../device/session
+  Imported from: zss/screens/touchui/keyboardgame.tsx
+    Import path: ../device/session
+
+Missing file: zss/screens/feature/bytes
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../feature/bytes
+
+Missing file: zss/screens/feature/fetchwiki
+  Imported from: zss/screens/panel/openit.tsx
+    Import path: ../feature/fetchwiki
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../feature/fetchwiki
+
+Missing file: zss/screens/feature/keyboard
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../feature/keyboard
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../feature/keyboard
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../feature/keyboard
+
+Missing file: zss/screens/feature/parse/markdownwriteui
+  Imported from: zss/screens/panel/openit.tsx
+    Import path: ../feature/parse/markdownwriteui
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../feature/parse/markdownwriteui
+
+Missing file: zss/screens/feature/rom
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../feature/rom
+
+Missing file: zss/screens/feature/speechtotext
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../feature/speechtotext
+
+Missing file: zss/screens/gadget/data/state
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/editor/editorframe.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/inspector/component.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/inspector/pts.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/screenui/tickertext.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/tape/backplate.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/tape/component.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/tape/layout.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/terminal/item.tsx
+    Import path: ../gadget/data/state
+  Imported from: zss/screens/terminal/terminalrows.tsx
+    Import path: ../gadget/data/state
+
+Missing file: zss/screens/gadget/data/types
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/panel/component.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/panel/number.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/panel/panelitem.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/panel/range.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/panel/select.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/touchui/keyboardgame.tsx
+    Import path: ../gadget/data/types
+  Imported from: zss/screens/touchui/stickinputs.ts
+    Import path: ../gadget/data/types
+
+Missing file: zss/screens/gadget/graphics/dither
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../gadget/graphics/dither
+  Imported from: zss/screens/tape/component.tsx
+    Import path: ../gadget/graphics/dither
+  Imported from: zss/screens/touchui/elements.tsx
+    Import path: ../gadget/graphics/dither
+
+Missing file: zss/screens/gadget/graphics/flat
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../gadget/graphics/flat
+
+Missing file: zss/screens/gadget/graphics/fpv
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../gadget/graphics/fpv
+
+Missing file: zss/screens/gadget/graphics/iso
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../gadget/graphics/iso
+
+Missing file: zss/screens/gadget/graphics/medialayer
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../gadget/graphics/medialayer
+
+Missing file: zss/screens/gadget/graphics/mode7
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../gadget/graphics/mode7
+
+Missing file: zss/screens/gadget/hooks
+  Imported from: zss/screens/editor/editorframe.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/inspector/pts.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/component.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/number.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/panelitem.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/range.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/select.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/panel/viewit.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/screenui/tickertext.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/scroll/backplate.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/scroll/controls.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/scroll/marquee.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/tape/backplate.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/tape/blinker.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/tape/layout.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/copyit.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/hyperlink.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/item.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/runit.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/terminalrows.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/terminal/viewit.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/touchui/component.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/touchui/keyboardgame.tsx
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/touchui/stickinputs.ts
+    Import path: ../gadget/hooks
+  Imported from: zss/screens/touchui/togglekey.tsx
+    Import path: ../gadget/hooks
+
+Missing file: zss/screens/gadget/rect
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../gadget/rect
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../gadget/rect
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../gadget/rect
+  Imported from: zss/screens/panel/hotkey.tsx
+    Import path: ../gadget/rect
+  Imported from: zss/screens/panel/zssedit.tsx
+    Import path: ../gadget/rect
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../gadget/rect
+
+Missing file: zss/screens/gadget/scrollable
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../gadget/scrollable
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../gadget/scrollable
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../gadget/scrollable
+
+Missing file: zss/screens/gadget/usedither
+  Imported from: zss/screens/scroll/controls.tsx
+    Import path: ../gadget/usedither
+
+Missing file: zss/screens/gadget/userinput
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/copyit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/hotkey.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/hyperlink.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/openit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/range.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/runit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/select.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/viewit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/panel/zssedit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/tape/component.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/terminal/copyit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/terminal/hyperlink.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/terminal/runit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/terminal/viewit.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/touchui/keyboardgame.tsx
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/touchui/stickinputs.ts
+    Import path: ../gadget/userinput
+  Imported from: zss/screens/touchui/thumbstick.tsx
+    Import path: ../gadget/userinput
+
+Missing file: zss/screens/gadget/userscreen
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../gadget/userscreen
+  Imported from: zss/screens/tape/component.tsx
+    Import path: ../gadget/userscreen
+  Imported from: zss/screens/touchui/component.tsx
+    Import path: ../gadget/userscreen
+
+Missing file: zss/screens/gadget/usetiles
+  Imported from: zss/screens/inspector/pts.tsx
+    Import path: ../gadget/usetiles
+  Imported from: zss/screens/panel/component.tsx
+    Import path: ../gadget/usetiles
+  Imported from: zss/screens/screenui/tickertext.tsx
+    Import path: ../gadget/usetiles
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../gadget/usetiles
+  Imported from: zss/screens/scroll/controls.tsx
+    Import path: ../gadget/usetiles
+  Imported from: zss/screens/tape/layout.tsx
+    Import path: ../gadget/usetiles
+  Imported from: zss/screens/touchui/component.tsx
+    Import path: ../gadget/usetiles
+
+Missing file: zss/screens/lang/ast
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../lang/ast
+
+Missing file: zss/screens/lang/lexer
+  Imported from: zss/screens/editor/colors.tsx
+    Import path: ../lang/lexer
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../lang/lexer
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../lang/lexer
+  Imported from: zss/screens/tape/common.ts
+    Import path: ../lang/lexer
+
+Missing file: zss/screens/lang/transformer
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../lang/transformer
+
+Missing file: zss/screens/lang/visitor
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../lang/visitor
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../lang/visitor
+  Imported from: zss/screens/tape/common.ts
+    Import path: ../lang/visitor
+
+Missing file: zss/screens/mapping/2d
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../mapping/2d
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../mapping/2d
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../mapping/2d
+
+Missing file: zss/screens/mapping/anim
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../mapping/anim
+
+Missing file: zss/screens/mapping/array
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../mapping/array
+
+Missing file: zss/screens/mapping/func
+  Imported from: zss/screens/panel/openit.tsx
+    Import path: ../mapping/func
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../mapping/func
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../mapping/func
+
+Missing file: zss/screens/mapping/guid
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../mapping/guid
+
+Missing file: zss/screens/mapping/number
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/panel/content.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/terminal/item.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/touchui/elements.tsx
+    Import path: ../mapping/number
+  Imported from: zss/screens/touchui/thumbstick.tsx
+    Import path: ../mapping/number
+
+Missing file: zss/screens/mapping/string
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../mapping/string
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../mapping/string
+
+Missing file: zss/screens/mapping/types
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/panel/common.ts
+    Import path: ../mapping/types
+  Imported from: zss/screens/panel/content.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/panel/hotkey.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/panel/panelitem.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/panel/zssedit.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/screenui/tickertext.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/tape/blinker.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../mapping/types
+  Imported from: zss/screens/terminal/item.tsx
+    Import path: ../mapping/types
+
+Missing file: zss/screens/mapping/value
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/hotkey.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/hyperlink.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/number.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/range.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/select.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../mapping/value
+  Imported from: zss/screens/panel/zssedit.tsx
+    Import path: ../mapping/value
+
+Missing file: zss/screens/memory/types
+  Imported from: zss/screens/inspector/pts.tsx
+    Import path: ../memory/types
+  Imported from: zss/screens/inspector/select.tsx
+    Import path: ../memory/types
+
+Missing file: zss/screens/screens/editor/component
+  Imported from: zss/screens/tape/layout.tsx
+    Import path: ../screens/editor/component
+
+Missing file: zss/screens/screens/panel/common
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../screens/panel/common
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../screens/panel/common
+  Imported from: zss/screens/terminal/copyit.tsx
+    Import path: ../screens/panel/common
+  Imported from: zss/screens/terminal/hyperlink.tsx
+    Import path: ../screens/panel/common
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../screens/panel/common
+  Imported from: zss/screens/terminal/runit.tsx
+    Import path: ../screens/panel/common
+  Imported from: zss/screens/terminal/viewit.tsx
+    Import path: ../screens/panel/common
+
+Missing file: zss/screens/screens/panel/component
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../screens/panel/component
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../screens/panel/component
+
+Missing file: zss/screens/screens/scroll/component
+  Imported from: zss/screens/screenui/component.tsx
+    Import path: ../screens/scroll/component
+
+Missing file: zss/screens/screens/scroll/marquee
+  Imported from: zss/screens/editor/editorframe.tsx
+    Import path: ../screens/scroll/marquee
+
+Missing file: zss/screens/screens/tape/backplate
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../screens/tape/backplate
+  Imported from: zss/screens/terminal/component.tsx
+    Import path: ../screens/tape/backplate
+
+Missing file: zss/screens/screens/tape/blinker
+  Imported from: zss/screens/scroll/controls.tsx
+    Import path: ../screens/tape/blinker
+
+Missing file: zss/screens/screens/tape/common
+  Imported from: zss/screens/editor/component.tsx
+    Import path: ../screens/tape/common
+  Imported from: zss/screens/editor/editorframe.tsx
+    Import path: ../screens/tape/common
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../screens/tape/common
+
+Missing file: zss/screens/screens/terminal/component
+  Imported from: zss/screens/tape/layout.tsx
+    Import path: ../screens/terminal/component
+
+Missing file: zss/screens/words/stats
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../words/stats
+
+Missing file: zss/screens/words/system
+  Imported from: zss/screens/editor/editorframe.tsx
+    Import path: ../words/system
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../words/system
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../words/system
+  Imported from: zss/screens/touchui/keyboardgame.tsx
+    Import path: ../words/system
+
+Missing file: zss/screens/words/textformat
+  Imported from: zss/screens/panel/charedit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/common.ts
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/copyit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/hotkey.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/hyperlink.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/number.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/openit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/range.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/runit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/select.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/viewit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/panel/zssedit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/tape/backplate.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/tape/common.ts
+    Import path: ../words/textformat
+  Imported from: zss/screens/terminal/copyit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/terminal/hyperlink.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/terminal/openit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/terminal/runit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/terminal/viewit.tsx
+    Import path: ../words/textformat
+  Imported from: zss/screens/touchui/elements.tsx
+    Import path: ../words/textformat
+
+Missing file: zss/screens/words/types
+  Imported from: zss/screens/editor/colors.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/editor/editorframe.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/editor/editorinput.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/editor/editorrows.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/inspector/pts.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/panel/coloredit.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/panel/common.ts
+    Import path: ../words/types
+  Imported from: zss/screens/panel/number.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/panel/panelitem.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/panel/select.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/panel/text.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/screenui/framed.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/screenui/tickertext.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/scroll/component.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/scroll/marquee.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/tape/common.ts
+    Import path: ../words/types
+  Imported from: zss/screens/terminal/input.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/terminal/item.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/touchui/component.tsx
+    Import path: ../words/types
+  Imported from: zss/screens/touchui/elements.tsx
+    Import path: ../words/types
+

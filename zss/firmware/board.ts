@@ -20,22 +20,22 @@ import {
 import {
   boardlistelementsbykind,
   boardlistptsbyempty,
-} from 'zss/memory/atomics'
+} from 'zss/memory/spatialqueries'
 import {
   boardelementread,
   boardobjectread,
   boardobjectsread,
   boardsafedelete,
   boardsetterrain,
-} from 'zss/memory/board'
+} from 'zss/memory/boardoperations'
 import {
   boardelementapplycolor,
   boardelementisobject,
-} from 'zss/memory/boardelement'
-import { boardcheckblockedobject } from 'zss/memory/boardops'
-import { bookelementdisplayread } from 'zss/memory/book'
-import { bookplayermovetoboard } from 'zss/memory/bookplayer'
-import { codepagereaddata } from 'zss/memory/codepage'
+} from 'zss/memory/boardoperations'
+import { boardcheckblockedobject } from 'zss/memory/boardoperations'
+import { bookelementdisplayread } from 'zss/memory/bookoperations'
+import { bookplayermovetoboard } from 'zss/memory/playermanagement'
+import { codepagereaddata } from 'zss/memory/codepageoperations'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'

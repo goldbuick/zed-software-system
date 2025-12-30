@@ -4,7 +4,7 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
 
-import { write } from '../writeui'
+import { write } from 'zss/feature/writeui'
 
 // Convert AudioBuffer to MP3 using lamejs
 export async function converttomp3(

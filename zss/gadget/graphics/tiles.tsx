@@ -2,17 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
+import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
+import { createbitmaptexture } from 'zss/gadget/display/textures'
 import {
   createTilemapBufferGeometryAttributes,
   createTilemapDataTexture,
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
-
-import { convertpalettetocolors } from '../data/palette'
-import { createbitmaptexture } from '../display/textures'
-import { useMedia } from '../hooks'
+import { useMedia } from 'zss/gadget/hooks'
 
 const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))

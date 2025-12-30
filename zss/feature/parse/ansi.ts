@@ -5,9 +5,9 @@ import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { boardsetterrain, ptwithinboard } from 'zss/memory/board'
-import { bookwritecodepage } from 'zss/memory/book'
-import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
+import { boardsetterrain, ptwithinboard } from 'zss/memory/boardoperations'
+import { bookwritecodepage } from 'zss/memory/bookoperations'
+import { codepagereaddata, createcodepage } from 'zss/memory/codepageoperations'
 import {
   BOARD,
   BOARD_HEIGHT,
@@ -15,8 +15,8 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 
-import { loadpalettefrombytes } from '../bytes'
-import { PALETTE } from '../palette'
+import { loadpalettefrombytes } from 'zss/feature/bytes'
+import { PALETTE } from 'zss/feature/palette'
 
 import { renderBytes } from './ansilove'
 

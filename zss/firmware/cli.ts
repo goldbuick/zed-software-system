@@ -71,18 +71,15 @@ import {
   bookreadcodepagebyaddress,
   bookreadsortedcodepages,
   bookupdatename,
-} from 'zss/memory/book'
-import { bookplayermovetoboard } from 'zss/memory/bookplayer'
+} from 'zss/memory/bookoperations'
+import { bookplayermovetoboard } from 'zss/memory/playermanagement'
 import {
   codepagereadname,
   codepagereadtype,
   codepagereadtypetostring,
-} from 'zss/memory/codepage'
-import {
-  memorycodepagetoprefix,
-  memorysendtoelements,
-  memorysendtolog,
-} from 'zss/memory/send'
+} from 'zss/memory/codepageoperations'
+import { memorycodepagetoprefix } from 'zss/memory/rendering'
+import { memorysendtoelements, memorysendtolog } from 'zss/memory/gameloop'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,

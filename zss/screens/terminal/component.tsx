@@ -8,13 +8,12 @@ import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { BackPlate } from 'zss/screens/tape/backplate'
+import { TapeTerminalContext } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
-
-import { TapeTerminalContext } from '../tape/common'
 
 import { TapeTerminalInput } from './input'
 import { TerminalRows } from './terminalrows'

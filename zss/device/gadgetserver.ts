@@ -20,8 +20,8 @@ import {
   memoryreadoperator,
   memoryreadplayerboard,
 } from 'zss/memory'
-import { bookreadflags } from 'zss/memory/book'
-import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendertogadget'
+import { bookreadflags } from 'zss/memory/bookoperations'
+import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
 

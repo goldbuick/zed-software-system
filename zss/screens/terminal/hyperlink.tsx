@@ -8,7 +8,7 @@ import {
   TapeTerminalContext,
   TapeTerminalItemInputProps,
   setuplogitem,
-} from '../tape/common'
+} from 'zss/screens/tape/common'
 
 export function TapeTerminalHyperlink({
   active,

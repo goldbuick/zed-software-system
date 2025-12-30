@@ -5,7 +5,7 @@ import { indextopt } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 
-import { createdarknessmaterial } from '../display/blocks'
+import { createdarknessmaterial } from 'zss/gadget/display/blocks'
 
 type DarknessMeshesProps = {
   width: number
@@ -60,7 +60,7 @@ export function DarknessMeshes({
 
   const shave = 0.1
   return (
-    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
+    <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>
       <boxGeometry
         args={[drawwidth - shave, drawheight - shave, drawheight * 2.5]}
       />

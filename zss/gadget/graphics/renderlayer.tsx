@@ -4,9 +4,9 @@ import { Bloom, Glitch, Noise } from '@react-three/postprocessing'
 import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
 import { Fragment, ReactNode, useEffect, useState } from 'react'
 import type { Camera } from 'three'
-import { Texture, WebGLRenderTarget } from 'three'
+import { Texture, Vector2, WebGLRenderTarget } from 'three'
 
-import { useMedia } from '../hooks'
+import { useMedia } from 'zss/gadget/hooks'
 
 import { EffectComposer } from './effectcomposer'
 import { RenderTexture } from './rendertexture'
@@ -31,9 +31,9 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
       {mood.includes('dark') && (
         <Fragment key="mood">
           <Glitch
-            delay={[10, 60 * 2]} // min and max glitch delay
-            duration={[0.1, 3.0]} // min and max glitch duration
-            strength={[0, 0.15]} // min and max glitch strength
+            delay={new Vector2(10, 60 * 2)} // min and max glitch delay
+            duration={new Vector2(0.1, 3.0)} // min and max glitch duration
+            strength={new Vector2(0, 0.15)} // min and max glitch strength
             mode={GlitchMode.SPORADIC} // glitch mode
             active // turn on/off the effect (switches between "mode" prop and GlitchMode.DISABLED)
             ratio={0.5} // Threshold for strong glitches, 0 - no weak glitches, 1 - no strong glitches.

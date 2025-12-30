@@ -6,15 +6,19 @@ import {
   Object3D,
 } from 'three'
 import { RUNTIME } from 'zss/config'
+import {
+  CHARS_PER_ROW,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  SPRITE,
+} from 'zss/gadget/data/types'
+import { time } from 'zss/gadget/display/anim'
+import { createBlocksBillboardMaterial } from 'zss/gadget/display/blocks'
+import { useSpritePool } from 'zss/gadget/display/spritepool'
+import { createBillboardBufferGeometryAttributes } from 'zss/gadget/display/tiles'
+import { useMedia } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
-
-import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
-import { time } from '../display/anim'
-import { createBlocksBillboardMaterial } from '../display/blocks'
-import { useSpritePool } from '../display/spritepool'
-import { createBillboardBufferGeometryAttributes } from '../display/tiles'
-import { useMedia } from '../hooks'
 
 type BillboardMeshesProps = {
   sprites: SPRITE[]
@@ -173,7 +177,7 @@ export function BillboardMeshes({
   }, [sprites, spritepool, facing, range, meshes, visible, lastmatrix])
 
   return (
-    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
+    <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />

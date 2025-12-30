@@ -31,18 +31,18 @@ import {
 import {
   boardfindplayerforelement,
   boardlistnamedelements,
-} from 'zss/memory/atomics'
+} from 'zss/memory/spatialqueries'
 import {
   boardelementread,
   boardelementreadbyidorindex,
   boardsafedelete,
-} from 'zss/memory/board'
+} from 'zss/memory/boardoperations'
 import {
   boardelementapplycolor,
   boardelementisobject,
-} from 'zss/memory/boardelement'
-import { boardobjectnamedlookupdelete } from 'zss/memory/boardlookup'
-import { bookelementdisplayread } from 'zss/memory/book'
+} from 'zss/memory/boardoperations'
+import { boardobjectnamedlookupdelete } from 'zss/memory/boardoperations'
+import { bookelementdisplayread } from 'zss/memory/bookoperations'
 import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'

@@ -1,21 +1,19 @@
-import { pick, pickwith } from 'zss/mapping/array'
-import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
 import {
-  MAYBE,
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
-import { memoryrun } from 'zss/memory'
+  boardcheckmoveobject,
+  boardelementread,
+  boardgetterrain,
+} from 'zss/memory/boardoperations'
+import { bookelementdisplayread } from 'zss/memory/bookoperations'
 import {
   boardfindplayerforelement,
   boardlistelementsbycolor,
   boardlistelementsbykind,
-} from 'zss/memory/atomics'
-import { boardelementread, boardgetterrain } from 'zss/memory/board'
-import { boardcheckmoveobject } from 'zss/memory/boardops'
-import { bookelementdisplayread } from 'zss/memory/book'
+} from 'zss/memory/spatialqueries'
+
+import { pick, pickwith } from 'zss/mapping/array'
+import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
+import { MAYBE, isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memoryrun } from 'zss/memory'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'

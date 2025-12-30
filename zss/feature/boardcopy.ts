@@ -11,9 +11,9 @@ import {
   boardgetterrain,
   boardsafedelete,
   boardsetterrain,
-} from 'zss/memory/board'
-import { boardelementisobject } from 'zss/memory/boardelement'
-import { boardreadgroup } from 'zss/memory/boardops'
+} from 'zss/memory/boardoperations'
+import { boardelementisobject } from 'zss/memory/boardoperations'
+import { boardreadgroup } from 'zss/memory/boardoperations'
 import {
   BOARD,
   BOARD_ELEMENT,

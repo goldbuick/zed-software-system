@@ -25,7 +25,7 @@ import { randominteger } from 'zss/mapping/number'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
-import { write } from '../writeui'
+import { write } from 'zss/feature/writeui'
 
 import { createsynthdrums } from './drums'
 import { addfcrushmodule } from './fcrushworkletnode'

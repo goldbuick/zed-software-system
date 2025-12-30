@@ -4,8 +4,8 @@ import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { TICK_FPS } from 'zss/mapping/tick'
 
-import { convertpalettetocolors } from '../data/palette'
-import { noiseutilshader } from '../fx/util'
+import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { noiseutilshader } from 'zss/gadget/fx/util'
 
 import { cloneMaterial, interval, time } from './anim'
 import { createbitmaptexture } from './textures'

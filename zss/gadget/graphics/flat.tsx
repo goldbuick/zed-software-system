@@ -10,7 +10,7 @@ import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { TapeTerminalInspector } from 'zss/screens/inspector/component'
 
-import { useScreenSize } from '../userscreen'
+import { useScreenSize } from 'zss/gadget/userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { RenderLayer } from './renderlayer'

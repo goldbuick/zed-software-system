@@ -1,5 +1,6 @@
+import { boardevaldir } from 'zss/memory/boardoperations'
+
 import { MAYBE, isnumber, isstring } from 'zss/mapping/types'
-import { boardevaldir } from 'zss/memory/board'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
 import {

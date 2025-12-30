@@ -8,7 +8,7 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbooklist } from 'zss/memory'
-import { bookreadcodepagesbytypeandstat } from 'zss/memory/book'
+import { bookreadcodepagesbytypeandstat } from 'zss/memory/bookoperations'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
