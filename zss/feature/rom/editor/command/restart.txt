@@ -1,1 +1,1 @@
-desc;$DKGRAYrestart
+desc;$DKGRAYRestart software, deletes all chip and player state (operator only)

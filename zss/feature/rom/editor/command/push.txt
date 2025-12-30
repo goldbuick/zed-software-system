@@ -1,1 +1,1 @@
-desc;$DKGRAYpush
+desc;$DKGRAYShove target object in direction ONLY if pushable

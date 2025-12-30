@@ -1,1 +1,1 @@
-desc;$DKGRAYshare
+desc;$DKGRAYget share url (operator only)

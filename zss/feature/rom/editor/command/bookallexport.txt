@@ -1,1 +1,1 @@
-desc;$DKGRAYbookallexport
+desc;$DKGRAYExport entire book as JSON (operator only)

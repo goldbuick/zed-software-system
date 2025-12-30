@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYSet bgplay volume

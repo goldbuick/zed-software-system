@@ -1,1 +1,1 @@
-desc;$DKGRAYsynthflush
+desc;$DKGRAYClear buffer of played notes

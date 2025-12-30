@@ -1,1 +1,1 @@
-desc;$DKGRAYbbs
+desc;$DKGRAYBBS login/publish actions

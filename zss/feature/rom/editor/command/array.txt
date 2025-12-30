@@ -1,1 +1,1 @@
-desc;$DKGRAYarray
+desc;$DKGRAYCreate array variable

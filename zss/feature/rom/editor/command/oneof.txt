@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYUses given id to ensure only one element of given kind is made

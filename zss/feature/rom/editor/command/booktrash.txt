@@ -1,1 +1,1 @@
-desc;$DKGRAYbooktrash
+desc;$DKGRAYTrash a book by address (operator only)

@@ -1,1 +1,1 @@
-desc;$DKGRAYexport
+desc;$DKGRAYShow export menu (operator only)

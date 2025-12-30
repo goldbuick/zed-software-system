@@ -1,1 +1,1 @@
-desc;$DKGRAYitchiopublish
+desc;$DKGRAYExport zip file for itch.io (operator only)

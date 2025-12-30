@@ -1,1 +1,1 @@
-desc;$DKGRAYgoto
+desc;$DKGRAYTeleport player to board by stat with optional x, y

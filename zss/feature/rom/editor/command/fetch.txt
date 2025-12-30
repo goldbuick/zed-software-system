@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYFetch URL with label, method, and optional data

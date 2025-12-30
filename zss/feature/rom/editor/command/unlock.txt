@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYUnlock against messages from others

@@ -1,1 +1,1 @@
-desc;$DKGRAYreverb3
+desc;$DKGRAYReverb for fx 2

@@ -1,1 +1,1 @@
-desc;$DKGRAYsave
+desc;$DKGRAYSave state to url (operator only)

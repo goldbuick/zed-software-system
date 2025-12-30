@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYShove target object in direction

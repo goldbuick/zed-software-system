@@ -1,1 +1,1 @@
-desc;$DKGRAYfindany
+desc;$DKGRAYHighlight matched elements

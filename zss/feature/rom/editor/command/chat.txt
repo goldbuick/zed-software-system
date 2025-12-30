@@ -1,1 +1,1 @@
-desc;$DKGRAYchat
+desc;$DKGRAYStart/stop twitch chat integration (operator only)

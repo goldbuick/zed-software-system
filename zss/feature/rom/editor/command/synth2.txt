@@ -1,1 +1,1 @@
-desc;$DKGRAYsynth2
+desc;$DKGRAYConfigure synth voice 2

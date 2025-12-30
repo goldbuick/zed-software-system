@@ -1,1 +1,1 @@
-desc;$DKGRAYtrash
+desc;$DKGRAYList books/codepages to delete (operator only)

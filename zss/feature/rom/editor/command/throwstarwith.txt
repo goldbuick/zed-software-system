@@ -1,1 +1,1 @@
-desc;$DKGRAYthrowstarwith
+desc;$DKGRAYThrow star with argument

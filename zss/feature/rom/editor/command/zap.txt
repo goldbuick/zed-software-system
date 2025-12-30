@@ -1,1 +1,1 @@
-desc;$DKGRAY<label>
+desc;$DKGRAYDe-activate first label of given name

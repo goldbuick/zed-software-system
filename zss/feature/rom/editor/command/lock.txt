@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYLock against external messages

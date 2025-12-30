@@ -1,1 +1,1 @@
-desc;$DKGRAYbroadcast
+desc;$DKGRAYStart/stop stream broadcast (operator only)

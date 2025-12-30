@@ -1,1 +1,1 @@
-desc;$DKGRAYplays music notes
+desc;$DKGRAYPlay music notes

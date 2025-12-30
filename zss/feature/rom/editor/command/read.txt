@@ -1,1 +1,1 @@
-desc;$DKGRAYread
+desc;$DKGRAYRead property from object into variable

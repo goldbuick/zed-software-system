@@ -1,1 +1,1 @@
-desc;$DKGRAYhalt until the next cycle
+desc;$DKGRAYYield execution until next tick

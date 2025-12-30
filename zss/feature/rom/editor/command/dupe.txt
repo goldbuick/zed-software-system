@@ -1,1 +1,1 @@
-desc;$DKGRAYdupe
+desc;$DKGRAYDuplicate element at direction in given direction

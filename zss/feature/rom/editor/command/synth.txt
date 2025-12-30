@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYConfigure or restart 8track synth

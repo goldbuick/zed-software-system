@@ -1,1 +1,1 @@
-desc;$DKGRAYduplicatewith
+desc;$DKGRAYDuplicate element with argument

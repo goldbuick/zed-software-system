@@ -1,1 +1,1 @@
-desc;$DKGRAYjoincode
+desc;$DKGRAYStart multiplayer session (operator only)

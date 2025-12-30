@@ -1,1 +1,1 @@
-desc;$DKGRAY<dir> <kind>
+desc;$DKGRAYPut element in direction

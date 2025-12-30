@@ -1,1 +1,1 @@
-desc;$DKGRAYbookexport
+desc;$DKGRAYShow book export options (operator only)

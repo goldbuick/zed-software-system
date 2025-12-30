@@ -1,1 +1,1 @@
-desc;$DKGRAYsynth5
+desc;$DKGRAYConfigure bgplay synth (voices 4-8)

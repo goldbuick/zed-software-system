@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYParse text data

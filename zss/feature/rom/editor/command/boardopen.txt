@@ -1,1 +1,1 @@
-desc;$DKGRAYboardopen
+desc;$DKGRAYUsed to move player to board
