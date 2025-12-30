@@ -16,11 +16,11 @@ import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { boardobjectread } from './boardoperations'
+import { memoryboardobjectread } from './boardoperations'
 import {
-  bookelementdisplayread,
-  bookexport,
-  bookimport,
+  memorybookelementdisplayread,
+  memorybookexport,
+  memorybookimport,
 } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
 import { BOOK, MEMORY_LABEL } from './types'
@@ -61,14 +61,14 @@ function base64tobase64url(base64String: string) {
 
 const FIXED_DATE = new Date('1980/09/02')
 
-export async function compressbooks(books: BOOK[]) {
+export async function memorycompressbooks(books: BOOK[]) {
   await getzstdlib()
 
   console.info('saved', books)
   const zip = new JSZip()
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
-    const exportedbook = bookexport(book)
+    const exportedbook = memorybookexport(book)
     if (exportedbook) {
       // convert to bin
       const bin = packformat(exportedbook)
@@ -89,7 +89,7 @@ export async function compressbooks(books: BOOK[]) {
 }
 
 // import json into book
-export async function decompressbooks(base64bytes: string) {
+export async function memorydecompressbooks(base64bytes: string) {
   await getzstdlib()
 
   const books: BOOK[] = []
@@ -108,7 +108,7 @@ export async function decompressbooks(base64bytes: string) {
     const str = await file.async('string')
     const maybebookfromstr = unpackformat(str)
     if (ispresent(maybebookfromstr)) {
-      const book = bookimport(maybebookfromstr)
+      const book = memorybookimport(maybebookfromstr)
       if (ispresent(book)) {
         books.push(book)
         continue
@@ -119,7 +119,7 @@ export async function decompressbooks(base64bytes: string) {
     const bin = await file.async('uint8array')
     const maybebookfrombin = unpackformat(bin)
     if (ispresent(maybebookfrombin)) {
-      const book = bookimport(maybebookfrombin)
+      const book = memorybookimport(maybebookfrombin)
       if (ispresent(book)) {
         books.push(book)
         continue
@@ -130,7 +130,7 @@ export async function decompressbooks(base64bytes: string) {
     const ubin = decompress(bin)
     const maybebookfromubin = unpackformat(ubin)
     if (ispresent(maybebookfromubin)) {
-      const book = bookimport(maybebookfromubin)
+      const book = memorybookimport(maybebookfromubin)
       if (ispresent(book)) {
         books.push(book)
       }
@@ -198,8 +198,8 @@ export async function memoryadminmenu(player: string) {
     const { user } = memoryreadflags(player)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(player)
-    const playerelement = boardobjectread(playerboard, player)
-    const icon = bookelementdisplayread(playerelement)
+    const playerelement = memoryboardobjectread(playerboard, player)
+    const icon = memorybookelementdisplayread(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
     if (isop && ispresent(playerboard)) {

@@ -2,83 +2,83 @@
 
 ## boardelement.ts
 
-- **boardelementapplycolor(element, strcolor)** - Applies color string to element
-- **boardelementexport(boardelement)** - Exports element to serializable format
-- **boardelementimport(boardelemententry)** - Imports element from serialized format
-- **boardelementisobject(element)** - Checks if element is an object (not terrain)
-- **createboardelement()** - Creates a new board element
+- **memoryboardelementapplycolor(element, strcolor)** - Applies color string to element
+- **memoryboardelementexport(boardelement)** - Exports element to serializable format
+- **memoryboardelementimport(boardelemententry)** - Imports element from serialized format
+- **memoryboardelementisobject(element)** - Checks if element is an object (not terrain)
+- **memorycreateboardelement()** - Creates a new board element
 
 ## boardlookup.ts
 
-- **boardnamedwrite(board, element, index?)** - Adds element to named lookup
-- **boardobjectlookupwrite(board, object)** - Updates object in position lookup
-- **boardobjectnamedlookupdelete(board, object)** - Removes object from lookups
-- **boardresetlookups(board)** - Resets and rebuilds lookup tables
-- **boardsetlookup(board)** - Builds lookup tables for a board
-- **boardterrainnameddelete(board, terrain)** - Removes terrain from named lookup
+- **memoryboardnamedwrite(board, element, index?)** - Adds element to named lookup
+- **memoryboardobjectlookupwrite(board, object)** - Updates object in position lookup
+- **memoryboardobjectnamedlookupdelete(board, object)** - Removes object from lookups
+- **memoryboardresetlookups(board)** - Resets and rebuilds lookup tables
+- **memoryboardsetlookup(board)** - Builds lookup tables for a board
+- **memoryboardterrainnameddelete(board, terrain)** - Removes terrain from named lookup
 
 ## boardmovement.ts
 
-- **boardcheckblockedobject(board, collision, dest, isplayer?)** - Checks if a destination is blocked
-- **boardcheckmoveobject(board, target, dest)** - Checks if an object can move to destination
-- **boardcleanup(board, timestamp)** - Cleans up deleted elements from a board
-- **boardmoveobject(board, element, dest)** - Low-level object movement on a board
+- **memoryboardcheckblockedobject(board, collision, dest, isplayer?)** - Checks if a destination is blocked
+- **memoryboardcheckmoveobject(board, target, dest)** - Checks if an object can move to destination
+- **memoryboardcleanup(board, timestamp)** - Cleans up deleted elements from a board
+- **memoryboardmoveobject(board, element, dest)** - Low-level object movement on a board
 - **BOOK_RUN_ARGS** (type) - Arguments for board tick execution
 - **memorymoveobject(book, board, element, dest, didpush?)** - Moves an object with collision, pushing, and interaction handling
 
 ## boardoperations.ts
 
-- **boarddeleteobject(board, id)** - Deletes an object from a board
-- **boardelementindex(board, pt)** - Converts point to board index
-- **boardelementread(board, pt)** - Reads element at a point (object or terrain)
-- **boardelementreadbyidorindex(board, idorindex)** - Reads element by ID or index
-- **boardevaldir(board, element, player, dir, startpt)** - Evaluates direction commands into destination points
-- **boardexport(board)** - Exports a board to a serializable format
-- **boardfindplayer(board, target, player)** - Finds a player element for targeting
-- **boardgetterrain(board, x, y)** - Gets terrain at coordinates
-- **boardimport(boardentry)** - Imports a board from serialized format
-- **boardobjectcreate(board, from)** - Creates a new object on a board
-- **boardobjectcreatefromkind(board, pt, kind, id?)** - Creates object from kind string
-- **boardobjectread(board, id)** - Gets an object by ID
-- **boardobjectreadbypt(board, pt)** - Gets object at a point
-- **boardobjectsread(board)** - Gets all objects on a board
-- **boardreadgroup(board, self, targetgroup)** - Reads elements matching a group specification
-- **boardsafedelete(board, element, timestamp)** - Safely deletes an element (marks for cleanup)
-- **boardsetterrain(board, from)** - Sets terrain at a position
-- **boardterrainsetfromkind(board, pt, kind)** - Sets terrain from a kind string
-- **boardtick(board, timestamp)** - Prepares code execution list for a board
-- **boardvisualsupdate(board)** - Updates board visual caches (over/under/charset/palette)
-- **createboard(fn?)** - Creates a new empty board
-- **playerblockedbyedge(board, element, dest)** - Checks if player movement is blocked by board edge
-- **playerwaszapped(board, element, dest)** - Checks if player was zapped (hit edge or solid)
-- **ptwithinboard(pt)** - Checks if a point is within board bounds
+- **memoryboarddeleteobject(board, id)** - Deletes an object from a board
+- **memoryboardelementindex(board, pt)** - Converts point to board index
+- **memoryboardelementread(board, pt)** - Reads element at a point (object or terrain)
+- **memoryboardelementreadbyidorindex(board, idorindex)** - Reads element by ID or index
+- **memoryboardevaldir(board, element, player, dir, startpt)** - Evaluates direction commands into destination points
+- **memoryboardexport(board)** - Exports a board to a serializable format
+- **memoryboardfindplayer(board, target, player)** - Finds a player element for targeting
+- **memoryboardgetterrain(board, x, y)** - Gets terrain at coordinates
+- **memoryboardimport(boardentry)** - Imports a board from serialized format
+- **memoryboardobjectcreate(board, from)** - Creates a new object on a board
+- **memoryboardobjectcreatefromkind(board, pt, kind, id?)** - Creates object from kind string
+- **memoryboardobjectread(board, id)** - Gets an object by ID
+- **memoryboardobjectreadbypt(board, pt)** - Gets object at a point
+- **memoryboardobjectsread(board)** - Gets all objects on a board
+- **memoryboardreadgroup(board, self, targetgroup)** - Reads elements matching a group specification
+- **memoryboardsafedelete(board, element, timestamp)** - Safely deletes an element (marks for cleanup)
+- **memoryboardsetterrain(board, from)** - Sets terrain at a position
+- **memoryboardterrainsetfromkind(board, pt, kind)** - Sets terrain from a kind string
+- **memoryboardtick(board, timestamp)** - Prepares code execution list for a board
+- **memoryboardvisualsupdate(board)** - Updates board visual caches (over/under/charset/palette)
+- **memorycreateboard(fn?)** - Creates a new empty board
+- **memoryplayerblockedbyedge(board, element, dest)** - Checks if player movement is blocked by board edge
+- **memoryplayerwaszapped(board, element, dest)** - Checks if player was zapped (hit edge or solid)
+- **memoryptwithinboard(pt)** - Checks if a point is within board bounds
 
 ## bookoperations.ts
 
-- **bookboardelementreadcodepage(book, element)** - Gets code page for a board element
-- **bookclearcodepage(book, address)** - Removes a code page from a book
-- **bookclearflags(book, id)** - Clears flags for an ID
-- **bookelementdisplayread(element, defaultchar?, defaultcolor?, defaultbg?)** - Gets display properties for an element
-- **bookensurecodepagewithtype(book, type, address)** - Ensures code page exists, creates if missing
-- **bookexport(book)** - Exports book to serializable format
-- **bookhasflags(book, id)** - Checks if flags exist for an ID
-- **bookhasmatch(book, ids)** - Checks if book matches any ID
-- **bookimport(bookentry)** - Imports book from serialized format
-- **bookreadboard(book, address)** - Reads a board from a book
-- **bookreadcodepagebyaddress(book, address)** - Finds code page by ID or name
-- **bookreadcodepagedatabytype(book, type)** - Gets typed data for all code pages of a type
-- **bookreadcodepagesbytype(book, type)** - Gets all code pages of a type
-- **bookreadcodepagesbytypeandstat(book, type, statname)** - Gets code pages by type and stat
-- **bookreadcodepagewithtype(book, type, address)** - Finds code page by type and address
-- **bookreadcodepagesbystat(book, statname)** - Finds code pages matching a stat
-- **bookreadflag(book, id, name)** - Reads a specific flag value
-- **bookreadflags(book, id)** - Reads flags for an ID
-- **bookreadsortedcodepages(book)** - Gets code pages sorted by type and name
-- **bookupdatename(book)** - Updates book name
-- **bookupdatetoken(book)** - Updates book token
-- **bookwritecodepage(book, codepage)** - Adds a code page to a book
-- **bookwriteflag(book, id, name, value)** - Writes a flag value
-- **createbook(pages)** - Creates a new book
+- **memorybookboardelementreadcodepage(book, element)** - Gets code page for a board element
+- **memorybookclearcodepage(book, address)** - Removes a code page from a book
+- **memorybookclearflags(book, id)** - Clears flags for an ID
+- **memorybookelementdisplayread(element, defaultchar?, defaultcolor?, defaultbg?)** - Gets display properties for an element
+- **memorybookensurecodepagewithtype(book, type, address)** - Ensures code page exists, creates if missing
+- **memorybookexport(book)** - Exports book to serializable format
+- **memorybookhasflags(book, id)** - Checks if flags exist for an ID
+- **memorybookhasmatch(book, ids)** - Checks if book matches any ID
+- **memorybookimport(bookentry)** - Imports book from serialized format
+- **memorybookreadboard(book, address)** - Reads a board from a book
+- **memorybookreadcodepagebyaddress(book, address)** - Finds code page by ID or name
+- **memorybookreadcodepagedatabytype(book, type)** - Gets typed data for all code pages of a type
+- **memorybookreadcodepagesbytype(book, type)** - Gets all code pages of a type
+- **memorybookreadcodepagesbytypeandstat(book, type, statname)** - Gets code pages by type and stat
+- **memorybookreadcodepagewithtype(book, type, address)** - Finds code page by type and address
+- **memorybookreadcodepagesbystat(book, statname)** - Finds code pages matching a stat
+- **memorybookreadflag(book, id, name)** - Reads a specific flag value
+- **memorybookreadflags(book, id)** - Reads flags for an ID
+- **memorybookreadsortedcodepages(book)** - Gets code pages sorted by type and name
+- **memorybookupdatename(book)** - Updates book name
+- **memorybookupdatetoken(book)** - Updates book token
+- **memorybookwritecodepage(book, codepage)** - Adds a code page to a book
+- **memorybookwriteflag(book, id, name, value)** - Writes a flag value
+- **memorycreatebook(pages)** - Creates a new book
 
 ## cliruntime.ts
 
@@ -93,23 +93,23 @@
 
 ## codepageoperations.ts
 
-- **bitmapexport(bitmap)** - Exports bitmap to serializable format
-- **bitmapimport(bitmapentry)** - Imports bitmap from serialized format
-- **codepageapplyelementstats(stats, element)** - Applies code page stats to a board element
-- **codepageexport(codepage)** - Exports codepage to serializable format
-- **codepagehasmatch(codepage, type, ids)** - Checks if codepage matches type and IDs
-- **codepageimport(codepageentry)** - Imports codepage from serialized format
-- **codepagereaddata(codepage)** - Gets typed data from code page (board/object/terrain/etc)
-- **codepagereadname(codepage)** - Gets the name of a code page
-- **codepagereadstat(codepage, stat)** - Reads a specific stat from code page
-- **codepagereadstatdefaults(codepage)** - Reads stats excluding type/name
-- **codepagereadstats(codepage)** - Reads all stats from code page (cached)
-- **codepagereadstatsfromtext(content)** - Parses stats from code text
-- **codepagereadtype(codepage)** - Gets the type of a code page
-- **codepagereadtypetostring(codepage)** - Gets type as string
-- **codepageresetstats(codepage)** - Resets cached stats
-- **codepagetypetostring(type)** - Converts code page type enum to string
-- **createcodepage(code, content)** - Creates a new code page
+- **memorybitmapexport(bitmap)** - Exports bitmap to serializable format
+- **memorybitmapimport(bitmapentry)** - Imports bitmap from serialized format
+- **memorycodepageapplyelementstats(stats, element)** - Applies code page stats to a board element
+- **memorycodepageexport(codepage)** - Exports codepage to serializable format
+- **memorycodepagehasmatch(codepage, type, ids)** - Checks if codepage matches type and IDs
+- **memorycodepageimport(codepageentry)** - Imports codepage from serialized format
+- **memorycodepagereaddata(codepage)** - Gets typed data from code page (board/object/terrain/etc)
+- **memorycodepagereadname(codepage)** - Gets the name of a code page
+- **memorycodepagereadstat(codepage, stat)** - Reads a specific stat from code page
+- **memorycodepagereadstatdefaults(codepage)** - Reads stats excluding type/name
+- **memorycodepagereadstats(codepage)** - Reads all stats from code page (cached)
+- **memorycodepagereadstatsfromtext(content)** - Parses stats from code text
+- **memorycodepagereadtype(codepage)** - Gets the type of a code page
+- **memorycodepagereadtypetostring(codepage)** - Gets type as string
+- **memorycodepageresetstats(codepage)** - Resets cached stats
+- **memorycodepagetypetostring(type)** - Converts code page type enum to string
+- **memorycreatecodepage(code, content)** - Creates a new code page
 
 ## gameloop.ts
 
@@ -163,8 +163,8 @@
 
 ## inspection.ts
 
-- **gadgetinspectboard(player, board)** - Shows board information in gadget
-- **gadgetinspectloaders(player, p1, p2)** - Shows gadget action loaders
+- **memorygadgetinspectboard(player, board)** - Shows board information in gadget
+- **memorygadgetinspectloaders(player, p1, p2)** - Shows gadget action loaders
 - **memoryinspect(player, p1, p2)** - Main inspection function for elements or areas
 - **memoryinspectarea(player, p1, p2, hassecretheap)** - Inspects a rectangular area
 - **memoryinspectbgarea(player, p1, p2, name)** - Batch edits backgrounds in an area
@@ -179,7 +179,7 @@
 
 ## inspectionbatch.ts
 
-- **hassecretheap()** - Checks if clipboard has data
+- **memoryhassecretheap()** - Checks if clipboard has data
 - **memoryinspectbatchcommand(path, player)** - Handles batch operation commands
 - **memoryinspectcopy(player, p1, p2, mode)** - Copies elements to clipboard
 - **memoryinspectcopymenu(player, p1, p2)** - Shows copy operation menu
@@ -187,15 +187,15 @@
 - **memoryinspectcutmenu(player, p1, p2)** - Shows cut operation menu
 - **memoryinspectpaste(player, p1, p2, mode)** - Pastes elements from clipboard
 - **memoryinspectpastemenu(player, p1, p2)** - Shows paste operation menu
-- **readsecretheap()** - Reads clipboard buffer
+- **memoryreadsecretheap()** - Reads clipboard buffer
 
 ## inspectionfind.ts
 
 - **FINDANY_CONFIG** (type) - Configuration for find operations
 - **memoryfindany(path, player)** - Executes find operation
 - **memoryfindanymenu(player)** - Shows find menu with configurable search slots
-- **readfindanyconfig()** - Reads find configuration
-- **writefindanyconfig(updater)** - Writes find configuration
+- **memoryreadfindanyconfig()** - Reads find configuration
+- **memorywritefindanyconfig(updater)** - Writes find configuration
 
 ## inspectionmakeit.ts
 
@@ -206,15 +206,15 @@
 
 - **memoryinspectremixcommand(path, player)** - Handles remix commands
 - **memoryinspectremixmenu(player, p1, p2)** - Shows remix operation menu
-- **readremixconfig()** - Reads remix configuration
-- **writeremixconfig(updater)** - Writes remix configuration
+- **memoryreadremixconfig()** - Reads remix configuration
+- **memorywriteremixconfig(updater)** - Writes remix configuration
 
 ## inspectionstyle.ts
 
 - **memoryinspectstyle(player, p1, p2, mode)** - Applies style from clipboard to area
 - **memoryinspectstylemenu(player, p1, p2)** - Shows style operation menu
-- **readstyleconfig()** - Reads style configuration
-- **writestyleconfig(updater)** - Writes style configuration
+- **memoryreadstyleconfig()** - Reads style configuration
+- **memorywritestyleconfig(updater)** - Writes style configuration
 
 ## loader.ts
 
@@ -228,10 +228,10 @@
 
 ## playermanagement.ts
 
-- **bookplayermovetoboard(book, player, board, dest)** - Moves player to a different board
-- **bookplayerreadactive(book, player)** - Checks if player is in active list
-- **bookplayerreadboards(book)** - Gets all boards with active players
-- **bookplayersetboard(book, player, board)** - Sets player's current board
+- **memorybookplayermovetoboard(book, player, board, dest)** - Moves player to a different board
+- **memorybookplayerreadactive(book, player)** - Checks if player is in active list
+- **memorybookplayerreadboards(book)** - Gets all boards with active players
+- **memorybookplayersetboard(book, player, board)** - Sets player's current board
 - **memoryplayerlogin(player, stickyflags)** - Logs in a player, places them on a board
 - **memoryplayerlogout(player, isendgame)** - Logs out a player, cleans up their state
 - **memoryplayerscan(players)** - Scans and tracks all player IDs across boards
@@ -240,7 +240,7 @@
 
 ## rendering.ts
 
-- **createcachedsprite(player, index, id, spriteindex)** - Creates a cached sprite for rendering
+- **memorycreatecachedsprite(player, index, id, spriteindex)** - Creates a cached sprite for rendering
 - **MEMORY_GADGET_LAYERS** (type) - Type for gadget layer data
 - **memorycodepagetoprefix(codepage)** - Gets display prefix for a code page
 - **memoryconverttogadgetcontrollayer(player, index, board)** - Creates control layer for gadget rendering
@@ -251,17 +251,17 @@
 
 ## spatialqueries.ts
 
-- **boardcheckcollide(source, dest)** - Checks if two collision types collide
-- **boardfindplayerforelement(board, elementpt, player)** - Finds player element for targeting
-- **boardlistelementsbycolor(board, strcolor)** - Lists elements matching a color
-- **boardlistelementsbyempty(board)** - Lists points with empty elements
-- **boardlistelementsbyidnameorpts(board, idnameorpts)** - Lists elements by ID, name, or points
-- **boardlistelementsbykind(board, kind)** - Lists elements matching a kind string
-- **boardlistnamedelements(board, name)** - Lists elements with a specific name
-- **boardlistptsbyempty(board)** - Lists empty points
-- **boardpickfarthestpt(pt, items)** - Picks farthest element from a point
-- **boardpicknearestpt(pt, items)** - Picks nearest element to a point
-- **boardreadpath(board, forcollision, frompt, topt, flee)** - Calculates path between two points using distance maps
+- **memoryboardcheckcollide(source, dest)** - Checks if two collision types collide
+- **memoryboardfindplayerforelement(board, elementpt, player)** - Finds player element for targeting
+- **memoryboardlistelementsbycolor(board, strcolor)** - Lists elements matching a color
+- **memoryboardlistelementsbyempty(board)** - Lists points with empty elements
+- **memoryboardlistelementsbyidnameorpts(board, idnameorpts)** - Lists elements by ID, name, or points
+- **memoryboardlistelementsbykind(board, kind)** - Lists elements matching a kind string
+- **memoryboardlistnamedelements(board, name)** - Lists elements with a specific name
+- **memoryboardlistptsbyempty(board)** - Lists empty points
+- **memoryboardpickfarthestpt(pt, items)** - Picks farthest element from a point
+- **memoryboardpicknearestpt(pt, items)** - Picks nearest element to a point
+- **memoryboardreadpath(board, forcollision, frompt, topt, flee)** - Calculates path between two points using distance maps
 
 ## types.ts
 
@@ -281,6 +281,6 @@
 
 ## utilities.ts
 
-- **compressbooks(books)** - Compresses books to base64 URL string
-- **decompressbooks(base64bytes)** - Decompresses books from base64 URL string
+- **memorycompressbooks(books)** - Compresses books to base64 URL string
+- **memorydecompressbooks(base64bytes)** - Decompresses books from base64 URL string
 - **memoryadminmenu(player)** - Shows admin menu with player list and utilities

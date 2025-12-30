@@ -23,11 +23,13 @@ type REMIX_CONFIG = {
 
 // read / write from indexdb
 
-export async function readremixconfig(): Promise<REMIX_CONFIG | undefined> {
+export async function memoryreadremixconfig(): Promise<
+  REMIX_CONFIG | undefined
+> {
   return idbget('remixconfig')
 }
 
-export async function writeremixconfig(
+export async function memorywriteremixconfig(
   updater: (oldValue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
 ): Promise<void> {
   return idbupdate('remixconfig', updater)
@@ -66,7 +68,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
           'all',
         )
       }
-      await writeremixconfig(() => remixconfig)
+      await memorywriteremixconfig(() => remixconfig)
       break
     }
     default:
@@ -76,7 +78,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
 }
 
 export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
-  const config = await readremixconfig()
+  const config = await memoryreadremixconfig()
   remixconfig = {
     ...remixconfig,
     ...config,

@@ -1,6 +1,6 @@
 import { ispresent } from 'zss/mapping/types'
 import { memoryboardread, memoryreadbooklist } from 'zss/memory'
-import { bookclearcodepage } from 'zss/memory/bookoperations'
+import { memorybookclearcodepage } from 'zss/memory/bookoperations'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { boardcopy } from './boardcopy'
@@ -23,7 +23,7 @@ export function boardsnapshot(target: string) {
   const list = memoryreadbooklist()
   const name = snapshotname(targetboard.id)
   for (let i = 0; i < list.length; ++i) {
-    bookclearcodepage(list[i], name)
+    memorybookclearcodepage(list[i], name)
   }
 
   // create snapshot board codepage

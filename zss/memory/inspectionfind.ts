@@ -23,11 +23,13 @@ export type FINDANY_CONFIG = {
 
 // read / write from indexdb
 
-export async function readfindanyconfig(): Promise<FINDANY_CONFIG | undefined> {
+export async function memoryreadfindanyconfig(): Promise<
+  FINDANY_CONFIG | undefined
+> {
   return idbget('findanyconfig')
 }
 
-export async function writefindanyconfig(
+export async function memorywritefindanyconfig(
   updater: (oldValue: FINDANY_CONFIG | undefined) => FINDANY_CONFIG,
 ): Promise<void> {
   return idbupdate('findanyconfig', updater)
@@ -41,7 +43,7 @@ let findanyconfig: FINDANY_CONFIG = {
 }
 
 export async function memoryfindanymenu(player: string) {
-  const config = await readfindanyconfig()
+  const config = await memoryreadfindanyconfig()
   findanyconfig = {
     ...findanyconfig,
     ...config,
@@ -96,7 +98,7 @@ export async function memoryfindany(
     return
   }
 
-  await writefindanyconfig(() => findanyconfig)
+  await memorywritefindanyconfig(() => findanyconfig)
 
   const expr: string = findanyconfig[path] ?? ''
   if (ispresent(expr)) {

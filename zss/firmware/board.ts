@@ -17,23 +17,23 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import {
-  boardelementapplycolor,
-  boardelementisobject,
+  memoryboardelementapplycolor,
+  memoryboardelementisobject,
 } from 'zss/memory/boardelement'
-import { boardcheckblockedobject } from 'zss/memory/boardmovement'
+import { memoryboardcheckblockedobject } from 'zss/memory/boardmovement'
 import {
-  boardelementread,
-  boardobjectread,
-  boardobjectsread,
-  boardsafedelete,
-  boardsetterrain,
+  memoryboardelementread,
+  memoryboardobjectread,
+  memoryboardobjectsread,
+  memoryboardsafedelete,
+  memoryboardsetterrain,
 } from 'zss/memory/boardoperations'
-import { bookelementdisplayread } from 'zss/memory/bookoperations'
-import { codepagereaddata } from 'zss/memory/codepageoperations'
-import { bookplayermovetoboard } from 'zss/memory/playermanagement'
+import { memorybookelementdisplayread } from 'zss/memory/bookoperations'
+import { memorycodepagereaddata } from 'zss/memory/codepageoperations'
+import { memorybookplayermovetoboard } from 'zss/memory/playermanagement'
 import {
-  boardlistelementsbykind,
-  boardlistptsbyempty,
+  memoryboardlistelementsbykind,
+  memoryboardlistptsbyempty,
 } from 'zss/memory/spatialqueries'
 import {
   BOARD_HEIGHT,
@@ -69,13 +69,15 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   if (READ_CONTEXT.elementisplayer) {
     const maxplayershots = READ_CONTEXT.board?.maxplayershots ?? 0
     if (maxplayershots > 0) {
-      const bulletcount = boardobjectsread(READ_CONTEXT.board).filter((obj) => {
-        return (
-          !obj.removed &&
-          ispid(obj.party) &&
-          memoryelementstatread(obj, 'collision') === COLLISION.ISBULLET
-        )
-      }).length
+      const bulletcount = memoryboardobjectsread(READ_CONTEXT.board).filter(
+        (obj) => {
+          return (
+            !obj.removed &&
+            ispid(obj.party) &&
+            memoryelementstatread(obj, 'collision') === COLLISION.ISBULLET
+          )
+        },
+      ).length
       if (bulletcount >= maxplayershots) {
         chip.set('didshoot', 0)
         // yield after shoot
@@ -203,9 +205,9 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   }
 
   // check if we are blocked by a pushable object element
-  let target = boardelementread(READ_CONTEXT.board, dir.destpt)
+  let target = memoryboardelementread(READ_CONTEXT.board, dir.destpt)
   if (
-    boardelementisobject(target) &&
+    memoryboardelementisobject(target) &&
     memoryelementstatread(target, 'pushable')
   ) {
     // attempt to shove it away
@@ -213,12 +215,12 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const pt = ptapplydir(pivot, dirfrompts(from, pivot))
     memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
     // grab new target
-    target = boardelementread(READ_CONTEXT.board, dir.destpt)
+    target = memoryboardelementread(READ_CONTEXT.board, dir.destpt)
   }
 
   // handle put empty case
   if (kindname === 'empty') {
-    boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
+    memoryboardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
     return 0
   }
 
@@ -226,22 +228,22 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   if (target?.kind === kindname) {
     // apply color and return
     const [, maybecolor] = kind
-    boardelementapplycolor(target, maybecolor)
+    memoryboardelementapplycolor(target, maybecolor)
     return 0
   }
 
   // invoke safe delete
-  if (boardelementisobject(target)) {
-    boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
+  if (memoryboardelementisobject(target)) {
+    memoryboardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
   }
 
   // handle terrain put
-  if (!boardelementisobject(kindelement)) {
+  if (!memoryboardelementisobject(kindelement)) {
     memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
   }
 
   // handle object put
-  if (boardelementisobject(kindelement)) {
+  if (memoryboardelementisobject(kindelement)) {
     const element = memorywritefromkind(
       READ_CONTEXT.board,
       kind,
@@ -264,7 +266,7 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
 
   // duplicate target at dir, in the direction of the given dir
   const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-  const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
+  const maybetarget = memoryboardelementread(READ_CONTEXT.board, dir.destpt)
   if (ispresent(maybetarget) && ispresent(maybetarget.kind)) {
     // handle player case
     const [maybename] = maybetarget.kind
@@ -274,7 +276,7 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
     }
 
     const collision = memoryelementstatread(maybetarget, 'collision')
-    const blocked = boardcheckblockedobject(
+    const blocked = memoryboardcheckblockedobject(
       READ_CONTEXT.board,
       collision,
       dupedir.destpt,
@@ -330,7 +332,7 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
 
-    const createdboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+    const createdboard = memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
     if (!ispresent(createdboard)) {
       return 0
     }
@@ -415,12 +417,12 @@ export const BOARD_FIRMWARE = createfirmware()
       y: maybey ?? targetboard.starty ?? Math.round(BOARD_HEIGHT * 0.5),
     }
 
-    const display = bookelementdisplayread(READ_CONTEXT.element)
+    const display = memorybookelementdisplayread(READ_CONTEXT.element)
     if (display.name !== 'player') {
       const color = memoryelementstatread(READ_CONTEXT.element, 'color')
       const bg = memoryelementstatread(READ_CONTEXT.element, 'bg')
       const findcolor = mapcolortostrcolor(color, bg)
-      const gotoelements = boardlistelementsbykind(targetboard, [
+      const gotoelements = memoryboardlistelementsbykind(targetboard, [
         display.name,
         findcolor,
       ])
@@ -450,7 +452,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
 
     // yolo
-    bookplayermovetoboard(
+    memorybookplayermovetoboard(
       READ_CONTEXT.book,
       READ_CONTEXT.elementfocus,
       targetboard.id,
@@ -469,7 +471,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
 
     const [target] = readargs(words, 0, [ARG_TYPE.STRING])
-    const maybeobject = boardobjectread(READ_CONTEXT.board, target)
+    const maybeobject = memoryboardobjectread(READ_CONTEXT.board, target)
     if (
       ispresent(READ_CONTEXT.element?.x) &&
       ispresent(READ_CONTEXT.element.y) &&
@@ -503,7 +505,10 @@ export const BOARD_FIRMWARE = createfirmware()
           break
         }
         // scan until we find an opposite transporter
-        const maybetransporter = boardelementread(READ_CONTEXT.board, scan)
+        const maybetransporter = memoryboardelementread(
+          READ_CONTEXT.board,
+          scan,
+        )
         if (
           maybetransporter?.kind === READ_CONTEXT.element.kind &&
           memoryelementstatread(maybetransporter, 'shootx') === -deltax &&
@@ -541,8 +546,8 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
-    if (boardelementisobject(maybetarget)) {
+    const maybetarget = memoryboardelementread(READ_CONTEXT.board, dir.destpt)
+    if (memoryboardelementisobject(maybetarget)) {
       const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
       const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
       memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
@@ -559,9 +564,9 @@ export const BOARD_FIRMWARE = createfirmware()
     // shove target at dir, in the direction of the given dir
     // but only if target is pushable
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
+    const maybetarget = memoryboardelementread(READ_CONTEXT.board, dir.destpt)
     if (
-      boardelementisobject(maybetarget) &&
+      memoryboardelementisobject(maybetarget) &&
       memoryelementstatread(maybetarget, 'pushable')
     ) {
       const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
@@ -610,7 +615,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.EAST:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          boardsetterrain(READ_CONTEXT.board, {
+          memoryboardsetterrain(READ_CONTEXT.board, {
             x: dir.destpt.x + i,
             y: dir.destpt.y,
             name: 'text',
@@ -623,7 +628,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.WEST:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          boardsetterrain(READ_CONTEXT.board, {
+          memoryboardsetterrain(READ_CONTEXT.board, {
             x: dir.destpt.x + i - last,
             y: dir.destpt.y,
             name: 'text',
@@ -636,7 +641,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.NORTH:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          boardsetterrain(READ_CONTEXT.board, {
+          memoryboardsetterrain(READ_CONTEXT.board, {
             x: dir.destpt.x,
             y: dir.destpt.y + i - last,
             name: 'text',
@@ -649,7 +654,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.SOUTH:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          boardsetterrain(READ_CONTEXT.board, {
+          memoryboardsetterrain(READ_CONTEXT.board, {
             x: dir.destpt.x,
             y: dir.destpt.y + i,
             name: 'text',
@@ -685,7 +690,7 @@ export const BOARD_FIRMWARE = createfirmware()
     const targetname = readstrkindname(target) ?? ''
     if (targetname === 'empty') {
       // empty into something becomes a put
-      boardlistptsbyempty(READ_CONTEXT.board).forEach((pt) => {
+      memoryboardlistptsbyempty(READ_CONTEXT.board).forEach((pt) => {
         memorywritefromkind(READ_CONTEXT.board, into, pt)
       })
     }
@@ -694,33 +699,39 @@ export const BOARD_FIRMWARE = createfirmware()
     const intoname = readstrkindname(into)
     const intocolor = readstrkindcolor(into)
     const intobg = readstrkindbg(into)
-    boardlistelementsbykind(READ_CONTEXT.board, target).forEach((element) => {
-      // modify existing elements
-      if (ispresent(intocolor)) {
-        element.color = intocolor
-      }
-      if (ispresent(intobg)) {
-        element.bg = intobg
-      }
-      const display = bookelementdisplayread(element)
-      if (display.name !== intoname) {
-        const newcolor = memoryelementstatread(element, 'color')
-        const newbg = memoryelementstatread(element, 'bg')
-        // erase element
-        boardsafedelete(READ_CONTEXT.board, element, READ_CONTEXT.timestamp)
-        // create new element
-        if (intoname !== 'empty') {
-          const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-          const newelement = memorywritefromkind(READ_CONTEXT.board, into, pt)
-          if (ispresent(newelement)) {
-            newelement.color = newcolor
-            newelement.bg = newbg
-          } else {
-            // throw error
+    memoryboardlistelementsbykind(READ_CONTEXT.board, target).forEach(
+      (element) => {
+        // modify existing elements
+        if (ispresent(intocolor)) {
+          element.color = intocolor
+        }
+        if (ispresent(intobg)) {
+          element.bg = intobg
+        }
+        const display = memorybookelementdisplayread(element)
+        if (display.name !== intoname) {
+          const newcolor = memoryelementstatread(element, 'color')
+          const newbg = memoryelementstatread(element, 'bg')
+          // erase element
+          memoryboardsafedelete(
+            READ_CONTEXT.board,
+            element,
+            READ_CONTEXT.timestamp,
+          )
+          // create new element
+          if (intoname !== 'empty') {
+            const pt = { x: element.x ?? 0, y: element.y ?? 0 }
+            const newelement = memorywritefromkind(READ_CONTEXT.board, into, pt)
+            if (ispresent(newelement)) {
+              newelement.color = newcolor
+              newelement.bg = newbg
+            } else {
+              // throw error
+            }
           }
         }
-      }
-    })
+      },
+    )
 
     return 0
   })
@@ -737,7 +748,7 @@ export const BOARD_FIRMWARE = createfirmware()
     // if there is already an object with mark id, bail
     if (
       ispresent(READ_CONTEXT.board) &&
-      boardobjectread(READ_CONTEXT.board, mark)
+      memoryboardobjectread(READ_CONTEXT.board, mark)
     ) {
       return 0
     }
@@ -750,7 +761,7 @@ export const BOARD_FIRMWARE = createfirmware()
     // if there is already an object with mark id, bail
     if (
       ispresent(READ_CONTEXT.board) &&
-      boardobjectread(READ_CONTEXT.board, mark)
+      memoryboardobjectread(READ_CONTEXT.board, mark)
     ) {
       return 0
     }

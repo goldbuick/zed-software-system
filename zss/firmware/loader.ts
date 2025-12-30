@@ -13,7 +13,7 @@ import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryboardread, memoryreadoperator } from 'zss/memory'
-import { boardobjectread } from 'zss/memory/boardoperations'
+import { memoryboardobjectread } from 'zss/memory/boardoperations'
 import { memorysendtoelements } from 'zss/memory/gameloop'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -121,7 +121,7 @@ export const LOADER_FIRMWARE = createfirmware({
     // and it'll update the READ_CONTEXT to point to the given object
     // the intent here is afford !chat to drive behavior of a __specific__ object
     const [id] = readargs(words, 0, [ARG_TYPE.STRING])
-    const maybeobject = boardobjectread(READ_CONTEXT.board, id)
+    const maybeobject = memoryboardobjectread(READ_CONTEXT.board, id)
     // #oneof chatuser chatdroid
     // #withobject chatuser
     // #goup ' <- this code
@@ -132,7 +132,7 @@ export const LOADER_FIRMWARE = createfirmware({
       READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
       READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
         ? READ_CONTEXT.elementid
-        : (READ_CONTEXT.element.player ?? memoryreadoperator())
+        : (READ_CONTEXT.element?.player ?? memoryreadoperator())
     }
     return 0
   })

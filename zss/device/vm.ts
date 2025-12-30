@@ -57,20 +57,20 @@ import {
   memorywriteoperator,
   memorywritetopic,
 } from 'zss/memory'
-import { boardobjectread } from 'zss/memory/boardoperations'
+import { memoryboardobjectread } from 'zss/memory/boardoperations'
 import {
-  bookreadcodepagebyaddress,
-  bookreadcodepagesbytype,
-  bookwritecodepage,
+  memorybookreadcodepagebyaddress,
+  memorybookreadcodepagesbytype,
+  memorybookwritecodepage,
 } from 'zss/memory/bookoperations'
 import {
-  codepageapplyelementstats,
-  codepagereaddata,
-  codepagereadname,
-  codepagereadstatsfromtext,
-  codepagereadtype,
-  codepagereadtypetostring,
-  codepageresetstats,
+  memorycodepageapplyelementstats,
+  memorycodepagereaddata,
+  memorycodepagereadname,
+  memorycodepagereadstatsfromtext,
+  memorycodepagereadtype,
+  memorycodepagereadtypetostring,
+  memorycodepageresetstats,
 } from 'zss/memory/codepageoperations'
 import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspection'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectionbatch'
@@ -86,14 +86,14 @@ import {
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import { memoryloader } from 'zss/memory/loader'
 import {
-  bookplayermovetoboard,
-  bookplayerreadboards,
+  memorybookplayermovetoboard,
+  memorybookplayerreadboards,
 } from 'zss/memory/playermanagement'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import {
-  compressbooks,
-  decompressbooks,
   memoryadminmenu,
+  memorycompressbooks,
+  memorydecompressbooks,
 } from 'zss/memory/utilities'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -141,7 +141,7 @@ async function savestate(autosave?: boolean) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
-    const content = await compressbooks(books)
+    const content = await memorycompressbooks(books)
     const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
     registersavemem(vm, memoryreadoperator(), historylabel, content)
   }
@@ -152,7 +152,7 @@ async function forkstate(transfer: string) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
-    const content = await compressbooks(books)
+    const content = await memorycompressbooks(books)
     registerforkmem(vm, memoryreadoperator(), content, transfer)
   }
 }
@@ -162,7 +162,7 @@ async function compressedbookstate() {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
-    return compressbooks(books)
+    return await memorycompressbooks(books)
   }
   return ''
 }
@@ -348,19 +348,20 @@ const vm = createdevice(
           ],
           // object codepage kinds
           kinds: [
-            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
-              (codepage) => codepagereadname(codepage),
-            ),
+            ...memorybookreadcodepagesbytype(
+              mainbook,
+              CODE_PAGE_TYPE.OBJECT,
+            ).map((codepage) => memorycodepagereadname(codepage)),
             ...objectKeys(categoryconsts),
           ],
           // other codepage types
           altkinds: [
-            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
-            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
-            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
-            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
-            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
-          ].map((codepage) => codepagereadname(codepage)),
+            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
+            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
+            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
+            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
+            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
+          ].map((codepage) => memorycodepagereadname(codepage)),
           colors: [...objectKeys(colorconsts)],
           dirs: [
             ...objectKeys(dirconsts).filter(
@@ -400,7 +401,7 @@ const vm = createdevice(
           doasync(vm, message.player, async () => {
             if (isstring(message.data)) {
               // unpack books
-              const books = await decompressbooks(message.data)
+              const books = await memorydecompressbooks(message.data)
               const booknames = books.map((item) => item.name)
               memoryresetbooks(books)
               apilog(vm, message.player, `loading ${booknames.join(', ')}`)
@@ -494,26 +495,30 @@ const vm = createdevice(
               const [codepage, maybeobject] = path
               // write to code
               const contentbook = memoryreadbookbyaddress(book)
-              const content = bookreadcodepagebyaddress(contentbook, codepage)
+              const content = memorybookreadcodepagebyaddress(
+                contentbook,
+                codepage,
+              )
               if (ispresent(content)) {
                 if (
-                  codepagereadtype(content) === CODE_PAGE_TYPE.BOARD &&
+                  memorycodepagereadtype(content) === CODE_PAGE_TYPE.BOARD &&
                   ispresent(maybeobject)
                 ) {
-                  const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(content)
-                  const object = boardobjectread(board, maybeobject)
+                  const board =
+                    memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(content)
+                  const object = memoryboardobjectread(board, maybeobject)
                   if (ispresent(object)) {
                     // TODO parse code for stats and update element name
                     object.code = value
-                    codepageapplyelementstats(
-                      codepagereadstatsfromtext(value),
+                    memorycodepageapplyelementstats(
+                      memorycodepagereadstatsfromtext(value),
                       object,
                     )
                   }
                 } else {
                   content.code = value
                   // re-parse code for @ attrs and expected data type
-                  codepageresetstats(content)
+                  memorycodepageresetstats(content)
                 }
               }
             })
@@ -606,13 +611,13 @@ const vm = createdevice(
           const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
           if (ispresent(mainbook) && isarray(message.data)) {
             const [address] = message.data
-            const codepage = bookreadcodepagebyaddress(mainbook, address)
+            const codepage = memorybookreadcodepagebyaddress(mainbook, address)
             if (ispresent(codepage)) {
               registercopyjsonfile(
                 vm,
                 operator,
                 codepage,
-                `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
+                `${memorycodepagereadname(codepage)}.${memorycodepagereadtypetostring(codepage)}.json`,
               )
             }
           }
@@ -772,7 +777,7 @@ const vm = createdevice(
                   ispresent(json.data) &&
                   isstring(json.exported)
                 ) {
-                  bookwritecodepage(mainbook, json.data)
+                  memorybookwritecodepage(mainbook, json.data)
                   apilog(vm, message.player, `loaded ${json.exported}`)
                 }
               } else {
@@ -808,13 +813,13 @@ const vm = createdevice(
             // path is player id
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             const playerboard = memoryreadplayerboard(path)
-            const playerelement = boardobjectread(playerboard, path)
+            const playerelement = memoryboardobjectread(playerboard, path)
             if (ispresent(playerboard) && ispresent(playerelement)) {
               const dest = {
                 x: playerelement.x ?? 0,
                 y: playerelement.y ?? 0,
               }
-              bookplayermovetoboard(
+              memorybookplayermovetoboard(
                 mainbook,
                 message.player,
                 playerboard.id,
@@ -834,7 +839,7 @@ const vm = createdevice(
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
                 for (let i = 0; i < pages.length; ++i) {
                   const codepage = pages[i]
-                  const name = codepagereadname(codepage)
+                  const name = memorycodepagereadname(codepage)
                   const lines = codepage.code.split('\n').slice(0, 2)
                   gadgethyperlink(
                     message.player,
@@ -852,7 +857,7 @@ const vm = createdevice(
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.TERRAIN)
                 for (let i = 0; i < pages.length; ++i) {
                   const codepage = pages[i]
-                  const name = codepagereadname(codepage)
+                  const name = memorycodepagereadname(codepage)
                   const lines = codepage.code.split('\n').slice(0, 2)
                   gadgethyperlink(
                     message.player,
@@ -985,7 +990,7 @@ const vm = createdevice(
                 invoke.target,
                 invoke.path,
                 undefined,
-                bookplayerreadboards(mainbook),
+                memorybookplayerreadboards(mainbook),
               )
             }
             break

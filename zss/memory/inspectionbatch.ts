@@ -16,13 +16,13 @@ import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
 import {
-  boardelementread,
-  boardgetterrain,
-  boardobjectcreate,
-  boardsafedelete,
-  boardsetterrain,
+  memoryboardelementread,
+  memoryboardgetterrain,
+  memoryboardobjectcreate,
+  memoryboardsafedelete,
+  memoryboardsetterrain,
 } from './boardoperations'
-import { bookelementdisplayread } from './bookoperations'
+import { memorybookelementdisplayread } from './bookoperations'
 import {
   memoryinspectbgarea,
   memoryinspectchararea,
@@ -67,8 +67,8 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         let bg = COLOR.ONCLEAR
         content += ''
         for (let x = p1x; x <= p2x; ++x) {
-          const element = boardgetterrain(board, x, y)
-          const display = bookelementdisplayread(element)
+          const element = memoryboardgetterrain(board, x, y)
+          const display = memorybookelementdisplayread(element)
           if (display.color != color) {
             color = display.color
             content += `$${COLOR[display.color]}`.toLowerCase()
@@ -156,7 +156,7 @@ type BOARD_ELEMENT_BUFFER = {
 
 // read / write from indexdb
 
-export async function readsecretheap(): Promise<
+export async function memoryreadsecretheap(): Promise<
   BOARD_ELEMENT_BUFFER | undefined
 > {
   return idbget('secretheap')
@@ -168,8 +168,8 @@ async function writesecretheap(
   return idbupdate('secretheap', updater)
 }
 
-export async function hassecretheap() {
-  return !!(await readsecretheap())
+export async function memoryhassecretheap() {
+  return !!(await memoryreadsecretheap())
 }
 
 function createboardelementbuffer(
@@ -190,10 +190,10 @@ function createboardelementbuffer(
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
       const pt = { x: x - x1, y: y - y1 }
-      const maybeobject = boardelementread(board, { x, y })
+      const maybeobject = memoryboardelementread(board, { x, y })
       if (maybeobject?.category === CATEGORY.ISOBJECT) {
-        terrain.push(deepcopy(boardgetterrain(board, x, y)))
-        if (bookelementdisplayread(maybeobject).name !== 'player') {
+        terrain.push(deepcopy(memoryboardgetterrain(board, x, y)))
+        if (memorybookelementdisplayread(maybeobject).name !== 'player') {
           objects.push({
             ...deepcopy(maybeobject),
             ...pt,
@@ -305,11 +305,11 @@ export async function memoryinspectcut(
     case 'cutall': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = boardelementread(board, { x, y })
+          const maybeobject = memoryboardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            boardsafedelete(board, maybeobject, mainbook.timestamp)
+            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
           }
-          boardsetterrain(board, { x, y })
+          memoryboardsetterrain(board, { x, y })
         }
       }
       break
@@ -317,9 +317,9 @@ export async function memoryinspectcut(
     case 'cutobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = boardelementread(board, { x, y })
+          const maybeobject = memoryboardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            boardsafedelete(board, maybeobject, mainbook.timestamp)
+            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
           }
         }
       }
@@ -328,7 +328,7 @@ export async function memoryinspectcut(
     case 'cutterrain': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          boardsetterrain(board, { x, y })
+          memoryboardsetterrain(board, { x, y })
         }
       }
       break
@@ -372,7 +372,7 @@ export async function memoryinspectpaste(
   mode: string,
 ) {
   const board = memoryreadplayerboard(player)
-  const secretheap = await readsecretheap()
+  const secretheap = await memoryreadsecretheap()
   if (!ispresent(board) || !ispresent(secretheap)) {
     return
   }
@@ -392,7 +392,7 @@ export async function memoryinspectpaste(
       for (let y = 0; y < iheight; ++y) {
         for (let x = 0; x < iwidth; ++x) {
           const idx = pttoindex({ x, y }, secretheap.width)
-          boardsetterrain(board, {
+          memoryboardsetterrain(board, {
             ...secretheap.terrain[idx],
             x: x1 + x,
             y: y1 + y,
@@ -406,7 +406,7 @@ export async function memoryinspectpaste(
           ispresent(obj.y) &&
           ptwithin(obj.x, obj.y, 0, width - 1, height - 1, 0)
         ) {
-          boardobjectcreate(board, {
+          memoryboardobjectcreate(board, {
             ...obj,
             id: undefined,
             x: x1 + obj.x,
@@ -424,7 +424,7 @@ export async function memoryinspectpaste(
           ispresent(obj.y) &&
           ptwithin(obj.x, obj.y, 0, width - 1, height - 1, 0)
         ) {
-          boardobjectcreate(board, {
+          memoryboardobjectcreate(board, {
             ...obj,
             id: undefined,
             x: x1 + obj.x,
@@ -437,7 +437,7 @@ export async function memoryinspectpaste(
       for (let y = 0; y < iheight; ++y) {
         for (let x = 0; x < iwidth; ++x) {
           const idx = pttoindex({ x, y }, secretheap.width)
-          boardsetterrain(board, {
+          memoryboardsetterrain(board, {
             ...secretheap.terrain[idx],
             x: x1 + x,
             y: y1 + y,
@@ -451,7 +451,7 @@ export async function memoryinspectpaste(
           const tx = (x - x1) % secretheap.width
           const ty = (y - y1) % secretheap.height
           const idx = pttoindex({ x: tx, y: ty }, secretheap.width)
-          boardsetterrain(board, {
+          memoryboardsetterrain(board, {
             ...secretheap.terrain[idx],
             x,
             y,

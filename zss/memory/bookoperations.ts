@@ -5,14 +5,14 @@ import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
-  codepageexport,
-  codepageimport,
-  codepagereaddata,
-  codepagereadname,
-  codepagereadstats,
-  codepagereadtype,
-  codepagetypetostring,
-  createcodepage,
+  memorycodepageexport,
+  memorycodepageimport,
+  memorycodepagereaddata,
+  memorycodepagereadname,
+  memorycodepagereadstats,
+  memorycodepagereadtype,
+  memorycodepagetypetostring,
+  memorycreatecodepage,
 } from './codepageoperations'
 import {
   BOARD,
@@ -26,7 +26,7 @@ import {
 
 // player state
 
-export function createbook(pages: CODE_PAGE[]): BOOK {
+export function memorycreatebook(pages: CODE_PAGE[]): BOOK {
   return {
     id: createsid(),
     name: createnameid(),
@@ -47,9 +47,9 @@ enum BOOK_KEYS {
   token,
 }
 
-export function bookexport(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
+export function memorybookexport(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   return formatobject(book, BOOK_KEYS, {
-    pages: (pages) => pages.map(codepageexport),
+    pages: (pages) => pages.map(memorycodepageexport),
     flags: (flags: Record<string, BOOK_FLAGS>) => {
       const ids = Object.keys(flags)
       for (let i = 0; i < ids.length; ++i) {
@@ -64,9 +64,9 @@ export function bookexport(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   })
 }
 
-export function bookimport(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
+export function memorybookimport(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   const book: MAYBE<BOOK> = unformatobject(bookentry, BOOK_KEYS, {
-    pages: (pages) => pages.map(codepageimport),
+    pages: (pages) => pages.map(memorycodepageimport),
   })
   if (ispresent(book)) {
     // remove old data
@@ -75,19 +75,19 @@ export function bookimport(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   return book
 }
 
-export function bookupdatename(book: MAYBE<BOOK>) {
+export function memorybookupdatename(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.name = createnameid()
   }
 }
 
-export function bookupdatetoken(book: MAYBE<BOOK>) {
+export function memorybookupdatetoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.token = `${createshortnameid()}${randominteger(1111, 9999)}`
   }
 }
 
-export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
+export function memorybookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
   if (!ispresent(book)) {
     return false
   }
@@ -97,7 +97,7 @@ export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
   return false
 }
 
-export function bookreadcodepagebyaddress(
+export function memorybookreadcodepagebyaddress(
   book: MAYBE<BOOK>,
   address: string,
 ): MAYBE<CODE_PAGE> {
@@ -107,13 +107,13 @@ export function bookreadcodepagebyaddress(
 
   const laddress = NAME(address)
   const codepage = book.pages.find(
-    (item) => item.id === address || laddress === codepagereadname(item),
+    (item) => item.id === address || laddress === memorycodepagereadname(item),
   )
 
   return codepage
 }
 
-export function bookreadcodepagesbystat(
+export function memorybookreadcodepagesbystat(
   book: MAYBE<BOOK>,
   statname: string,
 ): CODE_PAGE[] {
@@ -122,8 +122,8 @@ export function bookreadcodepagesbystat(
   }
   const maybename = NAME(statname)
   const result = book.pages.filter((codepage) => {
-    const stats = codepagereadstats(codepage)
-    const codepagename = NAME(codepagereadname(codepage))
+    const stats = memorycodepagereadstats(codepage)
+    const codepagename = NAME(memorycodepagereadname(codepage))
     return (
       codepage.id === statname ||
       maybename === codepagename ||
@@ -133,7 +133,7 @@ export function bookreadcodepagesbystat(
   return result
 }
 
-export function bookreadcodepagewithtype(
+export function memorybookreadcodepagewithtype(
   book: MAYBE<BOOK>,
   type: CODE_PAGE_TYPE,
   address: string,
@@ -145,45 +145,45 @@ export function bookreadcodepagewithtype(
   const laddress = NAME(address)
   const codepage = book.pages.find(
     (item) =>
-      codepagereadtype(item) === type &&
-      (item.id === address || laddress === codepagereadname(item)),
+      memorycodepagereadtype(item) === type &&
+      (item.id === address || laddress === memorycodepagereadname(item)),
   )
 
   return codepage
 }
 
-export function bookensurecodepagewithtype(
+export function memorybookensurecodepagewithtype(
   book: MAYBE<BOOK>,
   type: CODE_PAGE_TYPE,
   address: string,
 ): [MAYBE<CODE_PAGE>, boolean] {
-  let codepage = bookreadcodepagewithtype(book, type, address)
+  let codepage = memorybookreadcodepagewithtype(book, type, address)
   if (!ispresent(codepage)) {
     // create new codepage
-    const typestr = codepagetypetostring(type)
-    codepage = createcodepage(
+    const typestr = memorycodepagetypetostring(type)
+    codepage = memorycreatecodepage(
       typestr === 'object'
         ? `@${address || 'object'}\n`
         : `@${typestr} ${address}\n`,
       {},
     )
-    bookwritecodepage(book, codepage)
+    memorybookwritecodepage(book, codepage)
     return [codepage, true]
   }
   return [codepage, false]
 }
 
-export function bookreadcodepagesbytype(
+export function memorybookreadcodepagesbytype(
   book: MAYBE<BOOK>,
   type: CODE_PAGE_TYPE,
 ): CODE_PAGE[] {
   if (!ispresent(book)) {
     return []
   }
-  return book.pages.filter((item) => codepagereadtype(item) === type)
+  return book.pages.filter((item) => memorycodepagereadtype(item) === type)
 }
 
-export function bookreadcodepagesbytypeandstat(
+export function memorybookreadcodepagesbytypeandstat(
   book: MAYBE<BOOK>,
   type: CODE_PAGE_TYPE,
   statname: string,
@@ -193,10 +193,10 @@ export function bookreadcodepagesbytypeandstat(
   }
   const maybename = NAME(statname)
   const result = book.pages
-    .filter((item) => codepagereadtype(item) === type)
+    .filter((item) => memorycodepagereadtype(item) === type)
     .filter((codepage) => {
-      const stats = codepagereadstats(codepage)
-      const codepagename = NAME(codepagereadname(codepage))
+      const stats = memorycodepagereadstats(codepage)
+      const codepagename = NAME(memorycodepagereadname(codepage))
       return (
         codepage.id === statname ||
         maybename === codepagename ||
@@ -206,7 +206,7 @@ export function bookreadcodepagesbytypeandstat(
   return result
 }
 
-export function bookreadcodepagedatabytype<T extends CODE_PAGE_TYPE>(
+export function memorybookreadcodepagedatabytype<T extends CODE_PAGE_TYPE>(
   book: MAYBE<BOOK>,
   type: T,
 ): CODE_PAGE_TYPE_MAP[T][] {
@@ -214,34 +214,34 @@ export function bookreadcodepagedatabytype<T extends CODE_PAGE_TYPE>(
     return []
   }
   return book.pages
-    .filter((item) => codepagereadtype(item) === type)
-    .map((page) => codepagereaddata(page))
+    .filter((item) => memorycodepagereadtype(item) === type)
+    .map((page) => memorycodepagereaddata(page))
     .filter(ispresent) as CODE_PAGE_TYPE_MAP[T][]
 }
 
-export function bookreadsortedcodepages(book: MAYBE<BOOK>) {
+export function memorybookreadsortedcodepages(book: MAYBE<BOOK>) {
   if (!ispresent(book)) {
     return []
   }
   const sorted = deepcopy(book.pages).sort((a, b) => {
-    const atype = codepagereadtype(a)
-    const btype = codepagereadtype(b)
+    const atype = memorycodepagereadtype(a)
+    const btype = memorycodepagereadtype(b)
     if (atype === btype) {
-      return codepagereadname(a).localeCompare(codepagereadname(b))
+      return memorycodepagereadname(a).localeCompare(memorycodepagereadname(b))
     }
     return btype - atype
   })
   return sorted
 }
 
-export function bookboardelementreadcodepage(
+export function memorybookboardelementreadcodepage(
   book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<CODE_PAGE> {
   // figure out stats from kind codepage
   if (ispresent(element)) {
     // check for terrain element
-    const terrainpage = bookreadcodepagewithtype(
+    const terrainpage = memorybookreadcodepagewithtype(
       book,
       CODE_PAGE_TYPE.TERRAIN,
       element.kind ?? '',
@@ -250,7 +250,7 @@ export function bookboardelementreadcodepage(
       return terrainpage
     }
     // check for object element
-    const objectpage = bookreadcodepagewithtype(
+    const objectpage = memorybookreadcodepagewithtype(
       book,
       CODE_PAGE_TYPE.OBJECT,
       element.kind ?? '',
@@ -262,7 +262,7 @@ export function bookboardelementreadcodepage(
   return undefined
 }
 
-export function bookwritecodepage(
+export function memorybookwritecodepage(
   book: MAYBE<BOOK>,
   codepage: MAYBE<CODE_PAGE>,
 ): boolean {
@@ -270,30 +270,31 @@ export function bookwritecodepage(
     return false
   }
 
-  const existing = bookreadcodepagebyaddress(book, codepage.id)
+  const existing = memorybookreadcodepagebyaddress(book, codepage.id)
   if (ispresent(existing)) {
     return false
   }
 
   book.pages.push(codepage)
-  bookupdatetoken(book)
+  memorybookupdatetoken(book)
 
   return true
 }
 
-export function bookclearcodepage(book: MAYBE<BOOK>, address: string) {
-  const codepage = bookreadcodepagebyaddress(book, address)
+export function memorybookclearcodepage(book: MAYBE<BOOK>, address: string) {
+  const codepage = memorybookreadcodepagebyaddress(book, address)
   if (ispresent(book) && ispresent(codepage)) {
     const laddress = NAME(address)
     book.pages = book.pages.filter(
-      (item) => item.id !== address && laddress !== codepagereadname(item),
+      (item) =>
+        item.id !== address && laddress !== memorycodepagereadname(item),
     )
-    bookupdatetoken(book)
+    memorybookupdatetoken(book)
     return codepage
   }
 }
 
-export function bookelementdisplayread(
+export function memorybookelementdisplayread(
   element: MAYBE<BOARD_ELEMENT>,
   defaultchar = 1,
   defaultcolor = COLOR.WHITE,
@@ -324,19 +325,19 @@ export function bookelementdisplayread(
   }
 }
 
-export function bookreadboard(
+export function memorybookreadboard(
   book: MAYBE<BOOK>,
   address: string,
 ): MAYBE<BOARD> {
-  const codepage = bookreadcodepagebyaddress(book, address)
-  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+  const codepage = memorybookreadcodepagebyaddress(book, address)
+  return memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
 }
 
-export function bookhasflags(book: MAYBE<BOOK>, id: string) {
+export function memorybookhasflags(book: MAYBE<BOOK>, id: string) {
   return !!book?.flags[id]
 }
 
-export function bookreadflags(book: MAYBE<BOOK>, id: string) {
+export function memorybookreadflags(book: MAYBE<BOOK>, id: string) {
   if (!book) {
     return {}
   }
@@ -344,25 +345,29 @@ export function bookreadflags(book: MAYBE<BOOK>, id: string) {
   return book.flags[id]
 }
 
-export function bookclearflags(book: MAYBE<BOOK>, id: string) {
+export function memorybookclearflags(book: MAYBE<BOOK>, id: string) {
   if (!book) {
     return
   }
   delete book.flags[id]
 }
 
-export function bookreadflag(book: MAYBE<BOOK>, id: string, name: string) {
-  const flags = bookreadflags(book, id)
+export function memorybookreadflag(
+  book: MAYBE<BOOK>,
+  id: string,
+  name: string,
+) {
+  const flags = memorybookreadflags(book, id)
   return flags?.[name]
 }
 
-export function bookwriteflag(
+export function memorybookwriteflag(
   book: MAYBE<BOOK>,
   id: string,
   name: string,
   value: WORD,
 ) {
-  const flags = bookreadflags(book, id)
+  const flags = memorybookreadflags(book, id)
   if (flags) {
     flags[name] = value
   }

@@ -19,7 +19,7 @@ import {
   memoryreadoperator,
   memoryreadplayerboard,
 } from 'zss/memory'
-import { bookreadflags } from 'zss/memory/bookoperations'
+import { memorybookreadflags } from 'zss/memory/bookoperations'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
@@ -31,7 +31,10 @@ gadgetstateprovider((element) => {
   if (ispid(element)) {
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     // cheating here as data is non-WORD compliant
-    const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
+    const gadgetstore = memorybookreadflags(
+      mainbook,
+      MEMORY_LABEL.GADGETSTORE,
+    ) as any
     // group by element
     let value = gadgetstore[element]
     // make sure to init state

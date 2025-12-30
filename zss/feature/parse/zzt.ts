@@ -9,8 +9,14 @@ import {
   memorysetbook,
   memorywritefromkind,
 } from 'zss/memory'
-import { bookwritecodepage, createbook } from 'zss/memory/bookoperations'
-import { codepagereaddata, createcodepage } from 'zss/memory/codepageoperations'
+import {
+  memorybookwritecodepage,
+  memorycreatebook,
+} from 'zss/memory/bookoperations'
+import {
+  memorycodepagereaddata,
+  memorycreatecodepage,
+} from 'zss/memory/codepageoperations'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
@@ -584,11 +590,11 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
 
     // create a new board codepage
     const code = `@board ${String(i).padStart(3, '0')}. ${zztboard.boardname}\n${codepagestats.join('\n')}`
-    const codepage = createcodepage(code, {})
-    bookwritecodepage(book, codepage)
+    const codepage = memorycreatecodepage(code, {})
+    memorybookwritecodepage(book, codepage)
 
     // get board data from codepage
-    const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+    const board = memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
     if (!ispresent(board)) {
       continue
     }
@@ -684,7 +690,7 @@ export function parsezzt(player: string, content: Uint8Array) {
   }
 
   // build book
-  const book = createbook([])
+  const book = memorycreatebook([])
   book.name = worldname
   processboards(book, playerboard, zztboards)
 

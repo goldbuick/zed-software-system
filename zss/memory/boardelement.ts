@@ -12,7 +12,7 @@ import { CATEGORY } from 'zss/words/types'
 import { BOARD_ELEMENT } from './types'
 
 // Element creation and utilities
-export function createboardelement() {
+export function memorycreateboardelement() {
   const boardelement: BOARD_ELEMENT = {
     id: createsid(),
   }
@@ -68,7 +68,7 @@ enum BOARD_ELEMENT_KEYS {
 }
 
 // safe to serialize copy of boardelement
-export function boardelementexport(
+export function memoryboardelementexport(
   boardelement: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<FORMAT_OBJECT> {
   if (ispresent(boardelement?.id)) {
@@ -97,17 +97,19 @@ export function boardelementexport(
 }
 
 // import json into boardelement
-export function boardelementimport(
+export function memoryboardelementimport(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
   return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)
 }
 
-export function boardelementisobject(element: MAYBE<BOARD_ELEMENT>): boolean {
+export function memoryboardelementisobject(
+  element: MAYBE<BOARD_ELEMENT>,
+): boolean {
   return element?.category === CATEGORY.ISOBJECT
 }
 
-export function boardelementapplycolor(
+export function memoryboardelementapplycolor(
   element: MAYBE<BOARD_ELEMENT>,
   strcolor: MAYBE<STR_COLOR>,
 ) {

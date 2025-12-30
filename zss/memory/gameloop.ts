@@ -13,18 +13,18 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 import { NAME, PT } from 'zss/words/types'
 
-import { boardelementisobject } from './boardelement'
+import { memoryboardelementisobject } from './boardelement'
 import {
-  boardelementread,
-  boardelementreadbyidorindex,
-  boardobjectread,
-  boardsafedelete,
-  boardtick,
+  memoryboardelementread,
+  memoryboardelementreadbyidorindex,
+  memoryboardobjectread,
+  memoryboardsafedelete,
+  memoryboardtick,
 } from './boardoperations'
 import { memoryloaderarg } from './loader'
-import { bookplayerreadboards } from './playermanagement'
+import { memorybookplayerreadboards } from './playermanagement'
 import { memoryelementtologprefix } from './rendering'
-import { boardlistelementsbyidnameorpts } from './spatialqueries'
+import { memoryboardlistelementsbyidnameorpts } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -157,13 +157,13 @@ export function memorytick(playeronly = false) {
   READ_CONTEXT.timestamp = timestamp
 
   // update boards / build code / run chips
-  const boards = bookplayerreadboards(mainbook)
+  const boards = memorybookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
     // init kinds
     memoryboardinit(board)
     // iterate code needed to update given board
-    const run = boardtick(board, timestamp)
+    const run = memoryboardtick(board, timestamp)
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]
       if (type === CODE_PAGE_TYPE.ERROR) {
@@ -242,7 +242,7 @@ export function memorysendtoelement(
         fromelement,
         toelement,
       )
-      if (sameparty && boardelementisobject(toelement)) {
+      if (sameparty && memoryboardelementisobject(toelement)) {
         withlabel = 'partyshot'
       } else {
         withplayer = fromelementplayer
@@ -265,7 +265,7 @@ export function memorysendtoelement(
 
   // delete breakable elements if shot
   if (withlabel === 'shot' && memoryelementstatread(toelement, 'breakable')) {
-    boardsafedelete(READ_CONTEXT.board, toelement, READ_CONTEXT.timestamp)
+    memoryboardsafedelete(READ_CONTEXT.board, toelement, READ_CONTEXT.timestamp)
   }
 
   // send message
@@ -302,7 +302,7 @@ export function memorysendtoelements(
       case 'all':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = boardobjectread(READ_CONTEXT.board, id)
+          const object = memoryboardobjectread(READ_CONTEXT.board, id)
           if (ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -311,7 +311,7 @@ export function memorysendtoelements(
       case 'others':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = boardobjectread(READ_CONTEXT.board, id)
+          const object = memoryboardobjectread(READ_CONTEXT.board, id)
           if (id !== chip.id() && ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -319,11 +319,11 @@ export function memorysendtoelements(
         break
       case 'sender': {
         // sender info
-        const sender = boardelementreadbyidorindex(
+        const sender = memoryboardelementreadbyidorindex(
           READ_CONTEXT.board,
           READ_CONTEXT.element?.sender ?? '',
         )
-        if (ispresent(sender) && boardelementisobject(sender)) {
+        if (ispresent(sender) && memoryboardelementisobject(sender)) {
           memorysendtoelement(fromelement, sender, send.label)
         }
         break
@@ -343,15 +343,16 @@ export function memorysendtoelements(
         break
       case 'ping': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const boards = bookplayerreadboards(mainbook)
+        const boards = memorybookplayerreadboards(mainbook)
         memorysendtoboards('all', send.label, undefined, boards)
         break
       }
       default: {
         // target named elements
-        const elements = boardlistelementsbyidnameorpts(READ_CONTEXT.board, [
-          send.targetname,
-        ])
+        const elements = memoryboardlistelementsbyidnameorpts(
+          READ_CONTEXT.board,
+          [send.targetname],
+        )
         for (let i = 0; i < elements.length; ++i) {
           const element = elements[i]
           if (ispresent(element)) {
@@ -364,7 +365,7 @@ export function memorysendtoelements(
   } else if (ispresent(send.targetdir)) {
     if (send.targetdir.targets.length) {
       for (let i = 0; i < send.targetdir.targets.length; ++i) {
-        const element = boardelementread(
+        const element = memoryboardelementread(
           READ_CONTEXT.board,
           send.targetdir.targets[i],
         )
@@ -373,7 +374,7 @@ export function memorysendtoelements(
         }
       }
     } else {
-      const element = boardelementread(
+      const element = memoryboardelementread(
         READ_CONTEXT.board,
         send.targetdir.destpt,
       )
@@ -408,7 +409,7 @@ export function memorysendtoboards(
   if (ispt(target)) {
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
-      const element = boardelementread(board, target)
+      const element = memoryboardelementread(board, target)
       if (ispresent(element)) {
         sendtoelements([element])
       }
@@ -430,7 +431,7 @@ export function memorysendtoboards(
       }
       default: {
         // check named elements first
-        sendtoelements(boardlistelementsbyidnameorpts(board, [target]))
+        sendtoelements(memoryboardlistelementsbyidnameorpts(board, [target]))
         break
       }
     }

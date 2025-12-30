@@ -3,10 +3,10 @@ import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
 import {
-  bookreadcodepagebyaddress,
-  bookreadcodepagesbytype,
+  memorybookreadcodepagebyaddress,
+  memorybookreadcodepagesbytype,
 } from './bookoperations'
-import { codepagereadstats } from './codepageoperations'
+import { memorycodepagereadstats } from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
 import { memoryreadbookbysoftware, memorystartloader } from '.'
@@ -51,16 +51,16 @@ export function memoryloadermatches(
   }
 
   // first check for id match
-  const maybecodepage = bookreadcodepagebyaddress(mainbook, idoreventname)
+  const maybecodepage = memorybookreadcodepagebyaddress(mainbook, idoreventname)
   if (ispresent(maybecodepage)) {
     return [maybecodepage]
   }
 
-  const loaders = bookreadcodepagesbytype(
+  const loaders = memorybookreadcodepagesbytype(
     mainbook,
     CODE_PAGE_TYPE.LOADER,
   ).filter((codepage) => {
-    const stats = codepagereadstats(codepage)
+    const stats = memorycodepagereadstats(codepage)
 
     /*
     we match against format & event stats

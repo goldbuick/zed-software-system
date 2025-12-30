@@ -9,14 +9,14 @@ import {
   memoryelementstatread,
   memorywritefromkind,
 } from 'zss/memory'
-import { boardelementisobject } from 'zss/memory/boardelement'
+import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
-  boardelementread,
-  boardgetterrain,
-  boardsafedelete,
-  boardsetterrain,
+  memoryboardelementread,
+  memoryboardgetterrain,
+  memoryboardsafedelete,
+  memoryboardsetterrain,
 } from 'zss/memory/boardoperations'
-import { boardlistnamedelements } from 'zss/memory/spatialqueries'
+import { memoryboardlistnamedelements } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, PT } from 'zss/words/types'
@@ -63,7 +63,7 @@ export function boardremix(
   const data = new Uint8Array(BOARD_SIZE * 4)
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
-      const el = boardelementread(sourceboard, { x, y })
+      const el = memoryboardelementread(sourceboard, { x, y })
       const r = el?.char ?? 0 // in this case we have to ignore 0
       const g = el?.color ?? NO_COLOR // onclear here means unset
       const b = el?.bg ?? NO_COLOR // onclear here means unset
@@ -128,22 +128,22 @@ export function boardremix(
       // blank target region
       switch (targetset) {
         case 'all': {
-          const maybeobject = boardelementread(targetboard, { x, y })
-          if (boardelementisobject(maybeobject)) {
-            boardsafedelete(targetboard, maybeobject, book.timestamp)
+          const maybeobject = memoryboardelementread(targetboard, { x, y })
+          if (memoryboardelementisobject(maybeobject)) {
+            memoryboardsafedelete(targetboard, maybeobject, book.timestamp)
           }
-          boardsetterrain(targetboard, { x, y })
+          memoryboardsetterrain(targetboard, { x, y })
           break
         }
         case 'object': {
-          const maybeobject = boardelementread(targetboard, { x, y })
-          if (boardelementisobject(maybeobject)) {
-            boardsafedelete(targetboard, maybeobject, book.timestamp)
+          const maybeobject = memoryboardelementread(targetboard, { x, y })
+          if (memoryboardelementisobject(maybeobject)) {
+            memoryboardsafedelete(targetboard, maybeobject, book.timestamp)
           }
           break
         }
         case 'terrain':
-          boardsetterrain(targetboard, { x, y })
+          memoryboardsetterrain(targetboard, { x, y })
           break
         default:
           break
@@ -156,12 +156,12 @@ export function boardremix(
         case 'all':
           break
         case 'object':
-          if (!boardelementisobject(sourceelement)) {
+          if (!memoryboardelementisobject(sourceelement)) {
             maybekind = ''
           }
           break
         case 'terrain':
-          if (boardelementisobject(sourceelement)) {
+          if (memoryboardelementisobject(sourceelement)) {
             maybekind = ''
           }
           break
@@ -171,11 +171,11 @@ export function boardremix(
           }
           if (maybekind) {
             // blank target region
-            const maybeobject = boardelementread(targetboard, { x, y })
-            if (boardelementisobject(maybeobject)) {
-              boardsafedelete(targetboard, maybeobject, book.timestamp)
+            const maybeobject = memoryboardelementread(targetboard, { x, y })
+            if (memoryboardelementisobject(maybeobject)) {
+              memoryboardsafedelete(targetboard, maybeobject, book.timestamp)
             }
-            boardsetterrain(targetboard, { x, y })
+            memoryboardsetterrain(targetboard, { x, y })
           }
           break
       }
@@ -204,13 +204,15 @@ export function boardremix(
       }
 
       // sample if element category is object
-      if (boardelementisobject(maybenew)) {
+      if (memoryboardelementisobject(maybenew)) {
         // sample t board example of 'kind'
-        const sample = pick(boardlistnamedelements(sourceboard, maybekind))
+        const sample = pick(
+          memoryboardlistnamedelements(sourceboard, maybekind),
+        )
         if (ispresent(sample)) {
           // copy terrain element from under sample
-          boardsetterrain(targetboard, {
-            ...boardgetterrain(sourceboard, sample.x ?? 0, sample.y ?? 0),
+          memoryboardsetterrain(targetboard, {
+            ...memoryboardgetterrain(sourceboard, sample.x ?? 0, sample.y ?? 0),
             x,
             y,
           })

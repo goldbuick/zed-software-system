@@ -1,7 +1,7 @@
 import { linepoints } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { memoryboardinit, memoryboardread } from 'zss/memory'
-import { createboard } from 'zss/memory/boardoperations'
+import { memorycreateboard } from 'zss/memory/boardoperations'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
@@ -22,7 +22,7 @@ export function boardpivot(
   }
 
   // create tmp board for terrain
-  const tmpboard = createboard()
+  const tmpboard = memorycreateboard()
   const pivotobject = targetset === 'all' || targetset === 'object'
   const pivotterrain = targetset === 'all' || targetset === 'terrain'
 
