@@ -31,10 +31,9 @@ import {
   memoryinspectemptymenu,
 } from './inspection'
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
-import { BOARD, BOARD_ELEMENT } from './types'
+import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryensuresoftwarebook,
   memoryreadplayerboard,
 } from '.'

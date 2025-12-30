@@ -22,10 +22,9 @@ import {
   codepagereadtype,
   codepagereadtypetostring,
 } from './codepageoperations'
-import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryensuresoftwarecodepage,
   memoryreadbooklist,
 } from '.'

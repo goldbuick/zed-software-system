@@ -7,9 +7,9 @@ import {
   bookreadcodepagesbytype,
 } from './bookoperations'
 import { codepagereadstats } from './codepageoperations'
-import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
-import { MEMORY_LABEL, memoryreadbookbysoftware, memorystartloader } from '.'
+import { memoryreadbookbysoftware, memorystartloader } from '.'
 
 type LOADER_ENTRY = {
   arg: any

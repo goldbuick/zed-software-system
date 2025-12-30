@@ -44,10 +44,15 @@ import {
 import { hassecretheap } from './inspectionbatch'
 import { memoryloadermatches } from './loader'
 import { memoryelementtodisplayprefix } from './rendering'
-import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from './types'
 
 import {
-  MEMORY_LABEL,
   memoryboardinit,
   memoryelementstatread,
   memoryensuresoftwarebook,

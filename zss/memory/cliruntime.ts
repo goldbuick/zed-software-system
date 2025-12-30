@@ -8,9 +8,9 @@ import { NAME } from 'zss/words/types'
 import { boardobjectread } from './boardoperations'
 import { bookreadcodepagebyaddress } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
+import { MEMORY_LABEL } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryensuresoftwarebook,
   memorygetloaders,
   memoryreadbookbysoftware,

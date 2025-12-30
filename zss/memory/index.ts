@@ -41,6 +41,7 @@ import {
   BOOK,
   CODE_PAGE,
   CODE_PAGE_TYPE,
+  MEMORY_LABEL,
 } from './types'
 
 // Re-export functions from other modules
@@ -66,13 +67,8 @@ export { memorymessage, memorysendtoboards } from './gameloop'
 export { memorymoveobject } from './boardmovement'
 export { memoryreadgadgetlayers, type MEMORY_GADGET_LAYERS } from './rendering'
 
-export enum MEMORY_LABEL {
-  MAIN = 'main',
-  TEMP = 'temp',
-  TITLE = 'title',
-  PLAYER = 'player',
-  GADGETSTORE = 'gadgetstore',
-}
+// Re-export constants and enums from types
+export { MEMORY_LABEL } from './types'
 
 const MEMORY = {
   // halting state

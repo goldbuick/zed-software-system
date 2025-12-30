@@ -35,10 +35,10 @@ import {
   BOOK,
   BOOK_FLAGS,
   CODE_PAGE_TYPE,
+  MEMORY_LABEL,
 } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryboardinit,
   memoryboardread,
   memoryelementstatread,

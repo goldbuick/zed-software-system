@@ -23,10 +23,9 @@ import {
   bookimport,
 } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
-import { BOOK } from './types'
+import { BOOK, MEMORY_LABEL } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryisoperator,
   memoryreadbookbysoftware,
   memoryreadflags,

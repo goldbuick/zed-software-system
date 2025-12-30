@@ -31,10 +31,10 @@ import {
   BOARD_WIDTH,
   BOOK,
   CODE_PAGE_TYPE,
+  MEMORY_LABEL,
 } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryboardinit,
   memoryelementstatread,
   memorygetloaders,
