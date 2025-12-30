@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useEffect, useState } from 'react'
 import { Color, InstancedMesh, Object3D } from 'three'
 import { RUNTIME } from 'zss/config'

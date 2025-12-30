@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+/* eslint-disable react/no-unknown-property */
 import { ForwardRefComponent } from '@react-three/drei/helpers/ts-utils'
 import { ThreeElements, createPortal } from '@react-three/fiber'
 import { ReactNode, forwardRef, useImperativeHandle, useState } from 'react'

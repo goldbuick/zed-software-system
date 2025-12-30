@@ -77,7 +77,7 @@ export class File implements FileObj {
 
   read(num?: number): Uint8Array {
     const t = this.pos
-    num = num || this.size - this.pos
+    num = num ?? this.size - this.pos
     while (++this.pos < this.size) {
       if (--num === 0) {
         break
@@ -91,7 +91,7 @@ export class File implements FileObj {
   }
 
   peek(num?: number): number {
-    num = num || 0
+    num = num ?? 0
     return this.bytes[this.pos + num]
   }
 

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
@@ -64,7 +65,6 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
         layer.stats,
       )
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <Tiles
             width={layer.width}
@@ -110,7 +110,6 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
         (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISGHOST,
       )
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <ShadowMeshes sprites={shadowsprites} limit={BOARD_SIZE}>
             {(ix, iy) => [

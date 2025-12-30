@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { Plane } from '@react-three/drei'
 import { EventHandlers } from '@react-three/fiber'
 import { RUNTIME } from 'zss/config'

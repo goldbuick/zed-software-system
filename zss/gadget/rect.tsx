@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import React from 'react'
 import { Color, Mesh, PlaneGeometry } from 'three'
 import { RUNTIME } from 'zss/config'

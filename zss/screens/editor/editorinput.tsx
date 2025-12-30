@@ -287,7 +287,7 @@ export function EditorInput({
       undomanager?.off('stack-item-added', handleadded)
       undomanager?.off('stack-item-popped', handlepopped)
     }
-  }, [undomanager, tapeeditor.cursor])
+  }, [undomanager, tapeeditor.cursor, updatescrolling])
 
   return (
     <>

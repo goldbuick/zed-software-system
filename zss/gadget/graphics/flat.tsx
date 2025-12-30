@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useLayoutEffect, useRef, useState } from 'react'

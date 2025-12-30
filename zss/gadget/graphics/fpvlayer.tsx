@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -195,7 +196,6 @@ export function FPVLayer({
         }
       })
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <BillboardMeshes sprites={othersprites} facing={control.facing}>
             {(ix, iy) => [
@@ -230,7 +230,6 @@ export function FPVLayer({
     }
     case LAYER_TYPE.DITHER: {
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <DarknessMeshes alphas={layer.alphas} width={BOARD_WIDTH} />
         </group>

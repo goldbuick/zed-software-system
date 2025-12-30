@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import { BufferAttribute, BufferGeometry } from 'three'
