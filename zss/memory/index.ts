@@ -67,9 +67,6 @@ export { memorymessage, memorysendtoboards } from './gameloop'
 export { memorymoveobject } from './boardmovement'
 export { memoryreadgadgetlayers, type MEMORY_GADGET_LAYERS } from './rendering'
 
-// Re-export constants and enums from types
-export { MEMORY_LABEL } from './types'
-
 const MEMORY = {
   // halting state
   halt: false,

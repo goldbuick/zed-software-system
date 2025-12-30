@@ -6,7 +6,6 @@ import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
-  MEMORY_LABEL,
   memoryboardinit,
   memoryboardread,
   memoryelementkindread,
@@ -17,6 +16,7 @@ import {
   memorywritebullet,
   memorywritefromkind,
 } from 'zss/memory'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import {
   boardelementapplycolor,
   boardelementisobject,

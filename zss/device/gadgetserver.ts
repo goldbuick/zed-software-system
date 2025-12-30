@@ -14,12 +14,12 @@ import { ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_GADGET_LAYERS,
-  MEMORY_LABEL,
   memoryreadbookbysoftware,
   memoryreadgadgetlayers,
   memoryreadoperator,
   memoryreadplayerboard,
 } from 'zss/memory'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { bookreadflags } from 'zss/memory/bookoperations'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
 

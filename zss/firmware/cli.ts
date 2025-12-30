@@ -53,7 +53,6 @@ import {
 } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
-  MEMORY_LABEL,
   memoryboardread,
   memoryclearbook,
   memoryensuresoftwarebook,
@@ -65,6 +64,7 @@ import {
   memoryreadplayerboard,
   memorysetsoftwarebook,
 } from 'zss/memory'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import {
   bookclearcodepage,
   bookelementdisplayread,

@@ -29,7 +29,6 @@ import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
-  MEMORY_LABEL,
   memorycli,
   memoryclirepeatlast,
   memoryhasflags,
@@ -58,6 +57,7 @@ import {
   memorywriteoperator,
   memorywritetopic,
 } from 'zss/memory'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { boardobjectread } from 'zss/memory/boardoperations'
 import {
   bookreadcodepagebyaddress,
