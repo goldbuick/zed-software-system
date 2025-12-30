@@ -9,6 +9,7 @@ import {
   LAYER_MEDIA,
   LAYER_SPRITES,
   LAYER_TILES,
+  LAYER_TYPE,
   SPRITE,
   VIEWSCALE,
   createcontrol,
@@ -17,6 +18,7 @@ import {
   createsprite,
   createsprites,
   createtiles,
+  layersreadmedia,
 } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
@@ -25,25 +27,77 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
-import { boardcheckcollide } from './atomics'
 import {
   boardelementindex,
   boardevaldir,
   boardobjectread,
   boardvisualsupdate,
-} from './board'
-import { bookelementdisplayread } from './book'
-import { codepagereaddata } from './codepage'
-import { memoryelementtologprefix } from './send'
-import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from './types'
+} from './boardoperations'
+import { bookelementdisplayread } from './bookoperations'
+import {
+  codepagereaddata,
+  codepagereadname,
+  codepagereadtype,
+} from './codepageoperations'
+import { boardcheckcollide } from './spatialqueries'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from './types'
 
 import {
   memoryboardinit,
+  memoryboardread,
   memoryelementkindread,
   memoryelementstatread,
+  memoryoverboardread,
   memorypickcodepagewithtype,
   memoryreadflags,
+  memoryunderboardread,
 } from '.'
+
+// Display & Formatting Functions
+
+export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
+  if (
+    codepagereadtype(codepage) !== CODE_PAGE_TYPE.TERRAIN &&
+    codepagereadtype(codepage) !== CODE_PAGE_TYPE.OBJECT
+  ) {
+    return ''
+  }
+  const name = codepagereadname(codepage)
+  const stub: BOARD_ELEMENT = { kind: name }
+  memoryelementkindread(stub)
+  return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
+}
+
+export function memoryelementtodisplayprefix(element: MAYBE<BOARD_ELEMENT>) {
+  const icon = bookelementdisplayread(element)
+  const color = `${COLOR[icon.color]}`
+  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
+  return `$${color}$ON${bg}$${icon.char}`
+}
+
+export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
+  if (!ispresent(element?.id)) {
+    return ''
+  }
+
+  let withname = bookelementdisplayread(element).name
+  if (element.kind === 'player') {
+    const { user } = memoryreadflags(element.id)
+    withname = isstring(user) ? user : 'player'
+  }
+
+  const displayprefix = memoryelementtodisplayprefix(element)
+  return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
+}
+
+// Rendering & Gadget Conversion Functions
 
 const pt1 = new Vector2()
 
@@ -648,4 +702,106 @@ export function memoryconverttogadgetlayers(
 
   // return result
   return layers
+}
+
+export type MEMORY_GADGET_LAYERS = {
+  id: string
+  board: string
+  exiteast: string
+  exitwest: string
+  exitnorth: string
+  exitsouth: string
+  over: LAYER[]
+  under: LAYER[]
+  layers: LAYER[]
+  tickers: string[]
+}
+
+export function memoryreadgadgetlayers(
+  player: string,
+  board: MAYBE<BOARD>,
+): MEMORY_GADGET_LAYERS {
+  const over: LAYER[] = []
+  const under: LAYER[] = []
+  const layers: LAYER[] = []
+  const tickers: string[] = []
+  if (!ispresent(board)) {
+    return {
+      id: '',
+      board: '',
+      exiteast: '',
+      exitwest: '',
+      exitnorth: '',
+      exitsouth: '',
+      over,
+      under,
+      layers,
+      tickers,
+    }
+  }
+
+  // composite id
+  const id4all: string[] = [`${board.id}`]
+
+  // read over / under
+  const overboard = memoryoverboardread(board)
+  if (overboard?.id) {
+    id4all.push(overboard.id)
+  }
+
+  const underboard = memoryunderboardread(board)
+  if (underboard?.id) {
+    id4all.push(underboard.id)
+  }
+
+  // compose layers
+  under.push(
+    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, DIR.UNDER),
+  )
+  const multi = ispresent(overboard)
+  layers.push(
+    ...memoryconverttogadgetlayers(
+      player,
+      under.length,
+      board,
+      tickers,
+      DIR.MID,
+      multi,
+    ),
+  )
+  over.push(
+    ...memoryconverttogadgetlayers(
+      player,
+      under.length + layers.length,
+      overboard,
+      tickers,
+      DIR.OVER,
+      multi,
+    ),
+  )
+
+  // scan for media layers
+  const media = layersreadmedia(layers)
+  for (let i = 0; i < media.length; ++i) {
+    const layer = media[i]
+    if (layer.type === LAYER_TYPE.MEDIA) {
+      id4all.push(layer.id)
+      if (isstring(layer.media)) {
+        id4all.push(layer.media)
+      }
+    }
+  }
+
+  return {
+    id: id4all.join('|'),
+    board: board.id,
+    exiteast: memoryboardread(board.exiteast ?? '')?.id ?? '',
+    exitwest: memoryboardread(board.exitwest ?? '')?.id ?? '',
+    exitnorth: memoryboardread(board.exitnorth ?? '')?.id ?? '',
+    exitsouth: memoryboardread(board.exitsouth ?? '')?.id ?? '',
+    over,
+    under,
+    layers,
+    tickers,
+  }
 }

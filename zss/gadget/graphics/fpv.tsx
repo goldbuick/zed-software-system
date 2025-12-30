@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
@@ -11,13 +12,12 @@ import {
   VIEWSCALE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
+import { DepthFog } from 'zss/gadget/fx/depthfog'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
-
-import { DepthFog } from '../fx/depthfog'
-import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { FPVLayer } from './fpvlayer'
@@ -79,7 +79,6 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   const viewwidth = width * drawwidth
   const viewheight = height * drawheight
   const boarddrawwidth = BOARD_WIDTH * drawwidth
-  const boarddrawheight = BOARD_HEIGHT * drawheight
 
   const positionref = useRef<Group>(null)
   const tiltref = useRef<Group>(null)

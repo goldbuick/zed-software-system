@@ -96,7 +96,7 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
     } else {
       columns = 80
     }
-    icecolors = file.sauce.flags & 1 || options.icecolors || 0
+    icecolors = file.sauce.flags & 1 || (options.icecolors ?? 0)
 
     switch (file.sauce.letterSpacing) {
       case 1:
@@ -145,11 +145,11 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
     } else {
       columns = 80
     }
-    icecolors = options.icecolors || 0
+    icecolors = options.icecolors ?? 0
   }
 
   imageData.columns = columns
-  imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font ?? '80x25', options)
 
   switch (options.bits) {
     case 'ced':
@@ -275,8 +275,8 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
               }
               break
             case 'u':
-              x = savedX || x
-              y = savedY || y
+              x = savedX ?? x
+              y = savedY ?? y
               break
           }
         }
@@ -321,8 +321,8 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
                   y - 1 + topOfScreen,
                   code,
                   true,
-                  foreground24bit || imageData.palette[drawForeground],
-                  background24bit || imageData.palette[drawBackground],
+                  foreground24bit ?? imageData.palette[drawForeground],
+                  background24bit ?? imageData.palette[drawBackground],
                 )
               } else {
                 imageData.set(
@@ -353,7 +353,7 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
 function asc(bytes: Uint8Array, options: RenderOptions): ParsedData {
   const file = new File(bytes)
   const imageData = new ScreenData(80)
-  imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font ?? '80x25', options)
   imageData.palette = PaletteModule.ASC_PC
 
   let x = 0
@@ -386,14 +386,14 @@ function asc(bytes: Uint8Array, options: RenderOptions): ParsedData {
 // BIN parser
 function bin(bytes: Uint8Array, options: RenderOptions): ParsedData {
   const file = new File(bytes)
-  const imageData = new ScreenData(options.columns || 160)
-  imageData.font = FontModule.preset(options.font || '80x25', options)
+  const imageData = new ScreenData(options.columns ?? 160)
+  imageData.font = FontModule.preset(options.font ?? '80x25', options)
   imageData.palette = PaletteModule.BIN
   imageData.raw(file.read())
 
   let icecolors: number
   if (file.sauce) {
-    icecolors = file.sauce.flags & 1 || options.icecolors || 0
+    icecolors = file.sauce.flags & 1 || (options.icecolors ?? 0)
 
     switch (file.sauce.letterSpacing) {
       case 1:
@@ -437,7 +437,7 @@ function bin(bytes: Uint8Array, options: RenderOptions): ParsedData {
         break
     }
   } else {
-    icecolors = options.icecolors || 0
+    icecolors = options.icecolors ?? 0
   }
 
   if (!icecolors) {
@@ -502,7 +502,7 @@ function idf(bytes: Uint8Array, options: RenderOptions): ParsedData {
 function pcb(bytes: Uint8Array, options: RenderOptions): ParsedData {
   const file = new File(bytes)
   const imageData = new ScreenData(80)
-  imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font ?? '80x25', options)
   imageData.palette = PaletteModule.BIN
 
   let bg = 0
@@ -511,8 +511,8 @@ function pcb(bytes: Uint8Array, options: RenderOptions): ParsedData {
   let y = 0
 
   const icecolors = file.sauce
-    ? file.sauce.flags & 1 || options.icecolors || 0
-    : options.icecolors || 0
+    ? file.sauce.flags & 1 || (options.icecolors ?? 0)
+    : (options.icecolors ?? 0)
 
   function printChar(charCode: number): void {
     imageData.set(x, y, charCode, false, fg, bg)
@@ -609,7 +609,7 @@ function tnd(bytes: Uint8Array, options: RenderOptions): ParsedData {
   let y = 0
 
   const imageData = new ScreenData(80)
-  imageData.font = FontModule.preset(options.font || '80x25', options)
+  imageData.font = FontModule.preset(options.font ?? '80x25', options)
   imageData.palette = PaletteModule.ANSI
 
   while (!file.eof()) {

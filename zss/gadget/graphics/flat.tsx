@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useLayoutEffect, useRef, useState } from 'react'
@@ -5,12 +6,11 @@ import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { TapeTerminalInspector } from 'zss/screens/inspector/component'
-
-import { useScreenSize } from '../userscreen'
 
 import { FlatLayer } from './flatlayer'
 import { RenderLayer } from './renderlayer'

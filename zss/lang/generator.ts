@@ -9,7 +9,6 @@ import { LANG_ERROR } from './lexer'
 import { transformast } from './transformer'
 import { CodeNode } from './visitor'
 
-
 export type GeneratorFunc = (api: CHIP) => 0 | 1
 
 export type GeneratorBuild = {
@@ -25,8 +24,10 @@ export type GeneratorBuild = {
 
 export function compile(name: string, text: string): GeneratorBuild {
   const label = `compile-${name}`
+  // eslint-disable-next-line no-console
   console.time(label)
   const astResult = compileast(text)
+  // eslint-disable-next-line no-console
   console.timeEnd(label)
 
   if (SHOW_CODE) {

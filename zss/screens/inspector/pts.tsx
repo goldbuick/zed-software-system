@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useTapeInspector } from 'zss/gadget/data/state'
 import { resetTiles, useTiles, writeTile } from 'zss/gadget/hooks'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'

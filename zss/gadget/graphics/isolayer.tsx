@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
@@ -135,7 +136,6 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
         (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISGHOST,
       )
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <ShadowMeshes sprites={shadowsprites} limit={BOARD_SIZE}>
             {(ix, iy) => [
@@ -154,7 +154,6 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
     case LAYER_TYPE.DITHER: {
       // TODO replace this with the darkness meshes instances
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <DarknessMeshes alphas={layer.alphas} width={BOARD_WIDTH} />
         </group>

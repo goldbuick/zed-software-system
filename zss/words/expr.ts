@@ -8,14 +8,14 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
+import { boardcheckmoveobject } from 'zss/memory/boardmovement'
+import { boardelementread, boardgetterrain } from 'zss/memory/boardoperations'
+import { bookelementdisplayread } from 'zss/memory/bookoperations'
 import {
   boardfindplayerforelement,
   boardlistelementsbycolor,
   boardlistelementsbykind,
-} from 'zss/memory/atomics'
-import { boardelementread, boardgetterrain } from 'zss/memory/board'
-import { boardcheckmoveobject } from 'zss/memory/boardops'
-import { bookelementdisplayread } from 'zss/memory/book'
+} from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'

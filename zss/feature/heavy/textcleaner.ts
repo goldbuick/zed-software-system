@@ -17,6 +17,7 @@ export function cleanTextForTTS(text: string) {
     .replace(/\b_\b/g, ' ')
     .replace(/\b-\b/g, ' ')
     // Remove non-Latin characters (keep basic Latin, Latin Extended, numbers, punctuation, and whitespace)
+    // eslint-disable-next-line no-control-regex
     .replace(/[^\u0000-\u024F]/g, '')
 
   return cleanedText.trim()

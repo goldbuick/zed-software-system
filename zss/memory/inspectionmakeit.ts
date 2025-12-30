@@ -13,12 +13,15 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
-import { bookreadcodepagebyaddress, bookreadcodepagesbystat } from './book'
+import {
+  bookreadcodepagebyaddress,
+  bookreadcodepagesbystat,
+} from './bookoperations'
 import {
   codepagereadname,
   codepagereadtype,
   codepagereadtypetostring,
-} from './codepage'
+} from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 import {
@@ -26,18 +29,6 @@ import {
   memoryensuresoftwarecodepage,
   memoryreadbooklist,
 } from '.'
-
-function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
-  // first check for existing codepage with matching name or id
-  const books = memoryreadbooklist()
-  for (let i = 0; i < books.length; ++i) {
-    const maybecodepage = bookreadcodepagebyaddress(books[i], nameorid)
-    if (ispresent(maybecodepage)) {
-      return maybecodepage
-    }
-  }
-  return undefined
-}
 
 function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
   switch (type) {
@@ -93,6 +84,19 @@ function checkforcodepage(name: string, player: string) {
   return nomatch
 }
 
+function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
+  // first check for existing codepage with matching name or id
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const maybecodepage = bookreadcodepagebyaddress(books[i], nameorid)
+    if (ispresent(maybecodepage)) {
+      return maybecodepage
+    }
+  }
+  return undefined
+}
+
+// Make it operations
 export function memorymakeitscroll(makeit: string, player: string) {
   const [maybestat, maybelabel] = makeit.split(';')
   const words = maybestat.split(' ')

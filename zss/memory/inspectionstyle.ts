@@ -6,20 +6,16 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { pttoindex } from 'zss/mapping/2d'
+import { ptstoarea, pttoindex } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
-import { boardelementread, boardgetterrain } from './board'
 import { boardelementisobject } from './boardelement'
-import { bookelementdisplayread } from './book'
-import { readsecretheap } from './inspectcopypaste'
+import { boardelementread, boardgetterrain } from './boardoperations'
+import { bookelementdisplayread } from './bookoperations'
+import { readsecretheap } from './inspectionbatch'
 
 import { memoryreadplayerboard } from '.'
-
-function ptstoarea(p1: PT, p2: PT) {
-  return `${p1.x},${p1.y},${p2.x},${p2.y}`
-}
 
 type STYLE_CONFIG = {
   stylechars: number
@@ -27,8 +23,7 @@ type STYLE_CONFIG = {
   stylebgs: number
 }
 
-// read / write from indexdb
-
+// Style operations
 export async function readstyleconfig(): Promise<STYLE_CONFIG | undefined> {
   return idbget('styleconfig')
 }

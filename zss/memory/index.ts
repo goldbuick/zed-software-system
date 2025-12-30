@@ -1,83 +1,70 @@
-import { objectKeys } from 'ts-extras'
-import { senderid } from 'zss/chip'
-import { MESSAGE, apierror, apilog } from 'zss/device/api'
+import { apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { LAYER, LAYER_TYPE, layersreadmedia } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
-import { createsid, ispid } from 'zss/mapping/guid'
-import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
+import { createsid } from 'zss/mapping/guid'
+import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { maptonumber } from 'zss/mapping/value'
-import { createos } from 'zss/os'
-import {
-  dirfrompts,
-  ispt,
-  mapstrdir,
-  mapstrdirtoconst,
-  ptapplydir,
-} from 'zss/words/dir'
+import { dirfrompts, mapstrdir, mapstrdirtoconst } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { READ_CONTEXT } from 'zss/words/reader'
-import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
+import { COLLISION, NAME, PT } from 'zss/words/types'
 
-import { boardcheckcollide, boardlistelementsbyidnameorpts } from './atomics'
-import {
-  boarddeleteobject,
-  boardelementread,
-  boardgetterrain,
-  boardobjectcreatefromkind,
-  boardobjectread,
-  boardterrainsetfromkind,
-} from './board'
-import { boardelementapplycolor, boardelementisobject } from './boardelement'
+import { boardelementapplycolor } from './boardelement'
 import {
   boardnamedwrite,
   boardobjectlookupwrite,
-  boardobjectnamedlookupdelete,
   boardresetlookups,
 } from './boardlookup'
-import { boardmoveobject, boardtick } from './boardops'
+import {
+  boardobjectcreatefromkind,
+  boardterrainsetfromkind,
+} from './boardoperations'
 import {
   bookclearflags,
   bookensurecodepagewithtype,
   bookhasflags,
-  bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
-  bookreadflag,
   bookreadflags,
   bookreadsortedcodepages,
   createbook,
-} from './book'
-import {
-  bookplayermovetoboard,
-  bookplayerreadactive,
-  bookplayerreadboards,
-  bookplayersetboard,
-} from './bookplayer'
+} from './bookoperations'
 import {
   codepagereaddata,
   codepagereadstat,
   codepagereadtype,
-} from './codepage'
-import { memoryloaderarg } from './loader'
-import { memoryconverttogadgetlayers } from './rendertogadget'
-import { memorysendtoelement } from './send'
+} from './codepageoperations'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_ELEMENT_STAT,
-  BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
-  BOOK_FLAGS,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
 
-// manages chips
-const os = createos()
+// Re-export functions from other modules
+export {
+  memorycli,
+  memoryclirepeatlast,
+  memoryrun,
+  memoryresetchipafteredit,
+  memoryrestartallchipsandflags,
+  memoryscrollunlock,
+  memorystartloader,
+  memorycleanup,
+} from './cliruntime'
+export {
+  memoryreadplayerboard,
+  memoryreadplayeractive,
+  memoryplayerlogin,
+  memoryplayerlogout,
+  memoryplayerscan,
+} from './playermanagement'
+export { memorytick, memorytickobject } from './gameloop'
+export { memorymessage, memorysendtoboards } from './gameloop'
+export { memorymoveobject } from './boardmovement'
+export { memoryreadgadgetlayers, type MEMORY_GADGET_LAYERS } from './rendering'
 
 export enum MEMORY_LABEL {
   MAIN = 'main',
@@ -104,6 +91,11 @@ const MEMORY = {
   loaders: new Map<string, string>(),
   // active multiplayer session
   topic: '',
+}
+
+// Internal getter for loader.ts
+export function memorygetloaders() {
+  return MEMORY.loaders
 }
 
 export function memoryreadsession() {
@@ -575,466 +567,13 @@ export function memoryclearbook(address: string) {
   }
 }
 
-export function memoryplayerlogin(
-  player: string,
-  stickyflags: BOOK_FLAGS,
-): boolean {
-  if (!isstring(player) || !player) {
-    return apierror(
-      SOFTWARE,
-      player,
-      'login',
-      `failed for playerid ==>${player}<==`,
-    )
-  }
+// Player Management functions moved to player.ts
+// Messaging functions moved to send.ts
 
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return apierror(
-      SOFTWARE,
-      player,
-      'login:main',
-      `login failed to find book 'main'`,
-      'login',
-      `failed for playerid ==>${player}<==`,
-    )
-  }
+// Movement & Collision functions moved to boardops.ts
 
-  // if we have a current board, and a player on said board
-  let currentboard = memoryreadplayerboard(player)
-  if (ispresent(currentboard?.objects[player])) {
-    return true
-  }
-
-  // fallback to placing on the title board
-  if (!ispresent(currentboard)) {
-    const titlepage = memorypickcodepagewithtype(
-      CODE_PAGE_TYPE.BOARD,
-      MEMORY_LABEL.TITLE,
-    )
-    currentboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(titlepage)
-  }
-
-  // unable to find board
-  if (!ispresent(currentboard)) {
-    return apierror(
-      SOFTWARE,
-      player,
-      'login:title',
-      `login failed to find board with '${MEMORY_LABEL.TITLE}' stat`,
-    )
-  }
-
-  // unable to find kind
-  const playerkind = memorypickcodepagewithtype(
-    CODE_PAGE_TYPE.OBJECT,
-    MEMORY_LABEL.PLAYER,
-  )
-  if (!ispresent(playerkind)) {
-    return apierror(
-      SOFTWARE,
-      player,
-      'login:player',
-      `login failed to find object type '${MEMORY_LABEL.PLAYER}'`,
-    )
-  }
-
-  // plotting a new player
-  const startx = currentboard.startx ?? 0
-  const starty = currentboard.starty ?? 0
-  const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
-  const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
-  const obj = boardobjectcreatefromkind(
-    currentboard,
-    {
-      x: px,
-      y: py,
-    },
-    MEMORY_LABEL.PLAYER,
-    player,
-  )
-  if (ispresent(obj?.id)) {
-    // all players self-aggro
-    obj.player = player
-
-    // setup flags
-    const flags = bookreadflags(mainbook, player)
-    // assign stick flags
-    Object.assign(flags, stickyflags)
-    // good values
-    flags.enterx = px
-    flags.entery = py
-    flags.deaths = flags.deaths ?? 0
-    flags.highscore = flags.highscore ?? 0
-
-    // track current board
-    bookplayersetboard(mainbook, player, currentboard.id)
-    return true
-  }
-
-  return false
-}
-
-export function memoryplayerlogout(player: string, isendgame: boolean) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const removelist: string[] = []
-  for (let i = 0; i < mainbook.activelist.length; ++i) {
-    const mayberemove = mainbook.activelist[i]
-    if (mayberemove.startsWith(player)) {
-      removelist.push(mayberemove)
-    }
-  }
-
-  const board = memoryreadplayerboard(player)
-  for (let i = 0; i < removelist.length; ++i) {
-    const remove = removelist[i]
-
-    // get current flags
-    const flags = bookreadflags(mainbook, remove)
-
-    // capture carry-over values
-    const saveflags: Record<string, any> = {}
-    if (isendgame) {
-      // we track deaths & highscore
-      saveflags.deaths = maptonumber(flags.deaths, 0) + 1
-      saveflags.highscore = Math.max(
-        maptonumber(flags.score, 0),
-        maptonumber(flags.highscore, 0),
-      )
-    }
-
-    // clear from active list
-    bookplayersetboard(mainbook, remove, '')
-
-    // clear element
-    boardobjectnamedlookupdelete(board, boardobjectread(board, remove))
-    boarddeleteobject(board, remove)
-
-    // halt chip
-    os.halt(remove)
-
-    // clear memory
-    bookclearflags(mainbook, remove)
-
-    // set carry-over values
-    if (isendgame) {
-      const newflags = bookreadflags(mainbook, remove)
-      Object.assign(newflags, saveflags)
-    }
-  }
-}
-
-export function memoryreadplayerboard(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const address = bookreadflag(mainbook, player, 'board') as string
-  const codepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
-  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-}
-
-export function memoryreadplayeractive(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const isactive = bookplayerreadactive(mainbook, player)
-  const board = memoryreadplayerboard(player)
-  const playerelement = boardobjectread(board, player)
-  return isactive && ispresent(playerelement)
-}
-
-export function memoryplayerscan(players: Record<string, number>) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-
-  // ensure we're tracking all ids listed in book
-  const activelist = mainbook?.activelist ?? []
-  for (let i = 0; i < activelist.length; ++i) {
-    const objectid = activelist[i]
-    if (!ispresent(players[objectid])) {
-      players[objectid] = 0
-    }
-  }
-
-  // ensure we're tracking any orphaned player elements
-  const boards = bookplayerreadboards(mainbook)
-  for (let i = 0; i < boards.length; ++i) {
-    const board = boards[i]
-    const objects = Object.keys(board.objects)
-    for (let o = 0; o < objects.length; ++o) {
-      const object = board.objects[objects[o]]
-      const objectid = object.id
-      if (ispid(objectid)) {
-        // ensure marked location
-        bookplayersetboard(mainbook, objectid, board.id)
-        // ensure tracking
-        if (!ispresent(players[objectid])) {
-          players[objectid] = 0
-        }
-      }
-    }
-  }
-}
-
-export function memorymessage(message: MESSAGE) {
-  os.message(message)
-}
-
-function playerblockedbyedge(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  element: BOARD_ELEMENT,
-  dest: PT,
-) {
-  const elementid = element.id ?? ''
-  // attempt to move player
-  if (dest.x < 0) {
-    // exit west
-    const destboard = memoryboardread(board?.exitwest ?? '')
-    if (ispresent(destboard)) {
-      return bookplayermovetoboard(book, elementid, destboard.id, {
-        x: BOARD_WIDTH - 1,
-        y: dest.y,
-      })
-    }
-  } else if (dest.x >= BOARD_WIDTH) {
-    // exit east
-    const destboard = memoryboardread(board?.exiteast ?? '')
-    if (ispresent(destboard)) {
-      return bookplayermovetoboard(book, elementid, destboard.id, {
-        x: 0,
-        y: dest.y,
-      })
-    }
-  } else if (dest.y < 0) {
-    // exit north
-    const destboard = memoryboardread(board?.exitnorth ?? '')
-    if (ispresent(destboard)) {
-      return bookplayermovetoboard(book, elementid, destboard.id, {
-        x: dest.x,
-        y: BOARD_HEIGHT - 1,
-      })
-    }
-  } else if (dest.y >= BOARD_HEIGHT) {
-    // exit south
-    const destboard = memoryboardread(board?.exitsouth ?? '')
-    if (ispresent(destboard)) {
-      return bookplayermovetoboard(book, elementid, destboard.id, {
-        x: dest.x,
-        y: 0,
-      })
-    }
-  }
-  return false
-}
-
-function playerwaszapped(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  element: MAYBE<BOARD_ELEMENT>,
-  player: string,
-) {
-  const enterx = bookreadflag(book, player, 'enterx')
-  const entery = bookreadflag(book, player, 'entery')
-  if (isnumber(enterx) && isnumber(entery) && ispresent(element)) {
-    boardmoveobject(board, element, { x: enterx, y: entery })
-  }
-}
-
-export function memorymoveobject(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  element: MAYBE<BOARD_ELEMENT>,
-  dest: PT,
-  didpush: Record<string, boolean> = {},
-) {
-  if (!ispresent(element?.id)) {
-    return false
-  }
-
-  let blocked = boardmoveobject(board, element, dest)
-  const elementcollision = memoryelementstatread(element, 'collision')
-  const elementisplayer = ispid(element.id)
-  const elementisbullet = elementcollision === COLLISION.ISBULLET
-
-  // bullets can't PUSH, and you can only push object elements
-  if (
-    elementcollision !== COLLISION.ISBULLET &&
-    ispresent(blocked) &&
-    boardelementisobject(blocked)
-  ) {
-    // check terrain __under__ blocked
-    const mayberterrain = boardgetterrain(
-      board,
-      blocked.x ?? -1,
-      blocked.y ?? -1,
-    )
-    const terraincollision = memoryelementstatread(mayberterrain, 'collision')
-    if (!boardcheckcollide(elementcollision, terraincollision)) {
-      const elementisplayer = ispid(element?.id)
-
-      // is blocked pushable ?
-      const isitem = !!memoryelementstatread(blocked, 'item')
-      const ispushable = memoryelementcheckpushable(element, blocked)
-
-      // player cannot push items
-      const blockedid = blocked.id ?? ''
-      if (ispushable && (!elementisplayer || !isitem) && !didpush[blockedid]) {
-        didpush[blockedid] = true
-        const bumpdir = dirfrompts(
-          { x: element.x ?? 0, y: element.y ?? 0 },
-          dest,
-        )
-        const bump = ptapplydir(
-          { x: blocked.x ?? 0, y: blocked.y ?? 0 },
-          bumpdir,
-        )
-        if (!memorymoveobject(book, board, blocked, bump) && elementisplayer) {
-          memorysendtoelement(element, blocked, 'touch')
-        }
-      }
-
-      // update blocked by element
-      blocked = boardmoveobject(board, element, dest)
-    }
-  }
-
-  if (ispresent(blocked)) {
-    const blockedbyplayer = ispid(blocked.id)
-    const blockedisbullet =
-      memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
-    const blockedisedge = blocked.kind === 'edge'
-    if (elementisplayer) {
-      if (blockedisedge) {
-        if (!playerblockedbyedge(book, board, element, dest)) {
-          memorysendtoelement(blocked, element, 'thud')
-        }
-      } else if (blockedisbullet) {
-        if (board?.restartonzap) {
-          playerwaszapped(book, board, element, element.id ?? '')
-        }
-        memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
-      } else {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
-      }
-    } else if (elementisbullet) {
-      if (blockedisbullet) {
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'thud')
-      } else {
-        if (blockedbyplayer && board?.restartonzap) {
-          playerwaszapped(book, board, blocked, blocked.id ?? '')
-        }
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'shot')
-      }
-    } else {
-      if (blockedbyplayer) {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
-      } else if (blockedisbullet) {
-        memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
-      } else {
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'bump')
-      }
-    }
-
-    // blocked
-    return false
-  }
-
-  // we are allowed to move!
-  return true
-}
-
-export function memorytickobject(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  object: MAYBE<BOARD_ELEMENT>,
-  code: string,
-) {
-  if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
-    return
-  }
-
-  // cache context
-  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-
-  // write context
-  READ_CONTEXT.book = book
-  READ_CONTEXT.board = board
-  READ_CONTEXT.element = object
-
-  READ_CONTEXT.elementid = object.id ?? ''
-  READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-
-  const playerfromelement = READ_CONTEXT.element.player ?? MEMORY.operator
-  READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
-    ? READ_CONTEXT.elementid
-    : playerfromelement
-
-  // read cycle
-  const cycle = memoryelementstatread(object, 'cycle')
-
-  // run chip code
-  const id = object.id ?? ''
-  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
-  os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
-
-  // clear ticker
-  if (isnumber(object?.tickertime)) {
-    // clear ticker text after X number of ticks
-    if (READ_CONTEXT.timestamp - object.tickertime > TICK_FPS * 5) {
-      object.tickertime = 0
-      object.tickertext = ''
-    }
-  }
-
-  // clear used input
-  if (READ_CONTEXT.elementisplayer) {
-    const flags = memoryreadflags(READ_CONTEXT.elementid)
-    if (isnumber(flags.inputcurrent)) {
-      flags.inputcurrent = 0
-    }
-  }
-
-  // restore context
-  objectKeys(OLD_CONTEXT).forEach((key) => {
-    // @ts-expect-error dont bother me
-    READ_CONTEXT[key] = OLD_CONTEXT[key]
-  })
-}
-
-export function memorystartloader(id: string, code: string) {
-  MEMORY.loaders.set(id, code)
-}
-
-export function memoryscrollunlock(id: string, player: string) {
-  os.scrollunlock(id, player)
-}
-
-export function memoryresetchipafteredit(object: string) {
-  os.halt(object)
-}
-
-export function memoryrestartallchipsandflags() {
-  // stop all chips
-  const ids = os.ids()
-  for (let i = 0; i < ids.length; ++i) {
-    os.halt(ids[i])
-  }
-
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  // drop all flags from mainbook
-  mainbook.flags = {}
-}
+// Game Loop & Execution functions moved to tick.ts
+// System Operations functions moved to system.ts
 
 export function memoryboardinit(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
@@ -1057,299 +596,9 @@ export function memoryboardinit(board: MAYBE<BOARD>) {
   boardresetlookups(board)
 }
 
-export function memorytick(playeronly = false) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
+// memorytick moved to tick.ts
 
-  // inc timestamp
-  const timestamp = mainbook.timestamp + 1
+// CLI & Runtime functions moved to cli.ts
+// System Operations functions moved to system.ts
 
-  // update loaders
-  MEMORY.loaders.forEach((code, id) => {
-    // cache context
-    const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-
-    // write context, all blank except for book and timestamp
-    READ_CONTEXT.timestamp = mainbook.timestamp
-    READ_CONTEXT.book = mainbook
-    READ_CONTEXT.board = undefined
-    READ_CONTEXT.element = undefined
-    READ_CONTEXT.elementid = ''
-    READ_CONTEXT.elementisplayer = false
-    READ_CONTEXT.elementfocus = memoryreadoperator()
-
-    // set chip
-    const maybearg = memoryloaderarg(id)
-    if (ispresent(maybearg)) {
-      os.arg(id, maybearg)
-    }
-
-    // run code
-    os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
-
-    // teardown on ended
-    if (os.isended(id)) {
-      os.halt(id)
-      MEMORY.loaders.delete(id)
-    }
-
-    // restore context
-    objectKeys(OLD_CONTEXT).forEach((key) => {
-      // @ts-expect-error dont bother me
-      READ_CONTEXT[key] = OLD_CONTEXT[key]
-    })
-  })
-
-  // track tick
-  mainbook.timestamp = timestamp
-  READ_CONTEXT.timestamp = timestamp
-
-  // update boards / build code / run chips
-  const boards = bookplayerreadboards(mainbook)
-  for (let b = 0; b < boards.length; ++b) {
-    const board = boards[b]
-    // init kinds
-    memoryboardinit(board)
-    // iterate code needed to update given board
-    const run = boardtick(board, timestamp)
-    for (let i = 0; i < run.length; ++i) {
-      const { id, type, code, object } = run[i]
-      if (type === CODE_PAGE_TYPE.ERROR) {
-        // handle dead code
-        os.halt(id)
-        // in dev, we only run player objects
-      } else if (!playeronly || ispid(object?.id ?? '')) {
-        // handle active code
-        memorytickobject(mainbook, board, object, code)
-      }
-    }
-  }
-}
-
-export function memorysendtoboards(
-  target: string | PT,
-  message: string,
-  data: any,
-  boards: BOARD[],
-) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  function sendtoelements(elements: BOARD_ELEMENT[]) {
-    for (let i = 0; i < elements.length; ++i) {
-      const element = elements[i]
-      if (ispresent(element.id)) {
-        const chipmessage = `${senderid(element.id)}:${message}`
-        SOFTWARE.emit('', chipmessage, data)
-      }
-    }
-  }
-
-  if (ispt(target)) {
-    for (let b = 0; b < boards.length; ++b) {
-      const board = boards[b]
-      const element = boardelementread(board, target)
-      if (ispresent(element)) {
-        sendtoelements([element])
-      }
-    }
-    return
-  }
-
-  for (let b = 0; b < boards.length; ++b) {
-    const board = boards[b]
-
-    // the intent here is to gather a list of target chip ids
-    const ltarget = NAME(target)
-    switch (ltarget) {
-      case 'all':
-      case 'self':
-      case 'others': {
-        sendtoelements(Object.values(board.objects))
-        break
-      }
-      default: {
-        // check named elements first
-        sendtoelements(boardlistelementsbyidnameorpts(board, [target]))
-        break
-      }
-    }
-  }
-}
-
-export function memorycleanup() {
-  os.gc()
-}
-
-export function memoryclirepeatlast(player: string) {
-  const flags = memoryreadflags(player)
-  // setup as array of invokes
-  const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
-    ? flags.playbuffer
-    : '')
-  // run it
-  if (maybecli) {
-    memorycli(player, maybecli, false)
-  }
-}
-
-export function memorycli(player: string, cli: string, tracking = true) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  // player id + unique id fo run
-  const id = `${player}_cli`
-
-  // write context
-  READ_CONTEXT.timestamp = mainbook.timestamp
-  READ_CONTEXT.book = mainbook
-  READ_CONTEXT.board = memoryreadplayerboard(player)
-  READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
-  READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
-  READ_CONTEXT.elementisplayer = true
-  READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
-
-  // invoke once
-  os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
-
-  // track invoke
-  if (tracking) {
-    const flags = memoryreadflags(player)
-    // track value of invoke
-    flags.playbuffer = cli
-  }
-}
-
-export function memoryrun(address: string) {
-  // we assume READ_CONTEXT is setup correctly when this is run
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  const codepage = bookreadcodepagebyaddress(mainbook, address)
-  if (!ispresent(mainbook) || !ispresent(codepage)) {
-    return
-  }
-
-  // cache context
-  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-
-  const id = `${address}_run`
-  const itemname =
-    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
-  const itemcode = codepage?.code ?? ''
-
-  // set arg to value on chip with id = id
-  os.once(id, DRIVER_TYPE.RUNTIME, NAME(itemname), itemcode)
-
-  // restore context
-  objectKeys(OLD_CONTEXT).forEach((key) => {
-    // @ts-expect-error dont bother me
-    READ_CONTEXT[key] = OLD_CONTEXT[key]
-  })
-}
-
-export type MEMORY_GADGET_LAYERS = {
-  id: string
-  board: string
-  exiteast: string
-  exitwest: string
-  exitnorth: string
-  exitsouth: string
-  over: LAYER[]
-  under: LAYER[]
-  layers: LAYER[]
-  tickers: string[]
-}
-
-export function memoryreadgadgetlayers(
-  player: string,
-  board: MAYBE<BOARD>,
-): MEMORY_GADGET_LAYERS {
-  const over: LAYER[] = []
-  const under: LAYER[] = []
-  const layers: LAYER[] = []
-  const tickers: string[] = []
-  if (!ispresent(board)) {
-    return {
-      id: '',
-      board: '',
-      exiteast: '',
-      exitwest: '',
-      exitnorth: '',
-      exitsouth: '',
-      over,
-      under,
-      layers,
-      tickers,
-    }
-  }
-
-  // composite id
-  const id4all: string[] = [`${board.id}`]
-
-  // read over / under
-  const overboard = memoryoverboardread(board)
-  if (overboard?.id) {
-    id4all.push(overboard.id)
-  }
-
-  const underboard = memoryunderboardread(board)
-  if (underboard?.id) {
-    id4all.push(underboard.id)
-  }
-
-  // compose layers
-  under.push(
-    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, DIR.UNDER),
-  )
-  const multi = ispresent(overboard)
-  layers.push(
-    ...memoryconverttogadgetlayers(
-      player,
-      under.length,
-      board,
-      tickers,
-      DIR.MID,
-      multi,
-    ),
-  )
-  over.push(
-    ...memoryconverttogadgetlayers(
-      player,
-      under.length + layers.length,
-      overboard,
-      tickers,
-      DIR.OVER,
-      multi,
-    ),
-  )
-
-  // scan for media layers
-  const media = layersreadmedia(layers)
-  for (let i = 0; i < media.length; ++i) {
-    const layer = media[i]
-    if (layer.type === LAYER_TYPE.MEDIA) {
-      id4all.push(layer.id)
-      if (isstring(layer.media)) {
-        id4all.push(layer.media)
-      }
-    }
-  }
-
-  return {
-    id: id4all.join('|'),
-    board: board.id,
-    exiteast: memoryboardread(board.exiteast ?? '')?.id ?? '',
-    exitwest: memoryboardread(board.exitwest ?? '')?.id ?? '',
-    exitnorth: memoryboardread(board.exitnorth ?? '')?.id ?? '',
-    exitsouth: memoryboardread(board.exitsouth ?? '')?.id ?? '',
-    over,
-    under,
-    layers,
-    tickers,
-  }
-}
+// Rendering & Gadget Conversion functions moved to rendertogadget.ts

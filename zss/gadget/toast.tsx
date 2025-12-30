@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { Marquee } from 'zss/screens/scroll/marquee'
 import {
   WRITE_TEXT_CONTEXT,

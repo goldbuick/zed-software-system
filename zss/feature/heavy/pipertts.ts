@@ -1,8 +1,7 @@
-/* eslint-disable no-undef */
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
-import { phonemize } from './phonemizer.js'
 
 import { cachedFetch } from './modelcache'
+import { phonemize } from './phonemizer.js'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
 
 // Piper TTS class for local model

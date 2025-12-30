@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import { BufferAttribute, BufferGeometry } from 'three'
@@ -8,16 +9,15 @@ import {
   CHAR_WIDTH,
   SPRITE,
 } from 'zss/gadget/data/types'
+import { time } from 'zss/gadget/display/anim'
+import { useSpritePool } from 'zss/gadget/display/spritepool'
 import {
   createBillboardsMaterial,
   createSpritesMaterial,
 } from 'zss/gadget/display/sprites'
+import { useMedia } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
-
-import { time } from '../display/anim'
-import { useSpritePool } from '../display/spritepool'
-import { useMedia } from '../hooks'
 
 type SpritesProps = {
   sprites: SPRITE[]

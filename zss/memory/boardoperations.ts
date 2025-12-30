@@ -6,7 +6,7 @@ import {
 } from 'zss/feature/format'
 import { indextopt, ptdist, ptwithin } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
-import { createsid } from 'zss/mapping/guid'
+import { createsid, ispid } from 'zss/mapping/guid'
 import {
   MAYBE,
   deepcopy,
@@ -24,29 +24,44 @@ import {
   mapstrdirtoconst,
   ptapplydir,
 } from 'zss/words/dir'
-import { DIR, PT } from 'zss/words/types'
+import { COLLISION, DIR, PT } from 'zss/words/types'
 
-import { boardlistnamedelements, boardpicknearestpt } from './atomics'
-import { boardelementexport, boardelementimport } from './boardelement'
+import {
+  boardelementexport,
+  boardelementimport,
+  boardelementisobject,
+} from './boardelement'
 import {
   boardobjectnamedlookupdelete,
   boardterrainnameddelete,
 } from './boardlookup'
-import { boardreadpath } from './boardpathing'
-import { bookelementdisplayread } from './book'
+import { BOOK_RUN_ARGS, boardcleanup, boardmoveobject } from './boardmovement'
+import { bookelementdisplayread, bookreadflag } from './bookoperations'
+import { bookplayermovetoboard } from './playermanagement'
+import {
+  boardlistnamedelements,
+  boardpicknearestpt,
+  boardreadpath,
+} from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_ELEMENT_STAT,
   BOARD_HEIGHT,
+  BOARD_SIZE,
   BOARD_WIDTH,
+  BOOK,
   CODE_PAGE_TYPE,
 } from './types'
 
 import {
   memoryboardread,
+  memoryelementkindread,
   memoryelementstatread,
   memorypickcodepagewithtype,
 } from '.'
+
+// From board.ts
 
 function createempty() {
   return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
@@ -817,5 +832,249 @@ export function boardvisualsupdate(board: MAYBE<BOARD>) {
     }
   } else if (isstring(board.palettepage)) {
     delete board.palettepage
+  }
+}
+
+// object / terrain utils
+
+export function boardtick(board: MAYBE<BOARD>, timestamp: number) {
+  const args: BOOK_RUN_ARGS[] = []
+
+  if (!ispresent(board)) {
+    return args
+  }
+
+  function processlist(list: BOARD_ELEMENT[]) {
+    for (let i = 0; i < list.length; ++i) {
+      const object = list[i]
+
+      // check that we have an id
+      if (!ispresent(object.id)) {
+        continue
+      }
+
+      // track last position
+      object.lx = object.x
+      object.ly = object.y
+
+      // lookup kind
+      const kind = memoryelementkindread(object)
+
+      // object code is composed of kind code + object code
+      const code = `${kind?.code ?? ''}\n${object.code ?? ''}`
+
+      // check that we have code to execute
+      if (!code) {
+        continue
+      }
+
+      // only run if not removed
+      // edge case is removed with a pending thud
+      // essentially this affords objects that were forcibly removed
+      // a single tick before execution ends
+      if (object.removed) {
+        const delta = timestamp - object.removed
+        const cycle = memoryelementstatread(object, 'cycle')
+        if (delta > cycle) {
+          continue
+        }
+      }
+
+      // signal id & code
+      args.push({
+        id: object.id,
+        type: CODE_PAGE_TYPE.OBJECT,
+        code,
+        object,
+        terrain: undefined,
+      })
+    }
+  }
+
+  // iterate through objects
+  const objects = Object.values(board.objects)
+
+  // execution lists
+  const otherlist: BOARD_ELEMENT[] = []
+  const ghostlist: BOARD_ELEMENT[] = []
+  const playerlist: BOARD_ELEMENT[] = []
+  const bulletwaterlist: BOARD_ELEMENT[] = []
+
+  // filter into categories
+  for (let i = 0; i < objects.length; ++i) {
+    const el = objects[i]
+    if (ispid(el.id)) {
+      playerlist.push(el)
+    } else {
+      switch (memoryelementstatread(el, 'collision')) {
+        case COLLISION.ISSWIM:
+        case COLLISION.ISBULLET:
+          bulletwaterlist.push(el)
+          break
+        case COLLISION.ISGHOST:
+          ghostlist.push(el)
+          break
+        default:
+          otherlist.push(el)
+          break
+      }
+    }
+  }
+
+  // bullet & water run first
+  processlist(bulletwaterlist)
+
+  // players run next
+  processlist(playerlist)
+
+  // non-ghost run next
+  processlist(otherlist)
+
+  // ghosts run last
+  processlist(ghostlist)
+
+  // cleanup objects flagged for deletion
+  const stopids = boardcleanup(board, timestamp)
+  for (let i = 0; i < stopids.length; ++i) {
+    args.push({
+      id: stopids[i],
+      type: CODE_PAGE_TYPE.ERROR,
+      code: '',
+      object: undefined,
+      terrain: undefined,
+    })
+  }
+
+  // return code that needs to be run
+  return args
+}
+
+// working with groups
+
+export function boardreadgroup(
+  board: MAYBE<BOARD>,
+  self: string,
+  targetgroup: string,
+) {
+  const objectelements: BOARD_ELEMENT[] = []
+  const terrainelements: BOARD_ELEMENT[] = []
+  if (!ispresent(board)) {
+    return { objectelements, terrainelements }
+  }
+
+  function checkelement(el: BOARD_ELEMENT, isterrain: boolean) {
+    // skip removed elements
+    if (el.removed) {
+      return false
+    }
+
+    // special groups
+    switch (targetgroup) {
+      case 'all':
+        return true
+      case 'self':
+        return el?.id === self
+      case 'others':
+        return el?.id !== self
+      case 'terrain':
+        return isterrain === true
+      case 'object':
+        return isterrain === false
+    }
+
+    // stat & name groups
+    const statnamed = memoryelementstatread(
+      el,
+      targetgroup as BOARD_ELEMENT_STAT,
+    )
+
+    return (
+      ispresent(statnamed) ||
+      bookelementdisplayread(el).name === targetgroup ||
+      memoryelementstatread(el, 'group') === targetgroup
+    )
+  }
+
+  // match elements
+  for (let i = 0; i < BOARD_SIZE; ++i) {
+    const maybeterrain: MAYBE<BOARD_ELEMENT> = board.terrain[i]
+    const maybeobject: MAYBE<BOARD_ELEMENT> =
+      board.objects[board.lookup?.[i] ?? '']
+    if (ispresent(maybeterrain) && checkelement(maybeterrain, true)) {
+      terrainelements.push(maybeterrain)
+      // check for magic carpet
+      const maybeobject = board.objects[board.lookup?.[i] ?? '']
+      if (ispresent(maybeobject) && boardelementisobject(maybeobject)) {
+        objectelements.push(maybeobject)
+      }
+    } else if (
+      boardelementisobject(maybeobject) &&
+      checkelement(maybeobject, false)
+    ) {
+      objectelements.push(maybeobject)
+    }
+  }
+
+  return { objectelements, terrainelements }
+}
+
+export function playerblockedbyedge(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  element: BOARD_ELEMENT,
+  dest: PT,
+) {
+  const elementid = element.id ?? ''
+  // attempt to move player
+  if (dest.x < 0) {
+    // exit west
+    const destboard = memoryboardread(board?.exitwest ?? '')
+    if (ispresent(destboard)) {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
+        x: BOARD_WIDTH - 1,
+        y: dest.y,
+      })
+    }
+  } else if (dest.x >= BOARD_WIDTH) {
+    // exit east
+    const destboard = memoryboardread(board?.exiteast ?? '')
+    if (ispresent(destboard)) {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
+        x: 0,
+        y: dest.y,
+      })
+    }
+  } else if (dest.y < 0) {
+    // exit north
+    const destboard = memoryboardread(board?.exitnorth ?? '')
+    if (ispresent(destboard)) {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
+        x: dest.x,
+        y: BOARD_HEIGHT - 1,
+      })
+    }
+  } else if (dest.y >= BOARD_HEIGHT) {
+    // exit south
+    const destboard = memoryboardread(board?.exitsouth ?? '')
+    if (ispresent(destboard)) {
+      return bookplayermovetoboard(book, elementid, destboard.id, {
+        x: dest.x,
+        y: 0,
+      })
+    }
+  }
+  return false
+}
+
+export function playerwaszapped(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  player: string,
+) {
+  const enterx = bookreadflag(book, player, 'enterx')
+  const entery = bookreadflag(book, player, 'entery')
+  if (isnumber(enterx) && isnumber(entery) && ispresent(element)) {
+    boardmoveobject(board, element, { x: enterx, y: entery })
   }
 }

@@ -2,12 +2,12 @@ import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { bookwritecodepage } from 'zss/memory/book'
+import { bookwritecodepage } from 'zss/memory/bookoperations'
 import {
   codepagereadname,
   codepagereadstatsfromtext,
   createcodepage,
-} from 'zss/memory/codepage'
+} from 'zss/memory/codepageoperations'
 
 import { zztoop } from './zztoop'
 

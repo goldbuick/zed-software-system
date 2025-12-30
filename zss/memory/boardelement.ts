@@ -11,6 +11,7 @@ import { CATEGORY } from 'zss/words/types'
 
 import { BOARD_ELEMENT } from './types'
 
+// Element creation and utilities
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
     id: createsid(),

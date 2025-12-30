@@ -1,22 +1,21 @@
 import getSimilarColor, { IDefaultColor } from 'get-similar-color/dist'
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { loadpalettefrombytes } from 'zss/feature/bytes'
+import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { boardsetterrain, ptwithinboard } from 'zss/memory/board'
-import { bookwritecodepage } from 'zss/memory/book'
-import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
+import { boardsetterrain, ptwithinboard } from 'zss/memory/boardoperations'
+import { bookwritecodepage } from 'zss/memory/bookoperations'
+import { codepagereaddata, createcodepage } from 'zss/memory/codepageoperations'
 import {
   BOARD,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
-
-import { loadpalettefrombytes } from '../bytes'
-import { PALETTE } from '../palette'
 
 import { renderBytes } from './ansilove'
 

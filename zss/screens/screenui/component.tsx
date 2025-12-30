@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import React, { useState } from 'react'
 import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
@@ -197,13 +198,11 @@ export function ScreenUI() {
           height={screensize.rows + 2}
         />
       </group>
-      {/* eslint-disable-next-line react/no-unknown-property */}
       <group position={[0, 0, -512]}>
         {rects.map((rect) => {
           return (
             <group
               key={rect.name}
-              // eslint-disable-next-line react/no-unknown-property
               position={[
                 rect.x * RUNTIME.DRAW_CHAR_WIDTH(),
                 rect.y * RUNTIME.DRAW_CHAR_HEIGHT(),
@@ -217,10 +216,7 @@ export function ScreenUI() {
       </group>
       {hasscroll && (
         <React.Fragment key="scroll">
-          <group
-            // eslint-disable-next-line react/no-unknown-property
-            position={[0, 0, 800]}
-          >
+          <group position={[0, 0, 800]}>
             <StaticDither
               width={screensize.cols}
               height={screensize.rows}
@@ -228,7 +224,6 @@ export function ScreenUI() {
             />
           </group>
           <group
-            // eslint-disable-next-line react/no-unknown-property
             position={[
               scrollrect.x * RUNTIME.DRAW_CHAR_WIDTH(),
               scrollrect.y * RUNTIME.DRAW_CHAR_HEIGHT(),

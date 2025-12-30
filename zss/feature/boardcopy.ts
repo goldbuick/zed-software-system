@@ -6,14 +6,14 @@ import {
   memoryelementstatread,
   memorywritefromkind,
 } from 'zss/memory'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import {
   boardelementread,
   boardgetterrain,
+  boardreadgroup,
   boardsafedelete,
   boardsetterrain,
-} from 'zss/memory/board'
-import { boardelementisobject } from 'zss/memory/boardelement'
-import { boardreadgroup } from 'zss/memory/boardops'
+} from 'zss/memory/boardoperations'
 import {
   BOARD,
   BOARD_ELEMENT,

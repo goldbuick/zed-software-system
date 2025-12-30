@@ -1,4 +1,7 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
+import { parsetarget } from 'zss/device'
+import { apitoast, registercopy, vmcli } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
@@ -6,9 +9,11 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { pttoindex, ptwithin } from 'zss/mapping/2d'
+import { ptstoarea, pttoindex, ptwithin } from 'zss/mapping/2d'
+import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
-import { CATEGORY, PT } from 'zss/words/types'
+import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
 import {
   boardelementread,
@@ -16,8 +21,16 @@ import {
   boardobjectcreate,
   boardsafedelete,
   boardsetterrain,
-} from './board'
-import { bookelementdisplayread } from './book'
+} from './boardoperations'
+import { bookelementdisplayread } from './bookoperations'
+import {
+  memoryinspectbgarea,
+  memoryinspectchararea,
+  memoryinspectcolorarea,
+  memoryinspectempty,
+  memoryinspectemptymenu,
+} from './inspection'
+import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { BOARD, BOARD_ELEMENT } from './types'
 
 import {
@@ -26,8 +39,113 @@ import {
   memoryreadplayerboard,
 } from '.'
 
-function ptstoarea(p1: PT, p2: PT) {
-  return `${p1.x},${p1.y},${p2.x},${p2.y}`
+// Batch operations
+// From inspectbatch.ts
+
+export async function memoryinspectbatchcommand(path: string, player: string) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+  const batch = parsetarget(path)
+  const [x1, y1, x2, y2] = batch.path.split(',').map((v) => parseFloat(v))
+  const p1: PT = { x: Math.min(x1, x2), y: Math.min(y1, y2) }
+  const p2: PT = { x: Math.max(x1, x2), y: Math.max(y1, y2) }
+  switch (batch.target) {
+    case 'copy':
+      memoryinspectcopymenu(player, p1, p2)
+      break
+    case 'copyall':
+    case 'copyobjects':
+    case 'copyterrain':
+      await memoryinspectcopy(player, p1, p2, batch.target)
+      break
+    case 'copyastext': {
+      const p1x = Math.min(p1.x, p2.x)
+      const p1y = Math.min(p1.y, p2.y)
+      const p2x = Math.max(p1.x, p2.x)
+      const p2y = Math.max(p1.y, p2.y)
+      let content = ''
+      for (let y = p1y; y <= p2y; ++y) {
+        let color = COLOR.ONCLEAR
+        let bg = COLOR.ONCLEAR
+        content += ''
+        for (let x = p1x; x <= p2x; ++x) {
+          const element = boardgetterrain(board, x, y)
+          const display = bookelementdisplayread(element)
+          if (display.color != color) {
+            color = display.color
+            content += `$${COLOR[display.color]}`.toLowerCase()
+          }
+          if (display.bg != bg) {
+            bg = display.bg
+            content += `$ON${COLOR[display.bg]}`.toLowerCase()
+          }
+          content += `$${display.char}`
+        }
+        content += '\n'
+      }
+      registercopy(SOFTWARE, player, content)
+      apitoast(SOFTWARE, player, `copied! chars ${p1x},${p1y} to ${p2x},${p2y}`)
+      break
+    }
+    case 'cut':
+      memoryinspectcutmenu(player, p1, p2)
+      break
+    case 'cutall':
+    case 'cutobjects':
+    case 'cutterrain':
+      await memoryinspectcut(player, p1, p2, batch.target)
+      break
+    case 'paste':
+      memoryinspectpastemenu(player, p1, p2)
+      break
+    case 'pasteall':
+    case 'pasteobjects':
+    case 'pasteterrain':
+    case 'pasteterraintiled':
+      await memoryinspectpaste(player, p1, p2, batch.target)
+      break
+    case 'style':
+      await memoryinspectstylemenu(player, p1, p2)
+      break
+    case 'styleall':
+    case 'styleobjects':
+    case 'styleterrain':
+      await memoryinspectstyle(player, p1, p2, batch.target)
+      break
+    case 'empty':
+      memoryinspectemptymenu(player, p1, p2)
+      break
+    case 'emptyall':
+    case 'emptyobjects':
+    case 'emptyterrain':
+      memoryinspectempty(player, p1, p2, batch.target)
+      break
+    case 'chars':
+      memoryinspectchararea(player, p1, p2, 'char')
+      break
+    case 'colors':
+      memoryinspectcolorarea(player, p1, p2, 'color')
+      break
+    case 'bgs':
+      memoryinspectbgarea(player, p1, p2, 'bg')
+      break
+    case 'copycoords':
+      registercopy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
+      break
+    case 'pageopen':
+      doasync(SOFTWARE, player, async () => {
+        // wait a little
+        await waitfor(800)
+        // open codepage
+        vmcli(SOFTWARE, player, `#pageopen ${batch.path}`)
+      })
+      break
+    default:
+      console.info('unknown batch', batch)
+      break
+  }
 }
 
 // COPY & PASTE buffers
@@ -378,3 +496,5 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   shared.scrollname = 'paste'
   shared.scroll = gadgetcheckqueue(player)
 }
+
+// From inspectgadget.ts

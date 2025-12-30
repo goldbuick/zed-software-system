@@ -37,12 +37,12 @@ import {
   STAT_TYPE,
 } from 'zss/words/types'
 
-import { boardexport, boardimport, createboard } from './board'
 import {
   boardelementexport,
   boardelementimport,
   createboardelement,
 } from './boardelement'
+import { boardexport, boardimport, createboard } from './boardoperations'
 import {
   BOARD_ELEMENT,
   CODE_PAGE,

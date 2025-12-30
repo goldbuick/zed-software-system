@@ -1,6 +1,6 @@
 import { ispresent } from 'zss/mapping/types'
 import { memoryboardread, memoryreadbooklist } from 'zss/memory'
-import { bookclearcodepage } from 'zss/memory/book'
+import { bookclearcodepage } from 'zss/memory/bookoperations'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { boardcopy } from './boardcopy'

@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
+import { BITMAP, createbitmapfromarray } from 'zss/gadget/data/bitmap'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,
@@ -11,11 +13,8 @@ import {
   LAYER_TYPE,
   PALETTE_COLORS,
 } from 'zss/gadget/data/types'
+import { useMedia } from 'zss/gadget/hooks'
 import { MAYBE, isarray, isstring } from 'zss/mapping/types'
-
-import { BITMAP, createbitmapfromarray } from '../data/bitmap'
-import { useGadgetClient } from '../data/state'
-import { useMedia } from '../hooks'
 
 const defaultpalette = loadpalettefrombytes(PALETTE)
 const defaultcharset = loadcharsetfrombytes(CHARSET)

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useCallback, useContext, useLayoutEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'

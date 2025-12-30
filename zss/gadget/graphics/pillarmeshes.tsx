@@ -1,14 +1,14 @@
+/* eslint-disable react/no-unknown-property */
 import { useEffect, useMemo, useState } from 'react'
 import { Color, InstancedMesh, Object3D } from 'three'
 import { RUNTIME } from 'zss/config'
+import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
+import { createBlocksMaterial } from 'zss/gadget/display/blocks'
+import { createPillarBufferGeometryAttributes } from 'zss/gadget/display/tiles'
+import { useMedia } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
-
-import { CHAR_HEIGHT, CHAR_WIDTH } from '../data/types'
-import { createBlocksMaterial } from '../display/blocks'
-import { createPillarBufferGeometryAttributes } from '../display/tiles'
-import { useMedia } from '../hooks'
 
 type PillarwMeshesProps = {
   width: number
@@ -106,7 +106,7 @@ export function PillarwMeshes({
   }, [meshes, char, color, bg, width])
 
   return (
-    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
+    <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />

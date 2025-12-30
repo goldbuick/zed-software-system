@@ -2,8 +2,11 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
-import { bookreadcodepagebyaddress, bookreadcodepagesbytype } from './book'
-import { codepagereadstats } from './codepage'
+import {
+  bookreadcodepagebyaddress,
+  bookreadcodepagesbytype,
+} from './bookoperations'
+import { codepagereadstats } from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 import { MEMORY_LABEL, memoryreadbookbysoftware, memorystartloader } from '.'

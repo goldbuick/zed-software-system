@@ -1,16 +1,15 @@
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { write, writecopyit } from 'zss/feature/writeui'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { bookwritecodepage } from 'zss/memory/book'
+import { bookwritecodepage } from 'zss/memory/bookoperations'
 import {
   codepagereadname,
   codepagereadtypetostring,
   createcodepage,
-} from 'zss/memory/codepage'
+} from 'zss/memory/codepageoperations'
 import { NAME } from 'zss/words/types'
-
-import { write, writecopyit } from '../writeui'
 
 type ZZM_SONG = {
   order: number

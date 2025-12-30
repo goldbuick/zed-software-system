@@ -1,12 +1,12 @@
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, NAME } from 'zss/words/types'
 
-import { boardelementindex } from './board'
-import { bookelementdisplayread } from './book'
+import { boardelementindex } from './boardoperations'
+import { bookelementdisplayread } from './bookoperations'
 import {
   codepageapplyelementstats,
   codepagereadstatsfromtext,
-} from './codepage'
+} from './codepageoperations'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 import { memoryelementkindread, memoryelementstatread } from '.'

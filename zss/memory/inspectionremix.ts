@@ -14,6 +14,7 @@ import { PT, WORD } from 'zss/words/types'
 
 import { memoryboardread, memoryreadplayerboard } from '.'
 
+// Remix operations
 type REMIX_CONFIG = {
   stat: string
   patternsize: number

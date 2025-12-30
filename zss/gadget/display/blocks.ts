@@ -2,11 +2,10 @@ import { Color, DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
+import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { noiseutilshader } from 'zss/gadget/fx/util'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { COLOR } from 'zss/words/types'
-
-import { convertpalettetocolors } from '../data/palette'
-import { noiseutilshader } from '../fx/util'
 
 import { cloneMaterial, interval, time } from './anim'
 import { createbitmaptexture } from './textures'

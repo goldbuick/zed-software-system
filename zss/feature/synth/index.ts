@@ -20,12 +20,11 @@ import {
 import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { write } from 'zss/feature/writeui'
 import { createnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-
-import { write } from '../writeui'
 
 import { createsynthdrums } from './drums'
 import { addfcrushmodule } from './fcrushworkletnode'

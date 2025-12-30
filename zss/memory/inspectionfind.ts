@@ -13,6 +13,7 @@ import { WORD } from 'zss/words/types'
 
 import { memoryreadplayerboard } from '.'
 
+// Find operations
 export type FINDANY_CONFIG = {
   expr1: string
   expr2: string

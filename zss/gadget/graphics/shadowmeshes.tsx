@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import {
   DynamicDrawUsage,
@@ -5,14 +6,13 @@ import {
   InstancedMesh,
   Object3D,
 } from 'three'
+import { SPRITE } from 'zss/gadget/data/types'
+import { time } from 'zss/gadget/display/anim'
+import { createBlockDitherMaterial } from 'zss/gadget/display/dither'
+import { useSpritePool } from 'zss/gadget/display/spritepool'
+import { createTilemapBufferGeometryAttributes } from 'zss/gadget/display/tiles'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
-
-import { SPRITE } from '../data/types'
-import { time } from '../display/anim'
-import { createBlockDitherMaterial } from '../display/dither'
-import { useSpritePool } from '../display/spritepool'
-import { createTilemapBufferGeometryAttributes } from '../display/tiles'
 
 type ShadowMeshesProps = {
   sprites: SPRITE[]
@@ -107,7 +107,7 @@ export function ShadowMeshes({
   }, [sprites, spritepool, range, meshes, visible, nowposition, lastmatrix])
 
   return (
-    <instancedMesh ref={setmeshes} args={[null, null, limit]}>
+    <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
