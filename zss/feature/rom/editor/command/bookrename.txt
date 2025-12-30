@@ -1,1 +1,1 @@
-desc;$DKGRAYbookrename
+desc;$DKGRAYRename the main book (operator only)

@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYApply vibrato to fx 0-1

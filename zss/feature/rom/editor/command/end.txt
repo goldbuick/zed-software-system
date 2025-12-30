@@ -1,1 +1,1 @@
-desc;$DKGRAYstops program
+desc;$DKGRAYEnd program (optionally set 'arg' variable)

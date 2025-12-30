@@ -1,1 +1,1 @@
-desc;$DKGRAYgadget
+desc;$DKGRAYToggle built-in inspector

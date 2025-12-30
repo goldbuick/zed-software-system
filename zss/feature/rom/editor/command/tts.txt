@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYSpeak text with voice (or clear queue)

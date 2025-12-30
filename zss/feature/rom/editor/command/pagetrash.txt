@@ -1,1 +1,1 @@
-desc;$DKGRAYpagetrash
+desc;$DKGRAYTrash a code page (operator only)

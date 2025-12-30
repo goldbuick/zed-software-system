@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYRemix from source with pattern size and mirror to current board

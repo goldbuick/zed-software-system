@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYRotate board elements by degrees

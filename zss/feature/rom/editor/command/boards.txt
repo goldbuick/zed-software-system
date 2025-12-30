@@ -1,1 +1,1 @@
-desc;$DKGRAYboards
+desc;$DKGRAYList all boards as goto hyperlinks

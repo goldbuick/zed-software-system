@@ -1,1 +1,1 @@
-desc;$DKGRAYhelp
+desc;$DKGRAYShow help scroll

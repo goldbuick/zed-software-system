@@ -1,1 +1,1 @@
-desc;$DKGRAYthrowstar
+desc;$DKGRAYThrow star projectile, shorthand for `#shoot <dir> star`

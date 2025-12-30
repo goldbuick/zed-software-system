@@ -1,1 +1,1 @@
-desc;$DKGRAYpageopen
+desc;$DKGRAYOpen a code page editor

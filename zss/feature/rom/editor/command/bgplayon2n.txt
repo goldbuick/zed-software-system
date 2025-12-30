@@ -1,1 +1,1 @@
-desc;$DKGRAYbgplayon2n
+desc;$DKGRAYQuantized bgplay on 2n

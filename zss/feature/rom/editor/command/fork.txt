@@ -1,1 +1,1 @@
-desc;$DKGRAYfork
+desc;$DKGRAYOpen tab with copy of state (operator only)

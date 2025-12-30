@@ -1,1 +1,1 @@
-desc;$DKGRAYttsengine
+desc;$DKGRAYSet TTS engine and config

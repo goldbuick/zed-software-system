@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYRun function with argument

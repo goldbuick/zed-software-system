@@ -1,1 +1,1 @@
-desc;$DKGRAY<name>
+desc;$DKGRAYClear variables (set to 0)

@@ -1,1 +1,1 @@
-desc;$DKGRAY<dir> <color> <text>
+desc;$DKGRAYWrite text to board at direction

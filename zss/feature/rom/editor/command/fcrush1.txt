@@ -1,1 +1,1 @@
-desc;$DKGRAYfcrush1
+desc;$DKGRAYFrequency crush for fx 0

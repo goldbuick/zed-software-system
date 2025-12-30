@@ -1,1 +1,1 @@
-desc;$DKGRAYticker
+desc;$DKGRAYSets element ticker text

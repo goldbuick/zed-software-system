@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYCreate board snapshot

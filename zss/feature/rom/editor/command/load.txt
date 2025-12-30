@@ -1,1 +1,1 @@
-desc;$DKGRAYload
+desc;$DKGRAYLoad code from object codepage into object at given direction

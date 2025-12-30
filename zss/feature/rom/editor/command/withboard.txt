@@ -1,1 +1,1 @@
-desc;$DKGRAY<board>
+desc;$DKGRAYSwitch to target board by id, name, or stat
