@@ -19,9 +19,9 @@ import {
   memoryreadoperator,
   memoryreadplayerboard,
 } from 'zss/memory'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { bookreadflags } from 'zss/memory/bookoperations'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
+import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
 

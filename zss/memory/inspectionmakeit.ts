@@ -24,10 +24,7 @@ import {
 } from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
-import {
-  memoryensuresoftwarecodepage,
-  memoryreadbooklist,
-} from '.'
+import { memoryensuresoftwarecodepage, memoryreadbooklist } from '.'
 
 function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
   switch (type) {

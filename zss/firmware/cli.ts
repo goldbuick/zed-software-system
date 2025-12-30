@@ -64,7 +64,6 @@ import {
   memoryreadplayerboard,
   memorysetsoftwarebook,
 } from 'zss/memory'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import {
   bookclearcodepage,
   bookelementdisplayread,
@@ -86,6 +85,7 @@ import {
   BOOK,
   CODE_PAGE,
   CODE_PAGE_TYPE,
+  MEMORY_LABEL,
 } from 'zss/memory/types'
 import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'

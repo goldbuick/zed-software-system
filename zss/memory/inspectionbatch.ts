@@ -33,10 +33,7 @@ import {
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from './types'
 
-import {
-  memoryensuresoftwarebook,
-  memoryreadplayerboard,
-} from '.'
+import { memoryensuresoftwarebook, memoryreadplayerboard } from '.'
 
 // Batch operations
 // From inspectbatch.ts

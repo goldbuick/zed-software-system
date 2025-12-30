@@ -16,7 +16,6 @@ import {
   memorywritebullet,
   memorywritefromkind,
 } from 'zss/memory'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import {
   boardelementapplycolor,
   boardelementisobject,
@@ -36,7 +35,12 @@ import {
   boardlistelementsbykind,
   boardlistptsbyempty,
 } from 'zss/memory/spatialqueries'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {

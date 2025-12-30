@@ -57,7 +57,6 @@ import {
   memorywriteoperator,
   memorywritetopic,
 } from 'zss/memory'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { boardobjectread } from 'zss/memory/boardoperations'
 import {
   bookreadcodepagebyaddress,
@@ -90,7 +89,7 @@ import {
   bookplayermovetoboard,
   bookplayerreadboards,
 } from 'zss/memory/playermanagement'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import {
   compressbooks,
   decompressbooks,
