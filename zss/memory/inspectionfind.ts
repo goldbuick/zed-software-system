@@ -11,7 +11,7 @@ import {
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
-import { memoryreadplayerboard } from '.'
+import { memoryreadplayerboard } from './playermanagement'
 
 // Find operations
 export type FINDANY_CONFIG = {
@@ -21,18 +21,6 @@ export type FINDANY_CONFIG = {
   expr4: string
 }
 
-// read / write from indexdb
-
-export async function readfindanyconfig(): Promise<FINDANY_CONFIG | undefined> {
-  return idbget('findanyconfig')
-}
-
-export async function writefindanyconfig(
-  updater: (oldValue: FINDANY_CONFIG | undefined) => FINDANY_CONFIG,
-): Promise<void> {
-  return idbupdate('findanyconfig', updater)
-}
-
 let findanyconfig: FINDANY_CONFIG = {
   expr1: 'player',
   expr2: '',
@@ -40,8 +28,28 @@ let findanyconfig: FINDANY_CONFIG = {
   expr4: '',
 }
 
+export async function memoryfindany(
+  path: keyof typeof findanyconfig,
+  player: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  await memorywritefindanyconfig(() => findanyconfig)
+
+  const expr: string = findanyconfig[path] ?? ''
+  if (ispresent(expr)) {
+    vmcli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
+  } else {
+    // clear case
+    vmcli(SOFTWARE, player, `#findany`)
+  }
+}
+
 export async function memoryfindanymenu(player: string) {
-  const config = await readfindanyconfig()
+  const config = await memoryreadfindanyconfig()
   findanyconfig = {
     ...findanyconfig,
     ...config,
@@ -87,22 +95,14 @@ export async function memoryfindanymenu(player: string) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
-export async function memoryfindany(
-  path: keyof typeof findanyconfig,
-  player: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
+export async function memoryreadfindanyconfig(): Promise<
+  FINDANY_CONFIG | undefined
+> {
+  return idbget('findanyconfig')
+}
 
-  await writefindanyconfig(() => findanyconfig)
-
-  const expr: string = findanyconfig[path] ?? ''
-  if (ispresent(expr)) {
-    vmcli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
-  } else {
-    // clear case
-    vmcli(SOFTWARE, player, `#findany`)
-  }
+export async function memorywritefindanyconfig(
+  updater: (oldValue: FINDANY_CONFIG | undefined) => FINDANY_CONFIG,
+): Promise<void> {
+  return idbupdate('findanyconfig', updater)
 }

@@ -28,18 +28,18 @@ import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import {
-  boardelementindex,
-  boardevaldir,
-  boardobjectread,
-  boardvisualsupdate,
+  memoryboardelementindex,
+  memoryevaldir,
+  memoryreadboardobject,
+  memoryupdateboardvisuals,
 } from './boardoperations'
-import { bookelementdisplayread } from './bookoperations'
+import { memoryreadelementdisplay } from './bookoperations'
 import {
-  codepagereaddata,
-  codepagereadname,
-  codepagereadtype,
+  memoryreadcodepagedata,
+  memoryreadcodepagename,
+  memoryreadcodepagetype,
 } from './codepageoperations'
-import { boardcheckcollide } from './spatialqueries'
+import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -50,75 +50,441 @@ import {
 } from './types'
 
 import {
-  memoryboardinit,
-  memoryboardread,
-  memoryelementkindread,
-  memoryelementstatread,
-  memoryoverboardread,
+  memoryinitboard,
   memorypickcodepagewithtype,
+  memoryreadboard,
+  memoryreadelementkind,
+  memoryreadelementstat,
   memoryreadflags,
-  memoryunderboardread,
+  memoryreadoverboard,
+  memoryreadunderboard,
 } from '.'
 
 // Display & Formatting Functions
 
 export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
   if (
-    codepagereadtype(codepage) !== CODE_PAGE_TYPE.TERRAIN &&
-    codepagereadtype(codepage) !== CODE_PAGE_TYPE.OBJECT
+    memoryreadcodepagetype(codepage) !== CODE_PAGE_TYPE.TERRAIN &&
+    memoryreadcodepagetype(codepage) !== CODE_PAGE_TYPE.OBJECT
   ) {
     return ''
   }
-  const name = codepagereadname(codepage)
+  const name = memoryreadcodepagename(codepage)
   const stub: BOARD_ELEMENT = { kind: name }
-  memoryelementkindread(stub)
+  memoryreadelementkind(stub)
   return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
 }
 
-export function memoryelementtodisplayprefix(element: MAYBE<BOARD_ELEMENT>) {
-  const icon = bookelementdisplayread(element)
-  const color = `${COLOR[icon.color]}`
-  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
-  return `$${color}$ON${bg}$${icon.char}`
-}
-
-export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
-  if (!ispresent(element?.id)) {
-    return ''
-  }
-
-  let withname = bookelementdisplayread(element).name
-  if (element.kind === 'player') {
-    const { user } = memoryreadflags(element.id)
-    withname = isstring(user) ? user : 'player'
-  }
-
-  const displayprefix = memoryelementtodisplayprefix(element)
-  return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
-}
-
-// Rendering & Gadget Conversion Functions
-
-const pt1 = new Vector2()
-
-const LAYER_CACHE: Record<string, LAYER> = {}
-const SPRITE_CACHE: Record<string, SPRITE> = {}
-
-function createcachedtiles(
+export function memoryconverttogadgetcontrollayer(
   player: string,
   index: number,
-  width: number,
-  height: number,
-  bg = 0,
-): LAYER_TILES {
-  const id = `tiles:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
+  board: MAYBE<BOARD>,
+): LAYER[] {
+  const control = createcachedcontrol(player, index)
+  const maybeobject = memoryreadboardobject(board, player)
+  if (!ispresent(board) || !ispresent(maybeobject)) {
+    return []
   }
-  return LAYER_CACHE[id] as LAYER_TILES
+
+  // setup focus
+  control.focusid = maybeobject.id ?? ''
+  control.focusx = maybeobject.x ?? 0
+  control.focusy = maybeobject.y ?? 0
+
+  // player flags, then board flags
+  const { graphics, camera, facing } = readgraphics(player, board)
+  if (isstring(graphics)) {
+    const withgraphics = NAME(graphics)
+    switch (graphics) {
+      case 'fpv':
+      case 'iso':
+      case 'flat':
+      case 'mode7':
+        control.graphics = withgraphics
+        break
+      default:
+        control.graphics = 'flat'
+        break
+    }
+  }
+
+  if (isstring(camera)) {
+    switch (NAME(camera)) {
+      default:
+        control.viewscale = VIEWSCALE.MID
+        break
+      case 'near':
+        control.viewscale = VIEWSCALE.NEAR
+        break
+      case 'far':
+        control.viewscale = VIEWSCALE.FAR
+        break
+    }
+  }
+
+  if (isnumber(facing)) {
+    control.facing = degToRad(facing)
+  }
+
+  return [control]
 }
 
-export function createcachedsprite(
+export function memoryconverttogadgetlayers(
+  player: string,
+  index: number,
+  board: MAYBE<BOARD>,
+  tickers: string[],
+  whichlayer: DIR.UNDER | DIR.MID | DIR.OVER,
+  multi = false,
+): LAYER[] {
+  if (
+    !ispresent(board) ||
+    !ispresent(board.terrain) ||
+    !ispresent(board.objects)
+  ) {
+    return []
+  }
+
+  // make sure lookup is created
+  memoryinitboard(board)
+
+  // update resolve caches
+  memoryupdateboardvisuals(board)
+
+  const withgraphics = NAME(readgraphics(player, board).graphics)
+  const layers: LAYER[] = []
+
+  let iiii = index
+  const boardid = board.id
+  const boardwidth = BOARD_WIDTH
+  const boardheight = BOARD_HEIGHT
+  const tiles = createcachedtiles(
+    boardid,
+    iiii++,
+    boardwidth,
+    boardheight,
+    COLOR.BLACK,
+  )
+  layers.push(tiles)
+
+  const objectindex = iiii++
+  const objects = memorycreatecachedsprites(boardid, objectindex)
+  objects.sprites = []
+  layers.push(objects)
+
+  const isdark = board.isdark ? 1 : 0
+  const lighting = createcacheddither(
+    boardid,
+    iiii++,
+    boardwidth,
+    boardheight,
+    isdark,
+  )
+  layers.push(lighting)
+
+  // reset
+  lighting.alphas.fill(isdark)
+
+  for (let i = 0; i < board.terrain.length; ++i) {
+    const tile = board.terrain[i]
+    const display = memoryreadelementdisplay(
+      tile,
+      0,
+      COLOR.WHITE,
+      whichlayer === DIR.OVER ? COLOR.ONCLEAR : COLOR.BLACK,
+    )
+    const collision = memoryreadelementstat(tile, 'collision')
+    tiles.char[i] = display.char
+    tiles.color[i] = display.color
+    tiles.bg[i] = display.bg
+    tiles.stats[i] = collision
+  }
+
+  if (withgraphics === 'fpv') {
+    for (let i = 0; i < board.terrain.length; ++i) {
+      const tile = board.terrain[i]
+      if (multi || ispresent(memoryreadelementstat(tile, 'sky'))) {
+        tiles.char[i] = -tiles.char[i]
+      }
+    }
+  }
+
+  const boardobjects = Object.values(board.objects ?? {})
+
+  // create always show player spots
+  const playerspots = new Set<number>()
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    if (ispid(object.id) && isnumber(object.x) && isnumber(object.y)) {
+      playerspots.add(pttoindex(object as PT, BOARD_WIDTH))
+    }
+  }
+
+  // process objects
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    const collision = memoryreadelementstat(object, 'collision')
+    if (ispresent(object.removed) || collision === COLLISION.ISGHOST) {
+      continue
+    }
+
+    const id = object.id ?? ''
+    if (
+      ispid(id) === false &&
+      isnumber(object.x) &&
+      isnumber(object.y) &&
+      playerspots.has(pttoindex(object as PT, BOARD_WIDTH)) === true
+    ) {
+      continue
+    }
+
+    const display = memoryreadelementdisplay(object)
+    const sprite = memorycreatecachedsprite(boardid, objectindex, id, i)
+
+    // setup sprite
+    sprite.x = object.x ?? 0
+    sprite.y = object.y ?? 0
+    sprite.char = display.char
+    sprite.color = display.color
+    sprite.bg = display.bg
+    sprite.stat = collision
+    sprite.pid = ispid(id) ? id : undefined
+    objects.sprites.push(sprite)
+
+    // write lighting if needed
+    if (isdark) {
+      if (display.light > 0) {
+        const center = memoryboardelementindex(board, sprite)
+        const radius = clamp(Math.round(display.light), 1, BOARD_HEIGHT)
+        const step = 1 / (radius * 0.5)
+
+        lighting.alphas[center] = 0
+        if (radius > 1) {
+          // min, max, value
+          const blocked: [number, number, number][] = []
+          for (let r = 1; r <= radius; ++r) {
+            // light dir for a cone of light
+            if (r === 2) {
+              const maybedir = memoryreadelementstat(object, 'lightdir')
+              if (isstrdir(maybedir)) {
+                const lightdir = memoryevaldir(
+                  board,
+                  object,
+                  '',
+                  maybedir,
+                  sprite,
+                )
+                switch (dirfrompts(sprite, lightdir.destpt)) {
+                  case DIR.EAST:
+                    blocked.push([45, 315, 1])
+                    break
+                  case DIR.WEST:
+                    blocked.push([225, 135, 1])
+                    break
+                  case DIR.NORTH:
+                    blocked.push([315, 225, 1])
+                    break
+                  case DIR.SOUTH:
+                    blocked.push([135, 45, 1])
+                    break
+                }
+              }
+            }
+            const nextblocked: [number, number, number][] = []
+            for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
+              raycheck(
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                sprite.x - r,
+                y,
+              )
+              raycheck(
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                sprite.x + r,
+                y,
+              )
+            }
+            const inset = r - 1
+            for (let x = sprite.x - inset; x <= sprite.x + inset; ++x) {
+              raycheck(
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                x,
+                sprite.y - r,
+              )
+              raycheck(
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                x,
+                sprite.y + r,
+              )
+            }
+            // process newly blocked angles
+            for (let nb = 0; nb < nextblocked.length; ++nb) {
+              const range = nextblocked[nb]
+              let b = 0
+              for (b = 0; b < blocked.length; ++b) {
+                const block = blocked[b]
+                if (block[1] > block[0]) {
+                  if (
+                    range[1] >= block[0] &&
+                    range[0] <= block[1] &&
+                    range[2] >= 1 &&
+                    block[2] >= 1
+                  ) {
+                    // merged
+                    blocked[b] = [
+                      Math.min(range[0], block[0]),
+                      Math.max(range[1], block[1]),
+                      1,
+                    ]
+                    break
+                  }
+                }
+              }
+              if (b === blocked.length) {
+                blocked.push(range)
+              }
+            }
+          }
+        }
+      } else if (ispid(id)) {
+        // always show player
+        const index = memoryboardelementindex(board, sprite)
+        lighting.alphas[index] = 0
+      }
+    }
+  }
+
+  // process isghost objects
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    const collision = memoryreadelementstat(object, 'collision')
+    if (ispresent(object.removed) || collision !== COLLISION.ISGHOST) {
+      continue
+    }
+
+    const id = object.id ?? ''
+    const display = memoryreadelementdisplay(object)
+    const sprite = memorycreatecachedsprite(boardid, objectindex, id, i)
+
+    // setup sprite
+    sprite.x = object.x ?? 0
+    sprite.y = object.y ?? 0
+    sprite.char = display.char
+    sprite.color = display.color
+    sprite.bg = display.bg
+    sprite.stat = collision
+    objects.sprites.push(sprite)
+  }
+
+  // process ticker messages
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    // write ticker messages
+    if (
+      isstring(object.tickertext) &&
+      isnumber(object.tickertime) &&
+      object.tickertext.length
+    ) {
+      tickers.push(`${memoryelementtologprefix(object)}${object.tickertext}`)
+    }
+  }
+
+  // layers for display media
+  if (whichlayer === DIR.MID) {
+    // set mood
+    layers.push(
+      createcachedmedia(
+        boardid,
+        iiii++,
+        'text/mood',
+        isdark ? 'dark' : 'bright',
+      ),
+    )
+
+    // check for palette
+    if (isstring(board.palettepage)) {
+      const codepage = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.PALETTE,
+        board.palettepage,
+      )
+      const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
+      if (ispresent(palette?.bits)) {
+        layers.push(
+          createcachedmedia(
+            boardid,
+            iiii++,
+            'image/palette',
+            Array.from(palette.bits),
+          ),
+        )
+      }
+    }
+    // check for charset
+    if (isstring(board.charsetpage)) {
+      const codepage = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.CHARSET,
+        board.charsetpage,
+      )
+      const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
+      if (ispresent(charset?.bits)) {
+        layers.push(
+          createcachedmedia(
+            boardid,
+            iiii++,
+            'image/charset',
+            Array.from(charset.bits),
+          ),
+        )
+      }
+    }
+    // add media layer to list peer ids
+    const pids = Object.keys(board.objects).filter(ispid)
+    layers.push(
+      createcachedmedia(boardid, iiii++, 'text/players', pids.join(',')),
+    )
+  }
+
+  // return result
+  return layers
+}
+
+export type MEMORY_GADGET_LAYERS = {
+  id: string
+  board: string
+  exiteast: string
+  exitwest: string
+  exitnorth: string
+  exitsouth: string
+  over: LAYER[]
+  under: LAYER[]
+  layers: LAYER[]
+  tickers: string[]
+}
+
+export function memorycreatecachedsprite(
   player: string,
   index: number,
   id: string,
@@ -133,7 +499,10 @@ export function createcachedsprite(
   return SPRITE_CACHE[cid]
 }
 
-function createcachedsprites(player: string, index: number): LAYER_SPRITES {
+function memorycreatecachedsprites(
+  player: string,
+  index: number,
+): LAYER_SPRITES {
   const id = `sprites:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createsprites(player, index)
@@ -238,7 +607,7 @@ function raycheck(
 ) {
   // check index
   const pt = { x, y }
-  const idx = boardelementindex(board, pt)
+  const idx = memoryboardelementindex(board, pt)
   if (idx === -1) {
     return
   }
@@ -278,7 +647,7 @@ function raycheck(
   alphas[idx] = clamp(alphas[idx], 0, 1)
 
   // check lookup
-  const object = boardobjectread(board, board.lookup?.[idx] ?? '')
+  const object = memoryreadboardobject(board, board.lookup?.[idx] ?? '')
   if (ispresent(object)) {
     // half blocked
     const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
@@ -286,9 +655,9 @@ function raycheck(
   }
 
   const maybeterrain = board.terrain[idx]
-  const terrainkind = memoryelementkindread(maybeterrain)
+  const terrainkind = memoryreadelementkind(maybeterrain)
   const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
-  if (boardcheckcollide(COLLISION.ISBULLET, terraincollision)) {
+  if (memorycheckcollision(COLLISION.ISBULLET, terraincollision)) {
     // fully blocked
     const range: [number, number, number] = [...mixmaxrange(sprite, pt), 1]
     nextblocked.push(range)
@@ -308,413 +677,26 @@ function readgraphics(player: string, board: BOARD) {
   }
 }
 
-export function memoryconverttogadgetcontrollayer(
-  player: string,
-  index: number,
-  board: MAYBE<BOARD>,
-): LAYER[] {
-  const control = createcachedcontrol(player, index)
-  const maybeobject = boardobjectread(board, player)
-  if (!ispresent(board) || !ispresent(maybeobject)) {
-    return []
-  }
-
-  // setup focus
-  control.focusid = maybeobject.id ?? ''
-  control.focusx = maybeobject.x ?? 0
-  control.focusy = maybeobject.y ?? 0
-
-  // player flags, then board flags
-  const { graphics, camera, facing } = readgraphics(player, board)
-  if (isstring(graphics)) {
-    const withgraphics = NAME(graphics)
-    switch (graphics) {
-      case 'fpv':
-      case 'iso':
-      case 'flat':
-      case 'mode7':
-        control.graphics = withgraphics
-        break
-      default:
-        control.graphics = 'flat'
-        break
-    }
-  }
-
-  if (isstring(camera)) {
-    switch (NAME(camera)) {
-      default:
-        control.viewscale = VIEWSCALE.MID
-        break
-      case 'near':
-        control.viewscale = VIEWSCALE.NEAR
-        break
-      case 'far':
-        control.viewscale = VIEWSCALE.FAR
-        break
-    }
-  }
-
-  if (isnumber(facing)) {
-    control.facing = degToRad(facing)
-  }
-
-  return [control]
+export function memoryelementtodisplayprefix(element: MAYBE<BOARD_ELEMENT>) {
+  const icon = memoryreadelementdisplay(element)
+  const color = `${COLOR[icon.color]}`
+  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
+  return `$${color}$ON${bg}$${icon.char}`
 }
 
-export function memoryconverttogadgetlayers(
-  player: string,
-  index: number,
-  board: MAYBE<BOARD>,
-  tickers: string[],
-  whichlayer: DIR.UNDER | DIR.MID | DIR.OVER,
-  multi = false,
-): LAYER[] {
-  if (
-    !ispresent(board) ||
-    !ispresent(board.terrain) ||
-    !ispresent(board.objects)
-  ) {
-    return []
+export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
+  if (!ispresent(element?.id)) {
+    return ''
   }
 
-  // make sure lookup is created
-  memoryboardinit(board)
-
-  // update resolve caches
-  boardvisualsupdate(board)
-
-  const withgraphics = NAME(readgraphics(player, board).graphics)
-  const layers: LAYER[] = []
-
-  let iiii = index
-  const boardid = board.id
-  const boardwidth = BOARD_WIDTH
-  const boardheight = BOARD_HEIGHT
-  const tiles = createcachedtiles(
-    boardid,
-    iiii++,
-    boardwidth,
-    boardheight,
-    COLOR.BLACK,
-  )
-  layers.push(tiles)
-
-  const objectindex = iiii++
-  const objects = createcachedsprites(boardid, objectindex)
-  objects.sprites = []
-  layers.push(objects)
-
-  const isdark = board.isdark ? 1 : 0
-  const lighting = createcacheddither(
-    boardid,
-    iiii++,
-    boardwidth,
-    boardheight,
-    isdark,
-  )
-  layers.push(lighting)
-
-  // reset
-  lighting.alphas.fill(isdark)
-
-  for (let i = 0; i < board.terrain.length; ++i) {
-    const tile = board.terrain[i]
-    const display = bookelementdisplayread(
-      tile,
-      0,
-      COLOR.WHITE,
-      whichlayer === DIR.OVER ? COLOR.ONCLEAR : COLOR.BLACK,
-    )
-    const collision = memoryelementstatread(tile, 'collision')
-    tiles.char[i] = display.char
-    tiles.color[i] = display.color
-    tiles.bg[i] = display.bg
-    tiles.stats[i] = collision
+  let withname = memoryreadelementdisplay(element).name
+  if (element.kind === 'player') {
+    const { user } = memoryreadflags(element.id)
+    withname = isstring(user) ? user : 'player'
   }
 
-  if (withgraphics === 'fpv') {
-    for (let i = 0; i < board.terrain.length; ++i) {
-      const tile = board.terrain[i]
-      if (multi || ispresent(memoryelementstatread(tile, 'sky'))) {
-        tiles.char[i] = -tiles.char[i]
-      }
-    }
-  }
-
-  const boardobjects = Object.values(board.objects ?? {})
-
-  // create always show player spots
-  const playerspots = new Set<number>()
-  for (let i = 0; i < boardobjects.length; ++i) {
-    const object = boardobjects[i]
-    if (ispid(object.id) && isnumber(object.x) && isnumber(object.y)) {
-      playerspots.add(pttoindex(object as PT, BOARD_WIDTH))
-    }
-  }
-
-  // process objects
-  for (let i = 0; i < boardobjects.length; ++i) {
-    const object = boardobjects[i]
-    const collision = memoryelementstatread(object, 'collision')
-    if (ispresent(object.removed) || collision === COLLISION.ISGHOST) {
-      continue
-    }
-
-    const id = object.id ?? ''
-    if (
-      ispid(id) === false &&
-      isnumber(object.x) &&
-      isnumber(object.y) &&
-      playerspots.has(pttoindex(object as PT, BOARD_WIDTH)) === true
-    ) {
-      continue
-    }
-
-    const display = bookelementdisplayread(object)
-    const sprite = createcachedsprite(boardid, objectindex, id, i)
-
-    // setup sprite
-    sprite.x = object.x ?? 0
-    sprite.y = object.y ?? 0
-    sprite.char = display.char
-    sprite.color = display.color
-    sprite.bg = display.bg
-    sprite.stat = collision
-    sprite.pid = ispid(id) ? id : undefined
-    objects.sprites.push(sprite)
-
-    // write lighting if needed
-    if (isdark) {
-      if (display.light > 0) {
-        const center = boardelementindex(board, sprite)
-        const radius = clamp(Math.round(display.light), 1, BOARD_HEIGHT)
-        const step = 1 / (radius * 0.5)
-
-        lighting.alphas[center] = 0
-        if (radius > 1) {
-          // min, max, value
-          const blocked: [number, number, number][] = []
-          for (let r = 1; r <= radius; ++r) {
-            // light dir for a cone of light
-            if (r === 2) {
-              const maybedir = memoryelementstatread(object, 'lightdir')
-              if (isstrdir(maybedir)) {
-                const lightdir = boardevaldir(
-                  board,
-                  object,
-                  '',
-                  maybedir,
-                  sprite,
-                )
-                switch (dirfrompts(sprite, lightdir.destpt)) {
-                  case DIR.EAST:
-                    blocked.push([45, 315, 1])
-                    break
-                  case DIR.WEST:
-                    blocked.push([225, 135, 1])
-                    break
-                  case DIR.NORTH:
-                    blocked.push([315, 225, 1])
-                    break
-                  case DIR.SOUTH:
-                    blocked.push([135, 45, 1])
-                    break
-                }
-              }
-            }
-            const nextblocked: [number, number, number][] = []
-            for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                sprite.x - r,
-                y,
-              )
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                sprite.x + r,
-                y,
-              )
-            }
-            const inset = r - 1
-            for (let x = sprite.x - inset; x <= sprite.x + inset; ++x) {
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                x,
-                sprite.y - r,
-              )
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                x,
-                sprite.y + r,
-              )
-            }
-            // process newly blocked angles
-            for (let nb = 0; nb < nextblocked.length; ++nb) {
-              const range = nextblocked[nb]
-              let b = 0
-              for (b = 0; b < blocked.length; ++b) {
-                const block = blocked[b]
-                if (block[1] > block[0]) {
-                  if (
-                    range[1] >= block[0] &&
-                    range[0] <= block[1] &&
-                    range[2] >= 1 &&
-                    block[2] >= 1
-                  ) {
-                    // merged
-                    blocked[b] = [
-                      Math.min(range[0], block[0]),
-                      Math.max(range[1], block[1]),
-                      1,
-                    ]
-                    break
-                  }
-                }
-              }
-              if (b === blocked.length) {
-                blocked.push(range)
-              }
-            }
-          }
-        }
-      } else if (ispid(id)) {
-        // always show player
-        const index = boardelementindex(board, sprite)
-        lighting.alphas[index] = 0
-      }
-    }
-  }
-
-  // process isghost objects
-  for (let i = 0; i < boardobjects.length; ++i) {
-    const object = boardobjects[i]
-    const collision = memoryelementstatread(object, 'collision')
-    if (ispresent(object.removed) || collision !== COLLISION.ISGHOST) {
-      continue
-    }
-
-    const id = object.id ?? ''
-    const display = bookelementdisplayread(object)
-    const sprite = createcachedsprite(boardid, objectindex, id, i)
-
-    // setup sprite
-    sprite.x = object.x ?? 0
-    sprite.y = object.y ?? 0
-    sprite.char = display.char
-    sprite.color = display.color
-    sprite.bg = display.bg
-    sprite.stat = collision
-    objects.sprites.push(sprite)
-  }
-
-  // process ticker messages
-  for (let i = 0; i < boardobjects.length; ++i) {
-    const object = boardobjects[i]
-    // write ticker messages
-    if (
-      isstring(object.tickertext) &&
-      isnumber(object.tickertime) &&
-      object.tickertext.length
-    ) {
-      tickers.push(`${memoryelementtologprefix(object)}${object.tickertext}`)
-    }
-  }
-
-  // layers for display media
-  if (whichlayer === DIR.MID) {
-    // set mood
-    layers.push(
-      createcachedmedia(
-        boardid,
-        iiii++,
-        'text/mood',
-        isdark ? 'dark' : 'bright',
-      ),
-    )
-
-    // check for palette
-    if (isstring(board.palettepage)) {
-      const codepage = memorypickcodepagewithtype(
-        CODE_PAGE_TYPE.PALETTE,
-        board.palettepage,
-      )
-      const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
-      if (ispresent(palette?.bits)) {
-        layers.push(
-          createcachedmedia(
-            boardid,
-            iiii++,
-            'image/palette',
-            Array.from(palette.bits),
-          ),
-        )
-      }
-    }
-    // check for charset
-    if (isstring(board.charsetpage)) {
-      const codepage = memorypickcodepagewithtype(
-        CODE_PAGE_TYPE.CHARSET,
-        board.charsetpage,
-      )
-      const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
-      if (ispresent(charset?.bits)) {
-        layers.push(
-          createcachedmedia(
-            boardid,
-            iiii++,
-            'image/charset',
-            Array.from(charset.bits),
-          ),
-        )
-      }
-    }
-    // add media layer to list peer ids
-    const pids = Object.keys(board.objects).filter(ispid)
-    layers.push(
-      createcachedmedia(boardid, iiii++, 'text/players', pids.join(',')),
-    )
-  }
-
-  // return result
-  return layers
-}
-
-export type MEMORY_GADGET_LAYERS = {
-  id: string
-  board: string
-  exiteast: string
-  exitwest: string
-  exitnorth: string
-  exitsouth: string
-  over: LAYER[]
-  under: LAYER[]
-  layers: LAYER[]
-  tickers: string[]
+  const displayprefix = memoryelementtodisplayprefix(element)
+  return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
 }
 
 export function memoryreadgadgetlayers(
@@ -744,12 +726,12 @@ export function memoryreadgadgetlayers(
   const id4all: string[] = [`${board.id}`]
 
   // read over / under
-  const overboard = memoryoverboardread(board)
+  const overboard = memoryreadoverboard(board)
   if (overboard?.id) {
     id4all.push(overboard.id)
   }
 
-  const underboard = memoryunderboardread(board)
+  const underboard = memoryreadunderboard(board)
   if (underboard?.id) {
     id4all.push(underboard.id)
   }
@@ -795,13 +777,34 @@ export function memoryreadgadgetlayers(
   return {
     id: id4all.join('|'),
     board: board.id,
-    exiteast: memoryboardread(board.exiteast ?? '')?.id ?? '',
-    exitwest: memoryboardread(board.exitwest ?? '')?.id ?? '',
-    exitnorth: memoryboardread(board.exitnorth ?? '')?.id ?? '',
-    exitsouth: memoryboardread(board.exitsouth ?? '')?.id ?? '',
+    exiteast: memoryreadboard(board.exiteast ?? '')?.id ?? '',
+    exitwest: memoryreadboard(board.exitwest ?? '')?.id ?? '',
+    exitnorth: memoryreadboard(board.exitnorth ?? '')?.id ?? '',
+    exitsouth: memoryreadboard(board.exitsouth ?? '')?.id ?? '',
     over,
     under,
     layers,
     tickers,
   }
+}
+
+// Rendering & Gadget Conversion Functions
+
+const pt1 = new Vector2()
+
+const LAYER_CACHE: Record<string, LAYER> = {}
+const SPRITE_CACHE: Record<string, SPRITE> = {}
+
+function createcachedtiles(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  bg = 0,
+): LAYER_TILES {
+  const id = `tiles:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
+  }
+  return LAYER_CACHE[id] as LAYER_TILES
 }

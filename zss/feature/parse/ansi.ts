@@ -7,9 +7,15 @@ import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { boardsetterrain, ptwithinboard } from 'zss/memory/boardoperations'
-import { bookwritecodepage } from 'zss/memory/bookoperations'
-import { codepagereaddata, createcodepage } from 'zss/memory/codepageoperations'
+import {
+  memorysetboardterrain,
+  memoryptwithinboard,
+} from 'zss/memory/boardoperations'
+import { memorywritebookcodepage } from 'zss/memory/bookoperations'
+import {
+  memoryreadcodepagedata,
+  memorycreatecodepage,
+} from 'zss/memory/codepageoperations'
 import {
   BOARD,
   BOARD_HEIGHT,
@@ -103,17 +109,18 @@ export function parseansi(
           ]
           const numeral = `${bi}`.padStart(3, '0')
           const code = `@board ${patchworkname} ${numeral}\n${stats.join('\n')}\n`
-          const codepage = createcodepage(code, {})
-          bookwritecodepage(contentbook, codepage)
+          const codepage = memorycreatecodepage(code, {})
+          memorywritebookcodepage(contentbook, codepage)
           // get board data from codepage
-          boards[bi] = board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+          boards[bi] = board =
+            memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
         }
 
-        if (ispresent(board) && ptwithinboard({ x, y })) {
+        if (ispresent(board) && memoryptwithinboard({ x, y })) {
           const [char, fromcolor, frombg] = screendata.screen[i]
           const color = colormap.get(fromcolor) ?? 0
           const bg = colormap.get(frombg) ?? 0
-          boardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
+          memorysetboardterrain(board, { x, y, kind: 'fake', char, color, bg })
         }
 
         ++sx

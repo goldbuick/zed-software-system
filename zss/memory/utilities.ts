@@ -16,17 +16,16 @@ import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { boardobjectread } from './boardoperations'
+import { memoryreadboardobject } from './boardoperations'
 import {
-  bookelementdisplayread,
-  bookexport,
-  bookimport,
+  memoryexportbook,
+  memoryimportbook,
+  memoryreadelementdisplay,
 } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
-import { BOOK } from './types'
+import { BOOK, MEMORY_LABEL } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryisoperator,
   memoryreadbookbysoftware,
   memoryreadflags,
@@ -34,8 +33,6 @@ import {
   memoryreadoperator,
   memoryreadtopic,
 } from '.'
-
-// Compression & Serialization
 
 let zstdenabled = false
 async function getzstdlib(): Promise<void> {
@@ -59,91 +56,6 @@ function base64tobase64url(base64String: string) {
   // Replace base64 standard chars with url compatible chars
   return base64String.replace(/\+/g, '-').replace(/\//g, '_')
 }
-
-const FIXED_DATE = new Date('1980/09/02')
-
-export async function compressbooks(books: BOOK[]) {
-  await getzstdlib()
-
-  console.info('saved', books)
-  const zip = new JSZip()
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    const exportedbook = bookexport(book)
-    if (exportedbook) {
-      // convert to bin
-      const bin = packformat(exportedbook)
-      if (ispresent(bin)) {
-        // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
-        const binsquash = compress(bin, 15)
-        zip.file(book.id, binsquash, { date: FIXED_DATE })
-      }
-    }
-  }
-
-  // TODO: do we need this still ??
-  const content = await zip.generateAsync({
-    type: 'base64',
-  })
-
-  return base64tobase64url(content)
-}
-
-// import json into book
-export async function decompressbooks(base64bytes: string) {
-  await getzstdlib()
-
-  const books: BOOK[] = []
-  const content = base64urltobase64(base64bytes)
-  const zip = await JSZip.loadAsync(content, { base64: true })
-
-  // extract a normal list
-  const files: JSZipObject[] = []
-  zip.forEach((_path, file) => files.push(file))
-
-  // unpack books
-  for (let i = 0; i < files.length; ++i) {
-    const file = files[i]
-
-    // first pass try string
-    const str = await file.async('string')
-    const maybebookfromstr = unpackformat(str)
-    if (ispresent(maybebookfromstr)) {
-      const book = bookimport(maybebookfromstr)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    // second pass uncompressed msgpackr
-    const bin = await file.async('uint8array')
-    const maybebookfrombin = unpackformat(bin)
-    if (ispresent(maybebookfrombin)) {
-      const book = bookimport(maybebookfrombin)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    // second pass compressed msgpackr
-    const ubin = decompress(bin)
-    const maybebookfromubin = unpackformat(ubin)
-    if (ispresent(maybebookfromubin)) {
-      const book = bookimport(maybebookfromubin)
-      if (ispresent(book)) {
-        books.push(book)
-      }
-    }
-  }
-
-  return books
-}
-
-// Admin Operations
-
-// read / write from indexdb
 
 async function writeidb<T>(
   key: string,
@@ -183,6 +95,8 @@ async function readconfigall() {
   })
 }
 
+const FIXED_DATE = new Date('1980/09/02')
+
 export async function memoryadminmenu(player: string) {
   // get list of active players
   const isop = memoryisoperator(player)
@@ -199,8 +113,8 @@ export async function memoryadminmenu(player: string) {
     const { user } = memoryreadflags(player)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(player)
-    const playerelement = boardobjectread(playerboard, player)
-    const icon = bookelementdisplayread(playerelement)
+    const playerelement = memoryreadboardobject(playerboard, player)
+    const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
     if (isop && ispresent(playerboard)) {
@@ -285,4 +199,82 @@ export async function memoryadminmenu(player: string) {
   const shared = gadgetstate(player)
   shared.scrollname = 'cpu #admin'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memorycompressbooks(books: BOOK[]) {
+  await getzstdlib()
+
+  console.info('saved', books)
+  const zip = new JSZip()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    const exportedbook = memoryexportbook(book)
+    if (exportedbook) {
+      // convert to bin
+      const bin = packformat(exportedbook)
+      if (ispresent(bin)) {
+        // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
+        const binsquash = compress(bin, 15)
+        zip.file(book.id, binsquash, { date: FIXED_DATE })
+      }
+    }
+  }
+
+  // TODO: do we need this still ??
+  const content = await zip.generateAsync({
+    type: 'base64',
+  })
+
+  return base64tobase64url(content)
+}
+
+export async function memorydecompressbooks(base64bytes: string) {
+  await getzstdlib()
+
+  const books: BOOK[] = []
+  const content = base64urltobase64(base64bytes)
+  const zip = await JSZip.loadAsync(content, { base64: true })
+
+  // extract a normal list
+  const files: JSZipObject[] = []
+  zip.forEach((_path, file) => files.push(file))
+
+  // unpack books
+  for (let i = 0; i < files.length; ++i) {
+    const file = files[i]
+
+    // first pass try string
+    const str = await file.async('string')
+    const maybebookfromstr = unpackformat(str)
+    if (ispresent(maybebookfromstr)) {
+      const book = memoryimportbook(maybebookfromstr)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
+      }
+    }
+
+    // second pass uncompressed msgpackr
+    const bin = await file.async('uint8array')
+    const maybebookfrombin = unpackformat(bin)
+    if (ispresent(maybebookfrombin)) {
+      const book = memoryimportbook(maybebookfrombin)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
+      }
+    }
+
+    // second pass compressed msgpackr
+    const ubin = decompress(bin)
+    const maybebookfromubin = unpackformat(ubin)
+    if (ispresent(maybebookfromubin)) {
+      const book = memoryimportbook(maybebookfromubin)
+      if (ispresent(book)) {
+        books.push(book)
+      }
+    }
+  }
+
+  return books
 }

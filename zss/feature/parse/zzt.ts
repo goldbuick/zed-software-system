@@ -4,13 +4,19 @@ import { SOFTWARE } from 'zss/device/session'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
-  memoryboardinit,
+  memoryinitboard,
   memoryreadfirstcontentbook,
-  memorysetbook,
-  memorywritefromkind,
+  memorywritebook,
+  memorywriteelementfromkind,
 } from 'zss/memory'
-import { bookwritecodepage, createbook } from 'zss/memory/bookoperations'
-import { codepagereaddata, createcodepage } from 'zss/memory/codepageoperations'
+import {
+  memorywritebookcodepage,
+  memorycreatebook,
+} from 'zss/memory/bookoperations'
+import {
+  memoryreadcodepagedata,
+  memorycreatecodepage,
+} from 'zss/memory/codepageoperations'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
@@ -200,7 +206,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     dest: PT,
     addstats?: BOARD_ELEMENT,
   ) {
-    const element = memorywritefromkind(board, kind, dest)
+    const element = memorywriteelementfromkind(board, kind, dest)
     if (ispresent(element) && ispresent(addstats)) {
       const stats = objectKeys(addstats)
       for (let i = 0; i < stats.length; ++i) {
@@ -584,11 +590,11 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
 
     // create a new board codepage
     const code = `@board ${String(i).padStart(3, '0')}. ${zztboard.boardname}\n${codepagestats.join('\n')}`
-    const codepage = createcodepage(code, {})
-    bookwritecodepage(book, codepage)
+    const codepage = memorycreatecodepage(code, {})
+    memorywritebookcodepage(book, codepage)
 
     // get board data from codepage
-    const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+    const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
     if (!ispresent(board)) {
       continue
     }
@@ -607,7 +613,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     }
 
     // create lookups before processing stats
-    memoryboardinit(board)
+    memoryinitboard(board)
   }
 }
 
@@ -684,10 +690,10 @@ export function parsezzt(player: string, content: Uint8Array) {
   }
 
   // build book
-  const book = createbook([])
+  const book = memorycreatebook([])
   book.name = worldname
   processboards(book, playerboard, zztboards)
 
-  memorysetbook(book)
+  memorywritebook(book)
   apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
 }

@@ -53,32 +53,33 @@ import {
 } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
-  MEMORY_LABEL,
-  memoryboardread,
   memoryclearbook,
   memoryensuresoftwarebook,
+  memoryreadboard,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadflags,
   memoryreadoperator,
-  memoryreadplayerboard,
-  memorysetsoftwarebook,
+  memorywritesoftwarebook,
 } from 'zss/memory'
 import {
-  bookclearcodepage,
-  bookelementdisplayread,
-  bookreadcodepagebyaddress,
-  bookreadsortedcodepages,
-  bookupdatename,
+  memoryclearbookcodepage,
+  memoryreadbookcodepagebyaddress,
+  memoryreadbookcodepagessorted,
+  memoryreadelementdisplay,
+  memoryupdatebookname,
 } from 'zss/memory/bookoperations'
 import {
-  codepagereadname,
-  codepagereadtype,
-  codepagereadtypetostring,
+  memoryreadcodepagename,
+  memoryreadcodepagetype,
+  memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gameloop'
-import { bookplayermovetoboard } from 'zss/memory/playermanagement'
+import {
+  memorymoveplayertoboard,
+  memoryreadplayerboard,
+} from 'zss/memory/playermanagement'
 import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   BOARD_HEIGHT,
@@ -86,6 +87,7 @@ import {
   BOOK,
   CODE_PAGE,
   CODE_PAGE_TYPE,
+  MEMORY_LABEL,
 } from 'zss/memory/types'
 import { ispt } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -166,7 +168,7 @@ export const CLI_FIRMWARE = createfirmware()
     const [label, ...words] = args
     const { user } = memoryreadflags(READ_CONTEXT.elementid)
     const withuser = isstring(user) ? user : 'player'
-    const icon = bookelementdisplayread(READ_CONTEXT.element)
+    const icon = memoryreadelementdisplay(READ_CONTEXT.element)
     const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
     const labelstr = chip.template(maptostring(label).split(' '))
     apilog(
@@ -183,7 +185,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
 
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-    bookupdatename(mainbook)
+    memoryupdatebookname(mainbook)
     if (ispresent(mainbook)) {
       writeoption(
         SOFTWARE,
@@ -206,7 +208,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(book)) {
       // clear opened
       if (opened === book) {
-        memorysetsoftwarebook(MEMORY_LABEL.MAIN, '')
+        memorywritesoftwarebook(MEMORY_LABEL.MAIN, '')
       }
       // clear book
       memoryclearbook(address)
@@ -219,9 +221,9 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('boardopen', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
-    const target = memoryboardread(stat)
+    const target = memoryreadboard(stat)
     if (ispresent(target)) {
-      bookplayermovetoboard(
+      memorymoveplayertoboard(
         READ_CONTEXT.book,
         READ_CONTEXT.elementfocus,
         target.id,
@@ -246,14 +248,14 @@ export const CLI_FIRMWARE = createfirmware()
     const booklist = memoryreadbooklist()
     for (let i = 0; i < booklist.length; ++i) {
       codepagebook = booklist[i]
-      codepage = bookreadcodepagebyaddress(codepagebook, page)
+      codepage = memoryreadbookcodepagebyaddress(codepagebook, page)
       if (ispresent(codepage)) {
         break
       }
     }
 
     if (ispresent(codepage) && ispresent(codepagebook)) {
-      const name = codepagereadname(codepage)
+      const name = memoryreadcodepagename(codepage)
 
       // path
       const path = [codepage.id, maybeobject]
@@ -262,7 +264,7 @@ export const CLI_FIRMWARE = createfirmware()
       modemwriteinitstring(vmcodeaddress(codepagebook.id, path), codepage.code)
 
       // tell tape to open a code editor for given page
-      const type = codepagereadtypetostring(codepage)
+      const type = memoryreadcodepagetypeasstring(codepage)
 
       // codepage details
       const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
@@ -292,10 +294,10 @@ export const CLI_FIRMWARE = createfirmware()
     const [page] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-    const codepage = bookclearcodepage(mainbook, page)
+    const codepage = memoryclearbookcodepage(mainbook, page)
     if (ispresent(page)) {
-      const name = codepagereadname(codepage)
-      const pagetype = codepagereadtypetostring(codepage)
+      const name = memoryreadcodepagename(codepage)
+      const pagetype = memoryreadcodepagetypeasstring(codepage)
       apilog(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
@@ -359,10 +361,10 @@ export const CLI_FIRMWARE = createfirmware()
       `${mainbook.name} $GREEN${mainbook.id}`,
     )
     if (mainbook.pages.length) {
-      const sorted = bookreadsortedcodepages(mainbook)
+      const sorted = memoryreadbookcodepagessorted(mainbook)
       sorted.forEach((page) => {
-        const name = codepagereadname(page)
-        const type = codepagereadtypetostring(page)
+        const name = memoryreadcodepagename(page)
+        const type = memoryreadcodepagetypeasstring(page)
         const prefix = memorycodepagetoprefix(page)
         write(
           SOFTWARE,
@@ -387,10 +389,10 @@ export const CLI_FIRMWARE = createfirmware()
           'content',
           `${book.name} $GREEN${book.id}`,
         )
-        const sorted = bookreadsortedcodepages(book)
+        const sorted = memoryreadbookcodepagessorted(book)
         sorted.forEach((page) => {
-          const name = codepagereadname(page)
-          const type = codepagereadtypetostring(page)
+          const name = memoryreadcodepagename(page)
+          const type = memoryreadcodepagetypeasstring(page)
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
@@ -412,11 +414,11 @@ export const CLI_FIRMWARE = createfirmware()
         'main',
         `${mainbook.name} $GREEN${mainbook.id}`,
       )
-      const sorted = bookreadsortedcodepages(mainbook)
+      const sorted = memoryreadbookcodepagessorted(mainbook)
       sorted
-        .filter((page) => codepagereadtype(page) === CODE_PAGE_TYPE.BOARD)
+        .filter((page) => memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD)
         .forEach((page) => {
-          const name = codepagereadname(page)
+          const name = memoryreadcodepagename(page)
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
@@ -449,11 +451,13 @@ export const CLI_FIRMWARE = createfirmware()
           'content',
           `${book.name} $GREEN${book.id}`,
         )
-        const sorted = bookreadsortedcodepages(book)
+        const sorted = memoryreadbookcodepagessorted(book)
         sorted
-          .filter((page) => codepagereadtype(page) === CODE_PAGE_TYPE.BOARD)
+          .filter(
+            (page) => memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
+          )
           .forEach((page) => {
-            const name = codepagereadname(page)
+            const name = memoryreadcodepagename(page)
             write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
@@ -489,8 +493,8 @@ export const CLI_FIRMWARE = createfirmware()
         `pages in open ${book.name} book`,
       )
       book.pages.forEach((page) => {
-        const name = codepagereadname(page)
-        const type = codepagereadtypetostring(page)
+        const name = memoryreadcodepagename(page)
+        const type = memoryreadcodepagetypeasstring(page)
         const prefix = memorycodepagetoprefix(page)
         write(
           SOFTWARE,
@@ -589,15 +593,15 @@ export const CLI_FIRMWARE = createfirmware()
       writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
       setTimeout(() => {
         if (book.pages.length) {
-          const sorted = bookreadsortedcodepages(book)
+          const sorted = memoryreadbookcodepagessorted(book)
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
             `!bookallexport ${address};$blue[all] $whiteexport book`,
           )
           sorted.forEach((page) => {
-            const name = codepagereadname(page)
-            const type = codepagereadtypetostring(page)
+            const name = memoryreadcodepagename(page)
+            const type = memoryreadcodepagetypeasstring(page)
             const prefix = memorycodepagetoprefix(page)
             write(
               SOFTWARE,
@@ -633,13 +637,13 @@ export const CLI_FIRMWARE = createfirmware()
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
     const { target, path } = parsetarget(address)
     const book = memoryreadbookbyaddress(target)
-    const codepage = bookreadcodepagebyaddress(book, path)
+    const codepage = memoryreadbookcodepagebyaddress(book, path)
     if (ispresent(codepage)) {
       registerdownloadjsonfile(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         deepcopy(codepage),
-        `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
+        `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
       )
     }
     return 0

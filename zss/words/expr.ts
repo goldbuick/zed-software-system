@@ -7,14 +7,17 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memoryrun } from 'zss/memory'
-import { boardcheckmoveobject } from 'zss/memory/boardmovement'
-import { boardelementread, boardgetterrain } from 'zss/memory/boardoperations'
-import { bookelementdisplayread } from 'zss/memory/bookoperations'
+import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import {
-  boardfindplayerforelement,
-  boardlistelementsbycolor,
-  boardlistelementsbykind,
+  memorygetboardterrain,
+  memoryreadboardelement,
+} from 'zss/memory/boardoperations'
+import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
+import { memoryruncodepage } from 'zss/memory/cliruntime'
+import {
+  memoryfindplayerforelement,
+  memorylistboardelementsbycolor,
+  memorylistboardelementsbykind,
 } from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 
@@ -146,7 +149,7 @@ export function readexpr(index: number): [any, number] {
       case 'alligned': {
         // ALLIGNED
         // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
-        const maybeplayer = boardfindplayerforelement(
+        const maybeplayer = memoryfindplayerforelement(
           READ_CONTEXT.board,
           {
             x: READ_CONTEXT.element?.x ?? -1,
@@ -168,7 +171,7 @@ export function readexpr(index: number): [any, number] {
       case 'contact': {
         // CONTACT
         // This flag is SET whenever the object is adjacent to (touching) the player.
-        const maybeplayer = boardfindplayerforelement(
+        const maybeplayer = memoryfindplayerforelement(
           READ_CONTEXT.board,
           {
             x: READ_CONTEXT.element?.x ?? -1,
@@ -192,7 +195,7 @@ export function readexpr(index: number): [any, number] {
         // This flag is SET when the object is not free to move in the given direction, and
         // CLEAR when the object is free to move in the direction.
         const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
-        const isblocked = boardcheckmoveobject(
+        const isblocked = memorycheckmoveboardobject(
           READ_CONTEXT.board,
           READ_CONTEXT.element,
           dir.destpt,
@@ -236,10 +239,13 @@ export function readexpr(index: number): [any, number] {
           switch (dir.layer) {
             default:
             case DIR.MID:
-              maybelement = boardelementread(READ_CONTEXT.board, dir.destpt)
+              maybelement = memoryreadboardelement(
+                READ_CONTEXT.board,
+                dir.destpt,
+              )
               break
             case DIR.GROUND:
-              maybelement = boardgetterrain(
+              maybelement = memorygetboardterrain(
                 READ_CONTEXT.board,
                 dir.destpt.x,
                 dir.destpt.y,
@@ -248,7 +254,7 @@ export function readexpr(index: number): [any, number] {
           }
 
           if (ispresent(maybelement)) {
-            const display = bookelementdisplayread(maybelement)
+            const display = memoryreadelementdisplay(maybelement)
 
             // color only match
             if (isstrcolor(match)) {
@@ -279,7 +285,7 @@ export function readexpr(index: number): [any, number] {
 
         // color check
         if (isstrcolor(match)) {
-          const matchedelements = boardlistelementsbycolor(
+          const matchedelements = memorylistboardelementsbycolor(
             READ_CONTEXT.board,
             match,
           )
@@ -287,7 +293,7 @@ export function readexpr(index: number): [any, number] {
         }
 
         // kind check
-        const matchedelements = boardlistelementsbykind(
+        const matchedelements = memorylistboardelementsbykind(
           READ_CONTEXT.board,
           match,
         )
@@ -331,10 +337,13 @@ export function readexpr(index: number): [any, number] {
           switch (dir.layer) {
             default:
             case DIR.MID:
-              maybelement = boardelementread(READ_CONTEXT.board, dir.destpt)
+              maybelement = memoryreadboardelement(
+                READ_CONTEXT.board,
+                dir.destpt,
+              )
               break
             case DIR.GROUND:
-              maybelement = boardgetterrain(
+              maybelement = memorygetboardterrain(
                 READ_CONTEXT.board,
                 dir.destpt.x,
                 dir.destpt.y,
@@ -343,7 +352,7 @@ export function readexpr(index: number): [any, number] {
           }
 
           if (ispresent(maybelement)) {
-            const display = bookelementdisplayread(maybelement)
+            const display = memoryreadelementdisplay(maybelement)
 
             // color only match
             if (isstrcolor(match)) {
@@ -380,7 +389,7 @@ export function readexpr(index: number): [any, number] {
 
         // color check
         if (isstrcolor(match)) {
-          const matchedelements = boardlistelementsbycolor(
+          const matchedelements = memorylistboardelementsbycolor(
             READ_CONTEXT.board,
             match,
           )
@@ -388,7 +397,7 @@ export function readexpr(index: number): [any, number] {
         }
 
         // kind check
-        const matchedelements = boardlistelementsbykind(
+        const matchedelements = memorylistboardelementsbykind(
           READ_CONTEXT.board,
           match,
         )
@@ -470,7 +479,7 @@ export function readexpr(index: number): [any, number] {
       // advanced
       case 'run': {
         const [func, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NAME])
-        memoryrun(func)
+        memoryruncodepage(func)
         return [READ_CONTEXT.get?.('arg'), iii]
       }
       case 'runwith': {
@@ -481,7 +490,7 @@ export function readexpr(index: number): [any, number] {
         if (ispresent(READ_CONTEXT.element)) {
           READ_CONTEXT.element.arg = arg
         }
-        memoryrun(func)
+        memoryruncodepage(func)
         return [READ_CONTEXT.get?.('arg'), iii]
       }
     }

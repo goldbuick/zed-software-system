@@ -1,19 +1,89 @@
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, NAME } from 'zss/words/types'
 
-import { boardelementindex } from './boardoperations'
-import { bookelementdisplayread } from './bookoperations'
+import { memoryboardelementindex } from './boardoperations'
+import { memoryreadelementdisplay } from './bookoperations'
 import {
-  codepageapplyelementstats,
-  codepagereadstatsfromtext,
+  memoryapplyelementstats,
+  memoryreadcodepagestatsfromtext,
 } from './codepageoperations'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
-import { memoryelementkindread, memoryelementstatread } from '.'
+import { memoryreadelementkind, memoryreadelementstat } from '.'
 
 // quick lookup utils
 
-export function boardsetlookup(board: MAYBE<BOARD>) {
+export function memorywriteboardnamed(
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  index?: number,
+) {
+  // invalid data
+  if (!ispresent(board) || !ispresent(board.named) || !ispresent(element)) {
+    return
+  }
+  // update named
+  const name = NAME(element.name ?? element.kinddata?.name ?? '')
+  if (!board.named[name]) {
+    board.named[name] = new Set<string>()
+  }
+  // object.id or terrain index
+  board.named[name].add(element?.id ?? index ?? '')
+}
+
+export function memorywriteboardobjectlookup(
+  board: MAYBE<BOARD>,
+  object: MAYBE<BOARD_ELEMENT>,
+) {
+  // invalid data
+  if (!ispresent(board) || !ispresent(board.lookup) || !ispresent(object?.id)) {
+    return
+  }
+  // update object lookup
+  if (
+    !ispresent(object.removed) &&
+    memoryreadelementstat(object, 'collision') !== COLLISION.ISGHOST
+  ) {
+    const x = object.x ?? 0
+    const y = object.y ?? 0
+    board.lookup[x + y * BOARD_WIDTH] = object.id
+  }
+}
+
+export function memorydeleteboardobjectnamedlookup(
+  board: MAYBE<BOARD>,
+  object: MAYBE<BOARD_ELEMENT>,
+) {
+  if (ispresent(board) && ispresent(object?.id)) {
+    // remove from lookup
+    if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
+      const index = object.x + object.y * BOARD_WIDTH
+      if (board.lookup[index] === object.id) {
+        board.lookup[index] = undefined
+      }
+    }
+    // remove from named
+    const display = memoryreadelementdisplay(object)
+    if (ispresent(board.named?.[display.name]) && ispresent(object.id)) {
+      board.named[display.name].delete(object.id)
+    }
+  }
+}
+
+export function memoryresetboardlookups(board: MAYBE<BOARD>) {
+  if (!ispresent(board)) {
+    return
+  }
+
+  // reset all lookups
+  delete board.named
+  delete board.lookup
+
+  // make sure lookup is created
+  memoryinitboardlookup(board)
+}
+
+export function memoryinitboardlookup(board: MAYBE<BOARD>) {
   // invalid data
   if (!ispresent(board)) {
     return
@@ -42,20 +112,20 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       object.category = CATEGORY.ISOBJECT
 
       // update lookup
-      if (memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST) {
+      if (memoryreadelementstat(object, 'collision') !== COLLISION.ISGHOST) {
         lookup[object.x + object.y * BOARD_WIDTH] = object.id
       }
 
       // read code to get name
       if (isstring(object.code) && !ispresent(object.name)) {
-        codepageapplyelementstats(
-          codepagereadstatsfromtext(object.code),
+        memoryapplyelementstats(
+          memoryreadcodepagestatsfromtext(object.code),
           object,
         )
       }
 
       // update named lookup
-      const display = bookelementdisplayread(object)
+      const display = memoryreadelementdisplay(object)
       if (!named[display.name]) {
         named[display.name] = new Set<string>()
       }
@@ -75,7 +145,7 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       terrain.category = CATEGORY.ISTERRAIN
 
       // update named lookup
-      const display = bookelementdisplayread(memoryelementkindread(terrain))
+      const display = memoryreadelementdisplay(memoryreadelementkind(terrain))
       if (!named[display.name]) {
         named[display.name] = new Set<string>()
       }
@@ -92,86 +162,16 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
   board.named = named
 }
 
-export function boardresetlookups(board: MAYBE<BOARD>) {
-  if (!ispresent(board)) {
-    return
-  }
-
-  // reset all lookups
-  delete board.named
-  delete board.lookup
-
-  // make sure lookup is created
-  boardsetlookup(board)
-}
-
-export function boardnamedwrite(
-  board: MAYBE<BOARD>,
-  element: MAYBE<BOARD_ELEMENT>,
-  index?: number,
-) {
-  // invalid data
-  if (!ispresent(board) || !ispresent(board.named) || !ispresent(element)) {
-    return
-  }
-  // update named
-  const name = NAME(element.name ?? element.kinddata?.name ?? '')
-  if (!board.named[name]) {
-    board.named[name] = new Set<string>()
-  }
-  // object.id or terrain index
-  board.named[name].add(element?.id ?? index ?? '')
-}
-
-export function boardobjectlookupwrite(
-  board: MAYBE<BOARD>,
-  object: MAYBE<BOARD_ELEMENT>,
-) {
-  // invalid data
-  if (!ispresent(board) || !ispresent(board.lookup) || !ispresent(object?.id)) {
-    return
-  }
-  // update object lookup
-  if (
-    !ispresent(object.removed) &&
-    memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST
-  ) {
-    const x = object.x ?? 0
-    const y = object.y ?? 0
-    board.lookup[x + y * BOARD_WIDTH] = object.id
-  }
-}
-
-export function boardterrainnameddelete(
+export function memorydeleteboardterrainnamed(
   board: MAYBE<BOARD>,
   terrain: MAYBE<BOARD_ELEMENT>,
 ) {
   if (ispresent(board) && ispresent(terrain?.x) && ispresent(terrain.y)) {
     // remove from named
-    const display = bookelementdisplayread(terrain)
-    const index = boardelementindex(board, terrain)
+    const display = memoryreadelementdisplay(terrain)
+    const index = memoryboardelementindex(board, terrain)
     if (ispresent(board.named?.[display.name])) {
       board.named[display.name].delete(index)
-    }
-  }
-}
-
-export function boardobjectnamedlookupdelete(
-  board: MAYBE<BOARD>,
-  object: MAYBE<BOARD_ELEMENT>,
-) {
-  if (ispresent(board) && ispresent(object?.id)) {
-    // remove from lookup
-    if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
-      const index = object.x + object.y * BOARD_WIDTH
-      if (board.lookup[index] === object.id) {
-        board.lookup[index] = undefined
-      }
-    }
-    // remove from named
-    const display = bookelementdisplayread(object)
-    if (ispresent(board.named?.[display.name]) && ispresent(object.id)) {
-      board.named[display.name].delete(object.id)
     }
   }
 }

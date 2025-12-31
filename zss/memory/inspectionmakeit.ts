@@ -14,21 +14,17 @@ import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
 import {
-  bookreadcodepagebyaddress,
-  bookreadcodepagesbystat,
+  memoryreadbookcodepagebyaddress,
+  memoryreadbookcodepagesbystat,
 } from './bookoperations'
 import {
-  codepagereadname,
-  codepagereadtype,
-  codepagereadtypetostring,
+  memoryreadcodepagename,
+  memoryreadcodepagetype,
+  memoryreadcodepagetypeasstring,
 } from './codepageoperations'
-import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
-import {
-  MEMORY_LABEL,
-  memoryensuresoftwarecodepage,
-  memoryreadbooklist,
-} from '.'
+import { memoryensuresoftwarecodepage, memoryreadbooklist } from '.'
 
 function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
   switch (type) {
@@ -54,12 +50,12 @@ function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
 }
 
 function previewcodepage(codepage: CODE_PAGE, player: string) {
-  const type = codepagereadtype(codepage)
+  const type = memoryreadcodepagetype(codepage)
   makecodepagedesc(type, player)
   gadgethyperlink(
     player,
     'makeit',
-    `edit$CYAN @${codepagereadtypetostring(codepage)} ${codepagereadname(codepage)}`,
+    `edit$CYAN @${memoryreadcodepagetypeasstring(codepage)} ${memoryreadcodepagename(codepage)}`,
     ['edit', '', codepage.id],
   )
   // We should show the first 5 lines of the codepage here
@@ -74,7 +70,7 @@ function checkforcodepage(name: string, player: string) {
   let nomatch = true
   for (let i = 0; i < books.length; ++i) {
     // scan for id / name / stat matches
-    const codepages = bookreadcodepagesbystat(books[i], name)
+    const codepages = memoryreadbookcodepagesbystat(books[i], name)
     for (let c = 0; c < codepages.length; ++c) {
       nomatch = false
       previewcodepage(codepages[c], player)
@@ -88,7 +84,7 @@ function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
   // first check for existing codepage with matching name or id
   const books = memoryreadbooklist()
   for (let i = 0; i < books.length; ++i) {
-    const maybecodepage = bookreadcodepagebyaddress(books[i], nameorid)
+    const maybecodepage = memoryreadbookcodepagebyaddress(books[i], nameorid)
     if (ispresent(maybecodepage)) {
       return maybecodepage
     }
@@ -96,7 +92,101 @@ function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
   return undefined
 }
 
-// Make it operations
+export function memorymakeitcommand(
+  path: string,
+  data: string[],
+  player: string,
+) {
+  function openeditor(codepage: MAYBE<CODE_PAGE>, didcreate: boolean) {
+    doasync(SOFTWARE, player, async () => {
+      if (ispresent(codepage)) {
+        const type = memoryreadcodepagetypeasstring(codepage)
+        const name = memoryreadcodepagename(codepage)
+        if (didcreate) {
+          write(
+            SOFTWARE,
+            player,
+            `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
+          )
+        }
+        // wait a little
+        await waitfor(800)
+        // open codepage
+        vmcli(SOFTWARE, player, `#pageopen ${codepage.id}`)
+      }
+    })
+  }
+
+  switch (path) {
+    case 'edit': {
+      const [codepageid] = data
+      openeditor(findcodepage(codepageid), false)
+      break
+    }
+    case 'create': {
+      const [type, name] = data
+      // attempt to check first word as codepage type to create
+      switch (type) {
+        case stattypestring(STAT_TYPE.LOADER): {
+          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+            MEMORY_LABEL.MAIN,
+            name,
+            CODE_PAGE_TYPE.LOADER,
+          )
+          openeditor(codepage, didcreate)
+          break
+        }
+        case stattypestring(STAT_TYPE.BOARD): {
+          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+            MEMORY_LABEL.MAIN,
+            name,
+            CODE_PAGE_TYPE.BOARD,
+          )
+          openeditor(codepage, didcreate)
+          break
+        }
+        case stattypestring(STAT_TYPE.OBJECT): {
+          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+            MEMORY_LABEL.MAIN,
+            name,
+            CODE_PAGE_TYPE.OBJECT,
+          )
+          openeditor(codepage, didcreate)
+          break
+        }
+        case stattypestring(STAT_TYPE.TERRAIN): {
+          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+            MEMORY_LABEL.MAIN,
+            name,
+            CODE_PAGE_TYPE.TERRAIN,
+          )
+          openeditor(codepage, didcreate)
+          break
+        }
+        case stattypestring(STAT_TYPE.CHARSET): {
+          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+            MEMORY_LABEL.MAIN,
+            name,
+            CODE_PAGE_TYPE.CHARSET,
+          )
+          openeditor(codepage, didcreate)
+          break
+        }
+        case stattypestring(STAT_TYPE.PALETTE): {
+          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+            MEMORY_LABEL.MAIN,
+            name,
+            CODE_PAGE_TYPE.PALETTE,
+          )
+          openeditor(codepage, didcreate)
+          break
+        }
+      }
+      break
+    }
+  }
+}
+
 export function memorymakeitscroll(makeit: string, player: string) {
   const [maybestat, maybelabel] = makeit.split(';')
   const words = maybestat.split(' ')
@@ -259,99 +349,4 @@ export function memorymakeitscroll(makeit: string, player: string) {
   const shared = gadgetstate(player)
   shared.scrollname = 'makeit'
   shared.scroll = gadgetcheckqueue(player)
-}
-
-export function memorymakeitcommand(
-  path: string,
-  data: string[],
-  player: string,
-) {
-  function openeditor(codepage: MAYBE<CODE_PAGE>, didcreate: boolean) {
-    doasync(SOFTWARE, player, async () => {
-      if (ispresent(codepage)) {
-        const type = codepagereadtypetostring(codepage)
-        const name = codepagereadname(codepage)
-        if (didcreate) {
-          write(
-            SOFTWARE,
-            player,
-            `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
-          )
-        }
-        // wait a little
-        await waitfor(800)
-        // open codepage
-        vmcli(SOFTWARE, player, `#pageopen ${codepage.id}`)
-      }
-    })
-  }
-
-  switch (path) {
-    case 'edit': {
-      const [codepageid] = data
-      openeditor(findcodepage(codepageid), false)
-      break
-    }
-    case 'create': {
-      const [type, name] = data
-      // attempt to check first word as codepage type to create
-      switch (type) {
-        case stattypestring(STAT_TYPE.LOADER): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
-            name,
-            CODE_PAGE_TYPE.LOADER,
-          )
-          openeditor(codepage, didcreate)
-          break
-        }
-        case stattypestring(STAT_TYPE.BOARD): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
-            name,
-            CODE_PAGE_TYPE.BOARD,
-          )
-          openeditor(codepage, didcreate)
-          break
-        }
-        case stattypestring(STAT_TYPE.OBJECT): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
-            name,
-            CODE_PAGE_TYPE.OBJECT,
-          )
-          openeditor(codepage, didcreate)
-          break
-        }
-        case stattypestring(STAT_TYPE.TERRAIN): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
-            name,
-            CODE_PAGE_TYPE.TERRAIN,
-          )
-          openeditor(codepage, didcreate)
-          break
-        }
-        case stattypestring(STAT_TYPE.CHARSET): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
-            name,
-            CODE_PAGE_TYPE.CHARSET,
-          )
-          openeditor(codepage, didcreate)
-          break
-        }
-        case stattypestring(STAT_TYPE.PALETTE): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
-            name,
-            CODE_PAGE_TYPE.PALETTE,
-          )
-          openeditor(codepage, didcreate)
-          break
-        }
-      }
-      break
-    }
-  }
 }

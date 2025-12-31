@@ -12,7 +12,9 @@ import { ptstoarea } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
-import { memoryboardread, memoryreadplayerboard } from '.'
+import { memoryreadplayerboard } from './playermanagement'
+
+import { memoryreadboard } from '.'
 
 // Remix operations
 type REMIX_CONFIG = {
@@ -22,22 +24,6 @@ type REMIX_CONFIG = {
 }
 
 // read / write from indexdb
-
-export async function readremixconfig(): Promise<REMIX_CONFIG | undefined> {
-  return idbget('remixconfig')
-}
-
-export async function writeremixconfig(
-  updater: (oldValue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
-): Promise<void> {
-  return idbupdate('remixconfig', updater)
-}
-
-let remixconfig: REMIX_CONFIG = {
-  stat: '',
-  patternsize: 2,
-  mirror: 1,
-}
 
 export async function memoryinspectremixcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
@@ -54,7 +40,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
       break
     }
     case 'remixrun': {
-      const sourceboard = memoryboardread(remixconfig.stat)
+      const sourceboard = memoryreadboard(remixconfig.stat)
       if (ispresent(sourceboard)) {
         boardremix(
           board.id,
@@ -66,7 +52,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
           'all',
         )
       }
-      await writeremixconfig(() => remixconfig)
+      await memorywriteremixconfig(() => remixconfig)
       break
     }
     default:
@@ -76,7 +62,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
 }
 
 export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
-  const config = await readremixconfig()
+  const config = await memoryreadremixconfig()
   remixconfig = {
     ...remixconfig,
     ...config,
@@ -126,4 +112,22 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
   const shared = gadgetstate(player)
   shared.scrollname = 'remix'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memoryreadremixconfig(): Promise<
+  REMIX_CONFIG | undefined
+> {
+  return idbget('remixconfig')
+}
+
+export async function memorywriteremixconfig(
+  updater: (oldValue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
+): Promise<void> {
+  return idbupdate('remixconfig', updater)
+}
+
+let remixconfig: REMIX_CONFIG = {
+  stat: '',
+  patternsize: 2,
+  mirror: 1,
 }

@@ -5,16 +5,16 @@ import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
-import { boardobjectread } from './boardoperations'
-import { bookreadcodepagebyaddress } from './bookoperations'
+import { memoryreadboardobject } from './boardoperations'
+import { memoryreadbookcodepagebyaddress } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
+import { MEMORY_LABEL } from './types'
 
 import {
-  MEMORY_LABEL,
   memoryensuresoftwarebook,
-  memorygetloaders,
   memoryreadbookbysoftware,
   memoryreadflags,
+  memoryreadloaders,
 } from './index'
 
 // manages chips
@@ -22,19 +22,11 @@ const os = createos()
 
 // CLI Operations
 
-export function memoryclirepeatlast(player: string) {
-  const flags = memoryreadflags(player)
-  // setup as array of invokes
-  const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
-    ? flags.playbuffer
-    : '')
-  // run it
-  if (maybecli) {
-    memorycli(player, maybecli, false)
-  }
+export function memorycleanup() {
+  os.gc()
 }
 
-export function memorycli(player: string, cli: string, tracking = true) {
+export function memoryruncli(player: string, cli: string, tracking = true) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -47,7 +39,7 @@ export function memorycli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = memoryreadplayerboard(player)
-  READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
+  READ_CONTEXT.element = memoryreadboardobject(READ_CONTEXT.board, player)
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
@@ -63,41 +55,16 @@ export function memorycli(player: string, cli: string, tracking = true) {
   }
 }
 
-export function memoryrun(address: string) {
-  // we assume READ_CONTEXT is setup correctly when this is run
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  const codepage = bookreadcodepagebyaddress(mainbook, address)
-  if (!ispresent(mainbook) || !ispresent(codepage)) {
-    return
+export function memoryrepeatclilast(player: string) {
+  const flags = memoryreadflags(player)
+  // setup as array of invokes
+  const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
+    ? flags.playbuffer
+    : '')
+  // run it
+  if (maybecli) {
+    memoryruncli(player, maybecli, false)
   }
-
-  // cache context
-  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-
-  const id = `${address}_run`
-  const itemname =
-    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
-  const itemcode = codepage?.code ?? ''
-
-  // set arg to value on chip with id = id
-  os.once(id, DRIVER_TYPE.RUNTIME, NAME(itemname), itemcode)
-
-  // restore context
-  objectKeys(OLD_CONTEXT).forEach((key) => {
-    // @ts-expect-error dont bother me
-    READ_CONTEXT[key] = OLD_CONTEXT[key]
-  })
-}
-
-// System Operations
-
-export function memorystartloader(id: string, code: string) {
-  const loaders = memorygetloaders()
-  loaders.set(id, code)
-}
-
-export function memoryscrollunlock(id: string, player: string) {
-  os.scrollunlock(id, player)
 }
 
 export function memoryresetchipafteredit(object: string) {
@@ -120,6 +87,37 @@ export function memoryrestartallchipsandflags() {
   mainbook.flags = {}
 }
 
-export function memorycleanup() {
-  os.gc()
+export function memoryruncodepage(address: string) {
+  // we assume READ_CONTEXT is setup correctly when this is run
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const codepage = memoryreadbookcodepagebyaddress(mainbook, address)
+  if (!ispresent(mainbook) || !ispresent(codepage)) {
+    return
+  }
+
+  // cache context
+  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+
+  const id = `${address}_run`
+  const itemname =
+    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
+  const itemcode = codepage?.code ?? ''
+
+  // set arg to value on chip with id = id
+  os.once(id, DRIVER_TYPE.RUNTIME, NAME(itemname), itemcode)
+
+  // restore context
+  objectKeys(OLD_CONTEXT).forEach((key) => {
+    // @ts-expect-error dont bother me
+    READ_CONTEXT[key] = OLD_CONTEXT[key]
+  })
+}
+
+export function memoryunlockscroll(id: string, player: string) {
+  os.scrollunlock(id, player)
+}
+
+export function memorystartloader(id: string, code: string) {
+  const loaders = memoryreadloaders()
+  loaders.set(id, code)
 }

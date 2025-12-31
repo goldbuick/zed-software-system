@@ -10,28 +10,19 @@ import { ptstoarea, pttoindex } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
-import { boardelementisobject } from './boardelement'
-import { boardelementread, boardgetterrain } from './boardoperations'
-import { bookelementdisplayread } from './bookoperations'
-import { readsecretheap } from './inspectionbatch'
-
-import { memoryreadplayerboard } from '.'
+import { memoryboardelementisobject } from './boardelement'
+import {
+  memorygetboardterrain,
+  memoryreadboardelement,
+} from './boardoperations'
+import { memoryreadelementdisplay } from './bookoperations'
+import { memoryreadsecretheap } from './inspectionbatch'
+import { memoryreadplayerboard } from './playermanagement'
 
 type STYLE_CONFIG = {
   stylechars: number
   stylecolors: number
   stylebgs: number
-}
-
-// Style operations
-export async function readstyleconfig(): Promise<STYLE_CONFIG | undefined> {
-  return idbget('styleconfig')
-}
-
-export async function writestyleconfig(
-  updater: (oldValue: STYLE_CONFIG | undefined) => STYLE_CONFIG,
-): Promise<void> {
-  return idbupdate('styleconfig', updater)
 }
 
 let styleconfig: STYLE_CONFIG = {
@@ -46,9 +37,9 @@ export async function memoryinspectstyle(
   p2: PT,
   mode: string,
 ) {
-  await writestyleconfig(() => styleconfig)
+  await memorywritestyleconfig(() => styleconfig)
   const board = memoryreadplayerboard(player)
-  const secretheap = await readsecretheap()
+  const secretheap = await memoryreadsecretheap()
   if (!ispresent(board) || !ispresent(secretheap)) {
     return
   }
@@ -66,11 +57,11 @@ export async function memoryinspectstyle(
     for (let x = 0; x < iwidth; ++x) {
       const idx = pttoindex({ x, y }, secretheap.width)
       const terrain = secretheap.terrain[idx]
-      const display = bookelementdisplayread(terrain)
+      const display = memoryreadelementdisplay(terrain)
       const pt = { x: x1 + x, y: y1 + y }
       if (mode === 'styleall' || mode === 'styleobjects') {
-        const element = boardelementread(board, pt)
-        if (ispresent(element) && boardelementisobject(element)) {
+        const element = memoryreadboardelement(board, pt)
+        if (ispresent(element) && memoryboardelementisobject(element)) {
           if (styleconfig.stylechars) {
             element.char = display.char
           }
@@ -83,7 +74,7 @@ export async function memoryinspectstyle(
         }
       }
       if (mode === 'styleall' || mode === 'styleterrain') {
-        const element = boardgetterrain(board, pt.x, pt.y)
+        const element = memorygetboardterrain(board, pt.x, pt.y)
         if (ispresent(element)) {
           if (styleconfig.stylechars) {
             element.char = display.char
@@ -101,7 +92,7 @@ export async function memoryinspectstyle(
 }
 
 export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
-  const config = await readstyleconfig()
+  const config = await memoryreadstyleconfig()
   styleconfig = {
     ...styleconfig,
     ...config,
@@ -167,4 +158,16 @@ export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
   const shared = gadgetstate(player)
   shared.scrollname = 'style'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memoryreadstyleconfig(): Promise<
+  STYLE_CONFIG | undefined
+> {
+  return idbget('styleconfig')
+}
+
+export async function memorywritestyleconfig(
+  updater: (oldValue: STYLE_CONFIG | undefined) => STYLE_CONFIG,
+): Promise<void> {
+  return idbupdate('styleconfig', updater)
 }

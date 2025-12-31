@@ -181,3 +181,13 @@ export type BOOK = {
   // unique token
   token?: string
 }
+
+// memory labels
+
+export enum MEMORY_LABEL {
+  MAIN = 'main',
+  TEMP = 'temp',
+  TITLE = 'title',
+  PLAYER = 'player',
+  GADGETSTORE = 'gadgetstore',
+}
