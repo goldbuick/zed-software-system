@@ -11,10 +11,7 @@ import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
-import {
-  memorygetboardterrain,
-  memoryreadboardelement,
-} from './boardoperations'
+import { memoryreadelement, memoryreadterrain } from './boardoperations'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryreadsecretheap } from './inspectionbatch'
 import { memoryreadplayerboard } from './playermanagement'
@@ -60,7 +57,7 @@ export async function memoryinspectstyle(
       const display = memoryreadelementdisplay(terrain)
       const pt = { x: x1 + x, y: y1 + y }
       if (mode === 'styleall' || mode === 'styleobjects') {
-        const element = memoryreadboardelement(board, pt)
+        const element = memoryreadelement(board, pt)
         if (ispresent(element) && memoryboardelementisobject(element)) {
           if (styleconfig.stylechars) {
             element.char = display.char
@@ -74,7 +71,7 @@ export async function memoryinspectstyle(
         }
       }
       if (mode === 'styleall' || mode === 'styleterrain') {
-        const element = memorygetboardterrain(board, pt.x, pt.y)
+        const element = memoryreadterrain(board, pt.x, pt.y)
         if (ispresent(element)) {
           if (styleconfig.stylechars) {
             element.char = display.char

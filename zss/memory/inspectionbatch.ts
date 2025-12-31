@@ -17,10 +17,10 @@ import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
 import {
   memorycreateboardobject,
-  memorygetboardterrain,
-  memoryreadboardelement,
+  memoryreadelement,
+  memoryreadterrain,
   memorysafedeleteelement,
-  memorysetboardterrain,
+  memorywriteterrain,
 } from './boardoperations'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
@@ -66,9 +66,9 @@ function createboardelementbuffer(
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
       const pt = { x: x - x1, y: y - y1 }
-      const maybeobject = memoryreadboardelement(board, { x, y })
+      const maybeobject = memoryreadelement(board, { x, y })
       if (maybeobject?.category === CATEGORY.ISOBJECT) {
-        terrain.push(deepcopy(memorygetboardterrain(board, x, y)))
+        terrain.push(deepcopy(memoryreadterrain(board, x, y)))
         if (memoryreadelementdisplay(maybeobject).name !== 'player') {
           objects.push({
             ...deepcopy(maybeobject),
@@ -134,7 +134,7 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         let bg = COLOR.ONCLEAR
         content += ''
         for (let x = p1x; x <= p2x; ++x) {
-          const element = memorygetboardterrain(board, x, y)
+          const element = memoryreadterrain(board, x, y)
           const display = memoryreadelementdisplay(element)
           if (display.color != color) {
             color = display.color
@@ -297,11 +297,11 @@ export async function memoryinspectcut(
     case 'cutall': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadboardelement(board, { x, y })
+          const maybeobject = memoryreadelement(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
-          memorysetboardterrain(board, { x, y })
+          memorywriteterrain(board, { x, y })
         }
       }
       break
@@ -309,7 +309,7 @@ export async function memoryinspectcut(
     case 'cutobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadboardelement(board, { x, y })
+          const maybeobject = memoryreadelement(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
@@ -320,7 +320,7 @@ export async function memoryinspectcut(
     case 'cutterrain': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          memorysetboardterrain(board, { x, y })
+          memorywriteterrain(board, { x, y })
         }
       }
       break
@@ -384,7 +384,7 @@ export async function memoryinspectpaste(
       for (let y = 0; y < iheight; ++y) {
         for (let x = 0; x < iwidth; ++x) {
           const idx = pttoindex({ x, y }, secretheap.width)
-          memorysetboardterrain(board, {
+          memorywriteterrain(board, {
             ...secretheap.terrain[idx],
             x: x1 + x,
             y: y1 + y,
@@ -429,7 +429,7 @@ export async function memoryinspectpaste(
       for (let y = 0; y < iheight; ++y) {
         for (let x = 0; x < iwidth; ++x) {
           const idx = pttoindex({ x, y }, secretheap.width)
-          memorysetboardterrain(board, {
+          memorywriteterrain(board, {
             ...secretheap.terrain[idx],
             x: x1 + x,
             y: y1 + y,
@@ -443,7 +443,7 @@ export async function memoryinspectpaste(
           const tx = (x - x1) % secretheap.width
           const ty = (y - y1) % secretheap.height
           const idx = pttoindex({ x: tx, y: ty }, secretheap.width)
-          memorysetboardterrain(board, {
+          memorywriteterrain(board, {
             ...secretheap.terrain[idx],
             x,
             y,

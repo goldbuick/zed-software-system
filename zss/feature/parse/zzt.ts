@@ -10,12 +10,12 @@ import {
   memorywriteelementfromkind,
 } from 'zss/memory'
 import {
-  memorywritebookcodepage,
   memorycreatebook,
+  memorywritebookcodepage,
 } from 'zss/memory/bookoperations'
 import {
-  memoryreadcodepagedata,
   memorycreatecodepage,
+  memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'

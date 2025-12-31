@@ -59,10 +59,10 @@ import {
 } from './types'
 
 import {
+  memorypickcodepagewithtype,
   memoryreadboard,
   memoryreadelementkind,
   memoryreadelementstat,
-  memorypickcodepagewithtype,
 } from '.'
 
 // From board.ts
@@ -97,7 +97,7 @@ export function memoryboardelementindex(
   return pt.x + pt.y * BOARD_WIDTH
 }
 
-export function memoryreadboardelement(
+export function memoryreadelement(
   board: MAYBE<BOARD>,
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
@@ -108,7 +108,7 @@ export function memoryreadboardelement(
   }
 
   // check lookup
-  const object = memoryreadboardobject(board, board.lookup[index] ?? '')
+  const object = memoryreadobject(board, board.lookup[index] ?? '')
   if (ispresent(object)) {
     return object
   }
@@ -117,17 +117,17 @@ export function memoryreadboardelement(
   return board.terrain[index]
 }
 
-export function memoryreadboardelementbyidorindex(
+export function memoryreadelementbyidorindex(
   board: MAYBE<BOARD>,
   idorindex: string,
 ) {
-  const maybeobject = memoryreadboardobject(board, idorindex)
+  const maybeobject = memoryreadobject(board, idorindex)
   if (ispresent(maybeobject)) {
     return maybeobject
   }
   const maybeindex = parseFloat(idorindex)
   const pt = indextopt(isNaN(maybeindex) ? -1 : maybeindex, BOARD_WIDTH)
-  return memorygetboardterrain(board, pt.x, pt.y)
+  return memoryreadterrain(board, pt.x, pt.y)
 }
 
 export function memoryevaldir(
@@ -329,7 +329,7 @@ export function memoryevaldir(
             )
             // check dest spot for blocked
             if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-              const step = memoryreadboardobjectbypt(board, maybept)
+              const step = memoryreadobjectbypt(board, maybept)
               if (!ispresent(step)) {
                 pt.x = maybept.x
                 pt.y = maybept.y
@@ -366,7 +366,7 @@ export function memoryevaldir(
             )
             // check dest spot for blocked
             if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-              const step = memoryreadboardobjectbypt(board, maybept)
+              const step = memoryreadobjectbypt(board, maybept)
               if (!ispresent(step)) {
                 pt.x = maybept.x
                 pt.y = maybept.y
@@ -563,9 +563,7 @@ export function memoryfindboardplayer(
   )
 }
 
-// evals directions into a PT
-
-export function memorygetboardterrain(
+export function memoryreadterrain(
   board: MAYBE<BOARD>,
   x: number,
   y: number,
@@ -619,7 +617,7 @@ export function memorycreateboardobjectfromkind(
   return memorycreateboardobject(board, { ...pt, kind, id })
 }
 
-export function memoryreadboardobject(
+export function memoryreadobject(
   board: MAYBE<BOARD>,
   id: string,
 ): MAYBE<BOARD_ELEMENT> {
@@ -629,7 +627,7 @@ export function memoryreadboardobject(
   return board.objects[id]
 }
 
-export function memoryreadboardobjectbypt(
+export function memoryreadobjectbypt(
   board: MAYBE<BOARD>,
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
@@ -640,7 +638,7 @@ export function memoryreadboardobjectbypt(
   }
 
   // check lookup
-  const object = memoryreadboardobject(board, board.lookup[index] ?? '')
+  const object = memoryreadobject(board, board.lookup[index] ?? '')
   if (ispresent(object)) {
     return object
   }
@@ -648,14 +646,14 @@ export function memoryreadboardobjectbypt(
   return undefined
 }
 
-export function memoryreadboardobjects(board: MAYBE<BOARD>): BOARD_ELEMENT[] {
+export function memoryreadobjects(board: MAYBE<BOARD>): BOARD_ELEMENT[] {
   if (!ispresent(board)) {
     return []
   }
   return [...Object.values(board.objects)]
 }
 
-export function memoryreadboardgroup(
+export function memoryreadgroup(
   board: MAYBE<BOARD>,
   self: string,
   targetgroup: string,
@@ -740,7 +738,7 @@ export function memorysafedeleteelement(
     // drop from luts
     memorydeleteboardobjectnamedlookup(board, element)
   } else {
-    memorysetboardterrain(board, {
+    memorywriteterrain(board, {
       x: element?.x ?? 0,
       y: element?.y ?? 0,
     })
@@ -751,7 +749,7 @@ export function memorysafedeleteelement(
   return true
 }
 
-export function memorysetboardterrain(
+export function memorywriteterrain(
   board: MAYBE<BOARD>,
   from: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
@@ -780,12 +778,12 @@ export function memorysetboardterrain(
   return board.terrain[index]
 }
 
-export function memorysetboardterrainfromkind(
+export function memorywriteterrainfromkind(
   board: MAYBE<BOARD>,
   pt: PT,
   kind: string,
 ): MAYBE<BOARD_ELEMENT> {
-  return memorysetboardterrain(board, { ...pt, kind })
+  return memorywriteterrain(board, { ...pt, kind })
 }
 
 export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {

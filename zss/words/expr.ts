@@ -9,8 +9,8 @@ import {
 } from 'zss/mapping/types'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import {
-  memorygetboardterrain,
-  memoryreadboardelement,
+  memoryreadelement,
+  memoryreadterrain,
 } from 'zss/memory/boardoperations'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryruncodepage } from 'zss/memory/cliruntime'
@@ -239,13 +239,10 @@ export function readexpr(index: number): [any, number] {
           switch (dir.layer) {
             default:
             case DIR.MID:
-              maybelement = memoryreadboardelement(
-                READ_CONTEXT.board,
-                dir.destpt,
-              )
+              maybelement = memoryreadelement(READ_CONTEXT.board, dir.destpt)
               break
             case DIR.GROUND:
-              maybelement = memorygetboardterrain(
+              maybelement = memoryreadterrain(
                 READ_CONTEXT.board,
                 dir.destpt.x,
                 dir.destpt.y,
@@ -337,13 +334,10 @@ export function readexpr(index: number): [any, number] {
           switch (dir.layer) {
             default:
             case DIR.MID:
-              maybelement = memoryreadboardelement(
-                READ_CONTEXT.board,
-                dir.destpt,
-              )
+              maybelement = memoryreadelement(READ_CONTEXT.board, dir.destpt)
               break
             case DIR.GROUND:
-              maybelement = memorygetboardterrain(
+              maybelement = memoryreadterrain(
                 READ_CONTEXT.board,
                 dir.destpt.x,
                 dir.destpt.y,

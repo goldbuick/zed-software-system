@@ -4,9 +4,9 @@ import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { memorywritebookcodepage } from 'zss/memory/bookoperations'
 import {
+  memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagestatsfromtext,
-  memorycreatecodepage,
 } from 'zss/memory/codepageoperations'
 
 import { zztoop } from './zztoop'

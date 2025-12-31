@@ -10,11 +10,11 @@ import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memorycreateboard,
-  memorygetboardterrain,
   memoryptwithinboard,
-  memoryreadboardelement,
-  memoryreadboardgroup,
-  memorysetboardterrain,
+  memoryreadelement,
+  memoryreadgroup,
+  memoryreadterrain,
+  memorywriteterrain,
 } from 'zss/memory/boardoperations'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -72,7 +72,7 @@ export function boardweave(
       const tx = (x + delta.x + BOARD_WIDTH) % BOARD_WIDTH
       const ty = (y + delta.y + BOARD_HEIGHT) % BOARD_HEIGHT
       if (weaveobject) {
-        const maybeobject = memoryreadboardelement(targetboard, { x, y })
+        const maybeobject = memoryreadelement(targetboard, { x, y })
         if (
           memoryboardelementisobject(maybeobject) &&
           ispresent(maybeobject?.x) &&
@@ -119,7 +119,7 @@ export function boardweavegroup(
   memoryinitboard(targetboard)
 
   // read target group
-  const { terrainelements, objectelements } = memoryreadboardgroup(
+  const { terrainelements, objectelements } = memoryreadgroup(
     targetboard,
     self,
     targetgroup,
@@ -193,7 +193,7 @@ export function boardweavegroup(
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     // detect and track carried objects
-    const maybefromobject = memoryreadboardelement(targetboard, from)
+    const maybefromobject = memoryreadelement(targetboard, from)
     if (
       ispresent(maybefromobject) &&
       memoryboardelementisobject(maybefromobject)
@@ -222,7 +222,7 @@ export function boardweavegroup(
 
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (memoryptwithinboard(dest)) {
-      const destelement = memoryreadboardelement(targetboard, dest)
+      const destelement = memoryreadelement(targetboard, dest)
       const destid = destelement?.id ?? ''
       const destindex = pttoindex(
         { x: destelement?.x ?? 0, y: destelement?.y ?? 0 },
@@ -242,7 +242,7 @@ export function boardweavegroup(
         let pushfromelement = false
         const hasfromelement = carriedindexes.includes(fromindex)
         const carriedelement = hasfromelement
-          ? memoryreadboardelement(targetboard, from)
+          ? memoryreadelement(targetboard, from)
           : undefined
         const carriedispushable = hasfromelement
           ? memoryreadelementstat(carriedelement, 'pushable')
@@ -324,7 +324,7 @@ export function boardweavegroup(
     const from: PT = { x: fromelement.x ?? 0, y: fromelement.y ?? 0 }
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (memoryptwithinboard(dest)) {
-      const destelement = memoryreadboardelement(targetboard, dest)
+      const destelement = memoryreadelement(targetboard, dest)
       const destid = destelement?.id ?? ''
       const destcollision: COLLISION = memoryreadelementstat(
         destelement,
@@ -365,21 +365,21 @@ export function boardweavegroup(
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
-    const destelement = memorygetboardterrain(targetboard, dest.x, dest.y)
+    const destelement = memoryreadterrain(targetboard, dest.x, dest.y)
     if (ispresent(fromelement) && ispresent(destelement)) {
       // swap places
-      memorysetboardterrain(targetboard, {
+      memorywriteterrain(targetboard, {
         ...fromelement,
         x: dest.x,
         y: dest.y,
       })
-      memorysetboardterrain(targetboard, {
+      memorywriteterrain(targetboard, {
         ...destelement,
         x: from.x,
         y: from.y,
       })
       // check to see if we have to carry an object
-      const maybefromobject = memoryreadboardelement(targetboard, from)
+      const maybefromobject = memoryreadelement(targetboard, from)
       if (
         memoryboardelementisobject(maybefromobject) &&
         ispresent(maybefromobject)

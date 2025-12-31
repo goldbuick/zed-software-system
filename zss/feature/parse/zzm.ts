@@ -5,9 +5,9 @@ import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { memorywritebookcodepage } from 'zss/memory/bookoperations'
 import {
+  memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
-  memorycreatecodepage,
 } from 'zss/memory/codepageoperations'
 import { NAME } from 'zss/words/types'
 

@@ -31,10 +31,10 @@ import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 import { memoryboardelementisobject } from './boardelement'
 import {
   memoryboardelementindex,
-  memoryreadboardelement,
-  memoryreadboardelementbyidorindex,
+  memoryreadelement,
+  memoryreadelementbyidorindex,
   memorysafedeleteelement,
-  memorysetboardterrain,
+  memorywriteterrain,
 } from './boardoperations'
 import { memoryreadelementcodepage } from './bookoperations'
 import {
@@ -111,7 +111,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
-    const element = memoryreadboardelement(board, p1)
+    const element = memoryreadelement(board, p1)
     const codepage = memoryreadelementcodepage(mainbook, element)
     // found element def
     if (ispresent(element) && ispresent(codepage)) {
@@ -179,7 +179,7 @@ export function memoryinspectarea(
       if (isnumber(value)) {
         group = value
         rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryreadboardelement(board, pt)
+          const el = memoryreadelement(board, pt)
           if (ispresent(el)) {
             el[name as keyof BOARD_ELEMENT] = `group${value}`
           }
@@ -300,7 +300,7 @@ export function memoryinspectarea(
   const ids = new Set<string>()
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
-      const element = memoryreadboardelement(board, { x, y })
+      const element = memoryreadelement(board, { x, y })
       const codepage = memoryreadelementcodepage(mainbook, element)
       if (ispresent(codepage) && !ids.has(codepage.id)) {
         ids.add(codepage.id)
@@ -337,7 +337,7 @@ export function memoryinspectbgarea(
     if (isnumber(value)) {
       all = value
       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryreadboardelement(board, pt)
+        const el = memoryreadelement(board, pt)
         if (ispresent(el)) {
           el[name as keyof BOARD_ELEMENT] = value
         }
@@ -425,7 +425,7 @@ export function memoryinspectchararea(
     if (isnumber(value)) {
       all = value
       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryreadboardelement(board, pt)
+        const el = memoryreadelement(board, pt)
         if (ispresent(el)) {
           el[name as keyof BOARD_ELEMENT] = value
         }
@@ -514,7 +514,7 @@ export function memoryinspectcolorarea(
       all = value
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const el = memoryreadboardelement(board, { x, y })
+          const el = memoryreadelement(board, { x, y })
           if (ispresent(el)) {
             el[name as keyof BOARD_ELEMENT] = value
           }
@@ -550,7 +550,7 @@ export function memoryinspectcommand(path: string, player: string) {
     return
   }
   const inspect = parsetarget(path)
-  const element = memoryreadboardelementbyidorindex(board, inspect.target)
+  const element = memoryreadelementbyidorindex(board, inspect.target)
   if (!ispresent(element)) {
     return
   }
@@ -823,11 +823,11 @@ export function memoryinspectempty(
     case 'emptyall': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadboardelement(board, { x, y })
+          const maybeobject = memoryreadelement(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
-          memorysetboardterrain(board, { x, y })
+          memorywriteterrain(board, { x, y })
         }
       }
       break
@@ -835,7 +835,7 @@ export function memoryinspectempty(
     case 'emptyobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadboardelement(board, { x, y })
+          const maybeobject = memoryreadelement(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
@@ -846,7 +846,7 @@ export function memoryinspectempty(
     case 'emptyterrain': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          memorysetboardterrain(board, { x, y })
+          memorywriteterrain(board, { x, y })
         }
       }
       break

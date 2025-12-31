@@ -15,9 +15,9 @@ import { NAME, PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
 import {
-  memoryreadboardelement,
-  memoryreadboardelementbyidorindex,
-  memoryreadboardobject,
+  memoryreadelement,
+  memoryreadelementbyidorindex,
+  memoryreadobject,
   memorysafedeleteelement,
   memorytickboard,
 } from './boardoperations'
@@ -76,7 +76,7 @@ export function memorysendtoboards(
   if (ispt(target)) {
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
-      const element = memoryreadboardelement(board, target)
+      const element = memoryreadelement(board, target)
       if (ispresent(element)) {
         sendtoelements([element])
       }
@@ -187,7 +187,7 @@ export function memorysendtoelements(
       case 'all':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryreadboardobject(READ_CONTEXT.board, id)
+          const object = memoryreadobject(READ_CONTEXT.board, id)
           if (ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -196,7 +196,7 @@ export function memorysendtoelements(
       case 'others':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryreadboardobject(READ_CONTEXT.board, id)
+          const object = memoryreadobject(READ_CONTEXT.board, id)
           if (id !== chip.id() && ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -204,7 +204,7 @@ export function memorysendtoelements(
         break
       case 'sender': {
         // sender info
-        const sender = memoryreadboardelementbyidorindex(
+        const sender = memoryreadelementbyidorindex(
           READ_CONTEXT.board,
           READ_CONTEXT.element?.sender ?? '',
         )
@@ -250,7 +250,7 @@ export function memorysendtoelements(
   } else if (ispresent(send.targetdir)) {
     if (send.targetdir.targets.length) {
       for (let i = 0; i < send.targetdir.targets.length; ++i) {
-        const element = memoryreadboardelement(
+        const element = memoryreadelement(
           READ_CONTEXT.board,
           send.targetdir.targets[i],
         )
@@ -259,7 +259,7 @@ export function memorysendtoelements(
         }
       }
     } else {
-      const element = memoryreadboardelement(
+      const element = memoryreadelement(
         READ_CONTEXT.board,
         send.targetdir.destpt,
       )

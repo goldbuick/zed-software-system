@@ -11,10 +11,10 @@ import {
 } from 'zss/memory'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
-  memoryreadboardelement,
-  memorygetboardterrain,
+  memoryreadelement,
+  memoryreadterrain,
   memorysafedeleteelement,
-  memorysetboardterrain,
+  memorywriteterrain,
 } from 'zss/memory/boardoperations'
 import { memorylistboardnamedelements } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
@@ -63,7 +63,7 @@ export function boardremix(
   const data = new Uint8Array(BOARD_SIZE * 4)
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
-      const el = memoryreadboardelement(sourceboard, { x, y })
+      const el = memoryreadelement(sourceboard, { x, y })
       const r = el?.char ?? 0 // in this case we have to ignore 0
       const g = el?.color ?? NO_COLOR // onclear here means unset
       const b = el?.bg ?? NO_COLOR // onclear here means unset
@@ -128,22 +128,22 @@ export function boardremix(
       // blank target region
       switch (targetset) {
         case 'all': {
-          const maybeobject = memoryreadboardelement(targetboard, { x, y })
+          const maybeobject = memoryreadelement(targetboard, { x, y })
           if (memoryboardelementisobject(maybeobject)) {
             memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
           }
-          memorysetboardterrain(targetboard, { x, y })
+          memorywriteterrain(targetboard, { x, y })
           break
         }
         case 'object': {
-          const maybeobject = memoryreadboardelement(targetboard, { x, y })
+          const maybeobject = memoryreadelement(targetboard, { x, y })
           if (memoryboardelementisobject(maybeobject)) {
             memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
           }
           break
         }
         case 'terrain':
-          memorysetboardterrain(targetboard, { x, y })
+          memorywriteterrain(targetboard, { x, y })
           break
         default:
           break
@@ -171,11 +171,11 @@ export function boardremix(
           }
           if (maybekind) {
             // blank target region
-            const maybeobject = memoryreadboardelement(targetboard, { x, y })
+            const maybeobject = memoryreadelement(targetboard, { x, y })
             if (memoryboardelementisobject(maybeobject)) {
               memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
             }
-            memorysetboardterrain(targetboard, { x, y })
+            memorywriteterrain(targetboard, { x, y })
           }
           break
       }
@@ -211,8 +211,8 @@ export function boardremix(
         )
         if (ispresent(sample)) {
           // copy terrain element from under sample
-          memorysetboardterrain(targetboard, {
-            ...memorygetboardterrain(sourceboard, sample.x ?? 0, sample.y ?? 0),
+          memorywriteterrain(targetboard, {
+            ...memoryreadterrain(sourceboard, sample.x ?? 0, sample.y ?? 0),
             x,
             y,
           })

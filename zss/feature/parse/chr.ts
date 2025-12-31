@@ -5,9 +5,9 @@ import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { memorywritebookcodepage } from 'zss/memory/bookoperations'
 import {
+  memorycreatecodepage,
   memoryreadcodepagedata,
   memoryreadcodepagename,
-  memorycreatecodepage,
 } from 'zss/memory/codepageoperations'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 

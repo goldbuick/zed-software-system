@@ -44,7 +44,7 @@ import {
   memorywriteoperator,
   memorywritetopic,
 } from 'zss/memory'
-import { memoryreadboardobject } from 'zss/memory/boardoperations'
+import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
   memoryreadbookcodepagebyaddress,
   memoryreadbookcodepagesbytype,
@@ -510,7 +510,7 @@ const vm = createdevice(
                 ) {
                   const board =
                     memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(content)
-                  const object = memoryreadboardobject(board, maybeobject)
+                  const object = memoryreadobject(board, maybeobject)
                   if (ispresent(object)) {
                     // TODO parse code for stats and update element name
                     object.code = value
@@ -817,7 +817,7 @@ const vm = createdevice(
             // path is player id
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             const playerboard = memoryreadplayerboard(path)
-            const playerelement = memoryreadboardobject(playerboard, path)
+            const playerelement = memoryreadobject(playerboard, path)
             if (ispresent(playerboard) && ispresent(playerelement)) {
               const dest = {
                 x: playerelement.x ?? 0,

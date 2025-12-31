@@ -17,7 +17,7 @@ import { memorycheckblockedboardobject } from './boardmovement'
 import {
   memorycreateboardobjectfromkind,
   memorydeleteboardobject,
-  memoryreadboardobject,
+  memoryreadobject,
   memoryupdateboardvisuals,
 } from './boardoperations'
 import {
@@ -64,7 +64,7 @@ export function memorymoveplayertoboard(
   }
 
   // player element
-  const element = memoryreadboardobject(currentboard, player)
+  const element = memoryreadobject(currentboard, player)
   if (!memoryboardelementisobject(element) || !element?.id) {
     return false
   }
@@ -318,10 +318,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     memorywritebookplayerboard(mainbook, remove, '')
 
     // clear element
-    memorydeleteboardobjectnamedlookup(
-      board,
-      memoryreadboardobject(board, remove),
-    )
+    memorydeleteboardobjectnamedlookup(board, memoryreadobject(board, remove))
     memorydeleteboardobject(board, remove)
 
     // halt chip
@@ -374,7 +371,7 @@ export function memoryreadplayeractive(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const isactive = memoryreadbookplayeractive(mainbook, player)
   const board = memoryreadplayerboard(player)
-  const playerelement = memoryreadboardobject(board, player)
+  const playerelement = memoryreadobject(board, player)
   return isactive && ispresent(playerelement)
 }
 

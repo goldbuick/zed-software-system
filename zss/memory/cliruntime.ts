@@ -5,7 +5,7 @@ import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
-import { memoryreadboardobject } from './boardoperations'
+import { memoryreadobject } from './boardoperations'
 import { memoryreadbookcodepagebyaddress } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
 import { MEMORY_LABEL } from './types'
@@ -39,7 +39,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = memoryreadplayerboard(player)
-  READ_CONTEXT.element = memoryreadboardobject(READ_CONTEXT.board, player)
+  READ_CONTEXT.element = memoryreadobject(READ_CONTEXT.board, player)
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player

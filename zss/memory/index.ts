@@ -17,7 +17,7 @@ import {
 } from './boardlookup'
 import {
   memorycreateboardobjectfromkind,
-  memorysetboardterrainfromkind,
+  memorywriteterrainfromkind,
 } from './boardoperations'
 import {
   memoryclearbookflags,
@@ -388,7 +388,7 @@ export function memorywriteelementfromkind(
 
   const maybeterrain = memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, name)
   if (ispresent(maybeterrain)) {
-    const terrain = memorysetboardterrainfromkind(board, dest, name)
+    const terrain = memorywriteterrainfromkind(board, dest, name)
     if (ispresent(terrain)) {
       memoryapplyboardelementcolor(terrain, maybecolor)
       // update named (terrain & objects)

@@ -8,13 +8,13 @@ import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import {
-  memorysetboardterrain,
   memoryptwithinboard,
+  memorywriteterrain,
 } from 'zss/memory/boardoperations'
 import { memorywritebookcodepage } from 'zss/memory/bookoperations'
 import {
-  memoryreadcodepagedata,
   memorycreatecodepage,
+  memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import {
   BOARD,
@@ -120,7 +120,7 @@ export function parseansi(
           const [char, fromcolor, frombg] = screendata.screen[i]
           const color = colormap.get(fromcolor) ?? 0
           const bg = colormap.get(frombg) ?? 0
-          memorysetboardterrain(board, { x, y, kind: 'fake', char, color, bg })
+          memorywriteterrain(board, { x, y, kind: 'fake', char, color, bg })
         }
 
         ++sx

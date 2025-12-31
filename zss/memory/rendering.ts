@@ -30,7 +30,7 @@ import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 import {
   memoryboardelementindex,
   memoryevaldir,
-  memoryreadboardobject,
+  memoryreadobject,
   memoryupdateboardvisuals,
 } from './boardoperations'
 import { memoryreadelementdisplay } from './bookoperations'
@@ -81,7 +81,7 @@ export function memoryconverttogadgetcontrollayer(
   board: MAYBE<BOARD>,
 ): LAYER[] {
   const control = createcachedcontrol(player, index)
-  const maybeobject = memoryreadboardobject(board, player)
+  const maybeobject = memoryreadobject(board, player)
   if (!ispresent(board) || !ispresent(maybeobject)) {
     return []
   }
@@ -647,7 +647,7 @@ function raycheck(
   alphas[idx] = clamp(alphas[idx], 0, 1)
 
   // check lookup
-  const object = memoryreadboardobject(board, board.lookup?.[idx] ?? '')
+  const object = memoryreadobject(board, board.lookup?.[idx] ?? '')
   if (ispresent(object)) {
     // half blocked
     const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
