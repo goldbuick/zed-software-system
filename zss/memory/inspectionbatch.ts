@@ -38,6 +38,10 @@ import { memoryensuresoftwarebook, memoryreadplayerboard } from '.'
 // Batch operations
 // From inspectbatch.ts
 
+export async function memoryhassecretheap() {
+  return !!(await memoryreadsecretheap())
+}
+
 export async function memoryinspectbatchcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
   if (!ispresent(board)) {
@@ -141,81 +145,6 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
     default:
       console.info('unknown batch', batch)
       break
-  }
-}
-
-// COPY & PASTE buffers
-
-type BOARD_ELEMENT_BUFFER = {
-  board: string
-  width: number
-  height: number
-  terrain: MAYBE<BOARD_ELEMENT>[]
-  objects: BOARD_ELEMENT[]
-}
-
-// read / write from indexdb
-
-export async function memoryreadsecretheap(): Promise<
-  BOARD_ELEMENT_BUFFER | undefined
-> {
-  return idbget('secretheap')
-}
-
-async function writesecretheap(
-  updater: (oldValue: BOARD_ELEMENT_BUFFER | undefined) => BOARD_ELEMENT_BUFFER,
-): Promise<void> {
-  return idbupdate('secretheap', updater)
-}
-
-export async function memoryhassecretheap() {
-  return !!(await memoryreadsecretheap())
-}
-
-function createboardelementbuffer(
-  board: BOARD,
-  p1: PT,
-  p2: PT,
-): BOARD_ELEMENT_BUFFER {
-  const x1 = Math.min(p1.x, p2.x)
-  const y1 = Math.min(p1.y, p2.y)
-  const x2 = Math.max(p1.x, p2.x)
-  const y2 = Math.max(p1.y, p2.y)
-  const width = x2 - x1 + 1
-  const height = y2 - y1 + 1
-  const terrain: MAYBE<BOARD_ELEMENT>[] = []
-  const objects: BOARD_ELEMENT[] = []
-
-  // corner coords on copy
-  for (let y = y1; y <= y2; ++y) {
-    for (let x = x1; x <= x2; ++x) {
-      const pt = { x: x - x1, y: y - y1 }
-      const maybeobject = memoryboardelementread(board, { x, y })
-      if (maybeobject?.category === CATEGORY.ISOBJECT) {
-        terrain.push(deepcopy(memoryboardgetterrain(board, x, y)))
-        if (memorybookelementdisplayread(maybeobject).name !== 'player') {
-          objects.push({
-            ...deepcopy(maybeobject),
-            ...pt,
-            id: 'blank',
-          })
-        }
-      } else {
-        // maybe terrain
-        terrain.push({
-          ...deepcopy(maybeobject),
-          ...pt,
-        })
-      }
-    }
-  }
-
-  return {
-    board: board.id,
-    width,
-    height,
-    terrain,
-    objects,
   }
 }
 
@@ -491,6 +420,77 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   const shared = gadgetstate(player)
   shared.scrollname = 'paste'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memoryreadsecretheap(): Promise<
+  BOARD_ELEMENT_BUFFER | undefined
+> {
+  return idbget('secretheap')
+}
+
+async function writesecretheap(
+  updater: (oldValue: BOARD_ELEMENT_BUFFER | undefined) => BOARD_ELEMENT_BUFFER,
+): Promise<void> {
+  return idbupdate('secretheap', updater)
+}
+
+// COPY & PASTE buffers
+
+type BOARD_ELEMENT_BUFFER = {
+  board: string
+  width: number
+  height: number
+  terrain: MAYBE<BOARD_ELEMENT>[]
+  objects: BOARD_ELEMENT[]
+}
+
+// read / write from indexdb
+
+function createboardelementbuffer(
+  board: BOARD,
+  p1: PT,
+  p2: PT,
+): BOARD_ELEMENT_BUFFER {
+  const x1 = Math.min(p1.x, p2.x)
+  const y1 = Math.min(p1.y, p2.y)
+  const x2 = Math.max(p1.x, p2.x)
+  const y2 = Math.max(p1.y, p2.y)
+  const width = x2 - x1 + 1
+  const height = y2 - y1 + 1
+  const terrain: MAYBE<BOARD_ELEMENT>[] = []
+  const objects: BOARD_ELEMENT[] = []
+
+  // corner coords on copy
+  for (let y = y1; y <= y2; ++y) {
+    for (let x = x1; x <= x2; ++x) {
+      const pt = { x: x - x1, y: y - y1 }
+      const maybeobject = memoryboardelementread(board, { x, y })
+      if (maybeobject?.category === CATEGORY.ISOBJECT) {
+        terrain.push(deepcopy(memoryboardgetterrain(board, x, y)))
+        if (memorybookelementdisplayread(maybeobject).name !== 'player') {
+          objects.push({
+            ...deepcopy(maybeobject),
+            ...pt,
+            id: 'blank',
+          })
+        }
+      } else {
+        // maybe terrain
+        terrain.push({
+          ...deepcopy(maybeobject),
+          ...pt,
+        })
+      }
+    }
+  }
+
+  return {
+    board: board.id,
+    width,
+    height,
+    terrain,
+    objects,
+  }
 }
 
 // From inspectgadget.ts

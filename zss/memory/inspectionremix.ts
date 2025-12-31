@@ -23,24 +23,6 @@ type REMIX_CONFIG = {
 
 // read / write from indexdb
 
-export async function memoryreadremixconfig(): Promise<
-  REMIX_CONFIG | undefined
-> {
-  return idbget('remixconfig')
-}
-
-export async function memorywriteremixconfig(
-  updater: (oldValue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
-): Promise<void> {
-  return idbupdate('remixconfig', updater)
-}
-
-let remixconfig: REMIX_CONFIG = {
-  stat: '',
-  patternsize: 2,
-  mirror: 1,
-}
-
 export async function memoryinspectremixcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
   if (!ispresent(board)) {
@@ -128,4 +110,22 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
   const shared = gadgetstate(player)
   shared.scrollname = 'remix'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memoryreadremixconfig(): Promise<
+  REMIX_CONFIG | undefined
+> {
+  return idbget('remixconfig')
+}
+
+export async function memorywriteremixconfig(
+  updater: (oldValue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
+): Promise<void> {
+  return idbupdate('remixconfig', updater)
+}
+
+let remixconfig: REMIX_CONFIG = {
+  stat: '',
+  patternsize: 2,
+  mirror: 1,
 }

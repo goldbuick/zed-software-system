@@ -23,23 +23,24 @@ export type FINDANY_CONFIG = {
 
 // read / write from indexdb
 
-export async function memoryreadfindanyconfig(): Promise<
-  FINDANY_CONFIG | undefined
-> {
-  return idbget('findanyconfig')
-}
+export async function memoryfindany(
+  path: keyof typeof findanyconfig,
+  player: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
 
-export async function memorywritefindanyconfig(
-  updater: (oldValue: FINDANY_CONFIG | undefined) => FINDANY_CONFIG,
-): Promise<void> {
-  return idbupdate('findanyconfig', updater)
-}
+  await memorywritefindanyconfig(() => findanyconfig)
 
-let findanyconfig: FINDANY_CONFIG = {
-  expr1: 'player',
-  expr2: '',
-  expr3: '',
-  expr4: '',
+  const expr: string = findanyconfig[path] ?? ''
+  if (ispresent(expr)) {
+    vmcli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
+  } else {
+    // clear case
+    vmcli(SOFTWARE, player, `#findany`)
+  }
 }
 
 export async function memoryfindanymenu(player: string) {
@@ -89,22 +90,21 @@ export async function memoryfindanymenu(player: string) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
-export async function memoryfindany(
-  path: keyof typeof findanyconfig,
-  player: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
+export async function memoryreadfindanyconfig(): Promise<
+  FINDANY_CONFIG | undefined
+> {
+  return idbget('findanyconfig')
+}
 
-  await memorywritefindanyconfig(() => findanyconfig)
+export async function memorywritefindanyconfig(
+  updater: (oldValue: FINDANY_CONFIG | undefined) => FINDANY_CONFIG,
+): Promise<void> {
+  return idbupdate('findanyconfig', updater)
+}
 
-  const expr: string = findanyconfig[path] ?? ''
-  if (ispresent(expr)) {
-    vmcli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
-  } else {
-    // clear case
-    vmcli(SOFTWARE, player, `#findany`)
-  }
+let findanyconfig: FINDANY_CONFIG = {
+  expr1: 'player',
+  expr2: '',
+  expr3: '',
+  expr4: '',
 }

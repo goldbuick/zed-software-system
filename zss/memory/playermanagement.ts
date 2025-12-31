@@ -51,6 +51,137 @@ const os = createos()
 
 // Player Management Functions
 
+export function memorybookplayermovetoboard(
+  book: MAYBE<BOOK>,
+  player: string,
+  board: string,
+  dest: PT,
+) {
+  // current board
+  const currentboard = memoryreadplayerboard(player)
+  if (!ispresent(book) || !ispresent(currentboard)) {
+    return false
+  }
+
+  // player element
+  const element = memoryboardobjectread(currentboard, player)
+  if (!memoryboardelementisobject(element) || !element?.id) {
+    return false
+  }
+
+  // dest board
+  const destboard = memoryboardread(board)
+  if (!ispresent(destboard)) {
+    return false
+  }
+
+  // make sure lookup is created
+  memoryboardinit(destboard)
+
+  // read target spot
+  const maybeobject = memoryboardcheckblockedobject(
+    destboard,
+    COLLISION.ISWALK,
+    dest,
+    true,
+  )
+
+  // blocked by non-object
+  if (!ispresent(maybeobject) && !memoryboardelementisobject(maybeobject)) {
+    const terraincollision = memoryelementstatread(maybeobject, 'collision')
+    if (memoryboardcheckcollide(COLLISION.ISWALK, terraincollision)) {
+      return false
+    }
+  }
+
+  // remove from current board lookups
+  memoryboardobjectnamedlookupdelete(currentboard, element)
+  // hard remove player element
+  delete currentboard.objects[element.id]
+
+  // add to dest board
+  element.x = dest.x
+  element.y = dest.y
+  destboard.objects[element.id] = element
+
+  // add to dest board lookups
+  memoryboardnamedwrite(destboard, element)
+  memoryboardobjectlookupwrite(destboard, element)
+
+  // updating tracking
+  memorybookwriteflag(book, player, 'enterx', dest.x)
+  memorybookwriteflag(book, player, 'entery', dest.y)
+  memorybookplayersetboard(book, player, destboard.id)
+
+  // we did move
+  return true
+}
+
+function bookplayerreadboardids(book: MAYBE<BOOK>) {
+  const activelist = book?.activelist ?? []
+  const boardids = activelist.map((player) => {
+    const value = memorybookreadflag(book, player, 'board')
+    return isstring(value) ? value : ''
+  })
+  return unique(boardids)
+}
+
+export function memorybookplayerreadactive(book: MAYBE<BOOK>, player: string) {
+  return book?.activelist.includes(player) ?? false
+}
+
+export function memorybookplayerreadboards(book: MAYBE<BOOK>) {
+  const ids = bookplayerreadboardids(book)
+  const addedids = new Set<string>()
+  const mainboards: BOARD[] = []
+  for (let i = 0; i < ids.length; ++i) {
+    const board = memoryboardread(ids[i])
+    // only process once
+    if (ispresent(board) && !addedids.has(board.id)) {
+      // update resolve caches
+      memoryboardvisualsupdate(board)
+
+      // see if we have an over board
+      // it runs first
+      const over = memoryboardread(board.overboard ?? '')
+      if (ispresent(over)) {
+        // only add once
+        if (!addedids.has(over.id)) {
+          mainboards.push(over)
+        }
+      }
+
+      // followed by the mainboard
+      mainboards.push(board)
+    }
+  }
+  return mainboards
+}
+
+export function memorybookplayersetboard(
+  book: MAYBE<BOOK>,
+  player: string,
+  board: string,
+) {
+  if (!ispresent(book)) {
+    return
+  }
+  // write board flag
+  memorybookwriteflag(book, player, 'board', board)
+
+  // determine if player is on a board
+  const maybeboard = memoryboardread(board)
+  if (ispresent(maybeboard)) {
+    // ensure player is listed as active
+    if (!book.activelist.includes(player)) {
+      book.activelist.push(player)
+    }
+  } else {
+    // ensure player is not listed as active
+    book.activelist = book.activelist.filter((id) => id !== player)
+  }
+}
+
 export function memoryplayerlogin(
   player: string,
   stickyflags: BOOK_FLAGS,
@@ -207,21 +338,6 @@ export function memoryplayerlogout(player: string, isendgame: boolean) {
   }
 }
 
-export function memoryreadplayerboard(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const address = memorybookreadflag(mainbook, player, 'board') as string
-  const codepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
-  return memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-}
-
-export function memoryreadplayeractive(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const isactive = memorybookplayerreadactive(mainbook, player)
-  const board = memoryreadplayerboard(player)
-  const playerelement = memoryboardobjectread(board, player)
-  return isactive && ispresent(playerelement)
-}
-
 export function memoryplayerscan(players: Record<string, number>) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
 
@@ -254,135 +370,19 @@ export function memoryplayerscan(players: Record<string, number>) {
   }
 }
 
+export function memoryreadplayeractive(player: string) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const isactive = memorybookplayerreadactive(mainbook, player)
+  const board = memoryreadplayerboard(player)
+  const playerelement = memoryboardobjectread(board, player)
+  return isactive && ispresent(playerelement)
+}
+
+export function memoryreadplayerboard(player: string) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const address = memorybookreadflag(mainbook, player, 'board') as string
+  const codepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
+  return memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+}
+
 // Book Player Management Functions
-
-export function memorybookplayerreadactive(book: MAYBE<BOOK>, player: string) {
-  return book?.activelist.includes(player) ?? false
-}
-
-export function memorybookplayersetboard(
-  book: MAYBE<BOOK>,
-  player: string,
-  board: string,
-) {
-  if (!ispresent(book)) {
-    return
-  }
-  // write board flag
-  memorybookwriteflag(book, player, 'board', board)
-
-  // determine if player is on a board
-  const maybeboard = memoryboardread(board)
-  if (ispresent(maybeboard)) {
-    // ensure player is listed as active
-    if (!book.activelist.includes(player)) {
-      book.activelist.push(player)
-    }
-  } else {
-    // ensure player is not listed as active
-    book.activelist = book.activelist.filter((id) => id !== player)
-  }
-}
-
-export function memorybookplayermovetoboard(
-  book: MAYBE<BOOK>,
-  player: string,
-  board: string,
-  dest: PT,
-) {
-  // current board
-  const currentboard = memoryreadplayerboard(player)
-  if (!ispresent(book) || !ispresent(currentboard)) {
-    return false
-  }
-
-  // player element
-  const element = memoryboardobjectread(currentboard, player)
-  if (!memoryboardelementisobject(element) || !element?.id) {
-    return false
-  }
-
-  // dest board
-  const destboard = memoryboardread(board)
-  if (!ispresent(destboard)) {
-    return false
-  }
-
-  // make sure lookup is created
-  memoryboardinit(destboard)
-
-  // read target spot
-  const maybeobject = memoryboardcheckblockedobject(
-    destboard,
-    COLLISION.ISWALK,
-    dest,
-    true,
-  )
-
-  // blocked by non-object
-  if (!ispresent(maybeobject) && !memoryboardelementisobject(maybeobject)) {
-    const terraincollision = memoryelementstatread(maybeobject, 'collision')
-    if (memoryboardcheckcollide(COLLISION.ISWALK, terraincollision)) {
-      return false
-    }
-  }
-
-  // remove from current board lookups
-  memoryboardobjectnamedlookupdelete(currentboard, element)
-  // hard remove player element
-  delete currentboard.objects[element.id]
-
-  // add to dest board
-  element.x = dest.x
-  element.y = dest.y
-  destboard.objects[element.id] = element
-
-  // add to dest board lookups
-  memoryboardnamedwrite(destboard, element)
-  memoryboardobjectlookupwrite(destboard, element)
-
-  // updating tracking
-  memorybookwriteflag(book, player, 'enterx', dest.x)
-  memorybookwriteflag(book, player, 'entery', dest.y)
-  memorybookplayersetboard(book, player, destboard.id)
-
-  // we did move
-  return true
-}
-
-function bookplayerreadboardids(book: MAYBE<BOOK>) {
-  const activelist = book?.activelist ?? []
-  const boardids = activelist.map((player) => {
-    const value = memorybookreadflag(book, player, 'board')
-    return isstring(value) ? value : ''
-  })
-  return unique(boardids)
-}
-
-export function memorybookplayerreadboards(book: MAYBE<BOOK>) {
-  const ids = bookplayerreadboardids(book)
-  const addedids = new Set<string>()
-  const mainboards: BOARD[] = []
-  for (let i = 0; i < ids.length; ++i) {
-    const board = memoryboardread(ids[i])
-    // only process once
-    if (ispresent(board) && !addedids.has(board.id)) {
-      // update resolve caches
-      memoryboardvisualsupdate(board)
-
-      // see if we have an over board
-      // it runs first
-      const over = memoryboardread(board.overboard ?? '')
-      if (ispresent(over)) {
-        // only add once
-        if (!addedids.has(over.id)) {
-          mainboards.push(over)
-        }
-      }
-
-      // followed by the mainboard
-      mainboards.push(board)
-    }
-  }
-  return mainboards
-}

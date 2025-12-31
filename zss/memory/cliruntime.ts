@@ -22,16 +22,8 @@ const os = createos()
 
 // CLI Operations
 
-export function memoryclirepeatlast(player: string) {
-  const flags = memoryreadflags(player)
-  // setup as array of invokes
-  const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
-    ? flags.playbuffer
-    : '')
-  // run it
-  if (maybecli) {
-    memorycli(player, maybecli, false)
-  }
+export function memorycleanup() {
+  os.gc()
 }
 
 export function memorycli(player: string, cli: string, tracking = true) {
@@ -63,6 +55,38 @@ export function memorycli(player: string, cli: string, tracking = true) {
   }
 }
 
+export function memoryclirepeatlast(player: string) {
+  const flags = memoryreadflags(player)
+  // setup as array of invokes
+  const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
+    ? flags.playbuffer
+    : '')
+  // run it
+  if (maybecli) {
+    memorycli(player, maybecli, false)
+  }
+}
+
+export function memoryresetchipafteredit(object: string) {
+  os.halt(object)
+}
+
+export function memoryrestartallchipsandflags() {
+  // stop all chips
+  const ids = os.ids()
+  for (let i = 0; i < ids.length; ++i) {
+    os.halt(ids[i])
+  }
+
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  // drop all flags from mainbook
+  mainbook.flags = {}
+}
+
 export function memoryrun(address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
@@ -89,37 +113,13 @@ export function memoryrun(address: string) {
   })
 }
 
-// System Operations
+export function memoryscrollunlock(id: string, player: string) {
+  os.scrollunlock(id, player)
+}
 
 export function memorystartloader(id: string, code: string) {
   const loaders = memorygetloaders()
   loaders.set(id, code)
 }
 
-export function memoryscrollunlock(id: string, player: string) {
-  os.scrollunlock(id, player)
-}
-
-export function memoryresetchipafteredit(object: string) {
-  os.halt(object)
-}
-
-export function memoryrestartallchipsandflags() {
-  // stop all chips
-  const ids = os.ids()
-  for (let i = 0; i < ids.length; ++i) {
-    os.halt(ids[i])
-  }
-
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  // drop all flags from mainbook
-  mainbook.flags = {}
-}
-
-export function memorycleanup() {
-  os.gc()
-}
+// System Operations

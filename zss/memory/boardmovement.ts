@@ -27,6 +27,7 @@ import {
 import { memoryelementcheckpushable, memoryelementstatread } from '.'
 
 // Movement and collision check operations
+
 export function memoryboardcheckblockedobject(
   board: MAYBE<BOARD>,
   collision: MAYBE<COLLISION>,
@@ -103,6 +104,30 @@ export function memoryboardcheckmoveobject(
   const collsion = memoryelementstatread(object, 'collision')
   const blockedby = memoryboardcheckblockedobject(board, collsion, dest)
   return ispresent(blockedby)
+}
+
+export function memoryboardcleanup(board: MAYBE<BOARD>, timestamp: number) {
+  const ids: string[] = []
+  if (!ispresent(board)) {
+    return ids
+  }
+  // iterate through objects
+  const targets = Object.values(board.objects)
+  for (let i = 0; i < targets.length; ++i) {
+    const target = targets[i]
+    // check that we have an id and are marked for removal
+    // 5 seconds after marked for removal
+    if (ispresent(target.id) && ispresent(target.removed)) {
+      const delta = timestamp - target.removed
+      if (delta > TICK_FPS * 5) {
+        // track dropped ids
+        ids.push(target.id)
+        // drop from board
+        memoryboarddeleteobject(board, target.id)
+      }
+    }
+  }
+  return ids
 }
 
 export function memoryboardmoveobject(
@@ -201,47 +226,6 @@ export function memoryboardmoveobject(
   // no interaction
   return undefined
 }
-
-export function memoryboardcleanup(board: MAYBE<BOARD>, timestamp: number) {
-  const ids: string[] = []
-  if (!ispresent(board)) {
-    return ids
-  }
-  // iterate through objects
-  const targets = Object.values(board.objects)
-  for (let i = 0; i < targets.length; ++i) {
-    const target = targets[i]
-    // check that we have an id and are marked for removal
-    // 5 seconds after marked for removal
-    if (ispresent(target.id) && ispresent(target.removed)) {
-      const delta = timestamp - target.removed
-      if (delta > TICK_FPS * 5) {
-        // track dropped ids
-        ids.push(target.id)
-        // drop from board
-        memoryboarddeleteobject(board, target.id)
-      }
-    }
-  }
-  return ids
-}
-
-// update board
-
-type BOOK_RUN_CODE_TARGETS = {
-  object: MAYBE<BOARD_ELEMENT>
-  terrain: MAYBE<BOARD_ELEMENT>
-}
-
-type BOOK_RUN_CODE = {
-  id: string
-  code: string
-  type: CODE_PAGE_TYPE
-}
-
-export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE
-
-// Object movement
 
 export function memorymoveobject(
   book: MAYBE<BOOK>,
@@ -352,3 +336,20 @@ export function memorymoveobject(
   // we are allowed to move!
   return true
 }
+
+// update board
+
+type BOOK_RUN_CODE_TARGETS = {
+  object: MAYBE<BOARD_ELEMENT>
+  terrain: MAYBE<BOARD_ELEMENT>
+}
+
+type BOOK_RUN_CODE = {
+  id: string
+  code: string
+  type: CODE_PAGE_TYPE
+}
+
+export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE
+
+// Object movement

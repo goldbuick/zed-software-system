@@ -20,24 +20,41 @@ type LOADER_ENTRY = {
 
 const LOADER_REFS: Record<string, LOADER_ENTRY> = {}
 
-export function memoryloaderdone(id: string) {
-  delete LOADER_REFS[id]
+export function memoryloader(
+  arg: any,
+  format: string,
+  idoreventname: string,
+  content: any,
+  player: string,
+) {
+  const loaders = memoryloadermatches(format, idoreventname)
+  // run matched loaders
+  for (let i = 0; i < loaders.length; ++i) {
+    const id = `${createsid()}_loader`
+    LOADER_REFS[id] = {
+      arg,
+      format,
+      content,
+      player,
+    }
+    memorystartloader(id, loaders[i].code)
+  }
 }
 
 export function memoryloaderarg(id: string): MAYBE<WORD> {
   return LOADER_REFS[id]?.arg
 }
 
-export function memoryloaderformat(id: string): MAYBE<string> {
-  return LOADER_REFS[id]?.format
-}
-
 export function memoryloadercontent(id: string): any {
   return LOADER_REFS[id]?.content
 }
 
-export function memoryloaderplayer(id: string): MAYBE<string> {
-  return LOADER_REFS[id]?.player
+export function memoryloaderdone(id: string) {
+  delete LOADER_REFS[id]
+}
+
+export function memoryloaderformat(id: string): MAYBE<string> {
+  return LOADER_REFS[id]?.format
 }
 
 export function memoryloadermatches(
@@ -102,23 +119,6 @@ export function memoryloadermatches(
   return loaders
 }
 
-export function memoryloader(
-  arg: any,
-  format: string,
-  idoreventname: string,
-  content: any,
-  player: string,
-) {
-  const loaders = memoryloadermatches(format, idoreventname)
-  // run matched loaders
-  for (let i = 0; i < loaders.length; ++i) {
-    const id = `${createsid()}_loader`
-    LOADER_REFS[id] = {
-      arg,
-      format,
-      content,
-      player,
-    }
-    memorystartloader(id, loaders[i].code)
-  }
+export function memoryloaderplayer(id: string): MAYBE<string> {
+  return LOADER_REFS[id]?.player
 }

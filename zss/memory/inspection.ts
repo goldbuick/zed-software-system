@@ -64,91 +64,31 @@ import {
 
 // From inspect.ts
 
-export function memoryinspectempty(
-  player: string,
-  p1: PT,
-  p2: PT,
-  mode: string,
-) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  switch (mode) {
-    case 'emptyall': {
-      for (let y = p1.y; y <= p2.y; ++y) {
-        for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryboardelementread(board, { x, y })
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
-          }
-          memoryboardsetterrain(board, { x, y })
-        }
-      }
-      break
-    }
-    case 'emptyobjects': {
-      for (let y = p1.y; y <= p2.y; ++y) {
-        for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryboardelementread(board, { x, y })
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
-          }
-        }
-      }
-      break
-    }
-    case 'emptyterrain': {
-      for (let y = p1.y; y <= p2.y; ++y) {
-        for (let x = p1.x; x <= p2.x; ++x) {
-          memoryboardsetterrain(board, { x, y })
-        }
-      }
-      break
-    }
-  }
+export function memorygadgetinspectboard(player: string, board: string) {
+  const boardcodepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, board)
+  gadgettext(player, `board ${memorycodepagereadname(boardcodepage)}:`)
+  gadgethyperlink(player, 'batch', `board id ${board}`, ['copyit', board])
+  gadgethyperlink(player, 'batch', `edit board codepage`, [`pageopen:${board}`])
 }
 
-export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
+export function memorygadgetinspectloaders(player: string, p1: PT, p2: PT) {
+  // add matching loaders
+  const loaders = memoryloadermatches('text', 'gadget:action')
+  if (loaders.length) {
+    gadgettext(player, 'gadget actions:')
   }
 
   const area = ptstoarea(p1, p2)
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'clear terrain & objects', [
-    `emptyall:${area}`,
-    'hk',
-    '1',
-  ])
-  gadgethyperlink(player, 'batch', 'clear objects', [
-    `emptyobjects:${area}`,
-    'hk',
-    '2',
-  ])
-  gadgethyperlink(player, 'batch', 'clear terrain', [
-    `emptyterrain:${area}`,
-    'hk',
-    '3',
-  ])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'empty'
-  shared.scroll = gadgetcheckqueue(player)
+  for (let i = 0; i < loaders.length; ++i) {
+    const codepage = loaders[i]
+    const name = memorycodepagereadname(codepage)
+    gadgethyperlink(player, 'gadget', `run ${name}`, [
+      'action',
+      '',
+      codepage.id,
+      area,
+    ])
+  }
 }
 
 export async function memoryinspect(player: string, p1: PT, p2: PT) {
@@ -205,6 +145,395 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
   // send to player as a scroll
   const shared = gadgetstate(player)
   shared.scrollname = 'inspect'
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectarea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  memoryhassecretheap: boolean,
+) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  let group = 0
+  function get(name: string): WORD {
+    if (name === 'group') {
+      return group
+    }
+    return 0
+  }
+  function set(name: string, value: WORD) {
+    if (name === 'group') {
+      if (isnumber(value)) {
+        group = value
+        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+          const el = memoryboardelementread(board, pt)
+          if (ispresent(el)) {
+            el[name as keyof BOARD_ELEMENT] = `group${value}`
+          }
+        })
+      }
+    }
+  }
+
+  const area = ptstoarea(p1, p2)
+  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', 'copy elements', [
+    `copy:${area}`,
+    'hk',
+    '1',
+    ` 1 `,
+    'next',
+  ])
+  gadgethyperlink(player, 'batch', 'cut elements', [
+    `cut:${area}`,
+    'hk',
+    '2',
+    ` 2 `,
+    'next',
+  ])
+  if (memoryhassecretheap) {
+    gadgethyperlink(player, 'batch', 'paste elements', [
+      `paste:${area}`,
+      'hk',
+      '3',
+      ` 3 `,
+      'next',
+    ])
+  }
+  gadgethyperlink(player, 'batch', 'copy coords', [
+    `copycoords:${area}`,
+    'hk',
+    '5',
+    ` 5 `,
+  ])
+  if (memoryhassecretheap) {
+    gadgethyperlink(player, 'batch', 'style transfer', [
+      `style:${area}`,
+      'hk',
+      's',
+      ` S `,
+      'next',
+    ])
+  }
+  gadgethyperlink(player, 'remix', 'remix coords', [
+    `remix:${area}`,
+    'hk',
+    'r',
+    ` R `,
+    'next',
+  ])
+
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', `set chars:`, [
+    `chars:${area}`,
+    'hk',
+    'a',
+    ' A ',
+    'next',
+  ])
+  gadgethyperlink(player, 'batch', `set colors:`, [
+    `colors:${area}`,
+    'hk',
+    'c',
+    ' C ',
+    'next',
+  ])
+  gadgethyperlink(player, 'batch', `set bgs:`, [
+    `bgs:${area}`,
+    'hk',
+    'b',
+    ' B ',
+    'next',
+  ])
+  gadgethyperlink(
+    player,
+    `groups:${area}`,
+    'group',
+    [
+      'group',
+      'select',
+      'none',
+      '0',
+      ...range(1, 127)
+        .map((i) => [`group${i}`, `${i}`])
+        .flat(),
+    ],
+    get,
+    set,
+  )
+
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', 'make empty', [
+    `empty:${area}`,
+    'hk',
+    '0',
+    ` 0 `,
+    'next',
+  ])
+
+  // add gadget scripts
+  gadgettext(player, DIVIDER)
+  memorygadgetinspectloaders(player, p1, p2)
+
+  // codepage links
+  gadgettext(player, `codepages:`)
+
+  // scan board for codepages
+  const x1 = Math.min(p1.x, p2.x)
+  const y1 = Math.min(p1.y, p2.y)
+  const x2 = Math.max(p1.x, p2.x)
+  const y2 = Math.max(p1.y, p2.y)
+  const ids = new Set<string>()
+  for (let y = y1; y <= y2; ++y) {
+    for (let x = x1; x <= x2; ++x) {
+      const element = memoryboardelementread(board, { x, y })
+      const codepage = memorybookboardelementreadcodepage(mainbook, element)
+      if (ispresent(codepage) && !ids.has(codepage.id)) {
+        ids.add(codepage.id)
+        gadgethyperlink(
+          player,
+          'batch',
+          `edit @${memorycodepagereadname(codepage)}`,
+          [`pageopen:${codepage.id}`],
+        )
+      }
+    }
+  }
+
+  // board info
+  memorygadgetinspectboard(player, board.id)
+}
+
+export function memoryinspectbgarea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  name: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  let all = 0
+  function get() {
+    return all
+  }
+  function set(name: string, value: WORD) {
+    if (isnumber(value)) {
+      all = value
+      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+        const el = memoryboardelementread(board, pt)
+        if (ispresent(el)) {
+          el[name as keyof BOARD_ELEMENT] = value
+        }
+      })
+    }
+  }
+
+  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(
+    player,
+    `batch:${ptstoarea(p1, p2)}`,
+    'bg',
+    [name, 'bgedit'],
+    get,
+    set,
+  )
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scrollname = 'bulk set bg'
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectchar(
+  player: string,
+  element: BOARD_ELEMENT,
+  name: string,
+) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  function get(name: string): WORD {
+    const value =
+      element?.[name as keyof BOARD_ELEMENT] ??
+      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
+      0
+    return value
+  }
+  function set(name: string, value: WORD) {
+    if (ispresent(element)) {
+      element[name as keyof BOARD_ELEMENT] = value
+    }
+  }
+
+  const strcategory =
+    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+  const strname = element.name ?? element.kind ?? 'ERR'
+  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
+  const chip = chipfromelement(board, element)
+
+  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, chip, 'char', [name, 'charedit'], get, set)
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scrollname = 'char'
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectchararea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  name: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  let all = 0
+  function get() {
+    return all
+  }
+  function set(name: string, value: WORD) {
+    if (isnumber(value)) {
+      all = value
+      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+        const el = memoryboardelementread(board, pt)
+        if (ispresent(el)) {
+          el[name as keyof BOARD_ELEMENT] = value
+        }
+      })
+    }
+  }
+
+  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(
+    player,
+    `batch:${ptstoarea(p1, p2)}`,
+    'char',
+    [name, 'charedit'],
+    get,
+    set,
+  )
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scrollname = 'bulk set char'
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectcolor(
+  player: string,
+  element: BOARD_ELEMENT,
+  name: string,
+) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  function get(name: string): WORD {
+    const value =
+      element?.[name as keyof BOARD_ELEMENT] ??
+      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
+      0
+    return value
+  }
+  function set(name: string, value: WORD) {
+    if (ispresent(element)) {
+      element[name as keyof BOARD_ELEMENT] = value
+    }
+  }
+
+  const strcategory =
+    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+  const strname = element.name ?? element.kind ?? 'ERR'
+  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
+  const chip = chipfromelement(board, element)
+
+  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, chip, 'color', [name, `${name}edit`], get, set)
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scrollname = name
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectcolorarea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  name: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  let all = 0
+  function get() {
+    return all
+  }
+  function set(name: string, value: WORD) {
+    if (isnumber(value)) {
+      all = value
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const el = memoryboardelementread(board, { x, y })
+          if (ispresent(el)) {
+            el[name as keyof BOARD_ELEMENT] = value
+          }
+        }
+      }
+    }
+  }
+
+  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(
+    player,
+    `batch:${ptstoarea(p1, p2)}`,
+    'color',
+    [name, 'coloredit'],
+    get,
+    set,
+  )
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scrollname = 'bulk set color'
   shared.scroll = gadgetcheckqueue(player)
 }
 
@@ -269,99 +598,6 @@ export function memoryinspectcommand(path: string, player: string) {
       console.info('unknown inspect', inspect)
       break
   }
-}
-
-function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
-  const id = element?.id ?? memoryboardelementindex(board, element)
-  return `inspect:${id}`
-}
-
-export function memoryinspectcolor(
-  player: string,
-  element: BOARD_ELEMENT,
-  name: string,
-) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  function get(name: string): WORD {
-    const value =
-      element?.[name as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
-      0
-    return value
-  }
-  function set(name: string, value: WORD) {
-    if (ispresent(element)) {
-      element[name as keyof BOARD_ELEMENT] = value
-    }
-  }
-
-  const strcategory =
-    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
-  const strname = element.name ?? element.kind ?? 'ERR'
-  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-  const chip = chipfromelement(board, element)
-
-  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'color', [name, `${name}edit`], get, set)
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = name
-  shared.scroll = gadgetcheckqueue(player)
-}
-
-export function memoryinspectchar(
-  player: string,
-  element: BOARD_ELEMENT,
-  name: string,
-) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  function get(name: string): WORD {
-    const value =
-      element?.[name as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
-      0
-    return value
-  }
-  function set(name: string, value: WORD) {
-    if (ispresent(element)) {
-      element[name as keyof BOARD_ELEMENT] = value
-    }
-  }
-
-  const strcategory =
-    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
-  const strname = element.name ?? element.kind ?? 'ERR'
-  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-  const chip = chipfromelement(board, element)
-
-  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'char', [name, 'charedit'], get, set)
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'char'
-  shared.scroll = gadgetcheckqueue(player)
 }
 
 export function memoryinspectelement(
@@ -564,145 +800,11 @@ export function memoryinspectelement(
   memorygadgetinspectboard(player, board.id)
 }
 
-export function memoryinspectchararea(
+export function memoryinspectempty(
   player: string,
   p1: PT,
   p2: PT,
-  name: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  let all = 0
-  function get() {
-    return all
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value)) {
-      all = value
-      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryboardelementread(board, pt)
-        if (ispresent(el)) {
-          el[name as keyof BOARD_ELEMENT] = value
-        }
-      })
-    }
-  }
-
-  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(
-    player,
-    `batch:${ptstoarea(p1, p2)}`,
-    'char',
-    [name, 'charedit'],
-    get,
-    set,
-  )
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'bulk set char'
-  shared.scroll = gadgetcheckqueue(player)
-}
-
-export function memoryinspectcolorarea(
-  player: string,
-  p1: PT,
-  p2: PT,
-  name: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  let all = 0
-  function get() {
-    return all
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value)) {
-      all = value
-      for (let y = p1.y; y <= p2.y; ++y) {
-        for (let x = p1.x; x <= p2.x; ++x) {
-          const el = memoryboardelementread(board, { x, y })
-          if (ispresent(el)) {
-            el[name as keyof BOARD_ELEMENT] = value
-          }
-        }
-      }
-    }
-  }
-
-  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(
-    player,
-    `batch:${ptstoarea(p1, p2)}`,
-    'color',
-    [name, 'coloredit'],
-    get,
-    set,
-  )
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'bulk set color'
-  shared.scroll = gadgetcheckqueue(player)
-}
-
-export function memoryinspectbgarea(
-  player: string,
-  p1: PT,
-  p2: PT,
-  name: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  let all = 0
-  function get() {
-    return all
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value)) {
-      all = value
-      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryboardelementread(board, pt)
-        if (ispresent(el)) {
-          el[name as keyof BOARD_ELEMENT] = value
-        }
-      })
-    }
-  }
-
-  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(
-    player,
-    `batch:${ptstoarea(p1, p2)}`,
-    'bg',
-    [name, 'bgedit'],
-    get,
-    set,
-  )
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'bulk set bg'
-  shared.scroll = gadgetcheckqueue(player)
-}
-
-export function memoryinspectarea(
-  player: string,
-  p1: PT,
-  p2: PT,
-  memoryhassecretheap: boolean,
+  mode: string,
 ) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -714,179 +816,78 @@ export function memoryinspectarea(
     return
   }
 
-  let group = 0
-  function get(name: string): WORD {
-    if (name === 'group') {
-      return group
-    }
-    return 0
-  }
-  function set(name: string, value: WORD) {
-    if (name === 'group') {
-      if (isnumber(value)) {
-        group = value
-        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryboardelementread(board, pt)
-          if (ispresent(el)) {
-            el[name as keyof BOARD_ELEMENT] = `group${value}`
+  switch (mode) {
+    case 'emptyall': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const maybeobject = memoryboardelementread(board, { x, y })
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
           }
-        })
+          memoryboardsetterrain(board, { x, y })
+        }
       }
+      break
     }
+    case 'emptyobjects': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const maybeobject = memoryboardelementread(board, { x, y })
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
+          }
+        }
+      }
+      break
+    }
+    case 'emptyterrain': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          memoryboardsetterrain(board, { x, y })
+        }
+      }
+      break
+    }
+  }
+}
+
+export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
   }
 
   const area = ptstoarea(p1, p2)
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'copy elements', [
-    `copy:${area}`,
+  gadgethyperlink(player, 'batch', 'clear terrain & objects', [
+    `emptyall:${area}`,
     'hk',
     '1',
-    ` 1 `,
-    'next',
   ])
-  gadgethyperlink(player, 'batch', 'cut elements', [
-    `cut:${area}`,
+  gadgethyperlink(player, 'batch', 'clear objects', [
+    `emptyobjects:${area}`,
     'hk',
     '2',
-    ` 2 `,
-    'next',
   ])
-  if (memoryhassecretheap) {
-    gadgethyperlink(player, 'batch', 'paste elements', [
-      `paste:${area}`,
-      'hk',
-      '3',
-      ` 3 `,
-      'next',
-    ])
-  }
-  gadgethyperlink(player, 'batch', 'copy coords', [
-    `copycoords:${area}`,
+  gadgethyperlink(player, 'batch', 'clear terrain', [
+    `emptyterrain:${area}`,
     'hk',
-    '5',
-    ` 5 `,
-  ])
-  if (memoryhassecretheap) {
-    gadgethyperlink(player, 'batch', 'style transfer', [
-      `style:${area}`,
-      'hk',
-      's',
-      ` S `,
-      'next',
-    ])
-  }
-  gadgethyperlink(player, 'remix', 'remix coords', [
-    `remix:${area}`,
-    'hk',
-    'r',
-    ` R `,
-    'next',
+    '3',
   ])
 
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', `set chars:`, [
-    `chars:${area}`,
-    'hk',
-    'a',
-    ' A ',
-    'next',
-  ])
-  gadgethyperlink(player, 'batch', `set colors:`, [
-    `colors:${area}`,
-    'hk',
-    'c',
-    ' C ',
-    'next',
-  ])
-  gadgethyperlink(player, 'batch', `set bgs:`, [
-    `bgs:${area}`,
-    'hk',
-    'b',
-    ' B ',
-    'next',
-  ])
-  gadgethyperlink(
-    player,
-    `groups:${area}`,
-    'group',
-    [
-      'group',
-      'select',
-      'none',
-      '0',
-      ...range(1, 127)
-        .map((i) => [`group${i}`, `${i}`])
-        .flat(),
-    ],
-    get,
-    set,
-  )
-
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'make empty', [
-    `empty:${area}`,
-    'hk',
-    '0',
-    ` 0 `,
-    'next',
-  ])
-
-  // add gadget scripts
-  gadgettext(player, DIVIDER)
-  memorygadgetinspectloaders(player, p1, p2)
-
-  // codepage links
-  gadgettext(player, `codepages:`)
-
-  // scan board for codepages
-  const x1 = Math.min(p1.x, p2.x)
-  const y1 = Math.min(p1.y, p2.y)
-  const x2 = Math.max(p1.x, p2.x)
-  const y2 = Math.max(p1.y, p2.y)
-  const ids = new Set<string>()
-  for (let y = y1; y <= y2; ++y) {
-    for (let x = x1; x <= x2; ++x) {
-      const element = memoryboardelementread(board, { x, y })
-      const codepage = memorybookboardelementreadcodepage(mainbook, element)
-      if (ispresent(codepage) && !ids.has(codepage.id)) {
-        ids.add(codepage.id)
-        gadgethyperlink(
-          player,
-          'batch',
-          `edit @${memorycodepagereadname(codepage)}`,
-          [`pageopen:${codepage.id}`],
-        )
-      }
-    }
-  }
-
-  // board info
-  memorygadgetinspectboard(player, board.id)
-}
-export function memorygadgetinspectloaders(player: string, p1: PT, p2: PT) {
-  // add matching loaders
-  const loaders = memoryloadermatches('text', 'gadget:action')
-  if (loaders.length) {
-    gadgettext(player, 'gadget actions:')
-  }
-
-  const area = ptstoarea(p1, p2)
-  for (let i = 0; i < loaders.length; ++i) {
-    const codepage = loaders[i]
-    const name = memorycodepagereadname(codepage)
-    gadgethyperlink(player, 'gadget', `run ${name}`, [
-      'action',
-      '',
-      codepage.id,
-      area,
-    ])
-  }
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scrollname = 'empty'
+  shared.scroll = gadgetcheckqueue(player)
 }
 
-export function memorygadgetinspectboard(player: string, board: string) {
-  const boardcodepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, board)
-  gadgettext(player, `board ${memorycodepagereadname(boardcodepage)}:`)
-  gadgethyperlink(player, 'batch', `board id ${board}`, ['copyit', board])
-  gadgethyperlink(player, 'batch', `edit board codepage`, [`pageopen:${board}`])
+function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
+  const id = element?.id ?? memoryboardelementindex(board, element)
+  return `inspect:${id}`
 }

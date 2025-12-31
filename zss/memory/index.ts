@@ -9,7 +9,7 @@ import { dirfrompts, mapstrdir, mapstrdirtoconst } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { COLLISION, NAME, PT } from 'zss/words/types'
 
-import { memoryboardelementapplycolor } from './boardelement'
+import { memoryapplyboardelementcolor } from './boardelement'
 import {
   memoryboardnamedwrite,
   memoryboardobjectlookupwrite,
@@ -408,7 +408,7 @@ export function memorywritefromkind(
   if (ispresent(maybeobject)) {
     const object = memoryboardobjectcreatefromkind(board, dest, name, id)
     if (ispresent(object)) {
-      memoryboardelementapplycolor(object, maybecolor)
+      memoryapplyboardelementcolor(object, maybecolor)
       // update named (terrain & objects)
       memoryelementkindread(object)
       memoryboardobjectlookupwrite(board, object)
@@ -421,7 +421,7 @@ export function memorywritefromkind(
   if (ispresent(maybeterrain)) {
     const terrain = memoryboardterrainsetfromkind(board, dest, name)
     if (ispresent(terrain)) {
-      memoryboardelementapplycolor(terrain, maybecolor)
+      memoryapplyboardelementcolor(terrain, maybecolor)
       // update named (terrain & objects)
       memoryelementkindread(terrain)
       // calc index
@@ -449,7 +449,7 @@ export function memorywritebullet(
     // create new object element
     const object = memoryboardobjectcreatefromkind(board, dest, name)
     // update color
-    memoryboardelementapplycolor(object, maybecolor)
+    memoryapplyboardelementcolor(object, maybecolor)
     return object
   }
 

@@ -61,127 +61,6 @@ function base64tobase64url(base64String: string) {
 
 const FIXED_DATE = new Date('1980/09/02')
 
-export async function memorycompressbooks(books: BOOK[]) {
-  await getzstdlib()
-
-  console.info('saved', books)
-  const zip = new JSZip()
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    const exportedbook = memorybookexport(book)
-    if (exportedbook) {
-      // convert to bin
-      const bin = packformat(exportedbook)
-      if (ispresent(bin)) {
-        // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
-        const binsquash = compress(bin, 15)
-        zip.file(book.id, binsquash, { date: FIXED_DATE })
-      }
-    }
-  }
-
-  // TODO: do we need this still ??
-  const content = await zip.generateAsync({
-    type: 'base64',
-  })
-
-  return base64tobase64url(content)
-}
-
-// import json into book
-export async function memorydecompressbooks(base64bytes: string) {
-  await getzstdlib()
-
-  const books: BOOK[] = []
-  const content = base64urltobase64(base64bytes)
-  const zip = await JSZip.loadAsync(content, { base64: true })
-
-  // extract a normal list
-  const files: JSZipObject[] = []
-  zip.forEach((_path, file) => files.push(file))
-
-  // unpack books
-  for (let i = 0; i < files.length; ++i) {
-    const file = files[i]
-
-    // first pass try string
-    const str = await file.async('string')
-    const maybebookfromstr = unpackformat(str)
-    if (ispresent(maybebookfromstr)) {
-      const book = memorybookimport(maybebookfromstr)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    // second pass uncompressed msgpackr
-    const bin = await file.async('uint8array')
-    const maybebookfrombin = unpackformat(bin)
-    if (ispresent(maybebookfrombin)) {
-      const book = memorybookimport(maybebookfrombin)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    // second pass compressed msgpackr
-    const ubin = decompress(bin)
-    const maybebookfromubin = unpackformat(ubin)
-    if (ispresent(maybebookfromubin)) {
-      const book = memorybookimport(maybebookfromubin)
-      if (ispresent(book)) {
-        books.push(book)
-      }
-    }
-  }
-
-  return books
-}
-
-// Admin Operations
-
-// read / write from indexdb
-
-async function writeidb<T>(
-  key: string,
-  updater: (oldValue: T | undefined) => T,
-): Promise<void> {
-  return idbupdate(key, updater)
-}
-
-function readconfigdefault(name: string) {
-  switch (name) {
-    case 'crt':
-      return 'on'
-    default:
-      return 'off'
-  }
-}
-
-async function writeconfig(name: string, value: string) {
-  return writeidb(`config_${name}`, () => value)
-}
-
-async function readconfigall() {
-  const lookup = [
-    'config_crt',
-    'config_lowrez',
-    'config_scanlines',
-    'config_voice2text',
-  ]
-  const configs = await idbgetmany<string>(lookup)
-  return configs.map((value, index) => {
-    const key = lookup[index]
-    const keyname = key.replace('config_', '')
-    if (!value) {
-      return [keyname, readconfigdefault(keyname)]
-    }
-    return [keyname, value && value !== 'off' ? 'on' : 'off']
-  })
-}
-
 export async function memoryadminmenu(player: string) {
   // get list of active players
   const isop = memoryisoperator(player)
@@ -284,4 +163,126 @@ export async function memoryadminmenu(player: string) {
   const shared = gadgetstate(player)
   shared.scrollname = 'cpu #admin'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memorycompressbooks(books: BOOK[]) {
+  await getzstdlib()
+
+  console.info('saved', books)
+  const zip = new JSZip()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    const exportedbook = memorybookexport(book)
+    if (exportedbook) {
+      // convert to bin
+      const bin = packformat(exportedbook)
+      if (ispresent(bin)) {
+        // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
+        const binsquash = compress(bin, 15)
+        zip.file(book.id, binsquash, { date: FIXED_DATE })
+      }
+    }
+  }
+
+  // TODO: do we need this still ??
+  const content = await zip.generateAsync({
+    type: 'base64',
+  })
+
+  return base64tobase64url(content)
+}
+
+export async function memorydecompressbooks(base64bytes: string) {
+  await getzstdlib()
+
+  const books: BOOK[] = []
+  const content = base64urltobase64(base64bytes)
+  const zip = await JSZip.loadAsync(content, { base64: true })
+
+  // extract a normal list
+  const files: JSZipObject[] = []
+  zip.forEach((_path, file) => files.push(file))
+
+  // unpack books
+  for (let i = 0; i < files.length; ++i) {
+    const file = files[i]
+
+    // first pass try string
+    const str = await file.async('string')
+    const maybebookfromstr = unpackformat(str)
+    if (ispresent(maybebookfromstr)) {
+      const book = memorybookimport(maybebookfromstr)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
+      }
+    }
+
+    // second pass uncompressed msgpackr
+    const bin = await file.async('uint8array')
+    const maybebookfrombin = unpackformat(bin)
+    if (ispresent(maybebookfrombin)) {
+      const book = memorybookimport(maybebookfrombin)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
+      }
+    }
+
+    // second pass compressed msgpackr
+    const ubin = decompress(bin)
+    const maybebookfromubin = unpackformat(ubin)
+    if (ispresent(maybebookfromubin)) {
+      const book = memorybookimport(maybebookfromubin)
+      if (ispresent(book)) {
+        books.push(book)
+      }
+    }
+  }
+
+  return books
+}
+
+// import json into book
+
+// Admin Operations
+
+// read / write from indexdb
+
+async function writeidb<T>(
+  key: string,
+  updater: (oldValue: T | undefined) => T,
+): Promise<void> {
+  return idbupdate(key, updater)
+}
+
+function readconfigdefault(name: string) {
+  switch (name) {
+    case 'crt':
+      return 'on'
+    default:
+      return 'off'
+  }
+}
+
+async function writeconfig(name: string, value: string) {
+  return writeidb(`config_${name}`, () => value)
+}
+
+async function readconfigall() {
+  const lookup = [
+    'config_crt',
+    'config_lowrez',
+    'config_scanlines',
+    'config_voice2text',
+  ]
+  const configs = await idbgetmany<string>(lookup)
+  return configs.map((value, index) => {
+    const key = lookup[index]
+    const keyname = key.replace('config_', '')
+    if (!value) {
+      return [keyname, readconfigdefault(keyname)]
+    }
+    return [keyname, value && value !== 'off' ? 'on' : 'off']
+  })
 }

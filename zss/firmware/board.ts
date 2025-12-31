@@ -17,7 +17,7 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import {
-  memoryboardelementapplycolor,
+  memoryapplyboardelementcolor,
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
 import { memoryboardcheckblockedobject } from 'zss/memory/boardmovement'
@@ -228,7 +228,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   if (target?.kind === kindname) {
     // apply color and return
     const [, maybecolor] = kind
-    memoryboardelementapplycolor(target, maybecolor)
+    memoryapplyboardelementcolor(target, maybecolor)
     return 0
   }
 

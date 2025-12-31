@@ -38,7 +38,7 @@ import {
 } from 'zss/words/types'
 
 import {
-  memoryboardelementexport,
+  memoryexportboardelement,
   memoryboardelementimport,
   memorycreateboardelement,
 } from './boardelement'
@@ -75,267 +75,6 @@ export function memorybitmapimport(
   return unformatobject(bitmapentry, BITMAP_KEYS, {
     bits: (bits: number[]) => new Uint8Array(bits),
   })
-}
-
-export function memorycreatecodepage(
-  code: string,
-  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
-): CODE_PAGE {
-  return {
-    id: createsid(),
-    code,
-    ...content,
-  }
-}
-
-enum CODE_PAGE_KEYS {
-  id,
-  code,
-  board,
-  object,
-  terrain,
-  charset,
-  palette,
-  eighttrack,
-}
-
-// safe to serialize copy of codepage
-export function memorycodepageexport(
-  codepage: MAYBE<CODE_PAGE>,
-): MAYBE<FORMAT_OBJECT> {
-  return formatobject(codepage, CODE_PAGE_KEYS, {
-    board: memoryboardexport,
-    object: memoryboardelementexport,
-    terrain: memoryboardelementexport,
-    charset: memorybitmapexport,
-    palette: memorybitmapexport,
-    stats: FORMAT_SKIP,
-  })
-}
-
-// safe to serialize copy of codepage
-export function memorycodepageimport(
-  codepageentry: MAYBE<FORMAT_OBJECT>,
-): MAYBE<CODE_PAGE> {
-  return unformatobject<CODE_PAGE>(codepageentry, CODE_PAGE_KEYS, {
-    board: memoryboardimport,
-    object: memoryboardelementimport,
-    terrain: memoryboardelementimport,
-    charset: memorybitmapimport,
-    palette: memorybitmapimport,
-  })
-}
-
-export function memorycodepagehasmatch(
-  codepage: MAYBE<CODE_PAGE>,
-  type: CODE_PAGE_TYPE,
-  ids: string[],
-): boolean {
-  if (!ispresent(codepage) || memorycodepagereadtype(codepage) !== type) {
-    return false
-  }
-  if (ids.some((id) => id === codepage.id)) {
-    return true
-  }
-  return false
-}
-
-export function memorycodepagereadstatdefaults(
-  codepage: MAYBE<CODE_PAGE>,
-): CODE_PAGE_STATS {
-  const stats = { ...memorycodepagereadstats(codepage) }
-
-  // extract defaults
-  Object.keys(stats).forEach((key) => {
-    switch (key) {
-      case 'type':
-      case 'name':
-        // trim
-        delete stats[key]
-        break
-    }
-  })
-
-  // send it
-  return stats
-}
-
-export function memorycodepageresetstats(
-  codepage: MAYBE<CODE_PAGE>,
-): CODE_PAGE_STATS {
-  if (!ispresent(codepage)) {
-    return {}
-  }
-  codepage.stats = undefined
-  return memorycodepagereadstats(codepage)
-}
-
-export function memorycodepagereadstatsfromtext(
-  content: string,
-): CODE_PAGE_STATS {
-  const parse = tokenize(content)
-  const stats: CODE_PAGE_STATS = {}
-
-  // extract @stat lines
-  let isfirst = true
-  for (let i = 0; i < parse.tokens.length; ++i) {
-    const token = parse.tokens[i]
-    if (token.tokenType === stat) {
-      const source = token.image.slice(1)
-      const [sourcewords, label] = source.split(';').map((str) => str.trim())
-      const words = sourcewords.split(' ')
-      const stat = statformat(isstring(label) ? label : '', words, isfirst)
-      const maybename = stat.values.join(' ')
-      isfirst = false
-      switch (stat.type) {
-        case STAT_TYPE.LOADER:
-          stats.type = CODE_PAGE_TYPE.LOADER
-          stats.name = maybename
-          break
-        case STAT_TYPE.BOARD:
-          stats.type = CODE_PAGE_TYPE.BOARD
-          stats.name = maybename
-          break
-        case STAT_TYPE.OBJECT:
-          stats.type = CODE_PAGE_TYPE.OBJECT
-          stats.name = maybename || 'object'
-          break
-        case STAT_TYPE.TERRAIN:
-          stats.type = CODE_PAGE_TYPE.TERRAIN
-          stats.name = maybename
-          break
-        case STAT_TYPE.CHARSET:
-          stats.type = CODE_PAGE_TYPE.CHARSET
-          stats.name = maybename
-          break
-        case STAT_TYPE.PALETTE:
-          stats.type = CODE_PAGE_TYPE.PALETTE
-          stats.name = maybename
-          break
-        case STAT_TYPE.CONST: {
-          const [maybename, ...maybevalues] = stat.values
-          if (isstring(maybename)) {
-            const name = NAME(maybename)
-            const maybevalue = maybevalues.join(' ')
-            if (isstring(maybevalue)) {
-              const numbervalue = parseFloat(maybevalue)
-              if (isnumber(numbervalue)) {
-                stats[name] = numbervalue
-              } else {
-                stats[name] = `${maptostring(stats[name])}${maybevalue}`
-              }
-            } else {
-              stats[name] = 1
-            }
-          }
-          break
-        }
-        case STAT_TYPE.RANGE:
-        case STAT_TYPE.SELECT:
-        case STAT_TYPE.NUMBER:
-        case STAT_TYPE.TEXT:
-        case STAT_TYPE.HOTKEY:
-        case STAT_TYPE.ZSSEDIT:
-        case STAT_TYPE.CHAREDIT:
-        case STAT_TYPE.COLOREDIT: {
-          const [maybename, ...args] = stat.values
-          if (isstring(maybename)) {
-            const name = NAME(maybename)
-            stats[name] = [stattypestring(stat.type), ...args]
-          }
-          break
-        }
-      }
-    }
-  }
-
-  return stats
-}
-
-export function memorycodepagereadstats(
-  codepage: MAYBE<CODE_PAGE>,
-): CODE_PAGE_STATS {
-  if (!ispresent(codepage)) {
-    return {}
-  }
-
-  // cached results !
-  if (ispresent(codepage.stats?.type)) {
-    return codepage.stats
-  }
-
-  codepage.stats = memorycodepagereadstatsfromtext(codepage.code)
-
-  // default to object type
-  if (!ispresent(codepage.stats.type)) {
-    codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-  }
-
-  // results !
-  return codepage.stats
-}
-
-export function memorycodepagetypetostring(
-  type: MAYBE<CODE_PAGE_TYPE>,
-): string {
-  switch (type) {
-    default:
-    case CODE_PAGE_TYPE.ERROR:
-      return 'error'
-    case CODE_PAGE_TYPE.LOADER:
-      return stattypestring(STAT_TYPE.LOADER)
-    case CODE_PAGE_TYPE.BOARD:
-      return stattypestring(STAT_TYPE.BOARD)
-    case CODE_PAGE_TYPE.OBJECT:
-      return stattypestring(STAT_TYPE.OBJECT)
-    case CODE_PAGE_TYPE.TERRAIN:
-      return stattypestring(STAT_TYPE.TERRAIN)
-    case CODE_PAGE_TYPE.CHARSET:
-      return stattypestring(STAT_TYPE.CHARSET)
-    case CODE_PAGE_TYPE.PALETTE:
-      return stattypestring(STAT_TYPE.PALETTE)
-  }
-}
-
-export function memorycodepagereadtype(codepage: MAYBE<CODE_PAGE>) {
-  const stats = memorycodepagereadstats(codepage)
-  return stats.type ?? CODE_PAGE_TYPE.ERROR
-}
-
-export function memorycodepagereadtypetostring(codepage: MAYBE<CODE_PAGE>) {
-  return memorycodepagetypetostring(memorycodepagereadtype(codepage))
-}
-
-export function memorycodepagereadname(codepage: MAYBE<CODE_PAGE>) {
-  const stats = memorycodepagereadstats(codepage)
-  return stats.name ?? ''
-}
-
-export function memorycodepagereadstat(
-  codepage: MAYBE<CODE_PAGE>,
-  stat: string,
-) {
-  const stats = memorycodepagereadstats(codepage)
-  return stats[stat]
-}
-
-const colorparse = new Color()
-
-function mapstrtoconsts(value: any): MAYBE<COLOR | DIR> {
-  if (!isstring(value)) {
-    return undefined
-  }
-  const maybestrcolor = mapstrcolor(value)
-  if (ispresent(maybestrcolor) && ispresent(COLOR[maybestrcolor])) {
-    return COLOR[maybestrcolor]
-  }
-  const strdir = NAME(value)
-  // @ts-expect-error yes
-  const maybedir = DIR[strdir]
-  if (ispresent(maybedir)) {
-    return maybedir
-  }
-  return undefined
 }
 
 export function memorycodepageapplyelementstats(
@@ -448,6 +187,47 @@ export function memorycodepageapplyelementstats(
         break
     }
   }
+}
+
+export function memorycodepageexport(
+  codepage: MAYBE<CODE_PAGE>,
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(codepage, CODE_PAGE_KEYS, {
+    board: memoryboardexport,
+    object: memoryexportboardelement,
+    terrain: memoryexportboardelement,
+    charset: memorybitmapexport,
+    palette: memorybitmapexport,
+    stats: FORMAT_SKIP,
+  })
+}
+
+// safe to serialize copy of codepage
+
+export function memorycodepagehasmatch(
+  codepage: MAYBE<CODE_PAGE>,
+  type: CODE_PAGE_TYPE,
+  ids: string[],
+): boolean {
+  if (!ispresent(codepage) || memorycodepagereadtype(codepage) !== type) {
+    return false
+  }
+  if (ids.some((id) => id === codepage.id)) {
+    return true
+  }
+  return false
+}
+
+export function memorycodepageimport(
+  codepageentry: MAYBE<FORMAT_OBJECT>,
+): MAYBE<CODE_PAGE> {
+  return unformatobject<CODE_PAGE>(codepageentry, CODE_PAGE_KEYS, {
+    board: memoryboardimport,
+    object: memoryboardelementimport,
+    terrain: memoryboardelementimport,
+    charset: memorybitmapimport,
+    palette: memorybitmapimport,
+  })
 }
 
 export function memorycodepagereaddata<T extends CODE_PAGE_TYPE>(
@@ -636,3 +416,225 @@ export function memorycodepagereaddata<T extends CODE_PAGE_TYPE>(
     }
   }
 }
+
+export function memorycodepagereadname(codepage: MAYBE<CODE_PAGE>) {
+  const stats = memorycodepagereadstats(codepage)
+  return stats.name ?? ''
+}
+
+export function memorycodepagereadstat(
+  codepage: MAYBE<CODE_PAGE>,
+  stat: string,
+) {
+  const stats = memorycodepagereadstats(codepage)
+  return stats[stat]
+}
+
+const colorparse = new Color()
+
+function mapstrtoconsts(value: any): MAYBE<COLOR | DIR> {
+  if (!isstring(value)) {
+    return undefined
+  }
+  const maybestrcolor = mapstrcolor(value)
+  if (ispresent(maybestrcolor) && ispresent(COLOR[maybestrcolor])) {
+    return COLOR[maybestrcolor]
+  }
+  const strdir = NAME(value)
+  // @ts-expect-error yes
+  const maybedir = DIR[strdir]
+  if (ispresent(maybedir)) {
+    return maybedir
+  }
+  return undefined
+}
+
+export function memorycodepagereadstatdefaults(
+  codepage: MAYBE<CODE_PAGE>,
+): CODE_PAGE_STATS {
+  const stats = { ...memorycodepagereadstats(codepage) }
+
+  // extract defaults
+  Object.keys(stats).forEach((key) => {
+    switch (key) {
+      case 'type':
+      case 'name':
+        // trim
+        delete stats[key]
+        break
+    }
+  })
+
+  // send it
+  return stats
+}
+
+export function memorycodepagereadstats(
+  codepage: MAYBE<CODE_PAGE>,
+): CODE_PAGE_STATS {
+  if (!ispresent(codepage)) {
+    return {}
+  }
+
+  // cached results !
+  if (ispresent(codepage.stats?.type)) {
+    return codepage.stats
+  }
+
+  codepage.stats = memorycodepagereadstatsfromtext(codepage.code)
+
+  // default to object type
+  if (!ispresent(codepage.stats.type)) {
+    codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+  }
+
+  // results !
+  return codepage.stats
+}
+
+export function memorycodepagereadstatsfromtext(
+  content: string,
+): CODE_PAGE_STATS {
+  const parse = tokenize(content)
+  const stats: CODE_PAGE_STATS = {}
+
+  // extract @stat lines
+  let isfirst = true
+  for (let i = 0; i < parse.tokens.length; ++i) {
+    const token = parse.tokens[i]
+    if (token.tokenType === stat) {
+      const source = token.image.slice(1)
+      const [sourcewords, label] = source.split(';').map((str) => str.trim())
+      const words = sourcewords.split(' ')
+      const stat = statformat(isstring(label) ? label : '', words, isfirst)
+      const maybename = stat.values.join(' ')
+      isfirst = false
+      switch (stat.type) {
+        case STAT_TYPE.LOADER:
+          stats.type = CODE_PAGE_TYPE.LOADER
+          stats.name = maybename
+          break
+        case STAT_TYPE.BOARD:
+          stats.type = CODE_PAGE_TYPE.BOARD
+          stats.name = maybename
+          break
+        case STAT_TYPE.OBJECT:
+          stats.type = CODE_PAGE_TYPE.OBJECT
+          stats.name = maybename || 'object'
+          break
+        case STAT_TYPE.TERRAIN:
+          stats.type = CODE_PAGE_TYPE.TERRAIN
+          stats.name = maybename
+          break
+        case STAT_TYPE.CHARSET:
+          stats.type = CODE_PAGE_TYPE.CHARSET
+          stats.name = maybename
+          break
+        case STAT_TYPE.PALETTE:
+          stats.type = CODE_PAGE_TYPE.PALETTE
+          stats.name = maybename
+          break
+        case STAT_TYPE.CONST: {
+          const [maybename, ...maybevalues] = stat.values
+          if (isstring(maybename)) {
+            const name = NAME(maybename)
+            const maybevalue = maybevalues.join(' ')
+            if (isstring(maybevalue)) {
+              const numbervalue = parseFloat(maybevalue)
+              if (isnumber(numbervalue)) {
+                stats[name] = numbervalue
+              } else {
+                stats[name] = `${maptostring(stats[name])}${maybevalue}`
+              }
+            } else {
+              stats[name] = 1
+            }
+          }
+          break
+        }
+        case STAT_TYPE.RANGE:
+        case STAT_TYPE.SELECT:
+        case STAT_TYPE.NUMBER:
+        case STAT_TYPE.TEXT:
+        case STAT_TYPE.HOTKEY:
+        case STAT_TYPE.ZSSEDIT:
+        case STAT_TYPE.CHAREDIT:
+        case STAT_TYPE.COLOREDIT: {
+          const [maybename, ...args] = stat.values
+          if (isstring(maybename)) {
+            const name = NAME(maybename)
+            stats[name] = [stattypestring(stat.type), ...args]
+          }
+          break
+        }
+      }
+    }
+  }
+
+  return stats
+}
+
+export function memorycodepagereadtype(codepage: MAYBE<CODE_PAGE>) {
+  const stats = memorycodepagereadstats(codepage)
+  return stats.type ?? CODE_PAGE_TYPE.ERROR
+}
+
+export function memorycodepagereadtypetostring(codepage: MAYBE<CODE_PAGE>) {
+  return memorycodepagetypetostring(memorycodepagereadtype(codepage))
+}
+
+export function memorycodepageresetstats(
+  codepage: MAYBE<CODE_PAGE>,
+): CODE_PAGE_STATS {
+  if (!ispresent(codepage)) {
+    return {}
+  }
+  codepage.stats = undefined
+  return memorycodepagereadstats(codepage)
+}
+
+export function memorycodepagetypetostring(
+  type: MAYBE<CODE_PAGE_TYPE>,
+): string {
+  switch (type) {
+    default:
+    case CODE_PAGE_TYPE.ERROR:
+      return 'error'
+    case CODE_PAGE_TYPE.LOADER:
+      return stattypestring(STAT_TYPE.LOADER)
+    case CODE_PAGE_TYPE.BOARD:
+      return stattypestring(STAT_TYPE.BOARD)
+    case CODE_PAGE_TYPE.OBJECT:
+      return stattypestring(STAT_TYPE.OBJECT)
+    case CODE_PAGE_TYPE.TERRAIN:
+      return stattypestring(STAT_TYPE.TERRAIN)
+    case CODE_PAGE_TYPE.CHARSET:
+      return stattypestring(STAT_TYPE.CHARSET)
+    case CODE_PAGE_TYPE.PALETTE:
+      return stattypestring(STAT_TYPE.PALETTE)
+  }
+}
+
+export function memorycreatecodepage(
+  code: string,
+  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
+): CODE_PAGE {
+  return {
+    id: createsid(),
+    code,
+    ...content,
+  }
+}
+
+enum CODE_PAGE_KEYS {
+  id,
+  code,
+  board,
+  object,
+  terrain,
+  charset,
+  palette,
+  eighttrack,
+}
+
+// safe to serialize copy of codepage

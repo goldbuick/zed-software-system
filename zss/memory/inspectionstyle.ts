@@ -27,23 +27,6 @@ type STYLE_CONFIG = {
 }
 
 // Style operations
-export async function memoryreadstyleconfig(): Promise<
-  STYLE_CONFIG | undefined
-> {
-  return idbget('styleconfig')
-}
-
-export async function memorywritestyleconfig(
-  updater: (oldValue: STYLE_CONFIG | undefined) => STYLE_CONFIG,
-): Promise<void> {
-  return idbupdate('styleconfig', updater)
-}
-
-let styleconfig: STYLE_CONFIG = {
-  stylechars: 1,
-  stylecolors: 1,
-  stylebgs: 1,
-}
 
 export async function memoryinspectstyle(
   player: string,
@@ -172,4 +155,22 @@ export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
   const shared = gadgetstate(player)
   shared.scrollname = 'style'
   shared.scroll = gadgetcheckqueue(player)
+}
+
+export async function memoryreadstyleconfig(): Promise<
+  STYLE_CONFIG | undefined
+> {
+  return idbget('styleconfig')
+}
+
+export async function memorywritestyleconfig(
+  updater: (oldValue: STYLE_CONFIG | undefined) => STYLE_CONFIG,
+): Promise<void> {
+  return idbupdate('styleconfig', updater)
+}
+
+let styleconfig: STYLE_CONFIG = {
+  stylechars: 1,
+  stylecolors: 1,
+  stylebgs: 1,
 }

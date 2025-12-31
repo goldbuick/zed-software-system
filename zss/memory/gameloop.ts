@@ -48,180 +48,61 @@ const os = createos()
 
 // Tick & Update Functions
 
-export function memorytickobject(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  object: MAYBE<BOARD_ELEMENT>,
-  code: string,
-) {
-  if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
-    return
-  }
-
-  // cache context
-  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-
-  // write context
-  READ_CONTEXT.book = book
-  READ_CONTEXT.board = board
-  READ_CONTEXT.element = object
-
-  READ_CONTEXT.elementid = object.id ?? ''
-  READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-
-  const playerfromelement = READ_CONTEXT.element.player ?? memoryreadoperator()
-  READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
-    ? READ_CONTEXT.elementid
-    : playerfromelement
-
-  // read cycle
-  const cycle = memoryelementstatread(object, 'cycle')
-
-  // run chip code
-  const id = object.id ?? ''
-  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
-  os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
-
-  // clear ticker
-  if (isnumber(object?.tickertime)) {
-    // clear ticker text after X number of ticks
-    if (READ_CONTEXT.timestamp - object.tickertime > TICK_FPS * 5) {
-      object.tickertime = 0
-      object.tickertext = ''
-    }
-  }
-
-  // clear used input
-  if (READ_CONTEXT.elementisplayer) {
-    const flags = memoryreadflags(READ_CONTEXT.elementid)
-    if (isnumber(flags.inputcurrent)) {
-      flags.inputcurrent = 0
-    }
-  }
-
-  // restore context
-  objectKeys(OLD_CONTEXT).forEach((key) => {
-    // @ts-expect-error dont bother me
-    READ_CONTEXT[key] = OLD_CONTEXT[key]
-  })
+export function memorymessage(message: MESSAGE) {
+  os.message(message)
 }
 
-export function memorytick(playeronly = false) {
+export function memorysendtoboards(
+  target: string | PT,
+  message: string,
+  data: any,
+  boards: BOARD[],
+) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
 
-  // inc timestamp
-  const timestamp = mainbook.timestamp + 1
-
-  // update loaders
-  const loaders = memorygetloaders()
-  loaders.forEach((code, id) => {
-    // cache context
-    const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-
-    // write context, all blank except for book and timestamp
-    READ_CONTEXT.timestamp = mainbook.timestamp
-    READ_CONTEXT.book = mainbook
-    READ_CONTEXT.board = undefined
-    READ_CONTEXT.element = undefined
-    READ_CONTEXT.elementid = ''
-    READ_CONTEXT.elementisplayer = false
-    READ_CONTEXT.elementfocus = memoryreadoperator()
-
-    // set chip
-    const maybearg = memoryloaderarg(id)
-    if (ispresent(maybearg)) {
-      os.arg(id, maybearg)
-    }
-
-    // run code
-    os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
-
-    // teardown on ended
-    if (os.isended(id)) {
-      os.halt(id)
-      loaders.delete(id)
-    }
-
-    // restore context
-    objectKeys(OLD_CONTEXT).forEach((key) => {
-      // @ts-expect-error dont bother me
-      READ_CONTEXT[key] = OLD_CONTEXT[key]
-    })
-  })
-
-  // track tick
-  mainbook.timestamp = timestamp
-  READ_CONTEXT.timestamp = timestamp
-
-  // update boards / build code / run chips
-  const boards = memorybookplayerreadboards(mainbook)
-  for (let b = 0; b < boards.length; ++b) {
-    const board = boards[b]
-    // init kinds
-    memoryboardinit(board)
-    // iterate code needed to update given board
-    const run = memoryboardtick(board, timestamp)
-    for (let i = 0; i < run.length; ++i) {
-      const { id, type, code, object } = run[i]
-      if (type === CODE_PAGE_TYPE.ERROR) {
-        // handle dead code
-        os.halt(id)
-        // in dev, we only run player objects
-      } else if (!playeronly || ispid(object?.id ?? '')) {
-        // handle active code
-        memorytickobject(mainbook, board, object, code)
+  function sendtoelements(elements: BOARD_ELEMENT[]) {
+    for (let i = 0; i < elements.length; ++i) {
+      const element = elements[i]
+      if (ispresent(element.id)) {
+        const chipmessage = `${senderid(element.id)}:${message}`
+        SOFTWARE.emit('', chipmessage, data)
       }
     }
   }
-}
 
-// Messaging Functions
-
-export function memorymessage(message: MESSAGE) {
-  os.message(message)
-}
-
-export function memorysendtolog(
-  board: MAYBE<string>,
-  element: MAYBE<BOARD_ELEMENT>,
-  text: string,
-) {
-  if (!ispresent(board) || !ispresent(element?.id)) {
+  if (ispt(target)) {
+    for (let b = 0; b < boards.length; ++b) {
+      const board = boards[b]
+      const element = memoryboardelementread(board, target)
+      if (ispresent(element)) {
+        sendtoelements([element])
+      }
+    }
     return
   }
-  apichat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
-}
 
-function playerpartyinteraction(
-  fromelement: BOARD_ELEMENT,
-  toelement: BOARD_ELEMENT,
-) {
-  const fromelementisplayer = ispid(fromelement.id)
-  const fromelementpartyisplayer = ispid(fromelement.party ?? fromelement.id)
-  const fromelementisobjecorscroll =
-    fromelement.kind === 'object' || fromelement.kind === 'scroll'
+  for (let b = 0; b < boards.length; ++b) {
+    const board = boards[b]
 
-  let fromelementplayer = ''
-  if (fromelement.party && fromelementpartyisplayer) {
-    fromelementplayer = fromelement.party
+    // the intent here is to gather a list of target chip ids
+    const ltarget = NAME(target)
+    switch (ltarget) {
+      case 'all':
+      case 'self':
+      case 'others': {
+        sendtoelements(Object.values(board.objects))
+        break
+      }
+      default: {
+        // check named elements first
+        sendtoelements(memoryboardlistelementsbyidnameorpts(board, [target]))
+        break
+      }
+    }
   }
-  if (fromelementisplayer) {
-    fromelementplayer = fromelement.id ?? ''
-  }
-
-  const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
-  const toelementisobjectorscroll =
-    toelement.kind === 'object' || toelement.kind === 'scroll'
-
-  const sameparty =
-    fromelementpartyisplayer === toelementpartyisplayer &&
-    !toelementisobjectorscroll &&
-    !fromelementisobjecorscroll
-
-  return { sameparty, fromelementplayer }
 }
 
 export function memorysendtoelement(
@@ -385,55 +266,174 @@ export function memorysendtoelements(
   }
 }
 
-export function memorysendtoboards(
-  target: string | PT,
-  message: string,
-  data: any,
-  boards: BOARD[],
+export function memorysendtolog(
+  board: MAYBE<string>,
+  element: MAYBE<BOARD_ELEMENT>,
+  text: string,
 ) {
+  if (!ispresent(board) || !ispresent(element?.id)) {
+    return
+  }
+  apichat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
+}
+
+function playerpartyinteraction(
+  fromelement: BOARD_ELEMENT,
+  toelement: BOARD_ELEMENT,
+) {
+  const fromelementisplayer = ispid(fromelement.id)
+  const fromelementpartyisplayer = ispid(fromelement.party ?? fromelement.id)
+  const fromelementisobjecorscroll =
+    fromelement.kind === 'object' || fromelement.kind === 'scroll'
+
+  let fromelementplayer = ''
+  if (fromelement.party && fromelementpartyisplayer) {
+    fromelementplayer = fromelement.party
+  }
+  if (fromelementisplayer) {
+    fromelementplayer = fromelement.id ?? ''
+  }
+
+  const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
+  const toelementisobjectorscroll =
+    toelement.kind === 'object' || toelement.kind === 'scroll'
+
+  const sameparty =
+    fromelementpartyisplayer === toelementpartyisplayer &&
+    !toelementisobjectorscroll &&
+    !fromelementisobjecorscroll
+
+  return { sameparty, fromelementplayer }
+}
+
+export function memorytick(playeronly = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
 
-  function sendtoelements(elements: BOARD_ELEMENT[]) {
-    for (let i = 0; i < elements.length; ++i) {
-      const element = elements[i]
-      if (ispresent(element.id)) {
-        const chipmessage = `${senderid(element.id)}:${message}`
-        SOFTWARE.emit('', chipmessage, data)
-      }
-    }
-  }
+  // inc timestamp
+  const timestamp = mainbook.timestamp + 1
 
-  if (ispt(target)) {
-    for (let b = 0; b < boards.length; ++b) {
-      const board = boards[b]
-      const element = memoryboardelementread(board, target)
-      if (ispresent(element)) {
-        sendtoelements([element])
-      }
-    }
-    return
-  }
+  // update loaders
+  const loaders = memorygetloaders()
+  loaders.forEach((code, id) => {
+    // cache context
+    const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
+    // write context, all blank except for book and timestamp
+    READ_CONTEXT.timestamp = mainbook.timestamp
+    READ_CONTEXT.book = mainbook
+    READ_CONTEXT.board = undefined
+    READ_CONTEXT.element = undefined
+    READ_CONTEXT.elementid = ''
+    READ_CONTEXT.elementisplayer = false
+    READ_CONTEXT.elementfocus = memoryreadoperator()
+
+    // set chip
+    const maybearg = memoryloaderarg(id)
+    if (ispresent(maybearg)) {
+      os.arg(id, maybearg)
+    }
+
+    // run code
+    os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
+
+    // teardown on ended
+    if (os.isended(id)) {
+      os.halt(id)
+      loaders.delete(id)
+    }
+
+    // restore context
+    objectKeys(OLD_CONTEXT).forEach((key) => {
+      // @ts-expect-error dont bother me
+      READ_CONTEXT[key] = OLD_CONTEXT[key]
+    })
+  })
+
+  // track tick
+  mainbook.timestamp = timestamp
+  READ_CONTEXT.timestamp = timestamp
+
+  // update boards / build code / run chips
+  const boards = memorybookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
-
-    // the intent here is to gather a list of target chip ids
-    const ltarget = NAME(target)
-    switch (ltarget) {
-      case 'all':
-      case 'self':
-      case 'others': {
-        sendtoelements(Object.values(board.objects))
-        break
-      }
-      default: {
-        // check named elements first
-        sendtoelements(memoryboardlistelementsbyidnameorpts(board, [target]))
-        break
+    // init kinds
+    memoryboardinit(board)
+    // iterate code needed to update given board
+    const run = memoryboardtick(board, timestamp)
+    for (let i = 0; i < run.length; ++i) {
+      const { id, type, code, object } = run[i]
+      if (type === CODE_PAGE_TYPE.ERROR) {
+        // handle dead code
+        os.halt(id)
+        // in dev, we only run player objects
+      } else if (!playeronly || ispid(object?.id ?? '')) {
+        // handle active code
+        memorytickobject(mainbook, board, object, code)
       }
     }
   }
 }
+
+export function memorytickobject(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  object: MAYBE<BOARD_ELEMENT>,
+  code: string,
+) {
+  if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
+    return
+  }
+
+  // cache context
+  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+
+  // write context
+  READ_CONTEXT.book = book
+  READ_CONTEXT.board = board
+  READ_CONTEXT.element = object
+
+  READ_CONTEXT.elementid = object.id ?? ''
+  READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+
+  const playerfromelement = READ_CONTEXT.element.player ?? memoryreadoperator()
+  READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
+    ? READ_CONTEXT.elementid
+    : playerfromelement
+
+  // read cycle
+  const cycle = memoryelementstatread(object, 'cycle')
+
+  // run chip code
+  const id = object.id ?? ''
+  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
+  os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
+
+  // clear ticker
+  if (isnumber(object?.tickertime)) {
+    // clear ticker text after X number of ticks
+    if (READ_CONTEXT.timestamp - object.tickertime > TICK_FPS * 5) {
+      object.tickertime = 0
+      object.tickertext = ''
+    }
+  }
+
+  // clear used input
+  if (READ_CONTEXT.elementisplayer) {
+    const flags = memoryreadflags(READ_CONTEXT.elementid)
+    if (isnumber(flags.inputcurrent)) {
+      flags.inputcurrent = 0
+    }
+  }
+
+  // restore context
+  objectKeys(OLD_CONTEXT).forEach((key) => {
+    // @ts-expect-error dont bother me
+    READ_CONTEXT[key] = OLD_CONTEXT[key]
+  })
+}
+
+// Messaging Functions

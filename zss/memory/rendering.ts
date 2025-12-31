@@ -75,242 +75,6 @@ export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
   return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
 }
 
-export function memoryelementtodisplayprefix(element: MAYBE<BOARD_ELEMENT>) {
-  const icon = memorybookelementdisplayread(element)
-  const color = `${COLOR[icon.color]}`
-  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
-  return `$${color}$ON${bg}$${icon.char}`
-}
-
-export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
-  if (!ispresent(element?.id)) {
-    return ''
-  }
-
-  let withname = memorybookelementdisplayread(element).name
-  if (element.kind === 'player') {
-    const { user } = memoryreadflags(element.id)
-    withname = isstring(user) ? user : 'player'
-  }
-
-  const displayprefix = memoryelementtodisplayprefix(element)
-  return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
-}
-
-// Rendering & Gadget Conversion Functions
-
-const pt1 = new Vector2()
-
-const LAYER_CACHE: Record<string, LAYER> = {}
-const SPRITE_CACHE: Record<string, SPRITE> = {}
-
-function createcachedtiles(
-  player: string,
-  index: number,
-  width: number,
-  height: number,
-  bg = 0,
-): LAYER_TILES {
-  const id = `tiles:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
-  }
-  return LAYER_CACHE[id] as LAYER_TILES
-}
-
-export function memorycreatecachedsprite(
-  player: string,
-  index: number,
-  id: string,
-  spriteindex: number,
-): SPRITE {
-  const uid = `sprites:${player}:${index}:${id}`
-  const cid = `sprite:${player}:${index}:${spriteindex}`
-  if (!ispresent(SPRITE_CACHE[cid])) {
-    SPRITE_CACHE[cid] = createsprite(player, index, id)
-  }
-  SPRITE_CACHE[cid].id = uid
-  return SPRITE_CACHE[cid]
-}
-
-function memorycreatecachedsprites(
-  player: string,
-  index: number,
-): LAYER_SPRITES {
-  const id = `sprites:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createsprites(player, index)
-  }
-  return LAYER_CACHE[id] as LAYER_SPRITES
-}
-
-function createcacheddither(
-  player: string,
-  index: number,
-  width: number,
-  height: number,
-  fill = 0,
-): LAYER_DITHER {
-  const id = `dither:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createdither(player, index, width, height, fill)
-  }
-  return LAYER_CACHE[id] as LAYER_DITHER
-}
-
-function createcachedmedia(
-  player: string,
-  index: number,
-  mime: string,
-  media: string | number[],
-): LAYER_MEDIA {
-  const id = `media:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createmedia(player, index, mime, media)
-  }
-  const layermedia = LAYER_CACHE[id] as LAYER_MEDIA
-  // handle copydata
-  layermedia.mime = mime
-  layermedia.media = media
-  return layermedia
-}
-
-function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
-  const id = `control:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createcontrol(player, index)
-  }
-  return LAYER_CACHE[id] as LAYER_CONTROL
-}
-
-const CHAR_MARGIN = 3
-function mixmaxrange(from: PT, dest: PT): [number, number] {
-  // calc corners
-  const angles: number[] = []
-
-  const fromx = (from.x + 0.5) * CHAR_WIDTH
-  const fromy = (from.y + 0.5) * CHAR_HEIGHT
-  const destx = dest.x * CHAR_WIDTH
-  const desty = dest.y * CHAR_HEIGHT
-  const dx = destx - fromx
-  const dy = desty - fromy
-
-  pt1.x = dx - CHAR_MARGIN
-  pt1.y = dy - CHAR_MARGIN
-  angles.push(pt1.angle())
-  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
-  pt1.y = dy - CHAR_MARGIN
-  angles.push(pt1.angle())
-  pt1.x = dx - CHAR_MARGIN
-  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
-  angles.push(pt1.angle())
-  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
-  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
-  angles.push(pt1.angle())
-
-  const degs = angles.map((v) => Math.round(radToDeg(v)))
-  const minangle = Math.min(...degs)
-  const maxangle = Math.max(...degs)
-  const diff = maxangle - minangle
-
-  // handle inverted case
-  if (diff > 180) {
-    // acute angles
-    const a1 = degs.filter((angle) => angle < 180)
-    // obtuse angles
-    const a2 = degs.filter((angle) => angle > 180)
-    // we go from the largest acute angle
-    const newminangle = Math.max(...a1)
-    // to the smallest obtuse angle
-    const newmaxangle = Math.min(...a2)
-    return [newmaxangle, newminangle]
-  }
-  return [minangle, maxangle]
-}
-
-function raycheck(
-  board: BOARD,
-  alphas: number[],
-  blocked: [number, number, number][],
-  nextblocked: [number, number, number][],
-  sprite: SPRITE,
-  radius: number,
-  falloff: number,
-  x: number,
-  y: number,
-) {
-  // check index
-  const pt = { x, y }
-  const idx = memoryboardelementindex(board, pt)
-  if (idx === -1) {
-    return
-  }
-
-  // check distance
-  pt1.x = x - sprite.x
-  pt1.y = Math.round((y - sprite.y) * 1.333)
-  const raydist = pt1.length()
-  if (raydist > radius) {
-    return
-  }
-
-  // check angle
-  const angle = Math.round(radToDeg(pt1.angle()))
-
-  // current falloff
-  let current = 0
-  for (let b = 0; b < blocked.length; ++b) {
-    const [minangle, maxangle, value] = blocked[b]
-    // inverted edge case
-    if (minangle > maxangle) {
-      if (angle >= minangle || angle <= maxangle) {
-        current = Math.max(current, value)
-      }
-    } else if (angle >= minangle && angle <= maxangle) {
-      // take highest value
-      current = Math.max(current, value)
-    }
-  }
-
-  // update shading
-  const hradius = radius * 0.5
-  alphas[idx] = Math.min(
-    alphas[idx],
-    current + (raydist < hradius ? 0 : (raydist - hradius) * falloff),
-  )
-  alphas[idx] = clamp(alphas[idx], 0, 1)
-
-  // check lookup
-  const object = memoryboardobjectread(board, board.lookup?.[idx] ?? '')
-  if (ispresent(object)) {
-    // half blocked
-    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
-    nextblocked.push(range)
-  }
-
-  const maybeterrain = board.terrain[idx]
-  const terrainkind = memoryelementkindread(maybeterrain)
-  const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
-  if (memoryboardcheckcollide(COLLISION.ISBULLET, terraincollision)) {
-    // fully blocked
-    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 1]
-    nextblocked.push(range)
-  }
-}
-
-function readgraphics(player: string, board: BOARD) {
-  // player flags, then board flags
-  const { graphics, camera, facing } = memoryreadflags(player)
-  const withgraphics = graphics ?? board.graphics ?? ''
-  const withcamera = camera ?? board.camera ?? ''
-  const withfacing = facing ?? board.facing ?? ''
-  return {
-    graphics: withgraphics,
-    camera: withcamera,
-    facing: withfacing,
-  }
-}
-
 export function memoryconverttogadgetcontrollayer(
   player: string,
   index: number,
@@ -720,6 +484,221 @@ export type MEMORY_GADGET_LAYERS = {
   tickers: string[]
 }
 
+export function memorycreatecachedsprite(
+  player: string,
+  index: number,
+  id: string,
+  spriteindex: number,
+): SPRITE {
+  const uid = `sprites:${player}:${index}:${id}`
+  const cid = `sprite:${player}:${index}:${spriteindex}`
+  if (!ispresent(SPRITE_CACHE[cid])) {
+    SPRITE_CACHE[cid] = createsprite(player, index, id)
+  }
+  SPRITE_CACHE[cid].id = uid
+  return SPRITE_CACHE[cid]
+}
+
+function memorycreatecachedsprites(
+  player: string,
+  index: number,
+): LAYER_SPRITES {
+  const id = `sprites:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createsprites(player, index)
+  }
+  return LAYER_CACHE[id] as LAYER_SPRITES
+}
+
+function createcacheddither(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  fill = 0,
+): LAYER_DITHER {
+  const id = `dither:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createdither(player, index, width, height, fill)
+  }
+  return LAYER_CACHE[id] as LAYER_DITHER
+}
+
+function createcachedmedia(
+  player: string,
+  index: number,
+  mime: string,
+  media: string | number[],
+): LAYER_MEDIA {
+  const id = `media:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createmedia(player, index, mime, media)
+  }
+  const layermedia = LAYER_CACHE[id] as LAYER_MEDIA
+  // handle copydata
+  layermedia.mime = mime
+  layermedia.media = media
+  return layermedia
+}
+
+function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
+  const id = `control:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createcontrol(player, index)
+  }
+  return LAYER_CACHE[id] as LAYER_CONTROL
+}
+
+const CHAR_MARGIN = 3
+function mixmaxrange(from: PT, dest: PT): [number, number] {
+  // calc corners
+  const angles: number[] = []
+
+  const fromx = (from.x + 0.5) * CHAR_WIDTH
+  const fromy = (from.y + 0.5) * CHAR_HEIGHT
+  const destx = dest.x * CHAR_WIDTH
+  const desty = dest.y * CHAR_HEIGHT
+  const dx = destx - fromx
+  const dy = desty - fromy
+
+  pt1.x = dx - CHAR_MARGIN
+  pt1.y = dy - CHAR_MARGIN
+  angles.push(pt1.angle())
+  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
+  pt1.y = dy - CHAR_MARGIN
+  angles.push(pt1.angle())
+  pt1.x = dx - CHAR_MARGIN
+  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
+  angles.push(pt1.angle())
+  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
+  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
+  angles.push(pt1.angle())
+
+  const degs = angles.map((v) => Math.round(radToDeg(v)))
+  const minangle = Math.min(...degs)
+  const maxangle = Math.max(...degs)
+  const diff = maxangle - minangle
+
+  // handle inverted case
+  if (diff > 180) {
+    // acute angles
+    const a1 = degs.filter((angle) => angle < 180)
+    // obtuse angles
+    const a2 = degs.filter((angle) => angle > 180)
+    // we go from the largest acute angle
+    const newminangle = Math.max(...a1)
+    // to the smallest obtuse angle
+    const newmaxangle = Math.min(...a2)
+    return [newmaxangle, newminangle]
+  }
+  return [minangle, maxangle]
+}
+
+function raycheck(
+  board: BOARD,
+  alphas: number[],
+  blocked: [number, number, number][],
+  nextblocked: [number, number, number][],
+  sprite: SPRITE,
+  radius: number,
+  falloff: number,
+  x: number,
+  y: number,
+) {
+  // check index
+  const pt = { x, y }
+  const idx = memoryboardelementindex(board, pt)
+  if (idx === -1) {
+    return
+  }
+
+  // check distance
+  pt1.x = x - sprite.x
+  pt1.y = Math.round((y - sprite.y) * 1.333)
+  const raydist = pt1.length()
+  if (raydist > radius) {
+    return
+  }
+
+  // check angle
+  const angle = Math.round(radToDeg(pt1.angle()))
+
+  // current falloff
+  let current = 0
+  for (let b = 0; b < blocked.length; ++b) {
+    const [minangle, maxangle, value] = blocked[b]
+    // inverted edge case
+    if (minangle > maxangle) {
+      if (angle >= minangle || angle <= maxangle) {
+        current = Math.max(current, value)
+      }
+    } else if (angle >= minangle && angle <= maxangle) {
+      // take highest value
+      current = Math.max(current, value)
+    }
+  }
+
+  // update shading
+  const hradius = radius * 0.5
+  alphas[idx] = Math.min(
+    alphas[idx],
+    current + (raydist < hradius ? 0 : (raydist - hradius) * falloff),
+  )
+  alphas[idx] = clamp(alphas[idx], 0, 1)
+
+  // check lookup
+  const object = memoryboardobjectread(board, board.lookup?.[idx] ?? '')
+  if (ispresent(object)) {
+    // half blocked
+    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
+    nextblocked.push(range)
+  }
+
+  const maybeterrain = board.terrain[idx]
+  const terrainkind = memoryelementkindread(maybeterrain)
+  const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
+  if (memoryboardcheckcollide(COLLISION.ISBULLET, terraincollision)) {
+    // fully blocked
+    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 1]
+    nextblocked.push(range)
+  }
+}
+
+function readgraphics(player: string, board: BOARD) {
+  // player flags, then board flags
+  const { graphics, camera, facing } = memoryreadflags(player)
+  const withgraphics = graphics ?? board.graphics ?? ''
+  const withcamera = camera ?? board.camera ?? ''
+  const withfacing = facing ?? board.facing ?? ''
+  return {
+    graphics: withgraphics,
+    camera: withcamera,
+    facing: withfacing,
+  }
+}
+
+export function memoryelementtodisplayprefix(element: MAYBE<BOARD_ELEMENT>) {
+  const icon = memorybookelementdisplayread(element)
+  const color = `${COLOR[icon.color]}`
+  const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
+  return `$${color}$ON${bg}$${icon.char}`
+}
+
+export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
+  if (!ispresent(element?.id)) {
+    return ''
+  }
+
+  let withname = memorybookelementdisplayread(element).name
+  if (element.kind === 'player') {
+    const { user } = memoryreadflags(element.id)
+    withname = isstring(user) ? user : 'player'
+  }
+
+  const displayprefix = memoryelementtodisplayprefix(element)
+  return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
+}
+
 export function memoryreadgadgetlayers(
   player: string,
   board: MAYBE<BOARD>,
@@ -807,4 +786,25 @@ export function memoryreadgadgetlayers(
     layers,
     tickers,
   }
+}
+
+// Rendering & Gadget Conversion Functions
+
+const pt1 = new Vector2()
+
+const LAYER_CACHE: Record<string, LAYER> = {}
+const SPRITE_CACHE: Record<string, SPRITE> = {}
+
+function createcachedtiles(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  bg = 0,
+): LAYER_TILES {
+  const id = `tiles:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
+  }
+  return LAYER_CACHE[id] as LAYER_TILES
 }

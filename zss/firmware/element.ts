@@ -29,7 +29,7 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import {
-  memoryboardelementapplycolor,
+  memoryapplyboardelementcolor,
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
 import { memoryboardobjectnamedlookupdelete } from 'zss/memory/boardlookup'
@@ -821,7 +821,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           const target = dest.targets[i]
           const element = memoryboardelementread(READ_CONTEXT.board, target)
           if (ispresent(element)) {
-            memoryboardelementapplycolor(element, colorvalue ?? COLOR.PURPLE)
+            memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
           }
         }
         return 0
@@ -829,13 +829,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // handle single-target dirs
       const element = memoryboardelementread(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
-        memoryboardelementapplycolor(element, colorvalue ?? COLOR.PURPLE)
+        memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
       }
     } else {
       // self color update
       const [colorvalue] = readargs(words, 0, [ARG_TYPE.COLOR])
       if (ispresent(READ_CONTEXT.element) && ispresent(colorvalue)) {
-        memoryboardelementapplycolor(READ_CONTEXT.element, colorvalue)
+        memoryapplyboardelementcolor(READ_CONTEXT.element, colorvalue)
       }
     }
     return 0
