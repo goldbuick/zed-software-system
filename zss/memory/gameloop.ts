@@ -15,16 +15,16 @@ import { NAME, PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
 import {
-  memoryboardelementread,
-  memoryboardelementreadbyidorindex,
-  memoryboardobjectread,
-  memoryboardsafedelete,
-  memoryboardtick,
+  memoryreadboardelement,
+  memoryreadboardelementbyidorindex,
+  memoryreadboardobject,
+  memorysafedeleteelement,
+  memorytickboard,
 } from './boardoperations'
 import { memoryloaderarg } from './loader'
-import { memorybookplayerreadboards } from './playermanagement'
+import { memoryreadbookplayerboards } from './playermanagement'
 import { memoryelementtologprefix } from './rendering'
-import { memoryboardlistelementsbyidnameorpts } from './spatialqueries'
+import { memorylistboardelementsbyidnameorpts } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -35,11 +35,11 @@ import {
 } from './types'
 
 import {
-  memoryboardinit,
-  memoryelementstatread,
-  memorygetloaders,
+  memoryinitboard,
   memoryreadbookbysoftware,
+  memoryreadelementstat,
   memoryreadflags,
+  memoryreadloaders,
   memoryreadoperator,
 } from './index'
 
@@ -48,7 +48,7 @@ const os = createos()
 
 // Tick & Update Functions
 
-export function memorymessage(message: MESSAGE) {
+export function memorywritemessage(message: MESSAGE) {
   os.message(message)
 }
 
@@ -76,7 +76,7 @@ export function memorysendtoboards(
   if (ispt(target)) {
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
-      const element = memoryboardelementread(board, target)
+      const element = memoryreadboardelement(board, target)
       if (ispresent(element)) {
         sendtoelements([element])
       }
@@ -98,7 +98,7 @@ export function memorysendtoboards(
       }
       default: {
         // check named elements first
-        sendtoelements(memoryboardlistelementsbyidnameorpts(board, [target]))
+        sendtoelements(memorylistboardelementsbyidnameorpts(board, [target]))
         break
       }
     }
@@ -145,8 +145,12 @@ export function memorysendtoelement(
   }
 
   // delete breakable elements if shot
-  if (withlabel === 'shot' && memoryelementstatread(toelement, 'breakable')) {
-    memoryboardsafedelete(READ_CONTEXT.board, toelement, READ_CONTEXT.timestamp)
+  if (withlabel === 'shot' && memoryreadelementstat(toelement, 'breakable')) {
+    memorysafedeleteelement(
+      READ_CONTEXT.board,
+      toelement,
+      READ_CONTEXT.timestamp,
+    )
   }
 
   // send message
@@ -160,7 +164,7 @@ export function memorysendtoelement(
         BOARD_WIDTH,
       )}`
     }
-    memorymessage({
+    memorywritemessage({
       id: createsid(),
       session: SOFTWARE.session(),
       player: withplayer,
@@ -183,7 +187,7 @@ export function memorysendtoelements(
       case 'all':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryboardobjectread(READ_CONTEXT.board, id)
+          const object = memoryreadboardobject(READ_CONTEXT.board, id)
           if (ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -192,7 +196,7 @@ export function memorysendtoelements(
       case 'others':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryboardobjectread(READ_CONTEXT.board, id)
+          const object = memoryreadboardobject(READ_CONTEXT.board, id)
           if (id !== chip.id() && ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -200,7 +204,7 @@ export function memorysendtoelements(
         break
       case 'sender': {
         // sender info
-        const sender = memoryboardelementreadbyidorindex(
+        const sender = memoryreadboardelementbyidorindex(
           READ_CONTEXT.board,
           READ_CONTEXT.element?.sender ?? '',
         )
@@ -224,13 +228,13 @@ export function memorysendtoelements(
         break
       case 'ping': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const boards = memorybookplayerreadboards(mainbook)
+        const boards = memoryreadbookplayerboards(mainbook)
         memorysendtoboards('all', send.label, undefined, boards)
         break
       }
       default: {
         // target named elements
-        const elements = memoryboardlistelementsbyidnameorpts(
+        const elements = memorylistboardelementsbyidnameorpts(
           READ_CONTEXT.board,
           [send.targetname],
         )
@@ -246,7 +250,7 @@ export function memorysendtoelements(
   } else if (ispresent(send.targetdir)) {
     if (send.targetdir.targets.length) {
       for (let i = 0; i < send.targetdir.targets.length; ++i) {
-        const element = memoryboardelementread(
+        const element = memoryreadboardelement(
           READ_CONTEXT.board,
           send.targetdir.targets[i],
         )
@@ -255,7 +259,7 @@ export function memorysendtoelements(
         }
       }
     } else {
-      const element = memoryboardelementread(
+      const element = memoryreadboardelement(
         READ_CONTEXT.board,
         send.targetdir.destpt,
       )
@@ -306,7 +310,7 @@ function playerpartyinteraction(
   return { sameparty, fromelementplayer }
 }
 
-export function memorytick(playeronly = false) {
+export function memorytickmain(playeronly = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -316,7 +320,7 @@ export function memorytick(playeronly = false) {
   const timestamp = mainbook.timestamp + 1
 
   // update loaders
-  const loaders = memorygetloaders()
+  const loaders = memoryreadloaders()
   loaders.forEach((code, id) => {
     // cache context
     const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
@@ -357,13 +361,13 @@ export function memorytick(playeronly = false) {
   READ_CONTEXT.timestamp = timestamp
 
   // update boards / build code / run chips
-  const boards = memorybookplayerreadboards(mainbook)
+  const boards = memoryreadbookplayerboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
     // init kinds
-    memoryboardinit(board)
+    memoryinitboard(board)
     // iterate code needed to update given board
-    const run = memoryboardtick(board, timestamp)
+    const run = memorytickboard(board, timestamp)
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]
       if (type === CODE_PAGE_TYPE.ERROR) {
@@ -405,7 +409,7 @@ export function memorytickobject(
     : playerfromelement
 
   // read cycle
-  const cycle = memoryelementstatread(object, 'cycle')
+  const cycle = memoryreadelementstat(object, 'cycle')
 
   // run chip code
   const id = object.id ?? ''
@@ -435,5 +439,3 @@ export function memorytickobject(
     READ_CONTEXT[key] = OLD_CONTEXT[key]
   })
 }
-
-// Messaging Functions

@@ -1,6 +1,6 @@
 import { linepoints } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { memoryboardinit, memoryboardread } from 'zss/memory'
+import { memoryinitboard, memoryreadboard } from 'zss/memory'
 import { memorycreateboard } from 'zss/memory/boardoperations'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -16,7 +16,7 @@ export function boardpivot(
   if (!ispresent(READ_CONTEXT.book)) {
     return
   }
-  const targetboard = memoryboardread(target)
+  const targetboard = memoryreadboard(target)
   if (!ispresent(targetboard)) {
     return
   }
@@ -27,8 +27,8 @@ export function boardpivot(
   const pivotterrain = targetset === 'all' || targetset === 'terrain'
 
   // make sure lookup is created
-  memoryboardinit(targetboard)
-  memoryboardinit(tmpboard)
+  memoryinitboard(targetboard)
+  memoryinitboard(tmpboard)
 
   const alpha = -Math.tan(theta * 0.5)
   const beta = Math.sin(theta)
@@ -122,7 +122,7 @@ export function boardpivot(
     }
 
     // reset all lookups
-    memoryboardinit(tmpboard)
-    memoryboardinit(targetboard)
+    memoryinitboard(tmpboard)
+    memoryinitboard(targetboard)
   }
 }

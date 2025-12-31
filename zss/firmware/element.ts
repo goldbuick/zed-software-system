@@ -19,29 +19,31 @@ import {
 } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
-  memoryelementstatread,
-  memorymoveobject,
   memorypickcodepagewithtype,
+  memoryreadelementstat,
   memoryreadflags,
   memoryreadoperator,
-  memoryresetchipafteredit,
-  memoryrun,
-  memorywritefromkind,
+  memorywriteelementfromkind,
 } from 'zss/memory'
 import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
-import { memoryboardobjectnamedlookupdelete } from 'zss/memory/boardlookup'
+import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
+import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
-  memoryboardelementread,
-  memoryboardelementreadbyidorindex,
-  memoryboardsafedelete,
+  memoryreadboardelement,
+  memoryreadboardelementbyidorindex,
+  memorysafedeleteelement,
 } from 'zss/memory/boardoperations'
-import { memorybookelementdisplayread } from 'zss/memory/bookoperations'
+import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import {
-  memoryboardfindplayerforelement,
-  memoryboardlistnamedelements,
+  memoryresetchipafteredit,
+  memoryruncodepage,
+} from 'zss/memory/cliruntime'
+import {
+  memoryfindplayerforelement,
+  memorylistboardnamedelements,
 } from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
@@ -275,7 +277,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // find focused on player
-    const focus = memoryboardfindplayerforelement(
+    const focus = memoryfindplayerforelement(
       READ_CONTEXT.board,
       { x: READ_CONTEXT.element?.x ?? -1, y: READ_CONTEXT.element?.y ?? -1 },
       READ_CONTEXT.elementfocus,
@@ -287,7 +289,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // sender info
     const maybesender = READ_CONTEXT.element?.sender
-    const sender = memoryboardelementreadbyidorindex(
+    const sender = memoryreadboardelementbyidorindex(
       READ_CONTEXT.board,
       isstring(maybesender) ? maybesender : '',
     )
@@ -390,7 +392,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
           // check standard stat names
-          const maybevalue = memoryelementstatread(
+          const maybevalue = memoryreadelementstat(
             READ_CONTEXT.element,
             name as keyof BOARD_ELEMENT,
           )
@@ -412,7 +414,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       y: READ_CONTEXT.element?.y ?? -1,
     }
     // >>> this <<< uses focus
-    const focus = memoryboardfindplayerforelement(
+    const focus = memoryfindplayerforelement(
       READ_CONTEXT.board,
       focuspt,
       READ_CONTEXT.elementfocus,
@@ -739,7 +741,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
 
     // read current display
-    const display = memorybookelementdisplayread(READ_CONTEXT.element)
+    const display = memoryreadelementdisplay(READ_CONTEXT.element)
     const [kindname, maybecolor] = kind
 
     const mergedstrcolor = [
@@ -749,10 +751,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const kindcolorcopy: STR_KIND = [kindname, mergedstrcolor]
 
     // make invisible
-    memoryboardobjectnamedlookupdelete(READ_CONTEXT.board, READ_CONTEXT.element)
+    memorydeleteboardobjectnamedlookup(READ_CONTEXT.board, READ_CONTEXT.element)
     // nuke self
     if (
-      memoryboardsafedelete(
+      memorysafedeleteelement(
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         READ_CONTEXT.timestamp,
@@ -763,7 +765,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         y: READ_CONTEXT.element?.y ?? 0,
       }
       // write new element
-      memorywritefromkind(READ_CONTEXT.board, kindcolorcopy, pt)
+      memorywriteelementfromkind(READ_CONTEXT.board, kindcolorcopy, pt)
     }
     // halt execution
     chip.endofprogram()
@@ -772,7 +774,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   .command('bind', (_, words) => {
     // zed cafe simply copies the code from the given named element
     const [name] = readargs(words, 0, [ARG_TYPE.NAME])
-    const elements = memoryboardlistnamedelements(READ_CONTEXT.board, name)
+    const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
     if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
       READ_CONTEXT.element.code = pick(...elements).code ?? ''
       memoryresetchipafteredit(READ_CONTEXT.elementid)
@@ -790,7 +792,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       if (dest.targets.length) {
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
-          const element = memoryboardelementread(READ_CONTEXT.board, target)
+          const element = memoryreadboardelement(READ_CONTEXT.board, target)
           if (ispresent(element)) {
             element.char = charvalue
           }
@@ -798,7 +800,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return 0
       }
       // handle single-target dirs
-      const element = memoryboardelementread(READ_CONTEXT.board, dest.destpt)
+      const element = memoryreadboardelement(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         element.char = charvalue
       }
@@ -819,7 +821,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       if (dest.targets.length) {
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
-          const element = memoryboardelementread(READ_CONTEXT.board, target)
+          const element = memoryreadboardelement(READ_CONTEXT.board, target)
           if (ispresent(element)) {
             memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
           }
@@ -827,7 +829,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return 0
       }
       // handle single-target dirs
-      const element = memoryboardelementread(READ_CONTEXT.board, dest.destpt)
+      const element = memoryreadboardelement(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
       }
@@ -919,21 +921,21 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
-    memoryboardsafedelete(
+    memorysafedeleteelement(
       READ_CONTEXT.board,
       READ_CONTEXT.element,
       READ_CONTEXT.timestamp,
     )
 
     // special case for items
-    if (memoryelementstatread(READ_CONTEXT.element, 'item')) {
+    if (memoryreadelementstat(READ_CONTEXT.element, 'item')) {
       // yoink player if item
       // find focused on player
       const from: PT = {
         x: READ_CONTEXT.element?.x ?? -1,
         y: READ_CONTEXT.element?.y ?? -1,
       }
-      const focus = memoryboardfindplayerforelement(
+      const focus = memoryfindplayerforelement(
         READ_CONTEXT.board,
         from,
         READ_CONTEXT.elementfocus,
@@ -955,13 +957,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('run', (_, words) => {
     const [func] = readargs(words, 0, [ARG_TYPE.NAME])
-    memoryrun(func)
+    memoryruncodepage(func)
     return 0
   })
   .command('runwith', (chip, words) => {
     const [arg, func] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.NAME])
     chip.set('arg', arg)
-    memoryrun(func)
+    memoryruncodepage(func)
     return 0
   })
   .command('array', (chip, words) => {
@@ -993,7 +995,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       ARG_TYPE.NAME,
     ])
 
-    const maybeobject = memoryboardelementread(READ_CONTEXT.board, dir.destpt)
+    const maybeobject = memoryreadboardelement(READ_CONTEXT.board, dir.destpt)
     if (ispresent(maybeobject) && memoryboardelementisobject(maybeobject)) {
       // update .code of object to the codepage content of kindname
       switch (NAME(maybeaction)) {

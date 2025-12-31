@@ -1,18 +1,18 @@
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import {
-  memoryboardinit,
-  memoryboardread,
-  memoryelementstatread,
-  memorywritefromkind,
+  memoryinitboard,
+  memoryreadboard,
+  memoryreadelementstat,
+  memorywriteelementfromkind,
 } from 'zss/memory'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
-  memoryboardelementread,
-  memoryboardgetterrain,
-  memoryboardreadgroup,
-  memoryboardsafedelete,
-  memoryboardsetterrain,
+  memoryreadboardelement,
+  memorygetboardterrain,
+  memoryreadboardgroup,
+  memorysafedeleteelement,
+  memorysetboardterrain,
 } from 'zss/memory/boardoperations'
 import {
   BOARD,
@@ -27,11 +27,11 @@ import { PT } from 'zss/words/types'
 function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
-      const maybeobject = memoryboardelementread(board, { x, y })
+      const maybeobject = memoryreadboardelement(board, { x, y })
       if (memoryboardelementisobject(maybeobject)) {
-        memoryboardsafedelete(board, maybeobject, book.timestamp)
+        memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
-      memoryboardsetterrain(board, { x, y })
+      memorysetboardterrain(board, { x, y })
     }
   }
 }
@@ -39,7 +39,7 @@ function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
 function emptyareaterrain(board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
-      memoryboardsetterrain(board, { x, y })
+      memorysetboardterrain(board, { x, y })
     }
   }
 }
@@ -47,11 +47,11 @@ function emptyareaterrain(board: BOARD, p1: PT, p2: PT) {
 function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
-      const maybeobject = memoryboardelementread(board, { x, y })
+      const maybeobject = memoryreadboardelement(board, { x, y })
       if (memoryboardelementisobject(maybeobject)) {
-        memoryboardsafedelete(board, maybeobject, book.timestamp)
+        memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
-      memoryboardsetterrain(board, { x, y })
+      memorysetboardterrain(board, { x, y })
     }
   }
 }
@@ -119,19 +119,19 @@ export function boardcopy(
   }
   const book = READ_CONTEXT.book
 
-  const sourceboard = memoryboardread(source)
+  const sourceboard = memoryreadboard(source)
   if (!ispresent(sourceboard)) {
     return
   }
 
-  const targetboard = memoryboardread(target)
+  const targetboard = memoryreadboard(target)
   if (!ispresent(targetboard)) {
     return
   }
 
   // make sure lookup is created
-  memoryboardinit(sourceboard)
-  memoryboardinit(targetboard)
+  memoryinitboard(sourceboard)
+  memoryinitboard(targetboard)
 
   let isgroup = false
   if (ispresent(sourceboard) && ispresent(targetboard)) {
@@ -173,9 +173,9 @@ export function boardcopy(
         // read source element
         const pt: PT = { x, y }
         let terrain: MAYBE<BOARD_ELEMENT>
-        let object = memoryboardelementread(sourceboard, pt)
+        let object = memoryreadboardelement(sourceboard, pt)
         if (memoryboardelementisobject(object)) {
-          terrain = memoryboardgetterrain(sourceboard, x, y)
+          terrain = memorygetboardterrain(sourceboard, x, y)
           if (ispid(object?.id)) {
             object = undefined
           }
@@ -187,31 +187,39 @@ export function boardcopy(
         if (
           ispresent(terrain) &&
           (copyterrain ||
-            (isgroup && memoryelementstatread(terrain, 'group') === targetset))
+            (isgroup && memoryreadelementstat(terrain, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyarea(book, targetboard, pt, pt)
           }
-          const el = memorywritefromkind(targetboard, [terrain.kind ?? ''], pt)
+          const el = memorywriteelementfromkind(
+            targetboard,
+            [terrain.kind ?? ''],
+            pt,
+          )
           mapelementcopy(el, terrain)
         }
 
         if (
           ispresent(object) &&
           (copyobject ||
-            (isgroup && memoryelementstatread(object, 'group') === targetset))
+            (isgroup && memoryreadelementstat(object, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyareaobject(book, targetboard, pt, pt)
           }
-          const el = memorywritefromkind(targetboard, [object.kind ?? ''], pt)
+          const el = memorywriteelementfromkind(
+            targetboard,
+            [object.kind ?? ''],
+            pt,
+          )
           mapelementcopy(el, object)
         }
       }
     }
 
     // rebuild lookups
-    memoryboardinit(targetboard)
+    memoryinitboard(targetboard)
   }
 }
 
@@ -227,23 +235,23 @@ export function boardcopygroup(
   }
   const book = READ_CONTEXT.book
 
-  const sourceboard = memoryboardread(source)
+  const sourceboard = memoryreadboard(source)
   if (!ispresent(sourceboard)) {
     return
   }
 
-  const targetboard = memoryboardread(target)
+  const targetboard = memoryreadboard(target)
   if (!ispresent(targetboard)) {
     return
   }
 
   // make sure lookup is created
-  memoryboardinit(sourceboard)
-  memoryboardinit(targetboard)
+  memoryinitboard(sourceboard)
+  memoryinitboard(targetboard)
 
   if (ispresent(sourceboard) && ispresent(targetboard)) {
     // read target group
-    const { terrainelements, objectelements } = memoryboardreadgroup(
+    const { terrainelements, objectelements } = memoryreadboardgroup(
       sourceboard,
       self,
       targetgroup,
@@ -282,15 +290,19 @@ export function boardcopygroup(
         y: p1.y + (el.y ?? 0) - corner.y,
       }
 
-      const destelement = memoryboardelementread(targetboard, pt)
+      const destelement = memoryreadboardelement(targetboard, pt)
       if (ispresent(destelement)) {
         if (memoryboardelementisobject(destelement)) {
-          memoryboardsafedelete(targetboard, destelement, book.timestamp)
+          memorysafedeleteelement(targetboard, destelement, book.timestamp)
         }
-        memoryboardsetterrain(targetboard, pt)
+        memorysetboardterrain(targetboard, pt)
       }
 
-      const copyel = memorywritefromkind(targetboard, [el.kind ?? ''], pt)
+      const copyel = memorywriteelementfromkind(
+        targetboard,
+        [el.kind ?? ''],
+        pt,
+      )
       mapelementcopy(copyel, el)
     }
     for (let i = 0; i < objectelements.length; ++i) {
@@ -300,11 +312,15 @@ export function boardcopygroup(
         y: p1.y + (el.y ?? 0) - corner.y,
       }
 
-      const copyel = memorywritefromkind(targetboard, [el.kind ?? ''], pt)
+      const copyel = memorywriteelementfromkind(
+        targetboard,
+        [el.kind ?? ''],
+        pt,
+      )
       mapelementcopy(copyel, el)
     }
 
     // rebuild lookups
-    memoryboardinit(targetboard)
+    memoryinitboard(targetboard)
   }
 }

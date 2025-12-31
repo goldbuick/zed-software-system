@@ -12,7 +12,9 @@ import { ptstoarea } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
-import { memoryboardread, memoryreadplayerboard } from '.'
+import { memoryreadplayerboard } from './playermanagement'
+
+import { memoryreadboard } from '.'
 
 // Remix operations
 type REMIX_CONFIG = {
@@ -38,7 +40,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
       break
     }
     case 'remixrun': {
-      const sourceboard = memoryboardread(remixconfig.stat)
+      const sourceboard = memoryreadboard(remixconfig.stat)
       if (ispresent(sourceboard)) {
         boardremix(
           board.id,

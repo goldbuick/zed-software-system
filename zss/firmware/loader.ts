@@ -12,8 +12,8 @@ import { ispid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memoryboardread, memoryreadoperator } from 'zss/memory'
-import { memoryboardobjectread } from 'zss/memory/boardoperations'
+import { memoryreadboard, memoryreadoperator } from 'zss/memory'
+import { memoryreadboardobject } from 'zss/memory/boardoperations'
 import { memorysendtoelements } from 'zss/memory/gameloop'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -106,7 +106,7 @@ export const LOADER_FIRMWARE = createfirmware({
     const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
     // this will update the READ_CONTEXT so element centric
     // commands will work
-    const target = memoryboardread(stat)
+    const target = memoryreadboard(stat)
     if (ispresent(target)) {
       READ_CONTEXT.board = target
       READ_CONTEXT.element = {
@@ -121,7 +121,7 @@ export const LOADER_FIRMWARE = createfirmware({
     // and it'll update the READ_CONTEXT to point to the given object
     // the intent here is afford !chat to drive behavior of a __specific__ object
     const [id] = readargs(words, 0, [ARG_TYPE.STRING])
-    const maybeobject = memoryboardobjectread(READ_CONTEXT.board, id)
+    const maybeobject = memoryreadboardobject(READ_CONTEXT.board, id)
     // #oneof chatuser chatdroid
     // #withobject chatuser
     // #goup ' <- this code

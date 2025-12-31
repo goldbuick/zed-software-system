@@ -9,25 +9,25 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
 import {
-  memoryboardnamedwrite,
-  memoryboardobjectlookupwrite,
-  memoryboardobjectnamedlookupdelete,
+  memorydeleteboardobjectnamedlookup,
+  memorywriteboardnamed,
+  memorywriteboardobjectlookup,
 } from './boardlookup'
-import { memoryboardcheckblockedobject } from './boardmovement'
+import { memorycheckblockedboardobject } from './boardmovement'
 import {
-  memoryboarddeleteobject,
-  memoryboardobjectcreatefromkind,
-  memoryboardobjectread,
-  memoryboardvisualsupdate,
+  memorycreateboardobjectfromkind,
+  memorydeleteboardobject,
+  memoryreadboardobject,
+  memoryupdateboardvisuals,
 } from './boardoperations'
 import {
-  memorybookclearflags,
-  memorybookreadflag,
-  memorybookreadflags,
-  memorybookwriteflag,
+  memoryclearbookflags,
+  memoryreadbookflag,
+  memoryreadbookflags,
+  memorywritebookflag,
 } from './bookoperations'
-import { memorycodepagereaddata } from './codepageoperations'
-import { memoryboardcheckcollide } from './spatialqueries'
+import { memoryreadcodepagedata } from './codepageoperations'
+import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_HEIGHT,
@@ -39,11 +39,11 @@ import {
 } from './types'
 
 import {
-  memoryboardinit,
-  memoryboardread,
-  memoryelementstatread,
+  memoryinitboard,
   memorypickcodepagewithtype,
+  memoryreadboard,
   memoryreadbookbysoftware,
+  memoryreadelementstat,
 } from './index'
 
 // manages chips
@@ -51,7 +51,7 @@ const os = createos()
 
 // Player Management Functions
 
-export function memorybookplayermovetoboard(
+export function memorymoveplayertoboard(
   book: MAYBE<BOOK>,
   player: string,
   board: string,
@@ -64,22 +64,22 @@ export function memorybookplayermovetoboard(
   }
 
   // player element
-  const element = memoryboardobjectread(currentboard, player)
+  const element = memoryreadboardobject(currentboard, player)
   if (!memoryboardelementisobject(element) || !element?.id) {
     return false
   }
 
   // dest board
-  const destboard = memoryboardread(board)
+  const destboard = memoryreadboard(board)
   if (!ispresent(destboard)) {
     return false
   }
 
   // make sure lookup is created
-  memoryboardinit(destboard)
+  memoryinitboard(destboard)
 
   // read target spot
-  const maybeobject = memoryboardcheckblockedobject(
+  const maybeobject = memorycheckblockedboardobject(
     destboard,
     COLLISION.ISWALK,
     dest,
@@ -88,14 +88,14 @@ export function memorybookplayermovetoboard(
 
   // blocked by non-object
   if (!ispresent(maybeobject) && !memoryboardelementisobject(maybeobject)) {
-    const terraincollision = memoryelementstatread(maybeobject, 'collision')
-    if (memoryboardcheckcollide(COLLISION.ISWALK, terraincollision)) {
+    const terraincollision = memoryreadelementstat(maybeobject, 'collision')
+    if (memorycheckcollision(COLLISION.ISWALK, terraincollision)) {
       return false
     }
   }
 
   // remove from current board lookups
-  memoryboardobjectnamedlookupdelete(currentboard, element)
+  memorydeleteboardobjectnamedlookup(currentboard, element)
   // hard remove player element
   delete currentboard.objects[element.id]
 
@@ -105,13 +105,13 @@ export function memorybookplayermovetoboard(
   destboard.objects[element.id] = element
 
   // add to dest board lookups
-  memoryboardnamedwrite(destboard, element)
-  memoryboardobjectlookupwrite(destboard, element)
+  memorywriteboardnamed(destboard, element)
+  memorywriteboardobjectlookup(destboard, element)
 
   // updating tracking
-  memorybookwriteflag(book, player, 'enterx', dest.x)
-  memorybookwriteflag(book, player, 'entery', dest.y)
-  memorybookplayersetboard(book, player, destboard.id)
+  memorywritebookflag(book, player, 'enterx', dest.x)
+  memorywritebookflag(book, player, 'entery', dest.y)
+  memorywritebookplayerboard(book, player, destboard.id)
 
   // we did move
   return true
@@ -120,30 +120,30 @@ export function memorybookplayermovetoboard(
 function bookplayerreadboardids(book: MAYBE<BOOK>) {
   const activelist = book?.activelist ?? []
   const boardids = activelist.map((player) => {
-    const value = memorybookreadflag(book, player, 'board')
+    const value = memoryreadbookflag(book, player, 'board')
     return isstring(value) ? value : ''
   })
   return unique(boardids)
 }
 
-export function memorybookplayerreadactive(book: MAYBE<BOOK>, player: string) {
+export function memoryreadbookplayeractive(book: MAYBE<BOOK>, player: string) {
   return book?.activelist.includes(player) ?? false
 }
 
-export function memorybookplayerreadboards(book: MAYBE<BOOK>) {
+export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
   const ids = bookplayerreadboardids(book)
   const addedids = new Set<string>()
   const mainboards: BOARD[] = []
   for (let i = 0; i < ids.length; ++i) {
-    const board = memoryboardread(ids[i])
+    const board = memoryreadboard(ids[i])
     // only process once
     if (ispresent(board) && !addedids.has(board.id)) {
       // update resolve caches
-      memoryboardvisualsupdate(board)
+      memoryupdateboardvisuals(board)
 
       // see if we have an over board
       // it runs first
-      const over = memoryboardread(board.overboard ?? '')
+      const over = memoryreadboard(board.overboard ?? '')
       if (ispresent(over)) {
         // only add once
         if (!addedids.has(over.id)) {
@@ -158,7 +158,7 @@ export function memorybookplayerreadboards(book: MAYBE<BOOK>) {
   return mainboards
 }
 
-export function memorybookplayersetboard(
+export function memorywritebookplayerboard(
   book: MAYBE<BOOK>,
   player: string,
   board: string,
@@ -167,10 +167,10 @@ export function memorybookplayersetboard(
     return
   }
   // write board flag
-  memorybookwriteflag(book, player, 'board', board)
+  memorywritebookflag(book, player, 'board', board)
 
   // determine if player is on a board
-  const maybeboard = memoryboardread(board)
+  const maybeboard = memoryreadboard(board)
   if (ispresent(maybeboard)) {
     // ensure player is listed as active
     if (!book.activelist.includes(player)) {
@@ -182,7 +182,7 @@ export function memorybookplayersetboard(
   }
 }
 
-export function memoryplayerlogin(
+export function memoryloginplayer(
   player: string,
   stickyflags: BOOK_FLAGS,
 ): boolean {
@@ -219,7 +219,7 @@ export function memoryplayerlogin(
       CODE_PAGE_TYPE.BOARD,
       MEMORY_LABEL.TITLE,
     )
-    currentboard = memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(titlepage)
+    currentboard = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(titlepage)
   }
 
   // unable to find board
@@ -251,7 +251,7 @@ export function memoryplayerlogin(
   const starty = currentboard.starty ?? 0
   const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
   const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
-  const obj = memoryboardobjectcreatefromkind(
+  const obj = memorycreateboardobjectfromkind(
     currentboard,
     {
       x: px,
@@ -265,7 +265,7 @@ export function memoryplayerlogin(
     obj.player = player
 
     // setup flags
-    const flags = memorybookreadflags(mainbook, player)
+    const flags = memoryreadbookflags(mainbook, player)
     // assign stick flags
     Object.assign(flags, stickyflags)
     // good values
@@ -275,14 +275,14 @@ export function memoryplayerlogin(
     flags.highscore = flags.highscore ?? 0
 
     // track current board
-    memorybookplayersetboard(mainbook, player, currentboard.id)
+    memorywritebookplayerboard(mainbook, player, currentboard.id)
     return true
   }
 
   return false
 }
 
-export function memoryplayerlogout(player: string, isendgame: boolean) {
+export function memorylogoutplayer(player: string, isendgame: boolean) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -301,7 +301,7 @@ export function memoryplayerlogout(player: string, isendgame: boolean) {
     const remove = removelist[i]
 
     // get current flags
-    const flags = memorybookreadflags(mainbook, remove)
+    const flags = memoryreadbookflags(mainbook, remove)
 
     // capture carry-over values
     const saveflags: Record<string, any> = {}
@@ -315,30 +315,30 @@ export function memoryplayerlogout(player: string, isendgame: boolean) {
     }
 
     // clear from active list
-    memorybookplayersetboard(mainbook, remove, '')
+    memorywritebookplayerboard(mainbook, remove, '')
 
     // clear element
-    memoryboardobjectnamedlookupdelete(
+    memorydeleteboardobjectnamedlookup(
       board,
-      memoryboardobjectread(board, remove),
+      memoryreadboardobject(board, remove),
     )
-    memoryboarddeleteobject(board, remove)
+    memorydeleteboardobject(board, remove)
 
     // halt chip
     os.halt(remove)
 
     // clear memory
-    memorybookclearflags(mainbook, remove)
+    memoryclearbookflags(mainbook, remove)
 
     // set carry-over values
     if (isendgame) {
-      const newflags = memorybookreadflags(mainbook, remove)
+      const newflags = memoryreadbookflags(mainbook, remove)
       Object.assign(newflags, saveflags)
     }
   }
 }
 
-export function memoryplayerscan(players: Record<string, number>) {
+export function memoryscanplayers(players: Record<string, number>) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
 
   // ensure we're tracking all ids listed in book
@@ -351,7 +351,7 @@ export function memoryplayerscan(players: Record<string, number>) {
   }
 
   // ensure we're tracking any orphaned player elements
-  const boards = memorybookplayerreadboards(mainbook)
+  const boards = memoryreadbookplayerboards(mainbook)
   for (let i = 0; i < boards.length; ++i) {
     const board = boards[i]
     const objects = Object.keys(board.objects)
@@ -360,7 +360,7 @@ export function memoryplayerscan(players: Record<string, number>) {
       const objectid = object.id
       if (ispid(objectid)) {
         // ensure marked location
-        memorybookplayersetboard(mainbook, objectid, board.id)
+        memorywritebookplayerboard(mainbook, objectid, board.id)
         // ensure tracking
         if (!ispresent(players[objectid])) {
           players[objectid] = 0
@@ -372,17 +372,15 @@ export function memoryplayerscan(players: Record<string, number>) {
 
 export function memoryreadplayeractive(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const isactive = memorybookplayerreadactive(mainbook, player)
+  const isactive = memoryreadbookplayeractive(mainbook, player)
   const board = memoryreadplayerboard(player)
-  const playerelement = memoryboardobjectread(board, player)
+  const playerelement = memoryreadboardobject(board, player)
   return isactive && ispresent(playerelement)
 }
 
 export function memoryreadplayerboard(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const address = memorybookreadflag(mainbook, player, 'board') as string
+  const address = memoryreadbookflag(mainbook, player, 'board') as string
   const codepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
-  return memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+  return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
 }
-
-// Book Player Management Functions

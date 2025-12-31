@@ -13,11 +13,11 @@ import {
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
 import {
-  memoryboardelementread,
-  memoryboardgetterrain,
+  memorygetboardterrain,
   memoryptwithinboard,
+  memoryreadboardelement,
 } from './boardoperations'
-import { memorybookelementdisplayread } from './bookoperations'
+import { memoryreadelementdisplay } from './bookoperations'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -26,17 +26,31 @@ import {
   BOARD_WIDTH,
 } from './types'
 
-import { memoryelementstatread } from '.'
+import { memoryreadelementstat } from '.'
 
-// what is atomics? a set of spatial, data related queries, and mods
-// naming convention
-// check does one to many comparisons, input can be anything
-// list returns a list, input can be anything
-// pick returns a single item FROM a list
+function filterelement(
+  element: MAYBE<BOARD_ELEMENT>,
+  name: MAYBE<string>,
+  color: MAYBE<COLOR>,
+  bg: MAYBE<COLOR>,
+) {
+  if (!ispresent(element)) {
+    return false
+  }
+  const display = memoryreadelementdisplay(element)
+  if (ispresent(name) && name !== display.name) {
+    return false
+  }
+  if (ispresent(color) && color !== display.color) {
+    return false
+  }
+  if (ispresent(bg) && bg !== display.bg) {
+    return false
+  }
+  return true
+}
 
-// Collision
-
-export function memoryboardcheckcollide(
+export function memorycheckcollision(
   maybesource: MAYBE<COLLISION>,
   maybedest: MAYBE<COLLISION>,
 ) {
@@ -58,9 +72,7 @@ export function memoryboardcheckcollide(
   }
 }
 
-// Finding Elements
-
-export function memoryboardfindplayerforelement(
+export function memoryfindplayerforelement(
   board: MAYBE<BOARD>,
   elementpt: MAYBE<PT>,
   player: string,
@@ -71,7 +83,7 @@ export function memoryboardfindplayerforelement(
     return maybelplayer
   }
 
-  const players = memoryboardlistnamedelements(board, 'player')
+  const players = memorylistboardnamedelements(board, 'player')
   // find nearest player to element
   if (ispresent(elementpt)) {
     if (elementpt.x < 0) {
@@ -80,14 +92,14 @@ export function memoryboardfindplayerforelement(
     if (elementpt.y < 0) {
       elementpt.y = randominteger(0, BOARD_HEIGHT - 1)
     }
-    return memoryboardpicknearestpt(elementpt, players)
+    return memorypickboardnearestpt(elementpt, players)
   }
 
   // return rand
   return pick(...players)
 }
 
-export function memoryboardlistelementsbycolor(
+export function memorylistboardelementsbycolor(
   board: MAYBE<BOARD>,
   strcolor: STR_COLOR,
 ): BOARD_ELEMENT[] {
@@ -112,11 +124,11 @@ export function memoryboardlistelementsbycolor(
   return elements
 }
 
-export function memoryboardlistelementsbyempty(board: MAYBE<BOARD>): PT[] {
+export function memorylistboardelementsbyempty(board: MAYBE<BOARD>): PT[] {
   const pts: PT[] = []
   // returns a list of points where empties are
   for (let i = 0; i < BOARD_SIZE; ++i) {
-    const el = memoryboardelementread(board, indextopt(i, BOARD_WIDTH))
+    const el = memoryreadboardelement(board, indextopt(i, BOARD_WIDTH))
     if (!el?.kind && !el?.name) {
       pts.push({ x: el?.x ?? 0, y: el?.y ?? 0 })
     }
@@ -124,7 +136,7 @@ export function memoryboardlistelementsbyempty(board: MAYBE<BOARD>): PT[] {
   return pts
 }
 
-export function memoryboardlistelementsbyidnameorpts(
+export function memorylistboardelementsbyidnameorpts(
   board: MAYBE<BOARD>,
   idnameorpts: any[],
 ): BOARD_ELEMENT[] {
@@ -140,7 +152,7 @@ export function memoryboardlistelementsbyidnameorpts(
           return maybebyid
         }
         // check by name
-        const maybebyname = memoryboardlistnamedelements(
+        const maybebyname = memorylistboardnamedelements(
           board,
           NAME(idnameorpt),
         )
@@ -203,11 +215,11 @@ function memoryboardreaddistmap(
         // unwritten
         if (distmap[index] === -2) {
           // check terrain if its passible
-          const terrain = memoryboardgetterrain(board, check.x, check.y)
+          const terrain = memorygetboardterrain(board, check.x, check.y)
           if (
-            !memoryboardcheckcollide(
+            !memorycheckcollision(
               forcollision,
-              memoryelementstatread(terrain, 'collision'),
+              memoryreadelementstat(terrain, 'collision'),
             )
           ) {
             // write dist
@@ -242,19 +254,19 @@ function memoryboardreaddistmapvalue(pt: PT, values: number[]): number {
 
 // pathing utils
 
-export function memoryboardlistelementsbykind(
+export function memorylistboardelementsbykind(
   board: MAYBE<BOARD>,
   kind: STR_KIND,
 ): BOARD_ELEMENT[] {
   const name = readstrkindname(kind)
   const color = readstrkindcolor(kind)
   const bg = readstrkindbg(kind)
-  return memoryboardlistnamedelements(board, name ?? '').filter((element) =>
+  return memorylistboardnamedelements(board, name ?? '').filter((element) =>
     filterelement(element, name, color, bg),
   )
 }
 
-export function memoryboardlistnamedelements(
+export function memorylistboardnamedelements(
   board: MAYBE<BOARD>,
   name: string,
 ): BOARD_ELEMENT[] {
@@ -273,12 +285,12 @@ export function memoryboardlistnamedelements(
     .filter(ispresent)
 }
 
-export function memoryboardlistptsbyempty(board: MAYBE<BOARD>): PT[] {
+export function memorylistboardptsbyempty(board: MAYBE<BOARD>): PT[] {
   const pts: PT[] = []
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
       const pt = { x, y }
-      const el = memoryboardelementread(board, pt)
+      const el = memoryreadboardelement(board, pt)
       if (!el?.name && !el?.kind) {
         pts.push(pt)
       }
@@ -287,7 +299,7 @@ export function memoryboardlistptsbyempty(board: MAYBE<BOARD>): PT[] {
   return pts
 }
 
-export function memoryboardpickfarthestpt(
+export function memorypickboardfarthestpt(
   pt: PT,
   items: MAYBE<BOARD_ELEMENT>[],
 ) {
@@ -312,7 +324,7 @@ export function memoryboardpickfarthestpt(
 
 // Listing Elements
 
-export function memoryboardpicknearestpt(
+export function memorypickboardnearestpt(
   pt: PT,
   items: MAYBE<BOARD_ELEMENT>[],
 ) {
@@ -335,7 +347,7 @@ export function memoryboardpicknearestpt(
   return nearest
 }
 
-export function memoryboardreadpath(
+export function memoryreadboardpath(
   board: MAYBE<BOARD>,
   forcollision: COLLISION,
   frompt: PT,
@@ -383,26 +395,4 @@ export function memoryboardreadpath(
   }
 
   return next
-}
-
-function filterelement(
-  element: MAYBE<BOARD_ELEMENT>,
-  name: MAYBE<string>,
-  color: MAYBE<COLOR>,
-  bg: MAYBE<COLOR>,
-) {
-  if (!ispresent(element)) {
-    return false
-  }
-  const display = memorybookelementdisplayread(element)
-  if (ispresent(name) && name !== display.name) {
-    return false
-  }
-  if (ispresent(color) && color !== display.color) {
-    return false
-  }
-  if (ispresent(bg) && bg !== display.bg) {
-    return false
-  }
-  return true
 }

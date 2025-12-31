@@ -5,16 +5,16 @@ import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
-import { memoryboardobjectread } from './boardoperations'
-import { memorybookreadcodepagebyaddress } from './bookoperations'
+import { memoryreadboardobject } from './boardoperations'
+import { memoryreadbookcodepagebyaddress } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
 import { MEMORY_LABEL } from './types'
 
 import {
   memoryensuresoftwarebook,
-  memorygetloaders,
   memoryreadbookbysoftware,
   memoryreadflags,
+  memoryreadloaders,
 } from './index'
 
 // manages chips
@@ -26,7 +26,7 @@ export function memorycleanup() {
   os.gc()
 }
 
-export function memorycli(player: string, cli: string, tracking = true) {
+export function memoryruncli(player: string, cli: string, tracking = true) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -39,7 +39,7 @@ export function memorycli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = memoryreadplayerboard(player)
-  READ_CONTEXT.element = memoryboardobjectread(READ_CONTEXT.board, player)
+  READ_CONTEXT.element = memoryreadboardobject(READ_CONTEXT.board, player)
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
@@ -55,7 +55,7 @@ export function memorycli(player: string, cli: string, tracking = true) {
   }
 }
 
-export function memoryclirepeatlast(player: string) {
+export function memoryrepeatclilast(player: string) {
   const flags = memoryreadflags(player)
   // setup as array of invokes
   const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
@@ -63,7 +63,7 @@ export function memoryclirepeatlast(player: string) {
     : '')
   // run it
   if (maybecli) {
-    memorycli(player, maybecli, false)
+    memoryruncli(player, maybecli, false)
   }
 }
 
@@ -87,10 +87,10 @@ export function memoryrestartallchipsandflags() {
   mainbook.flags = {}
 }
 
-export function memoryrun(address: string) {
+export function memoryruncodepage(address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  const codepage = memorybookreadcodepagebyaddress(mainbook, address)
+  const codepage = memoryreadbookcodepagebyaddress(mainbook, address)
   if (!ispresent(mainbook) || !ispresent(codepage)) {
     return
   }
@@ -113,13 +113,11 @@ export function memoryrun(address: string) {
   })
 }
 
-export function memoryscrollunlock(id: string, player: string) {
+export function memoryunlockscroll(id: string, player: string) {
   os.scrollunlock(id, player)
 }
 
 export function memorystartloader(id: string, code: string) {
-  const loaders = memorygetloaders()
+  const loaders = memoryreadloaders()
   loaders.set(id, code)
 }
-
-// System Operations

@@ -6,15 +6,15 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
 import {
-  memoryboarddeleteobject,
   memoryboardelementindex,
-  memoryboardgetterrain,
-  memoryboardobjectread,
+  memorydeleteboardobject,
+  memorygetboardterrain,
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
+  memoryreadboardobject,
 } from './boardoperations'
 import { memorysendtoelement } from './gameloop'
-import { memoryboardcheckcollide } from './spatialqueries'
+import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -24,11 +24,9 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
-import { memoryelementcheckpushable, memoryelementstatread } from '.'
+import { memorycheckelementpushable, memoryreadelementstat } from '.'
 
-// Movement and collision check operations
-
-export function memoryboardcheckblockedobject(
+export function memorycheckblockedboardobject(
   board: MAYBE<BOARD>,
   collision: MAYBE<COLLISION>,
   dest: PT,
@@ -57,7 +55,7 @@ export function memoryboardcheckblockedobject(
   const targetidx = dest.x + dest.y * BOARD_WIDTH
 
   // blocked by an object
-  const maybeobject = memoryboardobjectread(
+  const maybeobject = memoryreadboardobject(
     board,
     board.lookup[targetidx] ?? '404',
   )
@@ -76,9 +74,9 @@ export function memoryboardcheckblockedobject(
   const maybeterrain = board.terrain[targetidx]
   if (
     ispresent(maybeterrain) &&
-    memoryboardcheckcollide(
+    memorycheckcollision(
       collision,
-      memoryelementstatread(maybeterrain, 'collision'),
+      memoryreadelementstat(maybeterrain, 'collision'),
     )
   ) {
     return maybeterrain
@@ -88,12 +86,12 @@ export function memoryboardcheckblockedobject(
   return undefined
 }
 
-export function memoryboardcheckmoveobject(
+export function memorycheckmoveboardobject(
   board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): boolean {
-  const object = memoryboardobjectread(board, target?.id ?? '')
+  const object = memoryreadboardobject(board, target?.id ?? '')
   const objectx = object?.x ?? -1
   const objecty = object?.y ?? -1
   // first pass, are we actually trying to move ?
@@ -101,12 +99,12 @@ export function memoryboardcheckmoveobject(
     // no interaction due to no movement
     return true
   }
-  const collsion = memoryelementstatread(object, 'collision')
-  const blockedby = memoryboardcheckblockedobject(board, collsion, dest)
+  const collsion = memoryreadelementstat(object, 'collision')
+  const blockedby = memorycheckblockedboardobject(board, collsion, dest)
   return ispresent(blockedby)
 }
 
-export function memoryboardcleanup(board: MAYBE<BOARD>, timestamp: number) {
+export function memorycleanupboard(board: MAYBE<BOARD>, timestamp: number) {
   const ids: string[] = []
   if (!ispresent(board)) {
     return ids
@@ -123,19 +121,19 @@ export function memoryboardcleanup(board: MAYBE<BOARD>, timestamp: number) {
         // track dropped ids
         ids.push(target.id)
         // drop from board
-        memoryboarddeleteobject(board, target.id)
+        memorydeleteboardobject(board, target.id)
       }
     }
   }
   return ids
 }
 
-export function memoryboardmoveobject(
+export function memorymoveboardobject(
   board: MAYBE<BOARD>,
   elementtomove: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const movingelement = memoryboardobjectread(board, elementtomove?.id ?? '')
+  const movingelement = memoryreadboardobject(board, elementtomove?.id ?? '')
 
   // first pass clipping
   if (
@@ -168,7 +166,7 @@ export function memoryboardmoveobject(
   // gather meta for move
   const startidx = memoryboardelementindex(board, movingelement)
   const destidx = memoryboardelementindex(board, dest)
-  const movingelementcollision = memoryelementstatread(
+  const movingelementcollision = memoryreadelementstat(
     movingelement,
     'collision',
   )
@@ -184,8 +182,8 @@ export function memoryboardmoveobject(
   const movingelementisplayer = ispid(movingelement?.id)
 
   // blocked by an object
-  const maybeobject = memoryboardobjectread(board, board.lookup[destidx] ?? '')
-  if (memoryelementstatread(maybeobject, 'collision') === COLLISION.ISGHOST) {
+  const maybeobject = memoryreadboardobject(board, board.lookup[destidx] ?? '')
+  if (memoryreadelementstat(maybeobject, 'collision') === COLLISION.ISGHOST) {
     // skip ghost
     return undefined
   }
@@ -203,10 +201,10 @@ export function memoryboardmoveobject(
 
   // blocked by terrain
   const mayberterrain = board.terrain[destidx]
-  const terraincollision = memoryelementstatread(mayberterrain, 'collision')
+  const terraincollision = memoryreadelementstat(mayberterrain, 'collision')
 
   // if blocked by terrain, bail
-  if (memoryboardcheckcollide(movingelementcollision, terraincollision)) {
+  if (memorycheckcollision(movingelementcollision, terraincollision)) {
     // for sending interaction messages
     return { ...mayberterrain, x: dest.x, y: dest.y }
   }
@@ -238,8 +236,8 @@ export function memorymoveobject(
     return false
   }
 
-  let blocked = memoryboardmoveobject(board, element, dest)
-  const elementcollision = memoryelementstatread(element, 'collision')
+  let blocked = memorymoveboardobject(board, element, dest)
+  const elementcollision = memoryreadelementstat(element, 'collision')
   const elementisplayer = ispid(element.id)
   const elementisbullet = elementcollision === COLLISION.ISBULLET
 
@@ -250,18 +248,18 @@ export function memorymoveobject(
     memoryboardelementisobject(blocked)
   ) {
     // check terrain __under__ blocked
-    const mayberterrain = memoryboardgetterrain(
+    const mayberterrain = memorygetboardterrain(
       board,
       blocked.x ?? -1,
       blocked.y ?? -1,
     )
-    const terraincollision = memoryelementstatread(mayberterrain, 'collision')
-    if (!memoryboardcheckcollide(elementcollision, terraincollision)) {
+    const terraincollision = memoryreadelementstat(mayberterrain, 'collision')
+    if (!memorycheckcollision(elementcollision, terraincollision)) {
       const elementisplayer = ispid(element?.id)
 
       // is blocked pushable ?
-      const isitem = !!memoryelementstatread(blocked, 'item')
-      const ispushable = memoryelementcheckpushable(element, blocked)
+      const isitem = !!memoryreadelementstat(blocked, 'item')
+      const ispushable = memorycheckelementpushable(element, blocked)
 
       // player cannot push items
       const blockedid = blocked.id ?? ''
@@ -281,14 +279,14 @@ export function memorymoveobject(
       }
 
       // update blocked by element
-      blocked = memoryboardmoveobject(board, element, dest)
+      blocked = memorymoveboardobject(board, element, dest)
     }
   }
 
   if (ispresent(blocked)) {
     const blockedbyplayer = ispid(blocked.id)
     const blockedisbullet =
-      memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
+      memoryreadelementstat(blocked, 'collision') === COLLISION.ISBULLET
     const blockedisedge = blocked.kind === 'edge'
     if (elementisplayer) {
       if (blockedisedge) {
@@ -337,8 +335,6 @@ export function memorymoveobject(
   return true
 }
 
-// update board
-
 type BOOK_RUN_CODE_TARGETS = {
   object: MAYBE<BOARD_ELEMENT>
   terrain: MAYBE<BOARD_ELEMENT>
@@ -351,5 +347,3 @@ type BOOK_RUN_CODE = {
 }
 
 export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE
-
-// Object movement

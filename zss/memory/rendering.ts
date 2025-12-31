@@ -29,17 +29,17 @@ import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import {
   memoryboardelementindex,
-  memoryboardevaldir,
-  memoryboardobjectread,
-  memoryboardvisualsupdate,
+  memoryevaldir,
+  memoryreadboardobject,
+  memoryupdateboardvisuals,
 } from './boardoperations'
-import { memorybookelementdisplayread } from './bookoperations'
+import { memoryreadelementdisplay } from './bookoperations'
 import {
-  memorycodepagereaddata,
-  memorycodepagereadname,
-  memorycodepagereadtype,
+  memoryreadcodepagedata,
+  memoryreadcodepagename,
+  memoryreadcodepagetype,
 } from './codepageoperations'
-import { memoryboardcheckcollide } from './spatialqueries'
+import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -50,28 +50,28 @@ import {
 } from './types'
 
 import {
-  memoryboardinit,
-  memoryboardread,
-  memoryelementkindread,
-  memoryelementstatread,
-  memoryoverboardread,
+  memoryinitboard,
   memorypickcodepagewithtype,
+  memoryreadboard,
+  memoryreadelementkind,
+  memoryreadelementstat,
   memoryreadflags,
-  memoryunderboardread,
+  memoryreadoverboard,
+  memoryreadunderboard,
 } from '.'
 
 // Display & Formatting Functions
 
 export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
   if (
-    memorycodepagereadtype(codepage) !== CODE_PAGE_TYPE.TERRAIN &&
-    memorycodepagereadtype(codepage) !== CODE_PAGE_TYPE.OBJECT
+    memoryreadcodepagetype(codepage) !== CODE_PAGE_TYPE.TERRAIN &&
+    memoryreadcodepagetype(codepage) !== CODE_PAGE_TYPE.OBJECT
   ) {
     return ''
   }
-  const name = memorycodepagereadname(codepage)
+  const name = memoryreadcodepagename(codepage)
   const stub: BOARD_ELEMENT = { kind: name }
-  memoryelementkindread(stub)
+  memoryreadelementkind(stub)
   return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
 }
 
@@ -81,7 +81,7 @@ export function memoryconverttogadgetcontrollayer(
   board: MAYBE<BOARD>,
 ): LAYER[] {
   const control = createcachedcontrol(player, index)
-  const maybeobject = memoryboardobjectread(board, player)
+  const maybeobject = memoryreadboardobject(board, player)
   if (!ispresent(board) || !ispresent(maybeobject)) {
     return []
   }
@@ -146,10 +146,10 @@ export function memoryconverttogadgetlayers(
   }
 
   // make sure lookup is created
-  memoryboardinit(board)
+  memoryinitboard(board)
 
   // update resolve caches
-  memoryboardvisualsupdate(board)
+  memoryupdateboardvisuals(board)
 
   const withgraphics = NAME(readgraphics(player, board).graphics)
   const layers: LAYER[] = []
@@ -187,13 +187,13 @@ export function memoryconverttogadgetlayers(
 
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
-    const display = memorybookelementdisplayread(
+    const display = memoryreadelementdisplay(
       tile,
       0,
       COLOR.WHITE,
       whichlayer === DIR.OVER ? COLOR.ONCLEAR : COLOR.BLACK,
     )
-    const collision = memoryelementstatread(tile, 'collision')
+    const collision = memoryreadelementstat(tile, 'collision')
     tiles.char[i] = display.char
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
@@ -203,7 +203,7 @@ export function memoryconverttogadgetlayers(
   if (withgraphics === 'fpv') {
     for (let i = 0; i < board.terrain.length; ++i) {
       const tile = board.terrain[i]
-      if (multi || ispresent(memoryelementstatread(tile, 'sky'))) {
+      if (multi || ispresent(memoryreadelementstat(tile, 'sky'))) {
         tiles.char[i] = -tiles.char[i]
       }
     }
@@ -223,7 +223,7 @@ export function memoryconverttogadgetlayers(
   // process objects
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
-    const collision = memoryelementstatread(object, 'collision')
+    const collision = memoryreadelementstat(object, 'collision')
     if (ispresent(object.removed) || collision === COLLISION.ISGHOST) {
       continue
     }
@@ -238,7 +238,7 @@ export function memoryconverttogadgetlayers(
       continue
     }
 
-    const display = memorybookelementdisplayread(object)
+    const display = memoryreadelementdisplay(object)
     const sprite = memorycreatecachedsprite(boardid, objectindex, id, i)
 
     // setup sprite
@@ -265,9 +265,9 @@ export function memoryconverttogadgetlayers(
           for (let r = 1; r <= radius; ++r) {
             // light dir for a cone of light
             if (r === 2) {
-              const maybedir = memoryelementstatread(object, 'lightdir')
+              const maybedir = memoryreadelementstat(object, 'lightdir')
               if (isstrdir(maybedir)) {
-                const lightdir = memoryboardevaldir(
+                const lightdir = memoryevaldir(
                   board,
                   object,
                   '',
@@ -380,13 +380,13 @@ export function memoryconverttogadgetlayers(
   // process isghost objects
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
-    const collision = memoryelementstatread(object, 'collision')
+    const collision = memoryreadelementstat(object, 'collision')
     if (ispresent(object.removed) || collision !== COLLISION.ISGHOST) {
       continue
     }
 
     const id = object.id ?? ''
-    const display = memorybookelementdisplayread(object)
+    const display = memoryreadelementdisplay(object)
     const sprite = memorycreatecachedsprite(boardid, objectindex, id, i)
 
     // setup sprite
@@ -430,7 +430,7 @@ export function memoryconverttogadgetlayers(
         CODE_PAGE_TYPE.PALETTE,
         board.palettepage,
       )
-      const palette = memorycodepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
+      const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette?.bits)) {
         layers.push(
           createcachedmedia(
@@ -448,7 +448,7 @@ export function memoryconverttogadgetlayers(
         CODE_PAGE_TYPE.CHARSET,
         board.charsetpage,
       )
-      const charset = memorycodepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
+      const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset?.bits)) {
         layers.push(
           createcachedmedia(
@@ -647,7 +647,7 @@ function raycheck(
   alphas[idx] = clamp(alphas[idx], 0, 1)
 
   // check lookup
-  const object = memoryboardobjectread(board, board.lookup?.[idx] ?? '')
+  const object = memoryreadboardobject(board, board.lookup?.[idx] ?? '')
   if (ispresent(object)) {
     // half blocked
     const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
@@ -655,9 +655,9 @@ function raycheck(
   }
 
   const maybeterrain = board.terrain[idx]
-  const terrainkind = memoryelementkindread(maybeterrain)
+  const terrainkind = memoryreadelementkind(maybeterrain)
   const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
-  if (memoryboardcheckcollide(COLLISION.ISBULLET, terraincollision)) {
+  if (memorycheckcollision(COLLISION.ISBULLET, terraincollision)) {
     // fully blocked
     const range: [number, number, number] = [...mixmaxrange(sprite, pt), 1]
     nextblocked.push(range)
@@ -678,7 +678,7 @@ function readgraphics(player: string, board: BOARD) {
 }
 
 export function memoryelementtodisplayprefix(element: MAYBE<BOARD_ELEMENT>) {
-  const icon = memorybookelementdisplayread(element)
+  const icon = memoryreadelementdisplay(element)
   const color = `${COLOR[icon.color]}`
   const bg = `${COLOR[icon.bg > COLOR.WHITE ? COLOR.BLACK : icon.bg]}`
   return `$${color}$ON${bg}$${icon.char}`
@@ -689,7 +689,7 @@ export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
     return ''
   }
 
-  let withname = memorybookelementdisplayread(element).name
+  let withname = memoryreadelementdisplay(element).name
   if (element.kind === 'player') {
     const { user } = memoryreadflags(element.id)
     withname = isstring(user) ? user : 'player'
@@ -726,12 +726,12 @@ export function memoryreadgadgetlayers(
   const id4all: string[] = [`${board.id}`]
 
   // read over / under
-  const overboard = memoryoverboardread(board)
+  const overboard = memoryreadoverboard(board)
   if (overboard?.id) {
     id4all.push(overboard.id)
   }
 
-  const underboard = memoryunderboardread(board)
+  const underboard = memoryreadunderboard(board)
   if (underboard?.id) {
     id4all.push(underboard.id)
   }
@@ -777,10 +777,10 @@ export function memoryreadgadgetlayers(
   return {
     id: id4all.join('|'),
     board: board.id,
-    exiteast: memoryboardread(board.exiteast ?? '')?.id ?? '',
-    exitwest: memoryboardread(board.exitwest ?? '')?.id ?? '',
-    exitnorth: memoryboardread(board.exitnorth ?? '')?.id ?? '',
-    exitsouth: memoryboardread(board.exitsouth ?? '')?.id ?? '',
+    exiteast: memoryreadboard(board.exiteast ?? '')?.id ?? '',
+    exitwest: memoryreadboard(board.exitwest ?? '')?.id ?? '',
+    exitnorth: memoryreadboard(board.exitnorth ?? '')?.id ?? '',
+    exitsouth: memoryreadboard(board.exitsouth ?? '')?.id ?? '',
     over,
     under,
     layers,

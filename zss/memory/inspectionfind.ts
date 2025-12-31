@@ -11,7 +11,7 @@ import {
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
-import { memoryreadplayerboard } from '.'
+import { memoryreadplayerboard } from './playermanagement'
 
 // Find operations
 export type FINDANY_CONFIG = {
@@ -21,7 +21,12 @@ export type FINDANY_CONFIG = {
   expr4: string
 }
 
-// read / write from indexdb
+let findanyconfig: FINDANY_CONFIG = {
+  expr1: 'player',
+  expr2: '',
+  expr3: '',
+  expr4: '',
+}
 
 export async function memoryfindany(
   path: keyof typeof findanyconfig,
@@ -100,11 +105,4 @@ export async function memorywritefindanyconfig(
   updater: (oldValue: FINDANY_CONFIG | undefined) => FINDANY_CONFIG,
 ): Promise<void> {
   return idbupdate('findanyconfig', updater)
-}
-
-let findanyconfig: FINDANY_CONFIG = {
-  expr1: 'player',
-  expr2: '',
-  expr3: '',
-  expr4: '',
 }

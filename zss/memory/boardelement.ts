@@ -11,8 +11,6 @@ import { CATEGORY } from 'zss/words/types'
 
 import { BOARD_ELEMENT } from './types'
 
-// Element creation and utilities
-
 export function memoryapplyboardelementcolor(
   element: MAYBE<BOARD_ELEMENT>,
   strcolor: MAYBE<STR_COLOR>,
@@ -57,9 +55,7 @@ export function memoryexportboardelement(
   })
 }
 
-// import json into boardelement
-
-export function memoryboardelementimport(
+export function memoryimportboardelement(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
   return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)
@@ -125,5 +121,3 @@ enum BOARD_ELEMENT_KEYS {
   p9,
   p10,
 }
-
-// safe to serialize copy of boardelement

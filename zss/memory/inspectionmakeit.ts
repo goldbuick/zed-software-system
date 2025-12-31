@@ -14,13 +14,13 @@ import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
 import {
-  memorybookreadcodepagebyaddress,
-  memorybookreadcodepagesbystat,
+  memoryreadbookcodepagebyaddress,
+  memoryreadbookcodepagesbystat,
 } from './bookoperations'
 import {
-  memorycodepagereadname,
-  memorycodepagereadtype,
-  memorycodepagereadtypetostring,
+  memoryreadcodepagename,
+  memoryreadcodepagetype,
+  memoryreadcodepagetypeasstring,
 } from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
@@ -50,12 +50,12 @@ function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
 }
 
 function previewcodepage(codepage: CODE_PAGE, player: string) {
-  const type = memorycodepagereadtype(codepage)
+  const type = memoryreadcodepagetype(codepage)
   makecodepagedesc(type, player)
   gadgethyperlink(
     player,
     'makeit',
-    `edit$CYAN @${memorycodepagereadtypetostring(codepage)} ${memorycodepagereadname(codepage)}`,
+    `edit$CYAN @${memoryreadcodepagetypeasstring(codepage)} ${memoryreadcodepagename(codepage)}`,
     ['edit', '', codepage.id],
   )
   // We should show the first 5 lines of the codepage here
@@ -70,7 +70,7 @@ function checkforcodepage(name: string, player: string) {
   let nomatch = true
   for (let i = 0; i < books.length; ++i) {
     // scan for id / name / stat matches
-    const codepages = memorybookreadcodepagesbystat(books[i], name)
+    const codepages = memoryreadbookcodepagesbystat(books[i], name)
     for (let c = 0; c < codepages.length; ++c) {
       nomatch = false
       previewcodepage(codepages[c], player)
@@ -84,15 +84,13 @@ function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
   // first check for existing codepage with matching name or id
   const books = memoryreadbooklist()
   for (let i = 0; i < books.length; ++i) {
-    const maybecodepage = memorybookreadcodepagebyaddress(books[i], nameorid)
+    const maybecodepage = memoryreadbookcodepagebyaddress(books[i], nameorid)
     if (ispresent(maybecodepage)) {
       return maybecodepage
     }
   }
   return undefined
 }
-
-// Make it operations
 
 export function memorymakeitcommand(
   path: string,
@@ -102,8 +100,8 @@ export function memorymakeitcommand(
   function openeditor(codepage: MAYBE<CODE_PAGE>, didcreate: boolean) {
     doasync(SOFTWARE, player, async () => {
       if (ispresent(codepage)) {
-        const type = memorycodepagereadtypetostring(codepage)
-        const name = memorycodepagereadname(codepage)
+        const type = memoryreadcodepagetypeasstring(codepage)
+        const name = memoryreadcodepagename(codepage)
         if (didcreate) {
           write(
             SOFTWARE,

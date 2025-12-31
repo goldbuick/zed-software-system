@@ -8,12 +8,12 @@ import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import {
-  memoryboardsetterrain,
+  memorysetboardterrain,
   memoryptwithinboard,
 } from 'zss/memory/boardoperations'
-import { memorybookwritecodepage } from 'zss/memory/bookoperations'
+import { memorywritebookcodepage } from 'zss/memory/bookoperations'
 import {
-  memorycodepagereaddata,
+  memoryreadcodepagedata,
   memorycreatecodepage,
 } from 'zss/memory/codepageoperations'
 import {
@@ -110,17 +110,17 @@ export function parseansi(
           const numeral = `${bi}`.padStart(3, '0')
           const code = `@board ${patchworkname} ${numeral}\n${stats.join('\n')}\n`
           const codepage = memorycreatecodepage(code, {})
-          memorybookwritecodepage(contentbook, codepage)
+          memorywritebookcodepage(contentbook, codepage)
           // get board data from codepage
           boards[bi] = board =
-            memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+            memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
         }
 
         if (ispresent(board) && memoryptwithinboard({ x, y })) {
           const [char, fromcolor, frombg] = screendata.screen[i]
           const color = colormap.get(fromcolor) ?? 0
           const bg = colormap.get(frombg) ?? 0
-          memoryboardsetterrain(board, { x, y, kind: 'fake', char, color, bg })
+          memorysetboardterrain(board, { x, y, kind: 'fake', char, color, bg })
         }
 
         ++sx

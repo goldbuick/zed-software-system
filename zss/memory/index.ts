@@ -11,27 +11,27 @@ import { COLLISION, NAME, PT } from 'zss/words/types'
 
 import { memoryapplyboardelementcolor } from './boardelement'
 import {
-  memoryboardnamedwrite,
-  memoryboardobjectlookupwrite,
-  memoryboardresetlookups,
+  memoryresetboardlookups,
+  memorywriteboardnamed,
+  memorywriteboardobjectlookup,
 } from './boardlookup'
 import {
-  memoryboardobjectcreatefromkind,
-  memoryboardterrainsetfromkind,
+  memorycreateboardobjectfromkind,
+  memorysetboardterrainfromkind,
 } from './boardoperations'
 import {
-  memorybookclearflags,
-  memorybookensurecodepagewithtype,
-  memorybookhasflags,
-  memorybookreadcodepagesbytypeandstat,
-  memorybookreadflags,
-  memorybookreadsortedcodepages,
+  memoryclearbookflags,
   memorycreatebook,
+  memoryensurebookcodepagewithtype,
+  memoryhasbookflags,
+  memoryreadbookcodepagesbytypeandstat,
+  memoryreadbookcodepagessorted,
+  memoryreadbookflags,
 } from './bookoperations'
 import {
-  memorycodepagereaddata,
-  memorycodepagereadstat,
-  memorycodepagereadtype,
+  memoryreadcodepagedata,
+  memoryreadcodepagestat,
+  memoryreadcodepagetype,
 } from './codepageoperations'
 import {
   BOARD,
@@ -43,29 +43,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-
-// Re-export functions from other modules
-export {
-  memorycli,
-  memoryclirepeatlast,
-  memoryrun,
-  memoryresetchipafteredit,
-  memoryrestartallchipsandflags,
-  memoryscrollunlock,
-  memorystartloader,
-  memorycleanup,
-} from './cliruntime'
-export {
-  memoryreadplayerboard,
-  memoryreadplayeractive,
-  memoryplayerlogin,
-  memoryplayerlogout,
-  memoryplayerscan,
-} from './playermanagement'
-export { memorytick, memorytickobject } from './gameloop'
-export { memorymessage, memorysendtoboards } from './gameloop'
-export { memorymoveobject } from './boardmovement'
-export { memoryreadgadgetlayers, type MEMORY_GADGET_LAYERS } from './rendering'
 
 const MEMORY = {
   // halting state
@@ -87,7 +64,7 @@ const MEMORY = {
 }
 
 // Internal getter for loader.ts
-export function memorygetloaders() {
+export function memoryreadloaders() {
   return MEMORY.loaders
 }
 
@@ -147,7 +124,7 @@ export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   )
 }
 
-export function memorysetsoftwarebook(
+export function memorywritesoftwarebook(
   slot: keyof typeof MEMORY.software,
   book: string,
 ) {
@@ -168,7 +145,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
   if (isstring(maybename)) {
     book.name = maybename
   }
-  memorysetbook(book)
+  memorywritebook(book)
   apilog(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
@@ -179,7 +156,7 @@ export function memoryensurebookbyname(name: string) {
     book = memorycreatebook([])
     book.name = name
   }
-  memorysetbook(book)
+  memorywritebook(book)
   apilog(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
@@ -215,7 +192,7 @@ export function memoryensuresoftwarebook(
   }
 
   // make sure slot is set
-  memorysetsoftwarebook(slot, book.id)
+  memorywritesoftwarebook(slot, book.id)
   return book
 }
 
@@ -224,20 +201,12 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
   address: string,
   createtype: T,
 ) {
-  return memorybookensurecodepagewithtype(
+  return memoryensurebookcodepagewithtype(
     memoryensuresoftwarebook(slot),
     createtype,
     address,
   )
 }
-
-/*
-when we list pages,
- we list all pages, from all books
-when we list boards, do the same
-will have to add in the pickstats support here as well
-
-*/
 
 export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
@@ -245,7 +214,7 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
 ): MAYBE<CODE_PAGE> {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const codepage = pick(
-    memorybookreadcodepagesbytypeandstat(mainbook, type, address),
+    memoryreadbookcodepagesbytypeandstat(mainbook, type, address),
   )
   if (ispresent(codepage)) {
     return codepage
@@ -255,7 +224,7 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
     const book = books[i]
     if (book.id !== mainbook?.id) {
       const fallbackcodepage = pick(
-        memorybookreadcodepagesbytypeandstat(book, type, address),
+        memoryreadbookcodepagesbytypeandstat(book, type, address),
       )
       if (ispresent(fallbackcodepage)) {
         return fallbackcodepage
@@ -269,16 +238,16 @@ export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
 ): CODE_PAGE[] {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const found = memorybookreadsortedcodepages(mainbook).filter(
-    (codepage) => memorycodepagereadtype(codepage) === type,
+  const found = memoryreadbookcodepagessorted(mainbook).filter(
+    (codepage) => memoryreadcodepagetype(codepage) === type,
   )
   const books = memoryreadbooklist()
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
     if (book.id !== mainbook?.id) {
       found.push(
-        ...memorybookreadsortedcodepages(book).filter(
-          (codepage) => memorycodepagereadtype(codepage) === type,
+        ...memoryreadbookcodepagessorted(book).filter(
+          (codepage) => memoryreadcodepagetype(codepage) === type,
         ),
       )
     }
@@ -286,7 +255,7 @@ export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(
   return found
 }
 
-export function memoryelementkindread(
+export function memoryreadelementkind(
   element: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
   if (ispresent(element?.kinddata)) {
@@ -303,7 +272,7 @@ export function memoryelementkindread(
   )
   if (ispresent(maybeobject)) {
     element.kinddata =
-      memorycodepagereaddata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
+      memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
     return element.kinddata
   }
 
@@ -313,14 +282,14 @@ export function memoryelementkindread(
   )
   if (ispresent(maybeterrain)) {
     element.kinddata =
-      memorycodepagereaddata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
+      memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
     return element.kinddata
   }
 
   return undefined
 }
 
-export function memoryelementstatread(
+export function memoryreadelementstat(
   element: MAYBE<BOARD_ELEMENT>,
   stat: BOARD_ELEMENT_STAT | 'sky',
 ) {
@@ -340,7 +309,7 @@ export function memoryelementstatread(
   const codepage =
     memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, kindid) ??
     memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, kindid)
-  const codepagestat = memorycodepagereadstat(codepage, stat)
+  const codepagestat = memoryreadcodepagestat(codepage, stat)
   if (ispresent(codepagestat)) {
     return codepagestat
   }
@@ -372,14 +341,14 @@ export function memoryelementstatread(
   }
 }
 
-export function memoryelementcheckpushable(
+export function memorycheckelementpushable(
   pusher: MAYBE<BOARD_ELEMENT>,
   target: MAYBE<BOARD_ELEMENT>,
 ) {
   const pusherpt: PT = { x: pusher?.x ?? -1, y: pusher?.y ?? -1 }
   const targetpt: PT = { x: target?.x ?? -1, y: target?.y ?? -1 }
   const pushdir = dirfrompts(pusherpt, targetpt)
-  const pushable = memoryelementstatread(target, 'pushable')
+  const pushable = memoryreadelementstat(target, 'pushable')
   if (isnumber(pushable)) {
     return pushable !== 0
   }
@@ -393,7 +362,7 @@ export function memoryelementcheckpushable(
   return false
 }
 
-export function memorywritefromkind(
+export function memorywriteelementfromkind(
   board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
   dest: PT,
@@ -406,27 +375,27 @@ export function memorywritefromkind(
 
   const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
   if (ispresent(maybeobject)) {
-    const object = memoryboardobjectcreatefromkind(board, dest, name, id)
+    const object = memorycreateboardobjectfromkind(board, dest, name, id)
     if (ispresent(object)) {
       memoryapplyboardelementcolor(object, maybecolor)
       // update named (terrain & objects)
-      memoryelementkindread(object)
-      memoryboardobjectlookupwrite(board, object)
-      memoryboardnamedwrite(board, object)
+      memoryreadelementkind(object)
+      memorywriteboardobjectlookup(board, object)
+      memorywriteboardnamed(board, object)
       return object
     }
   }
 
   const maybeterrain = memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, name)
   if (ispresent(maybeterrain)) {
-    const terrain = memoryboardterrainsetfromkind(board, dest, name)
+    const terrain = memorysetboardterrainfromkind(board, dest, name)
     if (ispresent(terrain)) {
       memoryapplyboardelementcolor(terrain, maybecolor)
       // update named (terrain & objects)
-      memoryelementkindread(terrain)
+      memoryreadelementkind(terrain)
       // calc index
       const idx = pttoindex(dest, BOARD_WIDTH)
-      memoryboardnamedwrite(board, terrain, idx)
+      memorywriteboardnamed(board, terrain, idx)
       return terrain
     }
   }
@@ -447,7 +416,7 @@ export function memorywritebullet(
   const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
   if (ispresent(maybeobject)) {
     // create new object element
-    const object = memoryboardobjectcreatefromkind(board, dest, name)
+    const object = memorycreateboardobjectfromkind(board, dest, name)
     // update color
     memoryapplyboardelementcolor(object, maybecolor)
     return object
@@ -456,12 +425,12 @@ export function memorywritebullet(
   return undefined
 }
 
-export function memoryboardread(address: string): MAYBE<BOARD> {
+export function memoryreadboard(address: string): MAYBE<BOARD> {
   const maybeboard = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
-  return memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(maybeboard)
+  return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
 }
 
-export function memoryoverboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
+export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   if (!ispresent(board)) {
     return
   }
@@ -472,7 +441,7 @@ export function memoryoverboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
   }
   // validate overboard value
   if (isstring(board.overboard)) {
-    const maybeover = memoryboardread(board.overboard)
+    const maybeover = memoryreadboard(board.overboard)
     if (ispresent(maybeover)) {
       return maybeover
     }
@@ -480,7 +449,7 @@ export function memoryoverboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
     return undefined
   }
   // no overboard value
-  const maybeover = memoryboardread(board.over)
+  const maybeover = memoryreadboard(board.over)
   if (ispresent(maybeover)) {
     board.overboard = maybeover.id
     return maybeover
@@ -488,7 +457,7 @@ export function memoryoverboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
   return undefined
 }
 
-export function memoryunderboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
+export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   if (!ispresent(board)) {
     return
   }
@@ -499,7 +468,7 @@ export function memoryunderboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
   }
   // validate underboard value
   if (isstring(board.underboard)) {
-    const maybeunder = memoryboardread(board.underboard)
+    const maybeunder = memoryreadboard(board.underboard)
     if (ispresent(maybeunder)) {
       return maybeunder
     }
@@ -507,7 +476,7 @@ export function memoryunderboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
     return undefined
   }
   // no underboard value
-  const maybeunder = memoryboardread(board.under)
+  const maybeunder = memoryreadboard(board.under)
   if (ispresent(maybeunder)) {
     board.underboard = maybeunder.id
     return maybeunder
@@ -517,17 +486,17 @@ export function memoryunderboardread(board: MAYBE<BOARD>): MAYBE<BOARD> {
 
 export function memoryreadflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  return memorybookreadflags(mainbook, id)
+  return memoryreadbookflags(mainbook, id)
 }
 
 export function memoryhasflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  return memorybookhasflags(mainbook, id)
+  return memoryhasbookflags(mainbook, id)
 }
 
 export function memoryclearflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  return memorybookclearflags(mainbook, id)
+  return memoryclearbookflags(mainbook, id)
 }
 
 export function memoryresetbooks(books: BOOK[]) {
@@ -552,7 +521,7 @@ export function memoryresetbooks(books: BOOK[]) {
   }
 }
 
-export function memorysetbook(book: BOOK) {
+export function memorywritebook(book: BOOK) {
   MEMORY.books.set(book.id, book)
   return book.id
 }
@@ -564,38 +533,23 @@ export function memoryclearbook(address: string) {
   }
 }
 
-// Player Management functions moved to player.ts
-// Messaging functions moved to send.ts
-
-// Movement & Collision functions moved to boardops.ts
-
-// Game Loop & Execution functions moved to tick.ts
-// System Operations functions moved to system.ts
-
-export function memoryboardinit(board: MAYBE<BOARD>) {
+export function memoryinitboard(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
   }
 
   // terrain setup
   for (let i = 0; i < board.terrain.length; ++i) {
-    memoryelementkindread(board.terrain[i])
+    memoryreadelementkind(board.terrain[i])
   }
 
   // object setup
   const oids = Object.keys(board.objects)
   for (let i = 0; i < oids.length; ++i) {
     const id = oids[i]
-    memoryelementkindread(board.objects[id])
+    memoryreadelementkind(board.objects[id])
   }
 
   // force build object lookup pre-tick
-  memoryboardresetlookups(board)
+  memoryresetboardlookups(board)
 }
-
-// memorytick moved to tick.ts
-
-// CLI & Runtime functions moved to cli.ts
-// System Operations functions moved to system.ts
-
-// Rendering & Gadget Conversion functions moved to rendertogadget.ts

@@ -12,15 +12,14 @@ import {
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { memoryreadbookbysoftware, memoryreadoperator } from 'zss/memory'
+import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
-  memoryreadbookbysoftware,
+  memoryconverttogadgetcontrollayer,
   memoryreadgadgetlayers,
-  memoryreadoperator,
-  memoryreadplayerboard,
-} from 'zss/memory'
-import { memorybookreadflags } from 'zss/memory/bookoperations'
-import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
+} from 'zss/memory/rendering'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
@@ -31,7 +30,7 @@ gadgetstateprovider((element) => {
   if (ispid(element)) {
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     // cheating here as data is non-WORD compliant
-    const gadgetstore = memorybookreadflags(
+    const gadgetstore = memoryreadbookflags(
       mainbook,
       MEMORY_LABEL.GADGETSTORE,
     ) as any

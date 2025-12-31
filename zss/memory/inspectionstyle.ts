@@ -12,13 +12,12 @@ import { PT, WORD } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
 import {
-  memoryboardelementread,
-  memoryboardgetterrain,
+  memorygetboardterrain,
+  memoryreadboardelement,
 } from './boardoperations'
-import { memorybookelementdisplayread } from './bookoperations'
+import { memoryreadelementdisplay } from './bookoperations'
 import { memoryreadsecretheap } from './inspectionbatch'
-
-import { memoryreadplayerboard } from '.'
+import { memoryreadplayerboard } from './playermanagement'
 
 type STYLE_CONFIG = {
   stylechars: number
@@ -26,7 +25,11 @@ type STYLE_CONFIG = {
   stylebgs: number
 }
 
-// Style operations
+let styleconfig: STYLE_CONFIG = {
+  stylechars: 1,
+  stylecolors: 1,
+  stylebgs: 1,
+}
 
 export async function memoryinspectstyle(
   player: string,
@@ -54,10 +57,10 @@ export async function memoryinspectstyle(
     for (let x = 0; x < iwidth; ++x) {
       const idx = pttoindex({ x, y }, secretheap.width)
       const terrain = secretheap.terrain[idx]
-      const display = memorybookelementdisplayread(terrain)
+      const display = memoryreadelementdisplay(terrain)
       const pt = { x: x1 + x, y: y1 + y }
       if (mode === 'styleall' || mode === 'styleobjects') {
-        const element = memoryboardelementread(board, pt)
+        const element = memoryreadboardelement(board, pt)
         if (ispresent(element) && memoryboardelementisobject(element)) {
           if (styleconfig.stylechars) {
             element.char = display.char
@@ -71,7 +74,7 @@ export async function memoryinspectstyle(
         }
       }
       if (mode === 'styleall' || mode === 'styleterrain') {
-        const element = memoryboardgetterrain(board, pt.x, pt.y)
+        const element = memorygetboardterrain(board, pt.x, pt.y)
         if (ispresent(element)) {
           if (styleconfig.stylechars) {
             element.char = display.char
@@ -167,10 +170,4 @@ export async function memorywritestyleconfig(
   updater: (oldValue: STYLE_CONFIG | undefined) => STYLE_CONFIG,
 ): Promise<void> {
   return idbupdate('styleconfig', updater)
-}
-
-let styleconfig: STYLE_CONFIG = {
-  stylechars: 1,
-  stylecolors: 1,
-  stylebgs: 1,
 }

@@ -31,18 +31,19 @@ import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 import { memoryboardelementisobject } from './boardelement'
 import {
   memoryboardelementindex,
-  memoryboardelementread,
-  memoryboardelementreadbyidorindex,
-  memoryboardsafedelete,
-  memoryboardsetterrain,
+  memoryreadboardelement,
+  memoryreadboardelementbyidorindex,
+  memorysafedeleteelement,
+  memorysetboardterrain,
 } from './boardoperations'
-import { memorybookboardelementreadcodepage } from './bookoperations'
+import { memoryreadelementcodepage } from './bookoperations'
 import {
-  memorycodepagereadname,
-  memorycodepagereadstatdefaults,
+  memoryreadcodepagename,
+  memoryreadcodepagestatdefaults,
 } from './codepageoperations'
 import { memoryhassecretheap } from './inspectionbatch'
 import { memoryloadermatches } from './loader'
+import { memoryreadplayerboard } from './playermanagement'
 import { memoryelementtodisplayprefix } from './rendering'
 import {
   BOARD,
@@ -53,20 +54,22 @@ import {
 } from './types'
 
 import {
-  memoryboardinit,
-  memoryelementstatread,
   memoryensuresoftwarebook,
+  memoryinitboard,
   memorypickcodepagewithtype,
   memoryreadbookbysoftware,
+  memoryreadelementstat,
   memoryreadoperator,
-  memoryreadplayerboard,
 } from '.'
 
-// From inspect.ts
+function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
+  const id = element?.id ?? memoryboardelementindex(board, element)
+  return `inspect:${id}`
+}
 
 export function memorygadgetinspectboard(player: string, board: string) {
   const boardcodepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, board)
-  gadgettext(player, `board ${memorycodepagereadname(boardcodepage)}:`)
+  gadgettext(player, `board ${memoryreadcodepagename(boardcodepage)}:`)
   gadgethyperlink(player, 'batch', `board id ${board}`, ['copyit', board])
   gadgethyperlink(player, 'batch', `edit board codepage`, [`pageopen:${board}`])
 }
@@ -81,7 +84,7 @@ export function memorygadgetinspectloaders(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
   for (let i = 0; i < loaders.length; ++i) {
     const codepage = loaders[i]
-    const name = memorycodepagereadname(codepage)
+    const name = memoryreadcodepagename(codepage)
     gadgethyperlink(player, 'gadget', `run ${name}`, [
       'action',
       '',
@@ -104,12 +107,12 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
   }
 
   // ensure lookup
-  memoryboardinit(board)
+  memoryinitboard(board)
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
-    const element = memoryboardelementread(board, p1)
-    const codepage = memorybookboardelementreadcodepage(mainbook, element)
+    const element = memoryreadboardelement(board, p1)
+    const codepage = memoryreadelementcodepage(mainbook, element)
     // found element def
     if (ispresent(element) && ispresent(codepage)) {
       memoryinspectelement(
@@ -176,7 +179,7 @@ export function memoryinspectarea(
       if (isnumber(value)) {
         group = value
         rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryboardelementread(board, pt)
+          const el = memoryreadboardelement(board, pt)
           if (ispresent(el)) {
             el[name as keyof BOARD_ELEMENT] = `group${value}`
           }
@@ -297,14 +300,14 @@ export function memoryinspectarea(
   const ids = new Set<string>()
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
-      const element = memoryboardelementread(board, { x, y })
-      const codepage = memorybookboardelementreadcodepage(mainbook, element)
+      const element = memoryreadboardelement(board, { x, y })
+      const codepage = memoryreadelementcodepage(mainbook, element)
       if (ispresent(codepage) && !ids.has(codepage.id)) {
         ids.add(codepage.id)
         gadgethyperlink(
           player,
           'batch',
-          `edit @${memorycodepagereadname(codepage)}`,
+          `edit @${memoryreadcodepagename(codepage)}`,
           [`pageopen:${codepage.id}`],
         )
       }
@@ -334,7 +337,7 @@ export function memoryinspectbgarea(
     if (isnumber(value)) {
       all = value
       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryboardelementread(board, pt)
+        const el = memoryreadboardelement(board, pt)
         if (ispresent(el)) {
           el[name as keyof BOARD_ELEMENT] = value
         }
@@ -422,7 +425,7 @@ export function memoryinspectchararea(
     if (isnumber(value)) {
       all = value
       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryboardelementread(board, pt)
+        const el = memoryreadboardelement(board, pt)
         if (ispresent(el)) {
           el[name as keyof BOARD_ELEMENT] = value
         }
@@ -511,7 +514,7 @@ export function memoryinspectcolorarea(
       all = value
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const el = memoryboardelementread(board, { x, y })
+          const el = memoryreadboardelement(board, { x, y })
           if (ispresent(el)) {
             el[name as keyof BOARD_ELEMENT] = value
           }
@@ -547,7 +550,7 @@ export function memoryinspectcommand(path: string, player: string) {
     return
   }
   const inspect = parsetarget(path)
-  const element = memoryboardelementreadbyidorindex(board, inspect.target)
+  const element = memoryreadboardelementbyidorindex(board, inspect.target)
   if (!ispresent(element)) {
     return
   }
@@ -567,7 +570,7 @@ export function memoryinspectcommand(path: string, player: string) {
       memoryinspectchar(player, element, inspect.path)
       break
     case 'empty':
-      memoryboardsafedelete(board, element, mainbook.timestamp)
+      memorysafedeleteelement(board, element, mainbook.timestamp)
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {
@@ -666,10 +669,10 @@ export function memoryinspectelement(
 
   const chip = chipfromelement(board, element)
   if (isobject) {
-    gadgettext(player, `cycle: ${memoryelementstatread(element, 'cycle')}`)
+    gadgettext(player, `cycle: ${memoryreadelementstat(element, 'cycle')}`)
   }
 
-  const collision = memoryelementstatread(element, 'collision')
+  const collision = memoryreadelementstat(element, 'collision')
   switch (collision as COLLISION) {
     case COLLISION.ISWALK:
       gadgettext(player, `collision: iswalk`)
@@ -691,19 +694,19 @@ export function memoryinspectelement(
   if (isobject) {
     gadgettext(
       player,
-      `ispushable: ${memoryelementstatread(element, 'pushable') ? `yes` : `no`}`,
+      `ispushable: ${memoryreadelementstat(element, 'pushable') ? `yes` : `no`}`,
     )
   }
   gadgettext(
     player,
     `isbreakable: ${
-      memoryelementstatread(element, 'breakable') ? `yes` : `no`
+      memoryreadelementstat(element, 'breakable') ? `yes` : `no`
     }`,
   )
 
   gadgettext(player, DIVIDER)
 
-  const stats = memorycodepagereadstatdefaults(codepage)
+  const stats = memoryreadcodepagestatdefaults(codepage)
   const targets = objectKeys(stats)
   for (let i = 0; i < targets.length; ++i) {
     const target = targets[i]
@@ -792,7 +795,7 @@ export function memoryinspectelement(
   gadgethyperlink(
     player,
     'batch',
-    `edit @${memorycodepagereadname(codepage)}`,
+    `edit @${memoryreadcodepagename(codepage)}`,
     [`pageopen:${codepage.id}`],
   )
 
@@ -820,11 +823,11 @@ export function memoryinspectempty(
     case 'emptyall': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryboardelementread(board, { x, y })
+          const maybeobject = memoryreadboardelement(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
+            memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
-          memoryboardsetterrain(board, { x, y })
+          memorysetboardterrain(board, { x, y })
         }
       }
       break
@@ -832,9 +835,9 @@ export function memoryinspectempty(
     case 'emptyobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryboardelementread(board, { x, y })
+          const maybeobject = memoryreadboardelement(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            memoryboardsafedelete(board, maybeobject, mainbook.timestamp)
+            memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
         }
       }
@@ -843,7 +846,7 @@ export function memoryinspectempty(
     case 'emptyterrain': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          memoryboardsetterrain(board, { x, y })
+          memorysetboardterrain(board, { x, y })
         }
       }
       break
@@ -885,9 +888,4 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
   const shared = gadgetstate(player)
   shared.scrollname = 'empty'
   shared.scroll = gadgetcheckqueue(player)
-}
-
-function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
-  const id = element?.id ?? memoryboardelementindex(board, element)
-  return `inspect:${id}`
 }

@@ -16,11 +16,11 @@ import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { memoryboardobjectread } from './boardoperations'
+import { memoryreadboardobject } from './boardoperations'
 import {
-  memorybookelementdisplayread,
-  memorybookexport,
-  memorybookimport,
+  memoryexportbook,
+  memoryimportbook,
+  memoryreadelementdisplay,
 } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
 import { BOOK, MEMORY_LABEL } from './types'
@@ -33,8 +33,6 @@ import {
   memoryreadoperator,
   memoryreadtopic,
 } from '.'
-
-// Compression & Serialization
 
 let zstdenabled = false
 async function getzstdlib(): Promise<void> {
@@ -59,6 +57,44 @@ function base64tobase64url(base64String: string) {
   return base64String.replace(/\+/g, '-').replace(/\//g, '_')
 }
 
+async function writeidb<T>(
+  key: string,
+  updater: (oldValue: T | undefined) => T,
+): Promise<void> {
+  return idbupdate(key, updater)
+}
+
+function readconfigdefault(name: string) {
+  switch (name) {
+    case 'crt':
+      return 'on'
+    default:
+      return 'off'
+  }
+}
+
+async function writeconfig(name: string, value: string) {
+  return writeidb(`config_${name}`, () => value)
+}
+
+async function readconfigall() {
+  const lookup = [
+    'config_crt',
+    'config_lowrez',
+    'config_scanlines',
+    'config_voice2text',
+  ]
+  const configs = await idbgetmany<string>(lookup)
+  return configs.map((value, index) => {
+    const key = lookup[index]
+    const keyname = key.replace('config_', '')
+    if (!value) {
+      return [keyname, readconfigdefault(keyname)]
+    }
+    return [keyname, value && value !== 'off' ? 'on' : 'off']
+  })
+}
+
 const FIXED_DATE = new Date('1980/09/02')
 
 export async function memoryadminmenu(player: string) {
@@ -77,8 +113,8 @@ export async function memoryadminmenu(player: string) {
     const { user } = memoryreadflags(player)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(player)
-    const playerelement = memoryboardobjectread(playerboard, player)
-    const icon = memorybookelementdisplayread(playerelement)
+    const playerelement = memoryreadboardobject(playerboard, player)
+    const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
     if (isop && ispresent(playerboard)) {
@@ -172,7 +208,7 @@ export async function memorycompressbooks(books: BOOK[]) {
   const zip = new JSZip()
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
-    const exportedbook = memorybookexport(book)
+    const exportedbook = memoryexportbook(book)
     if (exportedbook) {
       // convert to bin
       const bin = packformat(exportedbook)
@@ -211,7 +247,7 @@ export async function memorydecompressbooks(base64bytes: string) {
     const str = await file.async('string')
     const maybebookfromstr = unpackformat(str)
     if (ispresent(maybebookfromstr)) {
-      const book = memorybookimport(maybebookfromstr)
+      const book = memoryimportbook(maybebookfromstr)
       if (ispresent(book)) {
         books.push(book)
         continue
@@ -222,7 +258,7 @@ export async function memorydecompressbooks(base64bytes: string) {
     const bin = await file.async('uint8array')
     const maybebookfrombin = unpackformat(bin)
     if (ispresent(maybebookfrombin)) {
-      const book = memorybookimport(maybebookfrombin)
+      const book = memoryimportbook(maybebookfrombin)
       if (ispresent(book)) {
         books.push(book)
         continue
@@ -233,7 +269,7 @@ export async function memorydecompressbooks(base64bytes: string) {
     const ubin = decompress(bin)
     const maybebookfromubin = unpackformat(ubin)
     if (ispresent(maybebookfromubin)) {
-      const book = memorybookimport(maybebookfromubin)
+      const book = memoryimportbook(maybebookfromubin)
       if (ispresent(book)) {
         books.push(book)
       }
@@ -241,48 +277,4 @@ export async function memorydecompressbooks(base64bytes: string) {
   }
 
   return books
-}
-
-// import json into book
-
-// Admin Operations
-
-// read / write from indexdb
-
-async function writeidb<T>(
-  key: string,
-  updater: (oldValue: T | undefined) => T,
-): Promise<void> {
-  return idbupdate(key, updater)
-}
-
-function readconfigdefault(name: string) {
-  switch (name) {
-    case 'crt':
-      return 'on'
-    default:
-      return 'off'
-  }
-}
-
-async function writeconfig(name: string, value: string) {
-  return writeidb(`config_${name}`, () => value)
-}
-
-async function readconfigall() {
-  const lookup = [
-    'config_crt',
-    'config_lowrez',
-    'config_scanlines',
-    'config_voice2text',
-  ]
-  const configs = await idbgetmany<string>(lookup)
-  return configs.map((value, index) => {
-    const key = lookup[index]
-    const keyname = key.replace('config_', '')
-    if (!value) {
-      return [keyname, readconfigdefault(keyname)]
-    }
-    return [keyname, value && value !== 'off' ? 'on' : 'off']
-  })
 }

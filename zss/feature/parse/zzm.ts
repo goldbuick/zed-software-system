@@ -3,10 +3,10 @@ import { SOFTWARE } from 'zss/device/session'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { memorybookwritecodepage } from 'zss/memory/bookoperations'
+import { memorywritebookcodepage } from 'zss/memory/bookoperations'
 import {
-  memorycodepagereadname,
-  memorycodepagereadtypetostring,
+  memoryreadcodepagename,
+  memoryreadcodepagetypeasstring,
   memorycreatecodepage,
 } from 'zss/memory/codepageoperations'
 import { NAME } from 'zss/words/types'
@@ -135,16 +135,16 @@ ${song.lines.map((line) => `#play ${line}`).join('\n')}
   .join('\n')}
 `
   const codepage = memorycreatecodepage(code, {})
-  const codepagename = memorycodepagereadname(codepage)
+  const codepagename = memoryreadcodepagename(codepage)
 
-  memorybookwritecodepage(contentbook, codepage)
+  memorywritebookcodepage(contentbook, codepage)
   apitoast(
     SOFTWARE,
     player,
     `imported zzt zzm file ${codepagename} into ${contentbook.name} book`,
   )
-  const name = memorycodepagereadname(codepage)
-  const type = memorycodepagereadtypetostring(codepage)
+  const name = memoryreadcodepagename(codepage)
+  const type = memoryreadcodepagetypeasstring(codepage)
   write(
     SOFTWARE,
     player,

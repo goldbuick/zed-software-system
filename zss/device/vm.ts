@@ -29,49 +29,48 @@ import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
-  memorycli,
-  memoryclirepeatlast,
   memoryhasflags,
   memorylistcodepagewithtype,
-  memorymessage,
-  memoryplayerlogin,
-  memoryplayerlogout,
-  memoryplayerscan,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadflags,
   memoryreadhalt,
   memoryreadoperator,
-  memoryreadplayeractive,
-  memoryreadplayerboard,
   memoryreadsession,
   memoryresetbooks,
-  memoryresetchipafteredit,
-  memoryrestartallchipsandflags,
-  memoryscrollunlock,
-  memorysendtoboards,
-  memorysetbook,
-  memorytick,
+  memorywritebook,
   memorywritehalt,
   memorywriteoperator,
   memorywritetopic,
 } from 'zss/memory'
-import { memoryboardobjectread } from 'zss/memory/boardoperations'
+import { memoryreadboardobject } from 'zss/memory/boardoperations'
 import {
-  memorybookreadcodepagebyaddress,
-  memorybookreadcodepagesbytype,
-  memorybookwritecodepage,
+  memoryreadbookcodepagebyaddress,
+  memoryreadbookcodepagesbytype,
+  memorywritebookcodepage,
 } from 'zss/memory/bookoperations'
 import {
-  memorycodepageapplyelementstats,
-  memorycodepagereaddata,
-  memorycodepagereadname,
-  memorycodepagereadstatsfromtext,
-  memorycodepagereadtype,
-  memorycodepagereadtypetostring,
-  memorycodepageresetstats,
+  memoryrepeatclilast,
+  memoryresetchipafteredit,
+  memoryrestartallchipsandflags,
+  memoryruncli,
+  memoryunlockscroll,
+} from 'zss/memory/cliruntime'
+import {
+  memoryapplyelementstats,
+  memoryreadcodepagedata,
+  memoryreadcodepagename,
+  memoryreadcodepagestatsfromtext,
+  memoryreadcodepagetype,
+  memoryreadcodepagetypeasstring,
+  memoryresetcodepagestats,
 } from 'zss/memory/codepageoperations'
+import {
+  memorysendtoboards,
+  memorytickmain,
+  memorywritemessage,
+} from 'zss/memory/gameloop'
 import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspection'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectionbatch'
 import {
@@ -86,8 +85,13 @@ import {
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import { memoryloader } from 'zss/memory/loader'
 import {
-  memorybookplayermovetoboard,
-  memorybookplayerreadboards,
+  memoryloginplayer,
+  memorylogoutplayer,
+  memorymoveplayertoboard,
+  memoryreadbookplayerboards,
+  memoryreadplayeractive,
+  memoryreadplayerboard,
+  memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import {
@@ -348,20 +352,20 @@ const vm = createdevice(
           ],
           // object codepage kinds
           kinds: [
-            ...memorybookreadcodepagesbytype(
+            ...memoryreadbookcodepagesbytype(
               mainbook,
               CODE_PAGE_TYPE.OBJECT,
-            ).map((codepage) => memorycodepagereadname(codepage)),
+            ).map((codepage) => memoryreadcodepagename(codepage)),
             ...objectKeys(categoryconsts),
           ],
           // other codepage types
           altkinds: [
-            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
-            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
-            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
-            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
-            ...memorybookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
-          ].map((codepage) => memorycodepagereadname(codepage)),
+            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
+            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
+            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
+            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
+            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
+          ].map((codepage) => memoryreadcodepagename(codepage)),
           colors: [...objectKeys(colorconsts)],
           dirs: [
             ...objectKeys(dirconsts).filter(
@@ -420,7 +424,7 @@ const vm = createdevice(
         // clear scroll locks
         vmclearscroll(vm, message.player)
         // logout player
-        memoryplayerlogout(message.player, !!message.data)
+        memorylogoutplayer(message.player, !!message.data)
         // stop tracking
         delete tracking[message.player]
         apilog(vm, operator, `player ${message.player} logout`)
@@ -429,7 +433,7 @@ const vm = createdevice(
         break
       case 'login':
         // attempt login
-        if (memoryplayerlogin(message.player, message.data)) {
+        if (memoryloginplayer(message.player, message.data)) {
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
@@ -442,7 +446,7 @@ const vm = createdevice(
         break
       case 'local':
         // attempt login
-        if (memoryplayerlogin(message.player, {})) {
+        if (memoryloginplayer(message.player, {})) {
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
@@ -495,30 +499,30 @@ const vm = createdevice(
               const [codepage, maybeobject] = path
               // write to code
               const contentbook = memoryreadbookbyaddress(book)
-              const content = memorybookreadcodepagebyaddress(
+              const content = memoryreadbookcodepagebyaddress(
                 contentbook,
                 codepage,
               )
               if (ispresent(content)) {
                 if (
-                  memorycodepagereadtype(content) === CODE_PAGE_TYPE.BOARD &&
+                  memoryreadcodepagetype(content) === CODE_PAGE_TYPE.BOARD &&
                   ispresent(maybeobject)
                 ) {
                   const board =
-                    memorycodepagereaddata<CODE_PAGE_TYPE.BOARD>(content)
-                  const object = memoryboardobjectread(board, maybeobject)
+                    memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(content)
+                  const object = memoryreadboardobject(board, maybeobject)
                   if (ispresent(object)) {
                     // TODO parse code for stats and update element name
                     object.code = value
-                    memorycodepageapplyelementstats(
-                      memorycodepagereadstatsfromtext(value),
+                    memoryapplyelementstats(
+                      memoryreadcodepagestatsfromtext(value),
                       object,
                     )
                   }
                 } else {
                   content.code = value
                   // re-parse code for @ attrs and expected data type
-                  memorycodepageresetstats(content)
+                  memoryresetcodepagestats(content)
                 }
               }
             })
@@ -554,7 +558,7 @@ const vm = createdevice(
         if (ispresent(maybeboard)) {
           const objids = Object.keys(maybeboard.objects)
           for (let i = 0; i < objids.length; ++i) {
-            memoryscrollunlock(objids[i], message.player)
+            memoryunlockscroll(objids[i], message.player)
           }
         }
         break
@@ -572,13 +576,13 @@ const vm = createdevice(
         }
         break
       case 'tick': {
-        memorytick(memoryreadhalt())
+        memorytickmain(memoryreadhalt())
         break
       }
       case 'second': {
         // ensure player ids are added to tracking
         // this manages restoring from saved or transfered state
-        memoryplayerscan(tracking)
+        memoryscanplayers(tracking)
 
         // list of player ids
         const players = Object.keys(tracking)
@@ -611,13 +615,13 @@ const vm = createdevice(
           const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
           if (ispresent(mainbook) && isarray(message.data)) {
             const [address] = message.data
-            const codepage = memorybookreadcodepagebyaddress(mainbook, address)
+            const codepage = memoryreadbookcodepagebyaddress(mainbook, address)
             if (ispresent(codepage)) {
               registercopyjsonfile(
                 vm,
                 operator,
                 codepage,
-                `${memorycodepagereadname(codepage)}.${memorycodepagereadtypetostring(codepage)}.json`,
+                `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
               )
             }
           }
@@ -719,11 +723,11 @@ const vm = createdevice(
         break
       case 'cli':
         // user input from built-in console
-        memorycli(message.player, message.data)
+        memoryruncli(message.player, message.data)
         break
       case 'clirepeatlast':
         // repeat user input from built-in console
-        memoryclirepeatlast(message.player)
+        memoryrepeatclilast(message.player)
         break
       case 'restart':
         if (message.player === operator) {
@@ -764,7 +768,7 @@ const vm = createdevice(
                   ispresent(json.data) &&
                   isstring(json.exported)
                 ) {
-                  memorysetbook(json.data)
+                  memorywritebook(json.data)
                   apilog(vm, message.player, `loaded ${json.exported}`)
                 }
               } else if (/file:.*\..*\.codepage.json/.test(eventname)) {
@@ -777,7 +781,7 @@ const vm = createdevice(
                   ispresent(json.data) &&
                   isstring(json.exported)
                 ) {
-                  memorybookwritecodepage(mainbook, json.data)
+                  memorywritebookcodepage(mainbook, json.data)
                   apilog(vm, message.player, `loaded ${json.exported}`)
                 }
               } else {
@@ -813,13 +817,13 @@ const vm = createdevice(
             // path is player id
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             const playerboard = memoryreadplayerboard(path)
-            const playerelement = memoryboardobjectread(playerboard, path)
+            const playerelement = memoryreadboardobject(playerboard, path)
             if (ispresent(playerboard) && ispresent(playerelement)) {
               const dest = {
                 x: playerelement.x ?? 0,
                 y: playerelement.y ?? 0,
               }
-              memorybookplayermovetoboard(
+              memorymoveplayertoboard(
                 mainbook,
                 message.player,
                 playerboard.id,
@@ -839,7 +843,7 @@ const vm = createdevice(
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
                 for (let i = 0; i < pages.length; ++i) {
                   const codepage = pages[i]
-                  const name = memorycodepagereadname(codepage)
+                  const name = memoryreadcodepagename(codepage)
                   const lines = codepage.code.split('\n').slice(0, 2)
                   gadgethyperlink(
                     message.player,
@@ -857,7 +861,7 @@ const vm = createdevice(
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.TERRAIN)
                 for (let i = 0; i < pages.length; ++i) {
                   const codepage = pages[i]
-                  const name = memorycodepagereadname(codepage)
+                  const name = memoryreadcodepagename(codepage)
                   const lines = codepage.code.split('\n').slice(0, 2)
                   gadgethyperlink(
                     message.player,
@@ -983,14 +987,14 @@ const vm = createdevice(
             if (NAME(invoke.target) === 'self' || !invoke.path) {
               // chop off self:
               message.target = message.target.replace('self:', '')
-              memorymessage(message)
+              memorywritemessage(message)
             } else {
               const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
               memorysendtoboards(
                 invoke.target,
                 invoke.path,
                 undefined,
-                memorybookplayerreadboards(mainbook),
+                memoryreadbookplayerboards(mainbook),
               )
             }
             break
