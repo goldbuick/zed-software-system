@@ -2,10 +2,7 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
-import {
-  memoryreadcodepagebyaddress,
-  memorylistcodepagebytype,
-} from './bookoperations'
+import { memoryreadcodepage, memorylistcodepagebytype } from './bookoperations'
 import { memorystartloader } from './cliruntime'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
@@ -69,7 +66,7 @@ export function memoryloadermatches(
   }
 
   // first check for id match
-  const maybecodepage = memoryreadcodepagebyaddress(mainbook, idoreventname)
+  const maybecodepage = memoryreadcodepage(mainbook, idoreventname)
   if (ispresent(maybecodepage)) {
     return [maybecodepage]
   }

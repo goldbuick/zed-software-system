@@ -6,7 +6,7 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardoperations'
-import { memoryreadcodepagebyaddress } from './bookoperations'
+import { memoryreadcodepage } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
 import { MEMORY_LABEL } from './types'
 
@@ -90,7 +90,7 @@ export function memoryrestartallchipsandflags() {
 export function memoryruncodepage(address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  const codepage = memoryreadcodepagebyaddress(mainbook, address)
+  const codepage = memoryreadcodepage(mainbook, address)
   if (!ispresent(mainbook) || !ispresent(codepage)) {
     return
   }

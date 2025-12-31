@@ -13,10 +13,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
-import {
-  memoryreadcodepagebyaddress,
-  memorylistcodepagebystat,
-} from './bookoperations'
+import { memoryreadcodepage, memorylistcodepagebystat } from './bookoperations'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetype,
@@ -84,7 +81,7 @@ function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
   // first check for existing codepage with matching name or id
   const books = memoryreadbooklist()
   for (let i = 0; i < books.length; ++i) {
-    const maybecodepage = memoryreadcodepagebyaddress(books[i], nameorid)
+    const maybecodepage = memoryreadcodepage(books[i], nameorid)
     if (ispresent(maybecodepage)) {
       return maybecodepage
     }

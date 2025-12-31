@@ -62,7 +62,7 @@ export function memoryreadelementcodepage(
 }
 
 export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
-  const codepage = memoryreadcodepagebyaddress(book, address)
+  const codepage = memoryreadcodepage(book, address)
   if (ispresent(book) && ispresent(codepage)) {
     const laddress = NAME(address)
     book.pages = book.pages.filter(
@@ -175,7 +175,7 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   return book
 }
 
-export function memoryreadcodepagebyaddress(
+export function memoryreadcodepage(
   book: MAYBE<BOOK>,
   address: string,
 ): MAYBE<CODE_PAGE> {
@@ -328,7 +328,7 @@ export function memorywritecodepage(
     return false
   }
 
-  const existing = memoryreadcodepagebyaddress(book, codepage.id)
+  const existing = memoryreadcodepage(book, codepage.id)
   if (ispresent(existing)) {
     return false
   }

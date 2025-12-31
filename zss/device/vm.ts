@@ -47,7 +47,7 @@ import {
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
   memorylistcodepagebytype,
-  memoryreadcodepagebyaddress,
+  memoryreadcodepage,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
@@ -498,7 +498,7 @@ const vm = createdevice(
               const [codepage, maybeobject] = path
               // write to code
               const contentbook = memoryreadbookbyaddress(book)
-              const content = memoryreadcodepagebyaddress(contentbook, codepage)
+              const content = memoryreadcodepage(contentbook, codepage)
               if (ispresent(content)) {
                 if (
                   memoryreadcodepagetype(content) === CODE_PAGE_TYPE.BOARD &&
@@ -611,7 +611,7 @@ const vm = createdevice(
           const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
           if (ispresent(mainbook) && isarray(message.data)) {
             const [address] = message.data
-            const codepage = memoryreadcodepagebyaddress(mainbook, address)
+            const codepage = memoryreadcodepage(mainbook, address)
             if (ispresent(codepage)) {
               registercopyjsonfile(
                 vm,

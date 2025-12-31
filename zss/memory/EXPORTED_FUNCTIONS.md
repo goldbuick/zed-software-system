@@ -67,7 +67,7 @@
 - **memorylistcodepagebytype(book, type)** - Gets all code pages of a type
 - **memorylistcodepagebytypeandstat(book, type, statname)** - Gets code pages by type and stat
 - **memorylistcodepagessorted(book)** - Gets code pages sorted by type and name
-- **memoryreadcodepagebyaddress(book, address)** - Finds code page by ID or name
+- **memoryreadcodepageby(book, address)** - Finds code page by ID or name
 - **memoryreadcodepagewithtype(book, type, address)** - Finds code page by type and address
 - **memoryreadelementcodepage(book, element)** - Gets code page for a board element
 - **memoryreadelementdisplay(element, defaultchar?, defaultcolor?, defaultbg?)** - Gets display properties for an element

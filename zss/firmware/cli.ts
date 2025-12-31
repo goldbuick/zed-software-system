@@ -65,7 +65,7 @@ import {
 } from 'zss/memory'
 import {
   memoryclearbookcodepage,
-  memoryreadcodepagebyaddress,
+  memoryreadcodepage,
   memorylistcodepagessorted,
   memoryreadelementdisplay,
   memoryupdatebookname,
@@ -248,7 +248,7 @@ export const CLI_FIRMWARE = createfirmware()
     const booklist = memoryreadbooklist()
     for (let i = 0; i < booklist.length; ++i) {
       codepagebook = booklist[i]
-      codepage = memoryreadcodepagebyaddress(codepagebook, page)
+      codepage = memoryreadcodepage(codepagebook, page)
       if (ispresent(codepage)) {
         break
       }
@@ -637,7 +637,7 @@ export const CLI_FIRMWARE = createfirmware()
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
     const { target, path } = parsetarget(address)
     const book = memoryreadbookbyaddress(target)
-    const codepage = memoryreadcodepagebyaddress(book, path)
+    const codepage = memoryreadcodepage(book, path)
     if (ispresent(codepage)) {
       registerdownloadjsonfile(
         SOFTWARE,
