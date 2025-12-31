@@ -61,22 +61,6 @@ enum BITMAP_KEYS {
   bits,
 }
 
-export function memoryexportbitmap(
-  bitmap: MAYBE<BITMAP>,
-): MAYBE<FORMAT_OBJECT> {
-  return formatobject(bitmap, BITMAP_KEYS, {
-    bits: (bits: Uint8Array) => Array.from(bits),
-  })
-}
-
-export function memoryimportbitmap(
-  bitmapentry: MAYBE<FORMAT_OBJECT>,
-): MAYBE<BITMAP> {
-  return unformatobject(bitmapentry, BITMAP_KEYS, {
-    bits: (bits: number[]) => new Uint8Array(bits),
-  })
-}
-
 export function memoryapplyelementstats(
   stats: CODE_PAGE_STATS,
   element: BOARD_ELEMENT,
@@ -187,6 +171,22 @@ export function memoryapplyelementstats(
         break
     }
   }
+}
+
+export function memoryexportbitmap(
+  bitmap: MAYBE<BITMAP>,
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(bitmap, BITMAP_KEYS, {
+    bits: (bits: Uint8Array) => Array.from(bits),
+  })
+}
+
+export function memoryimportbitmap(
+  bitmapentry: MAYBE<FORMAT_OBJECT>,
+): MAYBE<BITMAP> {
+  return unformatobject(bitmapentry, BITMAP_KEYS, {
+    bits: (bits: number[]) => new Uint8Array(bits),
+  })
 }
 
 export function memoryexportcodepage(

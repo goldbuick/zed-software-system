@@ -1,6 +1,6 @@
 import { linepoints } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { memoryinitboard, memoryreadboard } from 'zss/memory'
+import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory'
 import { memorycreateboard } from 'zss/memory/boardoperations'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -16,7 +16,7 @@ export function boardpivot(
   if (!ispresent(READ_CONTEXT.book)) {
     return
   }
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return
   }

@@ -3,7 +3,7 @@ import { ispresent } from 'zss/mapping/types'
 import {
   memorycheckelementpushable,
   memoryinitboard,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementstat,
 } from 'zss/memory'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
@@ -41,7 +41,7 @@ export function boardweave(
     return
   }
 
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return
   }
@@ -110,7 +110,7 @@ export function boardweavegroup(
     return
   }
   const book = READ_CONTEXT.book
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return
   }

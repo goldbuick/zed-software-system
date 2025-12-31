@@ -11,7 +11,7 @@ import {
 } from 'zss/memory'
 import {
   memorycreatebook,
-  memorywritebookcodepage,
+  memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -591,7 +591,7 @@ function processboards(book: BOOK, startboard: number, zztboards: ZZT_BOARD[]) {
     // create a new board codepage
     const code = `@board ${String(i).padStart(3, '0')}. ${zztboard.boardname}\n${codepagestats.join('\n')}`
     const codepage = memorycreatecodepage(code, {})
-    memorywritebookcodepage(book, codepage)
+    memorywritecodepage(book, codepage)
 
     // get board data from codepage
     const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)

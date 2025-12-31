@@ -8,7 +8,7 @@ import { maptostring } from 'zss/mapping/value'
 import {
   memoryensuresoftwarecodepage,
   memoryinitboard,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
   memorywritebullet,
@@ -341,7 +341,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     // attempt to clone existing board
     if (isstring(maybesource)) {
-      const sourceboard = memoryreadboard(maybesource)
+      const sourceboard = memoryreadboardbyaddress(maybesource)
       if (ispresent(sourceboard)) {
         boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
         // make sure to copy board stats as well
@@ -405,7 +405,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
     ])
 
-    const targetboard = memoryreadboard(stat)
+    const targetboard = memoryreadboardbyaddress(stat)
     if (!ispresent(targetboard)) {
       return 0
     }

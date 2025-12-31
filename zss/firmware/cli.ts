@@ -55,7 +55,7 @@ import { maptostring } from 'zss/mapping/value'
 import {
   memoryclearbook,
   memoryensuresoftwarebook,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
@@ -65,8 +65,8 @@ import {
 } from 'zss/memory'
 import {
   memoryclearbookcodepage,
-  memoryreadbookcodepagebyaddress,
-  memoryreadbookcodepagessorted,
+  memoryreadcodepagebyaddress,
+  memorylistcodepagessorted,
   memoryreadelementdisplay,
   memoryupdatebookname,
 } from 'zss/memory/bookoperations'
@@ -221,7 +221,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('boardopen', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
-    const target = memoryreadboard(stat)
+    const target = memoryreadboardbyaddress(stat)
     if (ispresent(target)) {
       memorymoveplayertoboard(
         READ_CONTEXT.book,
@@ -248,7 +248,7 @@ export const CLI_FIRMWARE = createfirmware()
     const booklist = memoryreadbooklist()
     for (let i = 0; i < booklist.length; ++i) {
       codepagebook = booklist[i]
-      codepage = memoryreadbookcodepagebyaddress(codepagebook, page)
+      codepage = memoryreadcodepagebyaddress(codepagebook, page)
       if (ispresent(codepage)) {
         break
       }
@@ -361,7 +361,7 @@ export const CLI_FIRMWARE = createfirmware()
       `${mainbook.name} $GREEN${mainbook.id}`,
     )
     if (mainbook.pages.length) {
-      const sorted = memoryreadbookcodepagessorted(mainbook)
+      const sorted = memorylistcodepagessorted(mainbook)
       sorted.forEach((page) => {
         const name = memoryreadcodepagename(page)
         const type = memoryreadcodepagetypeasstring(page)
@@ -389,7 +389,7 @@ export const CLI_FIRMWARE = createfirmware()
           'content',
           `${book.name} $GREEN${book.id}`,
         )
-        const sorted = memoryreadbookcodepagessorted(book)
+        const sorted = memorylistcodepagessorted(book)
         sorted.forEach((page) => {
           const name = memoryreadcodepagename(page)
           const type = memoryreadcodepagetypeasstring(page)
@@ -414,7 +414,7 @@ export const CLI_FIRMWARE = createfirmware()
         'main',
         `${mainbook.name} $GREEN${mainbook.id}`,
       )
-      const sorted = memoryreadbookcodepagessorted(mainbook)
+      const sorted = memorylistcodepagessorted(mainbook)
       sorted
         .filter((page) => memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD)
         .forEach((page) => {
@@ -451,7 +451,7 @@ export const CLI_FIRMWARE = createfirmware()
           'content',
           `${book.name} $GREEN${book.id}`,
         )
-        const sorted = memoryreadbookcodepagessorted(book)
+        const sorted = memorylistcodepagessorted(book)
         sorted
           .filter(
             (page) => memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
@@ -593,7 +593,7 @@ export const CLI_FIRMWARE = createfirmware()
       writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
       setTimeout(() => {
         if (book.pages.length) {
-          const sorted = memoryreadbookcodepagessorted(book)
+          const sorted = memorylistcodepagessorted(book)
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
@@ -637,7 +637,7 @@ export const CLI_FIRMWARE = createfirmware()
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
     const { target, path } = parsetarget(address)
     const book = memoryreadbookbyaddress(target)
-    const codepage = memoryreadbookcodepagebyaddress(book, path)
+    const codepage = memoryreadcodepagebyaddress(book, path)
     if (ispresent(codepage)) {
       registerdownloadjsonfile(
         SOFTWARE,

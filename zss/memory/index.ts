@@ -24,8 +24,8 @@ import {
   memorycreatebook,
   memoryensurebookcodepagewithtype,
   memoryhasbookflags,
-  memoryreadbookcodepagesbytypeandstat,
-  memoryreadbookcodepagessorted,
+  memorylistcodepagebytypeandstat,
+  memorylistcodepagessorted,
   memoryreadbookflags,
 } from './bookoperations'
 import {
@@ -214,7 +214,7 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
 ): MAYBE<CODE_PAGE> {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const codepage = pick(
-    memoryreadbookcodepagesbytypeandstat(mainbook, type, address),
+    memorylistcodepagebytypeandstat(mainbook, type, address),
   )
   if (ispresent(codepage)) {
     return codepage
@@ -224,7 +224,7 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
     const book = books[i]
     if (book.id !== mainbook?.id) {
       const fallbackcodepage = pick(
-        memoryreadbookcodepagesbytypeandstat(book, type, address),
+        memorylistcodepagebytypeandstat(book, type, address),
       )
       if (ispresent(fallbackcodepage)) {
         return fallbackcodepage
@@ -238,7 +238,7 @@ export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
 ): CODE_PAGE[] {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const found = memoryreadbookcodepagessorted(mainbook).filter(
+  const found = memorylistcodepagessorted(mainbook).filter(
     (codepage) => memoryreadcodepagetype(codepage) === type,
   )
   const books = memoryreadbooklist()
@@ -246,7 +246,7 @@ export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(
     const book = books[i]
     if (book.id !== mainbook?.id) {
       found.push(
-        ...memoryreadbookcodepagessorted(book).filter(
+        ...memorylistcodepagessorted(book).filter(
           (codepage) => memoryreadcodepagetype(codepage) === type,
         ),
       )
@@ -425,7 +425,7 @@ export function memorywritebullet(
   return undefined
 }
 
-export function memoryreadboard(address: string): MAYBE<BOARD> {
+export function memoryreadboardbyaddress(address: string): MAYBE<BOARD> {
   const maybeboard = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
   return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
 }
@@ -441,7 +441,7 @@ export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   }
   // validate overboard value
   if (isstring(board.overboard)) {
-    const maybeover = memoryreadboard(board.overboard)
+    const maybeover = memoryreadboardbyaddress(board.overboard)
     if (ispresent(maybeover)) {
       return maybeover
     }
@@ -449,7 +449,7 @@ export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
     return undefined
   }
   // no overboard value
-  const maybeover = memoryreadboard(board.over)
+  const maybeover = memoryreadboardbyaddress(board.over)
   if (ispresent(maybeover)) {
     board.overboard = maybeover.id
     return maybeover
@@ -468,7 +468,7 @@ export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   }
   // validate underboard value
   if (isstring(board.underboard)) {
-    const maybeunder = memoryreadboard(board.underboard)
+    const maybeunder = memoryreadboardbyaddress(board.underboard)
     if (ispresent(maybeunder)) {
       return maybeunder
     }
@@ -476,7 +476,7 @@ export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
     return undefined
   }
   // no underboard value
-  const maybeunder = memoryreadboard(board.under)
+  const maybeunder = memoryreadboardbyaddress(board.under)
   if (ispresent(maybeunder)) {
     board.underboard = maybeunder.id
     return maybeunder

@@ -2,7 +2,7 @@ import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { memorywritebookcodepage } from 'zss/memory/bookoperations'
+import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagename,
@@ -27,7 +27,7 @@ export function parsezztobj(player: string, filename: string, content: string) {
   const codepage = memorycreatecodepage(zztoop(withcode), {})
   const codepagename = memoryreadcodepagename(codepage)
 
-  memorywritebookcodepage(contentbook, codepage)
+  memorywritecodepage(contentbook, codepage)
   apitoast(
     SOFTWARE,
     player,

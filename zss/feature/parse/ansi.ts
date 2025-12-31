@@ -11,7 +11,7 @@ import {
   memoryptwithinboard,
   memorywriteterrain,
 } from 'zss/memory/boardoperations'
-import { memorywritebookcodepage } from 'zss/memory/bookoperations'
+import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
@@ -110,7 +110,7 @@ export function parseansi(
           const numeral = `${bi}`.padStart(3, '0')
           const code = `@board ${patchworkname} ${numeral}\n${stats.join('\n')}\n`
           const codepage = memorycreatecodepage(code, {})
-          memorywritebookcodepage(contentbook, codepage)
+          memorywritecodepage(contentbook, codepage)
           // get board data from codepage
           boards[bi] = board =
             memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)

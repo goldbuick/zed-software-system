@@ -60,7 +60,7 @@ import {
 
 import {
   memorypickcodepagewithtype,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
 } from '.'
@@ -907,13 +907,13 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   if (isstring(board.over)) {
     if (isstring(board.overboard)) {
       // validate cached resolve is still valid
-      const over = memoryreadboard(board.overboard)
+      const over = memoryreadboardbyaddress(board.overboard)
       if (!ispresent(over)) {
         delete board.overboard
       }
     } else {
       // check to see if board.over is a stat
-      const maybeboard = memoryreadboard(board.over)
+      const maybeboard = memoryreadboardbyaddress(board.over)
       if (ispresent(maybeboard)) {
         board.overboard = maybeboard.id
       }
@@ -927,13 +927,13 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   if (isstring(board.under)) {
     if (isstring(board.underboard)) {
       // validate cached resolve is still valid
-      const under = memoryreadboard(board.underboard)
+      const under = memoryreadboardbyaddress(board.underboard)
       if (!ispresent(under)) {
         delete board.underboard
       }
     } else {
       // check to see if board.under is a stat
-      const maybeboard = memoryreadboard(board.under)
+      const maybeboard = memoryreadboardbyaddress(board.under)
       if (ispresent(maybeboard)) {
         board.underboard = maybeboard.id
       }
@@ -1011,7 +1011,7 @@ export function memoryplayerblockedbyedge(
   // attempt to move player
   if (dest.x < 0) {
     // exit west
-    const destboard = memoryreadboard(board?.exitwest ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exitwest ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: BOARD_WIDTH - 1,
@@ -1020,7 +1020,7 @@ export function memoryplayerblockedbyedge(
     }
   } else if (dest.x >= BOARD_WIDTH) {
     // exit east
-    const destboard = memoryreadboard(board?.exiteast ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exiteast ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: 0,
@@ -1029,7 +1029,7 @@ export function memoryplayerblockedbyedge(
     }
   } else if (dest.y < 0) {
     // exit north
-    const destboard = memoryreadboard(board?.exitnorth ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exitnorth ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: dest.x,
@@ -1038,7 +1038,7 @@ export function memoryplayerblockedbyedge(
     }
   } else if (dest.y >= BOARD_HEIGHT) {
     // exit south
-    const destboard = memoryreadboard(board?.exitsouth ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exitsouth ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: dest.x,

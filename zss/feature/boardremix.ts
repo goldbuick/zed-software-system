@@ -4,7 +4,7 @@ import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import {
   memoryinitboard,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
   memorywriteelementfromkind,
@@ -38,12 +38,12 @@ export function boardremix(
   }
   const book = READ_CONTEXT.book
 
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return false
   }
 
-  const sourceboard = memoryreadboard(source)
+  const sourceboard = memoryreadboardbyaddress(source)
   if (!ispresent(sourceboard)) {
     return false
   }

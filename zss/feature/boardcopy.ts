@@ -2,7 +2,7 @@ import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import {
   memoryinitboard,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory'
@@ -119,12 +119,12 @@ export function boardcopy(
   }
   const book = READ_CONTEXT.book
 
-  const sourceboard = memoryreadboard(source)
+  const sourceboard = memoryreadboardbyaddress(source)
   if (!ispresent(sourceboard)) {
     return
   }
 
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return
   }
@@ -235,12 +235,12 @@ export function boardcopygroup(
   }
   const book = READ_CONTEXT.book
 
-  const sourceboard = memoryreadboard(source)
+  const sourceboard = memoryreadboardbyaddress(source)
   if (!ispresent(sourceboard)) {
     return
   }
 
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return
   }

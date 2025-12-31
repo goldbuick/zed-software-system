@@ -52,7 +52,7 @@ import {
 import {
   memoryinitboard,
   memorypickcodepagewithtype,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
   memoryreadflags,
@@ -777,10 +777,10 @@ export function memoryreadgadgetlayers(
   return {
     id: id4all.join('|'),
     board: board.id,
-    exiteast: memoryreadboard(board.exiteast ?? '')?.id ?? '',
-    exitwest: memoryreadboard(board.exitwest ?? '')?.id ?? '',
-    exitnorth: memoryreadboard(board.exitnorth ?? '')?.id ?? '',
-    exitsouth: memoryreadboard(board.exitsouth ?? '')?.id ?? '',
+    exiteast: memoryreadboardbyaddress(board.exiteast ?? '')?.id ?? '',
+    exitwest: memoryreadboardbyaddress(board.exitwest ?? '')?.id ?? '',
+    exitnorth: memoryreadboardbyaddress(board.exitnorth ?? '')?.id ?? '',
+    exitsouth: memoryreadboardbyaddress(board.exitsouth ?? '')?.id ?? '',
     over,
     under,
     layers,

@@ -12,7 +12,7 @@ import { ispid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memoryreadboard, memoryreadoperator } from 'zss/memory'
+import { memoryreadboardbyaddress, memoryreadoperator } from 'zss/memory'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memorysendtoelements } from 'zss/memory/gameloop'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
@@ -106,7 +106,7 @@ export const LOADER_FIRMWARE = createfirmware({
     const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
     // this will update the READ_CONTEXT so element centric
     // commands will work
-    const target = memoryreadboard(stat)
+    const target = memoryreadboardbyaddress(stat)
     if (ispresent(target)) {
       READ_CONTEXT.board = target
       READ_CONTEXT.element = {
