@@ -71,12 +71,12 @@
 - **memoryreadcodepagewithtype(book, type, address)** - Finds code page by type and address
 - **memoryreadelementcodepage(book, element)** - Gets code page for a board element
 - **memoryreadelementdisplay(element, defaultchar?, defaultcolor?, defaultbg?)** - Gets display properties for an element
-- **memoryreadflag(book, id, name)** - Reads a specific flag value
-- **memoryreadflags(book, id)** - Reads flags for an ID
+- **memoryreadbookflag(book, id, name)** - Reads a specific flag value
+- **memoryreadbookflags(book, id)** - Reads flags for an ID
 - **memoryupdatebookname(book)** - Updates book name
 - **memoryupdatebooktoken(book)** - Updates book token
 - **memorywritecodepage(book, codepage)** - Adds a code page to a book
-- **memorywriteflag(book, id, name, value)** - Writes a flag value
+- **memorywritebookflag(book, id, name, value)** - Writes a flag value
 
 ## cliruntime.ts
 
@@ -145,6 +145,7 @@
 - **memoryreadhalt()** - Returns the halt state
 - **memoryreadloaders()** - Returns the loaders map (internal)
 - **memoryreadoperator()** - Returns the current operator/player ID
+- **memoryreadsession()** - Returns the session ID
 - **memoryreadoverboard(board)** - Reads the over board for a board
 - **memoryreadtopic()** - Returns the current multiplayer topic
 - **memoryreadunderboard(board)** - Reads the under board for a board
