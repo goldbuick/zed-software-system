@@ -3,11 +3,11 @@ import { SOFTWARE } from 'zss/device/session'
 import { loadcharsetfrombytes } from 'zss/feature/bytes'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { memorywritebookcodepage } from 'zss/memory/bookoperations'
+import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
+  memorycreatecodepage,
   memoryreadcodepagedata,
   memoryreadcodepagename,
-  memorycreatecodepage,
 } from 'zss/memory/codepageoperations'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
@@ -31,7 +31,7 @@ export function parsechr(
 
   if (ispresent(charset) && ispresent(codepagecharset)) {
     Object.assign(codepagecharset, charset)
-    memorywritebookcodepage(contentbook, codepage)
+    memorywritecodepage(contentbook, codepage)
     apitoast(
       SOFTWARE,
       player,

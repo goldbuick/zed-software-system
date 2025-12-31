@@ -59,10 +59,10 @@ import {
 } from './types'
 
 import {
-  memoryreadboard,
+  memorypickcodepagewithtype,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
-  memorypickcodepagewithtype,
 } from '.'
 
 // From board.ts
@@ -97,7 +97,7 @@ export function memoryboardelementindex(
   return pt.x + pt.y * BOARD_WIDTH
 }
 
-export function memoryreadboardelement(
+export function memoryreadelement(
   board: MAYBE<BOARD>,
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
@@ -108,7 +108,7 @@ export function memoryreadboardelement(
   }
 
   // check lookup
-  const object = memoryreadboardobject(board, board.lookup[index] ?? '')
+  const object = memoryreadobject(board, board.lookup[index] ?? '')
   if (ispresent(object)) {
     return object
   }
@@ -117,17 +117,17 @@ export function memoryreadboardelement(
   return board.terrain[index]
 }
 
-export function memoryreadboardelementbyidorindex(
+export function memoryreadelementbyidorindex(
   board: MAYBE<BOARD>,
   idorindex: string,
 ) {
-  const maybeobject = memoryreadboardobject(board, idorindex)
+  const maybeobject = memoryreadobject(board, idorindex)
   if (ispresent(maybeobject)) {
     return maybeobject
   }
   const maybeindex = parseFloat(idorindex)
   const pt = indextopt(isNaN(maybeindex) ? -1 : maybeindex, BOARD_WIDTH)
-  return memorygetboardterrain(board, pt.x, pt.y)
+  return memoryreadterrain(board, pt.x, pt.y)
 }
 
 export function memoryevaldir(
@@ -329,7 +329,7 @@ export function memoryevaldir(
             )
             // check dest spot for blocked
             if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-              const step = memoryreadboardobjectbypt(board, maybept)
+              const step = memoryreadobjectbypt(board, maybept)
               if (!ispresent(step)) {
                 pt.x = maybept.x
                 pt.y = maybept.y
@@ -366,7 +366,7 @@ export function memoryevaldir(
             )
             // check dest spot for blocked
             if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-              const step = memoryreadboardobjectbypt(board, maybept)
+              const step = memoryreadobjectbypt(board, maybept)
               if (!ispresent(step)) {
                 pt.x = maybept.x
                 pt.y = maybept.y
@@ -563,9 +563,7 @@ export function memoryfindboardplayer(
   )
 }
 
-// evals directions into a PT
-
-export function memorygetboardterrain(
+export function memoryreadterrain(
   board: MAYBE<BOARD>,
   x: number,
   y: number,
@@ -619,7 +617,7 @@ export function memorycreateboardobjectfromkind(
   return memorycreateboardobject(board, { ...pt, kind, id })
 }
 
-export function memoryreadboardobject(
+export function memoryreadobject(
   board: MAYBE<BOARD>,
   id: string,
 ): MAYBE<BOARD_ELEMENT> {
@@ -629,7 +627,7 @@ export function memoryreadboardobject(
   return board.objects[id]
 }
 
-export function memoryreadboardobjectbypt(
+export function memoryreadobjectbypt(
   board: MAYBE<BOARD>,
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
@@ -640,7 +638,7 @@ export function memoryreadboardobjectbypt(
   }
 
   // check lookup
-  const object = memoryreadboardobject(board, board.lookup[index] ?? '')
+  const object = memoryreadobject(board, board.lookup[index] ?? '')
   if (ispresent(object)) {
     return object
   }
@@ -648,14 +646,14 @@ export function memoryreadboardobjectbypt(
   return undefined
 }
 
-export function memoryreadboardobjects(board: MAYBE<BOARD>): BOARD_ELEMENT[] {
+export function memoryreadobjects(board: MAYBE<BOARD>): BOARD_ELEMENT[] {
   if (!ispresent(board)) {
     return []
   }
   return [...Object.values(board.objects)]
 }
 
-export function memoryreadboardgroup(
+export function memoryreadgroup(
   board: MAYBE<BOARD>,
   self: string,
   targetgroup: string,
@@ -740,7 +738,7 @@ export function memorysafedeleteelement(
     // drop from luts
     memorydeleteboardobjectnamedlookup(board, element)
   } else {
-    memorysetboardterrain(board, {
+    memorywriteterrain(board, {
       x: element?.x ?? 0,
       y: element?.y ?? 0,
     })
@@ -751,7 +749,7 @@ export function memorysafedeleteelement(
   return true
 }
 
-export function memorysetboardterrain(
+export function memorywriteterrain(
   board: MAYBE<BOARD>,
   from: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
@@ -780,12 +778,12 @@ export function memorysetboardterrain(
   return board.terrain[index]
 }
 
-export function memorysetboardterrainfromkind(
+export function memorywriteterrainfromkind(
   board: MAYBE<BOARD>,
   pt: PT,
   kind: string,
 ): MAYBE<BOARD_ELEMENT> {
-  return memorysetboardterrain(board, { ...pt, kind })
+  return memorywriteterrain(board, { ...pt, kind })
 }
 
 export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
@@ -909,13 +907,13 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   if (isstring(board.over)) {
     if (isstring(board.overboard)) {
       // validate cached resolve is still valid
-      const over = memoryreadboard(board.overboard)
+      const over = memoryreadboardbyaddress(board.overboard)
       if (!ispresent(over)) {
         delete board.overboard
       }
     } else {
       // check to see if board.over is a stat
-      const maybeboard = memoryreadboard(board.over)
+      const maybeboard = memoryreadboardbyaddress(board.over)
       if (ispresent(maybeboard)) {
         board.overboard = maybeboard.id
       }
@@ -929,13 +927,13 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   if (isstring(board.under)) {
     if (isstring(board.underboard)) {
       // validate cached resolve is still valid
-      const under = memoryreadboard(board.underboard)
+      const under = memoryreadboardbyaddress(board.underboard)
       if (!ispresent(under)) {
         delete board.underboard
       }
     } else {
       // check to see if board.under is a stat
-      const maybeboard = memoryreadboard(board.under)
+      const maybeboard = memoryreadboardbyaddress(board.under)
       if (ispresent(maybeboard)) {
         board.underboard = maybeboard.id
       }
@@ -1013,7 +1011,7 @@ export function memoryplayerblockedbyedge(
   // attempt to move player
   if (dest.x < 0) {
     // exit west
-    const destboard = memoryreadboard(board?.exitwest ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exitwest ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: BOARD_WIDTH - 1,
@@ -1022,7 +1020,7 @@ export function memoryplayerblockedbyedge(
     }
   } else if (dest.x >= BOARD_WIDTH) {
     // exit east
-    const destboard = memoryreadboard(board?.exiteast ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exiteast ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: 0,
@@ -1031,7 +1029,7 @@ export function memoryplayerblockedbyedge(
     }
   } else if (dest.y < 0) {
     // exit north
-    const destboard = memoryreadboard(board?.exitnorth ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exitnorth ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: dest.x,
@@ -1040,7 +1038,7 @@ export function memoryplayerblockedbyedge(
     }
   } else if (dest.y >= BOARD_HEIGHT) {
     // exit south
-    const destboard = memoryreadboard(board?.exitsouth ?? '')
+    const destboard = memoryreadboardbyaddress(board?.exitsouth ?? '')
     if (ispresent(destboard)) {
       return memorymoveplayertoboard(book, elementid, destboard.id, {
         x: dest.x,

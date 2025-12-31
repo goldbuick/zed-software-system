@@ -8,7 +8,7 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbooklist } from 'zss/memory'
-import { memoryreadbookcodepagesbytypeandstat } from 'zss/memory/bookoperations'
+import { memorylistcodepagebytypeandstat } from 'zss/memory/bookoperations'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -55,7 +55,7 @@ function pickcodepagewithtype(
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
     const fallbackcodepage = pick(
-      memoryreadbookcodepagesbytypeandstat(book, type, address),
+      memorylistcodepagebytypeandstat(book, type, address),
     )
     if (ispresent(fallbackcodepage)) {
       return fallbackcodepage

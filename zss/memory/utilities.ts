@@ -16,7 +16,7 @@ import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { memoryreadboardobject } from './boardoperations'
+import { memoryreadobject } from './boardoperations'
 import {
   memoryexportbook,
   memoryimportbook,
@@ -113,7 +113,7 @@ export async function memoryadminmenu(player: string) {
     const { user } = memoryreadflags(player)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(player)
-    const playerelement = memoryreadboardobject(playerboard, player)
+    const playerelement = memoryreadobject(playerboard, player)
     const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`

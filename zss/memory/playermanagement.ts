@@ -17,7 +17,7 @@ import { memorycheckblockedboardobject } from './boardmovement'
 import {
   memorycreateboardobjectfromkind,
   memorydeleteboardobject,
-  memoryreadboardobject,
+  memoryreadobject,
   memoryupdateboardvisuals,
 } from './boardoperations'
 import {
@@ -41,7 +41,7 @@ import {
 import {
   memoryinitboard,
   memorypickcodepagewithtype,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadbookbysoftware,
   memoryreadelementstat,
 } from './index'
@@ -64,13 +64,13 @@ export function memorymoveplayertoboard(
   }
 
   // player element
-  const element = memoryreadboardobject(currentboard, player)
+  const element = memoryreadobject(currentboard, player)
   if (!memoryboardelementisobject(element) || !element?.id) {
     return false
   }
 
   // dest board
-  const destboard = memoryreadboard(board)
+  const destboard = memoryreadboardbyaddress(board)
   if (!ispresent(destboard)) {
     return false
   }
@@ -135,7 +135,7 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
   const addedids = new Set<string>()
   const mainboards: BOARD[] = []
   for (let i = 0; i < ids.length; ++i) {
-    const board = memoryreadboard(ids[i])
+    const board = memoryreadboardbyaddress(ids[i])
     // only process once
     if (ispresent(board) && !addedids.has(board.id)) {
       // update resolve caches
@@ -143,7 +143,7 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
 
       // see if we have an over board
       // it runs first
-      const over = memoryreadboard(board.overboard ?? '')
+      const over = memoryreadboardbyaddress(board.overboard ?? '')
       if (ispresent(over)) {
         // only add once
         if (!addedids.has(over.id)) {
@@ -170,7 +170,7 @@ export function memorywritebookplayerboard(
   memorywritebookflag(book, player, 'board', board)
 
   // determine if player is on a board
-  const maybeboard = memoryreadboard(board)
+  const maybeboard = memoryreadboardbyaddress(board)
   if (ispresent(maybeboard)) {
     // ensure player is listed as active
     if (!book.activelist.includes(player)) {
@@ -318,10 +318,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     memorywritebookplayerboard(mainbook, remove, '')
 
     // clear element
-    memorydeleteboardobjectnamedlookup(
-      board,
-      memoryreadboardobject(board, remove),
-    )
+    memorydeleteboardobjectnamedlookup(board, memoryreadobject(board, remove))
     memorydeleteboardobject(board, remove)
 
     // halt chip
@@ -374,7 +371,7 @@ export function memoryreadplayeractive(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const isactive = memoryreadbookplayeractive(mainbook, player)
   const board = memoryreadplayerboard(player)
-  const playerelement = memoryreadboardobject(board, player)
+  const playerelement = memoryreadobject(board, player)
   return isactive && ispresent(playerelement)
 }
 

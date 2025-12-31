@@ -32,8 +32,8 @@ import {
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
-  memoryreadboardelement,
-  memoryreadboardelementbyidorindex,
+  memoryreadelement,
+  memoryreadelementbyidorindex,
   memorysafedeleteelement,
 } from 'zss/memory/boardoperations'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
@@ -289,7 +289,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // sender info
     const maybesender = READ_CONTEXT.element?.sender
-    const sender = memoryreadboardelementbyidorindex(
+    const sender = memoryreadelementbyidorindex(
       READ_CONTEXT.board,
       isstring(maybesender) ? maybesender : '',
     )
@@ -792,7 +792,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       if (dest.targets.length) {
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
-          const element = memoryreadboardelement(READ_CONTEXT.board, target)
+          const element = memoryreadelement(READ_CONTEXT.board, target)
           if (ispresent(element)) {
             element.char = charvalue
           }
@@ -800,7 +800,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return 0
       }
       // handle single-target dirs
-      const element = memoryreadboardelement(READ_CONTEXT.board, dest.destpt)
+      const element = memoryreadelement(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         element.char = charvalue
       }
@@ -821,7 +821,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       if (dest.targets.length) {
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
-          const element = memoryreadboardelement(READ_CONTEXT.board, target)
+          const element = memoryreadelement(READ_CONTEXT.board, target)
           if (ispresent(element)) {
             memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
           }
@@ -829,7 +829,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return 0
       }
       // handle single-target dirs
-      const element = memoryreadboardelement(READ_CONTEXT.board, dest.destpt)
+      const element = memoryreadelement(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
       }
@@ -995,7 +995,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       ARG_TYPE.NAME,
     ])
 
-    const maybeobject = memoryreadboardelement(READ_CONTEXT.board, dir.destpt)
+    const maybeobject = memoryreadelement(READ_CONTEXT.board, dir.destpt)
     if (ispresent(maybeobject) && memoryboardelementisobject(maybeobject)) {
       // update .code of object to the codepage content of kindname
       switch (NAME(maybeaction)) {

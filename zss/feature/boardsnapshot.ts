@@ -1,5 +1,5 @@
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadboard, memoryreadbooklist } from 'zss/memory'
+import { memoryreadboardbyaddress, memoryreadbooklist } from 'zss/memory'
 import { memoryclearbookcodepage } from 'zss/memory/bookoperations'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
@@ -14,7 +14,7 @@ const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const targetset = 'all'
 
 export function boardsnapshot(target: string) {
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return
   }
@@ -27,7 +27,7 @@ export function boardsnapshot(target: string) {
   }
 
   // create snapshot board codepage
-  const snapshotboard = memoryreadboard(name)
+  const snapshotboard = memoryreadboardbyaddress(name)
   if (!ispresent(snapshotboard)) {
     return
   }
@@ -40,14 +40,14 @@ export function boardsnapshot(target: string) {
 }
 
 export function boardrevert(target: string) {
-  const targetboard = memoryreadboard(target)
+  const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
     return
   }
 
   // read snapshot
   const name = snapshotname(targetboard.id)
-  const snapshotboard = memoryreadboard(name)
+  const snapshotboard = memoryreadboardbyaddress(name)
   if (!ispresent(snapshotboard)) {
     return
   }

@@ -8,10 +8,10 @@ import { memoryboardelementisobject } from './boardelement'
 import {
   memoryboardelementindex,
   memorydeleteboardobject,
-  memorygetboardterrain,
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
-  memoryreadboardobject,
+  memoryreadobject,
+  memoryreadterrain,
 } from './boardoperations'
 import { memorysendtoelement } from './gameloop'
 import { memorycheckcollision } from './spatialqueries'
@@ -55,10 +55,7 @@ export function memorycheckblockedboardobject(
   const targetidx = dest.x + dest.y * BOARD_WIDTH
 
   // blocked by an object
-  const maybeobject = memoryreadboardobject(
-    board,
-    board.lookup[targetidx] ?? '404',
-  )
+  const maybeobject = memoryreadobject(board, board.lookup[targetidx] ?? '404')
   if (ispresent(maybeobject)) {
     if (isplayer) {
       // players do not block players
@@ -91,7 +88,7 @@ export function memorycheckmoveboardobject(
   target: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): boolean {
-  const object = memoryreadboardobject(board, target?.id ?? '')
+  const object = memoryreadobject(board, target?.id ?? '')
   const objectx = object?.x ?? -1
   const objecty = object?.y ?? -1
   // first pass, are we actually trying to move ?
@@ -133,7 +130,7 @@ export function memorymoveboardobject(
   elementtomove: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const movingelement = memoryreadboardobject(board, elementtomove?.id ?? '')
+  const movingelement = memoryreadobject(board, elementtomove?.id ?? '')
 
   // first pass clipping
   if (
@@ -182,7 +179,7 @@ export function memorymoveboardobject(
   const movingelementisplayer = ispid(movingelement?.id)
 
   // blocked by an object
-  const maybeobject = memoryreadboardobject(board, board.lookup[destidx] ?? '')
+  const maybeobject = memoryreadobject(board, board.lookup[destidx] ?? '')
   if (memoryreadelementstat(maybeobject, 'collision') === COLLISION.ISGHOST) {
     // skip ghost
     return undefined
@@ -248,7 +245,7 @@ export function memorymoveobject(
     memoryboardelementisobject(blocked)
   ) {
     // check terrain __under__ blocked
-    const mayberterrain = memorygetboardterrain(
+    const mayberterrain = memoryreadterrain(
       board,
       blocked.x ?? -1,
       blocked.y ?? -1,

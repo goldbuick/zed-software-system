@@ -30,7 +30,7 @@ import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 import {
   memoryboardelementindex,
   memoryevaldir,
-  memoryreadboardobject,
+  memoryreadobject,
   memoryupdateboardvisuals,
 } from './boardoperations'
 import { memoryreadelementdisplay } from './bookoperations'
@@ -52,7 +52,7 @@ import {
 import {
   memoryinitboard,
   memorypickcodepagewithtype,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
   memoryreadflags,
@@ -81,7 +81,7 @@ export function memoryconverttogadgetcontrollayer(
   board: MAYBE<BOARD>,
 ): LAYER[] {
   const control = createcachedcontrol(player, index)
-  const maybeobject = memoryreadboardobject(board, player)
+  const maybeobject = memoryreadobject(board, player)
   if (!ispresent(board) || !ispresent(maybeobject)) {
     return []
   }
@@ -647,7 +647,7 @@ function raycheck(
   alphas[idx] = clamp(alphas[idx], 0, 1)
 
   // check lookup
-  const object = memoryreadboardobject(board, board.lookup?.[idx] ?? '')
+  const object = memoryreadobject(board, board.lookup?.[idx] ?? '')
   if (ispresent(object)) {
     // half blocked
     const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
@@ -777,10 +777,10 @@ export function memoryreadgadgetlayers(
   return {
     id: id4all.join('|'),
     board: board.id,
-    exiteast: memoryreadboard(board.exiteast ?? '')?.id ?? '',
-    exitwest: memoryreadboard(board.exitwest ?? '')?.id ?? '',
-    exitnorth: memoryreadboard(board.exitnorth ?? '')?.id ?? '',
-    exitsouth: memoryreadboard(board.exitsouth ?? '')?.id ?? '',
+    exiteast: memoryreadboardbyaddress(board.exiteast ?? '')?.id ?? '',
+    exitwest: memoryreadboardbyaddress(board.exitwest ?? '')?.id ?? '',
+    exitnorth: memoryreadboardbyaddress(board.exitnorth ?? '')?.id ?? '',
+    exitsouth: memoryreadboardbyaddress(board.exitsouth ?? '')?.id ?? '',
     over,
     under,
     layers,

@@ -3,11 +3,11 @@ import { SOFTWARE } from 'zss/device/session'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
-import { memorywritebookcodepage } from 'zss/memory/bookoperations'
+import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
+  memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
-  memorycreatecodepage,
 } from 'zss/memory/codepageoperations'
 import { NAME } from 'zss/words/types'
 
@@ -137,7 +137,7 @@ ${song.lines.map((line) => `#play ${line}`).join('\n')}
   const codepage = memorycreatecodepage(code, {})
   const codepagename = memoryreadcodepagename(codepage)
 
-  memorywritebookcodepage(contentbook, codepage)
+  memorywritecodepage(contentbook, codepage)
   apitoast(
     SOFTWARE,
     player,

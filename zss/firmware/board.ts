@@ -8,7 +8,7 @@ import { maptostring } from 'zss/mapping/value'
 import {
   memoryensuresoftwarecodepage,
   memoryinitboard,
-  memoryreadboard,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
   memorywritebullet,
@@ -23,11 +23,11 @@ import {
   memorymoveobject,
 } from 'zss/memory/boardmovement'
 import {
-  memoryreadboardelement,
-  memoryreadboardobject,
-  memoryreadboardobjects,
+  memoryreadelement,
+  memoryreadobject,
+  memoryreadobjects,
   memorysafedeleteelement,
-  memorysetboardterrain,
+  memorywriteterrain,
 } from 'zss/memory/boardoperations'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
@@ -71,7 +71,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   if (READ_CONTEXT.elementisplayer) {
     const maxplayershots = READ_CONTEXT.board?.maxplayershots ?? 0
     if (maxplayershots > 0) {
-      const bulletcount = memoryreadboardobjects(READ_CONTEXT.board).filter(
+      const bulletcount = memoryreadobjects(READ_CONTEXT.board).filter(
         (obj) => {
           return (
             !obj.removed &&
@@ -207,7 +207,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   }
 
   // check if we are blocked by a pushable object element
-  let target = memoryreadboardelement(READ_CONTEXT.board, dir.destpt)
+  let target = memoryreadelement(READ_CONTEXT.board, dir.destpt)
   if (
     memoryboardelementisobject(target) &&
     memoryreadelementstat(target, 'pushable')
@@ -217,7 +217,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const pt = ptapplydir(pivot, dirfrompts(from, pivot))
     memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
     // grab new target
-    target = memoryreadboardelement(READ_CONTEXT.board, dir.destpt)
+    target = memoryreadelement(READ_CONTEXT.board, dir.destpt)
   }
 
   // handle put empty case
@@ -268,7 +268,7 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
 
   // duplicate target at dir, in the direction of the given dir
   const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-  const maybetarget = memoryreadboardelement(READ_CONTEXT.board, dir.destpt)
+  const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
   if (ispresent(maybetarget) && ispresent(maybetarget.kind)) {
     // handle player case
     const [maybename] = maybetarget.kind
@@ -341,7 +341,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     // attempt to clone existing board
     if (isstring(maybesource)) {
-      const sourceboard = memoryreadboard(maybesource)
+      const sourceboard = memoryreadboardbyaddress(maybesource)
       if (ispresent(sourceboard)) {
         boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
         // make sure to copy board stats as well
@@ -405,7 +405,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
     ])
 
-    const targetboard = memoryreadboard(stat)
+    const targetboard = memoryreadboardbyaddress(stat)
     if (!ispresent(targetboard)) {
       return 0
     }
@@ -473,7 +473,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
 
     const [target] = readargs(words, 0, [ARG_TYPE.STRING])
-    const maybeobject = memoryreadboardobject(READ_CONTEXT.board, target)
+    const maybeobject = memoryreadobject(READ_CONTEXT.board, target)
     if (
       ispresent(READ_CONTEXT.element?.x) &&
       ispresent(READ_CONTEXT.element.y) &&
@@ -507,10 +507,7 @@ export const BOARD_FIRMWARE = createfirmware()
           break
         }
         // scan until we find an opposite transporter
-        const maybetransporter = memoryreadboardelement(
-          READ_CONTEXT.board,
-          scan,
-        )
+        const maybetransporter = memoryreadelement(READ_CONTEXT.board, scan)
         if (
           maybetransporter?.kind === READ_CONTEXT.element.kind &&
           memoryreadelementstat(maybetransporter, 'shootx') === -deltax &&
@@ -548,7 +545,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = memoryreadboardelement(READ_CONTEXT.board, dir.destpt)
+    const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
     if (memoryboardelementisobject(maybetarget)) {
       const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
       const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
@@ -566,7 +563,7 @@ export const BOARD_FIRMWARE = createfirmware()
     // shove target at dir, in the direction of the given dir
     // but only if target is pushable
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = memoryreadboardelement(READ_CONTEXT.board, dir.destpt)
+    const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
     if (
       memoryboardelementisobject(maybetarget) &&
       memoryreadelementstat(maybetarget, 'pushable')
@@ -617,7 +614,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.EAST:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          memorysetboardterrain(READ_CONTEXT.board, {
+          memorywriteterrain(READ_CONTEXT.board, {
             x: dir.destpt.x + i,
             y: dir.destpt.y,
             name: 'text',
@@ -630,7 +627,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.WEST:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          memorysetboardterrain(READ_CONTEXT.board, {
+          memorywriteterrain(READ_CONTEXT.board, {
             x: dir.destpt.x + i - last,
             y: dir.destpt.y,
             name: 'text',
@@ -643,7 +640,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.NORTH:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          memorysetboardterrain(READ_CONTEXT.board, {
+          memorywriteterrain(READ_CONTEXT.board, {
             x: dir.destpt.x,
             y: dir.destpt.y + i - last,
             name: 'text',
@@ -656,7 +653,7 @@ export const BOARD_FIRMWARE = createfirmware()
       case DIR.SOUTH:
         for (let i = 0; i < measuredwidth; ++i) {
           // create new terrain element
-          memorysetboardterrain(READ_CONTEXT.board, {
+          memorywriteterrain(READ_CONTEXT.board, {
             x: dir.destpt.x,
             y: dir.destpt.y + i,
             name: 'text',
@@ -754,7 +751,7 @@ export const BOARD_FIRMWARE = createfirmware()
     // if there is already an object with mark id, bail
     if (
       ispresent(READ_CONTEXT.board) &&
-      memoryreadboardobject(READ_CONTEXT.board, mark)
+      memoryreadobject(READ_CONTEXT.board, mark)
     ) {
       return 0
     }
@@ -767,7 +764,7 @@ export const BOARD_FIRMWARE = createfirmware()
     // if there is already an object with mark id, bail
     if (
       ispresent(READ_CONTEXT.board) &&
-      memoryreadboardobject(READ_CONTEXT.board, mark)
+      memoryreadobject(READ_CONTEXT.board, mark)
     ) {
       return 0
     }

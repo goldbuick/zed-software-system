@@ -14,7 +14,7 @@ import { PT, WORD } from 'zss/words/types'
 
 import { memoryreadplayerboard } from './playermanagement'
 
-import { memoryreadboard } from '.'
+import { memoryreadboardbyaddress } from '.'
 
 // Remix operations
 type REMIX_CONFIG = {
@@ -40,7 +40,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
       break
     }
     case 'remixrun': {
-      const sourceboard = memoryreadboard(remixconfig.stat)
+      const sourceboard = memoryreadboardbyaddress(remixconfig.stat)
       if (ispresent(sourceboard)) {
         boardremix(
           board.id,

@@ -13,9 +13,9 @@ import {
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
 import {
-  memorygetboardterrain,
   memoryptwithinboard,
-  memoryreadboardelement,
+  memoryreadelement,
+  memoryreadterrain,
 } from './boardoperations'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
@@ -128,7 +128,7 @@ export function memorylistboardelementsbyempty(board: MAYBE<BOARD>): PT[] {
   const pts: PT[] = []
   // returns a list of points where empties are
   for (let i = 0; i < BOARD_SIZE; ++i) {
-    const el = memoryreadboardelement(board, indextopt(i, BOARD_WIDTH))
+    const el = memoryreadelement(board, indextopt(i, BOARD_WIDTH))
     if (!el?.kind && !el?.name) {
       pts.push({ x: el?.x ?? 0, y: el?.y ?? 0 })
     }
@@ -215,7 +215,7 @@ function memoryboardreaddistmap(
         // unwritten
         if (distmap[index] === -2) {
           // check terrain if its passible
-          const terrain = memorygetboardterrain(board, check.x, check.y)
+          const terrain = memoryreadterrain(board, check.x, check.y)
           if (
             !memorycheckcollision(
               forcollision,
@@ -290,7 +290,7 @@ export function memorylistboardptsbyempty(board: MAYBE<BOARD>): PT[] {
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
       const pt = { x, y }
-      const el = memoryreadboardelement(board, pt)
+      const el = memoryreadelement(board, pt)
       if (!el?.name && !el?.kind) {
         pts.push(pt)
       }

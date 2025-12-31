@@ -44,11 +44,11 @@ import {
   memorywriteoperator,
   memorywritetopic,
 } from 'zss/memory'
-import { memoryreadboardobject } from 'zss/memory/boardoperations'
+import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
-  memoryreadbookcodepagebyaddress,
-  memoryreadbookcodepagesbytype,
-  memorywritebookcodepage,
+  memorylistcodepagebytype,
+  memoryreadcodepage,
+  memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
   memoryrepeatclilast,
@@ -352,19 +352,18 @@ const vm = createdevice(
           ],
           // object codepage kinds
           kinds: [
-            ...memoryreadbookcodepagesbytype(
-              mainbook,
-              CODE_PAGE_TYPE.OBJECT,
-            ).map((codepage) => memoryreadcodepagename(codepage)),
+            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
+              (codepage) => memoryreadcodepagename(codepage),
+            ),
             ...objectKeys(categoryconsts),
           ],
           // other codepage types
           altkinds: [
-            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
-            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
-            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
-            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
-            ...memoryreadbookcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
+            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
+            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.BOARD),
+            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.PALETTE),
+            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.CHARSET),
+            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.LOADER),
           ].map((codepage) => memoryreadcodepagename(codepage)),
           colors: [...objectKeys(colorconsts)],
           dirs: [
@@ -499,10 +498,7 @@ const vm = createdevice(
               const [codepage, maybeobject] = path
               // write to code
               const contentbook = memoryreadbookbyaddress(book)
-              const content = memoryreadbookcodepagebyaddress(
-                contentbook,
-                codepage,
-              )
+              const content = memoryreadcodepage(contentbook, codepage)
               if (ispresent(content)) {
                 if (
                   memoryreadcodepagetype(content) === CODE_PAGE_TYPE.BOARD &&
@@ -510,7 +506,7 @@ const vm = createdevice(
                 ) {
                   const board =
                     memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(content)
-                  const object = memoryreadboardobject(board, maybeobject)
+                  const object = memoryreadobject(board, maybeobject)
                   if (ispresent(object)) {
                     // TODO parse code for stats and update element name
                     object.code = value
@@ -615,7 +611,7 @@ const vm = createdevice(
           const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
           if (ispresent(mainbook) && isarray(message.data)) {
             const [address] = message.data
-            const codepage = memoryreadbookcodepagebyaddress(mainbook, address)
+            const codepage = memoryreadcodepage(mainbook, address)
             if (ispresent(codepage)) {
               registercopyjsonfile(
                 vm,
@@ -781,7 +777,7 @@ const vm = createdevice(
                   ispresent(json.data) &&
                   isstring(json.exported)
                 ) {
-                  memorywritebookcodepage(mainbook, json.data)
+                  memorywritecodepage(mainbook, json.data)
                   apilog(vm, message.player, `loaded ${json.exported}`)
                 }
               } else {
@@ -817,7 +813,7 @@ const vm = createdevice(
             // path is player id
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             const playerboard = memoryreadplayerboard(path)
-            const playerelement = memoryreadboardobject(playerboard, path)
+            const playerelement = memoryreadobject(playerboard, path)
             if (ispresent(playerboard) && ispresent(playerelement)) {
               const dest = {
                 x: playerelement.x ?? 0,
