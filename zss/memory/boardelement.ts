@@ -73,4 +73,3 @@ export function memorycreateboardelement() {
   }
   return boardelement
 }
-

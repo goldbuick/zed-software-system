@@ -95,7 +95,6 @@ async function readconfigall() {
   })
 }
 
-
 export async function memoryadminmenu(player: string) {
   // get list of active players
   const isop = memoryisoperator(player)

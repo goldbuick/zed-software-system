@@ -65,8 +65,8 @@ import {
 } from 'zss/memory'
 import {
   memoryclearbookcodepage,
-  memoryreadcodepage,
   memorylistcodepagessorted,
+  memoryreadcodepage,
   memoryreadelementdisplay,
   memoryupdatebookname,
 } from 'zss/memory/bookoperations'
