@@ -9,7 +9,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { STR_COLOR, isstrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { CATEGORY } from 'zss/words/types'
 
-import { BOARD_ELEMENT } from './types'
+import { BOARD_ELEMENT, BOARD_ELEMENT_KEYS } from './types'
 
 export function memoryapplyboardelementcolor(
   element: MAYBE<BOARD_ELEMENT>,
@@ -72,52 +72,4 @@ export function memorycreateboardelement() {
     id: createsid(),
   }
   return boardelement
-}
-
-enum BOARD_ELEMENT_KEYS {
-  kind,
-  id,
-  x,
-  y,
-  lx,
-  ly,
-  code,
-  name,
-  char,
-  color,
-  bg,
-  light,
-  player,
-  bucket,
-  pushable,
-  collision,
-  breakable,
-  tickertext,
-  tickertime,
-  p1,
-  p2,
-  p3,
-  cycle,
-  stepx,
-  stepy,
-  sender,
-  arg,
-  stopped,
-  removed,
-  party,
-  group,
-  lightdir,
-  item,
-  p4,
-  p5,
-  p6,
-  displaychar,
-  displaycolor,
-  displaybg,
-  shootx,
-  shooty,
-  p7,
-  p8,
-  p9,
-  p10,
 }

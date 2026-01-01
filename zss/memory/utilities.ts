@@ -23,7 +23,7 @@ import {
   memoryreadelementdisplay,
 } from './bookoperations'
 import { memoryreadplayerboard } from './playermanagement'
-import { BOOK, MEMORY_LABEL } from './types'
+import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
 
 import {
   memoryisoperator,
@@ -94,8 +94,6 @@ async function readconfigall() {
     return [keyname, value && value !== 'off' ? 'on' : 'off']
   })
 }
-
-const FIXED_DATE = new Date('1980/09/02')
 
 export async function memoryadminmenu(player: string) {
   // get list of active players

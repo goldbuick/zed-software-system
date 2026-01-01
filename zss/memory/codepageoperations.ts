@@ -48,18 +48,14 @@ import {
   memoryimportboard,
 } from './boardoperations'
 import {
+  BITMAP_KEYS,
   BOARD_ELEMENT,
   CODE_PAGE,
+  CODE_PAGE_KEYS,
   CODE_PAGE_STATS,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
-
-enum BITMAP_KEYS {
-  width,
-  height,
-  bits,
-}
 
 export function memoryapplyelementstats(
   stats: CODE_PAGE_STATS,
@@ -622,15 +618,4 @@ export function memorycreatecodepage(
     code,
     ...content,
   }
-}
-
-enum CODE_PAGE_KEYS {
-  id,
-  code,
-  board,
-  object,
-  terrain,
-  charset,
-  palette,
-  eighttrack,
 }

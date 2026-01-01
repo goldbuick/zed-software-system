@@ -18,20 +18,11 @@ import {
   BOARD_ELEMENT,
   BOOK,
   BOOK_FLAGS,
+  BOOK_KEYS,
   CODE_PAGE,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
-
-enum BOOK_KEYS {
-  id,
-  name,
-  timestamp,
-  activelist,
-  pages,
-  flags,
-  token,
-}
 
 export function memoryreadelementcodepage(
   book: MAYBE<BOOK>,

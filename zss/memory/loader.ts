@@ -2,7 +2,7 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
-import { memoryreadcodepage, memorylistcodepagebytype } from './bookoperations'
+import { memorylistcodepagebytype, memoryreadcodepage } from './bookoperations'
 import { memorystartloader } from './cliruntime'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'

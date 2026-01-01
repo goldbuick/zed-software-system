@@ -13,7 +13,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
-import { memoryreadcodepage, memorylistcodepagebystat } from './bookoperations'
+import { memorylistcodepagebystat, memoryreadcodepage } from './bookoperations'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetype,

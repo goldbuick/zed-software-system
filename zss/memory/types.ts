@@ -64,6 +64,54 @@ export type BOARD_ELEMENT = {
 
 export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
 
+export enum BOARD_ELEMENT_KEYS {
+  kind,
+  id,
+  x,
+  y,
+  lx,
+  ly,
+  code,
+  name,
+  char,
+  color,
+  bg,
+  light,
+  player,
+  bucket,
+  pushable,
+  collision,
+  breakable,
+  tickertext,
+  tickertime,
+  p1,
+  p2,
+  p3,
+  cycle,
+  stepx,
+  stepy,
+  sender,
+  arg,
+  stopped,
+  removed,
+  party,
+  group,
+  lightdir,
+  item,
+  p4,
+  p5,
+  p6,
+  displaychar,
+  displaycolor,
+  displaybg,
+  shootx,
+  shooty,
+  p7,
+  p8,
+  p9,
+  p10,
+}
+
 // boards
 
 export type BOARD = {
@@ -121,6 +169,35 @@ export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
 export const BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT
 
+export enum BOARD_KEYS {
+  terrain,
+  objects,
+  isdark,
+  over,
+  under,
+  exitnorth,
+  exitsouth,
+  exitwest,
+  exiteast,
+  timelimit,
+  restartonzap,
+  maxplayershots,
+  camera,
+  graphics,
+  b1,
+  b2,
+  b3,
+  b4,
+  b5,
+  b6,
+  b7,
+  b8,
+  b9,
+  b10,
+  charset,
+  palette,
+}
+
 // codepages
 
 export enum CODE_PAGE_TYPE {
@@ -165,6 +242,23 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
 }
 
+export enum BITMAP_KEYS {
+  width,
+  height,
+  bits,
+}
+
+export enum CODE_PAGE_KEYS {
+  id,
+  code,
+  board,
+  object,
+  terrain,
+  charset,
+  palette,
+  eighttrack,
+}
+
 // book
 
 export type BOOK_FLAGS = Record<string, WORD>
@@ -182,6 +276,16 @@ export type BOOK = {
   token?: string
 }
 
+export enum BOOK_KEYS {
+  id,
+  name,
+  timestamp,
+  activelist,
+  pages,
+  flags,
+  token,
+}
+
 // memory labels
 
 export enum MEMORY_LABEL {
@@ -191,3 +295,9 @@ export enum MEMORY_LABEL {
   PLAYER = 'player',
   GADGETSTORE = 'gadgetstore',
 }
+
+// constants
+
+export const CHAR_MARGIN = 3
+
+export const FIXED_DATE = new Date('1980/09/02')

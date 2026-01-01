@@ -45,6 +45,7 @@ import {
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
+  CHAR_MARGIN,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
@@ -549,7 +550,6 @@ function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
   return LAYER_CACHE[id] as LAYER_CONTROL
 }
 
-const CHAR_MARGIN = 3
 function mixmaxrange(from: PT, dest: PT): [number, number] {
   // calc corners
   const angles: number[] = []
