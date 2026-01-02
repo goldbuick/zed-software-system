@@ -45,7 +45,7 @@ import {
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
-  CHAR_MARGIN,
+  CHAR_RAY_MARGIN,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
@@ -561,17 +561,17 @@ function mixmaxrange(from: PT, dest: PT): [number, number] {
   const dx = destx - fromx
   const dy = desty - fromy
 
-  pt1.x = dx - CHAR_MARGIN
-  pt1.y = dy - CHAR_MARGIN
+  pt1.x = dx - CHAR_RAY_MARGIN
+  pt1.y = dy - CHAR_RAY_MARGIN
   angles.push(pt1.angle())
-  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
-  pt1.y = dy - CHAR_MARGIN
+  pt1.x = dx + CHAR_WIDTH + CHAR_RAY_MARGIN
+  pt1.y = dy - CHAR_RAY_MARGIN
   angles.push(pt1.angle())
-  pt1.x = dx - CHAR_MARGIN
-  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
+  pt1.x = dx - CHAR_RAY_MARGIN
+  pt1.y = dy + CHAR_HEIGHT + CHAR_RAY_MARGIN
   angles.push(pt1.angle())
-  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
-  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
+  pt1.x = dx + CHAR_WIDTH + CHAR_RAY_MARGIN
+  pt1.y = dy + CHAR_HEIGHT + CHAR_RAY_MARGIN
   angles.push(pt1.angle())
 
   const degs = angles.map((v) => Math.round(radToDeg(v)))
