@@ -1,0 +1,29 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  lint-and-test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          set-safe-directory: true
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: run lint
+        run: yarn lint
+
+      - name: run tests
+        run: yarn test
