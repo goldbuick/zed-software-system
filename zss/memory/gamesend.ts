@@ -122,7 +122,7 @@ export function memorysendtoelement(
 
   let withlabel = label
   // if a player is sending a message, dest elements get aggro if they are not a player
-  let withplayer = isfromplayer && !istoplayer ? fromelement.id : ''
+  let withplayer = isfromplayer && !istoplayer ? (fromelement.id ?? '') : ''
 
   switch (label) {
     case 'shot': {
