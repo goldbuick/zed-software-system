@@ -13,7 +13,7 @@ import {
   memoryreadterrain,
 } from 'zss/memory/boardoperations'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memoryruncodepage } from 'zss/memory/cliruntime'
+import { memoryruncodepage } from 'zss/memory/runtime'
 import {
   memoryfindplayerforelement,
   memorylistboardelementsbycolor,

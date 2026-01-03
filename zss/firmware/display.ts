@@ -3,7 +3,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorysendtolog } from 'zss/memory/gameloop'
+import { memorysendtolog } from 'zss/memory/gamesend'
 import { READ_CONTEXT } from 'zss/words/reader'
 
 export const DISPLAY_FIRMWARE = createfirmware()

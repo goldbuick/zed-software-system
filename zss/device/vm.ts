@@ -51,13 +51,6 @@ import {
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
-  memoryrepeatclilast,
-  memoryresetchipafteredit,
-  memoryrestartallchipsandflags,
-  memoryruncli,
-  memoryunlockscroll,
-} from 'zss/memory/cliruntime'
-import {
   memoryapplyelementstats,
   memoryreadcodepagedata,
   memoryreadcodepagename,
@@ -66,11 +59,7 @@ import {
   memoryreadcodepagetypeasstring,
   memoryresetcodepagestats,
 } from 'zss/memory/codepageoperations'
-import {
-  memorysendtoboards,
-  memorytickmain,
-  memorywritemessage,
-} from 'zss/memory/gameloop'
+import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspection'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectionbatch'
 import {
@@ -93,6 +82,15 @@ import {
   memoryreadplayerboard,
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
+import {
+  memorycleanupchips,
+  memoryhaltchip,
+  memorymessagechip,
+  memoryrepeatclilast,
+  memoryruncli,
+  memorytickmain,
+  memoryunlockscroll,
+} from 'zss/memory/runtime'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import {
   memoryadminmenu,
@@ -543,7 +541,7 @@ const vm = createdevice(
               observers[address] = undefined
               // nuke chip for object when we are no longer editing
               if (isstring(maybeobject)) {
-                memoryresetchipafteredit(maybeobject)
+                memoryhaltchip(maybeobject)
               }
             }
           }
@@ -727,7 +725,7 @@ const vm = createdevice(
         break
       case 'restart':
         if (message.player === operator) {
-          memoryrestartallchipsandflags()
+          memorycleanupchips()
           vmflush(vm, message.player)
         }
         break
@@ -983,7 +981,7 @@ const vm = createdevice(
             if (NAME(invoke.target) === 'self' || !invoke.path) {
               // chop off self:
               message.target = message.target.replace('self:', '')
-              memorywritemessage(message)
+              memorymessagechip(message)
             } else {
               const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
               memorysendtoboards(

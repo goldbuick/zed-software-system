@@ -3,11 +3,10 @@ import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
 import { memorylistcodepagebytype, memoryreadcodepage } from './bookoperations'
-import { memorystartloader } from './cliruntime'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
-import { memoryreadbookbysoftware } from '.'
+import { memoryreadbookbysoftware, memorystartloader } from '.'
 
 type LOADER_ENTRY = {
   arg: any

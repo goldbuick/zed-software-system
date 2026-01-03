@@ -68,6 +68,10 @@ export function memoryreadloaders() {
   return MEMORY.loaders
 }
 
+export function memorystartloader(id: string, code: string) {
+  MEMORY.loaders.set(id, code)
+}
+
 export function memoryreadsession() {
   return MEMORY.session
 }

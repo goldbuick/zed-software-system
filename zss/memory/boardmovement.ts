@@ -13,7 +13,7 @@ import {
   memoryreadobject,
   memoryreadterrain,
 } from './boardoperations'
-import { memorysendtoelement } from './gameloop'
+import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
