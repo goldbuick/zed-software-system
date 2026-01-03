@@ -1,5 +1,4 @@
 import {
-  BITMAP,
   bitmapToCanvas,
   createbitmap,
   createbitmapfromarray,
@@ -83,6 +82,7 @@ describe('bitmap', () => {
     it('should create a canvas element', () => {
       const bitmap = createbitmap(10, 20)
       bitmapToCanvas(bitmap)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(global.document.createElement).toHaveBeenCalledWith('canvas')
     })
 
@@ -182,7 +182,7 @@ describe('bitmap', () => {
       expect(result).toBeDefined()
       if (result) {
         const padWidth = CHAR_WIDTH + 2
-        const padHeight = CHAR_HEIGHT + 2
+
         // First pixel (offset by 1,1 for padding)
         const firstIdx = 1 + 1 * padWidth
         expect(result.bits[firstIdx]).toBe(255)
