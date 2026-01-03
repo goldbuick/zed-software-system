@@ -1,12 +1,12 @@
 import {
-  createsid,
-  issid,
+  createinfohash,
+  createnameid,
   createpid,
+  createshortnameid,
+  createsid,
   createtopic,
   ispid,
-  createnameid,
-  createshortnameid,
-  createinfohash,
+  issid,
 } from '../guid'
 
 describe('guid', () => {
@@ -155,4 +155,3 @@ describe('guid', () => {
     })
   })
 })
-

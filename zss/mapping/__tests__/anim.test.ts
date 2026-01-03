@@ -1,9 +1,6 @@
 import { Object3D } from 'three'
-import {
-  animsnapx,
-  animsnapy,
-  animpositiontotarget,
-} from '../anim'
+
+import { animpositiontotarget, animsnapx, animsnapy } from '../anim'
 
 describe('anim', () => {
   describe('animsnapy', () => {
@@ -47,13 +44,7 @@ describe('anim', () => {
       const velocity = 1.235
 
       // Initial call should not be complete
-      const result1 = animpositiontotarget(
-        object,
-        'y',
-        target,
-        delta,
-        velocity,
-      )
+      const result1 = animpositiontotarget(object, 'y', target, delta, velocity)
       expect(result1).toBe(false)
       expect(object.position.y).toBeGreaterThanOrEqual(0)
 
@@ -103,4 +94,3 @@ describe('anim', () => {
     })
   })
 })
-

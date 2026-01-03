@@ -1,4 +1,4 @@
-import { TICK_RATE, TICK_FPS, CYCLE_DEFAULT, waitfor } from '../tick'
+import { CYCLE_DEFAULT, TICK_FPS, TICK_RATE, waitfor } from '../tick'
 
 describe('tick', () => {
   describe('TICK_RATE', () => {
@@ -60,4 +60,3 @@ describe('tick', () => {
     })
   })
 })
-

@@ -1,18 +1,18 @@
 import {
-  range,
+  addToArray,
+  applyToIndex,
+  average,
+  findByKey,
+  findIndexByKey,
+  notEmpty,
   pick,
   pickwith,
-  addToArray,
-  setIndex,
+  range,
+  removeFromIndex,
   removeIndex,
   setAtIndex,
-  applyToIndex,
-  removeFromIndex,
-  findIndexByKey,
-  findByKey,
-  notEmpty,
+  setIndex,
   unique,
-  average,
 } from '../array'
 
 describe('array', () => {
@@ -58,7 +58,7 @@ describe('array', () => {
     })
 
     it('should handle arrays in arguments', () => {
-      const picked = pick(1, 2, [3, 4], 5)
+      const picked = pick<number | number[]>(1, 2, [3, 4], 5)
       expect([1, 2, 3, 4, 5]).toContain(picked)
     })
   })
@@ -135,7 +135,7 @@ describe('array', () => {
 
   describe('applyToIndex', () => {
     it('should apply props to object at index', () => {
-      const array = [{ a: 1 }, { b: 2 }, { c: 3 }]
+      const array: any[] = [{ a: 1 }, { b: 2 }, { c: 3 }]
       const result = applyToIndex(array, 1, { b: 99, x: 100 })
       expect(result[1]).toEqual({ b: 99, x: 100 })
     })
@@ -185,7 +185,10 @@ describe('array', () => {
 
   describe('findByKey', () => {
     it('should find object by key-value pair', () => {
-      const array = [{ id: 1, name: 'a' }, { id: 2, name: 'b' }]
+      const array = [
+        { id: 1, name: 'a' },
+        { id: 2, name: 'b' },
+      ]
       expect(findByKey(array, 'id', 2)).toEqual({ id: 2, name: 'b' })
     })
 
@@ -248,4 +251,3 @@ describe('array', () => {
     })
   })
 })
-

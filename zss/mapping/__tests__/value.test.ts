@@ -1,4 +1,4 @@
-import { maptostring, maptonumber, maptovalue } from '../value'
+import { maptonumber, maptostring, maptovalue } from '../value'
 
 describe('value', () => {
   describe('maptostring', () => {
@@ -106,4 +106,3 @@ describe('value', () => {
     })
   })
 })
-

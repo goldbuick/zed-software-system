@@ -1,14 +1,13 @@
-import { PT } from 'zss/words/types'
 import {
+  indextopt,
   indextox,
   indextoy,
-  indextopt,
+  linepoints,
   ptdist,
-  pttoindex,
   ptstoarea,
+  pttoindex,
   ptwithin,
   rectpoints,
-  linepoints,
 } from '../2d'
 
 describe('2d', () => {
@@ -65,15 +64,11 @@ describe('2d', () => {
     it('should calculate distance between points', () => {
       expect(ptdist({ x: 0, y: 0 }, { x: 0, y: 0 })).toBe(0)
       expect(ptdist({ x: 0, y: 0 }, { x: 3, y: 4 })).toBe(5)
-      expect(ptdist({ x: 0, y: 0 }, { x: 1, y: 1 })).toBeCloseTo(
-        Math.sqrt(2),
-      )
+      expect(ptdist({ x: 0, y: 0 }, { x: 1, y: 1 })).toBeCloseTo(Math.sqrt(2))
     })
 
     it('should handle negative coordinates', () => {
-      expect(ptdist({ x: -1, y: -1 }, { x: 1, y: 1 })).toBeCloseTo(
-        Math.sqrt(8),
-      )
+      expect(ptdist({ x: -1, y: -1 }, { x: 1, y: 1 })).toBeCloseTo(Math.sqrt(8))
     })
 
     it('should be symmetric', () => {
@@ -216,4 +211,3 @@ describe('2d', () => {
     })
   })
 })
-

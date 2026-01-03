@@ -1,5 +1,6 @@
-import { doasync } from '../func'
 import { apierror } from 'zss/device/api'
+
+import { doasync } from '../func'
 
 // Mock the apierror function
 jest.mock('zss/device/api', () => ({
@@ -73,12 +74,7 @@ describe('func', () => {
       await new Promise((resolve) => setTimeout(resolve, 10))
 
       expect(console.error).toHaveBeenCalledWith(error)
-      expect(apierror).toHaveBeenCalledWith(
-        mockDevice,
-        mockPlayer,
-        'crash',
-        '',
-      )
+      expect(apierror).toHaveBeenCalledWith(mockDevice, mockPlayer, 'crash', '')
     })
 
     it('should handle non-Error rejections', async () => {
@@ -101,4 +97,3 @@ describe('func', () => {
     })
   })
 })
-

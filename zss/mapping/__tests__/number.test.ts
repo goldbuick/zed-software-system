@@ -1,11 +1,11 @@
 import {
   clamp,
   makeeven,
-  snap,
-  randomnumber,
-  randomnumberwith,
   randominteger,
   randomintegerwith,
+  randomnumber,
+  randomnumberwith,
+  snap,
 } from '../number'
 
 describe('number', () => {
@@ -65,6 +65,7 @@ describe('number', () => {
       // Note: -0 === 0 is true, but Object.is distinguishes them
       // Use toEqual or check that the value equals 0 (ignoring sign)
       const result = snap(-4, 10)
+      // eslint-disable-next-line no-compare-neg-zero
       expect(result === 0 || result === -0).toBe(true)
       // Math.round(-15/10) * 10 = Math.round(-1.5) * 10 = -2 * 10 = -20
       // But Math.round(-1.5) = -1 (rounds towards positive infinity)
@@ -158,4 +159,3 @@ describe('number', () => {
     })
   })
 })
-

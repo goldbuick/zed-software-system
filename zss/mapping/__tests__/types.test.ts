@@ -1,17 +1,16 @@
 import {
-  isequal,
-  ispresent,
   deepcopy,
-  isboolean,
-  isnumber,
-  ismaybenumber,
-  isstring,
-  ismaybestring,
   isarray,
-  ismaybearray,
-  noop,
   isbook,
-  MAYBE,
+  isboolean,
+  isequal,
+  ismaybearray,
+  ismaybenumber,
+  ismaybestring,
+  isnumber,
+  ispresent,
+  isstring,
+  noop,
 } from '../types'
 
 describe('types', () => {
@@ -259,4 +258,3 @@ describe('types', () => {
     })
   })
 })
-
