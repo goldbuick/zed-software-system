@@ -83,10 +83,10 @@ import {
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import {
-  memorycleanupchips,
   memoryhaltchip,
   memorymessagechip,
   memoryrepeatclilast,
+  memoryrestartallchipsandflags,
   memoryruncli,
   memorytickmain,
   memoryunlockscroll,
@@ -725,7 +725,7 @@ const vm = createdevice(
         break
       case 'restart':
         if (message.player === operator) {
-          memorycleanupchips()
+          memoryrestartallchipsandflags()
           vmflush(vm, message.player)
         }
         break
