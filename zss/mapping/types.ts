@@ -44,6 +44,7 @@ export function noop<T>(item: T) {
 
 export function isbook(value: any) {
   return (
+    value !== null &&
     typeof value === 'object' &&
     isstring(value.id) === true &&
     isstring(value.name) === true &&
