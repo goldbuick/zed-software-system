@@ -31,8 +31,8 @@ import {
 } from 'zss/memory/boardoperations'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
-import { memorytickobject } from 'zss/memory/gameloop'
 import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
+import { memorytickobject } from 'zss/memory/runtime'
 import {
   memorylistboardelementsbykind,
   memorylistboardptsbyempty,

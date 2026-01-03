@@ -11,7 +11,7 @@ import {
 } from 'zss/gadget/data/api'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorysendtoelements, memorysendtolog } from 'zss/memory/gameloop'
+import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 

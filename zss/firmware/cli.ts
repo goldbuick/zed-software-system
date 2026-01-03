@@ -75,7 +75,7 @@ import {
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memorysendtoelements, memorysendtolog } from 'zss/memory/gameloop'
+import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import {
   memorymoveplayertoboard,
   memoryreadplayerboard,

@@ -37,10 +37,7 @@ import {
   memorysafedeleteelement,
 } from 'zss/memory/boardoperations'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import {
-  memoryresetchipafteredit,
-  memoryruncodepage,
-} from 'zss/memory/cliruntime'
+import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import {
   memoryfindplayerforelement,
   memorylistboardnamedelements,
@@ -777,7 +774,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
     if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
       READ_CONTEXT.element.code = pick(...elements).code ?? ''
-      memoryresetchipafteredit(READ_CONTEXT.elementid)
+      memoryhaltchip(READ_CONTEXT.elementid)
     }
     return 0
   })
@@ -1007,7 +1004,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           )
           if (ispresent(codepage)) {
             maybeobject.code += codepage.code
-            memoryresetchipafteredit(maybeobject.id ?? '')
+            memoryhaltchip(maybeobject.id ?? '')
           }
           break
         }
@@ -1018,7 +1015,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           )
           if (ispresent(codepage)) {
             maybeobject.code = codepage.code
-            memoryresetchipafteredit(maybeobject.id ?? '')
+            memoryhaltchip(maybeobject.id ?? '')
           }
           break
         }

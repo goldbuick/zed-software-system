@@ -4,7 +4,6 @@ import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptonumber } from 'zss/mapping/value'
-import { createos } from 'zss/os'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
@@ -27,6 +26,7 @@ import {
   memorywritebookflag,
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
+import { memoryhaltchip } from './runtime'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -45,9 +45,6 @@ import {
   memoryreadbookbysoftware,
   memoryreadelementstat,
 } from './index'
-
-// manages chips
-const os = createos()
 
 // Player Management Functions
 
@@ -322,7 +319,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     memorydeleteboardobject(board, remove)
 
     // halt chip
-    os.halt(remove)
+    memoryhaltchip(remove)
 
     // clear memory
     memoryclearbookflags(mainbook, remove)
