@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unknown-property */
 import {
+  registerterminalopen,
   registerterminalquickopen,
   vmclirepeatlast,
   vmfindany,
@@ -86,11 +87,11 @@ export function Framed({ width, height }: FramedProps) {
               break
             case '@':
             case '2':
-              registerterminalquickopen(SOFTWARE, player, '@')
+              registerterminalopen(SOFTWARE, player, '@')
               break
             case '#':
             case '3':
-              registerterminalquickopen(SOFTWARE, player, '#')
+              registerterminalopen(SOFTWARE, player, '#')
               break
             case 'p':
               if (mods.ctrl) {

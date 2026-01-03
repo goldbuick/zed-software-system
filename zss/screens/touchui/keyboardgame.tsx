@@ -108,7 +108,7 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         y={bottom}
         letters="#"
         onToggle={() => {
-          registerterminalquickopen(SOFTWARE, player, '#')
+          registerterminalopen(SOFTWARE, player, '#')
         }}
       />
       <ToggleKey

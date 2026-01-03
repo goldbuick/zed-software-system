@@ -1101,7 +1101,8 @@ export function createchip(
     not(...words) {
       // invert outcome
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-      return value ? 0 : 1
+      const result = maptoresult(value)
+      return result ? 0 : 1
     },
     expr(...words) {
       // parse expressions
