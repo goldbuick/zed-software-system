@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "sloc": "npx sloc -e .js zss",
-    "test": "yarn jest",
+    "test": "yarn jest --verbose",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "clear": "rimraf dist && rimraf dist-ssr && rimraf node_modules/.vite",
     "dev": "yarn && yarn clear && vite --host 0.0.0.0 --port 7777",
