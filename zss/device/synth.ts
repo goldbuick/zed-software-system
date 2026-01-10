@@ -6,9 +6,11 @@ import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefxconfig'
 import {
   selectttsengine,
   ttsclearqueue,
+  ttsinfo,
   ttsplay,
   ttsqueue,
 } from 'zss/feature/tts'
+import { write } from 'zss/feature/writeui'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
@@ -218,6 +220,18 @@ const synthdevice = createdevice('synth', [], (message) => {
           const [board, voice, phrase] = message.data as [string, any, string]
           if (board === '' || board === currentboard) {
             await ttsplay(message.player, voice, phrase)
+          }
+        }
+      })
+      break
+    case 'ttsinfo':
+      doasync(synthdevice, message.player, async () => {
+        if (isstring(message.data)) {
+          const data = await ttsinfo(message.player, message.data)
+          if (isarray(data)) {
+            for (let i = 0; i < data.length; i++) {
+              write(synthdevice, message.player, `$WHITE${data[i]}`)
+            }
           }
         }
       })

@@ -5,7 +5,6 @@ import { phonemize } from './phonemizer.js'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
 
 // KittenTTS class for local model
-
 export class KittenTTS {
   voices: { id: string; name: string }[]
   session: InferenceSession | null
@@ -14,11 +13,10 @@ export class KittenTTS {
   tokenizer: any
   vocab: any
   vocabArray: string[]
-  static voices_path = `https://raw.githubusercontent.com/rahulsushilsharma/tts-pipelines/refs/heads/main/public/tts-model/voices_kitten.json`
   static model_path =
     'https://huggingface.co/onnx-community/kitten-tts-nano-0.1-ONNX/resolve/main/onnx/model_quantized.onnx'
-  static tokenizer_path =
-    'https://raw.githubusercontent.com/rahulsushilsharma/tts-pipelines/refs/heads/main/public/tts-model/tokenizer.json'
+  static voices_path = '/tts-model/voices_kitten.json'
+  static tokenizer_path = '/tts-model/tokenizer.json'
   result_audio: {
     text: any
     audio: RawAudio
@@ -47,9 +45,9 @@ export class KittenTTS {
   ) {
     try {
       // Import ONNX Runtime Web and caching utility
-      model_path ??= this.model_path
-      voices_path ??= this.voices_path
-      tokenizer_path ??= this.tokenizer_path
+      model_path ??= KittenTTS.model_path
+      voices_path ??= KittenTTS.voices_path
+      tokenizer_path ??= KittenTTS.tokenizer_path
 
       // Use local files in public directory with threading enabled
       env.wasm.wasmPaths = `https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/`
@@ -348,6 +346,7 @@ export class KittenTTS {
   getAudio() {
     return this.result_audio
   }
+
   clearAudio() {
     this.result_audio = []
   }

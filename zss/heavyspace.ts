@@ -1,4 +1,5 @@
-import { createforward, shouldforwardheavytoclient } from './device/forward'
+import { createforward, shouldforwardheavytoclient } from 'zss/device/forward'
+
 import './device/heavy'
 
 const { forward } = createforward((message) => {
