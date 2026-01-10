@@ -218,7 +218,10 @@ const synthdevice = createdevice('synth', [], (message) => {
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
           const [board, voice, phrase] = message.data as [string, any, string]
-          if (board === '' || board === currentboard) {
+          if (
+            phrase.trim() !== '' &&
+            (board === '' || board === currentboard)
+          ) {
             await ttsplay(message.player, voice, phrase)
           }
         }
@@ -245,7 +248,7 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'ttsqueue':
       if (isarray(message.data)) {
         const [board, voice, phrase] = message.data as [string, any, string]
-        if (board === '' || board === currentboard) {
+        if (phrase.trim() !== '' && (board === '' || board === currentboard)) {
           ttsqueue(message.player, voice, phrase)
         }
       }
