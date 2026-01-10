@@ -44,7 +44,6 @@ export class PiperTTS {
           {
             name: 'wasm',
           },
-
           'cuda',
           'cpu',
         ],

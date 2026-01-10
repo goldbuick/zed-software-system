@@ -1,0 +1,52 @@
+FM Synthesis Algorithms 
+================================================
+
+Legend:
+  S1, S2, S3, S4 = Sound Sources/Operators
+  M = Modulator
+  C = Carrier
+  --> = Signal flow
+
+algo0: Four Mod Mode
+--------------------
+S1 --> M --> S2 --> M --> S3 --> M --> S4 --> C
+
+algo1: Merge Mod Mode
+---------------------
+S1 --> M --\
+           S3 --> M --> S4 --> C
+S2 --> M --/
+
+algo2: Double Mod Mode 1
+------------------------
+             S1 --> M --> S4 --> C
+S2 --> M --> S3 --> M ----/
+
+algo3: Double Mod Mode 2
+------------------------
+S1 --> M --> S2 --> M --> S4 --> C
+             S3 --> M ----/ 
+
+algo4: Two Serial Connection in Parallel Mode
+---------------------------------------------
+S1 --> M --> S2 --> C 
+S3 --> M --> S4 --> C 
+
+algo5: Common Modulation 3 Parallel Mode
+----------------------------------------
+S1 --> M --> S2 --> C
+       | --> S3 --> C 
+       \ --> S4 --> C 
+
+algo6: Two Serial Connection + Two Carriers Mode
+------------------------------------------------
+S1 --> M --> S2 --> C                         
+             S3 --> C 
+             S4 --> C 
+
+Algorithm 7: Four Parallel Carriers Mode
+------------------------------------------------
+S1 --> C
+S2 --> C
+S3 --> C
+S4 --> C

@@ -148,6 +148,15 @@ export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:clearscroll')
 }
 
+export function heavyttsinfo(
+  device: DEVICELIKE,
+  player: string,
+  engine: 'kitten' | 'piper',
+  info: string,
+) {
+  device.emit(player, 'heavy:ttsinfo', [engine, info])
+}
+
 export function heavyttsrequest(
   device: DEVICELIKE,
   player: string,
@@ -325,6 +334,10 @@ export function synthtts(
   phrase: string,
 ) {
   device.emit(player, 'synth:tts', [board, voice, phrase])
+}
+
+export function synthttsinfo(device: DEVICELIKE, player: string, info: string) {
+  device.emit(player, 'synth:ttsinfo', info)
 }
 
 export function synthttsqueue(

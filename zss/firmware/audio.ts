@@ -11,6 +11,7 @@ import {
   synthtts,
   synthttsclearqueue,
   synthttsengine,
+  synthttsinfo,
   synthttsqueue,
   synthttsvolume,
   synthvoice,
@@ -130,6 +131,8 @@ export const AUDIO_FIRMWARE = createfirmware()
         voice,
         phrase,
       )
+    } else if (isstring(voice)) {
+      synthttsinfo(SOFTWARE, READ_CONTEXT.elementfocus, voice)
     } else {
       synthttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus)
     }

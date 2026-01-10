@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { requestaudiobytes } from 'zss/feature/heavy/tts'
+import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 
@@ -10,6 +10,20 @@ const heavy = createdevice('heavy', [], (message) => {
     return
   }
   switch (message.target) {
+    case 'ttsinfo':
+      doasync(heavy, message.player, async () => {
+        if (isarray(message.data)) {
+          const [engine, info] = message.data as [
+            engine: 'kitten' | 'piper',
+            info: string,
+          ]
+          const data = await requestinfo(message.player, engine, info)
+          if (ispresent(data)) {
+            heavy.reply(message, 'heavy:ttsinfo', data)
+          }
+        }
+      })
+      break
     case 'ttsrequest':
       doasync(heavy, message.player, async () => {
         if (isarray(message.data)) {
