@@ -257,7 +257,7 @@ describe('state', () => {
 
   describe('constants', () => {
     it('should have TAPE_MAX_LINES constant', () => {
-      expect(TAPE_MAX_LINES).toBe(1024)
+      expect(TAPE_MAX_LINES).toBe(256)
     })
 
     it('should have TAPE_DISPLAY enum values', () => {
