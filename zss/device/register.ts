@@ -14,6 +14,7 @@ import {
 } from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
+  TAPE_MAX_LINES,
   useGadgetClient,
   useTape,
   useTapeInspector,
@@ -176,6 +177,9 @@ function terminaladdlog(message: MESSAGE) {
       logs.unshift(`(2)${row}`)
     }
   } else {
+    while (logs.length >= TAPE_MAX_LINES) {
+      logs.pop()
+    }
     logs.unshift(row)
     // need to adjust cursor row here
     if (useTapeTerminal.getState().ycursor > 0) {

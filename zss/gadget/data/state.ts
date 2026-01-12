@@ -72,7 +72,7 @@ export const useGadgetClient = create<{
 
 export type TAPE_ROW = [string, string, ...any[]]
 
-export const TAPE_MAX_LINES = 1024
+export const TAPE_MAX_LINES = 256
 
 export enum TAPE_DISPLAY {
   TOP,
