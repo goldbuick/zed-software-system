@@ -1,0 +1,199 @@
+import humanid from 'human-id'
+import {
+  get as idbget,
+  getMany as idbgetmany,
+  update as idbupdate,
+} from 'idb-keyval'
+import { apierror, apilog, vmbooks } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
+import { doasync } from 'zss/mapping/func'
+import { ispresent } from 'zss/mapping/types'
+
+import { shorturl } from './url'
+import { writecopyit } from './writeui'
+
+// read / write from indexdb
+
+async function readidb<T>(key: string): Promise<T | undefined> {
+  return idbget(key)
+}
+
+async function writeidb<T>(
+  key: string,
+  updater: (oldValue: T | undefined) => T,
+): Promise<void> {
+  return idbupdate(key, updater)
+}
+
+export function storagereadconfigdefault(name: string) {
+  switch (name) {
+    case 'crt':
+      return 'on'
+    default:
+      return 'off'
+  }
+}
+
+export async function storagereadconfig(name: string) {
+  const value = await readidb<string>(`config_${name}`)
+
+  if (!value) {
+    return storagereadconfigdefault(name)
+  }
+
+  return value && value !== 'off' ? 'on' : 'off'
+}
+
+export async function storagewriteconfig(name: string, value: string) {
+  return writeidb(`config_${name}`, () => value)
+}
+
+export async function storagereadconfigall() {
+  const lookup = [
+    'config_crt',
+    'config_lowrez',
+    'config_scanlines',
+    'config_voice2text',
+  ]
+  const configs = await idbgetmany<string>(lookup)
+  return configs.map((value, index) => {
+    const key = lookup[index]
+    const keyname = key.replace('config_', '')
+    if (!value) {
+      return [keyname, storagereadconfigdefault(keyname)]
+    }
+    return [keyname, value && value !== 'off' ? 'on' : 'off']
+  })
+}
+
+export async function storagereadhistorybuffer() {
+  return readidb<string[]>('HISTORYBUFFER')
+}
+
+export async function storagewritehistorybuffer(historybuffer: string[]) {
+  return writeidb('HISTORYBUFFER', () => historybuffer)
+}
+
+async function writelocalurl(fullurl: string) {
+  let shorturl = await readidb<string>(fullurl)
+  if (shorturl === undefined) {
+    // build short url
+    while (shorturl === undefined) {
+      const maybeurl = humanid({
+        addAdverb: true,
+        capitalize: false,
+        adjectiveCount: 2,
+      })
+      const hasvalue = await readidb<string>(maybeurl)
+      if (hasvalue === undefined) {
+        shorturl = maybeurl
+      }
+    }
+    // write lookups
+    await writeidb(fullurl, () => shorturl)
+    await writeidb(shorturl, () => fullurl)
+  }
+  return shorturl
+}
+
+async function readlocalurl(shorturl: string) {
+  return await readidb<string>(shorturl)
+}
+
+// read / write from window url #hash
+
+function readurlhash() {
+  try {
+    const hash = location.hash.slice(1)
+    if (hash.length) {
+      return hash
+    }
+  } catch (err: any) {
+    apierror(SOFTWARE, registerreadplayer(), 'crash', err.message)
+  }
+  return ''
+}
+
+export async function storagereadcontent(): Promise<string> {
+  const urlcontent = readurlhash()
+  if (urlcontent.length) {
+    // see if its a shorturlhash
+    const maybefullurlcontent = await readlocalurl(urlcontent)
+    if (
+      ispresent(maybefullurlcontent) &&
+      maybefullurlcontent.length > urlcontent.length
+    ) {
+      return maybefullurlcontent
+    }
+    return urlcontent
+  }
+  return ''
+}
+
+export async function storagewritecontent(
+  exportedbooks: string,
+  label: string,
+  fullcontent: string,
+) {
+  if (exportedbooks.length > 2048) {
+    const shorturl = await writelocalurl(exportedbooks)
+    return storagewritecontent(shorturl, label, fullcontent)
+  }
+  const newurlhash = `#${exportedbooks}`
+  if (location.hash !== newurlhash) {
+    // saving current state, don't interrupt the user
+    currenturlhash = exportedbooks
+    location.hash = newurlhash
+    const msg = `wrote ${fullcontent.length} chars [${fullcontent.slice(0, 8)}...${fullcontent.slice(-8)}]`
+    if (!label.includes('autosave')) {
+      apilog(SOFTWARE, registerreadplayer(), msg)
+    }
+    document.title = label
+  }
+}
+
+export async function storagereadvars(): Promise<Record<string, any>> {
+  const storage = await readidb<Record<string, any>>('storage')
+  return storage ?? {}
+}
+
+export async function storagewritevar(name: string, value: any) {
+  const storage = await storagereadvars()
+  storage[name] = value
+  return writeidb('storage', () => storage)
+}
+
+// either browser or tauri setup here ...
+
+let currenturlhash = ''
+window.addEventListener('hashchange', () => {
+  doasync(SOFTWARE, registerreadplayer(), async () => {
+    const urlhash = readurlhash()
+    if (currenturlhash !== urlhash) {
+      currenturlhash = urlhash
+      const urlcontent = await storagereadcontent()
+      // init vm with content
+      vmbooks(SOFTWARE, registerreadplayer(), urlcontent)
+    }
+  })
+})
+
+export async function storagesharecontent(player: string) {
+  // unpack short url before sharing
+  const urlcontent = await storagereadcontent()
+  // share full content
+  const out = `#${urlcontent}`
+  currenturlhash = urlcontent
+  location.hash = out
+  // gen global shorturl
+  const url = await shorturl(location.href)
+  writecopyit(SOFTWARE, player, url, url)
+}
+
+export function storagenukecontent() {
+  // nuke is the only valid case for reload
+  location.hash = ''
+  currenturlhash = location.hash
+  location.reload()
+}

@@ -7,8 +7,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Stats from 'stats.js'
 import { OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME, STATS_DEV } from 'zss/config'
-import { readconfig, registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { doasync } from 'zss/mapping/func'
@@ -67,15 +68,15 @@ export function Engine() {
   const [scanlines, setscanlines] = useState(false)
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
-      const lowrez = await readconfig('lowrez')
+      const lowrez = await storagereadconfig('lowrez')
       if (lowrez === 'on') {
         setforcelowrez(true)
       }
-      const crt = await readconfig('crt')
+      const crt = await storagereadconfig('crt')
       if (crt === 'on' && !islinux) {
         setcrt(true)
       }
-      const scanlines = await readconfig('scanlines')
+      const scanlines = await storagereadconfig('scanlines')
       if (scanlines === 'on') {
         setscanlines(true)
       }

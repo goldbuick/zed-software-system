@@ -1,17 +1,19 @@
-import humanid from 'human-id'
-import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice } from 'zss/device'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
-import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import {
-  writecopyit,
-  writeheader,
-  writeoption,
-  writetext,
-} from 'zss/feature/writeui'
+  storagenukecontent,
+  storagereadcontent,
+  storagereadhistorybuffer,
+  storagereadvars,
+  storagesharecontent,
+  storagewritecontent,
+  storagewritevar,
+} from 'zss/feature/storage'
+import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
+import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
@@ -52,19 +54,6 @@ import {
   vmzsswords,
 } from './api'
 
-// read / write from indexdb
-
-async function readidb<T>(key: string): Promise<T | undefined> {
-  return idbget(key)
-}
-
-async function writeidb<T>(
-  key: string,
-  updater: (oldValue: T | undefined) => T,
-): Promise<void> {
-  return idbupdate(key, updater)
-}
-
 // read / write from session
 
 function readsession(key: string): MAYBE<string> {
@@ -91,36 +80,6 @@ function writesession(key: string, value: MAYBE<string>) {
       err.message,
     )
   }
-}
-
-// read / write from window url #hash
-
-function readurlhash() {
-  try {
-    const hash = location.hash.slice(1)
-    if (hash.length) {
-      return hash
-    }
-  } catch (err: any) {
-    apierror(register, myplayerid, 'crash', err.message)
-  }
-  return ''
-}
-
-async function readurlcontent(): Promise<string> {
-  const urlcontent = readurlhash()
-  if (urlcontent.length) {
-    // see if its a shorturlhash
-    const maybefullurlcontent = await readlocalurl(urlcontent)
-    if (
-      ispresent(maybefullurlcontent) &&
-      maybefullurlcontent.length > urlcontent.length
-    ) {
-      return maybefullurlcontent
-    }
-    return urlcontent
-  }
-  return ''
 }
 
 async function writewikilink() {
@@ -234,93 +193,6 @@ async function loadmem(books: string) {
   vmbooks(register, myplayerid, books)
 }
 
-let currenturlhash = ''
-window.addEventListener('hashchange', () => {
-  doasync(register, myplayerid, async () => {
-    const urlhash = readurlhash()
-    if (currenturlhash !== urlhash) {
-      currenturlhash = urlhash
-      const urlcontent = await readurlcontent()
-      await loadmem(urlcontent)
-    }
-  })
-})
-
-async function writeurlcontent(
-  exportedbooks: string,
-  label: string,
-  fullcontent: string,
-) {
-  if (exportedbooks.length > 2048) {
-    const shorturl = await writelocalurl(exportedbooks)
-    return writeurlcontent(shorturl, label, fullcontent)
-  }
-  const newurlhash = `#${exportedbooks}`
-  if (location.hash !== newurlhash) {
-    // saving current state, don't interrupt the user
-    currenturlhash = exportedbooks
-    location.hash = newurlhash
-    const msg = `wrote ${fullcontent.length} chars [${fullcontent.slice(0, 8)}...${fullcontent.slice(-8)}]`
-    if (!label.includes('autosave')) {
-      apilog(register, myplayerid, msg)
-    }
-    document.title = label
-  }
-}
-
-function readconfigdefault(name: string) {
-  switch (name) {
-    case 'crt':
-      return 'on'
-    default:
-      return 'off'
-  }
-}
-
-export async function readconfig(name: string) {
-  const value = await readidb<string>(`config_${name}`)
-
-  if (!value) {
-    return readconfigdefault(name)
-  }
-
-  return value && value !== 'off' ? 'on' : 'off'
-}
-
-export async function readhistorybuffer() {
-  return readidb<string[]>('HISTORYBUFFER')
-}
-
-export async function writehistorybuffer(historybuffer: string[]) {
-  return writeidb('HISTORYBUFFER', () => historybuffer)
-}
-
-export async function writelocalurl(fullurl: string) {
-  let shorturl = await readidb<string>(fullurl)
-  if (shorturl === undefined) {
-    // build short url
-    while (shorturl === undefined) {
-      const maybeurl = humanid({
-        addAdverb: true,
-        capitalize: false,
-        adjectiveCount: 2,
-      })
-      const hasvalue = await readidb<string>(maybeurl)
-      if (hasvalue === undefined) {
-        shorturl = maybeurl
-      }
-    }
-    // write lookups
-    await writeidb(fullurl, () => shorturl)
-    await writeidb(shorturl, () => fullurl)
-  }
-  return shorturl
-}
-
-export async function readlocalurl(shorturl: string) {
-  return await readidb<string>(shorturl)
-}
-
 // simple bootstrap manager
 let keepalive = 0
 
@@ -367,7 +239,7 @@ const register = createdevice(
       case 'ready': {
         doasync(register, message.player, async () => {
           // setup history buffer
-          const historybuffer = await readhistorybuffer()
+          const historybuffer = await storagereadhistorybuffer()
           if (ispresent(historybuffer)) {
             useTapeTerminal.setState({
               buffer: historybuffer.filter((line) => {
@@ -388,7 +260,7 @@ const register = createdevice(
         gadgetserverdesync(register, myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
-          const urlcontent = await readurlcontent()
+          const urlcontent = await storagereadcontent()
           if (isjoin()) {
             bridgejoin(register, myplayerid, urlcontent)
           } else {
@@ -399,8 +271,8 @@ const register = createdevice(
         break
       case 'loginready':
         doasync(register, message.player, async () => {
-          const storage = await readidb<Record<string, any>>('storage')
-          vmlogin(register, myplayerid, storage ?? {})
+          const storage = await storagereadvars()
+          vmlogin(register, myplayerid, storage)
           vmzsswords(register, myplayerid)
         })
         break
@@ -450,10 +322,7 @@ const register = createdevice(
         doasync(register, message.player, async () => {
           if (isarray(message.data)) {
             const [name, value] = message.data
-            const storage =
-              (await readidb<Record<string, any>>('storage')) ?? {}
-            storage[name] = value
-            await writeidb('storage', () => storage)
+            await storagewritevar(name, value)
           }
         })
         break
@@ -534,15 +403,7 @@ const register = createdevice(
         break
       case 'share':
         doasync(register, message.player, async function () {
-          // unpack short url before sharing
-          const urlcontent = await readurlcontent()
-          // share full content
-          const out = `#${urlcontent}`
-          currenturlhash = urlcontent
-          location.hash = out
-          // gen global shorturl
-          const url = await shorturl(location.href)
-          writecopyit(register, message.player, url, url)
+          await storagesharecontent(message.player)
         })
         break
       case 'nuke':
@@ -556,10 +417,7 @@ const register = createdevice(
           await waitfor(1000)
           writeheader(register, message.player, 'BYE')
           await waitfor(100)
-          // nuke is the only valid case for reload
-          location.hash = ''
-          currenturlhash = location.hash
-          location.reload()
+          storagenukecontent()
         })
         break
       case 'savemem':
@@ -567,7 +425,7 @@ const register = createdevice(
           if (isarray(message.data)) {
             const [maybehistorylabel, maybecontent] = message.data
             if (isstring(maybehistorylabel) && isstring(maybecontent)) {
-              await writeurlcontent(
+              await storagewritecontent(
                 maybecontent,
                 maybehistorylabel,
                 maybecontent,

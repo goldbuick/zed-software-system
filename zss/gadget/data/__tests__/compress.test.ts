@@ -53,8 +53,10 @@ describe('compress', () => {
       expect(imported?.layers).toHaveLength(1)
       expect(imported?.layers?.[0].type).toBe(LAYER_TYPE.TILES)
       expect(imported?.layers?.[0].id).toBe(tiles.id)
-      expect(imported?.layers?.[0].width).toBe(5)
-      expect(imported?.layers?.[0].height).toBe(5)
+      if (imported?.layers?.[0].type === LAYER_TYPE.TILES) {
+        expect(imported.layers[0].width).toBe(5)
+        expect(imported.layers[0].height).toBe(5)
+      }
     })
 
     it('should export and import gadget state with sprites layer', () => {
