@@ -10,7 +10,11 @@ import { doasync } from 'zss/mapping/func'
 import { ispresent } from 'zss/mapping/types'
 
 import { shorturl } from './url'
-import { writecopyit } from './writeui'
+import { write, writecopyit } from './writeui'
+
+// detect what kind of container we are in
+const istauri =
+  typeof window !== 'undefined' && typeof window.__TAURI__ !== 'undefined'
 
 // read / write from indexdb
 
@@ -168,12 +172,13 @@ export async function storagewritevar(name: string, value: any) {
 
 let currenturlhash = ''
 export function storagewatchcontent(player: string) {
+  write(SOFTWARE, player, `istauri ${istauri}`)
   window.addEventListener('hashchange', () => {
     doasync(SOFTWARE, player, async () => {
-      const urlhash = readurlhash()
+      const urlhash = readurlhash(player)
       if (currenturlhash !== urlhash) {
         currenturlhash = urlhash
-        const urlcontent = await storagereadcontent()
+        const urlcontent = await storagereadcontent(player)
         // init vm with content
         vmbooks(SOFTWARE, player, urlcontent)
       }
@@ -183,7 +188,7 @@ export function storagewatchcontent(player: string) {
 
 export async function storagesharecontent(player: string) {
   // unpack short url before sharing
-  const urlcontent = await storagereadcontent()
+  const urlcontent = await storagereadcontent(player)
   // share full content
   const out = `#${urlcontent}`
   currenturlhash = urlcontent
