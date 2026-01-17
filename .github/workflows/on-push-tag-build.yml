@@ -27,7 +27,9 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build frontend
-        run: yarn build
+        run: |
+          yarn tauri:version
+          yarn build
 
       - name: Build Tauri app (Windows)
         uses: tauri-apps/tauri-action@v0
@@ -69,7 +71,9 @@ jobs:
           yarn install --frozen-lockfile
 
       - name: Build frontend
-        run: yarn build
+        run: |
+          yarn tauri:version
+          yarn build
 
       - name: Build Tauri app (macOS)
         uses: tauri-apps/tauri-action@v0
@@ -81,5 +85,4 @@ jobs:
           releaseName: 'zed-software-system v${{ github.ref_name }}'
           releaseBody: 'See the assets to download and install this version.'
           releaseDraft: false
-          releasePrerelease: false
           args: --target universal-apple-darwin
