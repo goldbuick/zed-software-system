@@ -5,11 +5,12 @@
   "identifier": "com.goldbuick.zed-cafe",
   "build": {
     "frontendDist": "../cafe/dist",
-    "devUrl": "https://localhost:7777",
-    "beforeDevCommand": "yarn dev",
+    "devUrl": "http://localhost:7777",
+    "beforeDevCommand": "yarn tauri:web",
     "beforeBuildCommand": "yarn build"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "zed-cafe",

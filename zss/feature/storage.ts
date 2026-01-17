@@ -1,3 +1,8 @@
+import {
+  BaseDirectory,
+  readTextFile,
+  writeTextFile,
+} from '@tauri-apps/plugin-fs'
 import humanid from 'human-id'
 import {
   get as idbget,
@@ -8,13 +13,15 @@ import { apierror, apilog, vmbooks } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { ispresent } from 'zss/mapping/types'
+import { BOOK } from 'zss/memory/types'
 
 import { shorturl } from './url'
-import { write, writecopyit } from './writeui'
+import { writecopyit } from './writeui'
 
 // detect what kind of container we are in
 const istauri =
-  typeof window !== 'undefined' && typeof window.__TAURI__ !== 'undefined'
+  typeof window !== 'undefined' &&
+  ('__TAURI__' in window || '__TAURI__INTERNALS__' in window)
 
 // read / write from indexdb
 
@@ -119,6 +126,12 @@ function readurlhash(player: string) {
 }
 
 export async function storagereadcontent(player: string): Promise<string> {
+  if (istauri) {
+    const content = await readTextFile('zss-content.json', {
+      baseDir: BaseDirectory.AppData,
+    })
+    return content
+  }
   const urlcontent = readurlhash(player)
   if (urlcontent.length) {
     // see if its a shorturlhash
@@ -136,24 +149,30 @@ export async function storagereadcontent(player: string): Promise<string> {
 
 export async function storagewritecontent(
   player: string,
-  exportedbooks: string,
   label: string,
-  fullcontent: string,
+  compressed: string,
+  books: BOOK[],
 ) {
-  if (exportedbooks.length > 2048) {
-    const shorturl = await writelocalurl(exportedbooks)
-    return storagewritecontent(player, shorturl, label, fullcontent)
+  if (compressed.length > 2048) {
+    const shorturl = await writelocalurl(compressed)
+    return storagewritecontent(player, label, shorturl, books)
   }
-  const newurlhash = `#${exportedbooks}`
-  if (location.hash !== newurlhash) {
-    // saving current state, don't interrupt the user
-    currenturlhash = exportedbooks
-    location.hash = newurlhash
-    const msg = `wrote ${fullcontent.length} chars [${fullcontent.slice(0, 8)}...${fullcontent.slice(-8)}]`
-    if (!label.includes('autosave')) {
-      apilog(SOFTWARE, player, msg)
+  if (istauri) {
+    await writeTextFile('zss-content.json', JSON.stringify(books, null, 2), {
+      baseDir: BaseDirectory.AppData,
+    })
+  } else {
+    const newurlhash = `#${compressed}`
+    if (location.hash !== newurlhash) {
+      // saving current state, don't interrupt the user
+      currenturlhash = compressed
+      location.hash = newurlhash
+      const msg = `wrote ${compressed.length} chars [${compressed.slice(0, 8)}...${compressed.slice(-8)}]`
+      if (!label.includes('autosave')) {
+        apilog(SOFTWARE, player, msg)
+      }
+      document.title = label
     }
-    document.title = label
   }
 }
 
@@ -172,7 +191,9 @@ export async function storagewritevar(name: string, value: any) {
 
 let currenturlhash = ''
 export function storagewatchcontent(player: string) {
-  write(SOFTWARE, player, `istauri ${istauri}`)
+  if (istauri) {
+    return
+  }
   window.addEventListener('hashchange', () => {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
@@ -187,6 +208,9 @@ export function storagewatchcontent(player: string) {
 }
 
 export async function storagesharecontent(player: string) {
+  if (istauri) {
+    return
+  }
   // unpack short url before sharing
   const urlcontent = await storagereadcontent(player)
   // share full content
@@ -199,6 +223,9 @@ export async function storagesharecontent(player: string) {
 }
 
 export function storagenukecontent() {
+  if (istauri) {
+    return
+  }
   // nuke is the only valid case for reload
   location.hash = ''
   currenturlhash = location.hash

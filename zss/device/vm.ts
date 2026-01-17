@@ -143,9 +143,9 @@ async function savestate(autosave?: boolean) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
-    const content = await memorycompressbooks(books)
-    const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
-    registersavemem(vm, memoryreadoperator(), historylabel, content)
+    const compressed = await memorycompressbooks(books)
+    const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${compressed.length} chars`
+    registersavemem(vm, memoryreadoperator(), historylabel, compressed, books)
   }
 }
 

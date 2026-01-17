@@ -31,6 +31,7 @@ import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
+  isbook,
   isboolean,
   ispresent,
   isstring,
@@ -263,7 +264,7 @@ const register = createdevice(
         gadgetserverdesync(register, myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
-          const urlcontent = await storagereadcontent()
+          const urlcontent = await storagereadcontent(myplayerid)
           if (isjoin()) {
             bridgejoin(register, myplayerid, urlcontent)
           } else {
@@ -424,13 +425,18 @@ const register = createdevice(
       case 'savemem':
         doasync(register, message.player, async function () {
           if (isarray(message.data)) {
-            const [maybehistorylabel, maybecontent] = message.data
-            if (isstring(maybehistorylabel) && isstring(maybecontent)) {
+            const [maybelabel, maybecontent, maybebooks] = message.data
+            if (
+              isstring(maybelabel) &&
+              isstring(maybecontent) &&
+              isarray(maybebooks) &&
+              maybebooks.every(isbook)
+            ) {
               await storagewritecontent(
                 message.player,
+                maybelabel,
                 maybecontent,
-                maybehistorylabel,
-                maybecontent,
+                maybebooks,
               )
             }
           }

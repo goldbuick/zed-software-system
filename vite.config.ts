@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, apppath, envprefix),
   }
 
+  const nohttps = !!JSON.parse(process.env.ZSS_NO_HTTPS ?? '')
   const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? '')
   const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? '')
 
@@ -38,7 +39,7 @@ export default defineConfig(({ mode }) => {
     envPrefix: envprefix,
     plugins: [
       react(),
-      mkcert(),
+      ...(nohttps ? [] : [mkcert()]),
       nodePolyfills({
         include: ['buffer'],
         globals: {
