@@ -7,7 +7,7 @@
     "frontendDist": "../cafe/dist",
     "devUrl": "http://localhost:7777",
     "beforeDevCommand": "yarn tauri:web",
-    "beforeBuildCommand": "yarn build"
+    "beforeBuildCommand": "yarn tauri:version && yarn build"
   },
   "app": {
     "windows": [
