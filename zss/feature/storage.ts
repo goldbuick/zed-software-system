@@ -16,7 +16,7 @@ import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
 import { shorturl } from './url'
-import { writecopyit } from './writeui'
+import { write, writecopyit } from './writeui'
 
 // detect what kind of container we are in
 const istauri =
@@ -130,12 +130,13 @@ export async function storagereadcontent(
 ): Promise<string | BOOK[]> {
   if (istauri) {
     try {
+      write(SOFTWARE, player, 'reading zss-content.json')
       const content = await readTextFile('zss-content.json', {
         baseDir: BaseDirectory.AppData,
       })
       return JSON.parse(content)
     } catch (err: any) {
-      apierror(SOFTWARE, player, 'readcontent', err.message)
+      apierror(SOFTWARE, player, 'readcontent', err.toString())
       return []
     }
   }
@@ -161,9 +162,14 @@ export async function storagewritecontent(
   books: BOOK[],
 ) {
   if (istauri) {
-    await writeTextFile('zss-content.json', JSON.stringify(books, null, 2), {
-      baseDir: BaseDirectory.AppData,
-    })
+    try {
+      write(SOFTWARE, player, 'writing zss-content.json')
+      await writeTextFile('zss-content.json', JSON.stringify(books, null, 2), {
+        baseDir: BaseDirectory.AppData,
+      })
+    } catch (err: any) {
+      apierror(SOFTWARE, player, 'writecontent', err.toString())
+    }
     return
   }
   if (compressed.length > 2048) {
