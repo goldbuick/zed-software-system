@@ -1,4 +1,4 @@
-import { appDataDir } from '@tauri-apps/api/path'
+import { appDataDir, join } from '@tauri-apps/api/path'
 import {
   BaseDirectory,
   mkdir,
@@ -133,7 +133,15 @@ function readurlhash(player: string) {
 export async function storagereadcontent(
   player: string,
 ): Promise<string | BOOK[]> {
+  const urlcontent = readurlhash(player)
   if (istauri) {
+    if (urlcontent.length) {
+      write(SOFTWARE, player, `reading url content, make sure to save`)
+      // clear the hash
+      location.hash = ''
+      // we only support long urls in tauri mode
+      return urlcontent
+    }
     try {
       write(SOFTWARE, player, `reading ${FILE_SOURCE}`)
       const content = await readTextFile(FILE_SOURCE, {
@@ -145,7 +153,6 @@ export async function storagereadcontent(
       return []
     }
   }
-  const urlcontent = readurlhash(player)
   if (urlcontent.length) {
     // see if its a shorturlhash
     const maybefullurlcontent = await readlocalurl(urlcontent)
@@ -212,8 +219,13 @@ let currenturlhash = ''
 export async function storagewatchcontent(player: string) {
   if (istauri) {
     await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true })
-    const appdata = await appDataDir()
-    await revealItemInDir(appdata)
+    try {
+      const appdata = await appDataDir()
+      const item = await join(appdata, FILE_SOURCE)
+      await revealItemInDir(item)
+    } catch (err: any) {
+      apierror(SOFTWARE, player, 'storage', err.toString())
+    }
     return
   }
   window.addEventListener('hashchange', () => {
