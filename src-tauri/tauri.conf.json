@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "zed-software-system",
   "version": "0.1.0",
-  "identifier": "com.goldbuick.zed-cafe",
+  "identifier": "cafe.zed.zed-software-system",
   "build": {
     "frontendDist": "../cafe/dist",
     "devUrl": "http://localhost:7777",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "zed-cafe",
+        "title": "zed.cafe",
         "maximized": true,
         "resizable": true,
         "fullscreen": false,
