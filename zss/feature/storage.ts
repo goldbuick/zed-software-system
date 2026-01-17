@@ -5,7 +5,6 @@ import {
   update as idbupdate,
 } from 'idb-keyval'
 import { apierror, apilog, vmbooks } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { ispresent } from 'zss/mapping/types'
@@ -103,20 +102,20 @@ async function readlocalurl(shorturl: string) {
 
 // read / write from window url #hash
 
-function readurlhash() {
+function readurlhash(player: string) {
   try {
     const hash = location.hash.slice(1)
     if (hash.length) {
       return hash
     }
   } catch (err: any) {
-    apierror(SOFTWARE, registerreadplayer(), 'crash', err.message)
+    apierror(SOFTWARE, player, 'crash', err.message)
   }
   return ''
 }
 
-export async function storagereadcontent(): Promise<string> {
-  const urlcontent = readurlhash()
+export async function storagereadcontent(player: string): Promise<string> {
+  const urlcontent = readurlhash(player)
   if (urlcontent.length) {
     // see if its a shorturlhash
     const maybefullurlcontent = await readlocalurl(urlcontent)
@@ -132,13 +131,14 @@ export async function storagereadcontent(): Promise<string> {
 }
 
 export async function storagewritecontent(
+  player: string,
   exportedbooks: string,
   label: string,
   fullcontent: string,
 ) {
   if (exportedbooks.length > 2048) {
     const shorturl = await writelocalurl(exportedbooks)
-    return storagewritecontent(shorturl, label, fullcontent)
+    return storagewritecontent(player, shorturl, label, fullcontent)
   }
   const newurlhash = `#${exportedbooks}`
   if (location.hash !== newurlhash) {
@@ -147,7 +147,7 @@ export async function storagewritecontent(
     location.hash = newurlhash
     const msg = `wrote ${fullcontent.length} chars [${fullcontent.slice(0, 8)}...${fullcontent.slice(-8)}]`
     if (!label.includes('autosave')) {
-      apilog(SOFTWARE, registerreadplayer(), msg)
+      apilog(SOFTWARE, player, msg)
     }
     document.title = label
   }
@@ -167,17 +167,19 @@ export async function storagewritevar(name: string, value: any) {
 // either browser or tauri setup here ...
 
 let currenturlhash = ''
-window.addEventListener('hashchange', () => {
-  doasync(SOFTWARE, registerreadplayer(), async () => {
-    const urlhash = readurlhash()
-    if (currenturlhash !== urlhash) {
-      currenturlhash = urlhash
-      const urlcontent = await storagereadcontent()
-      // init vm with content
-      vmbooks(SOFTWARE, registerreadplayer(), urlcontent)
-    }
+export function storagewatchcontent(player: string) {
+  window.addEventListener('hashchange', () => {
+    doasync(SOFTWARE, player, async () => {
+      const urlhash = readurlhash()
+      if (currenturlhash !== urlhash) {
+        currenturlhash = urlhash
+        const urlcontent = await storagereadcontent()
+        // init vm with content
+        vmbooks(SOFTWARE, player, urlcontent)
+      }
+    })
   })
-})
+}
 
 export async function storagesharecontent(player: string) {
   // unpack short url before sharing

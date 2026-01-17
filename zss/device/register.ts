@@ -9,6 +9,7 @@ import {
   storagereadhistorybuffer,
   storagereadvars,
   storagesharecontent,
+  storagewatchcontent,
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
@@ -238,6 +239,8 @@ const register = createdevice(
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
+          // setup content watcher
+          storagewatchcontent(myplayerid)
           // setup history buffer
           const historybuffer = await storagereadhistorybuffer()
           if (ispresent(historybuffer)) {
@@ -294,9 +297,7 @@ const register = createdevice(
         vmloader(register, message.player, undefined, 'text', 'sim:load', '')
         break
       case 'ackzsswords': {
-        useGadgetClient.setState({
-          zsswords: message.data,
-        })
+        useGadgetClient.setState({ zsswords: message.data })
         const dynamicwords: string[] = []
         const words = Object.values(message.data as Record<string, string[]>)
         for (let i = 0; i < words.length; ++i) {
@@ -426,6 +427,7 @@ const register = createdevice(
             const [maybehistorylabel, maybecontent] = message.data
             if (isstring(maybehistorylabel) && isstring(maybecontent)) {
               await storagewritecontent(
+                message.player,
                 maybecontent,
                 maybehistorylabel,
                 maybecontent,
