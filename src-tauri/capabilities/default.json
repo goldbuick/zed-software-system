@@ -31,6 +31,15 @@
           "path": "$APPDATA/*"
         }
       ]
+    },
+    {
+      "identifier": "opener:allow-reveal-item-in-dir",
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
     }
   ]
 }
+

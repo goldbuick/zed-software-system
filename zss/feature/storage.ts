@@ -1,3 +1,5 @@
+import { revealItemInDir } from '@tauri-apps/plugin-opener'
+import { appDataDir } from '@tauri-apps/api/path'
 import {
   BaseDirectory,
   mkdir,
@@ -208,6 +210,8 @@ let currenturlhash = ''
 export async function storagewatchcontent(player: string) {
   if (istauri) {
     await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true })
+    const appdata = await appDataDir()
+    await revealItemInDir(appdata)
     return
   }
   window.addEventListener('hashchange', () => {
