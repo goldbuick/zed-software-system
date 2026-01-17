@@ -59,6 +59,11 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Install Rust targets for universal macOS build
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
       - name: Install dependencies (macOS)
         run: |
           yarn install --frozen-lockfile
