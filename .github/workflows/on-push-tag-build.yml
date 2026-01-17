@@ -1,4 +1,4 @@
-name: Build Release (Tauri)
+name: Push Tag Build - Tauri Release
 
 on:
   push:

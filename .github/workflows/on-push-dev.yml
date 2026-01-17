@@ -1,4 +1,4 @@
-name: auto-version on dev
+name: Push Dev - Auto Version
 
 on:
   push:
