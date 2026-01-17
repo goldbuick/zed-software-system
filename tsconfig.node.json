@@ -9,6 +9,7 @@
   },
   "include": [
     "vite.config.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "sync-version.ts"
   ]
 }

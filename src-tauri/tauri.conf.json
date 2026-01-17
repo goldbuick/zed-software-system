@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "zed-software-system",
-  "version": "0.1.0",
+  "version": "0.85.1",
   "identifier": "cafe.zed.zed-software-system",
   "build": {
     "frontendDist": "../cafe/dist",
