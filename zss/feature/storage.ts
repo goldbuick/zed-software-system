@@ -233,6 +233,7 @@ export async function storagesharecontent(player: string) {
   // unpack short url before sharing
   const urlcontent = await storagereadcontent(player)
   if (isarray(urlcontent)) {
+    apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
     return
   }
   // share full content
@@ -244,8 +245,9 @@ export async function storagesharecontent(player: string) {
   writecopyit(SOFTWARE, player, url, url)
 }
 
-export function storagenukecontent() {
+export function storagenukecontent(player: string) {
   if (istauri) {
+    apierror(SOFTWARE, player, 'storage', '#nuke not supported in server mode')
     return
   }
   // nuke is the only valid case for reload

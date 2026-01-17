@@ -420,7 +420,7 @@ const register = createdevice(
           await waitfor(1000)
           writeheader(register, message.player, 'BYE')
           await waitfor(100)
-          storagenukecontent()
+          storagenukecontent(message.player)
         })
         break
       case 'savemem':
