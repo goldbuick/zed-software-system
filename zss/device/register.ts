@@ -36,6 +36,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import { BOOK } from 'zss/memory/types'
 import { tokenizeandstriptextformat } from 'zss/words/textformat'
 
 import {
@@ -55,7 +56,6 @@ import {
   vmoperator,
   vmzsswords,
 } from './api'
-import { BOOK } from 'zss/memory/types'
 
 // read / write from session
 
