@@ -12,7 +12,7 @@ import {
 import { apierror, apilog, vmbooks } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
 import { shorturl } from './url'
@@ -125,12 +125,19 @@ function readurlhash(player: string) {
   return ''
 }
 
-export async function storagereadcontent(player: string): Promise<string> {
+export async function storagereadcontent(
+  player: string,
+): Promise<string | BOOK[]> {
   if (istauri) {
-    const content = await readTextFile('zss-content.json', {
-      baseDir: BaseDirectory.AppData,
-    })
-    return content
+    try {
+      const content = await readTextFile('zss-content.json', {
+        baseDir: BaseDirectory.AppData,
+      })
+      return JSON.parse(content)
+    } catch (err: any) {
+      apierror(SOFTWARE, player, 'readcontent', err.message)
+      return []
+    }
   }
   const urlcontent = readurlhash(player)
   if (urlcontent.length) {
@@ -153,26 +160,26 @@ export async function storagewritecontent(
   compressed: string,
   books: BOOK[],
 ) {
-  if (compressed.length > 2048) {
-    const shorturl = await writelocalurl(compressed)
-    return storagewritecontent(player, label, shorturl, books)
-  }
   if (istauri) {
     await writeTextFile('zss-content.json', JSON.stringify(books, null, 2), {
       baseDir: BaseDirectory.AppData,
     })
-  } else {
-    const newurlhash = `#${compressed}`
-    if (location.hash !== newurlhash) {
-      // saving current state, don't interrupt the user
-      currenturlhash = compressed
-      location.hash = newurlhash
-      const msg = `wrote ${compressed.length} chars [${compressed.slice(0, 8)}...${compressed.slice(-8)}]`
-      if (!label.includes('autosave')) {
-        apilog(SOFTWARE, player, msg)
-      }
-      document.title = label
+    return
+  }
+  if (compressed.length > 2048) {
+    const shorturl = await writelocalurl(compressed)
+    return storagewritecontent(player, label, shorturl, books)
+  }
+  const newurlhash = `#${compressed}`
+  if (location.hash !== newurlhash) {
+    // saving current state, don't interrupt the user
+    currenturlhash = compressed
+    location.hash = newurlhash
+    const msg = `wrote ${compressed.length} chars [${compressed.slice(0, 8)}...${compressed.slice(-8)}]`
+    if (!label.includes('autosave')) {
+      apilog(SOFTWARE, player, msg)
     }
+    document.title = label
   }
 }
 
@@ -208,11 +215,11 @@ export function storagewatchcontent(player: string) {
 }
 
 export async function storagesharecontent(player: string) {
-  if (istauri) {
-    return
-  }
   // unpack short url before sharing
   const urlcontent = await storagereadcontent(player)
+  if (isarray(urlcontent)) {
+    return
+  }
   // share full content
   const out = `#${urlcontent}`
   currenturlhash = urlcontent

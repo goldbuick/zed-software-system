@@ -39,13 +39,13 @@ export default defineConfig(({ mode }) => {
     envPrefix: envprefix,
     plugins: [
       react(),
-      ...(nohttps ? [] : [mkcert()]),
       nodePolyfills({
         include: ['buffer'],
         globals: {
           global: true,
         },
       }),
+      ...(nohttps ? [] : [mkcert()]),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
     ],

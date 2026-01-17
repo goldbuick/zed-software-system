@@ -91,7 +91,7 @@ import {
   memorytickmain,
   memoryunlockscroll,
 } from 'zss/memory/runtime'
-import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { BOOK, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import {
   memoryadminmenu,
   memorycompressbooks,
@@ -400,15 +400,19 @@ const vm = createdevice(
       case 'books':
         if (message.player === operator) {
           doasync(vm, message.player, async () => {
-            if (isstring(message.data)) {
-              // unpack books
-              const books = await memorydecompressbooks(message.data)
-              const booknames = books.map((item) => item.name)
-              memoryresetbooks(books)
-              apilog(vm, message.player, `loading ${booknames.join(', ')}`)
-              // ack
-              registerloginready(vm, message.player)
+            let books: BOOK[] = []
+            if (isarray(message.data)) {
+              // server mode loading books
+              books = message.data
+            } else if (isstring(message.data)) {
+              // browser mode loading books
+              books = await memorydecompressbooks(message.data)
             }
+            const booknames = books.map((item) => item.name)
+            apilog(vm, message.player, `loading ${booknames.join(', ')}`)
+            memoryresetbooks(books)
+            // ack
+            registerloginready(vm, message.player)
           })
         }
         break

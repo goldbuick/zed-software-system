@@ -498,7 +498,11 @@ export function vmtopic(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'vm:topic', topic)
 }
 
-export function vmbooks(device: DEVICELIKE, player: string, books: string) {
+export function vmbooks(
+  device: DEVICELIKE,
+  player: string,
+  books: string | BOOK[],
+) {
   device.emit(player, 'vm:books', books)
 }
 
