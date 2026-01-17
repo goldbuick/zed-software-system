@@ -55,6 +55,7 @@ import {
   vmoperator,
   vmzsswords,
 } from './api'
+import { BOOK } from 'zss/memory/types'
 
 // read / write from session
 
@@ -182,7 +183,7 @@ function terminalinclayout(inc: boolean) {
   useTape.setState({ layout: nextlayout })
 }
 
-async function loadmem(books: string) {
+async function loadmem(books: string | BOOK[]) {
   if (books.length === 0) {
     apierror(register, myplayerid, 'content', 'no content found')
     await writewikilink()
@@ -265,7 +266,7 @@ const register = createdevice(
         // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)
-          if (isjoin()) {
+          if (isjoin() && isstring(urlcontent)) {
             bridgejoin(register, myplayerid, urlcontent)
           } else {
             // pull data && init

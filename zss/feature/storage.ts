@@ -26,6 +26,8 @@ const istauri =
   typeof window !== 'undefined' &&
   ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)
 
+const FILE_SOURCE = 'zss-content.json'
+
 // read / write from indexdb
 
 async function readidb<T>(key: string): Promise<T | undefined> {
@@ -133,8 +135,8 @@ export async function storagereadcontent(
 ): Promise<string | BOOK[]> {
   if (istauri) {
     try {
-      write(SOFTWARE, player, 'reading zss-content.json')
-      const content = await readTextFile('zss-content.json', {
+      write(SOFTWARE, player, `reading ${FILE_SOURCE}`)
+      const content = await readTextFile(FILE_SOURCE, {
         baseDir: BaseDirectory.AppData,
       })
       return JSON.parse(content)
@@ -166,8 +168,8 @@ export async function storagewritecontent(
 ) {
   if (istauri) {
     try {
-      write(SOFTWARE, player, 'writing zss-content.json')
-      await writeTextFile('zss-content.json', JSON.stringify(books, null, 2), {
+      write(SOFTWARE, player, `writing ${FILE_SOURCE}`)
+      await writeTextFile(FILE_SOURCE, JSON.stringify(books, null, 2), {
         baseDir: BaseDirectory.AppData,
         create: true,
       })
