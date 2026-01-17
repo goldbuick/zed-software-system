@@ -27,7 +27,9 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build frontend
-        run: yarn build
+        run: |
+          yarn tauri:version
+          yarn build
 
       - name: Build Tauri app (Windows)
         uses: tauri-apps/tauri-action@v0
@@ -39,7 +41,6 @@ jobs:
           releaseName: 'zed-software-system v${{ github.ref_name }}'
           releaseBody: 'See the assets to download and install this version.'
           releaseDraft: false
-          releasePrerelease: false
           args: --target x86_64-pc-windows-msvc
 
   build-macos:
@@ -69,7 +70,9 @@ jobs:
           yarn install --frozen-lockfile
 
       - name: Build frontend
-        run: yarn build
+        run: |
+          yarn tauri:version
+          yarn build
 
       - name: Build Tauri app (macOS)
         uses: tauri-apps/tauri-action@v0
@@ -81,5 +84,50 @@ jobs:
           releaseName: 'zed-software-system v${{ github.ref_name }}'
           releaseBody: 'See the assets to download and install this version.'
           releaseDraft: false
-          releasePrerelease: false
           args: --target universal-apple-darwin
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build frontend
+        run: |
+          yarn tauri:version
+          yarn build
+
+      - name: Build Tauri app (Linux)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./src-tauri
+          tagName: ${{ github.ref_name }}
+          releaseName: 'zed-software-system v${{ github.ref_name }}'
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: false
+          args: --target x86_64-unknown-linux-gnu
