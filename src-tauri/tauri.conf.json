@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "zed-software-system",
+  "productName": "zed-cafe",
   "version": "0.1.0",
-  "identifier": "cafe.zed.zed-software-system",
+  "identifier": "cafe.zed.zss",
   "build": {
     "frontendDist": "../cafe/dist",
     "devUrl": "http://localhost:7777",
@@ -16,7 +16,8 @@
         "maximized": true,
         "resizable": true,
         "fullscreen": false,
-        "backgroundThrottling": "disabled"
+        "backgroundThrottling": "disabled",
+        "acceptFirstMouse": true
       }
     ],
     "security": {
