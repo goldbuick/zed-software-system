@@ -46,10 +46,10 @@ export function isbook(value: any) {
   return (
     value !== null &&
     typeof value === 'object' &&
-    isstring(value.id) === true &&
-    isstring(value.name) === true &&
-    typeof value.flags === 'object' &&
-    typeof value.players === 'object' &&
-    isarray(value.pages) === true
+    isstring(value.id) &&
+    isstring(value.name) &&
+    isarray(value.pages) &&
+    isarray(value.activelist) &&
+    typeof value.flags === 'object'
   )
 }

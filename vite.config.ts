@@ -30,21 +30,22 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, apppath, envprefix),
   }
 
-  const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? '')
-  const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? '')
+  const nohttps = !!JSON.parse(process.env.ZSS_NO_HTTPS ?? 'false')
+  const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? 'false')
+  const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? 'false')
 
   return {
     root,
     envPrefix: envprefix,
     plugins: [
       react(),
-      mkcert(),
       nodePolyfills({
         include: ['buffer'],
         globals: {
           global: true,
         },
       }),
+      ...(nohttps ? [] : [mkcert()]),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
     ],

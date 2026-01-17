@@ -4,6 +4,7 @@ without having to include device code
 */
 import { INPUT } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
@@ -193,9 +194,14 @@ export function registersavemem(
   device: DEVICELIKE,
   player: string,
   historylabel: string,
-  books: string,
+  compressedbooks: string,
+  books: BOOK[],
 ) {
-  device.emit(player, 'register:savemem', [historylabel, books])
+  device.emit(player, 'register:savemem', [
+    historylabel,
+    compressedbooks,
+    books,
+  ])
 }
 
 export function registerforkmem(
@@ -492,7 +498,11 @@ export function vmtopic(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'vm:topic', topic)
 }
 
-export function vmbooks(device: DEVICELIKE, player: string, books: string) {
+export function vmbooks(
+  device: DEVICELIKE,
+  player: string,
+  books: string | BOOK[],
+) {
   device.emit(player, 'vm:books', books)
 }
 

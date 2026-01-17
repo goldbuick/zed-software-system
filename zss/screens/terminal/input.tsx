@@ -7,10 +7,11 @@ import {
   vmclirepeatlast,
   vmloader,
 } from 'zss/device/api'
-import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
+import { storagewritehistorybuffer } from 'zss/feature/storage'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
@@ -288,7 +289,7 @@ export function TapeTerminalInput({
           ...buffer.slice(1).filter((item) => item !== inputstate),
         ].filter((item) => item.includes('#broadcast') === false)
         // cache history
-        writehistorybuffer(historybuffer).catch((err) =>
+        storagewritehistorybuffer(historybuffer).catch((err: any) =>
           apierror(SOFTWARE, player, 'terminalinput', err.message),
         )
         useTapeTerminal.setState({
@@ -404,7 +405,7 @@ export function TapeTerminalInput({
                 ...buffer.slice(1).filter((item) => item !== invoke),
               ].filter((item) => item.includes('#broadcast') === false)
               // cache history
-              writehistorybuffer(historybuffer).catch((err) =>
+              storagewritehistorybuffer(historybuffer).catch((err) =>
                 apierror(SOFTWARE, player, 'terminalinput', err.message),
               )
               useTapeTerminal.setState({

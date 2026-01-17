@@ -1,7 +1,8 @@
 import { useLayoutEffect, useState } from 'react'
 import { vmcli } from 'zss/device/api'
-import { readconfig, registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { storagereadconfig } from 'zss/feature/storage'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
@@ -35,7 +36,7 @@ export function TapeTerminal() {
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
-      const voice2text = await readconfig('voice2text')
+      const voice2text = await storagereadconfig('voice2text')
       setvoice2text(voice2text === 'on')
     })
   }, [])
