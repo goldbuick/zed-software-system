@@ -204,8 +204,8 @@ describe('types', () => {
         id: 'test-id',
         name: 'test-name',
         flags: {},
-        players: {},
         pages: [],
+        activelist: [],
       }
       expect(isbook(validBook)).toBe(true)
     })

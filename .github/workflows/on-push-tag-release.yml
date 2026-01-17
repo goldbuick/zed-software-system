@@ -1,4 +1,4 @@
-name: create github release page
+name: Push Tag Release - Create Release Page
 
 on:
   push:

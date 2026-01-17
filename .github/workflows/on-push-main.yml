@@ -1,4 +1,4 @@
-name: publish build to gh-pages
+name: Push Main - Publish to GH Pages
 
 on:
   push:

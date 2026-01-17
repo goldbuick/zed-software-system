@@ -1,4 +1,4 @@
-name: On PR Merged
+name: PR Merged - Merge Main to Dev
 
 on:
   pull_request:

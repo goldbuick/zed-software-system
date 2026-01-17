@@ -1,4 +1,4 @@
-name: Create Release Tag
+name: Manual - Create Tag
 
 on:
   workflow_dispatch: # Manual trigger only

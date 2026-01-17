@@ -1,4 +1,3 @@
-import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import { appDataDir } from '@tauri-apps/api/path'
 import {
   BaseDirectory,
@@ -6,6 +5,7 @@ import {
   readTextFile,
   writeTextFile,
 } from '@tauri-apps/plugin-fs'
+import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import humanid from 'human-id'
 import {
   get as idbget,
