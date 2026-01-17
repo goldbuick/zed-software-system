@@ -1,5 +1,6 @@
 import {
   BaseDirectory,
+  mkdir,
   readTextFile,
   writeTextFile,
 } from '@tauri-apps/plugin-fs'
@@ -21,7 +22,7 @@ import { write, writecopyit } from './writeui'
 // detect what kind of container we are in
 const istauri =
   typeof window !== 'undefined' &&
-  ('__TAURI__' in window || '__TAURI__INTERNALS__' in window)
+  ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)
 
 // read / write from indexdb
 
@@ -166,6 +167,7 @@ export async function storagewritecontent(
       write(SOFTWARE, player, 'writing zss-content.json')
       await writeTextFile('zss-content.json', JSON.stringify(books, null, 2), {
         baseDir: BaseDirectory.AppData,
+        create: true,
       })
     } catch (err: any) {
       apierror(SOFTWARE, player, 'writecontent', err.toString())
@@ -203,8 +205,9 @@ export async function storagewritevar(name: string, value: any) {
 // either browser or tauri setup here ...
 
 let currenturlhash = ''
-export function storagewatchcontent(player: string) {
+export async function storagewatchcontent(player: string) {
   if (istauri) {
+    await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true })
     return
   }
   window.addEventListener('hashchange', () => {

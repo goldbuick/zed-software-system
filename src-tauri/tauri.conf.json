@@ -10,7 +10,6 @@
     "beforeBuildCommand": "yarn build"
   },
   "app": {
-    "withGlobalTauri": true,
     "windows": [
       {
         "title": "zed-cafe",
