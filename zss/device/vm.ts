@@ -56,7 +56,6 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagestatsfromtext,
   memoryreadcodepagetype,
-  memoryreadcodepagetypeasstring,
   memoryresetcodepagestats,
 } from 'zss/memory/codepageoperations'
 import { memorysendtoboards } from 'zss/memory/gamesend'
@@ -107,7 +106,6 @@ import {
   apilog,
   platformready,
   registercopy,
-  registercopyjsonfile,
   registerforkmem,
   registerinspector,
   registerloginfail,
