@@ -6,13 +6,12 @@ import {
   registerterminalclose,
   registerterminalinclayout,
   vmcli,
-  vmcopyjsonfile,
 } from 'zss/device/api'
 import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useTapeEditor } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
@@ -56,7 +55,6 @@ export function EditorInput({
   const player = registerreadplayer()
   const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
-  const editorpath = useTape((state) => state.editor.path)
 
   // split by line
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
@@ -381,9 +379,6 @@ export function EditorInput({
             default:
               if (mods.ctrl) {
                 switch (lkey) {
-                  case 'e':
-                    vmcopyjsonfile(SOFTWARE, player, editorpath)
-                    break
                   case 'z':
                     if (ismac && mods.shift) {
                       undomanager?.redo()

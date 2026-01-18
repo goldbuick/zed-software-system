@@ -345,32 +345,6 @@ const register = createdevice(
           }
         }
         break
-      case 'copyjsonfile':
-        if (isarray(message.data)) {
-          if (ispresent(withclipboard())) {
-            const [data, filename] = message.data as [any, string]
-            const blob = new Blob(
-              [
-                JSON.stringify(
-                  {
-                    exported: filename,
-                    data,
-                  },
-                  null,
-                  2,
-                ),
-              ],
-              {
-                type: 'text/plain',
-              },
-            )
-            withclipboard()
-              .write([new ClipboardItem({ [blob.type]: blob })])
-              .then(() => apitoast(register, message.player, `copied! json`))
-              .catch((err) => console.error(err))
-          }
-        }
-        break
       case 'downloadjsonfile':
         if (isarray(message.data)) {
           const [data, filename] = message.data as [any, string]

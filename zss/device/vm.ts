@@ -608,23 +608,6 @@ const vm = createdevice(
         }
         break
       }
-      case 'copyjsonfile':
-        if (message.player === operator) {
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          if (ispresent(mainbook) && isarray(message.data)) {
-            const [address] = message.data
-            const codepage = memoryreadcodepage(mainbook, address)
-            if (ispresent(codepage)) {
-              registercopyjsonfile(
-                vm,
-                operator,
-                codepage,
-                `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
-              )
-            }
-          }
-        }
-        break
       case 'makeitscroll':
         if (isstring(message.data)) {
           memorymakeitscroll(message.data, message.player)
