@@ -94,9 +94,8 @@ $white$meta+x$green.CUT
 $white$meta+v$green.PASTE 
 $white$meta+z$green.UNDO 
 $white${metaundo}$green.REDO 
-$white$meta+p$green.TEST SELECTED CODE 
-$white$meta+h$green.OPEN HELPSCROLL 
-$white$meta+e$green.COPY CODEPAGE TO CLIPBOARD AS JSON $blue
+$white$meta+p$green.RUN SELECTED CODE 
+$white$meta+h$green.OPEN HELPSCROLL $blue
     `}
       context={context}
     />

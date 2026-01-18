@@ -230,15 +230,6 @@ export function registercopy(
   device.emit(player, 'register:copy', content)
 }
 
-export function registercopyjsonfile(
-  device: DEVICELIKE,
-  player: string,
-  data: any,
-  filename: string,
-) {
-  device.emit(player, 'register:copyjsonfile', [data, filename])
-}
-
 export function registerdownloadjsonfile(
   device: DEVICELIKE,
   player: string,
@@ -541,14 +532,6 @@ export function vminput(
   mods: number,
 ) {
   device.emit(player, 'vm:input', [input, mods])
-}
-
-export function vmcopyjsonfile(
-  device: DEVICELIKE,
-  player: string,
-  path: string[],
-) {
-  device.emit(player, 'vm:copyjsonfile', path)
 }
 
 export function vmmakeitscroll(

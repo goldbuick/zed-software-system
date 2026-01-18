@@ -462,9 +462,6 @@ export function TapeTerminalInput({
             default:
               if (mods.ctrl) {
                 switch (lkey) {
-                  case 'e':
-                    vmcli(SOFTWARE, player, '#export')
-                    break
                   case 'p':
                     vmclirepeatlast(SOFTWARE, player)
                     break

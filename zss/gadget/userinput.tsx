@@ -215,7 +215,6 @@ window.addEventListener(
       case 'f':
       case 'z':
       case 'y':
-      case 'e':
       case 'a':
       case 'p':
       case 'h':
