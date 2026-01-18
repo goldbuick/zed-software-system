@@ -18,9 +18,11 @@ import { ScreenUI } from 'zss/screens/screenui/component'
 import { Tape } from 'zss/screens/tape/component'
 import { isfirefox, islinux } from 'zss/words/system'
 
+import { useTape } from './data/state'
 import { Scanlines } from './fx/scanlines'
 import { EffectComposerMain } from './graphics/effectcomposermain'
 import { useDeviceData } from './hooks'
+import { Rect } from './rect'
 import { TapeToast } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
@@ -28,9 +30,6 @@ import { TapeViewImage } from './viewimage'
 
 // include all front-end devices
 import 'zss/userspace'
-import { StaticDither } from './graphics/dither'
-import { useTape } from './data/state'
-import { Rect } from './rect'
 
 export function Engine() {
   const { viewport } = useThree()
@@ -140,7 +139,7 @@ export function Engine() {
           <TapeToast toast={toast} />
           <TapeViewImage />
           {showunmute && (
-            <group position={[0, 0, 0]}>
+            <>
               <Rect
                 blocking
                 opacity={0.5}
@@ -151,7 +150,7 @@ export function Engine() {
                 onClick={() => setshowunmute(false)}
               />
               <TapeToast toast="Click to un-mute" />
-            </group>
+            </>
           )}
         </UserScreen>
       </UserFocus>
