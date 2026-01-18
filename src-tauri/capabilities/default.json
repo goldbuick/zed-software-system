@@ -5,6 +5,11 @@
   "windows": [
     "main"
   ],
+  "remote": {
+    "urls": [
+      "https://zed.cafe"
+    ]
+  },
   "permissions": [
     "core:default",
     "log:default",
@@ -42,4 +47,3 @@
     }
   ]
 }
-

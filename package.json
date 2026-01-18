@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.85.9",
+  "version": "0.85.10",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc -e .js zss",
@@ -16,7 +16,6 @@
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
     "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
     "tauri": "tauri",
-    "tauri:web": "yarn && yarn clear && ZSS_NO_HTTPS=1 vite --host 0.0.0.0 --port 7777",
     "tauri:version": "npx tsx sync-version.ts",
     "tauri:win": "tauri build -t x86_64-pc-windows-msvc",
     "tauri:macos": "tauri build -t universal-apple-darwin"
