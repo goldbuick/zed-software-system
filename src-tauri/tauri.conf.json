@@ -5,8 +5,8 @@
   "identifier": "cafe.zed.zss",
   "build": {
     "frontendDist": "../cafe/dist",
-    "devUrl": "http://localhost:7777",
-    "beforeDevCommand": "yarn tauri:web",
+    "devUrl": "https://localhost:7777",
+    "beforeDevCommand": "yarn dev",
     "beforeBuildCommand": "yarn build"
   },
   "app": {
