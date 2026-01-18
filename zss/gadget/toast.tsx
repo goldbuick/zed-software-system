@@ -6,13 +6,16 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { useTape } from './data/state'
 import { ShadeBoxDither } from './graphics/dither'
 import { useTiles } from './hooks'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'
 
-function TapeActiveToast({ context }: { context: WRITE_TEXT_CONTEXT }) {
+type TapeActiveToastProps = {
+  context: WRITE_TEXT_CONTEXT
+}
+
+function TapeActiveToast({ context }: TapeActiveToastProps) {
   return (
     <group position={[0, 0, 999]}>
       <TilesRender width={context.width} height={context.height} />
@@ -20,8 +23,11 @@ function TapeActiveToast({ context }: { context: WRITE_TEXT_CONTEXT }) {
   )
 }
 
-export function TapeToast() {
-  const { toast } = useTape()
+type TapeToastProps = {
+  toast: string
+}
+
+export function TapeToast({ toast }: TapeToastProps) {
   const screensize = useScreenSize()
 
   const store = useTiles(screensize.cols, 1, 0, COLOR.GREEN, COLOR.ONCLEAR)
