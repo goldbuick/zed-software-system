@@ -33,6 +33,7 @@
 - **allTokens** (const) - Array of all token definitions for lexer
 
 ### Text Writing Context
+- **WRITE_TEXT_CONTEXT** (type) - Context for text formatting (cursor, colors, edges)
 - **createwritetextcontext(width, height, color, bg, topedge?, leftedge?, rightedge?, bottomedge?)** - Creates a context for text formatting operations
 - **applywritetextcontext(dest, source)** - Applies cursor position and active colors from source context to dest
 - **writetextreset(context)** - Resets active colors/edges to reset values in context
@@ -82,6 +83,7 @@
 - **isstrkind(value)** - Type guard to check if value is a string kind array [name, color?]
 
 ### Kind Extraction
+- **STR_KIND** (type) - Kind tuple [name, color?]
 - **readstrkindname(kind)** - Extracts name string from STR_KIND
 - **readstrkindcolor(kind)** - Extracts foreground COLOR from STR_KIND
 - **readstrkindbg(kind)** - Extracts background COLOR from STR_KIND
@@ -118,6 +120,7 @@
 ### Argument Reading
 - **readargs(words, index, args)** - Parses typed arguments from word array based on ARG_TYPE specification (COLOR, KIND, DIR, NAME, NUMBER, STRING, etc.)
 - **ARG_TYPE** (enum) - Enumeration of argument types for type-safe parsing
+- **ARG_TYPE_MAP** (type) - Maps ARG_TYPE to parsed value types
 - **READ_CONTEXT** (const) - Global context object containing current parsing state (book, board, element, words, get function)
 
 ### Send Command Parsing
