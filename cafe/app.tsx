@@ -5,6 +5,13 @@ import { enableaudio } from 'zss/device/synth'
 import { Engine } from 'zss/gadget/engine'
 import { useDeviceData } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
+import { isfirefox } from 'zss/words/system'
+
+if (!isfirefox) {
+  window.addEventListener('keyup', () => {
+    enableaudio()
+  })
+}
 
 window.addEventListener('click', () => {
   enableaudio()

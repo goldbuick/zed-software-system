@@ -89,6 +89,9 @@
 
 ## Type Checking & Utilities
 
+### Types
+- **MAYBE<T>** (type) - Optional type T | undefined
+
 ### Equality & Presence
 - **isequal** - Re-exported from react-fast-compare
 - **ispresent** - Re-exported from ts-extras (checks if value is not null/undefined)

@@ -4,16 +4,15 @@ This document categorizes and summarizes all exported functions from the `device
 
 ## Table of Contents
 1. [API & Messaging](#api--messaging)
-2. [Configuration & Storage](#configuration--storage)
-3. [Virtual Machine (VM)](#virtual-machine-vm)
-4. [Register Device](#register-device)
-5. [Audio & Synthesis](#audio--synthesis)
-6. [Bridge & Networking](#bridge--networking)
-7. [Gadget Client/Server](#gadget-clientserver)
-8. [Message Forwarding](#message-forwarding)
-9. [Modem (Shared State)](#modem-shared-state)
-10. [Session & Lifecycle](#session--lifecycle)
-11. [Types & Utilities](#types--utilities)
+2. [Virtual Machine (VM)](#virtual-machine-vm)
+3. [Register Device](#register-device)
+4. [Audio & Synthesis](#audio--synthesis)
+5. [Bridge & Networking](#bridge--networking)
+6. [Gadget Client/Server](#gadget-clientserver)
+7. [Message Forwarding](#message-forwarding)
+8. [Modem (Shared State)](#modem-shared-state)
+9. [Session & Lifecycle](#session--lifecycle)
+10. [Types & Utilities](#types--utilities)
 
 ---
 
@@ -39,26 +38,6 @@ Core messaging API for communicating with devices. These functions provide a cle
 
 ### Platform
 - `platformready(device)` - Signal that platform is ready
-
----
-
-## Configuration & Storage
-
-**File:** `register.ts`
-
-Functions for managing configuration, history, and URL storage using IndexedDB and session storage.
-
-### Configuration
-- `readconfig(name)` - Read configuration value from IndexedDB (returns 'on' or 'off')
-- `readhistorybuffer()` - Read command history buffer from IndexedDB
-- `writehistorybuffer(historybuffer)` - Write command history buffer to IndexedDB
-
-### URL Management
-- `writelocalurl(fullurl)` - Create and store a short URL mapping for a full URL
-- `readlocalurl(shorturl)` - Retrieve full URL from short URL mapping
-
-### Player Management
-- `registerreadplayer()` - Get current player ID from session
 
 ---
 
@@ -112,9 +91,6 @@ Core virtual machine operations for managing game state, memory, code execution,
 - `vminspect(device, player, p1, p2)` - Inspect area between two points
 - `vmfindany(device, player)` - Open findany menu
 
-### File Operations
-- `vmcopyjsonfile(device, player, path)` - Copy codepage as JSON file
-
 ### Fork & Transfer
 - `vmfork(device, player, transfer)` - Fork state to new window/tab
 
@@ -122,9 +98,12 @@ Core virtual machine operations for managing game state, memory, code execution,
 
 ## Register Device
 
-**File:** `register.ts` (additional functions via api.ts)
+**File:** `register.ts`, `api.ts`
 
 Functions for managing the register device, which handles UI state, terminal, editor, and clipboard operations.
+
+### Player
+- `registerreadplayer()` - Get current player ID from session (register.ts)
 
 ### Terminal Management
 - `registerterminalopen(device, player, openwith?)` - Open terminal with optional initial text
@@ -140,11 +119,10 @@ Functions for managing the register device, which handles UI state, terminal, ed
 
 ### Clipboard & Files
 - `registercopy(device, player, content)` - Copy text to clipboard
-- `registercopyjsonfile(device, player, data, filename)` - Copy JSON data to clipboard
 - `registerdownloadjsonfile(device, player, data, filename)` - Download JSON file
 
 ### Memory Operations
-- `registersavemem(device, player, historylabel, books)` - Save memory state
+- `registersavemem(device, player, historylabel, compressedbooks, books)` - Save memory state
 - `registerforkmem(device, player, books, transfer)` - Fork memory to new window
 - `registerpublishmem(device, player, books, ...args)` - Publish memory (itch.io, BBS, etc.)
 
@@ -195,6 +173,11 @@ Functions for audio synthesis, playback, TTS, and voice configuration.
 - `synthttsclearqueue(device, player)` - Clear TTS queue
 - `synthttsvolume(device, player, volume)` - Set TTS volume
 - `synthttsengine(device, player, engine, config)` - Set TTS engine and config
+- `synthttsinfo(device, player, info)` - Send TTS info string to synth
+
+### Heavy (TTS worker)
+- `heavyttsinfo(device, player, engine, info)` - Send TTS info to heavy worker
+- `heavyttsrequest(device, player, engine, config, voice, phrase)` - Request TTS from heavy worker
 
 ### Voice Configuration
 - `synthvoice(device, player, idx, config, value)` - Configure synth voice
@@ -336,13 +319,12 @@ Functions for session management and device lifecycle.
 1. **API & Messaging:** ~80 functions
 2. **VM Operations:** ~30 functions
 3. **Register Operations:** ~20 functions
-4. **Audio/Synth:** ~15 functions
+4. **Audio/Synth/Heavy:** ~18 functions
 5. **Bridge/Networking:** ~10 functions
 6. **Modem/Shared State:** ~8 functions
 7. **Gadget:** ~4 functions
 8. **Forwarding:** ~7 functions
-9. **Configuration:** ~5 functions
-10. **Lifecycle:** ~2 functions
+9. **Lifecycle:** ~2 functions
 
 ---
 

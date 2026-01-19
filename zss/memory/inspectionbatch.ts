@@ -44,6 +44,7 @@ type BOARD_ELEMENT_BUFFER = {
   height: number
   terrain: MAYBE<BOARD_ELEMENT>[]
   objects: BOARD_ELEMENT[]
+  flattened: MAYBE<BOARD_ELEMENT>[]
 }
 
 // read / write from indexdb
@@ -61,12 +62,14 @@ function createboardelementbuffer(
   const height = y2 - y1 + 1
   const terrain: MAYBE<BOARD_ELEMENT>[] = []
   const objects: BOARD_ELEMENT[] = []
+  const flattened: MAYBE<BOARD_ELEMENT>[] = []
 
   // corner coords on copy
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
       const pt = { x: x - x1, y: y - y1 }
       const maybeobject = memoryreadelement(board, { x, y })
+      flattened.push(deepcopy(maybeobject))
       if (maybeobject?.category === CATEGORY.ISOBJECT) {
         terrain.push(deepcopy(memoryreadterrain(board, x, y)))
         if (memoryreadelementdisplay(maybeobject).name !== 'player') {
@@ -92,6 +95,7 @@ function createboardelementbuffer(
     height,
     terrain,
     objects,
+    flattened,
   }
 }
 

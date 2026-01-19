@@ -16,11 +16,13 @@ import { doasync } from 'zss/mapping/func'
 import { createplatform, haltplatform } from 'zss/platform'
 import { ScreenUI } from 'zss/screens/screenui/component'
 import { Tape } from 'zss/screens/tape/component'
-import { islinux } from 'zss/words/system'
+import { isfirefox, islinux } from 'zss/words/system'
 
+import { useTape } from './data/state'
 import { Scanlines } from './fx/scanlines'
 import { EffectComposerMain } from './graphics/effectcomposermain'
 import { useDeviceData } from './hooks'
+import { Rect } from './rect'
 import { TapeToast } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
@@ -114,8 +116,13 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols])
 
-  const cameraref = useRef<OrthographicCameraImpl>(null)
+  // current toast message
+  const { toast } = useTape()
 
+  // click to un-mute overlay for firefox
+  const [showunmute, setshowunmute] = useState(isfirefox)
+
+  const cameraref = useRef<OrthographicCameraImpl>(null)
   return (
     <>
       <OrthographicCamera
@@ -129,8 +136,22 @@ export function Engine() {
         <UserScreen>
           <ScreenUI />
           <Tape />
-          <TapeToast />
+          <TapeToast toast={toast} />
           <TapeViewImage />
+          {showunmute && (
+            <>
+              <Rect
+                blocking
+                opacity={0.5}
+                color="black"
+                cursor="pointer"
+                width={Math.ceil(viewwidth / RUNTIME.DRAW_CHAR_WIDTH())}
+                height={Math.ceil(viewheight / RUNTIME.DRAW_CHAR_HEIGHT())}
+                onClick={() => setshowunmute(false)}
+              />
+              <TapeToast toast="Click to un-mute" />
+            </>
+          )}
         </UserScreen>
       </UserFocus>
       <EffectComposerMain width={viewwidth} height={viewheight}>

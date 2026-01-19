@@ -67,7 +67,7 @@
 - **memorylistcodepagebytype(book, type)** - Gets all code pages of a type
 - **memorylistcodepagebytypeandstat(book, type, statname)** - Gets code pages by type and stat
 - **memorylistcodepagessorted(book)** - Gets code pages sorted by type and name
-- **memoryreadcodepageby(book, address)** - Finds code page by ID or name
+- **memoryreadcodepage(book, address)** - Finds code page by ID or name
 - **memoryreadcodepagewithtype(book, type, address)** - Finds code page by type and address
 - **memoryreadelementcodepage(book, element)** - Gets code page for a board element
 - **memoryreadelementdisplay(element, defaultchar?, defaultcolor?, defaultbg?)** - Gets display properties for an element
@@ -78,16 +78,25 @@
 - **memorywritecodepage(book, codepage)** - Adds a code page to a book
 - **memorywritebookflag(book, id, name, value)** - Writes a flag value
 
-## cliruntime.ts
+## runtime.ts
 
-- **memorycleanup()** - Performs garbage collection
+- **memorygc()** - Performs garbage collection
+- **memoryhaltchip(id)** - Halts a chip by ID
+- **memorymessagechip(message)** - Sends a message to the OS message/chip system
 - **memoryrepeatclilast(player)** - Repeats last CLI command
-- **memoryresetchipafteredit(object)** - Halts a chip after editing
 - **memoryrestartallchipsandflags()** - Halts all chips and clears flags
 - **memoryruncli(player, cli, tracking?)** - Executes CLI command for a player
 - **memoryruncodepage(address)** - Runs a code page once
-- **memorystartloader(id, code)** - Starts a loader with code
+- **memorytickmain(playeronly?)** - Main game tick function, updates all boards and runs code
+- **memorytickobject(book, board, object, code)** - Ticks a single object's code
 - **memoryunlockscroll(id, player)** - Unlocks scroll for a player
+
+## gamesend.ts
+
+- **memorysendtoboards(target, message, data, boards)** - Sends messages to elements across multiple boards
+- **memorysendtoelement(fromelement, toelement, label)** - Sends a message between elements
+- **memorysendtoelements(chip, fromelement, send)** - Sends messages to multiple elements based on target spec
+- **memorysendtolog(board, element, text)** - Sends a formatted log message
 
 ## codepageoperations.ts
 
@@ -109,22 +118,13 @@
 - **memoryreadcodepagetypeasstring(codepage)** - Gets type as string
 - **memoryresetcodepagestats(codepage)** - Resets cached stats
 
-## gameloop.ts
-
-- **memorysendtoboards(target, message, data, boards)** - Sends messages to elements across multiple boards
-- **memorysendtoelement(fromelement, toelement, label)** - Sends a message between elements
-- **memorysendtoelements(chip, fromelement, send)** - Sends messages to multiple elements based on target spec
-- **memorysendtolog(board, element, text)** - Sends a formatted log message
-- **memorytickmain(playeronly?)** - Main game tick function, updates all boards and runs code
-- **memorytickobject(book, board, object, code)** - Ticks a single object's code
-- **memorywritemessage(message)** - Sends a message to the OS message system
-
 ## index.ts
 
 - **memorycheckelementpushable(pusher, target)** - Checks if target can be pushed by pusher
 - **memoryclearbook(address)** - Removes a book from memory
 - **memoryclearflags(id)** - Clears flags for an ID
 - **memorycreatesoftwarebook(maybename?)** - Creates a new software book
+- **memorystartloader(id, code)** - Starts a loader with code
 - **memoryensurebookbyname(name)** - Ensures a book exists by name, creates if missing
 - **memoryensuresoftwarebook(slot, maybename?)** - Ensures a software book exists for a slot
 - **memoryensuresoftwarecodepage(slot, address, createtype)** - Ensures a codepage exists in a software book
@@ -188,6 +188,7 @@
 
 ## inspectionfind.ts
 
+- **FINDANY_CONFIG** (type) - Find configuration with expr1–expr4 slots
 - **memoryfindany(path, player)** - Executes find operation (async)
 - **memoryfindanymenu(player)** - Shows find menu with configurable search slots (async)
 - **memoryreadfindanyconfig()** - Reads find configuration (async)
