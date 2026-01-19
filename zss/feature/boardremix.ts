@@ -67,23 +67,26 @@ export function boardremix(
       const r = el?.char ?? 0 // in this case we have to ignore 0
       const g = el?.color ?? NO_COLOR // onclear here means unset
       const b = el?.bg ?? NO_COLOR // onclear here means unset
-      // r, g, b - char, color, bg
-      data[p++] = r
-      data[p++] = g
-      data[p++] = b
-
-      // alpha
+      let a = 0
+      // map kind to alpha
       const kind = memoryreadelementkind(el)
       const kindname = NAME(kind?.name ?? 'empty')
       const maybealpha = elementkindtoalphamap.get(kindname)
       if (isnumber(maybealpha)) {
-        data[p++] = maybealpha
+        a = maybealpha
       } else {
         // add it & bump akind
+        a = akind
         elementkindtoalphamap.set(kindname, akind)
         elementalphatokindmap.set(akind, kindname)
-        data[p++] = akind++
+        akind++
       }
+      //
+      // r, g, b - char, color, bg, kind
+      data[p++] = r
+      data[p++] = g
+      data[p++] = b
+      data[p++] = a
     }
   }
 
@@ -98,10 +101,9 @@ export function boardremix(
     patternsize, // pattern size
     genwidth,
     genheight,
-    false, // is the input wrapping ?
+    true, // is the input wrapping ?
     false, // is the output wrapping ?
     mirror, // can we mirror the output 1 - 8
-    0,
   )
 
   let attempt = 0
@@ -123,7 +125,7 @@ export function boardremix(
       const dchar = remixdata[p++]
       const dcolor = remixdata[p++]
       const dbg = remixdata[p++]
-      akind = remixdata[p++]
+      const dkind = remixdata[p++]
 
       // blank target region
       switch (targetset) {
@@ -150,7 +152,7 @@ export function boardremix(
       }
 
       // create new element
-      let maybekind = elementalphatokindmap.get(akind) ?? ''
+      let maybekind = elementalphatokindmap.get(dkind) ?? ''
       const sourceelement = memoryreadelementkind({ kind: maybekind })
       switch (targetset) {
         case 'all':

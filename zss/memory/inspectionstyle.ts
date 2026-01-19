@@ -53,8 +53,8 @@ export async function memoryinspectstyle(
   for (let y = 0; y < iheight; ++y) {
     for (let x = 0; x < iwidth; ++x) {
       const idx = pttoindex({ x, y }, secretheap.width)
-      const terrain = secretheap.terrain[idx]
-      const display = memoryreadelementdisplay(terrain)
+      const maybeelement = secretheap.flattened[idx]
+      const display = memoryreadelementdisplay(maybeelement)
       const pt = { x: x1 + x, y: y1 + y }
       if (mode === 'styleall' || mode === 'styleobjects') {
         const element = memoryreadelement(board, pt)
