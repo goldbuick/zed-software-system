@@ -1,5 +1,7 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { parsetarget } from 'zss/device'
+import { apitoast, vmcli } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
@@ -9,6 +11,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { ptstoarea } from 'zss/mapping/2d'
+import { waitfor } from 'zss/mapping/tick'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
@@ -42,17 +45,25 @@ export async function memoryinspectremixcommand(path: string, player: string) {
     case 'remixrun': {
       const sourceboard = memoryreadboardbyaddress(remixconfig.stat)
       if (ispresent(sourceboard)) {
-        boardremix(
-          board.id,
-          sourceboard.id,
-          remixconfig.patternsize,
-          remixconfig.mirror,
-          p1,
-          p2,
-          'all',
-        )
+        if (
+          boardremix(
+            board.id,
+            sourceboard.id,
+            remixconfig.patternsize,
+            remixconfig.mirror,
+            p1,
+            p2,
+            'all',
+          )
+        ) {
+          await waitfor(3000)
+        } else {
+          apitoast(SOFTWARE, player, `failed to remix`)
+        }
       }
       await memorywriteremixconfig(() => remixconfig)
+      await waitfor(100)
+      await memoryinspectremixmenu(player, p1, p2)
       break
     }
     default:

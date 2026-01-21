@@ -411,6 +411,7 @@ const register = createdevice(
                 message.player,
                 maybelabel,
                 maybecontent,
+                maybecontent,
                 maybebooks,
               )
             }

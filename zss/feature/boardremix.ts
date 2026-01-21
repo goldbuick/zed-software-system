@@ -23,7 +23,6 @@ import { NAME, PT } from 'zss/words/types'
 
 import { mapelementcopy } from './boardcopy'
 
-const MAX_ATTEMPT = 5
 export function boardremix(
   target: string,
   source: string,
@@ -101,18 +100,12 @@ export function boardremix(
     patternsize, // pattern size
     genwidth,
     genheight,
-    true, // is the input wrapping ?
+    false, // is the input wrapping ?
     false, // is the output wrapping ?
     mirror, // can we mirror the output 1 - 8
   )
 
-  let attempt = 0
-  for (; attempt < MAX_ATTEMPT; ++attempt) {
-    if (model.generate()) {
-      break
-    }
-  }
-  if (attempt === MAX_ATTEMPT) {
+  if (!model.generate()) {
     return false
   }
 
