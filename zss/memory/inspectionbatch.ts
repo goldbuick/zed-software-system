@@ -69,22 +69,30 @@ function createboardelementbuffer(
     for (let x = x1; x <= x2; ++x) {
       const pt = { x: x - x1, y: y - y1 }
       const maybeobject = memoryreadelement(board, { x, y })
-      flattened.push(deepcopy(maybeobject))
-      if (maybeobject?.category === CATEGORY.ISOBJECT) {
-        terrain.push(deepcopy(memoryreadterrain(board, x, y)))
-        if (memoryreadelementdisplay(maybeobject).name !== 'player') {
+      if (maybeobject?.kind === 'player') {
+        // skip player
+        const under = deepcopy(memoryreadterrain(board, x, y))
+        terrain.push(under)
+        // visible element only
+        flattened.push(under)
+      } else {
+        if (maybeobject?.category === CATEGORY.ISOBJECT) {
+          // terrain and object
+          terrain.push(deepcopy(memoryreadterrain(board, x, y)))
           objects.push({
             ...deepcopy(maybeobject),
             ...pt,
             id: 'blank',
           })
+        } else {
+          // only terrain
+          terrain.push({
+            ...deepcopy(maybeobject),
+            ...pt,
+          })
         }
-      } else {
-        // maybe terrain
-        terrain.push({
-          ...deepcopy(maybeobject),
-          ...pt,
-        })
+        // visible element only
+        flattened.push(deepcopy(maybeobject))
       }
     }
   }
