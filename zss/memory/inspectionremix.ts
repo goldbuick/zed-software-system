@@ -1,6 +1,6 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { parsetarget } from 'zss/device'
-import { apitoast, vmcli } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
 import { DIVIDER } from 'zss/feature/writeui'
