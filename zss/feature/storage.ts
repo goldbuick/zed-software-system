@@ -170,6 +170,7 @@ export async function storagereadcontent(
 export async function storagewritecontent(
   player: string,
   label: string,
+  longcontent: string,
   compressed: string,
   books: BOOK[],
 ) {
@@ -187,14 +188,14 @@ export async function storagewritecontent(
   }
   if (compressed.length > 2048) {
     const shorturl = await writelocalurl(compressed)
-    return storagewritecontent(player, label, shorturl, books)
+    return storagewritecontent(player, label, longcontent, shorturl, books)
   }
   const newurlhash = `#${compressed}`
   if (location.hash !== newurlhash) {
     // saving current state, don't interrupt the user
     currenturlhash = compressed
     location.hash = newurlhash
-    const msg = `wrote ${compressed.length} chars [${compressed.slice(0, 8)}...${compressed.slice(-8)}]`
+    const msg = `wrote ${longcontent.length} chars [${longcontent.slice(0, 8)}...${longcontent.slice(-8)}]`
     if (!label.includes('autosave')) {
       apilog(SOFTWARE, player, msg)
     }
