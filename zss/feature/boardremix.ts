@@ -100,7 +100,7 @@ export function boardremix(
     patternsize, // pattern size
     genwidth,
     genheight,
-    false, // is the input wrapping ?
+    true, // is the input wrapping ?
     false, // is the output wrapping ?
     mirror, // can we mirror the output 1 - 8
   )
