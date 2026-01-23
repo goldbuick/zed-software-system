@@ -70,6 +70,7 @@ export async function storagereadconfigall() {
     'config_lowrez',
     'config_scanlines',
     'config_voice2text',
+    'config_loaderlogging',
   ]
   const configs = await idbgetmany<string>(lookup)
   return configs.map((value, index) => {

@@ -19,9 +19,20 @@ import {
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
-import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
+import { memorymoveplayertoboard } from './playermanagement'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from './types'
 
-import { memoryensuresoftwarecodepage, memoryreadbooklist } from '.'
+import {
+  memoryensuresoftwarecodepage,
+  memoryreadbookbysoftware,
+  memoryreadbooklist,
+} from '.'
 
 function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
   switch (type) {
@@ -94,17 +105,20 @@ export function memorymakeitcommand(
   data: string[],
   player: string,
 ) {
+  function writeopenpage(codepage: CODE_PAGE) {
+    const type = memoryreadcodepagetypeasstring(codepage)
+    const name = memoryreadcodepagename(codepage)
+    write(
+      SOFTWARE,
+      player,
+      `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
+    )
+  }
   function openeditor(codepage: MAYBE<CODE_PAGE>, didcreate: boolean) {
     doasync(SOFTWARE, player, async () => {
       if (ispresent(codepage)) {
-        const type = memoryreadcodepagetypeasstring(codepage)
-        const name = memoryreadcodepagename(codepage)
         if (didcreate) {
-          write(
-            SOFTWARE,
-            player,
-            `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
-          )
+          writeopenpage(codepage)
         }
         // wait a little
         await waitfor(800)
@@ -134,12 +148,20 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.BOARD): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+          const [codepage] = memoryensuresoftwarecodepage(
             MEMORY_LABEL.MAIN,
             name,
             CODE_PAGE_TYPE.BOARD,
           )
-          openeditor(codepage, didcreate)
+          if (ispresent(codepage)) {
+            writeopenpage(codepage)
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            const dest = {
+              x: Math.round(BOARD_WIDTH * 0.5),
+              y: Math.round(BOARD_HEIGHT * 0.5),
+            }
+            memorymoveplayertoboard(mainbook, player, codepage.id, dest)
+          }
           break
         }
         case stattypestring(STAT_TYPE.OBJECT): {
