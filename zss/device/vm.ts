@@ -10,6 +10,7 @@ import {
 } from 'zss/feature/parse/file'
 import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
 import { romparse, romread, romscroll } from 'zss/feature/rom'
+import { storagereadconfig } from 'zss/feature/storage'
 import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
@@ -732,6 +733,12 @@ const vm = createdevice(
         // or events from devices
         if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
+          doasync(vm, message.player, async () => {
+            if ((await storagereadconfig('loaderlogging')) === 'on') {
+              console.info('loader event', eventname, format, arg, content)
+              apilog(vm, message.player, `loader event ${eventname} ${format}`)
+            }
+          })
           switch (format) {
             case 'file':
               parsewebfile(message.player, content)
