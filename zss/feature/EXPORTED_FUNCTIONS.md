@@ -58,6 +58,7 @@ Text-to-speech functionality with support for multiple engines (Edge, Piper, Kit
 ### Audio Generation
 - `requestaudiobuffer(player, voice, input)` - Request audio buffer for text (Edge TTS)
 - `requestaudiobytes(player, engine, config, voice, input)` - Request audio bytes (Piper/Kitten TTS)
+- `requestinfo(player, engine, info)` - Request TTS engine information (e.g., list of available voices)
 
 ### Playback
 - `ttsplay(player, voice, input)` - Play text as speech immediately
@@ -301,7 +302,7 @@ Functions for exporting and publishing content.
 
 ## Utilities
 
-**Files:** `keyboard.ts`, `speechtotext.ts`, `fetchwiki.ts`
+**Files:** `keyboard.ts`, `speechtotext.ts`, `fetchwiki.ts`, `storage.ts`
 
 Various utility functions for browser APIs and external services.
 
@@ -316,6 +317,21 @@ Various utility functions for browser APIs and external services.
 ### Wiki
 - `fetchwiki(pagepath)` - Fetch markdown content from GitHub wiki
 
+### Storage
+- `storagereadconfigdefault(name)` - Read default configuration value for a setting
+- `storagereadconfig(name)` - Read configuration value from storage (async)
+- `storagewriteconfig(name, value)` - Write configuration value to storage (async)
+- `storagereadconfigall()` - Read all configuration values from storage (async)
+- `storagereadhistorybuffer()` - Read command history buffer from storage (async)
+- `storagewritehistorybuffer(historybuffer)` - Write command history buffer to storage (async)
+- `storagereadcontent(filename)` - Read content file from storage (async)
+- `storagewritecontent(filename, content)` - Write content file to storage (async)
+- `storagereadvars()` - Read variables from storage (async)
+- `storagewritevar(name, value)` - Write variable to storage (async)
+- `storagewatchcontent(player)` - Watch content file changes (async)
+- `storagesharecontent(player)` - Share content file (async)
+- `storagenukecontent(player)` - Delete all content files (nuke)
+
 ---
 
 ## Heavy Processing Module
@@ -323,6 +339,10 @@ Various utility functions for browser APIs and external services.
 **Files:** `heavy/tts.ts`, `heavy/pipertts.ts`, `heavy/kittentts.ts`, `heavy/utils.ts`, `heavy/textcleaner.ts`, `heavy/modelcache.ts`
 
 Heavy processing functions for TTS engines that run in workers or use heavy computations.
+
+### TTS Functions
+- `requestinfo(player, engine, info)` - Request TTS engine information (e.g., list of available voices)
+- `requestaudiobytes(player, engine, config, voice, input)` - Request audio bytes from TTS engine
 
 ### TTS Classes
 - `PiperTTS` - Piper TTS engine class
