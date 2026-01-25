@@ -4,7 +4,11 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## cli.ts (CLI_FIRMWARE)
 
-**Total: 45 commands**
+**Total: 32 commands**
+
+### Messaging
+
+- `help` - Open reference scroll
 
 ### Book & Page Management
 
@@ -13,7 +17,6 @@ This document lists all `.command('name', ...` invocations organized by firmware
 - `boardopen` - Used to move player to board
 - `pageopen` - Open a code page editor
 - `pagetrash` - Trash a code page (operator only)
-- `help` - Show reference scroll
 - `books` - List all books
 - `pages` - List all pages in main book
 - `boards` - List all boards as goto hyperlinks
@@ -32,18 +35,17 @@ This document lists all `.command('name', ...` invocations organized by firmware
 ### Export
 
 - `export` - Show export menu (operator only)
-- `bbs` - BBS login/publish actions
 - `bookexport` - Show book export options (operator only)
 - `bookallexport` - Export entire book as JSON (operator only)
 - `pageexport` - Export code page as JSON (operator only)
 - `itchiopublish` - Publish to itch.io (operator only)
+- `zztsearch` - Search ZZT content by field and text
+- `zztrandom` - Get random ZZT content
 
 ### Editing & Search
 
 - `gadget` - Toggle built-in inspector
 - `findany` - Highlight matched elements
-- `zztsearch` - Search ZZT content by field and text
-- `zztrandom` - Get random ZZT content
 
 ### Multiplayer & Social
 
@@ -52,12 +54,13 @@ This document lists all `.command('name', ...` invocations organized by firmware
 - `jointab` - Join via tab (operator only)
 - `chat` - Start/stop chat channel (operator only)
 - `broadcast` - Start/stop stream broadcast (operator only)
+- `bbs` - BBS login/publish actions (login, list, publish, delete, restart)
 
 ---
 
 ## audio.ts (AUDIO_FIRMWARE)
 
-**Total: 42 commands**
+**Total: 52 commands**
 
 ### TTS (Text-to-Speech)
 
@@ -84,8 +87,8 @@ This document lists all `.command('name', ...` invocations organized by firmware
 ### Synthesis
 
 - `synth` - Restart synth or configure multi-voice (applies to #play)
-- `synthrecord` - Record synth to filename
-- `synthflush` - Flush synth
+- `synthrecord` - Record saved synth notes to given filename
+- `synthflush` - Flush synth, clear saved notes
 - `synth1` - Configure synth voice 1
 - `synth2` - Configure synth voice 2
 - `synth3` - Configure synth voice 3
@@ -205,8 +208,13 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 **Total: 2 commands**
 
+### Lifecycle
+
 - `endgame` - Set health to 0
-- `help` - Show reference scroll
+
+### UI
+
+- `help` - Open reference scroll
 
 ---
 
@@ -223,21 +231,18 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 **Total: 7 commands**
 
-### Basic Commands (No-op or simplified versions)
+### File Operations
 
-- `endgame` - No-op in loaders
+- `readline` - Read line from text file
+- `readjson` - Read JSON data using JMESPath query
+- `readbin` - Read binary data with type specification
 
-### Reading Content
+### Context Management
 
-- `readline` - Parse text data
-- `readjson` - Parse JSON data
-- `readbin` - Parse binary data
-
-### Context Switching
-
-- `withboard` - Switch to target board by id, name, or stat
-- `withobject` - Switch to target object id
-- `userinput` - Automate user input actions (up/down/left/right/etc)
+- `withboard` - Set board context for element-centric commands
+- `withobject` - Set object context by ID
+- `userinput` - Simulate user input (up, down, left, right, shoot, ok, cancel)
+- `endgame` - No-op (when called in loaders)
 
 ---
 
@@ -252,16 +257,16 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## Summary Statistics
 
-- **Total unique commands across all firmware files: ~138**
+- **Total unique commands across all firmware files: ~143**
 - **Files with most commands:**
-  1. cli.ts - 45 commands
-  2. audio.ts - 42 commands
+  1. audio.ts - 52 commands
+  2. cli.ts - 32 commands
   3. element.ts - 20 commands
   4. board.ts - 20 commands
   5. loader.ts - 7 commands
-  6. runtime.ts - 2 commands
-  7. transforms.ts - 6 commands
+  6. transforms.ts - 6 commands
+  7. runtime.ts - 2 commands
   8. network.ts - 2 commands
   9. display.ts - 2 commands
 
-Note: Some commands appear in multiple firmware files (e.g., `endgame`) with different implementations for different contexts.
+Note: Some commands appear in multiple firmware files (e.g., `endgame`, `help`) with different implementations for different contexts.

@@ -124,20 +124,20 @@ export function requestaudiobytes(
             const stream = pipertts.stream(streamer, {
               speakerId: parseFloat(voice),
             })
-            doasync(SOFTWARE, player, async () => {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              for await (const _ of stream) {
-                write(SOFTWARE, player, `${engine} reading...`)
-              }
-              const rawaudio = pipertts?.merge_audio()
-              if (ispresent(rawaudio)) {
-                const audiobuffer = convertarraybytes(rawaudio)
-                clearTimeout(timer)
-                pipertts?.clearAudio()
-                write(SOFTWARE, player, `${engine} done...`)
-                resolve(audiobuffer)
-              }
-            })
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            for await (const _ of stream) {
+              write(SOFTWARE, player, `${engine} reading...`)
+            }
+            const rawaudio = pipertts?.merge_audio()
+            clearTimeout(timer)
+            pipertts?.clearAudio()
+            write(SOFTWARE, player, `${engine} done...`)
+            if (ispresent(rawaudio)) {
+              const audiobuffer = convertarraybytes(rawaudio)
+              resolve(audiobuffer)
+            } else {
+              resolve(undefined)
+            }
           }
           break
       }

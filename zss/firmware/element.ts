@@ -1,5 +1,5 @@
 import { MathUtils } from 'three'
-import { registerstore, vmlogout } from 'zss/device/api'
+import { apitoast, registerstore, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -37,6 +37,7 @@ import {
   memorysafedeleteelement,
 } from 'zss/memory/boardoperations'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
+import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import {
   memoryfindplayerforelement,
@@ -1022,5 +1023,20 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
     }
 
+    return 0
+  })
+  .command('toast', (_, words) => {
+    const text = words.map(maptostring).join('')
+    apitoast(SOFTWARE, READ_CONTEXT.elementfocus, text)
+    return 0
+  })
+  .command('ticker', (_, words) => {
+    const text = words.map(maptostring).join('')
+    if (ispresent(READ_CONTEXT.element)) {
+      READ_CONTEXT.element.tickertext = text
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      // log text
+      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, text)
+    }
     return 0
   })
