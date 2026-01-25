@@ -5,7 +5,6 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { AUDIO_FIRMWARE } from './audio'
 import { BOARD_FIRMWARE } from './board'
 import { CLI_FIRMWARE } from './cli'
-import { DISPLAY_FIRMWARE } from './display'
 import { ELEMENT_FIRMWARE } from './element'
 import { LOADER_FIRMWARE } from './loader'
 import { NETWORK_FIRMWARE } from './network'
@@ -25,7 +24,6 @@ const firmwares: Record<string, FIRMWARE> = {
   audio: AUDIO_FIRMWARE,
   board: BOARD_FIRMWARE,
   cli: CLI_FIRMWARE,
-  display: DISPLAY_FIRMWARE,
   element: ELEMENT_FIRMWARE,
   runtime: RUNTIME_FIRMWARE,
   loader: LOADER_FIRMWARE,
@@ -33,14 +31,7 @@ const firmwares: Record<string, FIRMWARE> = {
   transform: TRANSFORM_FIRMWARE,
 }
 
-const standardlib = [
-  'audio',
-  'board',
-  'display',
-  'network',
-  'transform',
-  'element',
-]
+const standardlib = ['audio', 'board', 'network', 'transform', 'element']
 
 const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.ERROR]: [],
