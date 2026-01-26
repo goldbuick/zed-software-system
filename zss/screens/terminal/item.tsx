@@ -19,13 +19,13 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { TapeTerminalCopyIt } from './copyit'
-import { TapeTerminalHyperlink } from './hyperlink'
-import { TapeTerminalOpenIt } from './openit'
-import { TapeTerminalRunIt } from './runit'
-import { TapeTerminalViewIt } from './viewit'
+import { TerminalCopyIt } from './copyit'
+import { TerminalHyperlink } from './hyperlink'
+import { TerminalOpenIt } from './openit'
+import { TerminalRunIt } from './runit'
+import { TerminalViewIt } from './viewit'
 
-export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
+export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
   const { quickterminal } = useTape()
   const edge = textformatreadedges(context)
@@ -91,16 +91,16 @@ export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
     // render hyperlink
     switch (NAME(input)) {
       case 'copyit':
-        return <TapeTerminalCopyIt {...props} words={words} />
+        return <TerminalCopyIt {...props} words={words} />
       case 'openit':
-        return <TapeTerminalOpenIt {...props} words={words} />
+        return <TerminalOpenIt {...props} words={words} />
       case 'viewit':
-        return <TapeTerminalViewIt {...props} words={words} />
+        return <TerminalViewIt {...props} words={words} />
       case 'runit':
-        return <TapeTerminalRunIt {...props} words={words} />
+        return <TerminalRunIt {...props} words={words} />
       default:
       case 'hyperlink':
-        return <TapeTerminalHyperlink {...props} words={words} />
+        return <TerminalHyperlink {...props} words={words} />
       case 'hk':
       case 'hotkey':
         return null
@@ -134,5 +134,5 @@ export function TapeTerminalActiveItem({
   y,
 }: TapeTerminalItemProps) {
   useBlink()
-  return <TapeTerminalItem active={active} text={text} y={y} />
+  return <TerminalItem active={active} text={text} y={y} />
 }

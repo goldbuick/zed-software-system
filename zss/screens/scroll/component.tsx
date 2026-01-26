@@ -22,9 +22,9 @@ import { COLOR } from 'zss/words/types'
 
 import { ScrollBackPlate } from './backplate'
 import { ScrollControls } from './controls'
-import { Marquee } from './marquee'
+import { ScrollMarquee } from './marquee'
 
-type ScrollProps = {
+type ScrollComponentProps = {
   width: number
   height: number
   color: number
@@ -34,14 +34,14 @@ type ScrollProps = {
   didclose?: () => void
 }
 
-export function Scroll({
+export function ScrollComponent({
   width,
   height,
   color,
   bg,
   text,
   shouldclose,
-}: ScrollProps) {
+}: ScrollComponentProps) {
   const { viewport } = useThree()
   const panelwidth = width - 3
   const panelheight = height - 3
@@ -157,7 +157,7 @@ export function Scroll({
             height={height}
             context={context}
           />
-          <Marquee
+          <ScrollMarquee
             margin={3}
             color={COLOR.BLUE}
             y={0}

@@ -14,7 +14,7 @@ import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { Panel } from 'zss/screens/panel/component'
-import { Scroll } from 'zss/screens/scroll/component'
+import { ScrollComponent } from 'zss/screens/scroll/component'
 
 import { Framed } from './framed'
 
@@ -56,7 +56,7 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
       )
     case RECT_TYPE.SCROLL:
       return (
-        <Scroll
+        <ScrollComponent
           width={rect.width}
           height={rect.height}
           color={14}
