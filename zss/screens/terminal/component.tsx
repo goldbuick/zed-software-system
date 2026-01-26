@@ -20,9 +20,9 @@ import { TerminalRows } from './rows'
 
 export function TapeTerminal() {
   const player = registerreadplayer()
-  const { quickterminal } = useTape()
-  const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
-  const terminallogs = useTape(useShallow((state) => state.terminal.logs))
+  const editoropen = useTape((state) => state.editor.open)
+  const terminallogs = useTape((state) => state.terminal.logs)
+  const quickterminal = useTape((state) => state.quickterminal)
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {

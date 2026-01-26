@@ -140,6 +140,7 @@ export const useTape = create<{
 }))
 
 export const useTerminal = create<{
+  pan: number
   scroll: number
   xcursor: number
   ycursor: number
@@ -149,6 +150,8 @@ export const useTerminal = create<{
   buffer: string[]
   reset: () => void
 }>((set) => ({
+  // panning offset
+  pan: 0,
   // scrolling offset
   scroll: 0,
   // cursor position & selection
@@ -161,6 +164,8 @@ export const useTerminal = create<{
   buffer: [''],
   reset() {
     set({
+      // panning offset
+      pan: 0,
       // scrolling offset
       scroll: 0,
       // cursor position & selection

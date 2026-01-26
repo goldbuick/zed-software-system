@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 import { Fragment, ReactNode, useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
-import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
+import { TAPE_DISPLAY, useTape, useTerminal } from 'zss/gadget/data/state'
 import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { TapeEditor } from 'zss/screens/editor/component'
@@ -73,9 +73,9 @@ export function TapeLayout({
   width,
   height,
 }: TapeLayoutProps) {
-  const [layout, editoropen] = useTape(
-    useShallow((state) => [state.layout, state.editor.open]),
-  )
+  const pan = useTerminal((state) => state.pan)
+  const layout = useTape((state) => state.layout)
+  const editoropen = useTape((state) => state.editor.open)
   if (editoropen) {
     if (layout === TAPE_DISPLAY.SPLIT_X) {
       const mid = editorsplit(width)
@@ -119,7 +119,7 @@ export function TapeLayout({
     <TapeLayoutTiles
       quickterminal={quickterminal}
       top={top}
-      left={-5}
+      left={-pan}
       width={terminalwidth}
       height={height}
     >
