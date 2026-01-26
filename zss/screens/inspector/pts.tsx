@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useTapeInspector } from 'zss/gadget/data/state'
+import { useInspector } from 'zss/gadget/data/state'
 import { resetTiles, useTiles, writeTile } from 'zss/gadget/hooks'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -7,7 +7,7 @@ import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 export function Pts() {
-  const pts = useTapeInspector(useShallow((state) => state.pts))
+  const pts = useInspector(useShallow((state) => state.pts))
   const store = useTiles(
     BOARD_WIDTH,
     BOARD_HEIGHT,

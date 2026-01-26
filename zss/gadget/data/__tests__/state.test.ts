@@ -3,9 +3,9 @@ import {
   TAPE_MAX_LINES,
   useGadgetClient,
   useTape,
-  useTapeEditor,
-  useTapeInspector,
-  useTapeTerminal,
+  useEditor,
+  useInspector,
+  useTerminal,
 } from '../state'
 
 describe('state', () => {
@@ -132,7 +132,7 @@ describe('state', () => {
 
   describe('useTapeTerminal', () => {
     it('should have initial state', () => {
-      const state = useTapeTerminal.getState()
+      const state = useTerminal.getState()
       expect(state.scroll).toBe(0)
       expect(state.xcursor).toBe(0)
       expect(state.ycursor).toBe(0)
@@ -143,18 +143,18 @@ describe('state', () => {
     })
 
     it('should update state', () => {
-      useTapeTerminal.setState({ scroll: 10, xcursor: 5, ycursor: 3 })
-      const state = useTapeTerminal.getState()
+      useTerminal.setState({ scroll: 10, xcursor: 5, ycursor: 3 })
+      const state = useTerminal.getState()
       expect(state.scroll).toBe(10)
       expect(state.xcursor).toBe(5)
       expect(state.ycursor).toBe(3)
 
       // Reset
-      useTapeTerminal.getState().reset()
+      useTerminal.getState().reset()
     })
 
     it('should reset to initial state', () => {
-      useTapeTerminal.setState({
+      useTerminal.setState({
         scroll: 100,
         xcursor: 50,
         ycursor: 25,
@@ -164,9 +164,9 @@ describe('state', () => {
         buffer: ['cmd1', 'cmd2', 'cmd3'],
       })
 
-      useTapeTerminal.getState().reset()
+      useTerminal.getState().reset()
 
-      const state = useTapeTerminal.getState()
+      const state = useTerminal.getState()
       expect(state.scroll).toBe(0)
       expect(state.xcursor).toBe(0)
       expect(state.ycursor).toBe(0)
@@ -179,7 +179,7 @@ describe('state', () => {
 
   describe('useTapeEditor', () => {
     it('should have initial state', () => {
-      const state = useTapeEditor.getState()
+      const state = useEditor.getState()
       expect(state.xscroll).toBe(0)
       expect(state.yscroll).toBe(0)
       expect(state.cursor).toBe(0)
@@ -187,27 +187,27 @@ describe('state', () => {
     })
 
     it('should update state', () => {
-      useTapeEditor.setState({ xscroll: 10, yscroll: 20, cursor: 5 })
-      const state = useTapeEditor.getState()
+      useEditor.setState({ xscroll: 10, yscroll: 20, cursor: 5 })
+      const state = useEditor.getState()
       expect(state.xscroll).toBe(10)
       expect(state.yscroll).toBe(20)
       expect(state.cursor).toBe(5)
 
       // Reset
-      useTapeEditor.getState().reset()
+      useEditor.getState().reset()
     })
 
     it('should reset to initial state', () => {
-      useTapeEditor.setState({
+      useEditor.setState({
         xscroll: 100,
         yscroll: 200,
         cursor: 50,
         select: 25,
       })
 
-      useTapeEditor.getState().reset()
+      useEditor.getState().reset()
 
-      const state = useTapeEditor.getState()
+      const state = useEditor.getState()
       expect(state.xscroll).toBe(0)
       expect(state.yscroll).toBe(0)
       expect(state.cursor).toBe(0)
@@ -217,7 +217,7 @@ describe('state', () => {
 
   describe('useTapeInspector', () => {
     it('should have initial state', () => {
-      const state = useTapeInspector.getState()
+      const state = useInspector.getState()
       expect(state.pts).toEqual([])
       expect(state.cursor).toBeUndefined()
       expect(state.select).toBeUndefined()
@@ -228,14 +228,14 @@ describe('state', () => {
         [0, 0],
         [1, 1],
       ] as any
-      useTapeInspector.setState({ pts, cursor: 0, select: 1 })
-      const state = useTapeInspector.getState()
+      useInspector.setState({ pts, cursor: 0, select: 1 })
+      const state = useInspector.getState()
       expect(state.pts).toEqual(pts)
       expect(state.cursor).toBe(0)
       expect(state.select).toBe(1)
 
       // Reset
-      useTapeInspector.getState().reset()
+      useInspector.getState().reset()
     })
 
     it('should reset to initial state', () => {
@@ -244,11 +244,11 @@ describe('state', () => {
         [1, 1],
         [2, 2],
       ] as any
-      useTapeInspector.setState({ pts, cursor: 1, select: 2 })
+      useInspector.setState({ pts, cursor: 1, select: 2 })
 
-      useTapeInspector.getState().reset()
+      useInspector.getState().reset()
 
-      const state = useTapeInspector.getState()
+      const state = useInspector.getState()
       expect(state.pts).toEqual([])
       expect(state.cursor).toBeUndefined()
       expect(state.select).toBeUndefined()

@@ -3,29 +3,20 @@ import { vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
-import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { BackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
-import {
-  textformatreadedges,
-  tokenizeandmeasuretextformat,
-} from 'zss/words/textformat'
+import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { TapeTerminalInput } from './input'
-import { TerminalRows } from './terminalrows'
+import { measurerow } from '../tape/measure'
 
-function measurerow(item: string, width: number, height: number) {
-  if (item.startsWith('!')) {
-    return 1
-  }
-  const measure = tokenizeandmeasuretextformat(item, width, height)
-  return measure?.y ?? 1
-}
+import { TapeTerminalInput } from './input'
+import { TerminalRows } from './rows'
 
 export function TapeTerminal() {
   const player = registerreadplayer()
@@ -42,15 +33,15 @@ export function TapeTerminal() {
   }, [])
 
   const context = useWriteText()
-  const tapeterminal = useTapeTerminal()
+  const tapeterminal = useTerminal()
 
   // terminal edges
   const edge = textformatreadedges(context)
 
   // measure rows
-  const logssize = context.width - 1
+  const logsrowmaxwidth = context.width - 1
   const logsrowheights: number[] = terminallogs.map((item) => {
-    return measurerow(item, logssize, edge.height)
+    return measurerow(item, logsrowmaxwidth, edge.height)
   })
 
   // ycoords for rows

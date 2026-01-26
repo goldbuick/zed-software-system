@@ -4,7 +4,7 @@ import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape, useEditor } from 'zss/gadget/data/state'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { createlineindexes } from 'zss/lang/transformer'
@@ -152,7 +152,7 @@ export function TapeEditor() {
     wordsexprs,
   ])
 
-  const tapeeditor = useTapeEditor()
+  const tapeeditor = useEditor()
   const codepage = useWaitForValueString(
     vmcodeaddress(editor.book, editor.path),
   )

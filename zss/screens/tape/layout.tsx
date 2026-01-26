@@ -14,6 +14,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { BackPlate } from './backplate'
 import { FG, bgcolor, editorsplit } from './common'
+import { measureminwidth } from './measure'
 
 type TapeLayoutTilesProps = {
   quickterminal: boolean
@@ -75,57 +76,51 @@ export function TapeLayout({
   const [layout, editoropen] = useTape(
     useShallow((state) => [state.layout, state.editor.open]),
   )
-
   if (editoropen) {
-    switch (layout) {
-      case TAPE_DISPLAY.SPLIT_X: {
-        const mid = editorsplit(width)
-        return (
-          <Fragment key="layout">
-            <TapeLayoutTiles
-              quickterminal={quickterminal}
-              top={top}
-              left={0}
-              width={mid}
-              height={height}
-            >
-              <TapeEditor />
-            </TapeLayoutTiles>
-            <TapeLayoutTiles
-              quickterminal={quickterminal}
-              top={top}
-              left={mid}
-              width={width - mid}
-              height={height}
-            >
-              <TapeTerminal />
-            </TapeLayoutTiles>
-          </Fragment>
-        )
-      }
-      default:
-        return (
+    if (layout === TAPE_DISPLAY.SPLIT_X) {
+      const mid = editorsplit(width)
+      return (
+        <>
           <TapeLayoutTiles
-            key="layout"
             quickterminal={quickterminal}
             top={top}
             left={0}
-            width={width}
+            width={mid}
             height={height}
           >
             <TapeEditor />
           </TapeLayoutTiles>
-        )
+          <TapeLayoutTiles
+            quickterminal={quickterminal}
+            top={top}
+            left={mid}
+            width={width - mid}
+            height={height}
+          >
+            <TapeTerminal />
+          </TapeLayoutTiles>
+        </>
+      )
     }
+    return (
+      <TapeLayoutTiles
+        quickterminal={quickterminal}
+        top={top}
+        left={0}
+        width={width}
+        height={height}
+      >
+        <TapeEditor />
+      </TapeLayoutTiles>
+    )
   }
-
+  const terminalwidth = measureminwidth(width)
   return (
     <TapeLayoutTiles
-      key="layout"
       quickterminal={quickterminal}
       top={top}
-      left={0}
-      width={width}
+      left={-5}
+      width={terminalwidth}
       height={height}
     >
       <TapeTerminal />

@@ -12,7 +12,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
-import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
@@ -46,7 +46,7 @@ export function TapeTerminalInput({
 }: TapeTerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const tapeterminal = useTapeTerminal()
+  const tapeterminal = useTerminal()
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
 
   const player = registerreadplayer()
@@ -83,11 +83,11 @@ export function TapeTerminalInput({
       // we are trying to modify historical entries
       if (tapeterminal.bufferindex > 0) {
         // blank inputslot and snap index to 0
-        useTapeTerminal.setState({ bufferindex: 0 })
+        useTerminal.setState({ bufferindex: 0 })
       }
       // write state
       tapeterminal.buffer[0] = stringsplice(inputstate, index, count, insert)
-      useTapeTerminal.setState({
+      useTerminal.setState({
         buffer: tapeterminal.buffer,
         // clear selection
         xselect: undefined,
@@ -102,11 +102,11 @@ export function TapeTerminalInput({
       // we are trying to modify historical entries
       if (tapeterminal.bufferindex > 0) {
         // blank inputslot and snap index to 0
-        useTapeTerminal.setState({ bufferindex: 0 })
+        useTerminal.setState({ bufferindex: 0 })
       }
       // write state
       tapeterminal.buffer[0] = replacewith
-      useTapeTerminal.setState({
+      useTerminal.setState({
         buffer: tapeterminal.buffer,
         // clear selection
         xselect: undefined,
@@ -119,7 +119,7 @@ export function TapeTerminalInput({
   const visiblerows = edge.bottom - edge.top - (editoropen ? 0 : 2)
   const inputstateycursor = useCallback(
     (moveby: number) => {
-      useTapeTerminal.setState((state) => {
+      useTerminal.setState((state) => {
         const ycursor = clamp(
           Math.round(state.ycursor + moveby),
           0,
@@ -143,7 +143,7 @@ export function TapeTerminalInput({
   function inputstateswitch(switchto: number) {
     const ir = tapeterminal.buffer.length - 1
     const index = clamp(switchto, 0, ir)
-    useTapeTerminal.setState({
+    useTerminal.setState({
       bufferindex: index,
       scroll: 0,
       xcursor: tapeterminal.buffer[index].length,
@@ -157,13 +157,13 @@ export function TapeTerminalInput({
   function trackselection(active: boolean) {
     if (active) {
       if (!ispresent(tapeterminal.xselect)) {
-        useTapeTerminal.setState({
+        useTerminal.setState({
           xselect: tapeterminal.xcursor,
           yselect: tapeterminal.ycursor,
         })
       }
     } else {
-      useTapeTerminal.setState({
+      useTerminal.setState({
         xselect: undefined,
         yselect: undefined,
       })
@@ -172,7 +172,7 @@ export function TapeTerminalInput({
 
   function deleteselection() {
     if (ispresent(tapeterminal.xselect)) {
-      useTapeTerminal.setState({
+      useTerminal.setState({
         xcursor: ii1,
         xselect: undefined,
         yselect: undefined,
@@ -182,7 +182,7 @@ export function TapeTerminalInput({
   }
 
   const resettoend = useCallback(() => {
-    useTapeTerminal.setState({
+    useTerminal.setState({
       scroll: 0,
       xcursor: inputstate.length,
       ycursor: 0,
@@ -270,7 +270,7 @@ export function TapeTerminalInput({
     }
 
     // track starting input
-    const { buffer, bufferindex } = useTapeTerminal.getState()
+    const { buffer, bufferindex } = useTerminal.getState()
     const inputstart = buffer[bufferindex]
 
     if (inputstart !== '') {
@@ -281,7 +281,7 @@ export function TapeTerminalInput({
     function onFinalised(value: string) {
       inputstatereplace(`${inputstart}${value}`)
       setTimeout(() => {
-        const { buffer, bufferindex } = useTapeTerminal.getState()
+        const { buffer, bufferindex } = useTerminal.getState()
         const inputstate = buffer[bufferindex]
         const historybuffer: string[] = [
           '',
@@ -292,7 +292,7 @@ export function TapeTerminalInput({
         storagewritehistorybuffer(historybuffer).catch((err: any) =>
           apierror(SOFTWARE, player, 'terminalinput', err.message),
         )
-        useTapeTerminal.setState({
+        useTerminal.setState({
           xcursor: 0,
           bufferindex: 0,
           xselect: undefined,
@@ -351,9 +351,9 @@ export function TapeTerminalInput({
         MOVE_LEFT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            useTapeTerminal.setState({ xcursor: 0 })
+            useTerminal.setState({ xcursor: 0 })
           } else {
-            useTapeTerminal.setState({
+            useTerminal.setState({
               xcursor: clamp(
                 tapeterminal.xcursor - (mods.alt ? 10 : 1),
                 0,
@@ -365,11 +365,11 @@ export function TapeTerminalInput({
         MOVE_RIGHT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            useTapeTerminal.setState({
+            useTerminal.setState({
               xcursor: inputstateactive ? inputstate.length : edge.right,
             })
           } else {
-            useTapeTerminal.setState({
+            useTerminal.setState({
               xcursor: clamp(
                 tapeterminal.xcursor + (mods.alt ? 10 : 1),
                 0,
@@ -398,7 +398,7 @@ export function TapeTerminalInput({
           const invoke = hasselection ? inputstateselected : inputstate
           if (invoke.length) {
             if (inputstateactive) {
-              const { buffer } = useTapeTerminal.getState()
+              const { buffer } = useTerminal.getState()
               const historybuffer: string[] = [
                 '',
                 invoke,
@@ -408,7 +408,7 @@ export function TapeTerminalInput({
               storagewritehistorybuffer(historybuffer).catch((err) =>
                 apierror(SOFTWARE, player, 'terminalinput', err.message),
               )
-              useTapeTerminal.setState({
+              useTerminal.setState({
                 xcursor: 0,
                 bufferindex: 0,
                 xselect: undefined,
@@ -466,7 +466,7 @@ export function TapeTerminalInput({
                     vmclirepeatlast(SOFTWARE, player)
                     break
                   case 'a':
-                    useTapeTerminal.setState({
+                    useTerminal.setState({
                       // start
                       xselect: 0,
                       yselect: 0,
@@ -547,7 +547,7 @@ export function TapeTerminalInput({
                 ) {
                   if (hasselection) {
                     inputstatesetsplice(ii1, iic, event.key)
-                    useTapeTerminal.setState({ xselect: undefined })
+                    useTerminal.setState({ xselect: undefined })
                   } else {
                     inputstatesetsplice(tapeterminal.xcursor, 0, event.key)
                   }

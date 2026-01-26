@@ -139,7 +139,7 @@ export const useTape = create<{
   },
 }))
 
-export const useTapeTerminal = create<{
+export const useTerminal = create<{
   scroll: number
   xcursor: number
   ycursor: number
@@ -175,7 +175,7 @@ export const useTapeTerminal = create<{
   },
 }))
 
-export const useTapeEditor = create<{
+export const useEditor = create<{
   xscroll: number
   yscroll: number
   cursor: number
@@ -200,7 +200,7 @@ export const useTapeEditor = create<{
   },
 }))
 
-export const useTapeInspector = create<{
+export const useInspector = create<{
   pts: PT[]
   cursor: MAYBE<number>
   select: MAYBE<number>
