@@ -26,7 +26,7 @@ import { ispid } from 'zss/mapping/guid'
 import { NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { TickerText } from './tickertext'
+import { ScreenUITickerText } from './tickertext'
 
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
@@ -44,12 +44,12 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   }
 }
 
-type FramedProps = {
+type ScreenUIFramedProps = {
   width: number
   height: number
 }
 
-export function Framed({ width, height }: FramedProps) {
+export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const player = registerreadplayer()
 
   // re-render only when layer count, board render id, or graphics changes
@@ -112,7 +112,10 @@ export function Framed({ width, height }: FramedProps) {
       {graphics === 'iso' && <IsoGraphics width={width} height={height} />}
       {graphics === 'fpv' && <FPVGraphics width={width} height={height} />}
       <group position-z={512}>
-        <TickerText width={Math.floor(width)} height={Math.floor(height)} />
+        <ScreenUITickerText
+          width={Math.floor(width)}
+          height={Math.floor(height)}
+        />
       </group>
     </>
   )

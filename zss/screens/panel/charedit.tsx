@@ -33,7 +33,7 @@ function coords() {
   }
 }
 
-export function PanelItemCharEdit({
+export function PanelCharEdit({
   sidebar,
   chip,
   row,

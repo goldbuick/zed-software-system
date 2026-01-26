@@ -13,10 +13,10 @@ import { Rect } from 'zss/gadget/rect'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ScrollContext } from 'zss/screens/panel/common'
-import { Panel } from 'zss/screens/panel/component'
+import { PanelComponent } from 'zss/screens/panel/component'
 import { ScrollComponent } from 'zss/screens/scroll/component'
 
-import { Framed } from './framed'
+import { ScreenUIFramed } from './framed'
 
 enum RECT_TYPE {
   PANEL,
@@ -44,7 +44,7 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
     case RECT_TYPE.PANEL:
       return (
         <group position-z={512}>
-          <Panel
+          <PanelComponent
             width={rect.width}
             height={rect.height}
             color={14}
@@ -66,14 +66,14 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
         />
       )
     case RECT_TYPE.FRAMED:
-      return <Framed width={rect.width} height={rect.height} />
+      return <ScreenUIFramed width={rect.width} height={rect.height} />
   }
   return null
 }
 
 const SIDEBAR_SIZE = 20
 
-export function ScreenUI() {
+export function ScreenUIComponent() {
   const screensize = useScreenSize()
   const { islandscape, sidebaropen, showtouchcontrols } = useDeviceData()
 

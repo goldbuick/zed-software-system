@@ -13,7 +13,7 @@ import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { ScrollContext } from 'zss/screens/panel/common'
-import { Panel } from 'zss/screens/panel/component'
+import { PanelComponent } from 'zss/screens/panel/component'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -179,7 +179,7 @@ $white$meta+up/down$green.JUMP TOP/BOTTOM $blue
             panelwidth={panelwidth}
             panelheight={panelheight}
           >
-            <Panel
+            <PanelComponent
               width={panelwidth}
               height={panelheight}
               xmargin={0}
