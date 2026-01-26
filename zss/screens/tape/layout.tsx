@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { Fragment, ReactNode, useMemo } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
 import { TAPE_DISPLAY, useTape, useTerminal } from 'zss/gadget/data/state'
 import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
@@ -10,7 +10,6 @@ import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
-import { useShallow } from 'zustand/react/shallow'
 
 import { BackPlate } from './backplate'
 import { FG, bgcolor, editorsplit } from './common'

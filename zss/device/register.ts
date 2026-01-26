@@ -19,8 +19,8 @@ import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
   useGadgetClient,
-  useTape,
   useInspector,
+  useTape,
   useTerminal,
 } from 'zss/gadget/data/state'
 import { INPUT } from 'zss/gadget/data/types'

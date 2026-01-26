@@ -10,10 +10,8 @@ import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { BackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
+import { measurerow } from 'zss/screens/tape/measure'
 import { textformatreadedges } from 'zss/words/textformat'
-import { useShallow } from 'zustand/react/shallow'
-
-import { measurerow } from '../tape/measure'
 
 import { TapeTerminalInput } from './input'
 import { TerminalRows } from './rows'

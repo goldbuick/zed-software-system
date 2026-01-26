@@ -1,10 +1,10 @@
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
-  useGadgetClient,
-  useTape,
   useEditor,
+  useGadgetClient,
   useInspector,
+  useTape,
   useTerminal,
 } from '../state'
 
