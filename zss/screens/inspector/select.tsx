@@ -4,7 +4,7 @@ import { RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useTape, useTapeInspector } from 'zss/gadget/data/state'
+import { useInspector, useTape } from 'zss/gadget/data/state'
 import { Rect } from 'zss/gadget/rect'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { isnumber, ispresent } from 'zss/mapping/types'
@@ -26,7 +26,7 @@ function coords() {
 
 export function Select() {
   const inspector = useTape((state) => state.inspector)
-  const [cursor, select] = useTapeInspector(
+  const [cursor, select] = useInspector(
     useShallow((state) => [state.cursor, state.select]),
   )
   const cursorpt = indextopt(cursor ?? 0, BOARD_WIDTH)
@@ -45,10 +45,10 @@ export function Select() {
 
   // track selection state
   function completeselection() {
-    if (isnumber(useTapeInspector.getState().cursor)) {
+    if (isnumber(useInspector.getState().cursor)) {
       vminspect(SOFTWARE, registerreadplayer(), selectstart, selectend)
     }
-    useTapeInspector.setState(() => ({
+    useInspector.setState(() => ({
       cursor: undefined,
       select: undefined,
     }))
@@ -72,17 +72,17 @@ export function Select() {
               point.copy(e.intersections[0].point),
             )
             const pt = coords()
-            useTapeInspector.setState(() => ({
+            useInspector.setState(() => ({
               cursor: pttoindex(pt, BOARD_WIDTH),
             }))
           }}
           onPointerMove={(e: ThreeEvent<PointerEvent>) => {
-            if (ispresent(useTapeInspector.getState().cursor)) {
+            if (ispresent(useInspector.getState().cursor)) {
               e.intersections[0].object.worldToLocal(
                 point.copy(e.intersections[0].point),
               )
               const pt = coords()
-              useTapeInspector.setState(() => ({
+              useInspector.setState(() => ({
                 select: pttoindex(pt, BOARD_WIDTH),
               }))
             }

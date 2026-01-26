@@ -139,7 +139,8 @@ export const useTape = create<{
   },
 }))
 
-export const useTapeTerminal = create<{
+export const useTerminal = create<{
+  pan: number
   scroll: number
   xcursor: number
   ycursor: number
@@ -149,6 +150,8 @@ export const useTapeTerminal = create<{
   buffer: string[]
   reset: () => void
 }>((set) => ({
+  // panning offset
+  pan: 0,
   // scrolling offset
   scroll: 0,
   // cursor position & selection
@@ -161,6 +164,8 @@ export const useTapeTerminal = create<{
   buffer: [''],
   reset() {
     set({
+      // panning offset
+      pan: 0,
       // scrolling offset
       scroll: 0,
       // cursor position & selection
@@ -175,7 +180,7 @@ export const useTapeTerminal = create<{
   },
 }))
 
-export const useTapeEditor = create<{
+export const useEditor = create<{
   xscroll: number
   yscroll: number
   cursor: number
@@ -200,7 +205,7 @@ export const useTapeEditor = create<{
   },
 }))
 
-export const useTapeInspector = create<{
+export const useInspector = create<{
   pts: PT[]
   cursor: MAYBE<number>
   select: MAYBE<number>

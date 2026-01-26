@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Y } from 'zss/device/modem'
 import { ROM_LOOKUP, romintolookup, romread } from 'zss/feature/rom'
-import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
@@ -71,7 +71,7 @@ export function EditorRows({
 }: EditorRowsProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const tapeeditor = useTapeEditor()
+  const tapeeditor = useEditor()
   const { quickterminal } = useTape()
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {

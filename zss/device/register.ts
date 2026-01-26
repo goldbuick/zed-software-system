@@ -19,9 +19,9 @@ import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
   useGadgetClient,
+  useInspector,
   useTape,
-  useTapeInspector,
-  useTapeTerminal,
+  useTerminal,
 } from 'zss/gadget/data/state'
 import { INPUT } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
@@ -144,8 +144,8 @@ function terminaladdlog(message: MESSAGE) {
     }
     logs.unshift(row)
     // need to adjust cursor row here
-    if (useTapeTerminal.getState().ycursor > 0) {
-      useTapeTerminal.setState((state) => {
+    if (useTerminal.getState().ycursor > 0) {
+      useTerminal.setState((state) => {
         return {
           ycursor: state.ycursor + 1,
           yselect: state.yselect ? state.yselect + 1 : undefined,
@@ -246,7 +246,7 @@ const register = createdevice(
           // setup history buffer
           const historybuffer = await storagereadhistorybuffer()
           if (ispresent(historybuffer)) {
-            useTapeTerminal.setState({
+            useTerminal.setState({
               buffer: historybuffer.filter((line) => {
                 // may need to add other checks here
                 return line.includes('#broadcast') === false
@@ -521,7 +521,7 @@ const register = createdevice(
         break
       case 'findany':
         if (isarray(message.data)) {
-          useTapeInspector.setState({ pts: message.data })
+          useInspector.setState({ pts: message.data })
         }
         break
       case 'log':
@@ -554,9 +554,9 @@ const register = createdevice(
       case 'terminal:open':
         if (isstring(message.data)) {
           // write state
-          const buffer = useTapeTerminal.getState().buffer
+          const buffer = useTerminal.getState().buffer
           buffer[0] = message.data
-          useTapeTerminal.setState({
+          useTerminal.setState({
             buffer,
             bufferindex: 0,
             xcursor: message.data.length,
@@ -575,9 +575,9 @@ const register = createdevice(
       case 'terminal:quickopen':
         if (isstring(message.data)) {
           // write state
-          const buffer = useTapeTerminal.getState().buffer
+          const buffer = useTerminal.getState().buffer
           buffer[0] = message.data
-          useTapeTerminal.setState({
+          useTerminal.setState({
             buffer,
             bufferindex: 0,
             xcursor: message.data.length,

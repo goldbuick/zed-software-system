@@ -11,7 +11,7 @@ import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { useTapeEditor } from 'zss/gadget/data/state'
+import { useEditor } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
@@ -51,7 +51,7 @@ export function EditorInput({
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const tapeeditor = useTapeEditor()
+  const tapeeditor = useEditor()
   const player = registerreadplayer()
   const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
@@ -109,17 +109,17 @@ export function EditorInput({
   function trackselection(active: boolean) {
     if (active) {
       if (!ispresent(tapeeditor.select)) {
-        useTapeEditor.setState({ select: tapeeditor.cursor })
+        useEditor.setState({ select: tapeeditor.cursor })
       }
     } else {
       // hopefully this works ?
-      useTapeEditor.setState({ select: undefined })
+      useEditor.setState({ select: undefined })
     }
   }
 
   const updatescrolling = useCallback(
     function (cursor: number) {
-      useTapeEditor.setState((state) => {
+      useEditor.setState((state) => {
         // cursor placement
         const ycursor2 = findcursorinrows(cursor, rows)
         const xcursor2 = cursor - rows[ycursor2].start
@@ -160,7 +160,7 @@ export function EditorInput({
       }
       const cursor = index + (insert ?? '').length
       updatescrolling(cursor)
-      useTapeEditor.setState({
+      useEditor.setState({
         cursor,
         select: undefined,
       })
@@ -178,7 +178,7 @@ export function EditorInput({
       }
       const cursor = index + (insert ?? '').length
       updatescrolling(cursor)
-      useTapeEditor.setState({ cursor })
+      useEditor.setState({ cursor })
     },
     [codepage, updatescrolling],
   )
@@ -223,19 +223,19 @@ export function EditorInput({
   function deleteselection() {
     if (hasselection) {
       updatescrolling(ii1)
-      useTapeEditor.setState({ cursor: ii1 })
+      useEditor.setState({ cursor: ii1 })
       strvaluesplice(ii1, iic)
     }
   }
 
   function resettoend() {
     updatescrolling(codeend)
-    useTapeEditor.setState({ cursor: codeend, select: undefined })
+    useEditor.setState({ cursor: codeend, select: undefined })
   }
 
   const movexcursor = useCallback(
     function (newcursor: number) {
-      useTapeEditor.setState(() => {
+      useEditor.setState(() => {
         const cursor = clamp(newcursor, 0, codeend)
         updatescrolling(cursor)
         return { cursor }
@@ -246,7 +246,7 @@ export function EditorInput({
 
   const moveycursor = useCallback(
     function (inc: number) {
-      useTapeEditor.setState(() => {
+      useEditor.setState(() => {
         let cursor = 0
         const yoffset = Math.round(ycursor + inc)
         if (yoffset < 0) {
@@ -276,7 +276,7 @@ export function EditorInput({
       if (arg0.stackItem.meta.has('cursor')) {
         const cursor = arg0.stackItem.meta.get('cursor')
         updatescrolling(cursor)
-        useTapeEditor.setState({ cursor })
+        useEditor.setState({ cursor })
       }
     }
     undomanager?.on('stack-item-added', handleadded)
@@ -339,7 +339,7 @@ export function EditorInput({
             codepage.insert(tapeeditor.cursor, `\n`)
             const cursor = tapeeditor.cursor + 1
             updatescrolling(cursor)
-            useTapeEditor.setState({ cursor })
+            useEditor.setState({ cursor })
           }
         }}
         CANCEL_BUTTON={(mods) => {
@@ -393,7 +393,7 @@ export function EditorInput({
                     break
                   case 'a':
                     updatescrolling(codeend)
-                    useTapeEditor.setState({ cursor: codeend, select: 0 })
+                    useEditor.setState({ cursor: codeend, select: 0 })
                     break
                   case 'c':
                     if (ispresent(withclipboard())) {
@@ -475,7 +475,7 @@ export function EditorInput({
                   const cursor = tapeeditor.cursor + event.key.length
                   codepage.insert(tapeeditor.cursor, event.key)
                   updatescrolling(cursor)
-                  useTapeEditor.setState({ cursor })
+                  useEditor.setState({ cursor })
                 }
               }
               break

@@ -3,35 +3,24 @@ import { vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
-import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { BackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
-import {
-  textformatreadedges,
-  tokenizeandmeasuretextformat,
-} from 'zss/words/textformat'
-import { useShallow } from 'zustand/react/shallow'
+import { measurerow } from 'zss/screens/tape/measure'
+import { textformatreadedges } from 'zss/words/textformat'
 
 import { TapeTerminalInput } from './input'
-import { TerminalRows } from './terminalrows'
-
-function measurerow(item: string, width: number, height: number) {
-  if (item.startsWith('!')) {
-    return 1
-  }
-  const measure = tokenizeandmeasuretextformat(item, width, height)
-  return measure?.y ?? 1
-}
+import { TerminalRows } from './rows'
 
 export function TapeTerminal() {
   const player = registerreadplayer()
-  const { quickterminal } = useTape()
-  const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
-  const terminallogs = useTape(useShallow((state) => state.terminal.logs))
+  const editoropen = useTape((state) => state.editor.open)
+  const terminallogs = useTape((state) => state.terminal.logs)
+  const quickterminal = useTape((state) => state.quickterminal)
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {
@@ -42,15 +31,15 @@ export function TapeTerminal() {
   }, [])
 
   const context = useWriteText()
-  const tapeterminal = useTapeTerminal()
+  const tapeterminal = useTerminal()
 
   // terminal edges
   const edge = textformatreadedges(context)
 
   // measure rows
-  const logssize = context.width - 1
+  const logsrowmaxwidth = context.width - 1
   const logsrowheights: number[] = terminallogs.map((item) => {
-    return measurerow(item, logssize, edge.height)
+    return measurerow(item, logsrowmaxwidth, edge.height)
   })
 
   // ycoords for rows
