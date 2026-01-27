@@ -488,6 +488,18 @@ const vm = createdevice(
         }
         break
       }
+      case 'look': {
+        const board = memoryreadplayerboard(message.player)
+        const gadget = gadgetstate(message.player)
+        vm.reply(message, 'acklook', {
+          board,
+          tickers: gadget.tickers ?? [],
+          scrollname: gadget.scrollname ?? '',
+          scroll: gadget.scroll ?? [],
+          sidebar: gadget.sidebar ?? [],
+        })
+        break
+      }
       case 'codewatch':
         if (isarray(message.data)) {
           const [book, path] = message.data
