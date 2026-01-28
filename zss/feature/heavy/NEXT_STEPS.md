@@ -52,7 +52,14 @@ For running a model **in the browser** with no server, use one of these ONNX set
 - **Use when:** You want the strongest in-browser “game → command” model and can afford ~2GB + WebGPU (Chrome 113+, Edge 113+).
 - **How:** Adapt the official sample: [onnxruntime-inference-examples / js/chat](https://github.com/microsoft/onnxruntime-inference-examples/tree/main/js/chat). Feed it `formatacklookfortext(acklook)` + a system prompt; treat the first line of the generated reply as the CLI command and call `agent.cli(...)`.
 
-### Option B: SmolLM2 + Transformers.js (lighter)
+### Option B: SmolLM2 + onnxruntime-web (implemented)
+
+- **Model:** `HuggingFaceTB/SmolLM2-1.7B-Instruct` ONNX (`model_q4` / `model_q4f16` from HuggingFace).
+- **Runtime:** **ONNX Runtime Web** + **@huggingface/transformers** (tokenizer only). See `smollm2onnx.ts`.
+- **Use when:** You want in-browser SmolLM2 with WebGPU (or WASM fallback) and no external API.
+- **How:** Use `createSmolLM2OnnxCaller(opts)` → `runllmonce(agent, callllm, systemPrompt)`, or `runAgentWithSmolLM2Once` / `runAgentWithSmolLM2Loop` from `llmagent.ts`.
+
+### Option B': SmolLM2 + Transformers.js pipeline (lighter)
 
 - **Models:** `HuggingFaceTB/SmolLM2-135M-Instruct` (smallest) | `SmolLM2-360M-Instruct` | `SmolLM2-1.7B-Instruct`.
 - **Runtime:** **Transformers.js** (`@huggingface/transformers` or Xenova variants). Use the `text-generation` pipeline with the desired model ID.
@@ -70,7 +77,7 @@ For running a model **in the browser** with no server, use one of these ONNX set
 
 1. **Remote API:** Use `createopenailikecaller(url, () => ({ Authorization: 'Bearer …' }))` and `runllmonce(agent, callllm)` to drive the agent with an external chat API.
 2. **Phi-3 in-browser:** Clone or mirror [onnxruntime-inference-examples/js/chat](https://github.com/microsoft/onnxruntime-inference-examples/tree/main/js/chat), load `microsoft/Phi-3-mini-4k-instruct-onnx-web`, and plug in `formatacklookfortext(acklook)` + system prompt; on each generation, call `agent.cli(firstLine)`.
-3. **SmolLM2 in-browser:** Add Transformers.js, load `HuggingFaceTB/SmolLM2-360M-Instruct` (or 135M), implement an `LLMCALLER` that runs the pipeline on `(systemPrompt, formatacklookfortext(data))` and returns the generated text; pass it to `runllmonce`.
+3. **SmolLM2 in-browser (ONNX):** Use `runAgentWithSmolLM2Loop(agent, systemPrompt?, opts?, intervalMs?)` from `llmagent.ts`. This loads `SmolLM2-1.7B-Instruct` via onnxruntime-web, then runs look → LLM → cli in a loop. Or use `createSmolLM2OnnxCaller` + `runllmonce` yourself.
 4. **Loop:** From heavy (or wherever agents are started), after starting an agent, call `runllmonce(agent, callllm)` in a loop (e.g. `setTimeout` or `requestAnimationFrame` + delay) so the agent keeps looking → LLM → cli.
 5. **System prompt:** Use a short instruction, e.g. “You are playing a text/grid game. Reply with exactly one CLI command: a single line the game understands (e.g. n, s, e, w, take key, #help). No explanation, only the command.”
 
@@ -82,4 +89,5 @@ For running a model **in the browser** with no server, use one of these ONNX set
 |------|------|
 | `agent.ts` | Agent lifecycle, `cli()`, `look()`, acklook handling. |
 | `formatacklook.ts` | `formatacklookfortext(data)` → string for LLM. |
-| `llmagent.ts` | `runllmonce`, `createopenailikecaller`, `LLMCALLER`. |
+| `llmagent.ts` | `runllmonce`, `runllmonceAsync`, `createopenailikecaller`, `runAgentWithSmolLM2Once`, `runAgentWithSmolLM2Loop`, `LLMCALLER`. |
+| `smollm2onnx.ts` | `createSmolLM2OnnxCaller()` — SmolLM2-1.7B-Instruct ONNX via onnxruntime-web; use with `runllmonce`. |

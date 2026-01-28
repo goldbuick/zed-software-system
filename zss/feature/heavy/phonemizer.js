@@ -1,79 +1,55 @@
-import Module from "./espeakng.worker.js";
+/**
+ * Phonemization using the phonemizer npm package (eSpeak NG, browser-compatible).
+ *
+ * The main "echogarden" package is Node.js-only and does not expose a phonemize
+ * API yet (see their TODO). This module uses "phonemizer", which uses eSpeak NG
+ * and is the standard browser solution. Echogarden uses @echogarden/espeak-ng-emscripten
+ * internally; phonemizer provides a ready-made phonemize/list_voices API on top of
+ * that stack.
+ */
+import {
+  list_voices as listVoicesNpm,
+  phonemize as phonemizeNpm,
+} from 'phonemizer'
 
-const workerPromise = new Promise((resolve) => {
-  if (Module.calledRun) {
-    resolve(new Module.eSpeakNGWorker());
-  } else {
-    Module.onRuntimeInitialized = () => resolve(new Module.eSpeakNGWorker());
-  }
-});
+/** Normalize Piper voice codes (e.g. "en-us") to phonemizer identifiers; pass through if already valid. */
+const VOICE_ALIASES = {
+  en: 'en-us',
+  'en-us': 'en-us',
+  'en-us-us': 'en-us',
+}
 
-const SUPPORTED_LANGUAGES = [
-  "en", // English
-];
-
-const initCache = workerPromise.then((worker) => {
-  const voices = worker
-    .list_voices()
-    .map(({ name, identifier, languages }) => ({
-      name,
-      identifier,
-      languages: languages.filter((lang) =>
-        SUPPORTED_LANGUAGES.includes(lang.name.split("-")[0]),
-      ),
-    }))
-    .filter((voice) => voice.languages.length > 0);
-
-  // Generate list of supported language identifiers:
-  const identifiers = new Set();
-  for (const voice of voices) {
-    identifiers.add(voice.identifier);
-    for (const lang of voice.languages) {
-      identifiers.add(lang.name);
-    }
-  }
-
-  return { voices, identifiers };
-});
+function toPhonemizerVoice(voice) {
+  return VOICE_ALIASES[voice?.toLowerCase()] ?? voice ?? 'en-us'
+}
 
 /**
  * List the available voices for the specified language.
- * @param {string} [language] The language identifier
- * @returns {Promise<{name: string; identifier: string; languages: {name: string; priority: number}[]}>} A list of available voices
+ * @param {string} [language] - Optional language filter (e.g. "en", "en-us")
+ * @returns {Promise<{name: string; identifier: string; languages: {name: string; priority: number}[]}[]>}
  */
-export const list_voices = async (language) => {
-  const { voices } = await initCache;
-  if (!language) return voices;
-  const base = language.split("-")[0];
+export async function list_voices(language) {
+  const voices = await listVoicesNpm()
+  if (!language) return voices
+  const base = (language || '').split('-')[0]
+  if (!base) return voices
   return voices.filter((voice) =>
-    voice.languages.some(
-      (lang) => lang.name === base || lang.name.startsWith(base + "-"),
+    voice.languages?.some(
+      (lang) => lang.name === base || String(lang.name).startsWith(base + '-'),
     ),
-  );
-};
+  )
+}
 
 /**
- * Multilingual text to phonemes converter
- *
- * @param {string} text The input text
- * @param {string} [language] The language identifier
- * @returns {Promise<string[]>} A phonemized version of the input
+ * Convert text to phonemes (IPA-style) for the given language/voice.
+ * @param {string} text - Input text
+ * @param {string} [language] - Voice/language (e.g. "en-us"). Default "en-us".
+ * @returns {Promise<string[]>} - Phonemized segments (one string per phrase/sentence)
  */
-export const phonemize = async (text, language = "en-us") => {
-  const worker = await workerPromise;
-
-  const { identifiers } = await initCache;
-  if (!identifiers.has(language)) {
-    throw new Error(
-      `Invalid language identifier: "${language}". Should be one of: ${Array.from(identifiers).toSorted().join(", ")}.`,
-    );
-  }
-  worker.set_voice(language);
-
-  return (
-    worker
-      .synthesize_ipa(text)
-      .ipa?.split("\n")
-      .filter((x) => x.length > 0) ?? []
-  );
-};
+export async function phonemize(text, language = 'en-us') {
+  const voice = toPhonemizerVoice(language)
+  const result = await phonemizeNpm(text, voice)
+  if (Array.isArray(result)) return result
+  if (typeof result === 'string') return result ? [result] : []
+  return []
+}
