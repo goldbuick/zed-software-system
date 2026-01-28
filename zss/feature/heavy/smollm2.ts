@@ -17,12 +17,11 @@ export async function createsmollm2caller(opts: SMOLLM2_OPTIONS = {}) {
       switch (progress.status) {
         case 'progress': {
           const amount = Math.round(progress.progress * 10)
-          opts.onWorking?.(`${progress.file} ${amount}/1000`)
+          if (amount % 10 === 0) {
+            opts.onWorking?.(`${progress.file} ${Math.round(amount / 10)}%`)
+          }
           break
         }
-        case 'done':
-          opts.onWorking?.('loading model')
-          break
       }
     },
   })
@@ -33,6 +32,8 @@ export async function createsmollm2caller(opts: SMOLLM2_OPTIONS = {}) {
       { role: 'system', content: system },
       { role: 'user', content: user },
     ]
+
+    opts.onWorking?.(`starting work ...`)
 
     // streaming output to show work in progress
     const streamer = new TextStreamer(generator.tokenizer, {
