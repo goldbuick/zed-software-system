@@ -18,20 +18,13 @@ type SMOLLM2_CONFIG = {
   hidden_size: number
 }
 
-export type LLM_CALLER = (
-  systemPrompt: string,
-  userContent: string,
-) => Promise<string>
+export type LLM_CALLER = (prompt: string) => Promise<string>
 
 export type SMOLLM2_OPTIONS = {
   maxTokens?: number
   provider?: 'webgpu' | 'wasm'
   useFp16?: boolean
-}
-
-/** Format system + user into SmolLM2 chat template (system\\n...\\n\\nuser\\n...\\n\\n). */
-function formatprompt(system: string, user: string): string {
-  return `system\n${system}\n\nuser\n${user}\n\n`
+  onWorking?: (message: string) => void
 }
 
 /** Greedy argmax over last token logits [1, seq, vocab]. */
@@ -60,6 +53,8 @@ async function loadconfig(): Promise<SMOLLM2_CONFIG> {
 
 async function loadsession(opts: SMOLLM2_OPTIONS): Promise<InferenceSession> {
   env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/'
+  env.wasm.numThreads = 1
+  env.wasm.simd = true
 
   const provider = opts.provider ?? 'webgpu'
   const useFp16 = opts.useFp16 ?? provider === 'webgpu'
@@ -136,11 +131,14 @@ function updatekvcache(
 export async function createsmollm2caller(
   opts: SMOLLM2_OPTIONS = {},
 ): Promise<LLM_CALLER> {
+  opts.onWorking?.('loading config')
   const config = await loadconfig()
+  opts.onWorking?.('loading sessing')
   const session = await loadsession(opts)
+  opts.onWorking?.('loading tokenizer')
   const tokenizer = await loadtokenizer()
 
-  const maxTokens = opts.maxTokens ?? 2048
+  const maxTokens = opts.maxTokens ?? 320
   const provider = opts.provider ?? 'webgpu'
   const useFp16 = opts.useFp16 ?? provider === 'webgpu'
   const headDim = config.hidden_size / config.num_attention_heads
@@ -158,20 +156,20 @@ export async function createsmollm2caller(
     eos: config.eos_token_id,
   }
 
-  return async (systemPrompt: string, userContent: string): Promise<string> => {
+  return async (prompt: string): Promise<string> => {
     // reset feed entries
     initfeed(state)
 
-    const prompt = formatprompt(systemPrompt, userContent)
     const inputIds = [
       ...tokenizer.encode(prompt, { add_special_tokens: true }),
       // include EOS token in input IDs
       // so that we can stop generating when we see it
-      state.eos,
+      tokenizer.eos_token_id,
     ]
     if (!inputIds.length) {
       return ''
     }
+    opts.onWorking?.(`input tokens: ${inputIds.length}`)
 
     state.feed.input_ids = new Tensor(
       'int64',
@@ -208,6 +206,7 @@ export async function createsmollm2caller(
       }
 
       outputTokens.push(lastToken)
+      opts.onWorking?.(`output tokens: ${outputTokens.length}`)
 
       // Set up for next iteration: input is the newly generated token
       // Position should be seqLen (the position of the token we just generated)
@@ -223,6 +222,7 @@ export async function createsmollm2caller(
       )
     }
 
+    opts.onWorking?.(`decoding output tokens`)
     return tokenizer.decode(outputTokens, { skip_special_tokens: true })
   }
 }

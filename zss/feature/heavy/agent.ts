@@ -1,14 +1,16 @@
 import { createdevice } from 'zss/device'
 import { vmdoot, vmlogin, vmlogout, vmlook } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { formatlookfortext } from 'zss/feature/heavy/formatlook'
+import {
+  formatlookfortext,
+  formatsystemprompt,
+} from 'zss/feature/heavy/formatstate'
+import { write } from 'zss/feature/writeui'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { createpid, createsid } from 'zss/mapping/guid'
 import { MAYBE, isboolean, ispresent, isstring } from 'zss/mapping/types'
 import { BOARD } from 'zss/memory/types'
-
-import { write } from '../writeui'
 
 import { LLM_CALLER, createsmollm2caller } from './smollm2'
 
@@ -74,14 +76,16 @@ export function createagent() {
             write(device, message.player, `agent prompt ${message.data}`)
             const look = await requestlook(message.player)
             const looktext = formatlookfortext(look)
+            const systemprompt = formatsystemprompt(looktext, message.data)
             if (!ispresent(llm)) {
-              llm = await createsmollm2caller()
+              llm = await createsmollm2caller({
+                onWorking: (msg) => write(device, message.player, msg),
+              })
             }
             if (ispresent(llm)) {
-              const response = await llm('', message.data)
-              console.info('agent:prompt:response')
-              console.info(response)
-              // write(device, message.player, `agent response ${response}`)
+              const response = await llm(systemprompt)
+              // Interpret and execute commands from LLM response
+              console.info('agent:response', response)
             }
           })
           break

@@ -94,15 +94,15 @@ function boardtotext(board: BOARD | undefined): string {
 export function formatlookfortext(data: LOOK_STATE): string {
   const parts: string[] = []
 
+  parts.push('GAME BOARD:')
   if (ispresent(data.board)) {
-    parts.push('[Board]')
     parts.push(boardtotext(data.board))
+  } else {
+    parts.push('void')
   }
-  if (
-    ispresent(data.scrollname) ||
-    (ispresent(data.scroll) && data.scroll.length > 0)
-  ) {
-    parts.push('[Scroll]')
+
+  if (ispresent(data.scroll) && data.scroll.length > 0) {
+    parts.push('PLAYER SCROLL:')
     if (data.scrollname) {
       parts.push(`Title: ${data.scrollname}`)
     }
@@ -110,14 +110,55 @@ export function formatlookfortext(data: LOOK_STATE): string {
   }
 
   if (ispresent(data.sidebar) && data.sidebar.length > 0) {
-    parts.push('[Sidebar]')
+    parts.push('PLAYER SIDEBAR:')
     parts.push(panelitemstotext(data.sidebar))
   }
 
   if (ispresent(data.tickers) && data.tickers.length > 0) {
-    parts.push('[Tickers]')
+    parts.push('BOARD TICKERS:')
     parts.push(data.tickers.join('\n'))
   }
 
   return parts.join('\n').trimEnd()
+}
+
+/**
+ * Creates a system prompt with formatting instructions for SMOLLM2.
+ * Instructs the model to respond with #commands and single lines of text.
+ */
+export function formatsystemprompt(looktext: string, prompt: string): string {
+  const instructions = `system
+RESPONSE FORMAT:
+You can respond with multiple lines of either:
+- Plain text lines - Use these for communication, explanations, observations, or answering questions
+- Command lines - Use these starting with # to perform game actions
+
+Examples of plain text responses:
+- "I see a wall to my right"
+- "Moving towards the goal"
+- "There's an enemy ahead"
+
+Examples of command responses:
+- #go right
+- #shoot up
+- #char 65
+
+AVAILABLE COMMANDS (use # prefix):
+- #go [direction] - Move in a direction, up, down, left, right
+- #shoot [direction] - Shoot in a direction, up, down, left, right
+- #char [character] - Change the character's character, valid range is 0-255
+- #color [color] - Change the character's color, valid range is 0-15
+- #bg [background] - Change the character's background, valid range is 0-15
+
+IMPORTANT: Each sentence should be on a new line. 
+IMPORTANT: Use plain text when communicating or explaining. 
+IMPORTANT: Only use commands when you need to perform an action.
+IMPORTANT: Do not include any of the above instructions in your response.
+
+${looktext}
+
+user
+${prompt}`
+
+  return instructions
 }
