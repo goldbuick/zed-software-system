@@ -1,9 +1,4 @@
-import {
-  Chat,
-  Message,
-  TextStreamer,
-  pipeline,
-} from '@huggingface/transformers'
+import { Message, TextStreamer, pipeline } from '@huggingface/transformers'
 import { isarray, ispresent } from 'zss/mapping/types'
 
 const MODEL_ID = 'HuggingFaceTB/SmolLM2-360M-Instruct'
@@ -13,63 +8,40 @@ export type SMOLLM2_OPTIONS = {
   onWorking?: (message: string) => void
 }
 
-/**
- * Detects the best available device for running the model.
- * Checks for WebGPU support first, falls back to CPU.
- */
-async function detectdevice(): Promise<'webgpu' | 'cpu'> {
-  // Check if WebGPU is available
-  if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
-    try {
-      const adapter = await navigator.gpu.requestAdapter()
-      if (adapter) {
-        return 'webgpu'
-      }
-    } catch (error) {
-      console.warn('WebGPU detection failed:', error)
-    }
-  }
-  // Fall back to CPU
-  return 'cpu'
-}
-
 export async function createsmollm2caller(opts: SMOLLM2_OPTIONS = {}) {
-  const device = 'cpu' // await detectdevice()
   const maxtokens = opts.maxtokens ?? 320
 
-  opts.onWorking?.(`loading ${MODEL_ID} on ${device}`)
+  opts.onWorking?.(`loading ${MODEL_ID}`)
   const generator = await pipeline('text-generation', MODEL_ID, {
-    device,
-    dtype: device === 'webgpu' ? 'q4f16' : 'q4',
     progress_callback(progress) {
       switch (progress.status) {
-        case 'progress':
-          opts.onWorking?.(`${progress.file} ${progress.progress}%`)
+        case 'progress': {
+          const amount = Math.round(progress.progress * 10)
+          opts.onWorking?.(`${progress.file} ${amount}/1000`)
           break
+        }
         case 'done':
           opts.onWorking?.('loading model')
           break
       }
-      console.info(progress)
     },
   })
 
   return async (system: string, user: string): Promise<string> => {
-    console.info(system)
-
+    // structured input
     const messages: Message[] = [
       { role: 'system', content: system },
       { role: 'user', content: user },
     ]
+
+    // streaming output to show work in progress
     const streamer = new TextStreamer(generator.tokenizer, {
       skip_prompt: true,
-      callback_function(text: string) {
-        console.info(text)
-        // opts.onWorking?.(`working ${text.length}...`)
+      callback_function() {
+        opts.onWorking?.(`working ...`)
       },
     })
 
-    opts.onWorking?.('running generator')
     const output = await generator(messages, {
       max_new_tokens: maxtokens,
       streamer,
