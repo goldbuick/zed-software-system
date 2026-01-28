@@ -5,13 +5,15 @@ import { formatlookfortext } from 'zss/feature/heavy/formatlook'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { createpid, createsid } from 'zss/mapping/guid'
-import { isboolean, isstring } from 'zss/mapping/types'
+import { MAYBE, isboolean, ispresent, isstring } from 'zss/mapping/types'
 import { BOARD } from 'zss/memory/types'
 
 import { write } from '../writeui'
 
+import { LLM_CALLER, createsmollm2caller } from './smollm2'
+
 const DOOT_RATE = 10
-let keepalive = DOOT_RATE
+let llm: MAYBE<LLM_CALLER> = undefined
 
 /** Data returned when the VM replies to vm:look (current board, scroll, sidebar, etc.) */
 type LOOK_DATA = {
@@ -41,6 +43,7 @@ async function requestlook(player: string): Promise<LOOK_DATA> {
 
 export function createagent() {
   const pid = createpid()
+  let keepalive = DOOT_RATE
 
   const device = createdevice(
     `agent_${pid}`,
@@ -71,12 +74,18 @@ export function createagent() {
             write(device, message.player, `agent prompt ${message.data}`)
             const look = await requestlook(message.player)
             const looktext = formatlookfortext(look)
-            console.info('agent:prompt:looktext', looktext)
+            if (!ispresent(llm)) {
+              llm = await createsmollm2caller()
+            }
+            if (ispresent(llm)) {
+              const response = await llm('', message.data)
+              console.info('agent:prompt:response')
+              console.info(response)
+              // write(device, message.player, `agent response ${response}`)
+            }
           })
           break
         }
-        default:
-          break
       }
     },
     SOFTWARE.session(),
