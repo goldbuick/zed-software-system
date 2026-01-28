@@ -140,7 +140,7 @@ export async function createsmollm2caller(
   const session = await loadsession(opts)
   const tokenizer = await loadtokenizer()
 
-  const maxTokens = opts.maxTokens ?? 128
+  const maxTokens = opts.maxTokens ?? 2048
   const provider = opts.provider ?? 'webgpu'
   const useFp16 = opts.useFp16 ?? provider === 'webgpu'
   const headDim = config.hidden_size / config.num_attention_heads
@@ -163,7 +163,12 @@ export async function createsmollm2caller(
     initfeed(state)
 
     const prompt = formatprompt(systemPrompt, userContent)
-    const inputIds = tokenizer.encode(prompt, { add_special_tokens: true })
+    const inputIds = [
+      ...tokenizer.encode(prompt, { add_special_tokens: true }),
+      // include EOS token in input IDs
+      // so that we can stop generating when we see it
+      state.eos,
+    ]
     if (!inputIds.length) {
       return ''
     }
@@ -179,11 +184,9 @@ export async function createsmollm2caller(
       [1, inputIds.length],
     )
 
-    let lastToken = -1
-    let seqLen = inputIds.length
     const outputTokens: number[] = []
-    while (lastToken !== state.eos && seqLen < maxTokens) {
-      seqLen = inputIds.length + outputTokens.length
+    while (outputTokens.length < maxTokens) {
+      const seqLen = inputIds.length + outputTokens.length
       state.feed.attention_mask = new Tensor(
         'int64',
         BigInt64Array.from({ length: seqLen }, () => 1n),
@@ -197,9 +200,17 @@ export async function createsmollm2caller(
       }
 
       updatekvcache(state, outputs)
-      lastToken = argmax(logits)
+
+      // Check for EOS before adding to output
+      const lastToken = argmax(logits)
+      if (lastToken === state.eos) {
+        break
+      }
+
       outputTokens.push(lastToken)
 
+      // Set up for next iteration: input is the newly generated token
+      // Position should be seqLen (the position of the token we just generated)
       state.feed.input_ids = new Tensor(
         'int64',
         BigInt64Array.from([BigInt(lastToken)]),
@@ -207,7 +218,7 @@ export async function createsmollm2caller(
       )
       state.feed.position_ids = new Tensor(
         'int64',
-        BigInt64Array.from([BigInt(seqLen - 1)]),
+        BigInt64Array.from([BigInt(seqLen)]),
         [1, 1],
       )
     }
