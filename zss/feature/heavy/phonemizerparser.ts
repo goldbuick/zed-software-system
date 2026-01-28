@@ -12,24 +12,33 @@ import {
   phonemize as phonemizeNpm,
 } from 'phonemizer'
 
+export type PhonemizerVoice = {
+  name: string
+  identifier: string
+  languages: { name: string; priority: number }[]
+}
+
 /** Normalize Piper voice codes (e.g. "en-us") to phonemizer identifiers; pass through if already valid. */
-const VOICE_ALIASES = {
+const VOICE_ALIASES: Record<string, string> = {
   en: 'en-us',
   'en-us': 'en-us',
   'en-us-us': 'en-us',
 }
 
-function toPhonemizerVoice(voice) {
-  return VOICE_ALIASES[voice?.toLowerCase()] ?? voice ?? 'en-us'
+function toPhonemizerVoice(voice: string | undefined): string {
+  return VOICE_ALIASES[voice?.toLowerCase() ?? ''] ?? voice ?? 'en-us'
 }
 
 /**
  * List the available voices for the specified language.
- * @param {string} [language] - Optional language filter (e.g. "en", "en-us")
- * @returns {Promise<{name: string; identifier: string; languages: {name: string; priority: number}[]}[]>}
+ * @param language - Optional language filter (e.g. "en", "en-us")
+ * @returns Available voices
  */
-export async function list_voices(language) {
-  const voices = await listVoicesNpm()
+export async function list_voices(
+  language?: string,
+): Promise<PhonemizerVoice[]> {
+  const raw = await listVoicesNpm()
+  const voices: PhonemizerVoice[] = Array.isArray(raw) ? raw : [raw]
   if (!language) return voices
   const base = (language || '').split('-')[0]
   if (!base) return voices
@@ -42,11 +51,14 @@ export async function list_voices(language) {
 
 /**
  * Convert text to phonemes (IPA-style) for the given language/voice.
- * @param {string} text - Input text
- * @param {string} [language] - Voice/language (e.g. "en-us"). Default "en-us".
- * @returns {Promise<string[]>} - Phonemized segments (one string per phrase/sentence)
+ * @param text - Input text
+ * @param language - Voice/language (e.g. "en-us"). Default "en-us".
+ * @returns Phonemized segments (one string per phrase/sentence)
  */
-export async function phonemize(text, language = 'en-us') {
+export async function phonemize(
+  text: string,
+  language = 'en-us',
+): Promise<string[]> {
   const voice = toPhonemizerVoice(language)
   const result = await phonemizeNpm(text, voice)
   if (Array.isArray(result)) return result

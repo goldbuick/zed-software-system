@@ -6035,6 +6035,11 @@ peerjs@^1.5.5:
     peerjs-js-binarypack "^2.1.0"
     webrtc-adapter "^9.0.0"
 
+phonemizer@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.npmjs.org/phonemizer/-/phonemizer-1.2.1.tgz#175aed7034b49b9169fc6adf13c16134374d238d"
+  integrity sha512-v0KJ4mi2T4Q7eJQ0W15Xd4G9k4kICSXE8bpDeJ8jisL4RyJhNWsweKTOi88QXFc4r4LZlz5jVL5lCHhkpdT71A==
+
 picocolors@^1.0.0, picocolors@^1.1.1:
   version "1.1.1"
   resolved "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz#3d321af3eab939b083c8f929a1d12cda81c26b6b"

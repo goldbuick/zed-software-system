@@ -1,7 +1,7 @@
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
 
 import { cachedFetch } from './modelcache'
-import { phonemize } from './phonemizer.js'
+import { phonemize } from './phonemizerparser'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
 
 // KittenTTS class for local model
