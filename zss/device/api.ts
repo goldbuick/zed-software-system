@@ -169,6 +169,22 @@ export function heavyttsrequest(
   device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
 }
 
+export function heavyagentstart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'heavy:agentstart')
+}
+
+export function heavyagentstop(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'heavy:agentstop', agentid)
+}
+
+export function heavyagentlist(device: DEVICELIKE, player: string) {
+  device.emit(player, 'heavy:agentlist')
+}
+
 export function platformready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }
@@ -180,10 +196,6 @@ export function registerinput(
   shift: boolean,
 ) {
   device.emit(player, 'register:input', [input, shift])
-}
-
-export function registerloginfail(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:loginfail')
 }
 
 export function registerloginready(device: DEVICELIKE, player: string) {

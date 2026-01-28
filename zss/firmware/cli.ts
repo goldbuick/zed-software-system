@@ -8,6 +8,9 @@ import {
   bridgestreamstart,
   bridgestreamstop,
   bridgetab,
+  heavyagentlist,
+  heavyagentstart,
+  heavyagentstop,
   registerdownloadjsonfile,
   registereditoropen,
   registerfindany,
@@ -745,6 +748,33 @@ export const CLI_FIRMWARE = createfirmware()
       bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
     } else {
       bridgestreamstop(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
+    return 0
+  })
+  .command('agent', (_, words) => {
+    const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    switch (NAME(action ?? '')) {
+      case 'start':
+        heavyagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+      case 'stop': {
+        const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
+        if (ispresent(agentid)) {
+          heavyagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
+        } else {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'agent',
+            '#agent stop <id>',
+          )
+        }
+        break
+      }
+      case 'list':
+      default:
+        heavyagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
     }
     return 0
   })

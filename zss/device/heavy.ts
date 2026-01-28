@@ -1,9 +1,13 @@
 import { createdevice } from 'zss/device'
+import { AGENT, createagent } from 'zss/feature/heavy/agent'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
+import { write, writeheader } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
-import { isarray, ispresent } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
-import { apierror } from './api'
+import { apierror, vmcli } from './api'
+
+const agents: Record<string, AGENT> = {}
 
 const heavy = createdevice('heavy', [], (message) => {
   if (!heavy.session(message)) {
@@ -45,6 +49,44 @@ const heavy = createdevice('heavy', [], (message) => {
           }
         }
       })
+      break
+    case 'agentstart': {
+      const agent = createagent(message.session)
+      agents[agent.id()] = agent
+      write(heavy, message.player, `agent ${agent.id()} started`)
+      break
+    }
+    case 'agentlist': {
+      const instances = Object.values(agents)
+      if (instances.length === 0) {
+        write(heavy, message.player, 'no agents running')
+        return
+      } else {
+        writeheader(heavy, message.player, 'agents')
+        for (let i = 0; i < instances.length; ++i) {
+          const agent = instances[i]
+          write(
+            heavy,
+            message.player,
+            `!copyit ${agent.id()};agent ${agent.id()}`,
+          )
+        }
+      }
+      break
+    }
+    case 'agentstop':
+      if (isstring(message.data)) {
+        const agentid = message.data
+        const agent = agents[agentid]
+        if (ispresent(agent)) {
+          agent.stop()
+          delete agents[agentid]
+          write(heavy, message.player, `agent ${agentid} stopped`)
+          vmcli(heavy, message.player, '#agent list')
+        } else {
+          apierror(heavy, message.player, 'heavy', `agent ${agentid} not found`)
+        }
+      }
       break
     default:
       apierror(

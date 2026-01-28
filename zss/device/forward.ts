@@ -26,7 +26,7 @@ export function createforward(handler: (message: MESSAGE) => void) {
   })
 
   function disconnect() {
-    hub.disconnect(device)
+    device.disconnect()
   }
 
   return { forward, disconnect }
@@ -118,8 +118,8 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
     case 'tick':
     case 'tock':
-    case 'second':
       return false
+    case 'second':
     case 'ready':
       return true
     default: {
@@ -127,14 +127,14 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
       switch (route.target) {
         case 'heavy':
           return true
+        default:
+          return route.target.startsWith('agent_')
       }
     }
   }
-  return false
 }
 
 // create heavy -> client forward
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function shouldforwardheavytoclient(_message: MESSAGE): boolean {
+export function shouldforwardheavytoclient(): boolean {
   return true
 }

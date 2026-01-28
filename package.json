@@ -87,6 +87,7 @@
     "prettier": "^3.0.1",
     "process": "^0.11.10",
     "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "react-fast-compare": "^3.2.2",
     "sloc": "^0.3.0",
     "source-map": "^0.7.4",

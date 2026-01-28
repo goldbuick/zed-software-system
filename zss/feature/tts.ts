@@ -3,7 +3,6 @@ import { getContext } from 'tone'
 import { createdevice } from 'zss/device'
 import { heavyttsinfo, heavyttsrequest, synthaudiobuffer } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { hub } from 'zss/hub'
 import { createsid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -34,7 +33,7 @@ async function requestaudiobuffer(
         if (message.target === 'heavy:ttsrequest' && message.data) {
           convertarraybytes(message.data).then(resolve).catch(console.error)
         }
-        hub.disconnect(once)
+        once.disconnect()
       },
       SOFTWARE.session(),
     )
@@ -51,7 +50,7 @@ export function ttsinfo(player: string, info: string) {
         if (message.target === 'heavy:ttsinfo' && message.data) {
           resolve(message.data)
         }
-        hub.disconnect(once)
+        once.disconnect()
       },
       SOFTWARE.session(),
     )

@@ -109,7 +109,6 @@ import {
   registercopy,
   registerforkmem,
   registerinspector,
-  registerloginfail,
   registerloginready,
   registerpublishmem,
   registersavemem,
@@ -437,11 +436,11 @@ const vm = createdevice(
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
-          // ack
+          // ack success
           vm.replynext(message, 'acklogin', true)
         } else {
-          // signal failure
-          registerloginfail(vm, message.player)
+          // ack failure
+          vm.replynext(message, 'acklogin', false)
         }
         break
       case 'local':
@@ -450,9 +449,11 @@ const vm = createdevice(
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
+          // ack success
+          vm.replynext(message, 'acklogin', true)
         } else {
-          // signal failure
-          registerloginfail(vm, message.player)
+          // ack failure
+          vm.replynext(message, 'acklogin', false)
         }
         break
       case 'doot':
