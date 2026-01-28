@@ -27,6 +27,25 @@ import { mapstrdir } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
+/*
+  synthbgplay, - queue 
+  synthbgplayvolume, - global
+  synthbpm, - global
+  synthflush, - global
+  synthplay, - queue
+  synthplayvolume, - global
+  synthrecord, - global
+  synthrestart, - gadget
+  synthtts, - global
+  synthttsclearqueue, - global
+  synthttsengine, - global
+  synthttsinfo, - global
+  synthttsqueue, - global
+  synthttsvolume, - global
+  synthvoice, - gadget
+  synthvoicefx, - gadget
+*/
+
 function handlesynthvoicefx(
   player: string,
   idx: number,
