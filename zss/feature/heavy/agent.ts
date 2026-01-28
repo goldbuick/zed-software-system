@@ -76,14 +76,14 @@ export function createagent() {
             write(device, message.player, `agent prompt ${message.data}`)
             const look = await requestlook(message.player)
             const looktext = formatlookfortext(look)
-            const systemprompt = formatsystemprompt(looktext, message.data)
+            const systemprompt = formatsystemprompt(looktext)
             if (!ispresent(llm)) {
               llm = await createsmollm2caller({
                 onWorking: (msg) => write(device, message.player, msg),
               })
             }
             if (ispresent(llm)) {
-              const response = await llm(systemprompt)
+              const response = await llm(systemprompt, message.data)
               // Interpret and execute commands from LLM response
               console.info('agent:response', response)
             }

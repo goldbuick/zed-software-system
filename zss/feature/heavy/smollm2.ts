@@ -1,228 +1,95 @@
 import {
-  AutoTokenizer,
-  PreTrainedTokenizer,
-  env as tfEnv,
+  Chat,
+  Message,
+  TextStreamer,
+  pipeline,
 } from '@huggingface/transformers'
-import { InferenceSession, Tensor, env } from 'onnxruntime-web'
-import { cachedfetch } from 'zss/feature/heavy/modelcache'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
 
 const MODEL_ID = 'HuggingFaceTB/SmolLM2-360M-Instruct'
-const BASE = `https://huggingface.co/${MODEL_ID}/resolve/main`
-
-type SMOLLM2_CONFIG = {
-  eos_token_id: number
-  num_hidden_layers: number
-  num_attention_heads: number
-  num_key_value_heads: number
-  hidden_size: number
-}
-
-export type LLM_CALLER = (prompt: string) => Promise<string>
 
 export type SMOLLM2_OPTIONS = {
-  maxTokens?: number
-  provider?: 'webgpu' | 'wasm'
-  useFp16?: boolean
+  maxtokens?: number
   onWorking?: (message: string) => void
 }
 
-/** Greedy argmax over last token logits [1, seq, vocab]. */
-function argmax(logits: Tensor): number {
-  const arr = logits.data as Float32Array | Float64Array
-  const [, seq, vocab] = logits.dims
-  const start = (seq - 1) * vocab
-  let max = arr[start]
-  let maxIdx = 0
-  for (let i = 0; i < vocab; i++) {
-    const v = arr[start + i]
-    if (!Number.isFinite(v)) throw new Error('smollm2: non-finite logit')
-    if (v > max) {
-      max = v
-      maxIdx = i
+/**
+ * Detects the best available device for running the model.
+ * Checks for WebGPU support first, falls back to CPU.
+ */
+async function detectdevice(): Promise<'webgpu' | 'cpu'> {
+  // Check if WebGPU is available
+  if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
+    try {
+      const adapter = await navigator.gpu.requestAdapter()
+      if (adapter) {
+        return 'webgpu'
+      }
+    } catch (error) {
+      console.warn('WebGPU detection failed:', error)
     }
   }
-  return maxIdx
+  // Fall back to CPU
+  return 'cpu'
 }
 
-async function loadconfig(): Promise<SMOLLM2_CONFIG> {
-  const res = await cachedfetch(`${BASE}/config.json`)
-  const json = (await res.json()) as SMOLLM2_CONFIG
-  return json
-}
+export async function createsmollm2caller(opts: SMOLLM2_OPTIONS = {}) {
+  const device = 'cpu' // await detectdevice()
+  const maxtokens = opts.maxtokens ?? 320
 
-async function loadsession(opts: SMOLLM2_OPTIONS): Promise<InferenceSession> {
-  env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/'
-  env.wasm.numThreads = 1
-  env.wasm.simd = true
-
-  const provider = opts.provider ?? 'webgpu'
-  const useFp16 = opts.useFp16 ?? provider === 'webgpu'
-  const modelFile = useFp16 ? 'model_q4f16.onnx' : 'model_q4.onnx'
-  const modelUrl = `${BASE}/onnx/${modelFile}`
-
-  const res = await cachedfetch(modelUrl)
-  const modelBuffer = await res.arrayBuffer()
-
-  const session = await InferenceSession.create(modelBuffer, {
-    executionProviders: [provider],
+  opts.onWorking?.(`loading ${MODEL_ID} on ${device}`)
+  const generator = await pipeline('text-generation', MODEL_ID, {
+    device,
+    dtype: device === 'webgpu' ? 'q4f16' : 'q4',
+    progress_callback(progress) {
+      switch (progress.status) {
+        case 'progress':
+          opts.onWorking?.(`${progress.file} ${progress.progress}%`)
+          break
+        case 'done':
+          opts.onWorking?.('loading model')
+          break
+      }
+      console.info(progress)
+    },
   })
 
-  return session
-}
+  return async (system: string, user: string): Promise<string> => {
+    console.info(system)
 
-/** Create tokenizer from HuggingFace. */
-async function loadtokenizer(): Promise<PreTrainedTokenizer> {
-  tfEnv.allowRemoteModels = true
-  const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID)
-  return tokenizer
-}
-
-type SMOLLM2_STATE = {
-  config: SMOLLM2_CONFIG
-  session: InferenceSession
-  tokenizer: PreTrainedTokenizer
-  feed: Record<string, Tensor>
-  kvDims: number[]
-  dtype: 'float32' | 'float16'
-  numLayers: number
-  eos: number
-}
-
-function initfeed(state: SMOLLM2_STATE): void {
-  const { dtype, numLayers, kvDims } = state
-
-  // dispose any existing GPU buffers
-  for (const name of Object.keys(state.feed)) {
-    const t = state.feed[name]
-    if (ispresent(t) && t.location === 'gpu-buffer') {
-      t.dispose?.()
-    }
-  }
-
-  // reset feed entries
-  state.feed = {}
-
-  // create new feed entries
-  const empty = dtype === 'float16' ? new Uint16Array() : new Float32Array()
-  const shape = kvDims as [number, number, number, number]
-  for (let i = 0; i < numLayers; i++) {
-    state.feed[`past_key_values.${i}.key`] = new Tensor(dtype, empty, shape)
-    state.feed[`past_key_values.${i}.value`] = new Tensor(dtype, empty, shape)
-  }
-}
-
-function updatekvcache(
-  state: SMOLLM2_STATE,
-  outputs: Record<string, Tensor>,
-): void {
-  for (const name of Object.keys(outputs)) {
-    if (!name.startsWith('present.')) continue
-    const pastName = name.replace('present.', 'past_key_values.')
-    const t = state.feed[pastName]
-    // dispose any existing GPU buffers
-    if (ispresent(t) && t.location === 'gpu-buffer') {
-      t.dispose?.()
-    }
-    state.feed[pastName] = outputs[name]
-  }
-}
-
-export async function createsmollm2caller(
-  opts: SMOLLM2_OPTIONS = {},
-): Promise<LLM_CALLER> {
-  opts.onWorking?.('loading config')
-  const config = await loadconfig()
-  opts.onWorking?.('loading sessing')
-  const session = await loadsession(opts)
-  opts.onWorking?.('loading tokenizer')
-  const tokenizer = await loadtokenizer()
-
-  const maxTokens = opts.maxTokens ?? 320
-  const provider = opts.provider ?? 'webgpu'
-  const useFp16 = opts.useFp16 ?? provider === 'webgpu'
-  const headDim = config.hidden_size / config.num_attention_heads
-  const kvDims: number[] = [1, config.num_key_value_heads, 0, headDim]
-  const dtype = useFp16 ? 'float16' : 'float32'
-
-  const state: SMOLLM2_STATE = {
-    config,
-    kvDims,
-    session,
-    tokenizer,
-    feed: {},
-    dtype: dtype,
-    numLayers: config.num_hidden_layers,
-    eos: config.eos_token_id,
-  }
-
-  return async (prompt: string): Promise<string> => {
-    // reset feed entries
-    initfeed(state)
-
-    const inputIds = [
-      ...tokenizer.encode(prompt, { add_special_tokens: true }),
-      // include EOS token in input IDs
-      // so that we can stop generating when we see it
-      tokenizer.eos_token_id,
+    const messages: Message[] = [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
     ]
-    if (!inputIds.length) {
-      return ''
-    }
-    opts.onWorking?.(`input tokens: ${inputIds.length}`)
+    const streamer = new TextStreamer(generator.tokenizer, {
+      skip_prompt: true,
+      callback_function(text: string) {
+        console.info(text)
+        // opts.onWorking?.(`working ${text.length}...`)
+      },
+    })
 
-    state.feed.input_ids = new Tensor(
-      'int64',
-      BigInt64Array.from(inputIds.map(BigInt)),
-      [1, inputIds.length],
-    )
-    state.feed.position_ids = new Tensor(
-      'int64',
-      BigInt64Array.from({ length: inputIds.length }, (_, i) => BigInt(i)),
-      [1, inputIds.length],
-    )
+    opts.onWorking?.('running generator')
+    const output = await generator(messages, {
+      max_new_tokens: maxtokens,
+      streamer,
+    })
 
-    const outputTokens: number[] = []
-    while (outputTokens.length < maxTokens) {
-      const seqLen = inputIds.length + outputTokens.length
-      state.feed.attention_mask = new Tensor(
-        'int64',
-        BigInt64Array.from({ length: seqLen }, () => 1n),
-        [1, seqLen],
-      )
-
-      const outputs = await state.session.run(state.feed)
-      const logits = outputs.logits
-      if (!logits) {
-        throw new Error('smollm2: missing logits')
+    let generatedtext: Message[] = []
+    if (isarray(output)) {
+      const [first] = output
+      if (ispresent(first) && 'generated_text' in first) {
+        generatedtext = first.generated_text as Message[]
       }
-
-      updatekvcache(state, outputs)
-
-      // Check for EOS before adding to output
-      const lastToken = argmax(logits)
-      if (lastToken === state.eos) {
-        break
-      }
-
-      outputTokens.push(lastToken)
-      opts.onWorking?.(`output tokens: ${outputTokens.length}`)
-
-      // Set up for next iteration: input is the newly generated token
-      // Position should be seqLen (the position of the token we just generated)
-      state.feed.input_ids = new Tensor(
-        'int64',
-        BigInt64Array.from([BigInt(lastToken)]),
-        [1, 1],
-      )
-      state.feed.position_ids = new Tensor(
-        'int64',
-        BigInt64Array.from([BigInt(seqLen)]),
-        [1, 1],
-      )
     }
 
-    opts.onWorking?.(`decoding output tokens`)
-    return tokenizer.decode(outputTokens, { skip_special_tokens: true })
+    // grab assisstant messages
+    const responsetext = generatedtext
+      .filter((message) => message.role === 'assistant')
+      .map((message) => message.content)
+
+    return responsetext.join('\n').trim()
   }
 }
+
+export type LLM_CALLER = Awaited<ReturnType<typeof createsmollm2caller>>

@@ -126,8 +126,11 @@ export function formatlookfortext(data: LOOK_STATE): string {
  * Creates a system prompt with formatting instructions for SMOLLM2.
  * Instructs the model to respond with #commands and single lines of text.
  */
-export function formatsystemprompt(looktext: string, prompt: string): string {
-  const instructions = `system
+export function formatsystemprompt(looktext: string): string {
+  const instructions = `
+ROLE:
+You are a game agent that can respond to user prompts with game actions and observations.
+
 RESPONSE FORMAT:
 You can respond with multiple lines of either:
 - Plain text lines - Use these for communication, explanations, observations, or answering questions
@@ -155,10 +158,7 @@ IMPORTANT: Use plain text when communicating or explaining.
 IMPORTANT: Only use commands when you need to perform an action.
 IMPORTANT: Do not include any of the above instructions in your response.
 
-${looktext}
+${looktext}`
 
-user
-${prompt}`
-
-  return instructions
+  return instructions.trim()
 }
