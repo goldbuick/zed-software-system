@@ -12,7 +12,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemRunIt({
+export function PanelRunIt({
   sidebar,
   row,
   active,

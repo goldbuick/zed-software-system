@@ -62,7 +62,7 @@ function listaltnames(color: string) {
 const colormap: number[] = [...range(0, 15), ...range(33, 48)]
 const bgmap: number[] = [...range(0, 15), 32]
 
-export function PanelItemColorEdit({
+export function PanelColorEdit({
   sidebar,
   chip,
   row,

@@ -1,63 +1,10 @@
-/* eslint-disable react/no-unknown-property */
-import { ReactNode, useMemo } from 'react'
-import { RUNTIME } from 'zss/config'
 import { TAPE_DISPLAY, useTape, useTerminal } from 'zss/gadget/data/state'
-import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
-import { TilesData, TilesRender } from 'zss/gadget/usetiles'
-import { TapeEditor } from 'zss/screens/editor/component'
-import { TapeTerminal } from 'zss/screens/terminal/component'
-import {
-  WRITE_TEXT_CONTEXT,
-  createwritetextcontext,
-} from 'zss/words/textformat'
+import { EditorComponent } from 'zss/screens/editor/component'
+import { TerminalComponent } from 'zss/screens/terminal/component'
 
-import { BackPlate } from './backplate'
-import { FG, bgcolor, editorsplit } from './common'
+import { editorsplit } from './common'
+import { TapeLayoutTiles } from './layouttiles'
 import { measureminwidth } from './measure'
-
-type TapeLayoutTilesProps = {
-  quickterminal: boolean
-  top: number
-  left: number
-  width: number
-  height: number
-  children: ReactNode
-}
-
-function TapeLayoutTiles({
-  quickterminal,
-  top,
-  left,
-  width,
-  height,
-  children,
-}: TapeLayoutTilesProps) {
-  const BG = bgcolor(quickterminal)
-  const store = useTiles(width, height, 0, FG, BG)
-  const context: WRITE_TEXT_CONTEXT = useMemo(() => {
-    return {
-      ...createwritetextcontext(width, height, FG, BG),
-      ...store.getState(),
-    }
-  }, [BG, width, height, store])
-  return (
-    <TilesData store={store}>
-      <WriteTextContext.Provider value={context}>
-        <BackPlate />
-        {children}
-      </WriteTextContext.Provider>
-      <group
-        position={[
-          left * RUNTIME.DRAW_CHAR_WIDTH(),
-          top * RUNTIME.DRAW_CHAR_HEIGHT(),
-          0,
-        ]}
-      >
-        <TilesRender width={width} height={height} />
-      </group>
-    </TilesData>
-  )
-}
 
 type TapeLayoutProps = {
   quickterminal: boolean
@@ -87,7 +34,7 @@ export function TapeLayout({
             width={mid}
             height={height}
           >
-            <TapeEditor />
+            <EditorComponent />
           </TapeLayoutTiles>
           <TapeLayoutTiles
             quickterminal={quickterminal}
@@ -96,7 +43,7 @@ export function TapeLayout({
             width={width - mid}
             height={height}
           >
-            <TapeTerminal />
+            <TerminalComponent />
           </TapeLayoutTiles>
         </>
       )
@@ -109,7 +56,7 @@ export function TapeLayout({
         width={width}
         height={height}
       >
-        <TapeEditor />
+        <EditorComponent />
       </TapeLayoutTiles>
     )
   }
@@ -122,7 +69,7 @@ export function TapeLayout({
       width={terminalwidth}
       height={height}
     >
-      <TapeTerminal />
+      <TerminalComponent />
     </TapeLayoutTiles>
   )
 }

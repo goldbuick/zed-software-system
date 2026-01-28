@@ -16,7 +16,7 @@ import { PanelItemProps, inputcolor, setuppanelitem, strsplice } from './common'
 
 const maybedefault = -111111
 
-export function PanelItemNumber({
+export function PanelNumber({
   sidebar,
   chip,
   row,

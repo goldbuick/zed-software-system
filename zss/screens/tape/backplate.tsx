@@ -4,11 +4,11 @@ import { textformatreadedges } from 'zss/words/textformat'
 
 import { BKG_PTRN, BKG_PTRN_ALT, FG, bgcolor } from './common'
 
-type BackPlateProps = {
+type TapeBackPlateProps = {
   bump?: boolean
 }
 
-export function BackPlate({ bump }: BackPlateProps) {
+export function TapeBackPlate({ bump }: TapeBackPlateProps) {
   const context = useWriteText()
   const edge = textformatreadedges(context)
   const { quickterminal } = useTape()

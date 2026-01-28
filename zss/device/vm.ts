@@ -109,7 +109,6 @@ import {
   registercopy,
   registerforkmem,
   registerinspector,
-  registerloginfail,
   registerloginready,
   registerpublishmem,
   registersavemem,
@@ -437,11 +436,11 @@ const vm = createdevice(
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
-          // ack
+          // ack success
           vm.replynext(message, 'acklogin', true)
         } else {
-          // signal failure
-          registerloginfail(vm, message.player)
+          // ack failure
+          vm.replynext(message, 'acklogin', false)
         }
         break
       case 'local':
@@ -450,9 +449,11 @@ const vm = createdevice(
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
+          // ack success
+          vm.replynext(message, 'acklogin', true)
         } else {
-          // signal failure
-          registerloginfail(vm, message.player)
+          // ack failure
+          vm.replynext(message, 'acklogin', false)
         }
         break
       case 'doot':
@@ -486,6 +487,18 @@ const vm = createdevice(
             flags.inputqueue.push([input, mods])
           }
         }
+        break
+      }
+      case 'look': {
+        const board = memoryreadplayerboard(message.player)
+        const gadget = gadgetstate(message.player)
+        vm.reply(message, 'acklook', {
+          board,
+          tickers: gadget.tickers ?? [],
+          scrollname: gadget.scrollname ?? '',
+          scroll: gadget.scroll ?? [],
+          sidebar: gadget.sidebar ?? [],
+        })
         break
       }
       case 'codewatch':

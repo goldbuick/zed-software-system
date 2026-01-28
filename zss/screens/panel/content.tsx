@@ -18,7 +18,7 @@ type PanelItemContentProps = {
   context: WRITE_TEXT_CONTEXT
 }
 
-export function PanelItemContent({
+export function PanelContent({
   sidebar,
   item,
   row,

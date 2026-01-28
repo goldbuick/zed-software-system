@@ -31,19 +31,19 @@ import {
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-type TapeTerminalInputProps = {
+type TerminalInputProps = {
   quickterminal: boolean
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
 }
 
-export function TapeTerminalInput({
+export function TerminalInput({
   quickterminal,
   voice2text,
   tapeycursor,
   logrowtotalheight,
-}: TapeTerminalInputProps) {
+}: TerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeterminal = useTerminal()

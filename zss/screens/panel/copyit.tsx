@@ -12,7 +12,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemCopyIt({
+export function PanelCopyIt({
   sidebar,
   row,
   active,

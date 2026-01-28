@@ -12,7 +12,6 @@
   },
   "permissions": [
     "core:default",
-    "log:default",
     {
       "identifier": "fs:allow-appdata-write",
       "allow": [

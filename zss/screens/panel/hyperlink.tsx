@@ -11,7 +11,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemHyperlink({
+export function PanelHyperlink({
   sidebar,
   chip,
   row,

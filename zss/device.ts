@@ -25,6 +25,7 @@ export type DEVICE = {
   reply: (to: MESSAGE, target: string, data?: any) => void
   replynext: (to: MESSAGE, target: string, data?: any) => void
   handle: MESSAGE_FUNC
+  disconnect: () => void
 }
 
 export function parsetarget(targetString: string) {
@@ -95,6 +96,9 @@ export function createdevice(
       if (id === target || 'all' === itarget || iname === itarget) {
         onMessage({ ...message, target: path })
       }
+    },
+    disconnect() {
+      hub.disconnect(device)
     },
   }
 

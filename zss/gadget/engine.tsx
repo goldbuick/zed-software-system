@@ -14,8 +14,8 @@ import { isjoin } from 'zss/feature/url'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { doasync } from 'zss/mapping/func'
 import { createplatform, haltplatform } from 'zss/platform'
-import { ScreenUI } from 'zss/screens/screenui/component'
-import { Tape } from 'zss/screens/tape/component'
+import { ScreenUIComponent } from 'zss/screens/screenui/component'
+import { TapeComponent } from 'zss/screens/tape/component'
 import { isfirefox, islinux } from 'zss/words/system'
 
 import { useTape } from './data/state'
@@ -134,8 +134,8 @@ export function Engine() {
       />
       <UserFocus>
         <UserScreen>
-          <ScreenUI />
-          <Tape />
+          <ScreenUIComponent />
+          <TapeComponent />
           <TapeToast toast={toast} />
           <TapeViewImage />
           {showunmute && (

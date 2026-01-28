@@ -5,7 +5,7 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
-export function PanelItemViewIt({
+export function PanelViewIt({
   sidebar,
   row,
   active,

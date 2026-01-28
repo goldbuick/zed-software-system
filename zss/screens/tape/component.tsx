@@ -9,7 +9,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TapeLayout } from './layout'
 
-export function Tape() {
+export function TapeComponent() {
   const screensize = useScreenSize()
   const [layout, quickterminal, terminalopen, editoropen] = useTape(
     useShallow((state) => [

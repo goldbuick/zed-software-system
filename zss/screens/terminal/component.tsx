@@ -8,15 +8,15 @@ import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
-import { BackPlate } from 'zss/screens/tape/backplate'
+import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
 import { textformatreadedges } from 'zss/words/textformat'
 
-import { TapeTerminalInput } from './input'
+import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
 
-export function TapeTerminal() {
+export function TerminalComponent() {
   const player = registerreadplayer()
   const editoropen = useTape((state) => state.editor.open)
   const terminallogs = useTape((state) => state.terminal.logs)
@@ -54,7 +54,7 @@ export function TapeTerminal() {
 
   return (
     <>
-      <BackPlate />
+      <TapeBackPlate />
       <TapeTerminalContext.Provider
         value={{
           sendmessage(maybetarget, data) {
@@ -70,7 +70,7 @@ export function TapeTerminal() {
       >
         <TerminalRows />
         {!editoropen && voice2text !== undefined && (
-          <TapeTerminalInput
+          <TerminalInput
             quickterminal={quickterminal}
             voice2text={voice2text}
             tapeycursor={tapeycursor}

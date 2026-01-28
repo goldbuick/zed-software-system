@@ -9,7 +9,7 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
-export function PanelItemOpenIt({
+export function PanelOpenIt({
   sidebar,
   row,
   active,

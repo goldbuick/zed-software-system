@@ -11,7 +11,7 @@ import {
 } from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-export function TapeTerminalRunIt({
+export function TerminalRunIt({
   active,
   prefix,
   label,

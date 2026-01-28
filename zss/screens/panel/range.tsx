@@ -8,7 +8,7 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { PanelItemProps, inputcolor, setuppanelitem, strsplice } from './common'
 
-export function PanelItemRange({
+export function PanelRange({
   sidebar,
   chip,
   row,

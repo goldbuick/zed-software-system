@@ -1,7 +1,7 @@
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
 
-import { cachedFetch } from './modelcache'
-import { phonemize } from './phonemizer.js'
+import { cachedfetch } from './modelcache'
+import { phonemize } from './phonemizerparser'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
 
 // Piper TTS class for local model
@@ -28,15 +28,10 @@ export class PiperTTS {
       env.wasm.wasmPaths = `https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/`
 
       // Load model and config
-      const [modelResponse, configResponse] = await Promise.all([
-        cachedFetch(modelPath),
-        cachedFetch(configPath),
-      ])
-
-      const [modelBuffer, voiceConfig] = await Promise.all([
-        modelResponse.bytes(),
-        configResponse.json(),
-      ])
+      const modelResponse = await cachedfetch(modelPath)
+      const configResponse = await cachedfetch(configPath)
+      const modelBuffer = await modelResponse.bytes()
+      const voiceConfig = await configResponse.json()
 
       // Create ONNX session with WASM execution provider
       const session = await InferenceSession.create(modelBuffer, {

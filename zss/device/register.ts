@@ -281,22 +281,30 @@ const register = createdevice(
           vmzsswords(register, myplayerid)
         })
         break
-      case 'loginfail':
-        doasync(register, message.player, async () => {
-          await writewikilink()
-          writepages()
-          // full open on login fail
-          registerterminalfull(register, myplayerid)
+      case 'acklogin':
+        if (message.data) {
+          // hide terminal
+          registerterminalclose(register, myplayerid)
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
-          await writehelphint()
-        })
-        break
-      case 'acklogin':
-        // hide terminal
-        registerterminalclose(register, myplayerid)
-        // signal sim loaded
-        vmloader(register, message.player, undefined, 'text', 'sim:load', '')
+        } else {
+          doasync(register, message.player, async () => {
+            await writewikilink()
+            writepages()
+            // full open on login fail
+            registerterminalfull(register, myplayerid)
+            // signal sim loaded
+            vmloader(
+              register,
+              message.player,
+              undefined,
+              'text',
+              'sim:load',
+              '',
+            )
+            await writehelphint()
+          })
+        }
         break
       case 'ackzsswords': {
         useGadgetClient.setState({ zsswords: message.data })

@@ -8,7 +8,7 @@ import {
 } from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-export function TapeTerminalViewIt({
+export function TerminalViewIt({
   active,
   prefix,
   label,

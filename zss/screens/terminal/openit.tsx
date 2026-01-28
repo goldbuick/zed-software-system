@@ -13,7 +13,7 @@ import {
 } from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-export function TapeTerminalOpenIt({
+export function TerminalOpenIt({
   active,
   prefix,
   label,

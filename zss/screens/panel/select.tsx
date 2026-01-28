@@ -9,7 +9,7 @@ import { WORD } from 'zss/words/types'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
-export function PanelItemSelect({
+export function PanelSelect({
   sidebar,
   chip,
   row,

@@ -15,7 +15,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemZSSEdit({
+export function PanelZSSEdit({
   chip,
   row,
   active,

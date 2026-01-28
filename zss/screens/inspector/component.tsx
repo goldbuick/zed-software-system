@@ -1,15 +1,15 @@
 import { useTape } from 'zss/gadget/data/state'
 
-import { Pts } from './pts'
-import { Select } from './select'
+import { InspectorPts } from './pts'
+import { InspectorSelect } from './select'
 
-export function TapeTerminalInspector() {
+export function InspectorComponent() {
   const inspector = useTape((state) => state.inspector)
   return (
     inspector && (
       <>
-        <Select />
-        <Pts />
+        <InspectorSelect />
+        <InspectorPts />
       </>
     )
   )

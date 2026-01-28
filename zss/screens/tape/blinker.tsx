@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useBlink, useTilesData, writeTile } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 
-type BlinkerProps = {
+type TapeBlinkerProps = {
   x: number
   y: number
   color?: number
@@ -11,7 +11,14 @@ type BlinkerProps = {
   alt?: number
 }
 
-export function Blinker({ x, y, color, on = 232, off = 7, alt }: BlinkerProps) {
+export function TapeBlinker({
+  x,
+  y,
+  color,
+  on = 232,
+  off = 7,
+  alt,
+}: TapeBlinkerProps) {
   const blink = useBlink()
   const tiles = useTilesData()
   const state = useRef(0)
