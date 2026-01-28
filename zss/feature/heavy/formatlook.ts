@@ -48,13 +48,13 @@ function panelitemstotext(items: PANEL_ITEM[] | undefined): string {
   return lines.join('\n')
 }
 
-function elementchar(el: BOARD_ELEMENT | null | undefined): string {
-  if (!ispresent(el)) {
-    return ' '
-  }
-  const c = el.char ?? 32
-  return c >= 32 && c < 127 ? String.fromCharCode(c) : ' '
-}
+// function elementchar(el: BOARD_ELEMENT | null | undefined): string {
+//   if (!ispresent(el)) {
+//     return ' '
+//   }
+//   const c = el.char ?? 32
+//   return c >= 32 && c < 127 ? String.fromCharCode(c) : ' '
+// }
 
 /** Render board as a 60x25 grid of characters (terrain + objects). */
 function boardtotext(board: BOARD | undefined): string {
@@ -67,23 +67,23 @@ function boardtotext(board: BOARD | undefined): string {
   const terrain = board.terrain ?? []
   const objects = board.objects ?? {}
 
-  for (let y = 0; y < h; y++) {
-    let row = ''
-    for (let x = 0; x < w; x++) {
-      const idx = y * w + x
-      const ter = terrain[idx]
-      let ch = elementchar(ter)
-      for (const id of Object.keys(objects)) {
-        const obj = objects[id]
-        if (obj?.x === x && obj?.y === y) {
-          ch = elementchar(obj)
-          break
-        }
-      }
-      row += ch
-    }
-    rows.push(row)
-  }
+  // for (let y = 0; y < h; y++) {
+  //   let row = ''
+  //   for (let x = 0; x < w; x++) {
+  //     const idx = y * w + x
+  //     const ter = terrain[idx]
+  //     let ch = elementchar(ter)
+  //     for (const id of Object.keys(objects)) {
+  //       const obj = objects[id]
+  //       if (obj?.x === x && obj?.y === y) {
+  //         ch = elementchar(obj)
+  //         break
+  //       }
+  //     }
+  //     row += ch
+  //   }
+  //   rows.push(row)
+  // }
   return rows.join('\n')
 }
 
@@ -97,9 +97,7 @@ export function formatlookfortext(data: LOOK_STATE): string {
   if (ispresent(data.board)) {
     parts.push('[Board]')
     parts.push(boardtotext(data.board))
-    parts.push('')
   }
-
   if (
     ispresent(data.scrollname) ||
     (ispresent(data.scroll) && data.scroll.length > 0)
@@ -109,13 +107,11 @@ export function formatlookfortext(data: LOOK_STATE): string {
       parts.push(`Title: ${data.scrollname}`)
     }
     parts.push(panelitemstotext(data.scroll))
-    parts.push('')
   }
 
   if (ispresent(data.sidebar) && data.sidebar.length > 0) {
     parts.push('[Sidebar]')
     parts.push(panelitemstotext(data.sidebar))
-    parts.push('')
   }
 
   if (ispresent(data.tickers) && data.tickers.length > 0) {

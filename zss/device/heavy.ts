@@ -54,6 +54,7 @@ const heavy = createdevice('heavy', [], (message) => {
       const agent = createagent()
       agents[agent.id()] = agent
       write(heavy, message.player, `agent ${agent.id()} started`)
+      vmcli(heavy, message.player, '#agent list')
       break
     }
     case 'agentlist': {

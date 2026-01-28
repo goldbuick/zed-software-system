@@ -28,7 +28,6 @@ async function requestlook(player: string): Promise<LOOK_DATA> {
       createsid(),
       [],
       (message) => {
-        console.info('agent:requestlook:message', message)
         if (message.target === 'acklook' && message.data) {
           resolve(message.data as LOOK_DATA)
         }
@@ -71,7 +70,6 @@ export function createagent() {
             }
             write(device, message.player, `agent prompt ${message.data}`)
             const look = await requestlook(message.player)
-            console.info('agent:prompt:look', look)
             const looktext = formatlookfortext(look)
             console.info('agent:prompt:looktext', looktext)
           })

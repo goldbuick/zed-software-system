@@ -70,6 +70,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'sync':
         case 'heavy':
         case 'joinack':
+        case 'acklook':
         case 'acklogin':
         case 'ackoperator':
         case 'ackzsswords':
@@ -128,8 +129,16 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
         case 'heavy':
           return true
         default:
-          return route.target.startsWith('agent_')
+          if (route.target.startsWith('agent_')) {
+            return true
+          }
+          break
       }
+      switch (route.path) {
+        case 'acklook':
+          return true
+      }
+      return false
     }
   }
 }
