@@ -51,7 +51,7 @@ const heavy = createdevice('heavy', [], (message) => {
       })
       break
     case 'agentstart': {
-      const agent = createagent(message.session)
+      const agent = createagent()
       agents[agent.id()] = agent
       write(heavy, message.player, `agent ${agent.id()} started`)
       break
@@ -83,6 +83,17 @@ const heavy = createdevice('heavy', [], (message) => {
           delete agents[agentid]
           write(heavy, message.player, `agent ${agentid} stopped`)
           vmcli(heavy, message.player, '#agent list')
+        } else {
+          apierror(heavy, message.player, 'heavy', `agent ${agentid} not found`)
+        }
+      }
+      break
+    case 'agentprompt':
+      if (isarray(message.data) && message.data.length >= 2) {
+        const [agentid, prompt] = message.data as [string, string]
+        const agent = agents[agentid]
+        if (ispresent(agent)) {
+          heavy.emit(message.player, `agent_${agentid}:prompt`, prompt)
         } else {
           apierror(heavy, message.player, 'heavy', `agent ${agentid} not found`)
         }

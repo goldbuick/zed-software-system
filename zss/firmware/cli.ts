@@ -9,6 +9,7 @@ import {
   bridgestreamstop,
   bridgetab,
   heavyagentlist,
+  heavyagentprompt,
   heavyagentstart,
   heavyagentstop,
   registerdownloadjsonfile,
@@ -752,8 +753,8 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('agent', (_, words) => {
-    const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    switch (NAME(action ?? '')) {
+    const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    switch (NAME(action)) {
       case 'start':
         heavyagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
         break
@@ -771,10 +772,35 @@ export const CLI_FIRMWARE = createfirmware()
         }
         break
       }
+      case '':
       case 'list':
-      default:
         heavyagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
         break
+      default: {
+        if (isstring(action)) {
+          let iii = ii
+          const values: any[] = []
+          while (iii < words.length) {
+            const [value, iiii] = readargs(words, iii, [ARG_TYPE.ANY])
+            values.push(value)
+            iii = iiii
+          }
+          heavyagentprompt(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            action,
+            values.map(maptostring).join(' '),
+          )
+        } else {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'agent',
+            '#agent <id> <prompt>',
+          )
+        }
+        break
+      }
     }
     return 0
   })

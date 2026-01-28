@@ -1,15 +1,20 @@
 import { createdevice } from 'zss/device'
-import { vmcli, vmdoot, vmlogin, vmlogout, vmlook } from 'zss/device/api'
+import { vmdoot, vmlogin, vmlogout, vmlook } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+import { formatlookfortext } from 'zss/feature/heavy/formatlook'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
-import { createpid } from 'zss/mapping/guid'
-import { isboolean, ispresent } from 'zss/mapping/types'
+import { doasync } from 'zss/mapping/func'
+import { createpid, createsid } from 'zss/mapping/guid'
+import { isboolean, isstring } from 'zss/mapping/types'
 import { BOARD } from 'zss/memory/types'
+
+import { write } from '../writeui'
 
 const DOOT_RATE = 10
 let keepalive = DOOT_RATE
 
 /** Data returned when the VM replies to vm:look (current board, scroll, sidebar, etc.) */
-export type ACKLOOK_DATA = {
+type LOOK_DATA = {
   board?: BOARD
   tickers?: string[]
   scrollname?: string
@@ -17,9 +22,26 @@ export type ACKLOOK_DATA = {
   sidebar?: PANEL_ITEM[]
 }
 
-export function createagent(withsession: string) {
+async function requestlook(player: string): Promise<LOOK_DATA> {
+  return new Promise((resolve) => {
+    const once = createdevice(
+      createsid(),
+      [],
+      (message) => {
+        console.info('agent:requestlook:message', message)
+        if (message.target === 'acklook' && message.data) {
+          resolve(message.data as LOOK_DATA)
+        }
+        once.disconnect()
+      },
+      SOFTWARE.session(),
+    )
+    vmlook(once, player)
+  })
+}
+
+export function createagent() {
   const pid = createpid()
-  let onLookCallback: ((data: ACKLOOK_DATA) => void) | null = null
 
   const device = createdevice(
     `agent_${pid}`,
@@ -35,26 +57,31 @@ export function createagent(withsession: string) {
           break
         case 'acklogin':
           if (isboolean(message.data)) {
-            if (message.data) {
-              console.info('agent:acklogin:success')
-            } else {
-              console.info('agent:acklogin:failure')
-            }
+            write(
+              device,
+              message.player,
+              `agent login ${message.data ? 'success' : 'failure'}`,
+            )
           }
           break
-        case 'acklook': {
-          const cb = onLookCallback
-          onLookCallback = null
-          if (cb && ispresent(message.data)) {
-            cb(message.data as ACKLOOK_DATA)
-          }
+        case 'prompt': {
+          doasync(device, message.player, async () => {
+            if (!isstring(message.data)) {
+              return
+            }
+            write(device, message.player, `agent prompt ${message.data}`)
+            const look = await requestlook(message.player)
+            console.info('agent:prompt:look', look)
+            const looktext = formatlookfortext(look)
+            console.info('agent:prompt:looktext', looktext)
+          })
           break
         }
         default:
           break
       }
     },
-    withsession,
+    SOFTWARE.session(),
   )
 
   // attempt login
@@ -64,22 +91,7 @@ export function createagent(withsession: string) {
     id() {
       return pid
     },
-    /** Send a CLI command to the game (e.g. "#help", "n", "take torch"). */
-    cli(input: string) {
-      vmcli(device, pid, input)
-    },
-    /**
-     * Request current game view (board, scroll, sidebar). The VM replies with
-     * acklook; if callback is provided it is invoked with that data.
-     */
-    look(callback?: (data: ACKLOOK_DATA) => void) {
-      if (callback) {
-        onLookCallback = callback
-      }
-      vmlook(device, pid)
-    },
     stop() {
-      onLookCallback = null
       vmlogout(device, pid, false)
       device.disconnect()
     },

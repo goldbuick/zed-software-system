@@ -1,6 +1,6 @@
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
 
-import { cachedFetch } from './modelcache'
+import { cachedfetch } from './modelcache'
 import { phonemize } from './phonemizerparser'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
 
@@ -53,7 +53,7 @@ export class KittenTTS {
       env.wasm.wasmPaths = `https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/`
 
       // Load model using cached fetch
-      const modelResponse = await cachedFetch(model_path)
+      const modelResponse = await cachedfetch(model_path)
       const modelBuffer = await modelResponse.bytes()
 
       // Try WebGPU with better configuration, fallback to WASM
@@ -94,7 +94,7 @@ export class KittenTTS {
       }
 
       // Load voices from the local voices.json file (also cached)
-      const voicesResponse = await cachedFetch(this.voices_path)
+      const voicesResponse = await cachedfetch(this.voices_path)
       const voicesData = await voicesResponse.json()
 
       // Transform the voices data into the format we need
@@ -120,7 +120,7 @@ export class KittenTTS {
   async loadTokenizer() {
     if (!this.tokenizer) {
       try {
-        const response = await cachedFetch(KittenTTS.tokenizer_path)
+        const response = await cachedfetch(KittenTTS.tokenizer_path)
         const tokenizerData = await response.json()
 
         // Extract the actual vocabulary from the tokenizer

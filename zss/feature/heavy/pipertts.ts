@@ -1,6 +1,6 @@
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
 
-import { cachedFetch } from './modelcache'
+import { cachedfetch } from './modelcache'
 import { phonemize } from './phonemizerparser'
 import { RawAudio, normalizePeak, trimSilence } from './utils'
 
@@ -29,8 +29,8 @@ export class PiperTTS {
 
       // Load model and config
       const [modelResponse, configResponse] = await Promise.all([
-        cachedFetch(modelPath),
-        cachedFetch(configPath),
+        cachedfetch(modelPath),
+        cachedfetch(configPath),
       ])
 
       const [modelBuffer, voiceConfig] = await Promise.all([

@@ -1,4 +1,4 @@
-class ModelCache {
+class modelcache {
   dbName = 'model-cache'
   storeName = 'models'
   version = 1
@@ -73,8 +73,8 @@ class ModelCache {
   }
 }
 
-export async function cachedFetch(url: string): Promise<Response> {
-  const cache = new ModelCache()
+export async function cachedfetch(url: string): Promise<Response> {
+  const cache = new modelcache()
 
   // Try cache first
   const cachedData = await cache.get(url)
@@ -96,5 +96,3 @@ export async function cachedFetch(url: string): Promise<Response> {
     headers: response.headers,
   })
 }
-
-export { ModelCache }

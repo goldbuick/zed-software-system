@@ -11,7 +11,7 @@ import {
   BOARD_WIDTH,
 } from 'zss/memory/types'
 
-export type ACKLOOK_LIKE = {
+export type LOOK_STATE = {
   board?: BOARD
   tickers?: string[]
   scrollname?: string
@@ -91,7 +91,7 @@ function boardtotext(board: BOARD | undefined): string {
  * Format acklook data into a single string suitable for an LLM prompt.
  * Sections: board (grid), scroll name + content, sidebar, tickers.
  */
-export function formatacklookfortext(data: ACKLOOK_LIKE): string {
+export function formatlookfortext(data: LOOK_STATE): string {
   const parts: string[] = []
 
   if (ispresent(data.board)) {

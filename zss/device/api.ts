@@ -185,6 +185,15 @@ export function heavyagentlist(device: DEVICELIKE, player: string) {
   device.emit(player, 'heavy:agentlist')
 }
 
+export function heavyagentprompt(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+  prompt: string,
+) {
+  device.emit(player, 'heavy:agentprompt', [agentid, prompt])
+}
+
 export function platformready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }
