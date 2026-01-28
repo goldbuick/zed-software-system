@@ -1,13 +1,25 @@
 import { createdevice } from 'zss/device'
-import { vmdoot, vmlogin, vmlogout } from 'zss/device/api'
+import { vmcli, vmdoot, vmlogin, vmlogout, vmlook } from 'zss/device/api'
+import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
-import { isboolean } from 'zss/mapping/types'
+import { isboolean, ispresent } from 'zss/mapping/types'
+import { BOARD } from 'zss/memory/types'
 
 const DOOT_RATE = 10
 let keepalive = DOOT_RATE
 
+/** Data returned when the VM replies to vm:look (current board, scroll, sidebar, etc.) */
+export type ACKLOOK_DATA = {
+  board?: BOARD
+  tickers?: string[]
+  scrollname?: string
+  scroll?: PANEL_ITEM[]
+  sidebar?: PANEL_ITEM[]
+}
+
 export function createagent(withsession: string) {
   const pid = createpid()
+  let onLookCallback: ((data: ACKLOOK_DATA) => void) | null = null
 
   const device = createdevice(
     `agent_${pid}`,
@@ -30,6 +42,14 @@ export function createagent(withsession: string) {
             }
           }
           break
+        case 'acklook': {
+          const cb = onLookCallback
+          onLookCallback = null
+          if (cb && ispresent(message.data)) {
+            cb(message.data as ACKLOOK_DATA)
+          }
+          break
+        }
         default:
           break
       }
@@ -44,10 +64,23 @@ export function createagent(withsession: string) {
     id() {
       return pid
     },
+    /** Send a CLI command to the game (e.g. "#help", "n", "take torch"). */
+    cli(input: string) {
+      vmcli(device, pid, input)
+    },
+    /**
+     * Request current game view (board, scroll, sidebar). The VM replies with
+     * acklook; if callback is provided it is invoked with that data.
+     */
+    look(callback?: (data: ACKLOOK_DATA) => void) {
+      if (callback) {
+        onLookCallback = callback
+      }
+      vmlook(device, pid)
+    },
     stop() {
-      // logout player
+      onLookCallback = null
       vmlogout(device, pid, false)
-      // disconnect device
       device.disconnect()
     },
   }
