@@ -49,6 +49,7 @@ import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
   memorylistcodepagebytype,
   memoryreadcodepage,
+  memoryreadelementdisplay,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
@@ -490,6 +491,9 @@ const vm = createdevice(
         break
       }
       case 'look': {
+        // we need to process the board elements
+        // with memoryreadelementdisplay
+        // because we need to describe the elements to the agent
         const board = memoryreadplayerboard(message.player)
         const gadget = gadgetstate(message.player)
         vm.reply(message, 'acklook', {
