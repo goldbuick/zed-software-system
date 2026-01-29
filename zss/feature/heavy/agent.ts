@@ -84,8 +84,12 @@ export function createagent() {
             }
             if (ispresent(llm)) {
               const response = await llm(systemprompt, message.data)
-              // Interpret and execute commands from LLM response
-              console.info('agent:response', response)
+              const lines = response.split('\n')
+              // TODO: Interpret and execute commands from LLM response
+              for (let i = 0; i < lines.length; ++i) {
+                const line = lines[i]
+                write(device, message.player, line)
+              }
             }
           })
           break
