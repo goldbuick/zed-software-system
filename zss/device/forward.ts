@@ -128,11 +128,6 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
       switch (route.target) {
         case 'heavy':
           return true
-        default:
-          if (route.target.startsWith('agent_')) {
-            return true
-          }
-          break
       }
       switch (route.path) {
         case 'acklook':

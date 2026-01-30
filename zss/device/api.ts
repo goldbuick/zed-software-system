@@ -169,29 +169,21 @@ export function heavyttsrequest(
   device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
 }
 
-export function heavyagentstart(device: DEVICELIKE, player: string) {
-  device.emit(player, 'heavy:agentstart')
-}
-
-export function heavyagentstop(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-) {
-  device.emit(player, 'heavy:agentstop', agentid)
-}
-
-export function heavyagentlist(device: DEVICELIKE, player: string) {
-  device.emit(player, 'heavy:agentlist')
-}
-
-export function heavyagentprompt(
+export function heavymodelprompt(
   device: DEVICELIKE,
   player: string,
   agentid: string,
   prompt: string,
 ) {
-  device.emit(player, 'heavy:agentprompt', [agentid, prompt])
+  device.emit(player, 'heavy:modelprompt', [agentid, prompt])
+}
+
+export function heavymodelstop(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'heavy:modelstop', agentid)
 }
 
 export function platformready(device: DEVICELIKE) {
@@ -557,6 +549,31 @@ export function vminput(
 
 export function vmlook(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:look')
+}
+
+export function vmagentstart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:agentstart')
+}
+
+export function vmagentstop(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'vm:agentstop', agentid)
+}
+
+export function vmagentlist(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:agentlist')
+}
+
+export function vmagentprompt(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+  prompt: string,
+) {
+  device.emit(player, 'vm:agentprompt', [agentid, prompt])
 }
 
 export function vmmakeitscroll(

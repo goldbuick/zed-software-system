@@ -8,10 +8,6 @@ import {
   bridgestreamstart,
   bridgestreamstop,
   bridgetab,
-  heavyagentlist,
-  heavyagentprompt,
-  heavyagentstart,
-  heavyagentstop,
   registerdownloadjsonfile,
   registereditoropen,
   registerfindany,
@@ -19,6 +15,10 @@ import {
   registernuke,
   registershare,
   vmadmin,
+  vmagentlist,
+  vmagentprompt,
+  vmagentstart,
+  vmagentstop,
   vmcodeaddress,
   vmflush,
   vmfork,
@@ -756,12 +756,12 @@ export const CLI_FIRMWARE = createfirmware()
     const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     switch (NAME(action)) {
       case 'start':
-        heavyagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
+        vmagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
         break
       case 'stop': {
         const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
         if (ispresent(agentid)) {
-          heavyagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
+          vmagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
         } else {
           apierror(
             SOFTWARE,
@@ -774,7 +774,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case '':
       case 'list':
-        heavyagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
+        vmagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
         break
       default: {
         if (isstring(action)) {
@@ -785,7 +785,7 @@ export const CLI_FIRMWARE = createfirmware()
             values.push(value)
             iii = iiii
           }
-          heavyagentprompt(
+          vmagentprompt(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
             action,

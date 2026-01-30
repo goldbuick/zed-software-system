@@ -1,13 +1,16 @@
 import { createdevice } from 'zss/device'
-import { AGENT, createagent } from 'zss/feature/heavy/agent'
+import {
+  MODEL_CALLER,
+  SMOLLM2_MODEL_ID,
+  createmodelcaller,
+} from 'zss/feature/heavy/model'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
-import { write, writeheader } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
-import { apierror, vmcli } from './api'
+import { apierror, apilog } from './api'
 
-const agents: Record<string, AGENT> = {}
+const modelcallers: Record<string, MODEL_CALLER> = {}
 
 const heavy = createdevice('heavy', [], (message) => {
   if (!heavy.session(message)) {
@@ -50,53 +53,47 @@ const heavy = createdevice('heavy', [], (message) => {
         }
       })
       break
-    case 'agentstart': {
-      const agent = createagent()
-      agents[agent.id()] = agent
-      write(heavy, message.player, `agent ${agent.id()} started`)
-      vmcli(heavy, message.player, '#agent list')
-      break
-    }
-    case 'agentlist': {
-      const instances = Object.values(agents)
-      if (instances.length === 0) {
-        write(heavy, message.player, 'no agents running')
-        return
-      } else {
-        writeheader(heavy, message.player, 'agents')
-        for (let i = 0; i < instances.length; ++i) {
-          const agent = instances[i]
-          write(
-            heavy,
-            message.player,
-            `!copyit ${agent.id()};agent ${agent.id()}`,
+    case 'modelprompt':
+      doasync(heavy, message.player, async () => {
+        if (!isarray(message.data) || message.data.length < 2) {
+          return
+        }
+        const [agentid, prompt] = message.data as [string, string]
+        let modelcaller = modelcallers[agentid]
+        if (!ispresent(modelcaller)) {
+          modelcallers[agentid] = modelcaller = await createmodelcaller(
+            SMOLLM2_MODEL_ID,
+            'causal',
           )
         }
-      }
+        if (ispresent(modelcaller)) {
+          const response = await modelcaller.call([
+            {
+              role: 'system',
+              content: 'You are a helpful video game player assistant.',
+            },
+            { role: 'user', content: prompt },
+          ])
+          response.split('\n').forEach((line) => {
+            apilog(heavy, message.player, '$5', line)
+          })
+        } else {
+          apierror(
+            heavy,
+            message.player,
+            'heavy',
+            `agent ${agentid} did not start successfully`,
+          )
+        }
+      })
       break
-    }
-    case 'agentstop':
+    case 'modelstop':
       if (isstring(message.data)) {
         const agentid = message.data
-        const agent = agents[agentid]
-        if (ispresent(agent)) {
-          agent.stop()
-          delete agents[agentid]
-          write(heavy, message.player, `agent ${agentid} stopped`)
-          vmcli(heavy, message.player, '#agent list')
-        } else {
-          apierror(heavy, message.player, 'heavy', `agent ${agentid} not found`)
-        }
-      }
-      break
-    case 'agentprompt':
-      if (isarray(message.data) && message.data.length >= 2) {
-        const [agentid, prompt] = message.data as [string, string]
-        const agent = agents[agentid]
-        if (ispresent(agent)) {
-          heavy.emit(message.player, `agent_${agentid}:prompt`, prompt)
-        } else {
-          apierror(heavy, message.player, 'heavy', `agent ${agentid} not found`)
+        const modelcaller = modelcallers[agentid]
+        if (ispresent(modelcaller)) {
+          modelcaller.destroy()
+          delete modelcallers[agentid]
         }
       }
       break
