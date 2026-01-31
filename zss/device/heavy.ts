@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import {
   MODEL_CALLER,
-  SMOLLM2_MODEL_ID,
+  MODEL_ID,
   createmodelcaller,
 } from 'zss/feature/heavy/model'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
@@ -62,8 +62,9 @@ const heavy = createdevice('heavy', [], (message) => {
         let modelcaller = modelcallers[agentid]
         if (!ispresent(modelcaller)) {
           modelcallers[agentid] = modelcaller = await createmodelcaller(
-            SMOLLM2_MODEL_ID,
+            MODEL_ID,
             'causal',
+            (msg) => apilog(heavy, message.player, '$5', msg),
           )
         }
         if (ispresent(modelcaller)) {
