@@ -121,6 +121,9 @@ export async function createmodelcaller(
         streamer,
         do_sample: false,
         max_new_tokens: 512,
+        min_p: 0.15,
+        temperature: 0.3,
+        repetition_penalty: 1.05,
       } as any)
 
       const decoded = tokenizer.decode(
