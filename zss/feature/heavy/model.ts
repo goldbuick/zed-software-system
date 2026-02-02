@@ -10,7 +10,7 @@ import {
 
 type MODEL_CATEGORY = 'causal' | 'seq2seq'
 
-export const MODEL_ID = 'onnx-community/LFM2-700M-ONNX'
+const MODEL_ID = 'HuggingFaceTB/SmolLM2-1.7B-Instruct'
 
 async function loadmodel(
   modelname: string,
@@ -35,7 +35,7 @@ async function loadmodel(
     progress_callback,
   })
 
-  const dtype = 'q4'
+  const dtype = 'q4f16'
   const device = 'webgpu'
   switch (category) {
     case 'causal': {
@@ -59,49 +59,71 @@ async function loadmodel(
   }
 }
 
-export async function createmodelcaller(
-  modelname: string,
-  category: MODEL_CATEGORY,
-  onworking: (message: string) => void,
-) {
-  const { tokenizer, model } = await loadmodel(modelname, category, onworking)
-  return {
-    async call(messages: Message[]) {
-      const tools = [
-        {
-          type: 'function',
-          function: {
-            name: 'get_current_time',
-            description: 'Get the current time',
-            parameters: {
-              type: 'object',
-              properties: {
-                format: {
-                  type: 'string',
-                  description: 'The format of the time',
-                },
-              },
-              required: ['format'],
+function modelbuildsystemprompt() {
+  const tools = [
+    {
+      type: 'function',
+      function: {
+        name: 'get_current_time',
+        description: 'Get the current time',
+        parameters: {
+          type: 'object',
+          properties: {
+            format: {
+              type: 'string',
+              description: 'The format of the time',
             },
           },
+          required: ['format'],
+        },
+      },
+    },
+  ]
+  /*
+
+You are given a question and a set of possible functions. 
+Based on the question, you can make one or more function/tool calls to achieve the purpose. 
+If none of the functions can be used, point it out and refuse to answer. 
+If the given question lacks the parameters required by the function, also point it out.
+
+*/
+  return `You are a NPC in a video game and you are an expert in composing functions.
+Give yourself a name and personality and help the player by answering questions and providing information.
+
+You have access to the following tools:
+<tools>${JSON.stringify(tools)}</tools>
+
+The output MUST strictly adhere to the following format, and NO other text MUST be included.
+The example format is as follows. Please make sure the parameter type is correct. If no function call is needed, please make the tool calls an empty list '[]'.
+<tool_call>[
+{"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
+... (more tool calls as required)
+]</tool_call>`
+}
+
+export async function createmodelcaller(onworking: (message: string) => void) {
+  const { tokenizer, model } = await loadmodel(MODEL_ID, 'causal', onworking)
+  return {
+    async call(messages: Message[]) {
+      const convo = [
+        ...messages,
+        {
+          role: 'system',
+          content: modelbuildsystemprompt(),
         },
       ]
 
       console.info(
-        tokenizer.apply_chat_template(messages, {
-          tools,
+        tokenizer.apply_chat_template(convo, {
           tokenize: false,
           return_dict: false,
           add_generation_prompt: true,
-          // chat_template: CHAT_TEMPLATE,
         }),
       )
 
-      const inputs = tokenizer.apply_chat_template(messages, {
-        tools,
+      const inputs = tokenizer.apply_chat_template(convo, {
         return_dict: true,
         add_generation_prompt: true,
-        // chat_template: CHAT_TEMPLATE,
       })
       if (typeof inputs !== 'object') {
         throw new Error('apply_chat_template returned unexpected type')
@@ -120,10 +142,11 @@ export async function createmodelcaller(
         ...inputs,
         streamer,
         do_sample: false,
-        max_new_tokens: 512,
-        min_p: 0.15,
-        temperature: 0.3,
-        repetition_penalty: 1.05,
+        max_new_tokens: 128,
+        num_return_sequences: 1,
+        top_p: 0.9,
+        temperature: 0.2,
+        // repetition_penalty: 1.05,
       } as any)
 
       const decoded = tokenizer.decode(

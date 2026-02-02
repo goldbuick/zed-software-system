@@ -1,9 +1,5 @@
 import { createdevice } from 'zss/device'
-import {
-  MODEL_CALLER,
-  MODEL_ID,
-  createmodelcaller,
-} from 'zss/feature/heavy/model'
+import { MODEL_CALLER, createmodelcaller } from 'zss/feature/heavy/model'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -61,21 +57,12 @@ const heavy = createdevice('heavy', [], (message) => {
         const [agentid, prompt] = message.data as [string, string]
         let modelcaller = modelcallers[agentid]
         if (!ispresent(modelcaller)) {
-          modelcallers[agentid] = modelcaller = await createmodelcaller(
-            MODEL_ID,
-            'causal',
-            (msg) => apilog(heavy, message.player, '$5', msg),
+          modelcallers[agentid] = modelcaller = await createmodelcaller((msg) =>
+            apilog(heavy, message.player, '$5', msg),
           )
         }
         if (ispresent(modelcaller)) {
           const response = await modelcaller.call([
-            {
-              role: 'system',
-              content: `
-You are non-player character in a video game.
-Give yourself a name and describe your personality.
-Help the player by answering questions and providing information.`,
-            },
             { role: 'user', content: prompt },
           ])
           response.split('\n').forEach((line) => {
