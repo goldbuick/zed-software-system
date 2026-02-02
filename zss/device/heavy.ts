@@ -71,7 +71,10 @@ const heavy = createdevice('heavy', [], (message) => {
           const response = await modelcaller.call([
             {
               role: 'system',
-              content: 'You are a helpful video game player assistant.',
+              content: `
+You are non-player character in a video game.
+Give yourself a name and describe your personality.
+Help the player by answering questions and providing information.`,
             },
             { role: 'user', content: prompt },
           ])
