@@ -478,9 +478,7 @@ export function TerminalInput({
                   case 'c':
                     // can support multiline ?
                     if (inputstateactive && ispresent(withclipboard())) {
-                      withclipboard()
-                        .writeText(inputstateselected)
-                        .catch((err) => console.error(err))
+                      void withclipboard().writeText(inputstateselected)
                     } else {
                       resettoend()
                     }

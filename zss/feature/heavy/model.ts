@@ -10,8 +10,6 @@ import {
 
 type MODEL_CATEGORY = 'causal' | 'seq2seq'
 
-const MODEL_ID = 'HuggingFaceTB/SmolLM2-1.7B-Instruct'
-
 async function loadmodel(
   modelname: string,
   category: MODEL_CATEGORY,
@@ -59,71 +57,118 @@ async function loadmodel(
   }
 }
 
-function modelbuildsystemprompt() {
-  const tools = [
-    {
-      type: 'function',
-      function: {
-        name: 'get_current_time',
-        description: 'Get the current time',
-        parameters: {
-          type: 'object',
-          properties: {
-            format: {
-              type: 'string',
-              description: 'The format of the time',
-            },
+const MODEL_ID = 'HuggingFaceTB/SmolLM2-1.7B-Instruct'
+const MODEL_MODE = 'causal'
+const MODEL_CHAT_TEMPLATE = `{# ───── header (system message) ───── #}
+{{- "<|im_start|>system\n" -}}
+{%- if messages[0].role == "system" -%}
+  {%- set system_message = messages[0].content -%}
+  {%- set custom_instructions = system_message.rstrip() -%}
+{%- endif -%}
+{%- if "/system_override" in system_message -%}
+  {{- custom_instructions.replace("/system_override", "").rstrip() -}}
+  {{- "<|im_end|>\n" -}}
+{%- else -%}
+  {{- "## Metadata\n\n" -}}
+  {{- "Knowledge Cutoff Date: June 2025\n" -}}
+  {%- set today = strftime_now("%d %B %Y") -%}
+  {{- "Today Date: " ~ today ~ "\n\n" -}}
+  {{- "## Custom Instructions\n\n" -}}
+  {%- if custom_instructions -%}
+    {{- custom_instructions + "\n\n" -}}
+  {%- else -%}
+    {{- "You are a helpful AI assistant running in a simulation.\n\n" -}}
+  {%- endif -%}
+  {%- if tools -%}
+    {{- "### Tools\n\n" -}}
+    {%- set ns = namespace(xml_tool_string="You may call one or more functions to assist with the user query.\nYou are provided with function signatures within <tools></tools> XML tags:\n\n<tools>\n") -%}
+    {%- for tool in tools[:] -%} {# The slicing makes sure that tools is a list #}
+      {%- set ns.xml_tool_string = ns.xml_tool_string ~ (tool | tojson) ~ "\n" -%}
+    {%- endfor -%}
+    {%- set xml_tool_string = ns.xml_tool_string + "</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\\"name\\": <function-name>, \\"arguments\\": <args-json-object>}\n</tool_call>" -%}
+    {{- xml_tool_string -}}
+    {{- "\n\n" -}}
+    {{- "<|im_end|>\n" -}}
+  {%- endif -%}
+{%- endif -%}
+{# ───── main loop ───── #}
+{%- for message in messages -%}
+    {%- set content = message.content if message.content is string else "" -%}
+    {%- if message.role == "user" -%}
+        {{ "<|im_start|>" + message.role + "\n"  + content + "<|im_end|>\n" }}
+    {%- elif message.role == "assistant" -%}
+        {% generation %}
+          {{ "<|im_start|>assistant\n" + content.lstrip("\n") + "<|im_end|>\n" }}
+        {% endgeneration %}
+    {%- elif message.role == "tool" -%}
+        {{ "<|im_start|>" + "tool\n"  + content + "<|im_end|>\n" }}
+    {%- endif -%}
+{%- endfor -%}
+{# ───── generation prompt ───── #}
+{%- if add_generation_prompt -%}
+    {{ "<|im_start|>assistant\n" }}
+{%- endif -%}
+`
+
+const MODEL_SYSTEM_PROMPT = `
+You are a non-player character in a video game.
+Give yourself a name and describe your personality.
+Help the player by answering questions and providing information.
+
+## Response Types
+- Text answer: Answer the question directly.
+- Tool call: Call a tool to help the player.
+`
+
+const MODEL_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'get_current_time',
+      description: 'Get the current time',
+      parameters: {
+        type: 'object',
+        properties: {
+          format: {
+            type: 'string',
+            description: 'The format of the time',
           },
-          required: ['format'],
         },
+        required: ['format'],
       },
     },
-  ]
-  /*
-
-You are given a question and a set of possible functions. 
-Based on the question, you can make one or more function/tool calls to achieve the purpose. 
-If none of the functions can be used, point it out and refuse to answer. 
-If the given question lacks the parameters required by the function, also point it out.
-
-*/
-  return `You are a NPC in a video game and you are an expert in composing functions.
-Give yourself a name and personality and help the player by answering questions and providing information.
-
-You have access to the following tools:
-<tools>${JSON.stringify(tools)}</tools>
-
-The output MUST strictly adhere to the following format, and NO other text MUST be included.
-The example format is as follows. Please make sure the parameter type is correct. If no function call is needed, please make the tool calls an empty list '[]'.
-<tool_call>[
-{"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
-... (more tool calls as required)
-]</tool_call>`
-}
+  },
+]
 
 export async function createmodelcaller(onworking: (message: string) => void) {
-  const { tokenizer, model } = await loadmodel(MODEL_ID, 'causal', onworking)
+  const { tokenizer, model } = await loadmodel(MODEL_ID, MODEL_MODE, onworking)
   return {
     async call(messages: Message[]) {
       const convo = [
-        ...messages,
         {
           role: 'system',
-          content: modelbuildsystemprompt(),
+          content: MODEL_SYSTEM_PROMPT,
         },
+        ...messages,
       ]
+
+      const generateoptions = {
+        chat_template: MODEL_CHAT_TEMPLATE,
+        tools: MODEL_TOOLS,
+        add_generation_prompt: true,
+      }
 
       console.info(
         tokenizer.apply_chat_template(convo, {
+          ...generateoptions,
           tokenize: false,
-          return_dict: false,
-          add_generation_prompt: true,
         }),
       )
 
       const inputs = tokenizer.apply_chat_template(convo, {
+        ...generateoptions,
+        tokenize: true,
         return_dict: true,
-        add_generation_prompt: true,
       })
       if (typeof inputs !== 'object') {
         throw new Error('apply_chat_template returned unexpected type')
@@ -142,11 +187,8 @@ export async function createmodelcaller(onworking: (message: string) => void) {
         ...inputs,
         streamer,
         do_sample: false,
-        max_new_tokens: 128,
+        max_new_tokens: 256,
         num_return_sequences: 1,
-        top_p: 0.9,
-        temperature: 0.2,
-        // repetition_penalty: 1.05,
       } as any)
 
       const decoded = tokenizer.decode(
