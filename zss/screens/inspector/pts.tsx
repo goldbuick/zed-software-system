@@ -6,7 +6,7 @@ import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-export function Pts() {
+export function InspectorPts() {
   const pts = useInspector(useShallow((state) => state.pts))
   const store = useTiles(
     BOARD_WIDTH,

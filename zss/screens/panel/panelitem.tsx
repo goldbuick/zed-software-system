@@ -4,21 +4,21 @@ import { useWriteText } from 'zss/gadget/hooks'
 import { isarray, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { PanelItemCharEdit } from './charedit'
-import { PanelItemColorEdit } from './coloredit'
+import { PanelCharEdit } from './charedit'
+import { PanelColorEdit } from './coloredit'
 import { PanelItemProps, setuppanelitem } from './common'
-import { PanelItemContent } from './content'
-import { PanelItemCopyIt } from './copyit'
-import { PanelItemHotkey } from './hotkey'
-import { PanelItemHyperlink } from './hyperlink'
-import { PanelItemNumber } from './number'
-import { PanelItemOpenIt } from './openit'
-import { PanelItemRange } from './range'
-import { PanelItemRunIt } from './runit'
-import { PanelItemSelect } from './select'
-import { PanelItemText } from './text'
-import { PanelItemViewIt } from './viewit'
-import { PanelItemZSSEdit } from './zssedit'
+import { PanelContent } from './content'
+import { PanelCopyIt } from './copyit'
+import { PanelHotkey } from './hotkey'
+import { PanelHyperlink } from './hyperlink'
+import { PanelNumber } from './number'
+import { PanelOpenIt } from './openit'
+import { PanelRange } from './range'
+import { PanelRunIt } from './runit'
+import { PanelSelect } from './select'
+import { PanelText } from './text'
+import { PanelViewIt } from './viewit'
+import { PanelZSSEdit } from './zssedit'
 
 type PanelItemComponentProps = {
   sidebar: boolean
@@ -41,7 +41,7 @@ export function PanelItem({
 
   if (typeof item === 'string') {
     return (
-      <PanelItemContent
+      <PanelContent
         sidebar={sidebar}
         player={player}
         item={item}
@@ -76,38 +76,38 @@ export function PanelItem({
     switch (NAME(type)) {
       default:
       case 'hyperlink':
-        return <PanelItemHyperlink {...props} />
+        return <PanelHyperlink {...props} />
       case 'hk':
       case 'hotkey':
-        return <PanelItemHotkey {...props} />
+        return <PanelHotkey {...props} />
       case 'rn':
       case 'range':
-        return <PanelItemRange {...props} />
+        return <PanelRange {...props} />
       case 'sl':
       case 'select':
-        return <PanelItemSelect {...props} />
+        return <PanelSelect {...props} />
       case 'nm':
       case 'number':
-        return <PanelItemNumber {...props} />
+        return <PanelNumber {...props} />
       case 'tx':
       case 'text':
-        return <PanelItemText {...props} />
+        return <PanelText {...props} />
       case 'copyit':
-        return <PanelItemCopyIt {...props} />
+        return <PanelCopyIt {...props} />
       case 'openit':
-        return <PanelItemOpenIt {...props} />
+        return <PanelOpenIt {...props} />
       case 'viewit':
-        return <PanelItemViewIt {...props} />
+        return <PanelViewIt {...props} />
       case 'runit':
-        return <PanelItemRunIt {...props} />
+        return <PanelRunIt {...props} />
       case 'zssedit':
-        return <PanelItemZSSEdit {...props} />
+        return <PanelZSSEdit {...props} />
       case 'charedit':
-        return <PanelItemCharEdit {...props} />
+        return <PanelCharEdit {...props} />
       case 'coloredit':
-        return <PanelItemColorEdit {...props} />
+        return <PanelColorEdit {...props} />
       case 'bgedit':
-        return <PanelItemColorEdit isbg {...props} />
+        return <PanelColorEdit isbg {...props} />
     }
   }
   return null

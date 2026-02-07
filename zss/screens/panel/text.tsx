@@ -17,7 +17,7 @@ import { NAME } from 'zss/words/types'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
-export function PanelItemText({
+export function PanelText({
   sidebar,
   chip,
   row,

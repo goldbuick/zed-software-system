@@ -24,7 +24,7 @@ function coords() {
   }
 }
 
-export function Select() {
+export function InspectorSelect() {
   const inspector = useTape((state) => state.inspector)
   const [cursor, select] = useInspector(
     useShallow((state) => [state.cursor, state.select]),

@@ -9,7 +9,7 @@ import {
 } from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-export function TapeTerminalHyperlink({
+export function TerminalHyperlink({
   active,
   prefix,
   label,

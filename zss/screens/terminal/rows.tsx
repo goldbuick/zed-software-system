@@ -7,7 +7,7 @@ import { textformatreadedges } from 'zss/words/textformat'
 
 import { measurerow } from '../tape/measure'
 
-import { TapeTerminalActiveItem, TapeTerminalItem } from './item'
+import { TapeTerminalActiveItem, TerminalItem } from './item'
 
 export function TerminalRows() {
   const screensize = useScreenSize()
@@ -85,7 +85,7 @@ export function TerminalRows() {
           active ? (
             <TapeTerminalActiveItem key={index} active text={text} y={y} />
           ) : (
-            <TapeTerminalItem key={index} text={text} y={y} />
+            <TerminalItem key={index} text={text} y={y} />
           ),
         )}
       </WriteTextContext.Provider>

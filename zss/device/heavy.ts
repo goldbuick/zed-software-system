@@ -1,9 +1,12 @@
 import { createdevice } from 'zss/device'
+import { MODEL_CALLER, createmodelcaller } from 'zss/feature/heavy/model'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import { doasync } from 'zss/mapping/func'
-import { isarray, ispresent } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
-import { apierror } from './api'
+import { apierror, apilog } from './api'
+
+const modelcallers: Record<string, MODEL_CALLER> = {}
 
 const heavy = createdevice('heavy', [], (message) => {
   if (!heavy.session(message)) {
@@ -45,6 +48,50 @@ const heavy = createdevice('heavy', [], (message) => {
           }
         }
       })
+      break
+    case 'modelprompt':
+      doasync(heavy, message.player, async () => {
+        if (!isarray(message.data) || message.data.length < 2) {
+          return
+        }
+        const [agentid, prompt] = message.data as [string, string]
+        let modelcaller = modelcallers[agentid]
+        if (!ispresent(modelcaller)) {
+          modelcallers[agentid] = modelcaller = await createmodelcaller(
+            agentid,
+            (msg) => apilog(heavy, message.player, '$21', msg),
+          )
+        }
+        if (ispresent(modelcaller)) {
+          // log user prompt input
+          apilog(heavy, message.player, '$21 input $7', prompt)
+          const response = await modelcaller.call([
+            { role: 'user', content: prompt },
+          ])
+          // log response lines
+          console.info('>>>', response)
+          apilog(heavy, message.player, '$21', response)
+          // clean up memory
+          modelcaller.clearpastvalues()
+        } else {
+          apierror(
+            heavy,
+            message.player,
+            'heavy',
+            `agent ${agentid} did not start successfully`,
+          )
+        }
+      })
+      break
+    case 'modelstop':
+      if (isstring(message.data)) {
+        const agentid = message.data
+        const modelcaller = modelcallers[agentid]
+        if (ispresent(modelcaller)) {
+          modelcaller.destroy()
+          delete modelcallers[agentid]
+        }
+      }
       break
     default:
       apierror(

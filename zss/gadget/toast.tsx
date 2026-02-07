@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { Marquee } from 'zss/screens/scroll/marquee'
+import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -55,7 +55,7 @@ export function TapeToast({ toast }: TapeToastProps) {
     <TilesData store={store}>
       {toast && (
         <>
-          <Marquee
+          <ScrollMarquee
             margin={1}
             color={COLOR.YELLOW}
             y={0}

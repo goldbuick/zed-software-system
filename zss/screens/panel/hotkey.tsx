@@ -15,7 +15,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemHotkey({
+export function PanelHotkey({
   sidebar,
   chip,
   row,

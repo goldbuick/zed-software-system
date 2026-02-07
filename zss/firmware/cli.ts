@@ -15,6 +15,10 @@ import {
   registernuke,
   registershare,
   vmadmin,
+  vmagentlist,
+  vmagentprompt,
+  vmagentstart,
+  vmagentstop,
   vmcodeaddress,
   vmflush,
   vmfork,
@@ -745,6 +749,58 @@ export const CLI_FIRMWARE = createfirmware()
       bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
     } else {
       bridgestreamstop(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
+    return 0
+  })
+  .command('agent', (_, words) => {
+    const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    switch (NAME(action)) {
+      case 'start':
+        vmagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+      case 'stop': {
+        const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
+        if (ispresent(agentid)) {
+          vmagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
+        } else {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'agent',
+            '#agent stop <id>',
+          )
+        }
+        break
+      }
+      case '':
+      case 'list':
+        vmagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+      default: {
+        if (isstring(action)) {
+          let iii = ii
+          const values: any[] = []
+          while (iii < words.length) {
+            const [value, iiii] = readargs(words, iii, [ARG_TYPE.ANY])
+            values.push(value)
+            iii = iiii
+          }
+          vmagentprompt(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            action,
+            values.map(maptostring).join(' '),
+          )
+        } else {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'agent',
+            '#agent <id> <prompt>',
+          )
+        }
+        break
+      }
     }
     return 0
   })

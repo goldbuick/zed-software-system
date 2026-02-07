@@ -10,7 +10,7 @@ import * as lexer from 'zss/lang/lexer'
 import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
-import { BackPlate } from 'zss/screens/tape/backplate'
+import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -85,7 +85,7 @@ zssmusiccolorconfig('8', ZSS_MUSIC_DRUM)
 zssmusiccolorconfig('9', ZSS_MUSIC_DRUM)
 zssmusiccolorconfig(';', ZSS_TYPE_SYMBOL)
 
-export function TapeEditor() {
+export function EditorComponent() {
   const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
 
@@ -255,7 +255,7 @@ export function TapeEditor() {
 
   return (
     <>
-      <BackPlate bump />
+      <TapeBackPlate bump />
       <EditorFrame />
       <EditorRows {...props} />
       <EditorInput {...props} />

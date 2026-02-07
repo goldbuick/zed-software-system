@@ -1,6 +1,6 @@
 import { useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText, writeTile } from 'zss/gadget/hooks'
-import { Marquee } from 'zss/screens/scroll/marquee'
+import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import { bgcolor, setupeditoritem } from 'zss/screens/tape/common'
 import { ismac, metakey } from 'zss/words/system'
 import {
@@ -74,7 +74,7 @@ export function EditorFrame() {
 
   const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
   return (
-    <Marquee
+    <ScrollMarquee
       margin={3}
       color={COLOR.BLUE}
       y={edge.top}

@@ -13,7 +13,7 @@ import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { ScrollContext } from 'zss/screens/panel/common'
-import { Panel } from 'zss/screens/panel/component'
+import { PanelComponent } from 'zss/screens/panel/component'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -22,9 +22,9 @@ import { COLOR } from 'zss/words/types'
 
 import { ScrollBackPlate } from './backplate'
 import { ScrollControls } from './controls'
-import { Marquee } from './marquee'
+import { ScrollMarquee } from './marquee'
 
-type ScrollProps = {
+type ScrollComponentProps = {
   width: number
   height: number
   color: number
@@ -34,14 +34,14 @@ type ScrollProps = {
   didclose?: () => void
 }
 
-export function Scroll({
+export function ScrollComponent({
   width,
   height,
   color,
   bg,
   text,
   shouldclose,
-}: ScrollProps) {
+}: ScrollComponentProps) {
   const { viewport } = useThree()
   const panelwidth = width - 3
   const panelheight = height - 3
@@ -157,7 +157,7 @@ export function Scroll({
             height={height}
             context={context}
           />
-          <Marquee
+          <ScrollMarquee
             margin={3}
             color={COLOR.BLUE}
             y={0}
@@ -179,7 +179,7 @@ $white$meta+up/down$green.JUMP TOP/BOTTOM $blue
             panelwidth={panelwidth}
             panelheight={panelheight}
           >
-            <Panel
+            <PanelComponent
               width={panelwidth}
               height={panelheight}
               xmargin={0}

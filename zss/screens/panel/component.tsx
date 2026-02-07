@@ -20,7 +20,7 @@ type PanelProps = {
   text: PANEL_ITEM[]
 }
 
-export function Panel({
+export function PanelComponent({
   inline = false,
   xmargin = 1,
   ymargin = 1,

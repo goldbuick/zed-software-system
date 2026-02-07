@@ -26,7 +26,7 @@ export function createforward(handler: (message: MESSAGE) => void) {
   })
 
   function disconnect() {
-    hub.disconnect(device)
+    device.disconnect()
   }
 
   return { forward, disconnect }
@@ -70,6 +70,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'sync':
         case 'heavy':
         case 'joinack':
+        case 'acklook':
         case 'acklogin':
         case 'ackoperator':
         case 'ackzsswords':
@@ -118,8 +119,8 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
     case 'tick':
     case 'tock':
-    case 'second':
       return false
+    case 'second':
     case 'ready':
       return true
     default: {
@@ -128,13 +129,16 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
         case 'heavy':
           return true
       }
+      switch (route.path) {
+        case 'acklook':
+          return true
+      }
+      return false
     }
   }
-  return false
 }
 
 // create heavy -> client forward
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function shouldforwardheavytoclient(_message: MESSAGE): boolean {
+export function shouldforwardheavytoclient(): boolean {
   return true
 }

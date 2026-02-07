@@ -10,12 +10,12 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-type TickerTextProps = {
+type ScreenUITickerTextProps = {
   width: number
   height: number
 }
 
-export function TickerText({ width, height }: TickerTextProps) {
+export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
   const store = useTiles(width, height, 0, COLOR.WHITE, COLOR.ONCLEAR)
   const tickers = useGadgetClient((state) => state.gadget.tickers)
   const context: WRITE_TEXT_CONTEXT = useMemo(() => {

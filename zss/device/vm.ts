@@ -1,6 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { fetchwiki } from 'zss/feature/fetchwiki'
+import { AGENT, createagent } from 'zss/feature/heavy/agent'
 import {
   markzipfilelistitem,
   parsewebfile,
@@ -18,6 +19,7 @@ import {
   museumofzztscreenshoturl,
   museumofzztsearch,
 } from 'zss/feature/url'
+import { write, writeheader } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
   gadgetcheckqueue,
@@ -104,15 +106,17 @@ import { dirconsts } from 'zss/words/dir'
 import { NAME, PT } from 'zss/words/types'
 
 import {
+  apierror,
   apilog,
+  heavymodelprompt,
   platformready,
   registercopy,
   registerforkmem,
   registerinspector,
-  registerloginfail,
   registerloginready,
   registerpublishmem,
   registersavemem,
+  vmagentlist,
   vmclearscroll,
   vmcli,
   vmcodeaddress,
@@ -136,6 +140,9 @@ let flushtick = 0
 // track watched memory
 const watching: Record<string, Set<string>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
+
+// track running agents
+const agents: Record<string, AGENT> = {}
 
 // save state
 async function savestate(autosave?: boolean) {
@@ -437,11 +444,11 @@ const vm = createdevice(
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
-          // ack
+          // ack success
           vm.replynext(message, 'acklogin', true)
         } else {
-          // signal failure
-          registerloginfail(vm, message.player)
+          // ack failure
+          vm.replynext(message, 'acklogin', false)
         }
         break
       case 'local':
@@ -450,9 +457,11 @@ const vm = createdevice(
           // start tracking
           tracking[message.player] = 0
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
+          // ack success
+          vm.replynext(message, 'acklogin', true)
         } else {
-          // signal failure
-          registerloginfail(vm, message.player)
+          // ack failure
+          vm.replynext(message, 'acklogin', false)
         }
         break
       case 'doot':
@@ -488,6 +497,72 @@ const vm = createdevice(
         }
         break
       }
+      case 'look': {
+        // we need to process the board elements
+        // with memoryreadelementdisplay
+        // because we need to describe the elements to the agent
+        const board = memoryreadplayerboard(message.player)
+        const gadget = gadgetstate(message.player)
+        vm.reply(message, 'acklook', {
+          board,
+          tickers: gadget.tickers ?? [],
+          scrollname: gadget.scrollname ?? '',
+          scroll: gadget.scroll ?? [],
+          sidebar: gadget.sidebar ?? [],
+        })
+        break
+      }
+      case 'agentstart': {
+        const agent = createagent()
+        const id = agent.id()
+        agents[id] = agent
+        write(vm, message.player, `agent ${id} started`)
+        vmagentlist(vm, message.player)
+        break
+      }
+      case 'agentstop':
+        if (isstring(message.data)) {
+          const agentid = message.data
+          const agent = agents[agentid]
+          if (ispresent(agent)) {
+            agent.stop()
+            delete agents[agentid]
+            write(vm, message.player, `agent ${agentid} stopped`)
+            vmagentlist(vm, message.player)
+          } else {
+            apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
+          }
+        }
+        break
+      case 'agentlist': {
+        const instances = Object.values(agents)
+        if (instances.length === 0) {
+          write(vm, message.player, 'no agents running')
+          return
+        } else {
+          writeheader(vm, message.player, 'agents')
+          for (let i = 0; i < instances.length; ++i) {
+            const agent = instances[i]
+            write(
+              vm,
+              message.player,
+              `!copyit ${agent.id()};agent ${agent.id()}`,
+            )
+          }
+        }
+        break
+      }
+      case 'agentprompt':
+        if (isarray(message.data)) {
+          const [agentid, prompt] = message.data
+          const agent = agents[agentid]
+          if (ispresent(agent)) {
+            heavymodelprompt(vm, message.player, agentid, prompt)
+          } else {
+            apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
+          }
+        }
+        break
       case 'codewatch':
         if (isarray(message.data)) {
           const [book, path] = message.data

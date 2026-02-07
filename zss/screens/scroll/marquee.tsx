@@ -7,7 +7,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-type MarqueeProps = {
+type ScrollMarqueeProps = {
   line: string
   color: COLOR
   margin: number
@@ -17,7 +17,7 @@ type MarqueeProps = {
   context: WRITE_TEXT_CONTEXT
 }
 
-export function Marquee({
+export function ScrollMarquee({
   line,
   color,
   margin,
@@ -25,7 +25,7 @@ export function Marquee({
   leftedge,
   rightedge,
   context,
-}: MarqueeProps) {
+}: ScrollMarqueeProps) {
   // we assume context is setup
   const blink = useBlink()
 

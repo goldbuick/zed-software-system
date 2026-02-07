@@ -2,7 +2,7 @@ import { RUNTIME } from 'zss/config'
 import { resetDither, useDither, writeDither } from 'zss/gadget/hooks'
 import { DitherData, DitherRender } from 'zss/gadget/usedither'
 import { TilesRender } from 'zss/gadget/usetiles'
-import { Blinker } from 'zss/screens/tape/blinker'
+import { TapeBlinker } from 'zss/screens/tape/blinker'
 
 type ScrollControlsProps = {
   row: number
@@ -50,8 +50,8 @@ export function ScrollControls({
           <DitherRender width={panelwidth} height={panelheight} />
         </DitherData>
         {children}
-        <Blinker x={1} y={1} />
-        <Blinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} />
+        <TapeBlinker x={1} y={1} />
+        <TapeBlinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} />
       </group>
     </>
   )

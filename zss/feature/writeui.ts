@@ -86,7 +86,7 @@ export function writecopyit(
 ) {
   if (showqr) {
     writeqr(device, player, content)
-    setTimeout(() => registerterminalfull(device, player), 2000)
+    setTimeout(() => registerterminalfull(device, player), 200)
   }
   write(device, player, `!copyit ${content};${label}`)
 }
