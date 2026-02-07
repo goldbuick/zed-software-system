@@ -7,11 +7,11 @@ describe('parsetoolcalls', () => {
   })
 
   it('parses call with no args', () => {
-    expect(parsetoolcalls('get_name()')).toEqual([
-      { name: 'get_name', args: {} },
+    expect(parsetoolcalls('get_agent_name()')).toEqual([
+      { name: 'get_agent_name', args: {} },
     ])
-    expect(parsetoolcalls('get_board()')).toEqual([
-      { name: 'get_board', args: {} },
+    expect(parsetoolcalls('get_agent_board()')).toEqual([
+      { name: 'get_agent_board', args: {} },
     ])
   })
 
@@ -37,39 +37,40 @@ describe('parsetoolcalls', () => {
   })
 
   it('strips optional outer brackets', () => {
-    expect(parsetoolcalls('[get_name()]')).toEqual([
-      { name: 'get_name', args: {} },
+    expect(parsetoolcalls('[get_agent_name()]')).toEqual([
+      { name: 'get_agent_name', args: {} },
     ])
     expect(parsetoolcalls('[get_current_time(format="iso")]')).toEqual([
       { name: 'get_current_time', args: { format: 'iso' } },
     ])
   })
 
-  it('parses positional args for known tools with required params', () => {
+  it('ignores positional args for unknown tools or tools without required params', () => {
+    // get_current_time is not in MODEL_TOOLS; positional args only apply to known tools with required params
     expect(parsetoolcalls('get_current_time("iso")')).toEqual([
-      { name: 'get_current_time', args: { format: 'iso' } },
+      { name: 'get_current_time', args: {} },
     ])
-    expect(parsetoolcalls("get_current_time('HH:mm:ss')")).toEqual([
-      { name: 'get_current_time', args: { format: 'HH:mm:ss' } },
+    expect(parsetoolcalls('get_agent_name("extra")')).toEqual([
+      { name: 'get_agent_name', args: {} },
     ])
   })
 
   it('parses multiple calls', () => {
-    expect(parsetoolcalls('get_name() get_board()')).toEqual([
-      { name: 'get_name', args: {} },
-      { name: 'get_board', args: {} },
+    expect(parsetoolcalls('get_agent_name() get_agent_board()')).toEqual([
+      { name: 'get_agent_name', args: {} },
+      { name: 'get_agent_board', args: {} },
     ])
-    expect(parsetoolcalls('get_name() get_current_time(format="iso")')).toEqual(
-      [
-        { name: 'get_name', args: {} },
-        { name: 'get_current_time', args: { format: 'iso' } },
-      ],
-    )
+    expect(
+      parsetoolcalls('get_agent_name() get_current_time(format="iso")'),
+    ).toEqual([
+      { name: 'get_agent_name', args: {} },
+      { name: 'get_current_time', args: { format: 'iso' } },
+    ])
   })
 
   it('handles whitespace around content', () => {
-    expect(parsetoolcalls('  get_name()  ')).toEqual([
-      { name: 'get_name', args: {} },
+    expect(parsetoolcalls('  get_agent_name()  ')).toEqual([
+      { name: 'get_agent_name', args: {} },
     ])
   })
 
@@ -85,8 +86,10 @@ describe('parsetoolcalls', () => {
     ])
   })
 
-  it('handles positional args with comma in quoted string', () => {
-    expect(parsetoolcalls('get_current_time("YYYY-MM-DD, HH:mm")')).toEqual([
+  it('handles comma in quoted string for named args', () => {
+    expect(
+      parsetoolcalls('get_current_time(format="YYYY-MM-DD, HH:mm")'),
+    ).toEqual([
       { name: 'get_current_time', args: { format: 'YYYY-MM-DD, HH:mm' } },
     ])
   })
