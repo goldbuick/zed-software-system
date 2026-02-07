@@ -32,7 +32,7 @@ async function loadmodel(
         break
       case 'progress': {
         const index = `${info.name}-${info.file}`
-        const progress = Math.round(info.progress)
+        const progress = Math.round(info.progress / 10) * 10
         if (progress !== lastprogress[index]) {
           lastprogress[index] = progress
           onworking(`${info.file} ${progress}% ...`)
@@ -74,68 +74,62 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'get_name',
-      description: `Get the ai agent's name`,
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_current_time',
-      description: 'Get the current time',
+      name: 'get_agent_name',
+      description: 'Gets the name given to the agent.',
       parameters: {
         type: 'object',
-        properties: {
-          format: {
-            type: 'string',
-            description: 'The format of the time',
-          },
-        },
-        required: ['format'],
+        properties: {},
       },
     },
   },
   {
     type: 'function',
     function: {
-      name: 'add_numbers',
-      description: 'Adds two numbers',
+      name: 'get_agent_board',
+      description:
+        'Gets where the agent is located. Returns the board id the agent is on.',
       parameters: {
         type: 'object',
-        properties: {
-          a: {
-            type: 'number',
-            description: 'The first number',
-          },
-          b: {
-            type: 'number',
-            description: 'The second number',
-          },
-        },
-        required: ['a', 'b'],
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_agent_location',
+      description:
+        'Gets where the agent is located. Returns the board id the agent is on.',
+      parameters: {
+        type: 'object',
+        properties: {},
       },
     },
   },
 ]
 
 const MODEL_TOOLS_LOGIC = {
-  async get_name(pid: string) {
+  async get_agent_name(pid: string) {
     // we need to read the name value from the player flag name
-    return `John Doe ${pid}`
+    return pid
   },
-  async get_current_time(_pid: string, args: any) {
-    const format = args.format ?? 'iso'
-    console.info({ format })
-    return new Date().toISOString()
+  async get_agent_board(pid: string) {
+    // we need to read the id from the player's current board
+    return pid
   },
-  async add_numbers(_pid: string, { a, b }: any) {
-    return Number(a) + Number(b)
+  async get_agent_location(pid: string) {
+    // we need to read the id from the player's current board
+    return pid
   },
 }
 
-const MODEL_SYSTEM_PROMPT = `You are a character in a video game.
-Help the player by performing tasks.
-Help the player by answering questions about yourself and the game world.
+const MODEL_SYSTEM_PROMPT = `You are a helpful ai agent.
+You are a non-player character in a video game.
+You have a name and role in the game world.
+You have a board location in the game world.
+The agent should refer to itself as "I" or "me".
+When the user says "you", "your", or "yourself" they are referring to the ai agent.
+When the user says "I", "me", or "myself" they are referring to the player.
 `
 
 // Match tool call start and end
@@ -152,26 +146,62 @@ const TOOL_CALL_REGEX_ARG =
 const TOOL_CALL_STRIP_BRACKETS = /^\[(.*)\]$/s
 
 type PARSED_TOOL_CALL = { name: string; args: Record<string, string> }
-function parsetoolcall(content: string): PARSED_TOOL_CALL | null {
-  // Strip optional outer brackets e.g. [add_numbers(a=10, b=10)]
+
+function gettoolparamnames(name: string): string[] {
+  const def = MODEL_TOOLS.find((t) => t.function.name === name)
+  const params = def?.function?.parameters as
+    | { required?: string[] }
+    | undefined
+  return params?.required ?? []
+}
+
+/** Split args string by comma, respecting quoted strings. */
+function splitargsbycomma(argsstr: string): string[] {
+  const out: string[] = []
+  let buf = ''
+  let inQuote: string | null = null
+  for (let i = 0; i < argsstr.length; i++) {
+    const c = argsstr[i]
+    if (c === '"' || c === "'") {
+      if (inQuote === c) inQuote = null
+      else inQuote ??= c
+      buf += c
+    } else if (c === ',' && !inQuote) {
+      out.push(buf.trim())
+      buf = ''
+    } else {
+      buf += c
+    }
+  }
+  if (buf.trim()) out.push(buf.trim())
+  return out
+}
+
+export function parsetoolcalls(content: string): PARSED_TOOL_CALL[] {
   const stripped = content.trim().replace(TOOL_CALL_STRIP_BRACKETS, '$1')
-  const match = TOOL_CALL_REGEX_CALL.exec(stripped)
-  if (!match) return null
-  const name = match[1]
-  const argsstr = match[2].trim()
-  const args: Record<string, string> = {}
-  let argmatch
-  while ((argmatch = TOOL_CALL_REGEX_ARG.exec(argsstr)) !== null) {
-    const key = argmatch[1] ?? argmatch[4]
-    const val = argmatch[3] ?? argmatch[5] ?? ''
-    args[key] = String(val)
+  const matches = [...stripped.matchAll(TOOL_CALL_REGEX_CALL)]
+  const calls: PARSED_TOOL_CALL[] = []
+  for (const match of matches) {
+    const name = match[1]
+    const argsstr = match[2].trim()
+    const args: Record<string, string> = {}
+    let argmatch
+    TOOL_CALL_REGEX_ARG.lastIndex = 0
+    while ((argmatch = TOOL_CALL_REGEX_ARG.exec(argsstr)) !== null) {
+      const key = argmatch[1] ?? argmatch[4]
+      const val = argmatch[3] ?? argmatch[5] ?? ''
+      args[key] = String(val)
+    }
+    const paramnames = gettoolparamnames(name)
+    if (paramnames.length > 0 && Object.keys(args).length === 0) {
+      const parts = splitargsbycomma(argsstr)
+      for (let i = 0; i < paramnames.length && i < parts.length; i++) {
+        args[paramnames[i]] = parts[i].replace(/^["']|["']$/g, '')
+      }
+    }
+    calls.push({ name, args })
   }
-  // Enforce invariant: only one tool call per content
-  if (TOOL_CALL_REGEX_CALL.exec(stripped) !== null) {
-    console.info('og content', content)
-    throw new Error('Expected at most one tool call in content')
-  }
-  return { name, args }
+  return calls
 }
 
 export async function createmodelcaller(
@@ -186,15 +216,13 @@ export async function createmodelcaller(
       ...messages,
     ]
 
-    console.info('inputs', messages)
-
-    // console.info(
-    //   tokenizer.apply_chat_template(convo, {
-    //     tokenize: false,
-    //     tools: MODEL_TOOLS,
-    //     add_generation_prompt: true,
-    //   }),
-    // )
+    console.info(
+      tokenizer.apply_chat_template(convo, {
+        tokenize: false,
+        tools: MODEL_TOOLS,
+        add_generation_prompt: true,
+      }),
+    )
 
     const input = tokenizer.apply_chat_template(convo, {
       tokenize: true,
@@ -233,37 +261,48 @@ export async function createmodelcaller(
       skip_special_tokens: false,
     })
 
-    const toolcalls: PARSED_TOOL_CALL[] = []
-    const toolcallscontent: string[] = []
     const responses: string[] = []
+    const toolcalls: string[] = []
+    const toolresponses: string[] = []
     for (let i = 0; i < decoded.length; ++i) {
       const text = decoded[i]
       const stripped = text.replace(/<\|im_end\|>$/, '')
       const check = TOOL_CALL_REGEX.exec(stripped)
       if (check) {
+        toolcalls.push(stripped)
         const content = check[1]
-        const call = parsetoolcall(content)
-        if (call) {
-          toolcallscontent.push(stripped)
-          toolcalls.push(call)
+        const calls = parsetoolcalls(content)
+        for (let c = 0; c < calls.length; ++c) {
+          const call = calls[c]
+          const fn =
+            MODEL_TOOLS_LOGIC[call.name as keyof typeof MODEL_TOOLS_LOGIC]
+          if (ispresent(fn)) {
+            // @ts-expect-error this should be the shape of the function
+            const result = await fn(pid, call.args)
+            toolresponses.push(`${result}`)
+          } else {
+            toolresponses.push('function not found')
+          }
         }
       } else {
         responses.push(stripped)
       }
     }
 
-    for (let i = 0; i < toolcalls.length; ++i) {
-      const call = toolcalls[i]
-      const fn = MODEL_TOOLS_LOGIC[call.name as keyof typeof MODEL_TOOLS_LOGIC]
-      if (ispresent(fn)) {
-        const result = await fn(pid, call.args)
-        const nested = await modelcall([
-          ...messages,
-          { role: 'assistant', content: toolcallscontent[i] },
-          { role: 'tool', content: JSON.stringify(result) },
-        ])
-        responses.push(nested)
-      }
+    // fold in tool calls and responses
+    if (toolcalls.length > 0) {
+      const nested = await modelcall([
+        ...messages,
+        ...toolcalls.map((content) => ({
+          role: 'assistant',
+          content,
+        })),
+        ...toolresponses.map((content) => ({
+          role: 'tool',
+          content,
+        })),
+      ])
+      responses.push(nested)
     }
 
     return responses.join('\n')

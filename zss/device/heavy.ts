@@ -59,19 +59,18 @@ const heavy = createdevice('heavy', [], (message) => {
         if (!ispresent(modelcaller)) {
           modelcallers[agentid] = modelcaller = await createmodelcaller(
             agentid,
-            (msg) => apilog(heavy, message.player, '$5', msg),
+            (msg) => apilog(heavy, message.player, '$21', msg),
           )
         }
         if (ispresent(modelcaller)) {
-          apilog(heavy, message.player, '$7 input', prompt)
+          // log user prompt input
+          apilog(heavy, message.player, '$21 input $7', prompt)
           const response = await modelcaller.call([
             { role: 'user', content: prompt },
           ])
-          const lines = response.split('\n')
-          for (let i = 0; i < lines.length; ++i) {
-            apilog(heavy, message.player, '$7', lines[i])
-            console.info(i, lines[i])
-          }
+          // log response lines
+          console.info('>>>', response)
+          apilog(heavy, message.player, '$21', response)
           // clean up memory
           modelcaller.clearpastvalues()
         } else {
