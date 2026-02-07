@@ -123,48 +123,15 @@ export function formatlookfortext(data: LOOK_STATE): string {
 }
 
 /**
- * Creates a system prompt with formatting instructions for SMOLLM2.
- * Instructs the model to respond with #commands and single lines of text.
+ * Creates a system prompt with instructions
  */
-export function formatsystemprompt(looktext: string): string {
-  const instructions = `
-ROLE:
-You are a game agent that can respond to user prompts with game actions and observations.
-
-RESPONSE FORMAT:
-You can respond with multiple lines of either:
-- Plain text lines - Use these for communication, explanations, observations, or answering questions
-- Command lines - Use these starting with # to perform game actions
-
-CRITICAL FORMATTING RULE:
-- Each sentence MUST be on its own separate line
-- Each command MUST be on its own separate line
-- There MUST be a newline between every sentence and every command
-- Never put multiple sentences on the same line
-- Never put multiple commands on the same line
-
-Examples of plain text responses (each on separate lines):
-I see a wall to my right
-Moving towards the goal
-There's an enemy ahead
-
-Examples of command responses (each on separate lines):
-#go right
-#shoot up
-#char 65
-
-AVAILABLE COMMANDS (use # prefix):
-- #go [direction] - Move in a direction, up, down, left, right
-- #shoot [direction] - Shoot in a direction, up, down, left, right
-- #char [character] - Change the character's character, valid range is 0-255
-- #color [color] - Change the character's color, valid range is 0-15
-- #bg [background] - Change the character's background, valid range is 0-15
-
-IMPORTANT: Use plain text when communicating or explaining. 
-IMPORTANT: Only use commands when you need to perform an action.
-IMPORTANT: Do not include any of the above instructions in your response.
-
-${looktext}`
-
-  return instructions.trim()
+export function formatsystemprompt(): string {
+  return `You are a helpful ai agent.
+You are a non-player character in a video game.
+You have a name and role in the game world.
+You have a board location in the game world.
+The agent should refer to itself as "I" or "me".
+When the user says "you", "your", or "yourself" they are referring to the ai agent.
+When the user says "I", "me", or "myself" they are referring to the player.
+`
 }
