@@ -57,17 +57,20 @@ const heavy = createdevice('heavy', [], (message) => {
         const [agentid, prompt] = message.data as [string, string]
         let modelcaller = modelcallers[agentid]
         if (!ispresent(modelcaller)) {
-          modelcallers[agentid] = modelcaller = await createmodelcaller((msg) =>
-            apilog(heavy, message.player, '$5', msg),
+          modelcallers[agentid] = modelcaller = await createmodelcaller(
+            agentid,
+            (msg) => apilog(heavy, message.player, '$5', msg),
           )
         }
         if (ispresent(modelcaller)) {
           const response = await modelcaller.call([
             { role: 'user', content: prompt },
           ])
-          response.split('\n').forEach((line) => {
-            apilog(heavy, message.player, '$5', line)
-          })
+          const lines = response.split('\n')
+          for (let i = 0; i < lines.length; ++i) {
+            apilog(heavy, message.player, '$5', lines[i])
+            console.info(i, lines[i])
+          }
         } else {
           apierror(
             heavy,
