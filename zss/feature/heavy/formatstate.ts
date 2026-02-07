@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Serialize acklook data to plain text for LLM consumption.
  * Strips color codes and formats board, scroll, sidebar, and tickers.

@@ -19,7 +19,7 @@ describe('parsetoolcalls', () => {
     expect(parsetoolcalls('get_current_time(format="iso")')).toEqual([
       { name: 'get_current_time', args: { format: 'iso' } },
     ])
-    expect(parsetoolcalls('get_current_time(format=\'HH:mm\')')).toEqual([
+    expect(parsetoolcalls("get_current_time(format='HH:mm')")).toEqual([
       { name: 'get_current_time', args: { format: 'HH:mm' } },
     ])
   })
@@ -49,7 +49,7 @@ describe('parsetoolcalls', () => {
     expect(parsetoolcalls('get_current_time("iso")')).toEqual([
       { name: 'get_current_time', args: { format: 'iso' } },
     ])
-    expect(parsetoolcalls('get_current_time(\'HH:mm:ss\')')).toEqual([
+    expect(parsetoolcalls("get_current_time('HH:mm:ss')")).toEqual([
       { name: 'get_current_time', args: { format: 'HH:mm:ss' } },
     ])
   })
@@ -59,12 +59,12 @@ describe('parsetoolcalls', () => {
       { name: 'get_name', args: {} },
       { name: 'get_board', args: {} },
     ])
-    expect(
-      parsetoolcalls('get_name() get_current_time(format="iso")'),
-    ).toEqual([
-      { name: 'get_name', args: {} },
-      { name: 'get_current_time', args: { format: 'iso' } },
-    ])
+    expect(parsetoolcalls('get_name() get_current_time(format="iso")')).toEqual(
+      [
+        { name: 'get_name', args: {} },
+        { name: 'get_current_time', args: { format: 'iso' } },
+      ],
+    )
   })
 
   it('handles whitespace around content', () => {
