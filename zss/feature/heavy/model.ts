@@ -168,6 +168,7 @@ function parsetoolcall(content: string): PARSED_TOOL_CALL | null {
   }
   // Enforce invariant: only one tool call per content
   if (TOOL_CALL_REGEX_CALL.exec(stripped) !== null) {
+    console.info('og content', content)
     throw new Error('Expected at most one tool call in content')
   }
   return { name, args }

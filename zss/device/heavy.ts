@@ -63,14 +63,17 @@ const heavy = createdevice('heavy', [], (message) => {
           )
         }
         if (ispresent(modelcaller)) {
+          apilog(heavy, message.player, '$7 input', prompt)
           const response = await modelcaller.call([
             { role: 'user', content: prompt },
           ])
           const lines = response.split('\n')
           for (let i = 0; i < lines.length; ++i) {
-            apilog(heavy, message.player, '$5', lines[i])
+            apilog(heavy, message.player, '$7', lines[i])
             console.info(i, lines[i])
           }
+          // clean up memory
+          modelcaller.clearpastvalues()
         } else {
           apierror(
             heavy,
