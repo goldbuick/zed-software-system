@@ -65,7 +65,6 @@ const heavy = createdevice('heavy', [], (message) => {
           const response = await modelcaller.call([
             { role: 'user', content: prompt },
           ])
-          console.info(response)
           response.split('\n').forEach((line) => {
             apilog(heavy, message.player, '$5', line)
           })

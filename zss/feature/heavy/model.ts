@@ -8,46 +8,55 @@ import {
   TextStreamer,
 } from '@huggingface/transformers'
 
-type MODEL_CATEGORY = 'causal' | 'seq2seq'
+// config values here
+const DTYPE = 'q4'
+const DEVICE = 'webgpu'
 
 async function loadmodel(
-  modelname: string,
-  category: MODEL_CATEGORY,
+  modelid: string,
+  category: 'causal' | 'seq2seq',
   onworking: (message: string) => void,
 ) {
+  const lastprogress: Record<string, number> = {}
+
+  onworking(`${modelid} loading ...`)
   function progress_callback(info: ProgressInfo) {
     switch (info.status) {
       case 'initiate':
-        onworking(`${info.name} ${info.file} loading ...`)
+        onworking(`${info.file} loading ...`)
         break
       case 'download':
         onworking(`${info.file} downloading ...`)
         break
-      case 'progress':
-        onworking(`${info.file} ${Math.round(info.progress)} ...`)
+      case 'progress': {
+        const index = `${info.name}-${info.file}`
+        const progress = Math.round(info.progress)
+        if (progress !== lastprogress[index]) {
+          lastprogress[index] = progress
+          onworking(`${info.file} ${progress}% ...`)
+        }
         break
+      }
     }
   }
 
-  const tokenizer = await AutoTokenizer.from_pretrained(modelname, {
+  const tokenizer = await AutoTokenizer.from_pretrained(modelid, {
     progress_callback,
   })
 
-  const dtype = 'q4f16'
-  const device = 'webgpu'
   switch (category) {
     case 'causal': {
-      const model = await AutoModelForCausalLM.from_pretrained(modelname, {
-        dtype,
-        device,
+      const model = await AutoModelForCausalLM.from_pretrained(modelid, {
+        dtype: DTYPE,
+        device: DEVICE,
         progress_callback,
       })
       return { tokenizer, model }
     }
     case 'seq2seq': {
-      const model = await AutoModelForSeq2SeqLM.from_pretrained(modelname, {
-        dtype,
-        device,
+      const model = await AutoModelForSeq2SeqLM.from_pretrained(modelid, {
+        dtype: DTYPE,
+        device: DEVICE,
         progress_callback,
       })
       return { tokenizer, model }
@@ -57,69 +66,7 @@ async function loadmodel(
   }
 }
 
-const MODEL_ID = 'HuggingFaceTB/SmolLM2-1.7B-Instruct'
-const MODEL_MODE = 'causal'
-const MODEL_CHAT_TEMPLATE = `{# ───── header (system message) ───── #}
-{{- "<|im_start|>system\n" -}}
-{%- if messages[0].role == "system" -%}
-  {%- set system_message = messages[0].content -%}
-  {%- set custom_instructions = system_message.rstrip() -%}
-{%- endif -%}
-{%- if "/system_override" in system_message -%}
-  {{- custom_instructions.replace("/system_override", "").rstrip() -}}
-  {{- "<|im_end|>\n" -}}
-{%- else -%}
-  {{- "## Metadata\n\n" -}}
-  {{- "Knowledge Cutoff Date: June 2025\n" -}}
-  {%- set today = strftime_now("%d %B %Y") -%}
-  {{- "Today Date: " ~ today ~ "\n\n" -}}
-  {{- "## Custom Instructions\n\n" -}}
-  {%- if custom_instructions -%}
-    {{- custom_instructions + "\n\n" -}}
-  {%- else -%}
-    {{- "You are a helpful AI assistant running in a simulation.\n\n" -}}
-  {%- endif -%}
-  {%- if tools -%}
-    {{- "### Tools\n\n" -}}
-    {%- set ns = namespace(xml_tool_string="You may call one or more functions to assist with the user query.\nYou are provided with function signatures within <tools></tools> XML tags:\n\n<tools>\n") -%}
-    {%- for tool in tools[:] -%} {# The slicing makes sure that tools is a list #}
-      {%- set ns.xml_tool_string = ns.xml_tool_string ~ (tool | tojson) ~ "\n" -%}
-    {%- endfor -%}
-    {%- set xml_tool_string = ns.xml_tool_string + "</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\\"name\\": <function-name>, \\"arguments\\": <args-json-object>}\n</tool_call>" -%}
-    {{- xml_tool_string -}}
-    {{- "\n\n" -}}
-    {{- "<|im_end|>\n" -}}
-  {%- endif -%}
-{%- endif -%}
-{# ───── main loop ───── #}
-{%- for message in messages -%}
-    {%- set content = message.content if message.content is string else "" -%}
-    {%- if message.role == "user" -%}
-        {{ "<|im_start|>" + message.role + "\n"  + content + "<|im_end|>\n" }}
-    {%- elif message.role == "assistant" -%}
-        {% generation %}
-          {{ "<|im_start|>assistant\n" + content.lstrip("\n") + "<|im_end|>\n" }}
-        {% endgeneration %}
-    {%- elif message.role == "tool" -%}
-        {{ "<|im_start|>" + "tool\n"  + content + "<|im_end|>\n" }}
-    {%- endif -%}
-{%- endfor -%}
-{# ───── generation prompt ───── #}
-{%- if add_generation_prompt -%}
-    {{ "<|im_start|>assistant\n" }}
-{%- endif -%}
-`
-
-const MODEL_SYSTEM_PROMPT = `
-You are a non-player character in a video game.
-Give yourself a name and describe your personality.
-Help the player by answering questions and providing information.
-
-## Response Types
-- Text answer: Answer the question directly.
-- Tool call: Call a tool to help the player.
-`
-
+const MODEL_ID = 'onnx-community/LFM2-350M-ONNX'
 const MODEL_TOOLS = [
   {
     type: 'function',
@@ -140,37 +87,47 @@ const MODEL_TOOLS = [
   },
 ]
 
+const MODEL_TOOLS_LOGIC = {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async get_current_time(format: string) {
+    console.info({ format })
+    return new Date().toISOString()
+  },
+}
+
+const MODEL_SYSTEM_PROMPT = `You are a non-player character in a video game.
+Give yourself a name and describe your personality.
+Help the player by answering questions and providing information.
+
+<|tool_call_start|> should use JSON to output function calls.
+`
+
+const TOOL_CALL_REGEX = /<\|tool_call_start\|>(.*?)<\|tool_call_end\|>/g
+
 export async function createmodelcaller(onworking: (message: string) => void) {
-  const { tokenizer, model } = await loadmodel(MODEL_ID, MODEL_MODE, onworking)
+  let pastvalues: any = undefined
+  const { tokenizer, model } = await loadmodel(MODEL_ID, 'causal', onworking)
   return {
-    async call(messages: Message[]) {
+    async call(messages: Message[], add_generation_prompt = true) {
       const convo = [
-        {
-          role: 'system',
-          content: MODEL_SYSTEM_PROMPT,
-        },
+        { role: 'system', content: MODEL_SYSTEM_PROMPT },
         ...messages,
       ]
-
-      const generateoptions = {
-        chat_template: MODEL_CHAT_TEMPLATE,
-        tools: MODEL_TOOLS,
-        add_generation_prompt: true,
-      }
-
       console.info(
         tokenizer.apply_chat_template(convo, {
-          ...generateoptions,
           tokenize: false,
+          tools: MODEL_TOOLS,
+          add_generation_prompt,
         }),
       )
 
-      const inputs = tokenizer.apply_chat_template(convo, {
-        ...generateoptions,
+      const input = tokenizer.apply_chat_template(convo, {
         tokenize: true,
         return_dict: true,
+        tools: MODEL_TOOLS,
+        add_generation_prompt,
       })
-      if (typeof inputs !== 'object') {
+      if (typeof input !== 'object') {
         throw new Error('apply_chat_template returned unexpected type')
       }
 
@@ -183,21 +140,36 @@ export async function createmodelcaller(onworking: (message: string) => void) {
       })
 
       onworking(`starting work ...`)
-      const output = await model.generate({
-        ...inputs,
+      const { sequences, past_key_values } = (await model.generate({
+        ...input,
         streamer,
         do_sample: false,
-        max_new_tokens: 256,
-        num_return_sequences: 1,
-      } as any)
+        max_new_tokens: 512,
+        past_key_values: pastvalues,
+        return_dict_in_generate: true,
+      } as any)) as any
 
-      const decoded = tokenizer.decode(
-        // @ts-expect-error yes it's complicated
-        output.slice(0, [inputs.input_ids.dims[1], null]),
-        { skip_special_tokens: true },
-      )
+      // track past values
+      pastvalues = past_key_values
 
-      return decoded
+      // @ts-expect-error this should be the shape of the input ids
+      const values = sequences.slice(null, [input.input_ids.dims[1], null])
+
+      // Decode the generated text with special tokens preserved (except final <|im_end|>) for tool call detection
+      const decoded = tokenizer.batch_decode(values, {
+        skip_special_tokens: false,
+      })
+
+      const mapped = decoded.map((text) => {
+        const check = text.match(TOOL_CALL_REGEX)
+        console.info({ text, check })
+        return text.replace(/<\|im_end\|>$/, '')
+      })
+
+      return mapped[0]
+    },
+    clearpastvalues() {
+      pastvalues = undefined
     },
     destroy() {
       void model.dispose()
