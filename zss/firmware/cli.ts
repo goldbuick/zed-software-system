@@ -13,6 +13,7 @@ import {
   registerfindany,
   registerinspector,
   registernuke,
+  registerscreenshot,
   registershare,
   vmadmin,
   vmagentlist,
@@ -802,6 +803,10 @@ export const CLI_FIRMWARE = createfirmware()
         break
       }
     }
+    return 0
+  })
+  .command('screenshot', () => {
+    registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('bbs', (_, words) => {
