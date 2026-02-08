@@ -485,28 +485,21 @@ export function TerminalInput({
                     break
                   case 'v':
                     if (inputstateactive && ispresent(withclipboard())) {
-                      withclipboard()
+                      void withclipboard()
                         .readText()
                         .then((text) => {
                           // did we paste json ??
-                          try {
-                            const json = JSON.parse(text)
-                            if (
-                              isstring(json.exported) &&
-                              ispresent(json.data)
-                            ) {
-                              vmloader(
-                                SOFTWARE,
-                                player,
-                                undefined,
-                                'json',
-                                `file:${json.exported}`,
-                                JSON.stringify(json),
-                              )
-                              return
-                            }
-                          } catch (err) {
-                            console.error(err)
+                          const json = JSON.parse(text)
+                          if (isstring(json.exported) && ispresent(json.data)) {
+                            vmloader(
+                              SOFTWARE,
+                              player,
+                              undefined,
+                              'json',
+                              `file:${json.exported}`,
+                              JSON.stringify(json),
+                            )
+                            return
                           }
                           const cleantext = text.replaceAll('\r', '')
                           if (hasselection) {
@@ -519,17 +512,15 @@ export function TerminalInput({
                             )
                           }
                         })
-                        .catch((err) => console.error(err))
                     } else {
                       resettoend()
                     }
                     break
                   case 'x':
                     if (inputstateactive && ispresent(withclipboard())) {
-                      withclipboard()
+                      void withclipboard()
                         .writeText(inputstateselected)
                         .then(() => deleteselection())
-                        .catch((err) => console.error(err))
                     } else {
                       resettoend()
                     }
