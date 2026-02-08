@@ -6,28 +6,28 @@ import { write } from 'zss/feature/writeui'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
-import type { AudioChain } from './audiochain'
+import type { AUDIO_CHAIN } from './audiochain'
 import { SYNTH_NOTE_ENTRY, SYNTH_NOTE_ON } from './playnotation'
 import { SOURCE_TYPE } from './source'
-import type { SourceFxSetup } from './sourcefxsetup'
+import type { SOURCE_FX_SETUP } from './sourcefxsetup'
 
-export type RecordingState = {
+export type RECORDING_STATE = {
   recordedticks: SYNTH_NOTE_ENTRY[]
   recordlastpercent: number
   recordisrendering: number
 }
 
-export type PlaybackState = {
+export type PLAYBACK_STATE = {
   pacertime: number
   pacercount: number
   pacer: Part
 }
 
-export function createTickHandler(
-  sourceFx: SourceFxSetup,
-  chain: AudioChain,
-  recording: RecordingState,
-  playback: PlaybackState,
+export function createtickhandler(
+  sourceFx: SOURCE_FX_SETUP,
+  chain: AUDIO_CHAIN,
+  recording: RECORDING_STATE,
+  playback: PLAYBACK_STATE,
 ) {
   const { SOURCE, FX, FXCHAIN, mapindextofx } = sourceFx
   const { drum } = chain

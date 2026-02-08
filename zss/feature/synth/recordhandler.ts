@@ -9,21 +9,21 @@ import { MAYBE } from 'zss/mapping/types'
 
 import { converttomp3 } from './mp3'
 import { SYNTH_NOTE_ENTRY } from './playnotation'
-import type { SourceFxSetup } from './sourcefxsetup'
-import type { RecordingState } from './tickhandler'
+import type { SOURCE_FX_SETUP } from './sourcefxsetup'
+import type { RECORDING_STATE } from './tickhandler'
 
-export type SynthFactory = () => {
+export type SYNTH_FACTORY = () => {
   setplayvolume: (v: number) => void
   applyreplay: (source: any[], fxchain: any, fx: any[]) => void
   synthreplay: (pattern: SYNTH_NOTE_ENTRY[], maxtime: number) => void
   destroy: () => void
 }
 
-export function createRecordHandler(
-  sourceFx: SourceFxSetup,
-  recording: RecordingState,
+export function createrecordhandler(
+  sourceFx: SOURCE_FX_SETUP,
+  recording: RECORDING_STATE,
   setupsynth: () => Promise<void>,
-  createsynth: SynthFactory,
+  createsynth: SYNTH_FACTORY,
 ) {
   const { SOURCE, FX, FXCHAIN } = sourceFx
 
@@ -50,7 +50,7 @@ export function createRecordHandler(
       const sourcereplay = SOURCE.map((item) => item.getreplay())
       const fxchainreplay = FXCHAIN.getreplay()
       const fxreplay = FX.map((item) => item.getreplay())
-      let audio: MAYBE<ReturnType<SynthFactory>>
+      let audio: MAYBE<ReturnType<SYNTH_FACTORY>>
 
       Offline(async ({ transport }) => {
         write(SOFTWARE, player, 'create synth')

@@ -1,7 +1,7 @@
 import { Part, Player, Time, ToneAudioBuffer, getTransport } from 'tone'
 import { ispresent } from 'zss/mapping/types'
 
-import { createAudioChain } from './audiochain'
+import { createaudiochain } from './audiochain'
 import { addfcrushmodule } from './fcrushworkletnode'
 import { volumetodb } from './fx'
 import {
@@ -11,14 +11,14 @@ import {
   invokeplay,
   parseplay,
 } from './playnotation'
-import { createRecordHandler } from './recordhandler'
+import { createrecordhandler } from './recordhandler'
 import { addsidechainmodule } from './sidechainworkletnode'
 import { SOURCE_TYPE } from './source'
-import { createSourceFxSetup } from './sourcefxsetup'
+import { createsourcefxsetup } from './sourcefxsetup'
 import {
-  type PlaybackState,
-  type RecordingState,
-  createTickHandler,
+  type PLAYBACK_STATE,
+  type RECORDING_STATE,
+  createtickhandler,
 } from './tickhandler'
 
 export async function setupsynth() {
@@ -27,27 +27,27 @@ export async function setupsynth() {
 }
 
 export function createsynth() {
-  const chain = createAudioChain()
-  const sourceFx = createSourceFxSetup(chain.playvolume, chain.bgplayvolume)
+  const chain = createaudiochain()
+  const sourceFx = createsourcefxsetup(chain.playvolume, chain.bgplayvolume)
   const { SOURCE, FX, FXCHAIN, changesource } = sourceFx
 
-  const recording: RecordingState = {
+  const recording: RECORDING_STATE = {
     recordedticks: [],
     recordlastpercent: 0,
     recordisrendering: 0,
   }
 
-  const playback: PlaybackState = {
+  const playback: PLAYBACK_STATE = {
     pacertime: -1,
     pacercount: 0,
     pacer: null!,
   }
 
-  const synthtick = createTickHandler(sourceFx, chain, recording, playback)
+  const synthtick = createtickhandler(sourceFx, chain, recording, playback)
   // @ts-expect-error Part callback type mismatch with SYNTH_NOTE_ON
   playback.pacer = new Part(synthtick)
 
-  const { synthrecord, synthflush } = createRecordHandler(
+  const { synthrecord, synthflush } = createrecordhandler(
     sourceFx,
     recording,
     setupsynth,

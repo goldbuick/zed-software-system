@@ -4,9 +4,9 @@ import { ispresent } from 'zss/mapping/types'
 import { createfx, createfxchannels } from './fx'
 import { SOURCE_TYPE, createsource } from './source'
 
-export type SourceFxSetup = ReturnType<typeof createSourceFxSetup>
+export type SOURCE_FX_SETUP = ReturnType<typeof createsourcefxsetup>
 
-export function createSourceFxSetup(playvolume: Volume, bgplayvolume: Volume) {
+export function createsourcefxsetup(playvolume: Volume, bgplayvolume: Volume) {
   const SOURCE = [
     createsource(SOURCE_TYPE.SYNTH, 0),
     createsource(SOURCE_TYPE.SYNTH, 0),

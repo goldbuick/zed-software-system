@@ -16,9 +16,9 @@ import { createsynthdrums } from './drums'
 import { volumetodb } from './fx'
 import { SidechainCompressor } from './sidechainworkletnode'
 
-export type AudioChain = ReturnType<typeof createAudioChain>
+export type AUDIO_CHAIN = ReturnType<typeof createaudiochain>
 
-export function createAudioChain() {
+export function createaudiochain() {
   const destination = getDestination()
 
   const mainvolume = new Volume()
