@@ -2,7 +2,7 @@ import { Context, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth, setupsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synth/voiceconfig'
-import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefxconfig'
+import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefx'
 import {
   selectttsengine,
   ttsclearqueue,

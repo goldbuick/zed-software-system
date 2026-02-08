@@ -3,16 +3,16 @@ import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { volumetodb } from './fx'
-import { synthvoicefxautofilterconfig } from './voicefxautofilterconfig'
-import { synthvoicefxautowahconfig } from './voicefxautowah'
-import { synthvoicefxdistortionconfig } from './voicefxdistortconfig'
-import { synthvoicefxechoconfig } from './voicefxechoconfig'
-import { synthvoicefxfcrushconfig } from './voicefxfcrushconfig'
-import { synthvoicefxreverbconfig } from './voicefxreverbconfig'
-import { synthvoicefxvibratoconfig } from './voicefxvibratoconfig'
+import { volumetodb } from '../fx'
+import { synthvoicefxautofilterconfig } from './autofilter'
+import { synthvoicefxautowahconfig } from './autowah'
+import { synthvoicefxdistortionconfig } from './distort'
+import { synthvoicefxechoconfig } from './echo'
+import { synthvoicefxfcrushconfig } from './fcrush'
+import { synthvoicefxreverbconfig } from './reverb'
+import { synthvoicefxvibratoconfig } from './vibrato'
 
-import { AUDIO_SYNTH } from '.'
+import { AUDIO_SYNTH } from '..'
 
 type FXSET = AUDIO_SYNTH['FX'][number]
 type JUSTFXSET = Omit<FXSET, 'applyreset'>
@@ -37,7 +37,6 @@ export function synthvoicefxconfig(
   if (ispresent(fx)) {
     switch (config) {
       case 'on':
-        // default on value(s)
         switch (fxname) {
           case 'vibrato':
           case 'autofilter':
@@ -53,9 +52,7 @@ export function synthvoicefxconfig(
         break
       default:
         if (isnumber(config)) {
-          // specify wet in terms of percent
           fx.volume.value = volumetodb(config)
-          // fx.wet.value = clamp(0.01 * config, 0, 1)
         } else {
           switch (fxname) {
             case 'fc':

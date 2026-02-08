@@ -2,27 +2,35 @@ import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { AUDIO_SYNTH } from '.'
+import { AUDIO_SYNTH } from '..'
 
-export function synthvoicefxfcrushconfig(
+export function synthvoicefxvibratoconfig(
   player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
   config: number | string,
   value: number | string,
 ) {
-  if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
+  if (!ispresent(synth)) {
+    return
+  }
+  if (index < 0 || index >= synth.FX.length) {
     apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const fcrush = synth.FXCHAIN.fcrush
+  const vibrato = synth.FXCHAIN.vibrato
   switch (config) {
-    case 'rate':
+    case 'maxdelay':
       if (isnumber(value)) {
-        fcrush.set({ rate: value })
+        vibrato.set({ maxDelay: value })
         return
       }
       break
   }
-  apierror(SOFTWARE, player, `kind`, `unknown fcrush ${config} or ${value}`)
+  apierror(
+    SOFTWARE,
+    player,
+    `synth`,
+    `unknown vibrato config ${config} with ${value}`,
+  )
 }
