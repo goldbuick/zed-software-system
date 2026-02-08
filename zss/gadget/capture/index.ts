@@ -9,6 +9,7 @@ import {
   CHAR_HEIGHT,
   CHAR_WIDTH,
   type LAYER,
+  type LAYER_SPRITES,
   type LAYER_TILES,
   LAYER_TYPE,
   layersreadcontrol,
@@ -18,23 +19,21 @@ import { COLOR } from 'zss/words/types'
 
 import { useMedia } from '../hooks'
 
-function isTilesLayer(l: LAYER): l is LAYER_TILES {
+function istileslayer(l: LAYER): l is LAYER_TILES {
   return l.type === LAYER_TYPE.TILES
 }
 
-function compositeTiles(
-  under: LAYER[],
-  layers: LAYER[],
-  over: LAYER[],
-  width: number,
-  height: number,
-) {
+function isspriteslayer(l: LAYER): l is LAYER_SPRITES {
+  return l.type === LAYER_TYPE.SPRITES
+}
+
+function compositetiles(layers: LAYER[], width: number, height: number) {
   const size = width * height
   const char: number[] = new Array(size).fill(0)
   const color: number[] = new Array(size).fill(0)
   const bg: number[] = new Array(size).fill(COLOR.ONCLEAR as number)
 
-  const all = [...under, ...layers, ...over].filter(isTilesLayer).reverse()
+  const all = [...layers].filter(istileslayer).reverse()
   for (let i = 0; i < size; i++) {
     const tx = i % width
     const ty = Math.floor(i / width)
@@ -56,93 +55,172 @@ function compositeTiles(
   return { char, color, bg }
 }
 
+function collectsprites(layers: LAYER[]) {
+  const sprites: {
+    x: number
+    y: number
+    char: number
+    color: number
+    bg: number
+  }[] = []
+  for (const layer of layers) {
+    if (isspriteslayer(layer)) {
+      for (const s of layer.sprites) {
+        if (s.pid) continue
+        sprites.push({
+          x: s.x,
+          y: s.y,
+          char: s.char,
+          color: s.color,
+          bg: s.bg,
+        })
+      }
+    }
+  }
+  return sprites
+}
+
+function sanitizefilename(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'board'
+}
+
 export function capturecurrentboardtopng(): string {
   const { charsetdata, palettedata } = useMedia.getState()
-  const {
-    under = [],
-    layers = [],
-    over = [],
-  } = useGadgetClient.getState().gadget
+  const { board, layers = [] } = useGadgetClient.getState().gadget
 
   if (!ispresent(charsetdata) || !ispresent(palettedata)) {
     throw new Error('charsetdata or palettedata not loaded')
   }
 
-  const { width, height } = layersreadcontrol([...under, ...layers, ...over])
+  const { width, height } = layersreadcontrol(layers)
   if (width === 0 || height === 0) {
     throw new Error('No tile layers to capture')
   }
 
-  const { char, color, bg } = compositeTiles(under, layers, over, width, height)
+  const { char, color, bg } = compositetiles(layers, width, height)
+  const sprites = collectsprites(layers)
 
-  const cellW = RUNTIME.DRAW_CHAR_WIDTH()
-  const cellH = RUNTIME.DRAW_CHAR_HEIGHT()
+  const cellw = RUNTIME.DRAW_CHAR_WIDTH()
+  const cellh = RUNTIME.DRAW_CHAR_HEIGHT()
   const canvas = document.createElement('canvas')
-  canvas.width = width * cellW
-  canvas.height = height * cellH
+  canvas.width = width * cellw
+  canvas.height = height * cellh
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Could not get canvas 2d context')
 
-  const charsetCanvas = charsetdata.image as HTMLCanvasElement
-  const charsetCtx = charsetCanvas.getContext('2d')
-  if (!charsetCtx) throw new Error('Could not get charset canvas context')
-  const charsetImageData = charsetCtx.getImageData(
+  const charsetcanvas = charsetdata.image as HTMLCanvasElement
+  const charsetctx = charsetcanvas.getContext('2d')
+  if (!charsetctx) throw new Error('Could not get charset canvas context')
+  const charsetimagedata = charsetctx.getImageData(
     0,
     0,
-    charsetCanvas.width,
-    charsetCanvas.height,
+    charsetcanvas.width,
+    charsetcanvas.height,
   )
-  const charsetData = charsetImageData.data
+  const charsetpixels = charsetimagedata.data
 
-  const outImageData = ctx.createImageData(canvas.width, canvas.height)
-  const out = outImageData.data
+  const outimagedata = ctx.createImageData(canvas.width, canvas.height)
+  const out = outimagedata.data
 
   for (let ty = 0; ty < height; ty++) {
     for (let tx = 0; tx < width; tx++) {
       const i = tx + ty * width
-      const charIdx = char[i] ?? 0
-      const colorIdx = color[i] ?? 0
-      const bgIdx = bg[i] ?? (COLOR.ONCLEAR as number)
+      const charidx = char[i] ?? 0
+      const coloridx = color[i] ?? 0
+      const bgidx = bg[i] ?? (COLOR.ONCLEAR as number)
 
-      const charCol = charIdx % CHARS_PER_ROW
-      const charRow = Math.floor(charIdx / CHARS_PER_ROW)
-      const srcX0 = charCol * CHAR_WIDTH
-      const srcY0 = charRow * CHAR_HEIGHT
+      const charcol = charidx % CHARS_PER_ROW
+      const charrow = Math.floor(charidx / CHARS_PER_ROW)
+      const srcx0 = charcol * CHAR_WIDTH
+      const srcy0 = charrow * CHAR_HEIGHT
 
-      const fgIdx = colorIdx > 31 ? (colorIdx - 33) % 16 : colorIdx % 16
-      const bgPalIdx = bgIdx < (COLOR.ONCLEAR as number) ? bgIdx - 16 : -1
-      const fg = palettedata[fgIdx]
-      const bgColor = bgPalIdx >= 0 ? palettedata[bgPalIdx] : null
+      const fgidx = coloridx > 31 ? (coloridx - 33) % 16 : coloridx % 16
+      const bgpalidx = bgidx < (COLOR.ONCLEAR as number) ? bgidx - 16 : -1
+      const fg = palettedata[fgidx]
+      const bgcolor = bgpalidx >= 0 ? palettedata[bgpalidx] : null
 
-      for (let py = 0; py < cellH; py++) {
-        for (let px = 0; px < cellW; px++) {
-          const srcX = srcX0 + Math.floor(px / RUNTIME.DRAW_CHAR_SCALE)
-          const srcY = srcY0 + Math.floor(py / RUNTIME.DRAW_CHAR_SCALE)
-          const srcI = (srcX + srcY * charsetCanvas.width) * 4
-          const gray = charsetData[srcI]
+      for (let py = 0; py < cellh; py++) {
+        for (let px = 0; px < cellw; px++) {
+          const srcx = srcx0 + Math.floor(px / RUNTIME.DRAW_CHAR_SCALE)
+          const srcy = srcy0 + Math.floor(py / RUNTIME.DRAW_CHAR_SCALE)
+          const srci = (srcx + srcy * charsetcanvas.width) * 4
+          const gray = charsetpixels[srci]
 
-          const outX = tx * cellW + px
-          const outY = ty * cellH + py
-          const outI = (outX + outY * canvas.width) * 4
+          const outx = tx * cellw + px
+          const outy = ty * cellh + py
+          const outi = (outx + outy * canvas.width) * 4
 
           if (gray === 0) {
-            if (bgColor) {
-              out[outI] = Math.round(bgColor.r * 255)
-              out[outI + 1] = Math.round(bgColor.g * 255)
-              out[outI + 2] = Math.round(bgColor.b * 255)
+            if (bgcolor) {
+              out[outi] = Math.round(bgcolor.r * 255)
+              out[outi + 1] = Math.round(bgcolor.g * 255)
+              out[outi + 2] = Math.round(bgcolor.b * 255)
             }
-            out[outI + 3] = bgColor ? 255 : 0
+            out[outi + 3] = bgcolor ? 255 : 0
           } else {
-            out[outI] = Math.round(fg.r * 255)
-            out[outI + 1] = Math.round(fg.g * 255)
-            out[outI + 2] = Math.round(fg.b * 255)
-            out[outI + 3] = 255
+            out[outi] = Math.round(fg.r * 255)
+            out[outi + 1] = Math.round(fg.g * 255)
+            out[outi + 2] = Math.round(fg.b * 255)
+            out[outi + 3] = 255
           }
         }
       }
     }
   }
 
-  ctx.putImageData(outImageData, 0, 0)
-  return canvas.toDataURL('image/png')
+  for (const s of sprites) {
+    const tx = Math.floor(s.x)
+    const ty = Math.floor(s.y)
+    if (tx < 0 || tx >= width || ty < 0 || ty >= height) continue
+
+    const charidx = s.char
+    const coloridx = s.color
+    const bgidx = s.bg
+
+    const charcol = charidx % CHARS_PER_ROW
+    const charrow = Math.floor(charidx / CHARS_PER_ROW)
+    const srcx0 = charcol * CHAR_WIDTH
+    const srcy0 = charrow * CHAR_HEIGHT
+
+    const fgidx = coloridx > 31 ? (coloridx - 33) % 16 : coloridx % 16
+    const bgpalidx = bgidx < (COLOR.ONCLEAR as number) ? bgidx - 16 : -1
+    const fg = palettedata[fgidx]
+    const bgcolor = bgpalidx >= 0 ? palettedata[bgpalidx] : null
+
+    for (let py = 0; py < cellh; py++) {
+      for (let px = 0; px < cellw; px++) {
+        const srcx = srcx0 + Math.floor(px / RUNTIME.DRAW_CHAR_SCALE)
+        const srcy = srcy0 + Math.floor(py / RUNTIME.DRAW_CHAR_SCALE)
+        const srci = (srcx + srcy * charsetcanvas.width) * 4
+        const gray = charsetpixels[srci]
+
+        const outx = tx * cellw + px
+        const outy = ty * cellh + py
+        const outi = (outx + outy * canvas.width) * 4
+
+        if (gray === 0) {
+          if (bgcolor) {
+            out[outi] = Math.round(bgcolor.r * 255)
+            out[outi + 1] = Math.round(bgcolor.g * 255)
+            out[outi + 2] = Math.round(bgcolor.b * 255)
+          }
+          out[outi + 3] = bgcolor ? 255 : 0
+        } else {
+          out[outi] = Math.round(fg.r * 255)
+          out[outi + 1] = Math.round(fg.g * 255)
+          out[outi + 2] = Math.round(fg.b * 255)
+          out[outi + 3] = 255
+        }
+      }
+    }
+  }
+
+  ctx.putImageData(outimagedata, 0, 0)
+  const dataurl = canvas.toDataURL('image/png')
+  const filename = `${sanitizefilename(board)}.png`
+  const a = document.createElement('a')
+  a.href = dataurl
+  a.download = filename
+  a.click()
+  return dataurl
 }
