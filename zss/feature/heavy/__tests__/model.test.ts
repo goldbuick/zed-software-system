@@ -1,4 +1,4 @@
-import { parsetoolcalls } from '../model'
+import { parsetoolcalls } from 'zss/feature/heavy/model'
 
 describe('parsetoolcalls', () => {
   it('returns empty array for empty string', () => {

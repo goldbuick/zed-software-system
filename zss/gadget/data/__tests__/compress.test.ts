@@ -1,4 +1,4 @@
-import { exportgadgetstate, importgadgetstate } from '../compress'
+import { exportgadgetstate, importgadgetstate } from 'zss/gadget/data/compress'
 import {
   LAYER_TYPE,
   createcontrol,
@@ -7,7 +7,7 @@ import {
   createsprite,
   createsprites,
   createtiles,
-} from '../types'
+} from 'zss/gadget/data/types'
 
 describe('compress', () => {
   describe('exportgadgetstate and importgadgetstate', () => {

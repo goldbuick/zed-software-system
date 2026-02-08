@@ -1,4 +1,4 @@
-import { maptonumber, maptostring, maptovalue } from '../value'
+import { maptonumber, maptostring, maptovalue } from 'zss/mapping/value'
 
 describe('value', () => {
   describe('maptostring', () => {

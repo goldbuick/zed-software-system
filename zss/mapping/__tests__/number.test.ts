@@ -6,7 +6,7 @@ import {
   randomnumber,
   randomnumberwith,
   snap,
-} from '../number'
+} from 'zss/mapping/number'
 
 describe('number', () => {
   describe('clamp', () => {

@@ -1,10 +1,9 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { AUDIO_SYNTH } from 'zss/feature/synth'
+import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { AUDIO_SYNTH } from '.'
-
-export function synthvoicefxdistortionconfig(
+export function synthvoicefxechoconfig(
   player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
@@ -15,20 +14,20 @@ export function synthvoicefxdistortionconfig(
     apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const distortion = synth.FXCHAIN.distortion
+  const echo = synth.FXCHAIN.echo
   switch (config) {
-    case 'distortion':
+    case 'delaytime':
       if (isnumber(value)) {
-        distortion.set({ distortion: value })
+        echo.set({ delayTime: value })
         return
       }
       break
-    case 'oversample':
-      if (isstring(value)) {
-        distortion.set({ oversample: value as OverSampleType })
+    case 'feedback':
+      if (isnumber(value)) {
+        echo.set({ feedback: value })
         return
       }
       break
   }
-  apierror(SOFTWARE, player, `kind`, `unknown distortion ${config} or ${value}`)
+  apierror(SOFTWARE, player, `kind`, `unknown echo ${config} or ${value}`)
 }

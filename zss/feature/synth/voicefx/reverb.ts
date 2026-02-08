@@ -1,10 +1,9 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { AUDIO_SYNTH } from 'zss/feature/synth'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { AUDIO_SYNTH } from '.'
-
-export function synthvoicefxechoconfig(
+export function synthvoicefxreverbconfig(
   player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
@@ -15,20 +14,20 @@ export function synthvoicefxechoconfig(
     apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const echo = synth.FXCHAIN.echo
+  const reverb = synth.FXCHAIN.reverb
   switch (config) {
-    case 'delaytime':
+    case 'decay':
       if (isnumber(value)) {
-        echo.set({ delayTime: value })
+        reverb.set({ decay: value })
         return
       }
       break
-    case 'feedback':
+    case 'predelay':
       if (isnumber(value)) {
-        echo.set({ feedback: value })
+        reverb.set({ preDelay: value })
         return
       }
       break
   }
-  apierror(SOFTWARE, player, `kind`, `unknown echo ${config} or ${value}`)
+  apierror(SOFTWARE, player, `kind`, `unknown reverb ${config} or ${value}`)
 }

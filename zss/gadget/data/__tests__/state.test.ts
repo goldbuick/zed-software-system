@@ -6,7 +6,7 @@ import {
   useInspector,
   useTape,
   useTerminal,
-} from '../state'
+} from 'zss/gadget/data/state'
 
 describe('state', () => {
   // Note: useEqual is a React hook that uses useRef and cannot be tested
