@@ -237,7 +237,7 @@ export async function createmodelcaller(
       },
     })
 
-    onworking(`starting work ...`)
+    onworking(`thinking ...`)
     const { sequences, past_key_values } = (await model.generate({
       ...input,
       streamer,
