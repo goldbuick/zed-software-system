@@ -243,6 +243,10 @@ export function registercopy(
   device.emit(player, 'register:copy', content)
 }
 
+export function registerscreenshot(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:screenshot')
+}
+
 export function registerdownloadjsonfile(
   device: DEVICELIKE,
   player: string,

@@ -15,6 +15,7 @@ import {
 } from 'zss/feature/storage'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
+import { capturecurrentboardtopng } from 'zss/gadget/capture'
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
@@ -389,6 +390,11 @@ const register = createdevice(
       case 'share':
         doasync(register, message.player, async function () {
           await storagesharecontent(message.player)
+        })
+        break
+      case 'screenshot':
+        doasync(register, message.player, async function () {
+          await capturecurrentboardtopng()
         })
         break
       case 'nuke':
