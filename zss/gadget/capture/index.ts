@@ -222,5 +222,4 @@ export function capturecurrentboardtopng(): string {
   a.href = dataurl
   a.download = filename
   a.click()
-  return dataurl
 }

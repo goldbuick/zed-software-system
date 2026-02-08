@@ -393,9 +393,7 @@ const register = createdevice(
         })
         break
       case 'screenshot':
-        doasync(register, message.player, async function () {
-          await capturecurrentboardtopng()
-        })
+        capturecurrentboardtopng()
         break
       case 'nuke':
         doasync(register, message.player, async function () {
