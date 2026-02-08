@@ -114,7 +114,36 @@ function applyconfig() {
 }
 const handleresize = debounce(applyconfig, 256)
 
+function detectWebGL(): boolean {
+  try {
+    const canvas = document.createElement('canvas')
+    const gl =
+      canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    return !!(window.WebGLRenderingContext && gl)
+  } catch {
+    return false
+  }
+}
+
+function showWebGLRequired() {
+  const frame = document.getElementById('frame')
+  if (!frame) return
+  frame.style.display = 'none'
+  const div = document.createElement('div')
+  div.id = 'webgl-required'
+  div.innerHTML = `
+    <p>WebGL is not enabled or not supported in your browser.</p>
+    <p><a href="https://get.webgl.org" target="_blank" rel="noopener noreferrer">Check WebGL support at get.webgl.org</a></p>
+  `
+  document.body.appendChild(div)
+}
+
 async function bootup() {
+  if (!detectWebGL()) {
+    showWebGLRequired()
+    return
+  }
+
   await root.configure({
     events: eventManagerFactory,
     dpr: 1,

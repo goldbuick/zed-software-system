@@ -32,3 +32,25 @@ canvas {
   top: -100px;
   position: fixed;
 }
+
+#webgl-required {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #ccc;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  z-index: 2;
+}
+
+#webgl-required p {
+  margin: 0.5rem 0;
+}
+
+#webgl-required a {
+  color: #8cf;
+}
