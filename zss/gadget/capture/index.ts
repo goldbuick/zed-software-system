@@ -27,6 +27,14 @@ function isspriteslayer(l: LAYER): l is LAYER_SPRITES {
   return l.type === LAYER_TYPE.SPRITES
 }
 
+function mapcoloridx(color: number): number {
+  const clear = COLOR.ONCLEAR as number
+  if (color <= clear) {
+    return color
+  }
+  return color - clear
+}
+
 function compositetiles(layers: LAYER[], width: number, height: number) {
   const size = width * height
   const char: number[] = new Array(size).fill(0)
@@ -41,13 +49,13 @@ function compositetiles(layers: LAYER[], width: number, height: number) {
       const layer = all[li]
       if (tx >= layer.width || ty >= layer.height) continue
       const ci = tx + ty * layer.width
-      const c = layer.char[ci] ?? 0
-      const co = layer.color[ci] ?? 0
-      const b = layer.bg[ci] ?? (COLOR.ONCLEAR as number)
-      if (c !== 0 || b < (COLOR.ONCLEAR as number)) {
-        char[i] = c
-        color[i] = co
-        bg[i] = b
+      const chr = layer.char[ci] ?? 0
+      const fgidx = mapcoloridx(layer.color[ci] ?? 0)
+      const bgidx = mapcoloridx(layer.bg[ci] ?? 0)
+      if (chr !== 0 || bgidx !== 0) {
+        char[i] = chr
+        color[i] = fgidx
+        bg[i] = bgidx
         break
       }
     }
@@ -71,8 +79,8 @@ function collectsprites(layers: LAYER[]) {
           x: s.x,
           y: s.y,
           char: s.char,
-          color: s.color,
-          bg: s.bg,
+          color: mapcoloridx(s.color),
+          bg: mapcoloridx(s.bg),
         })
       }
     }
@@ -84,7 +92,7 @@ function sanitizefilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'board'
 }
 
-export function capturecurrentboardtopng(): string {
+export function capturecurrentboardtopng() {
   const { charsetdata, palettedata } = useMedia.getState()
   const { board, layers = [] } = useGadgetClient.getState().gadget
 
@@ -97,20 +105,27 @@ export function capturecurrentboardtopng(): string {
     throw new Error('No tile layers to capture')
   }
 
-  const { char, color, bg } = compositetiles(layers, width, height)
+  const tiles = compositetiles(layers, width, height)
   const sprites = collectsprites(layers)
 
   const cellw = RUNTIME.DRAW_CHAR_WIDTH()
   const cellh = RUNTIME.DRAW_CHAR_HEIGHT()
+
   const canvas = document.createElement('canvas')
   canvas.width = width * cellw
   canvas.height = height * cellh
+
   const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Could not get canvas 2d context')
+  if (!ctx) {
+    throw new Error('Could not get canvas 2d context')
+  }
 
   const charsetcanvas = charsetdata.image as HTMLCanvasElement
   const charsetctx = charsetcanvas.getContext('2d')
-  if (!charsetctx) throw new Error('Could not get charset canvas context')
+  if (!charsetctx) {
+    throw new Error('Could not get charset canvas context')
+  }
+
   const charsetimagedata = charsetctx.getImageData(
     0,
     0,
@@ -122,22 +137,29 @@ export function capturecurrentboardtopng(): string {
   const outimagedata = ctx.createImageData(canvas.width, canvas.height)
   const out = outimagedata.data
 
+  // Fill with default bg (black) so ONCLEAR cells have a solid background
+  const defaultbg = palettedata[0]
+  for (let i = 0; i < out.length; i += 4) {
+    out[i] = Math.round(defaultbg.r * 255)
+    out[i + 1] = Math.round(defaultbg.g * 255)
+    out[i + 2] = Math.round(defaultbg.b * 255)
+    out[i + 3] = 255
+  }
+
   for (let ty = 0; ty < height; ty++) {
     for (let tx = 0; tx < width; tx++) {
       const i = tx + ty * width
-      const charidx = char[i] ?? 0
-      const coloridx = color[i] ?? 0
-      const bgidx = bg[i] ?? (COLOR.ONCLEAR as number)
+      const charidx = tiles.char[i] ?? 1
+      const coloridx = tiles.color[i] ?? 0
+      const bgidx = tiles.bg[i] ?? 0
 
       const charcol = charidx % CHARS_PER_ROW
       const charrow = Math.floor(charidx / CHARS_PER_ROW)
       const srcx0 = charcol * CHAR_WIDTH
       const srcy0 = charrow * CHAR_HEIGHT
 
-      const fgidx = coloridx > 31 ? (coloridx - 33) % 16 : coloridx % 16
-      const bgpalidx = bgidx < (COLOR.ONCLEAR as number) ? bgidx - 16 : -1
-      const fg = palettedata[fgidx]
-      const bgcolor = bgpalidx >= 0 ? palettedata[bgpalidx] : null
+      const fgcolor = palettedata[coloridx]
+      const bgcolor = palettedata[bgidx]
 
       for (let py = 0; py < cellh; py++) {
         for (let px = 0; px < cellw; px++) {
@@ -156,13 +178,12 @@ export function capturecurrentboardtopng(): string {
               out[outi + 1] = Math.round(bgcolor.g * 255)
               out[outi + 2] = Math.round(bgcolor.b * 255)
             }
-            out[outi + 3] = bgcolor ? 255 : 0
           } else {
-            out[outi] = Math.round(fg.r * 255)
-            out[outi + 1] = Math.round(fg.g * 255)
-            out[outi + 2] = Math.round(fg.b * 255)
-            out[outi + 3] = 255
+            out[outi] = Math.round(fgcolor.r * 255)
+            out[outi + 1] = Math.round(fgcolor.g * 255)
+            out[outi + 2] = Math.round(fgcolor.b * 255)
           }
+          out[outi + 3] = 255
         }
       }
     }
@@ -173,19 +194,13 @@ export function capturecurrentboardtopng(): string {
     const ty = Math.floor(s.y)
     if (tx < 0 || tx >= width || ty < 0 || ty >= height) continue
 
-    const charidx = s.char
-    const coloridx = s.color
-    const bgidx = s.bg
-
-    const charcol = charidx % CHARS_PER_ROW
-    const charrow = Math.floor(charidx / CHARS_PER_ROW)
+    const charcol = s.char % CHARS_PER_ROW
+    const charrow = Math.floor(s.char / CHARS_PER_ROW)
     const srcx0 = charcol * CHAR_WIDTH
     const srcy0 = charrow * CHAR_HEIGHT
 
-    const fgidx = coloridx > 31 ? (coloridx - 33) % 16 : coloridx % 16
-    const bgpalidx = bgidx < (COLOR.ONCLEAR as number) ? bgidx - 16 : -1
-    const fg = palettedata[fgidx]
-    const bgcolor = bgpalidx >= 0 ? palettedata[bgpalidx] : null
+    const fgcolor = palettedata[s.color]
+    const bgcolor = palettedata[s.bg]
 
     for (let py = 0; py < cellh; py++) {
       for (let px = 0; px < cellw; px++) {
@@ -204,13 +219,12 @@ export function capturecurrentboardtopng(): string {
             out[outi + 1] = Math.round(bgcolor.g * 255)
             out[outi + 2] = Math.round(bgcolor.b * 255)
           }
-          out[outi + 3] = bgcolor ? 255 : 0
         } else {
-          out[outi] = Math.round(fg.r * 255)
-          out[outi + 1] = Math.round(fg.g * 255)
-          out[outi + 2] = Math.round(fg.b * 255)
-          out[outi + 3] = 255
+          out[outi] = Math.round(fgcolor.r * 255)
+          out[outi + 1] = Math.round(fgcolor.g * 255)
+          out[outi + 2] = Math.round(fgcolor.b * 255)
         }
+        out[outi + 3] = 255
       }
     }
   }
