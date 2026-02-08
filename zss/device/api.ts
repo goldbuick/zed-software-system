@@ -268,20 +268,29 @@ export function registernuke(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:nuke', undefined)
 }
 
-export function synthaudioenabled(device: DEVICELIKE, player: string) {
-  device.emit(player, 'synth:audioenabled', undefined)
+export function synthaudioenabled(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+) {
+  device.emit(player, 'synth:audioenabled', [board])
 }
 
-export function synthrestart(device: DEVICELIKE, player: string) {
-  device.emit(player, 'synth:restart', undefined)
+export function synthrestart(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+) {
+  device.emit(player, 'synth:restart', [board])
 }
 
 export function synthaudiobuffer(
   device: DEVICELIKE,
   player: string,
+  board: string,
   audiobuffer: AudioBuffer,
 ) {
-  device.emit(player, 'synth:audiobuffer', audiobuffer)
+  device.emit(player, 'synth:audiobuffer', [board, audiobuffer])
 }
 
 export function synthplay(
@@ -303,41 +312,50 @@ export function synthbgplay(
   device.emit(player, 'synth:bgplay', [board, buffer, quantize])
 }
 
-export function synthbpm(device: DEVICELIKE, player: string, bpm: number) {
-  device.emit(player, 'synth:bpm', bpm)
+export function synthbpm(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+  bpm: number,
+) {
+  device.emit(player, 'synth:bpm', [board, bpm])
 }
 
 export function synthplayvolume(
   device: DEVICELIKE,
   player: string,
+  board: string,
   volume: number,
 ) {
-  device.emit(player, 'synth:playvolume', volume)
+  device.emit(player, 'synth:playvolume', [board, volume])
 }
 
 export function synthbgplayvolume(
   device: DEVICELIKE,
   player: string,
+  board: string,
   volume: number,
 ) {
-  device.emit(player, 'synth:bgplayvolume', volume)
+  device.emit(player, 'synth:bgplayvolume', [board, volume])
 }
 
 export function synthttsvolume(
   device: DEVICELIKE,
   player: string,
+  board: string,
   volume: number,
 ) {
-  device.emit(player, 'synth:ttsvolume', volume)
+  device.emit(player, 'synth:ttsvolume', [board, volume])
 }
 
 export function synthttsengine(
   device: DEVICELIKE,
   player: string,
+  board: string,
   engine: string,
   config: string,
 ) {
-  device.emit(player, 'synth:ttsengine', [engine, config])
+  device.emit(player, 'synth:ttsengine', [board, engine, config])
 }
 
 export function synthtts(
@@ -350,8 +368,13 @@ export function synthtts(
   device.emit(player, 'synth:tts', [board, voice, phrase])
 }
 
-export function synthttsinfo(device: DEVICELIKE, player: string, info: string) {
-  device.emit(player, 'synth:ttsinfo', info)
+export function synthttsinfo(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+  info: string,
+) {
+  device.emit(player, 'synth:ttsinfo', [board, info])
 }
 
 export function synthttsqueue(
@@ -364,41 +387,48 @@ export function synthttsqueue(
   device.emit(player, 'synth:ttsqueue', [board, voice, phrase])
 }
 
-export function synthttsclearqueue(device: DEVICELIKE, player: string) {
-  device.emit(player, 'synth:ttsclearqueue')
+export function synthttsclearqueue(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+) {
+  device.emit(player, 'synth:ttsclearqueue', [board])
 }
 
 export function synthvoice(
   device: DEVICELIKE,
   player: string,
+  board: string,
   idx: number,
   config: number | string,
   value: MAYBE<number | string | number[]>,
 ) {
-  device.emit(player, 'synth:voice', [idx, config, value])
+  device.emit(player, 'synth:voice', [board, idx, config, value])
 }
 
 export function synthvoicefx(
   device: DEVICELIKE,
   player: string,
+  board: string,
   idx: number,
   fx: string,
   config: number | string,
   value: MAYBE<number | string>,
 ) {
-  device.emit(player, 'synth:voicefx', [idx, fx, config, value])
+  device.emit(player, 'synth:voicefx', [board, idx, fx, config, value])
 }
 
 export function synthrecord(
   device: DEVICELIKE,
   player: string,
+  board: string,
   filename: string,
 ) {
-  device.emit(player, 'synth:record', filename)
+  device.emit(player, 'synth:record', [board, filename])
 }
 
-export function synthflush(device: DEVICELIKE, player: string) {
-  device.emit(player, 'synth:flush')
+export function synthflush(device: DEVICELIKE, player: string, board: string) {
+  device.emit(player, 'synth:flush', [board])
 }
 
 export function registerstore(

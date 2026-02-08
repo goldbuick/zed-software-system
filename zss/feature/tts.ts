@@ -60,6 +60,7 @@ export function ttsinfo(player: string, info: string) {
 
 export async function ttsplay(
   player: string,
+  board: string,
   voice: string,
   input: string,
 ): Promise<void> {
@@ -69,7 +70,7 @@ export async function ttsplay(
   // play the audio
   const audiobuffer = await requestaudiobuffer(player, voice, input)
   if (ispresent(audiobuffer)) {
-    synthaudiobuffer(SOFTWARE, player, audiobuffer)
+    synthaudiobuffer(SOFTWARE, player, board, audiobuffer)
   }
 }
 
@@ -78,10 +79,11 @@ const audioplayqueue = newQueue(1)
 
 async function audioplaytask(
   player: string,
+  board: string,
   audiobuffer: AudioBuffer,
 ): Promise<void> {
   // play the audio
-  synthaudiobuffer(SOFTWARE, player, audiobuffer)
+  synthaudiobuffer(SOFTWARE, player, board, audiobuffer)
   // wait audio duration before playing next audio
   const waittime = Math.max(1000, Math.round(audiobuffer.duration * 1000))
   await waitfor(waittime)
@@ -92,6 +94,7 @@ const audiobufferqueue = newQueue(1)
 
 async function audiobuffertask(
   player: string,
+  board: string,
   voice: string,
   input: string,
 ): Promise<void> {
@@ -99,16 +102,16 @@ async function audiobuffertask(
   audioplayqueue
     .add(async () => {
       if (ispresent(audiobuffer)) {
-        await audioplaytask(player, audiobuffer)
+        await audioplaytask(player, board, audiobuffer)
       }
     })
     .catch(console.error)
 }
 
-export function ttsqueue(player: string, voice: string, input: string) {
+export function ttsqueue(player: string, board: string, voice: string, input: string) {
   audiobufferqueue
     .add(async () => {
-      await audiobuffertask(player, voice, input)
+      await audiobuffertask(player, board, voice, input)
     })
     .catch(console.error)
 }
