@@ -1,10 +1,9 @@
 import { Channel } from 'tone'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { AUDIO_SYNTH } from 'zss/feature/synth'
+import { volumetodb } from 'zss/feature/synth/fx'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-
-import { AUDIO_SYNTH } from '..'
-import { volumetodb } from '../fx'
 
 import { synthvoicefxautofilterconfig } from './autofilter'
 import { synthvoicefxautowahconfig } from './autowah'

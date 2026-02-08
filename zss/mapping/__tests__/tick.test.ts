@@ -1,4 +1,4 @@
-import { CYCLE_DEFAULT, TICK_FPS, TICK_RATE, waitfor } from '../tick'
+import { CYCLE_DEFAULT, TICK_FPS, TICK_RATE, waitfor } from 'zss/mapping/tick'
 
 describe('tick', () => {
   describe('TICK_RATE', () => {

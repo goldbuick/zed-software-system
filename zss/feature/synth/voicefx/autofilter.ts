@@ -1,8 +1,7 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { AUDIO_SYNTH } from 'zss/feature/synth'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-
-import { AUDIO_SYNTH } from '..'
 
 export function synthvoicefxautofilterconfig(
   player: string,

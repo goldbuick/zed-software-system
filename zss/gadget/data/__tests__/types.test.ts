@@ -1,5 +1,3 @@
-import { COLOR } from 'zss/words/types'
-
 import {
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,
@@ -22,7 +20,8 @@ import {
   layersreadcontrol,
   layersreadmedia,
   paneladdress,
-} from '../types'
+} from 'zss/gadget/data/types'
+import { COLOR } from 'zss/words/types'
 
 describe('types', () => {
   describe('constants', () => {

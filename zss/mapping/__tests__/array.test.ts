@@ -13,7 +13,7 @@ import {
   setAtIndex,
   setIndex,
   unique,
-} from '../array'
+} from 'zss/mapping/array'
 
 describe('array', () => {
   describe('range', () => {

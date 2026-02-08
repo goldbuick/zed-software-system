@@ -1,6 +1,5 @@
 import { apierror } from 'zss/device/api'
-
-import { doasync } from '../func'
+import { doasync } from 'zss/mapping/func'
 
 // Mock the apierror function
 jest.mock('zss/device/api', () => ({

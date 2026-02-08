@@ -1,8 +1,7 @@
 import { Color } from 'three'
-
-import { createbitmapfromarray } from '../bitmap'
-import { convertpalettetocolors } from '../palette'
-import { FILE_BYTES_PER_COLOR } from '../types'
+import { createbitmapfromarray } from 'zss/gadget/data/bitmap'
+import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
 
 describe('palette', () => {
   describe('convertpalettetocolors', () => {

@@ -1,5 +1,7 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { AUDIO_SYNTH } from 'zss/feature/synth'
+import { SOURCE_TYPE } from 'zss/feature/synth/source'
 import {
   MAYBE,
   isarray,
@@ -7,9 +9,6 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-
-import { AUDIO_SYNTH } from '..'
-import { SOURCE_TYPE } from '../source'
 
 import { handlealgosynthconfig } from './algosynth'
 import { validatesynthtype } from './validation'

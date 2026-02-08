@@ -3,8 +3,8 @@ import {
   createbitmap,
   createbitmapfromarray,
   createspritebitmapfrombitmap,
-} from '../bitmap'
-import { CHAR_HEIGHT, CHAR_WIDTH } from '../types'
+} from 'zss/gadget/data/bitmap'
+import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 
 // Mock document.createElement for Node.js environment
 const mockCanvas = {

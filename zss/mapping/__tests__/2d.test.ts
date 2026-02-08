@@ -8,7 +8,7 @@ import {
   pttoindex,
   ptwithin,
   rectpoints,
-} from '../2d'
+} from 'zss/mapping/2d'
 
 describe('2d', () => {
   describe('indextox', () => {

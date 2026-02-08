@@ -7,7 +7,7 @@ import {
   createtopic,
   ispid,
   issid,
-} from '../guid'
+} from 'zss/mapping/guid'
 
 describe('guid', () => {
   describe('createsid', () => {

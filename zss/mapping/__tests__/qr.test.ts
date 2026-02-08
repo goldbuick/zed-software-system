@@ -1,4 +1,4 @@
-import { qrlines } from '../qr'
+import { qrlines } from 'zss/mapping/qr'
 
 describe('qr', () => {
   describe('qrlines', () => {

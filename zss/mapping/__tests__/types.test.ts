@@ -11,7 +11,7 @@ import {
   ispresent,
   isstring,
   noop,
-} from '../types'
+} from 'zss/mapping/types'
 
 describe('types', () => {
   describe('isequal', () => {

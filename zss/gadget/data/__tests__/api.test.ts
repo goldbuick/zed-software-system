@@ -1,7 +1,5 @@
 import { CHIP } from 'zss/chip'
 import { modemwritevaluenumber } from 'zss/device/modem'
-import { WORD } from 'zss/words/types'
-
 import {
   gadgetaddcenterpadding,
   gadgetcheckqueue,
@@ -11,8 +9,9 @@ import {
   gadgetstateprovider,
   gadgettext,
   initstate,
-} from '../api'
-import { GADGET_STATE } from '../types'
+} from 'zss/gadget/data/api'
+import { GADGET_STATE } from 'zss/gadget/data/types'
+import { WORD } from 'zss/words/types'
 
 // Mock dependencies
 jest.mock('zss/device/modem', () => ({

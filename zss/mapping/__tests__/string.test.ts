@@ -1,4 +1,4 @@
-import { stringsplice, totarget } from '../string'
+import { stringsplice, totarget } from 'zss/mapping/string'
 
 describe('string', () => {
   describe('stringsplice', () => {

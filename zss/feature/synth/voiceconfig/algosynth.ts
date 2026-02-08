@@ -1,6 +1,5 @@
+import { SOURCE_TYPE } from 'zss/feature/synth/source'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
-
-import { SOURCE_TYPE } from '../source'
 
 type AlgoVoice = {
   source: { type: SOURCE_TYPE.ALGO_SYNTH; synth: { set: (v: object) => void } }
