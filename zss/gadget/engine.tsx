@@ -16,7 +16,7 @@ import { doasync } from 'zss/mapping/func'
 import { createplatform, haltplatform } from 'zss/platform'
 import { ScreenUIComponent } from 'zss/screens/screenui/component'
 import { TapeComponent } from 'zss/screens/tape/component'
-import { isfirefox, islinux } from 'zss/words/system'
+import { isfirefox } from 'zss/words/system'
 
 import { useTape } from './data/state'
 import { Scanlines } from './fx/scanlines'
@@ -75,7 +75,7 @@ export function Engine() {
         setforcelowrez(true)
       }
       const crt = await storagereadconfig('crt')
-      if (crt === 'on' && !islinux) {
+      if (crt === 'on') {
         setcrt(true)
       }
       const scanlines = await storagereadconfig('scanlines')
