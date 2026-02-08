@@ -6,7 +6,11 @@ import { SOURCE_TYPE, createsource } from './source'
 
 export type SOURCE_FX_SETUP = ReturnType<typeof createsourcefxsetup>
 
-export function createsourcefxsetup(playvolume: Volume, bgplayvolume: Volume) {
+export function createsourcefxsetup(
+  playvolume: Volume,
+  bgplayvolume: Volume,
+  ttsvolume: Volume,
+) {
   const SOURCE = [
     createsource(SOURCE_TYPE.SYNTH, 0),
     createsource(SOURCE_TYPE.SYNTH, 0),
@@ -29,8 +33,7 @@ export function createsourcefxsetup(playvolume: Volume, bgplayvolume: Volume) {
   // wire up fx & input to dest
   for (let i = 0; i < FX.length; ++i) {
     const f = FX[i]
-    const isplay = i < 2
-    const dest = isplay ? playvolume : bgplayvolume
+    const dest = i < 2 ? playvolume : i < 3 ? bgplayvolume : ttsvolume
     f.sendtofx.connect(dest)
     f.fc.chain(FXCHAIN.fc, dest)
     f.echo.chain(FXCHAIN.echo, dest)

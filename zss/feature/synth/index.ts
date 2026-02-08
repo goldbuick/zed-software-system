@@ -28,7 +28,11 @@ export async function setupsynth() {
 
 export function createsynth() {
   const chain = createaudiochain()
-  const sourceFx = createsourcefxsetup(chain.playvolume, chain.bgplayvolume)
+  const sourceFx = createsourcefxsetup(
+    chain.playvolume,
+    chain.bgplayvolume,
+    chain.ttsvolume,
+  )
   const { SOURCE, FX, FXCHAIN, changesource } = sourceFx
 
   const recording: RECORDING_STATE = {
