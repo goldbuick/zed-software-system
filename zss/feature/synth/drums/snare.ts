@@ -1,11 +1,4 @@
-import {
-  Distortion,
-  Filter,
-  NoiseSynth,
-  Synth,
-  Time,
-  Volume,
-} from 'tone'
+import { Distortion, Filter, NoiseSynth, Synth, Time, Volume } from 'tone'
 
 export function createsnare(drumvolume: Volume) {
   const drumhisnaredistortion = new Distortion().connect(drumvolume)

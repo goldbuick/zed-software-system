@@ -3,7 +3,9 @@ import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
+import { AUDIO_SYNTH } from '..'
 import { volumetodb } from '../fx'
+
 import { synthvoicefxautofilterconfig } from './autofilter'
 import { synthvoicefxautowahconfig } from './autowah'
 import { synthvoicefxdistortionconfig } from './distort'
@@ -11,8 +13,6 @@ import { synthvoicefxechoconfig } from './echo'
 import { synthvoicefxfcrushconfig } from './fcrush'
 import { synthvoicefxreverbconfig } from './reverb'
 import { synthvoicefxvibratoconfig } from './vibrato'
-
-import { AUDIO_SYNTH } from '..'
 
 type FXSET = AUDIO_SYNTH['FX'][number]
 type JUSTFXSET = Omit<FXSET, 'applyreset'>
@@ -84,5 +84,5 @@ export function synthvoicefxconfig(
     }
     return
   }
-  apierror(SOFTWARE, player, `synth`, `unknown fx ${fxname}`)
+  apierror(SOFTWARE, player, `synth`, `unknown fx ${fxname as string}`)
 }
