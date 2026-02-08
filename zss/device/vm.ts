@@ -132,6 +132,9 @@ const SECOND_TIMEOUT = 16 // timeout after 16 seconds
 const tracking: Record<string, number> = {}
 const trackinglastlog: Record<string, number> = {}
 
+// track AFK state: last time we got an 'input' message per player
+const lastinputtime: Record<string, number> = {}
+
 // control how fast we persist to the register
 // this __should__ autosave every minute
 const FLUSH_RATE = 60
@@ -233,7 +236,7 @@ const vm = createdevice(
         break
       case 'admin':
         doasync(vm, message.player, async () => {
-          await memoryadminmenu(message.player)
+          await memoryadminmenu(message.player, lastinputtime)
         })
         break
       case 'zsswords': {
@@ -434,6 +437,7 @@ const vm = createdevice(
         memorylogoutplayer(message.player, !!message.data)
         // stop tracking
         delete tracking[message.player]
+        delete lastinputtime[message.player]
         apilog(vm, operator, `player ${message.player} logout`)
         // ack
         registerloginready(vm, message.player)
@@ -443,6 +447,7 @@ const vm = createdevice(
         if (memoryloginplayer(message.player, message.data)) {
           // start tracking
           tracking[message.player] = 0
+          lastinputtime[message.player] = Date.now()
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack success
           vm.replynext(message, 'acklogin', true)
@@ -456,6 +461,7 @@ const vm = createdevice(
         if (memoryloginplayer(message.player, {})) {
           // start tracking
           tracking[message.player] = 0
+          lastinputtime[message.player] = Date.now()
           apilog(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack success
           vm.replynext(message, 'acklogin', true)
@@ -484,6 +490,8 @@ const vm = createdevice(
           !message.player.includes('local') ||
           memoryhasflags(message.player)
         ) {
+          // track last input for AFK detection
+          lastinputtime[message.player] = Date.now()
           // player input
           const flags = memoryreadflags(message.player)
           const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
@@ -897,7 +905,7 @@ const vm = createdevice(
             switch (path) {
               case 'adminscroll':
                 doasync(vm, message.player, async () => {
-                  await memoryadminmenu(message.player)
+                  await memoryadminmenu(message.player, lastinputtime)
                 })
                 break
               case 'objectlistscroll': {
@@ -1071,4 +1079,9 @@ const vm = createdevice(
 export function started() {
   // signal ready state
   platformready(vm)
+}
+
+/** Last input timestamp (ms) for a player. Use for AFK: (Date.now() - ts) > threshold */
+export function vmreadplayerlastinput(player: string): number | undefined {
+  return lastinputtime[player]
 }

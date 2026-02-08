@@ -61,7 +61,19 @@ function base64tobase64url(base64String: string) {
   return base64String.replace(/\+/g, '-').replace(/\//g, '_')
 }
 
-export async function memoryadminmenu(player: string) {
+function formatidleseconds(ms: number | undefined): string {
+  if (ms === undefined) return ''
+  const sec = Math.floor((Date.now() - ms) / 1000)
+  if (sec < 60) return `${sec}s`
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min}m`
+  return `${Math.floor(min / 60)}h`
+}
+
+export async function memoryadminmenu(
+  player: string,
+  idletimes?: Record<string, number>,
+) {
   // get list of active players
   const isop = memoryisoperator(player)
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -73,23 +85,28 @@ export async function memoryadminmenu(player: string) {
   gadgettext(player, `active player list`)
   gadgettext(player, DIVIDER)
   for (let i = 0; i < activelist.length; ++i) {
-    const player = activelist[i]
-    const { user } = memoryreadflags(player)
+    const pid = activelist[i]
+    const { user } = memoryreadflags(pid)
     const withuser = isstring(user) ? user : 'player'
-    const playerboard = memoryreadplayerboard(player)
-    const playerelement = memoryreadobject(playerboard, player)
+    const playerboard = memoryreadplayerboard(pid)
+    const playerelement = memoryreadobject(playerboard, pid)
     const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
+    const idletxt = idletimes ? formatidleseconds(idletimes[pid]) : ''
+    const idletext = idletxt ? ` $GREY(idle ${idletxt})` : ''
     if (isop && ispresent(playerboard)) {
       gadgethyperlink(
         player,
         'admingoto',
-        `${icontext} ${withuser} ${location}`,
-        [player],
+        `${icontext} ${withuser} ${location}${idletext}`,
+        [pid],
       )
     } else {
-      gadgettext(player, `${icontext} ${withuser} ${isop ? location : ''}`)
+      gadgettext(
+        player,
+        `${icontext} ${withuser} ${isop ? location : ''}${idletext}`,
+      )
     }
   }
 
