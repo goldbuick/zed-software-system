@@ -28,7 +28,11 @@ export async function setupsynth() {
 
 export function createsynth() {
   const chain = createaudiochain()
-  const sourceFx = createsourcefxsetup(chain.playvolume, chain.bgplayvolume)
+  const sourceFx = createsourcefxsetup(
+    chain.playvolume,
+    chain.bgplayvolume,
+    chain.ttsvolume,
+  )
   const { SOURCE, FX, FXCHAIN, changesource } = sourceFx
 
   const recording: RECORDING_STATE = {
@@ -44,6 +48,7 @@ export function createsynth() {
   }
 
   const synthtick = createtickhandler(sourceFx, chain, recording, playback)
+
   // @ts-expect-error Part callback type mismatch with SYNTH_NOTE_ON
   playback.pacer = new Part(synthtick)
 
@@ -142,7 +147,7 @@ export function createsynth() {
   }
 
   function addaudiobuffer(audiobuffer: AudioBuffer | ToneAudioBuffer) {
-    const player = new Player(audiobuffer).connect(chain.ttsvolume)
+    const player = new Player(audiobuffer).connect(FX[3].sendtofx)
     player.start(0)
   }
 
