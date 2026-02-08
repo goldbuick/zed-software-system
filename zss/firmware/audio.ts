@@ -27,25 +27,6 @@ import { mapstrdir } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
-/*
-  synthbgplay, - queue 
-  synthbgplayvolume, - global
-  synthbpm, - global
-  synthflush, - global
-  synthplay, - queue
-  synthplayvolume, - global
-  synthrecord, - global
-  synthrestart, - gadget
-  synthtts, - global
-  synthttsclearqueue, - global
-  synthttsengine, - global
-  synthttsinfo, - global
-  synthttsqueue, - global
-  synthttsvolume, - global
-  synthvoice, - gadget
-  synthvoicefx, - gadget
-*/
-
 function handlesynthvoicefx(
   player: string,
   idx: number,
@@ -320,7 +301,7 @@ AUDIO_FIRMWARE.command('synth5', (_, words) => {
 })
 
 // handle synth fx configurations
-for (let i = 0; i < 3; ++i) {
+for (let i = 0; i < 4; ++i) {
   const idx = i + 1
   AUDIO_FIRMWARE.command(`echo${idx}`, (_, words) => {
     handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'echo', words)
