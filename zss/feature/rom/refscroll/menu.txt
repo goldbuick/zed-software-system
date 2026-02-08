@@ -3,7 +3,7 @@
 !terrainlistscroll hk 3 3 next;list terrain elements
 !adminscroll hk 4 4 next;cpu #admin
 !cliscroll hk t T next;cli commands
-!dictionary hk d D next;dictionary of commands
+!commandsscroll hk d D next;dictionary of all commands
 !charscroll hk a A next;char
 !colorscroll hk c C next;color
 !bgscroll hk b B next;bg
