@@ -64,7 +64,11 @@ export function enableaudio() {
           // lets rolling
           locked = false
           enabled = true
-          synthaudioenabled(synthdevice, registerreadplayer())
+          synthaudioenabled(
+          synthdevice,
+          registerreadplayer(),
+          useGadgetClient.getState().gadget.board ?? '',
+        )
         })
       }
     })
@@ -122,30 +126,44 @@ const synthdevice = createdevice('synth', [], (message) => {
       })
       break
     case 'bpm':
-      if (isnumber(message.data)) {
-        const bpm = Math.round(message.data)
-        synth.setbpm(bpm)
-        setAltInterval(bpm)
+      if (isarray(message.data)) {
+        const [, bpm] = message.data as [string, number]
+        if (isnumber(bpm)) {
+          synth.setbpm(Math.round(bpm))
+          setAltInterval(Math.round(bpm))
+        }
       }
       break
     case 'playvolume':
-      if (isnumber(message.data)) {
-        synth.setplayvolume(message.data)
+      if (isarray(message.data)) {
+        const [, volume] = message.data as [string, number]
+        if (isnumber(volume)) {
+          synth.setplayvolume(volume)
+        }
       }
       break
     case 'bgplayvolume':
-      if (isnumber(message.data)) {
-        synth.setbgplayvolume(message.data)
+      if (isarray(message.data)) {
+        const [, volume] = message.data as [string, number]
+        if (isnumber(volume)) {
+          synth.setbgplayvolume(volume)
+        }
       }
       break
     case 'ttsvolume':
-      if (isnumber(message.data)) {
-        synth.setttsvolume(message.data)
+      if (isarray(message.data)) {
+        const [, volume] = message.data as [string, number]
+        if (isnumber(volume)) {
+          synth.setttsvolume(volume)
+        }
       }
       break
     case 'audiobuffer':
-      if (ispresent(message.data)) {
-        synth.addaudiobuffer(message.data)
+      if (isarray(message.data)) {
+        const [, audiobuffer] = message.data as [string, AudioBuffer]
+        if (ispresent(audiobuffer)) {
+          synth.addaudiobuffer(audiobuffer)
+        }
       }
       break
     case 'play':
@@ -180,7 +198,8 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'voice':
       if (isarray(message.data)) {
-        const [index, config, value] = message.data as [
+        const [, index, config, value] = message.data as [
+          string,
           number,
           number | string,
           number | string | number[],
@@ -190,7 +209,8 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'voicefx':
       if (isarray(message.data)) {
-        const [synthindex, fxname, config, value] = message.data as [
+        const [, synthindex, fxname, config, value] = message.data as [
+          string,
           number,
           FXNAME,
           number | string,
@@ -207,8 +227,11 @@ const synthdevice = createdevice('synth', [], (message) => {
       }
       break
     case 'record':
-      if (isstring(message.data)) {
-        synth.synthrecord(message.data)
+      if (isarray(message.data)) {
+        const [, filename] = message.data as [string, string]
+        if (isstring(filename)) {
+          synth.synthrecord(filename)
+        }
       }
       break
     case 'flush':
@@ -222,15 +245,16 @@ const synthdevice = createdevice('synth', [], (message) => {
             phrase.trim() !== '' &&
             (board === '' || board === currentboard)
           ) {
-            await ttsplay(message.player, voice, phrase)
+            await ttsplay(message.player, board, voice, phrase)
           }
         }
       })
       break
     case 'ttsinfo':
       doasync(synthdevice, message.player, async () => {
-        if (isstring(message.data)) {
-          const data = await ttsinfo(message.player, message.data)
+        if (isarray(message.data)) {
+          const [, info] = message.data as [string, string]
+          const data = await ttsinfo(message.player, info)
           if (isarray(data)) {
             for (let i = 0; i < data.length; i++) {
               write(synthdevice, message.player, `$WHITE${data[i]}`)
@@ -241,7 +265,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'ttsengine':
       if (isarray(message.data)) {
-        const [engine, apikey] = message.data as [any, string]
+        const [, engine, apikey] = message.data as [string, any, string]
         selectttsengine(engine, apikey)
       }
       break
@@ -249,7 +273,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       if (isarray(message.data)) {
         const [board, voice, phrase] = message.data as [string, any, string]
         if (phrase.trim() !== '' && (board === '' || board === currentboard)) {
-          ttsqueue(message.player, voice, phrase)
+          ttsqueue(message.player, board, voice, phrase)
         }
       }
       break

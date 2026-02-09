@@ -153,38 +153,38 @@ Functions for audio synthesis, playback, TTS, and voice configuration.
 
 ### Audio Control
 - `enableaudio()` - Enable audio system (initializes Tone.js context)
-- `synthaudioenabled(device, player)` - Signal that audio is enabled
-- `synthrestart(device, player)` - Restart audio system
-- `synthflush(device, player)` - Flush audio buffers
+- `synthaudioenabled(device, player, board)` - Signal that audio is enabled
+- `synthrestart(device, player, board)` - Restart audio system
+- `synthflush(device, player, board)` - Flush audio buffers
 
 ### Audio Buffers
-- `synthaudiobuffer(device, player, audiobuffer)` - Add audio buffer to synth
+- `synthaudiobuffer(device, player, board, audiobuffer)` - Add audio buffer to synth
 
 ### Playback
 - `synthplay(device, player, board, buffer)` - Play audio buffer on board
 - `synthbgplay(device, player, board, buffer, quantize)` - Play background audio
-- `synthbpm(device, player, bpm)` - Set BPM
-- `synthplayvolume(device, player, volume)` - Set playback volume
-- `synthbgplayvolume(device, player, volume)` - Set background volume
+- `synthbpm(device, player, board, bpm)` - Set BPM
+- `synthplayvolume(device, player, board, volume)` - Set playback volume
+- `synthbgplayvolume(device, player, board, volume)` - Set background volume
 
 ### Text-to-Speech (TTS)
 - `synthtts(device, player, board, voice, phrase)` - Play TTS immediately
 - `synthttsqueue(device, player, board, voice, phrase)` - Queue TTS for playback
-- `synthttsclearqueue(device, player)` - Clear TTS queue
-- `synthttsvolume(device, player, volume)` - Set TTS volume
-- `synthttsengine(device, player, engine, config)` - Set TTS engine and config
-- `synthttsinfo(device, player, info)` - Send TTS info string to synth
+- `synthttsclearqueue(device, player, board)` - Clear TTS queue
+- `synthttsvolume(device, player, board, volume)` - Set TTS volume
+- `synthttsengine(device, player, board, engine, config)` - Set TTS engine and config
+- `synthttsinfo(device, player, board, info)` - Send TTS info string to synth
 
 ### Heavy (TTS worker)
 - `heavyttsinfo(device, player, engine, info)` - Send TTS info to heavy worker
 - `heavyttsrequest(device, player, engine, config, voice, phrase)` - Request TTS from heavy worker
 
 ### Voice Configuration
-- `synthvoice(device, player, idx, config, value)` - Configure synth voice
-- `synthvoicefx(device, player, idx, fx, config, value)` - Configure voice effects
+- `synthvoice(device, player, board, idx, config, value)` - Configure synth voice
+- `synthvoicefx(device, player, board, idx, fx, config, value)` - Configure voice effects
 
 ### Recording
-- `synthrecord(device, player, filename)` - Start/stop audio recording
+- `synthrecord(device, player, board, filename)` - Start/stop audio recording
 
 ### Broadcast
 - `synthbroadcastdestination()` - Get MediaStreamAudioDestinationNode for broadcasting

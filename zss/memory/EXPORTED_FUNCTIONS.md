@@ -259,6 +259,13 @@
 - **memorypickboardnearestpt(pt, items)** - Picks nearest element to a point
 - **memoryreadboardpath(board, forcollision, frompt, topt, flee)** - Calculates path between two points using distance maps
 
+## synthstate.ts
+
+- **memoryreadsynthstate(book, id)** - Reads cached synth state from book flags for id (e.g. board id)
+- **memorywritesynthstate(book, id, state)** - Writes synth state to book flags
+- **memoryclearsynthstate(book, id)** - Clears cached synth state for id
+- **memoryhassynthstate(book, id)** - Checks if synth state exists for id
+
 ## utilities.ts
 
 - **memoryadminmenu(player)** - Shows admin menu with player list and utilities (async)
