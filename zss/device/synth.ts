@@ -65,10 +65,10 @@ export function enableaudio() {
           locked = false
           enabled = true
           synthaudioenabled(
-          synthdevice,
-          registerreadplayer(),
-          useGadgetClient.getState().gadget.board ?? '',
-        )
+            synthdevice,
+            registerreadplayer(),
+            useGadgetClient.getState().gadget.board ?? '',
+          )
         })
       }
     })

@@ -11,10 +11,10 @@
  * - bgplayvolume: number
  * - ttsvolume: number
  */
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { memoryreadbookflag, memorywritebookflag } from './bookoperations'
-import { BOOK, MEMORY_LABEL } from './types'
+import { MEMORY_LABEL } from './types'
 
 import { memoryreadbookbysoftware } from '.'
 
@@ -31,25 +31,28 @@ export type SYNTH_STATE = {
 }
 
 export function memoryreadsynthstate(board: string): MAYBE<SYNTH_STATE> {
-  return memoryreadbookflag(book, board, SYNTHSTATE_FLAG)
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  return memoryreadbookflag(main, board, SYNTHSTATE_FLAG) as MAYBE<SYNTH_STATE>
 }
 
 export function memorywritesynthstate(board: string, state: SYNTH_STATE) {
-  const json = JSON.stringify(state)
-  memorywritebookflag(book, board, SYNTHSTATE_FLAG, json)
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  memorywritebookflag(main, board, SYNTHSTATE_FLAG, state as any)
   return state
 }
 
-export function memoryclearsynthstate(book: MAYBE<BOOK>, board: string) {
-  const flags = book?.flags[board]
+export function memoryclearsynthstate(board: string) {
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const flags = main?.flags[board]
   if (flags) {
     delete flags[SYNTHSTATE_FLAG]
   }
 }
 
 export function memoryhassynthstate(board: string): boolean {
-  const raw = memoryreadbookflag(book, board, SYNTHSTATE_FLAG)
-  return ispresent(raw) && isstring(raw)
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const state = memoryreadbookflag(main, board, SYNTHSTATE_FLAG)
+  return ispresent(state)
 }
 
 /**
@@ -69,7 +72,8 @@ export type SYNTH_CACHE = {
 }
 
 function readsynthcacheinternal(board: string): SYNTH_CACHE {
-  const parsed = memoryreadbookflag(book, board, SYNTHCACHE_FLAG) as any
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const parsed = memoryreadbookflag(main, board, SYNTHCACHE_FLAG) as any
   if (typeof parsed === 'object') {
     return {
       voices: Object(parsed.voices) === parsed.voices ? parsed.voices : {},
@@ -83,12 +87,9 @@ function readsynthcacheinternal(board: string): SYNTH_CACHE {
   return { voices: {}, voicefx: {} }
 }
 
-function memorywritesynthcache(
-  book: MAYBE<BOOK>,
-  board: string,
-  cache: Partial<SYNTH_CACHE>,
-) {
-  memorywritebookflag(book, board, SYNTHCACHE_FLAG, cache as any)
+function memorywritesynthcache(board: string, cache: Partial<SYNTH_CACHE>) {
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  memorywritebookflag(main, board, SYNTHCACHE_FLAG, cache as any)
 }
 
 export function memorymergesynthvoice(
@@ -97,12 +98,11 @@ export function memorymergesynthvoice(
   config: string | number,
   value: unknown,
 ) {
-  if (!book || !board) return
-  const cache = readsynthcacheinternal(book, board)
+  const cache = readsynthcacheinternal(board)
   const key = String(idx)
   if (!cache.voices[key]) cache.voices[key] = {}
   cache.voices[key][String(config)] = value
-  memorywritesynthcache(book, board, cache)
+  memorywritesynthcache(board, cache)
 }
 
 export function memorymergesynthvoicefx(
@@ -112,13 +112,15 @@ export function memorymergesynthvoicefx(
   config: unknown,
   value: unknown,
 ) {
-  if (!book || !board) return
-  const cache = readsynthcacheinternal(book, board)
+  if (!ispresent(board)) {
+    return
+  }
+  const cache = readsynthcacheinternal(board)
   const key = String(idx)
   if (!cache.voicefx[key]) cache.voicefx[key] = {}
   if (!cache.voicefx[key][fx]) cache.voicefx[key][fx] = {}
   cache.voicefx[key][fx][String(config)] = value
-  memorywritesynthcache(book, board, cache)
+  memorywritesynthcache(board, cache)
 }
 
 export function memorymergesynthglobal(
@@ -126,21 +128,21 @@ export function memorymergesynthglobal(
   key: 'bpm' | 'playvolume' | 'bgplayvolume' | 'ttsvolume',
   value: number,
 ) {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(main) || !ispresent(board)) {
+  if (!ispresent(board)) {
     return
   }
-  const cache = readsynthcacheinternal(book, board)
+  const cache = readsynthcacheinternal(board)
   cache[key] = value
-  memorywritesynthcache(book, board, cache)
+  memorywritesynthcache(board, cache)
 }
 
 export function memoryreadsynthcache(board: string) {
-  return readsynthcacheinternal(book, board)
+  return readsynthcacheinternal(board)
 }
 
 export function memoryclearsynthcache(board: string) {
-  const flags = book?.flags[board]
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const flags = main?.flags[board]
   if (flags) {
     delete flags[SYNTHCACHE_FLAG]
   }
