@@ -250,6 +250,16 @@ export function paneladdress(chip: string, target: string) {
   return `${chip}:${target}`
 }
 
+export type SYNTH_STATE = {
+  source: any[]
+  fxchain: any
+  fx: any[]
+  bpm?: number
+  playvolume?: number
+  bgplayvolume?: number
+  ttsvolume?: number
+}
+
 export type GADGET_STATE = {
   id: string
   board: string
@@ -264,6 +274,7 @@ export type GADGET_STATE = {
   scrollname?: string
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]
+  synthstate?: SYNTH_STATE
 }
 
 export const INPUT_ALT = 0x0001

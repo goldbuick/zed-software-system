@@ -24,6 +24,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   switch (message.target) {
     case 'paint': {
       const gadget = importgadgetstate(message.data)
+      console.info('paint', gadget)
       // expect compressed json
       useGadgetClient.setState({
         desync: false,
@@ -51,12 +52,13 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
 
             // unpack into gadget state
             const gadget = importgadgetstate(applied.newDocument)
+            console.info('patch', gadget)
             return {
               ...state,
               gadget,
               // write to layer cache
-              gadgetlayercache: {
-                ...state.gadgetlayercache,
+              layercache: {
+                ...state.layercache,
                 [gadget?.board ?? '']: gadget?.layers ?? [],
               },
               slim: applied.newDocument,

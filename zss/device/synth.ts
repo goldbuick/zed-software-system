@@ -64,11 +64,7 @@ export function enableaudio() {
           // lets rolling
           locked = false
           enabled = true
-          synthaudioenabled(
-            synthdevice,
-            registerreadplayer(),
-            useGadgetClient.getState().gadget.board ?? '',
-          )
+          synthaudioenabled(synthdevice, registerreadplayer())
         })
       }
     })

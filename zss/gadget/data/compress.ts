@@ -66,6 +66,7 @@ enum GADGET_STATE_KEYS {
   scrollname,
   scroll,
   sidebar,
+  synthstate,
 }
 
 export function exportgadgetstate(

@@ -23,7 +23,7 @@ export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
 export const useGadgetClient = create<{
   desync: boolean
   gadget: GADGET_STATE
-  gadgetlayercache: Record<string, LAYER[]>
+  layercache: Record<string, LAYER[]>
   slim: FORMAT_OBJECT
   zsswords: {
     cli: string[]
@@ -66,7 +66,7 @@ export const useGadgetClient = create<{
     scroll: [],
     sidebar: [],
   },
-  gadgetlayercache: {},
+  layercache: {},
   slim: [],
 }))
 

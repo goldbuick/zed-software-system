@@ -21,7 +21,7 @@ describe('state', () => {
       expect(state.gadget.board).toBe('')
       expect(state.gadget.layers).toEqual([])
       expect(state.zsswords.cli).toEqual([])
-      expect(state.gadgetlayercache).toEqual({})
+      expect(state.layercache).toEqual({})
       expect(state.slim).toEqual([])
     })
 

@@ -20,6 +20,7 @@ import {
   memoryconverttogadgetcontrollayer,
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
+import { memoryreadsynthstate } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
@@ -66,11 +67,11 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
         for (let i = 0; i < activelist.length; ++i) {
           const player = activelist[i]
           const playerboard = memoryreadplayerboard(player)
+          const boardid = playerboard?.id ?? ''
 
           // check layer cache
-          let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS> = layercache.get(
-            playerboard?.id ?? '',
-          )
+          let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS> =
+            layercache.get(boardid)
 
           // create layers if needed
           if (ispresent(playerboard) && !ispresent(gadgetlayers)) {
@@ -111,6 +112,9 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
             gadget.tickers = []
             gadget.sidebar = []
           }
+
+          // read synth state
+          gadget.synthstate = memoryreadsynthstate(boardid)
 
           // create compressed json from gadget
           const slim = exportgadgetstate(gadget)
