@@ -268,18 +268,14 @@ export function registernuke(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:nuke', undefined)
 }
 
-export function synthaudioenabled(
-  device: DEVICELIKE,
-  player: string,
-  board: string,
-) {
-  device.emit(player, 'synth:audioenabled', [board])
+export function synthaudioenabled(device: DEVICELIKE, player: string) {
+  device.emit(player, 'synth:audioenabled')
 }
 
 export function synthrestart(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
 ) {
   device.emit(player, 'synth:restart', [board])
 }
@@ -287,7 +283,7 @@ export function synthrestart(
 export function synthaudiobuffer(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   audiobuffer: AudioBuffer,
 ) {
   device.emit(player, 'synth:audiobuffer', [board, audiobuffer])
@@ -296,7 +292,7 @@ export function synthaudiobuffer(
 export function synthplay(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   buffer: string,
 ) {
   device.emit(player, 'synth:play', [board, buffer])
@@ -305,7 +301,7 @@ export function synthplay(
 export function synthbgplay(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   buffer: string,
   quantize: string,
 ) {
@@ -315,7 +311,7 @@ export function synthbgplay(
 export function synthbpm(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   bpm: number,
 ) {
   device.emit(player, 'synth:bpm', [board, bpm])
@@ -324,7 +320,7 @@ export function synthbpm(
 export function synthplayvolume(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   volume: number,
 ) {
   device.emit(player, 'synth:playvolume', [board, volume])
@@ -333,7 +329,7 @@ export function synthplayvolume(
 export function synthbgplayvolume(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   volume: number,
 ) {
   device.emit(player, 'synth:bgplayvolume', [board, volume])
@@ -342,7 +338,7 @@ export function synthbgplayvolume(
 export function synthttsvolume(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   volume: number,
 ) {
   device.emit(player, 'synth:ttsvolume', [board, volume])
@@ -398,7 +394,7 @@ export function synthttsclearqueue(
 export function synthvoice(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  board: MAYBE<string>,
   idx: number,
   config: number | string,
   value: MAYBE<number | string | number[]>,
@@ -421,14 +417,13 @@ export function synthvoicefx(
 export function synthrecord(
   device: DEVICELIKE,
   player: string,
-  board: string,
   filename: string,
 ) {
-  device.emit(player, 'synth:record', [board, filename])
+  device.emit(player, 'synth:record', [filename])
 }
 
-export function synthflush(device: DEVICELIKE, player: string, board: string) {
-  device.emit(player, 'synth:flush', [board])
+export function synthflush(device: DEVICELIKE, player: string) {
+  device.emit(player, 'synth:flush')
 }
 
 export function registerstore(

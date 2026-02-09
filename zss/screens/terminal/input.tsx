@@ -485,21 +485,28 @@ export function TerminalInput({
                     break
                   case 'v':
                     if (inputstateactive && ispresent(withclipboard())) {
-                      void withclipboard()
+                      withclipboard()
                         .readText()
                         .then((text) => {
                           // did we paste json ??
-                          const json = JSON.parse(text)
-                          if (isstring(json.exported) && ispresent(json.data)) {
-                            vmloader(
-                              SOFTWARE,
-                              player,
-                              undefined,
-                              'json',
-                              `file:${json.exported}`,
-                              JSON.stringify(json),
-                            )
-                            return
+                          try {
+                            const json = JSON.parse(text)
+                            if (
+                              isstring(json.exported) &&
+                              ispresent(json.data)
+                            ) {
+                              vmloader(
+                                SOFTWARE,
+                                player,
+                                undefined,
+                                'json',
+                                `file:${json.exported}`,
+                                JSON.stringify(json),
+                              )
+                              return
+                            }
+                          } catch (err) {
+                            console.error(err)
                           }
                           const cleantext = text.replaceAll('\r', '')
                           if (hasselection) {
@@ -512,6 +519,7 @@ export function TerminalInput({
                             )
                           }
                         })
+                        .catch((err) => console.error(err))
                     } else {
                       resettoend()
                     }
