@@ -20,6 +20,14 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadbookbysoftware } from 'zss/memory'
+import {
+  memoryclearsynthcache,
+  memorymergesynthglobal,
+  memorymergesynthvoice,
+  memorymergesynthvoicefx,
+} from 'zss/memory/synthstate'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { mapstrcategory } from 'zss/words/category'
 import { mapstrcollision } from 'zss/words/collision'
 import { mapstrcolor } from 'zss/words/color'
@@ -34,11 +42,16 @@ function handlesynthvoicefx(
   fx: string,
   words: WORD[],
 ) {
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(main)) {
+    return
+  }
   const [maybeconfig, maybevalue] = readargs(words, 0, [
     ARG_TYPE.NUMBER_OR_STRING,
     ARG_TYPE.MAYBE_NUMBER_OR_STRING,
   ])
   synthvoicefx(SOFTWARE, player, board, idx, fx, maybeconfig, maybevalue)
+  memorymergesynthvoicefx(main, board, idx, fx, maybeconfig, maybevalue)
 }
 
 const isfx = [
@@ -58,15 +71,36 @@ function handlesynthvoice(
   idx: number,
   words: WORD[],
 ) {
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(main)) {
+    return
+  }
   const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
   if (isnumber(voiceorfx)) {
     synthvoice(SOFTWARE, player, board, idx, 'volume', voiceorfx)
+    memorymergesynthvoice(main, board, idx, 'volume', voiceorfx)
   } else if (isfx.includes(NAME(voiceorfx))) {
     const [maybeconfig, maybevalue] = readargs(words, ii, [
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
     ])
-    synthvoicefx(SOFTWARE, player, board, idx, voiceorfx, maybeconfig, maybevalue)
+    synthvoicefx(
+      SOFTWARE,
+      player,
+      board,
+      idx,
+      voiceorfx,
+      maybeconfig,
+      maybevalue,
+    )
+    memorymergesynthvoicefx(
+      main,
+      board,
+      idx,
+      NAME(voiceorfx),
+      maybeconfig,
+      maybevalue,
+    )
   } else {
     // check for a list of numbers
     const [configorpartials] = readargs(words, ii, [
@@ -79,11 +113,13 @@ function handlesynthvoice(
       const partials = readargs(words, ii, argtypes).slice(0, count)
       const maybevalue = partials.length === 1 ? partials[0] : partials
       synthvoice(SOFTWARE, player, board, idx, voiceorfx, maybevalue)
+      memorymergesynthvoice(main, board, idx, voiceorfx, maybevalue)
     } else {
       const [maybevalue] = readargs(words, ii, [
         ARG_TYPE.MAYBE_NUMBER_OR_STRING,
       ])
       synthvoice(SOFTWARE, player, board, idx, voiceorfx, maybevalue)
+      memorymergesynthvoice(main, board, idx, voiceorfx, maybevalue)
     }
   }
 }
@@ -121,7 +157,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
-    synthttsengine(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', engine, config ?? '')
+    synthttsengine(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      engine,
+      config ?? '',
+    )
     return 0
   })
   .command('tts', (_, words) => {
@@ -138,9 +180,18 @@ export const AUDIO_FIRMWARE = createfirmware()
         phrase,
       )
     } else if (isstring(voice)) {
-      synthttsinfo(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', voice)
+      synthttsinfo(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        voice,
+      )
     } else {
-      synthttsclearqueue(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '')
+      synthttsclearqueue(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+      )
     }
     return 0
   })
@@ -160,22 +211,30 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('bpm', (_, words) => {
     const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synthbpm(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', bpm)
+    const bid = boardid()
+    synthbpm(SOFTWARE, READ_CONTEXT.elementfocus, bid, bpm)
+    memorymergesynthglobal(main, bid, 'bpm', bpm)
     return 0
   })
   .command('vol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synthplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', volume)
+    const bid = boardid()
+    synthplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, bid, volume)
+    memorymergesynthglobal(main, bid, 'playvolume', volume)
     return 0
   })
   .command('bgvol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synthbgplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', volume)
+    const bid = boardid()
+    synthbgplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, bid, volume)
+    memorymergesynthglobal(main, bid, 'bgplayvolume', volume)
     return 0
   })
   .command('ttsvol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synthttsvolume(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', volume)
+    const bid = boardid()
+    synthttsvolume(SOFTWARE, READ_CONTEXT.elementfocus, bid, volume)
+    memorymergesynthglobal(main, bid, 'ttsvolume', volume)
     return 0
   })
   .command('play', (chip, words) => {
@@ -220,77 +279,129 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('synth', (_, words) => {
+    const bid = boardid()
     if (words.length === 0) {
-      synthrestart(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '')
+      synthrestart(SOFTWARE, READ_CONTEXT.elementfocus, bid)
+      memoryclearsynthcache(main, bid)
       return 0
     }
     // multi-voice changes only apply to #play
     for (let i = 0; i < 4; ++i) {
-      handlesynthvoice(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, words)
+      handlesynthvoice(READ_CONTEXT.elementfocus, bid, i, words)
     }
     return 0
   })
   .command('synthrecord', (_, words) => {
     const [filename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-    synthrecord(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', filename ?? '')
+    synthrecord(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      filename ?? '',
+    )
     return 0
   })
   .command('synthflush', () => {
-    synthflush(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '')
+    synthflush(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+    )
     return 0
   })
   .command('echo', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, 'echo', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        'echo',
+        words,
+      )
     }
     return 0
   })
   .command('fcrush', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, 'fc', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        'fc',
+        words,
+      )
     }
     return 0
   })
   .command('autofilter', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, 'autofilter', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        'autofilter',
+        words,
+      )
     }
     return 0
   })
   .command('reverb', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, 'reverb', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        'reverb',
+        words,
+      )
     }
     return 0
   })
   .command('distort', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, 'distort', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        'distort',
+        words,
+      )
     }
     return 0
   })
   .command('vibrato', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, 'vibrato', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        'vibrato',
+        words,
+      )
     }
     return 0
   })
   .command('autowah', (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 2; ++i) {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, READ_CONTEXT.board?.id ?? '', i, 'autowah', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        'autowah',
+        words,
+      )
     }
     return 0
   })
 
 // handle individual synth voices
-const boardid = () => READ_CONTEXT.board?.id ?? ''
 for (let i = 0; i < 4; ++i) {
   AUDIO_FIRMWARE.command(`synth${i + 1}`, (_, words) => {
     handlesynthvoice(READ_CONTEXT.elementfocus, boardid(), i, words)
@@ -315,27 +426,63 @@ for (let i = 0; i < 4; ++i) {
     return 0
   })
     .command(`fcrush${idx}`, (_, words) => {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, boardid(), i, 'fcrush', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        boardid(),
+        i,
+        'fcrush',
+        words,
+      )
       return 0
     })
     .command(`autofilter${idx}`, (_, words) => {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, boardid(), i, 'autofilter', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        boardid(),
+        i,
+        'autofilter',
+        words,
+      )
       return 0
     })
     .command(`reverb${idx}`, (_, words) => {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, boardid(), i, 'reverb', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        boardid(),
+        i,
+        'reverb',
+        words,
+      )
       return 0
     })
     .command(`distort${idx}`, (_, words) => {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, boardid(), i, 'distort', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        boardid(),
+        i,
+        'distort',
+        words,
+      )
       return 0
     })
     .command(`vibrato${idx}`, (_, words) => {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, boardid(), i, 'vibrato', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        boardid(),
+        i,
+        'vibrato',
+        words,
+      )
       return 0
     })
     .command(`autowah${idx}`, (_, words) => {
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, boardid(), i, 'autowah', words)
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        boardid(),
+        i,
+        'autowah',
+        words,
+      )
       return 0
     })
 }
