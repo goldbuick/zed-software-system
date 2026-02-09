@@ -93,21 +93,21 @@ function readsynthcacheinternal(board: string): SYNTH_CACHE {
 export function memorymergesynthvoice(
   board: string,
   idx: number,
-  config: string | number,
-  value: unknown,
+  config: number | string,
+  value: MAYBE<number | string>,
 ) {
   const cache = readsynthcacheinternal(board)
   const key = String(idx)
   if (!cache.voices[key]) cache.voices[key] = {}
-  cache.voices[key][String(config)] = value
+  cache.voices[key][config] = value
 }
 
 export function memorymergesynthvoicefx(
   board: string,
   idx: number,
   fx: string,
-  config: string | number,
-  value: number | string,
+  config: number | string,
+  value: MAYBE<number | string>,
 ) {
   if (!ispresent(board)) {
     return
@@ -146,10 +146,6 @@ export function memorymergesynthglobal(
   }
   const cache = readsynthcacheinternal(board)
   cache[key] = value
-}
-
-export function memoryreadsynthcache(board: string) {
-  return readsynthcacheinternal(board)
 }
 
 export function memoryclearsynthcache(board: string) {
