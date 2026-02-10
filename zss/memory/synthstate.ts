@@ -116,6 +116,11 @@ export function memoryqueuesynthplay(board: string, play: string) {
     return
   }
 
+  if (board === '') {
+    synthplay(SOFTWARE, '', board, play)
+    return
+  }
+
   if (play === '') {
     const queue = readsynthplayinternal(board)
     queue.length = 0
