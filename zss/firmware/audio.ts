@@ -4,7 +4,6 @@ import {
   synthbgplayvolume,
   synthbpm,
   synthflush,
-  synthplay,
   synthplayvolume,
   synthrecord,
   synthtts,
