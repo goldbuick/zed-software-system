@@ -106,6 +106,8 @@ export function invokeplay(
   starttime: number,
   play: SYNTH_OP[] | string,
   withendofpattern = true,
+  makenotation = durationnotation,
+  calcseconds = durationseconds,
 ) {
   // translate ops into time, note pairs
   let time = starttime
@@ -118,11 +120,11 @@ export function invokeplay(
   function resetnote() {
     note = ''
     accidental = ''
-    time += durationseconds(duration)
+    time += calcseconds(duration)
   }
 
   function writenote() {
-    const notation = durationnotation(duration)
+    const notation = makenotation(duration)
     if (note === null) {
       pattern.push([time, [synth, notation, note]])
       resetnote()
