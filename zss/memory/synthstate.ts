@@ -1,105 +1,55 @@
-/**
- * Memory methods for caching synth state in book flags.
- * Synth state is stored per id (typically board id) as JSON.
- *
- * State format matches the synth's applyreplay interface plus global settings:
- * - source: array of 8 voice configs { type, synth, algo }
- * - fxchain: FX chain config
- * - fx: array of 4 FX channel configs
- * - bpm: number
- * - playvolume: number
- * - bgplayvolume: number
- * - ttsvolume: number
- */
 import { SYNTH_STATE } from 'zss/gadget/data/types'
-import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
+import { NAME } from 'zss/words/types'
 
-import {
-  memoryclearbookflags,
-  memoryreadbookflag,
-  memorywritebookflag,
-} from './bookoperations'
+import { memoryreadbookflag, memorywritebookflag } from './bookoperations'
 import { MEMORY_LABEL } from './types'
 
 import { memoryreadbookbysoftware } from '.'
 
-const SYNTHSTATE_FLAG = 'synthstate'
-
-export function memoryreadsynthstate(board: string): MAYBE<SYNTH_STATE> {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  return memoryreadbookflag(main, board, SYNTHSTATE_FLAG) as MAYBE<SYNTH_STATE>
+const SYNTH_STATE_FLAG = 'synthstate'
+const SYNTH_STATE_DEFAULT: SYNTH_STATE = {
+  voices: {},
+  voicefx: {},
 }
 
-export function memorywritesynthstate(board: string, state: SYNTH_STATE) {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  memorywritebookflag(main, board, SYNTHSTATE_FLAG, state as any)
-  return state
-}
-
-export function memoryclearsynthstate(board: string) {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  memoryclearbookflags(main, board)
-}
-
-export function memoryhassynthstate(board: string): boolean {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const state = memoryreadbookflag(main, board, SYNTHSTATE_FLAG)
-  return ispresent(state)
-}
-
-/**
- * Merged config cache for per-board synth state.
- * Built incrementally from synthvoice/synthvoicefx calls.
- * Replay by iterating and calling synthvoice/synthvoicefx for each entry.
- */
-const SYNTHCACHE_FLAG = 'synthcache'
-
-export type SYNTH_CACHE = {
-  voices: Record<string, Record<string, unknown>>
-  voicefx: Record<string, Record<string, Record<string, unknown>>>
-  bpm?: number
-  playvolume?: number
-  bgplayvolume?: number
-  ttsvolume?: number
-}
-
-function readsynthcacheinternal(board: string): SYNTH_CACHE {
+function readsynthcacheinternal(board: string): SYNTH_STATE {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const cache = memoryreadbookflag(
     main,
+    SYNTH_STATE_FLAG,
     board,
-    SYNTHCACHE_FLAG,
-  ) as MAYBE<SYNTH_CACHE>
+  ) as MAYBE<SYNTH_STATE>
+  // use the cached synth state
   if (ispresent(cache)) {
-    return {
-      voices: Object(cache.voices) === cache.voices ? cache.voices : {},
-      voicefx: Object(cache.voicefx) === cache.voicefx ? cache.voicefx : {},
-      bpm: cache.bpm,
-      playvolume: cache.playvolume,
-      bgplayvolume: cache.bgplayvolume,
-      ttsvolume: cache.ttsvolume,
-    }
+    return cache
   }
-  return {
-    voices: {},
-    voicefx: {},
-    bpm: 0,
-    playvolume: 0,
-    bgplayvolume: 0,
-    ttsvolume: 0,
-  }
+  // create a new synth state
+  const synthstate = deepcopy(SYNTH_STATE_DEFAULT)
+  memorywritebookflag(main, SYNTH_STATE_FLAG, board, synthstate as any)
+  return synthstate
+}
+
+export function memoryreadsynth(board: string): MAYBE<SYNTH_STATE> {
+  return readsynthcacheinternal(board)
 }
 
 export function memorymergesynthvoice(
   board: string,
   idx: number,
-  config: number | string,
+  config: string,
   value: MAYBE<number | string>,
 ) {
   const cache = readsynthcacheinternal(board)
-  const key = String(idx)
-  if (!cache.voices[key]) cache.voices[key] = {}
-  cache.voices[key][config] = value
+  if (NAME(config) === 'restart') {
+    cache.voices = {}
+    cache.voicefx = {}
+    return
+  }
+  if (!ispresent(cache.voices[idx])) {
+    cache.voices[idx] = {}
+  }
+  cache.voices[idx][config] = value
 }
 
 export function memorymergesynthvoicefx(
@@ -109,9 +59,6 @@ export function memorymergesynthvoicefx(
   config: number | string,
   value: MAYBE<number | string>,
 ) {
-  if (!ispresent(board)) {
-    return
-  }
   const cache = readsynthcacheinternal(board)
   if (!ispresent(cache.voicefx[idx])) {
     cache.voicefx[idx] = {}
@@ -133,25 +80,5 @@ export function memorymergesynthvoicefx(
         cache.voicefx[idx][fx][config] = value
       }
       break
-  }
-}
-
-export function memorymergesynthglobal(
-  board: string,
-  key: 'bpm' | 'playvolume' | 'bgplayvolume' | 'ttsvolume',
-  value: number,
-) {
-  if (!ispresent(board)) {
-    return
-  }
-  const cache = readsynthcacheinternal(board)
-  cache[key] = value
-}
-
-export function memoryclearsynthcache(board: string) {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const flags = main?.flags[board]
-  if (flags) {
-    delete flags[SYNTHCACHE_FLAG]
   }
 }

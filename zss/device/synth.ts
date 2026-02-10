@@ -12,6 +12,7 @@ import {
 } from 'zss/feature/tts'
 import { write } from 'zss/feature/writeui'
 import { useGadgetClient } from 'zss/gadget/data/state'
+import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
@@ -22,6 +23,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import { NAME } from 'zss/words/types'
 
 import { apierror, apilog, synthaudioenabled, vmloader } from './api'
 import { registerreadplayer } from './register'
@@ -189,8 +191,59 @@ const synthdevice = createdevice('synth', [], (message) => {
         }
       }
       break
-    case 'restart':
-      synth?.applyreset()
+    case 'update':
+      if (isarray(message.data)) {
+        const [board, synthstate] = message.data as [string, SYNTH_STATE]
+        if (board === '' || board === currentboard) {
+          // apply voices
+          const idxvoices = Object.keys(synthstate.voices).map(Number)
+          for (let i = 0; i < idxvoices.length; ++i) {
+            const idx = idxvoices[i]
+            const voice = synthstate.voices[idx]
+            const configs = Object.keys(voice)
+            for (let j = 0; j < configs.length; ++j) {
+              const config = configs[j]
+              const value = voice[config]
+              synthvoiceconfig(message.player, synth, idx, config, value ?? '')
+            }
+          }
+          // apply voicefx
+          const idxvoicefx = Object.keys(synthstate.voicefx).map(Number)
+          for (let i = 0; i < idxvoicefx.length; ++i) {
+            const idx = idxvoicefx[i]
+            const voicefx = synthstate.voicefx[idx]
+            const configs = Object.keys(voicefx)
+            for (let j = 0; j < configs.length; ++j) {
+              const fxname = configs[j]
+              const fxstate = voicefx[fxname]
+              const fxconfigs = Object.keys(fxstate)
+              for (let k = 0; k < fxconfigs.length; ++k) {
+                const fxconfig = fxconfigs[k]
+                const fxvalue = fxstate[fxconfig]
+                if (NAME(fxconfig) === 'on') {
+                  synthvoicefxconfig(
+                    message.player,
+                    synth,
+                    idx,
+                    fxname as FXNAME,
+                    fxvalue ?? '',
+                    '',
+                  )
+                } else {
+                  synthvoicefxconfig(
+                    message.player,
+                    synth,
+                    idx,
+                    fxname as FXNAME,
+                    fxconfig,
+                    fxvalue ?? '',
+                  )
+                }
+              }
+            }
+          }
+        }
+      }
       break
     case 'voice':
       if (isarray(message.data)) {

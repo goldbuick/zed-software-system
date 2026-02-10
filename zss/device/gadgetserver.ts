@@ -20,7 +20,7 @@ import {
   memoryconverttogadgetcontrollayer,
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
-import { memoryreadsynthstate } from 'zss/memory/synthstate'
+import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
@@ -114,7 +114,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
           }
 
           // read synth state
-          gadget.synthstate = memoryreadsynthstate(boardid)
+          gadget.synthstate = memoryreadsynth(boardid)
 
           // create compressed json from gadget
           const slim = exportgadgetstate(gadget)

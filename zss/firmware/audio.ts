@@ -7,7 +7,6 @@ import {
   synthplay,
   synthplayvolume,
   synthrecord,
-  synthrestart,
   synthtts,
   synthttsclearqueue,
   synthttsengine,
@@ -21,8 +20,6 @@ import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
-  memoryclearsynthcache,
-  memorymergesynthglobal,
   memorymergesynthvoice,
   memorymergesynthvoicefx,
 } from 'zss/memory/synthstate'
@@ -83,13 +80,7 @@ function handlesynthvoice(
       maybeconfig,
       maybevalue,
     )
-    memorymergesynthvoicefx(
-      board,
-      idx,
-      NAME(voiceorfx),
-      maybeconfig,
-      maybevalue,
-    )
+    memorymergesynthvoicefx(board, idx, voiceorfx, maybeconfig, maybevalue)
   } else {
     // check for a list of numbers
     const [configorpartials] = readargs(words, ii, [
@@ -200,30 +191,42 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('bpm', (_, words) => {
     const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    const bid = READ_CONTEXT.board?.id ?? ''
-    synthbpm(SOFTWARE, READ_CONTEXT.elementfocus, bid, bpm)
-    memorymergesynthglobal(bid, 'bpm', bpm)
+    synthbpm(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      bpm,
+    )
     return 0
   })
   .command('vol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    const bid = READ_CONTEXT.board?.id ?? ''
-    synthplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, bid, volume)
-    memorymergesynthglobal(bid, 'playvolume', volume)
+    synthplayvolume(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      volume,
+    )
     return 0
   })
   .command('bgvol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    const bid = READ_CONTEXT.board?.id ?? ''
-    synthbgplayvolume(SOFTWARE, READ_CONTEXT.elementfocus, bid, volume)
-    memorymergesynthglobal(bid, 'bgplayvolume', volume)
+    synthbgplayvolume(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      volume,
+    )
     return 0
   })
   .command('ttsvol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    const bid = READ_CONTEXT.board?.id ?? ''
-    synthttsvolume(SOFTWARE, READ_CONTEXT.elementfocus, bid, volume)
-    memorymergesynthglobal(bid, 'ttsvolume', volume)
+    synthttsvolume(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      volume,
+    )
     return 0
   })
   .command('play', (chip, words) => {
@@ -268,15 +271,14 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('synth', (_, words) => {
-    const bid = READ_CONTEXT.board?.id ?? ''
-    if (words.length === 0) {
-      synthrestart(SOFTWARE, READ_CONTEXT.elementfocus, bid)
-      memoryclearsynthcache(bid)
-      return 0
-    }
     // multi-voice changes only apply to #play
     for (let i = 0; i < 4; ++i) {
-      handlesynthvoice(READ_CONTEXT.elementfocus, bid, i, words)
+      handlesynthvoice(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        i,
+        words,
+      )
     }
     return 0
   })

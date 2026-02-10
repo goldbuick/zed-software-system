@@ -1,3 +1,4 @@
+import { MAYBE } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
 
@@ -251,13 +252,11 @@ export function paneladdress(chip: string, target: string) {
 }
 
 export type SYNTH_STATE = {
-  source: any[]
-  fxchain: any
-  fx: any[]
-  bpm?: number
-  playvolume?: number
-  bgplayvolume?: number
-  ttsvolume?: number
+  voices: Record<string, Record<string, MAYBE<number | string>>>
+  voicefx: Record<
+    string,
+    Record<string, Record<string, MAYBE<number | string>>>
+  >
 }
 
 export type GADGET_STATE = {
