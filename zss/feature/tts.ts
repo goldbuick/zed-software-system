@@ -108,7 +108,12 @@ async function audiobuffertask(
     .catch(console.error)
 }
 
-export function ttsqueue(player: string, board: string, voice: string, input: string) {
+export function ttsqueue(
+  player: string,
+  board: string,
+  voice: string,
+  input: string,
+) {
   audiobufferqueue
     .add(async () => {
       await audiobuffertask(player, board, voice, input)

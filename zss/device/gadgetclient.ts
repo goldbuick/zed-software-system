@@ -55,8 +55,8 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
               ...state,
               gadget,
               // write to layer cache
-              gadgetlayercache: {
-                ...state.gadgetlayercache,
+              layercache: {
+                ...state.layercache,
                 [gadget?.board ?? '']: gadget?.layers ?? [],
               },
               slim: applied.newDocument,

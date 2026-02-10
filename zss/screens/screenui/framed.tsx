@@ -1,7 +1,9 @@
 /* eslint-disable react/no-unknown-property */
+import { useEffect } from 'react'
 import {
   registerterminalopen,
   registerterminalquickopen,
+  synthupdate,
   vmclirepeatlast,
   vmfindany,
   vminput,
@@ -23,6 +25,7 @@ import { MediaLayers } from 'zss/gadget/graphics/medialayer'
 import { Mode7Graphics } from 'zss/gadget/graphics/mode7'
 import { UserInput, UserInputMods, modsfromevent } from 'zss/gadget/userinput'
 import { ispid } from 'zss/mapping/guid'
+import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -66,6 +69,13 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
     const control = layersreadcontrol(state.gadget.layers ?? [])
     return control.graphics
   })
+
+  const { board, synthstate } = useGadgetClient.getState().gadget
+  useEffect(() => {
+    if (ispresent(synthstate)) {
+      synthupdate(SOFTWARE, player, board, synthstate)
+    }
+  }, [player, board, synthstate])
 
   return (
     <>

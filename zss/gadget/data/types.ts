@@ -1,3 +1,4 @@
+import { MAYBE } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
 
@@ -250,6 +251,14 @@ export function paneladdress(chip: string, target: string) {
   return `${chip}:${target}`
 }
 
+export type SYNTH_STATE = {
+  voices: Record<string, Record<string, MAYBE<number | string>>>
+  voicefx: Record<
+    string,
+    Record<string, Record<string, MAYBE<number | string>>>
+  >
+}
+
 export type GADGET_STATE = {
   id: string
   board: string
@@ -264,6 +273,7 @@ export type GADGET_STATE = {
   scrollname?: string
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]
+  synthstate?: SYNTH_STATE
 }
 
 export const INPUT_ALT = 0x0001

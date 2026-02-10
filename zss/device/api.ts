@@ -2,7 +2,7 @@
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
-import { INPUT } from 'zss/gadget/data/types'
+import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
@@ -272,14 +272,6 @@ export function synthaudioenabled(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:audioenabled')
 }
 
-export function synthrestart(
-  device: DEVICELIKE,
-  player: string,
-  board: MAYBE<string>,
-) {
-  device.emit(player, 'synth:restart', [board])
-}
-
 export function synthaudiobuffer(
   device: DEVICELIKE,
   player: string,
@@ -424,6 +416,15 @@ export function synthrecord(
 
 export function synthflush(device: DEVICELIKE, player: string) {
   device.emit(player, 'synth:flush')
+}
+
+export function synthupdate(
+  device: DEVICELIKE,
+  player: string,
+  board: MAYBE<string>,
+  synthstate: SYNTH_STATE,
+) {
+  device.emit(player, 'synth:update', [board, synthstate])
 }
 
 export function registerstore(
