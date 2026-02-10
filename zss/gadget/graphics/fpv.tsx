@@ -254,12 +254,12 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
 
-  const { gadget, layercache: gadgetlayercache } = useGadgetClient.getState()
+  const { gadget, layercache } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const exiteast = gadgetlayercache[gadget.exiteast] ?? []
-  const exitwest = gadgetlayercache[gadget.exitwest] ?? []
-  const exitnorth = gadgetlayercache[gadget.exitnorth] ?? []
-  const exitsouth = gadgetlayercache[gadget.exitsouth] ?? []
+  const exiteast = layercache[gadget.exiteast] ?? []
+  const exitwest = layercache[gadget.exitwest] ?? []
+  const exitnorth = layercache[gadget.exitnorth] ?? []
+  const exitsouth = layercache[gadget.exitsouth] ?? []
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
