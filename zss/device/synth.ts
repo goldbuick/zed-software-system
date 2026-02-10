@@ -204,7 +204,15 @@ const synthdevice = createdevice('synth', [], (message) => {
             for (let j = 0; j < configs.length; ++j) {
               const config = configs[j]
               const value = voice[config]
-              synthvoiceconfig(message.player, synth, idx, config, value ?? '')
+              if (NAME(config) !== 'restart') {
+                synthvoiceconfig(
+                  message.player,
+                  synth,
+                  idx,
+                  config,
+                  value ?? '',
+                )
+              }
             }
           }
           // apply voicefx
