@@ -1,3 +1,4 @@
+import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
@@ -81,4 +82,52 @@ export function memorymergesynthvoicefx(
       }
       break
   }
+}
+
+type SYNTH_PLAY = [string, number]
+
+const SYNTH_PLAY_FLAG = 'synthplay'
+const SYNTH_PLAY_DEFAULT: SYNTH_PLAY[] = []
+
+function readsynthplayinternal(board: string): SYNTH_PLAY[] {
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const queue = memoryreadbookflag(main, SYNTH_PLAY_FLAG, board) as MAYBE<
+    SYNTH_PLAY[]
+  >
+  // use queue state
+  if (ispresent(queue)) {
+    return queue
+  }
+  // create a new synth play queue
+  const synthplay = deepcopy(SYNTH_PLAY_DEFAULT)
+  memorywritebookflag(main, SYNTH_PLAY_FLAG, board, synthplay as any)
+  return synthplay
+}
+
+export function memoryqueuesynthplay(board: string, play: string) {
+  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(main)) {
+    return
+  }
+
+  const invokes = parseplay(play)
+  let endtime = 0
+  for (let i = 0; i < invokes.length; ++i) {
+    const invoke = invokes[i]
+    const pattern = invokeplay(
+      i,
+      0,
+      invoke,
+      true,
+      (duration) => `${duration}n` as any,
+      (duration) => duration * 0.5,
+    )
+    const last = pattern[pattern.length - 1]
+    if (ispresent(last)) {
+      endtime = Math.max(endtime, last[0])
+    }
+  }
+
+  const queue = readsynthplayinternal(board)
+  queue.push([play, endtime])
 }

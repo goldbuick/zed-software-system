@@ -22,6 +22,7 @@ import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
   memorymergesynthvoice,
   memorymergesynthvoicefx,
+  memoryqueuesynthplay,
 } from 'zss/memory/synthstate'
 import { mapstrcategory } from 'zss/words/category'
 import { mapstrcollision } from 'zss/words/collision'
@@ -230,9 +231,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('play', (chip, words) => {
-    synthplay(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
+    memoryqueuesynthplay(
       READ_CONTEXT.board?.id ?? '',
       handleplaystr(chip, words),
     )
