@@ -1,5 +1,6 @@
 import { objectKeys } from 'ts-extras'
-import { MESSAGE } from 'zss/device/api'
+import { MESSAGE, synthplay } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -15,6 +16,7 @@ import {
   memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from './playermanagement'
+import { memoryreadsynthplay } from './synthstate'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -144,6 +146,22 @@ export function memorytickmain(playeronly = false) {
       } else if (!playeronly || ispid(object?.id ?? '')) {
         // handle active code
         memorytickobject(mainbook, board, object, code)
+      }
+    }
+    // process synth play queue
+    const queue = memoryreadsynthplay(board.id)
+    if (queue.length > 0) {
+      const [play, endtime] = queue[0]
+      const dec = endtime - 1
+      if (play) {
+        // dispatch play
+        synthplay(SOFTWARE, '', board.id, play)
+        console.info('play queue', board.id, play)
+      }
+      if (dec > 0) {
+        queue[0] = ['', dec]
+      } else {
+        queue.shift()
       }
     }
   }

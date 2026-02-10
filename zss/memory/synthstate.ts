@@ -1,3 +1,5 @@
+import { synthplay } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
@@ -84,7 +86,7 @@ export function memorymergesynthvoicefx(
   }
 }
 
-type SYNTH_PLAY = [string, number]
+export type SYNTH_PLAY = [string, number]
 
 const SYNTH_PLAY_FLAG = 'synthplay'
 const SYNTH_PLAY_DEFAULT: SYNTH_PLAY[] = []
@@ -104,9 +106,20 @@ function readsynthplayinternal(board: string): SYNTH_PLAY[] {
   return synthplay
 }
 
+export function memoryreadsynthplay(board: string): SYNTH_PLAY[] {
+  return readsynthplayinternal(board)
+}
+
 export function memoryqueuesynthplay(board: string, play: string) {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(main)) {
+    return
+  }
+
+  if (play === '') {
+    const queue = readsynthplayinternal(board)
+    queue.length = 0
+    synthplay(SOFTWARE, '', board, '')
     return
   }
 
@@ -120,7 +133,7 @@ export function memoryqueuesynthplay(board: string, play: string) {
       invoke,
       true,
       (duration) => `${duration}n` as any,
-      (duration) => duration * 0.5,
+      (duration) => Math.max(1, Math.round(duration * 0.5 - 2)),
     )
     const last = pattern[pattern.length - 1]
     if (ispresent(last)) {
