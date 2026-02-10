@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import {
   registerterminalopen,
   registerterminalquickopen,
@@ -25,7 +25,7 @@ import { MediaLayers } from 'zss/gadget/graphics/medialayer'
 import { Mode7Graphics } from 'zss/gadget/graphics/mode7'
 import { UserInput, UserInputMods, modsfromevent } from 'zss/gadget/userinput'
 import { ispid } from 'zss/mapping/guid'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
