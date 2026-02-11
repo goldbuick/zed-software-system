@@ -47,31 +47,12 @@ export default defineConfig(({ mode }) => {
       }),
       ...(nohttps ? [] : [mkcert()]),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
-      ...(useanalyzer
-        ? [analyzer({ exclude: ['**/*.wasm', /\.wasm$/] })]
-        : []),
+      ...(useanalyzer ? [analyzer()] : []),
     ],
     resolve: {
       alias: {
         zss: path.resolve(__dirname, './zss'),
         cafe: path.resolve(__dirname, './cafe'),
-      },
-    },
-    worker: {
-      format: 'es',
-    },
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules/phonemizer')) {
-              return 'phonemizer'
-            }
-            if (id.includes('node_modules/@huggingface')) {
-              return 'huggingface'
-            }
-          },
-        },
       },
     },
     optimizeDeps: {

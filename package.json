@@ -14,7 +14,7 @@
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
-    "analyze": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
+    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
     "tauri": "tauri",
     "tauri:version": "npx tsx sync-version.ts",
     "tauri:win": "tauri build -t x86_64-pc-windows-msvc",
