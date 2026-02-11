@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Y } from 'zss/device/modem'
+import type { SharedTextHandle } from 'zss/device/modem'
 import { ROM_LOOKUP, romintolookup, romread } from 'zss/feature/rom'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
@@ -59,7 +59,7 @@ export type EditorRowsProps = {
   xoffset: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
-  codepage: MAYBE<Y.Text>
+  codepage: MAYBE<SharedTextHandle>
 }
 
 export function EditorRows({

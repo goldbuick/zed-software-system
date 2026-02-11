@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import {
   apierror,
   apilog,
@@ -7,7 +7,13 @@ import {
   registerterminalinclayout,
   vmcli,
 } from 'zss/device/api'
-import { Y } from 'zss/device/modem'
+import type { Patch } from 'json-joy/lib/json-crdt-patch'
+import {
+  getModemLog,
+  modemApplyAndSyncPatch,
+  patchAffectsNode,
+  type SharedTextHandle,
+} from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
@@ -38,7 +44,7 @@ export type EditorInputProps = {
   xoffset: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
-  codepage: MAYBE<Y.Text>
+  codepage: MAYBE<SharedTextHandle>
 }
 
 export function EditorInput({
@@ -152,6 +158,7 @@ export function EditorInput({
 
   const strvaluesplice = useCallback(
     function (index: number, count: number, insert?: string) {
+      cursorBeforeEditRef.current = tapeeditor.cursor
       if (count > 0) {
         codepage?.delete(index, count)
       }
@@ -170,6 +177,7 @@ export function EditorInput({
 
   const strvaluespliceonly = useCallback(
     function (index: number, count: number, insert?: string) {
+      cursorBeforeEditRef.current = tapeeditor.cursor
       if (count > 0) {
         codepage?.delete(index, count)
       }
@@ -264,28 +272,80 @@ export function EditorInput({
     [codeend, rows, rowsend, xcursor, ycursor, updatescrolling],
   )
 
-  const undomanager = useMemo(() => {
-    return codepage ? new Y.UndoManager(codepage) : undefined
-  }, [codepage])
+  type UndoEntry = {
+    patch: Patch
+    undoPatch: Patch
+    cursorBefore: number
+    cursorAfter?: number
+  }
+  const undoStack = useRef<UndoEntry[]>([])
+  const redoStack = useRef<UndoEntry[]>([])
+  const cursorBeforeEditRef = useRef(0)
+
+  const undomanager = ispresent(codepage)
+    ? {
+        undo() {
+          const top = undoStack.current.pop()
+          if (!top) return
+          redoStack.current.push({
+            ...top,
+            cursorAfter: tapeeditor.cursor,
+          })
+          modemApplyAndSyncPatch(top.undoPatch)
+          updatescrolling(top.cursorBefore)
+          useEditor.setState({ cursor: top.cursorBefore, select: undefined })
+        },
+        redo() {
+          const top = redoStack.current.pop()
+          if (!top) return
+          const log = getModemLog()
+          let redoPatch: Patch
+          try {
+            redoPatch = log.undo(top.undoPatch)
+          } catch {
+            const [rebased] = log.rebaseBatch([top.patch])
+            if (!rebased) return
+            redoPatch = rebased
+          }
+          modemApplyAndSyncPatch(redoPatch)
+          let newUndoPatch: Patch
+          try {
+            newUndoPatch = log.undo(redoPatch)
+          } catch {
+            newUndoPatch = top.undoPatch
+          }
+          undoStack.current.push({
+            patch: redoPatch,
+            undoPatch: newUndoPatch,
+            cursorBefore: top.cursorBefore,
+            cursorAfter: tapeeditor.cursor,
+          })
+          const newCursor = top.cursorAfter ?? tapeeditor.cursor
+          updatescrolling(newCursor)
+          useEditor.setState({ cursor: newCursor, select: undefined })
+        },
+      }
+    : undefined
 
   useEffect(() => {
-    function handleadded(arg0: any) {
-      arg0.stackItem.meta.set('cursor', tapeeditor.cursor)
-    }
-    function handlepopped(arg0: any) {
-      if (arg0.stackItem.meta.has('cursor')) {
-        const cursor = arg0.stackItem.meta.get('cursor')
-        updatescrolling(cursor)
-        useEditor.setState({ cursor })
+    if (!ispresent(codepage)) return
+    const log = getModemLog()
+    const unsub = log.end.api.onFlush.listen((patch: Patch) => {
+      if (!patchAffectsNode(patch, codepage.nodeId)) return
+      try {
+        const undoPatch = log.undo(patch)
+        undoStack.current.push({
+          patch,
+          undoPatch,
+          cursorBefore: cursorBeforeEditRef.current,
+        })
+        redoStack.current = []
+      } catch {
+        // log.undo can throw for edge cases
       }
-    }
-    undomanager?.on('stack-item-added', handleadded)
-    undomanager?.on('stack-item-popped', handlepopped)
-    return () => {
-      undomanager?.off('stack-item-added', handleadded)
-      undomanager?.off('stack-item-popped', handlepopped)
-    }
-  }, [undomanager, tapeeditor.cursor, updatescrolling])
+    })
+    return () => unsub()
+  }, [codepage?.nodeId?.sid, codepage?.nodeId?.time])
 
   return (
     <>
@@ -335,7 +395,7 @@ export function EditorInput({
         }}
         OK_BUTTON={() => {
           if (ispresent(codepage)) {
-            // insert newline !
+            cursorBeforeEditRef.current = tapeeditor.cursor
             codepage.insert(tapeeditor.cursor, `\n`)
             const cursor = tapeeditor.cursor + 1
             updatescrolling(cursor)
@@ -380,16 +440,13 @@ export function EditorInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'z':
-                    if (ismac && mods.shift) {
-                      undomanager?.redo()
-                    } else {
-                      undomanager?.undo()
+                    if (undomanager) {
+                      if (ismac && mods.shift) undomanager.redo()
+                      else undomanager.undo()
                     }
                     break
                   case 'y':
-                    if (!ismac) {
-                      undomanager?.redo()
-                    }
+                    if (undomanager && !ismac) undomanager.redo()
                     break
                   case 'a':
                     updatescrolling(codeend)
@@ -472,6 +529,7 @@ export function EditorInput({
                     strvaluesplice(ii1, iic, event.key)
                   }
                 } else {
+                  cursorBeforeEditRef.current = tapeeditor.cursor
                   const cursor = tapeeditor.cursor + event.key.length
                   codepage.insert(tapeeditor.cursor, event.key)
                   updatescrolling(cursor)

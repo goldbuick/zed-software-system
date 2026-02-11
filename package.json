@@ -9,12 +9,12 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "clear": "rimraf dist && rimraf dist-ssr && rimraf node_modules/.vite",
     "dev": "yarn && yarn clear && vite --host 0.0.0.0 --port 7777",
-    "preview": "yarn && yarn clear && vite preview",
+    "preview": "yarn && yarn clear && vite preview --host 0.0.0.0 --port 7777",
     "build": "yarn && yarn clear && vite build",
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
-    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
+    "analyze": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
     "tauri": "tauri",
     "tauri:version": "npx tsx sync-version.ts",
     "tauri:win": "tauri build -t x86_64-pc-windows-msvc",
@@ -112,7 +112,6 @@
     "wavefunctioncollapse": "^2.1.0",
     "weighted": "^1.0.0",
     "weighted-shuffle": "^1.0.0",
-    "yjs": "^13.6.24",
     "zustand": "^5.0.1"
   }
 }
