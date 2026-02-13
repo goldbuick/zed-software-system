@@ -7,6 +7,24 @@ import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import type { StrApi } from 'json-joy/lib/json-crdt/model/api/nodes'
 
+/** Presence information for remote users editing codepages */
+export interface PresenceState {
+  /** Client/player ID */
+  clientId: string
+  /** User display name */
+  name: string
+  /** User color (hex) */
+  color: string
+  /** Cursor position in text */
+  cursor: number
+  /** Selection start (if selecting) */
+  select?: number
+  /** Codepage key being edited */
+  codepageKey: string
+  /** Last update timestamp */
+  lastSeen: number
+}
+
 /** Timestamp id for matching patches to a specific string node (undo scope) */
 export interface NodeId {
   sid: number
@@ -291,6 +309,21 @@ const modem = createdevice('modem', ['second'], (message) => {
       }
       break
     }
+    case 'presence': {
+      if (message.sender !== modem.id() && ispresent(message.data)) {
+        try {
+          const presence = message.data as Omit<PresenceState, 'lastSeen'>
+          // Update presence map (no relay needed - each client broadcasts directly)
+          presenceMap.set(presence.clientId, {
+            ...presence,
+            lastSeen: Date.now(),
+          })
+        } catch (e) {
+          console.error('modem presence decode', e)
+        }
+      }
+      break
+    }
   }
 })
 
@@ -300,3 +333,74 @@ function handleflush(patch: Patch) {
 
 SYNC_MODEL.api.autoFlush(true)
 SYNC_MODEL.api.onFlush.listen(handleflush)
+
+// Presence state management (ephemeral, not in CRDT)
+const presenceMap = new Map<string, PresenceState>()
+const PRESENCE_TIMEOUT = 30000 // Remove presence after 30 seconds of inactivity
+
+/** Broadcast presence information to all peers */
+export function modembroadcastpresence(
+  clientId: string,
+  codepageKey: string,
+  cursor: number,
+  select?: number,
+  name?: string,
+  color?: string,
+) {
+  const presence: Omit<PresenceState, 'lastSeen'> = {
+    clientId,
+    codepageKey,
+    cursor,
+    select,
+    name: name ?? `User ${clientId.slice(0, 6)}`,
+    color: color ?? '#3b82f6', // Default blue
+  }
+  modem.emit('', 'modem:presence', presence)
+  
+  // Update local presence immediately
+  presenceMap.set(clientId, {
+    ...presence,
+    lastSeen: Date.now(),
+  })
+}
+
+/** Get all presence states for a specific codepage */
+export function getpresenceforcodepage(codepageKey: string): PresenceState[] {
+  const now = Date.now()
+  const result: PresenceState[] = []
+  
+  // Clean up stale entries and collect active ones
+  for (const [clientId, presence] of presenceMap.entries()) {
+    if (now - presence.lastSeen > PRESENCE_TIMEOUT) {
+      presenceMap.delete(clientId)
+    } else if (presence.codepageKey === codepageKey) {
+      result.push(presence)
+    }
+  }
+  
+  return result
+}
+
+/** Hook to observe presence for a codepage */
+export function usePresence(codepageKey: string | undefined): PresenceState[] {
+  const [presence, setPresence] = useState<PresenceState[]>([])
+  
+  useEffect(() => {
+    if (!codepageKey) {
+      setPresence([])
+      return
+    }
+    
+    // Update presence periodically and on changes
+    const updatePresence = () => {
+      setPresence(getpresenceforcodepage(codepageKey))
+    }
+    
+    updatePresence()
+    const interval = setInterval(updatePresence, 500) // Check every 500ms
+    
+    return () => clearInterval(interval)
+  }, [codepageKey])
+  
+  return presence
+}

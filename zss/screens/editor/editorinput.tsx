@@ -1,3 +1,4 @@
+import type { Patch } from 'json-joy/lib/json-crdt-patch'
 import { useCallback, useEffect, useRef } from 'react'
 import {
   apierror,
@@ -7,12 +8,13 @@ import {
   registerterminalinclayout,
   vmcli,
 } from 'zss/device/api'
-import type { Patch } from 'json-joy/lib/json-crdt-patch'
 import {
+  type SharedTextHandle,
   getModemLog,
   modemApplyAndSyncPatch,
+  modembroadcastpresence,
   patchAffectsNode,
-  type SharedTextHandle,
+  usePresence,
 } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -62,11 +64,75 @@ export function EditorInput({
   const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
 
+  // Get codepage key for presence tracking
+  const codepageKey = ispresent(codepage)
+    ? `${codepage.nodeId.sid}:${codepage.nodeId.time}`
+    : undefined
+
+  // Get remote presence for this codepage
+  const remotePresence = usePresence(codepageKey)
+
+  // Debounced presence broadcast ref
+  const presenceTimeoutRef = useRef<number | undefined>(undefined)
+
   // split by line
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
   const rowsend = rows.length - 1
 
-  // draw cursor
+  // Generate color from player ID (simple hash)
+  const getColorForPlayer = useCallback((playerId: string): string => {
+    let hash = 0
+    for (let i = 0; i < playerId.length; i++) {
+      hash = playerId.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const hue = Math.abs(hash % 360)
+    return `hsl(${hue}, 70%, 50%)`
+  }, [])
+
+  // Broadcast presence when cursor or selection changes
+  useEffect(() => {
+    if (!codepageKey || !ispresent(codepage)) {
+      // Clear timeout if editor closes
+      if (presenceTimeoutRef.current) {
+        clearTimeout(presenceTimeoutRef.current)
+        presenceTimeoutRef.current = undefined
+      }
+      return
+    }
+
+    // Clear existing timeout
+    if (presenceTimeoutRef.current) {
+      clearTimeout(presenceTimeoutRef.current)
+    }
+
+    // Debounce presence updates (broadcast every 100ms max)
+    presenceTimeoutRef.current = window.setTimeout(() => {
+      modembroadcastpresence(
+        player,
+        codepageKey,
+        tapeeditor.cursor,
+        tapeeditor.select,
+        `User ${player.slice(0, 6)}`, // Simple name from player ID
+        getColorForPlayer(player), // Generate color from player ID
+      )
+    }, 100)
+
+    return () => {
+      if (presenceTimeoutRef.current) {
+        clearTimeout(presenceTimeoutRef.current)
+        presenceTimeoutRef.current = undefined
+      }
+    }
+  }, [
+    codepageKey,
+    tapeeditor.cursor,
+    tapeeditor.select,
+    player,
+    codepage,
+    getColorForPlayer,
+  ])
+
+  // draw local cursor
   const xblink = xcursor + 1 - xoffset
   const yblink = ycursor + 2 - yoffset
   if (ispresent(codepage)) {
@@ -89,6 +155,81 @@ export function EditorInput({
     }
   }
   blinkdelta.current = { x: xblink, y: yblink }
+
+  // draw remote cursors
+  if (ispresent(codepage) && remotePresence.length > 0) {
+    for (const presence of remotePresence) {
+      // Skip our own presence
+      if (presence.clientId === player) continue
+
+      const remoteCursor = presence.cursor
+      const remoteY = findcursorinrows(remoteCursor, rows)
+      const remoteRow = rows[remoteY]
+      if (!remoteRow) continue
+
+      const remoteX = remoteCursor - remoteRow.start
+      const remoteXblink = remoteX + 1 - xoffset
+      const remoteYblink = remoteY + 2 - yoffset
+
+      const x = edge.left + remoteXblink
+      const y = edge.top + remoteYblink
+
+      // visibility clip
+      if (
+        y > edge.top + 1 &&
+        y < edge.bottom &&
+        x > edge.left &&
+        x < edge.right
+      ) {
+        const atchar = x + y * context.width
+        // Draw remote cursor (different character, colored)
+        applystrtoindex(atchar, String.fromCharCode(219), context) // Block character
+        // Use a distinct color for remote cursors (cyan background)
+        applycolortoindexes(atchar, atchar, COLOR.WHITE, COLOR.CYAN, context)
+
+        // Draw selection if present
+        if (ispresent(presence.select) && presence.select !== presence.cursor) {
+          const selStart = Math.min(presence.cursor, presence.select)
+          const selEnd = Math.max(presence.cursor, presence.select)
+          const selStartY = findcursorinrows(selStart, rows)
+          const selEndY = findcursorinrows(selEnd, rows)
+
+          for (let selY = selStartY; selY <= selEndY; selY++) {
+            const selRow = rows[selY]
+            if (!selRow) continue
+
+            const selStartX = selY === selStartY ? selStart - selRow.start : 0
+            const selEndX =
+              selY === selEndY ? selEnd - selRow.start : selRow.code.length
+
+            for (let selX = selStartX; selX < selEndX; selX++) {
+              const selXblink = selX + 1 - xoffset
+              const selYblink = selY + 2 - yoffset
+              const selXPos = edge.left + selXblink
+              const selYPos = edge.top + selYblink
+
+              if (
+                selYPos > edge.top + 1 &&
+                selYPos < edge.bottom &&
+                selXPos > edge.left &&
+                selXPos < edge.right
+              ) {
+                const selAtchar = selXPos + selYPos * context.width
+                // Highlight selection background
+                applycolortoindexes(
+                  selAtchar,
+                  selAtchar,
+                  COLOR.BLACK,
+                  COLOR.DKGRAY,
+                  context,
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   // ranges
   const codeend = rows[rowsend].end
@@ -172,7 +313,7 @@ export function EditorInput({
         select: undefined,
       })
     },
-    [codepage, updatescrolling],
+    [codepage, updatescrolling, tapeeditor.cursor],
   )
 
   const strvaluespliceonly = useCallback(
@@ -188,7 +329,7 @@ export function EditorInput({
       updatescrolling(cursor)
       useEditor.setState({ cursor })
     },
-    [codepage, updatescrolling],
+    [codepage, updatescrolling, tapeeditor.cursor],
   )
 
   function strtogglecomments() {
@@ -345,7 +486,7 @@ export function EditorInput({
       }
     })
     return () => unsub()
-  }, [codepage?.nodeId?.sid, codepage?.nodeId?.time])
+  }, [codepage, codepage?.nodeId?.sid, codepage?.nodeId?.time])
 
   return (
     <>
