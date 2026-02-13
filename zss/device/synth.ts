@@ -284,11 +284,8 @@ const synthdevice = createdevice('synth', [], (message) => {
       }
       break
     case 'record':
-      if (isarray(message.data)) {
-        const [, filename] = message.data as [string, string]
-        if (isstring(filename)) {
-          synth.synthrecord(filename)
-        }
+      if (isstring(message.data)) {
+        synth.synthrecord(message.data)
       }
       break
     case 'flush':
