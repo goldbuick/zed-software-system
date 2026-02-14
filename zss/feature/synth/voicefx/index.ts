@@ -39,10 +39,10 @@ export function synthvoicefxconfig(
         switch (fxname) {
           case 'vibrato':
           case 'autofilter':
-            fx.volume.value = volumetodb(80)
+            fx.volume.value = volumetodb(50)
             break
           default:
-            fx.volume.value = volumetodb(30)
+            fx.volume.value = volumetodb(18)
             break
         }
         break

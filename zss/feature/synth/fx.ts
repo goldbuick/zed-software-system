@@ -40,18 +40,18 @@ export function createfx() {
   function applyreset() {
     reverb.set({
       ...resetreverb,
-      wet: 1,
+      wet: 0.5,
     })
     echo.set({
       ...resetecho,
-      wet: 1,
+      wet: 0.5,
       delayTime: '8n',
       maxDelay: '8n',
       feedback: 0.666,
     })
     autofilter.set({
       ...resetautofilter,
-      wet: 1,
+      wet: 0.5,
       depth: 0.5,
       frequency: 3,
       octaves: 5,

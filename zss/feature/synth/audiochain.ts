@@ -76,21 +76,21 @@ export function createaudiochain() {
 
   const sidechaincompressor = new SidechainCompressor({
     threshold: -42,
-    ratio: 4,
+    ratio: 5,
     attack: 0.005,
-    release: 0.005,
-    mix: 0.777,
+    release: 0.06,
+    mix: 0.75,
     makeupGain: 24,
   })
   sidechaincompressor.connect(razzlegain)
 
   const altaction = new Volume(-12)
-  const drumaction = new Volume(-32)
+  const drumaction = new Volume(-28)
 
   const playvolume = new Volume(volumetodb(20))
   playvolume.connect(sidechaincompressor)
 
-  const drumvolume = new Volume(volumetodb(100))
+  const drumvolume = new Volume(volumetodb(100) + 10)
   drumvolume.connect(razzlegain)
 
   const bgplayvolume = new Volume()
