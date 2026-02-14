@@ -414,7 +414,7 @@ export function EditorInput({
   )
 
   /** Number of undo/redo steps to perform per Cmd+Z / Cmd+Shift+Z. Set to 1 for single-step. */
-  const UNDO_REDO_BATCH_SIZE = 1
+  const UNDO_REDO_BATCH_SIZE = 5
 
   type UndoEntry = {
     patch: Patch
