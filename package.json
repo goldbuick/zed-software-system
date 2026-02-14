@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.88.2",
+  "version": "0.88.7",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc -e .js zss",
@@ -9,7 +9,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "clear": "rimraf dist && rimraf dist-ssr && rimraf node_modules/.vite",
     "dev": "yarn && yarn clear && vite --host 0.0.0.0 --port 7777",
-    "preview": "yarn && yarn clear && vite preview",
+    "preview": "yarn && yarn clear && vite preview --host 0.0.0.0 --port 7777",
     "build": "yarn && yarn clear && vite build",
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
@@ -74,7 +74,6 @@
     "jest": "^29.7.0",
     "json-joy": "^17.52.0",
     "jszip": "^3.10.1",
-    "loro-crdt": "^1.10.6",
     "maath": "^0.10.8",
     "marked": "^16.2.1",
     "mime": "^4.0.4",
@@ -112,7 +111,6 @@
     "wavefunctioncollapse": "^2.1.0",
     "weighted": "^1.0.0",
     "weighted-shuffle": "^1.0.0",
-    "yjs": "^13.6.24",
     "zustand": "^5.0.1"
   }
 }

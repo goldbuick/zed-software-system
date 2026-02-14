@@ -11,34 +11,44 @@ export async function converttomp3(
 ): Promise<Uint8Array> {
   const player = registerreadplayer()
 
-  // Get raw PCM data
-  const samples = buffer.getChannelData(0) // Mono for simplicity
+  // Get raw PCM data - stereo
+  const numChannels = buffer.numberOfChannels
+  const leftChannel = buffer.getChannelData(0)
+  const rightChannel = numChannels > 1 ? buffer.getChannelData(1) : leftChannel // Use left channel if mono
   const sampleRate = buffer.sampleRate
+  const numSamples = leftChannel.length
 
-  // Initialize MP3 encoder
-  const mp3encoder = new Mp3Encoder(1, sampleRate, 128) // mono, sample rate, bitrate
+  // Initialize MP3 encoder - stereo (2 channels)
+  const mp3encoder = new Mp3Encoder(2, sampleRate, 128) // stereo, sample rate, bitrate
   const sampleBlockSize = 1152 // Must be multiple of 576
 
   const mp3Data = []
 
   // Process the audio in chunks
-  for (let i = 0; i < samples.length; i += sampleBlockSize) {
+  for (let i = 0; i < numSamples; i += sampleBlockSize) {
     if (mp3Data.length % 64 === 0) {
-      write(SOFTWARE, player, `encoding chunk (${i}/${samples.length})`)
+      write(SOFTWARE, player, `encoding chunk (${i}/${numSamples})`)
     }
 
-    // Convert float32 samples to int16
-    const sampleChunk = new Int16Array(sampleBlockSize)
+    // Convert float32 to int16 - lamejs expects separate left and right buffers
+    const leftChunk = new Int16Array(sampleBlockSize)
+    const rightChunk = new Int16Array(sampleBlockSize)
     for (let j = 0; j < sampleBlockSize; j++) {
-      if (i + j < samples.length) {
-        // Scale to int16 range and convert
-        sampleChunk[j] =
-          samples[i + j] < 0 ? samples[i + j] * 0x8000 : samples[i + j] * 0x7fff
+      const sampleIndex = i + j
+      if (sampleIndex < numSamples) {
+        leftChunk[j] =
+          leftChannel[sampleIndex] < 0
+            ? leftChannel[sampleIndex] * 0x8000
+            : leftChannel[sampleIndex] * 0x7fff
+        rightChunk[j] =
+          rightChannel[sampleIndex] < 0
+            ? rightChannel[sampleIndex] * 0x8000
+            : rightChannel[sampleIndex] * 0x7fff
       }
     }
 
-    // Encode the chunk
-    const mp3buf = mp3encoder.encodeBuffer(sampleChunk)
+    // Encode the chunk (encodeBuffer(left, right) for stereo)
+    const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk)
     if (mp3buf.length > 0) {
       mp3Data.push(mp3buf)
     }

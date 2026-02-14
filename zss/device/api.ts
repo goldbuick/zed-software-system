@@ -411,7 +411,7 @@ export function synthrecord(
   player: string,
   filename: string,
 ) {
-  device.emit(player, 'synth:record', [filename])
+  device.emit(player, 'synth:record', filename)
 }
 
 export function synthflush(device: DEVICELIKE, player: string) {
