@@ -147,7 +147,7 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         content += ''
         for (let x = p1x; x <= p2x; ++x) {
           const element = memoryreadterrain(board, x, y)
-          const display = memoryreadelementdisplay(element)
+          const display = memoryreadelementdisplay(element, 0, 0, 0)
           if (display.color != color) {
             color = display.color
             content += `$${COLOR[display.color]}`.toLowerCase()
