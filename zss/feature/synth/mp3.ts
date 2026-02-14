@@ -14,8 +14,7 @@ export async function converttomp3(
   // Get raw PCM data - stereo
   const numChannels = buffer.numberOfChannels
   const leftChannel = buffer.getChannelData(0)
-  const rightChannel =
-    numChannels > 1 ? buffer.getChannelData(1) : leftChannel // Use left channel if mono
+  const rightChannel = numChannels > 1 ? buffer.getChannelData(1) : leftChannel // Use left channel if mono
   const sampleRate = buffer.sampleRate
   const numSamples = leftChannel.length
 

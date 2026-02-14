@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react'
-import { arr2hex, hex2arr } from 'uint8-util'
 import { Model, Patch } from 'json-joy/lib/json-crdt'
 import { Log } from 'json-joy/lib/json-crdt/log/Log'
+import type { StrApi } from 'json-joy/lib/json-crdt/model/api/nodes'
+import { useEffect, useState } from 'react'
+import { arr2hex, hex2arr } from 'uint8-util'
 import { createdevice } from 'zss/device'
 import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-import type { StrApi } from 'json-joy/lib/json-crdt/model/api/nodes'
 
 /** Presence information for remote users editing codepages */
-export interface PresenceState {
+export type PresenceState = {
   /** Client/player ID */
   clientId: string
   /** User display name */
@@ -26,7 +26,7 @@ export interface PresenceState {
 }
 
 /** Timestamp id for matching patches to a specific string node (undo scope) */
-export interface NodeId {
+export type NodeId = {
   sid: number
   time: number
 }
@@ -36,7 +36,7 @@ export interface NodeId {
  * Used by editor and panels for collaborative string editing.
  * nodeId enables undo/redo filtering (only undo edits to this string).
  */
-export interface SharedTextHandle {
+export type SharedTextHandle = {
   toJSON(): string
   insert(index: number, text: string): void
   delete(index: number, length: number): void
@@ -46,7 +46,10 @@ export interface SharedTextHandle {
 }
 
 function createSharedTextHandle(strApi: StrApi): SharedTextHandle {
-  const nodeId = (strApi as { node?: { id: NodeId } }).node?.id ?? { sid: -1, time: -1 }
+  const nodeId = (strApi as { node?: { id: NodeId } }).node?.id ?? {
+    sid: -1,
+    time: -1,
+  }
   return {
     get nodeId() {
       return nodeId
@@ -66,7 +69,6 @@ function createSharedTextHandle(strApi: StrApi): SharedTextHandle {
     },
   }
 }
-
 
 export enum MODEM_SHARED_TYPE {
   NUMBER,
@@ -144,14 +146,18 @@ function useWaitForValue<T extends MODEM_SHARED_TYPE>(
   try {
     if (type === MODEM_SHARED_TYPE.NUMBER) {
       const view = childApi.view()
-      return (typeof view === 'number' ? view : undefined) as MAYBE<SHARED_TYPE_MAP[T]>
+      return (typeof view === 'number' ? view : undefined) as MAYBE<
+        SHARED_TYPE_MAP[T]
+      >
     }
     if (type === MODEM_SHARED_TYPE.STRING) {
       const valApi = childApi as { get?: () => { asStr?: () => StrApi } }
       const inner = valApi.get?.() ?? childApi
       const strApi = (inner as { asStr?: () => StrApi }).asStr?.() ?? inner
       if (strApi && typeof (strApi as StrApi).ins === 'function') {
-        return createSharedTextHandle(strApi as StrApi) as MAYBE<SHARED_TYPE_MAP[T]>
+        return createSharedTextHandle(strApi as StrApi) as MAYBE<
+          SHARED_TYPE_MAP[T]
+        >
       }
     }
   } catch {
@@ -161,7 +167,10 @@ function useWaitForValue<T extends MODEM_SHARED_TYPE>(
 }
 
 export function useWaitForValueNumber(key: string) {
-  const value = useWaitForValue<MODEM_SHARED_TYPE.NUMBER>(key, MODEM_SHARED_TYPE.NUMBER)
+  const value = useWaitForValue<MODEM_SHARED_TYPE.NUMBER>(
+    key,
+    MODEM_SHARED_TYPE.NUMBER,
+  )
   if (!isnumber(value)) {
     return undefined
   }
@@ -169,7 +178,10 @@ export function useWaitForValueNumber(key: string) {
 }
 
 export function useWaitForValueString(key: string) {
-  const value = useWaitForValue<MODEM_SHARED_TYPE.STRING>(key, MODEM_SHARED_TYPE.STRING)
+  const value = useWaitForValue<MODEM_SHARED_TYPE.STRING>(
+    key,
+    MODEM_SHARED_TYPE.STRING,
+  )
   if (!ispresent(value) || typeof value?.toJSON !== 'function') {
     return undefined
   }
@@ -216,7 +228,9 @@ function getValueForKey(key: string): unknown {
   const childApi = obj.get(key)
   if (!childApi) return undefined
   try {
-    const valApi = childApi as { get?: () => { view?: () => unknown; asStr?: () => StrApi } }
+    const valApi = childApi as {
+      get?: () => { view?: () => unknown; asStr?: () => StrApi }
+    }
     const inner = valApi.get?.() ?? childApi
     const view = (inner as { view?: () => unknown })?.view?.()
     if (typeof view === 'string') {
@@ -278,11 +292,7 @@ const modem = createdevice('modem', ['second'], (message) => {
       break
     case 'join':
       if (message.sender !== modem.id()) {
-        modem.reply(
-          message,
-          'joinack',
-          arr2hex(SYNC_MODEL.toBinary()),
-        )
+        modem.reply(message, 'joinack', arr2hex(SYNC_MODEL.toBinary()))
       }
       break
     case 'joinack':
@@ -356,7 +366,7 @@ export function modembroadcastpresence(
     color: color ?? '#3b82f6', // Default blue
   }
   modem.emit('', 'modem:presence', presence)
-  
+
   // Update local presence immediately
   presenceMap.set(clientId, {
     ...presence,
@@ -368,7 +378,7 @@ export function modembroadcastpresence(
 export function getpresenceforcodepage(codepageKey: string): PresenceState[] {
   const now = Date.now()
   const result: PresenceState[] = []
-  
+
   // Clean up stale entries and collect active ones
   for (const [clientId, presence] of presenceMap.entries()) {
     if (now - presence.lastSeen > PRESENCE_TIMEOUT) {
@@ -377,30 +387,30 @@ export function getpresenceforcodepage(codepageKey: string): PresenceState[] {
       result.push(presence)
     }
   }
-  
+
   return result
 }
 
 /** Hook to observe presence for a codepage */
 export function usePresence(codepageKey: string | undefined): PresenceState[] {
   const [presence, setPresence] = useState<PresenceState[]>([])
-  
+
   useEffect(() => {
     if (!codepageKey) {
       setPresence([])
       return
     }
-    
+
     // Update presence periodically and on changes
     const updatePresence = () => {
       setPresence(getpresenceforcodepage(codepageKey))
     }
-    
+
     updatePresence()
     const interval = setInterval(updatePresence, 500) // Check every 500ms
-    
+
     return () => clearInterval(interval)
   }, [codepageKey])
-  
+
   return presence
 }
