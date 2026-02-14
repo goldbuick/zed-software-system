@@ -413,6 +413,9 @@ export function EditorInput({
     [codeend, rows, rowsend, xcursor, ycursor, updatescrolling],
   )
 
+  /** Number of undo/redo steps to perform per Cmd+Z / Cmd+Shift+Z. Set to 1 for single-step. */
+  const UNDO_REDO_BATCH_SIZE = 1
+
   type UndoEntry = {
     patch: Patch
     undoPatch: Patch
@@ -425,43 +428,60 @@ export function EditorInput({
 
   const undomanager = ispresent(codepage)
     ? {
-        undo() {
-          const top = undoStack.current.pop()
-          if (!top) return
-          redoStack.current.push({
-            ...top,
-            cursorAfter: tapeeditor.cursor,
-          })
-          modemApplyAndSyncPatch(top.undoPatch)
-          updatescrolling(top.cursorBefore)
-          useEditor.setState({ cursor: top.cursorBefore, select: undefined })
+        undo(count: number = UNDO_REDO_BATCH_SIZE) {
+          const n = Math.min(count, undoStack.current.length)
+          if (n <= 0) return
+          const batch: UndoEntry[] = []
+          for (let i = 0; i < n; i++) {
+            const top = undoStack.current.pop()
+            if (!top) break
+            batch.push(top)
+          }
+          const currentCursor = tapeeditor.cursor
+          for (let i = batch.length - 1; i >= 0; i--) {
+            const entry = batch[i]
+            const cursorAfter =
+              i === 0 ? currentCursor : batch[i - 1].cursorBefore
+            redoStack.current.push({ ...entry, cursorAfter })
+          }
+          for (const entry of batch) {
+            modemApplyAndSyncPatch(entry.undoPatch)
+          }
+          const oldest = batch[batch.length - 1]
+          updatescrolling(oldest.cursorBefore)
+          useEditor.setState({ cursor: oldest.cursorBefore, select: undefined })
         },
-        redo() {
-          const top = redoStack.current.pop()
-          if (!top) return
+        redo(count: number = UNDO_REDO_BATCH_SIZE) {
+          const n = Math.min(count, redoStack.current.length)
+          if (n <= 0) return
           const log = getModemLog()
-          let redoPatch: Patch
-          try {
-            redoPatch = log.undo(top.undoPatch)
-          } catch {
-            const [rebased] = log.rebaseBatch([top.patch])
-            if (!rebased) return
-            redoPatch = rebased
+          let newCursor = tapeeditor.cursor
+          for (let i = 0; i < n; i++) {
+            const top = redoStack.current.pop()
+            if (!top) break
+            let redoPatch: Patch
+            try {
+              redoPatch = log.undo(top.undoPatch)
+            } catch {
+              const [rebased] = log.rebaseBatch([top.patch])
+              if (!rebased) continue
+              redoPatch = rebased
+            }
+            modemApplyAndSyncPatch(redoPatch)
+            let newUndoPatch: Patch
+            try {
+              newUndoPatch = log.undo(redoPatch)
+            } catch {
+              newUndoPatch = top.undoPatch
+            }
+            undoStack.current.push({
+              patch: redoPatch,
+              undoPatch: newUndoPatch,
+              cursorBefore: top.cursorBefore,
+              cursorAfter: tapeeditor.cursor,
+            })
+            newCursor = top.cursorAfter ?? tapeeditor.cursor
           }
-          modemApplyAndSyncPatch(redoPatch)
-          let newUndoPatch: Patch
-          try {
-            newUndoPatch = log.undo(redoPatch)
-          } catch {
-            newUndoPatch = top.undoPatch
-          }
-          undoStack.current.push({
-            patch: redoPatch,
-            undoPatch: newUndoPatch,
-            cursorBefore: top.cursorBefore,
-            cursorAfter: tapeeditor.cursor,
-          })
-          const newCursor = top.cursorAfter ?? tapeeditor.cursor
           updatescrolling(newCursor)
           useEditor.setState({ cursor: newCursor, select: undefined })
         },
