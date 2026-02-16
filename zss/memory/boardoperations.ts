@@ -103,13 +103,9 @@ export function memoryreadelement(
   pt: PT,
   nolookup?: boolean,
 ): MAYBE<BOARD_ELEMENT> {
-  if (!ispresent(board)) {
-    return undefined
-  }
-  
   // clipping
   const index = memoryboardelementindex(board, pt)
-  if (index < 0) {
+  if (index < 0 || !ispresent(board)) {
     return undefined
   }
 
@@ -119,16 +115,17 @@ export function memoryreadelement(
     object = Object.values(board.objects).find(
       (el) => el.x === pt.x && el.y === pt.y && !el.removed,
     )
-  } else {
-    object = memoryreadobject(board, board.lookup?.[index] ?? '')
+  } else if (ispresent(board.lookup)) {
+    object = memoryreadobject(board, board.lookup[index] ?? '')
   }
 
+  // return object element
   if (ispresent(object)) {
     return object
   }
 
-  // return terrain
-  return board?.terrain?.[index]
+  // return terrain element
+  return board.terrain[index]
 }
 
 export function memoryreadelementbyidorindex(
