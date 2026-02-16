@@ -3,9 +3,8 @@ import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
 import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { VignetteTechnique } from 'postprocessing'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import Stats from 'stats.js'
-import { OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME, STATS_DEV } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -122,11 +121,9 @@ export function Engine() {
   // click to un-mute overlay for firefox
   const [showunmute, setshowunmute] = useState(isfirefox)
 
-  const cameraref = useRef<OrthographicCameraImpl>(null)
   return (
     <>
       <OrthographicCamera
-        ref={cameraref}
         makeDefault
         near={1}
         far={2000}

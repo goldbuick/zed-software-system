@@ -102,7 +102,6 @@ export enum DIR {
   // multi-target specifiers
   WITHIN,
   AWAYBY,
-  ELEMENTS,
 }
 
 export enum STAT_TYPE {

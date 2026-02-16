@@ -1,5 +1,6 @@
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 
+import { STR_KIND } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { DIR, NAME, PT, WORD } from './types'
 
@@ -94,7 +95,7 @@ export const dirconsts = {
   over: 'OVER',
   under: 'UNDER',
   ground: 'GROUND',
-  // distance specifiers
+  // multi-target specifiers
   within: 'WITHIN',
   awayby: 'AWAYBY',
   elements: 'ELEMENTS',
@@ -103,7 +104,7 @@ export const dirconsts = {
 export type STR_DIR_TYPE = typeof dirconsts
 export type STR_DIR_KEYS = keyof STR_DIR_TYPE
 export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
-export type STR_DIR = (STR_DIR_CONST | number)[]
+export type STR_DIR = (STR_DIR_CONST | STR_KIND | number)[]
 
 export type EVAL_DIR = {
   dir: STR_DIR
@@ -194,11 +195,8 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       }
       case 'FLEE':
       case 'FIND': {
-        // TODO: this should work kind or idx
-        //
         const [kind, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
-        // strdir.push(dir.destpt.x, dir.destpt.y)
-        console.info('kind', kind)
+        strdir.push(kind)
         ii = iii
         break
       }
@@ -241,9 +239,9 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'RNDP':
       case 'OVER':
       case 'UNDER':
+      case 'GROUND':
       case 'WITHIN':
       case 'AWAYBY':
-      case 'ELEMENTS':
         break
       default:
         return [strdir, ii]
