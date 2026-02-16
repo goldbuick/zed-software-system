@@ -111,7 +111,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
-    const element = memoryreadelement(board, p1)
+    const element = memoryreadelement(board, p1, true)
     const codepage = memoryreadelementcodepage(mainbook, element)
     // found element def
     if (ispresent(element) && ispresent(codepage)) {

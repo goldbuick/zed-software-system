@@ -323,7 +323,7 @@ window.addEventListener(
           // open merge login request
         }
         break
-      case 'f':
+      case 'k':
         if (mods.ctrl) {
           vmcli(SOFTWARE, player, '#fork')
         }
