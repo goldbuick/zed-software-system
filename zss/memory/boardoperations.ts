@@ -101,21 +101,33 @@ export function memoryboardelementindex(
 export function memoryreadelement(
   board: MAYBE<BOARD>,
   pt: PT,
+  nolookup?: boolean,
 ): MAYBE<BOARD_ELEMENT> {
   // clipping
   const index = memoryboardelementindex(board, pt)
-  if (index < 0 || !ispresent(board?.lookup)) {
+  if (index < 0) {
     return undefined
   }
 
-  // check lookup
-  const object = memoryreadobject(board, board.lookup[index] ?? '')
+  // find object: either by iterating objects by position or via lookup
+  let object: MAYBE<BOARD_ELEMENT>
+  if (nolookup === true && ispresent(board?.objects)) {
+    object = Object.values(board.objects).find(
+      (el) => el.x === pt.x && el.y === pt.y && !el.removed,
+    )
+  } else {
+    if (!ispresent(board?.lookup)) {
+      return board?.terrain?.[index]
+    }
+    object = memoryreadobject(board, board.lookup[index] ?? '')
+  }
+
   if (ispresent(object)) {
     return object
   }
 
   // return terrain
-  return board.terrain[index]
+  return board?.terrain?.[index]
 }
 
 export function memoryreadelementbyidorindex(
