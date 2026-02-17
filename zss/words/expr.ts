@@ -7,6 +7,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import { memoryreadboardbyevaldir } from 'zss/memory'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import {
   memoryreadelement,
@@ -195,8 +196,11 @@ export function readexpr(index: number): [any, number] {
         // This flag is SET when the object is not free to move in the given direction, and
         // CLEAR when the object is free to move in the direction.
         const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
+
+        // read board by eval dir
+        const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
         const isblocked = memorycheckmoveboardobject(
-          READ_CONTEXT.board,
+          board,
           READ_CONTEXT.element,
           dir.destpt,
         )
@@ -213,13 +217,18 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.DIR,
             ARG_TYPE.COLOR_OR_KIND,
           ])
+
+          // read board by eval dir
+          const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
           if (dir.targets.length) {
+            const dirstr = DIR[dir.layer]
             const [maybename, maybecolor] = match
             const matchlist: BOARD_ELEMENT[] = []
             for (let i = 0; i < dir.targets.length; ++i) {
               const target = dir.targets[i]
               const anyexpr = [
                 'any',
+                dirstr,
                 'at',
                 target.x,
                 target.y,
@@ -236,18 +245,10 @@ export function readexpr(index: number): [any, number] {
 
           // grab dest element from DIR
           let maybelement: MAYBE<BOARD_ELEMENT>
-          switch (dir.layer) {
-            default:
-            case DIR.MID:
-              maybelement = memoryreadelement(READ_CONTEXT.board, dir.destpt)
-              break
-            case DIR.GROUND:
-              maybelement = memoryreadterrain(
-                READ_CONTEXT.board,
-                dir.destpt.x,
-                dir.destpt.y,
-              )
-              break
+          if (dir.layer === DIR.GROUND) {
+            maybelement = memoryreadterrain(board, dir.destpt.x, dir.destpt.y)
+          } else {
+            maybelement = memoryreadelement(board, dir.destpt)
           }
 
           if (ispresent(maybelement)) {
@@ -308,13 +309,17 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.COLOR_OR_KIND,
           ])
 
+          // read board by eval dir
+          const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
           if (dir.targets.length) {
+            const dirstr = DIR[dir.layer]
             let matchcount = 0
             const [maybename, maybecolor] = match
             for (let i = 0; i < dir.targets.length; ++i) {
               const target = dir.targets[i]
               const anyexpr = [
                 'countof',
+                dirstr,
                 'at',
                 target.x,
                 target.y,
@@ -331,18 +336,10 @@ export function readexpr(index: number): [any, number] {
 
           // grab dest element from DIR
           let maybelement: MAYBE<BOARD_ELEMENT>
-          switch (dir.layer) {
-            default:
-            case DIR.MID:
-              maybelement = memoryreadelement(READ_CONTEXT.board, dir.destpt)
-              break
-            case DIR.GROUND:
-              maybelement = memoryreadterrain(
-                READ_CONTEXT.board,
-                dir.destpt.x,
-                dir.destpt.y,
-              )
-              break
+          if (dir.layer === DIR.GROUND) {
+            maybelement = memoryreadterrain(board, dir.destpt.x, dir.destpt.y)
+          } else {
+            maybelement = memoryreadelement(board, dir.destpt)
           }
 
           if (ispresent(maybelement)) {

@@ -7,7 +7,7 @@ import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadbooklist } from 'zss/memory'
+import { memoryreadboardbyevaldir, memoryreadbooklist } from 'zss/memory'
 import { memorylistcodepagebytypeandstat } from 'zss/memory/bookoperations'
 import {
   BOARD_HEIGHT,
@@ -131,9 +131,12 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       y: dir.destpt.y - (READ_CONTEXT.element?.y ?? 0),
     }
 
+    // read board by eval dir
+    const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+
     const filter = readfilter(words, ii)
     boardweave(
-      READ_CONTEXT.board.id,
+      board?.id ?? '',
       delta,
       filter.pt1,
       filter.pt2,

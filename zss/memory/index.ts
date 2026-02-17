@@ -5,9 +5,14 @@ import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { dirfrompts, mapstrdir, mapstrdirtoconst } from 'zss/words/dir'
+import {
+  EVAL_DIR,
+  dirfrompts,
+  mapstrdir,
+  mapstrdirtoconst,
+} from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { COLLISION, NAME, PT } from 'zss/words/types'
+import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
 
 import { memoryapplyboardelementcolor } from './boardelement'
 import {
@@ -486,6 +491,20 @@ export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
     return maybeunder
   }
   return undefined
+}
+
+export function memoryreadboardbyevaldir(dir: EVAL_DIR, board: MAYBE<BOARD>) {
+  if (!ispresent(board)) {
+    return
+  }
+  switch (dir.layer) {
+    case DIR.OVER:
+      return memoryreadoverboard(board)
+    case DIR.UNDER:
+      return memoryreadunderboard(board)
+    default:
+      return board
+  }
 }
 
 export function memoryreadflags(id: string) {
