@@ -8,6 +8,7 @@ import Stats from 'stats.js'
 import { RUNTIME, STATS_DEV } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { enableaudio } from 'zss/device/synth'
 import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { CRTShape } from 'zss/gadget/fx/crt'
@@ -29,7 +30,6 @@ import { TapeViewImage } from './viewimage'
 
 // include all front-end devices
 import 'zss/userspace'
-import { enableaudio } from 'zss/device/synth'
 
 export function Engine() {
   const { viewport } = useThree()
