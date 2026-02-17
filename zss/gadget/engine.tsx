@@ -29,6 +29,7 @@ import { TapeViewImage } from './viewimage'
 
 // include all front-end devices
 import 'zss/userspace'
+import { enableaudio } from 'zss/device/synth'
 
 export function Engine() {
   const { viewport } = useThree()
@@ -144,7 +145,10 @@ export function Engine() {
                 cursor="pointer"
                 width={Math.ceil(viewwidth / RUNTIME.DRAW_CHAR_WIDTH())}
                 height={Math.ceil(viewheight / RUNTIME.DRAW_CHAR_HEIGHT())}
-                onClick={() => setshowunmute(false)}
+                onClick={() => {
+                  enableaudio()
+                  setshowunmute(false)
+                }}
               />
               <TapeToast toast="Click to un-mute" />
             </>
