@@ -24,6 +24,7 @@ import {
   mapstrdirtoconst,
   ptapplydir,
 } from 'zss/words/dir'
+import { isstrkind } from 'zss/words/kind'
 import { COLLISION, DIR, PT } from 'zss/words/types'
 
 import {
@@ -43,6 +44,7 @@ import {
 import { memoryreadbookflag, memoryreadelementdisplay } from './bookoperations'
 import { memorymoveplayertoboard } from './playermanagement'
 import {
+  memorylistboardelementsbykind,
   memorylistboardnamedelements,
   memorypickboardnearestpt,
   memoryreadboardpath,
@@ -139,6 +141,56 @@ export function memoryreadelementbyidorindex(
   const maybeindex = parseFloat(idorindex)
   const pt = indextopt(isNaN(maybeindex) ? -1 : maybeindex, BOARD_WIDTH)
   return memoryreadterrain(board, pt.x, pt.y)
+}
+
+function memoryevaldiraway(
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  pt: PT,
+  x: number,
+  y: number,
+): void {
+  const dest = { x, y }
+  const dx = dest.x - pt.x
+  const dy = dest.y - pt.y
+  if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+    const collision = memoryreadelementstat(element, 'collision')
+    const maybept = memoryreadboardpath(board, collision, pt, dest, true)
+    if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
+      const step = memoryreadobjectbypt(board, maybept)
+      if (!ispresent(step)) {
+        pt.x = maybept.x
+        pt.y = maybept.y
+      }
+    }
+  } else {
+    ptapplydir(pt, dirfromdelta(-dx, -dy))
+  }
+}
+
+function memoryevaldirtoward(
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  pt: PT,
+  x: number,
+  y: number,
+): void {
+  const dest = { x, y }
+  const dx = dest.x - pt.x
+  const dy = dest.y - pt.y
+  if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+    const collision = memoryreadelementstat(element, 'collision')
+    const maybept = memoryreadboardpath(board, collision, pt, dest, false)
+    if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
+      const step = memoryreadobjectbypt(board, maybept)
+      if (!ispresent(step)) {
+        pt.x = maybept.x
+        pt.y = maybept.y
+      }
+    }
+  } else {
+    ptapplydir(pt, dirfromdelta(dx, dy))
+  }
 }
 
 export function memoryevaldir(
@@ -313,81 +365,49 @@ export function memoryevaldir(
       // pathfinding
       case DIR.FLEE: {
         // run away from nearest kind
+        const fleekind = dir[i + 1]
+        if (isstrkind(fleekind)) {
+          const nearest = memorypickboardnearestpt(
+            pt,
+            memorylistboardelementsbykind(board, fleekind),
+          )
+          if (ispresent(nearest) && ispt(nearest)) {
+            memoryevaldiraway(board, element, pt, nearest.x, nearest.y)
+          }
+        }
+        // need to skip args
+        i += 1
         break
       }
       case DIR.FIND: {
         // seek nearest kind
+        const findkind = dir[i + 1]
+        if (isstrkind(findkind)) {
+          const nearest = memorypickboardnearestpt(
+            pt,
+            memorylistboardelementsbykind(board, findkind),
+          )
+          if (ispresent(nearest) && ispt(nearest)) {
+            memoryevaldirtoward(board, element, pt, nearest.x, nearest.y)
+          }
+        }
+        // need to skip args
+        i += 1
         break
       }
       case DIR.AWAY: {
-        // AWAY <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          const dest = {
-            x,
-            y,
-          }
-          const dx = dest.x - pt.x
-          const dy = dest.y - pt.y
-          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-            const collision = memoryreadelementstat(element, 'collision')
-            const maybept = memoryreadboardpath(
-              board,
-              collision,
-              pt,
-              dest,
-              true,
-            )
-            // check dest spot for blocked
-            if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-              const step = memoryreadobjectbypt(board, maybept)
-              if (!ispresent(step)) {
-                pt.x = maybept.x
-                pt.y = maybept.y
-              }
-            }
-          } else {
-            // no pathing needed
-            const dir = dirfromdelta(-dx, -dy)
-            ptapplydir(pt, dir)
-          }
+          memoryevaldiraway(board, element, pt, x, y)
         }
         // need to skip args
         i += 2
         break
       }
       case DIR.TOWARD: {
-        // TOWARD <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          const dest = {
-            x,
-            y,
-          }
-          const dx = dest.x - pt.x
-          const dy = dest.y - pt.y
-          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-            const collision = memoryreadelementstat(element, 'collision')
-            const maybept = memoryreadboardpath(
-              board,
-              collision,
-              pt,
-              dest,
-              false,
-            )
-            // check dest spot for blocked
-            if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-              const step = memoryreadobjectbypt(board, maybept)
-              if (!ispresent(step)) {
-                pt.x = maybept.x
-                pt.y = maybept.y
-              }
-            }
-          } else {
-            // no pathing needed
-            const dir = dirfromdelta(dx, dy)
-            ptapplydir(pt, dir)
-          }
+          memoryevaldirtoward(board, element, pt, x, y)
         }
         // need to skip args
         i += 2
@@ -409,7 +429,7 @@ export function memoryevaldir(
         modeval.layer = dirconst
         return modeval
       }
-      // distance specifiers
+      // multi-target specifiers
       case DIR.WITHIN: {
         const [amount] = dir.slice(i + 1)
         const modeval = memoryevaldir(
@@ -490,32 +510,6 @@ export function memoryevaldir(
               return false
             }),
           }
-        }
-
-        return modeval
-      }
-      case DIR.ELEMENTS: {
-        const modeval = memoryevaldir(
-          board,
-          element,
-          player,
-          dir.slice(i + 1),
-          startpt,
-        )
-
-        // reset to startpt
-        pt.x = startpt.x
-        pt.y = startpt.y
-        modeval.targets = []
-
-        // get walking direction
-        const inline = dirfrompts(modeval.startpt, modeval.destpt)
-        for (let ii = 0; ii < BOARD_WIDTH; ++ii) {
-          ptapplydir(pt, inline)
-          if (!memoryptwithinboard(pt)) {
-            break
-          }
-          modeval.targets.push({ x: pt.x, y: pt.y })
         }
 
         return modeval

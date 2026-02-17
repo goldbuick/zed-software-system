@@ -3,12 +3,12 @@ import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
 import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { VignetteTechnique } from 'postprocessing'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import Stats from 'stats.js'
-import { OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME, STATS_DEV } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { enableaudio } from 'zss/device/synth'
 import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { CRTShape } from 'zss/gadget/fx/crt'
@@ -122,11 +122,9 @@ export function Engine() {
   // click to un-mute overlay for firefox
   const [showunmute, setshowunmute] = useState(isfirefox)
 
-  const cameraref = useRef<OrthographicCameraImpl>(null)
   return (
     <>
       <OrthographicCamera
-        ref={cameraref}
         makeDefault
         near={1}
         far={2000}
@@ -147,7 +145,10 @@ export function Engine() {
                 cursor="pointer"
                 width={Math.ceil(viewwidth / RUNTIME.DRAW_CHAR_WIDTH())}
                 height={Math.ceil(viewheight / RUNTIME.DRAW_CHAR_HEIGHT())}
-                onClick={() => setshowunmute(false)}
+                onClick={() => {
+                  enableaudio()
+                  setshowunmute(false)
+                }}
               />
               <TapeToast toast="Click to un-mute" />
             </>

@@ -20,6 +20,7 @@ import {
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
   memorypickcodepagewithtype,
+  memoryreadboardbyevaldir,
   memoryreadelementstat,
   memoryreadflags,
   memoryreadoperator,
@@ -786,19 +787,24 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.NUMBER,
       ])
+
+      // read board by eval dir
+      const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
+
       // handle multi-target dirs
       if (dest.targets.length) {
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
-          const element = memoryreadelement(READ_CONTEXT.board, target)
+          const element = memoryreadelement(board, target)
           if (ispresent(element)) {
             element.char = charvalue
           }
         }
         return 0
       }
+
       // handle single-target dirs
-      const element = memoryreadelement(READ_CONTEXT.board, dest.destpt)
+      const element = memoryreadelement(board, dest.destpt)
       if (ispresent(element)) {
         element.char = charvalue
       }
@@ -815,19 +821,24 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.COLOR,
       ])
+
+      // read board by eval dir
+      const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
+
       // handle multi-target dirs
       if (dest.targets.length) {
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
-          const element = memoryreadelement(READ_CONTEXT.board, target)
+          const element = memoryreadelement(board, target)
           if (ispresent(element)) {
             memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
           }
         }
         return 0
       }
+
       // handle single-target dirs
-      const element = memoryreadelement(READ_CONTEXT.board, dest.destpt)
+      const element = memoryreadelement(board, dest.destpt)
       if (ispresent(element)) {
         memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
       }
@@ -993,7 +1004,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       ARG_TYPE.NAME,
     ])
 
-    const maybeobject = memoryreadelement(READ_CONTEXT.board, dir.destpt)
+    // read board by eval dir
+    const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+
+    const maybeobject = memoryreadelement(board, dir.destpt)
     if (ispresent(maybeobject) && memoryboardelementisobject(maybeobject)) {
       // update .code of object to the codepage content of kindname
       switch (NAME(maybeaction)) {
