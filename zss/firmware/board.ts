@@ -50,6 +50,7 @@ import {
   readstrkindbg,
   readstrkindcolor,
   readstrkindname,
+  strkindtostr,
 } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import {
@@ -177,9 +178,10 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // list of target points to put
   if (dir.targets.length) {
     const dirstr = DIR[dir.layer]
+    const kindstr = strkindtostr(kind)
     for (let i = 0; i < dir.targets.length; ++i) {
       const target = dir.targets[i]
-      commandput([dirstr, 'at', target.x, target.y, ...kind], id, arg)
+      commandput([dirstr, 'at', target.x, target.y, ...kindstr], id, arg)
     }
     return 0
   }

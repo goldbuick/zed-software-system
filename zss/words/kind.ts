@@ -17,6 +17,11 @@ export function isstrkind(value: any): value is STR_KIND {
   return isarray(value) && typeof value[0] === 'string'
 }
 
+export function strkindtostr(kind: STR_KIND): string[] {
+  const [kindname, strcolor] = kind
+  return [...(strcolor ?? []), kindname]
+}
+
 export function readname(index: number): [string | undefined, number] {
   const value: MAYBE<WORD> = READ_CONTEXT.words[index]
   if (isstring(value)) {
