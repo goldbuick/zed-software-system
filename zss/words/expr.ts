@@ -470,6 +470,7 @@ export function readexpr(index: number): [any, number] {
       }
       // advanced
       case 'run': {
+        // run logic
         const withwords = READ_CONTEXT.words.slice(ii)
         const send = parsesend(withwords)
         if (NAME(send.targetname) === 'self') {
@@ -485,10 +486,12 @@ export function readexpr(index: number): [any, number] {
         return [READ_CONTEXT.get?.('arg'), iii]
       }
       case 'runwith': {
+        // grab value to set as arg
         const [arg, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (ispresent(READ_CONTEXT.element)) {
           READ_CONTEXT.element.arg = arg
         }
+        // run logic
         const withwords = READ_CONTEXT.words.slice(iii)
         const send = parsesend(withwords)
         if (NAME(send.targetname) === 'self') {
