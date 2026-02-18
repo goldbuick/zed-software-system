@@ -170,9 +170,27 @@ export const comment = createSimpleToken({
   start_chars_hint: [`'`],
 })
 
+function matchLabel(text: string, startOffset: number): RegExpExecArray | null {
+  if (text[startOffset] !== ':') {
+    return null
+  }
+  const atLineStart = startOffset === 0 || text[startOffset - 1] === '\n'
+  let end = startOffset + 1
+  if (atLineStart) {
+    while (end < text.length && text[end] !== '\n') {
+      end++
+    }
+  } else {
+    while (end < text.length && text[end] !== ' ' && text[end] !== '\n') {
+      end++
+    }
+  }
+  return [text.slice(startOffset, end)] as RegExpExecArray
+}
+
 export const label = createSimpleToken({
   name: 'label',
-  pattern: /:[^;:\n]*/,
+  pattern: matchLabel,
   start_chars_hint: [':'],
 })
 

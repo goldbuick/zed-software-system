@@ -4,6 +4,7 @@ import { apierror } from './device/api'
 import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
+import { createsid } from './mapping/guid'
 import { MAYBE, ispresent, isstring } from './mapping/types'
 import { memoryreadoperator } from './memory'
 
@@ -27,7 +28,13 @@ export type OS = {
     name: string,
     code: string,
   ) => boolean
-  once: (id: string, driver: DRIVER_TYPE, name: string, code: string) => void
+  once: (
+    id: string,
+    driver: DRIVER_TYPE,
+    name: string,
+    code: string,
+    label: string,
+  ) => void
   message: MESSAGE_FUNC
 }
 
@@ -150,10 +157,23 @@ export function createos() {
       // boot and tick it
       return !!os.boot(id, driver, name, code)?.tick(cycle)
     },
-    once(id, driver, name, code) {
+    once(id, driver, name, code, label) {
       // boot and run once
-      os.boot(id, driver, name, code)?.once()
-      os.halt(id)
+      const chip = os.boot(id, driver, name, code)
+      if (ispresent(chip)) {
+        if (chip.haslabel(label)) {
+          chip.message({
+            id: createsid(),
+            session: '',
+            target: label,
+            sender: id,
+            player: '',
+            data: '',
+          })
+        }
+        chip.once()
+        os.halt(id)
+      }
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)

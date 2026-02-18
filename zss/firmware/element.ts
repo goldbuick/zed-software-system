@@ -1,4 +1,5 @@
 import { MathUtils } from 'three'
+import { CHIP } from 'zss/chip'
 import { apitoast, registerstore, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -56,7 +57,8 @@ import {
 import { dirconsts, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { COLOR, NAME, PT } from 'zss/words/types'
+import { parsesend } from 'zss/words/send'
+import { COLOR, NAME, PT, WORD } from 'zss/words/types'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',
@@ -255,6 +257,26 @@ function maptoconst(value: string) {
     return maybedir
   }
   return undefined
+}
+
+function commandrun(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
+  const send = parsesend(words)
+  if (!ispresent(send.targetname)) {
+    return 0
+  }
+  if (ispresent(arg)) {
+    chip.set('arg', arg)
+  }
+  if (NAME(send.targetname) === 'self') {
+    if (chip.haslabel(send.label)) {
+      memoryruncodepage(READ_CONTEXT.element?.kind ?? '', send.label)
+    } else {
+      memoryruncodepage(send.label, '')
+    }
+  } else {
+    memoryruncodepage(send.targetname, send.label)
+  }
+  return 0
 }
 
 export const ELEMENT_FIRMWARE = createfirmware({
@@ -964,16 +986,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('run', (_, words) => {
-    const [func] = readargs(words, 0, [ARG_TYPE.NAME])
-    memoryruncodepage(func)
-    return 0
-  })
+  .command('run', commandrun)
   .command('runwith', (chip, words) => {
-    const [arg, func] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.NAME])
-    chip.set('arg', arg)
-    memoryruncodepage(func)
-    return 0
+    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    return commandrun(chip, words.slice(ii), arg)
   })
   .command('array', (chip, words) => {
     const values: any[] = []

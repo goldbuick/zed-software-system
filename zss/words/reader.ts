@@ -28,6 +28,7 @@ export const READ_CONTEXT = {
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,
+  haslabel: undefined as MAYBE<(label: string) => boolean>,
 }
 
 // param parsing engine
