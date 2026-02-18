@@ -244,7 +244,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
 
   // invoke once
-  os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
+  os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')
 
   // track invoke
   if (tracking) {
@@ -254,7 +254,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   }
 }
 
-export function memoryruncodepage(address: string) {
+export function memoryruncodepage(address: string, label: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   const codepage = memoryreadcodepage(mainbook, address)
@@ -271,7 +271,7 @@ export function memoryruncodepage(address: string) {
   const itemcode = codepage?.code ?? ''
 
   // set arg to value on chip with id = id
-  os.once(id, DRIVER_TYPE.RUNTIME, NAME(itemname), itemcode)
+  os.once(id, DRIVER_TYPE.RUNTIME, NAME(itemname), itemcode, label)
 
   // restore context
   objectKeys(OLD_CONTEXT).forEach((key) => {

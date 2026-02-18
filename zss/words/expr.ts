@@ -34,6 +34,7 @@ import {
 import { isstrdir, mapstrdir, readdir } from './dir'
 import { readstrkindcolor, readstrkindname } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
+import { parsesend } from './send'
 import { DIR, NAME } from './types'
 
 // consider signaling the end as a pipe | ??
@@ -469,20 +470,38 @@ export function readexpr(index: number): [any, number] {
       }
       // advanced
       case 'run': {
-        const [func, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NAME])
-        memoryruncodepage(func)
+        const withwords = READ_CONTEXT.words.slice(ii)
+        const send = parsesend(withwords)
+        if (NAME(send.targetname) === 'self') {
+          if (READ_CONTEXT.haslabel?.(send.label)) {
+            memoryruncodepage(READ_CONTEXT.element?.kind ?? '', send.label)
+          } else {
+            memoryruncodepage(send.label, '')
+          }
+        } else {
+          memoryruncodepage(send.targetname ?? '', send.label)
+        }
+        const iii = ii + (withwords.length - send.args.length)
         return [READ_CONTEXT.get?.('arg'), iii]
       }
       case 'runwith': {
-        const [arg, func, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.ANY,
-          ARG_TYPE.NAME,
-        ])
+        const [arg, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (ispresent(READ_CONTEXT.element)) {
           READ_CONTEXT.element.arg = arg
         }
-        memoryruncodepage(func)
-        return [READ_CONTEXT.get?.('arg'), iii]
+        const withwords = READ_CONTEXT.words.slice(iii)
+        const send = parsesend(withwords)
+        if (NAME(send.targetname) === 'self') {
+          if (READ_CONTEXT.haslabel?.(send.label)) {
+            memoryruncodepage(READ_CONTEXT.element?.kind ?? '', send.label)
+          } else {
+            memoryruncodepage(send.label, '')
+          }
+        } else {
+          memoryruncodepage(send.targetname ?? '', send.label)
+        }
+        const iiii = iii + (withwords.length - send.args.length)
+        return [READ_CONTEXT.get?.('arg'), iiii]
       }
     }
   }

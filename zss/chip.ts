@@ -593,6 +593,7 @@ export function createchip(
 
       // setup read context get
       READ_CONTEXT.get = chip.get
+      READ_CONTEXT.haslabel = chip.haslabel
 
       // invoke logic impl
       try {
