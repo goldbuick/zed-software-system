@@ -229,7 +229,7 @@ export function readexpr(index: number): [any, number] {
               const target = dir.targets[i]
               const anyexpr = [
                 'any',
-                dirstr,
+                ...(dir.layer !== DIR.MID ? [dirstr] : []),
                 'at',
                 target.x,
                 target.y,
@@ -320,7 +320,7 @@ export function readexpr(index: number): [any, number] {
               const target = dir.targets[i]
               const anyexpr = [
                 'countof',
-                dirstr,
+                ...(dir.layer !== DIR.MID ? [dirstr] : []),
                 'at',
                 target.x,
                 target.y,
