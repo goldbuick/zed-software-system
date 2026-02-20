@@ -242,6 +242,7 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'GROUND':
       case 'WITHIN':
       case 'AWAYBY':
+      case 'ELEMENTS':
         break
       default:
         return [strdir, ii]

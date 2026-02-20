@@ -514,6 +514,47 @@ export function memoryevaldir(
 
         return modeval
       }
+      case DIR.ELEMENTS: {
+        const modeval = memoryevaldir(
+          board,
+          element,
+          player,
+          dir.slice(i + 1),
+          startpt,
+        )
+        // scan in direction of destpt
+        const scandir = dirfrompts(startpt, modeval.destpt)
+
+        // process scan
+        if (modeval.targets.length === 0) {
+          for (let x = 0; x < BOARD_WIDTH; ++x) {
+            if (x === startpt.x) {
+              continue
+            }
+            const element = memoryreadelement(board, { x, y: startpt.y })
+            if (ispt(element)) {
+              modeval.targets.push(element)
+            }
+          }
+          for (let y = 0; y < BOARD_HEIGHT; ++y) {
+            if (y === startpt.y) {
+              continue
+            }
+            const element = memoryreadelement(board, { x: startpt.x, y })
+            if (ispt(element)) {
+              modeval.targets.push(element)
+            }
+          }
+        }
+
+        // filter modeval.targets to only include elements in the scan direction
+        modeval.targets = modeval.targets.filter(
+          (element) =>
+            ispt(element) && dirfrompts(startpt, element) === scandir,
+        )
+
+        return modeval
+      }
     }
   }
 
