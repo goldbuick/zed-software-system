@@ -25,6 +25,6 @@
 | Software | memorywritesoftwarebook, memoryreadbookbysoftware, memoryensuresoftwarebook |
 | Codepages | memorypickcodepagewithtype, memorylistcodepagewithtype, memoryensuresoftwarecodepage |
 | Elements | memoryreadelementkind, memoryreadelementstat, memorywriteelementfromkind, memorywritebullet |
-| Boards | memoryreadboardbyaddress, memoryreadoverboard, memoryreadunderboard |
+| Boards | memoryreadboardbyaddress, memoryreadboardbyevaldir, memoryreadoverboard, memoryreadunderboard |
 | Flags | memoryreadflags, memoryhasflags, memoryclearflags |
 | Init | memoryinitboard |

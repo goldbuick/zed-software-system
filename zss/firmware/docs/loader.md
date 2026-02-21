@@ -36,16 +36,13 @@ Returns loader metadata based on format:
 | `withboard` | `stat` | Set READ_CONTEXT.board to board at stat; element = random pt |
 | `withobject` | `id` | Set READ_CONTEXT.element to object; updates elementid, elementisplayer, elementfocus for send/chat |
 
-### Messaging (Loader-specific)
+### Loader context
 
 | Command | Description |
 |---------|-------------|
-| `send` | Parse full send, dispatch to elements |
-| `shortsend` | Parse short send, dispatch |
-| `text` | Output to chat (apichat) |
-| `hyperlink` | Create chat hyperlink |
-| `stat` | No-op |
-| `endgame` | No-op |
+| `endgame` | No-op (avoids ending session during import) |
+
+*(shortsend, send, stat, text, hyperlink are not documented here)*
 
 ### Input Simulation
 
@@ -56,5 +53,5 @@ Returns loader metadata based on format:
 ## Design Notes
 
 - `withobject` enables `#oneof chatuser … #withobject chatuser #goup '` patterns for chat-driven object behavior
-- Loader commands override runtime behavior (e.g., `text` → chat instead of ticker)
+- Loader context overrides runtime behavior for messaging/UI
 - `endgame` is no-op in loaders to avoid ending session during import
