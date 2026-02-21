@@ -11,6 +11,7 @@ import { NAME } from 'zss/words/types'
 
 import { memoryreadobject, memorytickboard } from './boardoperations'
 import { memoryreadcodepage } from './bookoperations'
+import { memoryreadcodepagestats } from './codepageoperations'
 import { memoryloaderarg } from './loader'
 import {
   memoryreadbookplayerboards,
@@ -28,6 +29,7 @@ import {
 import {
   memoryensuresoftwarebook,
   memoryinitboard,
+  memorypickcodepagewithtype,
   memoryreadbookbysoftware,
   memoryreadelementstat,
   memoryreadflags,
@@ -282,4 +284,25 @@ export function memoryruncodepage(address: string, label: string) {
 
 export function memoryunlockscroll(id: string, player: string) {
   os.scrollunlock(id, player)
+}
+
+export function memoryapplyboardsynthstats(board: MAYBE<BOARD>) {
+  const codepage = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.BOARD,
+    board?.id ?? '',
+  )
+  if (!ispresent(codepage)) {
+    return
+  }
+  const stats = memoryreadcodepagestats(codepage)
+  const statnames = objectKeys(stats).filter((key) =>
+    /^(synth\d+|autofilter\d+|autowah\d+|distortion\d+|echo\d+|fcrush\d+|reverb\d+|vibrato\d+)$/.test(
+      key,
+    ),
+  )
+
+  console.info('stats', statnames)
+
+  // the idea here is that we check for props names
+  // that match synth commands, like #synth, #echo, etc ..
 }
