@@ -27,7 +27,7 @@ export function synthvoicefxvibratoconfig(
         }
         break
     }
-    throw new Error(`unknown vibrato ${config} or ${String(value)}`)
+    throw new Error(`unknown vibrato|${config}|${value}`)
   } catch (err) {
     apierror(SOFTWARE, player, 'synth', err)
   }

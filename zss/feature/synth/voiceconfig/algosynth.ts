@@ -148,7 +148,7 @@ export function handlealgosynthconfig(
         }
         break
     }
-    throw new Error(`unknown algosynth ${config} or ${String(value)}`)
+    throw new Error(`unknown algosynth|${config}|${JSON.stringify(value)}`)
   } catch (err) {
     apierror(SOFTWARE, player, 'synth', err)
   }

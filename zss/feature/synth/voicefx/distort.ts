@@ -30,7 +30,7 @@ export function synthvoicefxdistortionconfig(
         }
         break
     }
-    throw new Error(`unknown distortion ${config} or ${value}`)
+    throw new Error(`unknown distort|${config}|${value}`)
   } catch (err) {
     apierror(SOFTWARE, player, 'synth', err)
   }

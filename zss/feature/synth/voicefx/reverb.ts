@@ -30,7 +30,7 @@ export function synthvoicefxreverbconfig(
         }
         break
     }
-    throw new Error(`unknown reverb ${config} or ${String(value)}`)
+    throw new Error(`unknown reverb|${config}|${value}`)
   } catch (err) {
     apierror(SOFTWARE, player, 'synth', err)
   }

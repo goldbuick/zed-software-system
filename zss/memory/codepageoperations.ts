@@ -25,7 +25,6 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { maptostring } from 'zss/mapping/value'
 import { mapstrcolor } from 'zss/words/color'
 import { statformat, stattypestring } from 'zss/words/stats'
 import {

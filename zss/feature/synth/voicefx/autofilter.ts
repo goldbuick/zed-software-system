@@ -48,7 +48,7 @@ export function synthvoicefxautofilterconfig(
         }
         break
     }
-    throw new Error(`unknown autofilter ${config} or ${value}`)
+    throw new Error(`unknown autofilter|${config}|${value}`)
   } catch (err) {
     apierror(SOFTWARE, player, 'synth', err)
   }

@@ -26,7 +26,7 @@ export function synthvoiceconfig(
 
   const voice = synth.SOURCE[index]
   if (!ispresent(voice)) {
-    apierror(SOFTWARE, player, `synth`, `unknown voice ${index}`)
+    apierror(SOFTWARE, player, `synth`, `unknown voice|${index}`)
     return
   }
 
@@ -339,7 +339,7 @@ export function synthvoiceconfig(
               }
               break
           }
-          throw new Error(`unknown config ${config}`)
+          throw new Error(`unknown config|${config}|${JSON.stringify(value)}`)
         }
         break
     }

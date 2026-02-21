@@ -51,7 +51,7 @@ export function synthvoicefxautowahconfig(
         }
         break
     }
-    throw new Error(`unknown autowah ${config} or ${value}`)
+    throw new Error(`unknown autowah|${config}|${value}`)
   } catch (err) {
     apierror(SOFTWARE, player, 'synth', err)
   }

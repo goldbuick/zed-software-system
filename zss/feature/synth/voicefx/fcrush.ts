@@ -24,7 +24,7 @@ export function synthvoicefxfcrushconfig(
         }
         break
     }
-    throw new Error(`unknown fcrush ${config} or ${String(value)}`)
+    throw new Error(`unknown fcrush|${config}|${value}`)
   } catch (err) {
     apierror(SOFTWARE, player, 'synth', err)
   }

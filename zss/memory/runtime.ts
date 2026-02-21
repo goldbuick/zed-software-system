@@ -4,7 +4,14 @@ import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
@@ -17,7 +24,11 @@ import {
   memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from './playermanagement'
-import { memoryreadsynthplay } from './synthstate'
+import {
+  memorymergesynthvoice,
+  memorymergesynthvoicefx,
+  memoryreadsynthplay,
+} from './synthstate'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -81,6 +92,8 @@ export function memoryrepeatclilast(player: string) {
   }
 }
 
+const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
+
 export function memorytickmain(playeronly = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -137,6 +150,9 @@ export function memorytickmain(playeronly = false) {
     const board = boards[b]
     // init kinds
     memoryinitboard(board)
+    if (timestamp % APPLY_SYNTH_RATE === 0) {
+      memoryapplyboardsynthstats(board)
+    }
     // iterate code needed to update given board
     const run = memorytickboard(board, timestamp)
     for (let i = 0; i < run.length; ++i) {
@@ -286,6 +302,51 @@ export function memoryunlockscroll(id: string, player: string) {
   os.scrollunlock(id, player)
 }
 
+function maptonumberorstring(arg: any) {
+  const str = maptostring(arg)
+  const value = parseFloat(maptostring(arg))
+  return isNaN(value) ? str : value
+}
+
+function memoryapplysynthvoice(
+  board: string,
+  idx: number,
+  statvalues: string[],
+) {
+  for (let i = 0; i < statvalues.length; ++i) {
+    const statvalue = statvalues[i]
+    if (isstring(statvalue)) {
+      const [config, ...values] = statvalue.split(' ')
+      const parsedconfig = maptostring(config)
+      const parsedvalues = maptonumberorstring(values.join(' '))
+      memorymergesynthvoice(board, idx, parsedconfig, parsedvalues || undefined)
+    }
+  }
+}
+
+function memoryapplysynthvoicefx(
+  board: string,
+  idx: number,
+  statname: string,
+  statvalues: string[],
+) {
+  for (let i = 0; i < statvalues.length; ++i) {
+    const statvalue = statvalues[i]
+    if (isstring(statvalue)) {
+      const [config, ...values] = statvalue.split(' ')
+      const parsedconfig = maptonumberorstring(config)
+      const parsedvalues = maptonumberorstring(values.join(' '))
+      memorymergesynthvoicefx(
+        board,
+        idx,
+        statname,
+        parsedconfig,
+        parsedvalues || undefined,
+      )
+    }
+  }
+}
+
 export function memoryapplyboardsynthstats(board: MAYBE<BOARD>) {
   const codepage = memorypickcodepagewithtype(
     CODE_PAGE_TYPE.BOARD,
@@ -294,15 +355,54 @@ export function memoryapplyboardsynthstats(board: MAYBE<BOARD>) {
   if (!ispresent(codepage)) {
     return
   }
+
   const stats = memoryreadcodepagestats(codepage)
   const statnames = objectKeys(stats).filter((key) =>
-    /^(synth\d+|autofilter\d+|autowah\d+|distortion\d+|echo\d+|fcrush\d+|reverb\d+|vibrato\d+)$/.test(
+    /^(synth\d?|autofilter\d?|autowah\d?|distortion\d?|echo\d?|fcrush\d?|reverb\d?|vibrato\d?)$/.test(
       key,
     ),
   )
 
-  console.info('stats', statnames)
+  const boardid = board?.id ?? ''
+  for (let i = 0; i < statnames.length; ++i) {
+    const statname = NAME(statnames[i])
+    const statvalues = (
+      isarray(stats[statname]) ? stats[statname] : [stats[statname]]
+    ) as string[]
 
-  // the idea here is that we check for props names
-  // that match synth commands, like #synth, #echo, etc ..
+    if (statname.startsWith('synth')) {
+      const digit = statname.replace('synth', '')
+      if (!digit) {
+        // default to synth5
+        for (let idx = 4; idx < 8; ++idx) {
+          memoryapplysynthvoice(boardid, idx, statvalues)
+        }
+      } else {
+        const idx = Number(digit)
+        memoryapplysynthvoice(boardid, idx, statvalues)
+      }
+    } else {
+      const fxnames = [
+        'autofilter',
+        'autowah',
+        'distortion',
+        'echo',
+        'fcrush',
+        'reverb',
+        'vibrato',
+      ]
+      for (let i = 0; i < fxnames.length; ++i) {
+        const fxname = fxnames[i]
+        if (statname.startsWith(fxname)) {
+          const digit = statname.replace(fxname, '')
+          if (!digit) {
+            memoryapplysynthvoicefx(boardid, 2, fxname, statvalues)
+          } else {
+            const idx = Number(digit)
+            memoryapplysynthvoicefx(boardid, idx, fxname, statvalues)
+          }
+        }
+      }
+    }
+  }
 }
