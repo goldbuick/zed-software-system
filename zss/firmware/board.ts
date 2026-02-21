@@ -83,7 +83,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
         },
       ).length
       if (bulletcount >= maxplayershots) {
-        chip.set('didshoot', 0)
+        chip.set('didfail', 1)
         // yield after shoot
         chip.yield()
         return 0
@@ -98,7 +98,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   const [maybename] = kind ?? []
   if (NAME(maybename) === 'player') {
     // NOT ALLOWED
-    chip.set('didshoot', 0)
+    chip.set('didfail', 1)
     // yield after shoot
     chip.yield()
     return 0
@@ -145,16 +145,14 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   }
 
   // track if we did shoot
-  if (READ_CONTEXT.elementisplayer) {
-    chip.set('didshoot', ispresent(bullet) ? 1 : 0)
-  }
+  chip.set('didfail', ispresent(bullet) ? 0 : 1)
 
   // yield after shoot
   chip.yield()
   return 0
 }
 
-function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
+function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // invalid data
   if (
     !ispt(READ_CONTEXT.element) ||
@@ -162,6 +160,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     !ispresent(READ_CONTEXT.board) ||
     !ispresent(READ_CONTEXT.element)
   ) {
+    chip.set('didfail', 1)
     return 0
   }
 
@@ -172,6 +171,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   const [maybename] = kind
   if (NAME(maybename) === 'player') {
     // NOT ALLOWED
+    chip.set('didfail', 1)
     return 0
   }
 
@@ -179,10 +179,15 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   if (dir.targets.length) {
     const dirstr = DIR[dir.layer]
     const kindstr = strkindtostr(kind)
+    let anyfailed = false
     for (let i = 0; i < dir.targets.length; ++i) {
       const target = dir.targets[i]
-      commandput([dirstr, 'at', target.x, target.y, ...kindstr], id, arg)
+      commandput(chip, [dirstr, 'at', target.x, target.y, ...kindstr], id, arg)
+      if (chip.get('didfail') === 1) {
+        anyfailed = true
+      }
     }
+    chip.set('didfail', anyfailed ? 1 : 0)
     return 0
   }
 
@@ -194,6 +199,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     destpt.y < 0 ||
     destpt.y >= BOARD_HEIGHT
   ) {
+    chip.set('didfail', 1)
     return 0
   }
 
@@ -213,6 +219,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   if (kindcollision === COLLISION.ISGHOST) {
     // ghost elements have no collision
     memorywriteelementfromkind(board, kind, dir.destpt, id)
+    chip.set('didfail', 0)
     return 0
   }
 
@@ -233,6 +240,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // handle put empty case
   if (kindname === 'empty') {
     memorysafedeleteelement(board, target, READ_CONTEXT.timestamp)
+    chip.set('didfail', 0)
     return 0
   }
 
@@ -241,6 +249,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     // apply color and return
     const [, maybecolor] = kind
     memoryapplyboardelementcolor(target, maybecolor)
+    chip.set('didfail', 0)
     return 0
   }
 
@@ -248,6 +257,9 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   if (memoryboardelementisobject(target)) {
     memorysafedeleteelement(board, target, READ_CONTEXT.timestamp)
   }
+
+  // success !
+  chip.set('didfail', 0)
 
   // handle terrain put
   if (!memoryboardelementisobject(kindelement)) {
@@ -266,9 +278,10 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   return 0
 }
 
-function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
+function commanddupe(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-    return 1
+    chip.set('didfail', 1)
+    return 0
   }
 
   // duplicate target at dir, in the direction of the given dir
@@ -284,7 +297,8 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
     const [maybename] = maybetarget.kind
     if (NAME(maybename) === 'player') {
       // NOT ALLOWED
-      return 1
+      chip.set('didfail', 1)
+      return 0
     }
 
     const collision = memoryreadelementstat(maybetarget, 'collision')
@@ -294,7 +308,8 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
       dupedir.destpt,
     )
     if (ispresent(blocked)) {
-      return 1
+      chip.set('didfail', 1)
+      return 0
     }
     const element = memorywriteelementfromkind(
       dupedirboard,
@@ -302,16 +317,20 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
       dupedir.destpt,
     )
     if (!ispresent(element)) {
-      return 1
+      chip.set('didfail', 1)
+      return 0
     }
     mapelementcopy(element, maybetarget)
     if (ispresent(arg)) {
       element.arg = arg
     }
   } else {
-    return 1
+    chip.set('didfail', 1)
+    return 0
   }
 
+  // success !
+  chip.set('didfail', 0)
   return 0
 }
 
@@ -588,17 +607,18 @@ export const BOARD_FIRMWARE = createfirmware()
     return 0
   })
   .command('duplicate', commanddupe)
-  .command('duplicatewith', (_, words) => {
+  .command('duplicatewith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commanddupe(words.slice(ii), arg)
+    return commanddupe(chip, words.slice(ii), arg)
   })
   .command('dupe', commanddupe)
-  .command('dupewith', (_, words) => {
+  .command('dupewith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commanddupe(words.slice(ii), arg)
+    return commanddupe(chip, words.slice(ii), arg)
   })
-  .command('write', (_, words) => {
+  .command('write', (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
 
@@ -678,10 +698,12 @@ export const BOARD_FIRMWARE = createfirmware()
         }
         break
     }
+    chip.set('didfail', 0)
     return 0
   })
-  .command('change', (_, words) => {
+  .command('change', (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
 
@@ -696,8 +718,12 @@ export const BOARD_FIRMWARE = createfirmware()
       NAME(maybeintoname) === 'player'
     ) {
       // NOT ALLOWED
+      chip.set('didfail', 1)
       return 0
     }
+
+    // default to failure
+    chip.set('didfail', 1)
 
     // begin filtering
     const targetname = readstrkindname(target) ?? ''
@@ -717,9 +743,11 @@ export const BOARD_FIRMWARE = createfirmware()
         // modify existing elements
         if (ispresent(intocolor)) {
           element.color = intocolor
+          chip.set('didfail', 0)
         }
         if (ispresent(intobg)) {
           element.bg = intobg
+          chip.set('didfail', 0)
         }
         const display = memoryreadelementdisplay(element)
         if (display.name !== intoname) {
@@ -740,11 +768,14 @@ export const BOARD_FIRMWARE = createfirmware()
               pt,
             )
             if (ispresent(newelement)) {
+              chip.set('didfail', 0)
               newelement.color = newcolor
               newelement.bg = newbg
             } else {
-              // throw error
+              chip.set('didfail', 1)
             }
+          } else {
+            chip.set('didfail', 0)
           }
         }
       },
@@ -752,14 +783,12 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('put', (_, words) => {
-    return commandput(words)
-  })
-  .command('putwith', (_, words) => {
+  .command('put', commandput)
+  .command('putwith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commandput(words.slice(ii), undefined, arg)
+    return commandput(chip, words.slice(ii), undefined, arg)
   })
-  .command('oneof', (_, words) => {
+  .command('oneof', (chip, words) => {
     const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
 
     // if there is already an object with mark id, bail
@@ -767,12 +796,13 @@ export const BOARD_FIRMWARE = createfirmware()
       ispresent(READ_CONTEXT.board) &&
       memoryreadobject(READ_CONTEXT.board, mark)
     ) {
+      chip.set('didfail', 1)
       return 0
     }
 
-    return commandput(words.slice(ii), mark)
+    return commandput(chip, words.slice(ii), mark)
   })
-  .command('oneofwith', (_, words) => {
+  .command('oneofwith', (chip, words) => {
     const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
 
     // if there is already an object with mark id, bail
@@ -780,10 +810,11 @@ export const BOARD_FIRMWARE = createfirmware()
       ispresent(READ_CONTEXT.board) &&
       memoryreadobject(READ_CONTEXT.board, mark)
     ) {
+      chip.set('didfail', 1)
       return 0
     }
 
-    return commandput(words.slice(ii), mark, arg)
+    return commandput(chip, words.slice(ii), mark, arg)
   })
   .command('shoot', commandshoot)
   .command('shootwith', (chip, words) => {
