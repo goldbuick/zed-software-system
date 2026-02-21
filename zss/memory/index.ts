@@ -220,10 +220,10 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
 export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
   address: string,
-  tracking?: string,
+  istracking = false,
 ): MAYBE<CODE_PAGE> {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (isstring(tracking)) {
+  if (istracking) {
     const trackingstate = memoryreadbookflags(mainbook, 'tracking')
     const books = memoryreadbooklist()
     const allpages: CODE_PAGE[] = []
@@ -290,6 +290,7 @@ export function memoryreadelementkind(
   const maybeobject = memorypickcodepagewithtype(
     CODE_PAGE_TYPE.OBJECT,
     element.kind,
+    true,
   )
   if (ispresent(maybeobject)) {
     element.kinddata =
@@ -300,6 +301,7 @@ export function memoryreadelementkind(
   const maybeterrain = memorypickcodepagewithtype(
     CODE_PAGE_TYPE.TERRAIN,
     element.kind,
+    true,
   )
   if (ispresent(maybeterrain)) {
     element.kinddata =
@@ -394,7 +396,11 @@ export function memorywriteelementfromkind(
   }
   const [name, maybecolor] = kind
 
-  const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
+  const maybeobject = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.OBJECT,
+    name,
+    true,
+  )
   if (ispresent(maybeobject)) {
     const object = memorycreateboardobjectfromkind(board, dest, name, id)
     if (ispresent(object)) {
@@ -407,7 +413,11 @@ export function memorywriteelementfromkind(
     }
   }
 
-  const maybeterrain = memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, name)
+  const maybeterrain = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.TERRAIN,
+    name,
+    true,
+  )
   if (ispresent(maybeterrain)) {
     const terrain = memorywriteterrainfromkind(board, dest, name)
     if (ispresent(terrain)) {
@@ -434,7 +444,11 @@ export function memorywritebullet(
   }
   const [name, maybecolor] = kind
 
-  const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
+  const maybeobject = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.OBJECT,
+    name,
+    true,
+  )
   if (ispresent(maybeobject)) {
     // create new object element
     const object = memorycreateboardobjectfromkind(board, dest, name)

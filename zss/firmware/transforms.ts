@@ -66,7 +66,11 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       return 0
     }
     const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
-    const sourceboard = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
+    const sourceboard = memorypickcodepagewithtype(
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+      true,
+    )
     if (!ispresent(sourceboard)) {
       chip.set('didfail', 1)
       return 0
@@ -96,7 +100,11 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       ARG_TYPE.NUMBER,
       ARG_TYPE.NUMBER,
     ])
-    const sourceboard = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
+    const sourceboard = memorypickcodepagewithtype(
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+      true,
+    )
     if (!ispresent(sourceboard)) {
       chip.set('didfail', 1)
       return 0

@@ -215,6 +215,7 @@ export function memoryloginplayer(
     const titlepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.BOARD,
       MEMORY_LABEL.TITLE,
+      true,
     )
     currentboard = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(titlepage)
   }
@@ -233,6 +234,7 @@ export function memoryloginplayer(
   const playerkind = memorypickcodepagewithtype(
     CODE_PAGE_TYPE.OBJECT,
     MEMORY_LABEL.PLAYER,
+    true,
   )
   if (!ispresent(playerkind)) {
     return apierror(
