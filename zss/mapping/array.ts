@@ -1,4 +1,4 @@
-import { randominteger, randomintegerwith } from './number'
+import { randominteger, randomintegerwith, randomnumber } from './number'
 import { MAYBE, ispresent } from './types'
 
 export function range(a: number, b?: number, step?: number) {
@@ -38,6 +38,49 @@ export function pick<T>(...args: T[]) {
 
 export function pickwith<T>(seed: string, ...args: T[]) {
   return randomitemwith(seed, args.flat())
+}
+
+export function pickwithweights<T>(tuples: [T, number][]): T | undefined {
+  const total = tuples.reduce((sum, [, w]) => sum + w, 0)
+  if (total <= 0) return undefined
+  let r = randomnumber() * total
+  for (const [value, weight] of tuples) {
+    r -= weight
+    if (r <= 0) return value
+  }
+  return tuples[tuples.length - 1]?.[0]
+}
+
+export function shuffle<T>(array: T[]): T[] {
+  const out = [...array]
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(randomnumber() * (i + 1))
+    const tmp = out[i]
+    out[i] = out[j]
+    out[j] = tmp
+  }
+  return out
+}
+
+export function shufflewithweights<T>(tuples: [T, number][]): T[] {
+  const remaining = tuples.map((t) => [...t] as [T, number])
+  const result: T[] = []
+  while (remaining.length > 0) {
+    const total = remaining.reduce((sum, [, w]) => sum + w, 0)
+    if (total <= 0) break
+    let r = randomnumber() * total
+    let idx = remaining.length - 1
+    for (let i = 0; i < remaining.length; i++) {
+      r -= remaining[i][1]
+      if (r <= 0) {
+        idx = i
+        break
+      }
+    }
+    result.push(remaining[idx][0])
+    remaining.splice(idx, 1)
+  }
+  return result
 }
 
 export function addToArray<T>(array: T[], value: T) {
