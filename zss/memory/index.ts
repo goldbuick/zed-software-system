@@ -220,8 +220,20 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
 export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
   address: string,
+  tracking?: string,
 ): MAYBE<CODE_PAGE> {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (isstring(tracking)) {
+    const trackingstate = memoryreadbookflags(mainbook, 'tracking')
+    const books = memoryreadbooklist()
+    const allpages: CODE_PAGE[] = []
+    for (let i = 0; i < books.length; ++i) {
+      const book = books[i]
+      const pages = memorylistcodepagebytypeandstat(book, type, address)
+      allpages.push(...pages)
+    }
+    return pick(allpages)
+  }
   const codepage = pick(
     memorylistcodepagebytypeandstat(mainbook, type, address),
   )
