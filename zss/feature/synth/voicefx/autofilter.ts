@@ -15,37 +15,41 @@ export function synthvoicefxautofilterconfig(
     return
   }
   const autofilter = synth.FXCHAIN.autofilter
-  switch (config) {
-    case 'type':
-      if (isstring(value)) {
-        autofilter.set({ filter: { type: value as BiquadFilterType } })
-        return
-      }
-      break
-    case 'q':
-      if (isnumber(value)) {
-        autofilter.set({ filter: { Q: value } })
-        return
-      }
-      break
-    case 'depth':
-      if (isnumber(value)) {
-        autofilter.set({ depth: value })
-        return
-      }
-      break
-    case 'frequency':
-      if (isnumber(value)) {
-        autofilter.set({ frequency: value })
-        return
-      }
-      break
-    case 'octaves':
-      if (isnumber(value)) {
-        autofilter.set({ octaves: value })
-        return
-      }
-      break
+  try {
+    switch (config) {
+      case 'type':
+        if (isstring(value)) {
+          autofilter.set({ filter: { type: value as BiquadFilterType } })
+          return
+        }
+        break
+      case 'q':
+        if (isnumber(value)) {
+          autofilter.set({ filter: { Q: value } })
+          return
+        }
+        break
+      case 'depth':
+        if (isnumber(value)) {
+          autofilter.set({ depth: value })
+          return
+        }
+        break
+      case 'frequency':
+        if (isnumber(value)) {
+          autofilter.set({ frequency: value })
+          return
+        }
+        break
+      case 'octaves':
+        if (isnumber(value)) {
+          autofilter.set({ octaves: value })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown autofilter ${config} or ${value}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
   }
-  apierror(SOFTWARE, player, `kind`, `unknown autofilter ${config} or ${value}`)
 }

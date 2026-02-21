@@ -18,18 +18,17 @@ export function synthvoicefxvibratoconfig(
     return
   }
   const vibrato = synth.FXCHAIN.vibrato
-  switch (config) {
-    case 'maxdelay':
-      if (isnumber(value)) {
-        vibrato.set({ maxDelay: value })
-        return
-      }
-      break
+  try {
+    switch (config) {
+      case 'maxdelay':
+        if (isnumber(value)) {
+          vibrato.set({ maxDelay: value })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown vibrato ${config} or ${String(value)}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
   }
-  apierror(
-    SOFTWARE,
-    player,
-    `synth`,
-    `unknown vibrato config ${config} with ${value}`,
-  )
 }

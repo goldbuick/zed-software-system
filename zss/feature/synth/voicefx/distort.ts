@@ -15,19 +15,23 @@ export function synthvoicefxdistortionconfig(
     return
   }
   const distortion = synth.FXCHAIN.distortion
-  switch (config) {
-    case 'distortion':
-      if (isnumber(value)) {
-        distortion.set({ distortion: value })
-        return
-      }
-      break
-    case 'oversample':
-      if (isstring(value)) {
-        distortion.set({ oversample: value as OverSampleType })
-        return
-      }
-      break
+  try {
+    switch (config) {
+      case 'distortion':
+        if (isnumber(value)) {
+          distortion.set({ distortion: value })
+          return
+        }
+        break
+      case 'oversample':
+        if (isstring(value)) {
+          distortion.set({ oversample: value as OverSampleType })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown distortion ${config} or ${value}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
   }
-  apierror(SOFTWARE, player, `kind`, `unknown distortion ${config} or ${value}`)
 }

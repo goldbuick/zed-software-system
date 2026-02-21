@@ -15,19 +15,23 @@ export function synthvoicefxreverbconfig(
     return
   }
   const reverb = synth.FXCHAIN.reverb
-  switch (config) {
-    case 'decay':
-      if (isnumber(value)) {
-        reverb.set({ decay: value })
-        return
-      }
-      break
-    case 'predelay':
-      if (isnumber(value)) {
-        reverb.set({ preDelay: value })
-        return
-      }
-      break
+  try {
+    switch (config) {
+      case 'decay':
+        if (isnumber(value)) {
+          reverb.set({ decay: value })
+          return
+        }
+        break
+      case 'predelay':
+        if (isnumber(value)) {
+          reverb.set({ preDelay: value })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown reverb ${config} or ${String(value)}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
   }
-  apierror(SOFTWARE, player, `kind`, `unknown reverb ${config} or ${value}`)
 }
