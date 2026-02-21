@@ -15,19 +15,23 @@ export function synthvoicefxechoconfig(
     return
   }
   const echo = synth.FXCHAIN.echo
-  switch (config) {
-    case 'delaytime':
-      if (isnumber(value)) {
-        echo.set({ delayTime: value })
-        return
-      }
-      break
-    case 'feedback':
-      if (isnumber(value)) {
-        echo.set({ feedback: value })
-        return
-      }
-      break
+  try {
+    switch (config) {
+      case 'delaytime':
+        if (isnumber(value)) {
+          echo.set({ delayTime: value })
+          return
+        }
+        break
+      case 'feedback':
+        if (isnumber(value)) {
+          echo.set({ feedback: value })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown echo ${config} or ${String(value)}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
   }
-  apierror(SOFTWARE, player, `kind`, `unknown echo ${config} or ${value}`)
 }

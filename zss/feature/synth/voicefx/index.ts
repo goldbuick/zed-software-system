@@ -83,5 +83,5 @@ export function synthvoicefxconfig(
     }
     return
   }
-  apierror(SOFTWARE, player, `synth`, `unknown fx ${fxname as string}`)
+  apierror(SOFTWARE, player, `synth`, `unknown fx|${fxname as string}`)
 }

@@ -79,7 +79,7 @@ export function memorymergesynthvoicefx(
     default:
       if (isnumber(config)) {
         cache.voicefx[idx][fx].on = value
-      } else {
+      } else if (config) {
         cache.voicefx[idx][fx][config] = value
       }
       break

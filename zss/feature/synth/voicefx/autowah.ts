@@ -18,43 +18,41 @@ export function synthvoicefxautowahconfig(
     return
   }
   const autowah = synth.FXCHAIN.autowah
-  switch (config) {
-    case 'basefrequency':
-      if (isnumber(value)) {
-        autowah.set({ baseFrequency: value })
-        return
-      }
-      break
-    case 'octaves':
-      if (isnumber(value)) {
-        autowah.set({ octaves: value })
-        return
-      }
-      break
-    case 'sensitivity':
-      if (isnumber(value)) {
-        autowah.set({ sensitivity: value })
-        return
-      }
-      break
-    case 'gain':
-      if (isnumber(value)) {
-        autowah.set({ gain: value })
-        return
-      }
-      break
-    case 'follower':
-      if (isnumber(value)) {
-        autowah.set({ follower: value })
-        return
-      }
-      break
+  try {
+    switch (config) {
+      case 'basefrequency':
+        if (isnumber(value)) {
+          autowah.set({ baseFrequency: value })
+          return
+        }
+        break
+      case 'octaves':
+        if (isnumber(value)) {
+          autowah.set({ octaves: value })
+          return
+        }
+        break
+      case 'sensitivity':
+        if (isnumber(value)) {
+          autowah.set({ sensitivity: value })
+          return
+        }
+        break
+      case 'gain':
+        if (isnumber(value)) {
+          autowah.set({ gain: value })
+          return
+        }
+        break
+      case 'follower':
+        if (isnumber(value)) {
+          autowah.set({ follower: value })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown autowah|${config}|${value}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
   }
-
-  apierror(
-    SOFTWARE,
-    player,
-    `synth`,
-    `unknown autowah config ${config} with ${value}`,
-  )
 }

@@ -25,7 +25,6 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { maptostring } from 'zss/mapping/value'
 import { mapstrcolor } from 'zss/words/color'
 import { statformat, stattypestring } from 'zss/words/stats'
 import {
@@ -384,13 +383,14 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
         for (let i = 0; i < statnames.length; ++i) {
           const statname = statnames[i].toLowerCase()
           const statvalue = stats[statname]
-          if (statname.startsWith('char') && isstring(statvalue)) {
+          if (statname.startsWith('char') && isarray(statvalue)) {
             const idx = parseFloat(statname.replace('char', ''))
             if (idx >= 0 && idx <= 255) {
+              const allrows = statvalue.join('')
               const SIZE = 8 * 14
               const pixels: number[] = []
               for (let i = 0; i < SIZE; ++i) {
-                const pixel = statvalue[i]
+                const pixel = allrows[i]
                 switch (pixel) {
                   case '-':
                   case undefined:
@@ -538,7 +538,15 @@ export function memoryreadcodepagestatsfromtext(
               if (isnumber(numbervalue)) {
                 stats[name] = numbervalue
               } else {
-                stats[name] = `${maptostring(stats[name])}${maybevalue}`
+                if (!ispresent(stats[name])) {
+                  stats[name] = maybevalue
+                } else {
+                  if (!isarray(stats[name])) {
+                    const current = stats[name]
+                    stats[name] = [current]
+                  }
+                  stats[name].push(maybevalue)
+                }
               }
             } else {
               stats[name] = 1

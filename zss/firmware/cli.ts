@@ -436,12 +436,7 @@ export const CLI_FIRMWARE = createfirmware()
         writetext(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `$white use @ to create a board`,
-        )
-        writetext(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$white @board name of board`,
+          `$white use @board name to create a board`,
         )
       }
     }

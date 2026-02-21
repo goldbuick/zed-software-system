@@ -15,13 +15,17 @@ export function synthvoicefxfcrushconfig(
     return
   }
   const fcrush = synth.FXCHAIN.fcrush
-  switch (config) {
-    case 'rate':
-      if (isnumber(value)) {
-        fcrush.set({ rate: value })
-        return
-      }
-      break
+  try {
+    switch (config) {
+      case 'rate':
+        if (isnumber(value)) {
+          fcrush.set({ rate: value })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown fcrush|${config}|${value}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
   }
-  apierror(SOFTWARE, player, `kind`, `unknown fcrush ${config} or ${value}`)
 }
