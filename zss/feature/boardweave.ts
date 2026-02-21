@@ -38,12 +38,12 @@ export function boardweave(
       return boardweavegroup(target, delta, self, targetset)
   }
   if (!ispresent(READ_CONTEXT.book)) {
-    return
+    return false
   }
 
   const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
-    return
+    return false
   }
 
   // create tmp board for terrain
@@ -98,6 +98,8 @@ export function boardweave(
 
   // reset all lookups
   memoryinitboard(targetboard)
+
+  return true
 }
 
 export function boardweavegroup(
@@ -107,12 +109,12 @@ export function boardweavegroup(
   targetgroup: string,
 ) {
   if (!ispresent(READ_CONTEXT.book)) {
-    return
+    return false
   }
   const book = READ_CONTEXT.book
   const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
-    return
+    return false
   }
 
   // make sure lookup is created
@@ -127,7 +129,7 @@ export function boardweavegroup(
 
   // if we get __nothing__ we should bail
   if (terrainelements.length === 0 && objectelements.length === 0) {
-    return
+    return false
   }
 
   // order based on delta
@@ -312,7 +314,7 @@ export function boardweavegroup(
 
   // bail as early as possible
   if (didcollide) {
-    return
+    return false
   }
 
   for (let i = 0; i < objectelements.length; ++i) {
@@ -357,7 +359,7 @@ export function boardweavegroup(
 
   // bail as early as possible
   if (didcollide) {
-    return
+    return false
   }
 
   // apply transform to terrain
@@ -405,4 +407,6 @@ export function boardweavegroup(
   }
 
   memoryinitboard(targetboard)
+
+  return true
 }
