@@ -65,6 +65,7 @@ export enum BOARD_ELEMENT_KEYS {
   p8,
   p9,
   p10,
+  didfail,
 }
 
 export enum BOARD_KEYS {
@@ -235,6 +236,7 @@ export type BOARD_ELEMENT = {
   stepy?: number
   shootx?: number
   shooty?: number
+  didfail?: number
   // messages
   sender?: string
   arg?: any

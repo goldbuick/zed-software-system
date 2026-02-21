@@ -65,28 +65,36 @@ function pickcodepagewithtype(
 }
 
 export const TRANSFORM_FIRMWARE = createfirmware()
-  .command('snapshot', () => {
+  .command('snapshot', (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
-    boardsnapshot(READ_CONTEXT.board.id)
+    chip.set('didfail', ispresent(boardsnapshot(READ_CONTEXT.board.id)) ? 0 : 1)
     return 0
   })
-  .command('revert', () => {
+  .command('revert', (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
-    boardrevert(READ_CONTEXT.board.id)
+    chip.set('didfail', ispresent(boardrevert(READ_CONTEXT.board.id)) ? 0 : 1)
     return 0
   })
-  .command('copy', (_, words) => {
+  .command('copy', (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
     const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
     const sourceboard = pickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
-    if (ispresent(sourceboard)) {
-      const filter = readfilter(words, ii)
+    if (!ispresent(sourceboard)) {
+      chip.set('didfail', 1)
+      return 0
+    }
+    const filter = readfilter(words, ii)
+    chip.set(
+      'didfail',
       boardcopy(
         sourceboard.id,
         READ_CONTEXT.board.id,
@@ -94,11 +102,14 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         filter.pt2,
         filter.targetset,
       )
-    }
+        ? 0
+        : 1,
+    )
     return 0
   })
-  .command('remix', (_, words) => {
+  .command('remix', (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
     const [stat, pattersize, mirror, ii] = readargs(words, 0, [
@@ -107,8 +118,13 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       ARG_TYPE.NUMBER,
     ])
     const sourceboard = pickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
-    if (ispresent(sourceboard)) {
-      const filter = readfilter(words, ii)
+    if (!ispresent(sourceboard)) {
+      chip.set('didfail', 1)
+      return 0
+    }
+    const filter = readfilter(words, ii)
+    chip.set(
+      'didfail',
       boardremix(
         READ_CONTEXT.board.id,
         sourceboard.id,
@@ -118,11 +134,14 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         filter.pt2,
         filter.targetset,
       )
-    }
+        ? 0
+        : 1,
+    )
     return 0
   })
-  .command('weave', (_, words) => {
+  .command('weave', (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
     const [dir, ii] = readargs(words, 0, [ARG_TYPE.DIR])
@@ -135,28 +154,39 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
 
     const filter = readfilter(words, ii)
-    boardweave(
-      board?.id ?? '',
-      delta,
-      filter.pt1,
-      filter.pt2,
-      READ_CONTEXT.elementid,
-      filter.targetset,
+    chip.set(
+      'didfail',
+      boardweave(
+        board?.id ?? '',
+        delta,
+        filter.pt1,
+        filter.pt2,
+        READ_CONTEXT.elementid,
+        filter.targetset,
+      )
+        ? 0
+        : 1,
     )
     return 0
   })
-  .command('pivot', (_, words) => {
+  .command('pivot', (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      chip.set('didfail', 1)
       return 0
     }
     const [degrees, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])
     const filter = readfilter(words, ii)
-    boardpivot(
-      READ_CONTEXT.board.id,
-      degToRad(degrees),
-      filter.pt1,
-      filter.pt2,
-      filter.targetset,
+    chip.set(
+      'didfail',
+      boardpivot(
+        READ_CONTEXT.board.id,
+        degToRad(degrees),
+        filter.pt1,
+        filter.pt2,
+        filter.targetset,
+      )
+        ? 0
+        : 1,
     )
     return 0
   })

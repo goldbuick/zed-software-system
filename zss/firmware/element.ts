@@ -102,6 +102,7 @@ const STANDARD_STAT_NAMES = new Set([
   'stepy',
   'shootx',
   'shooty',
+  'didfail',
   'light',
   'lightdir',
   // run & with arg
@@ -802,7 +803,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('char', (_, words) => {
+  .command('char', (chip, words) => {
     const [value] = readargs(words, 0, [ARG_TYPE.ANY])
     if (isstrdir(value)) {
       const [dest, charvalue] = readargs(words, 0, [
@@ -815,13 +816,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
       // handle multi-target dirs
       if (dest.targets.length) {
+        let anyfailed = false
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
           const element = memoryreadelement(board, target)
           if (ispresent(element)) {
             element.char = charvalue
+          } else {
+            anyfailed = true
           }
         }
+        chip.set('didfail', anyfailed ? 1 : 0)
         return 0
       }
 
@@ -829,14 +834,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
       const element = memoryreadelement(board, dest.destpt)
       if (ispresent(element)) {
         element.char = charvalue
+      } else {
+        chip.set('didfail', 1)
       }
     } else if (ispresent(READ_CONTEXT.element) && isnumber(value)) {
       // self char update
       READ_CONTEXT.element.char = value
+      chip.set('didfail', 0)
     }
     return 0
   })
-  .command('color', (_, words) => {
+  .command('color', (chip, words) => {
     const [value] = readargs(words, 0, [ARG_TYPE.ANY])
     if (isstrdir(value)) {
       const [dest, colorvalue] = readargs(words, 0, [
@@ -849,13 +857,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
       // handle multi-target dirs
       if (dest.targets.length) {
+        let anyfailed = false
         for (let i = 0; i < dest.targets.length; ++i) {
           const target = dest.targets[i]
           const element = memoryreadelement(board, target)
           if (ispresent(element)) {
             memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
+          } else {
+            anyfailed = true
           }
         }
+        chip.set('didfail', anyfailed ? 1 : 0)
         return 0
       }
 
@@ -863,12 +875,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
       const element = memoryreadelement(board, dest.destpt)
       if (ispresent(element)) {
         memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
+        chip.set('didfail', 0)
+      } else {
+        chip.set('didfail', 1)
       }
     } else {
       // self color update
       const [colorvalue] = readargs(words, 0, [ARG_TYPE.COLOR])
       if (ispresent(READ_CONTEXT.element) && ispresent(colorvalue)) {
         memoryapplyboardelementcolor(READ_CONTEXT.element, colorvalue)
+        chip.set('didfail', 0)
+      } else {
+        chip.set('didfail', 1)
       }
     }
     return 0

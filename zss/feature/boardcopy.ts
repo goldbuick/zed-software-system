@@ -115,18 +115,18 @@ export function boardcopy(
       return boardcopygroup(source, target, p1, '', targetset)
   }
   if (!ispresent(READ_CONTEXT.book)) {
-    return
+    return false
   }
   const book = READ_CONTEXT.book
 
   const sourceboard = memoryreadboardbyaddress(source)
   if (!ispresent(sourceboard)) {
-    return
+    return false
   }
 
   const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
-    return
+    return false
   }
 
   // make sure lookup is created
@@ -221,6 +221,7 @@ export function boardcopy(
     // rebuild lookups
     memoryinitboard(targetboard)
   }
+  return true
 }
 
 export function boardcopygroup(
@@ -231,18 +232,18 @@ export function boardcopygroup(
   targetgroup: string,
 ) {
   if (!ispresent(READ_CONTEXT.book)) {
-    return
+    return false
   }
   const book = READ_CONTEXT.book
 
   const sourceboard = memoryreadboardbyaddress(source)
   if (!ispresent(sourceboard)) {
-    return
+    return false
   }
 
   const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
-    return
+    return false
   }
 
   // make sure lookup is created
@@ -258,7 +259,7 @@ export function boardcopygroup(
     )
     // if we get __nothing__ we should bail
     if (terrainelements.length === 0 && objectelements.length === 0) {
-      return
+      return false
     }
 
     // get top left corner
@@ -323,4 +324,5 @@ export function boardcopygroup(
     // rebuild lookups
     memoryinitboard(targetboard)
   }
+  return true
 }

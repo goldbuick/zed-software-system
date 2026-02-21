@@ -14,11 +14,11 @@ export function boardpivot(
   targetset: string,
 ) {
   if (!ispresent(READ_CONTEXT.book)) {
-    return
+    return false
   }
   const targetboard = memoryreadboardbyaddress(target)
   if (!ispresent(targetboard)) {
-    return
+    return false
   }
 
   // create tmp board for terrain
@@ -125,4 +125,6 @@ export function boardpivot(
     memoryinitboard(tmpboard)
     memoryinitboard(targetboard)
   }
+
+  return true
 }
