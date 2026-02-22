@@ -1,1 +1,1 @@
-desc;$DKGRAYhyperlink
+desc;$DKGRAYDisplay clickable link in scroll or log

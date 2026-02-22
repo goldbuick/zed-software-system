@@ -1,1 +1,1 @@
-desc;$DKGRAYList all pages in main book
+desc;$DKGRAYList all pages in all loaded books

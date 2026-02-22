@@ -1,1 +1,1 @@
-desc;$DKGRAYchanges object into specified element
+desc;$DKGRAYChange element into specified kind

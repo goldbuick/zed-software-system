@@ -1,1 +1,1 @@
-desc;$DKGRAYLoad code from object codepage into object at given direction
+desc;$DKGRAYLegacy ZZT command, not implemented

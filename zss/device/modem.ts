@@ -136,14 +136,12 @@ function useWaitForValue<T extends MODEM_SHARED_TYPE>(
     return () => unsub()
   }, [])
 
-  const obj = ROOT_OBJ()
-  if (!obj.has(key)) {
-    return undefined
-  }
-  const childApi = obj.get(key)
-  if (!childApi) return undefined
-
   try {
+    const obj = ROOT_OBJ()
+    if (!obj.has(key)) return undefined
+    const childApi = obj.get(key)
+    if (!childApi) return undefined
+
     if (type === MODEM_SHARED_TYPE.NUMBER) {
       const view = childApi.view()
       return (typeof view === 'number' ? view : undefined) as MAYBE<
@@ -161,7 +159,7 @@ function useWaitForValue<T extends MODEM_SHARED_TYPE>(
       }
     }
   } catch {
-    // key exists but wrong type
+    // model may be mid-mutation when subscriber fires
   }
   return undefined
 }
@@ -223,11 +221,11 @@ export function modemwritevaluestring(key: string, value: string) {
 }
 
 function getValueForKey(key: string): unknown {
-  const obj = ROOT_OBJ()
-  if (!obj.has(key)) return undefined
-  const childApi = obj.get(key)
-  if (!childApi) return undefined
   try {
+    const obj = ROOT_OBJ()
+    if (!obj.has(key)) return undefined
+    const childApi = obj.get(key)
+    if (!childApi) return undefined
     const valApi = childApi as {
       get?: () => { view?: () => unknown; asStr?: () => StrApi }
     }
@@ -248,12 +246,14 @@ function modemobservevalue(
   callback: (value: unknown) => void,
 ): UNOBSERVE_FUNC {
   const unsub = SYNC_MODEL.api.subscribe(() => {
-    if (ROOT_OBJ().has(key)) {
-      callback(getValueForKey(key))
+    const value = getValueForKey(key)
+    if (value !== undefined) {
+      callback(value)
     }
   })
-  if (ROOT_OBJ().has(key)) {
-    callback(getValueForKey(key))
+  const value = getValueForKey(key)
+  if (value !== undefined) {
+    callback(value)
   }
   return () => unsub()
 }

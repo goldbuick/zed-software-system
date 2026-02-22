@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
 import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
@@ -38,6 +38,24 @@ import {
 import { EditorFrame } from './editorframe'
 import { EditorInput, EditorInputProps } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
+
+const STRUCTURED_COMMANDS = new Set([
+  'if',
+  'try',
+  'take',
+  'give',
+  'duplicate',
+  'do',
+  'done',
+  'else',
+  'while',
+  'repeat',
+  'waitfor',
+  'foreach',
+  'for',
+  'break',
+  'continue',
+])
 
 function skipwords(word: string) {
   switch (word) {
@@ -152,6 +170,14 @@ export function EditorComponent() {
     wordsexprs,
   ])
 
+  const commandNames = useMemo(() => {
+    const names = new Set(STRUCTURED_COMMANDS)
+    for (const word of wordscli) names.add(word.toLowerCase())
+    for (const word of wordsloader) names.add(word.toLowerCase())
+    for (const word of wordsruntime) names.add(word.toLowerCase())
+    return names
+  }, [wordscli, wordsloader, wordsruntime])
+
   const tapeeditor = useEditor()
   const codepage = useWaitForValueString(
     vmcodeaddress(editor.book, editor.path),
@@ -167,81 +193,108 @@ export function EditorComponent() {
   // get current string value of code
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
 
-  // split by line
-  const rows = splitcoderows(strvalue)
+  // tokenize, parse, and fold into rows (only re-run when text changes)
+  const rows = useMemo(() => {
+    const rows = splitcoderows(strvalue)
+    const parsed = compileast(strvalue)
 
-  // cursor placement
-  const ycursor = findcursorinrows(tapeeditor.cursor, rows)
-  const xcursor = tapeeditor.cursor - rows[ycursor].start
-
-  // tokenize code
-  const parsed = compileast(strvalue)
-
-  // fold tokens into lines
-  if (ispresent(parsed.tokens)) {
-    let isfirst = true
-    for (let i = 0; i < parsed.tokens.length; ++i) {
-      const token = parsed.tokens[i]
-      if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
-        // payload marks which stat is first
-        token.payload = isfirst
-        isfirst = false
-      }
-      const row = rows[(token.startLine ?? 1) - 1]
-      if (ispresent(row)) {
-        row.tokens = row.tokens ?? []
-        row.tokens.push(token)
-      }
-    }
-  }
-
-  // fold ast into lines
-  if (parsed?.ast?.type === NODE.PROGRAM) {
-    createlineindexes(parsed.ast)
-    const queue: CodeNode[] = []
-    for (let i = 1; i < parsed.ast.lines.length; ++i) {
-      queue.push(parsed.ast.lines[i])
-    }
-    while (queue.length) {
-      const node = queue.pop()
-      if (isnumber(node?.type)) {
-        switch (node.type) {
-          case NODE.LINE:
-          case NODE.IF:
-            if (isnumber(node.startLine)) {
-              const row = rows[node.startLine - 1]
-              row.asts = row.asts ?? []
-              row.asts.unshift(node)
-            }
-            break
+    // fold tokens into lines
+    if (ispresent(parsed.tokens)) {
+      let isfirst = true
+      for (let i = 0; i < parsed.tokens.length; ++i) {
+        const token = parsed.tokens[i]
+        if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
+          // payload marks which stat is first
+          token.payload = isfirst
+          isfirst = false
         }
-        // iterate through node props, looking for an array of elements
-        const propnames = objectKeys(node)
-        for (let i = 0; i < propnames.length; ++i) {
-          const prop = propnames[i]
-          const value = node[prop]
-          if (isarray(value)) {
-            queue.push(...value)
-          } else if (typeof value === 'object') {
-            // @ts-expect-error its okay
-            queue.push(value)
+        const row = rows[(token.startLine ?? 1) - 1]
+        if (ispresent(row)) {
+          row.tokens = row.tokens ?? []
+          row.tokens.push(token)
+        }
+      }
+    }
+
+    // fold ast into lines
+    if (parsed?.ast?.type === NODE.PROGRAM) {
+      createlineindexes(parsed.ast)
+      const queue: CodeNode[] = []
+      for (let i = 1; i < parsed.ast.lines.length; ++i) {
+        queue.push(parsed.ast.lines[i])
+      }
+      while (queue.length) {
+        const node = queue.pop()
+        if (isnumber(node?.type)) {
+          switch (node.type) {
+            case NODE.LINE:
+            case NODE.IF:
+              if (isnumber(node.startLine)) {
+                const row = rows[node.startLine - 1]
+                row.asts = row.asts ?? []
+                row.asts.unshift(node)
+              }
+              break
+          }
+          const propnames = objectKeys(node)
+          for (let i = 0; i < propnames.length; ++i) {
+            const prop = propnames[i]
+            const value = node[prop]
+            if (isarray(value)) {
+              queue.push(...value)
+            } else if (typeof value === 'object') {
+              // @ts-expect-error its okay
+              queue.push(value)
+            }
           }
         }
       }
     }
-  }
 
-  // fold errors into lines
-  if (ispresent(parsed.errors)) {
-    for (let i = 0; i < parsed.errors.length; ++i) {
-      const error = parsed.errors[i]
-      const row = rows[(error.line ?? 1) - 1]
-      if (ispresent(row)) {
-        row.errors = row.errors ?? []
-        row.errors.push(error)
+    // fold errors into lines
+    if (ispresent(parsed.errors)) {
+      for (let i = 0; i < parsed.errors.length; ++i) {
+        const error = parsed.errors[i]
+        const row = rows[(error.line ?? 1) - 1]
+        if (ispresent(row)) {
+          row.errors = row.errors ?? []
+          row.errors.push(error)
+        }
       }
     }
-  }
+
+    // warn when a label name shadows a command
+    if (ispresent(parsed.tokens)) {
+      for (let i = 0; i < parsed.tokens.length; ++i) {
+        const token = parsed.tokens[i]
+        if (
+          token.tokenTypeIdx === lexer.label.tokenTypeIdx &&
+          token.startColumn === 1
+        ) {
+          const labelname = token.image.slice(1).trim().toLowerCase()
+          if (commandNames.has(labelname)) {
+            const row = rows[(token.startLine ?? 1) - 1]
+            if (ispresent(row)) {
+              row.errors = row.errors ?? []
+              row.errors.push({
+                offset: token.startOffset,
+                line: token.startLine,
+                column: token.startColumn,
+                length: token.image.length,
+                message: `label ':${labelname}' shadows #${labelname} command`,
+              })
+            }
+          }
+        }
+      }
+    }
+
+    return rows
+  }, [strvalue, commandNames])
+
+  // cursor placement
+  const ycursor = findcursorinrows(tapeeditor.cursor, rows)
+  const xcursor = tapeeditor.cursor - rows[ycursor].start
 
   // measure edges once
   const props: EditorRowsProps | EditorInputProps = {

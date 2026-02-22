@@ -1,1 +1,1 @@
-desc;$DKGRAYtext
+desc;$DKGRAYDisplay text on element or in sidebar

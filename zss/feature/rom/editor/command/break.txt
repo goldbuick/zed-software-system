@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYExit current loop early

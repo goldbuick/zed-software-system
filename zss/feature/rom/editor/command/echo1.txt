@@ -1,1 +1,1 @@
-desc;$DKGRAYEcho for fx 0
+desc;$DKGRAYEcho for first 2 channels of #play

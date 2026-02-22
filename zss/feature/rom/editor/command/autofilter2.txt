@@ -1,1 +1,1 @@
-desc;$DKGRAYAutofilter for fx 1
+desc;$DKGRAYAutofilter for last 2 channels of #play

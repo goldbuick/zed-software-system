@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYRepeat a command N times

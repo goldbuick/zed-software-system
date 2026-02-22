@@ -1,1 +1,1 @@
-desc;$DKGRAYSave state to url (operator only)
+desc;$DKGRAYFlush and persist current state (operator only)

@@ -1,1 +1,1 @@
-desc;$DKGRAYlooping do-done block
+desc;$DKGRAYLooping do-done block with condition

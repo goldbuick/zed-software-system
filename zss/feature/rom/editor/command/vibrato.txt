@@ -1,1 +1,1 @@
-desc;$DKGRAYApply vibrato to fx 0-1
+desc;$DKGRAYApply vibrato to all 4 channels of #play
