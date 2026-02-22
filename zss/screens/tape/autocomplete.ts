@@ -143,15 +143,15 @@ export function getlineautocomplete(
   return EMPTY_AUTOCOMPLETE
 }
 
-const AC_BG = COLOR.ONBLACK
+const AC_BG = COLOR.BLACK
 const AC_FG = COLOR.LTGRAY
-const AC_SEL_BG = COLOR.ONBLACK
+const AC_SEL_BG = COLOR.DKBLUE
 const AC_SEL_FG = COLOR.WHITE
 const AC_HINT_FG = COLOR.DKGRAY
 
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
-function applySuggestionColors(
+function applysuggestioncolors(
   bufindex: number,
   textoffset: number,
   text: string,
@@ -186,7 +186,7 @@ function applySuggestionColors(
   context.changed()
 }
 
-function drawHintText(
+function drawhinttext(
   hint: string,
   hintx: number,
   hinty: number,
@@ -221,13 +221,13 @@ export function drawautocomplete(
   if (ac.suggestions.length === 0) return
 
   const effectiveIndex = acindex < 0 ? 0 : acindex
-  const startx = edge.left + 1 + ac.wordcol - xoffset
+  const startx = edge.left + ac.wordcol - xoffset
   const cursorRowY = edge.top + 2 + ycursor - yoffset + 1
   const numRows = ac.suggestions.length
   const drawBelow = cursorRowY + numRows <= edge.bottom - 1
   const starty = drawBelow
     ? cursorRowY
-    : Math.max(edge.top + 1, cursorRowY - numRows)
+    : Math.max(edge.top + 1, cursorRowY - numRows - 1)
 
   const maxitemlen = ac.suggestions.reduce(
     (max, s) => Math.max(max, s.length),
@@ -236,7 +236,7 @@ export function drawautocomplete(
   const itemwidth = maxitemlen + 2
 
   for (let i = 0; i < ac.suggestions.length; i++) {
-    const y = starty + i
+    const y = drawBelow ? starty + i : starty + numRows - 1 - i
     if (y >= edge.bottom || y <= edge.top + 1) continue
 
     const selected = i === effectiveIndex
@@ -256,7 +256,7 @@ export function drawautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    applySuggestionColors(
+    applysuggestioncolors(
       bufindex,
       textoffset,
       text,
@@ -270,8 +270,8 @@ export function drawautocomplete(
     if (selected) {
       const hint = romhintfor(ac.suggestions[i])
       if (hint) {
-        const hintx = rowstart + text.length + 1
-        drawHintText(hint, hintx, y, edge.right - 1, AC_BG, context)
+        const hintx = rowstart + text.length
+        drawhinttext(hint, hintx, y, edge.right, AC_BG, context)
       }
     }
   }
@@ -287,7 +287,7 @@ export function drawlineautocomplete(
 ) {
   if (ac.suggestions.length === 0 || acindex < 0) return
 
-  const startx = edge.left + ac.wordcol
+  const startx = edge.left + ac.wordcol - 1
   const maxitemlen = ac.suggestions.reduce(
     (max, s) => Math.max(max, s.length),
     0,
@@ -315,7 +315,7 @@ export function drawlineautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    applySuggestionColors(
+    applysuggestioncolors(
       bufindex,
       textoffset,
       text,
@@ -329,8 +329,8 @@ export function drawlineautocomplete(
     if (selected) {
       const hint = romhintfor(ac.suggestions[i])
       if (hint) {
-        const hintx = rowstart + text.length + 1
-        drawHintText(hint, hintx, y, edge.right, AC_BG, context)
+        const hintx = rowstart + text.length
+        drawhinttext(hint, hintx, y, edge.right, AC_BG, context)
       }
     }
   }

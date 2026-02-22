@@ -168,7 +168,7 @@ export function TerminalInput({
   drawlineautocomplete(
     autocomplete,
     tapeterminal.acindex,
-    edge.top + edge.height - 2,
+    edge.top + edge.height - 1,
     edge,
     context,
     wordcolors,

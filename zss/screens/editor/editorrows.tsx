@@ -7,6 +7,7 @@ import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { AUTOCOMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import {
   BG_ACTIVE,
   BG_SELECTED,
@@ -37,7 +38,6 @@ import {
   ZSS_TYPE_TEXT,
   zsswordcolor,
 } from './colors'
-import { AUTOCOMPLETE, drawautocomplete } from './editorautocomplete'
 
 function parsestatformat(image: string) {
   const [first] = image.substring(1).split(';')

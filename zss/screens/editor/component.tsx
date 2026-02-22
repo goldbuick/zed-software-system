@@ -10,6 +10,7 @@ import * as lexer from 'zss/lang/lexer'
 import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
+import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
 import { useShallow } from 'zustand/react/shallow'
@@ -35,7 +36,6 @@ import {
   zssmusiccolorconfig,
   zsswordcolorconfig,
 } from './colors'
-import { getautocomplete } from './editorautocomplete'
 import { EditorFrame } from './editorframe'
 import { EditorInput, EditorInputProps } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
