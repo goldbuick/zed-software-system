@@ -80,13 +80,14 @@
 
 ## runtime.ts
 
+- **memoryapplyboardsynthstats(board)** - Applies synth stats from board code pages to runtime
 - **memorygc()** - Performs garbage collection
 - **memoryhaltchip(id)** - Halts a chip by ID
 - **memorymessagechip(message)** - Sends a message to the OS message/chip system
 - **memoryrepeatclilast(player)** - Repeats last CLI command
 - **memoryrestartallchipsandflags()** - Halts all chips and clears flags
 - **memoryruncli(player, cli, tracking?)** - Executes CLI command for a player
-- **memoryruncodepage(address)** - Runs a code page once
+- **memoryruncodepage(address, label)** - Runs a code page once with given label
 - **memorytickmain(playeronly?)** - Main game tick function, updates all boards and runs code
 - **memorytickobject(book, board, object, code)** - Ticks a single object's code
 - **memoryunlockscroll(id, player)** - Unlocks scroll for a player
@@ -134,6 +135,7 @@
 - **memorylistcodepagewithtype(type)** - Lists all codepages of a specific type across all books
 - **memorypickcodepagewithtype(type, address)** - Finds a codepage by type and address across all books
 - **memoryreadboardbyaddress(address)** - Reads a board codepage by address
+- **memoryreadboardbyevaldir(dir, board)** - Resolves board from direction (n/s/e/w/board id)
 - **memoryreadbookbyaddress(address)** - Finds a book by ID or name
 - **memoryreadbookbysoftware(slot)** - Gets the book for a software slot
 - **memoryreadbooklist()** - Returns all books in memory
@@ -261,10 +263,11 @@
 
 ## synthstate.ts
 
-- **memoryreadsynthstate(book, id)** - Reads cached synth state from book flags for id (e.g. board id)
-- **memorywritesynthstate(book, id, state)** - Writes synth state to book flags
-- **memoryclearsynthstate(book, id)** - Clears cached synth state for id
-- **memoryhassynthstate(book, id)** - Checks if synth state exists for id
+- **memoryreadsynth(board)** - Reads cached synth state for board (from book flags)
+- **memorymergesynthvoice(board, idx, config, value)** - Merges voice config into synth state
+- **memorymergesynthvoicefx(board, idx, fx, config, value)** - Merges voice effect config into synth state
+- **memoryreadsynthplay(board)** - Reads synth play queue for board
+- **memoryqueuesynthplay(board, play)** - Queues a play string for the board
 
 ## utilities.ts
 

@@ -31,24 +31,16 @@ Processes the gadget queue for the current element:
 |---------|-------------|
 | `endgame` | Sets health to 0 (triggers game-over flow) |
 
-### Messaging
-
-| Command | Args | Description |
-|---------|------|-------------|
-| `send` | send spec | Parse full send, dispatch to elements |
-| `shortsend` | send spec | Parse short send, dispatch |
-
 ### UI
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `text` | text… | Set gadget text via gadgettext |
-| `hyperlink` | label words… | Create hyperlink; uses chip.template for label/words; calls gadgethyperlink with get/set for flag resolution |
 | `help` | — | Open reference scroll (vmrefscroll) |
-| `stat` | — | No-op |
+
+*(shortsend, send, stat, text, hyperlink are not documented here)*
 
 ## Design Notes
 
-- Runtime firmware overrides shared behavior (e.g., `text` → gadget text; `hyperlink` → gadget hyperlink with flag support)
+- Runtime firmware overrides shared behavior for messaging/UI in context
 - `aftertick` drives scroll and sidebar updates from the ticker queue
 - `gadgetcheckset` allows shared values to trigger UI updates

@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.89.0",
+  "version": "0.89.6",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc -e .js zss",
@@ -109,8 +109,6 @@
     "vite-plugin-mkcert": "^1.17.8",
     "vite-plugin-node-polyfills": "^0.24.0",
     "wavefunctioncollapse": "^2.1.0",
-    "weighted": "^1.0.0",
-    "weighted-shuffle": "^1.0.0",
     "zustand": "^5.0.1"
   }
 }

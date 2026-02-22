@@ -14,13 +14,7 @@ This document categorizes and summarizes all exported functions from the firmwar
 
 Firmware modules are created using `createfirmware()` and export command handlers organized by domain.
 
-### DISPLAY_FIRMWARE (`display.ts`)
-**Purpose**: Display and UI feedback commands
-
-| Command | Description |
-|---------|-------------|
-| `toast` | Display a toast notification message |
-| `ticker` | Set ticker text for the current element (sidebar text) |
+Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in `element.ts` (see Element section below). There is no separate `display.ts` file.
 
 ---
 
@@ -98,26 +92,17 @@ Firmware modules are created using `createfirmware()` and export command handler
 ---
 
 ### RUNTIME_FIRMWARE (`runtime.ts`)
-**Purpose**: Runtime execution, messaging, and UI interaction commands
+**Purpose**: Runtime execution and UI commands (messaging commands shortsend/send/stat/text/hyperlink are not documented here)
 
 #### Lifecycle
 | Command | Description |
 |---------|-------------|
 | `endgame` | End game by setting health to 0 |
 
-#### Messaging
-| Command | Description |
-|---------|-------------|
-| `send` | Send message to elements (with parsing) |
-| `shortsend` | Send short message to elements (no parsing) |
-
 #### UI
 | Command | Description |
 |---------|-------------|
-| `text` | Set gadget text |
-| `hyperlink` | Create hyperlink with label and action |
 | `help` | Open reference scroll |
-| `stat` | No-op (placeholder) |
 
 **Hooks**:
 - `set`: Monitors shared value changes for gadget state
@@ -141,15 +126,6 @@ Firmware modules are created using `createfirmware()` and export command handler
 | `withboard` | Set board context for element-centric commands |
 | `withobject` | Set object context by ID |
 | `userinput` | Simulate user input (up, down, left, right, shoot, ok, cancel) |
-
-#### Messaging (Loader-specific)
-| Command | Description |
-|---------|-------------|
-| `send` | Send message to elements |
-| `shortsend` | Send short message (with loader fallback) |
-| `text` | Output text to chat |
-| `hyperlink` | Create chat hyperlink |
-| `stat` | No-op |
 | `endgame` | No-op (when called in loaders) |
 
 **Hooks**:
@@ -158,7 +134,13 @@ Firmware modules are created using `createfirmware()` and export command handler
 ---
 
 ### ELEMENT_FIRMWARE (`element.ts`)
-**Purpose**: Element manipulation, movement, and state management
+**Purpose**: Element manipulation, movement, state management, and display feedback
+
+#### Display
+| Command | Description |
+|---------|-------------|
+| `toast` | Display a toast notification message |
+| `ticker` | Set ticker text for the current element (sidebar text) |
 
 #### State Management
 | Command | Description |
@@ -213,16 +195,11 @@ Firmware modules are created using `createfirmware()` and export command handler
 ---
 
 ### CLI_FIRMWARE (`cli.ts`)
-**Purpose**: Command-line interface and system management commands
+**Purpose**: Command-line interface and system management commands (messaging commands shortsend/send/stat/text/hyperlink are not documented here)
 
 #### Messaging
 | Command | Description |
 |---------|-------------|
-| `send` | Send message to elements |
-| `shortsend` | Send short message (with loader fallback) |
-| `text` | Set ticker text (player) or output to chat |
-| `hyperlink` | Create hyperlink with player info |
-| `stat` | Make scroll with text |
 | `help` | Open reference scroll |
 
 #### Book Management

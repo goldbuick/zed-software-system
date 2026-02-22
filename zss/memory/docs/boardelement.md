@@ -4,10 +4,12 @@
 
 ## Dependencies
 
-- `zss/feature/format` — formatobject, unformatobject
+- `zss/feature/format` — formatobject, unformatobject, FORMAT_OBJECT, FORMAT_SKIP
 - `zss/mapping/guid` — createsid
-- `zss/words/color` — STR_COLOR, mapstrcolortoattributes
+- `zss/mapping/types` — MAYBE, ispresent
+- `zss/words/color` — STR_COLOR, isstrcolor, mapstrcolortoattributes
 - `zss/words/types` — CATEGORY
+- `./types` — BOARD_ELEMENT, BOARD_ELEMENT_KEYS
 
 ## Exports
 

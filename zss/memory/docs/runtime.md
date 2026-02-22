@@ -21,6 +21,8 @@
 | Category | Exports |
 |----------|---------|
 | Chip | memorygc, memoryhaltchip, memoryrestartallchipsandflags, memorymessagechip |
-| CLI | memoryrepeatclilast |
-| Tick | memorytickmain (loaders, boards, chips) |
-| Run | memoryruncodepage |
+| CLI | memoryrepeatclilast, memoryruncli |
+| Tick | memorytickmain (loaders, boards, chips), memorytickobject |
+| Run | memoryruncodepage(address, label) |
+| Synth | memoryapplyboardsynthstats |
+| UI | memoryunlockscroll |

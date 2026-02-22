@@ -77,6 +77,7 @@ import {
 } from 'zss/memory/bookoperations'
 import {
   memoryreadcodepagename,
+  memoryreadcodepagestat,
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
@@ -110,6 +111,11 @@ function isemail(email: string) {
 
 function isoperator(player: string) {
   return player === memoryreadoperator()
+}
+
+function codepagepicksuffix(codepage: MAYBE<CODE_PAGE>): string {
+  const pickstat = memoryreadcodepagestat(codepage, 'pick')
+  return ispresent(pickstat) ? `$green pick ${maptostring(pickstat)}` : ''
 }
 
 function vmflushop() {
@@ -374,7 +380,7 @@ export const CLI_FIRMWARE = createfirmware()
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}`,
+          `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}${codepagepicksuffix(page)}`,
         )
       })
     } else {
@@ -398,10 +404,11 @@ export const CLI_FIRMWARE = createfirmware()
         sorted.forEach((page) => {
           const name = memoryreadcodepagename(page)
           const type = memoryreadcodepagetypeasstring(page)
+          const prefix = memorycodepagetoprefix(page)
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `!pageopen ${page.id};$blue[${type}]$white ${name}`,
+            `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}${codepagepicksuffix(page)}`,
           )
         })
       }

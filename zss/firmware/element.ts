@@ -20,17 +20,13 @@ import {
 } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
-  memorypickcodepagewithtype,
   memoryreadboardbyevaldir,
   memoryreadelementstat,
   memoryreadflags,
   memoryreadoperator,
   memorywriteelementfromkind,
 } from 'zss/memory'
-import {
-  memoryapplyboardelementcolor,
-  memoryboardelementisobject,
-} from 'zss/memory/boardelement'
+import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
@@ -45,7 +41,7 @@ import {
   memoryfindplayerforelement,
   memorylistboardnamedelements,
 } from 'zss/memory/spatialqueries'
-import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import {
@@ -1030,47 +1026,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
       const value = from[prop]
       chip.set(name, value)
     }
-    return 0
-  })
-  .command('load', (_, words) => {
-    const [dir, maybeaction, ii] = readargs(words, 0, [
-      ARG_TYPE.DIR,
-      ARG_TYPE.NAME,
-    ])
-
-    // read board by eval dir
-    const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-
-    const maybeobject = memoryreadelement(board, dir.destpt)
-    if (ispresent(maybeobject) && memoryboardelementisobject(maybeobject)) {
-      // update .code of object to the codepage content of kindname
-      switch (NAME(maybeaction)) {
-        case 'append': {
-          const [kindname] = readargs(words, ii, [ARG_TYPE.NAME])
-          const codepage = memorypickcodepagewithtype(
-            CODE_PAGE_TYPE.OBJECT,
-            kindname,
-          )
-          if (ispresent(codepage)) {
-            maybeobject.code += codepage.code
-            memoryhaltchip(maybeobject.id ?? '')
-          }
-          break
-        }
-        default: {
-          const codepage = memorypickcodepagewithtype(
-            CODE_PAGE_TYPE.OBJECT,
-            maybeaction,
-          )
-          if (ispresent(codepage)) {
-            maybeobject.code = codepage.code
-            memoryhaltchip(maybeobject.id ?? '')
-          }
-          break
-        }
-      }
-    }
-
     return 0
   })
   .command('toast', (_, words) => {

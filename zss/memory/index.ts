@@ -1,10 +1,22 @@
 import { apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
-import { pick } from 'zss/mapping/array'
+import {
+  pick,
+  pickwithweights,
+  shuffle,
+  shufflewithweights,
+} from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import {
   EVAL_DIR,
   dirfrompts,
@@ -222,25 +234,101 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
   address: string,
 ): MAYBE<CODE_PAGE> {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const codepage = pick(
-    memorylistcodepagebytypeandstat(mainbook, type, address),
-  )
-  if (ispresent(codepage)) {
-    return codepage
+
+  // add all matching pages from all books (keyed by page.id)
+  const matchedpages: Record<string, CODE_PAGE> = {}
+
+  // we put mainbook first
+  const pages = memorylistcodepagebytypeandstat(mainbook, type, address)
+  for (const page of pages) {
+    matchedpages[page.id] = page
   }
+
   const books = memoryreadbooklist()
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
     if (book.id !== mainbook?.id) {
-      const fallbackcodepage = pick(
-        memorylistcodepagebytypeandstat(book, type, address),
-      )
-      if (ispresent(fallbackcodepage)) {
-        return fallbackcodepage
+      const pages = memorylistcodepagebytypeandstat(book, type, address)
+      for (const page of pages) {
+        matchedpages[page.id] = page
       }
     }
   }
-  return undefined
+
+  // if we have 0 or 1 matched page, we can return it directly
+  const allpages = Object.values(matchedpages)
+  if (allpages.length <= 1) {
+    return allpages[0]
+  }
+
+  // scan allpages for pick stats
+  let hasshuffle = false
+  const weights: Record<string, number> = {}
+  for (const page of Object.values(matchedpages)) {
+    const pickstat = memoryreadcodepagestat(page, 'pick')
+    if (isstring(pickstat)) {
+      const [shuffleorweight, optionalweight] = pickstat.split(' ')
+      if (NAME(shuffleorweight) === 'shuffle') {
+        hasshuffle = true
+        const maybeweight = parseFloat(maptostring(optionalweight))
+        if (isnumber(maybeweight)) {
+          weights[page.id] = maybeweight
+        }
+      } else {
+        const maybeweight = parseFloat(maptostring(shuffleorweight))
+        if (isnumber(maybeweight)) {
+          weights[page.id] = maybeweight
+        }
+      }
+    }
+  }
+
+  const hasweights = Object.keys(weights).length > 0
+  const trackingstate = memoryreadbookflags(mainbook, 'tracking')
+
+  // do we have a source array ?
+  if (hasshuffle) {
+    if (hasweights) {
+      // weighted shuffle
+      if (!ispresent(trackingstate[address])) {
+        trackingstate[address] = shufflewithweights(
+          allpages.map((page) => [page.id, weights[page.id] ?? 1]),
+        )
+      }
+    } else {
+      // plain shuffle
+      if (!ispresent(trackingstate[address])) {
+        trackingstate[address] = shuffle(allpages.map((page) => page.id))
+      }
+    }
+
+    // begin to pull values from the source array (if shuffle)
+    const sourceids = trackingstate[address] as string[]
+    if (isarray(sourceids)) {
+      const first = sourceids.shift()
+
+      // reset source array when empty
+      if (sourceids.length === 0) {
+        delete trackingstate[address]
+      }
+
+      // return the page
+      return matchedpages[first ?? '']
+    }
+
+    // no source array found
+    return undefined
+  }
+
+  // weighted random pick
+  if (hasweights) {
+    return pickwithweights(
+      allpages.map((page) => [page, weights[page.id] ?? 1]),
+    )
+  }
+
+  // random pick
+  return pick(allpages)
 }
 
 export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(

@@ -4,7 +4,7 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## cli.ts (CLI_FIRMWARE)
 
-**Total: 32 commands**
+**Total: 34 commands**
 
 ### Messaging
 
@@ -46,6 +46,8 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 - `gadget` - Toggle built-in inspector
 - `findany` - Highlight matched elements
+- `agent` - Agent/LLM interaction (operator only)
+- `screenshot` - Capture screenshot (operator only)
 
 ### Multiplayer & Social
 
@@ -119,7 +121,12 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## element.ts (ELEMENT_FIRMWARE)
 
-**Total: 20 commands**
+**Total: 22 commands**
+
+### Display (element context)
+
+- `toast` - Show toast notification
+- `ticker` - Set element ticker text (sidebar)
 
 ### Variable & State
 
@@ -218,18 +225,9 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ---
 
-## display.ts (DISPLAY_FIRMWARE)
-
-**Total: 2 commands**
-
-- `toast` - Show toast notification
-- `ticker` - Sets element ticker text
-
----
-
 ## loader.ts (LOADER_FIRMWARE)
 
-**Total: 7 commands**
+**Total: 8 commands**
 
 ### File Operations
 
@@ -257,16 +255,15 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ## Summary Statistics
 
-- **Total unique commands across all firmware files: ~143**
+- **Total documented commands: ~150** (shortsend, send, stat, text, hyperlink are excluded from this summary)
 - **Files with most commands:**
   1. audio.ts - 52 commands
-  2. cli.ts - 32 commands
-  3. element.ts - 20 commands
+  2. cli.ts - 34 commands
+  3. element.ts - 22 commands
   4. board.ts - 20 commands
-  5. loader.ts - 7 commands
+  5. loader.ts - 8 commands
   6. transforms.ts - 6 commands
   7. runtime.ts - 2 commands
   8. network.ts - 2 commands
-  9. display.ts - 2 commands
 
-Note: Some commands appear in multiple firmware files (e.g., `endgame`, `help`) with different implementations for different contexts.
+Note: `toast` and `ticker` are registered on ELEMENT_FIRMWARE in element.ts (there is no separate display.ts).

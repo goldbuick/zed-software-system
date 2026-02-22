@@ -17,12 +17,8 @@
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `shortsend` | send spec | Parse short send; if target=’self’ → loader fallback (`cli:label`) |
-| `send` | send spec | Parse full send, dispatch to elements |
-| `text` | text… | If player: set ticker, log, raise chat event |
-| `hyperlink` | label words… | Create hyperlink with player info |
-| `stat` | text… | Make scroll with text |
 | `help` | — | Open reference scroll |
+*(shortsend, send, stat, text, hyperlink are not documented here)*
 
 ### Book & Page Management
 

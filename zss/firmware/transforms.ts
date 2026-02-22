@@ -5,16 +5,12 @@ import { boardremix } from 'zss/feature/boardremix'
 import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
-import { pick } from 'zss/mapping/array'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadboardbyevaldir, memoryreadbooklist } from 'zss/memory'
-import { memorylistcodepagebytypeandstat } from 'zss/memory/bookoperations'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+  memorypickcodepagewithtype,
+  memoryreadboardbyevaldir,
+} from 'zss/memory'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, PT, WORD } from 'zss/words/types'
 
@@ -47,23 +43,6 @@ function readfilter(words: WORD[], index: number) {
   return { targetset, pt1, pt2 }
 }
 
-function pickcodepagewithtype(
-  type: CODE_PAGE_TYPE,
-  address: string,
-): MAYBE<CODE_PAGE> {
-  const books = memoryreadbooklist()
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    const fallbackcodepage = pick(
-      memorylistcodepagebytypeandstat(book, type, address),
-    )
-    if (ispresent(fallbackcodepage)) {
-      return fallbackcodepage
-    }
-  }
-  return undefined
-}
-
 export const TRANSFORM_FIRMWARE = createfirmware()
   .command('snapshot', (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -87,7 +66,11 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       return 0
     }
     const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
-    const sourceboard = pickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
+    const sourceboard = memorypickcodepagewithtype(
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+      true,
+    )
     if (!ispresent(sourceboard)) {
       chip.set('didfail', 1)
       return 0
@@ -117,7 +100,11 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       ARG_TYPE.NUMBER,
       ARG_TYPE.NUMBER,
     ])
-    const sourceboard = pickcodepagewithtype(CODE_PAGE_TYPE.BOARD, stat)
+    const sourceboard = memorypickcodepagewithtype(
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+      true,
+    )
     if (!ispresent(sourceboard)) {
       chip.set('didfail', 1)
       return 0
