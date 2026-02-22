@@ -1,1 +1,1 @@
-desc;$DKGRAYevals condition for true or false
+desc;$DKGRAYEvaluate condition for true or false

@@ -1,1 +1,1 @@
-desc;$DKGRAYVibrato for fx 1
+desc;$DKGRAYVibrato for last 2 channels of #play

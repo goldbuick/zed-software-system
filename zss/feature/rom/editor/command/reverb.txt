@@ -1,1 +1,1 @@
-desc;$DKGRAYApply reverb to fx 0-1
+desc;$DKGRAYApply reverb to all 4 channels of #play

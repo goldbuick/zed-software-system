@@ -1,1 +1,1 @@
-desc;$DKGRAYFrequency crush for fx 1
+desc;$DKGRAYFrequency crush for last 2 channels of #play

@@ -1,1 +1,1 @@
-desc;$DKGRAYConfigure or restart 8track synth
+desc;$DKGRAYConfigure all 4 channels of #play synth voices

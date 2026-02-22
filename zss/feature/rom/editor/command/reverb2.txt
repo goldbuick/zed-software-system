@@ -1,1 +1,1 @@
-desc;$DKGRAYReverb for fx 1
+desc;$DKGRAYReverb for last 2 channels of #play

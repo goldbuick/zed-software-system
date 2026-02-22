@@ -422,6 +422,8 @@ export function EditorRows({
           case lexer.command_do.tokenTypeIdx:
           case lexer.command_if.tokenTypeIdx:
           case lexer.command_else.tokenTypeIdx:
+          case lexer.command_ticker.tokenTypeIdx:
+          case lexer.command_toast.tokenTypeIdx:
           case lexer.stat.tokenTypeIdx:
           case lexer.label.tokenTypeIdx:
           case lexer.comment.tokenTypeIdx:
@@ -462,6 +464,14 @@ export function EditorRows({
                 ? `editor:command:elseif`
                 : `editor:command:else`,
             )
+            break
+          }
+          case lexer.command_ticker.tokenTypeIdx: {
+            setlookup(`editor:command:ticker`)
+            break
+          }
+          case lexer.command_toast.tokenTypeIdx: {
+            setlookup(`editor:command:toast`)
             break
           }
           case lexer.stat.tokenTypeIdx: {

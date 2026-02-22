@@ -1,1 +1,1 @@
-desc;$DKGRAY
+desc;$DKGRAYBlock until condition is true

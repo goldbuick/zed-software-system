@@ -1,1 +1,1 @@
-desc;$DKGRAYTeleport player to board by stat with optional x, y
+desc;$DKGRAYTeleport player to board by name or address with optional x, y

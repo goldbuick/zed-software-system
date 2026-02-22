@@ -1,1 +1,1 @@
-desc;$DKGRAYelse logic in an if-do-done block
+desc;$DKGRAYAlternate branch in an if-do-done block

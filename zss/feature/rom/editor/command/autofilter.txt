@@ -1,1 +1,1 @@
-desc;$DKGRAYApply autofilter to fx 0-1
+desc;$DKGRAYApply autofilter to all 4 channels of #play

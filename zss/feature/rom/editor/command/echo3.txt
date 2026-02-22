@@ -1,1 +1,1 @@
-desc;$DKGRAYEcho for fx 2
+desc;$DKGRAYEcho for #bgplay

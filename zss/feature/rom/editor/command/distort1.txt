@@ -1,1 +1,1 @@
-desc;$DKGRAYDistortion for fx 0
+desc;$DKGRAYDistortion for first 2 channels of #play

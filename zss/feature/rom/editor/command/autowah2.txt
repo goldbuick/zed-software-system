@@ -1,1 +1,1 @@
-desc;$DKGRAYAutowah for fx 1
+desc;$DKGRAYAutowah for last 2 channels of #play

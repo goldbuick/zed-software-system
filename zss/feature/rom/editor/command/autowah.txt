@@ -1,1 +1,1 @@
-desc;$DKGRAYApply autowah to fx 0-1
+desc;$DKGRAYApply autowah to all 4 channels of #play

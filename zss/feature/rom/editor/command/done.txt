@@ -1,1 +1,1 @@
-desc;$DKGRAYcompletes an if-do-done block
+desc;$DKGRAYEnd a do-done block
