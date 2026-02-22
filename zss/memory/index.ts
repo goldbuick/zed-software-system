@@ -2,6 +2,8 @@ import { apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import {
+  inorder,
+  inorderwithweights,
   pick,
   pickwithweights,
   shuffle,
@@ -262,22 +264,35 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
   }
 
   // scan allpages for pick stats
-  let hasshuffle = false
+  let pickmode: 'shuffle' | 'inorder' | '' = ''
   const weights: Record<string, number> = {}
   for (const page of Object.values(matchedpages)) {
     const pickstat = memoryreadcodepagestat(page, 'pick')
     if (isstring(pickstat)) {
       const [shuffleorweight, optionalweight] = pickstat.split(' ')
-      if (NAME(shuffleorweight) === 'shuffle') {
-        hasshuffle = true
-        const maybeweight = parseFloat(maptostring(optionalweight))
-        if (isnumber(maybeweight)) {
-          weights[page.id] = maybeweight
+      switch (NAME(shuffleorweight)) {
+        case 'shuffle': {
+          pickmode = 'shuffle'
+          const maybeweight = parseFloat(maptostring(optionalweight))
+          if (isnumber(maybeweight)) {
+            weights[page.id] = maybeweight
+          }
+          break
         }
-      } else {
-        const maybeweight = parseFloat(maptostring(shuffleorweight))
-        if (isnumber(maybeweight)) {
-          weights[page.id] = maybeweight
+        case 'inorder': {
+          pickmode = 'inorder'
+          const maybeweight = parseFloat(maptostring(optionalweight))
+          if (isnumber(maybeweight)) {
+            weights[page.id] = maybeweight
+          }
+          break
+        }
+        default: {
+          const maybeweight = parseFloat(maptostring(shuffleorweight))
+          if (isnumber(maybeweight)) {
+            weights[page.id] = maybeweight
+          }
+          break
         }
       }
     }
@@ -287,48 +302,92 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
   const trackingstate = memoryreadbookflags(mainbook, 'tracking')
 
   // do we have a source array ?
-  if (hasshuffle) {
-    if (hasweights) {
-      // weighted shuffle
-      if (!ispresent(trackingstate[address])) {
-        trackingstate[address] = shufflewithweights(
-          allpages.map((page) => [page.id, weights[page.id] ?? 1]),
+  switch (pickmode) {
+    case 'shuffle': {
+      if (hasweights) {
+        // weighted shuffle
+        if (!ispresent(trackingstate[address])) {
+          trackingstate[address] = shufflewithweights(
+            allpages.map((page) => [page.id, weights[page.id] ?? 1]),
+          )
+        }
+      } else {
+        // plain shuffle
+        if (!ispresent(trackingstate[address])) {
+          trackingstate[address] = shuffle(allpages.map((page) => page.id))
+        }
+      }
+
+      // begin to pull values from the source array (if shuffle)
+      const sourceids = trackingstate[address] as string[]
+      if (isarray(sourceids)) {
+        const first = sourceids.shift()
+
+        // reset source array when empty
+        if (sourceids.length === 0) {
+          delete trackingstate[address]
+        }
+
+        // return the page
+        return matchedpages[first ?? '']
+      }
+
+      // no source array found
+      return undefined
+    }
+    case 'inorder': {
+      if (hasweights) {
+        // weighted ordering
+        if (!ispresent(trackingstate[address])) {
+          trackingstate[address] = inorderwithweights(
+            allpages.map((page) => [page.id, weights[page.id] ?? 1]),
+            (a, b) =>
+              (matchedpages[a]?.id ?? '').localeCompare(
+                matchedpages[b]?.id ?? '',
+              ),
+          )
+        }
+      } else {
+        // plain shuffle
+        if (!ispresent(trackingstate[address])) {
+          trackingstate[address] = inorder(
+            allpages.map((page) => page.id),
+            (a, b) =>
+              (matchedpages[a]?.id ?? '').localeCompare(
+                matchedpages[b]?.id ?? '',
+              ),
+          )
+        }
+      }
+
+      // begin to pull values from the source array (if shuffle)
+      const sourceids = trackingstate[address] as string[]
+      if (isarray(sourceids)) {
+        const first = sourceids.shift()
+
+        // reset source array when empty
+        if (sourceids.length === 0) {
+          delete trackingstate[address]
+        }
+
+        // return the page
+        return matchedpages[first ?? '']
+      }
+
+      // no source array found
+      return undefined
+    }
+    default: {
+      // weighted random pick
+      if (hasweights) {
+        return pickwithweights(
+          allpages.map((page) => [page, weights[page.id] ?? 1]),
         )
       }
-    } else {
-      // plain shuffle
-      if (!ispresent(trackingstate[address])) {
-        trackingstate[address] = shuffle(allpages.map((page) => page.id))
-      }
+      // random pick
+      return pick(allpages)
     }
-
-    // begin to pull values from the source array (if shuffle)
-    const sourceids = trackingstate[address] as string[]
-    if (isarray(sourceids)) {
-      const first = sourceids.shift()
-
-      // reset source array when empty
-      if (sourceids.length === 0) {
-        delete trackingstate[address]
-      }
-
-      // return the page
-      return matchedpages[first ?? '']
-    }
-
-    // no source array found
-    return undefined
   }
-
-  // weighted random pick
-  if (hasweights) {
-    return pickwithweights(
-      allpages.map((page) => [page, weights[page.id] ?? 1]),
-    )
-  }
-
-  // random pick
-  return pick(allpages)
 }
 
 export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(

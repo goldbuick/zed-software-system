@@ -19,7 +19,6 @@
 | `tokenize(text, noWhitespace?)` | Tokenizes text; returns lex result |
 | `hascenter(text)` | Returns text without $CENTER or undefined |
 | `createwritetextcontext` | Creates WRITE_TEXT_CONTEXT |
-| `writetextformat` | Internal: renders tokens to context |
 | `tokenizeandwritetextformat(text, context, shouldreset)` | Tokenize + render |
 | `tokenizeandstriptextformat(text)` | Strip formatting; return plain text |
 | `tokenizeandmeasuretextformat(text, width, height)` | Measure-only render |
@@ -45,10 +44,13 @@
 | MaybeFlag | `$name` | Variable interpolation |
 | Center | `$CENTER` | Centering marker |
 | MetaKey | `$META` | Platform meta key (cmd/ctrl) |
-| NumberLiteral | `$123` | Char code |
+| NumberLiteral | `$-?(\d*\.)?\d+…` | Char code (e.g. `$123`) |
 | EscapedDollar | `$$` | Literal $ |
+| HyperLinkText | `;[^;\r\n]*` | Hyperlink payload |
 | `$black`, `$onblack`, etc. | Color names | Inline color |
 
-## WRITE_TEXT_CONTEXT
+## WRITE_TEXT_CONTEXT / WRITE_PEN_CONTEXT
 
-Holds cursor (x, y), region (width, height), active/reset pen (color, bg, edges), and output arrays (char, color, bg). Supports measure-only mode and writefullwidth for line filling.
+**WRITE_PEN_CONTEXT**: color, bg, topedge, leftedge, rightedge, bottomedge (all optional except color/bg).
+
+**WRITE_TEXT_CONTEXT**: cursor (x, y), region (width, height), active/reset pen (WRITE_PEN_CONTEXT), output arrays (char, color, bg), plus disablewrap, measureonly, measuredwidth, writefullwidth, iseven, changed(). Supports measure-only mode and writefullwidth for line filling.

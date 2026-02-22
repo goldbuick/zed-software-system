@@ -604,6 +604,13 @@ class ScriptParser extends CstParser {
     this.SUBRULE2(this.dir)
   })
 
+  dir_select = this.RULED('dir_select', () => {
+    this.CONSUME(lexer.dir_select)
+    this.SUBRULE(this.simple_token) // inorder, shuffle, or random
+    this.OPTION(() => this.SUBRULE(this.color))
+    this.SUBRULE(this.string_token)
+  })
+
   dir_within = this.RULED('dir_within', () => {
     this.CONSUME(lexer.dir_within)
     this.SUBRULE1(this.simple_token)
@@ -634,6 +641,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.dir_find) },
       { ALT: () => this.SUBRULE(this.dir_flee) },
       { ALT: () => this.SUBRULE(this.dir_to) },
+      { ALT: () => this.SUBRULE(this.dir_select) },
       { ALT: () => this.CONSUME(lexer.dir_i) },
       { ALT: () => this.CONSUME(lexer.dir_u) },
       { ALT: () => this.CONSUME(lexer.dir_north) },

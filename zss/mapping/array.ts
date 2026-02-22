@@ -83,29 +83,47 @@ export function shufflewithweights<T>(tuples: [T, number][]): T[] {
   return result
 }
 
-export function addToArray<T>(array: T[], value: T) {
+/** Returns a copy of the array in original order (no shuffle). */
+export function inorder<T>(array: T[], orderby: (a: T, b: T) => number): T[] {
+  return [...array].sort((a, b) => orderby(a, b))
+}
+
+/** Returns items ordered by weight descending (higher weight first). */
+export function inorderwithweights<T>(
+  tuples: [T, number][],
+  orderby: (a: T, b: T) => number,
+): T[] {
+  return [...tuples]
+    .sort((a, b) => {
+      const cmp = b[1] - a[1]
+      return cmp ? cmp : orderby(a[0], b[0])
+    })
+    .map(([value]) => value)
+}
+
+export function addtoarray<T>(array: T[], value: T) {
   return [...array, value]
 }
 
-export function setIndex<T>(array: T[], index: number, value: T) {
+export function setindex<T>(array: T[], index: number, value: T) {
   const newArray = [...array]
   newArray[index] = value
   return newArray
 }
 
-export function removeIndex<T>(array: T[], index: number) {
+export function removeindex<T>(array: T[], index: number) {
   const newArray = [...array]
   newArray.splice(index, 1)
   return newArray
 }
 
-export function setAtIndex<T>(array: T[], index: number, value: T) {
+export function setatindex<T>(array: T[], index: number, value: T) {
   const newArray = [...array]
   newArray[index] = value
   return newArray
 }
 
-export function applyToIndex<T>(
+export function applytoindex<T>(
   array: Record<string, T>[],
   index: number,
   props: Record<string, T>,
@@ -118,7 +136,7 @@ export function applyToIndex<T>(
   return newArray
 }
 
-export function removeFromIndex<T>(
+export function removefromindex<T>(
   array: Record<string, T>[],
   index: number,
   key: string,
@@ -129,7 +147,7 @@ export function removeFromIndex<T>(
   return newArray
 }
 
-export function findIndexByKey<T>(
+export function findindexbykey<T>(
   array: Record<string, T>[],
   key: string,
   value: T,
@@ -137,7 +155,7 @@ export function findIndexByKey<T>(
   return array.findIndex((item) => item[key] === value)
 }
 
-export function findByKey<T>(
+export function findbykey<T>(
   array: Record<string, T>[],
   key: string,
   value: T,
@@ -145,7 +163,7 @@ export function findByKey<T>(
   return array.find((item) => item[key] === value)
 }
 
-export function notEmpty<T>(value: T | null | undefined): value is T {
+export function notempty<T>(value: T | null | undefined): value is T {
   if (value === null || value === undefined) {
     return false
   }

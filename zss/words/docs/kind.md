@@ -6,7 +6,7 @@
 
 - `zss/mapping/types` — MAYBE, isarray, ispresent, isstring
 - `zss/memory` — memoryreadelementkind
-- `./color` — readcolor, readstrbg, readstrcolor
+- `./color` — colortobg, readcolor, readstrbg, readstrcolor
 - `./reader` — READ_CONTEXT
 - `./types` — COLOR, WORD
 
@@ -16,6 +16,7 @@
 |--------|-------------|
 | `STR_KIND` | `[string, STR_COLOR?]` — name and optional color |
 | `isstrkind` | Type guard for STR_KIND |
+| `strkindtostr` | STR_KIND → string[] (color consts then name) |
 | `readname(index)` | Returns `[string | undefined, nextIndex]` |
 | `readkind(index)` | Returns `[STR_KIND | undefined, nextIndex]` |
 | `readstrkindname` | STR_KIND → name |

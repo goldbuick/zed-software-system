@@ -5,6 +5,7 @@
 ## Dependencies
 
 - `zss/mapping/types` — MAYBE, isarray, ispresent, isstring
+- `./kind` — STR_KIND (for STR_DIR type)
 - `./reader` — ARG_TYPE, READ_CONTEXT, readargs
 - `./types` — DIR, NAME, PT, WORD
 
@@ -25,7 +26,7 @@
 
 ## STR_DIR Format
 
-Array of STR_DIR_CONST and numbers. Modifiers (CW, CCW, OPP, etc.) can be followed by more dirs. Direction args:
+Array of STR_DIR_CONST, STR_KIND, numbers, and strings. Modifiers (CW, CCW, OPP, etc.) can be followed by more dirs. Direction args:
 
 | Dir | Args |
 |-----|------|
@@ -33,12 +34,14 @@ Array of STR_DIR_CONST and numbers. Modifiers (CW, CCW, OPP, etc.) can be follow
 | FIND, FLEE | kind |
 | TO | dir1, dir2 (combined dest) |
 | WITHIN, AWAYBY | amount (number) |
+| SELECT | selectmode (string), kind |
 
 ## readdir Logic
 
 1. Read dir const(s); mods (CW, CCW, OVER, etc.) allow more dirs
 2. For BY/AT/AWAY/TOWARD: read two numbers
-3. For FIND/FLEE: read kind (TODO: full impl)
+3. For FIND/FLEE: read kind
 4. For TO: read two dirs; combine destpts relative to element
 5. For WITHIN/AWAYBY: read number
-6. Return STR_DIR or `[undefined, index]`
+6. For SELECT: read selectmode (string) and kind
+7. Return STR_DIR or `[undefined, index]`

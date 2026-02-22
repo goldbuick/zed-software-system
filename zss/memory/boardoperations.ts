@@ -4,12 +4,13 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
-import { indextopt, ptdist, ptwithin } from 'zss/mapping/2d'
-import { pick } from 'zss/mapping/array'
+import { indextopt, ptdist, pttoindex, ptwithin } from 'zss/mapping/2d'
+import { inorder, pick, shuffle } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import {
   MAYBE,
   deepcopy,
+  isarray,
   isnumber,
   ispresent,
   isstring,
@@ -66,12 +67,19 @@ import {
   memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
+  memoryreadflags,
 } from '.'
 
 // From board.ts
 
 function createempty() {
   return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
+}
+
+function readidorindex(element: BOARD_ELEMENT) {
+  return memoryboardelementisobject(element)
+    ? element.id
+    : pttoindex({ x: element.x ?? 0, y: element.y ?? 0 }, BOARD_WIDTH)
 }
 
 export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
@@ -554,6 +562,68 @@ export function memoryevaldir(
         )
 
         return modeval
+      }
+      case DIR.SELECT: {
+        const [selectmode, kind] = dir.slice(i + 1)
+        if (isstrkind(kind)) {
+          // get source list of elements by kind
+          const elements = memorylistboardelementsbykind(board, kind)
+
+          // build tracking id
+          const tracking = memoryreadflags(`tracking_${board.id}`)
+
+          // unpack kind
+          const [kindname, kindcolor] = kind
+          const kindflag = [...(kindcolor ?? []), kindname].join('_')
+
+          // select a single target based on selectmode, from tracking targets
+          switch (selectmode) {
+            case 'inorder': {
+              // build source list
+              if (!ispresent(tracking[kindflag])) {
+                tracking[kindflag] = inorder(elements, (a, b) => {
+                  const aa = `${readidorindex(a)}`
+                  const bb = `${readidorindex(b)}`
+                  return aa.localeCompare(bb)
+                }).map(readidorindex)
+              }
+              break
+            }
+            case 'shuffle': {
+              if (!ispresent(tracking[kindflag])) {
+                tracking[kindflag] = shuffle(elements).map(readidorindex)
+              }
+              break
+            }
+            case 'random': {
+              tracking[kindflag] = [readidorindex(pick(elements))]
+              break
+            }
+          }
+
+          // we have a source list
+          if (isarray(tracking[kindflag])) {
+            // get next element
+            const target = tracking[kindflag].shift() as string
+            const element = memoryreadelementbyidorindex(board, target)
+
+            // if we've exhausted the source list, delete the tracking flag
+            // this will trigger a new source list to be built next time
+            if (tracking[kindflag].length < 1) {
+              delete tracking[kindflag]
+            }
+
+            // return result
+            return {
+              dir,
+              startpt,
+              destpt: { x: element?.x ?? 0, y: element?.y ?? 0 },
+              layer,
+              targets: [],
+            }
+          }
+        }
+        return { dir, startpt, destpt: startpt, layer, targets: [] }
       }
     }
   }

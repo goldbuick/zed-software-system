@@ -103,6 +103,8 @@ export enum DIR {
   WITHIN,
   AWAYBY,
   ELEMENTS,
+  // multi-target sequences
+  SELECT,
 }
 
 export enum STAT_TYPE {

@@ -37,6 +37,7 @@ import {
   Dir_findCstChildren,
   Dir_fleeCstChildren,
   Dir_modCstChildren,
+  Dir_selectCstChildren,
   Dir_toCstChildren,
   Dir_towardCstChildren,
   Dir_withinCstChildren,
@@ -1603,6 +1604,19 @@ class ScriptVisitor
         value: 'to',
       }),
       ...this.go(ctx.dir),
+    ]
+  }
+
+  dir_select(ctx: Dir_selectCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'select',
+      }),
+      ...this.go(ctx.simple_token),
+      ...this.go(ctx.color),
+      ...this.go(ctx.string_token),
     ]
   }
 
