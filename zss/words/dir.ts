@@ -99,12 +99,14 @@ export const dirconsts = {
   within: 'WITHIN',
   awayby: 'AWAYBY',
   elements: 'ELEMENTS',
+  // multi-target sequences
+  select: 'SELECT',
 } as const
 
 export type STR_DIR_TYPE = typeof dirconsts
 export type STR_DIR_KEYS = keyof STR_DIR_TYPE
 export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
-export type STR_DIR = (STR_DIR_CONST | STR_KIND | number)[]
+export type STR_DIR = (STR_DIR_CONST | STR_KIND | number | string)[]
 
 export type EVAL_DIR = {
   dir: STR_DIR
@@ -224,6 +226,15 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
           ARG_TYPE.NUMBER,
         ])
         strdir.push(amount)
+        ii = iii
+        break
+      }
+      case 'SELECT': {
+        const [selectmode, kind, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.STRING,
+          ARG_TYPE.KIND,
+        ])
+        strdir.push(NAME(selectmode), kind)
         ii = iii
         break
       }

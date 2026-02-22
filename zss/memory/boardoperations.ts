@@ -4,8 +4,8 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
-import { indextopt, ptdist, ptwithin } from 'zss/mapping/2d'
-import { pick } from 'zss/mapping/array'
+import { indextopt, ptdist, pttoindex, ptwithin } from 'zss/mapping/2d'
+import { inorder, pick } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import {
   MAYBE,
@@ -66,12 +66,17 @@ import {
   memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
+  memoryreadflags,
 } from '.'
 
 // From board.ts
 
 function createempty() {
   return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
+}
+
+function readidorindex(element: BOARD_ELEMENT) {
+  return memoryboardelementisobject(element) ? element.id : pttoindex({ x: element.x ?? 0, y: element.y ?? 0 }, BOARD_WIDTH)
 }
 
 export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
@@ -554,6 +559,42 @@ export function memoryevaldir(
         )
 
         return modeval
+      }
+      case DIR.SELECT: {
+        const [selectmode, kind] = dir.slice(i + 1)
+        if (isstrkind(kind)) {
+          // get source list of elements by kind
+          const elements = memorylistboardelementsbykind(board, kind)
+
+          // build tracking id
+          const tracking = memoryreadflags(`tracking_${board.id}`)
+
+          // unpack kind
+          const [kindname, kindcolor] = kind
+          const kindflag = `${kindcolor?.join('_') ?? ''}_${kindname}`
+
+          // select a single target based on selectmode, from tracking targets
+          switch (selectmode) {
+            case 'inorder': {
+              if (!ispresent(tracking[kindflag])) {
+                tracking[kindflag] = inorder(elements, (a, b) => a.id.localeCompare(b.id))
+              }
+              break
+            }
+            case 'shuffle': {
+              if (!ispresent(tracking[kindflag])) {
+                tracking[kindflag] = targets
+              }
+              break
+            }
+            case 'random': {
+              if (!ispresent(tracking[kindflag])) {
+                tracking[kindflag] = targets
+              }
+              break
+            }
+        }
+        return { dir, startpt, destpt: startpt, layer, targets: [] }
       }
     }
   }

@@ -360,6 +360,7 @@ export const dir_ground = createWordToken('ground')
 export const dir_within = createWordToken('within')
 export const dir_awayby = createWordToken('awayby')
 export const dir_elements = createWordToken('elements')
+export const dir_select = createWordToken('select')
 
 export const expr_aligned = createSimpleToken({
   name: 'expr_aligned',
@@ -637,6 +638,7 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     dir_within,
     dir_awayby,
     dir_elements,
+    dir_select,
     dir_away,
     dir_toward,
     dir_find,

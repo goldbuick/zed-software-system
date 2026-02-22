@@ -713,6 +713,18 @@ export type Dir_toCstChildren = {
   dir: DirCstNode[]
 }
 
+export type Dir_selectCstNode = {
+  name: 'dir_select'
+  children: Dir_selectCstChildren
+} & CstNode
+
+export type Dir_selectCstChildren = {
+  token_select: IToken[]
+  simple_token: Simple_tokenCstNode[]
+  color?: ColorCstNode[]
+  string_token: String_tokenCstNode[]
+}
+
 export type Dir_withinCstNode = {
   name: 'dir_within'
   children: Dir_withinCstChildren
@@ -757,6 +769,7 @@ export type DirCstChildren = {
   dir_find?: Dir_findCstNode[]
   dir_flee?: Dir_fleeCstNode[]
   dir_to?: Dir_toCstNode[]
+  dir_select?: Dir_selectCstNode[]
   token_i?: IToken[]
   token_u?: IToken[]
   token_north?: IToken[]
@@ -1074,6 +1087,7 @@ export type ICstNodeVisitor<IN, OUT> = {
   dir_find(children: Dir_findCstChildren, param?: IN): OUT
   dir_flee(children: Dir_fleeCstChildren, param?: IN): OUT
   dir_to(children: Dir_toCstChildren, param?: IN): OUT
+  dir_select(children: Dir_selectCstChildren, param?: IN): OUT
   dir_within(children: Dir_withinCstChildren, param?: IN): OUT
   dir_awayby(children: Dir_awaybyCstChildren, param?: IN): OUT
   dir(children: DirCstChildren, param?: IN): OUT
