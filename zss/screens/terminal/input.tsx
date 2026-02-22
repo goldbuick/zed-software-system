@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import {
   apierror,
   registerterminalclose,
@@ -17,12 +17,13 @@ import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
-import { stringsplice } from 'zss/mapping/string'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import {
+  AUTOCOMPLETE,
+  drawlineautocomplete,
+} from 'zss/screens/tape/autocomplete'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
-  applycolortoindexes,
-  applystrtoindex,
   textformatreadedges,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
@@ -31,11 +32,25 @@ import {
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import {
+  computeTerminalSelection,
+  drawTerminalCursor,
+  drawTerminalSelection,
+  inputstateswitch,
+  trackselection,
+} from './terminalinputhelpers'
+import {
+  useTerminalResetToEnd,
+  useTerminalSplice,
+  useTerminalYCursor,
+} from './terminalinputhooks'
+
 type TerminalInputProps = {
   quickterminal: boolean
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
+  autocomplete: AUTOCOMPLETE
 }
 
 export function TerminalInput({
@@ -43,6 +58,7 @@ export function TerminalInput({
   voice2text,
   tapeycursor,
   logrowtotalheight,
+  autocomplete,
 }: TerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -52,123 +68,52 @@ export function TerminalInput({
   const player = registerreadplayer()
   const edge = textformatreadedges(context)
 
-  // input & selection
   const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
-
-  // local x input
-  let ii1 = tapeterminal.xcursor
-  let ii2 = tapeterminal.xcursor
-  let hasselection = false
-
-  // adjust input edges selection
-  if (ispresent(tapeterminal.xselect) && ispresent(tapeterminal.yselect)) {
-    hasselection = true
-    ii1 = Math.min(tapeterminal.xcursor, tapeterminal.xselect)
-    ii2 = Math.max(tapeterminal.xcursor, tapeterminal.xselect)
-    if (tapeterminal.xcursor !== tapeterminal.xselect) {
-      // tuck in right side
-      --ii2
-    }
-  }
-
-  const iic = ii2 - ii1 + 1
   const inputstateactive = tapeterminal.ycursor === 0
-  const inputstateselected = hasselection
-    ? inputstate.substring(ii1, ii2 + 1)
-    : inputstate
 
-  // update state
-  const inputstatesetsplice = useCallback(
-    (index: number, count: number, insert?: string) => {
-      // we are trying to modify historical entries
-      if (tapeterminal.bufferindex > 0) {
-        // blank inputslot and snap index to 0
-        useTerminal.setState({ bufferindex: 0 })
-      }
-      // write state
-      tapeterminal.buffer[0] = stringsplice(inputstate, index, count, insert)
-      useTerminal.setState({
-        buffer: tapeterminal.buffer,
-        // clear selection
-        xselect: undefined,
-        xcursor: index + (insert ?? '').length,
-      })
-    },
-    [inputstate, tapeterminal.buffer, tapeterminal.bufferindex],
-  )
+  // --- selection ---
 
-  const inputstatereplace = useCallback(
-    (replacewith: string) => {
-      // we are trying to modify historical entries
-      if (tapeterminal.bufferindex > 0) {
-        // blank inputslot and snap index to 0
-        useTerminal.setState({ bufferindex: 0 })
-      }
-      // write state
-      tapeterminal.buffer[0] = replacewith
-      useTerminal.setState({
-        buffer: tapeterminal.buffer,
-        // clear selection
-        xselect: undefined,
-        xcursor: replacewith.length,
-      })
-    },
-    [tapeterminal.buffer, tapeterminal.bufferindex],
+  const { ii1, iic, hasselection, inputstateselected } =
+    computeTerminalSelection(
+      tapeterminal.xcursor,
+      tapeterminal.xselect,
+      tapeterminal.yselect,
+      inputstate,
+    )
+
+  // --- hooks ---
+
+  const { inputstatesetsplice, inputstatereplace } = useTerminalSplice(
+    inputstate,
+    tapeterminal.buffer,
+    tapeterminal.bufferindex,
   )
 
   const visiblerows = edge.bottom - edge.top - (editoropen ? 0 : 2)
-  const inputstateycursor = useCallback(
-    (moveby: number) => {
-      useTerminal.setState((state) => {
-        const ycursor = clamp(
-          Math.round(state.ycursor + moveby),
-          0,
-          logrowtotalheight,
-        )
-        const scroll = clamp(
-          ycursor - Math.round(visiblerows * 0.5),
-          0,
-          logrowtotalheight - visiblerows,
-        )
-        return {
-          ycursor,
-          scroll,
-        }
-      })
-    },
-    [logrowtotalheight, visiblerows],
-  )
+  const inputstateycursor = useTerminalYCursor(logrowtotalheight, visiblerows)
+  const resettoend = useTerminalResetToEnd(inputstate.length)
 
-  // navigate input history
-  function inputstateswitch(switchto: number) {
-    const ir = tapeterminal.buffer.length - 1
-    const index = clamp(switchto, 0, ir)
-    useTerminal.setState({
-      bufferindex: index,
-      scroll: 0,
-      xcursor: tapeterminal.buffer[index].length,
-      ycursor: 0,
-      xselect: undefined,
-      yselect: undefined,
-    })
+  // --- autocomplete ---
+
+  const acactive =
+    tapeterminal.acindex >= 0 && autocomplete.suggestions.length > 0
+
+  function acceptsuggestion() {
+    if (autocomplete.suggestions.length === 0) return
+    const idx = Math.min(
+      tapeterminal.acindex,
+      autocomplete.suggestions.length - 1,
+    )
+    const suggestion = autocomplete.suggestions[idx]
+    if (!suggestion) return
+    inputstatesetsplice(
+      autocomplete.wordstart,
+      autocomplete.prefix.length,
+      suggestion,
+    )
   }
 
-  // track selection
-  function trackselection(active: boolean) {
-    if (active) {
-      if (!ispresent(tapeterminal.xselect)) {
-        useTerminal.setState({
-          xselect: tapeterminal.xcursor,
-          yselect: tapeterminal.ycursor,
-        })
-      }
-    } else {
-      useTerminal.setState({
-        xselect: undefined,
-        yselect: undefined,
-      })
-    }
-  }
+  // --- inline helpers ---
 
   function deleteselection() {
     if (ispresent(tapeterminal.xselect)) {
@@ -181,21 +126,11 @@ export function TerminalInput({
     }
   }
 
-  const resettoend = useCallback(() => {
-    useTerminal.setState({
-      scroll: 0,
-      xcursor: inputstate.length,
-      ycursor: 0,
-      xselect: undefined,
-      yselect: undefined,
-    })
-  }, [inputstate.length])
+  // --- drawing ---
 
-  // reset color & bg
   context.reset.bg = bgcolor(quickterminal)
 
   if (!quickterminal) {
-    // write hint
     setuplogitem(false, 0, 0, context)
     const hint = `$DKCYAN${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} ${import.meta.env.ZSS_COMMIT_MESSAGE}`
     const measured = tokenizeandmeasuretextformat(hint, edge.width, 1)
@@ -203,7 +138,6 @@ export function TerminalInput({
     tokenizeandwritetextformat(hint, context, true)
   }
 
-  // draw divider
   const de = '$196'
   const dc = '$205'
   const dm = dc.repeat(edge.width - 6)
@@ -211,65 +145,38 @@ export function TerminalInput({
   context.active.color = COLOR.WHITE
   tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
 
-  // draw input line
   const inputline = inputstate.padEnd(edge.width, ' ')
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
-  // draw selection
-  if (
-    ispresent(tapeterminal.xselect) &&
-    ispresent(tapeterminal.yselect) &&
-    tapeterminal.xcursor !== tapeterminal.xselect
-  ) {
-    // top - left
-    const x1 = Math.min(tapeterminal.xcursor, tapeterminal.xselect)
-    const y1 = Math.min(tapeterminal.ycursor, tapeterminal.yselect)
-    // bottom - right
-    const x2 = Math.max(tapeterminal.xcursor, tapeterminal.xselect) - 1
-    const y2 = Math.max(tapeterminal.ycursor, tapeterminal.yselect)
-    // write colors
-    for (let iy = y1; iy <= y2; ++iy) {
-      const p1 = x1 + (edge.bottom - iy) * edge.width
-      const p2 = x2 + (edge.bottom - iy) * edge.width
-      applycolortoindexes(p1, p2, 15, 8, context)
-    }
-  }
+  drawTerminalSelection(
+    tapeterminal.xcursor,
+    tapeterminal.ycursor,
+    tapeterminal.xselect,
+    tapeterminal.yselect,
+    context,
+  )
 
-  // draw cursor
-  if (blink) {
-    const x = edge.left + tapeterminal.xcursor
-    const y = edge.top + tapeycursor
-    // visibility clip
-    if (
-      y >= edge.top &&
-      y <= edge.bottom &&
-      x >= edge.left &&
-      x <= edge.right
-    ) {
-      const atchar = x + y * context.width
-      applystrtoindex(atchar, String.fromCharCode(221), context)
-      applycolortoindexes(
-        atchar,
-        atchar,
-        COLOR.WHITE,
-        context.reset.bg,
-        context,
-      )
-    }
-  }
+  drawTerminalCursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
-  // handle speech to text
+  drawlineautocomplete(
+    autocomplete,
+    tapeterminal.acindex,
+    edge.top + edge.height - 2,
+    edge,
+    context,
+  )
+
+  // --- speech to text ---
+
   useEffect(() => {
     let listener: MAYBE<SpeechToText>
 
-    // #config voice2text on, use # or C to open terminal to start
     if (!voice2text || !quickterminal) {
       return
     }
 
-    // track starting input
     const { buffer, bufferindex } = useTerminal.getState()
     const inputstart = buffer[bufferindex]
 
@@ -277,7 +184,6 @@ export function TerminalInput({
       return
     }
 
-    // handlers
     function onFinalised(value: string) {
       inputstatereplace(`${inputstart}${value}`)
       setTimeout(() => {
@@ -288,7 +194,6 @@ export function TerminalInput({
           inputstate,
           ...buffer.slice(1).filter((item) => item !== inputstate),
         ].filter((item) => item.includes('#broadcast') === false)
-        // cache history
         storagewritehistorybuffer(historybuffer).catch((err: any) =>
           apierror(SOFTWARE, player, 'terminalinput', err.message),
         )
@@ -310,7 +215,6 @@ export function TerminalInput({
       inputstatereplace(`${inputstart}${value}`)
     }
 
-    // start
     try {
       const speechlistener = new SpeechToText(
         onFinalised,
@@ -323,13 +227,14 @@ export function TerminalInput({
       console.error(error.message)
     }
 
-    // Cleanup function
     return () => {
       listener?.stopListening()
       listener = undefined
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // --- render ---
 
   return (
     <>
@@ -361,6 +266,7 @@ export function TerminalInput({
               ),
             })
           }
+          useTerminal.setState({ acindex: -1 })
         }}
         MOVE_RIGHT={(mods) => {
           trackselection(mods.shift)
@@ -377,8 +283,18 @@ export function TerminalInput({
               ),
             })
           }
+          useTerminal.setState({ acindex: -1 })
         }}
         MOVE_UP={(mods) => {
+          if (acactive) {
+            useTerminal.setState({
+              acindex: Math.min(
+                autocomplete.suggestions.length - 1,
+                tapeterminal.acindex + 1,
+              ),
+            })
+            return
+          }
           if (mods.ctrl) {
             inputstateswitch(tapeterminal.bufferindex + 1)
           } else {
@@ -387,6 +303,12 @@ export function TerminalInput({
           }
         }}
         MOVE_DOWN={(mods) => {
+          if (acactive) {
+            useTerminal.setState({
+              acindex: Math.max(0, tapeterminal.acindex - 1),
+            })
+            return
+          }
           if (mods.ctrl) {
             inputstateswitch(tapeterminal.bufferindex - 1)
           } else {
@@ -395,6 +317,10 @@ export function TerminalInput({
           }
         }}
         OK_BUTTON={() => {
+          if (acactive) {
+            acceptsuggestion()
+            return
+          }
           const invoke = hasselection ? inputstateselected : inputstate
           if (invoke.length) {
             if (inputstateactive) {
@@ -404,7 +330,6 @@ export function TerminalInput({
                 invoke,
                 ...buffer.slice(1).filter((item) => item !== invoke),
               ].filter((item) => item.includes('#broadcast') === false)
-              // cache history
               storagewritehistorybuffer(historybuffer).catch((err) =>
                 apierror(SOFTWARE, player, 'terminalinput', err.message),
               )
@@ -414,6 +339,7 @@ export function TerminalInput({
                 xselect: undefined,
                 yselect: undefined,
                 buffer: historybuffer,
+                acindex: -1,
               })
               vmcli(SOFTWARE, player, invoke)
               if (quickterminal) {
@@ -425,9 +351,17 @@ export function TerminalInput({
           }
         }}
         CANCEL_BUTTON={() => {
+          if (acactive) {
+            useTerminal.setState({ acindex: -1 })
+            return
+          }
           registerterminalclose(SOFTWARE, player)
         }}
         MENU_BUTTON={(mods) => {
+          if (acactive) {
+            acceptsuggestion()
+            return
+          }
           registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
@@ -436,7 +370,6 @@ export function TerminalInput({
           const mods = modsfromevent(event)
           switch (lkey) {
             case 'delete':
-              // single line only
               if (inputstateactive) {
                 if (hasselection) {
                   deleteselection()
@@ -446,9 +379,9 @@ export function TerminalInput({
               } else {
                 resettoend()
               }
+              useTerminal.setState({ acindex: 0 })
               break
             case 'backspace':
-              // single line only
               if (inputstateactive) {
                 if (hasselection) {
                   deleteselection()
@@ -458,6 +391,7 @@ export function TerminalInput({
               } else {
                 resettoend()
               }
+              useTerminal.setState({ acindex: 0 })
               break
             default:
               if (mods.ctrl) {
@@ -467,16 +401,13 @@ export function TerminalInput({
                     break
                   case 'a':
                     useTerminal.setState({
-                      // start
                       xselect: 0,
                       yselect: 0,
-                      // end
                       xcursor: inputstate.length,
                       ycursor: 0,
                     })
                     break
                   case 'c':
-                    // can support multiline ?
                     if (inputstateactive && ispresent(withclipboard())) {
                       void withclipboard().writeText(inputstateselected)
                     } else {
@@ -488,7 +419,6 @@ export function TerminalInput({
                       withclipboard()
                         .readText()
                         .then((text) => {
-                          // did we paste json ??
                           try {
                             const json = JSON.parse(text)
                             if (
@@ -535,8 +465,7 @@ export function TerminalInput({
                     break
                 }
               } else if (mods.alt) {
-                // no-op ?? - could this shove text around when you have selection ??
-                // or jump by 10 or by word ??
+                // reserved for future use
               } else if (event.key.length === 1) {
                 if (
                   inputstateactive &&
@@ -551,6 +480,7 @@ export function TerminalInput({
                 } else {
                   resettoend()
                 }
+                useTerminal.setState({ acindex: 0 })
               }
               break
           }

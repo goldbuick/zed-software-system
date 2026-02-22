@@ -148,6 +148,7 @@ export const useTerminal = create<{
   yselect: MAYBE<number>
   bufferindex: number
   buffer: string[]
+  acindex: number
   reset: () => void
 }>((set) => ({
   // panning offset
@@ -162,6 +163,8 @@ export const useTerminal = create<{
   // input history
   bufferindex: 0,
   buffer: [''],
+  // autocomplete selected index (-1 = dismissed)
+  acindex: -1,
   reset() {
     set({
       // panning offset
@@ -176,6 +179,7 @@ export const useTerminal = create<{
       // input history
       bufferindex: 0,
       buffer: [''],
+      acindex: -1,
     })
   },
 }))
