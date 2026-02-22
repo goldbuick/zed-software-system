@@ -1,17 +1,17 @@
 import {
-  addToArray,
-  applyToIndex,
+  addtoarray,
+  applytoindex,
   average,
-  findByKey,
-  findIndexByKey,
-  notEmpty,
+  findbykey,
+  findindexbykey,
+  notempty,
   pick,
   pickwith,
   range,
-  removeFromIndex,
-  removeIndex,
-  setAtIndex,
-  setIndex,
+  removefromindex,
+  removeindex,
+  setatindex,
+  setindex,
   unique,
 } from 'zss/mapping/array'
 
@@ -78,137 +78,137 @@ describe('array', () => {
     })
   })
 
-  describe('addToArray', () => {
+  describe('addtoarray', () => {
     it('should add item to array', () => {
-      expect(addToArray([1, 2], 3)).toEqual([1, 2, 3])
-      expect(addToArray([], 1)).toEqual([1])
+      expect(addtoarray([1, 2], 3)).toEqual([1, 2, 3])
+      expect(addtoarray([], 1)).toEqual([1])
     })
 
     it('should not mutate original array', () => {
       const original = [1, 2]
-      const result = addToArray(original, 3)
+      const result = addtoarray(original, 3)
       expect(original).toEqual([1, 2])
       expect(result).not.toBe(original)
     })
   })
 
-  describe('setIndex', () => {
+  describe('setindex', () => {
     it('should set value at index', () => {
-      expect(setIndex([1, 2, 3], 1, 99)).toEqual([1, 99, 3])
-      expect(setIndex([1, 2, 3], 0, 99)).toEqual([99, 2, 3])
+      expect(setindex([1, 2, 3], 1, 99)).toEqual([1, 99, 3])
+      expect(setindex([1, 2, 3], 0, 99)).toEqual([99, 2, 3])
     })
 
     it('should not mutate original array', () => {
       const original = [1, 2, 3]
-      const result = setIndex(original, 1, 99)
+      const result = setindex(original, 1, 99)
       expect(original).toEqual([1, 2, 3])
       expect(result).not.toBe(original)
     })
   })
 
-  describe('removeIndex', () => {
+  describe('removeindex', () => {
     it('should remove item at index', () => {
-      expect(removeIndex([1, 2, 3], 1)).toEqual([1, 3])
-      expect(removeIndex([1, 2, 3], 0)).toEqual([2, 3])
+      expect(removeindex([1, 2, 3], 1)).toEqual([1, 3])
+      expect(removeindex([1, 2, 3], 0)).toEqual([2, 3])
     })
 
     it('should not mutate original array', () => {
       const original = [1, 2, 3]
-      const result = removeIndex(original, 1)
+      const result = removeindex(original, 1)
       expect(original).toEqual([1, 2, 3])
       expect(result).not.toBe(original)
     })
   })
 
-  describe('setAtIndex', () => {
+  describe('setatindex', () => {
     it('should set value at index', () => {
-      expect(setAtIndex([1, 2, 3], 1, 99)).toEqual([1, 99, 3])
+      expect(setatindex([1, 2, 3], 1, 99)).toEqual([1, 99, 3])
     })
 
     it('should not mutate original array', () => {
       const original = [1, 2, 3]
-      const result = setAtIndex(original, 1, 99)
+      const result = setatindex(original, 1, 99)
       expect(original).toEqual([1, 2, 3])
       expect(result).not.toBe(original)
     })
   })
 
-  describe('applyToIndex', () => {
+  describe('applytoindex', () => {
     it('should apply props to object at index', () => {
       const array: any[] = [{ a: 1 }, { b: 2 }, { c: 3 }]
-      const result = applyToIndex(array, 1, { b: 99, x: 100 })
+      const result = applytoindex(array, 1, { b: 99, x: 100 })
       expect(result[1]).toEqual({ b: 99, x: 100 })
     })
 
     it('should merge with existing props', () => {
       const array = [{ a: 1, b: 2 }]
-      const result = applyToIndex(array, 0, { b: 99, c: 3 })
+      const result = applytoindex(array, 0, { b: 99, c: 3 })
       expect(result[0]).toEqual({ a: 1, b: 99, c: 3 })
     })
 
     it('should not mutate original array', () => {
       const original = [{ a: 1 }]
-      const result = applyToIndex(original, 0, { b: 2 })
+      const result = applytoindex(original, 0, { b: 2 })
       expect(original).toEqual([{ a: 1 }])
       expect(result).not.toBe(original)
     })
   })
 
-  describe('removeFromIndex', () => {
+  describe('removefromindex', () => {
     it('should remove key from object at index', () => {
       const array = [{ a: 1, b: 2, c: 3 }]
-      const result = removeFromIndex(array, 0, 'b')
+      const result = removefromindex(array, 0, 'b')
       expect(result[0]).toEqual({ a: 1, c: 3 })
       expect('b' in result[0]).toBe(false)
     })
 
     it('should not mutate original array', () => {
       const original = [{ a: 1, b: 2 }]
-      const result = removeFromIndex(original, 0, 'b')
+      const result = removefromindex(original, 0, 'b')
       expect(original).toEqual([{ a: 1, b: 2 }])
       expect(result).not.toBe(original)
     })
   })
 
-  describe('findIndexByKey', () => {
+  describe('findindexbykey', () => {
     it('should find index by key-value pair', () => {
       const array = [{ id: 1 }, { id: 2 }, { id: 3 }]
-      expect(findIndexByKey(array, 'id', 2)).toBe(1)
-      expect(findIndexByKey(array, 'id', 1)).toBe(0)
+      expect(findindexbykey(array, 'id', 2)).toBe(1)
+      expect(findindexbykey(array, 'id', 1)).toBe(0)
     })
 
     it('should return -1 if not found', () => {
       const array = [{ id: 1 }, { id: 2 }]
-      expect(findIndexByKey(array, 'id', 99)).toBe(-1)
+      expect(findindexbykey(array, 'id', 99)).toBe(-1)
     })
   })
 
-  describe('findByKey', () => {
+  describe('findbykey', () => {
     it('should find object by key-value pair', () => {
       const array = [
         { id: 1, name: 'a' },
         { id: 2, name: 'b' },
       ]
-      expect(findByKey(array, 'id', 2)).toEqual({ id: 2, name: 'b' })
+      expect(findbykey(array, 'id', 2)).toEqual({ id: 2, name: 'b' })
     })
 
     it('should return undefined if not found', () => {
       const array = [{ id: 1 }]
-      expect(findByKey(array, 'id', 99)).toBeUndefined()
+      expect(findbykey(array, 'id', 99)).toBeUndefined()
     })
   })
 
-  describe('notEmpty', () => {
+  describe('notempty', () => {
     it('should return true for defined values', () => {
-      expect(notEmpty(0)).toBe(true)
-      expect(notEmpty('')).toBe(true)
-      expect(notEmpty(false)).toBe(true)
-      expect(notEmpty([])).toBe(true)
+      expect(notempty(0)).toBe(true)
+      expect(notempty('')).toBe(true)
+      expect(notempty(false)).toBe(true)
+      expect(notempty([])).toBe(true)
     })
 
     it('should return false for null or undefined', () => {
-      expect(notEmpty(null)).toBe(false)
-      expect(notEmpty(undefined)).toBe(false)
+      expect(notempty(null)).toBe(false)
+      expect(notempty(undefined)).toBe(false)
     })
   })
 

@@ -26,19 +26,19 @@
 - **pickwith(seed, ...args)** - Randomly picks one item using a seed-based RNG
 
 ### Immutable Array Modifications
-- **addToArray(array, value)** - Returns new array with value appended
-- **setIndex(array, index, value)** - Returns new array with value at index replaced
-- **removeIndex(array, index)** - Returns new array with item at index removed
-- **setAtIndex(array, index, value)** - Alias for setIndex
-- **applyToIndex(array, index, props)** - Merges props into object at index (immutable)
-- **removeFromIndex(array, index, key)** - Removes key from object at index (immutable)
+- **addtoarray(array, value)** - Returns new array with value appended
+- **setindex(array, index, value)** - Returns new array with value at index replaced
+- **removeindex(array, index)** - Returns new array with item at index removed
+- **setatindex(array, index, value)** - Alias for setindex
+- **applytoindex(array, index, props)** - Merges props into object at index (immutable)
+- **removefromindex(array, index, key)** - Removes key from object at index (immutable)
 
 ### Array Search
-- **findIndexByKey(array, key, value)** - Finds index of first item where key matches value
-- **findByKey(array, key, value)** - Finds first item where key matches value
+- **findindexbykey(array, key, value)** - Finds index of first item where key matches value
+- **findbykey(array, key, value)** - Finds first item where key matches value
 
 ### Array Utilities
-- **notEmpty(value)** - Type guard to filter out null/undefined values
+- **notempty(value)** - Type guard to filter out null/undefined values
 - **unique(values)** - Returns array of unique values with null/undefined filtered
 - **average(...maybevalues)** - Calculates average of numeric values (filters out undefined/null)
 

@@ -14,14 +14,14 @@
 | `range(a, b?, step?)` | Returns `[min..max]` by step; `range(5)` → 0..5 |
 | `pick(...args)` | Random item from flattened args |
 | `pickwith(seed, ...args)` | Deterministic random pick |
-| `addToArray` | `[...array, value]` |
-| `setIndex` | Immutable set at index |
-| `removeIndex` | Immutable remove at index |
-| `setAtIndex` | Alias for setIndex |
-| `applyToIndex` | Merge props into object at index |
-| `removeFromIndex` | Delete key from object at index |
-| `findIndexByKey` | Find index where `item[key] === value` |
-| `findByKey` | Find item where `item[key] === value` |
-| `notEmpty` | Type guard: excludes null/undefined |
+| `addtoarray` | `[...array, value]` |
+| `setindex` | Immutable set at index |
+| `removeindex` | Immutable remove at index |
+| `setatindex` | Alias for setindex |
+| `applytoindex` | Merge props into object at index |
+| `removefromindex` | Delete key from object at index |
+| `findindexbykey` | Find index where `item[key] === value` |
+| `findbykey` | Find item where `item[key] === value` |
+| `notempty` | Type guard: excludes null/undefined |
 | `unique` | Dedupe and filter undefined |
 | `average` | Mean of flattened numbers |
