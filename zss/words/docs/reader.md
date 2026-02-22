@@ -10,13 +10,13 @@
 - `./color` — STR_COLOR, mapcolortostrcolor, readcolor
 - `./dir` — EVAL_DIR, readdir
 - `./expr` — readexpr
-- `./kind` — STR_KIND, readkind
+- `./kind` — STR_KIND, isstrkind, readkind
 
 ## Exports
 
 | Export | Description |
 |--------|-------------|
-| `READ_CONTEXT` | Mutable context: book, board, element, elementid, elementisplayer, elementfocus, words, get |
+| `READ_CONTEXT` | Mutable context: timestamp, book, board, element, elementid, elementisplayer, elementfocus, words, get, haslabel |
 | `ARG_TYPE` | Enum of expected argument types |
 | `ARG_TYPE_MAP` | Maps ARG_TYPE to concrete types |
 | `readargs(words, index, args)` | Parses args; returns `[...values, nextIndex]` |

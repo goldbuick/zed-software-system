@@ -7,6 +7,7 @@
 - `zss/mapping/array` — pick, pickwith
 - `zss/mapping/number` — clamp, randominteger, randomintegerwith
 - `zss/mapping/types` — MAYBE, isarray, isnumber, ispresent, isstring
+- `zss/memory` — memoryreadboardbyevaldir
 - `zss/memory/boardmovement` — memorycheckmoveboardobject
 - `zss/memory/boardoperations` — memoryreadelement, memoryreadterrain
 - `zss/memory/bookoperations` — memoryreadelementdisplay
@@ -19,6 +20,7 @@
 - `./dir` — isstrdir, mapstrdir, readdir
 - `./kind` — readstrkindcolor, readstrkindname
 - `./reader` — ARG_TYPE, READ_CONTEXT, readargs
+- `./send` — parsesend
 - `./types` — DIR, NAME
 
 ## Exports
@@ -37,7 +39,7 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 
 | Expr | Description |
 |------|-------------|
-| `aligned` | 1 if element aligned (same row/col) with player |
+| `aligned`, `alligned` | 1 if element aligned (same row/col) with player |
 | `contact` | 1 if element adjacent to player |
 | `blocked` dir | 1 if movement blocked in direction |
 
