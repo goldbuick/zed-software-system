@@ -16,7 +16,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { maptonumber, maptostring } from 'zss/mapping/value'
+import { maptostring } from 'zss/mapping/value'
 import {
   EVAL_DIR,
   dirfrompts,

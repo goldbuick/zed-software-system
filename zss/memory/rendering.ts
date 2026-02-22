@@ -64,16 +64,17 @@ import {
 // Display & Formatting Functions
 
 export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
-  if (
-    memoryreadcodepagetype(codepage) !== CODE_PAGE_TYPE.TERRAIN &&
-    memoryreadcodepagetype(codepage) !== CODE_PAGE_TYPE.OBJECT
-  ) {
-    return ''
+  const type = memoryreadcodepagetype(codepage)
+  // if the codepage is a terrain or object, we can return the display prefix
+  if (type === CODE_PAGE_TYPE.TERRAIN || type === CODE_PAGE_TYPE.OBJECT) {
+    const name = memoryreadcodepagename(codepage)
+    const stub: BOARD_ELEMENT = {
+      kind: name,
+      kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
+    }
+    return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
   }
-  const name = memoryreadcodepagename(codepage)
-  const stub: BOARD_ELEMENT = { kind: name }
-  memoryreadelementkind(stub)
-  return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
+  return ''
 }
 
 export function memoryconverttogadgetcontrollayer(
