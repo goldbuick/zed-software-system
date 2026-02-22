@@ -6,7 +6,7 @@ import {
   applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
 export type TerminalSelection = {
   ii1: number
@@ -101,5 +101,153 @@ export function drawTerminalSelection(
     const p1 = x1 + (edge.bottom - iy) * edge.width
     const p2 = x2 + (edge.bottom - iy) * edge.width
     applycolortoindexes(p1, p2, 15, 8, context)
+  }
+}
+
+const CMD_COLOR = COLOR.DKGREEN
+const HASH_COLOR = COLOR.YELLOW
+const STAT_COLOR = COLOR.DKPURPLE
+const LABEL_COLOR = COLOR.DKRED
+const COMMENT_COLOR = COLOR.CYAN
+const NUMBER_COLOR = COLOR.WHITE
+const STRING_COLOR = COLOR.GREEN
+
+export function highlightTerminalInput(
+  inputline: string,
+  inputy: number,
+  wordcolors: Map<string, number>,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  if (inputline.length === 0) return
+  const edge = textformatreadedges(context)
+  const base = edge.left + inputy * context.width
+
+  const trimmed = inputline.trimStart()
+  const leadingspaces = inputline.length - trimmed.length
+
+  if (trimmed.startsWith(`'`)) {
+    applycolortoindexes(
+      base + leadingspaces,
+      base + inputline.length - 1,
+      COMMENT_COLOR,
+      context.reset.bg,
+      context,
+    )
+    return
+  }
+
+  if (trimmed.startsWith(':')) {
+    applycolortoindexes(
+      base + leadingspaces,
+      base + inputline.length - 1,
+      LABEL_COLOR,
+      context.reset.bg,
+      context,
+    )
+    return
+  }
+
+  if (trimmed.startsWith('@')) {
+    applycolortoindexes(
+      base + leadingspaces,
+      base + inputline.length - 1,
+      STAT_COLOR,
+      context.reset.bg,
+      context,
+    )
+    return
+  }
+
+  let i = leadingspaces
+  let afterhash = false
+
+  while (i < inputline.length) {
+    const ch = inputline[i]
+
+    if (ch === '#') {
+      applycolortoindexes(
+        base + i,
+        base + i,
+        HASH_COLOR,
+        context.reset.bg,
+        context,
+      )
+      afterhash = true
+      i++
+      continue
+    }
+
+    if (ch === `'`) {
+      applycolortoindexes(
+        base + i,
+        base + inputline.length - 1,
+        COMMENT_COLOR,
+        context.reset.bg,
+        context,
+      )
+      break
+    }
+
+    if (ch === '"' || ch === `'`) {
+      const quote = ch
+      const start = i
+      i++
+      while (i < inputline.length && inputline[i] !== quote) i++
+      if (i < inputline.length) i++
+      applycolortoindexes(
+        base + start,
+        base + i - 1,
+        STRING_COLOR,
+        context.reset.bg,
+        context,
+      )
+      continue
+    }
+
+    if (/\d/.test(ch)) {
+      const start = i
+      while (i < inputline.length && /[\d.]/.test(inputline[i])) i++
+      if (start > 0 && !/\w/.test(inputline[start - 1])) {
+        applycolortoindexes(
+          base + start,
+          base + i - 1,
+          NUMBER_COLOR,
+          context.reset.bg,
+          context,
+        )
+      }
+      continue
+    }
+
+    if (/\w/.test(ch)) {
+      const start = i
+      while (i < inputline.length && /\w/.test(inputline[i])) i++
+      const word = inputline.substring(start, i)
+      const lower = NAME(word)
+
+      if (afterhash && start === leadingspaces + 1) {
+        applycolortoindexes(
+          base + start,
+          base + i - 1,
+          CMD_COLOR,
+          context.reset.bg,
+          context,
+        )
+      } else {
+        const color = wordcolors.get(lower)
+        if (color !== undefined) {
+          applycolortoindexes(
+            base + start,
+            base + i - 1,
+            color,
+            context.reset.bg,
+            context,
+          )
+        }
+      }
+      continue
+    }
+
+    i++
   }
 }

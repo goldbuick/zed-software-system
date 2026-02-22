@@ -36,6 +36,7 @@ import {
   computeTerminalSelection,
   drawTerminalCursor,
   drawTerminalSelection,
+  highlightTerminalInput,
   inputstateswitch,
   trackselection,
 } from './terminalinputhelpers'
@@ -51,6 +52,7 @@ type TerminalInputProps = {
   tapeycursor: number
   logrowtotalheight: number
   autocomplete: AUTOCOMPLETE
+  wordcolors: Map<string, number>
 }
 
 export function TerminalInput({
@@ -59,6 +61,7 @@ export function TerminalInput({
   tapeycursor,
   logrowtotalheight,
   autocomplete,
+  wordcolors,
 }: TerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -149,6 +152,8 @@ export function TerminalInput({
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
+
+  highlightTerminalInput(inputstate, edge.height - 1, wordcolors, context)
 
   drawTerminalSelection(
     tapeterminal.xcursor,

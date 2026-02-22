@@ -16,6 +16,7 @@ import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
 import { textformatreadedges } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
@@ -36,6 +37,7 @@ export function TerminalComponent() {
   }, [])
 
   const [
+    wordscli,
     wordsruntime,
     wordsflags,
     wordsstats,
@@ -47,6 +49,7 @@ export function TerminalComponent() {
     wordsexprs,
   ] = useGadgetClient(
     useShallow((state) => [
+      state.zsswords.cli,
       state.zsswords.runtime,
       state.zsswords.flags,
       state.zsswords.stats,
@@ -61,9 +64,10 @@ export function TerminalComponent() {
 
   const commandwords = useMemo(() => {
     const words = new Set<string>()
+    for (const w of wordscli) words.add(w)
     for (const w of wordsruntime) words.add(w)
     return Array.from(words)
-  }, [wordsruntime])
+  }, [wordscli, wordsruntime])
 
   const allwords = useMemo(() => {
     const words = new Set(commandwords)
@@ -78,6 +82,32 @@ export function TerminalComponent() {
     return Array.from(words)
   }, [
     commandwords,
+    wordsflags,
+    wordsstats,
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+    wordsexprs,
+  ])
+
+  const wordcolors = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const w of wordscli) map.set(w, COLOR.DKGREEN)
+    for (const w of wordsruntime) map.set(w, COLOR.DKGREEN)
+    for (const w of wordsflags) map.set(w, COLOR.PURPLE)
+    for (const w of wordsstats) map.set(w, COLOR.DKPURPLE)
+    for (const w of wordskinds) map.set(w, COLOR.CYAN)
+    for (const w of wordsaltkinds) map.set(w, COLOR.DKCYAN)
+    for (const w of wordscolors) map.set(w, COLOR.RED)
+    for (const w of wordsdirs) map.set(w, COLOR.WHITE)
+    for (const w of wordsdirmods) map.set(w, COLOR.LTGRAY)
+    for (const w of wordsexprs) map.set(w, COLOR.YELLOW)
+    return map
+  }, [
+    wordscli,
+    wordsruntime,
     wordsflags,
     wordsstats,
     wordskinds,
@@ -155,6 +185,7 @@ export function TerminalComponent() {
             tapeycursor={tapeycursor}
             logrowtotalheight={logsrowtotalheight}
             autocomplete={autocomplete}
+            wordcolors={wordcolors}
           />
         )}
       </TapeTerminalContext.Provider>
