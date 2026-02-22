@@ -27,6 +27,7 @@ import { COLOR, STAT_TYPE } from 'zss/words/types'
 
 import {
   ZSS_COLOR_MAP,
+  ZSS_TYPE_COMMAND,
   ZSS_TYPE_ERROR,
   ZSS_TYPE_ERROR_LINE,
   ZSS_TYPE_LINE,
@@ -200,138 +201,174 @@ export function EditorRows({
         const right = (token.endColumn ?? 1) - 1 - xoffset
         const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
         if (ispresent(maybecolor)) {
-          switch (maybecolor) {
-            case ZSS_TYPE_STATNAME: {
-              const words = parsestatformat(token.image)
-              const statinfo = statformat('', words, !!token.payload)
-              switch (statinfo.type) {
-                case STAT_TYPE.BOARD:
-                case STAT_TYPE.LOADER:
-                case STAT_TYPE.OBJECT:
-                case STAT_TYPE.TERRAIN:
-                case STAT_TYPE.CHARSET:
-                case STAT_TYPE.PALETTE: {
-                  clippedapplycolortoindexes(
-                    index,
-                    edge.right,
-                    left,
-                    right,
-                    ZSS_TYPE_STATNAME,
-                    context.active.bg,
-                    context,
-                  )
-                  break
-                }
-                case STAT_TYPE.CONST:
-                case STAT_TYPE.RANGE:
-                case STAT_TYPE.SELECT:
-                case STAT_TYPE.NUMBER:
-                case STAT_TYPE.TEXT:
-                case STAT_TYPE.HOTKEY:
-                case STAT_TYPE.COPYIT:
-                case STAT_TYPE.OPENIT:
-                case STAT_TYPE.ZSSEDIT:
-                case STAT_TYPE.CHAREDIT:
-                case STAT_TYPE.COLOREDIT: {
-                  const [first] = words
-                  clippedapplycolortoindexes(
-                    index,
-                    edge.right,
-                    left,
-                    left + first.length,
-                    ZSS_TYPE_STATNAME,
-                    context.active.bg,
-                    context,
-                  )
-                  if (words.length > 1) {
-                    clippedapplycolortoindexes(
-                      index,
-                      edge.right,
-                      left + first.length + 1,
-                      right,
-                      ZSS_TYPE_NUMBER,
-                      context.active.bg,
-                      context,
-                    )
-                  }
-                  break
-                }
-                default:
-                  clippedapplycolortoindexes(
-                    index,
-                    edge.right,
-                    left,
-                    right,
-                    COLOR.DKRED,
-                    context.active.bg,
-                    context,
-                  )
-                  break
-              }
-              break
-            }
-            case ZSS_TYPE_SYMBOL: {
+          // #ticker <content>: "ticker" = dkgreen, content = green
+          if (token.tokenTypeIdx === lexer.command_ticker.tokenTypeIdx) {
+            const nameLen = 6 // "ticker"
+            clippedapplycolortoindexes(
+              index,
+              edge.right,
+              left,
+              left + nameLen - 1,
+              ZSS_TYPE_COMMAND,
+              context.active.bg,
+              context,
+            )
+            if (left + nameLen <= right) {
               clippedapplycolortoindexes(
                 index,
                 edge.right,
-                left,
-                left,
-                maybecolor,
+                left + nameLen,
+                right,
+                ZSS_TYPE_TEXT,
                 context.active.bg,
                 context,
               )
-              if (left !== right) {
-                clippedapplycolortoindexes(
-                  index,
-                  edge.right,
-                  left + 1,
-                  right,
-                  ZSS_TYPE_TEXT,
-                  context.active.bg,
-                  context,
-                )
-              }
-              break
             }
-            case ZSS_TYPE_TEXT: {
-              const wordcolor = zsswordcolor(token.image)
-              if (isarray(wordcolor)) {
-                for (let c = 0; c < wordcolor.length; ++c) {
-                  clippedapplycolortoindexes(
-                    index,
-                    edge.right,
-                    left + c,
-                    right + c,
-                    wordcolor[c],
-                    context.active.bg,
-                    context,
-                  )
+          } else if (token.tokenTypeIdx === lexer.command_toast.tokenTypeIdx) {
+            // #toast <content>: "toast" = dkgreen, content = green
+            const nameLen = 5 // "toast"
+            clippedapplycolortoindexes(
+              index,
+              edge.right,
+              left,
+              left + nameLen - 1,
+              ZSS_TYPE_COMMAND,
+              context.active.bg,
+              context,
+            )
+            if (left + nameLen <= right) {
+              clippedapplycolortoindexes(
+                index,
+                edge.right,
+                left + nameLen,
+                right,
+                ZSS_TYPE_TEXT,
+                context.active.bg,
+                context,
+              )
+            }
+          } else
+            switch (maybecolor) {
+              case ZSS_TYPE_STATNAME: {
+                const words = parsestatformat(token.image)
+                const statinfo = statformat('', words, !!token.payload)
+                switch (statinfo.type) {
+                  case STAT_TYPE.BOARD:
+                  case STAT_TYPE.LOADER:
+                  case STAT_TYPE.OBJECT:
+                  case STAT_TYPE.TERRAIN:
+                  case STAT_TYPE.CHARSET:
+                  case STAT_TYPE.PALETTE: {
+                    clippedapplycolortoindexes(
+                      index,
+                      edge.right,
+                      left,
+                      right,
+                      ZSS_TYPE_STATNAME,
+                      context.active.bg,
+                      context,
+                    )
+                    break
+                  }
+                  case STAT_TYPE.CONST:
+                  case STAT_TYPE.RANGE:
+                  case STAT_TYPE.SELECT:
+                  case STAT_TYPE.NUMBER:
+                  case STAT_TYPE.TEXT:
+                  case STAT_TYPE.HOTKEY:
+                  case STAT_TYPE.COPYIT:
+                  case STAT_TYPE.OPENIT:
+                  case STAT_TYPE.ZSSEDIT:
+                  case STAT_TYPE.CHAREDIT:
+                  case STAT_TYPE.COLOREDIT: {
+                    const [first] = words
+                    clippedapplycolortoindexes(
+                      index,
+                      edge.right,
+                      left,
+                      left + first.length,
+                      ZSS_TYPE_STATNAME,
+                      context.active.bg,
+                      context,
+                    )
+                    if (words.length > 1) {
+                      clippedapplycolortoindexes(
+                        index,
+                        edge.right,
+                        left + first.length + 1,
+                        right,
+                        ZSS_TYPE_NUMBER,
+                        context.active.bg,
+                        context,
+                      )
+                    }
+                    break
+                  }
+                  default:
+                    clippedapplycolortoindexes(
+                      index,
+                      edge.right,
+                      left,
+                      right,
+                      COLOR.DKRED,
+                      context.active.bg,
+                      context,
+                    )
+                    break
                 }
-              } else {
+                break
+              }
+              case ZSS_TYPE_SYMBOL: {
                 clippedapplycolortoindexes(
                   index,
                   edge.right,
                   left,
                   right,
-                  wordcolor,
+                  maybecolor,
                   context.active.bg,
                   context,
                 )
+                break
               }
-              break
+              case ZSS_TYPE_TEXT: {
+                const wordcolor = zsswordcolor(token.image)
+                if (isarray(wordcolor)) {
+                  for (let c = 0; c < wordcolor.length; ++c) {
+                    clippedapplycolortoindexes(
+                      index,
+                      edge.right,
+                      left + c,
+                      right + c,
+                      wordcolor[c],
+                      context.active.bg,
+                      context,
+                    )
+                  }
+                } else {
+                  clippedapplycolortoindexes(
+                    index,
+                    edge.right,
+                    left,
+                    right,
+                    wordcolor,
+                    context.active.bg,
+                    context,
+                  )
+                }
+                break
+              }
+              default:
+                clippedapplycolortoindexes(
+                  index,
+                  edge.right,
+                  left,
+                  right,
+                  maybecolor,
+                  context.active.bg,
+                  context,
+                )
+                break
             }
-            default:
-              clippedapplycolortoindexes(
-                index,
-                edge.right,
-                left,
-                right,
-                maybecolor,
-                context.active.bg,
-                context,
-              )
-              break
-          }
         }
       }
     }

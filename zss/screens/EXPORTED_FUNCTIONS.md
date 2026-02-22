@@ -171,6 +171,8 @@ This document categorizes and summarizes all exported functions, types, constant
 
 ## 4. Editor Components
 
+See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is implemented (token pipeline, ZSS_COLOR_MAP, word/music coloring, and index-based clipping).
+
 ### `editor/component.tsx`
 
 - **`TapeEditor()`**

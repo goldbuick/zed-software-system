@@ -51,6 +51,8 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.lparen.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.rparen.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.command_play.tokenTypeIdx ?? 0]: ZSS_TYPE_MUSIC,
+  [lexer.command_ticker.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMAND,
+  [lexer.command_toast.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMAND,
   [lexer.command_if.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMAND,
   [lexer.command_do.tokenTypeIdx ?? 0]: ZSS_TYPE_BLOCK,
   [lexer.command_done.tokenTypeIdx ?? 0]: ZSS_TYPE_BLOCK,
@@ -64,7 +66,7 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
 }
 
 export const ZSS_WORD_MESSAGE = COLOR.DKPURPLE
-export const ZSS_WORD_FLAG = COLOR.DKYELLOW
+export const ZSS_WORD_FLAG = COLOR.PURPLE
 export const ZSS_WORD_STAT = COLOR.DKPURPLE
 export const ZSS_WORD_KIND = COLOR.CYAN
 export const ZSS_WORD_KIND_ALT = COLOR.DKCYAN
