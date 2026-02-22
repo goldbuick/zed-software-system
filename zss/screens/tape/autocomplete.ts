@@ -143,9 +143,9 @@ export function getlineautocomplete(
   return EMPTY_AUTOCOMPLETE
 }
 
-const AC_BG = COLOR.DKBLUE
+const AC_BG = COLOR.ONBLACK
 const AC_FG = COLOR.LTGRAY
-const AC_SEL_BG = COLOR.BLUE
+const AC_SEL_BG = COLOR.ONBLACK
 const AC_SEL_FG = COLOR.WHITE
 const AC_HINT_FG = COLOR.DKGRAY
 
@@ -218,10 +218,16 @@ export function drawautocomplete(
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
 ) {
-  if (ac.suggestions.length === 0 || acindex < 0) return
+  if (ac.suggestions.length === 0) return
 
+  const effectiveIndex = acindex < 0 ? 0 : acindex
   const startx = edge.left + 1 + ac.wordcol - xoffset
-  const starty = edge.top + 2 + ycursor - yoffset + 1
+  const cursorRowY = edge.top + 2 + ycursor - yoffset + 1
+  const numRows = ac.suggestions.length
+  const drawBelow = cursorRowY + numRows <= edge.bottom - 1
+  const starty = drawBelow
+    ? cursorRowY
+    : Math.max(edge.top + 1, cursorRowY - numRows)
 
   const maxitemlen = ac.suggestions.reduce(
     (max, s) => Math.max(max, s.length),
@@ -233,7 +239,7 @@ export function drawautocomplete(
     const y = starty + i
     if (y >= edge.bottom || y <= edge.top + 1) continue
 
-    const selected = i === acindex
+    const selected = i === effectiveIndex
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(startx, edge.left + 1)
@@ -265,7 +271,7 @@ export function drawautocomplete(
       const hint = romhintfor(ac.suggestions[i])
       if (hint) {
         const hintx = rowstart + text.length + 1
-        drawHintText(hint, hintx, y, edge.right - 1, context.reset.bg, context)
+        drawHintText(hint, hintx, y, edge.right - 1, AC_BG, context)
       }
     }
   }
@@ -324,7 +330,7 @@ export function drawlineautocomplete(
       const hint = romhintfor(ac.suggestions[i])
       if (hint) {
         const hintx = rowstart + text.length + 1
-        drawHintText(hint, hintx, y, edge.right, context.reset.bg, context)
+        drawHintText(hint, hintx, y, edge.right, AC_BG, context)
       }
     }
   }
