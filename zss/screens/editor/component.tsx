@@ -39,6 +39,24 @@ import { EditorFrame } from './editorframe'
 import { EditorInput, EditorInputProps } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
 
+const STRUCTURED_COMMANDS = new Set([
+  'if',
+  'try',
+  'take',
+  'give',
+  'duplicate',
+  'do',
+  'done',
+  'else',
+  'while',
+  'repeat',
+  'waitfor',
+  'foreach',
+  'for',
+  'break',
+  'continue',
+])
+
 function skipwords(word: string) {
   switch (word) {
     // skip non-typed keywords
@@ -152,6 +170,14 @@ export function EditorComponent() {
     wordsexprs,
   ])
 
+  const commandNames = useMemo(() => {
+    const names = new Set(STRUCTURED_COMMANDS)
+    for (const word of wordscli) names.add(word.toLowerCase())
+    for (const word of wordsloader) names.add(word.toLowerCase())
+    for (const word of wordsruntime) names.add(word.toLowerCase())
+    return names
+  }, [wordscli, wordsloader, wordsruntime])
+
   const tapeeditor = useEditor()
   const codepage = useWaitForValueString(
     vmcodeaddress(editor.book, editor.path),
@@ -237,8 +263,34 @@ export function EditorComponent() {
       }
     }
 
+    // warn when a label name shadows a command
+    if (ispresent(parsed.tokens)) {
+      for (let i = 0; i < parsed.tokens.length; ++i) {
+        const token = parsed.tokens[i]
+        if (
+          token.tokenTypeIdx === lexer.label.tokenTypeIdx &&
+          token.startColumn === 1
+        ) {
+          const labelname = token.image.slice(1).trim().toLowerCase()
+          if (commandNames.has(labelname)) {
+            const row = rows[(token.startLine ?? 1) - 1]
+            if (ispresent(row)) {
+              row.errors = row.errors ?? []
+              row.errors.push({
+                offset: token.startOffset,
+                line: token.startLine,
+                column: token.startColumn,
+                length: token.image.length,
+                message: `label ':${labelname}' shadows #${labelname} command`,
+              })
+            }
+          }
+        }
+      }
+    }
+
     return rows
-  }, [strvalue])
+  }, [strvalue, commandNames])
 
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
