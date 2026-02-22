@@ -51,8 +51,14 @@ The write context (`WRITE_TEXT_CONTEXT` in `zss/words/textformat`) has parallel 
 | GREEN | MUSIC | command_play |
 | DKGREEN | COMMAND | command_ticker, command_toast, command_if, command_else, command_while, command_repeat, command_waitfor, command_foreach, command_break, command_continue |
 | DKCYAN | BLOCK | command_do, command_done |
+| YELLOW | EXPRS | category_isterrain, category_isobject, collision_is*, expr_* |
+| RED | COLOR | color_* (fg, bg, blink variants) |
+| WHITE | DIR | dir_idle, dir_up, dir_down, dir_left, dir_right, dir_flow, dir_seek, dir_rnd*, dir_north, dir_south, dir_west, dir_east, dir_over, dir_under, dir_ground, dir_within, dir_elements, dir_select, single-letter dirs |
+| LTGRAY | DIRMOD | dir_by, dir_at, dir_cw, dir_ccw, dir_opp, dir_rndp, dir_away, dir_toward, dir_find, dir_flee, dir_to, dir_awayby |
 
 ### By word (ZSS_WORD_*; used for text tokens via zsswordcolorconfig)
+
+The ZSS_WORD_* constants are also used directly in ZSS_COLOR_MAP for their corresponding lexer tokens. They are additionally configured at runtime in `component.tsx` via `zsswordcolorconfig` for text tokens that match known vocabulary.
 
 | Color | Constant | Used for |
 |-------|----------|----------|
