@@ -1,1 +1,1 @@
-desc;$DKGRAYcustom palette colors
+desc;Color palette used by this board

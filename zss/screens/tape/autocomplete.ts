@@ -1,3 +1,4 @@
+import { romintolookup, romread } from 'zss/feature/rom'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -13,6 +14,7 @@ export type AUTOCOMPLETE = {
   prefix: string
   wordcol: number
   wordstart: number
+  iscommand: boolean
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
@@ -20,6 +22,33 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
   prefix: '',
   wordcol: 0,
   wordstart: 0,
+  iscommand: false,
+}
+
+const ROM_CATEGORIES = [
+  'command',
+  'flag',
+  'stat',
+  'color',
+  'dir',
+  'dirmod',
+  'expr',
+]
+
+function extractdesc(content: string): string {
+  const lookup = romintolookup(content)
+  const desc = lookup.desc ?? ''
+  return desc.replace(/^\$\w+/i, '').trim()
+}
+
+export function romhintfor(word: string): string {
+  const lower = word.toLowerCase().trim()
+  if (!lower) return ''
+  for (const category of ROM_CATEGORIES) {
+    const content = romread(`editor:${category}:${lower}`)
+    if (content) return extractdesc(content)
+  }
+  return ''
 }
 
 const MAX_SUGGESTIONS = 8
@@ -64,7 +93,7 @@ export function getautocomplete(
       MIN_PREFIX_COMMAND,
       commandwords,
     )
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: true }
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
@@ -74,7 +103,7 @@ export function getautocomplete(
     const wordcol = col - prefix.length
     const wordstart = cursor - prefix.length
     const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords)
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: false }
   }
 
   return EMPTY_AUTOCOMPLETE
@@ -98,7 +127,7 @@ export function getlineautocomplete(
       MIN_PREFIX_COMMAND,
       commandwords,
     )
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: true }
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
@@ -108,7 +137,7 @@ export function getlineautocomplete(
     const wordcol = cursor - prefix.length
     const wordstart = cursor - prefix.length
     const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords)
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: false }
   }
 
   return EMPTY_AUTOCOMPLETE
@@ -118,6 +147,7 @@ const AC_BG = COLOR.DKBLUE
 const AC_FG = COLOR.LTGRAY
 const AC_SEL_BG = COLOR.BLUE
 const AC_SEL_FG = COLOR.WHITE
+const AC_HINT_FG = COLOR.DKGRAY
 
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
@@ -154,6 +184,28 @@ function applySuggestionColors(
     context.bg[bufindex + c] = bg
   }
   context.changed()
+}
+
+function drawHintText(
+  hint: string,
+  hintx: number,
+  hinty: number,
+  rightbound: number,
+  bg: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  if (!hint || hintx > rightbound) return
+  const available = rightbound - hintx + 1
+  const text = hint.length > available ? hint.substring(0, available) : hint
+  const bufindex = hintx + hinty * context.width
+  applystrtoindex(bufindex, text, context)
+  applycolortoindexes(
+    bufindex,
+    bufindex + text.length - 1,
+    AC_HINT_FG,
+    bg,
+    context,
+  )
 }
 
 export function drawautocomplete(
@@ -208,6 +260,14 @@ export function drawautocomplete(
       wordcolors,
       context,
     )
+
+    if (selected) {
+      const hint = romhintfor(ac.suggestions[i])
+      if (hint) {
+        const hintx = rowstart + text.length + 1
+        drawHintText(hint, hintx, y, edge.right - 1, context.reset.bg, context)
+      }
+    }
   }
 }
 
@@ -259,5 +319,13 @@ export function drawlineautocomplete(
       wordcolors,
       context,
     )
+
+    if (selected) {
+      const hint = romhintfor(ac.suggestions[i])
+      if (hint) {
+        const hintx = rowstart + text.length + 1
+        drawHintText(hint, hintx, y, edge.right, context.reset.bg, context)
+      }
+    }
   }
 }

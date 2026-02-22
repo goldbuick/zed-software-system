@@ -1,0 +1,1 @@
+desc;True when directional input is pressed

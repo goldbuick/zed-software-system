@@ -1,0 +1,1 @@
+desc;True if element is not breakable

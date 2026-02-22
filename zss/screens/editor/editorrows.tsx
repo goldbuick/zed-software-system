@@ -482,7 +482,12 @@ export function EditorRows({
           case lexer.stat.tokenTypeIdx: {
             const words = parsestatformat(token.image)
             const statinfo = statformat('', words, !!token.payload)
-            setlookup(`editor:stat:${stattypestring(statinfo.type)}`)
+            const statname = (words[0] ?? '').toLowerCase().trim()
+            if (statname && ispresent(romread(`editor:stat:${statname}`))) {
+              setlookup(`editor:stat:${statname}`)
+            } else {
+              setlookup(`editor:stat:${stattypestring(statinfo.type)}`)
+            }
             break
           }
           case lexer.label.tokenTypeIdx: {
@@ -507,7 +512,28 @@ export function EditorRows({
             break
           }
           case lexer.text.tokenTypeIdx: {
-            setlookup(`editor:text`)
+            const word = (token.image ?? '').toLowerCase().trim()
+            const wordCategories = [
+              'command',
+              'flag',
+              'stat',
+              'color',
+              'dir',
+              'dirmod',
+              'expr',
+            ]
+            let found = false
+            if (word) {
+              for (const cat of wordCategories) {
+                const addr = `editor:${cat}:${word}`
+                if (ispresent(romread(addr))) {
+                  setlookup(addr)
+                  found = true
+                  break
+                }
+              }
+            }
+            if (!found) setlookup(`editor:text`)
             break
           }
         }

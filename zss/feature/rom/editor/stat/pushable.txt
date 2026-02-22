@@ -1,0 +1,1 @@
+desc;Whether element can be pushed

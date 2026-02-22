@@ -1,0 +1,1 @@
+desc;True when last try command failed

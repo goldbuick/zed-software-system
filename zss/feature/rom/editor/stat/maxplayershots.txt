@@ -1,0 +1,1 @@
+desc;Max bullets player can fire
