@@ -37,6 +37,7 @@ import {
   ZSS_TYPE_TEXT,
   zsswordcolor,
 } from './colors'
+import { AUTOCOMPLETE, drawautocomplete } from './editorautocomplete'
 
 function parsestatformat(image: string) {
   const [first] = image.substring(1).split(';')
@@ -61,6 +62,8 @@ export type EditorRowsProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
+  autocomplete: AUTOCOMPLETE
+  wordcolors?: Map<string, number>
 }
 
 export function EditorRows({
@@ -69,6 +72,8 @@ export function EditorRows({
   yoffset,
   rows,
   codepage,
+  autocomplete,
+  wordcolors,
 }: EditorRowsProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -557,6 +562,19 @@ export function EditorRows({
       break
     }
   }
+
+  // render autocomplete dropdown
+  const { acindex } = tapeeditor
+  drawautocomplete(
+    autocomplete,
+    acindex,
+    cursor,
+    xoffset,
+    yoffset,
+    edge,
+    context,
+    wordcolors,
+  )
 
   // reset edge
   context.disablewrap = false
