@@ -22,6 +22,20 @@ import { useShallow } from 'zustand/react/shallow'
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
 
+const SPECIAL_COMMANDS = [
+  'toast',
+  'ticker',
+  'play',
+  'bgplay',
+  'bgplayon64n',
+  'bgplayon32n',
+  'bgplayon16n',
+  'bgplayon8n',
+  'bgplayon4n',
+  'bgplayon2n',
+  'bgplayon1n',
+]
+
 export function TerminalComponent() {
   const player = registerreadplayer()
   const editoropen = useTape((state) => state.editor.open)
@@ -66,6 +80,7 @@ export function TerminalComponent() {
     const words = new Set<string>()
     for (const w of wordscli) words.add(w)
     for (const w of wordsruntime) words.add(w)
+    for (const w of SPECIAL_COMMANDS) words.add(w)
     return Array.from(words)
   }, [wordscli, wordsruntime])
 
@@ -96,6 +111,7 @@ export function TerminalComponent() {
     const map = new Map<string, number>()
     for (const w of wordscli) map.set(w, COLOR.DKGREEN)
     for (const w of wordsruntime) map.set(w, COLOR.DKGREEN)
+    for (const w of SPECIAL_COMMANDS) map.set(w, COLOR.DKGREEN)
     for (const w of wordsflags) map.set(w, COLOR.PURPLE)
     for (const w of wordsstats) map.set(w, COLOR.DKPURPLE)
     for (const w of wordskinds) map.set(w, COLOR.CYAN)

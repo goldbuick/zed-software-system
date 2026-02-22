@@ -112,6 +112,98 @@ const COMMENT_COLOR = COLOR.CYAN
 const NUMBER_COLOR = COLOR.WHITE
 const STRING_COLOR = COLOR.GREEN
 
+const TEXTBODY_COMMANDS = new Set(['toast', 'ticker'])
+
+const MUSICBODY_COMMANDS = new Set([
+  'play',
+  'bgplay',
+  'bgplayon64n',
+  'bgplayon32n',
+  'bgplayon16n',
+  'bgplayon8n',
+  'bgplayon4n',
+  'bgplayon2n',
+  'bgplayon1n',
+])
+
+const MUSIC_NOTE_CHARS = new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+const MUSIC_REST_CHARS = new Set(['x'])
+const MUSIC_PITCH_CHARS = new Set(['#', '!'])
+const MUSIC_TIME_CHARS = new Set(['y', 't', 's', 'i', 'q', 'h', 'w'])
+const MUSIC_TIMEMOD_CHARS = new Set(['3', '.'])
+const MUSIC_OCTAVE_CHARS = new Set(['+', '-'])
+const MUSIC_DRUM_CHARS = new Set([
+  '0',
+  '1',
+  '2',
+  'p',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+])
+
+enum MUSIC_MODE {
+  NEEDS_SETUP,
+  NOTES,
+  MESSAGE,
+}
+
+function musiccharcolor(ch: string): COLOR {
+  if (MUSIC_NOTE_CHARS.has(ch)) return COLOR.GREEN
+  if (MUSIC_REST_CHARS.has(ch)) return COLOR.DKGREEN
+  if (MUSIC_PITCH_CHARS.has(ch)) return COLOR.DKYELLOW
+  if (MUSIC_TIME_CHARS.has(ch)) return COLOR.DKCYAN
+  if (MUSIC_TIMEMOD_CHARS.has(ch)) return COLOR.CYAN
+  if (MUSIC_OCTAVE_CHARS.has(ch)) return COLOR.YELLOW
+  if (MUSIC_DRUM_CHARS.has(ch)) return COLOR.PURPLE
+  return COLOR.GREEN
+}
+
+function highlightMusicBody(
+  inputline: string,
+  from: number,
+  base: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  let mode = MUSIC_MODE.NEEDS_SETUP
+  for (let j = from; j < inputline.length; j++) {
+    const ch = inputline[j]
+    switch (ch) {
+      case ';':
+        mode = MUSIC_MODE.NEEDS_SETUP
+        break
+      case ' ':
+        break
+      default:
+        if (mode === MUSIC_MODE.NEEDS_SETUP) {
+          mode = MUSIC_MODE.NOTES
+        }
+        break
+      case '#':
+        if (mode === MUSIC_MODE.NEEDS_SETUP) {
+          mode = MUSIC_MODE.MESSAGE
+        }
+        break
+    }
+    let color: COLOR
+    switch (mode) {
+      case MUSIC_MODE.NEEDS_SETUP:
+        color = COLOR.LTGRAY
+        break
+      case MUSIC_MODE.NOTES:
+        color = musiccharcolor(ch)
+        break
+      case MUSIC_MODE.MESSAGE:
+        color = COLOR.CYAN
+        break
+    }
+    applycolortoindexes(base + j, base + j, color, context.reset.bg, context)
+  }
+}
+
 export function highlightTerminalInput(
   inputline: string,
   inputy: number,
@@ -188,11 +280,10 @@ export function highlightTerminalInput(
       break
     }
 
-    if (ch === '"' || ch === `'`) {
-      const quote = ch
+    if (ch === '"') {
       const start = i
       i++
-      while (i < inputline.length && inputline[i] !== quote) i++
+      while (i < inputline.length && inputline[i] !== '"') i++
       if (i < inputline.length) i++
       applycolortoindexes(
         base + start,
@@ -225,7 +316,7 @@ export function highlightTerminalInput(
       const word = inputline.substring(start, i)
       const lower = NAME(word)
 
-      if (afterhash && start === leadingspaces + 1) {
+      if (afterhash) {
         applycolortoindexes(
           base + start,
           base + i - 1,
@@ -233,17 +324,36 @@ export function highlightTerminalInput(
           context.reset.bg,
           context,
         )
-      } else {
-        const color = wordcolors.get(lower)
-        if (color !== undefined) {
+
+        if (TEXTBODY_COMMANDS.has(lower) && i < inputline.length) {
           applycolortoindexes(
-            base + start,
-            base + i - 1,
-            color,
+            base + i,
+            base + inputline.length - 1,
+            STRING_COLOR,
             context.reset.bg,
             context,
           )
+          return
         }
+
+        if (MUSICBODY_COMMANDS.has(lower) && i < inputline.length) {
+          highlightMusicBody(inputline, i, base, context)
+          return
+        }
+
+        afterhash = false
+        continue
+      }
+
+      const color = wordcolors.get(lower)
+      if (color !== undefined) {
+        applycolortoindexes(
+          base + start,
+          base + i - 1,
+          color,
+          context.reset.bg,
+          context,
+        )
       }
       continue
     }

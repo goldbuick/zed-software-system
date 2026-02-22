@@ -58,6 +58,20 @@ const STRUCTURED_COMMANDS = new Set([
   'continue',
 ])
 
+const SPECIAL_COMMANDS = new Set([
+  'toast',
+  'ticker',
+  'play',
+  'bgplay',
+  'bgplayon64n',
+  'bgplayon32n',
+  'bgplayon16n',
+  'bgplayon8n',
+  'bgplayon4n',
+  'bgplayon2n',
+  'bgplayon1n',
+])
+
 function skipwords(word: string) {
   switch (word) {
     // skip non-typed keywords
@@ -188,6 +202,7 @@ export function EditorComponent() {
     }
     for (const w of wordsruntime) words.add(w)
     for (const w of STRUCTURED_COMMANDS) words.add(w)
+    for (const w of SPECIAL_COMMANDS) words.add(w)
     return Array.from(words)
   }, [isloader, wordsloader, wordsruntime])
 
@@ -217,6 +232,7 @@ export function EditorComponent() {
   const wordcolors = useMemo(() => {
     const map = new Map<string, number>()
     for (const w of STRUCTURED_COMMANDS) map.set(w, ZSS_TYPE_COMMAND)
+    for (const w of SPECIAL_COMMANDS) map.set(w, ZSS_TYPE_COMMAND)
     for (const w of wordscli) map.set(w, ZSS_TYPE_COMMAND)
     for (const w of wordsloader) map.set(w, ZSS_TYPE_COMMAND)
     for (const w of wordsruntime) map.set(w, ZSS_TYPE_COMMAND)

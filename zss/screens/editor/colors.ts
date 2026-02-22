@@ -280,14 +280,15 @@ function zssplaywordcolor(word: string) {
   return colors
 }
 
+const PLAY_COMMAND_RE =
+  /^(play|bgplay|bgplayon64n|bgplayon32n|bgplayon16n|bgplayon8n|bgplayon4n|bgplayon2n|bgplayon1n) /i
+
 export function zsswordcolor(word: string) {
-  if (word.startsWith('play ')) {
-    const colors: COLOR[] = new Array<COLOR>(5).fill(ZSS_TYPE_COMMAND)
-    colors.push(...zssplaywordcolor(word.slice(5)))
-    return colors
-  } else if (word.startsWith('bgplay ')) {
-    const colors: COLOR[] = new Array<COLOR>(7).fill(ZSS_TYPE_COMMAND)
-    colors.push(...zssplaywordcolor(word.slice(7)))
+  const match = PLAY_COMMAND_RE.exec(word)
+  if (match) {
+    const cmdlen = match[1].length
+    const colors: COLOR[] = new Array<COLOR>(cmdlen).fill(ZSS_TYPE_COMMAND)
+    colors.push(...zssplaywordcolor(word.slice(cmdlen)))
     return colors
   }
   return ZSS_WORD_MAP.get(word) ?? COLOR.GREEN
