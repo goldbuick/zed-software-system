@@ -645,10 +645,11 @@ export function createchip(
       return true
     },
     haslabel(label) {
+      const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
           const [name, labels] = flags.lb[i] as [string, number[]]
-          if (name === label) {
+          if (name === nlabel) {
             // pick first unzapped label to determine active
             const active =
               labels.find((item) => isnumber(item) && item > 0) ?? 0
@@ -662,9 +663,10 @@ export function createchip(
       if (isarray(flags.mg) && isarray(flags.lb)) {
         const [target] = flags.mg as [string] // unpack message
         if (ispresent(target)) {
+          const ntarget = NAME(target)
           for (let i = 0; i < flags.lb.length; ++i) {
             const [name, labels] = flags.lb[i] as [string, number[]]
-            if (name === target) {
+            if (name === ntarget) {
               // pick first unzapped label
               return labels.find((item) => isnumber(item) && item > 0) ?? 0
             }
@@ -708,9 +710,10 @@ export function createchip(
         return
       }
       // validate we have given label
-      if (chip.haslabel(incoming.target)) {
+      const target = NAME(incoming.target)
+      if (chip.haslabel(target)) {
         flags.mg = [
-          incoming.target,
+          target,
           incoming.data,
           incoming.sender,
           incoming.player,
@@ -720,10 +723,11 @@ export function createchip(
       }
     },
     zap(label) {
+      const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
           const entry = flags.lb[i] as [string, number[]]
-          if (entry[0] === label) {
+          if (entry[0] === nlabel) {
             // zap first active label
             const index = entry[1].findIndex((item) => item > 0)
             if (index >= 0 && ispresent(entry[1])) {
@@ -736,10 +740,11 @@ export function createchip(
       }
     },
     restore(label) {
+      const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
           const entry = flags.lb[i] as [string, number[]]
-          if (entry[0] === label) {
+          if (entry[0] === nlabel) {
             // restore all labels
             for (let l = 0; l < entry[1].length; l++) {
               entry[1][l] = Math.abs(entry[1][l])

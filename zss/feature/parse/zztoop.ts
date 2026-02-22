@@ -1,27 +1,45 @@
+// ZED Cafe structural keywords that don't exist in ZZT-OOP
+// and would change parsing behavior if left unescaped
+const ZSS_RESERVED = [
+  'do',
+  'done',
+  'else',
+  'while',
+  'repeat',
+  'waitfor',
+  'foreach',
+  'for',
+  'break',
+  'continue',
+]
+
 function mapkeyword(line: string, keyword: string) {
   let scrubbed = line
+  const lower = scrubbed.toLowerCase()
+  const kw = keyword.toLowerCase()
 
-  // label check
-  if (scrubbed.trim() === `:${keyword}`) {
-    scrubbed = scrubbed.replace(`:${keyword}`, `:_${keyword}`)
+  // label definition at line start: :keyword
+  if (lower.trim() === `:${kw}`) {
+    scrubbed = scrubbed.replace(new RegExp(`:${kw}`, 'i'), `:_${kw}`)
   }
 
-  // comment check
-  if (scrubbed.trim() === `'${keyword}`) {
-    scrubbed = scrubbed.replace(`'${keyword}`, `'_${keyword}`)
+  // comment at line start: 'keyword
+  if (lower.trim() === `'${kw}`) {
+    scrubbed = scrubbed.replace(new RegExp(`'${kw}`, 'i'), `'_${kw}`)
   }
 
-  // send check
-  if (scrubbed.startsWith(`#${keyword}`)) {
-    scrubbed = scrubbed.replace(`#${keyword}`, `#_${keyword}`)
-  }
+  // command at line start: #keyword (word boundary to avoid #for matching #fork)
+  const cmdRe = new RegExp(`^(\\s*#)${kw}\\b`, 'i')
+  scrubbed = scrubbed.replace(cmdRe, `$1_${kw}`)
 
-  // shortcut send check
-  if (scrubbed.endsWith(` ${keyword}`)) {
-    scrubbed = scrubbed.replace(` ${keyword}`, ` _${keyword}`)
-  }
+  // inline label reference: target:keyword (word boundary)
+  const inlineRe = new RegExp(`(\\S):${kw}\\b`, 'gi')
+  scrubbed = scrubbed.replace(inlineRe, `$1:_${kw}`)
 
-  // result
+  // shortcut send at end of line: #send keyword
+  const sendRe = new RegExp(` ${kw}$`, 'i')
+  scrubbed = scrubbed.replace(sendRe, ` _${kw}`)
+
   return scrubbed
 }
 
@@ -70,21 +88,23 @@ export function zztoop(content: string) {
         }
       }
 
-      // handle zss reserved words being used for labels
-      scrubbed = mapkeyword(scrubbed, 'do')
-      scrubbed = mapkeyword(scrubbed, 'done')
+      // normalize label definitions and references to lowercase
+      // ZED Cafe labels are case-insensitive, so :TOUCH and :touch are the same
+      const trimmed = scrubbed.trimStart()
+      if (trimmed.startsWith(':') || trimmed.startsWith("'")) {
+        scrubbed = scrubbed.toLowerCase()
+      } else if (trimmed.startsWith('#')) {
+        // lowercase inline label references like target:label
+        scrubbed = scrubbed.replace(/:\S+/g, (m) => m.toLowerCase())
+      }
+
+      // escape all zss reserved words that could clash
+      for (const kw of ZSS_RESERVED) {
+        scrubbed = mapkeyword(scrubbed, kw)
+      }
 
       // handle weave commands that map to zss
       scrubbed = mapcommand(scrubbed, 'fgplay', 'play')
-
-      if (
-        scrubbed.includes('do') ||
-        scrubbed.includes('run') ||
-        scrubbed.includes('done') ||
-        scrubbed.includes('load')
-      ) {
-        // console.info('>>>', scrubbed)
-      }
 
       return scrubbed
     })
