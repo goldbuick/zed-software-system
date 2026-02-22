@@ -63,6 +63,7 @@ export type EditorRowsProps = {
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTOCOMPLETE
+  wordcolors?: Map<string, number>
 }
 
 export function EditorRows({
@@ -72,6 +73,7 @@ export function EditorRows({
   rows,
   codepage,
   autocomplete,
+  wordcolors,
 }: EditorRowsProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -571,6 +573,7 @@ export function EditorRows({
     yoffset,
     edge,
     context,
+    wordcolors,
   )
 
   // reset edge

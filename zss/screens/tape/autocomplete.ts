@@ -24,7 +24,7 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
 
 const MAX_SUGGESTIONS = 8
 const MIN_PREFIX_COMMAND = 1
-const MIN_PREFIX_GENERAL = 2
+const MIN_PREFIX_GENERAL = 1
 
 function filtersuggestions(
   prefix: string,
@@ -121,6 +121,41 @@ const AC_SEL_FG = COLOR.WHITE
 
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
+function applySuggestionColors(
+  bufindex: number,
+  textoffset: number,
+  text: string,
+  word: string,
+  selected: boolean,
+  bg: number,
+  wordcolors: Map<string, number> | undefined,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  const defaultfg = selected ? AC_SEL_FG : AC_FG
+  applystrtoindex(bufindex, text, context)
+
+  if (!wordcolors) {
+    applycolortoindexes(
+      bufindex,
+      bufindex + text.length - 1,
+      defaultfg,
+      bg,
+      context,
+    )
+    return
+  }
+
+  const wordcolor = wordcolors.get(word.toLowerCase()) ?? defaultfg
+  for (let c = 0; c < text.length; c++) {
+    const charoffset = textoffset + c
+    const ispadding = charoffset === 0 || charoffset > word.length
+    const fg = ispadding ? defaultfg : wordcolor
+    context.color[bufindex + c] = fg
+    context.bg[bufindex + c] = bg
+  }
+  context.changed()
+}
+
 export function drawautocomplete(
   ac: AUTOCOMPLETE,
   acindex: number,
@@ -129,6 +164,7 @@ export function drawautocomplete(
   yoffset: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
+  wordcolors?: Map<string, number>,
 ) {
   if (ac.suggestions.length === 0 || acindex < 0) return
 
@@ -146,7 +182,6 @@ export function drawautocomplete(
     if (y >= edge.bottom || y <= edge.top + 1) continue
 
     const selected = i === acindex
-    const fg = selected ? AC_SEL_FG : AC_FG
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(startx, edge.left + 1)
@@ -163,8 +198,16 @@ export function drawautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    applystrtoindex(bufindex, text, context)
-    applycolortoindexes(bufindex, bufindex + text.length - 1, fg, bg, context)
+    applySuggestionColors(
+      bufindex,
+      textoffset,
+      text,
+      ac.suggestions[i],
+      selected,
+      bg,
+      wordcolors,
+      context,
+    )
   }
 }
 
@@ -174,6 +217,7 @@ export function drawlineautocomplete(
   inputy: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
+  wordcolors?: Map<string, number>,
 ) {
   if (ac.suggestions.length === 0 || acindex < 0) return
 
@@ -189,7 +233,6 @@ export function drawlineautocomplete(
     if (y < edge.top || y >= edge.bottom) continue
 
     const selected = i === acindex
-    const fg = selected ? AC_SEL_FG : AC_FG
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(startx, edge.left)
@@ -206,7 +249,15 @@ export function drawlineautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    applystrtoindex(bufindex, text, context)
-    applycolortoindexes(bufindex, bufindex + text.length - 1, fg, bg, context)
+    applySuggestionColors(
+      bufindex,
+      textoffset,
+      text,
+      ac.suggestions[i],
+      selected,
+      bg,
+      wordcolors,
+      context,
+    )
   }
 }

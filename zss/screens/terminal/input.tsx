@@ -171,6 +171,7 @@ export function TerminalInput({
     edge.top + edge.height - 2,
     edge,
     context,
+    wordcolors,
   )
 
   // --- speech to text ---

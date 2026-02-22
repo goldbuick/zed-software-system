@@ -214,6 +214,35 @@ export function EditorComponent() {
     wordsexprs,
   ])
 
+  const wordcolors = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const w of STRUCTURED_COMMANDS) map.set(w, ZSS_TYPE_COMMAND)
+    for (const w of wordscli) map.set(w, ZSS_TYPE_COMMAND)
+    for (const w of wordsloader) map.set(w, ZSS_TYPE_COMMAND)
+    for (const w of wordsruntime) map.set(w, ZSS_TYPE_COMMAND)
+    for (const w of wordsflags) map.set(w, ZSS_WORD_FLAG)
+    for (const w of wordsstats) map.set(w, ZSS_WORD_STAT)
+    for (const w of wordskinds) map.set(w, ZSS_WORD_KIND)
+    for (const w of wordsaltkinds) map.set(w, ZSS_WORD_KIND_ALT)
+    for (const w of wordscolors) map.set(w, ZSS_WORD_COLOR)
+    for (const w of wordsdirs) map.set(w, ZSS_WORD_DIR)
+    for (const w of wordsdirmods) map.set(w, ZSS_WORD_DIRMOD)
+    for (const w of wordsexprs) map.set(w, ZSS_WORD_EXPRS)
+    return map
+  }, [
+    wordscli,
+    wordsloader,
+    wordsruntime,
+    wordsflags,
+    wordsstats,
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+    wordsexprs,
+  ])
+
   const tapeeditor = useEditor()
   const codepage = useWaitForValueString(
     vmcodeaddress(editor.book, editor.path),
@@ -353,7 +382,7 @@ export function EditorComponent() {
     <>
       <TapeBackPlate bump />
       <EditorFrame />
-      <EditorRows {...props} />
+      <EditorRows {...props} wordcolors={wordcolors} />
       <EditorInput {...props} />
     </>
   )
