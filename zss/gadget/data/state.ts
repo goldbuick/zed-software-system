@@ -185,6 +185,7 @@ export const useEditor = create<{
   yscroll: number
   cursor: number
   select: MAYBE<number>
+  acindex: number
   reset: () => void
 }>((set) => ({
   // scrolling offset
@@ -193,6 +194,8 @@ export const useEditor = create<{
   // cursor position & selection (text index)
   cursor: 0,
   select: undefined,
+  // autocomplete selected index (-1 = dismissed)
+  acindex: -1,
   reset() {
     set({
       // scrolling offset
@@ -201,6 +204,7 @@ export const useEditor = create<{
       // cursor position & selection (text index)
       cursor: 0,
       select: undefined,
+      acindex: -1,
     })
   },
 }))

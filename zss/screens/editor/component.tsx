@@ -35,6 +35,7 @@ import {
   zssmusiccolorconfig,
   zsswordcolorconfig,
 } from './colors'
+import { getautocomplete } from './editorautocomplete'
 import { EditorFrame } from './editorframe'
 import { EditorInput, EditorInputProps } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
@@ -178,6 +179,41 @@ export function EditorComponent() {
     return names
   }, [wordscli, wordsloader, wordsruntime])
 
+  const isloader = editor.type === 'loader'
+
+  const commandwords = useMemo(() => {
+    const words = new Set<string>()
+    if (isloader) {
+      for (const w of wordsloader) words.add(w)
+    }
+    for (const w of wordsruntime) words.add(w)
+    for (const w of STRUCTURED_COMMANDS) words.add(w)
+    return Array.from(words)
+  }, [isloader, wordsloader, wordsruntime])
+
+  const allwords = useMemo(() => {
+    const words = new Set(commandwords)
+    for (const w of wordsflags) words.add(w)
+    for (const w of wordsstats) words.add(w)
+    for (const w of wordskinds) words.add(w)
+    for (const w of wordsaltkinds) words.add(w)
+    for (const w of wordscolors) words.add(w)
+    for (const w of wordsdirs) words.add(w)
+    for (const w of wordsdirmods) words.add(w)
+    for (const w of wordsexprs) words.add(w)
+    return Array.from(words)
+  }, [
+    commandwords,
+    wordsflags,
+    wordsstats,
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+    wordsexprs,
+  ])
+
   const tapeeditor = useEditor()
   const codepage = useWaitForValueString(
     vmcodeaddress(editor.book, editor.path),
@@ -296,6 +332,12 @@ export function EditorComponent() {
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
 
+  const autocomplete = useMemo(
+    () =>
+      getautocomplete(rows, tapeeditor.cursor, ycursor, commandwords, allwords),
+    [rows, tapeeditor.cursor, ycursor, commandwords, allwords],
+  )
+
   // measure edges once
   const props: EditorRowsProps | EditorInputProps = {
     rows,
@@ -304,6 +346,7 @@ export function EditorComponent() {
     codepage,
     xoffset: -4 + tapeeditor.xscroll,
     yoffset: tapeeditor.yscroll,
+    autocomplete,
   }
 
   return (

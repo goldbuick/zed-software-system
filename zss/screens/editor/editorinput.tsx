@@ -21,6 +21,7 @@ import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
 
+import { AUTOCOMPLETE } from './editorautocomplete'
 import {
   changeIndent,
   computeSelection,
@@ -42,6 +43,7 @@ export type EditorInputProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
+  autocomplete: AUTOCOMPLETE
 }
 
 export function EditorInput({
@@ -51,6 +53,7 @@ export function EditorInput({
   yoffset,
   rows,
   codepage,
+  autocomplete,
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -153,6 +156,24 @@ export function EditorInput({
     useEditor.setState({ cursor: codeend, select: undefined })
   }
 
+  const acactive =
+    tapeeditor.acindex >= 0 && autocomplete.suggestions.length > 0
+
+  function acceptsuggestion() {
+    if (!ispresent(codepage) || autocomplete.suggestions.length === 0) return
+    const idx = Math.min(
+      tapeeditor.acindex,
+      autocomplete.suggestions.length - 1,
+    )
+    const suggestion = autocomplete.suggestions[idx]
+    if (!suggestion) return
+    strvaluesplice(
+      autocomplete.wordstart,
+      autocomplete.prefix.length,
+      suggestion,
+    )
+  }
+
   // --- render ---
 
   return (
@@ -176,6 +197,7 @@ export function EditorInput({
           } else {
             movexcursor(tapeeditor.cursor - (mods.alt ? 10 : 1))
           }
+          useEditor.setState({ acindex: -1 })
         }}
         MOVE_RIGHT={(mods) => {
           trackselection(mods.shift)
@@ -184,22 +206,40 @@ export function EditorInput({
           } else {
             movexcursor(tapeeditor.cursor + (mods.alt ? 10 : 1))
           }
+          useEditor.setState({ acindex: -1 })
         }}
         MOVE_UP={(mods) => {
+          if (acactive) {
+            useEditor.setState({
+              acindex: Math.max(0, tapeeditor.acindex - 1),
+            })
+            return
+          }
           trackselection(mods.shift)
           if (mods.ctrl) {
             movexcursor(0)
           } else {
             moveycursor(mods.alt ? -10 : -1)
           }
+          useEditor.setState({ acindex: -1 })
         }}
         MOVE_DOWN={(mods) => {
+          if (acactive) {
+            useEditor.setState({
+              acindex: Math.min(
+                autocomplete.suggestions.length - 1,
+                tapeeditor.acindex + 1,
+              ),
+            })
+            return
+          }
           trackselection(mods.shift)
           if (mods.ctrl) {
             movexcursor(codeend)
           } else {
             moveycursor(mods.alt ? 10 : 1)
           }
+          useEditor.setState({ acindex: -1 })
         }}
         OK_BUTTON={() => {
           if (ispresent(codepage)) {
@@ -207,10 +247,14 @@ export function EditorInput({
             codepage.insert(tapeeditor.cursor, `\n`)
             const cursor = tapeeditor.cursor + 1
             updatescrolling(cursor)
-            useEditor.setState({ cursor })
+            useEditor.setState({ cursor, acindex: -1 })
           }
         }}
         CANCEL_BUTTON={(mods) => {
+          if (acactive) {
+            useEditor.setState({ acindex: -1 })
+            return
+          }
           if (mods.shift || mods.alt || mods.ctrl) {
             registerterminalclose(SOFTWARE, player)
           } else {
@@ -218,6 +262,10 @@ export function EditorInput({
           }
         }}
         MENU_BUTTON={(mods) => {
+          if (acactive) {
+            acceptsuggestion()
+            return
+          }
           registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
@@ -236,6 +284,7 @@ export function EditorInput({
               } else {
                 strvaluesplice(tapeeditor.cursor, 1)
               }
+              useEditor.setState({ acindex: 0 })
               break
             case 'backspace':
               if (hasselection) {
@@ -243,6 +292,7 @@ export function EditorInput({
               } else if (strvalue.length > 0) {
                 strvaluesplice(Math.max(tapeeditor.cursor - 1, 0), 1)
               }
+              useEditor.setState({ acindex: 0 })
               break
             default:
               if (mods.ctrl) {
@@ -347,7 +397,7 @@ export function EditorInput({
                   const cursor = tapeeditor.cursor + event.key.length
                   codepage.insert(tapeeditor.cursor, event.key)
                   updatescrolling(cursor)
-                  useEditor.setState({ cursor })
+                  useEditor.setState({ cursor, acindex: 0 })
                 }
               }
               break
