@@ -1,0 +1,1 @@
+desc;Collision type of this element

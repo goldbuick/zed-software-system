@@ -16,12 +16,12 @@ import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { AUTOCOMPLETE } from 'zss/screens/tape/autocomplete'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
 
-import { AUTOCOMPLETE } from './editorautocomplete'
 import {
   changeIndent,
   computeSelection,
@@ -156,15 +156,17 @@ export function EditorInput({
     useEditor.setState({ cursor: codeend, select: undefined })
   }
 
-  const acactive =
-    tapeeditor.acindex >= 0 && autocomplete.suggestions.length > 0
+  const acactive = autocomplete.suggestions.length > 0
+  const acnumRows = autocomplete.suggestions.length
+  const accursorRowY = edge.top + 2 + ycursor - yoffset + 1
+  const acdrawBelow = accursorRowY + acnumRows <= edge.bottom - 1
 
   function acceptsuggestion() {
     if (!ispresent(codepage) || autocomplete.suggestions.length === 0) return
-    const idx = Math.min(
-      tapeeditor.acindex,
-      autocomplete.suggestions.length - 1,
-    )
+    const idx =
+      tapeeditor.acindex < 0
+        ? 0
+        : Math.min(tapeeditor.acindex, autocomplete.suggestions.length - 1)
     const suggestion = autocomplete.suggestions[idx]
     if (!suggestion) return
     strvaluesplice(
@@ -210,9 +212,10 @@ export function EditorInput({
         }}
         MOVE_UP={(mods) => {
           if (acactive) {
-            useEditor.setState({
-              acindex: Math.max(0, tapeeditor.acindex - 1),
-            })
+            const next = acdrawBelow
+              ? Math.max(0, tapeeditor.acindex - 1)
+              : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
+            useEditor.setState({ acindex: next })
             return
           }
           trackselection(mods.shift)
@@ -225,12 +228,12 @@ export function EditorInput({
         }}
         MOVE_DOWN={(mods) => {
           if (acactive) {
-            useEditor.setState({
-              acindex: Math.min(
-                autocomplete.suggestions.length - 1,
-                tapeeditor.acindex + 1,
-              ),
-            })
+            const next = acdrawBelow
+              ? tapeeditor.acindex < 0
+                ? 0
+                : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
+              : Math.max(0, tapeeditor.acindex - 1)
+            useEditor.setState({ acindex: next })
             return
           }
           trackselection(mods.shift)
@@ -242,6 +245,10 @@ export function EditorInput({
           useEditor.setState({ acindex: -1 })
         }}
         OK_BUTTON={() => {
+          if (acactive) {
+            acceptsuggestion()
+            return
+          }
           if (ispresent(codepage)) {
             cursorBeforeEditRef.current = tapeeditor.cursor
             codepage.insert(tapeeditor.cursor, `\n`)

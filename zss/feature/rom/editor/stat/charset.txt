@@ -1,1 +1,1 @@
-desc;$DKGRAYcustom 8x14 charset
+desc;Character set used by this board

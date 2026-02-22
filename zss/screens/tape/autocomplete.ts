@@ -1,3 +1,4 @@
+import { romintolookup, romread } from 'zss/feature/rom'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -13,6 +14,7 @@ export type AUTOCOMPLETE = {
   prefix: string
   wordcol: number
   wordstart: number
+  iscommand: boolean
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
@@ -20,6 +22,33 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
   prefix: '',
   wordcol: 0,
   wordstart: 0,
+  iscommand: false,
+}
+
+const ROM_CATEGORIES = [
+  'command',
+  'flag',
+  'stat',
+  'color',
+  'dir',
+  'dirmod',
+  'expr',
+]
+
+function extractdesc(content: string): string {
+  const lookup = romintolookup(content)
+  const desc = lookup.desc ?? ''
+  return desc.replace(/^\$\w+/i, '').trim()
+}
+
+export function romhintfor(word: string): string {
+  const lower = word.toLowerCase().trim()
+  if (!lower) return ''
+  for (const category of ROM_CATEGORIES) {
+    const content = romread(`editor:${category}:${lower}`)
+    if (content) return extractdesc(content)
+  }
+  return ''
 }
 
 const MAX_SUGGESTIONS = 8
@@ -64,7 +93,7 @@ export function getautocomplete(
       MIN_PREFIX_COMMAND,
       commandwords,
     )
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: true }
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
@@ -74,7 +103,7 @@ export function getautocomplete(
     const wordcol = col - prefix.length
     const wordstart = cursor - prefix.length
     const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords)
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: false }
   }
 
   return EMPTY_AUTOCOMPLETE
@@ -98,7 +127,7 @@ export function getlineautocomplete(
       MIN_PREFIX_COMMAND,
       commandwords,
     )
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: true }
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
@@ -108,20 +137,21 @@ export function getlineautocomplete(
     const wordcol = cursor - prefix.length
     const wordstart = cursor - prefix.length
     const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords)
-    return { suggestions, prefix, wordcol, wordstart }
+    return { suggestions, prefix, wordcol, wordstart, iscommand: false }
   }
 
   return EMPTY_AUTOCOMPLETE
 }
 
-const AC_BG = COLOR.DKBLUE
+const AC_BG = COLOR.BLACK
 const AC_FG = COLOR.LTGRAY
-const AC_SEL_BG = COLOR.BLUE
+const AC_SEL_BG = COLOR.DKBLUE
 const AC_SEL_FG = COLOR.WHITE
+const AC_HINT_FG = COLOR.DKGRAY
 
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
-function applySuggestionColors(
+function applysuggestioncolors(
   bufindex: number,
   textoffset: number,
   text: string,
@@ -156,6 +186,28 @@ function applySuggestionColors(
   context.changed()
 }
 
+function drawhinttext(
+  hint: string,
+  hintx: number,
+  hinty: number,
+  rightbound: number,
+  bg: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  if (!hint || hintx > rightbound) return
+  const available = rightbound - hintx + 1
+  const text = hint.length > available ? hint.substring(0, available) : hint
+  const bufindex = hintx + hinty * context.width
+  applystrtoindex(bufindex, text, context)
+  applycolortoindexes(
+    bufindex,
+    bufindex + text.length - 1,
+    AC_HINT_FG,
+    bg,
+    context,
+  )
+}
+
 export function drawautocomplete(
   ac: AUTOCOMPLETE,
   acindex: number,
@@ -166,10 +218,16 @@ export function drawautocomplete(
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
 ) {
-  if (ac.suggestions.length === 0 || acindex < 0) return
+  if (ac.suggestions.length === 0) return
 
-  const startx = edge.left + 1 + ac.wordcol - xoffset
-  const starty = edge.top + 2 + ycursor - yoffset + 1
+  const effectiveIndex = acindex < 0 ? 0 : acindex
+  const startx = edge.left + ac.wordcol - xoffset
+  const cursorRowY = edge.top + 2 + ycursor - yoffset + 1
+  const numRows = ac.suggestions.length
+  const drawBelow = cursorRowY + numRows <= edge.bottom - 1
+  const starty = drawBelow
+    ? cursorRowY
+    : Math.max(edge.top + 1, cursorRowY - numRows - 1)
 
   const maxitemlen = ac.suggestions.reduce(
     (max, s) => Math.max(max, s.length),
@@ -178,10 +236,10 @@ export function drawautocomplete(
   const itemwidth = maxitemlen + 2
 
   for (let i = 0; i < ac.suggestions.length; i++) {
-    const y = starty + i
+    const y = drawBelow ? starty + i : starty + numRows - 1 - i
     if (y >= edge.bottom || y <= edge.top + 1) continue
 
-    const selected = i === acindex
+    const selected = i === effectiveIndex
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(startx, edge.left + 1)
@@ -198,7 +256,7 @@ export function drawautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    applySuggestionColors(
+    applysuggestioncolors(
       bufindex,
       textoffset,
       text,
@@ -208,6 +266,14 @@ export function drawautocomplete(
       wordcolors,
       context,
     )
+
+    if (selected) {
+      const hint = romhintfor(ac.suggestions[i])
+      if (hint) {
+        const hintx = rowstart + text.length
+        drawhinttext(hint, hintx, y, edge.right, AC_BG, context)
+      }
+    }
   }
 }
 
@@ -221,7 +287,7 @@ export function drawlineautocomplete(
 ) {
   if (ac.suggestions.length === 0 || acindex < 0) return
 
-  const startx = edge.left + ac.wordcol
+  const startx = edge.left + ac.wordcol - 1
   const maxitemlen = ac.suggestions.reduce(
     (max, s) => Math.max(max, s.length),
     0,
@@ -249,7 +315,7 @@ export function drawlineautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    applySuggestionColors(
+    applysuggestioncolors(
       bufindex,
       textoffset,
       text,
@@ -259,5 +325,13 @@ export function drawlineautocomplete(
       wordcolors,
       context,
     )
+
+    if (selected) {
+      const hint = romhintfor(ac.suggestions[i])
+      if (hint) {
+        const hintx = rowstart + text.length
+        drawhinttext(hint, hintx, y, edge.right, AC_BG, context)
+      }
+    }
   }
 }

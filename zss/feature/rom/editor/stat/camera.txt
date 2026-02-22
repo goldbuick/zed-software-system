@@ -1,0 +1,1 @@
+desc;Camera mode for this board
