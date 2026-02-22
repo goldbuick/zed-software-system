@@ -128,8 +128,7 @@ function applylabelrename(line: string, rename: Map<string, string>): string {
       result = result.replaceAll(`:${original}`, `:${mapped}`)
       // shortcut send at end: #send label
       if (result.endsWith(` ${original}`)) {
-        result =
-          result.slice(0, result.length - original.length) + mapped
+        result = result.slice(0, result.length - original.length) + mapped
       }
     }
   }

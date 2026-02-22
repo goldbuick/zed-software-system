@@ -712,12 +712,7 @@ export function createchip(
       // validate we have given label
       const target = NAME(incoming.target)
       if (chip.haslabel(target)) {
-        flags.mg = [
-          target,
-          incoming.data,
-          incoming.sender,
-          incoming.player,
-        ]
+        flags.mg = [target, incoming.data, incoming.sender, incoming.player]
       } else {
         // should we raise an error ?
       }
