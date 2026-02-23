@@ -1,4 +1,6 @@
 import { romintolookup, romread } from 'zss/feature/rom'
+import * as lexer from 'zss/lang/lexer'
+import { ispresent } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -80,6 +82,133 @@ function filtersuggestions(
     .slice(0, MAX_SUGGESTIONS)
 }
 
+const COMMAND_WORD_TOKEN_TYPES = new Set([
+  lexer.command_play.tokenTypeIdx,
+  lexer.command_toast.tokenTypeIdx,
+  lexer.command_ticker.tokenTypeIdx,
+  lexer.command_if.tokenTypeIdx,
+  lexer.command_do.tokenTypeIdx,
+  lexer.command_done.tokenTypeIdx,
+  lexer.command_else.tokenTypeIdx,
+  lexer.command_while.tokenTypeIdx,
+  lexer.command_repeat.tokenTypeIdx,
+  lexer.command_waitfor.tokenTypeIdx,
+  lexer.command_foreach.tokenTypeIdx,
+  lexer.command_break.tokenTypeIdx,
+  lexer.command_continue.tokenTypeIdx,
+])
+
+function getautocompletefromtokens(
+  row: EDITOR_CODE_ROW,
+  col: number,
+  commandwords: string[],
+  statwords: string[],
+  allwords: string[],
+): AUTOCOMPLETE | null {
+  const tokens = row.tokens
+  if (!tokens?.length) {
+    return null
+  }
+  const cursorCol1 = col + 1
+  let activetokenidx = -1
+  let aftertokenidx = -1
+  for (let t = 0; t < tokens.length; t++) {
+    const tok = tokens[t]
+    const sc = tok.startColumn ?? 1
+    const ec = tok.endColumn ?? 1
+    if (cursorCol1 >= sc && cursorCol1 <= ec) {
+      activetokenidx = t
+      break
+    }
+    if (ec === cursorCol1 - 1) {
+      aftertokenidx = t
+    }
+  }
+  if (activetokenidx >= 0) {
+    const token = tokens[activetokenidx]
+    const prev = tokens[activetokenidx - 1]
+    const idx = token.startColumn ?? 1
+    const prefix = row.code.substring(idx - 1, col)
+    const wordcol = idx - 1
+    const wordstart = row.start + wordcol
+    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+      return {
+        suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
+        prefix: '',
+        wordcol,
+        wordstart,
+        iscommand: true,
+        category: 'command',
+      }
+    }
+    if (COMMAND_WORD_TOKEN_TYPES.has(token.tokenTypeIdx)) {
+      return EMPTY_AUTOCOMPLETE
+    }
+    if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
+      const statprefix = prefix.replace(/^@/, '')
+      return {
+        suggestions: filtersuggestions(
+          statprefix,
+          MIN_PREFIX_GENERAL,
+          statwords,
+        ),
+        prefix: statprefix,
+        wordcol,
+        wordstart,
+        iscommand: false,
+        category: 'stat',
+      }
+    }
+    if (token.tokenTypeIdx === lexer.text.tokenTypeIdx) {
+      const isafterhash =
+        prev && prev.tokenTypeIdx === lexer.command.tokenTypeIdx
+      if (isafterhash) {
+        return {
+          suggestions: filtersuggestions(
+            prefix,
+            MIN_PREFIX_COMMAND,
+            commandwords,
+          ),
+          prefix,
+          wordcol,
+          wordstart,
+          iscommand: true,
+          category: 'command',
+        }
+      }
+      if (/^\d+$/.test(prefix)) {
+        return EMPTY_AUTOCOMPLETE
+      }
+      return {
+        suggestions: filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords),
+        prefix,
+        wordcol,
+        wordstart,
+        iscommand: false,
+        category: 'general',
+      }
+    }
+    return null
+  }
+  if (aftertokenidx >= 0) {
+    const token = tokens[aftertokenidx]
+    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+      const endCol1 = token.endColumn ?? 1
+      const wordcol = endCol1
+      const wordstart = row.start + wordcol
+      return {
+        suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
+        prefix: '',
+        wordcol,
+        wordstart,
+        iscommand: true,
+        category: 'command',
+      }
+    }
+  }
+  return null
+}
+
 export function getautocomplete(
   rows: EDITOR_CODE_ROW[],
   cursor: number,
@@ -94,6 +223,17 @@ export function getautocomplete(
   }
 
   const col = cursor - row.start
+  const fromtokens = getautocompletefromtokens(
+    row,
+    col,
+    commandwords,
+    statwords,
+    allwords,
+  )
+  if (fromtokens !== null) {
+    return fromtokens
+  }
+
   const linetext = row.code.substring(0, col)
 
   const cmdmatch = /#(\w*)$/.exec(linetext)
@@ -159,13 +299,146 @@ export function getautocomplete(
   return EMPTY_AUTOCOMPLETE
 }
 
+export type LINE_TOKEN = {
+  startColumn?: number
+  endColumn?: number
+  tokenTypeIdx: number
+  image: string
+}
+
+function getlineautocompletefromtokens(
+  line: string,
+  cursor: number,
+  tokens: LINE_TOKEN[],
+  commandwords: string[],
+  statwords: string[],
+  allwords: string[],
+): AUTOCOMPLETE | null {
+  if (!tokens.length) {
+    return null
+  }
+  const cursorCol1 = cursor + 1
+  let activetokenidx = -1
+  let aftertokenidx = -1
+  for (let t = 0; t < tokens.length; t++) {
+    const tok = tokens[t]
+    const sc = tok.startColumn ?? 1
+    const ec = tok.endColumn ?? 1
+    if (cursorCol1 >= sc && cursorCol1 <= ec) {
+      activetokenidx = t
+      break
+    }
+    if (ec === cursorCol1 - 1) {
+      aftertokenidx = t
+    }
+  }
+  if (activetokenidx >= 0) {
+    const token = tokens[activetokenidx]
+    const prev = tokens[activetokenidx - 1]
+    const idx = token.startColumn ?? 1
+    const prefix = line.substring(idx - 1, cursor)
+    const wordcol = idx - 1
+    const wordstart = wordcol
+    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+      return {
+        suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
+        prefix: '',
+        wordcol,
+        wordstart,
+        iscommand: true,
+        category: 'command',
+      }
+    }
+    if (COMMAND_WORD_TOKEN_TYPES.has(token.tokenTypeIdx)) {
+      return EMPTY_AUTOCOMPLETE
+    }
+    if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
+      const statprefix = prefix.replace(/^@/, '')
+      return {
+        suggestions: filtersuggestions(
+          statprefix,
+          MIN_PREFIX_GENERAL,
+          statwords,
+        ),
+        prefix: statprefix,
+        wordcol,
+        wordstart,
+        iscommand: false,
+        category: 'stat',
+      }
+    }
+    if (token.tokenTypeIdx === lexer.text.tokenTypeIdx) {
+      const isafterhash =
+        prev && prev.tokenTypeIdx === lexer.command.tokenTypeIdx
+      if (isafterhash) {
+        return {
+          suggestions: filtersuggestions(
+            prefix,
+            MIN_PREFIX_COMMAND,
+            commandwords,
+          ),
+          prefix,
+          wordcol,
+          wordstart,
+          iscommand: true,
+          category: 'command',
+        }
+      }
+      if (/^\d+$/.test(prefix)) {
+        return EMPTY_AUTOCOMPLETE
+      }
+      return {
+        suggestions: filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords),
+        prefix,
+        wordcol,
+        wordstart,
+        iscommand: false,
+        category: 'general',
+      }
+    }
+    return null
+  }
+  if (aftertokenidx >= 0) {
+    const token = tokens[aftertokenidx]
+    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+      const endCol1 = token.endColumn ?? 1
+      const wordcol = endCol1
+      const wordstart = wordcol
+      return {
+        suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
+        prefix: '',
+        wordcol,
+        wordstart,
+        iscommand: true,
+        category: 'command',
+      }
+    }
+  }
+  return null
+}
+
 export function getlineautocomplete(
   line: string,
   cursor: number,
   commandwords: string[],
   statwords: string[],
   allwords: string[],
+  linetokens?: LINE_TOKEN[],
 ): AUTOCOMPLETE {
+  if (ispresent(linetokens) && linetokens.length > 0) {
+    const fromtokens = getlineautocompletefromtokens(
+      line,
+      cursor,
+      linetokens,
+      commandwords,
+      statwords,
+      allwords,
+    )
+    if (fromtokens !== null) {
+      return fromtokens
+    }
+  }
+
   const linetext = line.substring(0, cursor)
 
   const cmdmatch = /#(\w*)$/.exec(linetext)

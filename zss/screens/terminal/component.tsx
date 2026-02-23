@@ -21,6 +21,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
+import { tokenizeline } from './terminalinputhelpers'
 
 const SPECIAL_COMMANDS = [
   'toast',
@@ -204,6 +205,10 @@ export function TerminalComponent() {
 
   const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
   const inputstateactive = tapeterminal.ycursor === 0
+  const linetokens = useMemo(
+    () => (inputstateactive ? tokenizeline(inputstate) : []),
+    [inputstate, inputstateactive],
+  )
   const autocomplete = useMemo(
     () =>
       inputstateactive
@@ -213,6 +218,7 @@ export function TerminalComponent() {
             commandwords,
             statwords,
             allwords,
+            linetokens,
           )
         : EMPTY_AUTOCOMPLETE,
     [
@@ -222,6 +228,7 @@ export function TerminalComponent() {
       commandwords,
       statwords,
       allwords,
+      linetokens,
     ],
   )
 
@@ -250,6 +257,7 @@ export function TerminalComponent() {
             logrowtotalheight={logsrowtotalheight}
             autocomplete={autocomplete}
             wordcolors={wordcolors}
+            linetokens={linetokens}
           />
         )}
       </TapeTerminalContext.Provider>

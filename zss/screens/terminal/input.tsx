@@ -1,3 +1,4 @@
+import type { IToken } from 'chevrotain'
 import { useEffect } from 'react'
 import {
   apierror,
@@ -53,6 +54,7 @@ type TerminalInputProps = {
   logrowtotalheight: number
   autocomplete: AUTOCOMPLETE
   wordcolors: Map<string, number>
+  linetokens?: IToken[]
 }
 
 export function TerminalInput({
@@ -62,6 +64,7 @@ export function TerminalInput({
   logrowtotalheight,
   autocomplete,
   wordcolors,
+  linetokens,
 }: TerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -157,7 +160,13 @@ export function TerminalInput({
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
-  highlightTerminalInput(inputstate, edge.height - 1, wordcolors, context)
+  highlightTerminalInput(
+    inputstate,
+    edge.height - 1,
+    wordcolors,
+    context,
+    linetokens,
+  )
 
   drawTerminalSelection(
     tapeterminal.xcursor,
