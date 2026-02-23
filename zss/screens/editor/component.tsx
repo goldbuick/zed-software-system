@@ -4,7 +4,7 @@ import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useEditor, useTape } from 'zss/gadget/data/state'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { createlineindexes } from 'zss/lang/transformer'
@@ -13,6 +13,7 @@ import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
+import { buildWordColorMap, useZssWords } from 'zss/screens/tape/zsswords'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -39,38 +40,6 @@ import {
 import { EditorFrame } from './editorframe'
 import { EditorInput, EditorInputProps } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
-
-const STRUCTURED_COMMANDS = new Set([
-  'if',
-  'try',
-  'take',
-  'give',
-  'duplicate',
-  'do',
-  'done',
-  'else',
-  'while',
-  'repeat',
-  'waitfor',
-  'foreach',
-  'for',
-  'break',
-  'continue',
-])
-
-const SPECIAL_COMMANDS = new Set([
-  'toast',
-  'ticker',
-  'play',
-  'bgplay',
-  'bgplayon64n',
-  'bgplayon32n',
-  'bgplayon16n',
-  'bgplayon8n',
-  'bgplayon4n',
-  'bgplayon2n',
-  'bgplayon1n',
-])
 
 function skipwords(word: string) {
   switch (word) {
@@ -122,236 +91,75 @@ export function EditorComponent() {
   const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
 
-  const [
-    wordscli,
-    wordsloader,
-    wordsruntime,
-    wordsflags,
-    statsBoard,
-    statsHelper,
-    statsSender,
-    statsInteraction,
-    statsBoolean,
-    statsConfig,
-    statsRunwith,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ] = useGadgetClient(
-    useShallow((state) => [
-      state.zsswords.cli,
-      state.zsswords.loader,
-      state.zsswords.runtime,
-      state.zsswords.flags,
-      state.zsswords.statsBoard,
-      state.zsswords.statsHelper,
-      state.zsswords.statsSender,
-      state.zsswords.statsInteraction,
-      state.zsswords.statsBoolean,
-      state.zsswords.statsConfig,
-      state.zsswords.statsRunwith,
-      state.zsswords.kinds,
-      state.zsswords.altkinds,
-      state.zsswords.colors,
-      state.zsswords.dirs,
-      state.zsswords.dirmods,
-      state.zsswords.exprs,
-    ]),
-  )
-
-  const wordsstats = useMemo(
-    () => [
-      ...statsBoard,
-      ...statsHelper,
-      ...statsSender,
-      ...statsInteraction,
-      ...statsBoolean,
-      ...statsConfig,
-      ...statsRunwith,
-    ],
-    [
-      statsBoard,
-      statsHelper,
-      statsSender,
-      statsInteraction,
-      statsBoolean,
-      statsConfig,
-      statsRunwith,
-    ],
-  )
+  const { words, commandNames, commandwords, statwords, allwords } =
+    useZssWords({ isLoader: editor.type === 'loader' })
 
   useEffect(() => {
     // set command keywords
-    wordscli
+    words.cli
       .filter(skipwords)
       .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
-    wordsloader
+    words.loader
       .filter(skipwords)
       .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
-    wordsruntime
+    words.runtime
       .filter(skipwords)
       .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
 
     // enum const words
-    wordsflags.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_FLAG))
-    wordsstats.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
-    wordskinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND))
-    wordsaltkinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND_ALT))
-    wordscolors.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_COLOR))
-    wordsdirs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIR))
-    wordsdirmods.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIRMOD))
-    wordsexprs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_EXPRS))
+    words.flags.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_FLAG))
+    words.statsboard.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
+    words.statshelper.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
+    words.statssender.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
+    words.statsinteraction.forEach((word) =>
+      zsswordcolorconfig(word, ZSS_WORD_STAT),
+    )
+    words.statsboolean.forEach((word) =>
+      zsswordcolorconfig(word, ZSS_WORD_STAT),
+    )
+    words.statsconfig.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
+    words.kinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND))
+    words.altkinds.forEach((word) =>
+      zsswordcolorconfig(word, ZSS_WORD_KIND_ALT),
+    )
+    words.colors.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_COLOR))
+    words.dirs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIR))
+    words.dirmods.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIRMOD))
+    words.exprs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_EXPRS))
   }, [
-    wordscli,
-    wordsloader,
-    wordsruntime,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
+    words.cli,
+    words.loader,
+    words.runtime,
+    words.flags,
+    words.statsboard,
+    words.statshelper,
+    words.statssender,
+    words.statsinteraction,
+    words.statsboolean,
+    words.statsconfig,
+    words.kinds,
+    words.altkinds,
+    words.colors,
+    words.dirs,
+    words.dirmods,
+    words.exprs,
   ])
 
-  const commandNames = useMemo(() => {
-    const names = new Set(STRUCTURED_COMMANDS)
-    for (const word of wordscli) {
-      names.add(word.toLowerCase())
-    }
-    for (const word of wordsloader) {
-      names.add(word.toLowerCase())
-    }
-    for (const word of wordsruntime) {
-      names.add(word.toLowerCase())
-    }
-    return names
-  }, [wordscli, wordsloader, wordsruntime])
-
-  const isloader = editor.type === 'loader'
-
-  const commandwords = useMemo(() => {
-    const words = new Set<string>()
-    if (isloader) {
-      for (const w of wordsloader) {
-        words.add(w)
-      }
-    }
-    for (const w of wordsruntime) {
-      words.add(w)
-    }
-    for (const w of STRUCTURED_COMMANDS) {
-      words.add(w)
-    }
-    for (const w of SPECIAL_COMMANDS) {
-      words.add(w)
-    }
-    return Array.from(words)
-  }, [isloader, wordsloader, wordsruntime])
-
-  const statwords = useMemo(() => {
-    const flagset = new Set(wordsflags.map((w) => w.toLowerCase()))
-    return Array.from(wordsstats).filter((w) => !flagset.has(w.toLowerCase()))
-  }, [wordsstats, wordsflags])
-
-  const allwords = useMemo(() => {
-    const words = new Set(commandwords)
-    for (const w of wordsflags) {
-      words.add(w)
-    }
-    for (const w of wordsstats) {
-      words.add(w)
-    }
-    for (const w of wordskinds) {
-      words.add(w)
-    }
-    for (const w of wordsaltkinds) {
-      words.add(w)
-    }
-    for (const w of wordscolors) {
-      words.add(w)
-    }
-    for (const w of wordsdirs) {
-      words.add(w)
-    }
-    for (const w of wordsdirmods) {
-      words.add(w)
-    }
-    for (const w of wordsexprs) {
-      words.add(w)
-    }
-    return Array.from(words)
-  }, [
-    commandwords,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ])
-
-  const wordcolors = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const w of STRUCTURED_COMMANDS) {
-      map.set(w, ZSS_TYPE_COMMAND)
-    }
-    for (const w of SPECIAL_COMMANDS) {
-      map.set(w, ZSS_TYPE_COMMAND)
-    }
-    for (const w of wordscli) {
-      map.set(w, ZSS_TYPE_COMMAND)
-    }
-    for (const w of wordsloader) {
-      map.set(w, ZSS_TYPE_COMMAND)
-    }
-    for (const w of wordsruntime) {
-      map.set(w, ZSS_TYPE_COMMAND)
-    }
-    for (const w of wordsflags) {
-      map.set(w, ZSS_WORD_FLAG)
-    }
-    for (const w of wordsstats) {
-      map.set(w, ZSS_WORD_STAT)
-    }
-    for (const w of wordskinds) {
-      map.set(w, ZSS_WORD_KIND)
-    }
-    for (const w of wordsaltkinds) {
-      map.set(w, ZSS_WORD_KIND_ALT)
-    }
-    for (const w of wordscolors) {
-      map.set(w, ZSS_WORD_COLOR)
-    }
-    for (const w of wordsdirs) {
-      map.set(w, ZSS_WORD_DIR)
-    }
-    for (const w of wordsdirmods) {
-      map.set(w, ZSS_WORD_DIRMOD)
-    }
-    for (const w of wordsexprs) {
-      map.set(w, ZSS_WORD_EXPRS)
-    }
-    return map
-  }, [
-    wordscli,
-    wordsloader,
-    wordsruntime,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ])
+  const wordcolors = useMemo(
+    () =>
+      buildWordColorMap(words, {
+        command: ZSS_TYPE_COMMAND,
+        flag: ZSS_WORD_FLAG,
+        stat: ZSS_WORD_STAT,
+        kind: ZSS_WORD_KIND,
+        kindAlt: ZSS_WORD_KIND_ALT,
+        color: ZSS_WORD_COLOR,
+        dir: ZSS_WORD_DIR,
+        dirmod: ZSS_WORD_DIRMOD,
+        exprs: ZSS_WORD_EXPRS,
+      }),
+    [words],
+  )
 
   const tapeeditor = useEditor()
   const codepage = useWaitForValueString(

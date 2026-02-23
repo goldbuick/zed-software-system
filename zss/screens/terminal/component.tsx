@@ -3,39 +3,28 @@ import { vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
-import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import {
   EMPTY_AUTOCOMPLETE,
-  getlineautocomplete,
+  getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
+import {
+  buildWordColorMap,
+  useZssWords,
+} from 'zss/screens/tape/zsswords'
 import { textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
-import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
 import { tokenizeline } from './terminalinputhelpers'
-
-const SPECIAL_COMMANDS = [
-  'toast',
-  'ticker',
-  'play',
-  'bgplay',
-  'bgplayon64n',
-  'bgplayon32n',
-  'bgplayon16n',
-  'bgplayon8n',
-  'bgplayon4n',
-  'bgplayon2n',
-  'bgplayon1n',
-]
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -51,171 +40,22 @@ export function TerminalComponent() {
     })
   }, [])
 
-  const [
-    wordscli,
-    wordsruntime,
-    wordsflags,
-    statsBoard,
-    statsHelper,
-    statsSender,
-    statsInteraction,
-    statsBoolean,
-    statsConfig,
-    statsRunwith,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ] = useGadgetClient(
-    useShallow((state) => [
-      state.zsswords.cli,
-      state.zsswords.runtime,
-      state.zsswords.flags,
-      state.zsswords.statsBoard,
-      state.zsswords.statsHelper,
-      state.zsswords.statsSender,
-      state.zsswords.statsInteraction,
-      state.zsswords.statsBoolean,
-      state.zsswords.statsConfig,
-      state.zsswords.statsRunwith,
-      state.zsswords.kinds,
-      state.zsswords.altkinds,
-      state.zsswords.colors,
-      state.zsswords.dirs,
-      state.zsswords.dirmods,
-      state.zsswords.exprs,
-    ]),
+  const { words, commandwords, statwords, allwords } = useZssWords()
+  const wordcolors = useMemo(
+    () =>
+      buildWordColorMap(words, {
+        command: COLOR.DKGREEN,
+        flag: COLOR.PURPLE,
+        stat: COLOR.DKPURPLE,
+        kind: COLOR.CYAN,
+        kindAlt: COLOR.DKCYAN,
+        color: COLOR.RED,
+        dir: COLOR.WHITE,
+        dirmod: COLOR.LTGRAY,
+        exprs: COLOR.YELLOW,
+      }),
+    [words],
   )
-
-  const wordsstats = useMemo(
-    () => [
-      ...statsBoard,
-      ...statsHelper,
-      ...statsSender,
-      ...statsInteraction,
-      ...statsBoolean,
-      ...statsConfig,
-      ...statsRunwith,
-    ],
-    [
-      statsBoard,
-      statsHelper,
-      statsSender,
-      statsInteraction,
-      statsBoolean,
-      statsConfig,
-      statsRunwith,
-    ],
-  )
-
-  const commandwords = useMemo(() => {
-    const words = new Set<string>()
-    for (const w of wordscli) {
-      words.add(w)
-    }
-    for (const w of wordsruntime) {
-      words.add(w)
-    }
-    for (const w of SPECIAL_COMMANDS) {
-      words.add(w)
-    }
-    return Array.from(words)
-  }, [wordscli, wordsruntime])
-
-  const statwords = useMemo(() => {
-    const flagset = new Set(wordsflags.map((w) => w.toLowerCase()))
-    return Array.from(wordsstats).filter((w) => !flagset.has(w.toLowerCase()))
-  }, [wordsstats, wordsflags])
-
-  const allwords = useMemo(() => {
-    const words = new Set(commandwords)
-    for (const w of wordsflags) {
-      words.add(w)
-    }
-    for (const w of wordsstats) {
-      words.add(w)
-    }
-    for (const w of wordskinds) {
-      words.add(w)
-    }
-    for (const w of wordsaltkinds) {
-      words.add(w)
-    }
-    for (const w of wordscolors) {
-      words.add(w)
-    }
-    for (const w of wordsdirs) {
-      words.add(w)
-    }
-    for (const w of wordsdirmods) {
-      words.add(w)
-    }
-    for (const w of wordsexprs) {
-      words.add(w)
-    }
-    return Array.from(words)
-  }, [
-    commandwords,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ])
-
-  const wordcolors = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const w of wordscli) {
-      map.set(w, COLOR.DKGREEN)
-    }
-    for (const w of wordsruntime) {
-      map.set(w, COLOR.DKGREEN)
-    }
-    for (const w of SPECIAL_COMMANDS) {
-      map.set(w, COLOR.DKGREEN)
-    }
-    for (const w of wordsflags) {
-      map.set(w, COLOR.PURPLE)
-    }
-    for (const w of wordsstats) {
-      map.set(w, COLOR.DKPURPLE)
-    }
-    for (const w of wordskinds) {
-      map.set(w, COLOR.CYAN)
-    }
-    for (const w of wordsaltkinds) {
-      map.set(w, COLOR.DKCYAN)
-    }
-    for (const w of wordscolors) {
-      map.set(w, COLOR.RED)
-    }
-    for (const w of wordsdirs) {
-      map.set(w, COLOR.WHITE)
-    }
-    for (const w of wordsdirmods) {
-      map.set(w, COLOR.LTGRAY)
-    }
-    for (const w of wordsexprs) {
-      map.set(w, COLOR.YELLOW)
-    }
-    return map
-  }, [
-    wordscli,
-    wordsruntime,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ])
 
   const context = useWriteText()
   const tapeterminal = useTerminal()
@@ -245,28 +85,36 @@ export function TerminalComponent() {
     () => (inputstateactive ? tokenizeline(inputstate) : []),
     [inputstate, inputstateactive],
   )
-  const autocomplete = useMemo(
-    () =>
-      inputstateactive
-        ? getlineautocomplete(
-            inputstate,
-            tapeterminal.xcursor,
-            commandwords,
-            statwords,
-            allwords,
-            linetokens,
-          )
-        : EMPTY_AUTOCOMPLETE,
-    [
-      inputstate,
+  const autocomplete = useMemo(() => {
+    if (!inputstateactive) {
+      return EMPTY_AUTOCOMPLETE
+    }
+    const lineWithNewline = inputstate + '\n'
+    const rows = [
+      {
+        start: 0,
+        code: lineWithNewline,
+        end: inputstate.length,
+        tokens: linetokens,
+      },
+    ]
+    return getautocomplete(
+      rows,
       tapeterminal.xcursor,
-      inputstateactive,
+      0,
       commandwords,
       statwords,
       allwords,
-      linetokens,
-    ],
-  )
+    )
+  }, [
+    inputstateactive,
+    inputstate,
+    tapeterminal.xcursor,
+    linetokens,
+    commandwords,
+    statwords,
+    allwords,
+  ])
 
   return (
     <>
