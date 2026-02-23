@@ -108,6 +108,7 @@ function getautocompletefromtokens(
   if (!tokens?.length) {
     return null
   }
+  console.info({ tokens })
   const cursorCol1 = col + 1
   let activetokenidx = -1
   let aftertokenidx = -1
@@ -123,6 +124,7 @@ function getautocompletefromtokens(
       aftertokenidx = t
     }
   }
+  console.info({ activetokenidx, aftertokenidx })
   if (activetokenidx >= 0) {
     const token = tokens[activetokenidx]
     const prev = tokens[activetokenidx - 1]
@@ -130,81 +132,89 @@ function getautocompletefromtokens(
     const prefix = row.code.substring(idx - 1, col)
     const wordcol = idx - 1
     const wordstart = row.start + wordcol
-    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
-      return {
-        suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
-        prefix: '',
-        wordcol,
-        wordstart,
-        iscommand: true,
-        category: 'command',
-      }
+    
+    // handle cases where we check previous token type
+    switch (prev.tokenTypeIdx) {
+      case lexer.command.tokenTypeIdx:
+        console.info('command', token)
+        break
     }
-    if (COMMAND_WORD_TOKEN_TYPES.has(token.tokenTypeIdx)) {
-      return EMPTY_AUTOCOMPLETE
-    }
-    if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
-      const statprefix = prefix.replace(/^@/, '')
-      return {
-        suggestions: filtersuggestions(
-          statprefix,
-          MIN_PREFIX_GENERAL,
-          statwords,
-        ),
-        prefix: statprefix,
-        wordcol,
-        wordstart,
-        iscommand: false,
-        category: 'stat',
-      }
-    }
-    if (token.tokenTypeIdx === lexer.text.tokenTypeIdx) {
-      const isafterhash =
-        prev && prev.tokenTypeIdx === lexer.command.tokenTypeIdx
-      if (isafterhash) {
-        return {
-          suggestions: filtersuggestions(
-            prefix,
-            MIN_PREFIX_COMMAND,
-            commandwords,
-          ),
-          prefix,
-          wordcol,
-          wordstart,
-          iscommand: true,
-          category: 'command',
-        }
-      }
-      if (/^\d+$/.test(prefix)) {
-        return EMPTY_AUTOCOMPLETE
-      }
-      return {
-        suggestions: filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords),
-        prefix,
-        wordcol,
-        wordstart,
-        iscommand: false,
-        category: 'general',
-      }
-    }
-    return null
-  }
-  if (aftertokenidx >= 0) {
-    const token = tokens[aftertokenidx]
-    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
-      const endCol1 = token.endColumn ?? 1
-      const wordcol = endCol1
-      const wordstart = row.start + wordcol
-      return {
-        suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
-        prefix: '',
-        wordcol,
-        wordstart,
-        iscommand: true,
-        category: 'command',
-      }
-    }
-  }
+
+  //   if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+  //     return {
+  //       suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
+  //       prefix: '',
+  //       wordcol,
+  //       wordstart,
+  //       iscommand: true,
+  //       category: 'command',
+  //     }
+  //   }
+  //   if (COMMAND_WORD_TOKEN_TYPES.has(token.tokenTypeIdx)) {
+  //     return EMPTY_AUTOCOMPLETE
+  //   }
+  //   if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
+  //     const statprefix = prefix.replace(/^@/, '')
+  //     return {
+  //       suggestions: filtersuggestions(
+  //         statprefix,
+  //         MIN_PREFIX_GENERAL,
+  //         statwords,
+  //       ),
+  //       prefix: statprefix,
+  //       wordcol,
+  //       wordstart,
+  //       iscommand: false,
+  //       category: 'stat',
+  //     }
+  //   }
+  //   if (token.tokenTypeIdx === lexer.text.tokenTypeIdx) {
+  //     const isafterhash =
+  //       prev && prev.tokenTypeIdx === lexer.command.tokenTypeIdx
+  //     if (isafterhash) {
+  //       return {
+  //         suggestions: filtersuggestions(
+  //           prefix,
+  //           MIN_PREFIX_COMMAND,
+  //           commandwords,
+  //         ),
+  //         prefix,
+  //         wordcol,
+  //         wordstart,
+  //         iscommand: true,
+  //         category: 'command',
+  //       }
+  //     }
+  //     if (/^\d+$/.test(prefix)) {
+  //       return EMPTY_AUTOCOMPLETE
+  //     }
+  //     return {
+  //       suggestions: filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords),
+  //       prefix,
+  //       wordcol,
+  //       wordstart,
+  //       iscommand: false,
+  //       category: 'general',
+  //     }
+  //   }
+  //   return null
+  // }
+  // if (aftertokenidx >= 0) {
+  //   const token = tokens[aftertokenidx]
+  //   if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+  //     const endCol1 = token.endColumn ?? 1
+  //     const wordcol = endCol1
+  //     const wordstart = row.start + wordcol
+  //     return {
+  //       suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
+  //       prefix: '',
+  //       wordcol,
+  //       wordstart,
+  //       iscommand: true,
+  //       category: 'command',
+  //     }
+  //   }
+  // }
   return null
 }
 
@@ -231,68 +241,6 @@ export function getautocomplete(
   )
   if (fromtokens !== null) {
     return fromtokens
-  }
-
-  const linetext = row.code.substring(0, col)
-
-  const cmdmatch = /#(\w*)$/.exec(linetext)
-  if (cmdmatch) {
-    const prefix = cmdmatch[1]
-    const wordcol = col - prefix.length
-    const wordstart = cursor - prefix.length
-    const suggestions = filtersuggestions(
-      prefix,
-      MIN_PREFIX_COMMAND,
-      commandwords,
-    )
-    return {
-      suggestions,
-      prefix,
-      wordcol,
-      wordstart,
-      iscommand: true,
-      category: 'command',
-    }
-  }
-
-  const statnamematch = /(?:^|\s)@(\w*)$/.exec(linetext)
-  if (statnamematch) {
-    const prefix = statnamematch[1]
-    const wordcol = col - prefix.length
-    const wordstart = cursor - prefix.length
-    const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, statwords)
-    return {
-      suggestions,
-      prefix,
-      wordcol,
-      wordstart,
-      iscommand: false,
-      category: 'stat',
-    }
-  }
-
-  const statvaluematch = /@\S+\s+(\w*)$/.exec(linetext)
-  if (statvaluematch) {
-    return EMPTY_AUTOCOMPLETE
-  }
-
-  const wordmatch = /(\w+)$/.exec(linetext)
-  if (wordmatch) {
-    const prefix = wordmatch[1]
-    if (/^\d+$/.test(prefix)) {
-      return EMPTY_AUTOCOMPLETE
-    }
-    const wordcol = col - prefix.length
-    const wordstart = cursor - prefix.length
-    const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords)
-    return {
-      suggestions,
-      prefix,
-      wordcol,
-      wordstart,
-      iscommand: false,
-      category: 'general',
-    }
   }
 
   return EMPTY_AUTOCOMPLETE
@@ -367,8 +315,8 @@ function drawhinttext(
 export function drawautocomplete(
   ac: AUTOCOMPLETE,
   acindex: number,
-  cursorRowY: number,
-  startx: number,
+  py: number,
+  px: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
@@ -389,13 +337,11 @@ export function drawautocomplete(
   let starty: number
   let yForIndex: (i: number) => number
   if (drawAbove) {
-    starty = cursorRowY - numRows
+    starty = py - numRows
     yForIndex = (i) => starty + i
   } else {
-    const drawBelow = cursorRowY + numRows <= edge.bottom - 1
-    starty = drawBelow
-      ? cursorRowY
-      : Math.max(edge.top + 1, cursorRowY - numRows - 1)
+    const drawBelow = py + numRows <= edge.bottom - 1
+    starty = drawBelow ? py : Math.max(edge.top + 1, py - numRows - 1)
     yForIndex = (i) => (drawBelow ? starty + i : starty + numRows - 1 - i)
   }
 
@@ -409,13 +355,13 @@ export function drawautocomplete(
     const selected = i === effectiveIndex
     const bg = selected ? AC_SEL_BG : AC_BG
 
-    const rowstart = Math.max(startx, edge.left + 1)
-    const rowend = Math.min(startx + itemwidth - 1, edge.right - 1)
+    const rowstart = Math.max(px, edge.left + 1)
+    const rowend = Math.min(px + itemwidth - 1, edge.right - 1)
     if (rowstart > rowend) {
       continue
     }
 
-    const textoffset = rowstart - startx
+    const textoffset = rowstart - px
     const fulltext = ` ${ac.suggestions[i]} `
       .padEnd(itemwidth, ' ')
       .substring(0, itemwidth)
