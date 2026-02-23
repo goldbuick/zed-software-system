@@ -119,7 +119,9 @@ function sameId(a: NodeId, b: { sid?: number; time?: number }): boolean {
 export function patchAffectsNode(patch: Patch, nodeId: NodeId): boolean {
   for (const op of patch.ops) {
     const obj = (op as { obj?: { sid?: number; time?: number } }).obj
-    if (obj && sameId(nodeId, obj)) return true
+    if (obj && sameId(nodeId, obj)) {
+      return true
+    }
   }
   return false
 }
@@ -138,9 +140,13 @@ function useWaitForValue<T extends MODEM_SHARED_TYPE>(
 
   try {
     const obj = ROOT_OBJ()
-    if (!obj.has(key)) return undefined
+    if (!obj.has(key)) {
+      return undefined
+    }
     const childApi = obj.get(key)
-    if (!childApi) return undefined
+    if (!childApi) {
+      return undefined
+    }
 
     if (type === MODEM_SHARED_TYPE.NUMBER) {
       const view = childApi.view()
@@ -193,7 +199,9 @@ function modemwriteinit<T extends MODEM_SHARED_TYPE>(
   value: SHARED_TYPE_MAP[T],
 ) {
   const obj = ROOT_OBJ()
-  if (obj.has(key)) return
+  if (obj.has(key)) {
+    return
+  }
   const toSet =
     type === MODEM_SHARED_TYPE.STRING
       ? (value as SharedTextHandle).toJSON()
@@ -207,7 +215,9 @@ export function modemwriteinitnumber(key: string, value: number) {
 
 export function modemwriteinitstring(key: string, value: string) {
   const obj = ROOT_OBJ()
-  if (obj.has(key)) return
+  if (obj.has(key)) {
+    return
+  }
   obj.set({ [key]: value })
 }
 
@@ -223,9 +233,13 @@ export function modemwritevaluestring(key: string, value: string) {
 function getValueForKey(key: string): unknown {
   try {
     const obj = ROOT_OBJ()
-    if (!obj.has(key)) return undefined
+    if (!obj.has(key)) {
+      return undefined
+    }
     const childApi = obj.get(key)
-    if (!childApi) return undefined
+    if (!childApi) {
+      return undefined
+    }
     const valApi = childApi as {
       get?: () => { view?: () => unknown; asStr?: () => StrApi }
     }

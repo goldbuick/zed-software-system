@@ -212,8 +212,9 @@ export class KittenTTS {
                 )
 
                 // Retry inference with WASM
-                if (this.wasmSession == null)
+                if (this.wasmSession == null) {
                   throw new Error('WASM session not created')
+                }
                 results = await this.wasmSession.run(inputs)
                 audioOutput = results.waveform
                 audioData = audioOutput.data
@@ -226,8 +227,12 @@ export class KittenTTS {
               let min = audioData[0],
                 max = audioData[0]
               for (let i = 1; i < audioData.length; i++) {
-                if (audioData[i] < min) min = audioData[i]
-                if (audioData[i] > max) max = audioData[i]
+                if (audioData[i] < min) {
+                  min = audioData[i]
+                }
+                if (audioData[i] > max) {
+                  max = audioData[i]
+                }
               }
 
               // Apply speed adjustment

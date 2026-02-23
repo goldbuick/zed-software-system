@@ -42,11 +42,15 @@ export function pickwith<T>(seed: string, ...args: T[]) {
 
 export function pickwithweights<T>(tuples: [T, number][]): T | undefined {
   const total = tuples.reduce((sum, [, w]) => sum + w, 0)
-  if (total <= 0) return undefined
+  if (total <= 0) {
+    return undefined
+  }
   let r = randomnumber() * total
   for (const [value, weight] of tuples) {
     r -= weight
-    if (r <= 0) return value
+    if (r <= 0) {
+      return value
+    }
   }
   return tuples[tuples.length - 1]?.[0]
 }
@@ -67,7 +71,9 @@ export function shufflewithweights<T>(tuples: [T, number][]): T[] {
   const result: T[] = []
   while (remaining.length > 0) {
     const total = remaining.reduce((sum, [, w]) => sum + w, 0)
-    if (total <= 0) break
+    if (total <= 0) {
+      break
+    }
     let r = randomnumber() * total
     let idx = remaining.length - 1
     for (let i = 0; i < remaining.length; i++) {

@@ -47,7 +47,9 @@ function compositetiles(layers: LAYER[], width: number, height: number) {
     const ty = Math.floor(i / width)
     for (let li = 0; li < all.length; li++) {
       const layer = all[li]
-      if (tx >= layer.width || ty >= layer.height) continue
+      if (tx >= layer.width || ty >= layer.height) {
+        continue
+      }
       const ci = tx + ty * layer.width
       const chr = layer.char[ci] ?? 0
       const fgidx = mapcoloridx(layer.color[ci] ?? 0)
@@ -74,7 +76,9 @@ function collectsprites(layers: LAYER[]) {
   for (const layer of layers) {
     if (isspriteslayer(layer)) {
       for (const s of layer.sprites) {
-        if (s.pid) continue
+        if (s.pid) {
+          continue
+        }
         sprites.push({
           x: s.x,
           y: s.y,
@@ -192,7 +196,9 @@ export function capturecurrentboardtopng() {
   for (const s of sprites) {
     const tx = Math.floor(s.x)
     const ty = Math.floor(s.y)
-    if (tx < 0 || tx >= width || ty < 0 || ty >= height) continue
+    if (tx < 0 || tx >= width || ty < 0 || ty >= height) {
+      continue
+    }
 
     const charcol = s.char % CHARS_PER_ROW
     const charrow = Math.floor(s.char / CHARS_PER_ROW)

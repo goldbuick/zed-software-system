@@ -158,8 +158,11 @@ function splitargsbycomma(argsstr: string): string[] {
   for (let i = 0; i < argsstr.length; i++) {
     const c = argsstr[i]
     if (c === '"' || c === "'") {
-      if (inQuote === c) inQuote = null
-      else inQuote ??= c
+      if (inQuote === c) {
+        inQuote = null
+      } else {
+        inQuote ??= c
+      }
       buf += c
     } else if (c === ',' && !inQuote) {
       out.push(buf.trim())
@@ -168,7 +171,9 @@ function splitargsbycomma(argsstr: string): string[] {
       buf += c
     }
   }
-  if (buf.trim()) out.push(buf.trim())
+  if (buf.trim()) {
+    out.push(buf.trim())
+  }
   return out
 }
 

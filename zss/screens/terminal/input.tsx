@@ -102,13 +102,17 @@ export function TerminalInput({
     tapeterminal.acindex >= 0 && autocomplete.suggestions.length > 0
 
   function acceptsuggestion() {
-    if (autocomplete.suggestions.length === 0) return
+    if (autocomplete.suggestions.length === 0) {
+      return
+    }
     const idx = Math.min(
       tapeterminal.acindex,
       autocomplete.suggestions.length - 1,
     )
     const suggestion = autocomplete.suggestions[idx]
-    if (!suggestion) return
+    if (!suggestion) {
+      return
+    }
     inputstatesetsplice(
       autocomplete.wordstart,
       autocomplete.prefix.length,

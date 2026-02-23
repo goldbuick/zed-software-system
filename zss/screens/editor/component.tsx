@@ -187,9 +187,15 @@ export function EditorComponent() {
 
   const commandNames = useMemo(() => {
     const names = new Set(STRUCTURED_COMMANDS)
-    for (const word of wordscli) names.add(word.toLowerCase())
-    for (const word of wordsloader) names.add(word.toLowerCase())
-    for (const word of wordsruntime) names.add(word.toLowerCase())
+    for (const word of wordscli) {
+      names.add(word.toLowerCase())
+    }
+    for (const word of wordsloader) {
+      names.add(word.toLowerCase())
+    }
+    for (const word of wordsruntime) {
+      names.add(word.toLowerCase())
+    }
     return names
   }, [wordscli, wordsloader, wordsruntime])
 
@@ -198,24 +204,84 @@ export function EditorComponent() {
   const commandwords = useMemo(() => {
     const words = new Set<string>()
     if (isloader) {
-      for (const w of wordsloader) words.add(w)
+      for (const w of wordsloader) {
+        words.add(w)
+      }
     }
-    for (const w of wordsruntime) words.add(w)
-    for (const w of STRUCTURED_COMMANDS) words.add(w)
-    for (const w of SPECIAL_COMMANDS) words.add(w)
+    for (const w of wordsruntime) {
+      words.add(w)
+    }
+    for (const w of STRUCTURED_COMMANDS) {
+      words.add(w)
+    }
+    for (const w of SPECIAL_COMMANDS) {
+      words.add(w)
+    }
     return Array.from(words)
   }, [isloader, wordsloader, wordsruntime])
 
+  const statwords = useMemo(() => Array.from(wordsstats), [wordsstats])
+
+  const statvaluewords = useMemo(() => {
+    const words = new Set<string>()
+    for (const w of wordskinds) {
+      words.add(w)
+    }
+    for (const w of wordsaltkinds) {
+      words.add(w)
+    }
+    for (const w of wordscolors) {
+      words.add(w)
+    }
+    for (const w of wordsdirs) {
+      words.add(w)
+    }
+    for (const w of wordsdirmods) {
+      words.add(w)
+    }
+    for (const w of wordsexprs) {
+      words.add(w)
+    }
+    for (const w of wordsstats) {
+      words.add(w)
+    }
+    return Array.from(words)
+  }, [
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+    wordsexprs,
+    wordsstats,
+  ])
+
   const allwords = useMemo(() => {
     const words = new Set(commandwords)
-    for (const w of wordsflags) words.add(w)
-    for (const w of wordsstats) words.add(w)
-    for (const w of wordskinds) words.add(w)
-    for (const w of wordsaltkinds) words.add(w)
-    for (const w of wordscolors) words.add(w)
-    for (const w of wordsdirs) words.add(w)
-    for (const w of wordsdirmods) words.add(w)
-    for (const w of wordsexprs) words.add(w)
+    for (const w of wordsflags) {
+      words.add(w)
+    }
+    for (const w of wordsstats) {
+      words.add(w)
+    }
+    for (const w of wordskinds) {
+      words.add(w)
+    }
+    for (const w of wordsaltkinds) {
+      words.add(w)
+    }
+    for (const w of wordscolors) {
+      words.add(w)
+    }
+    for (const w of wordsdirs) {
+      words.add(w)
+    }
+    for (const w of wordsdirmods) {
+      words.add(w)
+    }
+    for (const w of wordsexprs) {
+      words.add(w)
+    }
     return Array.from(words)
   }, [
     commandwords,
@@ -231,19 +297,45 @@ export function EditorComponent() {
 
   const wordcolors = useMemo(() => {
     const map = new Map<string, number>()
-    for (const w of STRUCTURED_COMMANDS) map.set(w, ZSS_TYPE_COMMAND)
-    for (const w of SPECIAL_COMMANDS) map.set(w, ZSS_TYPE_COMMAND)
-    for (const w of wordscli) map.set(w, ZSS_TYPE_COMMAND)
-    for (const w of wordsloader) map.set(w, ZSS_TYPE_COMMAND)
-    for (const w of wordsruntime) map.set(w, ZSS_TYPE_COMMAND)
-    for (const w of wordsflags) map.set(w, ZSS_WORD_FLAG)
-    for (const w of wordsstats) map.set(w, ZSS_WORD_STAT)
-    for (const w of wordskinds) map.set(w, ZSS_WORD_KIND)
-    for (const w of wordsaltkinds) map.set(w, ZSS_WORD_KIND_ALT)
-    for (const w of wordscolors) map.set(w, ZSS_WORD_COLOR)
-    for (const w of wordsdirs) map.set(w, ZSS_WORD_DIR)
-    for (const w of wordsdirmods) map.set(w, ZSS_WORD_DIRMOD)
-    for (const w of wordsexprs) map.set(w, ZSS_WORD_EXPRS)
+    for (const w of STRUCTURED_COMMANDS) {
+      map.set(w, ZSS_TYPE_COMMAND)
+    }
+    for (const w of SPECIAL_COMMANDS) {
+      map.set(w, ZSS_TYPE_COMMAND)
+    }
+    for (const w of wordscli) {
+      map.set(w, ZSS_TYPE_COMMAND)
+    }
+    for (const w of wordsloader) {
+      map.set(w, ZSS_TYPE_COMMAND)
+    }
+    for (const w of wordsruntime) {
+      map.set(w, ZSS_TYPE_COMMAND)
+    }
+    for (const w of wordsflags) {
+      map.set(w, ZSS_WORD_FLAG)
+    }
+    for (const w of wordsstats) {
+      map.set(w, ZSS_WORD_STAT)
+    }
+    for (const w of wordskinds) {
+      map.set(w, ZSS_WORD_KIND)
+    }
+    for (const w of wordsaltkinds) {
+      map.set(w, ZSS_WORD_KIND_ALT)
+    }
+    for (const w of wordscolors) {
+      map.set(w, ZSS_WORD_COLOR)
+    }
+    for (const w of wordsdirs) {
+      map.set(w, ZSS_WORD_DIR)
+    }
+    for (const w of wordsdirmods) {
+      map.set(w, ZSS_WORD_DIRMOD)
+    }
+    for (const w of wordsexprs) {
+      map.set(w, ZSS_WORD_EXPRS)
+    }
     return map
   }, [
     wordscli,
@@ -379,8 +471,24 @@ export function EditorComponent() {
 
   const autocomplete = useMemo(
     () =>
-      getautocomplete(rows, tapeeditor.cursor, ycursor, commandwords, allwords),
-    [rows, tapeeditor.cursor, ycursor, commandwords, allwords],
+      getautocomplete(
+        rows,
+        tapeeditor.cursor,
+        ycursor,
+        commandwords,
+        statwords,
+        statvaluewords,
+        allwords,
+      ),
+    [
+      rows,
+      tapeeditor.cursor,
+      ycursor,
+      commandwords,
+      statwords,
+      statvaluewords,
+      allwords,
+    ],
   )
 
   // measure edges once

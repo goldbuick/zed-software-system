@@ -127,7 +127,9 @@ function detectWebGL(): boolean {
 
 function showWebGLRequired() {
   const frame = document.getElementById('frame')
-  if (!frame) return
+  if (!frame) {
+    return
+  }
   frame.style.display = 'none'
   const div = document.createElement('div')
   div.id = 'webgl-required'

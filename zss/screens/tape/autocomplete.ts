@@ -9,12 +9,15 @@ import { COLOR } from 'zss/words/types'
 
 import { EDITOR_CODE_ROW } from './common'
 
+export type AUTOCOMPLETE_CATEGORY = 'command' | 'stat' | 'statvalue' | 'general'
+
 export type AUTOCOMPLETE = {
   suggestions: string[]
   prefix: string
   wordcol: number
   wordstart: number
   iscommand: boolean
+  category: AUTOCOMPLETE_CATEGORY
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
@@ -23,6 +26,7 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
   wordcol: 0,
   wordstart: 0,
   iscommand: false,
+  category: 'general',
 }
 
 const ROM_CATEGORIES = [
@@ -43,10 +47,14 @@ function extractdesc(content: string): string {
 
 export function romhintfor(word: string): string {
   const lower = word.toLowerCase().trim()
-  if (!lower) return ''
+  if (!lower) {
+    return ''
+  }
   for (const category of ROM_CATEGORIES) {
     const content = romread(`editor:${category}:${lower}`)
-    if (content) return extractdesc(content)
+    if (content) {
+      return extractdesc(content)
+    }
   }
   return ''
 }
@@ -60,7 +68,9 @@ function filtersuggestions(
   minlen: number,
   words: string[],
 ): string[] {
-  if (prefix.length < minlen) return []
+  if (prefix.length < minlen) {
+    return []
+  }
   const lower = prefix.toLowerCase()
   return words
     .filter(
@@ -75,15 +85,20 @@ export function getautocomplete(
   cursor: number,
   ycursor: number,
   commandwords: string[],
+  statwords: string[],
+  statvaluewords: string[],
   allwords: string[],
 ): AUTOCOMPLETE {
   const row = rows[ycursor]
-  if (!row) return EMPTY_AUTOCOMPLETE
+  if (!row) {
+    return EMPTY_AUTOCOMPLETE
+  }
 
   const col = cursor - row.start
   const linetext = row.code.substring(0, col)
+  const trimmed = linetext.trimStart()
 
-  const cmdmatch = /#(\w+)$/.exec(linetext)
+  const cmdmatch = /#(\w*)$/.exec(linetext)
   if (cmdmatch) {
     const prefix = cmdmatch[1]
     const wordcol = col - prefix.length
@@ -93,17 +108,71 @@ export function getautocomplete(
       MIN_PREFIX_COMMAND,
       commandwords,
     )
-    return { suggestions, prefix, wordcol, wordstart, iscommand: true }
+    return {
+      suggestions,
+      prefix,
+      wordcol,
+      wordstart,
+      iscommand: true,
+      category: 'command',
+    }
+  }
+
+  const statnamematch = /@(\w*)$/.exec(linetext)
+  if (statnamematch && trimmed.startsWith('@')) {
+    const prefix = statnamematch[1]
+    const wordcol = col - prefix.length
+    const wordstart = cursor - prefix.length
+    const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, statwords)
+    return {
+      suggestions,
+      prefix,
+      wordcol,
+      wordstart,
+      iscommand: false,
+      category: 'stat',
+    }
+  }
+
+  const statvaluematch = /@\S+\s+(\w*)$/.exec(linetext)
+  if (statvaluematch) {
+    const prefix = statvaluematch[1]
+    if (!/^\d*$/.test(prefix)) {
+      const wordcol = col - prefix.length
+      const wordstart = cursor - prefix.length
+      const suggestions = filtersuggestions(
+        prefix,
+        MIN_PREFIX_GENERAL,
+        statvaluewords,
+      )
+      return {
+        suggestions,
+        prefix,
+        wordcol,
+        wordstart,
+        iscommand: false,
+        category: 'statvalue',
+      }
+    }
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
   if (wordmatch) {
     const prefix = wordmatch[1]
-    if (/^\d+$/.test(prefix)) return EMPTY_AUTOCOMPLETE
+    if (/^\d+$/.test(prefix)) {
+      return EMPTY_AUTOCOMPLETE
+    }
     const wordcol = col - prefix.length
     const wordstart = cursor - prefix.length
     const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords)
-    return { suggestions, prefix, wordcol, wordstart, iscommand: false }
+    return {
+      suggestions,
+      prefix,
+      wordcol,
+      wordstart,
+      iscommand: false,
+      category: 'general',
+    }
   }
 
   return EMPTY_AUTOCOMPLETE
@@ -113,11 +182,14 @@ export function getlineautocomplete(
   line: string,
   cursor: number,
   commandwords: string[],
+  statwords: string[],
+  statvaluewords: string[],
   allwords: string[],
 ): AUTOCOMPLETE {
   const linetext = line.substring(0, cursor)
+  const trimmed = linetext.trimStart()
 
-  const cmdmatch = /#(\w+)$/.exec(linetext)
+  const cmdmatch = /#(\w*)$/.exec(linetext)
   if (cmdmatch) {
     const prefix = cmdmatch[1]
     const wordcol = cursor - prefix.length
@@ -127,17 +199,71 @@ export function getlineautocomplete(
       MIN_PREFIX_COMMAND,
       commandwords,
     )
-    return { suggestions, prefix, wordcol, wordstart, iscommand: true }
+    return {
+      suggestions,
+      prefix,
+      wordcol,
+      wordstart,
+      iscommand: true,
+      category: 'command',
+    }
+  }
+
+  const statnamematch = /@(\w*)$/.exec(linetext)
+  if (statnamematch && trimmed.startsWith('@')) {
+    const prefix = statnamematch[1]
+    const wordcol = cursor - prefix.length
+    const wordstart = cursor - prefix.length
+    const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, statwords)
+    return {
+      suggestions,
+      prefix,
+      wordcol,
+      wordstart,
+      iscommand: false,
+      category: 'stat',
+    }
+  }
+
+  const statvaluematch = /@\S+\s+(\w*)$/.exec(linetext)
+  if (statvaluematch) {
+    const prefix = statvaluematch[1]
+    if (!/^\d*$/.test(prefix)) {
+      const wordcol = cursor - prefix.length
+      const wordstart = cursor - prefix.length
+      const suggestions = filtersuggestions(
+        prefix,
+        MIN_PREFIX_GENERAL,
+        statvaluewords,
+      )
+      return {
+        suggestions,
+        prefix,
+        wordcol,
+        wordstart,
+        iscommand: false,
+        category: 'statvalue',
+      }
+    }
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
   if (wordmatch) {
     const prefix = wordmatch[1]
-    if (/^\d+$/.test(prefix)) return EMPTY_AUTOCOMPLETE
+    if (/^\d+$/.test(prefix)) {
+      return EMPTY_AUTOCOMPLETE
+    }
     const wordcol = cursor - prefix.length
     const wordstart = cursor - prefix.length
     const suggestions = filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords)
-    return { suggestions, prefix, wordcol, wordstart, iscommand: false }
+    return {
+      suggestions,
+      prefix,
+      wordcol,
+      wordstart,
+      iscommand: false,
+      category: 'general',
+    }
   }
 
   return EMPTY_AUTOCOMPLETE
@@ -194,7 +320,9 @@ function drawhinttext(
   bg: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  if (!hint || hintx > rightbound) return
+  if (!hint || hintx > rightbound) {
+    return
+  }
   const available = rightbound - hintx + 1
   const text = hint.length > available ? hint.substring(0, available) : hint
   const bufindex = hintx + hinty * context.width
@@ -218,7 +346,9 @@ export function drawautocomplete(
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
 ) {
-  if (ac.suggestions.length === 0) return
+  if (ac.suggestions.length === 0) {
+    return
+  }
 
   const effectiveIndex = acindex < 0 ? 0 : acindex
   const startx = edge.left + ac.wordcol - xoffset
@@ -237,14 +367,18 @@ export function drawautocomplete(
 
   for (let i = 0; i < ac.suggestions.length; i++) {
     const y = drawBelow ? starty + i : starty + numRows - 1 - i
-    if (y >= edge.bottom || y <= edge.top + 1) continue
+    if (y >= edge.bottom || y <= edge.top + 1) {
+      continue
+    }
 
     const selected = i === effectiveIndex
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(startx, edge.left + 1)
     const rowend = Math.min(startx + itemwidth - 1, edge.right - 1)
-    if (rowstart > rowend) continue
+    if (rowstart > rowend) {
+      continue
+    }
 
     const textoffset = rowstart - startx
     const fulltext = ` ${ac.suggestions[i]} `
@@ -285,7 +419,9 @@ export function drawlineautocomplete(
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
 ) {
-  if (ac.suggestions.length === 0 || acindex < 0) return
+  if (ac.suggestions.length === 0 || acindex < 0) {
+    return
+  }
 
   const startx = edge.left + ac.wordcol - 1
   const maxitemlen = ac.suggestions.reduce(
@@ -296,14 +432,18 @@ export function drawlineautocomplete(
 
   for (let i = 0; i < ac.suggestions.length; i++) {
     const y = inputy - 1 - i
-    if (y < edge.top || y >= edge.bottom) continue
+    if (y < edge.top || y >= edge.bottom) {
+      continue
+    }
 
     const selected = i === acindex
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(startx, edge.left)
     const rowend = Math.min(startx + itemwidth - 1, edge.right)
-    if (rowstart > rowend) continue
+    if (rowstart > rowend) {
+      continue
+    }
 
     const textoffset = rowstart - startx
     const fulltext = ` ${ac.suggestions[i]} `

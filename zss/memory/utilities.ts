@@ -62,11 +62,17 @@ function base64tobase64url(base64String: string) {
 }
 
 function formatidleseconds(ms: number | undefined): string {
-  if (ms === undefined) return ''
+  if (ms === undefined) {
+    return ''
+  }
   const sec = Math.floor((Date.now() - ms) / 1000)
-  if (sec < 60) return `${sec}s`
+  if (sec < 60) {
+    return `${sec}s`
+  }
   const min = Math.floor(sec / 60)
-  if (min < 60) return `${min}m`
+  if (min < 60) {
+    return `${min}m`
+  }
   return `${Math.floor(min / 60)}h`
 }
 

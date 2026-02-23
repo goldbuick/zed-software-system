@@ -73,7 +73,9 @@ export function drawTerminalCursor(
   tapeycursor: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  if (!blink) return
+  if (!blink) {
+    return
+  }
   const edge = textformatreadedges(context)
   const x = edge.left + xcursor
   const y = edge.top + tapeycursor
@@ -91,7 +93,9 @@ export function drawTerminalSelection(
   yselect: MAYBE<number>,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  if (!ispresent(xselect) || !ispresent(yselect) || xcursor === xselect) return
+  if (!ispresent(xselect) || !ispresent(yselect) || xcursor === xselect) {
+    return
+  }
   const edge = textformatreadedges(context)
   const x1 = Math.min(xcursor, xselect)
   const y1 = Math.min(ycursor, yselect)
@@ -152,13 +156,27 @@ enum MUSIC_MODE {
 }
 
 function musiccharcolor(ch: string): COLOR {
-  if (MUSIC_NOTE_CHARS.has(ch)) return COLOR.GREEN
-  if (MUSIC_REST_CHARS.has(ch)) return COLOR.DKGREEN
-  if (MUSIC_PITCH_CHARS.has(ch)) return COLOR.DKYELLOW
-  if (MUSIC_TIME_CHARS.has(ch)) return COLOR.DKCYAN
-  if (MUSIC_TIMEMOD_CHARS.has(ch)) return COLOR.CYAN
-  if (MUSIC_OCTAVE_CHARS.has(ch)) return COLOR.YELLOW
-  if (MUSIC_DRUM_CHARS.has(ch)) return COLOR.PURPLE
+  if (MUSIC_NOTE_CHARS.has(ch)) {
+    return COLOR.GREEN
+  }
+  if (MUSIC_REST_CHARS.has(ch)) {
+    return COLOR.DKGREEN
+  }
+  if (MUSIC_PITCH_CHARS.has(ch)) {
+    return COLOR.DKYELLOW
+  }
+  if (MUSIC_TIME_CHARS.has(ch)) {
+    return COLOR.DKCYAN
+  }
+  if (MUSIC_TIMEMOD_CHARS.has(ch)) {
+    return COLOR.CYAN
+  }
+  if (MUSIC_OCTAVE_CHARS.has(ch)) {
+    return COLOR.YELLOW
+  }
+  if (MUSIC_DRUM_CHARS.has(ch)) {
+    return COLOR.PURPLE
+  }
   return COLOR.GREEN
 }
 
@@ -210,7 +228,9 @@ export function highlightTerminalInput(
   wordcolors: Map<string, number>,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  if (inputline.length === 0) return
+  if (inputline.length === 0) {
+    return
+  }
   const edge = textformatreadedges(context)
   const base = edge.left + inputy * context.width
 
@@ -283,8 +303,12 @@ export function highlightTerminalInput(
     if (ch === '"') {
       const start = i
       i++
-      while (i < inputline.length && inputline[i] !== '"') i++
-      if (i < inputline.length) i++
+      while (i < inputline.length && inputline[i] !== '"') {
+        i++
+      }
+      if (i < inputline.length) {
+        i++
+      }
       applycolortoindexes(
         base + start,
         base + i - 1,
@@ -297,7 +321,9 @@ export function highlightTerminalInput(
 
     if (/\d/.test(ch)) {
       const start = i
-      while (i < inputline.length && /[\d.]/.test(inputline[i])) i++
+      while (i < inputline.length && /[\d.]/.test(inputline[i])) {
+        i++
+      }
       if (start > 0 && !/\w/.test(inputline[start - 1])) {
         applycolortoindexes(
           base + start,
@@ -312,7 +338,9 @@ export function highlightTerminalInput(
 
     if (/\w/.test(ch)) {
       const start = i
-      while (i < inputline.length && /\w/.test(inputline[i])) i++
+      while (i < inputline.length && /\w/.test(inputline[i])) {
+        i++
+      }
       const word = inputline.substring(start, i)
       const lower = NAME(word)
 

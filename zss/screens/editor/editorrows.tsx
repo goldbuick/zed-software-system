@@ -252,7 +252,7 @@ export function EditorRows({
                 context,
               )
             }
-          } else
+          } else {
             switch (maybecolor) {
               case ZSS_TYPE_STATNAME: {
                 const words = parsestatformat(token.image)
@@ -374,6 +374,7 @@ export function EditorRows({
                 )
                 break
             }
+          }
         }
       }
     }
@@ -533,7 +534,9 @@ export function EditorRows({
                 }
               }
             }
-            if (!found) setlookup(`editor:text`)
+            if (!found) {
+              setlookup(`editor:text`)
+            }
             break
           }
         }

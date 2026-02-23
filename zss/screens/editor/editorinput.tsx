@@ -162,13 +162,17 @@ export function EditorInput({
   const acdrawBelow = accursorRowY + acnumRows <= edge.bottom - 1
 
   function acceptsuggestion() {
-    if (!ispresent(codepage) || autocomplete.suggestions.length === 0) return
+    if (!ispresent(codepage) || autocomplete.suggestions.length === 0) {
+      return
+    }
     const idx =
       tapeeditor.acindex < 0
         ? 0
         : Math.min(tapeeditor.acindex, autocomplete.suggestions.length - 1)
     const suggestion = autocomplete.suggestions[idx]
-    if (!suggestion) return
+    if (!suggestion) {
+      return
+    }
     strvaluesplice(
       autocomplete.wordstart,
       autocomplete.prefix.length,
@@ -306,12 +310,17 @@ export function EditorInput({
                 switch (lkey) {
                   case 'z':
                     if (undomanager) {
-                      if (ismac && mods.shift) undomanager.redo()
-                      else undomanager.undo()
+                      if (ismac && mods.shift) {
+                        undomanager.redo()
+                      } else {
+                        undomanager.undo()
+                      }
                     }
                     break
                   case 'y':
-                    if (undomanager && !ismac) undomanager.redo()
+                    if (undomanager && !ismac) {
+                      undomanager.redo()
+                    }
                     break
                   case 'a':
                     updatescrolling(codeend)

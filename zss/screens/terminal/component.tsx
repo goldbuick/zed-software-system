@@ -78,22 +78,80 @@ export function TerminalComponent() {
 
   const commandwords = useMemo(() => {
     const words = new Set<string>()
-    for (const w of wordscli) words.add(w)
-    for (const w of wordsruntime) words.add(w)
-    for (const w of SPECIAL_COMMANDS) words.add(w)
+    for (const w of wordscli) {
+      words.add(w)
+    }
+    for (const w of wordsruntime) {
+      words.add(w)
+    }
+    for (const w of SPECIAL_COMMANDS) {
+      words.add(w)
+    }
     return Array.from(words)
   }, [wordscli, wordsruntime])
 
+  const statwords = useMemo(() => Array.from(wordsstats), [wordsstats])
+
+  const statvaluewords = useMemo(() => {
+    const words = new Set<string>()
+    for (const w of wordskinds) {
+      words.add(w)
+    }
+    for (const w of wordsaltkinds) {
+      words.add(w)
+    }
+    for (const w of wordscolors) {
+      words.add(w)
+    }
+    for (const w of wordsdirs) {
+      words.add(w)
+    }
+    for (const w of wordsdirmods) {
+      words.add(w)
+    }
+    for (const w of wordsexprs) {
+      words.add(w)
+    }
+    for (const w of wordsstats) {
+      words.add(w)
+    }
+    return Array.from(words)
+  }, [
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+    wordsexprs,
+    wordsstats,
+  ])
+
   const allwords = useMemo(() => {
     const words = new Set(commandwords)
-    for (const w of wordsflags) words.add(w)
-    for (const w of wordsstats) words.add(w)
-    for (const w of wordskinds) words.add(w)
-    for (const w of wordsaltkinds) words.add(w)
-    for (const w of wordscolors) words.add(w)
-    for (const w of wordsdirs) words.add(w)
-    for (const w of wordsdirmods) words.add(w)
-    for (const w of wordsexprs) words.add(w)
+    for (const w of wordsflags) {
+      words.add(w)
+    }
+    for (const w of wordsstats) {
+      words.add(w)
+    }
+    for (const w of wordskinds) {
+      words.add(w)
+    }
+    for (const w of wordsaltkinds) {
+      words.add(w)
+    }
+    for (const w of wordscolors) {
+      words.add(w)
+    }
+    for (const w of wordsdirs) {
+      words.add(w)
+    }
+    for (const w of wordsdirmods) {
+      words.add(w)
+    }
+    for (const w of wordsexprs) {
+      words.add(w)
+    }
     return Array.from(words)
   }, [
     commandwords,
@@ -109,17 +167,39 @@ export function TerminalComponent() {
 
   const wordcolors = useMemo(() => {
     const map = new Map<string, number>()
-    for (const w of wordscli) map.set(w, COLOR.DKGREEN)
-    for (const w of wordsruntime) map.set(w, COLOR.DKGREEN)
-    for (const w of SPECIAL_COMMANDS) map.set(w, COLOR.DKGREEN)
-    for (const w of wordsflags) map.set(w, COLOR.PURPLE)
-    for (const w of wordsstats) map.set(w, COLOR.DKPURPLE)
-    for (const w of wordskinds) map.set(w, COLOR.CYAN)
-    for (const w of wordsaltkinds) map.set(w, COLOR.DKCYAN)
-    for (const w of wordscolors) map.set(w, COLOR.RED)
-    for (const w of wordsdirs) map.set(w, COLOR.WHITE)
-    for (const w of wordsdirmods) map.set(w, COLOR.LTGRAY)
-    for (const w of wordsexprs) map.set(w, COLOR.YELLOW)
+    for (const w of wordscli) {
+      map.set(w, COLOR.DKGREEN)
+    }
+    for (const w of wordsruntime) {
+      map.set(w, COLOR.DKGREEN)
+    }
+    for (const w of SPECIAL_COMMANDS) {
+      map.set(w, COLOR.DKGREEN)
+    }
+    for (const w of wordsflags) {
+      map.set(w, COLOR.PURPLE)
+    }
+    for (const w of wordsstats) {
+      map.set(w, COLOR.DKPURPLE)
+    }
+    for (const w of wordskinds) {
+      map.set(w, COLOR.CYAN)
+    }
+    for (const w of wordsaltkinds) {
+      map.set(w, COLOR.DKCYAN)
+    }
+    for (const w of wordscolors) {
+      map.set(w, COLOR.RED)
+    }
+    for (const w of wordsdirs) {
+      map.set(w, COLOR.WHITE)
+    }
+    for (const w of wordsdirmods) {
+      map.set(w, COLOR.LTGRAY)
+    }
+    for (const w of wordsexprs) {
+      map.set(w, COLOR.YELLOW)
+    }
     return map
   }, [
     wordscli,
@@ -165,6 +245,8 @@ export function TerminalComponent() {
             inputstate,
             tapeterminal.xcursor,
             commandwords,
+            statwords,
+            statvaluewords,
             allwords,
           )
         : EMPTY_AUTOCOMPLETE,
@@ -173,6 +255,8 @@ export function TerminalComponent() {
       tapeterminal.xcursor,
       inputstateactive,
       commandwords,
+      statwords,
+      statvaluewords,
       allwords,
     ],
   )

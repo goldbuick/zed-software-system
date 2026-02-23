@@ -5,7 +5,9 @@ class modelcache {
   db: IDBDatabase | null = null
 
   async init() {
-    if (this.db) return this.db
+    if (this.db) {
+      return this.db
+    }
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version)
       request.onerror = () => reject(request.error as Error)
@@ -28,7 +30,9 @@ class modelcache {
   async get(url: string) {
     await this.init()
     return new Promise<ArrayBuffer | null>((resolve, reject) => {
-      if (!this.db) return reject(new Error('IndexedDB not initialized'))
+      if (!this.db) {
+        return reject(new Error('IndexedDB not initialized'))
+      }
       const transaction = this.db.transaction([this.storeName], 'readonly')
       const store = transaction.objectStore(this.storeName)
       const request = store.get(url)
@@ -43,7 +47,9 @@ class modelcache {
             void this.delete(url)
             resolve(null)
           }
-        } else resolve(null)
+        } else {
+          resolve(null)
+        }
       }
     })
   }
@@ -51,7 +57,9 @@ class modelcache {
   async set(url: string, data: ArrayBuffer) {
     await this.init()
     return new Promise<void>((resolve, reject) => {
-      if (!this.db) return reject(new Error('IndexedDB not initialized'))
+      if (!this.db) {
+        return reject(new Error('IndexedDB not initialized'))
+      }
       const tx = this.db.transaction([this.storeName], 'readwrite')
       const store = tx.objectStore(this.storeName)
       const req = store.put({ url, data, timestamp: Date.now() })
@@ -63,7 +71,9 @@ class modelcache {
   async delete(url: string) {
     await this.init()
     return new Promise<void>((resolve, reject) => {
-      if (!this.db) return reject(new Error('IndexedDB not initialized'))
+      if (!this.db) {
+        return reject(new Error('IndexedDB not initialized'))
+      }
       const tx = this.db.transaction([this.storeName], 'readwrite')
       const store = tx.objectStore(this.storeName)
       const req = store.delete(url)
@@ -85,7 +95,9 @@ export async function cachedfetch(url: string): Promise<Response> {
 
   // Otherwise fetch from network
   const response = await fetch(url)
-  if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.status}`)
+  }
 
   const data = await response.arrayBuffer()
   await cache.set(url, data)
