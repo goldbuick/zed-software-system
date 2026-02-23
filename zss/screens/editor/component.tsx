@@ -13,7 +13,7 @@ import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
-import { buildWordColorMap, useZssWords } from 'zss/screens/tape/zsswords'
+import { buildwordcolormap, useZssWords } from 'zss/screens/tape/zsswords'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -35,17 +35,17 @@ export function EditorComponent() {
   const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
 
-  const { words, commandNames, commandwords, statwords, allwords } =
+  const { words, commandnames, commandwords, statwords, allwords } =
     useZssWords({ isLoader: editor.type === 'loader' })
 
   const wordcolors = useMemo(
     () =>
-      buildWordColorMap(words, {
+      buildwordcolormap(words, {
         command: ZSS_TYPE_COMMAND,
         flag: ZSS_WORD_FLAG,
         stat: ZSS_WORD_STAT,
         kind: ZSS_WORD_KIND,
-        kindAlt: ZSS_WORD_KIND_ALT,
+        kindalt: ZSS_WORD_KIND_ALT,
         color: ZSS_WORD_COLOR,
         dir: ZSS_WORD_DIR,
         dirmod: ZSS_WORD_DIRMOD,
@@ -148,7 +148,7 @@ export function EditorComponent() {
           token.startColumn === 1
         ) {
           const labelname = token.image.slice(1).trim().toLowerCase()
-          if (commandNames.has(labelname)) {
+          if (commandnames.has(labelname)) {
             const row = rows[(token.startLine ?? 1) - 1]
             if (ispresent(row)) {
               row.errors = row.errors ?? []
@@ -166,7 +166,7 @@ export function EditorComponent() {
     }
 
     return rows
-  }, [strvalue, commandNames])
+  }, [strvalue, commandnames])
 
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)

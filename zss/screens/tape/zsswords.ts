@@ -2,36 +2,6 @@ import { useMemo } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { useShallow } from 'zustand/react/shallow'
 
-/** Normalize zsswords from state (handles both camelCase and lowercase keys from wire/legacy). */
-function normalizeZssWords(
-  z: Record<string, string[] | undefined> | undefined,
-): ZSS_WORDS {
-  if (!z) {
-    return EMPTY_ZSS_WORDS
-  }
-  const arr = (k: string, ...alt: string[]) =>
-    z[k] ?? alt.map((a) => z[a]).find(Boolean) ?? []
-  return {
-    cli: arr('cli'),
-    loader: arr('loader'),
-    runtime: arr('runtime'),
-    flags: arr('flags'),
-    statsboard: arr('statsboard', 'statsBoard'),
-    statshelper: arr('statshelper', 'statsHelper'),
-    statssender: arr('statssender', 'statsSender'),
-    statsinteraction: arr('statsinteraction', 'statsInteraction'),
-    statsboolean: arr('statsboolean', 'statsBoolean'),
-    statsconfig: arr('statsconfig', 'statsConfig'),
-    statsrunwith: arr('statsrunwith', 'statsRunwith'),
-    kinds: arr('kinds'),
-    altkinds: arr('altkinds'),
-    colors: arr('colors'),
-    dirs: arr('dirs'),
-    dirmods: arr('dirmods'),
-    exprs: arr('exprs'),
-  }
-}
-
 const EMPTY_ZSS_WORDS: ZSS_WORDS = {
   cli: [],
   loader: [],
@@ -111,7 +81,7 @@ export type ZSS_WORD_COLOR_MAP = {
   flag: number
   stat: number
   kind: number
-  kindAlt: number
+  kindalt: number
   color: number
   dir: number
   dirmod: number
@@ -119,12 +89,12 @@ export type ZSS_WORD_COLOR_MAP = {
 }
 
 /** Build word -> color (or token type) map from normalized words and category colors. */
-export function buildWordColorMap(
+export function buildwordcolormap(
   words: ZSS_WORDS,
   colors: ZSS_WORD_COLOR_MAP,
 ): Map<string, number> {
   const map = new Map<string, number>()
-  const { command, flag, stat, kind, kindAlt, color, dir, dirmod, exprs } =
+  const { command, flag, stat, kind, kindalt, color, dir, dirmod, exprs } =
     colors
   for (const w of STRUCTURED_COMMANDS) {
     map.set(w, command)
@@ -169,7 +139,7 @@ export function buildWordColorMap(
     map.set(w, kind)
   }
   for (const w of words.altkinds) {
-    map.set(w, kindAlt)
+    map.set(w, kindalt)
   }
   for (const w of words.colors) {
     map.set(w, color)
@@ -189,13 +159,15 @@ export function buildWordColorMap(
 export type UseZssWordsOptions = {
   /** Include loader commands in command set (editor loader codepage). */
   isLoader?: boolean
+  /** Include CLI commands (e.g. for terminal #command autocomplete). */
+  isCli?: boolean
 }
 
 export type UseZssWordsResult = {
   /** Normalized word arrays from gadget state. */
   words: ZSS_WORDS
   /** Set of lowercased command names (for label shadow check in editor). */
-  commandNames: Set<string>
+  commandnames: Set<string>
   /** Command words for autocomplete (runtime + optional loader + structured + special). */
   commandwords: string[]
   /** Stat words minus flags. */
@@ -207,15 +179,37 @@ export type UseZssWordsResult = {
 export function useZssWords(
   options: UseZssWordsOptions = {},
 ): UseZssWordsResult {
-  const { isLoader = false } = options
+  const { isLoader = false, isCli = false } = options
   const raw = useGadgetClient(useShallow((state) => state.zsswords))
-  const words = useMemo(
-    () => normalizeZssWords(raw as Record<string, string[] | undefined>),
-    [raw],
-  )
+  const words = useMemo(() => {
+    const z = raw as Record<string, string[] | undefined> | undefined
+    if (!z) {
+      return EMPTY_ZSS_WORDS
+    }
+    const arr = (k: string) => z[k] ?? []
+    return {
+      cli: arr('cli'),
+      loader: arr('loader'),
+      runtime: arr('runtime'),
+      flags: arr('flags'),
+      statsboard: arr('statsboard'),
+      statshelper: arr('statshelper'),
+      statssender: arr('statssender'),
+      statsinteraction: arr('statsinteraction'),
+      statsboolean: arr('statsboolean'),
+      statsconfig: arr('statsconfig'),
+      statsrunwith: arr('statsrunwith'),
+      kinds: arr('kinds'),
+      altkinds: arr('altkinds'),
+      colors: arr('colors'),
+      dirs: arr('dirs'),
+      dirmods: arr('dirmods'),
+      exprs: arr('exprs'),
+    }
+  }, [raw])
 
-  const commandNames = useMemo(() => {
-    const names = new Set(STRUCTURED_SET)
+  const commandnames = useMemo(() => {
+    const names = new Set<string>(STRUCTURED_SET)
     for (const word of words.cli) {
       names.add(word.toLowerCase())
     }
@@ -235,6 +229,11 @@ export function useZssWords(
         set.add(w)
       }
     }
+    if (isCli) {
+      for (const w of words.cli) {
+        set.add(w)
+      }
+    }
     for (const w of words.runtime) {
       set.add(w)
     }
@@ -245,7 +244,7 @@ export function useZssWords(
       set.add(w)
     }
     return Array.from(set)
-  }, [isLoader, words.loader, words.runtime])
+  }, [isLoader, isCli, words.loader, words.cli, words.runtime])
 
   const statwords = useMemo(() => {
     const flagset = new Set(words.flags.map((w) => w.toLowerCase()))
@@ -334,7 +333,7 @@ export function useZssWords(
 
   return {
     words,
-    commandNames,
+    commandnames,
     commandwords,
     statwords,
     allwords,

@@ -15,9 +15,20 @@ import {
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
-import { buildWordColorMap, useZssWords } from 'zss/screens/tape/zsswords'
+import { buildwordcolormap, useZssWords } from 'zss/screens/tape/zsswords'
 import { textformatreadedges } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
+
+import {
+  ZSS_TYPE_COMMAND,
+  ZSS_WORD_COLOR,
+  ZSS_WORD_DIR,
+  ZSS_WORD_DIRMOD,
+  ZSS_WORD_EXPRS,
+  ZSS_WORD_FLAG,
+  ZSS_WORD_KIND,
+  ZSS_WORD_KIND_ALT,
+  ZSS_WORD_STAT,
+} from '../editor/colors'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
@@ -37,19 +48,21 @@ export function TerminalComponent() {
     })
   }, [])
 
-  const { words, commandwords, statwords, allwords } = useZssWords()
+  const { words, commandwords, statwords, allwords } = useZssWords({
+    isCli: true,
+  })
   const wordcolors = useMemo(
     () =>
-      buildWordColorMap(words, {
-        command: COLOR.DKGREEN,
-        flag: COLOR.PURPLE,
-        stat: COLOR.DKPURPLE,
-        kind: COLOR.CYAN,
-        kindAlt: COLOR.DKCYAN,
-        color: COLOR.RED,
-        dir: COLOR.WHITE,
-        dirmod: COLOR.LTGRAY,
-        exprs: COLOR.YELLOW,
+      buildwordcolormap(words, {
+        command: ZSS_TYPE_COMMAND,
+        flag: ZSS_WORD_FLAG,
+        stat: ZSS_WORD_STAT,
+        kind: ZSS_WORD_KIND,
+        kindalt: ZSS_WORD_KIND_ALT,
+        color: ZSS_WORD_COLOR,
+        dir: ZSS_WORD_DIR,
+        dirmod: ZSS_WORD_DIRMOD,
+        exprs: ZSS_WORD_EXPRS,
       }),
     [words],
   )
