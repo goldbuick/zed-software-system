@@ -222,40 +222,6 @@ export function EditorComponent() {
 
   const statwords = useMemo(() => Array.from(wordsstats), [wordsstats])
 
-  const statvaluewords = useMemo(() => {
-    const words = new Set<string>()
-    for (const w of wordskinds) {
-      words.add(w)
-    }
-    for (const w of wordsaltkinds) {
-      words.add(w)
-    }
-    for (const w of wordscolors) {
-      words.add(w)
-    }
-    for (const w of wordsdirs) {
-      words.add(w)
-    }
-    for (const w of wordsdirmods) {
-      words.add(w)
-    }
-    for (const w of wordsexprs) {
-      words.add(w)
-    }
-    for (const w of wordsstats) {
-      words.add(w)
-    }
-    return Array.from(words)
-  }, [
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-    wordsstats,
-  ])
-
   const allwords = useMemo(() => {
     const words = new Set(commandwords)
     for (const w of wordsflags) {
@@ -477,18 +443,9 @@ export function EditorComponent() {
         ycursor,
         commandwords,
         statwords,
-        statvaluewords,
         allwords,
       ),
-    [
-      rows,
-      tapeeditor.cursor,
-      ycursor,
-      commandwords,
-      statwords,
-      statvaluewords,
-      allwords,
-    ],
+    [rows, tapeeditor.cursor, ycursor, commandwords, statwords, allwords],
   )
 
   // measure edges once

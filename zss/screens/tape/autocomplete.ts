@@ -86,7 +86,6 @@ export function getautocomplete(
   ycursor: number,
   commandwords: string[],
   statwords: string[],
-  statvaluewords: string[],
   allwords: string[],
 ): AUTOCOMPLETE {
   const row = rows[ycursor]
@@ -96,7 +95,6 @@ export function getautocomplete(
 
   const col = cursor - row.start
   const linetext = row.code.substring(0, col)
-  const trimmed = linetext.trimStart()
 
   const cmdmatch = /#(\w*)$/.exec(linetext)
   if (cmdmatch) {
@@ -118,8 +116,8 @@ export function getautocomplete(
     }
   }
 
-  const statnamematch = /@(\w*)$/.exec(linetext)
-  if (statnamematch && trimmed.startsWith('@')) {
+  const statnamematch = /(?:^|\s)@(\w*)$/.exec(linetext)
+  if (statnamematch) {
     const prefix = statnamematch[1]
     const wordcol = col - prefix.length
     const wordstart = cursor - prefix.length
@@ -136,24 +134,7 @@ export function getautocomplete(
 
   const statvaluematch = /@\S+\s+(\w*)$/.exec(linetext)
   if (statvaluematch) {
-    const prefix = statvaluematch[1]
-    if (!/^\d*$/.test(prefix)) {
-      const wordcol = col - prefix.length
-      const wordstart = cursor - prefix.length
-      const suggestions = filtersuggestions(
-        prefix,
-        MIN_PREFIX_GENERAL,
-        statvaluewords,
-      )
-      return {
-        suggestions,
-        prefix,
-        wordcol,
-        wordstart,
-        iscommand: false,
-        category: 'statvalue',
-      }
-    }
+    return EMPTY_AUTOCOMPLETE
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
@@ -183,11 +164,9 @@ export function getlineautocomplete(
   cursor: number,
   commandwords: string[],
   statwords: string[],
-  statvaluewords: string[],
   allwords: string[],
 ): AUTOCOMPLETE {
   const linetext = line.substring(0, cursor)
-  const trimmed = linetext.trimStart()
 
   const cmdmatch = /#(\w*)$/.exec(linetext)
   if (cmdmatch) {
@@ -209,8 +188,8 @@ export function getlineautocomplete(
     }
   }
 
-  const statnamematch = /@(\w*)$/.exec(linetext)
-  if (statnamematch && trimmed.startsWith('@')) {
+  const statnamematch = /(?:^|\s)@(\w*)$/.exec(linetext)
+  if (statnamematch) {
     const prefix = statnamematch[1]
     const wordcol = cursor - prefix.length
     const wordstart = cursor - prefix.length
@@ -227,24 +206,7 @@ export function getlineautocomplete(
 
   const statvaluematch = /@\S+\s+(\w*)$/.exec(linetext)
   if (statvaluematch) {
-    const prefix = statvaluematch[1]
-    if (!/^\d*$/.test(prefix)) {
-      const wordcol = cursor - prefix.length
-      const wordstart = cursor - prefix.length
-      const suggestions = filtersuggestions(
-        prefix,
-        MIN_PREFIX_GENERAL,
-        statvaluewords,
-      )
-      return {
-        suggestions,
-        prefix,
-        wordcol,
-        wordstart,
-        iscommand: false,
-        category: 'statvalue',
-      }
-    }
+    return EMPTY_AUTOCOMPLETE
   }
 
   const wordmatch = /(\w+)$/.exec(linetext)
@@ -274,7 +236,6 @@ const AC_FG = COLOR.LTGRAY
 const AC_SEL_BG = COLOR.DKBLUE
 const AC_SEL_FG = COLOR.WHITE
 const AC_HINT_FG = COLOR.DKGRAY
-
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
 function applysuggestioncolors(
@@ -419,11 +380,12 @@ export function drawlineautocomplete(
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
 ) {
-  if (ac.suggestions.length === 0 || acindex < 0) {
+  if (ac.suggestions.length === 0) {
     return
   }
+  const effectiveindex = acindex < 0 ? 0 : acindex
 
-  const startx = edge.left + ac.wordcol - 1
+  const startx = edge.left + ac.wordcol
   const maxitemlen = ac.suggestions.reduce(
     (max, s) => Math.max(max, s.length),
     0,
@@ -436,7 +398,7 @@ export function drawlineautocomplete(
       continue
     }
 
-    const selected = i === acindex
+    const selected = i === effectiveindex
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(startx, edge.left)

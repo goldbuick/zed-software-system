@@ -273,10 +273,6 @@ export function EditorInput({
           }
         }}
         MENU_BUTTON={(mods) => {
-          if (acactive) {
-            acceptsuggestion()
-            return
-          }
           registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
