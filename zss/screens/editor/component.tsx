@@ -17,15 +17,7 @@ import { buildWordColorMap, useZssWords } from 'zss/screens/tape/zsswords'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
-  ZSS_MUSIC_DRUM,
-  ZSS_MUSIC_NOTE,
-  ZSS_MUSIC_OCTAVE,
-  ZSS_MUSIC_PITCH,
-  ZSS_MUSIC_REST,
-  ZSS_MUSIC_TIME,
-  ZSS_MUSIC_TIMEMOD,
   ZSS_TYPE_COMMAND,
-  ZSS_TYPE_SYMBOL,
   ZSS_WORD_COLOR,
   ZSS_WORD_DIR,
   ZSS_WORD_DIRMOD,
@@ -34,58 +26,10 @@ import {
   ZSS_WORD_KIND,
   ZSS_WORD_KIND_ALT,
   ZSS_WORD_STAT,
-  zssmusiccolorconfig,
-  zsswordcolorconfig,
 } from './colors'
 import { EditorFrame } from './editorframe'
 import { EditorInput, EditorInputProps } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
-
-function skipwords(word: string) {
-  switch (word) {
-    // skip non-typed keywords
-    case 'stat':
-    case 'text':
-    case 'hyperlink':
-      return false
-    default:
-      return true
-  }
-}
-
-// set #play note colors
-zssmusiccolorconfig('a', ZSS_MUSIC_NOTE)
-zssmusiccolorconfig('b', ZSS_MUSIC_NOTE)
-zssmusiccolorconfig('c', ZSS_MUSIC_NOTE)
-zssmusiccolorconfig('d', ZSS_MUSIC_NOTE)
-zssmusiccolorconfig('e', ZSS_MUSIC_NOTE)
-zssmusiccolorconfig('f', ZSS_MUSIC_NOTE)
-zssmusiccolorconfig('g', ZSS_MUSIC_NOTE)
-zssmusiccolorconfig('x', ZSS_MUSIC_REST)
-zssmusiccolorconfig('#', ZSS_MUSIC_PITCH)
-zssmusiccolorconfig('!', ZSS_MUSIC_PITCH)
-zssmusiccolorconfig('y', ZSS_MUSIC_TIME)
-zssmusiccolorconfig('t', ZSS_MUSIC_TIME)
-zssmusiccolorconfig('s', ZSS_MUSIC_TIME)
-zssmusiccolorconfig('i', ZSS_MUSIC_TIME)
-zssmusiccolorconfig('q', ZSS_MUSIC_TIME)
-zssmusiccolorconfig('h', ZSS_MUSIC_TIME)
-zssmusiccolorconfig('w', ZSS_MUSIC_TIME)
-zssmusiccolorconfig('3', ZSS_MUSIC_TIMEMOD)
-zssmusiccolorconfig('.', ZSS_MUSIC_TIMEMOD)
-zssmusiccolorconfig('+', ZSS_MUSIC_OCTAVE)
-zssmusiccolorconfig('-', ZSS_MUSIC_OCTAVE)
-zssmusiccolorconfig('0', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('1', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('2', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('p', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('4', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('5', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('6', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('7', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('8', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig('9', ZSS_MUSIC_DRUM)
-zssmusiccolorconfig(';', ZSS_TYPE_SYMBOL)
 
 export function EditorComponent() {
   const player = registerreadplayer()
@@ -93,57 +37,6 @@ export function EditorComponent() {
 
   const { words, commandNames, commandwords, statwords, allwords } =
     useZssWords({ isLoader: editor.type === 'loader' })
-
-  useEffect(() => {
-    // set command keywords
-    words.cli
-      .filter(skipwords)
-      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
-    words.loader
-      .filter(skipwords)
-      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
-    words.runtime
-      .filter(skipwords)
-      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
-
-    // enum const words
-    words.flags.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_FLAG))
-    words.statsboard.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
-    words.statshelper.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
-    words.statssender.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
-    words.statsinteraction.forEach((word) =>
-      zsswordcolorconfig(word, ZSS_WORD_STAT),
-    )
-    words.statsboolean.forEach((word) =>
-      zsswordcolorconfig(word, ZSS_WORD_STAT),
-    )
-    words.statsconfig.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
-    words.kinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND))
-    words.altkinds.forEach((word) =>
-      zsswordcolorconfig(word, ZSS_WORD_KIND_ALT),
-    )
-    words.colors.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_COLOR))
-    words.dirs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIR))
-    words.dirmods.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIRMOD))
-    words.exprs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_EXPRS))
-  }, [
-    words.cli,
-    words.loader,
-    words.runtime,
-    words.flags,
-    words.statsboard,
-    words.statshelper,
-    words.statssender,
-    words.statsinteraction,
-    words.statsboolean,
-    words.statsconfig,
-    words.kinds,
-    words.altkinds,
-    words.colors,
-    words.dirs,
-    words.dirmods,
-    words.exprs,
-  ])
 
   const wordcolors = useMemo(
     () =>

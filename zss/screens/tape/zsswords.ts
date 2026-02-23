@@ -10,7 +10,7 @@ function normalizeZssWords(
     return EMPTY_ZSS_WORDS
   }
   const arr = (k: string, ...alt: string[]) =>
-    (z[k] ?? alt.map((a) => z[a]).find(Boolean) ?? []) as string[]
+    z[k] ?? alt.map((a) => z[a]).find(Boolean) ?? []
   return {
     cli: arr('cli'),
     loader: arr('loader'),

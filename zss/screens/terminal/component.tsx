@@ -15,10 +15,7 @@ import {
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
-import {
-  buildWordColorMap,
-  useZssWords,
-} from 'zss/screens/tape/zsswords'
+import { buildWordColorMap, useZssWords } from 'zss/screens/tape/zsswords'
 import { textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 

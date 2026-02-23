@@ -46,7 +46,7 @@ function extractdesc(content: string): string {
   return desc.replace(/^\$\w+/i, '').trim()
 }
 
-export function romhintfor(word: string): string {
+function romhintfor(word: string): string {
   const lower = word.toLowerCase().trim()
   if (!lower) {
     return ''
