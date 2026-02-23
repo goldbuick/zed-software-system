@@ -19,10 +19,7 @@ import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import {
-  AUTOCOMPLETE,
-  drawlineautocomplete,
-} from 'zss/screens/tape/autocomplete'
+import { AUTOCOMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
@@ -178,13 +175,15 @@ export function TerminalInput({
 
   drawTerminalCursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
-  drawlineautocomplete(
+  drawautocomplete(
     autocomplete,
     tapeterminal.acindex,
     edge.top + edge.height - 1,
+    edge.left + autocomplete.wordcol,
     edge,
     context,
     wordcolors,
+    true,
   )
 
   // --- speech to text ---
