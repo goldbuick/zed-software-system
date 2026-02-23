@@ -308,9 +308,20 @@ const register = createdevice(
         }
         break
       case 'ackzsswords': {
-        useGadgetClient.setState({ zsswords: message.data })
+        const data = message.data as Record<string, string[]>
+        const normalized = { ...data }
+        if (ispresent(data.stats) && !ispresent(data.statsBoard)) {
+          normalized.statsBoard = data.stats ?? []
+          normalized.statsHelper = []
+          normalized.statsSender = []
+          normalized.statsInteraction = []
+          normalized.statsBoolean = []
+          normalized.statsConfig = []
+          normalized.statsRunwith = []
+        }
+        useGadgetClient.setState({ zsswords: normalized })
         const dynamicwords: string[] = []
-        const words = Object.values(message.data as Record<string, string[]>)
+        const words = Object.values(normalized)
         for (let i = 0; i < words.length; ++i) {
           dynamicwords.push(...words[i])
         }

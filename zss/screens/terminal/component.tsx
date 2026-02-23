@@ -55,7 +55,13 @@ export function TerminalComponent() {
     wordscli,
     wordsruntime,
     wordsflags,
-    wordsstats,
+    statsBoard,
+    statsHelper,
+    statsSender,
+    statsInteraction,
+    statsBoolean,
+    statsConfig,
+    statsRunwith,
     wordskinds,
     wordsaltkinds,
     wordscolors,
@@ -67,7 +73,13 @@ export function TerminalComponent() {
       state.zsswords.cli,
       state.zsswords.runtime,
       state.zsswords.flags,
-      state.zsswords.stats,
+      state.zsswords.statsBoard,
+      state.zsswords.statsHelper,
+      state.zsswords.statsSender,
+      state.zsswords.statsInteraction,
+      state.zsswords.statsBoolean,
+      state.zsswords.statsConfig,
+      state.zsswords.statsRunwith,
       state.zsswords.kinds,
       state.zsswords.altkinds,
       state.zsswords.colors,
@@ -75,6 +87,27 @@ export function TerminalComponent() {
       state.zsswords.dirmods,
       state.zsswords.exprs,
     ]),
+  )
+
+  const wordsstats = useMemo(
+    () => [
+      ...statsBoard,
+      ...statsHelper,
+      ...statsSender,
+      ...statsInteraction,
+      ...statsBoolean,
+      ...statsConfig,
+      ...statsRunwith,
+    ],
+    [
+      statsBoard,
+      statsHelper,
+      statsSender,
+      statsInteraction,
+      statsBoolean,
+      statsConfig,
+      statsRunwith,
+    ],
   )
 
   const commandwords = useMemo(() => {
@@ -91,7 +124,10 @@ export function TerminalComponent() {
     return Array.from(words)
   }, [wordscli, wordsruntime])
 
-  const statwords = useMemo(() => Array.from(wordsstats), [wordsstats])
+  const statwords = useMemo(() => {
+    const flagset = new Set(wordsflags.map((w) => w.toLowerCase()))
+    return Array.from(wordsstats).filter((w) => !flagset.has(w.toLowerCase()))
+  }, [wordsstats, wordsflags])
 
   const allwords = useMemo(() => {
     const words = new Set(commandwords)
