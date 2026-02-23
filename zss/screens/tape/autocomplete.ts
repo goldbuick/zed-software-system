@@ -10,14 +10,22 @@ import { COLOR } from 'zss/words/types'
 
 import { EDITOR_CODE_ROW } from './common'
 
-export type AUTOCOMPLETE_CATEGORY = 'command' | 'stat' | 'statvalue' | 'general'
+export type AUTOCOMPLETE_CATEGORY =
+  | 'command'
+  | 'flag'
+  | 'stat'
+  | 'kind'
+  | 'color'
+  | 'dir'
+  | 'dirmod'
+  | 'expr'
+  | 'none'
 
 export type AUTOCOMPLETE = {
   suggestions: string[]
   prefix: string
   wordcol: number
   wordstart: number
-  iscommand: boolean
   category: AUTOCOMPLETE_CATEGORY
 }
 
@@ -26,8 +34,7 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
   prefix: '',
   wordcol: 0,
   wordstart: 0,
-  iscommand: false,
-  category: 'general',
+  category: 'none',
 }
 
 const ROM_CATEGORIES = [
@@ -61,15 +68,9 @@ function romhintfor(word: string): string {
 }
 
 const MAX_SUGGESTIONS = 8
-const MIN_PREFIX_COMMAND = 1
-const MIN_PREFIX_GENERAL = 1
 
-function filtersuggestions(
-  prefix: string,
-  minlen: number,
-  words: string[],
-): string[] {
-  if (prefix.length < minlen) {
+function filtersuggestions(prefix: string, words: string[]): string[] {
+  if (prefix.length < 1) {
     return []
   }
   const lower = prefix.toLowerCase()
@@ -80,22 +81,6 @@ function filtersuggestions(
     .sort()
     .slice(0, MAX_SUGGESTIONS)
 }
-
-const COMMAND_WORD_TOKEN_TYPES = new Set([
-  lexer.command_play.tokenTypeIdx,
-  lexer.command_toast.tokenTypeIdx,
-  lexer.command_ticker.tokenTypeIdx,
-  lexer.command_if.tokenTypeIdx,
-  lexer.command_do.tokenTypeIdx,
-  lexer.command_done.tokenTypeIdx,
-  lexer.command_else.tokenTypeIdx,
-  lexer.command_while.tokenTypeIdx,
-  lexer.command_repeat.tokenTypeIdx,
-  lexer.command_waitfor.tokenTypeIdx,
-  lexer.command_foreach.tokenTypeIdx,
-  lexer.command_break.tokenTypeIdx,
-  lexer.command_continue.tokenTypeIdx,
-])
 
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
@@ -108,113 +93,84 @@ function getautocompletefromtokens(
   if (!tokens?.length) {
     return null
   }
-  console.info({ tokens })
-  const cursorCol1 = col + 1
+  const cursor = col + 1
+
   let activetokenidx = -1
-  let aftertokenidx = -1
   for (let t = 0; t < tokens.length; t++) {
     const tok = tokens[t]
-    const sc = tok.startColumn ?? 1
-    const ec = tok.endColumn ?? 1
-    if (cursorCol1 >= sc && cursorCol1 <= ec) {
+    const startx = tok.startColumn ?? 1
+    const endx = tok.endColumn ?? 1
+    if (cursor >= startx && cursor <= endx) {
       activetokenidx = t
       break
     }
-    if (ec === cursorCol1 - 1) {
-      aftertokenidx = t
-    }
   }
-  console.info({ activetokenidx, aftertokenidx })
+
   if (activetokenidx >= 0) {
-    const token = tokens[activetokenidx]
-    const prev = tokens[activetokenidx - 1]
-    const idx = token.startColumn ?? 1
-    const prefix = row.code.substring(idx - 1, col)
-    const wordcol = idx - 1
-    const wordstart = row.start + wordcol
-    
-    // handle cases where we check previous token type
-    switch (prev.tokenTypeIdx) {
-      case lexer.command.tokenTypeIdx:
-        console.info('command', token)
-        break
+    // handle being at the end of a line
+    if (
+      activetokenidx > 0 &&
+      tokens[activetokenidx].tokenTypeIdx === lexer.newline.tokenTypeIdx
+    ) {
+      --activetokenidx
     }
 
-  //   if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
-  //     return {
-  //       suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
-  //       prefix: '',
-  //       wordcol,
-  //       wordstart,
-  //       iscommand: true,
-  //       category: 'command',
-  //     }
-  //   }
-  //   if (COMMAND_WORD_TOKEN_TYPES.has(token.tokenTypeIdx)) {
-  //     return EMPTY_AUTOCOMPLETE
-  //   }
-  //   if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
-  //     const statprefix = prefix.replace(/^@/, '')
-  //     return {
-  //       suggestions: filtersuggestions(
-  //         statprefix,
-  //         MIN_PREFIX_GENERAL,
-  //         statwords,
-  //       ),
-  //       prefix: statprefix,
-  //       wordcol,
-  //       wordstart,
-  //       iscommand: false,
-  //       category: 'stat',
-  //     }
-  //   }
-  //   if (token.tokenTypeIdx === lexer.text.tokenTypeIdx) {
-  //     const isafterhash =
-  //       prev && prev.tokenTypeIdx === lexer.command.tokenTypeIdx
-  //     if (isafterhash) {
-  //       return {
-  //         suggestions: filtersuggestions(
-  //           prefix,
-  //           MIN_PREFIX_COMMAND,
-  //           commandwords,
-  //         ),
-  //         prefix,
-  //         wordcol,
-  //         wordstart,
-  //         iscommand: true,
-  //         category: 'command',
-  //       }
-  //     }
-  //     if (/^\d+$/.test(prefix)) {
-  //       return EMPTY_AUTOCOMPLETE
-  //     }
-  //     return {
-  //       suggestions: filtersuggestions(prefix, MIN_PREFIX_GENERAL, allwords),
-  //       prefix,
-  //       wordcol,
-  //       wordstart,
-  //       iscommand: false,
-  //       category: 'general',
-  //     }
-  //   }
-  //   return null
-  // }
-  // if (aftertokenidx >= 0) {
-  //   const token = tokens[aftertokenidx]
-  //   if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
-  //     const endCol1 = token.endColumn ?? 1
-  //     const wordcol = endCol1
-  //     const wordstart = row.start + wordcol
-  //     return {
-  //       suggestions: filtersuggestions('', MIN_PREFIX_COMMAND, commandwords),
-  //       prefix: '',
-  //       wordcol,
-  //       wordstart,
-  //       iscommand: true,
-  //       category: 'command',
-  //     }
-  //   }
-  // }
+    // get token context
+    const token = tokens[activetokenidx]
+    const prev = tokens[activetokenidx - 1]
+    const wordcol = token.endColumn ?? 1
+    const wordstart = row.start + (token.startColumn ?? 1)
+
+    switch (token.tokenTypeIdx) {
+      case lexer.text.tokenTypeIdx:
+      case lexer.stringliteral.tokenTypeIdx:
+      case lexer.stringliteraldouble.tokenTypeIdx:
+        switch (prev?.tokenTypeIdx) {
+          case lexer.command.tokenTypeIdx:
+            return {
+              suggestions: filtersuggestions(token.image, commandwords),
+              prefix: token.image,
+              wordcol,
+              wordstart,
+              category: 'command',
+            }
+            break
+          case lexer.stat.tokenTypeIdx:
+            console.info('stat', token.image)
+            break
+          default:
+            console.info('prev unknown', prev)
+            break
+        }
+        break
+      case lexer.stat.tokenTypeIdx:
+        // only consider autocomplete for stats if we are in the editor
+        break
+      case lexer.label.tokenTypeIdx:
+      case lexer.comment.tokenTypeIdx:
+        // skip
+        break
+      case lexer.command_play.tokenTypeIdx:
+        // notes ??
+        break
+      case lexer.command_toast.tokenTypeIdx:
+      case lexer.command_ticker.tokenTypeIdx:
+      case lexer.command_if.tokenTypeIdx:
+      case lexer.command_do.tokenTypeIdx:
+      case lexer.command_done.tokenTypeIdx:
+      case lexer.command_else.tokenTypeIdx:
+      case lexer.command_while.tokenTypeIdx:
+      case lexer.command_repeat.tokenTypeIdx:
+      case lexer.command_waitfor.tokenTypeIdx:
+      case lexer.command_foreach.tokenTypeIdx:
+      case lexer.command_break.tokenTypeIdx:
+      case lexer.command_continue.tokenTypeIdx:
+        break
+      default:
+        console.info('token unknown', token)
+        break
+    }
+  }
   return null
 }
 
@@ -239,6 +195,7 @@ export function getautocomplete(
     statwords,
     allwords,
   )
+  console.info('fromtokens', fromtokens)
   if (fromtokens !== null) {
     return fromtokens
   }
