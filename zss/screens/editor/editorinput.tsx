@@ -16,7 +16,7 @@ import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { AUTOCOMPLETE } from 'zss/screens/tape/autocomplete'
+import { AUTO_COMPLETE } from 'zss/screens/tape/autocomplete'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -43,7 +43,7 @@ export type EditorInputProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
-  autocomplete: AUTOCOMPLETE
+  autocomplete: AUTO_COMPLETE
 }
 
 export function EditorInput({

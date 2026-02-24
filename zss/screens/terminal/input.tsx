@@ -19,7 +19,7 @@ import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { AUTOCOMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
+import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
@@ -51,7 +51,7 @@ type TerminalInputProps = {
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
-  autocomplete: AUTOCOMPLETE
+  autocomplete: AUTO_COMPLETE
   wordcolors: Map<string, number>
   linetokens?: IToken[]
 }
@@ -99,7 +99,7 @@ export function TerminalInput({
   const resettoend = useTerminalResetToEnd(inputstate.length)
 
   // --- autocomplete ---
-  const { autocompleteWords } = useZssWords({
+  const { autocompletewords } = useZssWords({
     isCli: true,
   })
 
@@ -180,7 +180,7 @@ export function TerminalInput({
 
   drawTerminalCursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
-  const startx = edge.left
+  const startx = edge.left + autocomplete.wordcol
   const starty = edge.top + edge.height - 1
   drawautocomplete(
     autocomplete,
@@ -189,7 +189,7 @@ export function TerminalInput({
     starty,
     edge,
     context,
-    autocompleteWords,
+    autocompletewords,
     wordcolors,
     true,
   )

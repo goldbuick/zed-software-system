@@ -35,7 +35,7 @@ export function EditorComponent() {
   const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
 
-  const { words, commandnames, autocompleteWords } = useZssWords({
+  const { words, commandnames, autocompletewords } = useZssWords({
     isLoader: editor.type === 'loader',
   })
 
@@ -174,8 +174,8 @@ export function EditorComponent() {
   const xcursor = tapeeditor.cursor - rows[ycursor].start
 
   const autocomplete = useMemo(
-    () => getautocomplete(rows, tapeeditor.cursor, ycursor, autocompleteWords),
-    [rows, tapeeditor.cursor, ycursor, autocompleteWords],
+    () => getautocomplete(rows, tapeeditor.cursor, ycursor, autocompletewords),
+    [rows, tapeeditor.cursor, ycursor, autocompletewords],
   )
 
   // measure edges once

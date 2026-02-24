@@ -7,7 +7,7 @@ import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { AUTOCOMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
+import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import {
   BG_ACTIVE,
   BG_SELECTED,
@@ -64,7 +64,7 @@ export type EditorRowsProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
-  autocomplete: AUTOCOMPLETE
+  autocomplete: AUTO_COMPLETE
   wordcolors?: Map<string, number>
 }
 
@@ -600,7 +600,7 @@ export function EditorRows({
   }
 
   // render autocomplete dropdown
-  const startx = edge.left - xoffset + 1
+  const startx = edge.left + 4 + autocomplete.wordcol
   const starty = edge.top + 2 + cursor - yoffset + 1
   drawautocomplete(
     autocomplete,

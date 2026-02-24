@@ -48,7 +48,7 @@ export function TerminalComponent() {
     })
   }, [])
 
-  const { words, autocompleteWords } = useZssWords({
+  const { words, autocompletewords } = useZssWords({
     isCli: true,
   })
   const wordcolors = useMemo(
@@ -108,13 +108,13 @@ export function TerminalComponent() {
         tokens: linetokens,
       },
     ]
-    return getautocomplete(rows, tapeterminal.xcursor, 0, autocompleteWords)
+    return getautocomplete(rows, tapeterminal.xcursor, 0, autocompletewords)
   }, [
     inputstateactive,
     inputstate,
     tapeterminal.xcursor,
     linetokens,
-    autocompleteWords,
+    autocompletewords,
   ])
 
   return (

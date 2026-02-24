@@ -11,7 +11,7 @@ import { COLOR } from 'zss/words/types'
 
 import { EDITOR_CODE_ROW } from './common'
 
-export type AUTOCOMPLETE_CATEGORY =
+export type AUTO_COMPLETE_CATEGORY =
   | 'command'
   | 'flag'
   | 'stat'
@@ -22,7 +22,7 @@ export type AUTOCOMPLETE_CATEGORY =
   | 'expr'
 
 /** Words per category for autocomplete. Ensures each category has a word list. */
-export type AUTOCOMPLETE_WORDS = {
+export type AUTO_COMPLETE_WORDS = {
   command: string[]
   flag: string[]
   stat: string[]
@@ -33,14 +33,14 @@ export type AUTOCOMPLETE_WORDS = {
   expr: string[]
 }
 
-export type AUTOCOMPLETE = {
+export type AUTO_COMPLETE = {
   suggestions: string[]
   prefix: string
   wordcol: number
   wordstart: number
 }
 
-export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
+export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   suggestions: [],
   prefix: '',
   wordcol: 0,
@@ -63,7 +63,7 @@ function extractdesc(content: string): string {
   return desc.replace(/^\$\w+/i, '').trim()
 }
 
-function romhintfor(word: string, words: AUTOCOMPLETE_WORDS): string {
+function romhintfor(word: string, words: AUTO_COMPLETE_WORDS): string {
   const lower = word.toLowerCase().trim()
   if (!lower) {
     return ''
@@ -101,8 +101,8 @@ function filtersuggestions(prefix: string, words: string[]): string[] {
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
-  words: AUTOCOMPLETE_WORDS,
-): MAYBE<AUTOCOMPLETE> {
+  words: AUTO_COMPLETE_WORDS,
+): MAYBE<AUTO_COMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
     return undefined
@@ -132,8 +132,8 @@ function getautocompletefromtokens(
     // get token context
     const token = tokens[activetokenidx]
     const prev = tokens[activetokenidx - 1]
-    const wordcol = token.endColumn ?? 1
-    const wordstart = row.start + (token.startColumn ?? 1) - 1
+    const wordcol = (token.startColumn ?? 1) - 1
+    const wordstart = row.start + wordcol
 
     const prefix = token.image
     switch (token.tokenTypeIdx) {
@@ -207,8 +207,8 @@ export function getautocomplete(
   rows: EDITOR_CODE_ROW[],
   cursor: number,
   ycursor: number,
-  words: AUTOCOMPLETE_WORDS,
-): AUTOCOMPLETE {
+  words: AUTO_COMPLETE_WORDS,
+): AUTO_COMPLETE {
   const row = rows[ycursor]
   if (!row) {
     return EMPTY_AUTOCOMPLETE
@@ -278,13 +278,13 @@ function drawhinttext(
 }
 
 export function drawautocomplete(
-  ac: AUTOCOMPLETE,
+  ac: AUTO_COMPLETE,
   acindex: number,
   px: number,
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
-  words: AUTOCOMPLETE_WORDS,
+  words: AUTO_COMPLETE_WORDS,
   wordcolors?: Map<string, number>,
   drawabove?: boolean,
 ) {
@@ -324,6 +324,7 @@ export function drawautocomplete(
 
     const rowstart = Math.max(px, edge.left + 1)
     const rowend = Math.min(px + itemwidth - 1, edge.right - 1)
+    console.info(rowstart, rowend)
     if (rowstart > rowend) {
       continue
     }
