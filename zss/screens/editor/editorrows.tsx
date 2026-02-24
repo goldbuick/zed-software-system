@@ -593,14 +593,13 @@ export function EditorRows({
   }
 
   // render autocomplete dropdown
-  const { acindex } = tapeeditor
-  const cursorRowY = edge.top + 2 + cursor - yoffset + 1
-  const startx = edge.left - xoffset
+  const startx = edge.left - xoffset + 1
+  const starty = edge.top + 2 + cursor - yoffset + 1
   drawautocomplete(
     autocomplete,
-    acindex,
+    tapeeditor.acindex,
     startx,
-    cursorRowY,
+    starty,
     edge,
     context,
     wordcolors,

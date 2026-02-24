@@ -212,7 +212,6 @@ export function getautocomplete(
 
   const col = cursor - row.start
   const fromtokens = getautocompletefromtokens(row, col, words)
-  console.info('fromtokens', fromtokens)
   if (fromtokens !== null) {
     return fromtokens
   }

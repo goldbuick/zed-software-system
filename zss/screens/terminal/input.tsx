@@ -175,11 +175,13 @@ export function TerminalInput({
 
   drawTerminalCursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
+  const startx = edge.left
+  const starty = edge.top + edge.height - 1
   drawautocomplete(
     autocomplete,
     tapeterminal.acindex,
-    edge.left,
-    edge.top + edge.height - 1,
+    startx,
+    starty,
     edge,
     context,
     wordcolors,
