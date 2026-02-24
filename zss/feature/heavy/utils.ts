@@ -117,12 +117,18 @@ export class RawAudio {
 }
 
 export function normalizePeak(f32: Float32Array<ArrayBuffer>, target = 0.9) {
-  if (!f32?.length) return
+  if (!f32?.length) {
+    return
+  }
   let max = 1e-9
-  for (let i = 0; i < f32.length; i++) max = Math.max(max, Math.abs(f32[i]))
+  for (let i = 0; i < f32.length; i++) {
+    max = Math.max(max, Math.abs(f32[i]))
+  }
   const g = Math.min(4, target / max)
   if (g < 1) {
-    for (let i = 0; i < f32.length; i++) f32[i] *= g
+    for (let i = 0; i < f32.length; i++) {
+      f32[i] *= g
+    }
   }
 }
 
@@ -133,8 +139,12 @@ export function trimSilence(
 ) {
   let s = 0,
     e = f32.length - 1
-  while (s < e && Math.abs(f32[s]) < thresh) s++
-  while (e > s && Math.abs(f32[e]) < thresh) e--
+  while (s < e && Math.abs(f32[s]) < thresh) {
+    s++
+  }
+  while (e > s && Math.abs(f32[e]) < thresh) {
+    e--
+  }
   s = Math.max(0, s - minSamples)
   e = Math.min(f32.length, e + minSamples)
   return f32.slice(s, e)

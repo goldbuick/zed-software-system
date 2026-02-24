@@ -16,7 +16,7 @@ import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { AUTOCOMPLETE } from 'zss/screens/tape/autocomplete'
+import { AUTO_COMPLETE } from 'zss/screens/tape/autocomplete'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -43,7 +43,7 @@ export type EditorInputProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
-  autocomplete: AUTOCOMPLETE
+  autocomplete: AUTO_COMPLETE
 }
 
 export function EditorInput({
@@ -162,13 +162,17 @@ export function EditorInput({
   const acdrawBelow = accursorRowY + acnumRows <= edge.bottom - 1
 
   function acceptsuggestion() {
-    if (!ispresent(codepage) || autocomplete.suggestions.length === 0) return
+    if (!ispresent(codepage) || autocomplete.suggestions.length === 0) {
+      return
+    }
     const idx =
       tapeeditor.acindex < 0
         ? 0
         : Math.min(tapeeditor.acindex, autocomplete.suggestions.length - 1)
     const suggestion = autocomplete.suggestions[idx]
-    if (!suggestion) return
+    if (!suggestion) {
+      return
+    }
     strvaluesplice(
       autocomplete.wordstart,
       autocomplete.prefix.length,
@@ -269,10 +273,6 @@ export function EditorInput({
           }
         }}
         MENU_BUTTON={(mods) => {
-          if (acactive) {
-            acceptsuggestion()
-            return
-          }
           registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
@@ -306,12 +306,17 @@ export function EditorInput({
                 switch (lkey) {
                   case 'z':
                     if (undomanager) {
-                      if (ismac && mods.shift) undomanager.redo()
-                      else undomanager.undo()
+                      if (ismac && mods.shift) {
+                        undomanager.redo()
+                      } else {
+                        undomanager.undo()
+                      }
                     }
                     break
                   case 'y':
-                    if (undomanager && !ismac) undomanager.redo()
+                    if (undomanager && !ismac) {
+                      undomanager.redo()
+                    }
                     break
                   case 'a':
                     updatescrolling(codeend)

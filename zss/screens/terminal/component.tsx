@@ -3,38 +3,36 @@ import { vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
-import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import {
   EMPTY_AUTOCOMPLETE,
-  getlineautocomplete,
+  getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
+import { buildwordcolormap, useZssWords } from 'zss/screens/tape/zsswords'
 import { textformatreadedges } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
-import { useShallow } from 'zustand/react/shallow'
+
+import {
+  ZSS_TYPE_COMMAND,
+  ZSS_WORD_COLOR,
+  ZSS_WORD_DIR,
+  ZSS_WORD_DIRMOD,
+  ZSS_WORD_EXPRS,
+  ZSS_WORD_FLAG,
+  ZSS_WORD_KIND,
+  ZSS_WORD_KIND_ALT,
+  ZSS_WORD_STAT,
+} from '../editor/colors'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
-
-const SPECIAL_COMMANDS = [
-  'toast',
-  'ticker',
-  'play',
-  'bgplay',
-  'bgplayon64n',
-  'bgplayon32n',
-  'bgplayon16n',
-  'bgplayon8n',
-  'bgplayon4n',
-  'bgplayon2n',
-  'bgplayon1n',
-]
+import { tokenizeline } from './terminalinputhelpers'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -50,89 +48,24 @@ export function TerminalComponent() {
     })
   }, [])
 
-  const [
-    wordscli,
-    wordsruntime,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ] = useGadgetClient(
-    useShallow((state) => [
-      state.zsswords.cli,
-      state.zsswords.runtime,
-      state.zsswords.flags,
-      state.zsswords.stats,
-      state.zsswords.kinds,
-      state.zsswords.altkinds,
-      state.zsswords.colors,
-      state.zsswords.dirs,
-      state.zsswords.dirmods,
-      state.zsswords.exprs,
-    ]),
+  const { words, autocompletewords } = useZssWords({
+    isCli: true,
+  })
+  const wordcolors = useMemo(
+    () =>
+      buildwordcolormap(words, {
+        command: ZSS_TYPE_COMMAND,
+        flag: ZSS_WORD_FLAG,
+        stat: ZSS_WORD_STAT,
+        kind: ZSS_WORD_KIND,
+        kindalt: ZSS_WORD_KIND_ALT,
+        color: ZSS_WORD_COLOR,
+        dir: ZSS_WORD_DIR,
+        dirmod: ZSS_WORD_DIRMOD,
+        exprs: ZSS_WORD_EXPRS,
+      }),
+    [words],
   )
-
-  const commandwords = useMemo(() => {
-    const words = new Set<string>()
-    for (const w of wordscli) words.add(w)
-    for (const w of wordsruntime) words.add(w)
-    for (const w of SPECIAL_COMMANDS) words.add(w)
-    return Array.from(words)
-  }, [wordscli, wordsruntime])
-
-  const allwords = useMemo(() => {
-    const words = new Set(commandwords)
-    for (const w of wordsflags) words.add(w)
-    for (const w of wordsstats) words.add(w)
-    for (const w of wordskinds) words.add(w)
-    for (const w of wordsaltkinds) words.add(w)
-    for (const w of wordscolors) words.add(w)
-    for (const w of wordsdirs) words.add(w)
-    for (const w of wordsdirmods) words.add(w)
-    for (const w of wordsexprs) words.add(w)
-    return Array.from(words)
-  }, [
-    commandwords,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ])
-
-  const wordcolors = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const w of wordscli) map.set(w, COLOR.DKGREEN)
-    for (const w of wordsruntime) map.set(w, COLOR.DKGREEN)
-    for (const w of SPECIAL_COMMANDS) map.set(w, COLOR.DKGREEN)
-    for (const w of wordsflags) map.set(w, COLOR.PURPLE)
-    for (const w of wordsstats) map.set(w, COLOR.DKPURPLE)
-    for (const w of wordskinds) map.set(w, COLOR.CYAN)
-    for (const w of wordsaltkinds) map.set(w, COLOR.DKCYAN)
-    for (const w of wordscolors) map.set(w, COLOR.RED)
-    for (const w of wordsdirs) map.set(w, COLOR.WHITE)
-    for (const w of wordsdirmods) map.set(w, COLOR.LTGRAY)
-    for (const w of wordsexprs) map.set(w, COLOR.YELLOW)
-    return map
-  }, [
-    wordscli,
-    wordsruntime,
-    wordsflags,
-    wordsstats,
-    wordskinds,
-    wordsaltkinds,
-    wordscolors,
-    wordsdirs,
-    wordsdirmods,
-    wordsexprs,
-  ])
 
   const context = useWriteText()
   const tapeterminal = useTerminal()
@@ -158,24 +91,31 @@ export function TerminalComponent() {
 
   const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
   const inputstateactive = tapeterminal.ycursor === 0
-  const autocomplete = useMemo(
-    () =>
-      inputstateactive
-        ? getlineautocomplete(
-            inputstate,
-            tapeterminal.xcursor,
-            commandwords,
-            allwords,
-          )
-        : EMPTY_AUTOCOMPLETE,
-    [
-      inputstate,
-      tapeterminal.xcursor,
-      inputstateactive,
-      commandwords,
-      allwords,
-    ],
+  const linetokens = useMemo(
+    () => (inputstateactive ? tokenizeline(inputstate) : []),
+    [inputstate, inputstateactive],
   )
+  const autocomplete = useMemo(() => {
+    if (!inputstateactive) {
+      return EMPTY_AUTOCOMPLETE
+    }
+    const linewithnewline = inputstate + '\n'
+    const rows = [
+      {
+        start: 0,
+        code: linewithnewline,
+        end: inputstate.length,
+        tokens: linetokens,
+      },
+    ]
+    return getautocomplete(rows, tapeterminal.xcursor, 0, autocompletewords)
+  }, [
+    inputstateactive,
+    inputstate,
+    tapeterminal.xcursor,
+    linetokens,
+    autocompletewords,
+  ])
 
   return (
     <>
@@ -202,6 +142,7 @@ export function TerminalComponent() {
             logrowtotalheight={logsrowtotalheight}
             autocomplete={autocomplete}
             wordcolors={wordcolors}
+            linetokens={linetokens}
           />
         )}
       </TapeTerminalContext.Provider>

@@ -92,15 +92,21 @@ export function drawRemoteCursors(
   edge: EditorEdge,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  if (!ispresent(codepage) || remotePresence.length === 0) return
+  if (!ispresent(codepage) || remotePresence.length === 0) {
+    return
+  }
 
   for (const presence of remotePresence) {
-    if (presence.clientId === player) continue
+    if (presence.clientId === player) {
+      continue
+    }
 
     const remoteCursor = presence.cursor
     const remoteY = findcursorinrows(remoteCursor, rows)
     const remoteRow = rows[remoteY]
-    if (!remoteRow) continue
+    if (!remoteRow) {
+      continue
+    }
 
     const remoteX = remoteCursor - remoteRow.start
     const remoteXblink = remoteX + 1 - xoffset
@@ -141,7 +147,9 @@ function drawRemoteSelection(
 
   for (let selY = selStartY; selY <= selEndY; selY++) {
     const selRow = rows[selY]
-    if (!selRow) continue
+    if (!selRow) {
+      continue
+    }
 
     const selStartX = selY === selStartY ? selStart - selRow.start : 0
     const selEndX =

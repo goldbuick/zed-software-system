@@ -1,4 +1,7 @@
+import type { IToken } from 'chevrotain'
 import { useTerminal } from 'zss/gadget/data/state'
+import { tokenize } from 'zss/lang/lexer'
+import * as lexer from 'zss/lang/lexer'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
@@ -7,6 +10,16 @@ import {
   textformatreadedges,
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
+
+export function tokenizeline(line: string): IToken[] {
+  try {
+    const result = tokenize(line.length ? `${line}\n` : ' \n')
+    const tokens = result.tokens ?? []
+    return tokens.filter((t) => (t.startLine ?? 1) === 1)
+  } catch {
+    return []
+  }
+}
 
 export type TerminalSelection = {
   ii1: number
@@ -73,7 +86,9 @@ export function drawTerminalCursor(
   tapeycursor: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  if (!blink) return
+  if (!blink) {
+    return
+  }
   const edge = textformatreadedges(context)
   const x = edge.left + xcursor
   const y = edge.top + tapeycursor
@@ -91,7 +106,9 @@ export function drawTerminalSelection(
   yselect: MAYBE<number>,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  if (!ispresent(xselect) || !ispresent(yselect) || xcursor === xselect) return
+  if (!ispresent(xselect) || !ispresent(yselect) || xcursor === xselect) {
+    return
+  }
   const edge = textformatreadedges(context)
   const x1 = Math.min(xcursor, xselect)
   const y1 = Math.min(ycursor, yselect)
@@ -111,6 +128,29 @@ const LABEL_COLOR = COLOR.DKRED
 const COMMENT_COLOR = COLOR.CYAN
 const NUMBER_COLOR = COLOR.WHITE
 const STRING_COLOR = COLOR.GREEN
+
+const CLI_TOKEN_COLOR: Partial<Record<number, number>> = {
+  [lexer.command.tokenTypeIdx ?? 0]: HASH_COLOR,
+  [lexer.stat.tokenTypeIdx ?? 0]: STAT_COLOR,
+  [lexer.comment.tokenTypeIdx ?? 0]: COMMENT_COLOR,
+  [lexer.label.tokenTypeIdx ?? 0]: LABEL_COLOR,
+  [lexer.numberliteral.tokenTypeIdx ?? 0]: NUMBER_COLOR,
+  [lexer.stringliteral.tokenTypeIdx ?? 0]: STRING_COLOR,
+  [lexer.stringliteraldouble.tokenTypeIdx ?? 0]: STRING_COLOR,
+  [lexer.command_play.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_toast.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_ticker.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_if.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_do.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_done.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_else.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_while.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_repeat.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_waitfor.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_foreach.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_break.tokenTypeIdx ?? 0]: CMD_COLOR,
+  [lexer.command_continue.tokenTypeIdx ?? 0]: CMD_COLOR,
+}
 
 const TEXTBODY_COMMANDS = new Set(['toast', 'ticker'])
 
@@ -152,13 +192,27 @@ enum MUSIC_MODE {
 }
 
 function musiccharcolor(ch: string): COLOR {
-  if (MUSIC_NOTE_CHARS.has(ch)) return COLOR.GREEN
-  if (MUSIC_REST_CHARS.has(ch)) return COLOR.DKGREEN
-  if (MUSIC_PITCH_CHARS.has(ch)) return COLOR.DKYELLOW
-  if (MUSIC_TIME_CHARS.has(ch)) return COLOR.DKCYAN
-  if (MUSIC_TIMEMOD_CHARS.has(ch)) return COLOR.CYAN
-  if (MUSIC_OCTAVE_CHARS.has(ch)) return COLOR.YELLOW
-  if (MUSIC_DRUM_CHARS.has(ch)) return COLOR.PURPLE
+  if (MUSIC_NOTE_CHARS.has(ch)) {
+    return COLOR.GREEN
+  }
+  if (MUSIC_REST_CHARS.has(ch)) {
+    return COLOR.DKGREEN
+  }
+  if (MUSIC_PITCH_CHARS.has(ch)) {
+    return COLOR.DKYELLOW
+  }
+  if (MUSIC_TIME_CHARS.has(ch)) {
+    return COLOR.DKCYAN
+  }
+  if (MUSIC_TIMEMOD_CHARS.has(ch)) {
+    return COLOR.CYAN
+  }
+  if (MUSIC_OCTAVE_CHARS.has(ch)) {
+    return COLOR.YELLOW
+  }
+  if (MUSIC_DRUM_CHARS.has(ch)) {
+    return COLOR.PURPLE
+  }
   return COLOR.GREEN
 }
 
@@ -204,15 +258,126 @@ function highlightMusicBody(
   }
 }
 
+function highlightterminalinputfromtokens(
+  inputline: string,
+  inputy: number,
+  tokens: IToken[],
+  wordcolors: Map<string, number>,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  const edge = textformatreadedges(context)
+  const base = edge.left + inputy * context.width
+  let prevtidx: number | undefined
+  for (const token of tokens) {
+    const sc = (token.startColumn ?? 1) - 1
+    const ec = (token.endColumn ?? 1) - 1
+    if (sc > inputline.length) {
+      prevtidx = token.tokenTypeIdx
+      continue
+    }
+    const end = Math.min(ec, inputline.length - 1)
+    const tidx = token.tokenTypeIdx
+    if (
+      tidx === lexer.command_toast.tokenTypeIdx ||
+      tidx === lexer.command_ticker.tokenTypeIdx
+    ) {
+      const img = token.image ?? ''
+      const firstSpace = img.indexOf(' ')
+      const cmdLen = firstSpace < 0 ? img.length : firstSpace
+      if (cmdLen > 0) {
+        applycolortoindexes(
+          base + sc,
+          base + Math.min(sc + cmdLen - 1, end),
+          CMD_COLOR,
+          context.reset.bg,
+          context,
+        )
+      }
+      if (firstSpace >= 0 && sc + firstSpace <= end) {
+        applycolortoindexes(
+          base + sc + firstSpace,
+          base + end,
+          STRING_COLOR,
+          context.reset.bg,
+          context,
+        )
+      }
+      prevtidx = tidx
+      continue
+    }
+    if (tidx === lexer.command_play.tokenTypeIdx) {
+      const img = token.image ?? ''
+      const firstSpace = img.indexOf(' ')
+      const cmdLen = firstSpace < 0 ? img.length : firstSpace
+      if (cmdLen > 0) {
+        applycolortoindexes(
+          base + sc,
+          base + Math.min(sc + cmdLen - 1, end),
+          CMD_COLOR,
+          context.reset.bg,
+          context,
+        )
+      }
+      if (firstSpace >= 0 && sc + firstSpace < inputline.length) {
+        highlightMusicBody(inputline, sc + firstSpace, base, context)
+      }
+      prevtidx = tidx
+      continue
+    }
+    if (tidx === lexer.text.tokenTypeIdx) {
+      const isafterhash = prevtidx === lexer.command.tokenTypeIdx
+      const color = isafterhash
+        ? CMD_COLOR
+        : wordcolors.get(NAME((token.image ?? '').trim()))
+      if (color !== undefined) {
+        applycolortoindexes(
+          base + sc,
+          base + end,
+          color,
+          context.reset.bg,
+          context,
+        )
+      }
+      prevtidx = tidx
+      continue
+    }
+    const color = CLI_TOKEN_COLOR[tidx]
+    if (color !== undefined) {
+      applycolortoindexes(
+        base + sc,
+        base + end,
+        color,
+        context.reset.bg,
+        context,
+      )
+    }
+    prevtidx = tidx
+  }
+}
+
 export function highlightTerminalInput(
   inputline: string,
   inputy: number,
   wordcolors: Map<string, number>,
   context: WRITE_TEXT_CONTEXT,
+  linetokens?: IToken[],
 ) {
-  if (inputline.length === 0) return
+  if (inputline.length === 0) {
+    return
+  }
   const edge = textformatreadedges(context)
   const base = edge.left + inputy * context.width
+
+  if (ispresent(linetokens) && linetokens.length > 0) {
+    highlightterminalinputfromtokens(
+      inputline,
+      inputy,
+      linetokens,
+      wordcolors,
+      context,
+    )
+    return
+  }
 
   const trimmed = inputline.trimStart()
   const leadingspaces = inputline.length - trimmed.length
@@ -283,8 +448,12 @@ export function highlightTerminalInput(
     if (ch === '"') {
       const start = i
       i++
-      while (i < inputline.length && inputline[i] !== '"') i++
-      if (i < inputline.length) i++
+      while (i < inputline.length && inputline[i] !== '"') {
+        i++
+      }
+      if (i < inputline.length) {
+        i++
+      }
       applycolortoindexes(
         base + start,
         base + i - 1,
@@ -297,7 +466,9 @@ export function highlightTerminalInput(
 
     if (/\d/.test(ch)) {
       const start = i
-      while (i < inputline.length && /[\d.]/.test(inputline[i])) i++
+      while (i < inputline.length && /[\d.]/.test(inputline[i])) {
+        i++
+      }
       if (start > 0 && !/\w/.test(inputline[start - 1])) {
         applycolortoindexes(
           base + start,
@@ -312,7 +483,9 @@ export function highlightTerminalInput(
 
     if (/\w/.test(ch)) {
       const start = i
-      while (i < inputline.length && /\w/.test(inputline[i])) i++
+      while (i < inputline.length && /\w/.test(inputline[i])) {
+        i++
+      }
       const word = inputline.substring(start, i)
       const lower = NAME(word)
 

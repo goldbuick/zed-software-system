@@ -79,7 +79,9 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
               if (!isConvolution(child)) {
                 let next: unknown = null
                 while ((next = children[i + 1]?.object) instanceof Effect) {
-                  if (isConvolution(next)) break
+                  if (isConvolution(next)) {
+                    break
+                  }
                   effects.push(next)
                   i++
                 }
@@ -92,11 +94,15 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
             }
           }
 
-          for (const pass of passes) composer?.addPass(pass)
+          for (const pass of passes) {
+            composer?.addPass(pass)
+          }
         }
 
         return () => {
-          for (const pass of passes) composer?.removePass(pass)
+          for (const pass of passes) {
+            composer?.removePass(pass)
+          }
         }
       }, [composer, children, camera])
 

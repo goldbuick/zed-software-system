@@ -30,7 +30,12 @@ export const useGadgetClient = create<{
     loader: string[]
     runtime: string[]
     flags: string[]
-    stats: string[]
+    statsboard: string[]
+    statshelper: string[]
+    statssender: string[]
+    statsinteraction: string[]
+    statsboolean: string[]
+    statsconfig: string[]
     kinds: string[]
     altkinds: string[]
     colors: string[]
@@ -45,7 +50,12 @@ export const useGadgetClient = create<{
     loader: [],
     runtime: [],
     flags: [],
-    stats: [],
+    statsboard: [],
+    statshelper: [],
+    statssender: [],
+    statsinteraction: [],
+    statsboolean: [],
+    statsconfig: [],
     kinds: [],
     altkinds: [],
     colors: [],

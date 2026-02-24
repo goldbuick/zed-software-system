@@ -75,7 +75,9 @@ function buildlabelrenamemap(lines: string[]): Map<string, string> {
     const trimmed = line.trimStart()
     if (trimmed.startsWith(':')) {
       const name = trimmed.slice(1).trim()
-      if (!name) continue
+      if (!name) {
+        continue
+      }
       const lower = name.toLowerCase()
       let variants = groups.get(lower)
       if (!variants) {
@@ -90,7 +92,9 @@ function buildlabelrenamemap(lines: string[]): Map<string, string> {
 
   // only process groups with actual case collisions
   for (const [lower, variants] of groups) {
-    if (variants.length <= 1) continue
+    if (variants.length <= 1) {
+      continue
+    }
     // first variant keeps the base lowercase name
     rename.set(variants[0], lower)
     // subsequent variants get a numeric suffix
@@ -103,7 +107,9 @@ function buildlabelrenamemap(lines: string[]): Map<string, string> {
 }
 
 function applylabelrename(line: string, rename: Map<string, string>): string {
-  if (rename.size === 0) return line
+  if (rename.size === 0) {
+    return line
+  }
   let result = line
   const trimmed = result.trimStart()
 

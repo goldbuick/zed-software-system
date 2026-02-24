@@ -1,3 +1,4 @@
+import type { IToken } from 'chevrotain'
 import { useEffect } from 'react'
 import {
   apierror,
@@ -18,10 +19,7 @@ import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import {
-  AUTOCOMPLETE,
-  drawlineautocomplete,
-} from 'zss/screens/tape/autocomplete'
+import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
@@ -31,6 +29,8 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
+
+import { useZssWords } from '../tape/zsswords'
 
 import {
   computeTerminalSelection,
@@ -51,8 +51,9 @@ type TerminalInputProps = {
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
-  autocomplete: AUTOCOMPLETE
+  autocomplete: AUTO_COMPLETE
   wordcolors: Map<string, number>
+  linetokens?: IToken[]
 }
 
 export function TerminalInput({
@@ -62,6 +63,7 @@ export function TerminalInput({
   logrowtotalheight,
   autocomplete,
   wordcolors,
+  linetokens,
 }: TerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -97,18 +99,25 @@ export function TerminalInput({
   const resettoend = useTerminalResetToEnd(inputstate.length)
 
   // --- autocomplete ---
+  const { autocompletewords } = useZssWords({
+    isCli: true,
+  })
 
   const acactive =
     tapeterminal.acindex >= 0 && autocomplete.suggestions.length > 0
 
   function acceptsuggestion() {
-    if (autocomplete.suggestions.length === 0) return
+    if (autocomplete.suggestions.length === 0) {
+      return
+    }
     const idx = Math.min(
       tapeterminal.acindex,
       autocomplete.suggestions.length - 1,
     )
     const suggestion = autocomplete.suggestions[idx]
-    if (!suggestion) return
+    if (!suggestion) {
+      return
+    }
     inputstatesetsplice(
       autocomplete.wordstart,
       autocomplete.prefix.length,
@@ -153,7 +162,13 @@ export function TerminalInput({
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
-  highlightTerminalInput(inputstate, edge.height - 1, wordcolors, context)
+  highlightTerminalInput(
+    inputstate,
+    edge.height - 1,
+    wordcolors,
+    context,
+    linetokens,
+  )
 
   drawTerminalSelection(
     tapeterminal.xcursor,
@@ -165,13 +180,18 @@ export function TerminalInput({
 
   drawTerminalCursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
-  drawlineautocomplete(
+  const startx = edge.left + autocomplete.wordcol
+  const starty = edge.top + edge.height - 1
+  drawautocomplete(
     autocomplete,
     tapeterminal.acindex,
-    edge.top + edge.height - 1,
+    startx,
+    starty,
     edge,
     context,
+    autocompletewords,
     wordcolors,
+    true,
   )
 
   // --- speech to text ---
@@ -364,10 +384,6 @@ export function TerminalInput({
           registerterminalclose(SOFTWARE, player)
         }}
         MENU_BUTTON={(mods) => {
-          if (acactive) {
-            acceptsuggestion()
-            return
-          }
           registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {

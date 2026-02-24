@@ -37,7 +37,9 @@ export function chunkText(text: string) {
 
   for (const line of lines) {
     // Skip empty lines
-    if (line.trim() === '') continue
+    if (line.trim() === '') {
+      continue
+    }
 
     // Check if the line already ends with punctuation
     const endsWithPunctuation = /[.!?]$/.test(line.trim())
@@ -54,7 +56,9 @@ export function chunkText(text: string) {
 
     for (const sentence of sentences) {
       const trimmedSentence = sentence.trim()
-      if (!trimmedSentence) continue
+      if (!trimmedSentence) {
+        continue
+      }
 
       // If this sentence alone exceeds max length, split it at word boundaries
       if (trimmedSentence.length > MAX_CHUNK_LENGTH) {

@@ -39,9 +39,13 @@ export async function list_voices(
 ): Promise<PhonemizerVoice[]> {
   const raw = await listVoicesNpm()
   const voices: PhonemizerVoice[] = Array.isArray(raw) ? raw : [raw]
-  if (!language) return voices
+  if (!language) {
+    return voices
+  }
   const base = (language || '').split('-')[0]
-  if (!base) return voices
+  if (!base) {
+    return voices
+  }
   return voices.filter((voice) =>
     voice.languages?.some(
       (lang) => lang.name === base || String(lang.name).startsWith(base + '-'),
@@ -61,7 +65,11 @@ export async function phonemize(
 ): Promise<string[]> {
   const voice = toPhonemizerVoice(language)
   const result = await phonemizeNpm(text, voice)
-  if (Array.isArray(result)) return result
-  if (typeof result === 'string') return result ? [result] : []
+  if (Array.isArray(result)) {
+    return result
+  }
+  if (typeof result === 'string') {
+    return result ? [result] : []
+  }
   return []
 }

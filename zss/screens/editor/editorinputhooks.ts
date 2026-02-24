@@ -219,11 +219,15 @@ export function useUndoRedo(
     ? {
         undo(count: number = UNDO_REDO_BATCH_SIZE) {
           const n = Math.min(count, undoStack.current.length)
-          if (n <= 0) return
+          if (n <= 0) {
+            return
+          }
           const batch: UndoEntry[] = []
           for (let i = 0; i < n; i++) {
             const top = undoStack.current.pop()
-            if (!top) break
+            if (!top) {
+              break
+            }
             batch.push(top)
           }
           const currentCursor = editorCursor
@@ -245,18 +249,24 @@ export function useUndoRedo(
         },
         redo(count: number = UNDO_REDO_BATCH_SIZE) {
           const n = Math.min(count, redoStack.current.length)
-          if (n <= 0) return
+          if (n <= 0) {
+            return
+          }
           const log = getModemLog()
           let newCursor = editorCursor
           for (let i = 0; i < n; i++) {
             const top = redoStack.current.pop()
-            if (!top) break
+            if (!top) {
+              break
+            }
             let redoPatch: Patch
             try {
               redoPatch = log.undo(top.undoPatch)
             } catch {
               const [rebased] = log.rebaseBatch([top.patch])
-              if (!rebased) continue
+              if (!rebased) {
+                continue
+              }
               redoPatch = rebased
             }
             modemApplyAndSyncPatch(redoPatch)
@@ -281,10 +291,14 @@ export function useUndoRedo(
     : undefined
 
   useEffect(() => {
-    if (!ispresent(codepage)) return
+    if (!ispresent(codepage)) {
+      return
+    }
     const log = getModemLog()
     const unsub = log.end.api.onFlush.listen((patch: Patch) => {
-      if (!patchAffectsNode(patch, codepage.nodeId)) return
+      if (!patchAffectsNode(patch, codepage.nodeId)) {
+        return
+      }
       try {
         const undoPatch = log.undo(patch)
         undoStack.current.push({

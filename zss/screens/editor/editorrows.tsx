@@ -7,7 +7,7 @@ import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { AUTOCOMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
+import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import {
   BG_ACTIVE,
   BG_SELECTED,
@@ -25,6 +25,8 @@ import {
   writeplaintext,
 } from 'zss/words/textformat'
 import { COLOR, STAT_TYPE } from 'zss/words/types'
+
+import { useZssWords } from '../tape/zsswords'
 
 import {
   ZSS_COLOR_MAP,
@@ -62,7 +64,7 @@ export type EditorRowsProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
-  autocomplete: AUTOCOMPLETE
+  autocomplete: AUTO_COMPLETE
   wordcolors?: Map<string, number>
 }
 
@@ -78,6 +80,7 @@ export function EditorRows({
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
+  const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
@@ -86,6 +89,10 @@ export function EditorRows({
     }
     return []
   }, [rows])
+
+  const { autocompletewords } = useZssWords({
+    isLoader: editortype === 'loader',
+  })
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -252,7 +259,7 @@ export function EditorRows({
                 context,
               )
             }
-          } else
+          } else {
             switch (maybecolor) {
               case ZSS_TYPE_STATNAME: {
                 const words = parsestatformat(token.image)
@@ -374,6 +381,7 @@ export function EditorRows({
                 )
                 break
             }
+          }
         }
       }
     }
@@ -533,7 +541,9 @@ export function EditorRows({
                 }
               }
             }
-            if (!found) setlookup(`editor:text`)
+            if (!found) {
+              setlookup(`editor:text`)
+            }
             break
           }
         }
@@ -590,15 +600,16 @@ export function EditorRows({
   }
 
   // render autocomplete dropdown
-  const { acindex } = tapeeditor
+  const startx = edge.left + 4 + autocomplete.wordcol
+  const starty = edge.top + 2 + cursor - yoffset + 1
   drawautocomplete(
     autocomplete,
-    acindex,
-    cursor,
-    xoffset,
-    yoffset,
+    tapeeditor.acindex,
+    startx,
+    starty,
     edge,
     context,
+    autocompletewords,
     wordcolors,
   )
 
