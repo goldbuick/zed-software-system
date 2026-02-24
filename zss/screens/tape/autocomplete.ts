@@ -20,7 +20,6 @@ export type AUTOCOMPLETE_CATEGORY =
   | 'dir'
   | 'dirmod'
   | 'expr'
-  | 'none'
 
 /** Words per category for autocomplete. Ensures each category has a word list. */
 export type AUTOCOMPLETE_WORDS = {
@@ -51,7 +50,6 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
 const ROM_CATEGORIES = [
   'flag',
   'stat',
-  'kind',
   'color',
   'dir',
   'dirmod',
@@ -65,11 +63,17 @@ function extractdesc(content: string): string {
   return desc.replace(/^\$\w+/i, '').trim()
 }
 
-function romhintfor(word: string): string {
+function romhintfor(word: string, words: AUTOCOMPLETE_WORDS): string {
   const lower = word.toLowerCase().trim()
   if (!lower) {
     return ''
   }
+  // check if lower is a kind
+  const iskind = words.kind.some((k) => k.toLowerCase().trim() === lower)
+  if (iskind) {
+    return `is a board element`
+  }
+  // scan for rom hints
   for (const category of ROM_CATEGORIES) {
     const content = romread(`editor:${category}:${lower}`)
     if (content) {
@@ -215,11 +219,11 @@ export function getautocomplete(
   )
 }
 
-const AC_BG = COLOR.BLACK
-const AC_FG = COLOR.LTGRAY
-const AC_SEL_BG = COLOR.DKBLUE
+const AC_BG = COLOR.DKBLUE
+const AC_FG = COLOR.WHITE
+const AC_SEL_BG = COLOR.BLACK
 const AC_SEL_FG = COLOR.WHITE
-const AC_HINT_FG = COLOR.DKGRAY
+const AC_HINT_FG = COLOR.LTGRAY
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
 function applysuggestioncolors(
@@ -227,31 +231,24 @@ function applysuggestioncolors(
   textoffset: number,
   text: string,
   word: string,
-  selected: boolean,
+  fg: number,
   bg: number,
   wordcolors: Map<string, number> | undefined,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  const defaultfg = selected ? AC_SEL_FG : AC_FG
   applystrtoindex(bufindex, text, context)
 
   if (!wordcolors) {
-    applycolortoindexes(
-      bufindex,
-      bufindex + text.length - 1,
-      defaultfg,
-      bg,
-      context,
-    )
+    applycolortoindexes(bufindex, bufindex + text.length - 1, fg, bg, context)
     return
   }
 
-  const wordcolor = wordcolors.get(word.toLowerCase()) ?? defaultfg
+  const wordcolor = wordcolors.get(word.toLowerCase()) ?? fg
   for (let c = 0; c < text.length; c++) {
     const charoffset = textoffset + c
     const ispadding = charoffset === 0 || charoffset > word.length
-    const fg = ispadding ? defaultfg : wordcolor
-    context.color[bufindex + c] = fg
+    const color = ispadding ? fg : wordcolor
+    context.color[bufindex + c] = color
     context.bg[bufindex + c] = bg
   }
   context.changed()
@@ -262,7 +259,6 @@ function drawhinttext(
   hintx: number,
   hinty: number,
   rightbound: number,
-  bg: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
   if (!hint || hintx > rightbound) {
@@ -276,7 +272,7 @@ function drawhinttext(
     bufindex,
     bufindex + text.length - 1,
     AC_HINT_FG,
-    bg,
+    AC_SEL_BG,
     context,
   )
 }
@@ -288,6 +284,7 @@ export function drawautocomplete(
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
+  words: AUTOCOMPLETE_WORDS,
   wordcolors?: Map<string, number>,
   drawabove?: boolean,
 ) {
@@ -346,17 +343,17 @@ export function drawautocomplete(
       textoffset,
       text,
       ac.suggestions[i],
-      selected,
+      selected ? AC_SEL_FG : AC_FG,
       bg,
       wordcolors,
       context,
     )
 
     if (selected) {
-      const hint = romhintfor(ac.suggestions[i])
+      const hint = romhintfor(ac.suggestions[i], words)
       if (hint) {
         const hintx = rowstart + text.length
-        drawhinttext(hint, hintx, y, edge.right, AC_BG, context)
+        drawhinttext(hint, hintx, y, edge.right, context)
       }
     }
   }

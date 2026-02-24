@@ -30,6 +30,8 @@ import {
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { useZssWords } from '../tape/zsswords'
+
 import {
   computeTerminalSelection,
   drawTerminalCursor,
@@ -97,6 +99,9 @@ export function TerminalInput({
   const resettoend = useTerminalResetToEnd(inputstate.length)
 
   // --- autocomplete ---
+  const { autocompleteWords } = useZssWords({
+    isCli: true,
+  })
 
   const acactive =
     tapeterminal.acindex >= 0 && autocomplete.suggestions.length > 0
@@ -184,6 +189,7 @@ export function TerminalInput({
     starty,
     edge,
     context,
+    autocompleteWords,
     wordcolors,
     true,
   )

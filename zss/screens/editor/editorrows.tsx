@@ -26,6 +26,8 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, STAT_TYPE } from 'zss/words/types'
 
+import { useZssWords } from '../tape/zsswords'
+
 import {
   ZSS_COLOR_MAP,
   ZSS_TYPE_COMMAND,
@@ -78,6 +80,7 @@ export function EditorRows({
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
+  const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
@@ -86,6 +89,10 @@ export function EditorRows({
     }
     return []
   }, [rows])
+
+  const { autocompletewords } = useZssWords({
+    isLoader: editortype === 'loader',
+  })
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -602,6 +609,7 @@ export function EditorRows({
     starty,
     edge,
     context,
+    autocompletewords,
     wordcolors,
   )
 
