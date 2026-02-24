@@ -38,7 +38,6 @@ export type AUTOCOMPLETE = {
   prefix: string
   wordcol: number
   wordstart: number
-  category: AUTOCOMPLETE_CATEGORY
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
@@ -46,7 +45,6 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
   prefix: '',
   wordcol: 0,
   wordstart: 0,
-  category: 'none',
 }
 
 const ROM_CATEGORIES = [
@@ -145,7 +143,6 @@ function getautocompletefromtokens(
               prefix,
               wordcol,
               wordstart,
-              category: 'command',
             }
           case lexer.stat.tokenTypeIdx:
             return {
@@ -153,11 +150,22 @@ function getautocompletefromtokens(
               prefix,
               wordcol,
               wordstart,
-              category: 'stat',
             }
           default:
-            console.info('prev unknown', prev)
-            break
+            return {
+              suggestions: filtersuggestions(prefix, [
+                ...words.flag,
+                ...words.stat,
+                ...words.kind,
+                ...words.color,
+                ...words.dir,
+                ...words.dirmod,
+                ...words.expr,
+              ]),
+              prefix,
+              wordcol,
+              wordstart,
+            }
         }
         break
       case lexer.stat.tokenTypeIdx:
@@ -184,7 +192,7 @@ function getautocompletefromtokens(
       case lexer.command_continue.tokenTypeIdx:
         break
       default:
-        console.info('token unknown', token)
+        console.info('token unknown', token.image)
         break
     }
   }
@@ -281,8 +289,8 @@ function drawhinttext(
 export function drawautocomplete(
   ac: AUTOCOMPLETE,
   acindex: number,
-  py: number,
   px: number,
+  py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
@@ -303,8 +311,9 @@ export function drawautocomplete(
   let starty: number
   let yForIndex: (i: number) => number
   if (drawAbove) {
+    // Draw with index 0 just above the input so MOVE_UP increases acindex = highlight moves up
     starty = py - numRows
-    yForIndex = (i) => starty + i
+    yForIndex = (i) => starty + numRows - 1 - i
   } else {
     const drawBelow = py + numRows <= edge.bottom - 1
     starty = drawBelow ? py : Math.max(edge.top + 1, py - numRows - 1)

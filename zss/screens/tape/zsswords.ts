@@ -96,64 +96,62 @@ export function buildwordcolormap(
   colors: ZSS_WORD_COLOR_MAP,
 ): Map<string, number> {
   const map = new Map<string, number>()
-  const { command, flag, stat, kind, kindalt, color, dir, dirmod, exprs } =
-    colors
   for (const w of STRUCTURED_COMMANDS) {
-    map.set(w, command)
+    map.set(w, colors.command)
   }
   for (const w of SPECIAL_COMMANDS) {
-    map.set(w, command)
+    map.set(w, colors.command)
   }
   for (const w of words.cli) {
-    map.set(w, command)
+    map.set(w, colors.command)
   }
   for (const w of words.loader) {
-    map.set(w, command)
+    map.set(w, colors.command)
   }
   for (const w of words.runtime) {
-    map.set(w, command)
+    map.set(w, colors.command)
   }
   for (const w of words.flags) {
-    map.set(w, flag)
+    map.set(w, colors.flag)
   }
   for (const w of words.statsboard) {
-    map.set(w, stat)
+    map.set(w, colors.stat)
   }
   for (const w of words.statshelper) {
-    map.set(w, stat)
+    map.set(w, colors.stat)
   }
   for (const w of words.statssender) {
-    map.set(w, stat)
+    map.set(w, colors.stat)
   }
   for (const w of words.statsinteraction) {
-    map.set(w, stat)
+    map.set(w, colors.stat)
   }
   for (const w of words.statsboolean) {
-    map.set(w, stat)
+    map.set(w, colors.stat)
   }
   for (const w of words.statsconfig) {
-    map.set(w, stat)
+    map.set(w, colors.stat)
   }
   for (const w of words.statsrunwith) {
-    map.set(w, stat)
+    map.set(w, colors.stat)
   }
   for (const w of words.kinds) {
-    map.set(w, kind)
+    map.set(w, colors.kind)
   }
   for (const w of words.altkinds) {
-    map.set(w, kindalt)
+    map.set(w, colors.kindalt)
   }
   for (const w of words.colors) {
-    map.set(w, color)
+    map.set(w, colors.color)
   }
   for (const w of words.dirs) {
-    map.set(w, dir)
+    map.set(w, colors.dir)
   }
   for (const w of words.dirmods) {
-    map.set(w, dirmod)
+    map.set(w, colors.dirmod)
   }
   for (const w of words.exprs) {
-    map.set(w, exprs)
+    map.set(w, colors.exprs)
   }
   return map
 }
@@ -170,12 +168,6 @@ export type UseZssWordsResult = {
   words: ZSS_WORDS
   /** Set of lowercased command names (for label shadow check in editor). */
   commandnames: Set<string>
-  /** Command words for autocomplete (runtime + optional loader + structured + special). */
-  commandwords: string[]
-  /** Stat words minus flags. */
-  statwords: string[]
-  /** All known words (commands + flags + stats + kinds + colors + dirs + exprs). */
-  allwords: string[]
   /** Words per category for autocomplete (command, flag, stat, kind, color, dir, dirmod, expr). */
   autocompleteWords: AUTOCOMPLETE_WORDS
 }
@@ -185,6 +177,7 @@ export function useZssWords(
 ): UseZssWordsResult {
   const { isLoader = false, isCli = false } = options
   const raw = useGadgetClient(useShallow((state) => state.zsswords))
+
   const words = useMemo(() => {
     const z = raw as Record<string, string[] | undefined> | undefined
     if (!z) {
@@ -272,96 +265,33 @@ export function useZssWords(
     words.flags,
   ])
 
-  const allwords = useMemo(() => {
-    const set = new Set(commandwords)
-    for (const w of words.flags) {
-      set.add(w)
-    }
-    for (const w of words.statsboard) {
-      set.add(w)
-    }
-    for (const w of words.statshelper) {
-      set.add(w)
-    }
-    for (const w of words.statssender) {
-      set.add(w)
-    }
-    for (const w of words.statsinteraction) {
-      set.add(w)
-    }
-    for (const w of words.statsboolean) {
-      set.add(w)
-    }
-    for (const w of words.statsconfig) {
-      set.add(w)
-    }
-    for (const w of words.statsrunwith) {
-      set.add(w)
-    }
-    for (const w of words.kinds) {
-      set.add(w)
-    }
-    for (const w of words.altkinds) {
-      set.add(w)
-    }
-    for (const w of words.colors) {
-      set.add(w)
-    }
-    for (const w of words.dirs) {
-      set.add(w)
-    }
-    for (const w of words.dirmods) {
-      set.add(w)
-    }
-    for (const w of words.exprs) {
-      set.add(w)
-    }
-    return Array.from(set)
-  }, [
-    commandwords,
-    words.flags,
-    words.statsboard,
-    words.statshelper,
-    words.statssender,
-    words.statsinteraction,
-    words.statsboolean,
-    words.statsconfig,
-    words.statsrunwith,
-    words.kinds,
-    words.altkinds,
-    words.colors,
-    words.dirs,
-    words.dirmods,
-    words.exprs,
-  ])
-
-  const autocompleteWords = useMemo((): AUTOCOMPLETE_WORDS => ({
-    command: commandwords,
-    flag: words.flags,
-    stat: statwords,
-    kind: [...words.kinds, ...words.altkinds],
-    color: words.colors,
-    dir: words.dirs,
-    dirmod: words.dirmods,
-    expr: words.exprs,
-  }), [
-    commandwords,
-    statwords,
-    words.flags,
-    words.kinds,
-    words.altkinds,
-    words.colors,
-    words.dirs,
-    words.dirmods,
-    words.exprs,
-  ])
+  const autocompleteWords = useMemo(
+    (): AUTOCOMPLETE_WORDS => ({
+      command: commandwords,
+      flag: words.flags,
+      stat: statwords,
+      kind: [...words.kinds, ...words.altkinds],
+      color: words.colors,
+      dir: words.dirs,
+      dirmod: words.dirmods,
+      expr: words.exprs,
+    }),
+    [
+      commandwords,
+      statwords,
+      words.flags,
+      words.kinds,
+      words.altkinds,
+      words.colors,
+      words.dirs,
+      words.dirmods,
+      words.exprs,
+    ],
+  )
 
   return {
     words,
     commandnames,
-    commandwords,
-    statwords,
-    allwords,
     autocompleteWords,
   }
 }

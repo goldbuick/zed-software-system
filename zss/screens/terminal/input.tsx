@@ -178,8 +178,8 @@ export function TerminalInput({
   drawautocomplete(
     autocomplete,
     tapeterminal.acindex,
+    edge.left,
     edge.top + edge.height - 1,
-    edge.left + autocomplete.wordcol,
     edge,
     context,
     wordcolors,

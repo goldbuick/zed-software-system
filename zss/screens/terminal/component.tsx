@@ -48,7 +48,7 @@ export function TerminalComponent() {
     })
   }, [])
 
-  const { words, commandwords, statwords, allwords, autocompleteWords } = useZssWords({
+  const { words, autocompleteWords } = useZssWords({
     isCli: true,
   })
   const wordcolors = useMemo(
@@ -99,21 +99,16 @@ export function TerminalComponent() {
     if (!inputstateactive) {
       return EMPTY_AUTOCOMPLETE
     }
-    const lineWithNewline = inputstate + '\n'
+    const linewithnewline = inputstate + '\n'
     const rows = [
       {
         start: 0,
-        code: lineWithNewline,
+        code: linewithnewline,
         end: inputstate.length,
         tokens: linetokens,
       },
     ]
-    return getautocomplete(
-      rows,
-      tapeterminal.xcursor,
-      0,
-      autocompleteWords,
-    )
+    return getautocomplete(rows, tapeterminal.xcursor, 0, autocompleteWords)
   }, [
     inputstateactive,
     inputstate,
