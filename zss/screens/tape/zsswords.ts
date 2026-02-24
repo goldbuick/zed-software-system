@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { useShallow } from 'zustand/react/shallow'
 
+import type { AUTOCOMPLETE_WORDS } from './autocomplete'
+
 const EMPTY_ZSS_WORDS: ZSS_WORDS = {
   cli: [],
   loader: [],
@@ -174,6 +176,8 @@ export type UseZssWordsResult = {
   statwords: string[]
   /** All known words (commands + flags + stats + kinds + colors + dirs + exprs). */
   allwords: string[]
+  /** Words per category for autocomplete (command, flag, stat, kind, color, dir, dirmod, expr). */
+  autocompleteWords: AUTOCOMPLETE_WORDS
 }
 
 export function useZssWords(
@@ -331,11 +335,33 @@ export function useZssWords(
     words.exprs,
   ])
 
+  const autocompleteWords = useMemo((): AUTOCOMPLETE_WORDS => ({
+    command: commandwords,
+    flag: words.flags,
+    stat: statwords,
+    kind: [...words.kinds, ...words.altkinds],
+    color: words.colors,
+    dir: words.dirs,
+    dirmod: words.dirmods,
+    expr: words.exprs,
+  }), [
+    commandwords,
+    statwords,
+    words.flags,
+    words.kinds,
+    words.altkinds,
+    words.colors,
+    words.dirs,
+    words.dirmods,
+    words.exprs,
+  ])
+
   return {
     words,
     commandnames,
     commandwords,
     statwords,
     allwords,
+    autocompleteWords,
   }
 }

@@ -21,6 +21,18 @@ export type AUTOCOMPLETE_CATEGORY =
   | 'expr'
   | 'none'
 
+/** Words per category for autocomplete. Ensures each category has a word list. */
+export type AUTOCOMPLETE_WORDS = {
+  command: string[]
+  flag: string[]
+  stat: string[]
+  kind: string[]
+  color: string[]
+  dir: string[]
+  dirmod: string[]
+  expr: string[]
+}
+
 export type AUTOCOMPLETE = {
   suggestions: string[]
   prefix: string
@@ -41,10 +53,12 @@ const ROM_CATEGORIES = [
   'command',
   'flag',
   'stat',
+  'kind',
   'color',
   'dir',
   'dirmod',
   'expr',
+  'none',
 ]
 
 function extractdesc(content: string): string {
@@ -85,9 +99,7 @@ function filtersuggestions(prefix: string, words: string[]): string[] {
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
-  commandwords: string[],
-  statwords: string[],
-  allwords: string[],
+  words: AUTOCOMPLETE_WORDS,
 ): AUTOCOMPLETE | null {
   const tokens = row.tokens
   if (!tokens?.length) {
@@ -119,8 +131,9 @@ function getautocompletefromtokens(
     const token = tokens[activetokenidx]
     const prev = tokens[activetokenidx - 1]
     const wordcol = token.endColumn ?? 1
-    const wordstart = row.start + (token.startColumn ?? 1)
+    const wordstart = row.start + (token.startColumn ?? 1) - 1
 
+    const prefix = token.image
     switch (token.tokenTypeIdx) {
       case lexer.text.tokenTypeIdx:
       case lexer.stringliteral.tokenTypeIdx:
@@ -128,16 +141,20 @@ function getautocompletefromtokens(
         switch (prev?.tokenTypeIdx) {
           case lexer.command.tokenTypeIdx:
             return {
-              suggestions: filtersuggestions(token.image, commandwords),
-              prefix: token.image,
+              suggestions: filtersuggestions(prefix, words.command),
+              prefix,
               wordcol,
               wordstart,
               category: 'command',
             }
-            break
           case lexer.stat.tokenTypeIdx:
-            console.info('stat', token.image)
-            break
+            return {
+              suggestions: filtersuggestions(prefix, words.stat),
+              prefix,
+              wordcol,
+              wordstart,
+              category: 'stat',
+            }
           default:
             console.info('prev unknown', prev)
             break
@@ -178,9 +195,7 @@ export function getautocomplete(
   rows: EDITOR_CODE_ROW[],
   cursor: number,
   ycursor: number,
-  commandwords: string[],
-  statwords: string[],
-  allwords: string[],
+  words: AUTOCOMPLETE_WORDS,
 ): AUTOCOMPLETE {
   const row = rows[ycursor]
   if (!row) {
@@ -188,13 +203,7 @@ export function getautocomplete(
   }
 
   const col = cursor - row.start
-  const fromtokens = getautocompletefromtokens(
-    row,
-    col,
-    commandwords,
-    statwords,
-    allwords,
-  )
+  const fromtokens = getautocompletefromtokens(row, col, words)
   console.info('fromtokens', fromtokens)
   if (fromtokens !== null) {
     return fromtokens

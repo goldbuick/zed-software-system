@@ -35,7 +35,7 @@ export function EditorComponent() {
   const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
 
-  const { words, commandnames, commandwords, statwords, allwords } =
+  const { words, commandnames, commandwords, statwords, allwords, autocompleteWords } =
     useZssWords({ isLoader: editor.type === 'loader' })
 
   const wordcolors = useMemo(
@@ -178,11 +178,9 @@ export function EditorComponent() {
         rows,
         tapeeditor.cursor,
         ycursor,
-        commandwords,
-        statwords,
-        allwords,
+        autocompleteWords,
       ),
-    [rows, tapeeditor.cursor, ycursor, commandwords, statwords, allwords],
+    [rows, tapeeditor.cursor, ycursor, autocompleteWords],
   )
 
   // measure edges once
