@@ -1,5 +1,6 @@
 import { romintolookup, romread } from 'zss/feature/rom'
 import * as lexer from 'zss/lang/lexer'
+import { MAYBE } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -48,7 +49,6 @@ export const EMPTY_AUTOCOMPLETE: AUTOCOMPLETE = {
 }
 
 const ROM_CATEGORIES = [
-  'command',
   'flag',
   'stat',
   'kind',
@@ -56,7 +56,7 @@ const ROM_CATEGORIES = [
   'dir',
   'dirmod',
   'expr',
-  'none',
+  'command',
 ]
 
 function extractdesc(content: string): string {
@@ -98,10 +98,10 @@ function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
   words: AUTOCOMPLETE_WORDS,
-): AUTOCOMPLETE | null {
+): MAYBE<AUTOCOMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
-    return null
+    return undefined
   }
   const cursor = col + 1
 
@@ -196,7 +196,7 @@ function getautocompletefromtokens(
         break
     }
   }
-  return null
+  return undefined
 }
 
 export function getautocomplete(
@@ -209,14 +209,10 @@ export function getautocomplete(
   if (!row) {
     return EMPTY_AUTOCOMPLETE
   }
-
-  const col = cursor - row.start
-  const fromtokens = getautocompletefromtokens(row, col, words)
-  if (fromtokens !== null) {
-    return fromtokens
-  }
-
-  return EMPTY_AUTOCOMPLETE
+  return (
+    getautocompletefromtokens(row, cursor - row.start, words) ??
+    EMPTY_AUTOCOMPLETE
+  )
 }
 
 const AC_BG = COLOR.BLACK
@@ -293,14 +289,14 @@ export function drawautocomplete(
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
   wordcolors?: Map<string, number>,
-  drawAbove?: boolean,
+  drawabove?: boolean,
 ) {
   if (ac.suggestions.length === 0) {
     return
   }
 
-  const effectiveIndex = acindex < 0 ? 0 : acindex
-  const numRows = ac.suggestions.length
+  const effectiveindex = acindex < 0 ? 0 : acindex
+  const numrows = ac.suggestions.length
   const maxitemlen = ac.suggestions.reduce(
     (max, s) => Math.max(max, s.length),
     0,
@@ -308,25 +304,25 @@ export function drawautocomplete(
   const itemwidth = maxitemlen + 2
 
   let starty: number
-  let yForIndex: (i: number) => number
-  if (drawAbove) {
+  let yforindex: (i: number) => number
+  if (drawabove) {
     // Draw with index 0 just above the input so MOVE_UP increases acindex = highlight moves up
-    starty = py - numRows
-    yForIndex = (i) => starty + numRows - 1 - i
+    starty = py - numrows
+    yforindex = (i) => starty + numrows - 1 - i
   } else {
-    const drawBelow = py + numRows <= edge.bottom - 1
-    starty = drawBelow ? py : Math.max(edge.top + 1, py - numRows - 1)
-    yForIndex = (i) => (drawBelow ? starty + i : starty + numRows - 1 - i)
+    const drawbelow = py + numrows <= edge.bottom - 1
+    starty = drawbelow ? py : Math.max(edge.top + 1, py - numrows - 1)
+    yforindex = (i) => (drawbelow ? starty + i : starty + numrows - 1 - i)
   }
 
-  const minY = drawAbove ? edge.top : edge.top + 2
+  const minY = drawabove ? edge.top : edge.top + 2
   for (let i = 0; i < ac.suggestions.length; i++) {
-    const y = yForIndex(i)
+    const y = yforindex(i)
     if (y >= edge.bottom || y < minY) {
       continue
     }
 
-    const selected = i === effectiveIndex
+    const selected = i === effectiveindex
     const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(px, edge.left + 1)
