@@ -18,6 +18,7 @@ export function useTerminalSplice(
         buffer,
         xselect: undefined,
         xcursor: index + (insert ?? '').length,
+        autocompleteactive: true,
       })
     },
     [inputstate, buffer, bufferindex],
@@ -33,6 +34,7 @@ export function useTerminalSplice(
         buffer,
         xselect: undefined,
         xcursor: replacewith.length,
+        autocompleteactive: true,
       })
     },
     [buffer, bufferindex],

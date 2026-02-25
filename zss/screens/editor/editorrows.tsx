@@ -65,6 +65,7 @@ export type EditorRowsProps = {
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
+  autocompleteactive: boolean
   wordcolors?: Map<string, number>
 }
 
@@ -75,6 +76,7 @@ export function EditorRows({
   rows,
   codepage,
   autocomplete,
+  autocompleteactive,
   wordcolors,
 }: EditorRowsProps) {
   const blink = useBlink()
@@ -599,19 +601,21 @@ export function EditorRows({
     }
   }
 
-  // render autocomplete dropdown
-  const startx = edge.left + 4 + autocomplete.wordcol
-  const starty = edge.top + 2 + cursor - yoffset + 1
-  drawautocomplete(
-    autocomplete,
-    tapeeditor.acindex,
-    startx,
-    starty,
-    edge,
-    context,
-    autocompletewords,
-    wordcolors,
-  )
+  // render autocomplete dropdown only after user has typed a character
+  if (autocompleteactive && autocomplete.suggestions.length > 0) {
+    const startx = edge.left + 4 + autocomplete.wordcol
+    const starty = edge.top + 2 + cursor - yoffset + 1
+    drawautocomplete(
+      autocomplete,
+      tapeeditor.acindex,
+      startx,
+      starty,
+      edge,
+      context,
+      autocompletewords,
+      wordcolors,
+    )
+  }
 
   // reset edge
   context.disablewrap = false

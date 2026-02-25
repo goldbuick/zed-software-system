@@ -187,6 +187,7 @@ export function EditorComponent() {
     xoffset: -4 + tapeeditor.xscroll,
     yoffset: tapeeditor.yscroll,
     autocomplete,
+    autocompleteactive: tapeeditor.autocompleteactive,
   }
 
   return (

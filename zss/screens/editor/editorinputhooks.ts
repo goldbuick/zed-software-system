@@ -115,7 +115,7 @@ export function useCursorNavigation(
       useEditor.setState(() => {
         const cursor = clamp(newcursor, 0, codeend)
         updatescrolling(cursor)
-        return { cursor }
+        return { cursor, autocompleteactive: false, acindex: -1 }
       })
     },
     [codeend, updatescrolling],
@@ -135,7 +135,7 @@ export function useCursorNavigation(
           cursor = row.start + Math.min(xcursor, row.code.length - 1)
         }
         updatescrolling(cursor)
-        return { cursor }
+        return { cursor, autocompleteactive: false, acindex: -1 }
       })
     },
     [codeend, rows, rowsend, xcursor, ycursor, updatescrolling],
@@ -168,6 +168,7 @@ export function useEditorSplice(
       useEditor.setState({
         cursor,
         select: undefined,
+        autocompleteactive: true,
       })
     },
     [codepage, updatescrolling, editorCursor, cursorBeforeEditRef],
@@ -184,7 +185,7 @@ export function useEditorSplice(
       }
       const cursor = index + (insert ?? '').length
       updatescrolling(cursor)
-      useEditor.setState({ cursor })
+      useEditor.setState({ cursor, autocompleteactive: true })
     },
     [codepage, updatescrolling, editorCursor, cursorBeforeEditRef],
   )
