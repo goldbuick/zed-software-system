@@ -1,1 +1,2 @@
 desc;$DKGRAYReverb for last 2 channels of #play
+args;$DKGRAY[config] [value]

@@ -1,1 +1,2 @@
 desc;$DKGRAYStart/stop/list AI agents; prompt with <id> <values>
+args;$DKGRAY[start|stop|list|<id>] [...]

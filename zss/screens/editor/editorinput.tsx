@@ -44,6 +44,7 @@ export type EditorInputProps = {
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
+  autocompleteactive?: boolean
 }
 
 export function EditorInput({
@@ -156,7 +157,8 @@ export function EditorInput({
     useEditor.setState({ cursor: codeend, select: undefined })
   }
 
-  const acactive = autocomplete.suggestions.length > 0
+  const acactive =
+    tapeeditor.autocompleteactive && autocomplete.suggestions.length > 0
   const acnumRows = autocomplete.suggestions.length
   const accursorRowY = edge.top + 2 + ycursor - yoffset + 1
   const acdrawBelow = accursorRowY + acnumRows <= edge.bottom - 1
@@ -263,7 +265,7 @@ export function EditorInput({
         }}
         CANCEL_BUTTON={(mods) => {
           if (acactive) {
-            useEditor.setState({ acindex: -1 })
+            useEditor.setState({ acindex: -1, autocompleteactive: false })
             return
           }
           if (mods.shift || mods.alt || mods.ctrl) {
@@ -409,7 +411,11 @@ export function EditorInput({
                   const cursor = tapeeditor.cursor + event.key.length
                   codepage.insert(tapeeditor.cursor, event.key)
                   updatescrolling(cursor)
-                  useEditor.setState({ cursor, acindex: 0 })
+                  useEditor.setState({
+                    cursor,
+                    acindex: 0,
+                    autocompleteactive: true,
+                  })
                 }
               }
               break

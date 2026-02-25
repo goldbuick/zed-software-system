@@ -1,1 +1,2 @@
 desc;$DKGRAYAutowah for #tts
+args;$DKGRAY[config] [value]

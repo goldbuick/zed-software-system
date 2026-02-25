@@ -11,13 +11,12 @@ import {
 import { useEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { getColorForPlayer } from 'zss/screens/inputcommon'
 import {
   EDITOR_CODE_ROW,
   findcursorinrows,
   findmaxwidthinrows,
 } from 'zss/screens/tape/common'
-
-import { getColorForPlayer } from './editorinputhelpers'
 
 const CHUNK_STEP = 32
 
@@ -116,7 +115,7 @@ export function useCursorNavigation(
       useEditor.setState(() => {
         const cursor = clamp(newcursor, 0, codeend)
         updatescrolling(cursor)
-        return { cursor }
+        return { cursor, autocompleteactive: false, acindex: -1 }
       })
     },
     [codeend, updatescrolling],
@@ -136,7 +135,7 @@ export function useCursorNavigation(
           cursor = row.start + Math.min(xcursor, row.code.length - 1)
         }
         updatescrolling(cursor)
-        return { cursor }
+        return { cursor, autocompleteactive: false, acindex: -1 }
       })
     },
     [codeend, rows, rowsend, xcursor, ycursor, updatescrolling],
@@ -169,6 +168,7 @@ export function useEditorSplice(
       useEditor.setState({
         cursor,
         select: undefined,
+        autocompleteactive: true,
       })
     },
     [codepage, updatescrolling, editorCursor, cursorBeforeEditRef],
@@ -185,7 +185,7 @@ export function useEditorSplice(
       }
       const cursor = index + (insert ?? '').length
       updatescrolling(cursor)
-      useEditor.setState({ cursor })
+      useEditor.setState({ cursor, autocompleteactive: true })
     },
     [codepage, updatescrolling, editorCursor, cursorBeforeEditRef],
   )

@@ -1,1 +1,2 @@
 desc;$DKGRAYStart/stop stream broadcast (operator only)
+args;$DKGRAY[streamkey]

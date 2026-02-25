@@ -1,1 +1,2 @@
 desc;$DKGRAYConfigure synth voice 3
+args;$DKGRAY(none)

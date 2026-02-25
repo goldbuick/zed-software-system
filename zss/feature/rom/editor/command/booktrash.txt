@@ -1,1 +1,2 @@
 desc;$DKGRAYTrash a book by address (operator only)
+args;$DKGRAY(none)

@@ -12,6 +12,10 @@
 | `romscroll` | `player`, `line` | Print ROM line to scroll via gadget |
 | `romintolookup` | `content` | Convert ROM content to key-value lookup (ROM_LOOKUP) |
 
+## Command helper format (`editor:command:*.txt`)
+
+Each file has two lines: `desc;...` and `args;...`. The **args** row should match the arguments consumed by the corresponding `.command(name, ...)` implementation (see `readargs` in `zss/firmware/*.ts`). Use `<required>`, `[optional]`, and `...` for rest args so the editor hint stays in sync with the firmware.
+
 ## Content Layout
 
 - `editor/` — Command help, stats, hyperlinks

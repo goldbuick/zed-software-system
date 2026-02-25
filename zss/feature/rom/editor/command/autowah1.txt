@@ -1,1 +1,2 @@
 desc;$DKGRAYAutowah for first 2 channels of #play
+args;$DKGRAY[config] [value]

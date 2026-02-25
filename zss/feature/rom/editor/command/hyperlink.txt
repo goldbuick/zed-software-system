@@ -1,1 +1,2 @@
 desc;$DKGRAYDisplay clickable link in scroll or log
+args;$DKGRAY(none)

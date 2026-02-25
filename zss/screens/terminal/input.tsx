@@ -104,7 +104,7 @@ export function TerminalInput({
   })
 
   const acactive =
-    tapeterminal.acindex >= 0 && autocomplete.suggestions.length > 0
+    tapeterminal.autocompleteactive && autocomplete.suggestions.length > 0
 
   function acceptsuggestion() {
     if (autocomplete.suggestions.length === 0) {
@@ -180,19 +180,21 @@ export function TerminalInput({
 
   drawTerminalCursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
-  const startx = edge.left + autocomplete.wordcol
-  const starty = edge.top + edge.height - 1
-  drawautocomplete(
-    autocomplete,
-    tapeterminal.acindex,
-    startx,
-    starty,
-    edge,
-    context,
-    autocompletewords,
-    wordcolors,
-    true,
-  )
+  if (tapeterminal.autocompleteactive && autocomplete.suggestions.length > 0) {
+    const startx = edge.left + autocomplete.wordcol - 1
+    const starty = edge.top + edge.height - 1
+    drawautocomplete(
+      autocomplete,
+      tapeterminal.acindex,
+      startx,
+      starty,
+      edge,
+      context,
+      autocompletewords,
+      wordcolors,
+      true,
+    )
+  }
 
   // --- speech to text ---
 
@@ -282,7 +284,11 @@ export function TerminalInput({
         MOVE_LEFT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            useTerminal.setState({ xcursor: 0 })
+            useTerminal.setState({
+              xcursor: 0,
+              acindex: -1,
+              autocompleteactive: false,
+            })
           } else {
             useTerminal.setState({
               xcursor: clamp(
@@ -290,15 +296,18 @@ export function TerminalInput({
                 0,
                 edge.right,
               ),
+              acindex: -1,
+              autocompleteactive: false,
             })
           }
-          useTerminal.setState({ acindex: -1 })
         }}
         MOVE_RIGHT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
             useTerminal.setState({
               xcursor: inputstateactive ? inputstate.length : edge.right,
+              acindex: -1,
+              autocompleteactive: false,
             })
           } else {
             useTerminal.setState({
@@ -307,9 +316,10 @@ export function TerminalInput({
                 0,
                 edge.right,
               ),
+              acindex: -1,
+              autocompleteactive: false,
             })
           }
-          useTerminal.setState({ acindex: -1 })
         }}
         MOVE_UP={(mods) => {
           if (acactive) {
@@ -326,6 +336,7 @@ export function TerminalInput({
           } else {
             trackselection(mods.shift)
             inputstateycursor(mods.alt ? 10 : 1)
+            useTerminal.setState({ acindex: -1, autocompleteactive: false })
           }
         }}
         MOVE_DOWN={(mods) => {
@@ -340,6 +351,7 @@ export function TerminalInput({
           } else {
             trackselection(mods.shift)
             inputstateycursor(-(mods.alt ? 10 : 1))
+            useTerminal.setState({ acindex: -1, autocompleteactive: false })
           }
         }}
         OK_BUTTON={() => {
@@ -366,6 +378,7 @@ export function TerminalInput({
                 yselect: undefined,
                 buffer: historybuffer,
                 acindex: -1,
+                autocompleteactive: false,
               })
               vmcli(SOFTWARE, player, invoke)
               if (quickterminal) {
@@ -378,7 +391,7 @@ export function TerminalInput({
         }}
         CANCEL_BUTTON={() => {
           if (acactive) {
-            useTerminal.setState({ acindex: -1 })
+            useTerminal.setState({ acindex: -1, autocompleteactive: false })
             return
           }
           registerterminalclose(SOFTWARE, player)

@@ -159,6 +159,8 @@ export const useTerminal = create<{
   bufferindex: number
   buffer: string[]
   acindex: number
+  /** True only after user has typed a character; disengages on cursor move so autocomplete does not open on arrow into a word. */
+  autocompleteactive: boolean
   reset: () => void
 }>((set) => ({
   // panning offset
@@ -175,21 +177,19 @@ export const useTerminal = create<{
   buffer: [''],
   // autocomplete selected index (-1 = dismissed)
   acindex: -1,
+  autocompleteactive: false,
   reset() {
     set({
-      // panning offset
       pan: 0,
-      // scrolling offset
       scroll: 0,
-      // cursor position & selection
       xcursor: 0,
       ycursor: 0,
       xselect: undefined,
       yselect: undefined,
-      // input history
       bufferindex: 0,
       buffer: [''],
       acindex: -1,
+      autocompleteactive: false,
     })
   },
 }))
@@ -200,25 +200,24 @@ export const useEditor = create<{
   cursor: number
   select: MAYBE<number>
   acindex: number
+  /** True only after user has typed a character; disengages on cursor move so autocomplete does not open on arrow into a word. */
+  autocompleteactive: boolean
   reset: () => void
 }>((set) => ({
-  // scrolling offset
   xscroll: 0,
   yscroll: 0,
-  // cursor position & selection (text index)
   cursor: 0,
   select: undefined,
-  // autocomplete selected index (-1 = dismissed)
   acindex: -1,
+  autocompleteactive: false,
   reset() {
     set({
-      // scrolling offset
       xscroll: 0,
       yscroll: 0,
-      // cursor position & selection (text index)
       cursor: 0,
       select: undefined,
       acindex: -1,
+      autocompleteactive: false,
     })
   },
 }))

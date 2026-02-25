@@ -1,1 +1,2 @@
 desc;$DKGRAYSearch ZZT content by field and text
+args;$DKGRAY[field] [text]

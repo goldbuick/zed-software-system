@@ -1,1 +1,2 @@
 desc;$DKGRAYTrash a code page (operator only)
+args;$DKGRAY<page>

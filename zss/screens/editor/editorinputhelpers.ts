@@ -1,6 +1,13 @@
 import type { RefObject } from 'react'
 import type { PresenceState, SharedTextHandle } from 'zss/device/modem'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import {
+  type InputSelectionRange,
+  type TextEdge,
+  computeSelectionRange,
+  drawBlockCursor,
+  getColorForPlayer,
+} from 'zss/screens/inputcommon'
 import { EDITOR_CODE_ROW, findcursorinrows } from 'zss/screens/tape/common'
 import {
   WRITE_TEXT_CONTEXT,
@@ -12,44 +19,18 @@ import { COLOR, PT } from 'zss/words/types'
 
 export type EditorEdge = ReturnType<typeof textformatreadedges>
 
-export function getColorForPlayer(playerId: string): string {
-  let hash = 0
-  for (let i = 0; i < playerId.length; i++) {
-    hash = playerId.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const hue = Math.abs(hash % 360)
-  return `hsl(${hue}, 70%, 50%)`
-}
+// Re-export for callers that use getColorForPlayer from this file
+export { getColorForPlayer }
 
-export type SelectionRange = {
-  ii1: number
-  ii2: number
-  iic: number
-  hasselection: boolean
-  strvalueselected: string
-}
+export type SelectionRange = InputSelectionRange & { strvalueselected: string }
 
 export function computeSelection(
   cursor: number,
   select: MAYBE<number>,
   strvalue: string,
 ): SelectionRange {
-  let ii1 = cursor
-  let ii2 = cursor
-  let hasselection = false
-
-  if (ispresent(select)) {
-    hasselection = true
-    ii1 = Math.min(cursor, select)
-    ii2 = Math.max(cursor, select)
-    if (cursor !== select) {
-      --ii2
-    }
-  }
-
-  const iic = ii2 - ii1 + 1
-  const strvalueselected = hasselection ? strvalue.substring(ii1, ii2 + 1) : ''
-  return { ii1, ii2, iic, hasselection, strvalueselected }
+  const r = computeSelectionRange(cursor, select, strvalue)
+  return { ...r, strvalueselected: r.selected }
 }
 
 export function drawLocalCursor(
@@ -73,9 +54,9 @@ export function drawLocalCursor(
         x > edge.left &&
         x < edge.right
       ) {
-        const atchar = x + y * context.width
-        applystrtoindex(atchar, String.fromCharCode(221), context)
-        applycolortoindexes(atchar, atchar, COLOR.WHITE, COLOR.DKBLUE, context)
+        drawBlockCursor(xblink, yblink, edge as TextEdge, context, {
+          bg: COLOR.DKBLUE,
+        })
       }
     }
   }

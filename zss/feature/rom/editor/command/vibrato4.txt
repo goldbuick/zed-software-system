@@ -1,1 +1,2 @@
 desc;$DKGRAYVibrato for #tts
+args;$DKGRAY[config] [value]

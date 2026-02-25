@@ -1,1 +1,2 @@
 desc;$DKGRAYFlush and persist current state (operator only)
+args;$DKGRAY(none)

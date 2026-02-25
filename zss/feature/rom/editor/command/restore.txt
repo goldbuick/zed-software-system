@@ -1,1 +1,2 @@
 desc;$DKGRAYRestore all labels of given name
+args;$DKGRAY(none)

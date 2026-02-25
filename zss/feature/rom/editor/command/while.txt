@@ -1,1 +1,2 @@
 desc;$DKGRAYLooping do-done block with condition
+args;$DKGRAY(none)

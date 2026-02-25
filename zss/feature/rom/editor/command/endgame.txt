@@ -1,1 +1,2 @@
 desc;$DKGRAYSet health to 0
+args;$DKGRAY(none)

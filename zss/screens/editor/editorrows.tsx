@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
-import { ROM_LOOKUP, romintolookup, romread } from 'zss/feature/rom'
+import {
+  ROM_LOOKUP,
+  romintolookup,
+  romread,
+  stripRomValue,
+} from 'zss/feature/rom'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import * as lexer from 'zss/lang/lexer'
@@ -65,6 +70,7 @@ export type EditorRowsProps = {
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
+  autocompleteactive: boolean
   wordcolors?: Map<string, number>
 }
 
@@ -75,6 +81,7 @@ export function EditorRows({
   rows,
   codepage,
   autocomplete,
+  autocompleteactive,
   wordcolors,
 }: EditorRowsProps) {
   const blink = useBlink()
@@ -550,7 +557,10 @@ export function EditorRows({
         break
       }
 
-      if (isstring(lookup?.desc)) {
+      // When a command token was detected to our left, show its args hint; otherwise show desc (with format codes)
+      if (isstring(lookup?.args)) {
+        writeplaintext(stripRomValue(lookup.args), context, false)
+      } else if (isstring(lookup?.desc)) {
         tokenizeandwritetextformat(lookup.desc, context, false)
       }
     }
@@ -599,19 +609,21 @@ export function EditorRows({
     }
   }
 
-  // render autocomplete dropdown
-  const startx = edge.left + 4 + autocomplete.wordcol
-  const starty = edge.top + 2 + cursor - yoffset + 1
-  drawautocomplete(
-    autocomplete,
-    tapeeditor.acindex,
-    startx,
-    starty,
-    edge,
-    context,
-    autocompletewords,
-    wordcolors,
-  )
+  // render autocomplete dropdown only after user has typed a character
+  if (autocompleteactive && autocomplete.suggestions.length > 0) {
+    const startx = edge.left + 4 + autocomplete.wordcol
+    const starty = edge.top + 2 + cursor - yoffset + 1
+    drawautocomplete(
+      autocomplete,
+      tapeeditor.acindex,
+      startx,
+      starty,
+      edge,
+      context,
+      autocompletewords,
+      wordcolors,
+    )
+  }
 
   // reset edge
   context.disablewrap = false
