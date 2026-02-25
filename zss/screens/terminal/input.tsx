@@ -97,9 +97,6 @@ export function TerminalInput({
   const resettoend = useTerminalResetToEnd(inputstate.length)
 
   // --- autocomplete ---
-  const { autocompletewords } = useZssWords({
-    isCli: true,
-  })
 
   const acactive =
     tapeterminal.autocompleteactive && autocomplete.suggestions.length > 0
@@ -188,7 +185,7 @@ export function TerminalInput({
       starty,
       edge,
       context,
-      autocompletewords,
+      {},
       wordcolors,
       true,
     )

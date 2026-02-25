@@ -17,18 +17,6 @@ import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
 import { textformatreadedges } from 'zss/words/textformat'
 
-import {
-  ZSS_TYPE_COMMAND,
-  ZSS_WORD_COLOR,
-  ZSS_WORD_DIR,
-  ZSS_WORD_DIRMOD,
-  ZSS_WORD_EXPRS,
-  ZSS_WORD_FLAG,
-  ZSS_WORD_KIND,
-  ZSS_WORD_KIND_ALT,
-  ZSS_WORD_STAT,
-} from '../editor/colors'
-
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
 import { tokenizeline } from './terminalinputhelpers'
@@ -46,25 +34,6 @@ export function TerminalComponent() {
       setvoice2text(voice2text === 'on')
     })
   }, [])
-
-  const { words, autocompletewords } = useZssWords({
-    isCli: true,
-  })
-  const wordcolors = useMemo(
-    () =>
-      buildwordcolormap(words, {
-        command: ZSS_TYPE_COMMAND,
-        flag: ZSS_WORD_FLAG,
-        stat: ZSS_WORD_STAT,
-        kind: ZSS_WORD_KIND,
-        kindalt: ZSS_WORD_KIND_ALT,
-        color: ZSS_WORD_COLOR,
-        dir: ZSS_WORD_DIR,
-        dirmod: ZSS_WORD_DIRMOD,
-        exprs: ZSS_WORD_EXPRS,
-      }),
-    [words],
-  )
 
   const context = useWriteText()
   const tapeterminal = useTerminal()
@@ -94,27 +63,28 @@ export function TerminalComponent() {
     () => (inputstateactive ? tokenizeline(inputstate) : []),
     [inputstate, inputstateactive],
   )
-  const autocomplete = useMemo(() => {
-    if (!inputstateactive) {
-      return EMPTY_AUTOCOMPLETE
-    }
-    const linewithnewline = inputstate + '\n'
-    const rows = [
-      {
-        start: 0,
-        code: linewithnewline,
-        end: inputstate.length,
-        tokens: linetokens,
-      },
-    ]
-    return getautocomplete(rows, tapeterminal.xcursor, 0, autocompletewords)
-  }, [
-    inputstateactive,
-    inputstate,
-    tapeterminal.xcursor,
-    linetokens,
-    autocompletewords,
-  ])
+
+  // const autocomplete = useMemo(() => {
+  //   if (!inputstateactive) {
+  //     return EMPTY_AUTOCOMPLETE
+  //   }
+  //   const linewithnewline = inputstate + '\n'
+  //   const rows = [
+  //     {
+  //       start: 0,
+  //       code: linewithnewline,
+  //       end: inputstate.length,
+  //       tokens: linetokens,
+  //     },
+  //   ]
+  //   return getautocomplete(rows, tapeterminal.xcursor, 0, autocompletewords)
+  // }, [
+  //   inputstateactive,
+  //   inputstate,
+  //   tapeterminal.xcursor,
+  //   linetokens,
+  //   autocompletewords,
+  // ])
 
   return (
     <>
@@ -139,8 +109,6 @@ export function TerminalComponent() {
             voice2text={voice2text}
             tapeycursor={tapeycursor}
             logrowtotalheight={logsrowtotalheight}
-            autocomplete={autocomplete}
-            wordcolors={wordcolors}
             linetokens={linetokens}
           />
         )}
