@@ -92,11 +92,9 @@ export function EditorRows({
   const tapeeditor = useEditor()
   const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
-  const commandMaps = useGadgetClient((state) => ({
-    cli: state.zsswords.clicommands,
-    loader: state.zsswords.loadercommands,
-    runtime: state.zsswords.runtimecommands,
-  }))
+  const commandMapKey =
+    editortype === 'loader' ? 'loadercommands' : 'runtimecommands'
+  const commandMap = useGadgetClient((state) => state.zsswords[commandMapKey])
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
       const last = rows[rows.length - 1]
@@ -569,8 +567,6 @@ export function EditorRows({
       const commandName = lookupAddress?.startsWith('editor:command:')
         ? lookupAddress.slice(17).toLowerCase().trim()
         : ''
-      const driverKey = editortype === 'loader' ? 'loader' : 'runtime'
-      const commandMap = commandMaps[driverKey]
       const commandArgsHint =
         commandName && commandMap ? (commandMap[commandName] ?? '') : ''
       if (commandArgsHint) {
