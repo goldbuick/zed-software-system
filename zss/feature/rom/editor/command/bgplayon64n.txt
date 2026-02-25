@@ -1,2 +1,2 @@
 desc;$DKGRAYQuantized bgplay on 64n
-args;$LTGRAY(none)
+args;$DKGRAY(none)

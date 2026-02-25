@@ -1,2 +1,2 @@
 desc;$DKGRAYAutofilter for #bgplay
-args;$LTGRAY(none)
+args;$DKGRAY[config] [value]

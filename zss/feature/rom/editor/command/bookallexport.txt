@@ -1,2 +1,2 @@
 desc;$DKGRAYExport entire book as JSON (operator only)
-args;$LTGRAY(none)
+args;$DKGRAY<book>

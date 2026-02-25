@@ -1,2 +1,2 @@
 desc;$DKGRAYRevert board to snapshot state
-args;$LTGRAY(none)
+args;$DKGRAY(none)

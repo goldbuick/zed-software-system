@@ -1,2 +1,2 @@
 desc;$DKGRAYOpen tab with copy of state (operator only)
-args;$LTGRAY(none)
+args;$DKGRAY[address]

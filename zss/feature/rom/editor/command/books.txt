@@ -1,2 +1,2 @@
 desc;$DKGRAYList all books
-args;$LTGRAY(none)
+args;$DKGRAY(none)

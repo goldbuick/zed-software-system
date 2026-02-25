@@ -1,2 +1,2 @@
 desc;$DKGRAYDuplicate element at direction in given direction
-args;$LTGRAY<dir> <dupedir>
+args;$DKGRAY<dir> <dupedir>

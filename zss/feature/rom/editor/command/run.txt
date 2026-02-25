@@ -1,2 +1,2 @@
 desc;$DKGRAYRun object codepage of given name
-args;$LTGRAY<name>
+args;$DKGRAY<name>

@@ -1,2 +1,2 @@
 desc;$DKGRAYSet TTS volume
-args;$LTGRAY(none)
+args;$DKGRAY(none)

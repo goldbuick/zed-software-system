@@ -1,2 +1,2 @@
 desc;$DKGRAYEnd program and set 'arg' variable
-args;$LTGRAY(none)
+args;$DKGRAY(none)

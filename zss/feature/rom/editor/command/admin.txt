@@ -1,2 +1,2 @@
 desc;$DKGRAYShow admin scroll
-args;$LTGRAY(none)
+args;$DKGRAY(none)

@@ -1,2 +1,2 @@
 desc;$DKGRAYSets element ticker text
-args;$LTGRAY<text>
+args;$DKGRAY<text>

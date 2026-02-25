@@ -1,2 +1,2 @@
 desc;$DKGRAYDistortion for first 2 channels of #play
-args;$LTGRAY(none)
+args;$DKGRAY[config] [value]

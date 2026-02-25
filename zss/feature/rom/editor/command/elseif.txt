@@ -1,2 +1,2 @@
 desc;$DKGRAYConditional alternate branch in an if-do-done block
-args;$LTGRAY(none)
+args;$DKGRAY(none)

@@ -1,2 +1,2 @@
 desc;$DKGRAYWrite text to board at direction
-args;$LTGRAY<dir> <color> <text>
+args;$DKGRAY<dir> <color> <text>

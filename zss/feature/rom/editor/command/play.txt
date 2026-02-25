@@ -1,2 +1,2 @@
 desc;$DKGRAYPlay music notes
-args;$LTGRAY<notes>
+args;$DKGRAY<notes>

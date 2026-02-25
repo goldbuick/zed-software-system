@@ -1,2 +1,2 @@
 desc;$DKGRAYYield execution until next tick
-args;$LTGRAY(none)
+args;$DKGRAY(none)

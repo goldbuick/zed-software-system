@@ -1,2 +1,2 @@
 desc;$DKGRAYSwitch to target object id
-args;$LTGRAY<id>
+args;$DKGRAY<id>

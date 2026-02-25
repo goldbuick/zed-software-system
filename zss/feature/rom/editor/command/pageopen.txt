@@ -1,2 +1,2 @@
 desc;$DKGRAYOpen a code page editor
-args;$LTGRAY(none)
+args;$DKGRAY<page> [object]

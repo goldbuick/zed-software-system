@@ -1,2 +1,2 @@
 desc;$DKGRAYEcho for #tts
-args;$LTGRAY(none)
+args;$DKGRAY[config] [value]

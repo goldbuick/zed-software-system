@@ -1,2 +1,2 @@
 desc;$DKGRAYSet element cycle value (1-255)
-args;$LTGRAY(none)
+args;$DKGRAY<value> (1-255)

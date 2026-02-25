@@ -1,2 +1,2 @@
 desc;$DKGRAYRead property from object into variable
-args;$LTGRAY(none)
+args;$DKGRAY<from> <prop> <name>

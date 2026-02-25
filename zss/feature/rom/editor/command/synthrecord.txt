@@ -1,2 +1,2 @@
 desc;$DKGRAYRecord played note buffer to an mp3 file
-args;$LTGRAY(none)
+args;$DKGRAY(none)

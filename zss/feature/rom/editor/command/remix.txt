@@ -1,2 +1,2 @@
 desc;$DKGRAYRemix from source with pattern size and mirror to current board
-args;$LTGRAY(none)
+args;$DKGRAY<stat> <size> <mirror> [filter...]

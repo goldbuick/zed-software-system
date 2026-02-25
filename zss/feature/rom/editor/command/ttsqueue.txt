@@ -1,2 +1,2 @@
 desc;$DKGRAYQueue TTS phrase
-args;$LTGRAY(none)
+args;$DKGRAY(none)

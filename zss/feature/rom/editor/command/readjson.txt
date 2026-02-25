@@ -1,2 +1,2 @@
 desc;$DKGRAYParse JSON data
-args;$LTGRAY(none)
+args;$DKGRAY(none)

@@ -1,2 +1,2 @@
 desc;$DKGRAYRename the main book (operator only)
-args;$LTGRAY(none)
+args;$DKGRAY(none)

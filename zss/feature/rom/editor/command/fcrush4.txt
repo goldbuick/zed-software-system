@@ -1,2 +1,2 @@
 desc;$DKGRAYFrequency crush for #tts
-args;$LTGRAY(none)
+args;$DKGRAY[config] [value]

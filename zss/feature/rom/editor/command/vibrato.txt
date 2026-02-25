@@ -1,2 +1,2 @@
 desc;$DKGRAYApply vibrato to all 4 channels of #play
-args;$LTGRAY(none)
+args;$DKGRAY[config] [value]

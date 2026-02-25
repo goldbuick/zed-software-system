@@ -1,2 +1,2 @@
 desc;$DKGRAYThrow star with argument
-args;$LTGRAY(none)
+args;$DKGRAY(none)

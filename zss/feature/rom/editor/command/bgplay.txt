@@ -1,2 +1,2 @@
 desc;$DKGRAYlike #play but for sound effects
-args;$LTGRAY(none)
+args;$DKGRAY(none)

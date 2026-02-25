@@ -1,2 +1,2 @@
 desc;$DKGRAYGet share url (operator only)
-args;$LTGRAY(none)
+args;$DKGRAY(none)

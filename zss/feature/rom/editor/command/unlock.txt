@@ -1,2 +1,2 @@
 desc;$DKGRAYUnlock against messages from others
-args;$LTGRAY(none)
+args;$DKGRAY(none)

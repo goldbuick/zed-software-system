@@ -1,2 +1,2 @@
 desc;$DKGRAYList books/codepages to delete (operator only)
-args;$LTGRAY(none)
+args;$DKGRAY(none)

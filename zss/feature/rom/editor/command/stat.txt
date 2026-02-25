@@ -1,2 +1,2 @@
 desc;$DKGRAYDisplay text in a scroll window
-args;$LTGRAY(none)
+args;$DKGRAY(none)

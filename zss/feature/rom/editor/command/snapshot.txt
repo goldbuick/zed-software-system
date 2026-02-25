@@ -1,2 +1,2 @@
 desc;$DKGRAYCreate board snapshot
-args;$LTGRAY(none)
+args;$DKGRAY(none)

@@ -1,2 +1,2 @@
 desc;$DKGRAYIterate over array or numeric range
-args;$LTGRAY(none)
+args;$DKGRAY(none)

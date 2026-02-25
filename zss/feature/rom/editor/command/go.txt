@@ -1,2 +1,2 @@
 desc;$DKGRAYMove element in direction
-args;$LTGRAY(none)
+args;$DKGRAY<dir>

@@ -1,2 +1,2 @@
 desc;$DKGRAYRotate board elements by degrees
-args;$LTGRAY(none)
+args;$DKGRAY<degrees> [filter...]

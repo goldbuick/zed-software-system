@@ -1,2 +1,2 @@
 desc;$DKGRAYSet main volume
-args;$LTGRAY<0-100>
+args;$DKGRAY<0-100>

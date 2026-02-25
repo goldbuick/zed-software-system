@@ -1,2 +1,2 @@
 desc;$DKGRAYChange elements of one kind to another
-args;$LTGRAY(none)
+args;$DKGRAY(none)

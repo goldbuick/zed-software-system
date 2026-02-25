@@ -1,2 +1,2 @@
 desc;$DKGRAYGet random ZZT content
-args;$LTGRAY(none)
+args;$DKGRAY(none)

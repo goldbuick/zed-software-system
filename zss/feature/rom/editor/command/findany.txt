@@ -1,2 +1,2 @@
 desc;$DKGRAYHighlight matched elements
-args;$LTGRAY(none)
+args;$DKGRAY[selection]

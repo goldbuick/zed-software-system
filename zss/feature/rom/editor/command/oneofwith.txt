@@ -1,2 +1,2 @@
 desc;$DKGRAYPut element with argument and oneof logic
-args;$LTGRAY(none)
+args;$DKGRAY(none)

@@ -1,2 +1,2 @@
 desc;$DKGRAYConfigure #bgplay synth voices
-args;$LTGRAY(none)
+args;$DKGRAY(none)

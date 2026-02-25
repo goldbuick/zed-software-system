@@ -1,2 +1,2 @@
 desc;$DKGRAYEvaluate condition for true or false
-args;$LTGRAY(none)
+args;$DKGRAY(none)

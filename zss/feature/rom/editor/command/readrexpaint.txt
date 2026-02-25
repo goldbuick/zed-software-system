@@ -1,2 +1,2 @@
 desc;$DKGRAYParse REXPaint file data
-args;$LTGRAY(none)
+args;$DKGRAY(none)

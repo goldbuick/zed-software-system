@@ -1,2 +1,2 @@
 desc;$DKGRAYStart multiplayer session (operator only)
-args;$LTGRAY(none)
+args;$DKGRAY[hidden]

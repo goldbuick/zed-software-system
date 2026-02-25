@@ -1,2 +1,2 @@
 desc;$DKGRAYChange element into specified kind
-args;$LTGRAY(none)
+args;$DKGRAY<kind>

@@ -1,2 +1,2 @@
 desc;$DKGRAYSet BPM
-args;$LTGRAY(none)
+args;$DKGRAY(none)

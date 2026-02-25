@@ -1,2 +1,2 @@
 desc;$DKGRAYThrow star projectile, shorthand for `#shoot <dir> star`
-args;$LTGRAY(none)
+args;$DKGRAY(none)

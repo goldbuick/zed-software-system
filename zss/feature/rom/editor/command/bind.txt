@@ -1,2 +1,2 @@
 desc;$DKGRAYCopy code from named element
-args;$LTGRAY(none)
+args;$DKGRAY<name>
