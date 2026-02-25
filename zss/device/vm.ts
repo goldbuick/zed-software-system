@@ -373,11 +373,8 @@ const vm = createdevice(
           'elements',
         ]
         const zsswords: GADGET_ZSS_WORDS = {
-          cli: firmwarelistcommands(DRIVER_TYPE.CLI),
           clicommands,
-          loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
           loadercommands,
-          runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
           runtimecommands,
           flags: [
             ...objectKeys(memoryreadflags(message.player)),

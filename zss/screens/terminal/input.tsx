@@ -30,8 +30,6 @@ import {
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useZssWords } from '../tape/zsswords'
-
 import {
   computeTerminalSelection,
   drawTerminalCursor,

@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { FORMAT_OBJECT } from 'zss/feature/format'
+import { ROM_LOOKUP } from 'zss/feature/rom'
 import { MAYBE, isequal } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
@@ -26,6 +27,8 @@ export const useGadgetClient = create<{
   layercache: Record<string, LAYER[]>
   slim: FORMAT_OBJECT
   zsswords: GADGET_ZSS_WORDS
+  lookup: MAYBE<ROM_LOOKUP>
+  lookupaddress: MAYBE<string>
 }>(() => ({
   desync: false,
   zsswords: {
@@ -64,6 +67,8 @@ export const useGadgetClient = create<{
   },
   layercache: {},
   slim: [],
+  lookup: undefined,
+  lookupaddress: undefined,
 }))
 
 export type TAPE_ROW = [string, string, ...any[]]

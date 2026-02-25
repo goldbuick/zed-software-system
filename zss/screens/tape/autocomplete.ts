@@ -1,4 +1,3 @@
-import { romintolookup, romread } from 'zss/feature/rom'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE } from 'zss/mapping/types'
 import {
@@ -31,8 +30,6 @@ export type AUTO_COMPLETE_WORDS = {
   dir: string[]
   dirmod: string[]
   expr: string[]
-  /** When set, used for command hint instead of ROM (COMMAND_ARGS_SIGNATURES instruction string). */
-  getCommandHint?: (name: string) => string
 }
 
 export type AUTO_COMPLETE = {
@@ -49,53 +46,15 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   wordstart: 0,
 }
 
-const ROM_CATEGORIES = [
-  'flag',
-  'stat',
-  'color',
-  'dir',
-  'dirmod',
-  'expr',
-  'command',
-]
-
-const STRIP_COLOR = /^\$\w+/i
-
-function stripromvalue(value: string): string {
-  return value.replace(STRIP_COLOR, '').trim()
-}
-
-/** Autocomplete dropdown hint: description only (args are shown separately when a command is detected to the left). */
-function exthintfromcontent(content: string): string {
-  const lookup = romintolookup(content)
-  const desc = stripromvalue(lookup.desc ?? '')
-  return desc
-}
-
-function romhintfor(word: string, words: AUTO_COMPLETE_WORDS): string {
-  const lower = word.toLowerCase().trim()
-  if (!lower) {
-    return ''
-  }
-  // command hint from COMMAND_ARGS_SIGNATURES when available
-  const cmdHint = words.getCommandHint?.(lower)
-  if (cmdHint) {
-    return cmdHint
-  }
-  // check if lower is a kind
-  const iskind = words.kind.some((k) => k.toLowerCase().trim() === lower)
-  if (iskind) {
-    return `is a board element`
-  }
-  // scan for rom hints
-  for (const category of ROM_CATEGORIES) {
-    const content = romread(`editor:${category}:${lower}`)
-    if (content) {
-      return exthintfromcontent(content)
-    }
-  }
-  return ''
-}
+// const ROM_CATEGORIES = [
+//   'flag',
+//   'stat',
+//   'color',
+//   'dir',
+//   'dirmod',
+//   'expr',
+//   'command',
+// ]
 
 const MAX_SUGGESTIONS = 8
 
@@ -364,7 +323,7 @@ export function drawautocomplete(
     )
 
     if (selected) {
-      const hint = romhintfor(ac.suggestions[i], words)
+      const hint = '' //romhintfor(ac.suggestions[i], words)
       if (hint) {
         const hintx = rowstart + text.length
         drawhinttext(hint, hintx, y, edge.right, context)

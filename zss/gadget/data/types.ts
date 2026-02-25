@@ -278,11 +278,8 @@ export type GADGET_STATE = {
 
 /** ZSS word lists and command-args hints per driver (from vm). */
 export type GADGET_ZSS_WORDS = {
-  cli: string[]
   clicommands: Record<string, string>
-  loader: string[]
   loadercommands: Record<string, string>
-  runtime: string[]
   runtimecommands: Record<string, string>
   flags: string[]
   statsboard: string[]

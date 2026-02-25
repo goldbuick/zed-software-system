@@ -1,17 +1,12 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
-import {
-  ROM_LOOKUP,
-  romintolookup,
-  romread,
-  stripRomValue,
-} from 'zss/feature/rom'
+import { romread } from 'zss/feature/rom'
 import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import {
   BG_ACTIVE,
@@ -31,8 +26,6 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, STAT_TYPE } from 'zss/words/types'
 
-import { useZssWords } from '../tape/zsswords'
-
 import {
   ZSS_COLOR_MAP,
   ZSS_TYPE_COMMAND,
@@ -51,18 +44,8 @@ function parsestatformat(image: string) {
   return first.split(' ')
 }
 
-let lookup: MAYBE<ROM_LOOKUP>
-let lookupAddress: MAYBE<string>
-function setlookup(address: string) {
-  lookupAddress = address
-  const maybelookup = romintolookup(romread(address))
-  const keys = Object.keys(maybelookup).filter((key) => !!key)
-  if (keys.length) {
-    lookup = maybelookup
-  } else {
-    lookup = undefined
-    console.error(address)
-  }
+function setlookupaddress(address: string) {
+  useGadgetClient.setState({ lookupaddress: address })
 }
 
 export type EditorRowsProps = {
@@ -74,7 +57,6 @@ export type EditorRowsProps = {
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
   autocompleteactive: boolean
-  wordcolors?: Map<string, number>
 }
 
 export function EditorRows({
@@ -85,16 +67,19 @@ export function EditorRows({
   codepage,
   autocomplete,
   autocompleteactive,
-  wordcolors,
 }: EditorRowsProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
-  const editortype = useTape((state) => state.editor.type)
+  // const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
-  const commandMapKey =
-    editortype === 'loader' ? 'loadercommands' : 'runtimecommands'
-  const commandMap = useGadgetClient((state) => state.zsswords[commandMapKey])
+
+  // const commandMapKey =
+  //   editortype === 'loader' ? 'loadercommands' : 'runtimecommands'
+  // const commandMap = useGadgetClient((state) => state.zsswords[commandMapKey])
+
+  const lookupaddress = useGadgetClient((state) => state.lookupaddress)
+
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
       const last = rows[rows.length - 1]
@@ -102,10 +87,6 @@ export function EditorRows({
     }
     return []
   }, [rows])
-
-  const { autocompletewords } = useZssWords({
-    isLoader: editortype === 'loader',
-  })
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -437,7 +418,6 @@ export function EditorRows({
         }
       }
 
-      lookup = undefined as MAYBE<ROM_LOOKUP>
       // scan for hint category indicator
       for (let c = activetokenidx; c >= 0; --c) {
         const prevtoken = row.tokens[c - 1]
@@ -469,15 +449,15 @@ export function EditorRows({
         }
         switch (token.tokenTypeIdx) {
           case lexer.command.tokenTypeIdx: {
-            setlookup(`editor:command:${nexttoken.image}`)
+            setlookupaddress(`editor:command:${nexttoken.image}`)
             break
           }
           case lexer.command_do.tokenTypeIdx: {
-            setlookup(`editor:command:do`)
+            setlookupaddress(`editor:command:do`)
             break
           }
           case lexer.command_if.tokenTypeIdx: {
-            setlookup(
+            setlookupaddress(
               prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
                 ? `editor:command:elseif`
                 : `editor:command:if`,
@@ -485,7 +465,7 @@ export function EditorRows({
             break
           }
           case lexer.command_else.tokenTypeIdx: {
-            setlookup(
+            setlookupaddress(
               nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
                 ? `editor:command:elseif`
                 : `editor:command:else`,
@@ -493,11 +473,11 @@ export function EditorRows({
             break
           }
           case lexer.command_ticker.tokenTypeIdx: {
-            setlookup(`editor:command:ticker`)
+            setlookupaddress(`editor:command:ticker`)
             break
           }
           case lexer.command_toast.tokenTypeIdx: {
-            setlookup(`editor:command:toast`)
+            setlookupaddress(`editor:command:toast`)
             break
           }
           case lexer.stat.tokenTypeIdx: {
@@ -505,37 +485,36 @@ export function EditorRows({
             const statinfo = statformat('', words, !!token.payload)
             const statname = (words[0] ?? '').toLowerCase().trim()
             if (statname && ispresent(romread(`editor:stat:${statname}`))) {
-              setlookup(`editor:stat:${statname}`)
+              setlookupaddress(`editor:stat:${statname}`)
             } else {
-              setlookup(`editor:stat:${stattypestring(statinfo.type)}`)
+              setlookupaddress(`editor:stat:${stattypestring(statinfo.type)}`)
             }
             break
           }
           case lexer.label.tokenTypeIdx: {
-            setlookup(`editor:label`)
+            setlookupaddress(`editor:label`)
             break
           }
           case lexer.comment.tokenTypeIdx: {
-            setlookup(`editor:comment`)
+            setlookupaddress(`editor:comment`)
             break
           }
           case lexer.hyperlink.tokenTypeIdx: {
             // scan tokens until hyperlink text
-            setlookup(`editor:hyperlink`)
+            setlookupaddress(`editor:hyperlink`)
             break
           }
           case lexer.query.tokenTypeIdx: {
-            setlookup(`editor:shorttry`)
+            setlookupaddress(`editor:shorttry`)
             break
           }
           case lexer.divide.tokenTypeIdx: {
-            setlookup(`editor:shortgo`)
+            setlookupaddress(`editor:shortgo`)
             break
           }
           case lexer.text.tokenTypeIdx: {
             const word = (token.image ?? '').toLowerCase().trim()
             const wordCategories = [
-              'command',
               'flag',
               'stat',
               'color',
@@ -548,14 +527,14 @@ export function EditorRows({
               for (const cat of wordCategories) {
                 const addr = `editor:${cat}:${word}`
                 if (ispresent(romread(addr))) {
-                  setlookup(addr)
+                  setlookupaddress(addr)
                   found = true
                   break
                 }
               }
             }
             if (!found) {
-              setlookup(`editor:text`)
+              setlookupaddress(`editor:text`)
             }
             break
           }
@@ -563,19 +542,21 @@ export function EditorRows({
         break
       }
 
+      console.info(lookupaddress)
+
       // When a command token was detected to our left, show args hint from vm data (COMMAND_ARGS_SIGNATURES); otherwise show desc (with format codes)
-      const commandName = lookupAddress?.startsWith('editor:command:')
-        ? lookupAddress.slice(17).toLowerCase().trim()
-        : ''
-      const commandArgsHint =
-        commandName && commandMap ? (commandMap[commandName] ?? '') : ''
-      if (commandArgsHint) {
-        writeplaintext(commandArgsHint, context, false)
-      } else if (!commandName && isstring(lookup?.args)) {
-        writeplaintext(stripRomValue(lookup.args), context, false)
-      } else if (!commandName && isstring(lookup?.desc)) {
-        tokenizeandwritetextformat(lookup.desc, context, false)
-      }
+      // const commandName = lookupAddress?.startsWith('editor:command:')
+      //   ? lookupAddress.slice(17).toLowerCase().trim()
+      //   : ''
+      // const commandArgsHint =
+      //   commandName && commandMap ? (commandMap[commandName] ?? '') : ''
+      // if (commandArgsHint) {
+      //   writeplaintext(commandArgsHint, context, false)
+      // } else if (!commandName && isstring(lookup?.args)) {
+      //   writeplaintext(stripRomValue(lookup.args), context, false)
+      // } else if (!commandName && isstring(lookup?.desc)) {
+      //   tokenizeandwritetextformat(lookup.desc, context, false)
+      // }
     }
 
     // apply error and info meta

@@ -58,7 +58,15 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { ARG_TYPE, COLLISION, COLOR, DIR, NAME, PT, WORD } from 'zss/words/types'
+import {
+  ARG_TYPE,
+  COLLISION,
+  COLOR,
+  DIR,
+  NAME,
+  PT,
+  WORD,
+} from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data

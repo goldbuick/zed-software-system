@@ -13,20 +13,8 @@ import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
-import { buildwordcolormap, useZssWords } from 'zss/screens/tape/zsswords'
 import { useShallow } from 'zustand/react/shallow'
 
-import {
-  ZSS_TYPE_COMMAND,
-  ZSS_WORD_COLOR,
-  ZSS_WORD_DIR,
-  ZSS_WORD_DIRMOD,
-  ZSS_WORD_EXPRS,
-  ZSS_WORD_FLAG,
-  ZSS_WORD_KIND,
-  ZSS_WORD_KIND_ALT,
-  ZSS_WORD_STAT,
-} from './colors'
 import { EditorFrame } from './editorframe'
 import { EditorInput } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
@@ -34,26 +22,6 @@ import { EditorRows, EditorRowsProps } from './editorrows'
 export function EditorComponent() {
   const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
-
-  const { words, commandnames, autocompletewords } = useZssWords({
-    isLoader: editor.type === 'loader',
-  })
-
-  const wordcolors = useMemo(
-    () =>
-      buildwordcolormap(words, {
-        command: ZSS_TYPE_COMMAND,
-        flag: ZSS_WORD_FLAG,
-        stat: ZSS_WORD_STAT,
-        kind: ZSS_WORD_KIND,
-        kindalt: ZSS_WORD_KIND_ALT,
-        color: ZSS_WORD_COLOR,
-        dir: ZSS_WORD_DIR,
-        dirmod: ZSS_WORD_DIRMOD,
-        exprs: ZSS_WORD_EXPRS,
-      }),
-    [words],
-  )
 
   const tapeeditor = useEditor()
   const codepage = useWaitForValueString(
@@ -141,42 +109,42 @@ export function EditorComponent() {
     }
 
     // warn when a label name shadows a command
-    if (ispresent(parsed.tokens)) {
-      for (let i = 0; i < parsed.tokens.length; ++i) {
-        const token = parsed.tokens[i]
-        if (
-          token.tokenTypeIdx === lexer.label.tokenTypeIdx &&
-          token.startColumn === 1
-        ) {
-          const labelname = token.image.slice(1).trim().toLowerCase()
-          if (commandnames.has(labelname)) {
-            const row = rows[(token.startLine ?? 1) - 1]
-            if (ispresent(row)) {
-              row.errors = row.errors ?? []
-              row.errors.push({
-                offset: token.startOffset,
-                line: token.startLine,
-                column: token.startColumn,
-                length: token.image.length,
-                message: `label ':${labelname}' shadows #${labelname} command`,
-              })
-            }
-          }
-        }
-      }
-    }
+    // if (ispresent(parsed.tokens)) {
+    //   for (let i = 0; i < parsed.tokens.length; ++i) {
+    //     const token = parsed.tokens[i]
+    //     if (
+    //       token.tokenTypeIdx === lexer.label.tokenTypeIdx &&
+    //       token.startColumn === 1
+    //     ) {
+    //       const labelname = token.image.slice(1).trim().toLowerCase()
+    //       if (commandnames.has(labelname)) {
+    //         const row = rows[(token.startLine ?? 1) - 1]
+    //         if (ispresent(row)) {
+    //           row.errors = row.errors ?? []
+    //           row.errors.push({
+    //             offset: token.startOffset,
+    //             line: token.startLine,
+    //             column: token.startColumn,
+    //             length: token.image.length,
+    //             message: `label ':${labelname}' shadows #${labelname} command`,
+    //           })
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
     return rows
-  }, [strvalue, commandnames])
+  }, [strvalue])
 
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
 
-  const autocomplete = useMemo(
-    () => getautocomplete(rows, tapeeditor.cursor, ycursor, autocompletewords),
-    [rows, tapeeditor.cursor, ycursor, autocompletewords],
-  )
+  // const autocomplete = useMemo(
+  //   () => getautocomplete(rows, tapeeditor.cursor, ycursor, autocompletewords),
+  //   [rows, tapeeditor.cursor, ycursor, autocompletewords],
+  // )
 
   // measure edges once
   const props: EditorRowsProps = {
@@ -186,7 +154,7 @@ export function EditorComponent() {
     codepage,
     xoffset: -4 + tapeeditor.xscroll,
     yoffset: tapeeditor.yscroll,
-    autocomplete,
+    // autocomplete,
     autocompleteactive: tapeeditor.autocompleteactive,
   }
 
@@ -194,7 +162,7 @@ export function EditorComponent() {
     <>
       <TapeBackPlate bump />
       <EditorFrame />
-      <EditorRows {...props} wordcolors={wordcolors} />
+      <EditorRows {...props} />
       <EditorInput {...props} />
     </>
   )
