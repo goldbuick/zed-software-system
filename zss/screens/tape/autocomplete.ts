@@ -31,6 +31,8 @@ export type AUTO_COMPLETE_WORDS = {
   dir: string[]
   dirmod: string[]
   expr: string[]
+  /** When set, used for command hint instead of ROM (COMMAND_ARGS_SIGNATURES instruction string). */
+  getCommandHint?: (name: string) => string
 }
 
 export type AUTO_COMPLETE = {
@@ -74,6 +76,11 @@ function romhintfor(word: string, words: AUTO_COMPLETE_WORDS): string {
   const lower = word.toLowerCase().trim()
   if (!lower) {
     return ''
+  }
+  // command hint from COMMAND_ARGS_SIGNATURES when available
+  const cmdHint = words.getCommandHint?.(lower)
+  if (cmdHint) {
+    return cmdHint
   }
   // check if lower is a kind
   const iskind = words.kind.some((k) => k.toLowerCase().trim() === lower)

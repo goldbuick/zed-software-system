@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { DRIVER_TYPE, firmwarecommandargshint } from 'zss/firmware/runner'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -265,6 +266,11 @@ export function useZssWords(
     words.flags,
   ])
 
+  const driver = isCli
+    ? DRIVER_TYPE.CLI
+    : isLoader
+      ? DRIVER_TYPE.LOADER
+      : DRIVER_TYPE.RUNTIME
   const autocompletewords = useMemo(
     (): AUTO_COMPLETE_WORDS => ({
       command: commandwords,
@@ -275,8 +281,10 @@ export function useZssWords(
       dir: words.dirs,
       dirmod: words.dirmods,
       expr: words.exprs,
+      getCommandHint: (name: string) => firmwarecommandargshint(driver, name),
     }),
     [
+      driver,
       commandwords,
       statwords,
       words.flags,

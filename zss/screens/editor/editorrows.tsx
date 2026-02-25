@@ -6,6 +6,7 @@ import {
   romread,
   stripRomValue,
 } from 'zss/feature/rom'
+import { DRIVER_TYPE, firmwarecommandargshint } from 'zss/firmware/runner'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import * as lexer from 'zss/lang/lexer'
@@ -52,12 +53,15 @@ function parsestatformat(image: string) {
 }
 
 let lookup: MAYBE<ROM_LOOKUP>
+let lookupAddress: MAYBE<string>
 function setlookup(address: string) {
+  lookupAddress = address
   const maybelookup = romintolookup(romread(address))
   const keys = Object.keys(maybelookup).filter((key) => !!key)
   if (keys.length) {
     lookup = maybelookup
   } else {
+    lookup = undefined
     console.error(address)
   }
 }
@@ -89,6 +93,8 @@ export function EditorRows({
   const tapeeditor = useEditor()
   const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
+  const driver =
+    editortype === 'loader' ? DRIVER_TYPE.LOADER : DRIVER_TYPE.RUNTIME
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
       const last = rows[rows.length - 1]
@@ -557,8 +563,13 @@ export function EditorRows({
         break
       }
 
-      // When a command token was detected to our left, show its args hint; otherwise show desc (with format codes)
-      if (isstring(lookup?.args)) {
+      // When a command token was detected to our left, show args hint from COMMAND_ARGS_SIGNATURES; otherwise show desc (with format codes)
+      const commandArgsHint =
+        lookupAddress?.startsWith('editor:command:') &&
+        firmwarecommandargshint(driver, lookupAddress.slice(17))
+      if (commandArgsHint) {
+        writeplaintext(commandArgsHint, context, false)
+      } else if (isstring(lookup?.args)) {
         writeplaintext(stripRomValue(lookup.args), context, false)
       } else if (isstring(lookup?.desc)) {
         tokenizeandwritetextformat(lookup.desc, context, false)

@@ -1,5 +1,9 @@
 import { CHIP } from 'zss/chip'
-import { FIRMWARE, FIRMWARE_COMMAND } from 'zss/firmware'
+import {
+  COMMAND_ARGS_SIGNATURES,
+  FIRMWARE,
+  FIRMWARE_COMMAND,
+} from 'zss/firmware'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_FIRMWARE } from './audio'
@@ -88,6 +92,34 @@ export function firmwaregetcommand(
   }
 
   return commands.get(method)
+}
+
+export function firmwaregetcommandargs(
+  driver: DRIVER_TYPE,
+  method: string,
+): MAYBE<COMMAND_ARGS_SIGNATURES> {
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    const args = wares[i].getcommandargs(method)
+    if (ispresent(args)) {
+      return args
+    }
+  }
+  return undefined
+}
+
+/** First signature’s instruction string (last element), for hints. */
+export function firmwarecommandargshint(
+  driver: DRIVER_TYPE,
+  method: string,
+): string {
+  const sigs = firmwaregetcommandargs(driver, method)
+  const first = sigs?.[0]
+  if (!first?.length) {
+    return ''
+  }
+  const last = first[first.length - 1]
+  return typeof last === 'string' ? last : ''
 }
 
 export function firmwareget(
