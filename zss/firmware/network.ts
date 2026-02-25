@@ -55,7 +55,14 @@ function fetchcommand(
 export const NETWORK_FIRMWARE = createfirmware()
   .command(
     'fetch',
-    [[ARG_TYPE.NAME, ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING]],
+    [
+      [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_STRING,
+        'URL with label, method, and optional data',
+      ],
+    ],
     (_, words) => {
       const [label, url, maybemethod = 'get', ii] = readargs(words, 0, [
         ARG_TYPE.NAME,
@@ -68,7 +75,15 @@ export const NETWORK_FIRMWARE = createfirmware()
   )
   .command(
     'fetchwith',
-    [[ARG_TYPE.ANY, ARG_TYPE.NAME, ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING]],
+    [
+      [
+        ARG_TYPE.ANY,
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_STRING,
+        'URL with argument, label, method, and optional data',
+      ],
+    ],
     (_, words) => {
       const [arg, label, url, maybemethod = 'get', ii] = readargs(words, 0, [
         ARG_TYPE.ANY,

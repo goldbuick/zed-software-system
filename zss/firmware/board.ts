@@ -339,92 +339,104 @@ const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const targetset = 'all'
 
 export const BOARD_FIRMWARE = createfirmware()
-  .command('build', [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING]], (chip, words) => {
-    if (
-      !ispresent(READ_CONTEXT.book) ||
-      !ispresent(READ_CONTEXT.board) ||
-      !ispresent(READ_CONTEXT.element)
-    ) {
-      return 0
-    }
+  .command(
+    'build',
+    [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING, 'new board and write id to stat']],
+    (chip, words) => {
+      if (
+        !ispresent(READ_CONTEXT.book) ||
+        !ispresent(READ_CONTEXT.board) ||
+        !ispresent(READ_CONTEXT.element)
+      ) {
+        return 0
+      }
 
-    // creates a new board from an existing one or blank, and writes the id to the given stat
-    const [stat, maybesource] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_STRING,
-    ])
+      // creates a new board from an existing one or blank, and writes the id to the given stat
+      const [stat, maybesource] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_STRING,
+      ])
 
-    const [codepage] = memoryensuresoftwarecodepage(
-      MEMORY_LABEL.TEMP,
-      createsid(),
-      CODE_PAGE_TYPE.BOARD,
-    )
-    if (!ispresent(codepage)) {
-      return 0
-    }
+      const [codepage] = memoryensuresoftwarecodepage(
+        MEMORY_LABEL.TEMP,
+        createsid(),
+        CODE_PAGE_TYPE.BOARD,
+      )
+      if (!ispresent(codepage)) {
+        return 0
+      }
 
-    const createdboard = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
-    if (!ispresent(createdboard)) {
-      return 0
-    }
+      const createdboard =
+        memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
+      if (!ispresent(createdboard)) {
+        return 0
+      }
 
-    // attempt to clone existing board
-    if (isstring(maybesource)) {
-      const sourceboard = memoryreadboardbyaddress(maybesource)
-      if (ispresent(sourceboard)) {
-        boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
-        // make sure to copy board stats as well
-        createdboard.isdark = sourceboard.isdark
-        createdboard.startx = sourceboard.startx
-        createdboard.starty = sourceboard.starty
-        createdboard.over = sourceboard.over
-        createdboard.under = sourceboard.under
-        createdboard.camera = sourceboard.camera
-        createdboard.graphics = sourceboard.graphics
-        createdboard.facing = sourceboard.facing
-        createdboard.charset = sourceboard.charset
-        createdboard.palette = sourceboard.palette
-        createdboard.timelimit = sourceboard.timelimit
-        createdboard.restartonzap = sourceboard.restartonzap
-        createdboard.maxplayershots = sourceboard.maxplayershots
-        createdboard.b1 = sourceboard.b1
-        createdboard.b2 = sourceboard.b2
-        createdboard.b3 = sourceboard.b3
-        createdboard.b4 = sourceboard.b4
-        createdboard.b5 = sourceboard.b5
-        createdboard.b6 = sourceboard.b6
-        createdboard.b7 = sourceboard.b7
-        createdboard.b8 = sourceboard.b8
-        createdboard.b9 = sourceboard.b9
-        createdboard.b10 = sourceboard.b10
-        // when building out border boards, make sure to link back
-        // to current board
-        switch (NAME(stat)) {
-          case 'exitwest':
-            createdboard.exiteast = READ_CONTEXT.board.id
-            break
-          case 'exiteast':
-            createdboard.exitwest = READ_CONTEXT.board.id
-            break
-          case 'exitnorth':
-            createdboard.exitsouth = READ_CONTEXT.board.id
-            break
-          case 'exitsouth':
-            createdboard.exitnorth = READ_CONTEXT.board.id
-            break
-          default:
-            break
+      // attempt to clone existing board
+      if (isstring(maybesource)) {
+        const sourceboard = memoryreadboardbyaddress(maybesource)
+        if (ispresent(sourceboard)) {
+          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+          // make sure to copy board stats as well
+          createdboard.isdark = sourceboard.isdark
+          createdboard.startx = sourceboard.startx
+          createdboard.starty = sourceboard.starty
+          createdboard.over = sourceboard.over
+          createdboard.under = sourceboard.under
+          createdboard.camera = sourceboard.camera
+          createdboard.graphics = sourceboard.graphics
+          createdboard.facing = sourceboard.facing
+          createdboard.charset = sourceboard.charset
+          createdboard.palette = sourceboard.palette
+          createdboard.timelimit = sourceboard.timelimit
+          createdboard.restartonzap = sourceboard.restartonzap
+          createdboard.maxplayershots = sourceboard.maxplayershots
+          createdboard.b1 = sourceboard.b1
+          createdboard.b2 = sourceboard.b2
+          createdboard.b3 = sourceboard.b3
+          createdboard.b4 = sourceboard.b4
+          createdboard.b5 = sourceboard.b5
+          createdboard.b6 = sourceboard.b6
+          createdboard.b7 = sourceboard.b7
+          createdboard.b8 = sourceboard.b8
+          createdboard.b9 = sourceboard.b9
+          createdboard.b10 = sourceboard.b10
+          // when building out border boards, make sure to link back
+          // to current board
+          switch (NAME(stat)) {
+            case 'exitwest':
+              createdboard.exiteast = READ_CONTEXT.board.id
+              break
+            case 'exiteast':
+              createdboard.exitwest = READ_CONTEXT.board.id
+              break
+            case 'exitnorth':
+              createdboard.exitsouth = READ_CONTEXT.board.id
+              break
+            case 'exitsouth':
+              createdboard.exitnorth = READ_CONTEXT.board.id
+              break
+            default:
+              break
+          }
         }
       }
-    }
 
-    // update stat with created board id
-    chip.set(stat, createdboard.id)
-    return 0
-  })
+      // update stat with created board id
+      chip.set(stat, createdboard.id)
+      return 0
+    },
+  )
   .command(
     'goto',
-    [[ARG_TYPE.STRING, ARG_TYPE.MAYBE_NUMBER, ARG_TYPE.MAYBE_NUMBER]],
+    [
+      [
+        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
+        'player to board by name or address with optional x, y',
+      ],
+    ],
     (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
@@ -496,339 +508,418 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('transport', [[ARG_TYPE.STRING]], (_, words) => {
-    if (
-      !ispresent(READ_CONTEXT.book) ||
-      !ispresent(READ_CONTEXT.board) ||
-      !ispresent(READ_CONTEXT.element)
-    ) {
-      return 0
-    }
-
-    const [target] = readargs(words, 0, [ARG_TYPE.STRING])
-    const maybeobject = memoryreadobject(READ_CONTEXT.board, target)
-    if (
-      ispresent(READ_CONTEXT.element?.x) &&
-      ispresent(READ_CONTEXT.element.y) &&
-      ispresent(maybeobject?.x) &&
-      ispresent(maybeobject.y)
-    ) {
-      let placing = true
-      const scan: PT = {
-        x: READ_CONTEXT.element.x,
-        y: READ_CONTEXT.element.y,
-      }
-      const deltax = scan.x - maybeobject.x
-      const deltay = scan.y - maybeobject.y
+  .command(
+    'transport',
+    [[ARG_TYPE.STRING, 'element across board with transporter logic']],
+    (_, words) => {
       if (
-        memoryreadelementstat(READ_CONTEXT.element, 'shootx') !== deltax ||
-        memoryreadelementstat(READ_CONTEXT.element, 'shooty') !== deltay
+        !ispresent(READ_CONTEXT.book) ||
+        !ispresent(READ_CONTEXT.board) ||
+        !ispresent(READ_CONTEXT.element)
       ) {
-        // transporters are one direction
         return 0
       }
-      while (placing) {
-        scan.x += deltax
-        scan.y += deltay
-        // scan until board edge
-        if (
-          scan.x < 0 ||
-          scan.x >= BOARD_WIDTH ||
-          scan.y < 0 ||
-          scan.y >= BOARD_HEIGHT
-        ) {
-          break
+
+      const [target] = readargs(words, 0, [ARG_TYPE.STRING])
+      const maybeobject = memoryreadobject(READ_CONTEXT.board, target)
+      if (
+        ispresent(READ_CONTEXT.element?.x) &&
+        ispresent(READ_CONTEXT.element.y) &&
+        ispresent(maybeobject?.x) &&
+        ispresent(maybeobject.y)
+      ) {
+        let placing = true
+        const scan: PT = {
+          x: READ_CONTEXT.element.x,
+          y: READ_CONTEXT.element.y,
         }
-        // scan until we find an opposite transporter
-        const maybetransporter = memoryreadelement(READ_CONTEXT.board, scan)
+        const deltax = scan.x - maybeobject.x
+        const deltay = scan.y - maybeobject.y
         if (
-          maybetransporter?.kind === READ_CONTEXT.element.kind &&
-          memoryreadelementstat(maybetransporter, 'shootx') === -deltax &&
-          memoryreadelementstat(maybetransporter, 'shooty') === -deltay
+          memoryreadelementstat(READ_CONTEXT.element, 'shootx') !== deltax ||
+          memoryreadelementstat(READ_CONTEXT.element, 'shooty') !== deltay
         ) {
-          // if we can move the object here, we're done!
+          // transporters are one direction
+          return 0
+        }
+        while (placing) {
+          scan.x += deltax
+          scan.y += deltay
+          // scan until board edge
           if (
-            memorymoveobject(
-              READ_CONTEXT.book,
-              READ_CONTEXT.board,
-              maybeobject,
-              {
-                x: scan.x + deltax,
-                y: scan.y + deltay,
-              },
-            )
+            scan.x < 0 ||
+            scan.x >= BOARD_WIDTH ||
+            scan.y < 0 ||
+            scan.y >= BOARD_HEIGHT
           ) {
-            placing = false
+            break
+          }
+          // scan until we find an opposite transporter
+          const maybetransporter = memoryreadelement(READ_CONTEXT.board, scan)
+          if (
+            maybetransporter?.kind === READ_CONTEXT.element.kind &&
+            memoryreadelementstat(maybetransporter, 'shootx') === -deltax &&
+            memoryreadelementstat(maybetransporter, 'shooty') === -deltay
+          ) {
+            // if we can move the object here, we're done!
+            if (
+              memorymoveobject(
+                READ_CONTEXT.book,
+                READ_CONTEXT.board,
+                maybeobject,
+                {
+                  x: scan.x + deltax,
+                  y: scan.y + deltay,
+                },
+              )
+            ) {
+              placing = false
+            }
           }
         }
+        if (placing) {
+          memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybeobject, {
+            x: READ_CONTEXT.element.x + deltax,
+            y: READ_CONTEXT.element.y + deltay,
+          })
+        }
       }
-      if (placing) {
-        memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybeobject, {
-          x: READ_CONTEXT.element.x + deltax,
-          y: READ_CONTEXT.element.y + deltay,
+
+      return 0
+    },
+  )
+  .command(
+    'shove',
+    [[ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction']],
+    (_, words) => {
+      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+        return 0
+      }
+      // shove target at dir, in the direction of the given dir
+      const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+      const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
+      if (memoryboardelementisobject(maybetarget)) {
+        const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
+        const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
+        memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
+          x: shovex,
+          y: shovey,
         })
       }
-    }
+      return 0
+    },
+  )
+  .command(
+    'push',
+    [
+      [
+        ARG_TYPE.DIR,
+        ARG_TYPE.DIR,
+        'target object in direction ONLY if pushable',
+      ],
+    ],
+    (_, words) => {
+      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+        return 0
+      }
+      // shove target at dir, in the direction of the given dir
+      // but only if target is pushable
+      const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+      const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
+      if (
+        memoryboardelementisobject(maybetarget) &&
+        memoryreadelementstat(maybetarget, 'pushable')
+      ) {
+        const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
+        const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
+        memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
+          x: shovex,
+          y: shovey,
+        })
+      }
+      return 0
+    },
+  )
+  .command(
+    'duplicate',
+    [[ARG_TYPE.DIR, ARG_TYPE.DIR, 'element at direction in given direction']],
+    commanddupe,
+  )
+  .command(
+    'duplicatewith',
+    [[ARG_TYPE.ANY, 'element with argument']],
+    (chip, words) => {
+      const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+      return commanddupe(chip, words.slice(ii), arg)
+    },
+  )
+  .command(
+    'dupe',
+    [[ARG_TYPE.DIR, ARG_TYPE.DIR, 'element at direction in given direction']],
+    commanddupe,
+  )
+  .command(
+    'dupewith',
+    [[ARG_TYPE.ANY, 'element with argument']],
+    (chip, words) => {
+      const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+      return commanddupe(chip, words.slice(ii), arg)
+    },
+  )
+  .command(
+    'write',
+    [[ARG_TYPE.DIR, ARG_TYPE.COLOR, 'text to board at direction']],
+    (chip, words) => {
+      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+        chip.set('didfail', 1)
+        return 0
+      }
 
-    return 0
-  })
-  .command('shove', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], (_, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      const [dir, strcolor, ii] = readargs(words, 0, [
+        ARG_TYPE.DIR,
+        ARG_TYPE.COLOR,
+      ])
+
+      // read board by eval dir
+      const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+
+      const text = words.slice(ii).map(maptostring).join(' ')
+      const { color, bg } = mapstrcolortoattributes(strcolor)
+      const measuredwidth =
+        tokenizeandmeasuretextformat(text, 256, 1)?.measuredwidth ?? 1
+      const context = createwritetextcontext(
+        256,
+        1,
+        color ?? COLOR.WHITE,
+        bg ?? COLOR.BLACK,
+      )
+      tokenizeandwritetextformat(text, context, false)
+      const last = measuredwidth - 1
+
+      const heading = dirfrompts(dir.startpt, dir.destpt)
+      switch (heading) {
+        case DIR.EAST:
+          for (let i = 0; i < measuredwidth; ++i) {
+            // create new terrain element
+            memorywriteterrain(board, {
+              x: dir.destpt.x + i,
+              y: dir.destpt.y,
+              name: 'text',
+              char: context.char[i],
+              color: context.color[i],
+              bg: context.bg[i],
+            })
+          }
+          break
+        case DIR.WEST:
+          for (let i = 0; i < measuredwidth; ++i) {
+            // create new terrain element
+            memorywriteterrain(board, {
+              x: dir.destpt.x + i - last,
+              y: dir.destpt.y,
+              name: 'text',
+              char: context.char[i],
+              color: context.color[i],
+              bg: context.bg[i],
+            })
+          }
+          break
+        case DIR.NORTH:
+          for (let i = 0; i < measuredwidth; ++i) {
+            // create new terrain element
+            memorywriteterrain(board, {
+              x: dir.destpt.x,
+              y: dir.destpt.y + i - last,
+              name: 'text',
+              char: context.char[i],
+              color: context.color[i],
+              bg: context.bg[i],
+            })
+          }
+          break
+        case DIR.SOUTH:
+          for (let i = 0; i < measuredwidth; ++i) {
+            // create new terrain element
+            memorywriteterrain(board, {
+              x: dir.destpt.x,
+              y: dir.destpt.y + i,
+              name: 'text',
+              char: context.char[i],
+              color: context.color[i],
+              bg: context.bg[i],
+            })
+          }
+          break
+      }
+      chip.set('didfail', 0)
       return 0
-    }
-    // shove target at dir, in the direction of the given dir
-    const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
-    if (memoryboardelementisobject(maybetarget)) {
-      const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
-      const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
-      memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
-        x: shovex,
-        y: shovey,
-      })
-    }
-    return 0
-  })
-  .command('push', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], (_, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      return 0
-    }
-    // shove target at dir, in the direction of the given dir
-    // but only if target is pushable
-    const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
-    if (
-      memoryboardelementisobject(maybetarget) &&
-      memoryreadelementstat(maybetarget, 'pushable')
-    ) {
-      const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
-      const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
-      memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
-        x: shovex,
-        y: shovey,
-      })
-    }
-    return 0
-  })
-  .command('duplicate', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], commanddupe)
-  .command('duplicatewith', [[ARG_TYPE.ANY]], (chip, words) => {
-    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commanddupe(chip, words.slice(ii), arg)
-  })
-  .command('dupe', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], commanddupe)
-  .command('dupewith', [[ARG_TYPE.ANY]], (chip, words) => {
-    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commanddupe(chip, words.slice(ii), arg)
-  })
-  .command('write', [[ARG_TYPE.DIR, ARG_TYPE.COLOR]], (chip, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+    },
+  )
+  .command(
+    'change',
+    [[ARG_TYPE.KIND, ARG_TYPE.KIND, 'elements of one kind to another']],
+    (chip, words) => {
+      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+        chip.set('didfail', 1)
+        return 0
+      }
+
+      // read
+      const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
+
+      // handle player case
+      const [maybetargetname] = target
+      const [maybeintoname] = into
+      if (
+        NAME(maybetargetname) === 'player' ||
+        NAME(maybeintoname) === 'player'
+      ) {
+        // NOT ALLOWED
+        chip.set('didfail', 1)
+        return 0
+      }
+
+      // default to failure
       chip.set('didfail', 1)
-      return 0
-    }
 
-    const [dir, strcolor, ii] = readargs(words, 0, [
-      ARG_TYPE.DIR,
-      ARG_TYPE.COLOR,
-    ])
+      // begin filtering
+      const targetname = readstrkindname(target) ?? ''
+      if (targetname === 'empty') {
+        // empty into something becomes a put
+        memorylistboardptsbyempty(READ_CONTEXT.board).forEach((pt) => {
+          memorywriteelementfromkind(READ_CONTEXT.board, into, pt)
+        })
+      }
 
-    // read board by eval dir
-    const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-
-    const text = words.slice(ii).map(maptostring).join(' ')
-    const { color, bg } = mapstrcolortoattributes(strcolor)
-    const measuredwidth =
-      tokenizeandmeasuretextformat(text, 256, 1)?.measuredwidth ?? 1
-    const context = createwritetextcontext(
-      256,
-      1,
-      color ?? COLOR.WHITE,
-      bg ?? COLOR.BLACK,
-    )
-    tokenizeandwritetextformat(text, context, false)
-    const last = measuredwidth - 1
-
-    const heading = dirfrompts(dir.startpt, dir.destpt)
-    switch (heading) {
-      case DIR.EAST:
-        for (let i = 0; i < measuredwidth; ++i) {
-          // create new terrain element
-          memorywriteterrain(board, {
-            x: dir.destpt.x + i,
-            y: dir.destpt.y,
-            name: 'text',
-            char: context.char[i],
-            color: context.color[i],
-            bg: context.bg[i],
-          })
-        }
-        break
-      case DIR.WEST:
-        for (let i = 0; i < measuredwidth; ++i) {
-          // create new terrain element
-          memorywriteterrain(board, {
-            x: dir.destpt.x + i - last,
-            y: dir.destpt.y,
-            name: 'text',
-            char: context.char[i],
-            color: context.color[i],
-            bg: context.bg[i],
-          })
-        }
-        break
-      case DIR.NORTH:
-        for (let i = 0; i < measuredwidth; ++i) {
-          // create new terrain element
-          memorywriteterrain(board, {
-            x: dir.destpt.x,
-            y: dir.destpt.y + i - last,
-            name: 'text',
-            char: context.char[i],
-            color: context.color[i],
-            bg: context.bg[i],
-          })
-        }
-        break
-      case DIR.SOUTH:
-        for (let i = 0; i < measuredwidth; ++i) {
-          // create new terrain element
-          memorywriteterrain(board, {
-            x: dir.destpt.x,
-            y: dir.destpt.y + i,
-            name: 'text',
-            char: context.char[i],
-            color: context.color[i],
-            bg: context.bg[i],
-          })
-        }
-        break
-    }
-    chip.set('didfail', 0)
-    return 0
-  })
-  .command('change', [[ARG_TYPE.KIND, ARG_TYPE.KIND]], (chip, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      chip.set('didfail', 1)
-      return 0
-    }
-
-    // read
-    const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
-
-    // handle player case
-    const [maybetargetname] = target
-    const [maybeintoname] = into
-    if (
-      NAME(maybetargetname) === 'player' ||
-      NAME(maybeintoname) === 'player'
-    ) {
-      // NOT ALLOWED
-      chip.set('didfail', 1)
-      return 0
-    }
-
-    // default to failure
-    chip.set('didfail', 1)
-
-    // begin filtering
-    const targetname = readstrkindname(target) ?? ''
-    if (targetname === 'empty') {
-      // empty into something becomes a put
-      memorylistboardptsbyempty(READ_CONTEXT.board).forEach((pt) => {
-        memorywriteelementfromkind(READ_CONTEXT.board, into, pt)
-      })
-    }
-
-    // modify attrs
-    const intoname = readstrkindname(into)
-    const intocolor = readstrkindcolor(into)
-    const intobg = readstrkindbg(into)
-    memorylistboardelementsbykind(READ_CONTEXT.board, target).forEach(
-      (element) => {
-        // modify existing elements
-        if (ispresent(intocolor)) {
-          element.color = intocolor
-          chip.set('didfail', 0)
-        }
-        if (ispresent(intobg)) {
-          element.bg = intobg
-          chip.set('didfail', 0)
-        }
-        const display = memoryreadelementdisplay(element)
-        if (display.name !== intoname) {
-          const newcolor = memoryreadelementstat(element, 'color')
-          const newbg = memoryreadelementstat(element, 'bg')
-          // erase element
-          memorysafedeleteelement(
-            READ_CONTEXT.board,
-            element,
-            READ_CONTEXT.timestamp,
-          )
-          // create new element
-          if (intoname !== 'empty') {
-            const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-            const newelement = memorywriteelementfromkind(
-              READ_CONTEXT.board,
-              into,
-              pt,
-            )
-            if (ispresent(newelement)) {
-              chip.set('didfail', 0)
-              newelement.color = newcolor
-              newelement.bg = newbg
-            } else {
-              chip.set('didfail', 1)
-            }
-          } else {
+      // modify attrs
+      const intoname = readstrkindname(into)
+      const intocolor = readstrkindcolor(into)
+      const intobg = readstrkindbg(into)
+      memorylistboardelementsbykind(READ_CONTEXT.board, target).forEach(
+        (element) => {
+          // modify existing elements
+          if (ispresent(intocolor)) {
+            element.color = intocolor
             chip.set('didfail', 0)
           }
-        }
-      },
-    )
+          if (ispresent(intobg)) {
+            element.bg = intobg
+            chip.set('didfail', 0)
+          }
+          const display = memoryreadelementdisplay(element)
+          if (display.name !== intoname) {
+            const newcolor = memoryreadelementstat(element, 'color')
+            const newbg = memoryreadelementstat(element, 'bg')
+            // erase element
+            memorysafedeleteelement(
+              READ_CONTEXT.board,
+              element,
+              READ_CONTEXT.timestamp,
+            )
+            // create new element
+            if (intoname !== 'empty') {
+              const pt = { x: element.x ?? 0, y: element.y ?? 0 }
+              const newelement = memorywriteelementfromkind(
+                READ_CONTEXT.board,
+                into,
+                pt,
+              )
+              if (ispresent(newelement)) {
+                chip.set('didfail', 0)
+                newelement.color = newcolor
+                newelement.bg = newbg
+              } else {
+                chip.set('didfail', 1)
+              }
+            } else {
+              chip.set('didfail', 0)
+            }
+          }
+        },
+      )
 
-    return 0
-  })
-  .command('put', [[ARG_TYPE.DIR, ARG_TYPE.KIND]], commandput)
-  .command('putwith', [[ARG_TYPE.ANY]], (chip, words) => {
-    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commandput(chip, words.slice(ii), undefined, arg)
-  })
-  .command('oneof', [[ARG_TYPE.ANY]], (chip, words) => {
-    const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-
-    // if there is already an object with mark id, bail
-    if (
-      ispresent(READ_CONTEXT.board) &&
-      memoryreadobject(READ_CONTEXT.board, mark)
-    ) {
-      chip.set('didfail', 1)
       return 0
-    }
+    },
+  )
+  .command(
+    'put',
+    [[ARG_TYPE.DIR, ARG_TYPE.KIND, 'element in direction']],
+    commandput,
+  )
+  .command(
+    'putwith',
+    [[ARG_TYPE.ANY, 'element with argument']],
+    (chip, words) => {
+      const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+      return commandput(chip, words.slice(ii), undefined, arg)
+    },
+  )
+  .command(
+    'oneof',
+    [
+      [
+        ARG_TYPE.ANY,
+        'given id to ensure only one element of given kind is made',
+      ],
+    ],
+    (chip, words) => {
+      const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
 
-    return commandput(chip, words.slice(ii), mark)
-  })
-  .command('oneofwith', [[ARG_TYPE.ANY, ARG_TYPE.ANY]], (chip, words) => {
-    const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
+      // if there is already an object with mark id, bail
+      if (
+        ispresent(READ_CONTEXT.board) &&
+        memoryreadobject(READ_CONTEXT.board, mark)
+      ) {
+        chip.set('didfail', 1)
+        return 0
+      }
 
-    // if there is already an object with mark id, bail
-    if (
-      ispresent(READ_CONTEXT.board) &&
-      memoryreadobject(READ_CONTEXT.board, mark)
-    ) {
-      chip.set('didfail', 1)
-      return 0
-    }
+      return commandput(chip, words.slice(ii), mark)
+    },
+  )
+  .command(
+    'oneofwith',
+    [[ARG_TYPE.ANY, ARG_TYPE.ANY, 'element with argument and oneof logic']],
+    (chip, words) => {
+      const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
 
-    return commandput(chip, words.slice(ii), mark, arg)
-  })
-  .command('shoot', [[ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND]], commandshoot)
-  .command('shootwith', [[ARG_TYPE.ANY]], (chip, words) => {
-    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commandshoot(chip, words.slice(ii), arg)
-  })
-  .command('throwstar', [], (chip, words) => {
-    return commandshoot(chip, [...words, 'star'])
-  })
-  .command('throwstarwith', [[ARG_TYPE.ANY]], (chip, words) => {
-    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commandshoot(chip, [...words.slice(ii), 'star'], arg)
-  })
+      // if there is already an object with mark id, bail
+      if (
+        ispresent(READ_CONTEXT.board) &&
+        memoryreadobject(READ_CONTEXT.board, mark)
+      ) {
+        chip.set('didfail', 1)
+        return 0
+      }
+
+      return commandput(chip, words.slice(ii), mark, arg)
+    },
+  )
+  .command(
+    'shoot',
+    [[ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND, 'projectile, with optional kind']],
+    commandshoot,
+  )
+  .command(
+    'shootwith',
+    [[ARG_TYPE.ANY, 'projectile with argument']],
+    (chip, words) => {
+      const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+      return commandshoot(chip, words.slice(ii), arg)
+    },
+  )
+  .command(
+    'throwstar',
+    [['star projectile, shorthand for `#shoot <dir> star`']],
+    (chip, words) => {
+      return commandshoot(chip, [...words, 'star'])
+    },
+  )
+  .command(
+    'throwstarwith',
+    [[ARG_TYPE.ANY, 'star with argument']],
+    (chip, words) => {
+      const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+      return commandshoot(chip, [...words.slice(ii), 'star'], arg)
+    },
+  )

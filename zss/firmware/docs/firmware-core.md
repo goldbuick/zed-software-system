@@ -38,7 +38,7 @@ Result of `createfirmware`:
 
 ## createfirmware(events?)
 
-Creates a firmware instance. Commands are registered via `.command(name, setofargs, func)` where `setofargs` is an array of possible argument signatures (e.g. `[[ARG_TYPE.NAME, ARG_TYPE.ANY]]` or `[]` for no args). Event hooks override defaults.
+Creates a firmware instance. Commands are registered via `.command(name, setofargs, func)` where `setofargs` is an array of possible argument signatures (e.g. `[[ARG_TYPE.NAME, ARG_TYPE.ANY, '']]` or `NO_COMMAND_ARGS` for no args). Each signature is zero or more ARG_TYPE (number) followed by a string. Event hooks override defaults.
 
 ## Example
 
@@ -52,9 +52,9 @@ const MY_FIRMWARE = createfirmware({
     // per-tick logic
   },
 })
-  .command('foo', [], (chip, words) => {
+  .command('foo', NO_COMMAND_ARGS, (chip, words) => {
     chip.set('x', 1)
     return 0
   })
-  .command('bar', [], (chip, words) => 1)
+  .command('bar', NO_COMMAND_ARGS, (chip, words) => 1)
 ```

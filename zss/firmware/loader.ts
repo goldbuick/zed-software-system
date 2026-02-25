@@ -70,106 +70,122 @@ export const LOADER_FIRMWARE = createfirmware({
     return [false, undefined]
   },
 })
-  .command('endgame', [], () => {
+  .command('endgame', [['health to 0']], () => {
     // no-op when called in loaders
     return 0
   })
-  .command('shortsend', [], (chip, words) => {
-    const send = parsesend(words)
-    memorysendtoelements(chip, READ_CONTEXT.element, send)
-    return 0
-  })
-  .command('send', [], (chip, words) => {
+  .command(
+    'shortsend',
+    [['message (short form, no target keyword needed)']],
+    (chip, words) => {
+      const send = parsesend(words)
+      memorysendtoelements(chip, READ_CONTEXT.element, send)
+      return 0
+    },
+  )
+  .command('send', [['message to target elements']], (chip, words) => {
     const send = parsesend(words, true)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('stat', [], () => {
+  .command('stat', [['text in a scroll window']], () => {
     // no-op
     return 0
   })
-  .command('text', [], (_, words) => {
+  .command('text', [['text on element or in sidebar']], (_, words) => {
     const text = words.map(maptostring).join(' ')
     apichat(SOFTWARE, '', '$GREEN', text)
     return 0
   })
-  .command('hyperlink', [], (chip, args) => {
+  .command('hyperlink', [['clickable link in scroll or log']], (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
     apichat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
     return 0
   })
-  .command('readline', [], loadertext)
-  .command('readjson', [], loaderjson)
-  .command('readbin', [], loaderbinary)
-  .command('withboard', [[ARG_TYPE.STRING]], (_, words) => {
-    const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
-    // this will update the READ_CONTEXT so element centric
-    // commands will work
-    const target = memoryreadboardbyaddress(stat)
-    if (ispresent(target)) {
-      READ_CONTEXT.board = target
-      READ_CONTEXT.element = {
-        x: randominteger(0, BOARD_WIDTH - 1),
-        y: randominteger(0, BOARD_HEIGHT - 1),
+  .command('readline', [['text data']], loadertext)
+  .command('readjson', [['JSON data']], loaderjson)
+  .command('readbin', [['binary data']], loaderbinary)
+  .command(
+    'withboard',
+    [[ARG_TYPE.STRING, 'to target board by id, name, or stat']],
+    (_, words) => {
+      const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
+      // this will update the READ_CONTEXT so element centric
+      // commands will work
+      const target = memoryreadboardbyaddress(stat)
+      if (ispresent(target)) {
+        READ_CONTEXT.board = target
+        READ_CONTEXT.element = {
+          x: randominteger(0, BOARD_WIDTH - 1),
+          y: randominteger(0, BOARD_HEIGHT - 1),
+        }
       }
-    }
-    return 0
-  })
-  .command('withobject', [[ARG_TYPE.STRING]], (_, words) => {
-    // the idea here is we can give an object id
-    // and it'll update the READ_CONTEXT to point to the given object
-    // the intent here is afford !chat to drive behavior of a __specific__ object
-    const [id] = readargs(words, 0, [ARG_TYPE.STRING])
-    const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
-    // #oneof chatuser chatdroid
-    // #withobject chatuser
-    // #goup ' <- this code
-    if (ispresent(maybeobject)) {
-      // write context
-      READ_CONTEXT.element = maybeobject
-      READ_CONTEXT.elementid = maybeobject.id ?? ''
-      READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-      READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
-        ? READ_CONTEXT.elementid
-        : (READ_CONTEXT.element?.player ?? memoryreadoperator())
-    }
-    return 0
-  })
-  .command('userinput', [[ARG_TYPE.NAME]], (_, words) => {
-    const [action] = readargs(words, 0, [ARG_TYPE.NAME])
-    const player = memoryreadoperator()
-    switch (NAME(action)) {
-      case 'up':
-        registerinput(SOFTWARE, player, INPUT.MOVE_UP, false)
-        break
-      case 'down':
-        registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, false)
-        break
-      case 'left':
-        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
-        break
-      case 'right':
-        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
-        break
-      case 'shootup':
-        registerinput(SOFTWARE, player, INPUT.MOVE_UP, true)
-        break
-      case 'shootdown':
-        registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, true)
-        break
-      case 'shootleft':
-        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
-        break
-      case 'shootright':
-        registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
-        break
-      case 'ok':
-        registerinput(SOFTWARE, player, INPUT.OK_BUTTON, false)
-        break
-      case 'cancel':
-        registerinput(SOFTWARE, player, INPUT.CANCEL_BUTTON, false)
-        break
-    }
-    return 0
-  })
+      return 0
+    },
+  )
+  .command(
+    'withobject',
+    [[ARG_TYPE.STRING, 'to target object id']],
+    (_, words) => {
+      // the idea here is we can give an object id
+      // and it'll update the READ_CONTEXT to point to the given object
+      // the intent here is afford !chat to drive behavior of a __specific__ object
+      const [id] = readargs(words, 0, [ARG_TYPE.STRING])
+      const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
+      // #oneof chatuser chatdroid
+      // #withobject chatuser
+      // #goup ' <- this code
+      if (ispresent(maybeobject)) {
+        // write context
+        READ_CONTEXT.element = maybeobject
+        READ_CONTEXT.elementid = maybeobject.id ?? ''
+        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+        READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
+          ? READ_CONTEXT.elementid
+          : (READ_CONTEXT.element?.player ?? memoryreadoperator())
+      }
+      return 0
+    },
+  )
+  .command(
+    'userinput',
+    [[ARG_TYPE.NAME, 'user input actions (up/down/left/right/etc)']],
+    (_, words) => {
+      const [action] = readargs(words, 0, [ARG_TYPE.NAME])
+      const player = memoryreadoperator()
+      switch (NAME(action)) {
+        case 'up':
+          registerinput(SOFTWARE, player, INPUT.MOVE_UP, false)
+          break
+        case 'down':
+          registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, false)
+          break
+        case 'left':
+          registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
+          break
+        case 'right':
+          registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
+          break
+        case 'shootup':
+          registerinput(SOFTWARE, player, INPUT.MOVE_UP, true)
+          break
+        case 'shootdown':
+          registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, true)
+          break
+        case 'shootleft':
+          registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
+          break
+        case 'shootright':
+          registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
+          break
+        case 'ok':
+          registerinput(SOFTWARE, player, INPUT.OK_BUTTON, false)
+          break
+        case 'cancel':
+          registerinput(SOFTWARE, player, INPUT.CANCEL_BUTTON, false)
+          break
+      }
+      return 0
+    },
+  )

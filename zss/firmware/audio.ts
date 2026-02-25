@@ -30,6 +30,43 @@ import { mapstrdir } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
+/** Inlined desc for dynamically named audio commands (synth1–5, echo1–4, fcrush1–4, etc.). */
+const AUDIO_CMD_DESC: Record<string, string> = {
+  synth1: 'synth voice 1',
+  synth2: 'synth voice 2',
+  synth3: 'synth voice 3',
+  synth4: 'synth voice 4',
+  synth5: '#bgplay synth voices',
+  echo1: 'for first 2 channels of #play',
+  echo2: 'for last 2 channels of #play',
+  echo3: 'for #bgplay',
+  echo4: 'for #tts',
+  fcrush1: 'crush for first 2 channels of #play',
+  fcrush2: 'crush for last 2 channels of #play',
+  fcrush3: 'crush for #bgplay',
+  fcrush4: 'crush for #tts',
+  autofilter1: 'for first 2 channels of #play',
+  autofilter2: 'for last 2 channels of #play',
+  autofilter3: 'for #bgplay',
+  autofilter4: 'for #tts',
+  reverb1: 'for first 2 channels of #play',
+  reverb2: 'for last 2 channels of #play',
+  reverb3: 'for #bgplay',
+  reverb4: 'for #tts',
+  distort1: 'for first 2 channels of #play',
+  distort2: 'for last 2 channels of #play',
+  distort3: 'for #bgplay',
+  distort4: 'for #tts',
+  vibrato1: 'for first 2 channels of #play',
+  vibrato2: 'for last 2 channels of #play',
+  vibrato3: 'for #bgplay',
+  vibrato4: 'for #tts',
+  autowah1: 'for first 2 channels of #play',
+  autowah2: 'for last 2 channels of #play',
+  autowah3: 'for #bgplay',
+  autowah4: 'for #tts',
+}
+
 function handlesynthvoicefx(
   player: string,
   board: string,
@@ -134,7 +171,7 @@ function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
 export const AUDIO_FIRMWARE = createfirmware()
   .command(
     'ttsengine',
-    [[ARG_TYPE.STRING, ARG_TYPE.MAYBE_STRING]],
+    [[ARG_TYPE.STRING, ARG_TYPE.MAYBE_STRING, 'TTS engine and config']],
     (_, words) => {
       const [engine, config] = readargs(words, 0, [
         ARG_TYPE.STRING,
@@ -152,7 +189,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'tts',
-    [[ARG_TYPE.MAYBE_NUMBER_OR_STRING, ARG_TYPE.MAYBE_STRING]],
+    [
+      [
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_STRING,
+        'text with voice (or clear queue)',
+      ],
+    ],
     (_, words) => {
       const [voice, phrase] = readargs(words, 0, [
         ARG_TYPE.MAYBE_NUMBER_OR_STRING,
@@ -185,7 +228,7 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'ttsqueue',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.STRING]],
+    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.STRING, 'TTS phrase']],
     (_, words) => {
       const [voice, phrase] = readargs(words, 0, [
         ARG_TYPE.NUMBER_OR_STRING,
@@ -201,7 +244,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('bpm', [[ARG_TYPE.NUMBER]], (_, words) => {
+  .command('bpm', [[ARG_TYPE.NUMBER, 'BPM']], (_, words) => {
     const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synthbpm(
       SOFTWARE,
@@ -211,7 +254,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('vol', [[ARG_TYPE.NUMBER]], (_, words) => {
+  .command('vol', [[ARG_TYPE.NUMBER, 'main volume']], (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synthplayvolume(
       SOFTWARE,
@@ -221,7 +264,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('bgvol', [[ARG_TYPE.NUMBER]], (_, words) => {
+  .command('bgvol', [[ARG_TYPE.NUMBER, 'bgplay volume']], (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synthbgplayvolume(
       SOFTWARE,
@@ -231,7 +274,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('ttsvol', [[ARG_TYPE.NUMBER]], (_, words) => {
+  .command('ttsvol', [[ARG_TYPE.NUMBER, 'TTS volume']], (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synthttsvolume(
       SOFTWARE,
@@ -241,46 +284,50 @@ export const AUDIO_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('play', [[ARG_TYPE.MAYBE_NAME]], (chip, words) => {
+  .command('play', [[ARG_TYPE.MAYBE_NAME, 'music notes']], (chip, words) => {
     memoryqueuesynthplay(
       READ_CONTEXT.board?.id ?? '',
       handleplaystr(chip, words),
     )
     return 0
   })
-  .command('bgplay', [[ARG_TYPE.MAYBE_NAME]], (chip, words) => {
-    handlebgplay(chip, words, '')
-    return 0
-  })
-  .command('bgplayon64n', [], (chip, words) => {
+  .command(
+    'bgplay',
+    [[ARG_TYPE.MAYBE_NAME, '#play but for sound effects']],
+    (chip, words) => {
+      handlebgplay(chip, words, '')
+      return 0
+    },
+  )
+  .command('bgplayon64n', [['bgplay on 64n']], (chip, words) => {
     handlebgplay(chip, words, '@64n')
     return 0
   })
-  .command('bgplayon32n', [], (chip, words) => {
+  .command('bgplayon32n', [['bgplay on 32n']], (chip, words) => {
     handlebgplay(chip, words, '@32n')
     return 0
   })
-  .command('bgplayon16n', [], (chip, words) => {
+  .command('bgplayon16n', [['bgplay on 16n']], (chip, words) => {
     handlebgplay(chip, words, '@16n')
     return 0
   })
-  .command('bgplayon8n', [], (chip, words) => {
+  .command('bgplayon8n', [['bgplay on 8n']], (chip, words) => {
     handlebgplay(chip, words, '@8n')
     return 0
   })
-  .command('bgplayon4n', [], (chip, words) => {
+  .command('bgplayon4n', [['bgplay on 4n']], (chip, words) => {
     handlebgplay(chip, words, '@4n')
     return 0
   })
-  .command('bgplayon2n', [], (chip, words) => {
+  .command('bgplayon2n', [['bgplay on 2n']], (chip, words) => {
     handlebgplay(chip, words, '@2n')
     return 0
   })
-  .command('bgplayon1n', [], (chip, words) => {
+  .command('bgplayon1n', [['bgplay on 1n']], (chip, words) => {
     handlebgplay(chip, words, '@1m')
     return 0
   })
-  .command('synth', [], (_, words) => {
+  .command('synth', [['all 4 channels of #play synth voices']], (_, words) => {
     // multi-voice changes only apply to #play
     for (let i = 0; i < 4; ++i) {
       handlesynthvoice(
@@ -292,18 +339,28 @@ export const AUDIO_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('synthrecord', [[ARG_TYPE.MAYBE_STRING]], (_, words) => {
-    const [filename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-    synthrecord(SOFTWARE, READ_CONTEXT.elementfocus, filename ?? '')
-    return 0
-  })
-  .command('synthflush', [], () => {
+  .command(
+    'synthrecord',
+    [[ARG_TYPE.MAYBE_STRING, 'played note buffer to an mp3 file']],
+    (_, words) => {
+      const [filename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+      synthrecord(SOFTWARE, READ_CONTEXT.elementfocus, filename ?? '')
+      return 0
+    },
+  )
+  .command('synthflush', [['buffer of played notes']], () => {
     synthflush(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command(
     'echo',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        'echo effect to all 4 channels of #play',
+      ],
+    ],
     (_, words) => {
       // multi-voice changes only apply to #play
       for (let i = 0; i < 2; ++i) {
@@ -320,7 +377,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'fcrush',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        'frequency crush to all 4 channels of #play',
+      ],
+    ],
     (_, words) => {
       // multi-voice changes only apply to #play
       for (let i = 0; i < 2; ++i) {
@@ -337,7 +400,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'autofilter',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        'autofilter to all 4 channels of #play',
+      ],
+    ],
     (_, words) => {
       // multi-voice changes only apply to #play
       for (let i = 0; i < 2; ++i) {
@@ -354,7 +423,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'reverb',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        'reverb to all 4 channels of #play',
+      ],
+    ],
     (_, words) => {
       // multi-voice changes only apply to #play
       for (let i = 0; i < 2; ++i) {
@@ -371,7 +446,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'distort',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        'distortion to all 4 channels of #play',
+      ],
+    ],
     (_, words) => {
       // multi-voice changes only apply to #play
       for (let i = 0; i < 2; ++i) {
@@ -388,7 +469,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'vibrato',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        'vibrato to all 4 channels of #play',
+      ],
+    ],
     (_, words) => {
       // multi-voice changes only apply to #play
       for (let i = 0; i < 2; ++i) {
@@ -405,7 +492,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command(
     'autowah',
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        'autowah to all 4 channels of #play',
+      ],
+    ],
     (_, words) => {
       // multi-voice changes only apply to #play
       for (let i = 0; i < 2; ++i) {
@@ -423,15 +516,19 @@ export const AUDIO_FIRMWARE = createfirmware()
 
 // handle individual synth voices
 for (let i = 0; i < 4; ++i) {
-  AUDIO_FIRMWARE.command(`synth${i + 1}`, [], (_, words) => {
-    const bid = READ_CONTEXT.board?.id ?? ''
-    handlesynthvoice(READ_CONTEXT.elementfocus, bid, i, words)
-    return 0
-  })
+  AUDIO_FIRMWARE.command(
+    `synth${i + 1}`,
+    [[AUDIO_CMD_DESC[`synth${i + 1}`]]],
+    (_, words) => {
+      const bid = READ_CONTEXT.board?.id ?? ''
+      handlesynthvoice(READ_CONTEXT.elementfocus, bid, i, words)
+      return 0
+    },
+  )
 }
 
 // handle bgplay synth voices
-AUDIO_FIRMWARE.command('synth5', [], (_, words) => {
+AUDIO_FIRMWARE.command('synth5', [[AUDIO_CMD_DESC.synth5]], (_, words) => {
   // changes bgplay synth
   for (let i = 4; i < 8; ++i) {
     const bid = READ_CONTEXT.board?.id ?? ''
@@ -445,7 +542,13 @@ for (let i = 0; i < 4; ++i) {
   const idx = i + 1
   AUDIO_FIRMWARE.command(
     `echo${idx}`,
-    [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+    [
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        AUDIO_CMD_DESC[`echo${idx}`],
+      ],
+    ],
     (_, words) => {
       const bid = READ_CONTEXT.board?.id ?? ''
       handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'echo', words)
@@ -454,7 +557,13 @@ for (let i = 0; i < 4; ++i) {
   )
     .command(
       `fcrush${idx}`,
-      [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+      [
+        [
+          ARG_TYPE.NUMBER_OR_STRING,
+          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+          AUDIO_CMD_DESC[`fcrush${idx}`],
+        ],
+      ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
         handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'fcrush', words)
@@ -463,7 +572,13 @@ for (let i = 0; i < 4; ++i) {
     )
     .command(
       `autofilter${idx}`,
-      [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+      [
+        [
+          ARG_TYPE.NUMBER_OR_STRING,
+          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+          AUDIO_CMD_DESC[`autofilter${idx}`],
+        ],
+      ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
         handlesynthvoicefx(
@@ -478,7 +593,13 @@ for (let i = 0; i < 4; ++i) {
     )
     .command(
       `reverb${idx}`,
-      [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+      [
+        [
+          ARG_TYPE.NUMBER_OR_STRING,
+          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+          AUDIO_CMD_DESC[`reverb${idx}`],
+        ],
+      ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
         handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'reverb', words)
@@ -487,7 +608,13 @@ for (let i = 0; i < 4; ++i) {
     )
     .command(
       `distort${idx}`,
-      [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+      [
+        [
+          ARG_TYPE.NUMBER_OR_STRING,
+          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+          AUDIO_CMD_DESC[`distort${idx}`],
+        ],
+      ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
         handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'distort', words)
@@ -496,7 +623,13 @@ for (let i = 0; i < 4; ++i) {
     )
     .command(
       `vibrato${idx}`,
-      [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+      [
+        [
+          ARG_TYPE.NUMBER_OR_STRING,
+          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+          AUDIO_CMD_DESC[`vibrato${idx}`],
+        ],
+      ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
         handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'vibrato', words)
@@ -505,7 +638,13 @@ for (let i = 0; i < 4; ++i) {
     )
     .command(
       `autowah${idx}`,
-      [[ARG_TYPE.NUMBER_OR_STRING, ARG_TYPE.MAYBE_NUMBER_OR_STRING]],
+      [
+        [
+          ARG_TYPE.NUMBER_OR_STRING,
+          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+          AUDIO_CMD_DESC[`autowah${idx}`],
+        ],
+      ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
         handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'autowah', words)

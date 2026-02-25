@@ -123,29 +123,33 @@ function vmflushop() {
 }
 
 export const CLI_FIRMWARE = createfirmware()
-  .command('shortsend', [], (chip, words) => {
-    const send = parsesend(words)
-    // #funfact - loader fallback
-    if (send.targetname === 'self') {
-      vmloader(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        undefined,
-        'text',
-        `cli:${send.label}`,
-        send.args.join(' '),
-      )
-    } else {
-      memorysendtoelements(chip, READ_CONTEXT.element, send)
-    }
-    return 0
-  })
-  .command('send', [], (chip, words) => {
+  .command(
+    'shortsend',
+    [['message (short form, no target keyword needed)']],
+    (chip, words) => {
+      const send = parsesend(words)
+      // #funfact - loader fallback
+      if (send.targetname === 'self') {
+        vmloader(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          undefined,
+          'text',
+          `cli:${send.label}`,
+          send.args.join(' '),
+        )
+      } else {
+        memorysendtoelements(chip, READ_CONTEXT.element, send)
+      }
+      return 0
+    },
+  )
+  .command('send', [['message to target elements']], (chip, words) => {
     const send = parsesend(words, true)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('stat', [], (_, words) => {
+  .command('stat', [['text in a scroll window']], (_, words) => {
     vmmakeitscroll(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
@@ -153,7 +157,7 @@ export const CLI_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('text', [], (_, words) => {
+  .command('text', [['text on element or in sidebar']], (_, words) => {
     const ticker = words.map(maptostring).join(' ')
     if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
       // update player element ticker
@@ -175,7 +179,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('hyperlink', [], (chip, args) => {
+  .command('hyperlink', [['clickable link in scroll or log']], (chip, args) => {
     const [label, ...words] = args
     const { user } = memoryreadflags(READ_CONTEXT.elementid)
     const withuser = isstring(user) ? user : 'player'
@@ -190,7 +194,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // --- book & pages commands
-  .command('bookrename', [], () => {
+  .command('bookrename', [['the main book (operator only)']], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -208,123 +212,146 @@ export const CLI_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('booktrash', [[ARG_TYPE.NAME]], (chip, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
-
-    const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const book = memoryreadbookbyaddress(address)
-    if (ispresent(book)) {
-      // clear opened
-      if (opened === book) {
-        memorywritesoftwarebook(MEMORY_LABEL.MAIN, '')
+  .command(
+    'booktrash',
+    [[ARG_TYPE.NAME, 'a book by address (operator only)']],
+    (chip, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
       }
-      // clear book
-      memoryclearbook(address)
-      apilog(SOFTWARE, READ_CONTEXT.elementfocus, `trashed [book] ${book.name}`)
-      vmflushop()
-      // reset to good state
-      chip.command('pages')
-    }
-    return 0
-  })
-  .command('boardopen', [[ARG_TYPE.NAME]], (_, words) => {
-    const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
-    const target = memoryreadboardbyaddress(stat)
-    if (ispresent(target)) {
-      memorymoveplayertoboard(
-        READ_CONTEXT.book,
-        READ_CONTEXT.elementfocus,
-        target.id,
-        {
-          x: randominteger(0, BOARD_WIDTH - 1),
-          y: randominteger(0, BOARD_HEIGHT - 1),
-        },
-      )
-    }
+      const [address] = readargs(words, 0, [ARG_TYPE.NAME])
 
-    return 0
-  })
-  .command('pageopen', [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    const [page, maybeobject] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_NAME,
-    ])
-
-    // search through all books
-    let codepage: MAYBE<CODE_PAGE> = undefined
-    let codepagebook: MAYBE<BOOK> = undefined
-    const booklist = memoryreadbooklist()
-    for (let i = 0; i < booklist.length; ++i) {
-      codepagebook = booklist[i]
-      codepage = memoryreadcodepage(codepagebook, page)
-      if (ispresent(codepage)) {
-        break
+      const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const book = memoryreadbookbyaddress(address)
+      if (ispresent(book)) {
+        // clear opened
+        if (opened === book) {
+          memorywritesoftwarebook(MEMORY_LABEL.MAIN, '')
+        }
+        // clear book
+        memoryclearbook(address)
+        apilog(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `trashed [book] ${book.name}`,
+        )
+        vmflushop()
+        // reset to good state
+        chip.command('pages')
       }
-    }
-
-    if (ispresent(codepage) && ispresent(codepagebook)) {
-      const name = memoryreadcodepagename(codepage)
-
-      // path
-      const path = [codepage.id, maybeobject]
-
-      // write to modem
-      modemwriteinitstring(vmcodeaddress(codepagebook.id, path), codepage.code)
-
-      // tell tape to open a code editor for given page
-      const type = memoryreadcodepagetypeasstring(codepage)
-
-      // codepage details
-      const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
-      registereditoropen(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        codepagebook.id,
-        path,
-        type,
-        title,
-      )
-    } else {
-      apierror(
-        SOFTWARE,
-        'pageopen',
-        `page ${page} not found`,
-        READ_CONTEXT.elementfocus,
-      )
-    }
-
-    return 0
-  })
-  .command('pagetrash', [[ARG_TYPE.NAME]], (chip, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
-    }
-    const [page] = readargs(words, 0, [ARG_TYPE.NAME])
+    },
+  )
+  .command(
+    'boardopen',
+    [[ARG_TYPE.NAME, 'to move player to board']],
+    (_, words) => {
+      const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
+      const target = memoryreadboardbyaddress(stat)
+      if (ispresent(target)) {
+        memorymoveplayertoboard(
+          READ_CONTEXT.book,
+          READ_CONTEXT.elementfocus,
+          target.id,
+          {
+            x: randominteger(0, BOARD_WIDTH - 1),
+            y: randominteger(0, BOARD_HEIGHT - 1),
+          },
+        )
+      }
 
-    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-    const codepage = memoryclearbookcodepage(mainbook, page)
-    if (ispresent(page)) {
-      const name = memoryreadcodepagename(codepage)
-      const pagetype = memoryreadcodepagetypeasstring(codepage)
-      apilog(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `trashed [${pagetype}] ${name}`,
-      )
-      vmflushop()
-      chip.command('pages')
-    }
+      return 0
+    },
+  )
+  .command(
+    'pageopen',
+    [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'a code page editor']],
+    (_, words) => {
+      const [page, maybeobject] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_NAME,
+      ])
 
-    return 0
-  })
-  .command('help', [], () => {
+      // search through all books
+      let codepage: MAYBE<CODE_PAGE> = undefined
+      let codepagebook: MAYBE<BOOK> = undefined
+      const booklist = memoryreadbooklist()
+      for (let i = 0; i < booklist.length; ++i) {
+        codepagebook = booklist[i]
+        codepage = memoryreadcodepage(codepagebook, page)
+        if (ispresent(codepage)) {
+          break
+        }
+      }
+
+      if (ispresent(codepage) && ispresent(codepagebook)) {
+        const name = memoryreadcodepagename(codepage)
+
+        // path
+        const path = [codepage.id, maybeobject]
+
+        // write to modem
+        modemwriteinitstring(
+          vmcodeaddress(codepagebook.id, path),
+          codepage.code,
+        )
+
+        // tell tape to open a code editor for given page
+        const type = memoryreadcodepagetypeasstring(codepage)
+
+        // codepage details
+        const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
+        registereditoropen(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          codepagebook.id,
+          path,
+          type,
+          title,
+        )
+      } else {
+        apierror(
+          SOFTWARE,
+          'pageopen',
+          `page ${page} not found`,
+          READ_CONTEXT.elementfocus,
+        )
+      }
+
+      return 0
+    },
+  )
+  .command(
+    'pagetrash',
+    [[ARG_TYPE.NAME, 'a code page (operator only)']],
+    (chip, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
+      }
+      const [page] = readargs(words, 0, [ARG_TYPE.NAME])
+
+      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      const codepage = memoryclearbookcodepage(mainbook, page)
+      if (ispresent(page)) {
+        const name = memoryreadcodepagename(codepage)
+        const pagetype = memoryreadcodepagetypeasstring(codepage)
+        apilog(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `trashed [${pagetype}] ${name}`,
+        )
+        vmflushop()
+        chip.command('pages')
+      }
+
+      return 0
+    },
+  )
+  .command('help', [['help scroll']], () => {
     vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('books', [], () => {
+  .command('books', [['all books']], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -359,7 +386,7 @@ export const CLI_FIRMWARE = createfirmware()
     write(SOFTWARE, READ_CONTEXT.elementfocus, `!bookcreate;create a new book`)
     return 0
   })
-  .command('pages', [], () => {
+  .command('pages', [['all pages in all loaded books']], () => {
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (!ispresent(mainbook)) {
       return 0
@@ -416,7 +443,7 @@ export const CLI_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('boards', [], () => {
+  .command('boards', [['all boards as goto hyperlinks']], () => {
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `boards`)
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (ispresent(mainbook)) {
@@ -475,7 +502,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('trash', [], () => {
+  .command('trash', [['books/codepages to delete (operator only)']], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -514,7 +541,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- game state related commands
-  .command('dev', [], () => {
+  .command('dev', [['dev mode / halt execution (operator only)']], () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vmflushop()
       vmhalt(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -523,7 +550,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('share', [], () => {
+  .command('share', [['share url (operator only)']], () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vmflushop()
       registershare(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -532,7 +559,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('save', [], () => {
+  .command('save', [['and persist current state (operator only)']], () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vmflushop()
     } else {
@@ -540,38 +567,50 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('fork', [[ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    if (isoperator(READ_CONTEXT.elementfocus)) {
-      const [address] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-      vmfork(SOFTWARE, READ_CONTEXT.elementfocus, address ?? '')
-    } else {
-      // no-op
-    }
-    return 0
-  })
-  .command('nuke', [], () => {
-    if (isoperator(READ_CONTEXT.elementfocus)) {
-      registernuke(SOFTWARE, READ_CONTEXT.elementfocus)
-    } else {
-      // no-op
-    }
-    return 0
-  })
-  .command('endgame', [], () => {
+  .command(
+    'fork',
+    [[ARG_TYPE.MAYBE_NAME, 'tab with copy of state (operator only)']],
+    (_, words) => {
+      if (isoperator(READ_CONTEXT.elementfocus)) {
+        const [address] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+        vmfork(SOFTWARE, READ_CONTEXT.elementfocus, address ?? '')
+      } else {
+        // no-op
+      }
+      return 0
+    },
+  )
+  .command(
+    'nuke',
+    [['a countdown and reloads into an empty state (operator only)']],
+    () => {
+      if (isoperator(READ_CONTEXT.elementfocus)) {
+        registernuke(SOFTWARE, READ_CONTEXT.elementfocus)
+      } else {
+        // no-op
+      }
+      return 0
+    },
+  )
+  .command('endgame', [['health to 0']], () => {
     vmlogout(SOFTWARE, READ_CONTEXT.elementfocus, false)
     return 0
   })
-  .command('restart', [], () => {
-    if (isoperator(READ_CONTEXT.elementfocus)) {
-      vmrestart(SOFTWARE, READ_CONTEXT.elementfocus)
-      vmflushop()
-    } else {
-      // no-op
-    }
-    return 0
-  })
+  .command(
+    'restart',
+    [['software, deletes all chip and player state (operator only)']],
+    () => {
+      if (isoperator(READ_CONTEXT.elementfocus)) {
+        vmrestart(SOFTWARE, READ_CONTEXT.elementfocus)
+        vmflushop()
+      } else {
+        // no-op
+      }
+      return 0
+    },
+  )
   // -- export content related commands
-  .command('export', [], () => {
+  .command('export', [['export menu (operator only)']], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -589,73 +628,85 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('bookexport', [[ARG_TYPE.NAME]], (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
-    const book = memoryreadbookbyaddress(address)
-    if (ispresent(book)) {
-      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
-      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
-      setTimeout(() => {
-        if (book.pages.length) {
-          const sorted = memorylistcodepagessorted(book)
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `!bookallexport ${address};$blue[all] $whiteexport book`,
-          )
-          sorted.forEach((page) => {
-            const name = memoryreadcodepagename(page)
-            const type = memoryreadcodepagetypeasstring(page)
-            const prefix = memorycodepagetoprefix(page)
+  .command(
+    'bookexport',
+    [[ARG_TYPE.NAME, 'book export options (operator only)']],
+    (_, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
+      }
+      const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+      const book = memoryreadbookbyaddress(address)
+      if (ispresent(book)) {
+        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
+        writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
+        setTimeout(() => {
+          if (book.pages.length) {
+            const sorted = memorylistcodepagessorted(book)
             write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `!pageexport ${address}:${page.id};$blue[${type}] ${prefix}$white${name}`,
+              `!bookallexport ${address};$blue[all] $whiteexport book`,
             )
-          })
-        }
-      }, 1000)
-    }
-    return 0
-  })
-  .command('bookallexport', [[ARG_TYPE.NAME]], (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
+            sorted.forEach((page) => {
+              const name = memoryreadcodepagename(page)
+              const type = memoryreadcodepagetypeasstring(page)
+              const prefix = memorycodepagetoprefix(page)
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `!pageexport ${address}:${page.id};$blue[${type}] ${prefix}$white${name}`,
+              )
+            })
+          }
+        }, 1000)
+      }
       return 0
-    }
-    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
-    const book = memoryreadbookbyaddress(address)
-    if (ispresent(book)) {
-      registerdownloadjsonfile(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        deepcopy(book),
-        `${book.name}.book.json`,
-      )
-    }
-    return 0
-  })
-  .command('pageexport', [[ARG_TYPE.NAME]], (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
+    },
+  )
+  .command(
+    'bookallexport',
+    [[ARG_TYPE.NAME, 'entire book as JSON (operator only)']],
+    (_, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
+      }
+      const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+      const book = memoryreadbookbyaddress(address)
+      if (ispresent(book)) {
+        registerdownloadjsonfile(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          deepcopy(book),
+          `${book.name}.book.json`,
+        )
+      }
       return 0
-    }
-    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
-    const { target, path } = parsetarget(address)
-    const book = memoryreadbookbyaddress(target)
-    const codepage = memoryreadcodepage(book, path)
-    if (ispresent(codepage)) {
-      registerdownloadjsonfile(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        deepcopy(codepage),
-        `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
-      )
-    }
-    return 0
-  })
-  .command('itchiopublish', [], () => {
+    },
+  )
+  .command(
+    'pageexport',
+    [[ARG_TYPE.NAME, 'code page as JSON (operator only)']],
+    (_, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
+      }
+      const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+      const { target, path } = parsetarget(address)
+      const book = memoryreadbookbyaddress(target)
+      const codepage = memoryreadcodepage(book, path)
+      if (ispresent(codepage)) {
+        registerdownloadjsonfile(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          deepcopy(codepage),
+          `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
+        )
+      }
+      return 0
+    },
+  )
+  .command('itchiopublish', [['zip file for itch.io (operator only)']], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -669,12 +720,12 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- editing related commands
-  .command('gadget', [], () => {
+  .command('gadget', [['built-in inspector']], () => {
     // gadget will turn on / off the built-in inspector
     registerinspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
     return 0
   })
-  .command('findany', [[ARG_TYPE.ANY]], (_, words) => {
+  .command('findany', [[ARG_TYPE.ANY, 'matched elements']], (_, words) => {
     const [maybeselection] = readargs(words, 0, [ARG_TYPE.ANY])
     if (isarray(maybeselection)) {
       const pts = maybeselection.filter(ispt)
@@ -685,133 +736,157 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- import content related commands
-  .command('zztsearch', [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    const [maybefield, maybetext] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_NAME,
-    ])
-    const field = ispresent(maybetext) ? maybefield : 'title'
-    const text = ispresent(maybetext) ? maybetext : maybefield
-    vmzztsearch(SOFTWARE, READ_CONTEXT.elementfocus, field, text)
-    return 0
-  })
-  .command('zztrandom', [], () => {
+  .command(
+    'zztsearch',
+    [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'ZZT content by field and text']],
+    (_, words) => {
+      const [maybefield, maybetext] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_NAME,
+      ])
+      const field = ispresent(maybetext) ? maybefield : 'title'
+      const text = ispresent(maybetext) ? maybetext : maybefield
+      vmzztsearch(SOFTWARE, READ_CONTEXT.elementfocus, field, text)
+      return 0
+    },
+  )
+  .command('zztrandom', [['random ZZT content']], () => {
     vmzztrandom(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands
-  .command('admin', [], () => {
+  .command('admin', [['admin scroll']], () => {
     vmadmin(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('joincode', [[ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
+  .command(
+    'joincode',
+    [[ARG_TYPE.MAYBE_NAME, 'multiplayer session (operator only)']],
+    (_, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
+      }
+      const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      const playerboard = memoryreadplayerboard(READ_CONTEXT.elementfocus)
+      if (ispresent(playerboard)) {
+        bridgestart(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+      } else {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'multiplayer',
+          'need to have an active player on a board in order to start multiplayer',
+        )
+      }
       return 0
-    }
-    const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    const playerboard = memoryreadplayerboard(READ_CONTEXT.elementfocus)
-    if (ispresent(playerboard)) {
-      bridgestart(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
-    } else {
-      apierror(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        'multiplayer',
-        'need to have an active player on a board in order to start multiplayer',
-      )
-    }
-    return 0
-  })
-  .command('jointab', [[ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
+    },
+  )
+  .command(
+    'jointab',
+    [[ARG_TYPE.MAYBE_NAME, 'new tab with the join url (operator only)']],
+    (_, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
+      }
+      const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      bridgetab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
       return 0
-    }
-    const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    bridgetab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
-    return 0
-  })
+    },
+  )
   // -- audience related commands
-  .command('chat', [[ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-    const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    if (channel) {
-      bridgechatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
-    } else {
-      bridgechatstop(SOFTWARE, READ_CONTEXT.elementfocus)
-    }
-    return 0
-  })
-  .command('broadcast', [[ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-    const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    if (streamkey) {
-      bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
-    } else {
-      bridgestreamstop(SOFTWARE, READ_CONTEXT.elementfocus)
-    }
-    return 0
-  })
-  .command('agent', [[ARG_TYPE.MAYBE_NAME]], (_, words) => {
-    const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    switch (NAME(action)) {
-      case 'start':
-        vmagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-      case 'stop': {
-        const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
-        if (ispresent(agentid)) {
-          vmagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
-        } else {
-          apierror(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            'agent',
-            '#agent stop <id>',
-          )
-        }
-        break
+  .command(
+    'chat',
+    [[ARG_TYPE.MAYBE_NAME, 'twitch chat integration (operator only)']],
+    (_, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
       }
-      case '':
-      case 'list':
-        vmagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-      default: {
-        if (isstring(action)) {
-          let iii = ii
-          const values: any[] = []
-          while (iii < words.length) {
-            const [value, iiii] = readargs(words, iii, [ARG_TYPE.ANY])
-            values.push(value)
-            iii = iiii
+      const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      if (channel) {
+        bridgechatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
+      } else {
+        bridgechatstop(SOFTWARE, READ_CONTEXT.elementfocus)
+      }
+      return 0
+    },
+  )
+  .command(
+    'broadcast',
+    [[ARG_TYPE.MAYBE_NAME, 'stream broadcast (operator only)']],
+    (_, words) => {
+      if (!isoperator(READ_CONTEXT.elementfocus)) {
+        return 0
+      }
+      const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      if (streamkey) {
+        bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
+      } else {
+        bridgestreamstop(SOFTWARE, READ_CONTEXT.elementfocus)
+      }
+      return 0
+    },
+  )
+  .command(
+    'agent',
+    [[ARG_TYPE.MAYBE_NAME, '/stop/list AI agents; prompt with <id> <values>']],
+    (_, words) => {
+      const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      switch (NAME(action)) {
+        case 'start':
+          vmagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
+          break
+        case 'stop': {
+          const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
+          if (ispresent(agentid)) {
+            vmagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
+          } else {
+            apierror(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              'agent',
+              '#agent stop <id>',
+            )
           }
-          vmagentprompt(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            action,
-            values.map(maptostring).join(' '),
-          )
-        } else {
-          apierror(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            'agent',
-            '#agent <id> <prompt>',
-          )
+          break
         }
-        break
+        case '':
+        case 'list':
+          vmagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
+          break
+        default: {
+          if (isstring(action)) {
+            let iii = ii
+            const values: any[] = []
+            while (iii < words.length) {
+              const [value, iiii] = readargs(words, iii, [ARG_TYPE.ANY])
+              values.push(value)
+              iii = iiii
+            }
+            vmagentprompt(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              action,
+              values.map(maptostring).join(' '),
+            )
+          } else {
+            apierror(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              'agent',
+              '#agent <id> <prompt>',
+            )
+          }
+          break
+        }
       }
-    }
-    return 0
-  })
-  .command('screenshot', [], () => {
+      return 0
+    },
+  )
+  .command('screenshot', [['screenshot for capture']], () => {
     registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('bbs', [[ARG_TYPE.ANY]], (_, words) => {
+  .command('bbs', [[ARG_TYPE.ANY, 'login/publish actions']], (_, words) => {
     const [action, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     switch (NAME(action)) {
       default:
