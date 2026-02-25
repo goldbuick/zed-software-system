@@ -44,7 +44,6 @@ export type EditorInputProps = {
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
-  autocompleteactive: boolean
 }
 
 export function EditorInput({
@@ -55,7 +54,6 @@ export function EditorInput({
   rows,
   codepage,
   autocomplete,
-  autocompleteactive: _autocompleteactive,
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
