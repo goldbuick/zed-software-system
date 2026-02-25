@@ -1,2 +1,0 @@
-desc;$DKGRAYAutomate user input actions (up/down/left/right/etc)
-args;$DKGRAY(none)

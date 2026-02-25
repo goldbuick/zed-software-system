@@ -1,2 +1,0 @@
-desc;$DKGRAYSet color (self or at direction)
-args;$DKGRAY(none)

@@ -1,2 +1,0 @@
-desc;$DKGRAYTeleport player to board by name or address with optional x, y
-args;$DKGRAY<board> [x] [y]

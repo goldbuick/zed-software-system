@@ -1,2 +1,0 @@
-desc;$DKGRAYClear buffer of played notes
-args;$DKGRAY(none)

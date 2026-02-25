@@ -1,2 +1,0 @@
-desc;$DKGRAYSwitch to target object id
-args;$DKGRAY<id>

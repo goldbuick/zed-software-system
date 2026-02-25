@@ -1,2 +1,0 @@
-desc;$DKGRAYSend message to target elements
-args;$DKGRAY(none)

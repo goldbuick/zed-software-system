@@ -1,2 +1,0 @@
-desc;$DKGRAYDistortion for #bgplay
-args;$DKGRAY[config] [value]

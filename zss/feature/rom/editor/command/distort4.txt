@@ -1,2 +1,0 @@
-desc;$DKGRAYDistortion for #tts
-args;$DKGRAY[config] [value]

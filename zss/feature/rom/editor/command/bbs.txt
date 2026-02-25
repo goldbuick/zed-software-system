@@ -1,2 +1,0 @@
-desc;$DKGRAYBBS login/publish actions
-args;$DKGRAY(none)

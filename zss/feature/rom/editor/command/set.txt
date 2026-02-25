@@ -1,2 +1,0 @@
-desc;$DKGRAYSet variable to value
-args;$DKGRAY<name> <value>

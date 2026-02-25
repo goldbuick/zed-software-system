@@ -1,2 +1,0 @@
-desc;$DKGRAYExport zip file for itch.io (operator only)
-args;$DKGRAY(none)

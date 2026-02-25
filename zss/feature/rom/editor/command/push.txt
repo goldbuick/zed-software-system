@@ -1,2 +1,0 @@
-desc;$DKGRAYShove target object in direction ONLY if pushable
-args;$DKGRAY<dir> <movedir>

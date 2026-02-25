@@ -1,2 +1,0 @@
-desc;$DKGRAYAutofilter for #bgplay
-args;$DKGRAY[config] [value]

@@ -1,2 +1,0 @@
-desc;$DKGRAYCopy region from source to current board
-args;$DKGRAY<stat> [filter...]

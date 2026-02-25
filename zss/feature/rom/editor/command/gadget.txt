@@ -1,2 +1,0 @@
-desc;$DKGRAYToggle built-in inspector
-args;$DKGRAY(none)

@@ -1,2 +1,0 @@
-desc;$DKGRAYSend message (short form, no target keyword needed)
-args;$DKGRAY(none)

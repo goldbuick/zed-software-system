@@ -1,2 +1,0 @@
-desc;$DKGRAYShow toast notification
-args;$DKGRAY<text>

@@ -1,2 +1,0 @@
-desc;$DKGRAYParse binary data
-args;$DKGRAY(none)

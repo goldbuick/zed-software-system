@@ -1,2 +1,0 @@
-desc;$DKGRAYRegister screenshot for capture
-args;$DKGRAY(none)

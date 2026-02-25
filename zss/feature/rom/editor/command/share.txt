@@ -1,2 +1,0 @@
-desc;$DKGRAYGet share url (operator only)
-args;$DKGRAY(none)

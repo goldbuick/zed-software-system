@@ -1,2 +1,0 @@
-desc;$DKGRAYList all boards as goto hyperlinks
-args;$DKGRAY(none)

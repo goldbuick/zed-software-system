@@ -1,2 +1,0 @@
-desc;$DKGRAYConfigure synth voice 1
-args;$DKGRAY(none)

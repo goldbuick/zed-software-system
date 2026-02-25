@@ -1,2 +1,0 @@
-desc;$DKGRAYShove target object in direction
-args;$DKGRAY<dir> <movedir>

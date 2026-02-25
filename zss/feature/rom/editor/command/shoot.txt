@@ -1,2 +1,0 @@
-desc;$DKGRAYShoot projectile, with optional kind
-args;$DKGRAY<dir> [kind]

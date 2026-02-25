@@ -1,2 +1,0 @@
-desc;$DKGRAYSet TTS engine and config
-args;$DKGRAY(none)

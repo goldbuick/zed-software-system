@@ -1,2 +1,0 @@
-desc;$DKGRAYOpen new tab with the join url (operator only)
-args;$DKGRAY[hidden]
