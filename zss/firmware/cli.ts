@@ -96,9 +96,9 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 import { ispt } from 'zss/words/dir'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { COLOR, NAME } from 'zss/words/types'
+import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
 let bbscode = ''
 let bbsemail = ''

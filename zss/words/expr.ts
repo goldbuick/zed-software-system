@@ -33,7 +33,8 @@ import {
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
 import { readstrkindcolor, readstrkindname } from './kind'
-import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
+import { READ_CONTEXT, readargs } from './reader'
+import { ARG_TYPE } from './types'
 import { parsesend } from './send'
 import { DIR, NAME } from './types'
 

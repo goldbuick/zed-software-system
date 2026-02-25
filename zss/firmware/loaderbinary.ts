@@ -2,8 +2,8 @@ import { BINARY_READER } from 'zss/device/api'
 import { FIRMWARE_COMMAND } from 'zss/firmware'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryloadercontent } from 'zss/memory/loader'
-import { ARG_TYPE, readargs } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
+import { readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function readbin(binaryreader: BINARY_READER, kind: string): MAYBE<number> {
   if (!ispresent(binaryreader)) {

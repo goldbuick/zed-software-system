@@ -52,9 +52,9 @@ import {
 } from 'zss/words/color'
 import { dirconsts, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { COLOR, NAME, PT, WORD } from 'zss/words/types'
+import { ARG_TYPE, COLOR, NAME, PT, WORD } from 'zss/words/types'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',

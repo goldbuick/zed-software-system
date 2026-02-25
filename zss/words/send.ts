@@ -1,7 +1,8 @@
 import { isstring } from 'zss/mapping/types'
 
 import { EVAL_DIR, isstrdir } from './dir'
-import { ARG_TYPE, readargs } from './reader'
+import { readargs } from './reader'
+import { ARG_TYPE } from './types'
 import { WORD } from './types'
 
 export type SEND_META = {

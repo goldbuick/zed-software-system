@@ -1,7 +1,6 @@
 import { objectKeys } from 'ts-extras'
 
 import { CHIP } from './chip'
-import { ARG_TYPE } from './words/reader'
 import { WORD } from './words/types'
 
 type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
@@ -12,7 +11,7 @@ type FIRMWARE_LIST = () => string[]
 export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
 
 /** Possible argument signatures for a command; each inner array is zero or more ARG_TYPE (number) followed by a string (e.g. description). */
-export type COMMAND_ARGS_SIGNATURES = [...ARG_TYPE[], string][]
+export type COMMAND_ARGS_SIGNATURES = [...number[], string][]
 
 /** No-arg command signature (zero ARG_TYPEs, single empty string). */
 export const NO_COMMAND_ARGS: COMMAND_ARGS_SIGNATURES = [['']] as const

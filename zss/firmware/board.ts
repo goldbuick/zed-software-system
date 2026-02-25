@@ -52,13 +52,13 @@ import {
   readstrkindname,
   strkindtostr,
 } from 'zss/words/kind'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLLISION, COLOR, DIR, NAME, PT, WORD } from 'zss/words/types'
+import { ARG_TYPE, COLLISION, COLOR, DIR, NAME, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data

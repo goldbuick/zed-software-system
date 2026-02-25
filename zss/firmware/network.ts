@@ -6,8 +6,8 @@ import { isstrcategory } from 'zss/words/category'
 import { isstrcollision } from 'zss/words/collision'
 import { isstrcolor } from 'zss/words/color'
 import { isstrdir } from 'zss/words/dir'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME, WORD } from 'zss/words/types'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
 function fetchcommand(
   arg: any,

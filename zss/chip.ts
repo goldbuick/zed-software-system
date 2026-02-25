@@ -23,7 +23,8 @@ import {
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
-import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
+import { READ_CONTEXT, readargs } from './words/reader'
+import { ARG_TYPE } from './words/types'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { NAME, WORD, WORD_RESULT } from './words/types'
 

@@ -27,8 +27,8 @@ import { mapstrcategory } from 'zss/words/category'
 import { mapstrcollision } from 'zss/words/collision'
 import { mapstrcolor } from 'zss/words/color'
 import { mapstrdir } from 'zss/words/dir'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME, WORD } from 'zss/words/types'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
 /** Inlined desc for dynamically named audio commands (synth1–5, echo1–4, fcrush1–4, etc.). */
 const AUDIO_CMD_DESC: Record<string, string> = {

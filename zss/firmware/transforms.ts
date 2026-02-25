@@ -11,8 +11,8 @@ import {
   memoryreadboardbyevaldir,
 } from 'zss/memory'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME, PT, WORD } from 'zss/words/types'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME, PT, WORD } from 'zss/words/types'
 
 function readfilter(words: WORD[], index: number) {
   let targetset = 'all'

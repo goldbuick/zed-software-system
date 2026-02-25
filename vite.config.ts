@@ -33,6 +33,8 @@ export default defineConfig(({ mode }) => {
   const nohttps = !!JSON.parse(process.env.ZSS_NO_HTTPS ?? 'false')
   const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? 'false')
   const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? 'false')
+  const devHost = process.env.ZSS_DEV_HOST?.trim()
+  const mkcertHosts = ['localhost', ...(devHost ? [devHost] : [])]
 
   return {
     root,
@@ -45,7 +47,7 @@ export default defineConfig(({ mode }) => {
           global: true,
         },
       }),
-      ...(nohttps ? [] : [mkcert()]),
+      ...(nohttps ? [] : [mkcert({ hosts: mkcertHosts })]),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
     ],
