@@ -44,7 +44,7 @@ function readfilter(words: WORD[], index: number) {
 }
 
 export const TRANSFORM_FIRMWARE = createfirmware()
-  .command('snapshot', (chip) => {
+  .command('snapshot', [], (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -52,7 +52,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     chip.set('didfail', ispresent(boardsnapshot(READ_CONTEXT.board.id)) ? 0 : 1)
     return 0
   })
-  .command('revert', (chip) => {
+  .command('revert', [], (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -60,7 +60,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     chip.set('didfail', ispresent(boardrevert(READ_CONTEXT.board.id)) ? 0 : 1)
     return 0
   })
-  .command('copy', (chip, words) => {
+  .command('copy', [[ARG_TYPE.STRING]], (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -90,43 +90,47 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('remix', (chip, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      chip.set('didfail', 1)
-      return 0
-    }
-    const [stat, pattersize, mirror, ii] = readargs(words, 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.NUMBER,
-      ARG_TYPE.NUMBER,
-    ])
-    const sourceboard = memorypickcodepagewithtype(
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-      true,
-    )
-    if (!ispresent(sourceboard)) {
-      chip.set('didfail', 1)
-      return 0
-    }
-    const filter = readfilter(words, ii)
-    chip.set(
-      'didfail',
-      boardremix(
-        READ_CONTEXT.board.id,
-        sourceboard.id,
-        pattersize,
-        mirror,
-        filter.pt1,
-        filter.pt2,
-        filter.targetset,
+  .command(
+    'remix',
+    [[ARG_TYPE.STRING, ARG_TYPE.NUMBER, ARG_TYPE.NUMBER]],
+    (chip, words) => {
+      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+        chip.set('didfail', 1)
+        return 0
+      }
+      const [stat, pattersize, mirror, ii] = readargs(words, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+      ])
+      const sourceboard = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.BOARD,
+        stat,
+        true,
       )
-        ? 0
-        : 1,
-    )
-    return 0
-  })
-  .command('weave', (chip, words) => {
+      if (!ispresent(sourceboard)) {
+        chip.set('didfail', 1)
+        return 0
+      }
+      const filter = readfilter(words, ii)
+      chip.set(
+        'didfail',
+        boardremix(
+          READ_CONTEXT.board.id,
+          sourceboard.id,
+          pattersize,
+          mirror,
+          filter.pt1,
+          filter.pt2,
+          filter.targetset,
+        )
+          ? 0
+          : 1,
+      )
+      return 0
+    },
+  )
+  .command('weave', [[ARG_TYPE.DIR]], (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -156,7 +160,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('pivot', (chip, words) => {
+  .command('pivot', [[ARG_TYPE.NUMBER]], (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0

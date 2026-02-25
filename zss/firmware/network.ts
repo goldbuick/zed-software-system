@@ -53,22 +53,30 @@ function fetchcommand(
 }
 
 export const NETWORK_FIRMWARE = createfirmware()
-  .command('fetch', (_, words) => {
-    const [label, url, maybemethod = 'get', ii] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-    fetchcommand(undefined, label, url, maybemethod, words, ii)
-    return 0
-  })
-  .command('fetchwith', (_, words) => {
-    const [arg, label, url, maybemethod = 'get', ii] = readargs(words, 0, [
-      ARG_TYPE.ANY,
-      ARG_TYPE.NAME,
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-    fetchcommand(arg, label, url, maybemethod, words, ii)
-    return 0
-  })
+  .command(
+    'fetch',
+    [[ARG_TYPE.NAME, ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING]],
+    (_, words) => {
+      const [label, url, maybemethod = 'get', ii] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_STRING,
+      ])
+      fetchcommand(undefined, label, url, maybemethod, words, ii)
+      return 0
+    },
+  )
+  .command(
+    'fetchwith',
+    [[ARG_TYPE.ANY, ARG_TYPE.NAME, ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING]],
+    (_, words) => {
+      const [arg, label, url, maybemethod = 'get', ii] = readargs(words, 0, [
+        ARG_TYPE.ANY,
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_STRING,
+      ])
+      fetchcommand(arg, label, url, maybemethod, words, ii)
+      return 0
+    },
+  )

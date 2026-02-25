@@ -70,39 +70,39 @@ export const LOADER_FIRMWARE = createfirmware({
     return [false, undefined]
   },
 })
-  .command('endgame', () => {
+  .command('endgame', [], () => {
     // no-op when called in loaders
     return 0
   })
-  .command('shortsend', (chip, words) => {
+  .command('shortsend', [], (chip, words) => {
     const send = parsesend(words)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('send', (chip, words) => {
+  .command('send', [], (chip, words) => {
     const send = parsesend(words, true)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('stat', () => {
+  .command('stat', [], () => {
     // no-op
     return 0
   })
-  .command('text', (_, words) => {
+  .command('text', [], (_, words) => {
     const text = words.map(maptostring).join(' ')
     apichat(SOFTWARE, '', '$GREEN', text)
     return 0
   })
-  .command('hyperlink', (chip, args) => {
+  .command('hyperlink', [], (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
     apichat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
     return 0
   })
-  .command('readline', loadertext)
-  .command('readjson', loaderjson)
-  .command('readbin', loaderbinary)
-  .command('withboard', (_, words) => {
+  .command('readline', [], loadertext)
+  .command('readjson', [], loaderjson)
+  .command('readbin', [], loaderbinary)
+  .command('withboard', [[ARG_TYPE.STRING]], (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
     // this will update the READ_CONTEXT so element centric
     // commands will work
@@ -116,7 +116,7 @@ export const LOADER_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('withobject', (_, words) => {
+  .command('withobject', [[ARG_TYPE.STRING]], (_, words) => {
     // the idea here is we can give an object id
     // and it'll update the READ_CONTEXT to point to the given object
     // the intent here is afford !chat to drive behavior of a __specific__ object
@@ -136,7 +136,7 @@ export const LOADER_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('userinput', (_, words) => {
+  .command('userinput', [[ARG_TYPE.NAME]], (_, words) => {
     const [action] = readargs(words, 0, [ARG_TYPE.NAME])
     const player = memoryreadoperator()
     switch (NAME(action)) {

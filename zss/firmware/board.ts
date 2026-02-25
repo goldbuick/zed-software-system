@@ -339,7 +339,7 @@ const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const targetset = 'all'
 
 export const BOARD_FIRMWARE = createfirmware()
-  .command('build', (chip, words) => {
+  .command('build', [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING]], (chip, words) => {
     if (
       !ispresent(READ_CONTEXT.book) ||
       !ispresent(READ_CONTEXT.board) ||
@@ -422,77 +422,81 @@ export const BOARD_FIRMWARE = createfirmware()
     chip.set(stat, createdboard.id)
     return 0
   })
-  .command('goto', (_, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      return 0
-    }
+  .command(
+    'goto',
+    [[ARG_TYPE.STRING, ARG_TYPE.MAYBE_NUMBER, ARG_TYPE.MAYBE_NUMBER]],
+    (_, words) => {
+      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+        return 0
+      }
 
-    // teleport player to a board with given stat
-    const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
-    const [maybex, maybey] = readargs(words, ii, [
-      ARG_TYPE.MAYBE_NUMBER,
-      ARG_TYPE.MAYBE_NUMBER,
-    ])
-
-    const targetboard = memoryreadboardbyaddress(stat)
-    if (!ispresent(targetboard)) {
-      return 0
-    }
-
-    // init board kinds
-    memoryinitboard(targetboard)
-
-    // read entry pt
-    const destpt: PT = {
-      x: maybex ?? targetboard.startx ?? Math.round(BOARD_WIDTH * 0.5),
-      y: maybey ?? targetboard.starty ?? Math.round(BOARD_HEIGHT * 0.5),
-    }
-
-    const display = memoryreadelementdisplay(READ_CONTEXT.element)
-    if (display.name !== 'player') {
-      const color = memoryreadelementstat(READ_CONTEXT.element, 'color')
-      const bg = memoryreadelementstat(READ_CONTEXT.element, 'bg')
-      const findcolor = mapcolortostrcolor(color, bg)
-      const gotoelements = memorylistboardelementsbykind(targetboard, [
-        display.name,
-        findcolor,
+      // teleport player to a board with given stat
+      const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
+      const [maybex, maybey] = readargs(words, ii, [
+        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
       ])
 
-      // pick the first
-      const [gotoelement] = gotoelements.sort((a, b) => {
-        const ay = a.y ?? 10000
-        const by = b.y ?? 10000
-        const ydelta = ay - by
-        if (ydelta !== 0) {
-          return ydelta
-        }
-        const ax = a.x ?? 10000
-        const bx = b.x ?? 10000
-        return ax - bx
-      })
-
-      // got a match
-      if (
-        ispresent(gotoelement) &&
-        isnumber(gotoelement.x) &&
-        isnumber(gotoelement.y)
-      ) {
-        destpt.x = gotoelement.x
-        destpt.y = gotoelement.y
+      const targetboard = memoryreadboardbyaddress(stat)
+      if (!ispresent(targetboard)) {
+        return 0
       }
-    }
 
-    // yolo
-    memorymoveplayertoboard(
-      READ_CONTEXT.book,
-      READ_CONTEXT.elementfocus,
-      targetboard.id,
-      destpt,
-    )
+      // init board kinds
+      memoryinitboard(targetboard)
 
-    return 0
-  })
-  .command('transport', (_, words) => {
+      // read entry pt
+      const destpt: PT = {
+        x: maybex ?? targetboard.startx ?? Math.round(BOARD_WIDTH * 0.5),
+        y: maybey ?? targetboard.starty ?? Math.round(BOARD_HEIGHT * 0.5),
+      }
+
+      const display = memoryreadelementdisplay(READ_CONTEXT.element)
+      if (display.name !== 'player') {
+        const color = memoryreadelementstat(READ_CONTEXT.element, 'color')
+        const bg = memoryreadelementstat(READ_CONTEXT.element, 'bg')
+        const findcolor = mapcolortostrcolor(color, bg)
+        const gotoelements = memorylistboardelementsbykind(targetboard, [
+          display.name,
+          findcolor,
+        ])
+
+        // pick the first
+        const [gotoelement] = gotoelements.sort((a, b) => {
+          const ay = a.y ?? 10000
+          const by = b.y ?? 10000
+          const ydelta = ay - by
+          if (ydelta !== 0) {
+            return ydelta
+          }
+          const ax = a.x ?? 10000
+          const bx = b.x ?? 10000
+          return ax - bx
+        })
+
+        // got a match
+        if (
+          ispresent(gotoelement) &&
+          isnumber(gotoelement.x) &&
+          isnumber(gotoelement.y)
+        ) {
+          destpt.x = gotoelement.x
+          destpt.y = gotoelement.y
+        }
+      }
+
+      // yolo
+      memorymoveplayertoboard(
+        READ_CONTEXT.book,
+        READ_CONTEXT.elementfocus,
+        targetboard.id,
+        destpt,
+      )
+
+      return 0
+    },
+  )
+  .command('transport', [[ARG_TYPE.STRING]], (_, words) => {
     if (
       !ispresent(READ_CONTEXT.book) ||
       !ispresent(READ_CONTEXT.board) ||
@@ -568,7 +572,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('shove', (_, words) => {
+  .command('shove', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
@@ -585,7 +589,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('push', (_, words) => {
+  .command('push', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
@@ -606,17 +610,17 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('duplicate', commanddupe)
-  .command('duplicatewith', (chip, words) => {
+  .command('duplicate', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], commanddupe)
+  .command('duplicatewith', [[ARG_TYPE.ANY]], (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commanddupe(chip, words.slice(ii), arg)
   })
-  .command('dupe', commanddupe)
-  .command('dupewith', (chip, words) => {
+  .command('dupe', [[ARG_TYPE.DIR, ARG_TYPE.DIR]], commanddupe)
+  .command('dupewith', [[ARG_TYPE.ANY]], (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commanddupe(chip, words.slice(ii), arg)
   })
-  .command('write', (chip, words) => {
+  .command('write', [[ARG_TYPE.DIR, ARG_TYPE.COLOR]], (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -701,7 +705,7 @@ export const BOARD_FIRMWARE = createfirmware()
     chip.set('didfail', 0)
     return 0
   })
-  .command('change', (chip, words) => {
+  .command('change', [[ARG_TYPE.KIND, ARG_TYPE.KIND]], (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -783,12 +787,12 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('put', commandput)
-  .command('putwith', (chip, words) => {
+  .command('put', [[ARG_TYPE.DIR, ARG_TYPE.KIND]], commandput)
+  .command('putwith', [[ARG_TYPE.ANY]], (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandput(chip, words.slice(ii), undefined, arg)
   })
-  .command('oneof', (chip, words) => {
+  .command('oneof', [[ARG_TYPE.ANY]], (chip, words) => {
     const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
 
     // if there is already an object with mark id, bail
@@ -802,7 +806,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return commandput(chip, words.slice(ii), mark)
   })
-  .command('oneofwith', (chip, words) => {
+  .command('oneofwith', [[ARG_TYPE.ANY, ARG_TYPE.ANY]], (chip, words) => {
     const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
 
     // if there is already an object with mark id, bail
@@ -816,15 +820,15 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return commandput(chip, words.slice(ii), mark, arg)
   })
-  .command('shoot', commandshoot)
-  .command('shootwith', (chip, words) => {
+  .command('shoot', [[ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND]], commandshoot)
+  .command('shootwith', [[ARG_TYPE.ANY]], (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandshoot(chip, words.slice(ii), arg)
   })
-  .command('throwstar', (chip, words) => {
+  .command('throwstar', [], (chip, words) => {
     return commandshoot(chip, [...words, 'star'])
   })
-  .command('throwstarwith', (chip, words) => {
+  .command('throwstarwith', [[ARG_TYPE.ANY]], (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandshoot(chip, [...words.slice(ii), 'star'], arg)
   })

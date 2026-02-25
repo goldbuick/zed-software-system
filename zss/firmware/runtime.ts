@@ -59,30 +59,30 @@ export const RUNTIME_FIRMWARE = createfirmware({
     }
   },
 })
-  .command('endgame', (chip) => {
+  .command('endgame', [], (chip) => {
     chip.set('health', 0)
     return 0
   })
-  .command('shortsend', (chip, words) => {
+  .command('shortsend', [], (chip, words) => {
     const send = parsesend(words)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('send', (chip, words) => {
+  .command('send', [], (chip, words) => {
     const send = parsesend(words, true)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('stat', () => {
+  .command('stat', [], () => {
     //  no-op
     return 0
   })
-  .command('text', (_, words) => {
+  .command('text', [], (_, words) => {
     const text = words.map(maptostring).join('')
     gadgettext(READ_CONTEXT.elementid, text)
     return 0
   })
-  .command('hyperlink', (chip, args) => {
+  .command('hyperlink', [], (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
     const wordsstr = chip.template(words)
@@ -97,7 +97,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
     )
     return 0
   })
-  .command('help', () => {
+  .command('help', [], () => {
     vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
