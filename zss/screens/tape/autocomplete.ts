@@ -324,7 +324,6 @@ export function drawautocomplete(
 
     const rowstart = Math.max(px, edge.left + 1)
     const rowend = Math.min(px + itemwidth - 1, edge.right - 1)
-    console.info(rowstart, rowend)
     if (rowstart > rowend) {
       continue
     }
