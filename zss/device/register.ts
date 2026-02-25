@@ -24,7 +24,7 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/state'
-import { INPUT } from 'zss/gadget/data/types'
+import { GADGET_ZSS_WORDS, INPUT } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
@@ -308,22 +308,10 @@ const register = createdevice(
         }
         break
       case 'ackzsswords': {
-        const data = message.data as Record<string, string[]>
-        const normalized = { ...data }
-        if (ispresent(data.stats) && !ispresent(data.statsBoard)) {
-          normalized.statsBoard = data.stats ?? []
-          normalized.statsHelper = []
-          normalized.statsSender = []
-          normalized.statsInteraction = []
-          normalized.statsBoolean = []
-          normalized.statsConfig = []
-          normalized.statsRunwith = []
-        }
-        useGadgetClient.setState({ zsswords: normalized })
-        const dynamicwords: string[] = []
-        const words = Object.values(normalized)
-        for (let i = 0; i < words.length; ++i) {
-          dynamicwords.push(...words[i])
+        if (ispresent(message.data)) {
+          useGadgetClient.setState({
+            zsswords: message.data as GADGET_ZSS_WORDS,
+          })
         }
         break
       }

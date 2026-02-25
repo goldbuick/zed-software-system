@@ -20,14 +20,18 @@ import {
   museumofzztsearch,
 } from 'zss/feature/url'
 import { write, writeheader } from 'zss/feature/writeui'
-import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
+import {
+  DRIVER_TYPE,
+  firmwarecommandargshint,
+  firmwarelistcommands,
+} from 'zss/firmware/runner'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
+import { GADGET_ZSS_WORDS, INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -334,6 +338,27 @@ const vm = createdevice(
         break
       case 'zsswords': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const clicommands: Record<string, string> = {}
+        const loadercommands: Record<string, string> = {}
+        const runtimecommands: Record<string, string> = {}
+        for (const cmd of firmwarelistcommands(DRIVER_TYPE.CLI)) {
+          const hint = firmwarecommandargshint(DRIVER_TYPE.CLI, cmd)
+          if (hint) {
+            clicommands[cmd] = hint
+          }
+        }
+        for (const cmd of firmwarelistcommands(DRIVER_TYPE.LOADER)) {
+          const hint = firmwarecommandargshint(DRIVER_TYPE.LOADER, cmd)
+          if (hint) {
+            loadercommands[cmd] = hint
+          }
+        }
+        for (const cmd of firmwarelistcommands(DRIVER_TYPE.RUNTIME)) {
+          const hint = firmwarecommandargshint(DRIVER_TYPE.RUNTIME, cmd)
+          if (hint) {
+            runtimecommands[cmd] = hint
+          }
+        }
         const dirmods = [
           'cw',
           'ccw',
@@ -347,10 +372,13 @@ const vm = createdevice(
           'awayby',
           'elements',
         ]
-        vm.replynext(message, `ackzsswords`, {
+        const zsswords: GADGET_ZSS_WORDS = {
           cli: firmwarelistcommands(DRIVER_TYPE.CLI),
+          clicommands,
           loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
+          loadercommands,
           runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
+          runtimecommands,
           flags: [
             ...objectKeys(memoryreadflags(message.player)),
             'inputmove',
@@ -364,18 +392,16 @@ const vm = createdevice(
           ],
           statsboard: STATS_BOARD,
           statshelper: STATS_HELPER,
-          statsSender: STATS_SENDER,
+          statssender: STATS_SENDER,
           statsinteraction: STATS_INTERACTION,
           statsboolean: STATS_BOOLEAN,
           statsconfig: STATS_CONFIG,
-          // object codepage kinds
           kinds: [
             ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
               (codepage) => memoryreadcodepagename(codepage),
             ),
             ...objectKeys(categoryconsts),
           ],
-          // other codepage types
           altkinds: [
             ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
             ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.BOARD),
@@ -414,7 +440,8 @@ const vm = createdevice(
             'run',
             'runwith',
           ],
-        })
+        }
+        vm.replynext(message, `ackzsswords`, zsswords)
         break
       }
       case 'books':

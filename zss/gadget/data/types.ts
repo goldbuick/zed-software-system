@@ -276,6 +276,29 @@ export type GADGET_STATE = {
   synthstate?: SYNTH_STATE
 }
 
+/** ZSS word lists and command-args hints per driver (from vm). */
+export type GADGET_ZSS_WORDS = {
+  cli: string[]
+  clicommands: Record<string, string>
+  loader: string[]
+  loadercommands: Record<string, string>
+  runtime: string[]
+  runtimecommands: Record<string, string>
+  flags: string[]
+  statsboard: string[]
+  statshelper: string[]
+  statssender: string[]
+  statsinteraction: string[]
+  statsboolean: string[]
+  statsconfig: string[]
+  kinds: string[]
+  altkinds: string[]
+  colors: string[]
+  dirs: string[]
+  dirmods: string[]
+  exprs: string[]
+}
+
 export const INPUT_ALT = 0x0001
 export const INPUT_CTRL = 0x0010
 export const INPUT_SHIFT = 0x0100

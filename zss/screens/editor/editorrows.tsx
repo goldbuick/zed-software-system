@@ -6,8 +6,7 @@ import {
   romread,
   stripRomValue,
 } from 'zss/feature/rom'
-import { DRIVER_TYPE, firmwarecommandargshint } from 'zss/firmware/runner'
-import { useEditor, useTape } from 'zss/gadget/data/state'
+import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
@@ -93,8 +92,11 @@ export function EditorRows({
   const tapeeditor = useEditor()
   const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
-  const driver =
-    editortype === 'loader' ? DRIVER_TYPE.LOADER : DRIVER_TYPE.RUNTIME
+  const commandMaps = useGadgetClient((state) => ({
+    cli: state.zsswords.clicommands,
+    loader: state.zsswords.loadercommands,
+    runtime: state.zsswords.runtimecommands,
+  }))
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
       const last = rows[rows.length - 1]
@@ -563,15 +565,19 @@ export function EditorRows({
         break
       }
 
-      // When a command token was detected to our left, show args hint from COMMAND_ARGS_SIGNATURES; otherwise show desc (with format codes)
+      // When a command token was detected to our left, show args hint from vm data (COMMAND_ARGS_SIGNATURES); otherwise show desc (with format codes)
+      const commandName = lookupAddress?.startsWith('editor:command:')
+        ? lookupAddress.slice(17).toLowerCase().trim()
+        : ''
+      const driverKey = editortype === 'loader' ? 'loader' : 'runtime'
+      const commandMap = commandMaps[driverKey]
       const commandArgsHint =
-        lookupAddress?.startsWith('editor:command:') &&
-        firmwarecommandargshint(driver, lookupAddress.slice(17))
+        commandName && commandMap ? (commandMap[commandName] ?? '') : ''
       if (commandArgsHint) {
         writeplaintext(commandArgsHint, context, false)
-      } else if (isstring(lookup?.args)) {
+      } else if (!commandName && isstring(lookup?.args)) {
         writeplaintext(stripRomValue(lookup.args), context, false)
-      } else if (isstring(lookup?.desc)) {
+      } else if (!commandName && isstring(lookup?.desc)) {
         tokenizeandwritetextformat(lookup.desc, context, false)
       }
     }
