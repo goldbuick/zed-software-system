@@ -11,13 +11,12 @@ import {
 import { useEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { getColorForPlayer } from 'zss/screens/inputcommon'
 import {
   EDITOR_CODE_ROW,
   findcursorinrows,
   findmaxwidthinrows,
 } from 'zss/screens/tape/common'
-
-import { getColorForPlayer } from './editorinputhelpers'
 
 const CHUNK_STEP = 32
 

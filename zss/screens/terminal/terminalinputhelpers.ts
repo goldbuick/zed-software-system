@@ -4,9 +4,13 @@ import { tokenize } from 'zss/lang/lexer'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
+  type InputSelectionRange,
+  computeSelectionRange,
+  drawBlockCursor,
+} from 'zss/screens/inputcommon'
+import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
-  applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
@@ -21,11 +25,7 @@ export function tokenizeline(line: string): IToken[] {
   }
 }
 
-export type TerminalSelection = {
-  ii1: number
-  ii2: number
-  iic: number
-  hasselection: boolean
+export type TerminalSelection = InputSelectionRange & {
   inputstateselected: string
 }
 
@@ -35,24 +35,10 @@ export function computeTerminalSelection(
   yselect: MAYBE<number>,
   inputstate: string,
 ): TerminalSelection {
-  let ii1 = xcursor
-  let ii2 = xcursor
-  let hasselection = false
-
-  if (ispresent(xselect) && ispresent(yselect)) {
-    hasselection = true
-    ii1 = Math.min(xcursor, xselect)
-    ii2 = Math.max(xcursor, xselect)
-    if (xcursor !== xselect) {
-      --ii2
-    }
-  }
-
-  const iic = ii2 - ii1 + 1
-  const inputstateselected = hasselection
-    ? inputstate.substring(ii1, ii2 + 1)
-    : inputstate
-  return { ii1, ii2, iic, hasselection, inputstateselected }
+  const r = computeSelectionRange(xcursor, xselect, inputstate, {
+    hasSelection: ispresent(xselect) && ispresent(yselect),
+  })
+  return { ...r, inputstateselected: r.selected }
 }
 
 export function trackselection(active: boolean) {
@@ -90,13 +76,7 @@ export function drawTerminalCursor(
     return
   }
   const edge = textformatreadedges(context)
-  const x = edge.left + xcursor
-  const y = edge.top + tapeycursor
-  if (x >= edge.left && x <= edge.right && y >= edge.top && y <= edge.bottom) {
-    const atchar = x + y * context.width
-    applystrtoindex(atchar, String.fromCharCode(221), context)
-    applycolortoindexes(atchar, atchar, COLOR.WHITE, context.reset.bg, context)
-  }
+  drawBlockCursor(xcursor, tapeycursor, edge, context)
 }
 
 export function drawTerminalSelection(
