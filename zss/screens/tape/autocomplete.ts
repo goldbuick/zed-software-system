@@ -57,10 +57,17 @@ const ROM_CATEGORIES = [
   'command',
 ]
 
-function extractdesc(content: string): string {
+const STRIP_COLOR = /^\$\w+/i
+
+function stripromvalue(value: string): string {
+  return value.replace(STRIP_COLOR, '').trim()
+}
+
+/** Autocomplete dropdown hint: description only (args are shown separately when a command is detected to the left). */
+function exthintfromcontent(content: string): string {
   const lookup = romintolookup(content)
-  const desc = lookup.desc ?? ''
-  return desc.replace(/^\$\w+/i, '').trim()
+  const desc = stripromvalue(lookup.desc ?? '')
+  return desc
 }
 
 function romhintfor(word: string, words: AUTO_COMPLETE_WORDS): string {
@@ -77,7 +84,7 @@ function romhintfor(word: string, words: AUTO_COMPLETE_WORDS): string {
   for (const category of ROM_CATEGORIES) {
     const content = romread(`editor:${category}:${lower}`)
     if (content) {
-      return extractdesc(content)
+      return exthintfromcontent(content)
     }
   }
   return ''

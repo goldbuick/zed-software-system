@@ -1,1 +1,2 @@
 desc;$DKGRAYApply autowah to all 4 channels of #play
+args;$LTGRAY(none)

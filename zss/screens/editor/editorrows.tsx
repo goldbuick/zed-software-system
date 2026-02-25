@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
-import { ROM_LOOKUP, romintolookup, romread } from 'zss/feature/rom'
+import {
+  ROM_LOOKUP,
+  romintolookup,
+  romread,
+  stripRomValue,
+} from 'zss/feature/rom'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import * as lexer from 'zss/lang/lexer'
@@ -552,7 +557,10 @@ export function EditorRows({
         break
       }
 
-      if (isstring(lookup?.desc)) {
+      // When a command token was detected to our left, show its args hint; otherwise show desc (with format codes)
+      if (isstring(lookup?.args)) {
+        writeplaintext(stripRomValue(lookup.args), context, false)
+      } else if (isstring(lookup?.desc)) {
         tokenizeandwritetextformat(lookup.desc, context, false)
       }
     }

@@ -44,6 +44,7 @@ export type EditorInputProps = {
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
+  autocompleteactive?: boolean
 }
 
 export function EditorInput({

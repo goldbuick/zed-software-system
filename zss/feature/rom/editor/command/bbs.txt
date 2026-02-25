@@ -1,1 +1,2 @@
 desc;$DKGRAYBBS login/publish actions
+args;$LTGRAY(none)

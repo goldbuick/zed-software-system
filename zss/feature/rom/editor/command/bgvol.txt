@@ -1,1 +1,2 @@
 desc;$DKGRAYSet bgplay volume
+args;$LTGRAY(none)

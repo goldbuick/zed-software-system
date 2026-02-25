@@ -1,1 +1,2 @@
 desc;$DKGRAYLock against external messages
+args;$LTGRAY(none)

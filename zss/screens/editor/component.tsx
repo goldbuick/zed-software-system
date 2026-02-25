@@ -28,7 +28,7 @@ import {
   ZSS_WORD_STAT,
 } from './colors'
 import { EditorFrame } from './editorframe'
-import { EditorInput, EditorInputProps } from './editorinput'
+import { EditorInput } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
 
 export function EditorComponent() {
@@ -179,7 +179,7 @@ export function EditorComponent() {
   )
 
   // measure edges once
-  const props: EditorRowsProps | EditorInputProps = {
+  const props: EditorRowsProps = {
     rows,
     xcursor,
     ycursor,

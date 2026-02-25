@@ -1,1 +1,2 @@
 desc;$DKGRAYSet variable to value
+args;$LTGRAY<name> <value>

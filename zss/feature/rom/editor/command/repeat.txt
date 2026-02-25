@@ -1,1 +1,2 @@
 desc;$DKGRAYRepeat a command N times
+args;$LTGRAY(none)

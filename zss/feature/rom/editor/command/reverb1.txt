@@ -1,1 +1,2 @@
 desc;$DKGRAYReverb for first 2 channels of #play
+args;$LTGRAY(none)

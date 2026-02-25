@@ -1,1 +1,2 @@
 desc;$DKGRAYDistortion for #bgplay
+args;$LTGRAY(none)

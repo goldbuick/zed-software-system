@@ -1,1 +1,2 @@
 desc;$DKGRAYShoot projectile with argument
+args;$LTGRAY(none)

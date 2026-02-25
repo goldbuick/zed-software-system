@@ -1,1 +1,2 @@
 desc;$DKGRAYDistortion for #tts
+args;$LTGRAY(none)

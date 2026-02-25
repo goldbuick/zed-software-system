@@ -1,1 +1,2 @@
 desc;$DKGRAYPut element with argument
+args;$LTGRAY<arg> <dir> <kind>

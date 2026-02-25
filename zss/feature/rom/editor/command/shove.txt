@@ -1,1 +1,2 @@
 desc;$DKGRAYShove target object in direction
+args;$LTGRAY<dir> <movedir>

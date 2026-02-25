@@ -1,1 +1,2 @@
 desc;$DKGRAYToggle built-in inspector
+args;$LTGRAY(none)

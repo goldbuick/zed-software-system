@@ -1,1 +1,2 @@
 desc;$DKGRAYCreate array variable
+args;$LTGRAY(none)

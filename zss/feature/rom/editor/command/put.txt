@@ -1,1 +1,2 @@
 desc;$DKGRAYPut element in direction
+args;$LTGRAY<dir> <kind>

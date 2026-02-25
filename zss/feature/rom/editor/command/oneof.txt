@@ -1,1 +1,2 @@
 desc;$DKGRAYUses given id to ensure only one element of given kind is made
+args;$LTGRAY(none)

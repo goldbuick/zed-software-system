@@ -1,1 +1,2 @@
 desc;$DKGRAYSpeak text with voice (or clear queue)
+args;$LTGRAY(none)

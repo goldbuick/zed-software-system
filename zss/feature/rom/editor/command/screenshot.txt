@@ -1,1 +1,2 @@
 desc;$DKGRAYRegister screenshot for capture
+args;$LTGRAY(none)

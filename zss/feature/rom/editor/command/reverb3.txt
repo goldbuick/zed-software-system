@@ -1,1 +1,2 @@
 desc;$DKGRAYReverb for #bgplay
+args;$LTGRAY(none)

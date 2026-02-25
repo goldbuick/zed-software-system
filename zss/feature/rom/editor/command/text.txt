@@ -1,1 +1,2 @@
 desc;$DKGRAYDisplay text on element or in sidebar
+args;$LTGRAY(none)

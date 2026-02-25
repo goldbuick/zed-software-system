@@ -1,1 +1,2 @@
 desc;$DKGRAYParse binary data
+args;$LTGRAY(none)

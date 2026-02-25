@@ -1,1 +1,2 @@
 desc;$DKGRAYShow toast notification
+args;$LTGRAY<text>

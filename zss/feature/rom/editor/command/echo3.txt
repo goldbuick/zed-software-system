@@ -1,1 +1,2 @@
 desc;$DKGRAYEcho for #bgplay
+args;$LTGRAY(none)
