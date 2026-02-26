@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { FORMAT_OBJECT } from 'zss/feature/format'
-import { ROM_LOOKUP } from 'zss/feature/rom'
 import { MAYBE, isequal } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
@@ -97,7 +96,7 @@ export const useTape = create<{
     type: string
     title: string
   }
-  autocompleteactive: boolean
+  autocompleteindex: number
   hintlookup: string
   reset: () => void
 }>((set) => ({
@@ -117,7 +116,7 @@ export const useTape = create<{
     type: '',
     title: '',
   },
-  autocompleteactive: false,
+  autocompleteindex: -1,
   hintlookup: '',
   reset() {
     set({
@@ -136,7 +135,8 @@ export const useTape = create<{
         type: '',
         title: '',
       },
-      lookupaddress: undefined,
+      autocompleteindex: -1,
+      hintlookup: '',
     })
   },
 }))
@@ -150,9 +150,6 @@ export const useTerminal = create<{
   yselect: MAYBE<number>
   bufferindex: number
   buffer: string[]
-  acindex: number
-  /** True only after user has typed a character; disengages on cursor move so autocomplete does not open on arrow into a word. */
-  autocompleteactive: boolean
   reset: () => void
 }>((set) => ({
   // panning offset
@@ -167,9 +164,6 @@ export const useTerminal = create<{
   // input history
   bufferindex: 0,
   buffer: [''],
-  // autocomplete selected index (-1 = dismissed)
-  acindex: -1,
-  autocompleteactive: false,
   reset() {
     set({
       pan: 0,
@@ -180,8 +174,6 @@ export const useTerminal = create<{
       yselect: undefined,
       bufferindex: 0,
       buffer: [''],
-      acindex: -1,
-      autocompleteactive: false,
     })
   },
 }))
@@ -191,25 +183,18 @@ export const useEditor = create<{
   yscroll: number
   cursor: number
   select: MAYBE<number>
-  acindex: number
-  /** True only after user has typed a character; disengages on cursor move so autocomplete does not open on arrow into a word. */
-  autocompleteactive: boolean
   reset: () => void
 }>((set) => ({
   xscroll: 0,
   yscroll: 0,
   cursor: 0,
   select: undefined,
-  acindex: -1,
-  autocompleteactive: false,
   reset() {
     set({
       xscroll: 0,
       yscroll: 0,
       cursor: 0,
       select: undefined,
-      acindex: -1,
-      autocompleteactive: false,
     })
   },
 }))

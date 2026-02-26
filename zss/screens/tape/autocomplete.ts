@@ -1,6 +1,6 @@
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -9,6 +9,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
+import { zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 
 export type AUTO_COMPLETE = {
@@ -32,7 +33,7 @@ function filtersuggestions(prefix: string, words: string[]): string[] {
     return []
   }
   const lower = prefix.toLowerCase()
-  return words
+  return [...new Set(words)]
     .filter(
       (w) => w.toLowerCase().startsWith(lower) && w.toLowerCase() !== lower,
     )
@@ -190,23 +191,18 @@ function applysuggestioncolors(
   word: string,
   fg: number,
   bg: number,
-  wordcolors: Map<string, number> | undefined,
   context: WRITE_TEXT_CONTEXT,
 ) {
   applystrtoindex(bufindex, text, context)
-
-  if (!wordcolors) {
-    applycolortoindexes(bufindex, bufindex + text.length - 1, fg, bg, context)
-    return
-  }
-
-  const wordcolor = wordcolors.get(word.toLowerCase()) ?? fg
   for (let c = 0; c < text.length; c++) {
-    const charoffset = textoffset + c
-    const ispadding = charoffset === 0 || charoffset > word.length
-    const color = ispadding ? fg : wordcolor
-    context.color[bufindex + c] = color
-    context.bg[bufindex + c] = bg
+    const wordcolor = zsswordcolor(word.toLowerCase())
+    if (!isarray(wordcolor)) {
+      const charoffset = textoffset + c
+      const ispadding = charoffset === 0 || charoffset > word.length
+      const color = ispadding ? fg : wordcolor
+      context.color[bufindex + c] = color
+      context.bg[bufindex + c] = bg
+    }
   }
   context.changed()
 }
@@ -293,16 +289,15 @@ export function drawautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    // applysuggestioncolors(
-    //   bufindex,
-    //   textoffset,
-    //   text,
-    //   ac.suggestions[i],
-    //   selected ? AC_SEL_FG : AC_FG,
-    //   bg,
-    //   wordcolors,
-    //   context,
-    // )
+    applysuggestioncolors(
+      bufindex,
+      textoffset,
+      text,
+      ac.suggestions[i],
+      selected ? AC_SEL_FG : AC_FG,
+      bg,
+      context,
+    )
 
     if (selected) {
       const hint = '' //romhintfor(ac.suggestions[i], words)

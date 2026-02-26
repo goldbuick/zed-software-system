@@ -170,7 +170,7 @@ export function EditorRows({
     )
 
     // apply token colors
-    applycodetokencolors(index, xoffset, edge.right, row.tokens ?? [], context)
+    applycodetokencolors(xoffset, index, edge.right, row.tokens ?? [], context)
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
@@ -396,18 +396,18 @@ export function EditorRows({
   }
 
   // render autocomplete dropdown only after user has typed a character
-  if (autocompleteactive && autocomplete.suggestions.length > 0) {
-    const startx = edge.left + 4 + autocomplete.wordcol
-    const starty = edge.top + 2 + cursor - yoffset + 1
-    drawautocomplete(
-      autocomplete,
-      tapeeditor.acindex,
-      startx,
-      starty,
-      edge,
-      context,
-    )
-  }
+  // if (autocompleteactive && autocomplete.suggestions.length > 0) {
+  //   const startx = edge.left + 4 + autocomplete.wordcol
+  //   const starty = edge.top + 2 + cursor - yoffset + 1
+  //   drawautocomplete(
+  //     autocomplete,
+  //     tapeeditor.acindex,
+  //     startx,
+  //     starty,
+  //     edge,
+  //     context,
+  //   )
+  // }
 
   // reset edge
   context.disablewrap = false

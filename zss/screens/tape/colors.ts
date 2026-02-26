@@ -1,4 +1,5 @@
 import type { IToken } from 'chevrotain'
+import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
@@ -254,20 +255,63 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.expr_stop.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
 }
 
-export const ZSS_WORD_MESSAGE = COLOR.DKPURPLE
-export const ZSS_WORD_FLAG = COLOR.PURPLE
-export const ZSS_WORD_STAT = COLOR.DKPURPLE
-export const ZSS_WORD_KIND = COLOR.CYAN
-export const ZSS_WORD_KIND_ALT = COLOR.DKCYAN
-export const ZSS_WORD_COLOR = COLOR.RED
-export const ZSS_WORD_DIR = COLOR.WHITE
-export const ZSS_WORD_DIRMOD = COLOR.LTGRAY
-export const ZSS_WORD_EXPRS = COLOR.YELLOW
+/** Keys of GADGET_ZSS_WORDS that are string[] word lists (excludes command records). */
+export type ZSS_WORD_LIST_KEY = keyof Pick<
+  GADGET_ZSS_WORDS,
+  | 'flags'
+  | 'statsboard'
+  | 'statshelper'
+  | 'statssender'
+  | 'statsinteraction'
+  | 'statsboolean'
+  | 'statsconfig'
+  | 'kinds'
+  | 'altkinds'
+  | 'colors'
+  | 'dirs'
+  | 'dirmods'
+  | 'exprs'
+>
 
-const ZSS_WORD_MAP = new Map<string, COLOR>()
+/** Maps each GADGET_ZSS_WORDS word-list category to its ZSS_TYPE_ color for highlighting. */
+export const ZSS_WORD_LIST_COLOR_MAP: Record<ZSS_WORD_LIST_KEY, number> = {
+  flags: ZSS_TYPE_FLAGMOD,
+  statsboard: ZSS_TYPE_STATNAME,
+  statshelper: ZSS_TYPE_STATNAME,
+  statssender: ZSS_TYPE_STATNAME,
+  statsinteraction: ZSS_TYPE_STATNAME,
+  statsboolean: ZSS_TYPE_STATNAME,
+  statsconfig: ZSS_TYPE_STATNAME,
+  kinds: ZSS_TYPE_SYMBOL,
+  altkinds: ZSS_TYPE_SYMBOL,
+  colors: ZSS_TYPE_COLOR,
+  dirs: ZSS_TYPE_DIR,
+  dirmods: ZSS_TYPE_DIR_MOD,
+  exprs: ZSS_TYPE_SYMBOL,
+}
 
-export function zsswordcolorconfig(word: string, color: COLOR) {
-  ZSS_WORD_MAP.set(word, color)
+let ZSS_WORD_MAP = new Map<string, COLOR>()
+
+/**
+ * Builds a lookup map from word (lowercase) to ZSS_TYPE_ color using the word-list
+ * categories. Pass the string[] fields from GADGET_ZSS_WORDS; each word is assigned
+ * its category's color. Later categories overwrite if a word appears in multiple.
+ */
+export function buildzsswordcolors(
+  words: Pick<GADGET_ZSS_WORDS, ZSS_WORD_LIST_KEY>,
+): Map<string, COLOR> {
+  ZSS_WORD_MAP = new Map<string, COLOR>()
+  const keys = Object.keys(ZSS_WORD_LIST_COLOR_MAP) as ZSS_WORD_LIST_KEY[]
+  for (const key of keys) {
+    const list = words[key]
+    const color = ZSS_WORD_LIST_COLOR_MAP[key]
+    if (isarray(list)) {
+      for (const w of list) {
+        ZSS_WORD_MAP.set(w.toLowerCase(), color)
+      }
+    }
+  }
+  return ZSS_WORD_MAP
 }
 
 enum COLOR_MODE {

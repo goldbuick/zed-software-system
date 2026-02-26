@@ -43,8 +43,6 @@ export type EditorInputProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
-  autocomplete: AUTO_COMPLETE
-  autocompleteactive?: boolean
 }
 
 export function EditorInput({
@@ -54,7 +52,6 @@ export function EditorInput({
   yoffset,
   rows,
   codepage,
-  autocomplete,
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
@@ -157,30 +154,30 @@ export function EditorInput({
     useEditor.setState({ cursor: codeend, select: undefined })
   }
 
-  const acactive =
-    tapeeditor.autocompleteactive && autocomplete.suggestions.length > 0
-  const acnumRows = autocomplete.suggestions.length
-  const accursorRowY = edge.top + 2 + ycursor - yoffset + 1
-  const acdrawBelow = accursorRowY + acnumRows <= edge.bottom - 1
+  // const acactive =
+  //   tapeeditor.autocompleteactive && autocomplete.suggestions.length > 0
+  // const acnumRows = autocomplete.suggestions.length
+  // const accursorRowY = edge.top + 2 + ycursor - yoffset + 1
+  // const acdrawBelow = accursorRowY + acnumRows <= edge.bottom - 1
 
-  function acceptsuggestion() {
-    if (!ispresent(codepage) || autocomplete.suggestions.length === 0) {
-      return
-    }
-    const idx =
-      tapeeditor.acindex < 0
-        ? 0
-        : Math.min(tapeeditor.acindex, autocomplete.suggestions.length - 1)
-    const suggestion = autocomplete.suggestions[idx]
-    if (!suggestion) {
-      return
-    }
-    strvaluesplice(
-      autocomplete.wordstart,
-      autocomplete.prefix.length,
-      suggestion,
-    )
-  }
+  // function acceptsuggestion() {
+  //   if (!ispresent(codepage) || autocomplete.suggestions.length === 0) {
+  //     return
+  //   }
+  //   const idx =
+  //     tapeeditor.acindex < 0
+  //       ? 0
+  //       : Math.min(tapeeditor.acindex, autocomplete.suggestions.length - 1)
+  //   const suggestion = autocomplete.suggestions[idx]
+  //   if (!suggestion) {
+  //     return
+  //   }
+  //   strvaluesplice(
+  //     autocomplete.wordstart,
+  //     autocomplete.prefix.length,
+  //     suggestion,
+  //   )
+  // }
 
   // --- render ---
 
@@ -217,13 +214,13 @@ export function EditorInput({
           useEditor.setState({ acindex: -1 })
         }}
         MOVE_UP={(mods) => {
-          if (acactive) {
-            const next = acdrawBelow
-              ? Math.max(0, tapeeditor.acindex - 1)
-              : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
-            useEditor.setState({ acindex: next })
-            return
-          }
+          // if (acactive) {
+          //   const next = acdrawBelow
+          //     ? Math.max(0, tapeeditor.acindex - 1)
+          //     : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
+          //   useEditor.setState({ acindex: next })
+          //   return
+          // }
           trackselection(mods.shift)
           if (mods.ctrl) {
             movexcursor(0)
@@ -233,15 +230,15 @@ export function EditorInput({
           useEditor.setState({ acindex: -1 })
         }}
         MOVE_DOWN={(mods) => {
-          if (acactive) {
-            const next = acdrawBelow
-              ? tapeeditor.acindex < 0
-                ? 0
-                : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
-              : Math.max(0, tapeeditor.acindex - 1)
-            useEditor.setState({ acindex: next })
-            return
-          }
+          // if (acactive) {
+          //   const next = acdrawBelow
+          //     ? tapeeditor.acindex < 0
+          //       ? 0
+          //       : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
+          //     : Math.max(0, tapeeditor.acindex - 1)
+          //   useEditor.setState({ acindex: next })
+          //   return
+          // }
           trackselection(mods.shift)
           if (mods.ctrl) {
             movexcursor(codeend)
@@ -251,10 +248,10 @@ export function EditorInput({
           useEditor.setState({ acindex: -1 })
         }}
         OK_BUTTON={() => {
-          if (acactive) {
-            acceptsuggestion()
-            return
-          }
+          // if (acactive) {
+          //   acceptsuggestion()
+          //   return
+          // }
           if (ispresent(codepage)) {
             cursorBeforeEditRef.current = tapeeditor.cursor
             codepage.insert(tapeeditor.cursor, `\n`)
@@ -264,10 +261,10 @@ export function EditorInput({
           }
         }}
         CANCEL_BUTTON={(mods) => {
-          if (acactive) {
-            useEditor.setState({ acindex: -1, autocompleteactive: false })
-            return
-          }
+          // if (acactive) {
+          //   useEditor.setState({ acindex: -1, autocompleteactive: false })
+          //   return
+          // }
           if (mods.shift || mods.alt || mods.ctrl) {
             registerterminalclose(SOFTWARE, player)
           } else {
