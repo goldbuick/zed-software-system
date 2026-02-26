@@ -8,10 +8,6 @@ import { useWriteText } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
-import {
-  EMPTY_AUTOCOMPLETE,
-  getautocomplete,
-} from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
@@ -63,28 +59,6 @@ export function TerminalComponent() {
     () => (inputstateactive ? tokenizeline(inputstate) : []),
     [inputstate, inputstateactive],
   )
-
-  // const autocomplete = useMemo(() => {
-  //   if (!inputstateactive) {
-  //     return EMPTY_AUTOCOMPLETE
-  //   }
-  //   const linewithnewline = inputstate + '\n'
-  //   const rows = [
-  //     {
-  //       start: 0,
-  //       code: linewithnewline,
-  //       end: inputstate.length,
-  //       tokens: linetokens,
-  //     },
-  //   ]
-  //   return getautocomplete(rows, tapeterminal.xcursor, 0, autocompletewords)
-  // }, [
-  //   inputstateactive,
-  //   inputstate,
-  //   tapeterminal.xcursor,
-  //   linetokens,
-  //   autocompletewords,
-  // ])
 
   return (
     <>

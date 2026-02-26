@@ -1,5 +1,5 @@
 import type { IToken } from 'chevrotain'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   apierror,
   registerterminalclose,
@@ -13,13 +13,18 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
-import { useTape, useTerminal } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
+import {
+  AUTO_COMPLETE,
+  EMPTY_AUTOCOMPLETE,
+  drawautocomplete,
+  getautocomplete,
+} from 'zss/screens/tape/autocomplete'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
@@ -31,10 +36,9 @@ import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
-  computeTerminalSelection,
-  drawTerminalCursor,
-  drawTerminalSelection,
-  highlightTerminalInput,
+  computeterminalselection,
+  drawterminalcursor,
+  drawterminalselection,
   inputstateswitch,
   trackselection,
 } from './terminalinputhelpers'
@@ -49,8 +53,6 @@ type TerminalInputProps = {
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
-  autocomplete: AUTO_COMPLETE
-  wordcolors: Map<string, number>
   linetokens?: IToken[]
 }
 
@@ -59,8 +61,6 @@ export function TerminalInput({
   voice2text,
   tapeycursor,
   logrowtotalheight,
-  autocomplete,
-  wordcolors,
   linetokens,
 }: TerminalInputProps) {
   const blink = useBlink()
@@ -77,7 +77,7 @@ export function TerminalInput({
   // --- selection ---
 
   const { ii1, iic, hasselection, inputstateselected } =
-    computeTerminalSelection(
+    computeterminalselection(
       tapeterminal.xcursor,
       tapeterminal.xselect,
       tapeterminal.yselect,
@@ -98,8 +98,22 @@ export function TerminalInput({
 
   // --- autocomplete ---
 
-  const acactive =
-    tapeterminal.autocompleteactive && autocomplete.suggestions.length > 0
+  const zsswords = useGadgetClient((state) => state.zsswords)
+  const autocomplete = useMemo(() => {
+    if (!inputstateactive) {
+      return EMPTY_AUTOCOMPLETE
+    }
+    const linewithnewline = inputstate + '\n'
+    const rows = [
+      {
+        start: 0,
+        code: linewithnewline,
+        end: inputstate.length,
+        tokens: linetokens,
+      },
+    ]
+    return getautocomplete(rows, tapeterminal.xcursor, 0, zsswords)
+  }, [inputstateactive, inputstate, tapeterminal.xcursor, linetokens, zsswords])
 
   function acceptsuggestion() {
     if (autocomplete.suggestions.length === 0) {
@@ -157,15 +171,7 @@ export function TerminalInput({
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
-  highlightTerminalInput(
-    inputstate,
-    edge.height - 1,
-    wordcolors,
-    context,
-    linetokens,
-  )
-
-  drawTerminalSelection(
+  drawterminalselection(
     tapeterminal.xcursor,
     tapeterminal.ycursor,
     tapeterminal.xselect,
@@ -173,23 +179,23 @@ export function TerminalInput({
     context,
   )
 
-  drawTerminalCursor(blink, tapeterminal.xcursor, tapeycursor, context)
+  drawterminalcursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
-  if (tapeterminal.autocompleteactive && autocomplete.suggestions.length > 0) {
-    const startx = edge.left + autocomplete.wordcol - 1
-    const starty = edge.top + edge.height - 1
-    drawautocomplete(
-      autocomplete,
-      tapeterminal.acindex,
-      startx,
-      starty,
-      edge,
-      context,
-      {},
-      wordcolors,
-      true,
-    )
-  }
+  // if (tapeterminal.autocompleteactive && autocomplete.suggestions.length > 0) {
+  //   const startx = edge.left + autocomplete.wordcol - 1
+  //   const starty = edge.top + edge.height - 1
+  //   drawautocomplete(
+  //     autocomplete,
+  //     tapeterminal.acindex,
+  //     startx,
+  //     starty,
+  //     edge,
+  //     context,
+  //     {},
+  //     undefined,
+  //     true,
+  //   )
+  // }
 
   // --- speech to text ---
 

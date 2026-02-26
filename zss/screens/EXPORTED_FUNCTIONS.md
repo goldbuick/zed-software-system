@@ -204,7 +204,7 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
   - Editor frame/wrapper component
   - Provides editor container UI
 
-### `editor/colors.tsx`
+### `tape/colors.ts`
 
 #### Syntax Highlighting Constants
 
@@ -480,9 +480,9 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 | | `terminal/item.tsx` | `TapeTerminalItem()`, `TapeTerminalActiveItem()` |
 | | `terminal/*.tsx` | Terminal action components (runit, copyit, openit, etc.) |
 | **Editor** | `editor/component.tsx` | `TapeEditor()` - Code editor |
-| | `editor/colors.tsx` | 20+ color constants, syntax highlighting functions |
 | | `editor/*.tsx` | Editor UI components (rows, input, frame) |
 | **Tape** | `tape/layout.tsx` | `TapeLayout()` - Layout component |
+| | `tape/colors.ts` | 20+ color constants, syntax highlighting functions |
 | | `tape/common.ts` | Constants, types, utility functions for tape/editor |
 | | `tape/*.tsx` | Backplate, blinker components |
 | **Scroll** | `scroll/component.tsx` | `Scroll()` - Scrollable panel |

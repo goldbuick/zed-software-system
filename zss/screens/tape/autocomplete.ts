@@ -1,3 +1,4 @@
+import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE } from 'zss/mapping/types'
 import {
@@ -9,28 +10,6 @@ import {
 import { COLOR } from 'zss/words/types'
 
 import { EDITOR_CODE_ROW } from './common'
-
-export type AUTO_COMPLETE_CATEGORY =
-  | 'command'
-  | 'flag'
-  | 'stat'
-  | 'kind'
-  | 'color'
-  | 'dir'
-  | 'dirmod'
-  | 'expr'
-
-/** Words per category for autocomplete. Ensures each category has a word list. */
-export type AUTO_COMPLETE_WORDS = {
-  command: string[]
-  flag: string[]
-  stat: string[]
-  kind: string[]
-  color: string[]
-  dir: string[]
-  dirmod: string[]
-  expr: string[]
-}
 
 export type AUTO_COMPLETE = {
   suggestions: string[]
@@ -45,16 +24,6 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   wordcol: 0,
   wordstart: 0,
 }
-
-// const ROM_CATEGORIES = [
-//   'flag',
-//   'stat',
-//   'color',
-//   'dir',
-//   'dirmod',
-//   'expr',
-//   'command',
-// ]
 
 const MAX_SUGGESTIONS = 8
 
@@ -74,7 +43,7 @@ function filtersuggestions(prefix: string, words: string[]): string[] {
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
-  words: AUTO_COMPLETE_WORDS,
+  words: GADGET_ZSS_WORDS,
 ): MAYBE<AUTO_COMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
@@ -116,14 +85,25 @@ function getautocompletefromtokens(
         switch (prev?.tokenTypeIdx) {
           case lexer.command.tokenTypeIdx:
             return {
-              suggestions: filtersuggestions(prefix, words.command),
+              suggestions: filtersuggestions(prefix, [
+                ...Object.keys(words.clicommands),
+                ...Object.keys(words.loadercommands),
+                ...Object.keys(words.runtimecommands),
+              ]),
               prefix,
               wordcol,
               wordstart,
             }
           case lexer.stat.tokenTypeIdx:
             return {
-              suggestions: filtersuggestions(prefix, words.stat),
+              suggestions: filtersuggestions(prefix, [
+                ...words.statsboard,
+                ...words.statshelper,
+                ...words.statssender,
+                ...words.statsinteraction,
+                ...words.statsboolean,
+                ...words.statsconfig,
+              ]),
               prefix,
               wordcol,
               wordstart,
@@ -131,13 +111,19 @@ function getautocompletefromtokens(
           default:
             return {
               suggestions: filtersuggestions(prefix, [
-                ...words.flag,
-                ...words.stat,
-                ...words.kind,
-                ...words.color,
-                ...words.dir,
-                ...words.dirmod,
-                ...words.expr,
+                ...words.flags,
+                ...words.statsboard,
+                ...words.statshelper,
+                ...words.statssender,
+                ...words.statsinteraction,
+                ...words.statsboolean,
+                ...words.statsconfig,
+                ...words.kinds,
+                ...words.altkinds,
+                ...words.colors,
+                ...words.dirs,
+                ...words.dirmods,
+                ...words.exprs,
               ]),
               prefix,
               wordcol,
@@ -180,7 +166,7 @@ export function getautocomplete(
   rows: EDITOR_CODE_ROW[],
   cursor: number,
   ycursor: number,
-  words: AUTO_COMPLETE_WORDS,
+  words: GADGET_ZSS_WORDS,
 ): AUTO_COMPLETE {
   const row = rows[ycursor]
   if (!row) {
@@ -257,8 +243,6 @@ export function drawautocomplete(
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
-  words: AUTO_COMPLETE_WORDS,
-  wordcolors?: Map<string, number>,
   drawabove?: boolean,
 ) {
   if (ac.suggestions.length === 0) {
@@ -311,16 +295,16 @@ export function drawautocomplete(
     )
 
     const bufindex = rowstart + y * context.width
-    applysuggestioncolors(
-      bufindex,
-      textoffset,
-      text,
-      ac.suggestions[i],
-      selected ? AC_SEL_FG : AC_FG,
-      bg,
-      wordcolors,
-      context,
-    )
+    // applysuggestioncolors(
+    //   bufindex,
+    //   textoffset,
+    //   text,
+    //   ac.suggestions[i],
+    //   selected ? AC_SEL_FG : AC_FG,
+    //   bg,
+    //   wordcolors,
+    //   context,
+    // )
 
     if (selected) {
       const hint = '' //romhintfor(ac.suggestions[i], words)
