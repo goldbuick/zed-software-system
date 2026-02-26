@@ -1,6 +1,6 @@
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
-import { MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -163,13 +163,11 @@ function getautocompletefromtokens(
 }
 
 export function getautocomplete(
-  rows: EDITOR_CODE_ROW[],
+  row: MAYBE<EDITOR_CODE_ROW>,
   cursor: number,
-  ycursor: number,
   words: GADGET_ZSS_WORDS,
 ): AUTO_COMPLETE {
-  const row = rows[ycursor]
-  if (!row) {
+  if (!ispresent(row)) {
     return EMPTY_AUTOCOMPLETE
   }
   return (

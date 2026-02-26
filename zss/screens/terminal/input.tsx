@@ -1,4 +1,3 @@
-import type { IToken } from 'chevrotain'
 import { useEffect, useMemo } from 'react'
 import {
   apierror,
@@ -40,6 +39,7 @@ import {
   drawterminalcursor,
   drawterminalselection,
   inputstateswitch,
+  tokenizeline,
   trackselection,
 } from './terminalinputhelpers'
 import {
@@ -53,7 +53,6 @@ type TerminalInputProps = {
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
-  linetokens?: IToken[]
 }
 
 export function TerminalInput({
@@ -61,18 +60,22 @@ export function TerminalInput({
   voice2text,
   tapeycursor,
   logrowtotalheight,
-  linetokens,
 }: TerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeterminal = useTerminal()
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
 
+  // autocomplete and hints state
+  const autocompleteactive = useTape((state) => state.autocompleteactive)
+  const hintlookup = useTape((state) => state.hintlookup)
+
   const player = registerreadplayer()
   const edge = textformatreadedges(context)
 
   const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
   const inputstateactive = tapeterminal.ycursor === 0
+  const inputlinetokens = useMemo(() => tokenizeline(inputstate), [inputstate])
 
   // --- selection ---
 
@@ -105,19 +108,22 @@ export function TerminalInput({
     }
     const linewithnewline = inputstate + '\n'
     return getautocomplete(
-      [
-        {
-          start: 0,
-          code: linewithnewline,
-          end: inputstate.length,
-          tokens: linetokens,
-        },
-      ],
+      {
+        start: 0,
+        code: linewithnewline,
+        end: inputstate.length,
+        tokens: inputlinetokens,
+      },
       tapeterminal.xcursor,
-      0,
       zsswords,
     )
-  }, [inputstateactive, inputstate, tapeterminal.xcursor, linetokens, zsswords])
+  }, [
+    inputstateactive,
+    inputstate,
+    tapeterminal.xcursor,
+    inputlinetokens,
+    zsswords,
+  ])
 
   function acceptsuggestion() {
     if (autocomplete.suggestions.length === 0) {
@@ -170,19 +176,15 @@ export function TerminalInput({
   context.active.color = COLOR.WHITE
   tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
 
-  const inputline = inputstate.padEnd(edge.width, ' ')
   setuplogitem(false, 0, edge.height - 1, context)
+  const yoffset = context.y * context.width
+  const inputline = inputstate.padEnd(edge.width, ' ')
+
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
   // apply token colors
-  applycodetokencolors(
-    tapeterminal.ycursor * context.width,
-    0,
-    edge.width,
-    linetokens ?? [],
-    context,
-  )
+  applycodetokencolors(0, yoffset, edge.width, inputlinetokens, context)
 
   drawterminalselection(
     tapeterminal.xcursor,
@@ -336,7 +338,7 @@ export function TerminalInput({
           }
         }}
         MOVE_UP={(mods) => {
-          if (acactive) {
+          if (autocompleteactive) {
             useTerminal.setState({
               acindex: Math.min(
                 autocomplete.suggestions.length - 1,
@@ -354,7 +356,7 @@ export function TerminalInput({
           }
         }}
         MOVE_DOWN={(mods) => {
-          if (acactive) {
+          if (autocompleteactive) {
             useTerminal.setState({
               acindex: Math.max(0, tapeterminal.acindex - 1),
             })
@@ -369,7 +371,7 @@ export function TerminalInput({
           }
         }}
         OK_BUTTON={() => {
-          if (acactive) {
+          if (autocompleteactive) {
             acceptsuggestion()
             return
           }
@@ -404,8 +406,8 @@ export function TerminalInput({
           }
         }}
         CANCEL_BUTTON={() => {
-          if (acactive) {
-            useTerminal.setState({ acindex: -1, autocompleteactive: false })
+          if (autocompleteactive) {
+            useTape.setState({ autocompleteactive: false })
             return
           }
           registerterminalclose(SOFTWARE, player)
@@ -428,7 +430,7 @@ export function TerminalInput({
               } else {
                 resettoend()
               }
-              useTerminal.setState({ acindex: 0 })
+              useTape.setState({ autocompleteactive: false })
               break
             case 'backspace':
               if (inputstateactive) {
@@ -440,7 +442,7 @@ export function TerminalInput({
               } else {
                 resettoend()
               }
-              useTerminal.setState({ acindex: 0 })
+              useTape.setState({ autocompleteactive: false })
               break
             default:
               if (mods.ctrl) {
@@ -529,7 +531,7 @@ export function TerminalInput({
                 } else {
                   resettoend()
                 }
-                useTerminal.setState({ acindex: 0 })
+                useTape.setState({ autocompleteactive: false })
               }
               break
           }

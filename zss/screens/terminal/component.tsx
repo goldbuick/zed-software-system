@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -15,7 +15,6 @@ import { textformatreadedges } from 'zss/words/textformat'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
-import { tokenizeline } from './terminalinputhelpers'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -53,13 +52,6 @@ export function TerminalComponent() {
   // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
 
-  const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
-  const inputstateactive = tapeterminal.ycursor === 0
-  const linetokens = useMemo(
-    () => (inputstateactive ? tokenizeline(inputstate) : []),
-    [inputstate, inputstateactive],
-  )
-
   return (
     <>
       <TapeBackPlate />
@@ -83,7 +75,6 @@ export function TerminalComponent() {
             voice2text={voice2text}
             tapeycursor={tapeycursor}
             logrowtotalheight={logsrowtotalheight}
-            linetokens={linetokens}
           />
         )}
       </TapeTerminalContext.Provider>

@@ -391,8 +391,8 @@ export function parsestatformat(image: string): string[] {
  * Returns the index of the token under the cursor, or -1.
  */
 export function applycodetokencolors(
-  index: number,
   xoffset: number,
+  yoffset: number,
   rightedge: number,
   tokens: IToken[],
   context: WRITE_TEXT_CONTEXT,
@@ -410,7 +410,7 @@ export function applycodetokencolors(
     if (token.tokenTypeIdx === lexer.command_ticker.tokenTypeIdx) {
       const nameLen = 6 // "ticker"
       clippedapplycolortoindexes(
-        index,
+        yoffset,
         rightedge,
         left,
         left + nameLen - 1,
@@ -420,7 +420,7 @@ export function applycodetokencolors(
       )
       if (left + nameLen <= right) {
         clippedapplycolortoindexes(
-          index,
+          yoffset,
           rightedge,
           left + nameLen,
           right,
@@ -436,7 +436,7 @@ export function applycodetokencolors(
     if (token.tokenTypeIdx === lexer.command_toast.tokenTypeIdx) {
       const nameLen = 5 // "toast"
       clippedapplycolortoindexes(
-        index,
+        yoffset,
         rightedge,
         left,
         left + nameLen - 1,
@@ -446,7 +446,7 @@ export function applycodetokencolors(
       )
       if (left + nameLen <= right) {
         clippedapplycolortoindexes(
-          index,
+          yoffset,
           rightedge,
           left + nameLen,
           right,
@@ -470,7 +470,7 @@ export function applycodetokencolors(
           case STAT_TYPE.CHARSET:
           case STAT_TYPE.PALETTE:
             clippedapplycolortoindexes(
-              index,
+              yoffset,
               rightedge,
               left,
               right,
@@ -492,7 +492,7 @@ export function applycodetokencolors(
           case STAT_TYPE.COLOREDIT: {
             const [first] = words
             clippedapplycolortoindexes(
-              index,
+              yoffset,
               rightedge,
               left,
               left + first.length,
@@ -502,7 +502,7 @@ export function applycodetokencolors(
             )
             if (words.length > 1) {
               clippedapplycolortoindexes(
-                index,
+                yoffset,
                 rightedge,
                 left + first.length + 1,
                 right,
@@ -515,7 +515,7 @@ export function applycodetokencolors(
           }
           default:
             clippedapplycolortoindexes(
-              index,
+              yoffset,
               rightedge,
               left,
               right,
@@ -529,7 +529,7 @@ export function applycodetokencolors(
       }
       case ZSS_TYPE_SYMBOL:
         clippedapplycolortoindexes(
-          index,
+          yoffset,
           rightedge,
           left,
           right,
@@ -543,7 +543,7 @@ export function applycodetokencolors(
         if (isarray(wordcolor)) {
           for (let c = 0; c < wordcolor.length; ++c) {
             clippedapplycolortoindexes(
-              index,
+              yoffset,
               rightedge,
               left + c,
               right + c,
@@ -554,7 +554,7 @@ export function applycodetokencolors(
           }
         } else {
           clippedapplycolortoindexes(
-            index,
+            yoffset,
             rightedge,
             left,
             right,
@@ -567,7 +567,7 @@ export function applycodetokencolors(
       }
       default:
         clippedapplycolortoindexes(
-          index,
+          yoffset,
           rightedge,
           left,
           right,

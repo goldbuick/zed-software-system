@@ -27,8 +27,6 @@ export const useGadgetClient = create<{
   layercache: Record<string, LAYER[]>
   slim: FORMAT_OBJECT
   zsswords: GADGET_ZSS_WORDS
-  lookup: MAYBE<ROM_LOOKUP>
-  lookupaddress: MAYBE<string>
 }>(() => ({
   desync: false,
   zsswords: {
@@ -67,8 +65,6 @@ export const useGadgetClient = create<{
   },
   layercache: {},
   slim: [],
-  lookup: undefined,
-  lookupaddress: undefined,
 }))
 
 export type TAPE_ROW = [string, string, ...any[]]
@@ -101,6 +97,8 @@ export const useTape = create<{
     type: string
     title: string
   }
+  autocompleteactive: boolean
+  hintlookup: string
   reset: () => void
 }>((set) => ({
   layout: TAPE_DISPLAY.TOP,
@@ -119,6 +117,8 @@ export const useTape = create<{
     type: '',
     title: '',
   },
+  autocompleteactive: false,
+  hintlookup: '',
   reset() {
     set({
       layout: TAPE_DISPLAY.TOP,
@@ -136,6 +136,7 @@ export const useTape = create<{
         type: '',
         title: '',
       },
+      lookupaddress: undefined,
     })
   },
 }))
