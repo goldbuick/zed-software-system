@@ -1,6 +1,5 @@
 import type { IToken } from 'chevrotain'
 import * as lexer from 'zss/lang/lexer'
-import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
 import {
@@ -382,16 +381,6 @@ ZSS_MUSIC_MAP.set(';', ZSS_TYPE_SYMBOL)
 // Editor row token coloring (shared by editorrows)
 // ---------------------------------------------------------------------------
 
-export type EditorRowTokenColorsParams = {
-  row: { start: number; end: number; tokens?: IToken[] }
-  index: number
-  edge: { right: number }
-  context: WRITE_TEXT_CONTEXT
-  xoffset: number
-  active: boolean
-  cursor: number
-}
-
 export function parsestatformat(image: string): string[] {
   const [first] = image.substring(1).split(';')
   return first.split(' ')
@@ -401,41 +390,28 @@ export function parsestatformat(image: string): string[] {
  * Applies syntax highlighting for a single editor row's tokens.
  * Returns the index of the token under the cursor, or -1.
  */
-export function applyEditorRowTokenColors({
-  row,
-  index,
-  edge,
-  context,
-  xoffset,
-  active,
-  cursor,
-}: EditorRowTokenColorsParams): number {
-  let activetokenidx = -1
-  const cursorcolumn = clamp(cursor - row.start, 1, row.end - row.start)
-  if (!ispresent(row.tokens)) {
-    return activetokenidx
-  }
-  for (let t = 0; t < row.tokens.length; ++t) {
-    const token = row.tokens[t]
-    if (
-      active &&
-      cursorcolumn >= (token.startColumn ?? 1) &&
-      cursorcolumn <= (token.endColumn ?? 1)
-    ) {
-      activetokenidx = t
-    }
+export function applycodetokencolors(
+  index: number,
+  xoffset: number,
+  rightedge: number,
+  tokens: IToken[],
+  context: WRITE_TEXT_CONTEXT,
+) {
+  for (let t = 0; t < tokens.length; ++t) {
+    const token = tokens[t]
     const left = (token.startColumn ?? 1) - 1 - xoffset
     const right = (token.endColumn ?? 1) - 1 - xoffset
     const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
     if (!ispresent(maybecolor)) {
       continue
     }
+
     // #ticker <content>: "ticker" = dkgreen, content = green
     if (token.tokenTypeIdx === lexer.command_ticker.tokenTypeIdx) {
       const nameLen = 6 // "ticker"
       clippedapplycolortoindexes(
         index,
-        edge.right,
+        rightedge,
         left,
         left + nameLen - 1,
         ZSS_TYPE_COMMAND,
@@ -445,7 +421,7 @@ export function applyEditorRowTokenColors({
       if (left + nameLen <= right) {
         clippedapplycolortoindexes(
           index,
-          edge.right,
+          rightedge,
           left + nameLen,
           right,
           ZSS_TYPE_TEXT,
@@ -455,12 +431,13 @@ export function applyEditorRowTokenColors({
       }
       continue
     }
+
     // #toast <content>: "toast" = dkgreen, content = green
     if (token.tokenTypeIdx === lexer.command_toast.tokenTypeIdx) {
       const nameLen = 5 // "toast"
       clippedapplycolortoindexes(
         index,
-        edge.right,
+        rightedge,
         left,
         left + nameLen - 1,
         ZSS_TYPE_COMMAND,
@@ -470,7 +447,7 @@ export function applyEditorRowTokenColors({
       if (left + nameLen <= right) {
         clippedapplycolortoindexes(
           index,
-          edge.right,
+          rightedge,
           left + nameLen,
           right,
           ZSS_TYPE_TEXT,
@@ -480,6 +457,7 @@ export function applyEditorRowTokenColors({
       }
       continue
     }
+
     switch (maybecolor) {
       case ZSS_TYPE_STATNAME: {
         const words = parsestatformat(token.image ?? '')
@@ -493,7 +471,7 @@ export function applyEditorRowTokenColors({
           case STAT_TYPE.PALETTE:
             clippedapplycolortoindexes(
               index,
-              edge.right,
+              rightedge,
               left,
               right,
               ZSS_TYPE_STATNAME,
@@ -515,7 +493,7 @@ export function applyEditorRowTokenColors({
             const [first] = words
             clippedapplycolortoindexes(
               index,
-              edge.right,
+              rightedge,
               left,
               left + first.length,
               ZSS_TYPE_STATNAME,
@@ -525,7 +503,7 @@ export function applyEditorRowTokenColors({
             if (words.length > 1) {
               clippedapplycolortoindexes(
                 index,
-                edge.right,
+                rightedge,
                 left + first.length + 1,
                 right,
                 ZSS_TYPE_NUMBER,
@@ -538,7 +516,7 @@ export function applyEditorRowTokenColors({
           default:
             clippedapplycolortoindexes(
               index,
-              edge.right,
+              rightedge,
               left,
               right,
               ZSS_TYPE_ERROR_LINE,
@@ -552,7 +530,7 @@ export function applyEditorRowTokenColors({
       case ZSS_TYPE_SYMBOL:
         clippedapplycolortoindexes(
           index,
-          edge.right,
+          rightedge,
           left,
           right,
           maybecolor,
@@ -566,7 +544,7 @@ export function applyEditorRowTokenColors({
           for (let c = 0; c < wordcolor.length; ++c) {
             clippedapplycolortoindexes(
               index,
-              edge.right,
+              rightedge,
               left + c,
               right + c,
               wordcolor[c],
@@ -577,7 +555,7 @@ export function applyEditorRowTokenColors({
         } else {
           clippedapplycolortoindexes(
             index,
-            edge.right,
+            rightedge,
             left,
             right,
             wordcolor,
@@ -590,7 +568,7 @@ export function applyEditorRowTokenColors({
       default:
         clippedapplycolortoindexes(
           index,
-          edge.right,
+          rightedge,
           left,
           right,
           maybecolor,
@@ -600,5 +578,4 @@ export function applyEditorRowTokenColors({
         break
     }
   }
-  return activetokenidx
 }

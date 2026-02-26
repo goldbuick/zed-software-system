@@ -1,19 +1,14 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
-import { romread } from 'zss/feature/rom'
 import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
-import * as lexer from 'zss/lang/lexer'
-import { CodeNode, NODE } from 'zss/lang/visitor'
-import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
 import {
   ZSS_TYPE_ERROR,
   ZSS_TYPE_ERROR_LINE,
   ZSS_TYPE_LINE,
-  applyEditorRowTokenColors,
-  parsestatformat,
+  applycodetokencolors,
 } from 'zss/screens/tape/colors'
 import {
   BG_ACTIVE,
@@ -23,7 +18,6 @@ import {
   bgcolor,
   setupeditoritem,
 } from 'zss/screens/tape/common'
-import { statformat, stattypestring } from 'zss/words/stats'
 import {
   clippedapplybgtoindexes,
   clippedapplycolortoindexes,
@@ -33,9 +27,9 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-function setlookupaddress(address: string) {
-  useGadgetClient.setState({ lookupaddress: address })
-}
+// function setlookupaddress(address: string) {
+//   useGadgetClient.setState({ lookupaddress: address })
+// }
 
 export type EditorRowsProps = {
   xcursor: number
@@ -176,20 +170,7 @@ export function EditorRows({
     )
 
     // apply token colors
-    const cursorcolumn = clamp(
-      tapeeditor.cursor - row.start,
-      1,
-      row.end - row.start,
-    )
-    const activetokenidx = applyEditorRowTokenColors({
-      row,
-      index,
-      edge,
-      context,
-      xoffset,
-      active,
-      cursor: tapeeditor.cursor,
-    })
+    applycodetokencolors(index, xoffset, edge.right, row.tokens ?? [], context)
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
@@ -215,160 +196,160 @@ export function EditorRows({
     }
 
     // render hints
-    if (active && ispresent(row.tokens)) {
-      let node: MAYBE<CodeNode>
-      // pick first, or IF
-      if (ispresent(row.asts)) {
-        for (let i = 0; i < (row.asts?.length ?? 0); ++i) {
-          if (row.asts[i].type === NODE.IF) {
-            node = row.asts[i]
-          }
-        }
-        if (!ispresent(node)) {
-          node = row.asts.find((el) => cursorcolumn <= (el.endColumn ?? 0))
-        }
-      }
+    // if (active && ispresent(row.tokens)) {
+    //   let node: MAYBE<CodeNode>
+    //   // pick first, or IF
+    //   if (ispresent(row.asts)) {
+    //     for (let i = 0; i < (row.asts?.length ?? 0); ++i) {
+    //       if (row.asts[i].type === NODE.IF) {
+    //         node = row.asts[i]
+    //       }
+    //     }
+    //     if (!ispresent(node)) {
+    //       node = row.asts.find((el) => cursorcolumn <= (el.endColumn ?? 0))
+    //     }
+    //   }
 
-      // scan for hint category indicator
-      for (let c = activetokenidx; c >= 0; --c) {
-        const prevtoken = row.tokens[c - 1]
-        const token = row.tokens[c]
-        const nexttoken = row.tokens[c + 1]
-        switch (token.tokenTypeIdx) {
-          case lexer.command.tokenTypeIdx:
-          case lexer.command_do.tokenTypeIdx:
-          case lexer.command_if.tokenTypeIdx:
-          case lexer.command_else.tokenTypeIdx:
-          case lexer.command_ticker.tokenTypeIdx:
-          case lexer.command_toast.tokenTypeIdx:
-          case lexer.stat.tokenTypeIdx:
-          case lexer.label.tokenTypeIdx:
-          case lexer.comment.tokenTypeIdx:
-          case lexer.hyperlink.tokenTypeIdx:
-          case lexer.query.tokenTypeIdx:
-          case lexer.divide.tokenTypeIdx:
-          case lexer.text.tokenTypeIdx:
-            if (
-              token.tokenTypeIdx === lexer.divide.tokenTypeIdx &&
-              (!ispresent(node) || token.startColumn !== node.startColumn)
-            ) {
-              continue
-            }
-            break
-          default:
-            continue
-        }
-        switch (token.tokenTypeIdx) {
-          case lexer.command.tokenTypeIdx: {
-            setlookupaddress(`editor:command:${nexttoken.image}`)
-            break
-          }
-          case lexer.command_do.tokenTypeIdx: {
-            setlookupaddress(`editor:command:do`)
-            break
-          }
-          case lexer.command_if.tokenTypeIdx: {
-            setlookupaddress(
-              prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
-                ? `editor:command:elseif`
-                : `editor:command:if`,
-            )
-            break
-          }
-          case lexer.command_else.tokenTypeIdx: {
-            setlookupaddress(
-              nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
-                ? `editor:command:elseif`
-                : `editor:command:else`,
-            )
-            break
-          }
-          case lexer.command_ticker.tokenTypeIdx: {
-            setlookupaddress(`editor:command:ticker`)
-            break
-          }
-          case lexer.command_toast.tokenTypeIdx: {
-            setlookupaddress(`editor:command:toast`)
-            break
-          }
-          case lexer.stat.tokenTypeIdx: {
-            const words = parsestatformat(token.image)
-            const statinfo = statformat('', words, !!token.payload)
-            const statname = (words[0] ?? '').toLowerCase().trim()
-            if (statname && ispresent(romread(`editor:stat:${statname}`))) {
-              setlookupaddress(`editor:stat:${statname}`)
-            } else {
-              setlookupaddress(`editor:stat:${stattypestring(statinfo.type)}`)
-            }
-            break
-          }
-          case lexer.label.tokenTypeIdx: {
-            setlookupaddress(`editor:label`)
-            break
-          }
-          case lexer.comment.tokenTypeIdx: {
-            setlookupaddress(`editor:comment`)
-            break
-          }
-          case lexer.hyperlink.tokenTypeIdx: {
-            // scan tokens until hyperlink text
-            setlookupaddress(`editor:hyperlink`)
-            break
-          }
-          case lexer.query.tokenTypeIdx: {
-            setlookupaddress(`editor:shorttry`)
-            break
-          }
-          case lexer.divide.tokenTypeIdx: {
-            setlookupaddress(`editor:shortgo`)
-            break
-          }
-          case lexer.text.tokenTypeIdx: {
-            const word = (token.image ?? '').toLowerCase().trim()
-            const wordCategories = [
-              'flag',
-              'stat',
-              'color',
-              'dir',
-              'dirmod',
-              'expr',
-            ]
-            let found = false
-            if (word) {
-              for (const cat of wordCategories) {
-                const addr = `editor:${cat}:${word}`
-                if (ispresent(romread(addr))) {
-                  setlookupaddress(addr)
-                  found = true
-                  break
-                }
-              }
-            }
-            if (!found) {
-              setlookupaddress(`editor:text`)
-            }
-            break
-          }
-        }
-        break
-      }
+    //   // scan for hint category indicator
+    //   for (let c = activetokenidx; c >= 0; --c) {
+    //     const prevtoken = row.tokens[c - 1]
+    //     const token = row.tokens[c]
+    //     const nexttoken = row.tokens[c + 1]
+    //     switch (token.tokenTypeIdx) {
+    //       case lexer.command.tokenTypeIdx:
+    //       case lexer.command_do.tokenTypeIdx:
+    //       case lexer.command_if.tokenTypeIdx:
+    //       case lexer.command_else.tokenTypeIdx:
+    //       case lexer.command_ticker.tokenTypeIdx:
+    //       case lexer.command_toast.tokenTypeIdx:
+    //       case lexer.stat.tokenTypeIdx:
+    //       case lexer.label.tokenTypeIdx:
+    //       case lexer.comment.tokenTypeIdx:
+    //       case lexer.hyperlink.tokenTypeIdx:
+    //       case lexer.query.tokenTypeIdx:
+    //       case lexer.divide.tokenTypeIdx:
+    //       case lexer.text.tokenTypeIdx:
+    //         if (
+    //           token.tokenTypeIdx === lexer.divide.tokenTypeIdx &&
+    //           (!ispresent(node) || token.startColumn !== node.startColumn)
+    //         ) {
+    //           continue
+    //         }
+    //         break
+    //       default:
+    //         continue
+    //     }
+    //     switch (token.tokenTypeIdx) {
+    //       case lexer.command.tokenTypeIdx: {
+    //         setlookupaddress(`editor:command:${nexttoken.image}`)
+    //         break
+    //       }
+    //       case lexer.command_do.tokenTypeIdx: {
+    //         setlookupaddress(`editor:command:do`)
+    //         break
+    //       }
+    //       case lexer.command_if.tokenTypeIdx: {
+    //         setlookupaddress(
+    //           prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
+    //             ? `editor:command:elseif`
+    //             : `editor:command:if`,
+    //         )
+    //         break
+    //       }
+    //       case lexer.command_else.tokenTypeIdx: {
+    //         setlookupaddress(
+    //           nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
+    //             ? `editor:command:elseif`
+    //             : `editor:command:else`,
+    //         )
+    //         break
+    //       }
+    //       case lexer.command_ticker.tokenTypeIdx: {
+    //         setlookupaddress(`editor:command:ticker`)
+    //         break
+    //       }
+    //       case lexer.command_toast.tokenTypeIdx: {
+    //         setlookupaddress(`editor:command:toast`)
+    //         break
+    //       }
+    //       case lexer.stat.tokenTypeIdx: {
+    //         const words = parsestatformat(token.image)
+    //         const statinfo = statformat('', words, !!token.payload)
+    //         const statname = (words[0] ?? '').toLowerCase().trim()
+    //         if (statname && ispresent(romread(`editor:stat:${statname}`))) {
+    //           setlookupaddress(`editor:stat:${statname}`)
+    //         } else {
+    //           setlookupaddress(`editor:stat:${stattypestring(statinfo.type)}`)
+    //         }
+    //         break
+    //       }
+    //       case lexer.label.tokenTypeIdx: {
+    //         setlookupaddress(`editor:label`)
+    //         break
+    //       }
+    //       case lexer.comment.tokenTypeIdx: {
+    //         setlookupaddress(`editor:comment`)
+    //         break
+    //       }
+    //       case lexer.hyperlink.tokenTypeIdx: {
+    //         // scan tokens until hyperlink text
+    //         setlookupaddress(`editor:hyperlink`)
+    //         break
+    //       }
+    //       case lexer.query.tokenTypeIdx: {
+    //         setlookupaddress(`editor:shorttry`)
+    //         break
+    //       }
+    //       case lexer.divide.tokenTypeIdx: {
+    //         setlookupaddress(`editor:shortgo`)
+    //         break
+    //       }
+    //       case lexer.text.tokenTypeIdx: {
+    //         const word = (token.image ?? '').toLowerCase().trim()
+    //         const wordCategories = [
+    //           'flag',
+    //           'stat',
+    //           'color',
+    //           'dir',
+    //           'dirmod',
+    //           'expr',
+    //         ]
+    //         let found = false
+    //         if (word) {
+    //           for (const cat of wordCategories) {
+    //             const addr = `editor:${cat}:${word}`
+    //             if (ispresent(romread(addr))) {
+    //               setlookupaddress(addr)
+    //               found = true
+    //               break
+    //             }
+    //           }
+    //         }
+    //         if (!found) {
+    //           setlookupaddress(`editor:text`)
+    //         }
+    //         break
+    //       }
+    //     }
+    //     break
+    //   }
 
-      console.info(lookupaddress)
+    //   console.info(lookupaddress)
 
-      // When a command token was detected to our left, show args hint from vm data (COMMAND_ARGS_SIGNATURES); otherwise show desc (with format codes)
-      // const commandName = lookupAddress?.startsWith('editor:command:')
-      //   ? lookupAddress.slice(17).toLowerCase().trim()
-      //   : ''
-      // const commandArgsHint =
-      //   commandName && commandMap ? (commandMap[commandName] ?? '') : ''
-      // if (commandArgsHint) {
-      //   writeplaintext(commandArgsHint, context, false)
-      // } else if (!commandName && isstring(lookup?.args)) {
-      //   writeplaintext(stripRomValue(lookup.args), context, false)
-      // } else if (!commandName && isstring(lookup?.desc)) {
-      //   tokenizeandwritetextformat(lookup.desc, context, false)
-      // }
-    }
+    //   // When a command token was detected to our left, show args hint from vm data (COMMAND_ARGS_SIGNATURES); otherwise show desc (with format codes)
+    //   // const commandName = lookupAddress?.startsWith('editor:command:')
+    //   //   ? lookupAddress.slice(17).toLowerCase().trim()
+    //   //   : ''
+    //   // const commandArgsHint =
+    //   //   commandName && commandMap ? (commandMap[commandName] ?? '') : ''
+    //   // if (commandArgsHint) {
+    //   //   writeplaintext(commandArgsHint, context, false)
+    //   // } else if (!commandName && isstring(lookup?.args)) {
+    //   //   writeplaintext(stripRomValue(lookup.args), context, false)
+    //   // } else if (!commandName && isstring(lookup?.desc)) {
+    //   //   tokenizeandwritetextformat(lookup.desc, context, false)
+    //   // }
+    // }
 
     // apply error and info meta
     const [maybeerror] = row.errors ?? []

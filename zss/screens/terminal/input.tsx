@@ -20,9 +20,7 @@ import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import {
-  AUTO_COMPLETE,
   EMPTY_AUTOCOMPLETE,
-  drawautocomplete,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
@@ -34,6 +32,8 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
+
+import { applycodetokencolors } from '../tape/colors'
 
 import {
   computeterminalselection,
@@ -104,15 +104,19 @@ export function TerminalInput({
       return EMPTY_AUTOCOMPLETE
     }
     const linewithnewline = inputstate + '\n'
-    const rows = [
-      {
-        start: 0,
-        code: linewithnewline,
-        end: inputstate.length,
-        tokens: linetokens,
-      },
-    ]
-    return getautocomplete(rows, tapeterminal.xcursor, 0, zsswords)
+    return getautocomplete(
+      [
+        {
+          start: 0,
+          code: linewithnewline,
+          end: inputstate.length,
+          tokens: linetokens,
+        },
+      ],
+      tapeterminal.xcursor,
+      0,
+      zsswords,
+    )
   }, [inputstateactive, inputstate, tapeterminal.xcursor, linetokens, zsswords])
 
   function acceptsuggestion() {
@@ -170,6 +174,15 @@ export function TerminalInput({
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
+
+  // apply token colors
+  applycodetokencolors(
+    tapeterminal.ycursor * context.width,
+    0,
+    edge.width,
+    linetokens ?? [],
+    context,
+  )
 
   drawterminalselection(
     tapeterminal.xcursor,
