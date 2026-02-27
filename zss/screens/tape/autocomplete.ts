@@ -260,8 +260,8 @@ function drawhinttext(
 }
 
 export function drawautocomplete(
-  ac: AUTO_COMPLETE,
-  acindex: number,
+  autocomplete: AUTO_COMPLETE,
+  autocompleteindex: number,
   px: number,
   py: number,
   edge: AutocompleteEdge,
@@ -269,13 +269,13 @@ export function drawautocomplete(
   words: GADGET_ZSS_WORDS,
   drawabove?: boolean,
 ) {
-  if (ac.suggestions.length === 0) {
+  if (autocomplete.suggestions.length === 0) {
     return
   }
 
-  const effectiveindex = acindex < 0 ? 0 : acindex
-  const numrows = ac.suggestions.length
-  const maxitemlen = ac.suggestions.reduce(
+  const effectiveindex = Math.max(0, autocompleteindex)
+  const numrows = autocomplete.suggestions.length
+  const maxitemlen = autocomplete.suggestions.reduce(
     (max, s) => Math.max(max, s.word.length),
     0,
   )
@@ -294,7 +294,7 @@ export function drawautocomplete(
   }
 
   const minY = drawabove ? edge.top : edge.top + 2
-  for (let i = 0; i < ac.suggestions.length; i++) {
+  for (let i = 0; i < autocomplete.suggestions.length; i++) {
     const y = yforindex(i)
     if (y >= edge.bottom || y < minY) {
       continue
@@ -303,14 +303,14 @@ export function drawautocomplete(
     const selected = i === effectiveindex
     const bg = selected ? AC_SEL_BG : AC_BG
 
-    const rowstart = Math.max(px, edge.left + 1)
+    const rowstart = Math.max(px, edge.left)
     const rowend = Math.min(px + itemwidth - 1, edge.right - 1)
     if (rowstart > rowend) {
       continue
     }
 
     const textoffset = rowstart - px
-    const fulltext = ` ${ac.suggestions[i].word} `
+    const fulltext = ` ${autocomplete.suggestions[i].word} `
       .padEnd(itemwidth, ' ')
       .substring(0, itemwidth)
     const text = fulltext.substring(
@@ -323,7 +323,7 @@ export function drawautocomplete(
       bufindex,
       textoffset,
       text,
-      ac.suggestions[i].word,
+      autocomplete.suggestions[i].word,
       selected ? AC_SEL_FG : AC_FG,
       bg,
       context,
@@ -331,7 +331,7 @@ export function drawautocomplete(
 
     if (selected) {
       let hint = ''
-      const suggestion = ac.suggestions[i]
+      const suggestion = autocomplete.suggestions[i]
       switch (suggestion.category) {
         case 'clicommands':
           // use the value from words.clicommands

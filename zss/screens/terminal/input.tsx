@@ -70,7 +70,7 @@ export function TerminalInput({
   // autocomplete and hints state
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const autocompleteactive = autocompleteindex >= 0
-  const hintlookup = useTape((state) => state.hintlookup)
+  const argslookup = useTape((state) => state.argslookup)
 
   const player = registerreadplayer()
   const edge = textformatreadedges(context)

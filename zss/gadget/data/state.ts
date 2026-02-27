@@ -97,7 +97,7 @@ export const useTape = create<{
     title: string
   }
   autocompleteindex: number
-  hintlookup: string
+  argslookup: string
   reset: () => void
 }>((set) => ({
   layout: TAPE_DISPLAY.TOP,
@@ -117,7 +117,7 @@ export const useTape = create<{
     title: '',
   },
   autocompleteindex: -1,
-  hintlookup: '',
+  argslookup: '',
   reset() {
     set({
       layout: TAPE_DISPLAY.TOP,
@@ -136,7 +136,7 @@ export const useTape = create<{
         title: '',
       },
       autocompleteindex: -1,
-      hintlookup: '',
+      argslookup: '',
     })
   },
 }))
