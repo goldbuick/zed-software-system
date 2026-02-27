@@ -1,4 +1,4 @@
-import { romread, stripRomValue } from 'zss/feature/rom'
+import type { COMMAND_ARGS_SIGNATURES } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
@@ -23,6 +23,8 @@ export type AUTO_COMPLETE = {
   prefix: string
   wordcol: number
   wordstart: number
+  checkforargshint: boolean
+  checkforargswords: string[]
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
@@ -30,6 +32,8 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   prefix: '',
   wordcol: 0,
   wordstart: 0,
+  checkforargshint: false,
+  checkforargswords: [],
 }
 
 const MAX_SUGGESTIONS = 8
@@ -101,6 +105,22 @@ function getautocompletefromtokens(
       --activetokenidx
     }
 
+    // detect command token to our left and first token after it (command name)
+    let commandTokenIdx = -1
+    for (let i = activetokenidx - 1; i >= 0; i--) {
+      if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
+        commandTokenIdx = i
+        break
+      }
+    }
+    const checkforargshint = commandTokenIdx >= 0
+    const tokensAfterCommandToCursor =
+      commandTokenIdx >= 0
+        ? tokens
+            .slice(commandTokenIdx + 1, activetokenidx + 1)
+            .map((t) => t.image ?? '')
+        : []
+
     // get token context
     const token = tokens[activetokenidx]
     const prev = tokens[activetokenidx - 1]
@@ -123,6 +143,8 @@ function getautocompletefromtokens(
               prefix,
               wordcol,
               wordstart,
+              checkforargshint,
+              checkforargswords: tokensAfterCommandToCursor,
             }
           case lexer.stat.tokenTypeIdx:
             return {
@@ -137,6 +159,8 @@ function getautocompletefromtokens(
               prefix,
               wordcol,
               wordstart,
+              checkforargshint,
+              checkforargswords: tokensAfterCommandToCursor,
             }
           default:
             return {
@@ -162,9 +186,10 @@ function getautocompletefromtokens(
               prefix,
               wordcol,
               wordstart,
+              checkforargshint,
+              checkforargswords: tokensAfterCommandToCursor,
             }
         }
-        break
       case lexer.stat.tokenTypeIdx:
         // only consider autocomplete for stats if we are in the editor
         break
@@ -261,6 +286,50 @@ function drawhinttext(
     AC_SEL_BG,
     context,
   )
+}
+
+/**
+ * Draws the list of argument signatures + hints for a command (e.g. above the terminal input).
+ * Each signature is one line: the trailing hint string for that signature.
+ */
+export function drawcommandarghint(
+  sigs: COMMAND_ARGS_SIGNATURES,
+  px: number,
+  py: number,
+  edge: AutocompleteEdge,
+  context: WRITE_TEXT_CONTEXT,
+  drawabove?: boolean,
+) {
+  if (!sigs?.length) {
+    return
+  }
+  const numrows = sigs.length
+  const drawbelow = !drawabove && py + 1 + numrows <= edge.bottom
+  const starty = drawabove
+    ? py - numrows
+    : drawbelow
+      ? py + 1
+      : Math.max(edge.top + 1, py - numrows - 1)
+  const minY = edge.top
+  const maxY = edge.bottom - 1
+
+  for (let i = 0; i < sigs.length; i++) {
+    const sig = sigs[i]
+    if (!Array.isArray(sig) || sig.length === 0) {
+      continue
+    }
+    const last = sig[sig.length - 1]
+    const hint = typeof last === 'string' ? last.trim() : ''
+    if (!hint) {
+      continue
+    }
+    const y = drawbelow ? starty + i : starty + numrows - 1 - i
+    if (y < minY || y > maxY) {
+      continue
+    }
+    const rowstart = Math.max(px, edge.left + 1)
+    drawhinttext(hint, rowstart, y, edge.right - 1, context)
+  }
 }
 
 export function drawautocomplete(
@@ -379,14 +448,9 @@ export function drawautocomplete(
           }
           break
         }
-        default: {
-          const rompath = `editor:${suggestion.category}:${suggestion.word}`
-          const rom = romread(rompath)
-          hint = rom
-            ? stripRomValue((rom.split('\n')[0] ?? '').replace(/^desc;/, ''))
-            : suggestion.category
+        default:
+          hint = suggestion.category
           break
-        }
       }
       if (hint) {
         const hintx = rowstart + text.length

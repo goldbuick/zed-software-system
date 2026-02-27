@@ -21,6 +21,7 @@ import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import {
   EMPTY_AUTOCOMPLETE,
   drawautocomplete,
+  drawcommandarghint,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
@@ -69,8 +70,6 @@ export function TerminalInput({
 
   // autocomplete and hints state
   const autocompleteindex = useTape((state) => state.autocompleteindex)
-  const autocompleteactive = autocompleteindex >= 0
-  const argslookup = useTape((state) => state.argslookup)
 
   const player = registerreadplayer()
   const edge = textformatreadedges(context)
@@ -142,6 +141,7 @@ export function TerminalInput({
       autocomplete.prefix.length,
       suggestion.word,
     )
+    useTape.setState({ autocompleteindex: -1 })
   }
 
   // --- inline helpers ---
@@ -196,7 +196,10 @@ export function TerminalInput({
 
   drawterminalcursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
-  if (autocompleteactive && autocomplete.suggestions.length > 0) {
+  const autocompleteactive =
+    autocompleteindex >= 0 && autocomplete.suggestions.length > 0
+
+  if (autocompleteactive) {
     const startx = edge.left + autocomplete.wordcol - 1
     const starty = edge.top + edge.height - 1
     drawautocomplete(
@@ -209,6 +212,24 @@ export function TerminalInput({
       zsswords,
       true,
     )
+  }
+
+  if (
+    autocomplete.checkforargshint &&
+    autocomplete.checkforargswords.length > 0
+  ) {
+    const [command] = autocomplete.checkforargswords
+    const maybecommandsigs =
+      command != null
+        ? (zsswords.clicommands[command] ??
+          zsswords.loadercommands[command] ??
+          zsswords.runtimecommands[command])
+        : undefined
+    if (ispresent(maybecommandsigs)) {
+      const startx = edge.left + autocomplete.wordcol - 1
+      const starty = edge.top + edge.height - 1
+      drawcommandarghint(maybecommandsigs, startx, starty, edge, context)
+    }
   }
 
   // --- speech to text ---
