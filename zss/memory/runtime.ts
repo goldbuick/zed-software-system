@@ -40,7 +40,7 @@ import {
 import {
   memoryensuresoftwarebook,
   memoryinitboard,
-  memorypickcodepagewithtype,
+  memorypickcodepagewithtypeandstat,
   memoryreadbookbysoftware,
   memoryreadelementstat,
   memoryreadflags,
@@ -348,7 +348,7 @@ function memoryapplysynthvoicefx(
 }
 
 export function memoryapplyboardsynthstats(board: MAYBE<BOARD>) {
-  const codepage = memorypickcodepagewithtype(
+  const codepage = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.BOARD,
     board?.id ?? '',
   )

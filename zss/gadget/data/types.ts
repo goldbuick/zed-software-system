@@ -1,3 +1,4 @@
+import type { COMMAND_ARGS_SIGNATURES } from 'zss/firmware'
 import { MAYBE } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
@@ -276,11 +277,11 @@ export type GADGET_STATE = {
   synthstate?: SYNTH_STATE
 }
 
-/** ZSS word lists and command-args hints per driver (from vm). */
+/** ZSS word lists and command-args signatures per driver (from vm). */
 export type GADGET_ZSS_WORDS = {
-  clicommands: Record<string, string>
-  loadercommands: Record<string, string>
-  runtimecommands: Record<string, string>
+  clicommands: Record<string, COMMAND_ARGS_SIGNATURES>
+  loadercommands: Record<string, COMMAND_ARGS_SIGNATURES>
+  runtimecommands: Record<string, COMMAND_ARGS_SIGNATURES>
   flags: string[]
   statsboard: string[]
   statshelper: string[]
@@ -288,8 +289,13 @@ export type GADGET_ZSS_WORDS = {
   statsinteraction: string[]
   statsboolean: string[]
   statsconfig: string[]
-  kinds: string[]
-  altkinds: string[]
+  objects: string[]
+  terrains: string[]
+  boards: string[]
+  palettes: string[]
+  charsets: string[]
+  loaders: string[]
+  categories: string[]
   colors: string[]
   dirs: string[]
   dirmods: string[]

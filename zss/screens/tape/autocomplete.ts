@@ -148,8 +148,12 @@ function getautocompletefromtokens(
                 ...tagwords(words.statsinteraction, 'stats'),
                 ...tagwords(words.statsboolean, 'stats'),
                 ...tagwords(words.statsconfig, 'stats'),
-                ...tagwords(words.kinds, 'kinds'),
-                ...tagwords(words.altkinds, 'altkinds'),
+                ...tagwords(words.objects, 'objects'),
+                ...tagwords(words.terrains, 'terrains'),
+                ...tagwords(words.boards, 'boards'),
+                ...tagwords(words.palettes, 'palettes'),
+                ...tagwords(words.charsets, 'charsets'),
+                ...tagwords(words.loaders, 'loaders'),
                 ...tagwords(words.colors, 'colors'),
                 ...tagwords(words.dirs, 'dirs'),
                 ...tagwords(words.dirmods, 'dirmods'),
@@ -333,10 +337,48 @@ export function drawautocomplete(
       let hint = ''
       const suggestion = autocomplete.suggestions[i]
       switch (suggestion.category) {
-        case 'clicommands':
-          // use the value from words.clicommands
-          hint = words.clicommands[suggestion.word]
+        case 'objects':
+          hint = 'object codepage'
           break
+        case 'terrains':
+          hint = 'terrain codepage'
+          break
+        case 'boards':
+          hint = 'board codepage'
+          break
+        case 'palettes':
+          hint = 'palette codepage'
+          break
+        case 'charsets':
+          hint = 'charset codepage'
+          break
+        case 'loaders':
+          hint = 'loader codepage'
+          break
+        case 'clicommands':
+        case 'loadercommands':
+        case 'runtimecommands': {
+          const sigs = words[suggestion.category]?.[suggestion.word]
+          if (sigs && Array.isArray(sigs)) {
+            const seen = new Set<string>()
+            for (const sig of sigs) {
+              if (!Array.isArray(sig) || sig.length === 0) {
+                continue
+              }
+              const last = sig[sig.length - 1]
+              if (typeof last === 'string') {
+                const trimmed = last.trim()
+                if (trimmed && !seen.has(trimmed)) {
+                  seen.add(trimmed)
+                }
+              }
+            }
+            if (seen.size > 0) {
+              hint = Array.from(seen).join(' | ')
+            }
+          }
+          break
+        }
         default: {
           const rompath = `editor:${suggestion.category}:${suggestion.word}`
           const rom = romread(rompath)

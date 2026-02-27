@@ -40,7 +40,7 @@ import {
 
 import {
   memoryinitboard,
-  memorypickcodepagewithtype,
+  memorypickcodepagewithtypeandstat,
   memoryreadboardbyaddress,
   memoryreadbookbysoftware,
   memoryreadelementstat,
@@ -212,7 +212,7 @@ export function memoryloginplayer(
 
   // fallback to placing on the title board
   if (!ispresent(currentboard)) {
-    const titlepage = memorypickcodepagewithtype(
+    const titlepage = memorypickcodepagewithtypeandstat(
       CODE_PAGE_TYPE.BOARD,
       MEMORY_LABEL.TITLE,
     )
@@ -230,7 +230,7 @@ export function memoryloginplayer(
   }
 
   // unable to find kind
-  const playerkind = memorypickcodepagewithtype(
+  const playerkind = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.OBJECT,
     MEMORY_LABEL.PLAYER,
   )
@@ -375,6 +375,6 @@ export function memoryreadplayeractive(player: string) {
 export function memoryreadplayerboard(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const address = memoryreadbookflag(mainbook, player, 'board') as string
-  const codepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
+  const codepage = memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.BOARD, address)
   return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
 }

@@ -265,8 +265,12 @@ export type ZSS_WORD_LIST_KEY = keyof Pick<
   | 'statsinteraction'
   | 'statsboolean'
   | 'statsconfig'
-  | 'kinds'
-  | 'altkinds'
+  | 'objects'
+  | 'terrains'
+  | 'boards'
+  | 'palettes'
+  | 'charsets'
+  | 'loaders'
   | 'colors'
   | 'dirs'
   | 'dirmods'
@@ -282,8 +286,12 @@ export const ZSS_WORD_LIST_COLOR_MAP: Record<ZSS_WORD_LIST_KEY, number> = {
   statsinteraction: ZSS_TYPE_STATNAME,
   statsboolean: ZSS_TYPE_STATNAME,
   statsconfig: ZSS_TYPE_STATNAME,
-  kinds: ZSS_TYPE_SYMBOL,
-  altkinds: ZSS_TYPE_SYMBOL,
+  objects: ZSS_TYPE_SYMBOL,
+  terrains: ZSS_TYPE_SYMBOL,
+  boards: ZSS_TYPE_SYMBOL,
+  palettes: ZSS_TYPE_SYMBOL,
+  charsets: ZSS_TYPE_SYMBOL,
+  loaders: ZSS_TYPE_SYMBOL,
   colors: ZSS_TYPE_COLOR,
   dirs: ZSS_TYPE_DIR,
   dirmods: ZSS_TYPE_DIR_MOD,

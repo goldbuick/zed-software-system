@@ -63,7 +63,7 @@ import {
 } from './types'
 
 import {
-  memorypickcodepagewithtype,
+  memorypickcodepagewithtypeandstat,
   memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
@@ -1062,7 +1062,7 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   // see if we have a valid charset
   if (isstring(board.charset)) {
     if (isstring(board.charsetpage)) {
-      const charset = memorypickcodepagewithtype(
+      const charset = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
         board.charset,
       )
@@ -1070,7 +1070,7 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
         delete board.charsetpage
       }
     } else {
-      const maybecharset = memorypickcodepagewithtype(
+      const maybecharset = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
         board.charset,
         true,
@@ -1086,7 +1086,7 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   // see if we have a valid palette
   if (isstring(board.palette)) {
     if (isstring(board.palettepage)) {
-      const palette = memorypickcodepagewithtype(
+      const palette = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
         board.palette,
       )
@@ -1094,7 +1094,7 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
         delete board.palettepage
       }
     } else {
-      const maybepalette = memorypickcodepagewithtype(
+      const maybepalette = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
         board.palette,
         true,

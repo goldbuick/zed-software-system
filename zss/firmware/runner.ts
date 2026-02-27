@@ -108,18 +108,37 @@ export function firmwaregetcommandargs(
   return undefined
 }
 
-/** First signature’s instruction string (last element), for hints. */
+/** Aggregate all signatures' instruction strings (last element), for hints. */
 export function firmwarecommandargshint(
   driver: DRIVER_TYPE,
   method: string,
 ): string {
   const sigs = firmwaregetcommandargs(driver, method)
-  const first = sigs?.[0]
-  if (!first?.length) {
+  if (!sigs?.length) {
     return ''
   }
-  const last = first[first.length - 1]
-  return typeof last === 'string' ? last : ''
+
+  const seen = new Set<string>()
+  for (const sig of sigs) {
+    if (!sig.length) {
+      continue
+    }
+    const last = sig[sig.length - 1]
+    if (typeof last === 'string') {
+      const trimmed = last.trim()
+      if (trimmed && !seen.has(trimmed)) {
+        seen.add(trimmed)
+      }
+    }
+  }
+
+  if (seen.size === 0) {
+    return ''
+  }
+
+  // Join multiple signatures' hints with separator so callers
+  // can display all supported forms in one line.
+  return Array.from(seen).join(' | ')
 }
 
 export function firmwareget(

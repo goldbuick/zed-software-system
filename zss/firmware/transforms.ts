@@ -7,7 +7,7 @@ import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
-  memorypickcodepagewithtype,
+  memorypickcodepagewithtypeandstat,
   memoryreadboardbyevaldir,
 } from 'zss/memory'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -69,7 +69,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         return 0
       }
       const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
-      const sourceboard = memorypickcodepagewithtype(
+      const sourceboard = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.BOARD,
         stat,
         true,
@@ -114,7 +114,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
       ])
-      const sourceboard = memorypickcodepagewithtype(
+      const sourceboard = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.BOARD,
         stat,
         true,

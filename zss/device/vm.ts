@@ -22,7 +22,7 @@ import {
 import { write, writeheader } from 'zss/feature/writeui'
 import {
   DRIVER_TYPE,
-  firmwarecommandargshint,
+  firmwaregetcommandargs,
   firmwarelistcommands,
 } from 'zss/firmware/runner'
 import {
@@ -37,6 +37,7 @@ import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryhasflags,
+  memorylistallcodepagewithtype,
   memorylistcodepagewithtype,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
@@ -53,7 +54,6 @@ import {
 } from 'zss/memory'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
-  memorylistcodepagebytype,
   memoryreadcodepage,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
@@ -337,26 +337,25 @@ const vm = createdevice(
         })
         break
       case 'zsswords': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const clicommands: Record<string, string> = {}
-        const loadercommands: Record<string, string> = {}
-        const runtimecommands: Record<string, string> = {}
+        const clicommands: GADGET_ZSS_WORDS['clicommands'] = {}
+        const loadercommands: GADGET_ZSS_WORDS['loadercommands'] = {}
+        const runtimecommands: GADGET_ZSS_WORDS['runtimecommands'] = {}
         for (const cmd of firmwarelistcommands(DRIVER_TYPE.CLI)) {
-          const hint = firmwarecommandargshint(DRIVER_TYPE.CLI, cmd)
-          if (hint) {
-            clicommands[cmd] = hint
+          const sigs = firmwaregetcommandargs(DRIVER_TYPE.CLI, cmd)
+          if (ispresent(sigs)) {
+            clicommands[cmd] = sigs
           }
         }
         for (const cmd of firmwarelistcommands(DRIVER_TYPE.LOADER)) {
-          const hint = firmwarecommandargshint(DRIVER_TYPE.LOADER, cmd)
-          if (hint) {
-            loadercommands[cmd] = hint
+          const sigs = firmwaregetcommandargs(DRIVER_TYPE.LOADER, cmd)
+          if (ispresent(sigs)) {
+            loadercommands[cmd] = sigs
           }
         }
         for (const cmd of firmwarelistcommands(DRIVER_TYPE.RUNTIME)) {
-          const hint = firmwarecommandargshint(DRIVER_TYPE.RUNTIME, cmd)
-          if (hint) {
-            runtimecommands[cmd] = hint
+          const sigs = firmwaregetcommandargs(DRIVER_TYPE.RUNTIME, cmd)
+          if (ispresent(sigs)) {
+            runtimecommands[cmd] = sigs
           }
         }
         const dirmods = [
@@ -393,19 +392,25 @@ const vm = createdevice(
           statsinteraction: STATS_INTERACTION,
           statsboolean: STATS_BOOLEAN,
           statsconfig: STATS_CONFIG,
-          kinds: [
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
-              (codepage) => memoryreadcodepagename(codepage),
-            ),
-            ...objectKeys(categoryconsts),
-          ],
-          altkinds: [
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.BOARD),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.PALETTE),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.CHARSET),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.LOADER),
-          ].map((codepage) => memoryreadcodepagename(codepage)),
+          objects: memorylistallcodepagewithtype(CODE_PAGE_TYPE.OBJECT).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          terrains: memorylistallcodepagewithtype(CODE_PAGE_TYPE.TERRAIN).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          boards: memorylistallcodepagewithtype(CODE_PAGE_TYPE.BOARD).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          palettes: memorylistallcodepagewithtype(CODE_PAGE_TYPE.PALETTE).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          charsets: memorylistallcodepagewithtype(CODE_PAGE_TYPE.CHARSET).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          loaders: memorylistallcodepagewithtype(CODE_PAGE_TYPE.LOADER).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          categories: [...objectKeys(categoryconsts)],
           colors: [...objectKeys(colorconsts)],
           dirs: [
             ...objectKeys(dirconsts).filter(
