@@ -175,7 +175,7 @@ export function EditorInput({
   //   strvaluesplice(
   //     autocomplete.wordstart,
   //     autocomplete.prefix.length,
-  //     suggestion,
+  //     suggestion.word,
   //   )
   // }
 

@@ -1,3 +1,4 @@
+import { romread, stripRomValue } from 'zss/feature/rom'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
@@ -12,8 +13,13 @@ import { COLOR } from 'zss/words/types'
 import { zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 
+export type AUTO_COMPLETE_SUGGESTION = {
+  word: string
+  category: string
+}
+
 export type AUTO_COMPLETE = {
-  suggestions: string[]
+  suggestions: AUTO_COMPLETE_SUGGESTION[]
   prefix: string
   wordcol: number
   wordstart: number
@@ -28,17 +34,40 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
 
 const MAX_SUGGESTIONS = 8
 
-function filtersuggestions(prefix: string, words: string[]): string[] {
+function filtersuggestions(
+  prefix: string,
+  items: AUTO_COMPLETE_SUGGESTION[],
+): AUTO_COMPLETE_SUGGESTION[] {
   if (prefix.length < 1) {
     return []
   }
   const lower = prefix.toLowerCase()
-  return [...new Set(words)]
-    .filter(
-      (w) => w.toLowerCase().startsWith(lower) && w.toLowerCase() !== lower,
-    )
-    .sort()
+  const seen = new Set<string>()
+  return items
+    .filter(({ word }) => {
+      const wl = word.toLowerCase()
+      if (seen.has(wl) || !wl.startsWith(lower) || wl === lower) {
+        return false
+      }
+      seen.add(wl)
+      return true
+    })
+    .sort((a, b) => a.word.localeCompare(b.word))
     .slice(0, MAX_SUGGESTIONS)
+}
+
+function tagwords(
+  words: string[],
+  category: string,
+): AUTO_COMPLETE_SUGGESTION[] {
+  return words.map((word) => ({ word, category }))
+}
+
+function tagrecordkeys(
+  rec: Record<string, unknown>,
+  category: string,
+): AUTO_COMPLETE_SUGGESTION[] {
+  return Object.keys(rec).map((word) => ({ word, category }))
 }
 
 function getautocompletefromtokens(
@@ -87,9 +116,9 @@ function getautocompletefromtokens(
           case lexer.command.tokenTypeIdx:
             return {
               suggestions: filtersuggestions(prefix, [
-                ...Object.keys(words.clicommands),
-                ...Object.keys(words.loadercommands),
-                ...Object.keys(words.runtimecommands),
+                ...tagrecordkeys(words.clicommands, 'clicommands'),
+                ...tagrecordkeys(words.loadercommands, 'loadercommands'),
+                ...tagrecordkeys(words.runtimecommands, 'runtimecommands'),
               ]),
               prefix,
               wordcol,
@@ -98,12 +127,12 @@ function getautocompletefromtokens(
           case lexer.stat.tokenTypeIdx:
             return {
               suggestions: filtersuggestions(prefix, [
-                ...words.statsboard,
-                ...words.statshelper,
-                ...words.statssender,
-                ...words.statsinteraction,
-                ...words.statsboolean,
-                ...words.statsconfig,
+                ...tagwords(words.statsboard, 'stats'),
+                ...tagwords(words.statshelper, 'stats'),
+                ...tagwords(words.statssender, 'stats'),
+                ...tagwords(words.statsinteraction, 'stats'),
+                ...tagwords(words.statsboolean, 'stats'),
+                ...tagwords(words.statsconfig, 'stats'),
               ]),
               prefix,
               wordcol,
@@ -112,19 +141,19 @@ function getautocompletefromtokens(
           default:
             return {
               suggestions: filtersuggestions(prefix, [
-                ...words.flags,
-                ...words.statsboard,
-                ...words.statshelper,
-                ...words.statssender,
-                ...words.statsinteraction,
-                ...words.statsboolean,
-                ...words.statsconfig,
-                ...words.kinds,
-                ...words.altkinds,
-                ...words.colors,
-                ...words.dirs,
-                ...words.dirmods,
-                ...words.exprs,
+                ...tagwords(words.flags, 'flags'),
+                ...tagwords(words.statsboard, 'stats'),
+                ...tagwords(words.statshelper, 'stats'),
+                ...tagwords(words.statssender, 'stats'),
+                ...tagwords(words.statsinteraction, 'stats'),
+                ...tagwords(words.statsboolean, 'stats'),
+                ...tagwords(words.statsconfig, 'stats'),
+                ...tagwords(words.kinds, 'kinds'),
+                ...tagwords(words.altkinds, 'altkinds'),
+                ...tagwords(words.colors, 'colors'),
+                ...tagwords(words.dirs, 'dirs'),
+                ...tagwords(words.dirmods, 'dirmods'),
+                ...tagwords(words.exprs, 'exprs'),
               ]),
               prefix,
               wordcol,
@@ -237,6 +266,7 @@ export function drawautocomplete(
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
+  words: GADGET_ZSS_WORDS,
   drawabove?: boolean,
 ) {
   if (ac.suggestions.length === 0) {
@@ -246,7 +276,7 @@ export function drawautocomplete(
   const effectiveindex = acindex < 0 ? 0 : acindex
   const numrows = ac.suggestions.length
   const maxitemlen = ac.suggestions.reduce(
-    (max, s) => Math.max(max, s.length),
+    (max, s) => Math.max(max, s.word.length),
     0,
   )
   const itemwidth = maxitemlen + 2
@@ -280,7 +310,7 @@ export function drawautocomplete(
     }
 
     const textoffset = rowstart - px
-    const fulltext = ` ${ac.suggestions[i]} `
+    const fulltext = ` ${ac.suggestions[i].word} `
       .padEnd(itemwidth, ' ')
       .substring(0, itemwidth)
     const text = fulltext.substring(
@@ -293,14 +323,29 @@ export function drawautocomplete(
       bufindex,
       textoffset,
       text,
-      ac.suggestions[i],
+      ac.suggestions[i].word,
       selected ? AC_SEL_FG : AC_FG,
       bg,
       context,
     )
 
     if (selected) {
-      const hint = '' //romhintfor(ac.suggestions[i], words)
+      let hint = ''
+      const suggestion = ac.suggestions[i]
+      switch (suggestion.category) {
+        case 'clicommands':
+          // use the value from words.clicommands
+          hint = words.clicommands[suggestion.word]
+          break
+        default: {
+          const rompath = `editor:${suggestion.category}:${suggestion.word}`
+          const rom = romread(rompath)
+          hint = rom
+            ? stripRomValue((rom.split('\n')[0] ?? '').replace(/^desc;/, ''))
+            : suggestion.category
+          break
+        }
+      }
       if (hint) {
         const hintx = rowstart + text.length
         drawhinttext(hint, hintx, y, edge.right, context)

@@ -140,7 +140,7 @@ export function TerminalInput({
     inputstatesetsplice(
       autocomplete.wordstart,
       autocomplete.prefix.length,
-      suggestion,
+      suggestion.word,
     )
   }
 
@@ -206,6 +206,7 @@ export function TerminalInput({
       starty,
       edge,
       context,
+      zsswords,
       true,
     )
   }
@@ -296,6 +297,7 @@ export function TerminalInput({
       />
       <UserInput
         MOVE_LEFT={(mods) => {
+          useTape.setState({ autocompleteindex: -1 })
           trackselection(mods.shift)
           if (mods.ctrl) {
             useTerminal.setState({
@@ -312,6 +314,7 @@ export function TerminalInput({
           }
         }}
         MOVE_RIGHT={(mods) => {
+          useTape.setState({ autocompleteindex: -1 })
           trackselection(mods.shift)
           if (mods.ctrl) {
             useTerminal.setState({
@@ -329,12 +332,12 @@ export function TerminalInput({
         }}
         MOVE_UP={(mods) => {
           if (autocompleteactive) {
-            // useTerminal.setState({
-            //   acindex: Math.min(
-            //     autocomplete.suggestions.length - 1,
-            //     tapeterminal.acindex + 1,
-            //   ),
-            // })
+            useTape.setState({
+              autocompleteindex: Math.min(
+                autocomplete.suggestions.length - 1,
+                autocompleteindex + 1,
+              ),
+            })
             return
           }
           if (mods.ctrl) {
@@ -346,9 +349,9 @@ export function TerminalInput({
         }}
         MOVE_DOWN={(mods) => {
           if (autocompleteactive) {
-            // useTerminal.setState({
-            //   acindex: Math.max(0, tapeterminal.acindex - 1),
-            // })
+            useTape.setState({
+              autocompleteindex: Math.max(0, autocompleteindex - 1),
+            })
             return
           }
           if (mods.ctrl) {
@@ -399,6 +402,10 @@ export function TerminalInput({
           registerterminalclose(SOFTWARE, player)
         }}
         MENU_BUTTON={(mods) => {
+          if (autocompleteactive) {
+            acceptsuggestion()
+            return
+          }
           registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
@@ -517,7 +524,9 @@ export function TerminalInput({
                 } else {
                   resettoend()
                 }
-                useTape.setState({ autocompleteindex: 0 })
+                useTape.setState({
+                  autocompleteindex: event.key === ' ' ? -1 : 0,
+                })
               }
               break
           }
