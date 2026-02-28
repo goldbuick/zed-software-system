@@ -1,2 +1,0 @@
-desc;$DKGRAYDoes a countdown and reloads into an empty state (operator only)
-args;$DKGRAY(none)

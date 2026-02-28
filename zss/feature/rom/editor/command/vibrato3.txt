@@ -1,2 +1,0 @@
-desc;$DKGRAYVibrato for #bgplay
-args;$DKGRAY[config] [value]

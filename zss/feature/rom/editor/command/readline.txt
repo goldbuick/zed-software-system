@@ -1,2 +1,0 @@
-desc;$DKGRAYParse text data
-args;$DKGRAY(none)

@@ -12,7 +12,7 @@ import {
 import { EVAL_DIR, STR_DIR, isstrdir, mapstrdir, readdir } from './dir'
 import { readexpr } from './expr'
 import { STR_KIND, isstrkind, readkind } from './kind'
-import { PT, WORD } from './types'
+import { ARG_TYPE, PT, WORD } from './types'
 
 export const READ_CONTEXT = {
   // useful state
@@ -33,23 +33,6 @@ export const READ_CONTEXT = {
 
 // param parsing engine
 // a simple DSL to say string [number] [number] args
-
-export enum ARG_TYPE {
-  COLOR,
-  KIND,
-  DIR,
-  NAME,
-  NUMBER,
-  STRING,
-  NUMBER_OR_STRING,
-  COLOR_OR_KIND,
-  MAYBE_KIND,
-  MAYBE_NAME,
-  MAYBE_NUMBER,
-  MAYBE_STRING,
-  MAYBE_NUMBER_OR_STRING,
-  ANY,
-}
 
 export type ARG_TYPE_MAP = {
   [ARG_TYPE.COLOR]: STR_COLOR

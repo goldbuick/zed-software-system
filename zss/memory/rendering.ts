@@ -52,7 +52,7 @@ import {
 
 import {
   memoryinitboard,
-  memorypickcodepagewithtype,
+  memorypickcodepagewithtypeandstat,
   memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
@@ -428,7 +428,7 @@ export function memoryconverttogadgetlayers(
 
     // check for palette
     if (isstring(board.palettepage)) {
-      const codepage = memorypickcodepagewithtype(
+      const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
         board.palettepage,
       )
@@ -446,7 +446,7 @@ export function memoryconverttogadgetlayers(
     }
     // check for charset
     if (isstring(board.charsetpage)) {
-      const codepage = memorypickcodepagewithtype(
+      const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
         board.charsetpage,
       )

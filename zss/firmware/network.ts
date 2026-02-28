@@ -6,8 +6,8 @@ import { isstrcategory } from 'zss/words/category'
 import { isstrcollision } from 'zss/words/collision'
 import { isstrcolor } from 'zss/words/color'
 import { isstrdir } from 'zss/words/dir'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME, WORD } from 'zss/words/types'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
 function fetchcommand(
   arg: any,
@@ -53,22 +53,41 @@ function fetchcommand(
 }
 
 export const NETWORK_FIRMWARE = createfirmware()
-  .command('fetch', (_, words) => {
-    const [label, url, maybemethod = 'get', ii] = readargs(words, 0, [
+  .command(
+    'fetch',
+    [
       ARG_TYPE.NAME,
       ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_STRING,
-    ])
-    fetchcommand(undefined, label, url, maybemethod, words, ii)
-    return 0
-  })
-  .command('fetchwith', (_, words) => {
-    const [arg, label, url, maybemethod = 'get', ii] = readargs(words, 0, [
+      'URL with label, method, and optional data',
+    ],
+    (_, words) => {
+      const [label, url, maybemethod = 'get', ii] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_STRING,
+      ])
+      fetchcommand(undefined, label, url, maybemethod, words, ii)
+      return 0
+    },
+  )
+  .command(
+    'fetchwith',
+    [
       ARG_TYPE.ANY,
       ARG_TYPE.NAME,
       ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_STRING,
-    ])
-    fetchcommand(arg, label, url, maybemethod, words, ii)
-    return 0
-  })
+      'URL with argument, label, method, and optional data',
+    ],
+    (_, words) => {
+      const [arg, label, url, maybemethod = 'get', ii] = readargs(words, 0, [
+        ARG_TYPE.ANY,
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_STRING,
+      ])
+      fetchcommand(arg, label, url, maybemethod, words, ii)
+      return 0
+    },
+  )

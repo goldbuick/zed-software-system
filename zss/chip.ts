@@ -23,9 +23,9 @@ import {
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
-import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
+import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
-import { NAME, WORD, WORD_RESULT } from './words/types'
+import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
 
 /**
  * CHIP represents a virtual machine instance that executes compiled code.

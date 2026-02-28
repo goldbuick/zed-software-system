@@ -1,3 +1,4 @@
+import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { MAYBE } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
@@ -274,6 +275,31 @@ export type GADGET_STATE = {
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]
   synthstate?: SYNTH_STATE
+}
+
+/** ZSS word lists and command-args signatures per driver (from vm). */
+export type GADGET_ZSS_WORDS = {
+  clicommands: Record<string, COMMAND_ARGS_SIGNATURE>
+  loadercommands: Record<string, COMMAND_ARGS_SIGNATURE>
+  runtimecommands: Record<string, COMMAND_ARGS_SIGNATURE>
+  flags: string[]
+  statsboard: string[]
+  statshelper: string[]
+  statssender: string[]
+  statsinteraction: string[]
+  statsboolean: string[]
+  statsconfig: string[]
+  objects: string[]
+  terrains: string[]
+  boards: string[]
+  palettes: string[]
+  charsets: string[]
+  loaders: string[]
+  categories: string[]
+  colors: string[]
+  dirs: string[]
+  dirmods: string[]
+  exprs: string[]
 }
 
 export const INPUT_ALT = 0x0001

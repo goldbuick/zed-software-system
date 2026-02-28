@@ -1,2 +1,0 @@
-desc;$DKGRAYBlock until condition is true
-args;$DKGRAY(none)

@@ -1,2 +1,0 @@
-desc;$DKGRAYReverb for #tts
-args;$DKGRAY[config] [value]

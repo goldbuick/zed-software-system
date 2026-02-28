@@ -2,22 +2,21 @@ import { IToken } from 'chevrotain'
 import { createContext } from 'react'
 import { LANG_ERROR } from 'zss/lang/lexer'
 import { CodeNode } from 'zss/lang/visitor'
+import {
+  BG_ACTIVE,
+  BG_SELECTED,
+  FG,
+  FG_SELECTED,
+  bgcolor,
+} from 'zss/screens/tape/colors'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
 
 // deco
 export const BKG_PTRN = 250
 export const BKG_PTRN_ALT = 249
 
-// colors
-export const FG = COLOR.BLUE
-export const FG_SELECTED = COLOR.WHITE
-export const BG_SELECTED = COLOR.DKGRAY
-export const BG_ACTIVE = COLOR.BLACK
-
-export function bgcolor(quickterminal: boolean) {
-  return quickterminal ? COLOR.ONCLEAR : COLOR.DKBLUE
-}
+// colors (re-export from tape/colors)
+export { BG_ACTIVE, BG_SELECTED, FG, FG_SELECTED, bgcolor }
 
 export function editorsplit(width: number) {
   return Math.round(width * 0.5)
@@ -81,7 +80,7 @@ export function setupeditoritem(
   const edge = textformatreadedges(context)
   // reset context
   context.iseven = context.y % 2 === 0
-  context.active.color = COLOR.WHITE
+  context.active.color = FG_SELECTED
   context.active.bg = active && !blink ? BG_ACTIVE : context.reset.bg
   context.active.leftedge = edge.left + xmargin
   context.active.rightedge = edge.right - xmargin

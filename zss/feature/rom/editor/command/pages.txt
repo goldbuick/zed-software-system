@@ -1,2 +1,0 @@
-desc;$DKGRAYList all pages in all loaded books
-args;$DKGRAY(none)

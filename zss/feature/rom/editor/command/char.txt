@@ -1,2 +1,0 @@
-desc;$DKGRAYSet character (self or at direction)
-args;$DKGRAY(none)

@@ -1,18 +1,14 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
-import {
-  ROM_LOOKUP,
-  romintolookup,
-  romread,
-  stripRomValue,
-} from 'zss/feature/rom'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
-import * as lexer from 'zss/lang/lexer'
-import { CodeNode, NODE } from 'zss/lang/visitor'
-import { clamp } from 'zss/mapping/number'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import {
+  ZSS_TYPE_ERROR,
+  ZSS_TYPE_ERROR_LINE,
+  ZSS_TYPE_LINE,
+  applycodetokencolors,
+} from 'zss/screens/tape/colors'
 import {
   BG_ACTIVE,
   BG_SELECTED,
@@ -21,7 +17,6 @@ import {
   bgcolor,
   setupeditoritem,
 } from 'zss/screens/tape/common'
-import { statformat, stattypestring } from 'zss/words/stats'
 import {
   clippedapplybgtoindexes,
   clippedapplycolortoindexes,
@@ -29,38 +24,7 @@ import {
   tokenizeandwritetextformat,
   writeplaintext,
 } from 'zss/words/textformat'
-import { COLOR, STAT_TYPE } from 'zss/words/types'
-
-import { useZssWords } from '../tape/zsswords'
-
-import {
-  ZSS_COLOR_MAP,
-  ZSS_TYPE_COMMAND,
-  ZSS_TYPE_ERROR,
-  ZSS_TYPE_ERROR_LINE,
-  ZSS_TYPE_LINE,
-  ZSS_TYPE_NUMBER,
-  ZSS_TYPE_STATNAME,
-  ZSS_TYPE_SYMBOL,
-  ZSS_TYPE_TEXT,
-  zsswordcolor,
-} from './colors'
-
-function parsestatformat(image: string) {
-  const [first] = image.substring(1).split(';')
-  return first.split(' ')
-}
-
-let lookup: MAYBE<ROM_LOOKUP>
-function setlookup(address: string) {
-  const maybelookup = romintolookup(romread(address))
-  const keys = Object.keys(maybelookup).filter((key) => !!key)
-  if (keys.length) {
-    lookup = maybelookup
-  } else {
-    console.error(address)
-  }
-}
+import { COLOR } from 'zss/words/types'
 
 export type EditorRowsProps = {
   xcursor: number
@@ -69,9 +33,6 @@ export type EditorRowsProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
-  autocomplete: AUTO_COMPLETE
-  autocompleteactive: boolean
-  wordcolors?: Map<string, number>
 }
 
 export function EditorRows({
@@ -80,15 +41,13 @@ export function EditorRows({
   yoffset,
   rows,
   codepage,
-  autocomplete,
-  autocompleteactive,
-  wordcolors,
 }: EditorRowsProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
-  const editortype = useTape((state) => state.editor.type)
+  // const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
+
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
       const last = rows[rows.length - 1]
@@ -96,10 +55,6 @@ export function EditorRows({
     }
     return []
   }, [rows])
-
-  const { autocompletewords } = useZssWords({
-    isLoader: editortype === 'loader',
-  })
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -200,198 +155,7 @@ export function EditorRows({
     )
 
     // apply token colors
-    let activetokenidx = -1
-    const cursorcolumn = clamp(
-      tapeeditor.cursor - row.start,
-      1,
-      row.end - row.start,
-    )
-    if (ispresent(row.tokens)) {
-      for (let t = 0; t < row.tokens.length; ++t) {
-        const token = row.tokens[t]
-        if (
-          active &&
-          cursorcolumn >= (token.startColumn ?? 1) &&
-          cursorcolumn <= (token.endColumn ?? 1)
-        ) {
-          activetokenidx = t
-        }
-        const left = (token.startColumn ?? 1) - 1 - xoffset
-        const right = (token.endColumn ?? 1) - 1 - xoffset
-        const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
-        if (ispresent(maybecolor)) {
-          // #ticker <content>: "ticker" = dkgreen, content = green
-          if (token.tokenTypeIdx === lexer.command_ticker.tokenTypeIdx) {
-            const nameLen = 6 // "ticker"
-            clippedapplycolortoindexes(
-              index,
-              edge.right,
-              left,
-              left + nameLen - 1,
-              ZSS_TYPE_COMMAND,
-              context.active.bg,
-              context,
-            )
-            if (left + nameLen <= right) {
-              clippedapplycolortoindexes(
-                index,
-                edge.right,
-                left + nameLen,
-                right,
-                ZSS_TYPE_TEXT,
-                context.active.bg,
-                context,
-              )
-            }
-          } else if (token.tokenTypeIdx === lexer.command_toast.tokenTypeIdx) {
-            // #toast <content>: "toast" = dkgreen, content = green
-            const nameLen = 5 // "toast"
-            clippedapplycolortoindexes(
-              index,
-              edge.right,
-              left,
-              left + nameLen - 1,
-              ZSS_TYPE_COMMAND,
-              context.active.bg,
-              context,
-            )
-            if (left + nameLen <= right) {
-              clippedapplycolortoindexes(
-                index,
-                edge.right,
-                left + nameLen,
-                right,
-                ZSS_TYPE_TEXT,
-                context.active.bg,
-                context,
-              )
-            }
-          } else {
-            switch (maybecolor) {
-              case ZSS_TYPE_STATNAME: {
-                const words = parsestatformat(token.image)
-                const statinfo = statformat('', words, !!token.payload)
-                switch (statinfo.type) {
-                  case STAT_TYPE.BOARD:
-                  case STAT_TYPE.LOADER:
-                  case STAT_TYPE.OBJECT:
-                  case STAT_TYPE.TERRAIN:
-                  case STAT_TYPE.CHARSET:
-                  case STAT_TYPE.PALETTE: {
-                    clippedapplycolortoindexes(
-                      index,
-                      edge.right,
-                      left,
-                      right,
-                      ZSS_TYPE_STATNAME,
-                      context.active.bg,
-                      context,
-                    )
-                    break
-                  }
-                  case STAT_TYPE.CONST:
-                  case STAT_TYPE.RANGE:
-                  case STAT_TYPE.SELECT:
-                  case STAT_TYPE.NUMBER:
-                  case STAT_TYPE.TEXT:
-                  case STAT_TYPE.HOTKEY:
-                  case STAT_TYPE.COPYIT:
-                  case STAT_TYPE.OPENIT:
-                  case STAT_TYPE.ZSSEDIT:
-                  case STAT_TYPE.CHAREDIT:
-                  case STAT_TYPE.COLOREDIT: {
-                    const [first] = words
-                    clippedapplycolortoindexes(
-                      index,
-                      edge.right,
-                      left,
-                      left + first.length,
-                      ZSS_TYPE_STATNAME,
-                      context.active.bg,
-                      context,
-                    )
-                    if (words.length > 1) {
-                      clippedapplycolortoindexes(
-                        index,
-                        edge.right,
-                        left + first.length + 1,
-                        right,
-                        ZSS_TYPE_NUMBER,
-                        context.active.bg,
-                        context,
-                      )
-                    }
-                    break
-                  }
-                  default:
-                    clippedapplycolortoindexes(
-                      index,
-                      edge.right,
-                      left,
-                      right,
-                      COLOR.DKRED,
-                      context.active.bg,
-                      context,
-                    )
-                    break
-                }
-                break
-              }
-              case ZSS_TYPE_SYMBOL: {
-                clippedapplycolortoindexes(
-                  index,
-                  edge.right,
-                  left,
-                  right,
-                  maybecolor,
-                  context.active.bg,
-                  context,
-                )
-                break
-              }
-              case ZSS_TYPE_TEXT: {
-                const wordcolor = zsswordcolor(token.image)
-                if (isarray(wordcolor)) {
-                  for (let c = 0; c < wordcolor.length; ++c) {
-                    clippedapplycolortoindexes(
-                      index,
-                      edge.right,
-                      left + c,
-                      right + c,
-                      wordcolor[c],
-                      context.active.bg,
-                      context,
-                    )
-                  }
-                } else {
-                  clippedapplycolortoindexes(
-                    index,
-                    edge.right,
-                    left,
-                    right,
-                    wordcolor,
-                    context.active.bg,
-                    context,
-                  )
-                }
-                break
-              }
-              default:
-                clippedapplycolortoindexes(
-                  index,
-                  edge.right,
-                  left,
-                  right,
-                  maybecolor,
-                  context.active.bg,
-                  context,
-                )
-                break
-            }
-          }
-        }
-      }
-    }
+    applycodetokencolors(xoffset, index, edge.right, row.tokens ?? [], context)
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
@@ -413,155 +177,6 @@ export function EditorRows({
           BG_SELECTED,
           context,
         )
-      }
-    }
-
-    // render hints
-    if (active && ispresent(row.tokens)) {
-      let node: MAYBE<CodeNode>
-      // pick first, or IF
-      if (ispresent(row.asts)) {
-        for (let i = 0; i < (row.asts?.length ?? 0); ++i) {
-          if (row.asts[i].type === NODE.IF) {
-            node = row.asts[i]
-          }
-        }
-        if (!ispresent(node)) {
-          node = row.asts.find((el) => cursorcolumn <= (el.endColumn ?? 0))
-        }
-      }
-
-      lookup = undefined as MAYBE<ROM_LOOKUP>
-      // scan for hint category indicator
-      for (let c = activetokenidx; c >= 0; --c) {
-        const prevtoken = row.tokens[c - 1]
-        const token = row.tokens[c]
-        const nexttoken = row.tokens[c + 1]
-        switch (token.tokenTypeIdx) {
-          case lexer.command.tokenTypeIdx:
-          case lexer.command_do.tokenTypeIdx:
-          case lexer.command_if.tokenTypeIdx:
-          case lexer.command_else.tokenTypeIdx:
-          case lexer.command_ticker.tokenTypeIdx:
-          case lexer.command_toast.tokenTypeIdx:
-          case lexer.stat.tokenTypeIdx:
-          case lexer.label.tokenTypeIdx:
-          case lexer.comment.tokenTypeIdx:
-          case lexer.hyperlink.tokenTypeIdx:
-          case lexer.query.tokenTypeIdx:
-          case lexer.divide.tokenTypeIdx:
-          case lexer.text.tokenTypeIdx:
-            if (
-              token.tokenTypeIdx === lexer.divide.tokenTypeIdx &&
-              (!ispresent(node) || token.startColumn !== node.startColumn)
-            ) {
-              continue
-            }
-            break
-          default:
-            continue
-        }
-        switch (token.tokenTypeIdx) {
-          case lexer.command.tokenTypeIdx: {
-            setlookup(`editor:command:${nexttoken.image}`)
-            break
-          }
-          case lexer.command_do.tokenTypeIdx: {
-            setlookup(`editor:command:do`)
-            break
-          }
-          case lexer.command_if.tokenTypeIdx: {
-            setlookup(
-              prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
-                ? `editor:command:elseif`
-                : `editor:command:if`,
-            )
-            break
-          }
-          case lexer.command_else.tokenTypeIdx: {
-            setlookup(
-              nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
-                ? `editor:command:elseif`
-                : `editor:command:else`,
-            )
-            break
-          }
-          case lexer.command_ticker.tokenTypeIdx: {
-            setlookup(`editor:command:ticker`)
-            break
-          }
-          case lexer.command_toast.tokenTypeIdx: {
-            setlookup(`editor:command:toast`)
-            break
-          }
-          case lexer.stat.tokenTypeIdx: {
-            const words = parsestatformat(token.image)
-            const statinfo = statformat('', words, !!token.payload)
-            const statname = (words[0] ?? '').toLowerCase().trim()
-            if (statname && ispresent(romread(`editor:stat:${statname}`))) {
-              setlookup(`editor:stat:${statname}`)
-            } else {
-              setlookup(`editor:stat:${stattypestring(statinfo.type)}`)
-            }
-            break
-          }
-          case lexer.label.tokenTypeIdx: {
-            setlookup(`editor:label`)
-            break
-          }
-          case lexer.comment.tokenTypeIdx: {
-            setlookup(`editor:comment`)
-            break
-          }
-          case lexer.hyperlink.tokenTypeIdx: {
-            // scan tokens until hyperlink text
-            setlookup(`editor:hyperlink`)
-            break
-          }
-          case lexer.query.tokenTypeIdx: {
-            setlookup(`editor:shorttry`)
-            break
-          }
-          case lexer.divide.tokenTypeIdx: {
-            setlookup(`editor:shortgo`)
-            break
-          }
-          case lexer.text.tokenTypeIdx: {
-            const word = (token.image ?? '').toLowerCase().trim()
-            const wordCategories = [
-              'command',
-              'flag',
-              'stat',
-              'color',
-              'dir',
-              'dirmod',
-              'expr',
-            ]
-            let found = false
-            if (word) {
-              for (const cat of wordCategories) {
-                const addr = `editor:${cat}:${word}`
-                if (ispresent(romread(addr))) {
-                  setlookup(addr)
-                  found = true
-                  break
-                }
-              }
-            }
-            if (!found) {
-              setlookup(`editor:text`)
-            }
-            break
-          }
-        }
-        break
-      }
-
-      // When a command token was detected to our left, show its args hint; otherwise show desc (with format codes)
-      if (isstring(lookup?.args)) {
-        writeplaintext(stripRomValue(lookup.args), context, false)
-      } else if (isstring(lookup?.desc)) {
-        tokenizeandwritetextformat(lookup.desc, context, false)
       }
     }
 
@@ -607,22 +222,6 @@ export function EditorRows({
     if (context.y >= edge.bottom) {
       break
     }
-  }
-
-  // render autocomplete dropdown only after user has typed a character
-  if (autocompleteactive && autocomplete.suggestions.length > 0) {
-    const startx = edge.left + 4 + autocomplete.wordcol
-    const starty = edge.top + 2 + cursor - yoffset + 1
-    drawautocomplete(
-      autocomplete,
-      tapeeditor.acindex,
-      startx,
-      starty,
-      edge,
-      context,
-      autocompletewords,
-      wordcolors,
-    )
   }
 
   // reset edge

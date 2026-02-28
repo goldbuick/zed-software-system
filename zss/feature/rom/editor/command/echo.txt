@@ -1,2 +1,0 @@
-desc;$DKGRAYApply echo effect to all 4 channels of #play
-args;$DKGRAY[config] [value]

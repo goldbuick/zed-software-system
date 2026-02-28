@@ -52,9 +52,9 @@ import {
 } from 'zss/words/color'
 import { dirconsts, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { COLOR, NAME, PT, WORD } from 'zss/words/types'
+import { ARG_TYPE, COLOR, NAME, PT, WORD } from 'zss/words/types'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',
@@ -743,53 +743,64 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
   },
 })
-  .command('clear', (chip, words) => {
+  .command('clear', ['variables (set to 0)'], (chip, words) => {
     for (let i = 0; i < words.length; ++i) {
       chip.set(maptostring(words[i]), 0)
     }
     return 0
   })
-  .command('set', (chip, words) => {
-    const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-    chip.set(name, value ?? 1)
-    return 0
-  })
-  .command('become', (chip, words) => {
-    // read
-    const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
+  .command(
+    'set',
+    [ARG_TYPE.NAME, ARG_TYPE.ANY, 'variable to value'],
+    (chip, words) => {
+      const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
+      chip.set(name, value ?? 1)
+      return 0
+    },
+  )
+  .command(
+    'become',
+    [ARG_TYPE.KIND, 'element into specified kind'],
+    (chip, words) => {
+      // read
+      const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
 
-    // read current display
-    const display = memoryreadelementdisplay(READ_CONTEXT.element)
-    const [kindname, maybecolor] = kind
+      // read current display
+      const display = memoryreadelementdisplay(READ_CONTEXT.element)
+      const [kindname, maybecolor] = kind
 
-    const mergedstrcolor = [
-      ...mapcolortostrcolor(display.color, display.bg),
-      ...(maybecolor ?? []),
-    ]
-    const kindcolorcopy: STR_KIND = [kindname, mergedstrcolor]
+      const mergedstrcolor = [
+        ...mapcolortostrcolor(display.color, display.bg),
+        ...(maybecolor ?? []),
+      ]
+      const kindcolorcopy: STR_KIND = [kindname, mergedstrcolor]
 
-    // make invisible
-    memorydeleteboardobjectnamedlookup(READ_CONTEXT.board, READ_CONTEXT.element)
-    // nuke self
-    if (
-      memorysafedeleteelement(
+      // make invisible
+      memorydeleteboardobjectnamedlookup(
         READ_CONTEXT.board,
         READ_CONTEXT.element,
-        READ_CONTEXT.timestamp,
       )
-    ) {
-      const pt: PT = {
-        x: READ_CONTEXT.element?.x ?? 0,
-        y: READ_CONTEXT.element?.y ?? 0,
+      // nuke self
+      if (
+        memorysafedeleteelement(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          READ_CONTEXT.timestamp,
+        )
+      ) {
+        const pt: PT = {
+          x: READ_CONTEXT.element?.x ?? 0,
+          y: READ_CONTEXT.element?.y ?? 0,
+        }
+        // write new element
+        memorywriteelementfromkind(READ_CONTEXT.board, kindcolorcopy, pt)
       }
-      // write new element
-      memorywriteelementfromkind(READ_CONTEXT.board, kindcolorcopy, pt)
-    }
-    // halt execution
-    chip.endofprogram()
-    return 0
-  })
-  .command('bind', (_, words) => {
+      // halt execution
+      chip.endofprogram()
+      return 0
+    },
+  )
+  .command('bind', [ARG_TYPE.NAME, 'code from named element'], (_, words) => {
     // zed cafe simply copies the code from the given named element
     const [name] = readargs(words, 0, [ARG_TYPE.NAME])
     const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
@@ -799,95 +810,103 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('char', (chip, words) => {
-    const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-    if (isstrdir(value)) {
-      const [dest, charvalue] = readargs(words, 0, [
-        ARG_TYPE.DIR,
-        ARG_TYPE.NUMBER,
-      ])
+  .command(
+    'char',
+    [ARG_TYPE.ANY, 'character (self or at direction)'],
+    (chip, words) => {
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+      if (isstrdir(value)) {
+        const [dest, charvalue] = readargs(words, 0, [
+          ARG_TYPE.DIR,
+          ARG_TYPE.NUMBER,
+        ])
 
-      // read board by eval dir
-      const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
+        // read board by eval dir
+        const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
 
-      // handle multi-target dirs
-      if (dest.targets.length) {
-        let anyfailed = false
-        for (let i = 0; i < dest.targets.length; ++i) {
-          const target = dest.targets[i]
-          const element = memoryreadelement(board, target)
-          if (ispresent(element)) {
-            element.char = charvalue
-          } else {
-            anyfailed = true
+        // handle multi-target dirs
+        if (dest.targets.length) {
+          let anyfailed = false
+          for (let i = 0; i < dest.targets.length; ++i) {
+            const target = dest.targets[i]
+            const element = memoryreadelement(board, target)
+            if (ispresent(element)) {
+              element.char = charvalue
+            } else {
+              anyfailed = true
+            }
           }
+          chip.set('didfail', anyfailed ? 1 : 0)
+          return 0
         }
-        chip.set('didfail', anyfailed ? 1 : 0)
-        return 0
+
+        // handle single-target dirs
+        const element = memoryreadelement(board, dest.destpt)
+        if (ispresent(element)) {
+          element.char = charvalue
+        } else {
+          chip.set('didfail', 1)
+        }
+      } else if (ispresent(READ_CONTEXT.element) && isnumber(value)) {
+        // self char update
+        READ_CONTEXT.element.char = value
+        chip.set('didfail', 0)
       }
+      return 0
+    },
+  )
+  .command(
+    'color',
+    [ARG_TYPE.COLOR, 'color (self or at direction)'],
+    (chip, words) => {
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+      if (isstrdir(value)) {
+        const [dest, colorvalue] = readargs(words, 0, [
+          ARG_TYPE.DIR,
+          ARG_TYPE.COLOR,
+        ])
 
-      // handle single-target dirs
-      const element = memoryreadelement(board, dest.destpt)
-      if (ispresent(element)) {
-        element.char = charvalue
-      } else {
-        chip.set('didfail', 1)
-      }
-    } else if (ispresent(READ_CONTEXT.element) && isnumber(value)) {
-      // self char update
-      READ_CONTEXT.element.char = value
-      chip.set('didfail', 0)
-    }
-    return 0
-  })
-  .command('color', (chip, words) => {
-    const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-    if (isstrdir(value)) {
-      const [dest, colorvalue] = readargs(words, 0, [
-        ARG_TYPE.DIR,
-        ARG_TYPE.COLOR,
-      ])
+        // read board by eval dir
+        const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
 
-      // read board by eval dir
-      const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
-
-      // handle multi-target dirs
-      if (dest.targets.length) {
-        let anyfailed = false
-        for (let i = 0; i < dest.targets.length; ++i) {
-          const target = dest.targets[i]
-          const element = memoryreadelement(board, target)
-          if (ispresent(element)) {
-            memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
-          } else {
-            anyfailed = true
+        // handle multi-target dirs
+        if (dest.targets.length) {
+          let anyfailed = false
+          for (let i = 0; i < dest.targets.length; ++i) {
+            const target = dest.targets[i]
+            const element = memoryreadelement(board, target)
+            if (ispresent(element)) {
+              memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
+            } else {
+              anyfailed = true
+            }
           }
+          chip.set('didfail', anyfailed ? 1 : 0)
+          return 0
         }
-        chip.set('didfail', anyfailed ? 1 : 0)
-        return 0
-      }
 
-      // handle single-target dirs
-      const element = memoryreadelement(board, dest.destpt)
-      if (ispresent(element)) {
-        memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
-        chip.set('didfail', 0)
+        // handle single-target dirs
+        const element = memoryreadelement(board, dest.destpt)
+        if (ispresent(element)) {
+          memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
+          chip.set('didfail', 0)
+        } else {
+          chip.set('didfail', 1)
+        }
       } else {
-        chip.set('didfail', 1)
+        // self color update
+        const [colorvalue] = readargs(words, 0, [ARG_TYPE.COLOR])
+        if (ispresent(READ_CONTEXT.element) && ispresent(colorvalue)) {
+          memoryapplyboardelementcolor(READ_CONTEXT.element, colorvalue)
+          chip.set('didfail', 0)
+        } else {
+          chip.set('didfail', 1)
+        }
       }
-    } else {
-      // self color update
-      const [colorvalue] = readargs(words, 0, [ARG_TYPE.COLOR])
-      if (ispresent(READ_CONTEXT.element) && ispresent(colorvalue)) {
-        memoryapplyboardelementcolor(READ_CONTEXT.element, colorvalue)
-        chip.set('didfail', 0)
-      } else {
-        chip.set('didfail', 1)
-      }
-    }
-    return 0
-  })
-  .command('go', (chip, words) => {
+      return 0
+    },
+  )
+  .command('go', [ARG_TYPE.DIR, 'element in direction'], (chip, words) => {
     if (ispresent(READ_CONTEXT.element)) {
       // attempt to move
       const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
@@ -913,59 +932,79 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // if blocked, return 1
     return 1
   })
-  .command('walk', (_, words) => {
-    if (!ispresent(READ_CONTEXT.element)) {
+  .command(
+    'walk',
+    [ARG_TYPE.DIR, 'cause element to move in direction each tick'],
+    (_, words) => {
+      if (!ispresent(READ_CONTEXT.element)) {
+        return 0
+      }
+
+      // read walk direction
+      const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
+      const x = READ_CONTEXT.element.x ?? 0
+      const y = READ_CONTEXT.element.y ?? 0
+
+      // create delta from dir
+      READ_CONTEXT.element.stepx = dest.destpt.x - x
+      READ_CONTEXT.element.stepy = dest.destpt.y - y
       return 0
-    }
-
-    // read walk direction
-    const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
-    const x = READ_CONTEXT.element.x ?? 0
-    const y = READ_CONTEXT.element.y ?? 0
-
-    // create delta from dir
-    READ_CONTEXT.element.stepx = dest.destpt.x - x
-    READ_CONTEXT.element.stepy = dest.destpt.y - y
-    return 0
-  })
-  .command('idle', (chip) => {
+    },
+  )
+  .command('idle', ['execution until next tick'], (chip) => {
     chip.yield()
     return 0
   })
-  .command('end', (chip, words) => {
-    const [result] = readargs(words, 0, [ARG_TYPE.ANY])
-    if (ispresent(result)) {
-      chip.set('arg', result)
-    }
-    chip.endofprogram()
-    return 0
-  })
-  .command('lock', (chip) => {
+  .command(
+    'end',
+    [ARG_TYPE.ANY, "program (optionally set 'arg' variable)"],
+    (chip, words) => {
+      const [result] = readargs(words, 0, [ARG_TYPE.ANY])
+      if (ispresent(result)) {
+        chip.set('arg', result)
+      }
+      chip.endofprogram()
+      return 0
+    },
+  )
+  .command('lock', ['against external messages'], (chip) => {
     chip.lock(chip.id())
     return 0
   })
-  .command('restore', (chip, words) => {
-    chip.restore(maptostring(words[0]))
-    return 0
-  })
-  .command('unlock', (chip) => {
+  .command(
+    'restore',
+    [ARG_TYPE.STRING, 'all labels of given name'],
+    (chip, words) => {
+      chip.restore(maptostring(words[0]))
+      return 0
+    },
+  )
+  .command('unlock', ['against messages from others'], (chip) => {
     chip.unlock()
     return 0
   })
-  .command('zap', (chip, words) => {
-    chip.zap(maptostring(words[0]))
-    return 0
-  })
-  .command('cycle', (_, words) => {
-    if (ispresent(READ_CONTEXT.element)) {
-      // read cycle
-      const [cyclevalue] = readargs(words, 0, [ARG_TYPE.NUMBER])
-      // write cycle
-      READ_CONTEXT.element.cycle = clamp(Math.round(cyclevalue), 1, 255)
-    }
-    return 0
-  })
-  .command('die', (chip) => {
+  .command(
+    'zap',
+    [ARG_TYPE.STRING, '-activate first label of given name'],
+    (chip, words) => {
+      chip.zap(maptostring(words[0]))
+      return 0
+    },
+  )
+  .command(
+    'cycle',
+    [ARG_TYPE.NUMBER, 'element cycle value (1-255)'],
+    (_, words) => {
+      if (ispresent(READ_CONTEXT.element)) {
+        // read cycle
+        const [cyclevalue] = readargs(words, 0, [ARG_TYPE.NUMBER])
+        // write cycle
+        READ_CONTEXT.element.cycle = clamp(Math.round(cyclevalue), 1, 255)
+      }
+      return 0
+    },
+  )
+  .command('die', ['element (halt execution unless @isitem)'], (chip) => {
     memorysafedeleteelement(
       READ_CONTEXT.board,
       READ_CONTEXT.element,
@@ -1000,12 +1039,16 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('run', commandrun)
-  .command('runwith', (chip, words) => {
-    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commandrun(chip, words.slice(ii), arg)
-  })
-  .command('array', (chip, words) => {
+  .command('run', [ARG_TYPE.NAME, 'object codepage of given name'], commandrun)
+  .command(
+    'runwith',
+    [ARG_TYPE.ANY, 'function with argument'],
+    (chip, words) => {
+      const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+      return commandrun(chip, words.slice(ii), arg)
+    },
+  )
+  .command('array', [ARG_TYPE.NAME, 'array variable'], (chip, words) => {
     const values: any[] = []
     const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
     for (let i = ii; i < words.length; ) {
@@ -1016,24 +1059,33 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.set(name, values)
     return 0
   })
-  .command('read', (chip, words) => {
-    const [from, prop, name] = readargs(words, 0, [
+  .command(
+    'read',
+    [
       ARG_TYPE.ANY,
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.NAME,
-    ])
-    if (ispresent(from)) {
-      const value = from[prop]
-      chip.set(name, value)
-    }
-    return 0
-  })
-  .command('toast', (_, words) => {
+      'property from object into variable',
+    ],
+    (chip, words) => {
+      const [from, prop, name] = readargs(words, 0, [
+        ARG_TYPE.ANY,
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.NAME,
+      ])
+      if (ispresent(from)) {
+        const value = from[prop]
+        chip.set(name, value)
+      }
+      return 0
+    },
+  )
+  .command('toast', ['toast notification'], (_, words) => {
     const text = words.map(maptostring).join('')
     apitoast(SOFTWARE, READ_CONTEXT.elementfocus, text)
     return 0
   })
-  .command('ticker', (_, words) => {
+  .command('ticker', ['element ticker text'], (_, words) => {
     const text = words.map(maptostring).join('')
     if (ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = text

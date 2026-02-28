@@ -1,2 +1,0 @@
-desc;$DKGRAYReverb for #bgplay
-args;$DKGRAY[config] [value]

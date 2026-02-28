@@ -1,2 +1,0 @@
-desc;$DKGRAYSet board palette by name
-args;$DKGRAY(none)

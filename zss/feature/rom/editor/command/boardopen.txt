@@ -1,2 +1,0 @@
-desc;$DKGRAYUsed to move player to board
-args;$DKGRAY<board>

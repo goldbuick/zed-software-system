@@ -1,2 +1,0 @@
-desc;$DKGRAYAutowah for #bgplay
-args;$DKGRAY[config] [value]

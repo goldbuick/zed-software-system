@@ -136,6 +136,24 @@ export type STAT = {
   values: string[]
 }
 
+// Argument type enum for command/readargs DSL (ARG_TYPE_MAP and readargs live in reader.ts)
+export enum ARG_TYPE {
+  COLOR,
+  KIND,
+  DIR,
+  NAME,
+  NUMBER,
+  STRING,
+  NUMBER_OR_STRING,
+  COLOR_OR_KIND,
+  MAYBE_KIND,
+  MAYBE_NAME,
+  MAYBE_NUMBER,
+  MAYBE_STRING,
+  MAYBE_NUMBER_OR_STRING,
+  ANY,
+}
+
 export type PT = { x: number; y: number }
 export type WORD = string | number | undefined | WORD[]
 export type WORD_RESULT = 0 | 1

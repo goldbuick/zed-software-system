@@ -1,2 +1,0 @@
-desc;$DKGRAYLock against external messages
-args;$DKGRAY(none)

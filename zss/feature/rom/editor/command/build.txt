@@ -1,2 +1,0 @@
-desc;$DKGRAYCreate new board and write id to stat
-args;$DKGRAY<stat> [source]

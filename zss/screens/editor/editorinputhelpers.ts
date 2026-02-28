@@ -6,8 +6,14 @@ import {
   type TextEdge,
   computeSelectionRange,
   drawBlockCursor,
-  getColorForPlayer,
 } from 'zss/screens/inputcommon'
+import {
+  ZSS_CURSOR_BG,
+  ZSS_REMOTE_CURSOR_BG,
+  ZSS_REMOTE_CURSOR_FG,
+  ZSS_REMOTE_SELECTION_BG,
+  ZSS_REMOTE_SELECTION_FG,
+} from 'zss/screens/tape/colors'
 import { EDITOR_CODE_ROW, findcursorinrows } from 'zss/screens/tape/common'
 import {
   WRITE_TEXT_CONTEXT,
@@ -15,12 +21,9 @@ import {
   applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { COLOR, PT } from 'zss/words/types'
+import { PT } from 'zss/words/types'
 
 export type EditorEdge = ReturnType<typeof textformatreadedges>
-
-// Re-export for callers that use getColorForPlayer from this file
-export { getColorForPlayer }
 
 export type SelectionRange = InputSelectionRange & { strvalueselected: string }
 
@@ -55,7 +58,7 @@ export function drawLocalCursor(
         x < edge.right
       ) {
         drawBlockCursor(xblink, yblink, edge as TextEdge, context, {
-          bg: COLOR.DKBLUE,
+          bg: ZSS_CURSOR_BG,
         })
       }
     }
@@ -104,7 +107,13 @@ export function drawRemoteCursors(
     ) {
       const atchar = x + y * context.width
       applystrtoindex(atchar, String.fromCharCode(219), context)
-      applycolortoindexes(atchar, atchar, COLOR.WHITE, COLOR.CYAN, context)
+      applycolortoindexes(
+        atchar,
+        atchar,
+        ZSS_REMOTE_CURSOR_FG,
+        ZSS_REMOTE_CURSOR_BG,
+        context,
+      )
 
       if (ispresent(presence.select) && presence.select !== presence.cursor) {
         drawRemoteSelection(presence, rows, xoffset, yoffset, edge, context)
@@ -152,8 +161,8 @@ function drawRemoteSelection(
         applycolortoindexes(
           selAtchar,
           selAtchar,
-          COLOR.BLACK,
-          COLOR.DKGRAY,
+          ZSS_REMOTE_SELECTION_FG,
+          ZSS_REMOTE_SELECTION_BG,
           context,
         )
       }

@@ -4,7 +4,7 @@ import { MAYBE, isequal } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
 
-import { GADGET_STATE, LAYER } from './types'
+import { GADGET_STATE, GADGET_ZSS_WORDS, LAYER } from './types'
 
 export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
   const prev = useRef<U>(null as U)
@@ -25,30 +25,16 @@ export const useGadgetClient = create<{
   gadget: GADGET_STATE
   layercache: Record<string, LAYER[]>
   slim: FORMAT_OBJECT
-  zsswords: {
-    cli: string[]
-    loader: string[]
-    runtime: string[]
-    flags: string[]
-    statsboard: string[]
-    statshelper: string[]
-    statssender: string[]
-    statsinteraction: string[]
-    statsboolean: string[]
-    statsconfig: string[]
-    kinds: string[]
-    altkinds: string[]
-    colors: string[]
-    dirs: string[]
-    dirmods: string[]
-    exprs: string[]
-  }
+  zsswords: GADGET_ZSS_WORDS
 }>(() => ({
   desync: false,
   zsswords: {
     cli: [],
+    clicommands: {},
     loader: [],
+    loadercommands: {},
     runtime: [],
+    runtimecommands: {},
     flags: [],
     statsboard: [],
     statshelper: [],
@@ -56,8 +42,13 @@ export const useGadgetClient = create<{
     statsinteraction: [],
     statsboolean: [],
     statsconfig: [],
-    kinds: [],
-    altkinds: [],
+    objects: [],
+    terrains: [],
+    boards: [],
+    palettes: [],
+    charsets: [],
+    loaders: [],
+    categories: [],
     colors: [],
     dirs: [],
     dirmods: [],
@@ -110,6 +101,8 @@ export const useTape = create<{
     type: string
     title: string
   }
+  autocompleteindex: number
+  argslookup: string
   reset: () => void
 }>((set) => ({
   layout: TAPE_DISPLAY.TOP,
@@ -128,6 +121,8 @@ export const useTape = create<{
     type: '',
     title: '',
   },
+  autocompleteindex: -1,
+  argslookup: '',
   reset() {
     set({
       layout: TAPE_DISPLAY.TOP,
@@ -145,6 +140,8 @@ export const useTape = create<{
         type: '',
         title: '',
       },
+      autocompleteindex: -1,
+      argslookup: '',
     })
   },
 }))
@@ -158,9 +155,6 @@ export const useTerminal = create<{
   yselect: MAYBE<number>
   bufferindex: number
   buffer: string[]
-  acindex: number
-  /** True only after user has typed a character; disengages on cursor move so autocomplete does not open on arrow into a word. */
-  autocompleteactive: boolean
   reset: () => void
 }>((set) => ({
   // panning offset
@@ -175,9 +169,6 @@ export const useTerminal = create<{
   // input history
   bufferindex: 0,
   buffer: [''],
-  // autocomplete selected index (-1 = dismissed)
-  acindex: -1,
-  autocompleteactive: false,
   reset() {
     set({
       pan: 0,
@@ -188,8 +179,6 @@ export const useTerminal = create<{
       yselect: undefined,
       bufferindex: 0,
       buffer: [''],
-      acindex: -1,
-      autocompleteactive: false,
     })
   },
 }))
@@ -199,25 +188,18 @@ export const useEditor = create<{
   yscroll: number
   cursor: number
   select: MAYBE<number>
-  acindex: number
-  /** True only after user has typed a character; disengages on cursor move so autocomplete does not open on arrow into a word. */
-  autocompleteactive: boolean
   reset: () => void
 }>((set) => ({
   xscroll: 0,
   yscroll: 0,
   cursor: 0,
   select: undefined,
-  acindex: -1,
-  autocompleteactive: false,
   reset() {
     set({
       xscroll: 0,
       yscroll: 0,
       cursor: 0,
       select: undefined,
-      acindex: -1,
-      autocompleteactive: false,
     })
   },
 }))

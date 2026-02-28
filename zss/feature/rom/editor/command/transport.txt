@@ -1,2 +1,0 @@
-desc;$DKGRAYMove element across board with transporter logic
-args;$DKGRAY<target>

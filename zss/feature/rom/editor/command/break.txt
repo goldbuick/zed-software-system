@@ -1,2 +1,0 @@
-desc;$DKGRAYExit current loop early
-args;$DKGRAY(none)

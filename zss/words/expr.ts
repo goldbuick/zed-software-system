@@ -33,9 +33,9 @@ import {
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
 import { readstrkindcolor, readstrkindname } from './kind'
-import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
+import { READ_CONTEXT, readargs } from './reader'
 import { parsesend } from './send'
-import { DIR, NAME } from './types'
+import { ARG_TYPE, DIR, NAME } from './types'
 
 // consider signaling the end as a pipe | ??
 function readvargs(index: number, maxcount = 0): [any[], number] {

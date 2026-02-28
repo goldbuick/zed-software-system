@@ -20,19 +20,24 @@ import {
   museumofzztsearch,
 } from 'zss/feature/url'
 import { write, writeheader } from 'zss/feature/writeui'
-import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
+import {
+  DRIVER_TYPE,
+  firmwaregetcommandargs,
+  firmwarelistcommands,
+} from 'zss/firmware/runner'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
+import { GADGET_ZSS_WORDS, INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryhasflags,
+  memorylistallcodepagewithtype,
   memorylistcodepagewithtype,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
@@ -49,7 +54,6 @@ import {
 } from 'zss/memory'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
-  memorylistcodepagebytype,
   memoryreadcodepage,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
@@ -333,7 +337,27 @@ const vm = createdevice(
         })
         break
       case 'zsswords': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const clicommands: GADGET_ZSS_WORDS['clicommands'] = {}
+        const loadercommands: GADGET_ZSS_WORDS['loadercommands'] = {}
+        const runtimecommands: GADGET_ZSS_WORDS['runtimecommands'] = {}
+        for (const cmd of firmwarelistcommands(DRIVER_TYPE.CLI)) {
+          const sig = firmwaregetcommandargs(DRIVER_TYPE.CLI, cmd)
+          if (ispresent(sig)) {
+            clicommands[cmd] = sig
+          }
+        }
+        for (const cmd of firmwarelistcommands(DRIVER_TYPE.LOADER)) {
+          const sig = firmwaregetcommandargs(DRIVER_TYPE.LOADER, cmd)
+          if (ispresent(sig)) {
+            loadercommands[cmd] = sig
+          }
+        }
+        for (const cmd of firmwarelistcommands(DRIVER_TYPE.RUNTIME)) {
+          const sig = firmwaregetcommandargs(DRIVER_TYPE.RUNTIME, cmd)
+          if (ispresent(sig)) {
+            runtimecommands[cmd] = sig
+          }
+        }
         const dirmods = [
           'cw',
           'ccw',
@@ -347,10 +371,10 @@ const vm = createdevice(
           'awayby',
           'elements',
         ]
-        vm.replynext(message, `ackzsswords`, {
-          cli: firmwarelistcommands(DRIVER_TYPE.CLI),
-          loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
-          runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
+        const zsswords: GADGET_ZSS_WORDS = {
+          clicommands,
+          loadercommands,
+          runtimecommands,
           flags: [
             ...objectKeys(memoryreadflags(message.player)),
             'inputmove',
@@ -364,25 +388,29 @@ const vm = createdevice(
           ],
           statsboard: STATS_BOARD,
           statshelper: STATS_HELPER,
-          statsSender: STATS_SENDER,
+          statssender: STATS_SENDER,
           statsinteraction: STATS_INTERACTION,
           statsboolean: STATS_BOOLEAN,
           statsconfig: STATS_CONFIG,
-          // object codepage kinds
-          kinds: [
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
-              (codepage) => memoryreadcodepagename(codepage),
-            ),
-            ...objectKeys(categoryconsts),
-          ],
-          // other codepage types
-          altkinds: [
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.BOARD),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.PALETTE),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.CHARSET),
-            ...memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.LOADER),
-          ].map((codepage) => memoryreadcodepagename(codepage)),
+          objects: memorylistallcodepagewithtype(CODE_PAGE_TYPE.OBJECT).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          terrains: memorylistallcodepagewithtype(CODE_PAGE_TYPE.TERRAIN).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          boards: memorylistallcodepagewithtype(CODE_PAGE_TYPE.BOARD).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          palettes: memorylistallcodepagewithtype(CODE_PAGE_TYPE.PALETTE).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          charsets: memorylistallcodepagewithtype(CODE_PAGE_TYPE.CHARSET).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          loaders: memorylistallcodepagewithtype(CODE_PAGE_TYPE.LOADER).map(
+            (codepage) => memoryreadcodepagename(codepage),
+          ),
+          categories: [...objectKeys(categoryconsts)],
           colors: [...objectKeys(colorconsts)],
           dirs: [
             ...objectKeys(dirconsts).filter(
@@ -414,7 +442,8 @@ const vm = createdevice(
             'run',
             'runwith',
           ],
-        })
+        }
+        vm.replynext(message, `ackzsswords`, zsswords)
         break
       }
       case 'books':

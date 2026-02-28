@@ -10,6 +10,12 @@ type FIRMWARE_LIST = () => string[]
 
 export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
 
+/** One argument signature: zero or more ARG_TYPE (number) followed by a string (e.g. description). */
+export type COMMAND_ARGS_SIGNATURE = [...number[], string]
+
+/** No-arg command: single signature with no ARG_TYPEs and empty description. */
+export const NO_COMMAND_ARGS: COMMAND_ARGS_SIGNATURE = ['']
+
 export type FIRMWARE_EVENTS = {
   get?: FIRMWARE_GET
   set?: FIRMWARE_SET
@@ -24,12 +30,18 @@ export type FIRMWARE = {
   everytick: FIRMWARE_CYCLE
   aftertick: FIRMWARE_CYCLE
   getcommand: (name: string) => FIRMWARE_COMMAND | undefined
-  command: (name: string, func: FIRMWARE_COMMAND) => FIRMWARE
+  getcommandargs: (name: string) => COMMAND_ARGS_SIGNATURE | undefined
+  command: (
+    name: string,
+    args: COMMAND_ARGS_SIGNATURE,
+    func: FIRMWARE_COMMAND,
+  ) => FIRMWARE
   listcommands: () => string[]
 }
 
 export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
   const commands: Record<string, FIRMWARE_COMMAND> = {}
+  const commandArgs: Record<string, COMMAND_ARGS_SIGNATURE> = {}
 
   const firmware: FIRMWARE = {
     everytick() {},
@@ -41,8 +53,12 @@ export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
     getcommand(name) {
       return commands[name]
     },
-    command(name, func): FIRMWARE {
+    getcommandargs(name) {
+      return commandArgs[name]
+    },
+    command(name, args, func): FIRMWARE {
       commands[name] = func
+      commandArgs[name] = args
       return firmware
     },
   }

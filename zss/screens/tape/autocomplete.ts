@@ -1,43 +1,30 @@
-import { romintolookup, romread } from 'zss/feature/rom'
+import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
+import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
-import { MAYBE } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
   applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
+import { ARG_TYPE, COLOR } from 'zss/words/types'
 
+import { zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 
-export type AUTO_COMPLETE_CATEGORY =
-  | 'command'
-  | 'flag'
-  | 'stat'
-  | 'kind'
-  | 'color'
-  | 'dir'
-  | 'dirmod'
-  | 'expr'
-
-/** Words per category for autocomplete. Ensures each category has a word list. */
-export type AUTO_COMPLETE_WORDS = {
-  command: string[]
-  flag: string[]
-  stat: string[]
-  kind: string[]
-  color: string[]
-  dir: string[]
-  dirmod: string[]
-  expr: string[]
+export type AUTO_COMPLETE_SUGGESTION = {
+  word: string
+  category: string
 }
 
 export type AUTO_COMPLETE = {
-  suggestions: string[]
+  suggestions: AUTO_COMPLETE_SUGGESTION[]
   prefix: string
   wordcol: number
   wordstart: number
+  checkforargshint: boolean
+  checkforargswords: string[]
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
@@ -45,70 +32,52 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   prefix: '',
   wordcol: 0,
   wordstart: 0,
-}
-
-const ROM_CATEGORIES = [
-  'flag',
-  'stat',
-  'color',
-  'dir',
-  'dirmod',
-  'expr',
-  'command',
-]
-
-const STRIP_COLOR = /^\$\w+/i
-
-function stripromvalue(value: string): string {
-  return value.replace(STRIP_COLOR, '').trim()
-}
-
-/** Autocomplete dropdown hint: description only (args are shown separately when a command is detected to the left). */
-function exthintfromcontent(content: string): string {
-  const lookup = romintolookup(content)
-  const desc = stripromvalue(lookup.desc ?? '')
-  return desc
-}
-
-function romhintfor(word: string, words: AUTO_COMPLETE_WORDS): string {
-  const lower = word.toLowerCase().trim()
-  if (!lower) {
-    return ''
-  }
-  // check if lower is a kind
-  const iskind = words.kind.some((k) => k.toLowerCase().trim() === lower)
-  if (iskind) {
-    return `is a board element`
-  }
-  // scan for rom hints
-  for (const category of ROM_CATEGORIES) {
-    const content = romread(`editor:${category}:${lower}`)
-    if (content) {
-      return exthintfromcontent(content)
-    }
-  }
-  return ''
+  checkforargshint: false,
+  checkforargswords: [],
 }
 
 const MAX_SUGGESTIONS = 8
 
-function filtersuggestions(prefix: string, words: string[]): string[] {
+function filtersuggestions(
+  prefix: string,
+  items: AUTO_COMPLETE_SUGGESTION[],
+): AUTO_COMPLETE_SUGGESTION[] {
   if (prefix.length < 1) {
     return []
   }
   const lower = prefix.toLowerCase()
-  return words
-    .filter(
-      (w) => w.toLowerCase().startsWith(lower) && w.toLowerCase() !== lower,
-    )
-    .sort()
+  const seen = new Set<string>()
+  return items
+    .filter(({ word }) => {
+      const wl = word.toLowerCase()
+      if (seen.has(wl) || !wl.startsWith(lower) || wl === lower) {
+        return false
+      }
+      seen.add(wl)
+      return true
+    })
+    .sort((a, b) => a.word.localeCompare(b.word))
     .slice(0, MAX_SUGGESTIONS)
+}
+
+function tagwords(
+  words: string[],
+  category: string,
+): AUTO_COMPLETE_SUGGESTION[] {
+  return words.map((word) => ({ word, category }))
+}
+
+function tagrecordkeys(
+  rec: Record<string, unknown>,
+  category: string,
+): AUTO_COMPLETE_SUGGESTION[] {
+  return Object.keys(rec).map((word) => ({ word, category }))
 }
 
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
-  words: AUTO_COMPLETE_WORDS,
+  words: GADGET_ZSS_WORDS,
 ): MAYBE<AUTO_COMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
@@ -136,6 +105,22 @@ function getautocompletefromtokens(
       --activetokenidx
     }
 
+    // detect command token to our left and first token after it (command name)
+    let commandTokenIdx = -1
+    for (let i = activetokenidx - 1; i >= 0; i--) {
+      if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
+        commandTokenIdx = i
+        break
+      }
+    }
+    const checkforargshint = commandTokenIdx >= 0
+    const tokensAfterCommandToCursor =
+      commandTokenIdx >= 0
+        ? tokens
+            .slice(commandTokenIdx + 1, activetokenidx + 1)
+            .map((t) => t.image ?? '')
+        : []
+
     // get token context
     const token = tokens[activetokenidx]
     const prev = tokens[activetokenidx - 1]
@@ -150,35 +135,61 @@ function getautocompletefromtokens(
         switch (prev?.tokenTypeIdx) {
           case lexer.command.tokenTypeIdx:
             return {
-              suggestions: filtersuggestions(prefix, words.command),
-              prefix,
-              wordcol,
-              wordstart,
-            }
-          case lexer.stat.tokenTypeIdx:
-            return {
-              suggestions: filtersuggestions(prefix, words.stat),
-              prefix,
-              wordcol,
-              wordstart,
-            }
-          default:
-            return {
               suggestions: filtersuggestions(prefix, [
-                ...words.flag,
-                ...words.stat,
-                ...words.kind,
-                ...words.color,
-                ...words.dir,
-                ...words.dirmod,
-                ...words.expr,
+                ...tagrecordkeys(words.clicommands, 'clicommands'),
+                ...tagrecordkeys(words.loadercommands, 'loadercommands'),
+                ...tagrecordkeys(words.runtimecommands, 'runtimecommands'),
               ]),
               prefix,
               wordcol,
               wordstart,
+              checkforargshint,
+              checkforargswords: tokensAfterCommandToCursor,
+            }
+          case lexer.stat.tokenTypeIdx:
+            return {
+              suggestions: filtersuggestions(prefix, [
+                ...tagwords(words.statsboard, 'stats'),
+                ...tagwords(words.statshelper, 'stats'),
+                ...tagwords(words.statssender, 'stats'),
+                ...tagwords(words.statsinteraction, 'stats'),
+                ...tagwords(words.statsboolean, 'stats'),
+                ...tagwords(words.statsconfig, 'stats'),
+              ]),
+              prefix,
+              wordcol,
+              wordstart,
+              checkforargshint,
+              checkforargswords: tokensAfterCommandToCursor,
+            }
+          default:
+            return {
+              suggestions: filtersuggestions(prefix, [
+                ...tagwords(words.flags, 'flags'),
+                ...tagwords(words.statsboard, 'stats'),
+                ...tagwords(words.statshelper, 'stats'),
+                ...tagwords(words.statssender, 'stats'),
+                ...tagwords(words.statsinteraction, 'stats'),
+                ...tagwords(words.statsboolean, 'stats'),
+                ...tagwords(words.statsconfig, 'stats'),
+                ...tagwords(words.objects, 'objects'),
+                ...tagwords(words.terrains, 'terrains'),
+                ...tagwords(words.boards, 'boards'),
+                ...tagwords(words.palettes, 'palettes'),
+                ...tagwords(words.charsets, 'charsets'),
+                ...tagwords(words.loaders, 'loaders'),
+                ...tagwords(words.colors, 'colors'),
+                ...tagwords(words.dirs, 'dirs'),
+                ...tagwords(words.dirmods, 'dirmods'),
+                ...tagwords(words.exprs, 'exprs'),
+              ]),
+              prefix,
+              wordcol,
+              wordstart,
+              checkforargshint,
+              checkforargswords: tokensAfterCommandToCursor,
             }
         }
-        break
       case lexer.stat.tokenTypeIdx:
         // only consider autocomplete for stats if we are in the editor
         break
@@ -211,13 +222,11 @@ function getautocompletefromtokens(
 }
 
 export function getautocomplete(
-  rows: EDITOR_CODE_ROW[],
+  row: MAYBE<EDITOR_CODE_ROW>,
   cursor: number,
-  ycursor: number,
-  words: AUTO_COMPLETE_WORDS,
+  words: GADGET_ZSS_WORDS,
 ): AUTO_COMPLETE {
-  const row = rows[ycursor]
-  if (!row) {
+  if (!ispresent(row)) {
     return EMPTY_AUTOCOMPLETE
   }
   return (
@@ -240,23 +249,18 @@ function applysuggestioncolors(
   word: string,
   fg: number,
   bg: number,
-  wordcolors: Map<string, number> | undefined,
   context: WRITE_TEXT_CONTEXT,
 ) {
   applystrtoindex(bufindex, text, context)
-
-  if (!wordcolors) {
-    applycolortoindexes(bufindex, bufindex + text.length - 1, fg, bg, context)
-    return
-  }
-
-  const wordcolor = wordcolors.get(word.toLowerCase()) ?? fg
   for (let c = 0; c < text.length; c++) {
-    const charoffset = textoffset + c
-    const ispadding = charoffset === 0 || charoffset > word.length
-    const color = ispadding ? fg : wordcolor
-    context.color[bufindex + c] = color
-    context.bg[bufindex + c] = bg
+    const wordcolor = zsswordcolor(word.toLowerCase())
+    if (!isarray(wordcolor)) {
+      const charoffset = textoffset + c
+      const ispadding = charoffset === 0 || charoffset > word.length
+      const color = ispadding ? fg : wordcolor
+      context.color[bufindex + c] = color
+      context.bg[bufindex + c] = bg
+    }
   }
   context.changed()
 }
@@ -284,25 +288,93 @@ function drawhinttext(
   )
 }
 
-export function drawautocomplete(
-  ac: AUTO_COMPLETE,
-  acindex: number,
+/**
+ * Draws the argument hint for a command (e.g. above the terminal input).
+ * Uses the trailing hint string from the command's single signature.
+ */
+export function drawcommandarghint(
+  sig: COMMAND_ARGS_SIGNATURE,
   px: number,
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
-  words: AUTO_COMPLETE_WORDS,
-  wordcolors?: Map<string, number>,
+) {
+  const withsig = [...sig]
+  const hint = withsig.pop()
+  if (!isstring(hint)) {
+    return
+  }
+  let cursor = px
+  for (const arg of withsig) {
+    let arglabel = ''
+    switch (arg) {
+      case ARG_TYPE.COLOR:
+        arglabel = '<color>'
+        break
+      case ARG_TYPE.KIND:
+        arglabel = '<kind>'
+        break
+      case ARG_TYPE.DIR:
+        arglabel = '<dir>'
+        break
+      case ARG_TYPE.NAME:
+        arglabel = '<name>'
+        break
+      case ARG_TYPE.NUMBER:
+        arglabel = '<number>'
+        break
+      case ARG_TYPE.STRING:
+        arglabel = '<string>'
+        break
+      case ARG_TYPE.NUMBER_OR_STRING:
+        arglabel = '<number or string>'
+        break
+      case ARG_TYPE.COLOR_OR_KIND:
+        arglabel = '<color or kind>'
+        break
+      case ARG_TYPE.MAYBE_KIND:
+        arglabel = '[kind]'
+        break
+      case ARG_TYPE.MAYBE_NAME:
+        arglabel = '[name]'
+        break
+      case ARG_TYPE.MAYBE_NUMBER:
+        arglabel = '[number]'
+        break
+      case ARG_TYPE.MAYBE_STRING:
+        arglabel = '[string]'
+        break
+      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
+        arglabel = '[number or string]'
+        break
+      case ARG_TYPE.ANY:
+        arglabel = '<any>'
+        break
+    }
+    drawhinttext(arglabel, cursor, py, edge.right, context)
+    cursor += arglabel.length + 1
+  }
+  drawhinttext(hint, cursor, py, edge.right, context)
+}
+
+export function drawautocomplete(
+  autocomplete: AUTO_COMPLETE,
+  autocompleteindex: number,
+  px: number,
+  py: number,
+  edge: AutocompleteEdge,
+  context: WRITE_TEXT_CONTEXT,
+  words: GADGET_ZSS_WORDS,
   drawabove?: boolean,
 ) {
-  if (ac.suggestions.length === 0) {
+  if (autocomplete.suggestions.length === 0) {
     return
   }
 
-  const effectiveindex = acindex < 0 ? 0 : acindex
-  const numrows = ac.suggestions.length
-  const maxitemlen = ac.suggestions.reduce(
-    (max, s) => Math.max(max, s.length),
+  const effectiveindex = Math.max(0, autocompleteindex)
+  const numrows = autocomplete.suggestions.length
+  const maxitemlen = autocomplete.suggestions.reduce(
+    (max, s) => Math.max(max, s.word.length),
     0,
   )
   const itemwidth = maxitemlen + 2
@@ -320,7 +392,7 @@ export function drawautocomplete(
   }
 
   const minY = drawabove ? edge.top : edge.top + 2
-  for (let i = 0; i < ac.suggestions.length; i++) {
+  for (let i = 0; i < autocomplete.suggestions.length; i++) {
     const y = yforindex(i)
     if (y >= edge.bottom || y < minY) {
       continue
@@ -329,14 +401,14 @@ export function drawautocomplete(
     const selected = i === effectiveindex
     const bg = selected ? AC_SEL_BG : AC_BG
 
-    const rowstart = Math.max(px, edge.left + 1)
+    const rowstart = Math.max(px, edge.left)
     const rowend = Math.min(px + itemwidth - 1, edge.right - 1)
     if (rowstart > rowend) {
       continue
     }
 
     const textoffset = rowstart - px
-    const fulltext = ` ${ac.suggestions[i]} `
+    const fulltext = ` ${autocomplete.suggestions[i].word} `
       .padEnd(itemwidth, ' ')
       .substring(0, itemwidth)
     const text = fulltext.substring(
@@ -349,15 +421,62 @@ export function drawautocomplete(
       bufindex,
       textoffset,
       text,
-      ac.suggestions[i],
+      autocomplete.suggestions[i].word,
       selected ? AC_SEL_FG : AC_FG,
       bg,
-      wordcolors,
       context,
     )
 
     if (selected) {
-      const hint = romhintfor(ac.suggestions[i], words)
+      let hint = ''
+      const suggestion = autocomplete.suggestions[i]
+      switch (suggestion.category) {
+        case 'objects':
+          hint = 'object codepage'
+          break
+        case 'terrains':
+          hint = 'terrain codepage'
+          break
+        case 'boards':
+          hint = 'board codepage'
+          break
+        case 'palettes':
+          hint = 'palette codepage'
+          break
+        case 'charsets':
+          hint = 'charset codepage'
+          break
+        case 'loaders':
+          hint = 'loader codepage'
+          break
+        case 'clicommands':
+        case 'loadercommands':
+        case 'runtimecommands': {
+          const sigs = words[suggestion.category]?.[suggestion.word]
+          if (sigs && Array.isArray(sigs)) {
+            const seen = new Set<string>()
+            for (const sig of sigs) {
+              if (!Array.isArray(sig) || sig.length === 0) {
+                continue
+              }
+              const last = sig[sig.length - 1]
+              if (typeof last === 'string') {
+                const trimmed = last.trim()
+                if (trimmed && !seen.has(trimmed)) {
+                  seen.add(trimmed)
+                }
+              }
+            }
+            if (seen.size > 0) {
+              hint = Array.from(seen).join(' | ')
+            }
+          }
+          break
+        }
+        default:
+          hint = suggestion.category
+          break
+      }
       if (hint) {
         const hintx = rowstart + text.length
         drawhinttext(hint, hintx, y, edge.right, context)

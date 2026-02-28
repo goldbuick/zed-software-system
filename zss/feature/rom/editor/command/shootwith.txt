@@ -1,2 +1,0 @@
-desc;$DKGRAYShoot projectile with argument
-args;$DKGRAY(none)

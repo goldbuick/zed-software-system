@@ -1,2 +1,0 @@
-desc;$DKGRAYEnter dev mode / halt execution (operator only)
-args;$DKGRAY(none)

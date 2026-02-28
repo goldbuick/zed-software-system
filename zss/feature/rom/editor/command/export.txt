@@ -1,2 +1,0 @@
-desc;$DKGRAYShow export menu (operator only)
-args;$DKGRAY(none)

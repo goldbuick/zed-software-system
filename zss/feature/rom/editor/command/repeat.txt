@@ -1,2 +1,0 @@
-desc;$DKGRAYRepeat a command N times
-args;$DKGRAY(none)

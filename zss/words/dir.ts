@@ -1,8 +1,8 @@
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { STR_KIND } from './kind'
-import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
-import { DIR, NAME, PT, WORD } from './types'
+import { READ_CONTEXT, readargs } from './reader'
+import { ARG_TYPE, DIR, NAME, PT, WORD } from './types'
 
 export function ispt(value: any): value is PT {
   return ispresent(value) && ispresent(value.x) && ispresent(value.y)

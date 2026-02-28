@@ -1,2 +1,0 @@
-desc;$DKGRAYLegacy ZZT command, not implemented
-args;$DKGRAY(none)

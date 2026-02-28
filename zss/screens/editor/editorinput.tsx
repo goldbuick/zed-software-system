@@ -11,12 +11,16 @@ import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { useEditor } from 'zss/gadget/data/state'
+import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { AUTO_COMPLETE } from 'zss/screens/tape/autocomplete'
+import {
+  AUTO_COMPLETE,
+  drawautocomplete,
+  drawcommandarghint,
+} from 'zss/screens/tape/autocomplete'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -44,7 +48,7 @@ export type EditorInputProps = {
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
-  autocompleteactive?: boolean
+  autocompleteactive: boolean
 }
 
 export function EditorInput({
@@ -55,10 +59,13 @@ export function EditorInput({
   rows,
   codepage,
   autocomplete,
+  autocompleteactive,
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
+  const autocompleteindex = useTape((state) => state.autocompleteindex)
+  const zsswords = useGadgetClient((state) => state.zsswords)
   const player = registerreadplayer()
   const blinkdelta = useRef<PT>(undefined)
   const cursorBeforeEditRef = useRef(0)
@@ -124,6 +131,44 @@ export function EditorInput({
     context,
   )
 
+  const suggestionslength = autocomplete.suggestions.length
+  const starty = edge.top + 2 + (ycursor - yoffset) + 1
+  const drawabove = starty + suggestionslength > edge.bottom - 1
+
+  const startx = edge.left - xoffset + autocomplete.wordcol
+  if (autocompleteactive) {
+    drawautocomplete(
+      autocomplete,
+      autocompleteindex,
+      startx,
+      drawabove ? starty - 1 : starty,
+      edge,
+      context,
+      zsswords,
+      drawabove,
+    )
+  }
+
+  if (
+    autocomplete.checkforargshint &&
+    autocomplete.checkforargswords.length > 0
+  ) {
+    const [command] = autocomplete.checkforargswords
+    const maybesig =
+      zsswords.clicommands[command] ??
+      zsswords.loadercommands[command] ??
+      zsswords.runtimecommands[command]
+    if (ispresent(maybesig)) {
+      drawcommandarghint(
+        maybesig,
+        startx + command.length,
+        starty,
+        edge,
+        context,
+      )
+    }
+  }
+
   // --- selection state ---
 
   const { ii1, iic, hasselection, strvalueselected } = computeSelection(
@@ -157,20 +202,11 @@ export function EditorInput({
     useEditor.setState({ cursor: codeend, select: undefined })
   }
 
-  const acactive =
-    tapeeditor.autocompleteactive && autocomplete.suggestions.length > 0
-  const acnumRows = autocomplete.suggestions.length
-  const accursorRowY = edge.top + 2 + ycursor - yoffset + 1
-  const acdrawBelow = accursorRowY + acnumRows <= edge.bottom - 1
-
   function acceptsuggestion() {
-    if (!ispresent(codepage) || autocomplete.suggestions.length === 0) {
+    if (autocomplete.suggestions.length === 0) {
       return
     }
-    const idx =
-      tapeeditor.acindex < 0
-        ? 0
-        : Math.min(tapeeditor.acindex, autocomplete.suggestions.length - 1)
+    const idx = Math.min(autocompleteindex, autocomplete.suggestions.length - 1)
     const suggestion = autocomplete.suggestions[idx]
     if (!suggestion) {
       return
@@ -178,8 +214,9 @@ export function EditorInput({
     strvaluesplice(
       autocomplete.wordstart,
       autocomplete.prefix.length,
-      suggestion,
+      suggestion.word,
     )
+    useTape.setState({ autocompleteindex: -1 })
   }
 
   // --- render ---
@@ -205,7 +242,7 @@ export function EditorInput({
           } else {
             movexcursor(tapeeditor.cursor - (mods.alt ? 10 : 1))
           }
-          useEditor.setState({ acindex: -1 })
+          useTape.setState({ autocompleteindex: -1 })
         }}
         MOVE_RIGHT={(mods) => {
           trackselection(mods.shift)
@@ -214,14 +251,19 @@ export function EditorInput({
           } else {
             movexcursor(tapeeditor.cursor + (mods.alt ? 10 : 1))
           }
-          useEditor.setState({ acindex: -1 })
+          useTape.setState({ autocompleteindex: -1 })
         }}
         MOVE_UP={(mods) => {
-          if (acactive) {
-            const next = acdrawBelow
-              ? Math.max(0, tapeeditor.acindex - 1)
-              : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
-            useEditor.setState({ acindex: next })
+          if (autocompleteactive) {
+            const maxIdx = autocomplete.suggestions.length - 1
+            useTape.setState({
+              autocompleteindex: drawabove
+                ? Math.min(
+                    maxIdx,
+                    (autocompleteindex < 0 ? 0 : autocompleteindex) + 1,
+                  )
+                : Math.max(0, autocompleteindex - 1),
+            })
             return
           }
           trackselection(mods.shift)
@@ -230,16 +272,19 @@ export function EditorInput({
           } else {
             moveycursor(mods.alt ? -10 : -1)
           }
-          useEditor.setState({ acindex: -1 })
+          useTape.setState({ autocompleteindex: -1 })
         }}
         MOVE_DOWN={(mods) => {
-          if (acactive) {
-            const next = acdrawBelow
-              ? tapeeditor.acindex < 0
-                ? 0
-                : Math.min(acnumRows - 1, tapeeditor.acindex + 1)
-              : Math.max(0, tapeeditor.acindex - 1)
-            useEditor.setState({ acindex: next })
+          if (autocompleteactive) {
+            const maxIdx = autocomplete.suggestions.length - 1
+            useTape.setState({
+              autocompleteindex: drawabove
+                ? Math.max(0, autocompleteindex - 1)
+                : Math.min(
+                    maxIdx,
+                    autocompleteindex < 0 ? 0 : autocompleteindex + 1,
+                  ),
+            })
             return
           }
           trackselection(mods.shift)
@@ -248,10 +293,10 @@ export function EditorInput({
           } else {
             moveycursor(mods.alt ? 10 : 1)
           }
-          useEditor.setState({ acindex: -1 })
+          useTape.setState({ autocompleteindex: -1 })
         }}
         OK_BUTTON={() => {
-          if (acactive) {
+          if (autocompleteactive) {
             acceptsuggestion()
             return
           }
@@ -260,12 +305,13 @@ export function EditorInput({
             codepage.insert(tapeeditor.cursor, `\n`)
             const cursor = tapeeditor.cursor + 1
             updatescrolling(cursor)
-            useEditor.setState({ cursor, acindex: -1 })
+            useEditor.setState({ cursor })
+            useTape.setState({ autocompleteindex: -1 })
           }
         }}
         CANCEL_BUTTON={(mods) => {
-          if (acactive) {
-            useEditor.setState({ acindex: -1, autocompleteactive: false })
+          if (autocompleteactive) {
+            useTape.setState({ autocompleteindex: -1 })
             return
           }
           if (mods.shift || mods.alt || mods.ctrl) {
@@ -275,6 +321,10 @@ export function EditorInput({
           }
         }}
         MENU_BUTTON={(mods) => {
+          if (autocompleteactive) {
+            acceptsuggestion()
+            return
+          }
           registerterminalinclayout(SOFTWARE, player, !mods.shift)
         }}
         keydown={(event) => {
@@ -293,7 +343,7 @@ export function EditorInput({
               } else {
                 strvaluesplice(tapeeditor.cursor, 1)
               }
-              useEditor.setState({ acindex: 0 })
+              useTape.setState({ autocompleteindex: 0 })
               break
             case 'backspace':
               if (hasselection) {
@@ -301,7 +351,7 @@ export function EditorInput({
               } else if (strvalue.length > 0) {
                 strvaluesplice(Math.max(tapeeditor.cursor - 1, 0), 1)
               }
-              useEditor.setState({ acindex: 0 })
+              useTape.setState({ autocompleteindex: 0 })
               break
             default:
               if (mods.ctrl) {
@@ -406,15 +456,17 @@ export function EditorInput({
                   } else {
                     strvaluesplice(ii1, iic, event.key)
                   }
+                  useTape.setState({
+                    autocompleteindex: event.key === ' ' ? -1 : 0,
+                  })
                 } else {
                   cursorBeforeEditRef.current = tapeeditor.cursor
                   const cursor = tapeeditor.cursor + event.key.length
                   codepage.insert(tapeeditor.cursor, event.key)
                   updatescrolling(cursor)
-                  useEditor.setState({
-                    cursor,
-                    acindex: 0,
-                    autocompleteactive: true,
+                  useEditor.setState({ cursor })
+                  useTape.setState({
+                    autocompleteindex: event.key === ' ' ? -1 : 0,
                   })
                 }
               }

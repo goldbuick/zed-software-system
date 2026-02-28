@@ -1,2 +1,0 @@
-desc;$DKGRAYWill cause element to move in direction each tick
-args;$DKGRAY<dir>

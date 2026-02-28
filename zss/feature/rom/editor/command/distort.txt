@@ -1,2 +1,0 @@
-desc;$DKGRAYApply distortion to all 4 channels of #play
-args;$DKGRAY[config] [value]

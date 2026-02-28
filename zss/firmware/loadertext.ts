@@ -3,8 +3,8 @@ import { FIRMWARE_COMMAND } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { memoryloadercontent } from 'zss/memory/loader'
-import { ARG_TYPE, readargs } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
+import { readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME } from 'zss/words/types'
 
 export const loadertext: FIRMWARE_COMMAND = (chip, words) => {
   const textreader: TEXT_READER = memoryloadercontent(chip.id())

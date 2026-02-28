@@ -1,2 +1,0 @@
-desc;$DKGRAYDelete element (halt execution unless @isitem)
-args;$DKGRAY(none)

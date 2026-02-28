@@ -1,2 +1,0 @@
-desc;$DKGRAYConfigure all 4 channels of #play synth voices
-args;$DKGRAY(none)
