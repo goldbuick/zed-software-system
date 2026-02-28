@@ -79,6 +79,7 @@ export function EditorInput({
   const rowsend = rows.length - 1
   const codeend = rows[rowsend].end
   const coderow = rows[ycursor]
+  const coderowlength = coderow.code.length
 
   // --- hooks ---
 
@@ -135,12 +136,12 @@ export function EditorInput({
   const starty = edge.top + 2 + (ycursor - yoffset) + 1
   const drawabove = starty + suggestionslength > edge.bottom - 1
 
-  const startx = edge.left - xoffset + autocomplete.wordcol
+  const startx = edge.left - xoffset
   if (autocompleteactive) {
     drawautocomplete(
       autocomplete,
       autocompleteindex,
-      startx,
+      startx + autocomplete.wordcol,
       drawabove ? starty - 1 : starty,
       edge,
       context,
@@ -161,8 +162,8 @@ export function EditorInput({
     if (ispresent(maybesig)) {
       drawcommandarghint(
         maybesig,
-        startx + command.length,
-        starty,
+        startx + coderowlength + 1,
+        starty - 1,
         edge,
         context,
       )

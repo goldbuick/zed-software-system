@@ -114,7 +114,7 @@ function getautocompletefromtokens(
       }
     }
     const checkforargshint = commandTokenIdx >= 0
-    const tokensAfterCommandToCursor =
+    const checkforargswords =
       commandTokenIdx >= 0
         ? tokens
             .slice(commandTokenIdx + 1, activetokenidx + 1)
@@ -144,7 +144,7 @@ function getautocompletefromtokens(
               wordcol,
               wordstart,
               checkforargshint,
-              checkforargswords: tokensAfterCommandToCursor,
+              checkforargswords,
             }
           case lexer.stat.tokenTypeIdx:
             return {
@@ -160,7 +160,7 @@ function getautocompletefromtokens(
               wordcol,
               wordstart,
               checkforargshint,
-              checkforargswords: tokensAfterCommandToCursor,
+              checkforargswords,
             }
           default:
             return {
@@ -187,7 +187,7 @@ function getautocompletefromtokens(
               wordcol,
               wordstart,
               checkforargshint,
-              checkforargswords: tokensAfterCommandToCursor,
+              checkforargswords,
             }
         }
       case lexer.stat.tokenTypeIdx:
@@ -217,7 +217,17 @@ function getautocompletefromtokens(
         console.info('token unknown', token.image)
         break
     }
+
+    return {
+      suggestions: [],
+      prefix: '',
+      wordcol: 0,
+      wordstart: 0,
+      checkforargshint,
+      checkforargswords: [],
+    }
   }
+
   return undefined
 }
 
