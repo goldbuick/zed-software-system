@@ -1039,11 +1039,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command(
-    'run',
-    [ARG_TYPE.NAME, 'object codepage of given name'],
-    commandrun,
-  )
+  .command('run', [ARG_TYPE.NAME, 'object codepage of given name'], commandrun)
   .command(
     'runwith',
     [ARG_TYPE.ANY, 'function with argument'],

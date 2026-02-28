@@ -68,7 +68,10 @@ function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
 }
 
 export function memorygadgetinspectboard(player: string, board: string) {
-  const boardcodepage = memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.BOARD, board)
+  const boardcodepage = memorypickcodepagewithtypeandstat(
+    CODE_PAGE_TYPE.BOARD,
+    board,
+  )
   gadgettext(player, `board ${memoryreadcodepagename(boardcodepage)}:`)
   gadgethyperlink(player, 'batch', `board id ${board}`, ['copyit', board])
   gadgethyperlink(player, 'batch', `edit board codepage`, [`pageopen:${board}`])

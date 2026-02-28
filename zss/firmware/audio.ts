@@ -439,7 +439,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     [
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-        'distortion to all 4 channels of #play',
+      'distortion to all 4 channels of #play',
     ],
     (_, words) => {
       // multi-voice changes only apply to #play

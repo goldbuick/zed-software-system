@@ -1,7 +1,6 @@
 import type { IToken } from 'chevrotain'
 import { useTerminal } from 'zss/gadget/data/state'
 import { tokenize } from 'zss/lang/lexer'
-import * as lexer from 'zss/lang/lexer'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   type InputSelectionRange,
@@ -9,22 +8,10 @@ import {
   drawBlockCursor,
 } from 'zss/screens/inputcommon'
 import {
-  ZSS_COLOR_MAP,
-  ZSS_TYPE_COMMAND,
-  ZSS_TYPE_COMMENT,
-  ZSS_TYPE_LABEL,
-  ZSS_TYPE_NUMBER,
-  ZSS_TYPE_STATNAME,
-  ZSS_TYPE_SYMBOL,
-  ZSS_TYPE_TEXT,
-  zssmusiccolor,
-} from 'zss/screens/tape/colors'
-import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { COLOR, NAME } from 'zss/words/types'
 
 export function tokenizeline(line: string): IToken[] {
   try {

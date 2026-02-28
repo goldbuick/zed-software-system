@@ -6,7 +6,6 @@ import {
   type TextEdge,
   computeSelectionRange,
   drawBlockCursor,
-  getColorForPlayer,
 } from 'zss/screens/inputcommon'
 import {
   ZSS_CURSOR_BG,
@@ -25,9 +24,6 @@ import {
 import { PT } from 'zss/words/types'
 
 export type EditorEdge = ReturnType<typeof textformatreadedges>
-
-// Re-export for callers that use getColorForPlayer from this file
-export { getColorForPlayer }
 
 export type SelectionRange = InputSelectionRange & { strvalueselected: string }
 
