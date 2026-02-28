@@ -70,45 +70,45 @@ export const LOADER_FIRMWARE = createfirmware({
     return [false, undefined]
   },
 })
-  .command('endgame', [['health to 0']], () => {
+  .command('endgame', ['health to 0'], () => {
     // no-op when called in loaders
     return 0
   })
   .command(
     'shortsend',
-    [['message (short form, no target keyword needed)']],
+    ['message (short form, no target keyword needed)'],
     (chip, words) => {
       const send = parsesend(words)
       memorysendtoelements(chip, READ_CONTEXT.element, send)
       return 0
     },
   )
-  .command('send', [['message to target elements']], (chip, words) => {
+  .command('send', ['message to target elements'], (chip, words) => {
     const send = parsesend(words, true)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('stat', [['text in a scroll window']], () => {
+  .command('stat', ['text in a scroll window'], () => {
     // no-op
     return 0
   })
-  .command('text', [['text on element or in sidebar']], (_, words) => {
+  .command('text', ['text on element or in sidebar'], (_, words) => {
     const text = words.map(maptostring).join(' ')
     apichat(SOFTWARE, '', '$GREEN', text)
     return 0
   })
-  .command('hyperlink', [['clickable link in scroll or log']], (chip, args) => {
+  .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
     apichat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
     return 0
   })
-  .command('readline', [['text data']], loadertext)
-  .command('readjson', [['JSON data']], loaderjson)
-  .command('readbin', [['binary data']], loaderbinary)
+  .command('readline', ['text data'], loadertext)
+  .command('readjson', ['JSON data'], loaderjson)
+  .command('readbin', ['binary data'], loaderbinary)
   .command(
     'withboard',
-    [[ARG_TYPE.STRING, 'to target board by id, name, or stat']],
+    [ARG_TYPE.STRING, 'to target board by id, name, or stat'],
     (_, words) => {
       const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
       // this will update the READ_CONTEXT so element centric
@@ -126,7 +126,7 @@ export const LOADER_FIRMWARE = createfirmware({
   )
   .command(
     'withobject',
-    [[ARG_TYPE.STRING, 'to target object id']],
+    [ARG_TYPE.STRING, 'to target object id'],
     (_, words) => {
       // the idea here is we can give an object id
       // and it'll update the READ_CONTEXT to point to the given object
@@ -150,7 +150,7 @@ export const LOADER_FIRMWARE = createfirmware({
   )
   .command(
     'userinput',
-    [[ARG_TYPE.NAME, 'user input actions (up/down/left/right/etc)']],
+    [ARG_TYPE.NAME, 'user input actions (up/down/left/right/etc)'],
     (_, words) => {
       const [action] = readargs(words, 0, [ARG_TYPE.NAME])
       const player = memoryreadoperator()

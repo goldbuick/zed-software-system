@@ -125,7 +125,7 @@ function vmflushop() {
 export const CLI_FIRMWARE = createfirmware()
   .command(
     'shortsend',
-    [['message (short form, no target keyword needed)']],
+    ['message (short form, no target keyword needed)'],
     (chip, words) => {
       const send = parsesend(words)
       // #funfact - loader fallback
@@ -144,12 +144,12 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('send', [['message to target elements']], (chip, words) => {
+  .command('send', ['message to target elements'], (chip, words) => {
     const send = parsesend(words, true)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('stat', [['text in a scroll window']], (_, words) => {
+  .command('stat', ['text in a scroll window'], (_, words) => {
     vmmakeitscroll(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
@@ -157,7 +157,7 @@ export const CLI_FIRMWARE = createfirmware()
     )
     return 0
   })
-  .command('text', [['text on element or in sidebar']], (_, words) => {
+  .command('text', ['text on element or in sidebar'], (_, words) => {
     const ticker = words.map(maptostring).join(' ')
     if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
       // update player element ticker
@@ -179,7 +179,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('hyperlink', [['clickable link in scroll or log']], (chip, args) => {
+  .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
     const [label, ...words] = args
     const { user } = memoryreadflags(READ_CONTEXT.elementid)
     const withuser = isstring(user) ? user : 'player'
@@ -194,7 +194,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // --- book & pages commands
-  .command('bookrename', [['the main book (operator only)']], () => {
+  .command('bookrename', ['the main book (operator only)'], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -214,7 +214,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command(
     'booktrash',
-    [[ARG_TYPE.NAME, 'a book by address (operator only)']],
+    [ARG_TYPE.NAME, 'a book by address (operator only)'],
     (chip, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -244,7 +244,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'boardopen',
-    [[ARG_TYPE.NAME, 'to move player to board']],
+    [ARG_TYPE.NAME, 'to move player to board'],
     (_, words) => {
       const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
       const target = memoryreadboardbyaddress(stat)
@@ -265,7 +265,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'pageopen',
-    [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'a code page editor']],
+    [ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'a code page editor'],
     (_, words) => {
       const [page, maybeobject] = readargs(words, 0, [
         ARG_TYPE.NAME,
@@ -323,7 +323,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'pagetrash',
-    [[ARG_TYPE.NAME, 'a code page (operator only)']],
+    [ARG_TYPE.NAME, 'a code page (operator only)'],
     (chip, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -347,11 +347,11 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('help', [['help scroll']], () => {
+  .command('help', ['help scroll'], () => {
     vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('books', [['all books']], () => {
+  .command('books', ['all books'], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -386,7 +386,7 @@ export const CLI_FIRMWARE = createfirmware()
     write(SOFTWARE, READ_CONTEXT.elementfocus, `!bookcreate;create a new book`)
     return 0
   })
-  .command('pages', [['all pages in all loaded books']], () => {
+  .command('pages', ['all pages in all loaded books'], () => {
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (!ispresent(mainbook)) {
       return 0
@@ -443,7 +443,7 @@ export const CLI_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('boards', [['all boards as goto hyperlinks']], () => {
+  .command('boards', ['all boards as goto hyperlinks'], () => {
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `boards`)
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (ispresent(mainbook)) {
@@ -502,7 +502,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('trash', [['books/codepages to delete (operator only)']], () => {
+  .command('trash', ['books/codepages to delete (operator only)'], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -541,7 +541,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- game state related commands
-  .command('dev', [['dev mode / halt execution (operator only)']], () => {
+  .command('dev', ['dev mode / halt execution (operator only)'], () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vmflushop()
       vmhalt(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -550,7 +550,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('share', [['share url (operator only)']], () => {
+  .command('share', ['share url (operator only)'], () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vmflushop()
       registershare(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -559,7 +559,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('save', [['and persist current state (operator only)']], () => {
+  .command('save', ['and persist current state (operator only)'], () => {
     if (isoperator(READ_CONTEXT.elementfocus)) {
       vmflushop()
     } else {
@@ -569,7 +569,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command(
     'fork',
-    [[ARG_TYPE.MAYBE_NAME, 'tab with copy of state (operator only)']],
+    [ARG_TYPE.MAYBE_NAME, 'tab with copy of state (operator only)'],
     (_, words) => {
       if (isoperator(READ_CONTEXT.elementfocus)) {
         const [address] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
@@ -582,7 +582,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'nuke',
-    [['a countdown and reloads into an empty state (operator only)']],
+    ['a countdown and reloads into an empty state (operator only)'],
     () => {
       if (isoperator(READ_CONTEXT.elementfocus)) {
         registernuke(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -592,13 +592,13 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('endgame', [['health to 0']], () => {
+  .command('endgame', ['health to 0'], () => {
     vmlogout(SOFTWARE, READ_CONTEXT.elementfocus, false)
     return 0
   })
   .command(
     'restart',
-    [['software, deletes all chip and player state (operator only)']],
+    ['software, deletes all chip and player state (operator only)'],
     () => {
       if (isoperator(READ_CONTEXT.elementfocus)) {
         vmrestart(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -610,7 +610,7 @@ export const CLI_FIRMWARE = createfirmware()
     },
   )
   // -- export content related commands
-  .command('export', [['export menu (operator only)']], () => {
+  .command('export', ['export menu (operator only)'], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -630,7 +630,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command(
     'bookexport',
-    [[ARG_TYPE.NAME, 'book export options (operator only)']],
+    [ARG_TYPE.NAME, 'book export options (operator only)'],
     (_, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -666,7 +666,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'bookallexport',
-    [[ARG_TYPE.NAME, 'entire book as JSON (operator only)']],
+    [ARG_TYPE.NAME, 'entire book as JSON (operator only)'],
     (_, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -686,7 +686,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'pageexport',
-    [[ARG_TYPE.NAME, 'code page as JSON (operator only)']],
+    [ARG_TYPE.NAME, 'code page as JSON (operator only)'],
     (_, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -706,7 +706,7 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('itchiopublish', [['zip file for itch.io (operator only)']], () => {
+  .command('itchiopublish', ['zip file for itch.io (operator only)'], () => {
     if (!isoperator(READ_CONTEXT.elementfocus)) {
       return 0
     }
@@ -720,12 +720,12 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- editing related commands
-  .command('gadget', [['built-in inspector']], () => {
+  .command('gadget', ['built-in inspector'], () => {
     // gadget will turn on / off the built-in inspector
     registerinspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
     return 0
   })
-  .command('findany', [[ARG_TYPE.ANY, 'matched elements']], (_, words) => {
+  .command('findany', [ARG_TYPE.ANY, 'matched elements'], (_, words) => {
     const [maybeselection] = readargs(words, 0, [ARG_TYPE.ANY])
     if (isarray(maybeselection)) {
       const pts = maybeselection.filter(ispt)
@@ -738,7 +738,7 @@ export const CLI_FIRMWARE = createfirmware()
   // -- import content related commands
   .command(
     'zztsearch',
-    [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'ZZT content by field and text']],
+    [ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'ZZT content by field and text'],
     (_, words) => {
       const [maybefield, maybetext] = readargs(words, 0, [
         ARG_TYPE.NAME,
@@ -750,18 +750,18 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('zztrandom', [['random ZZT content']], () => {
+  .command('zztrandom', ['random ZZT content'], () => {
     vmzztrandom(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands
-  .command('admin', [['admin scroll']], () => {
+  .command('admin', ['admin scroll'], () => {
     vmadmin(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command(
     'joincode',
-    [[ARG_TYPE.MAYBE_NAME, 'multiplayer session (operator only)']],
+    [ARG_TYPE.MAYBE_NAME, 'multiplayer session (operator only)'],
     (_, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -783,7 +783,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'jointab',
-    [[ARG_TYPE.MAYBE_NAME, 'new tab with the join url (operator only)']],
+    [ARG_TYPE.MAYBE_NAME, 'new tab with the join url (operator only)'],
     (_, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -796,7 +796,7 @@ export const CLI_FIRMWARE = createfirmware()
   // -- audience related commands
   .command(
     'chat',
-    [[ARG_TYPE.MAYBE_NAME, 'twitch chat integration (operator only)']],
+    [ARG_TYPE.MAYBE_NAME, 'twitch chat integration (operator only)'],
     (_, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -812,7 +812,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'broadcast',
-    [[ARG_TYPE.MAYBE_NAME, 'stream broadcast (operator only)']],
+    [ARG_TYPE.MAYBE_NAME, 'stream broadcast (operator only)'],
     (_, words) => {
       if (!isoperator(READ_CONTEXT.elementfocus)) {
         return 0
@@ -828,7 +828,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'agent',
-    [[ARG_TYPE.MAYBE_NAME, '/stop/list AI agents; prompt with <id> <values>']],
+    [ARG_TYPE.MAYBE_NAME, '/stop/list AI agents; prompt with <id> <values>'],
     (_, words) => {
       const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       switch (NAME(action)) {
@@ -882,11 +882,11 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('screenshot', [['screenshot for capture']], () => {
+  .command('screenshot', ['screenshot for capture'], () => {
     registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('bbs', [[ARG_TYPE.ANY, 'login/publish actions']], (_, words) => {
+  .command('bbs', [ARG_TYPE.ANY, 'login/publish actions'], (_, words) => {
     const [action, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     switch (NAME(action)) {
       default:

@@ -349,7 +349,11 @@ const targetset = 'all'
 export const BOARD_FIRMWARE = createfirmware()
   .command(
     'build',
-    [[ARG_TYPE.NAME, ARG_TYPE.MAYBE_STRING, 'new board and write id to stat']],
+    [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_STRING,
+      'create board and link to stat. optional source board.',
+    ],
     (chip, words) => {
       if (
         !ispresent(READ_CONTEXT.book) ||
@@ -438,12 +442,10 @@ export const BOARD_FIRMWARE = createfirmware()
   .command(
     'goto',
     [
-      [
-        ARG_TYPE.STRING,
-        ARG_TYPE.MAYBE_NUMBER,
-        ARG_TYPE.MAYBE_NUMBER,
-        'player to board by name or address with optional x, y',
-      ],
+      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_NUMBER,
+      ARG_TYPE.MAYBE_NUMBER,
+      'player to board by name or address with optional x, y',
     ],
     (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -518,7 +520,7 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'transport',
-    [[ARG_TYPE.STRING, 'element across board with transporter logic']],
+    [ARG_TYPE.STRING, 'element across board with transporter logic'],
     (_, words) => {
       if (
         !ispresent(READ_CONTEXT.book) ||
@@ -598,7 +600,7 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'shove',
-    [[ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction']],
+    [ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction'],
     (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
@@ -619,13 +621,7 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'push',
-    [
-      [
-        ARG_TYPE.DIR,
-        ARG_TYPE.DIR,
-        'target object in direction ONLY if pushable',
-      ],
-    ],
+    [ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction ONLY if pushable'],
     (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
@@ -650,12 +646,12 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'duplicate',
-    [[ARG_TYPE.DIR, ARG_TYPE.DIR, 'element at direction in given direction']],
+    [ARG_TYPE.DIR, ARG_TYPE.DIR, 'element at direction in given direction'],
     commanddupe,
   )
   .command(
     'duplicatewith',
-    [[ARG_TYPE.ANY, 'element with argument']],
+    [ARG_TYPE.ANY, ARG_TYPE.DIR, ARG_TYPE.DIR, 'element with argument'],
     (chip, words) => {
       const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       return commanddupe(chip, words.slice(ii), arg)
@@ -663,12 +659,12 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'dupe',
-    [[ARG_TYPE.DIR, ARG_TYPE.DIR, 'element at direction in given direction']],
+    [ARG_TYPE.DIR, ARG_TYPE.DIR, 'element at direction in given direction'],
     commanddupe,
   )
   .command(
     'dupewith',
-    [[ARG_TYPE.ANY, 'element with argument']],
+    [ARG_TYPE.ANY, ARG_TYPE.DIR, ARG_TYPE.DIR, 'element with argument'],
     (chip, words) => {
       const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       return commanddupe(chip, words.slice(ii), arg)
@@ -676,7 +672,7 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'write',
-    [[ARG_TYPE.DIR, ARG_TYPE.COLOR, 'text to board at direction']],
+    [ARG_TYPE.DIR, ARG_TYPE.COLOR, 'text to board at direction'],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
@@ -765,7 +761,7 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'change',
-    [[ARG_TYPE.KIND, ARG_TYPE.KIND, 'elements of one kind to another']],
+    [ARG_TYPE.KIND, ARG_TYPE.KIND, 'elements of one kind to another'],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
@@ -851,12 +847,12 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'put',
-    [[ARG_TYPE.DIR, ARG_TYPE.KIND, 'element in direction']],
+    [ARG_TYPE.DIR, ARG_TYPE.KIND, 'element in direction'],
     commandput,
   )
   .command(
     'putwith',
-    [[ARG_TYPE.ANY, 'element with argument']],
+    [ARG_TYPE.ANY, ARG_TYPE.DIR, ARG_TYPE.KIND, 'element with argument'],
     (chip, words) => {
       const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       return commandput(chip, words.slice(ii), undefined, arg)
@@ -865,10 +861,10 @@ export const BOARD_FIRMWARE = createfirmware()
   .command(
     'oneof',
     [
-      [
-        ARG_TYPE.ANY,
-        'given id to ensure only one element of given kind is made',
-      ],
+      ARG_TYPE.ANY,
+      ARG_TYPE.DIR,
+      ARG_TYPE.KIND,
+      'given id to ensure only one element of given kind is made',
     ],
     (chip, words) => {
       const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
@@ -887,7 +883,13 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'oneofwith',
-    [[ARG_TYPE.ANY, ARG_TYPE.ANY, 'element with argument and oneof logic']],
+    [
+      ARG_TYPE.ANY,
+      ARG_TYPE.ANY,
+      ARG_TYPE.DIR,
+      ARG_TYPE.KIND,
+      'element with argument and oneof logic',
+    ],
     (chip, words) => {
       const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
 
@@ -905,12 +907,17 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'shoot',
-    [[ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND, 'projectile, with optional kind']],
+    [ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND, 'projectile, with optional kind'],
     commandshoot,
   )
   .command(
     'shootwith',
-    [[ARG_TYPE.ANY, 'projectile with argument']],
+    [
+      ARG_TYPE.ANY,
+      ARG_TYPE.DIR,
+      ARG_TYPE.MAYBE_KIND,
+      'projectile with argument',
+    ],
     (chip, words) => {
       const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       return commandshoot(chip, words.slice(ii), arg)
@@ -918,14 +925,14 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'throwstar',
-    [['star projectile, shorthand for `#shoot <dir> star`']],
+    [ARG_TYPE.DIR, 'star projectile, shorthand for `#shoot <dir> star`'],
     (chip, words) => {
       return commandshoot(chip, [...words, 'star'])
     },
   )
   .command(
     'throwstarwith',
-    [[ARG_TYPE.ANY, 'star with argument']],
+    [ARG_TYPE.ANY, ARG_TYPE.DIR, 'star with argument'],
     (chip, words) => {
       const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       return commandshoot(chip, [...words.slice(ii), 'star'], arg)

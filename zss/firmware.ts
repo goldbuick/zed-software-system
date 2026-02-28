@@ -10,11 +10,11 @@ type FIRMWARE_LIST = () => string[]
 
 export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
 
-/** Possible argument signatures for a command; each inner array is zero or more ARG_TYPE (number) followed by a string (e.g. description). */
-export type COMMAND_ARGS_SIGNATURES = [...number[], string][]
+/** One argument signature: zero or more ARG_TYPE (number) followed by a string (e.g. description). */
+export type COMMAND_ARGS_SIGNATURE = [...number[], string]
 
-/** No-arg command signature (zero ARG_TYPEs, single empty string). */
-export const NO_COMMAND_ARGS: COMMAND_ARGS_SIGNATURES = [['']] as const
+/** No-arg command: single signature with no ARG_TYPEs and empty description. */
+export const NO_COMMAND_ARGS: COMMAND_ARGS_SIGNATURE = ['']
 
 export type FIRMWARE_EVENTS = {
   get?: FIRMWARE_GET
@@ -30,10 +30,10 @@ export type FIRMWARE = {
   everytick: FIRMWARE_CYCLE
   aftertick: FIRMWARE_CYCLE
   getcommand: (name: string) => FIRMWARE_COMMAND | undefined
-  getcommandargs: (name: string) => COMMAND_ARGS_SIGNATURES | undefined
+  getcommandargs: (name: string) => COMMAND_ARGS_SIGNATURE | undefined
   command: (
     name: string,
-    setofargs: COMMAND_ARGS_SIGNATURES,
+    args: COMMAND_ARGS_SIGNATURE,
     func: FIRMWARE_COMMAND,
   ) => FIRMWARE
   listcommands: () => string[]
@@ -41,7 +41,7 @@ export type FIRMWARE = {
 
 export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
   const commands: Record<string, FIRMWARE_COMMAND> = {}
-  const commandArgs: Record<string, COMMAND_ARGS_SIGNATURES> = {}
+  const commandArgs: Record<string, COMMAND_ARGS_SIGNATURE> = {}
 
   const firmware: FIRMWARE = {
     everytick() {},
@@ -56,9 +56,9 @@ export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
     getcommandargs(name) {
       return commandArgs[name]
     },
-    command(name, setofargs, func): FIRMWARE {
+    command(name, args, func): FIRMWARE {
       commands[name] = func
-      commandArgs[name] = setofargs
+      commandArgs[name] = args
       return firmware
     },
   }

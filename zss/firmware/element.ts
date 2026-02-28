@@ -743,7 +743,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
   },
 })
-  .command('clear', [['variables (set to 0)']], (chip, words) => {
+  .command('clear', ['variables (set to 0)'], (chip, words) => {
     for (let i = 0; i < words.length; ++i) {
       chip.set(maptostring(words[i]), 0)
     }
@@ -751,7 +751,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command(
     'set',
-    [[ARG_TYPE.NAME, ARG_TYPE.ANY, 'variable to value']],
+    [ARG_TYPE.NAME, ARG_TYPE.ANY, 'variable to value'],
     (chip, words) => {
       const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
       chip.set(name, value ?? 1)
@@ -760,7 +760,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   )
   .command(
     'become',
-    [[ARG_TYPE.KIND, 'element into specified kind']],
+    [ARG_TYPE.KIND, 'element into specified kind'],
     (chip, words) => {
       // read
       const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
@@ -800,7 +800,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     },
   )
-  .command('bind', [[ARG_TYPE.NAME, 'code from named element']], (_, words) => {
+  .command('bind', [ARG_TYPE.NAME, 'code from named element'], (_, words) => {
     // zed cafe simply copies the code from the given named element
     const [name] = readargs(words, 0, [ARG_TYPE.NAME])
     const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
@@ -812,10 +812,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command(
     'char',
-    [
-      [ARG_TYPE.ANY, 'character (self or at direction)'],
-      [ARG_TYPE.DIR, ARG_TYPE.NUMBER, 'character (self or at direction)'],
-    ],
+    [ARG_TYPE.ANY, 'character (self or at direction)'],
     (chip, words) => {
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       if (isstrdir(value)) {
@@ -860,10 +857,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   )
   .command(
     'color',
-    [
-      [ARG_TYPE.COLOR, 'color (self or at direction)'],
-      [ARG_TYPE.DIR, ARG_TYPE.COLOR, 'color (self or at direction)'],
-    ],
+    [ARG_TYPE.COLOR, 'color (self or at direction)'],
     (chip, words) => {
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       if (isstrdir(value)) {
@@ -912,7 +906,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     },
   )
-  .command('go', [[ARG_TYPE.DIR, 'element in direction']], (chip, words) => {
+  .command('go', [ARG_TYPE.DIR, 'element in direction'], (chip, words) => {
     if (ispresent(READ_CONTEXT.element)) {
       // attempt to move
       const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
@@ -940,7 +934,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command(
     'walk',
-    [[ARG_TYPE.DIR, 'cause element to move in direction each tick']],
+    [ARG_TYPE.DIR, 'cause element to move in direction each tick'],
     (_, words) => {
       if (!ispresent(READ_CONTEXT.element)) {
         return 0
@@ -957,13 +951,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     },
   )
-  .command('idle', [['execution until next tick']], (chip) => {
+  .command('idle', ['execution until next tick'], (chip) => {
     chip.yield()
     return 0
   })
   .command(
     'end',
-    [[ARG_TYPE.ANY, "program (optionally set 'arg' variable)"]],
+    [ARG_TYPE.ANY, "program (optionally set 'arg' variable)"],
     (chip, words) => {
       const [result] = readargs(words, 0, [ARG_TYPE.ANY])
       if (ispresent(result)) {
@@ -973,25 +967,25 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     },
   )
-  .command('lock', [['against external messages']], (chip) => {
+  .command('lock', ['against external messages'], (chip) => {
     chip.lock(chip.id())
     return 0
   })
   .command(
     'restore',
-    [[ARG_TYPE.STRING, 'all labels of given name']],
+    [ARG_TYPE.STRING, 'all labels of given name'],
     (chip, words) => {
       chip.restore(maptostring(words[0]))
       return 0
     },
   )
-  .command('unlock', [['against messages from others']], (chip) => {
+  .command('unlock', ['against messages from others'], (chip) => {
     chip.unlock()
     return 0
   })
   .command(
     'zap',
-    [[ARG_TYPE.STRING, '-activate first label of given name']],
+    [ARG_TYPE.STRING, '-activate first label of given name'],
     (chip, words) => {
       chip.zap(maptostring(words[0]))
       return 0
@@ -999,7 +993,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   )
   .command(
     'cycle',
-    [[ARG_TYPE.NUMBER, 'element cycle value (1-255)']],
+    [ARG_TYPE.NUMBER, 'element cycle value (1-255)'],
     (_, words) => {
       if (ispresent(READ_CONTEXT.element)) {
         // read cycle
@@ -1010,7 +1004,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     },
   )
-  .command('die', [['element (halt execution unless @isitem)']], (chip) => {
+  .command('die', ['element (halt execution unless @isitem)'], (chip) => {
     memorysafedeleteelement(
       READ_CONTEXT.board,
       READ_CONTEXT.element,
@@ -1047,18 +1041,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command(
     'run',
-    [[ARG_TYPE.NAME, 'object codepage of given name']],
+    [ARG_TYPE.NAME, 'object codepage of given name'],
     commandrun,
   )
   .command(
     'runwith',
-    [[ARG_TYPE.ANY, 'function with argument']],
+    [ARG_TYPE.ANY, 'function with argument'],
     (chip, words) => {
       const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       return commandrun(chip, words.slice(ii), arg)
     },
   )
-  .command('array', [[ARG_TYPE.NAME, 'array variable']], (chip, words) => {
+  .command('array', [ARG_TYPE.NAME, 'array variable'], (chip, words) => {
     const values: any[] = []
     const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
     for (let i = ii; i < words.length; ) {
@@ -1072,12 +1066,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
   .command(
     'read',
     [
-      [
-        ARG_TYPE.ANY,
-        ARG_TYPE.NUMBER_OR_STRING,
-        ARG_TYPE.NAME,
-        'property from object into variable',
-      ],
+      ARG_TYPE.ANY,
+      ARG_TYPE.NUMBER_OR_STRING,
+      ARG_TYPE.NAME,
+      'property from object into variable',
     ],
     (chip, words) => {
       const [from, prop, name] = readargs(words, 0, [
@@ -1092,12 +1084,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     },
   )
-  .command('toast', [['toast notification']], (_, words) => {
+  .command('toast', ['toast notification'], (_, words) => {
     const text = words.map(maptostring).join('')
     apitoast(SOFTWARE, READ_CONTEXT.elementfocus, text)
     return 0
   })
-  .command('ticker', [['element ticker text']], (_, words) => {
+  .command('ticker', ['element ticker text'], (_, words) => {
     const text = words.map(maptostring).join('')
     if (ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = text

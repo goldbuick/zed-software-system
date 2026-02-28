@@ -1,14 +1,14 @@
-import type { COMMAND_ARGS_SIGNATURES } from 'zss/firmware'
+import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
-import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
   applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
+import { ARG_TYPE, COLOR } from 'zss/words/types'
 
 import { zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
@@ -289,47 +289,72 @@ function drawhinttext(
 }
 
 /**
- * Draws the list of argument signatures + hints for a command (e.g. above the terminal input).
- * Each signature is one line: the trailing hint string for that signature.
+ * Draws the argument hint for a command (e.g. above the terminal input).
+ * Uses the trailing hint string from the command's single signature.
  */
 export function drawcommandarghint(
-  sigs: COMMAND_ARGS_SIGNATURES,
+  sig: COMMAND_ARGS_SIGNATURE,
   px: number,
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
-  drawabove?: boolean,
 ) {
-  if (!sigs?.length) {
+  const withsig = [...sig]
+  const hint = withsig.pop()
+  if (!isstring(hint)) {
     return
   }
-  const numrows = sigs.length
-  const drawbelow = !drawabove && py + 1 + numrows <= edge.bottom
-  const starty = drawabove
-    ? py - numrows
-    : drawbelow
-      ? py + 1
-      : Math.max(edge.top + 1, py - numrows - 1)
-  const minY = edge.top
-  const maxY = edge.bottom - 1
-
-  for (let i = 0; i < sigs.length; i++) {
-    const sig = sigs[i]
-    if (!Array.isArray(sig) || sig.length === 0) {
-      continue
+  let cursor = px
+  for (const arg of withsig) {
+    let arglabel = ''
+    switch (arg) {
+      case ARG_TYPE.COLOR:
+        arglabel = '<color>'
+        break
+      case ARG_TYPE.KIND:
+        arglabel = '<kind>'
+        break
+      case ARG_TYPE.DIR:
+        arglabel = '<dir>'
+        break
+      case ARG_TYPE.NAME:
+        arglabel = '<name>'
+        break
+      case ARG_TYPE.NUMBER:
+        arglabel = '<number>'
+        break
+      case ARG_TYPE.STRING:
+        arglabel = '<string>'
+        break
+      case ARG_TYPE.NUMBER_OR_STRING:
+        arglabel = '<number or string>'
+        break
+      case ARG_TYPE.COLOR_OR_KIND:
+        arglabel = '<color or kind>'
+        break
+      case ARG_TYPE.MAYBE_KIND:
+        arglabel = '[kind]'
+        break
+      case ARG_TYPE.MAYBE_NAME:
+        arglabel = '[name]'
+        break
+      case ARG_TYPE.MAYBE_NUMBER:
+        arglabel = '[number]'
+        break
+      case ARG_TYPE.MAYBE_STRING:
+        arglabel = '[string]'
+        break
+      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
+        arglabel = '[number or string]'
+        break
+      case ARG_TYPE.ANY:
+        arglabel = '<any>'
+        break
     }
-    const last = sig[sig.length - 1]
-    const hint = typeof last === 'string' ? last.trim() : ''
-    if (!hint) {
-      continue
-    }
-    const y = drawbelow ? starty + i : starty + numrows - 1 - i
-    if (y < minY || y > maxY) {
-      continue
-    }
-    const rowstart = Math.max(px, edge.left + 1)
-    drawhinttext(hint, rowstart, y, edge.right - 1, context)
+    drawhinttext(arglabel, cursor, py, edge.right, context)
+    cursor += arglabel.length + 1
   }
+  drawhinttext(hint, cursor, py, edge.right, context)
 }
 
 export function drawautocomplete(

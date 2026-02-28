@@ -199,9 +199,9 @@ export function TerminalInput({
   const autocompleteactive =
     autocompleteindex >= 0 && autocomplete.suggestions.length > 0
 
+  const startx = edge.left + autocomplete.wordcol - 1
+  const starty = edge.top + edge.height - 1
   if (autocompleteactive) {
-    const startx = edge.left + autocomplete.wordcol - 1
-    const starty = edge.top + edge.height - 1
     drawautocomplete(
       autocomplete,
       autocompleteindex,
@@ -219,16 +219,18 @@ export function TerminalInput({
     autocomplete.checkforargswords.length > 0
   ) {
     const [command] = autocomplete.checkforargswords
-    const maybecommandsigs =
-      command != null
-        ? (zsswords.clicommands[command] ??
-          zsswords.loadercommands[command] ??
-          zsswords.runtimecommands[command])
-        : undefined
-    if (ispresent(maybecommandsigs)) {
-      const startx = edge.left + autocomplete.wordcol - 1
-      const starty = edge.top + edge.height - 1
-      drawcommandarghint(maybecommandsigs, startx, starty, edge, context)
+    const maybesig =
+      zsswords.clicommands[command] ??
+      zsswords.loadercommands[command] ??
+      zsswords.runtimecommands[command]
+    if (ispresent(maybesig)) {
+      drawcommandarghint(
+        maybesig,
+        startx + inputstate.length,
+        starty,
+        edge,
+        context,
+      )
     }
   }
 

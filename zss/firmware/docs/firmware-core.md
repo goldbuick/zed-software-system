@@ -38,7 +38,7 @@ Result of `createfirmware`:
 
 ## createfirmware(events?)
 
-Creates a firmware instance. Commands are registered via `.command(name, setofargs, func)` where `setofargs` is an array of possible argument signatures (e.g. `[[ARG_TYPE.NAME, ARG_TYPE.ANY, '']]` or `NO_COMMAND_ARGS` for no args). Each signature is zero or more ARG_TYPE (number) followed by a string. Event hooks override defaults.
+Creates a firmware instance. Commands are registered via `.command(name, args, func)` where `args` is a single argument signature (e.g. `[ARG_TYPE.NAME, ARG_TYPE.ANY, '']` or `NO_COMMAND_ARGS` for no args). A signature is zero or more ARG_TYPE (number) followed by a string. Event hooks override defaults.
 
 ## Example
 

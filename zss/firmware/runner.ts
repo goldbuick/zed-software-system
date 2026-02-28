@@ -1,6 +1,6 @@
 import { CHIP } from 'zss/chip'
 import {
-  COMMAND_ARGS_SIGNATURES,
+  COMMAND_ARGS_SIGNATURE,
   FIRMWARE,
   FIRMWARE_COMMAND,
 } from 'zss/firmware'
@@ -97,7 +97,7 @@ export function firmwaregetcommand(
 export function firmwaregetcommandargs(
   driver: DRIVER_TYPE,
   method: string,
-): MAYBE<COMMAND_ARGS_SIGNATURES> {
+): MAYBE<COMMAND_ARGS_SIGNATURE> {
   const wares = getfimrwares(driver)
   for (let i = 0; i < wares.length; ++i) {
     const args = wares[i].getcommandargs(method)
@@ -108,37 +108,17 @@ export function firmwaregetcommandargs(
   return undefined
 }
 
-/** Aggregate all signatures' instruction strings (last element), for hints. */
+/** Returns the signature's instruction string (last element) for hints. */
 export function firmwarecommandargshint(
   driver: DRIVER_TYPE,
   method: string,
 ): string {
-  const sigs = firmwaregetcommandargs(driver, method)
-  if (!sigs?.length) {
+  const sig = firmwaregetcommandargs(driver, method)
+  if (!sig?.length) {
     return ''
   }
-
-  const seen = new Set<string>()
-  for (const sig of sigs) {
-    if (!sig.length) {
-      continue
-    }
-    const last = sig[sig.length - 1]
-    if (typeof last === 'string') {
-      const trimmed = last.trim()
-      if (trimmed && !seen.has(trimmed)) {
-        seen.add(trimmed)
-      }
-    }
-  }
-
-  if (seen.size === 0) {
-    return ''
-  }
-
-  // Join multiple signatures' hints with separator so callers
-  // can display all supported forms in one line.
-  return Array.from(seen).join(' | ')
+  const last = sig[sig.length - 1]
+  return typeof last === 'string' ? last.trim() : ''
 }
 
 export function firmwareget(

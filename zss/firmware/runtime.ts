@@ -59,34 +59,34 @@ export const RUNTIME_FIRMWARE = createfirmware({
     }
   },
 })
-  .command('endgame', [['health to 0']], (chip) => {
+  .command('endgame', ['health to 0'], (chip) => {
     chip.set('health', 0)
     return 0
   })
   .command(
     'shortsend',
-    [['message (short form, no target keyword needed)']],
+    ['message (short form, no target keyword needed)'],
     (chip, words) => {
       const send = parsesend(words)
       memorysendtoelements(chip, READ_CONTEXT.element, send)
       return 0
     },
   )
-  .command('send', [['message to target elements']], (chip, words) => {
+  .command('send', ['message to target elements'], (chip, words) => {
     const send = parsesend(words, true)
     memorysendtoelements(chip, READ_CONTEXT.element, send)
     return 0
   })
-  .command('stat', [['text in a scroll window']], () => {
+  .command('stat', ['text in a scroll window'], () => {
     //  no-op
     return 0
   })
-  .command('text', [['text on element or in sidebar']], (_, words) => {
+  .command('text', ['text on element or in sidebar'], (_, words) => {
     const text = words.map(maptostring).join('')
     gadgettext(READ_CONTEXT.elementid, text)
     return 0
   })
-  .command('hyperlink', [['clickable link in scroll or log']], (chip, args) => {
+  .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
     const wordsstr = chip.template(words)
@@ -101,7 +101,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
     )
     return 0
   })
-  .command('help', [['help scroll']], () => {
+  .command('help', ['help scroll'], () => {
     vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })

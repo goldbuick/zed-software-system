@@ -44,7 +44,7 @@ function readfilter(words: WORD[], index: number) {
 }
 
 export const TRANSFORM_FIRMWARE = createfirmware()
-  .command('snapshot', [['board snapshot']], (chip) => {
+  .command('snapshot', ['board snapshot'], (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -52,7 +52,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     chip.set('didfail', ispresent(boardsnapshot(READ_CONTEXT.board.id)) ? 0 : 1)
     return 0
   })
-  .command('revert', [['board to snapshot state']], (chip) => {
+  .command('revert', ['board to snapshot state'], (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       chip.set('didfail', 1)
       return 0
@@ -62,7 +62,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
   })
   .command(
     'copy',
-    [[ARG_TYPE.STRING, 'region from source to current board']],
+    [ARG_TYPE.STRING, 'region from source to current board'],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
@@ -97,12 +97,10 @@ export const TRANSFORM_FIRMWARE = createfirmware()
   .command(
     'remix',
     [
-      [
-        ARG_TYPE.STRING,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
-        'from source with pattern size and mirror to current board',
-      ],
+      ARG_TYPE.STRING,
+      ARG_TYPE.NUMBER,
+      ARG_TYPE.NUMBER,
+      'from source with pattern size and mirror to current board',
     ],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -143,7 +141,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
   )
   .command(
     'weave',
-    [[ARG_TYPE.DIR, 'board elements in direction']],
+    [ARG_TYPE.DIR, 'board elements in direction'],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
@@ -177,7 +175,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
   )
   .command(
     'pivot',
-    [[ARG_TYPE.NUMBER, 'board elements by degrees']],
+    [ARG_TYPE.NUMBER, 'board elements by degrees'],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)

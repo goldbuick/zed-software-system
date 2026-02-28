@@ -341,21 +341,21 @@ const vm = createdevice(
         const loadercommands: GADGET_ZSS_WORDS['loadercommands'] = {}
         const runtimecommands: GADGET_ZSS_WORDS['runtimecommands'] = {}
         for (const cmd of firmwarelistcommands(DRIVER_TYPE.CLI)) {
-          const sigs = firmwaregetcommandargs(DRIVER_TYPE.CLI, cmd)
-          if (ispresent(sigs)) {
-            clicommands[cmd] = sigs
+          const sig = firmwaregetcommandargs(DRIVER_TYPE.CLI, cmd)
+          if (ispresent(sig)) {
+            clicommands[cmd] = sig
           }
         }
         for (const cmd of firmwarelistcommands(DRIVER_TYPE.LOADER)) {
-          const sigs = firmwaregetcommandargs(DRIVER_TYPE.LOADER, cmd)
-          if (ispresent(sigs)) {
-            loadercommands[cmd] = sigs
+          const sig = firmwaregetcommandargs(DRIVER_TYPE.LOADER, cmd)
+          if (ispresent(sig)) {
+            loadercommands[cmd] = sig
           }
         }
         for (const cmd of firmwarelistcommands(DRIVER_TYPE.RUNTIME)) {
-          const sigs = firmwaregetcommandargs(DRIVER_TYPE.RUNTIME, cmd)
-          if (ispresent(sigs)) {
-            runtimecommands[cmd] = sigs
+          const sig = firmwaregetcommandargs(DRIVER_TYPE.RUNTIME, cmd)
+          if (ispresent(sig)) {
+            runtimecommands[cmd] = sig
           }
         }
         const dirmods = [
