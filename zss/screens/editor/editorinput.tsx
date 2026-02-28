@@ -162,7 +162,7 @@ export function EditorInput({
       drawcommandarghint(
         maybesig,
         startx + command.length,
-        drawabove ? starty - 1 : starty,
+        starty,
         edge,
         context,
       )
