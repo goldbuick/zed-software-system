@@ -61,8 +61,6 @@ export function inputstateswitch(switchto: number) {
     ycursor: 0,
     xselect: undefined,
     yselect: undefined,
-    acindex: -1,
-    autocompleteactive: false,
   })
 }
 
