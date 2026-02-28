@@ -16,7 +16,11 @@ import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { AUTO_COMPLETE, drawautocomplete } from 'zss/screens/tape/autocomplete'
+import {
+  AUTO_COMPLETE,
+  drawautocomplete,
+  drawcommandarghint,
+} from 'zss/screens/tape/autocomplete'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -131,8 +135,8 @@ export function EditorInput({
   const starty = edge.top + 2 + (ycursor - yoffset) + 1
   const drawabove = starty + suggestionslength > edge.bottom - 1
 
+  const startx = edge.left - xoffset + autocomplete.wordcol
   if (autocompleteactive) {
-    const startx = edge.left - xoffset + autocomplete.wordcol
     drawautocomplete(
       autocomplete,
       autocompleteindex,
@@ -143,6 +147,26 @@ export function EditorInput({
       zsswords,
       drawabove,
     )
+  }
+
+  if (
+    autocomplete.checkforargshint &&
+    autocomplete.checkforargswords.length > 0
+  ) {
+    const [command] = autocomplete.checkforargswords
+    const maybesig =
+      zsswords.clicommands[command] ??
+      zsswords.loadercommands[command] ??
+      zsswords.runtimecommands[command]
+    if (ispresent(maybesig)) {
+      drawcommandarghint(
+        maybesig,
+        startx + command.length,
+        drawabove ? starty - 1 : starty,
+        edge,
+        context,
+      )
+    }
   }
 
   // --- selection state ---
