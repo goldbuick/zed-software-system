@@ -279,6 +279,7 @@ export type GADGET_STATE = {
 
 /** ZSS word lists and command-args signatures per driver (from vm). */
 export type GADGET_ZSS_WORDS = {
+  langcommands: Record<string, COMMAND_ARGS_SIGNATURE>
   clicommands: Record<string, COMMAND_ARGS_SIGNATURE>
   loadercommands: Record<string, COMMAND_ARGS_SIGNATURE>
   runtimecommands: Record<string, COMMAND_ARGS_SIGNATURE>

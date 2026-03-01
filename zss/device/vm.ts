@@ -107,7 +107,7 @@ import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
 import { dirconsts } from 'zss/words/dir'
-import { NAME, PT } from 'zss/words/types'
+import { ARG_TYPE, NAME, PT } from 'zss/words/types'
 
 import {
   apierror,
@@ -337,6 +337,25 @@ const vm = createdevice(
         })
         break
       case 'zsswords': {
+        const langcommands: GADGET_ZSS_WORDS['langcommands'] = {
+          if: [ARG_TYPE.ANY, 'conditional logic'],
+          try: [ARG_TYPE.ANY, 'try moving with a fallback command'],
+          give: [ARG_TYPE.NAME, ARG_TYPE.ANY, 'give the value'],
+          take: [ARG_TYPE.NAME, ARG_TYPE.ANY, 'take the value'],
+          else: ['else/else if branch of a conditional logic'],
+          repeat: [ARG_TYPE.NUMBER, 'repeat the loop this many times'],
+          while: [ARG_TYPE.ANY, 'loop until the condition is false'],
+          foreach: [
+            ARG_TYPE.NAME,
+            ARG_TYPE.ANY,
+            ARG_TYPE.ANY,
+            'iterate over a list of values',
+          ],
+          break: ['break out of the current loop'],
+          continue: ['skip to the next iteration'],
+          do: ['start of a do-done block'],
+          done: ['end of a do-done block'],
+        }
         const clicommands: GADGET_ZSS_WORDS['clicommands'] = {}
         const loadercommands: GADGET_ZSS_WORDS['loadercommands'] = {}
         const runtimecommands: GADGET_ZSS_WORDS['runtimecommands'] = {}
@@ -372,6 +391,7 @@ const vm = createdevice(
           'elements',
         ]
         const zsswords: GADGET_ZSS_WORDS = {
+          langcommands,
           clicommands,
           loadercommands,
           runtimecommands,
