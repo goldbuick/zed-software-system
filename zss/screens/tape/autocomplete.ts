@@ -1,3 +1,4 @@
+import { romread } from 'zss/feature/rom'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
@@ -33,9 +34,7 @@ const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
  * Word lists and command record keys are included. Later categories overwrite
  * if a word appears in multiple.
  */
-export function buildwordcategorymap(
-  words: GADGET_ZSS_WORDS,
-): Map<string, string> {
+function buildwordcategorymap(words: GADGET_ZSS_WORDS): Map<string, string> {
   const map = new Map<string, string>()
   for (const key of WORD_LIST_KEYS) {
     const list = words[key]
@@ -208,12 +207,12 @@ function getautocompletefromtokens(
       case lexer.text.tokenTypeIdx:
       case lexer.stringliteral.tokenTypeIdx:
       case lexer.numberliteral.tokenTypeIdx:
-        if (cmdidx >= 0) {
-          activecategory = 'commands'
+        if (cmdidx >= 0 && activetokenidx === cmdidx + 1) {
           prefix = tokens[cmdidx + 1].image ?? ''
+          activecategory = 'commands'
         } else {
-          activecategory =
-            wordcategorymap.get(NAME(token.image).toLowerCase()) ?? 'text'
+          prefix = NAME(token.image).toLowerCase()
+          activecategory = wordcategorymap.get(prefix) ?? 'text'
         }
         break
     }
@@ -236,17 +235,7 @@ function getautocompletefromtokens(
           endoflineargs,
         }
       }
-      case 'flags':
-      case 'objects':
-      case 'terrains':
-      case 'boards':
-      case 'palettes':
-      case 'charsets':
-      case 'loaders':
-      case 'colors':
-      case 'dirs':
-      case 'dirmods':
-      case 'exprs': {
+      default: {
         const items = [
           ...tagwords(words.flags, 'flags'),
           ...tagwords(words.statsboard, 'stats'),
@@ -275,16 +264,6 @@ function getautocompletefromtokens(
           endoflineargs,
         }
       }
-      case 'text':
-      default:
-        return {
-          suggestions: [],
-          prefix,
-          wordcol,
-          wordstart,
-          endoflinehint,
-          endoflineargs,
-        }
     }
   }
 
@@ -358,6 +337,57 @@ function drawhinttext(
   )
 }
 
+function argsliststring(args: ARG_TYPE[]) {
+  const list = []
+  for (const arg of args) {
+    switch (arg) {
+      case ARG_TYPE.COLOR:
+        list.push('<color>')
+        break
+      case ARG_TYPE.KIND:
+        list.push('<kind>')
+        break
+      case ARG_TYPE.DIR:
+        list.push('<dir>')
+        break
+      case ARG_TYPE.NAME:
+        list.push('<name>')
+        break
+      case ARG_TYPE.NUMBER:
+        list.push('<number>')
+        break
+      case ARG_TYPE.STRING:
+        list.push('<string>')
+        break
+      case ARG_TYPE.NUMBER_OR_STRING:
+        list.push('<num|str>')
+        break
+      case ARG_TYPE.COLOR_OR_KIND:
+        list.push('<color|kind>')
+        break
+      case ARG_TYPE.MAYBE_KIND:
+        list.push('[kind]')
+        break
+      case ARG_TYPE.MAYBE_NAME:
+        list.push('[name]')
+        break
+      case ARG_TYPE.MAYBE_NUMBER:
+        list.push('[number]')
+        break
+      case ARG_TYPE.MAYBE_STRING:
+        list.push('[string]')
+        break
+      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
+        list.push('[num|str]')
+        break
+      case ARG_TYPE.ANY:
+        list.push('<any>')
+        break
+    }
+  }
+  return list.join(' ')
+}
+
 /**
  * Draws the argument hint for a command (e.g. above the terminal input).
  * Uses the trailing hint string from the command's single signature.
@@ -375,70 +405,12 @@ export function drawcommandarghint(
     return
   }
   let cursor = px
-  for (const arg of withsig) {
-    let arglabel = ''
-    switch (arg) {
-      case ARG_TYPE.COLOR:
-        arglabel = '<color>'
-        break
-      case ARG_TYPE.KIND:
-        arglabel = '<kind>'
-        break
-      case ARG_TYPE.DIR:
-        arglabel = '<dir>'
-        break
-      case ARG_TYPE.NAME:
-        arglabel = '<name>'
-        break
-      case ARG_TYPE.NUMBER:
-        arglabel = '<number>'
-        break
-      case ARG_TYPE.STRING:
-        arglabel = '<string>'
-        break
-      case ARG_TYPE.NUMBER_OR_STRING:
-        arglabel = '<number or string>'
-        break
-      case ARG_TYPE.COLOR_OR_KIND:
-        arglabel = '<color or kind>'
-        break
-      case ARG_TYPE.MAYBE_KIND:
-        arglabel = '[kind]'
-        break
-      case ARG_TYPE.MAYBE_NAME:
-        arglabel = '[name]'
-        break
-      case ARG_TYPE.MAYBE_NUMBER:
-        arglabel = '[number]'
-        break
-      case ARG_TYPE.MAYBE_STRING:
-        arglabel = '[string]'
-        break
-      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
-        arglabel = '[number or string]'
-        break
-      case ARG_TYPE.ANY:
-        arglabel = '<any>'
-        break
-    }
-    drawhinttext(arglabel, cursor, py, edge.right, context)
-    cursor += arglabel.length + 1
+  const argsStr = argsliststring(withsig as ARG_TYPE[])
+  if (argsStr) {
+    drawhinttext(argsStr, cursor, py, edge.right, context)
+    cursor += argsStr.length + 1
   }
   drawhinttext(hint, cursor, py, edge.right, context)
-}
-
-/**
- * Draws a single-line hint at the given position (e.g. when no command token
- * was found scanning left, to show valid line starters).
- */
-export function drawsimpleeolhint(
-  text: string,
-  px: number,
-  py: number,
-  edge: AutocompleteEdge,
-  context: WRITE_TEXT_CONTEXT,
-) {
-  drawhinttext(text, px, py, edge.right, context)
 }
 
 export function drawautocomplete(
@@ -533,33 +505,34 @@ export function drawautocomplete(
         case 'loaders':
           hint = 'loader codepage'
           break
-        case 'clicommands':
-        case 'loadercommands':
-        case 'runtimecommands': {
-          const sigs = words[suggestion.category]?.[suggestion.word]
-          if (sigs && Array.isArray(sigs)) {
-            const seen = new Set<string>()
-            for (const sig of sigs) {
-              if (!Array.isArray(sig) || sig.length === 0) {
-                continue
-              }
-              const last = sig[sig.length - 1]
-              if (typeof last === 'string') {
-                const trimmed = last.trim()
-                if (trimmed && !seen.has(trimmed)) {
-                  seen.add(trimmed)
-                }
-              }
-            }
-            if (seen.size > 0) {
-              hint = Array.from(seen).join(' | ')
+        case 'commands': {
+          const sig =
+            words.clicommands[suggestion.word] ??
+            words.loadercommands[suggestion.word] ??
+            words.runtimecommands[suggestion.word]
+          if (isarray(sig)) {
+            const args = [...sig] as ARG_TYPE[]
+            const cmd = args.pop()
+            hint = `${argsliststring(args)} ${cmd}`
+          }
+          break
+        }
+        default: {
+          const rompath = `editor:${suggestion.category}:${suggestion.word}`
+          const rom = romread(rompath)
+          if (ispresent(rom)) {
+            const [, desc] = rom.split('\n')[0].split(';')
+            hint = `${desc}`
+          } else {
+            console.info(suggestion.category, suggestion.word)
+            switch (suggestion.category) {
+              case 'flags':
+                hint = `flag ${suggestion.word}`
+                break
             }
           }
           break
         }
-        default:
-          hint = suggestion.category
-          break
       }
       if (hint) {
         const hintx = rowstart + text.length
