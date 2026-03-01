@@ -226,7 +226,7 @@ export function TerminalInput({
     if (ispresent(maybesig)) {
       drawcommandarghint(
         maybesig,
-        startx + inputstate.length,
+        startx + inputstate.length + 1,
         starty,
         edge,
         context,
