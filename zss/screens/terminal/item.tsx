@@ -20,9 +20,14 @@ import {
 import { NAME } from 'zss/words/types'
 
 import { TerminalCopyIt } from './copyit'
+import { TerminalHotkey } from './hotkey'
 import { TerminalHyperlink } from './hyperlink'
+import { TerminalNumber } from './number'
 import { TerminalOpenIt } from './openit'
+import { TerminalRange } from './range'
 import { TerminalRunIt } from './runit'
+import { TerminalSelect } from './select'
+import { TerminalText } from './text'
 import { TerminalViewIt } from './viewit'
 
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
@@ -103,19 +108,19 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
         return <TerminalHyperlink {...props} words={words} />
       case 'hk':
       case 'hotkey':
-        return null
+        return <TerminalHotkey {...props} words={words} />
       case 'rn':
       case 'range':
-        return null
+        return <TerminalRange {...props} words={words} />
       case 'sl':
       case 'select':
-        return null
+        return <TerminalSelect {...props} words={words} />
       case 'nm':
       case 'number':
-        return null
+        return <TerminalNumber {...props} words={words} />
       case 'tx':
       case 'text':
-        return null
+        return <TerminalText {...props} words={words} />
       case 'zssedit':
         return null
       case 'charedit':
