@@ -5,6 +5,11 @@ import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { inputcolor } from 'zss/screens/panel/common'
+import {
+  TapeTerminalItemInputProps,
+  setuplogitem,
+} from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -12,12 +17,6 @@ import {
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
-
-import { inputcolor } from 'zss/screens/panel/common'
-import {
-  TapeTerminalItemInputProps,
-  setuplogitem,
-} from 'zss/screens/tape/common'
 
 export function TerminalText({
   active,

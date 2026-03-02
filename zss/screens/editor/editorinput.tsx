@@ -150,31 +150,22 @@ export function EditorInput({
     )
   }
 
-  // if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
-  //   const [command] = autocomplete.endoflineargs
-  //   const maybesig =
-  //     zsswords.langcommands[command] ??
-  //     zsswords.clicommands[command] ??
-  //     zsswords.loadercommands[command] ??
-  //     zsswords.runtimecommands[command]
-  //   if (ispresent(maybesig)) {
-  //     drawcommandarghint(
-  //       maybesig,
-  //       startx + coderowlength + 1,
-  //       starty - 1,
-  //       edge,
-  //       context,
-  //     )
-  //   } else {
-  //     drawcommandarghint(
-  //       [`send the message ${command}`],
-  //       startx + coderowlength + 1,
-  //       starty - 1,
-  //       edge,
-  //       context,
-  //     )
-  //   }
-  // }
+  if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
+    const [command] = autocomplete.endoflineargs
+    const maybesig =
+      zsswords.clicommands[command] ??
+      zsswords.loadercommands[command] ??
+      zsswords.runtimecommands[command]
+    if (ispresent(maybesig)) {
+      drawcommandarghint(
+        maybesig,
+        startx + coderowlength + 1,
+        starty - 1,
+        edge,
+        context,
+      )
+    }
+  }
 
   // --- selection state ---
 

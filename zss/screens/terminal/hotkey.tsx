@@ -20,8 +20,8 @@ export function TerminalHotkey({
   const context = useWriteText()
   const cc = useContext(TapeTerminalContext)
 
-  const [, , shortcut, maybetext, maybenoclose, ...data] = words.map(
-    (v) => maptovalue(v, ''),
+  const [, , shortcut, maybetext, maybenoclose, ...data] = words.map((v) =>
+    maptovalue(v, ''),
   )
 
   const text = maybetext || ` ${(shortcut ?? '').toUpperCase()} `

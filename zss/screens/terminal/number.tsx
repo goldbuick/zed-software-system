@@ -8,14 +8,13 @@ import {
   UserInputHandler,
 } from 'zss/gadget/userinput'
 import { maptonumber } from 'zss/mapping/value'
-import { tokenizeandwritetextformat } from 'zss/words/textformat'
-import { NAME } from 'zss/words/types'
-
 import { inputcolor, strsplice } from 'zss/screens/panel/common'
 import {
   TapeTerminalItemInputProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 const maybedefault = -111111
 

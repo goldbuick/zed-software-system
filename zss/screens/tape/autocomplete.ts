@@ -225,7 +225,10 @@ function getautocompletefromtokens(
           ...tagrecordkeys(words.loadercommands, 'commands'),
           ...tagrecordkeys(words.runtimecommands, 'commands'),
         ]
-        const suggestions = filtersuggestions(prefix, items)
+        const suggestions = [
+          ...filtersuggestions(prefix, items),
+          { word: prefix, category: 'commands' },
+        ]
         return {
           suggestions,
           prefix,
