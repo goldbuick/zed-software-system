@@ -1,2 +1,2 @@
-desc;$DKGRAYadds hyperlink text
+desc;adds hyperlink text to scroll
 
