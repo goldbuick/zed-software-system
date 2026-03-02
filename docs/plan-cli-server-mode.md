@@ -244,7 +244,7 @@ Create a headless, Node.js-based server mode that runs the ZSS simulation withou
      - Wait for Peer to be ready and `readsubscribetopic()` to return the peer/topic ID
 
 3. **Join URL**
-   - Build join URL: `http://localhost:7777/join/#${topic}` (or configurable `ZSS_WEB_ORIGIN` + port)
+   - Build join URL: `https://zed.cafe/join/#${topic}` (or configurable `ZSS_WEB_ORIGIN` + port)
    - Server runs CLI; web app runs separately (Vite dev or deployed). Join URL points at the web app's `/join/` route with the topic hash
 
 4. **Open in browser**
@@ -315,6 +315,23 @@ zss/
 3. Content loads from filesystem; can save/load games
 4. No browser, no canvas, no React required
 5. (Phase 6) On boot: multiplayer host starts, stub book loads, join URL opens in browser
+
+---
+
+## Standalone Executables
+
+Build scripts produce standalone binaries for Windows, macOS, and Linux:
+
+| Script | Description |
+|--------|-------------|
+| `yarn build:server` | Bundle server + workers to `dist-server/*.cjs` (for `node dist-server/server.cjs`) |
+| `yarn pkg:host` | Build for current platform → `dist-bin/zss-server`, `zss-simspace`, `zss-heavyspace` |
+| `yarn pkg:linux` | Build for Linux x64 → `dist-bin/linux-x64/` |
+| `yarn pkg:mac` | Build for macOS (x64 + arm64) → `dist-bin/macos-*/` |
+| `yarn pkg:win` | Build for Windows x64 → `dist-bin/win-x64/` |
+| `yarn pkg:all` | Build for all platforms |
+
+Each platform folder contains three executables that must be kept together: `zss-server` (main), `zss-simspace`, `zss-heavyspace`. Run `zss-server` (or `zss-server.exe` on Windows).
 
 ---
 

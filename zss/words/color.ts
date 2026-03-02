@@ -6,8 +6,17 @@ import {
   isstring,
 } from 'zss/mapping/types'
 
+import {
+  colorconsts,
+  STR_COLOR_KEYS,
+  STR_COLOR_CONST,
+  STR_COLOR_TYPE,
+} from './colorconsts'
 import { READ_CONTEXT } from './reader'
 import { COLOR, NAME, WORD } from './types'
+
+export { colorconsts }
+export type { STR_COLOR_TYPE, STR_COLOR_KEYS, STR_COLOR_CONST }
 
 export function colortofg(color: MAYBE<COLOR>): MAYBE<number> {
   if (ispresent(color)) {
@@ -24,88 +33,6 @@ export function colortobg(color: MAYBE<COLOR>): MAYBE<number> {
     : undefined
 }
 
-export const colorconsts = {
-  black: 'BLACK',
-  dkblue: 'DKBLUE',
-  dkgreen: 'DKGREEN',
-  dkcyan: 'DKCYAN',
-  dkred: 'DKRED',
-  dkpurple: 'DKPURPLE',
-  dkyellow: 'DKYELLOW',
-  ltgray: 'LTGRAY',
-  dkgray: 'DKGRAY',
-  blue: 'BLUE',
-  green: 'GREEN',
-  cyan: 'CYAN',
-  red: 'RED',
-  purple: 'PURPLE',
-  yellow: 'YELLOW',
-  white: 'WHITE',
-  // aliases
-  brown: 'DKYELLOW',
-  dkwhite: 'LTGRAY',
-  ltgrey: 'LTGRAY',
-  gray: 'LTGRAY',
-  grey: 'LTGRAY',
-  dkgrey: 'DKGRAY',
-  ltblack: 'DKGRAY',
-  // bg color
-  onblack: 'ONBLACK',
-  ondkblue: 'ONDKBLUE',
-  ondkgreen: 'ONDKGREEN',
-  ondkcyan: 'ONDKCYAN',
-  ondkred: 'ONDKRED',
-  ondkpurple: 'ONDKPURPLE',
-  ondkyellow: 'ONDKYELLOW',
-  onltgray: 'ONLTGRAY',
-  ondkgray: 'ONDKGRAY',
-  onblue: 'ONBLUE',
-  ongreen: 'ONGREEN',
-  oncyan: 'ONCYAN',
-  onred: 'ONRED',
-  onpurple: 'ONPURPLE',
-  onyellow: 'ONYELLOW',
-  onwhite: 'ONWHITE',
-  // aliases
-  onbrown: 'ONDKYELLOW',
-  ondkwhite: 'ONLTGRAY',
-  onltgrey: 'ONLTGRAY',
-  ongray: 'ONLTGRAY',
-  ongrey: 'ONLTGRAY',
-  ondkgrey: 'ONDKGRAY',
-  onltblack: 'ONDKGRAY',
-  // special bg colors
-  onclear: 'ONCLEAR',
-  // blinking fg colors
-  blblack: 'BLBLACK',
-  bldkblue: 'BLDKBLUE',
-  bldkgreen: 'BLDKGREEN',
-  bldkcyan: 'BLDKCYAN',
-  bldkred: 'BLDKRED',
-  bldkpurple: 'BLDKPURPLE',
-  bldkyellow: 'BLDKYELLOW',
-  blltgray: 'BLLTGRAY',
-  bldkgray: 'BLDKGRAY',
-  blblue: 'BLBLUE',
-  blgreen: 'BLGREEN',
-  blcyan: 'BLCYAN',
-  blred: 'BLRED',
-  blpurple: 'BLPURPLE',
-  blyellow: 'BLYELLOW',
-  blwhite: 'BLWHITE',
-  // aliases
-  blbrown: 'BLDKYELLOW',
-  bldkwhite: 'BLLTGRAY',
-  blltgrey: 'BLLTGRAY',
-  blgray: 'BLLTGRAY',
-  blgrey: 'BLLTGRAY',
-  bldkgrey: 'BLDKGRAY',
-  blltblack: 'BLDKGRAY',
-} as const
-
-export type STR_COLOR_TYPE = typeof colorconsts
-export type STR_COLOR_KEYS = keyof STR_COLOR_TYPE
-export type STR_COLOR_CONST = STR_COLOR_TYPE[STR_COLOR_KEYS]
 export type STR_COLOR = STR_COLOR_CONST[]
 
 export function isstrcolor(value: any): value is STR_COLOR {

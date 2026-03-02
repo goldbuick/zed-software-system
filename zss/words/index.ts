@@ -5,6 +5,7 @@
 
 export * from './category'
 export * from './color'
+export * from './cp437'
 export * from './collision'
 export * from './dir'
 export * from './expr'

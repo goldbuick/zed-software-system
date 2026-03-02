@@ -1,11 +1,3 @@
-import { appDataDir, join } from '@tauri-apps/api/path'
-import {
-  BaseDirectory,
-  mkdir,
-  readTextFile,
-  writeTextFile,
-} from '@tauri-apps/plugin-fs'
-import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import humanid from 'human-id'
 import {
   get as idbget,
@@ -20,11 +12,6 @@ import { BOOK } from 'zss/memory/types'
 
 import { shorturl } from './url'
 import { write, writecopyit } from './writeui'
-
-// detect what kind of container we are in
-const istauri =
-  typeof window !== 'undefined' &&
-  ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)
 
 const FILE_SOURCE = 'zss-content.json'
 
@@ -135,25 +122,6 @@ export async function storagereadcontent(
   player: string,
 ): Promise<string | BOOK[]> {
   const urlcontent = readurlhash(player)
-  if (istauri) {
-    if (urlcontent.length) {
-      write(SOFTWARE, player, `reading url content, make sure to save`)
-      // clear the hash
-      location.hash = ''
-      // we only support long urls in tauri mode
-      return urlcontent
-    }
-    try {
-      write(SOFTWARE, player, `reading ${FILE_SOURCE}`)
-      const content = await readTextFile(FILE_SOURCE, {
-        baseDir: BaseDirectory.AppData,
-      })
-      return JSON.parse(content)
-    } catch (err: any) {
-      apierror(SOFTWARE, player, 'readcontent', err.toString())
-      return []
-    }
-  }
   if (urlcontent.length) {
     // see if its a shorturlhash
     const maybefullurlcontent = await readlocalurl(urlcontent)
@@ -175,21 +143,9 @@ export async function storagewritecontent(
   compressed: string,
   books: BOOK[],
 ) {
-  if (istauri) {
-    try {
-      write(SOFTWARE, player, `writing ${FILE_SOURCE}`)
-      await writeTextFile(FILE_SOURCE, JSON.stringify(books, null, 2), {
-        baseDir: BaseDirectory.AppData,
-        create: true,
-      })
-    } catch (err: any) {
-      apierror(SOFTWARE, player, 'writecontent', err.toString())
-    }
-    return
-  }
   if (compressed.length > 2048) {
-    const shorturl = await writelocalurl(compressed)
-    return storagewritecontent(player, label, longcontent, shorturl, books)
+    const short = await writelocalurl(compressed)
+    return storagewritecontent(player, label, longcontent, short, books)
   }
   const newurlhash = `#${compressed}`
   if (location.hash !== newurlhash) {
@@ -215,21 +171,8 @@ export async function storagewritevar(name: string, value: any) {
   return writeidb('storage', () => storage)
 }
 
-// either browser or tauri setup here ...
-
 let currenturlhash = ''
 export async function storagewatchcontent(player: string) {
-  if (istauri) {
-    await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true })
-    try {
-      const appdata = await appDataDir()
-      const item = await join(appdata, FILE_SOURCE)
-      await revealItemInDir(item)
-    } catch (err: any) {
-      apierror(SOFTWARE, player, 'storage', err.toString())
-    }
-    return
-  }
   window.addEventListener('hashchange', () => {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
@@ -260,10 +203,6 @@ export async function storagesharecontent(player: string) {
 }
 
 export function storagenukecontent(player: string) {
-  if (istauri) {
-    apierror(SOFTWARE, player, 'storage', '#nuke not supported in server mode')
-    return
-  }
   // nuke is the only valid case for reload
   location.hash = ''
   currenturlhash = location.hash

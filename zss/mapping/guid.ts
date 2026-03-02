@@ -1,9 +1,21 @@
 import Alea from 'alea'
-import humanid from 'human-id'
+import humanIdPkg from 'human-id'
 import { customAlphabet, nanoid } from 'nanoid'
-import { lowercase, numbers } from 'nanoid-dictionary'
 
 import { MAYBE } from './types'
+
+const humanid: (opts?: any) => string =
+  typeof humanIdPkg === 'function'
+    ? humanIdPkg
+    : humanIdPkg?.default ?? (() => createnameidFallback())
+
+function createnameidFallback() {
+  return `name_${nanoid(8)}`
+}
+
+// Inline to avoid nanoid-dictionary ESM interop issues in Node
+const numbers = '0123456789'
+const lowercase = 'abcdefghijklmnopqrstuvwxyz'
 
 export function createsid() {
   return `sid_${nanoid(12).replaceAll('-', '.')}`
@@ -29,18 +41,23 @@ export function ispid(id: MAYBE<string>): id is string {
 }
 
 export function createnameid() {
-  return humanid({
-    capitalize: false,
-    adjectiveCount: 1,
-  })
+  try {
+    return humanid({ capitalize: false, adjectiveCount: 1 })
+  } catch {
+    return createnameidFallback()
+  }
 }
 
 export function createshortnameid() {
-  return humanid({
-    addAdverb: false,
-    capitalize: false,
-    adjectiveCount: 0,
-  })
+  try {
+    return humanid({
+      addAdverb: false,
+      capitalize: false,
+      adjectiveCount: 0,
+    })
+  } catch {
+    return createnameidFallback()
+  }
 }
 
 const PEER_ID_LENGTH = 20

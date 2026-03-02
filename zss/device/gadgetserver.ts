@@ -1,6 +1,3 @@
-import { compare } from 'fast-json-patch'
-import { Encoder as BinEncoder } from 'json-joy/esm/json-patch/codec/binary'
-import { decode as jsondecode } from 'json-joy/esm/json-patch/codec/json'
 import { createdevice } from 'zss/device'
 import { FORMAT_OBJECT } from 'zss/feature/format'
 import {
@@ -25,7 +22,15 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
 
-const patchencoder = new BinEncoder()
+let _patchencoder: any
+async function getPatchCodec() {
+  if (!_patchencoder) {
+    const binMod = await import('json-joy/esm/json-patch/codec/binary')
+    const Encoder = binMod.Encoder ?? binMod.default
+    _patchencoder = new Encoder()
+  }
+  return _patchencoder
+}
 
 gadgetstateprovider((element) => {
   if (ispid(element)) {
@@ -49,8 +54,16 @@ gadgetstateprovider((element) => {
 // we don't store sync state
 const gadgetsync = new Map<string, FORMAT_OBJECT>()
 
-const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
+const isheadless =
+  typeof process !== 'undefined' && process.env.ZSS_HEADLESS === '1'
+
+const gadgetserver = createdevice('gadgetserver', ['tock'], async (message) => {
   if (!gadgetserver.session(message)) {
+    return
+  }
+
+  // headless/server mode: no paint/patch output (no canvas/gadget client)
+  if (isheadless && message.target === 'tock') {
     return
   }
 
@@ -124,6 +137,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
           // write patch
           const previous = gadgetsync.get(player) ?? []
+          const { compare } = await import('fast-json-patch')
 
           // this should be the compressed json
           const patch = compare(previous, slim)
@@ -133,15 +147,17 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
           // only send when we have changes
           if (patch.length) {
-            // convert to binary encoding
-            const data = patchencoder.encode(jsondecode(patch as any, {}))
-            // this should be the patch for compressed json
+            const encoder = await getPatchCodec()
+            const data = encoder.encode(patch)
             gadgetclientpatch(gadgetserver, player, data)
           }
         }
       }
       break
     case 'desync': {
+      if (isheadless) {
+        break
+      }
       // get current state
       const gadget = gadgetstate(message.player)
       // create compressed json from gadget

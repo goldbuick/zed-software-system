@@ -3,6 +3,7 @@ import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { colorconsts, colortobg, colortofg } from 'zss/words/color'
+import { cp437ToChar } from 'zss/words/cp437'
 import { COLOR } from 'zss/words/types'
 
 import { metakey } from './system'
@@ -276,11 +277,12 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         writeStr('$')
         break
 
-      case NumberLiteral:
+      case NumberLiteral: {
+        const code = parseInt(token.image.replace(/^\$-?/, ''), 10)
+        const charCode = !isNaN(code) && code >= 0 && code <= 255 ? code : 32
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
-
-          context.char[i] = parseFloat(token.image.replace('$', ''))
+          context.char[i] = charCode
           if (context.active.color !== undefined) {
             context.color[i] = context.active.color
           }
@@ -290,6 +292,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         }
         incCursor()
         break
+      }
 
       case StringLiteralDouble:
         writeStr(
@@ -409,7 +412,16 @@ export function tokenizeandstriptextformat(text: string) {
           return false
       }
     })
-    .map((token) => token.image)
+    .map((token) => {
+      if (token.tokenType === NumberLiteral) {
+        const code = parseInt(
+          (token.image as string).replace(/^\$-?/, ''),
+          10,
+        )
+        return !isNaN(code) && code >= 0 && code <= 255 ? cp437ToChar(code) : ''
+      }
+      return token.image as string
+    })
     .join('')
 
   return plain.trim().length === 0 ? '' : plain
