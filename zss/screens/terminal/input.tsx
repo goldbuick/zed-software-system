@@ -215,20 +215,13 @@ export function TerminalInput({
   }
 
   if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
-    const [command] = autocomplete.endoflineargs
-    const maybesig =
-      zsswords.clicommands[command] ??
-      zsswords.loadercommands[command] ??
-      zsswords.runtimecommands[command]
-    if (ispresent(maybesig)) {
-      drawcommandarghint(
-        maybesig,
-        startx + inputstate.length + 1,
-        starty,
-        edge,
-        context,
-      )
-    }
+    drawcommandarghint(
+      autocomplete.endoflineargs,
+      startx + inputstate.length + 1,
+      starty,
+      edge,
+      context,
+    )
   }
 
   // --- speech to text ---

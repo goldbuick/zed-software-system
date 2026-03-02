@@ -69,7 +69,7 @@ export type AUTO_COMPLETE = {
   wordcol: number
   wordstart: number
   endoflinehint: boolean
-  endoflineargs: string[]
+  endoflineargs: COMMAND_ARGS_SIGNATURE
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
@@ -78,7 +78,7 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   wordcol: 0,
   wordstart: 0,
   endoflinehint: false,
-  endoflineargs: [],
+  endoflineargs: [''],
 }
 
 const MAX_SUGGESTIONS = 8
@@ -117,6 +117,21 @@ function tagrecordkeys(
   category: string,
 ): AUTO_COMPLETE_SUGGESTION[] {
   return Object.keys(rec).map((word) => ({ word, category }))
+}
+
+function hintfromrom(category: string, word = ''): string {
+  const rompath = word ? `editor:${category}:${word}` : `editor:${category}`
+  const rom = romread(rompath)
+  if (ispresent(rom)) {
+    const [, desc] = rom.split('\n')[0].split(';')
+    return desc ?? ''
+  }
+  switch (category) {
+    case 'flags':
+      return `flag ${word}`
+    default:
+      return ''
+  }
 }
 
 function getautocompletefromtokens(
@@ -166,17 +181,26 @@ function getautocompletefromtokens(
       }
     }
 
-    const endoflinehint = cmdidx >= 0
-    const endoflineargs =
-      cmdidx >= 0
-        ? tokens.slice(cmdidx + 1, activetokenidx + 1).map((t) => t.image ?? '')
-        : []
+    let endoflinehint = cmdidx >= 0
+    const maybecommand = tokens[cmdidx + 1].image ?? ''
+    const maybesig =
+      words.langcommands[maybecommand] ??
+      words.clicommands[maybecommand] ??
+      words.loadercommands[maybecommand] ??
+      words.runtimecommands[maybecommand]
+
+    let endoflineargs = ispresent(maybesig)
+      ? maybesig
+      : ([`send the message ${maybecommand}`] as COMMAND_ARGS_SIGNATURE)
 
     let prefix = ''
     let activecategory = ''
     switch (token.tokenTypeIdx) {
       case lexer.command.tokenTypeIdx:
         // skip
+        break
+      case lexer.stat.tokenTypeIdx:
+        activecategory = 'stat'
         break
       case lexer.label.tokenTypeIdx:
         activecategory = 'label'
@@ -213,7 +237,6 @@ function getautocompletefromtokens(
         } else {
           prefix = NAME(token.image).toLowerCase()
           activecategory = wordcategorymap.get(prefix) ?? 'text'
-          console.info('##', prefix, activecategory)
         }
         break
     }
@@ -232,6 +255,22 @@ function getautocompletefromtokens(
         ]
         return {
           suggestions,
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+        }
+      }
+      case 'stat':
+      case 'label':
+      case 'comment':
+      case 'hyperlink':
+      case 'hyperlinktext': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom(activecategory)]
+        return {
+          suggestions: [],
           prefix,
           wordcol,
           wordstart,
@@ -259,8 +298,9 @@ function getautocompletefromtokens(
           ...tagwords(words.dirmods, 'dirmods'),
           ...tagwords(words.exprs, 'exprs'),
         ]
+        const suggestions = filtersuggestions(prefix, items)
         return {
-          suggestions: filtersuggestions(prefix, items),
+          suggestions,
           prefix,
           wordcol,
           wordstart,
@@ -521,22 +561,9 @@ export function drawautocomplete(
           }
           break
         }
-        default: {
-          const rompath = `editor:${suggestion.category}:${suggestion.word}`
-          const rom = romread(rompath)
-          if (ispresent(rom)) {
-            const [, desc] = rom.split('\n')[0].split(';')
-            hint = `${desc}`
-          } else {
-            console.info(suggestion.category, suggestion.word)
-            switch (suggestion.category) {
-              case 'flags':
-                hint = `flag ${suggestion.word}`
-                break
-            }
-          }
+        default:
+          hint = hintfromrom(suggestion.category, suggestion.word)
           break
-        }
       }
       if (hint) {
         const hintx = rowstart + text.length
