@@ -1,7 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { fetchwiki } from 'zss/feature/fetchwiki'
-import { AGENT, createagent } from 'zss/feature/heavy/agent'
 import {
   markzipfilelistitem,
   parsewebfile,
@@ -148,8 +147,8 @@ let flushtick = 0
 const watching: Record<string, Set<string>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
-// track running agents
-const agents: Record<string, AGENT> = {}
+// track running agents (lazy-loaded from zss/feature/heavy/agent)
+const agents: Record<string, { id: () => string; stop: () => void }> = {}
 
 // stat categories for zsswords (flattened for wire format)
 const STATS_BOARD = [
@@ -581,11 +580,14 @@ const vm = createdevice(
         break
       }
       case 'agentstart': {
-        const agent = createagent()
-        const id = agent.id()
-        agents[id] = agent
-        write(vm, message.player, `agent ${id} started`)
-        vmagentlist(vm, message.player)
+        doasync(vm, message.player, async () => {
+          const { createagent } = await import('zss/feature/heavy/agent')
+          const agent = createagent()
+          const id = agent.id()
+          agents[id] = agent
+          write(vm, message.player, `agent ${id} started`)
+          vmagentlist(vm, message.player)
+        })
         break
       }
       case 'agentstop':

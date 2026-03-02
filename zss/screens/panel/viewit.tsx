@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useMedia } from 'zss/gadget/hooks'
 import { UserInput } from 'zss/gadget/userinput'
+import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
@@ -15,8 +16,7 @@ export function PanelViewIt({
 }: PanelItemProps) {
   const { setviewimage } = useMedia()
   const invoke = useCallback(() => {
-    const [, ...values] = args
-    const content = values.join(' ')
+    const content = extractcontentfromargs(args)
     setviewimage(content)
   }, [setviewimage, args])
 

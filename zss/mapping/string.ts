@@ -1,5 +1,3 @@
-import { ispresent } from './types'
-
 export function stringsplice(
   str: string,
   index: number,
@@ -13,11 +11,18 @@ export function stringsplice(
 
 export function totarget(scope: string) {
   // determine target of send
-  const [maybetarget, maybelabel] = scope.split(':')
-  const haslabel = ispresent(maybelabel)
+  const parts = scope.split(':')
+  const maybetarget = parts[0]
+  const rest = parts.slice(1)
+  const haslabel = rest.length > 0
 
   const target = haslabel ? maybetarget : 'self'
-  const label = haslabel ? maybelabel : scope
+  const label = haslabel ? rest.join(':') : scope
 
   return [target, label]
+}
+
+export function parsetarget(scope: string): { target: string; path: string } {
+  const [target, path] = totarget(scope)
+  return { target, path }
 }

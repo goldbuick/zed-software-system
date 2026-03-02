@@ -8,7 +8,12 @@ import {
   writeoption,
   writesection,
 } from 'zss/feature/writeui'
-import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
+import {
+  gadgetheader,
+  gadgethyperlink,
+  gadgetsection,
+  gadgettext,
+} from 'zss/gadget/data/api'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -78,37 +83,6 @@ export function romprint(player: string, line: string[]) {
       }
       break
   }
-}
-
-const COLOR_EDGE = '$dkpurple'
-const CHR_TM = '$196'
-const CHR_BM = '$205'
-
-function gadgettbar(player: string, width: number) {
-  const CHR_TBAR = CHR_TM.repeat(width)
-  gadgettext(player, `${COLOR_EDGE}${CHR_TBAR}`)
-}
-
-function gadgetbbar(player: string, width: number) {
-  const CHR_BBAR = CHR_BM.repeat(width)
-  gadgettext(player, `${COLOR_EDGE}${CHR_BBAR}`)
-}
-
-function gadgetheader(player: string, header: string) {
-  gadgettext(player, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
-  gadgettbar(player, header.length + 2)
-  gadgettext(player, `${COLOR_EDGE} $white${header} `)
-  gadgetbbar(player, header.length + 2)
-}
-
-function gadgetsection(player: string, section: string) {
-  gadgettext(player, `${COLOR_EDGE} ${' '.repeat(section.length)} `)
-  gadgettext(player, `${COLOR_EDGE} $gray${section} `)
-  gadgetbbar(player, section.length + 2)
-}
-
-function gadgetoption(player: string, option: string, label: string) {
-  gadgettext(player, `${COLOR_EDGE} $white${option} $blue${label}`)
 }
 
 export function romscroll(player: string, line: string[]) {

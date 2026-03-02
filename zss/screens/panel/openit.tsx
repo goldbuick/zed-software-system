@@ -5,6 +5,7 @@ import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { UserInput } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
+import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
@@ -18,8 +19,8 @@ export function PanelOpenIt({
   context,
 }: PanelItemProps) {
   const invoke = useCallback(() => {
-    const [, openmethod, ...values] = args
-    const content = values.join(' ')
+    const [, openmethod] = args
+    const content = extractcontentfromargs(args, 2)
     const player = registerreadplayer()
     setTimeout(() => {
       switch (openmethod) {

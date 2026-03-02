@@ -39,6 +39,26 @@ export default defineConfig(({ mode }) => {
   return {
     root,
     envPrefix: envprefix,
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (id.includes('node_modules/three')) {
+              return 'vendor-three'
+            }
+            if (id.includes('node_modules/@react-three')) {
+              return 'vendor-r3f'
+            }
+            if (id.includes('node_modules/tone')) {
+              return 'vendor-tone'
+            }
+            if (id.includes('zss/feature/heavy')) {
+              return 'zss-heavy'
+            }
+          },
+        },
+      },
+    },
     plugins: [
       react(),
       nodePolyfills({

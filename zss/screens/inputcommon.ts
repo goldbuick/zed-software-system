@@ -3,6 +3,13 @@
  * Use for selection range computation, block cursor drawing, and player color.
  */
 
+export function extractcontentfromargs(
+  words: (string | number)[],
+  skip = 1,
+): string {
+  return words.slice(skip).join(' ')
+}
+
 import type { MAYBE } from 'zss/mapping/types'
 import { ispresent } from 'zss/mapping/types'
 import {

@@ -3,6 +3,7 @@ import { registercopy } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput'
+import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import {
@@ -22,8 +23,7 @@ export function PanelCopyIt({
 }: PanelItemProps) {
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    const [, ...words] = args
-    registercopy(SOFTWARE, registerreadplayer(), words.join(' '))
+    registercopy(SOFTWARE, registerreadplayer(), extractcontentfromargs(args))
     scroll.sendclose()
   }, [args, scroll])
 

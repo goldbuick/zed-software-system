@@ -139,6 +139,35 @@ export function gadgettext(element: string, text: string) {
   gadgetreadqueue(element).push(text)
 }
 
+const SCROLL_COLOR_EDGE = '$dkpurple'
+const SCROLL_CHR_TM = '$196'
+const SCROLL_CHR_BM = '$205'
+
+export function gadgettbar(player: string, width: number) {
+  gadgettext(player, `${SCROLL_COLOR_EDGE}${SCROLL_CHR_TM.repeat(width)}`)
+}
+
+export function gadgetbbar(player: string, width: number) {
+  gadgettext(player, `${SCROLL_COLOR_EDGE}${SCROLL_CHR_BM.repeat(width)}`)
+}
+
+export function gadgetheader(player: string, header: string) {
+  gadgettext(player, `${SCROLL_COLOR_EDGE} ${' '.repeat(header.length)} `)
+  gadgettbar(player, header.length + 2)
+  gadgettext(player, `${SCROLL_COLOR_EDGE} $white${header} `)
+  gadgetbbar(player, header.length + 2)
+}
+
+export function gadgetsection(player: string, section: string) {
+  gadgettext(player, `${SCROLL_COLOR_EDGE} ${' '.repeat(section.length)} `)
+  gadgettext(player, `${SCROLL_COLOR_EDGE} $gray${section} `)
+  gadgetbbar(player, section.length + 2)
+}
+
+export function gadgetoption(player: string, option: string, label: string) {
+  gadgettext(player, `${SCROLL_COLOR_EDGE} $white${option} $blue${label}`)
+}
+
 export function gadgethyperlink(
   player: string,
   chip: string,

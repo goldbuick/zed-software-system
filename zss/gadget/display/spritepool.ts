@@ -19,7 +19,7 @@ export function useSpritePool(
     }))
   }, [limit])
 
-  // build lookups
+  // build lookups and update pool (spritepool from same render's useMemo above)
   const range = useMemo(() => {
     const spritesbyid: Record<string, SPRITE> = {}
     for (let i = 0; i < sprites.length; ++i) {
@@ -60,7 +60,7 @@ export function useSpritePool(
     }
 
     return range
-  }, [sprites, limit, spritepool])
+  }, [sprites, limit]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return [spritepool, range]
 }

@@ -1,6 +1,7 @@
 import { MESSAGE } from './device/api'
 import { hub } from './hub'
 import { createsid } from './mapping/guid'
+import { parsetarget } from './mapping/string'
 import { ispresent, noop } from './mapping/types'
 import { NAME } from './words/types'
 
@@ -28,10 +29,7 @@ export type DEVICE = {
   disconnect: () => void
 }
 
-export function parsetarget(targetString: string) {
-  const [target, ...path] = targetString.split(':')
-  return { target, path: path.join(':') }
-}
+export { parsetarget }
 
 export function createdevice(
   name: string,
@@ -76,19 +74,27 @@ export function createdevice(
     handle(message) {
       const { target, path } = parsetarget(message.target)
       const itarget = NAME(target)
+      const ipath = NAME(path)
+
+      // Broadcast: no colon means target is 'self' and path is the topic (e.g. "ready", "second")
+      const broadcasttopic = itarget === 'self' && path ? ipath : itarget
 
       // we snag ready internally to save the session
-      if (!session && itarget === 'ready') {
+      if (!session && (itarget === 'ready' || broadcasttopic === 'ready')) {
         session = message.session
       }
 
       // we got a reset
-      if (itarget === 'sessionreset') {
+      if (itarget === 'sessionreset' || broadcasttopic === 'sessionreset') {
         session = ''
       }
 
-      // we match by topics
-      if (itopics.findIndex((tag) => tag === 'all' || tag === itarget) !== -1) {
+      // we match by topics (broadcast "ready"/"second" etc. or directed target)
+      if (
+        itopics.findIndex(
+          (tag) => tag === 'all' || tag === itarget || tag === broadcasttopic,
+        ) !== -1
+      ) {
         onMessage(message)
       }
 

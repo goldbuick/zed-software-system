@@ -3,6 +3,7 @@ import { registerterminalquickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput'
+import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import {
@@ -22,13 +23,12 @@ export function PanelRunIt({
 }: PanelItemProps) {
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    const [, ...values] = args
     scroll.sendclose()
     setTimeout(() => {
       registerterminalquickopen(
         SOFTWARE,
         registerreadplayer(),
-        values.join(' '),
+        extractcontentfromargs(args),
       )
     }, 1000)
   }, [args, scroll])

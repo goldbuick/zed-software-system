@@ -1,37 +1,25 @@
-import { apierror } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
-import { AUDIO_SYNTH } from 'zss/feature/synth'
-import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
+import { isnumber } from 'zss/mapping/types'
 
-export function synthvoicefxreverbconfig(
-  player: string,
-  synth: MAYBE<AUDIO_SYNTH>,
-  index: number,
-  config: number | string,
-  value: number | string,
-) {
-  if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
-    apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
-    return
-  }
-  const reverb = synth.FXCHAIN.reverb
-  try {
+import { createVoiceFxConfigHandler } from './common'
+
+export const synthvoicefxreverbconfig = createVoiceFxConfigHandler(
+  'reverb',
+  (synth) => synth.FXCHAIN.reverb,
+  (reverb, config, value) => {
     switch (config) {
       case 'decay':
         if (isnumber(value)) {
           reverb.set({ decay: value })
-          return
+          return true
         }
         break
       case 'predelay':
         if (isnumber(value)) {
           reverb.set({ preDelay: value })
-          return
+          return true
         }
         break
     }
-    throw new Error(`unknown reverb|${config}|${value}`)
-  } catch (err) {
-    apierror(SOFTWARE, player, 'synth', err)
-  }
-}
+    return false
+  },
+)
