@@ -213,6 +213,7 @@ function getautocompletefromtokens(
         } else {
           prefix = NAME(token.image).toLowerCase()
           activecategory = wordcategorymap.get(prefix) ?? 'text'
+          console.info('##', prefix, activecategory)
         }
         break
     }
