@@ -6,8 +6,9 @@ import { MAYBE } from './types'
 
 const humanid: (opts?: any) => string =
   typeof humanIdPkg === 'function'
-    ? humanIdPkg
-    : (humanIdPkg?.default ?? (() => createnameidFallback()))
+    ? (humanIdPkg as (opts?: any) => string)
+    : ((humanIdPkg as { default?: (opts?: any) => string })?.default ??
+      (() => createnameidFallback()))
 
 function createnameidFallback() {
   return `name_${nanoid(8)}`

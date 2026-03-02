@@ -149,7 +149,7 @@ export function textformatToAnsi(text: string): string {
     const colorKey = tokenType.name?.toLowerCase()
     if (colorKey && colorKey in colorconsts) {
       const constName = (colorconsts as Record<string, string>)[colorKey]
-      const colorVal = (COLOR as Record<string, number>)[constName]
+      const colorVal = (COLOR as unknown as Record<string, number>)[constName]
       if (colorVal !== undefined) {
         if (constName === 'ONCLEAR') {
           output += RESET

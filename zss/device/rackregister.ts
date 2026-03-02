@@ -81,11 +81,11 @@ export function registerwritehistorybuffer(buf: string[]) {
   historyBuffer = buf
 }
 
-export const rackserver = createdevice(
+export const rackregister = createdevice(
   'register',
   ['ready', 'second', 'log', 'chat', 'toast'],
   function (message) {
-    if (!rackserver.session(message)) {
+    if (!rackregister.session(message)) {
       return
     }
 
@@ -104,7 +104,7 @@ export const rackserver = createdevice(
 
     switch (message.target) {
       case 'ready': {
-        doasync(rackserver, message.player, async () => {
+        doasync(rackregister, message.player, async () => {
           myplayerid =
             (await storagereadplayer()) ??
             process.env.ZSS_PLAYER_ID ??
@@ -121,31 +121,31 @@ export const rackserver = createdevice(
           }
 
           await waitfor(256)
-          apilog(rackserver, myplayerid, `myplayerid ${myplayerid}`)
-          vmoperator(rackserver, myplayerid)
+          apilog(rackregister, myplayerid, `myplayerid ${myplayerid}`)
+          vmoperator(rackregister, myplayerid)
         })
         break
       }
       case 'ackoperator': {
-        gadgetserverdesync(rackserver, myplayerid)
-        doasync(rackserver, message.player, async () => {
+        gadgetserverdesync(rackregister, myplayerid)
+        doasync(rackregister, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)
           await loadmem(urlcontent)
         })
         break
       }
       case 'loginready': {
-        doasync(rackserver, message.player, async () => {
+        doasync(rackregister, message.player, async () => {
           const storage = await storagereadvars()
-          vmlogin(rackserver, myplayerid, storage)
-          vmzsswords(rackserver, myplayerid)
+          vmlogin(rackregister, myplayerid, storage)
+          vmzsswords(rackregister, myplayerid)
         })
         break
       }
       case 'acklogin': {
         if (message.data) {
           vmloader(
-            rackserver,
+            rackregister,
             message.player,
             undefined,
             'text',
@@ -153,10 +153,10 @@ export const rackserver = createdevice(
             '',
           )
         } else {
-          doasync(rackserver, message.player, () => {
-            registerterminalfull(rackserver, myplayerid)
+          doasync(rackregister, message.player, () => {
+            registerterminalfull(rackregister, myplayerid)
             vmloader(
-              rackserver,
+              rackregister,
               message.player,
               undefined,
               'text',
@@ -169,7 +169,7 @@ export const rackserver = createdevice(
         break
       }
       case 'store': {
-        doasync(rackserver, message.player, async () => {
+        doasync(rackregister, message.player, async () => {
           if (isarray(message.data)) {
             const [name, value] = message.data
             await storagewritevar(name, value)
@@ -181,7 +181,7 @@ export const rackserver = createdevice(
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
-          vmdoot(rackserver, myplayerid)
+          vmdoot(rackregister, myplayerid)
         }
         break
       }
@@ -197,25 +197,25 @@ export const rackserver = createdevice(
         }
         break
       case 'nuke': {
-        doasync(rackserver, message.player, async () => {
-          writeheader(rackserver, myplayerid, 'nuke in')
-          writeoption(rackserver, myplayerid, '3', '...')
+        doasync(rackregister, message.player, async () => {
+          writeheader(rackregister, myplayerid, 'nuke in')
+          writeoption(rackregister, myplayerid, '3', '...')
           await waitfor(1000)
-          writeoption(rackserver, myplayerid, '2', '...')
+          writeoption(rackregister, myplayerid, '2', '...')
           await waitfor(1000)
-          writeoption(rackserver, myplayerid, '1', '...')
+          writeoption(rackregister, myplayerid, '1', '...')
           await waitfor(1000)
-          writeheader(rackserver, myplayerid, 'BYE')
+          writeheader(rackregister, myplayerid, 'BYE')
           await waitfor(100)
           await storagenukecontent(myplayerid)
-          apilog(rackserver, myplayerid, 'content deleted')
+          apilog(rackregister, myplayerid, 'content deleted')
           await waitfor(200)
           process.exit(0)
         })
         break
       }
       case 'savemem': {
-        doasync(rackserver, message.player, async () => {
+        doasync(rackregister, message.player, async () => {
           if (isarray(message.data)) {
             const [maybelabel, maybecontent, maybebooks] = message.data
             if (
@@ -293,20 +293,20 @@ async function loadmem(content: string | BOOK[]) {
     books = [createstubbook()]
   } else {
     apierror(
-      rackserver,
+      rackregister,
       myplayerid,
       'content',
       'compressed content not supported in server mode',
     )
-    vmzsswords(rackserver, myplayerid)
-    registerterminalfull(rackserver, myplayerid)
+    vmzsswords(rackregister, myplayerid)
+    registerterminalfull(rackregister, myplayerid)
     return
   }
-  vmbooks(rackserver, myplayerid, books)
+  vmbooks(rackregister, myplayerid, books)
   await netterminalhost()
   const topic = readsubscribetopic()
   if (ispresent(topic)) {
     const joinUrl = `https://zed.cafe/join/#${topic}`
-    apilog(rackserver, myplayerid, `join $white${joinUrl}`)
+    apilog(rackregister, myplayerid, `join $white${joinUrl}`)
   }
 }

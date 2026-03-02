@@ -1,3 +1,4 @@
+import type { FORMAT_OBJECT } from 'zss/feature/format'
 import {
   FORMAT_SKIP,
   formatobject,
@@ -48,13 +49,13 @@ describe('format', () => {
 
   describe('unformatobject', () => {
     it('unformats array to object with keymap', () => {
-      const formatted = ['f', 1, 'b', 2]
+      const formatted = ['f', 1, 'b', 2] as unknown as FORMAT_OBJECT
       const keymap = { f: 'foo', b: 'bar' }
       expect(unformatobject(formatted, keymap)).toEqual({ foo: 1, bar: 2 })
     })
 
     it('applies formatter when provided', () => {
-      const formatted = ['x', 84]
+      const formatted = ['x', 84] as unknown as FORMAT_OBJECT
       const formatmap = {
         x: (v: number) => v / 2,
       }

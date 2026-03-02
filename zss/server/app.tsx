@@ -4,7 +4,7 @@
  */
 import { Box, Text } from 'ink'
 import TextInput from 'ink-text-input'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const PROMPT = 'zed.cafe> '
 const MAX_LOG_LINES = 200

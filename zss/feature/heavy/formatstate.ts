@@ -1,16 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Serialize acklook data to plain text for LLM consumption.
  * Strips color codes and formats board, scroll, sidebar, and tickers.
  */
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-} from 'zss/memory/types'
+import { BOARD } from 'zss/memory/types'
 
 export type LOOK_STATE = {
   board?: BOARD
@@ -62,11 +56,9 @@ function boardtotext(board: BOARD | undefined): string {
   if (!ispresent(board)) {
     return ''
   }
-  const w = BOARD_WIDTH
-  const h = BOARD_HEIGHT
   const rows: string[] = []
-  const terrain = board.terrain ?? []
-  const objects = board.objects ?? {}
+  // TODO: render grid when elementchar is re-enabled
+  void board
 
   // for (let y = 0; y < h; y++) {
   //   let row = ''

@@ -3,11 +3,16 @@
  * Use for selection range computation, block cursor drawing, and player color.
  */
 
-export function extractcontentfromargs(
-  words: (string | number)[],
-  skip = 1,
-): string {
-  return words.slice(skip).join(' ')
+export function extractcontentfromargs(words: unknown, skip = 1): string {
+  const arr = Array.isArray(words) ? words : []
+  return arr
+    .slice(skip)
+    .flatMap((w) => (Array.isArray(w) ? w : [w]))
+    .filter(
+      (w): w is string | number => w !== undefined && typeof w !== 'object',
+    )
+    .map((w) => `${w}`)
+    .join(' ')
 }
 
 import type { MAYBE } from 'zss/mapping/types'

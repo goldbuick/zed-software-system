@@ -54,20 +54,12 @@ gadgetstateprovider((element) => {
 // we don't store sync state
 const gadgetsync = new Map<string, FORMAT_OBJECT>()
 
-const isheadless =
-  typeof process !== 'undefined' && process.env.ZSS_HEADLESS === '1'
-
 const gadgetserver = createdevice(
   'gadgetserver',
   ['tock'],
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   async (message) => {
     if (!gadgetserver.session(message)) {
-      return
-    }
-
-    // headless/server mode: no paint/patch output (no canvas/gadget client)
-    if (isheadless && message.target === 'tock') {
       return
     }
 
@@ -155,7 +147,11 @@ const gadgetserver = createdevice(
             // only send when we have changes
             if (rfcPatch.length) {
               const encoder = await getPatchCodec()
-              const ops = decodeToOps(rfcPatch)
+              // fast-json-patch RFC 6902 format is compatible with json-joy's decode
+              const ops = decodeToOps(
+                rfcPatch as Parameters<typeof decodeToOps>[0],
+                {},
+              )
               const data = encoder.encode(ops)
               gadgetclientpatch(gadgetserver, player, data)
             }
@@ -163,9 +159,6 @@ const gadgetserver = createdevice(
         }
         break
       case 'desync': {
-        if (isheadless) {
-          break
-        }
         // get current state
         const gadget = gadgetstate(message.player)
         // create compressed json from gadget

@@ -1073,7 +1073,6 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
       const maybecharset = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
         board.charset,
-        true,
       )
       if (ispresent(maybecharset)) {
         board.charsetpage = maybecharset.id
@@ -1097,7 +1096,6 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
       const maybepalette = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
         board.palette,
-        true,
       )
       if (ispresent(maybepalette)) {
         board.palettepage = maybepalette.id

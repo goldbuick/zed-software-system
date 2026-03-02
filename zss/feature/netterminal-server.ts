@@ -13,14 +13,14 @@ import {
   shouldnotforwardonpeerclient,
   shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
-import { registerreadplayer } from 'zss/device/rackserver'
+import { registerreadplayer } from 'zss/device/rackregister'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage-server'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-const Peer = peerjs.Peer ?? peerjs
+const Peer = (peerjs as { Peer?: typeof peerjs }).Peer ?? peerjs
 
 async function readpeerid(): Promise<string | undefined> {
   return storagereadnetid()
@@ -39,7 +39,7 @@ export function readsubscribetopic() {
   return subscribetopic
 }
 
-let networkpeer: MAYBE<Peer>
+let networkpeer: MAYBE<InstanceType<typeof Peer>>
 
 function ishost() {
   return networkpeer?.id === subscribetopic

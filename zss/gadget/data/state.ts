@@ -153,6 +153,7 @@ export const useTerminal = create<{
   yselect: MAYBE<number>
   bufferindex: number
   buffer: string[]
+  autocompleteactive: boolean
   reset: () => void
 }>((set) => ({
   // panning offset
@@ -167,6 +168,7 @@ export const useTerminal = create<{
   // input history
   bufferindex: 0,
   buffer: [''],
+  autocompleteactive: false,
   reset() {
     set({
       pan: 0,
@@ -177,6 +179,7 @@ export const useTerminal = create<{
       yselect: undefined,
       bufferindex: 0,
       buffer: [''],
+      autocompleteactive: false,
     })
   },
 }))
@@ -186,18 +189,24 @@ export const useEditor = create<{
   yscroll: number
   cursor: number
   select: MAYBE<number>
+  autocompleteactive: boolean
+  acindex: number
   reset: () => void
 }>((set) => ({
   xscroll: 0,
   yscroll: 0,
   cursor: 0,
   select: undefined,
+  autocompleteactive: false,
+  acindex: -1,
   reset() {
     set({
       xscroll: 0,
       yscroll: 0,
       cursor: 0,
       select: undefined,
+      autocompleteactive: false,
+      acindex: -1,
     })
   },
 }))

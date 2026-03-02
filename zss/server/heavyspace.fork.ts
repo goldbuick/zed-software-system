@@ -5,7 +5,7 @@ import { createforward, shouldforwardheavytoclient } from '../device/forward'
 import '../device/heavy'
 
 const { forward } = createforward((message) => {
-  if (shouldforwardheavytoclient(message) && process.send) {
+  if (shouldforwardheavytoclient() && process.send) {
     process.send(message)
   }
 })
