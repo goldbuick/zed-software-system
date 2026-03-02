@@ -2,9 +2,9 @@
  * Ink-based terminal UI for the ZSS server REPL.
  * Renders a scrollable log area with a styled input prompt.
  */
-import React, { useEffect, useState } from 'react'
 import { Box, Text } from 'ink'
 import TextInput from 'ink-text-input'
+import React, { useEffect, useState } from 'react'
 
 const PROMPT = 'zed.cafe> '
 const MAX_LOG_LINES = 200
@@ -16,11 +16,7 @@ export type ServerAppProps = {
   onReady: () => void | Promise<void>
 }
 
-export function ServerApp({
-  onSubmit,
-  onLogOutput,
-  onReady,
-}: ServerAppProps) {
+export function ServerApp({ onSubmit, onLogOutput, onReady }: ServerAppProps) {
   const [logLines, setLogLines] = useState<string[]>([])
   const [input, setInput] = useState('')
   const [mounted, setMounted] = useState(false)
@@ -65,7 +61,9 @@ export function ServerApp({
       </Box>
 
       <Box marginTop={0} flexDirection="row" paddingX={0}>
-        <Text color={PROMPT_COLOR} bold>{PROMPT}</Text>
+        <Text color={PROMPT_COLOR} bold>
+          {PROMPT}
+        </Text>
         <TextInput
           value={input}
           onChange={setInput}

@@ -15,7 +15,7 @@
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
     "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
-    "server": "tsx --tsconfig tsconfig.server.json zss/server/main-ink.tsx",
+    "server": "tsx --tsconfig tsconfig.server.json zss/server/main.tsx",
     "build:server": "node scripts/build-server.mjs",
     "pkg:host": "yarn build:server && node scripts/pkg-host.mjs",
     "pkg:linux": "yarn build:server && node scripts/pkg-all.mjs linux",

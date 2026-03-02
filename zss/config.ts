@@ -1,9 +1,11 @@
 import { CHAR_HEIGHT, CHAR_WIDTH } from './gadget/data/types'
 
+/* eslint-disable @typescript-eslint/prefer-optional-chain -- typeof guard needed for Node */
 const env =
   typeof import.meta !== 'undefined' && import.meta?.env
     ? import.meta.env
-    : (typeof process !== 'undefined' && process.env) || {}
+    : (process?.env ?? {})
+/* eslint-enable @typescript-eslint/prefer-optional-chain */
 
 function envBool(key: string) {
   return !!JSON.parse(env[key] ?? 'false')

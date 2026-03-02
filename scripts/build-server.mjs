@@ -37,7 +37,7 @@ async function build() {
   await Promise.all([
     esbuild.build({
       ...shared,
-      entryPoints: [path.join(root, 'zss/server/main-ink.tsx')],
+      entryPoints: [path.join(root, 'zss/server/main.tsx')],
       outfile: path.join(outDir, 'server.cjs'),
     }),
     esbuild.build({

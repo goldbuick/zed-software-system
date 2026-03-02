@@ -5,8 +5,6 @@
 import 'zss/feature/peerjs-node-polyfill'
 import peerjs from 'peerjs'
 import type { DataConnection } from 'peerjs'
-
-const Peer = peerjs.Peer ?? peerjs
 import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
 import {
   createforward,
@@ -15,12 +13,14 @@ import {
   shouldnotforwardonpeerclient,
   shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
-import { registerreadplayer } from 'zss/device/registerserver'
+import { registerreadplayer } from 'zss/device/rackserver'
 import { SOFTWARE } from 'zss/device/session'
+import { storagereadnetid, storagewritenetid } from 'zss/feature/storage-server'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { storagereadnetid, storagewritenetid } from 'zss/feature/storage-server'
+
+const Peer = peerjs.Peer ?? peerjs
 
 async function readpeerid(): Promise<string | undefined> {
   return storagereadnetid()

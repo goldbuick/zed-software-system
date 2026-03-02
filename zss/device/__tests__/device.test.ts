@@ -1,8 +1,4 @@
-import {
-  createdevice,
-  createmessage,
-  parsetarget,
-} from 'zss/device'
+import { createdevice, createmessage, parsetarget } from 'zss/device'
 
 describe('device', () => {
   describe('createmessage', () => {
@@ -77,7 +73,12 @@ describe('device', () => {
       const onMessage = jest.fn()
       device = createdevice('mydevice', [], onMessage)
 
-      const msg = createmessage('sess1', 'player1', 'register', 'mydevice:operator')
+      const msg = createmessage(
+        'sess1',
+        'player1',
+        'register',
+        'mydevice:operator',
+      )
       device.handle(msg)
 
       expect(onMessage).toHaveBeenCalledTimes(1)

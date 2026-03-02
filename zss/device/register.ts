@@ -243,7 +243,7 @@ const register = createdevice(
       case 'ready': {
         doasync(register, message.player, async () => {
           // setup content watcher
-          await storagewatchcontent(myplayerid)
+          storagewatchcontent(myplayerid)
           // setup history buffer
           const historybuffer = await storagereadhistorybuffer()
           if (ispresent(historybuffer)) {

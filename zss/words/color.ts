@@ -7,10 +7,10 @@ import {
 } from 'zss/mapping/types'
 
 import {
-  colorconsts,
-  STR_COLOR_KEYS,
   STR_COLOR_CONST,
+  STR_COLOR_KEYS,
   STR_COLOR_TYPE,
+  colorconsts,
 } from './colorconsts'
 import { READ_CONTEXT } from './reader'
 import { COLOR, NAME, WORD } from './types'

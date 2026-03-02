@@ -1,5 +1,5 @@
 /**
- * Server-side register: handles boot flow, storage, stdout output.
+ * Server-side rack: handles boot flow, storage, stdout output.
  * Uses storage-server for config/content. No React, no Zustand, no DOM.
  */
 import { createdevice } from 'zss/device'
@@ -8,22 +8,23 @@ import {
   readsubscribetopic,
 } from 'zss/feature/netterminal-server'
 import {
+  storagenukecontent,
   storagereadcontent,
   storagereadhistorybuffer,
+  storagereadplayer,
   storagereadvars,
   storagewatchcontent,
   storagewritecontent,
-  storagewritevar,
-  storagereadplayer,
   storagewriteplayer,
+  storagewritevar,
 } from 'zss/feature/storage-server'
+import { writeheader, writeoption } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, isbook, ispresent, isstring } from 'zss/mapping/types'
 import { memorylistcodepagebytypeandstat } from 'zss/memory/bookoperations'
-import { BOOK } from 'zss/memory/types'
-import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { BOOK, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { createstubbook } from 'zss/server/stubbook'
 import { textformatToAnsi } from 'zss/server/terminal-format'
 
@@ -80,11 +81,11 @@ export function registerwritehistorybuffer(buf: string[]) {
   historyBuffer = buf
 }
 
-export const registerserver = createdevice(
+export const rackserver = createdevice(
   'register',
   ['ready', 'second', 'log', 'chat', 'toast'],
-  async function (message) {
-    if (!registerserver.session(message)) {
+  function (message) {
+    if (!rackserver.session(message)) {
       return
     }
 
@@ -103,9 +104,11 @@ export const registerserver = createdevice(
 
     switch (message.target) {
       case 'ready': {
-        doasync(registerserver, message.player, async () => {
+        doasync(rackserver, message.player, async () => {
           myplayerid =
-            (await storagereadplayer()) ?? process.env.ZSS_PLAYER_ID ?? createpid()
+            (await storagereadplayer()) ??
+            process.env.ZSS_PLAYER_ID ??
+            createpid()
           await storagewriteplayer(myplayerid)
 
           await storagewatchcontent(myplayerid)
@@ -118,40 +121,55 @@ export const registerserver = createdevice(
           }
 
           await waitfor(256)
-          apilog(registerserver, myplayerid, `myplayerid ${myplayerid}`)
-          vmoperator(registerserver, myplayerid)
+          apilog(rackserver, myplayerid, `myplayerid ${myplayerid}`)
+          vmoperator(rackserver, myplayerid)
         })
         break
       }
       case 'ackoperator': {
-        gadgetserverdesync(registerserver, myplayerid)
-        doasync(registerserver, message.player, async () => {
+        gadgetserverdesync(rackserver, myplayerid)
+        doasync(rackserver, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)
-          await loadmem(urlcontent as string | BOOK[])
+          await loadmem(urlcontent)
         })
         break
       }
       case 'loginready': {
-        doasync(registerserver, message.player, async () => {
+        doasync(rackserver, message.player, async () => {
           const storage = await storagereadvars()
-          vmlogin(registerserver, myplayerid, storage)
-          vmzsswords(registerserver, myplayerid)
+          vmlogin(rackserver, myplayerid, storage)
+          vmzsswords(rackserver, myplayerid)
         })
         break
       }
       case 'acklogin': {
         if (message.data) {
-          vmloader(registerserver, message.player, undefined, 'text', 'sim:load', '')
+          vmloader(
+            rackserver,
+            message.player,
+            undefined,
+            'text',
+            'sim:load',
+            '',
+          )
         } else {
-          doasync(registerserver, message.player, async () => {
-            registerterminalfull(registerserver, myplayerid)
-            vmloader(registerserver, message.player, undefined, 'text', 'sim:load', '')
+          doasync(rackserver, message.player, () => {
+            registerterminalfull(rackserver, myplayerid)
+            vmloader(
+              rackserver,
+              message.player,
+              undefined,
+              'text',
+              'sim:load',
+              '',
+            )
+            return Promise.resolve()
           })
         }
         break
       }
       case 'store': {
-        doasync(registerserver, message.player, async () => {
+        doasync(rackserver, message.player, async () => {
           if (isarray(message.data)) {
             const [name, value] = message.data
             await storagewritevar(name, value)
@@ -163,7 +181,7 @@ export const registerserver = createdevice(
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
-          vmdoot(registerserver, myplayerid)
+          vmdoot(rackserver, myplayerid)
         }
         break
       }
@@ -178,8 +196,26 @@ export const registerserver = createdevice(
           logOutput(`${message.data}`)
         }
         break
+      case 'nuke': {
+        doasync(rackserver, message.player, async () => {
+          writeheader(rackserver, myplayerid, 'nuke in')
+          writeoption(rackserver, myplayerid, '3', '...')
+          await waitfor(1000)
+          writeoption(rackserver, myplayerid, '2', '...')
+          await waitfor(1000)
+          writeoption(rackserver, myplayerid, '1', '...')
+          await waitfor(1000)
+          writeheader(rackserver, myplayerid, 'BYE')
+          await waitfor(100)
+          await storagenukecontent(myplayerid)
+          apilog(rackserver, myplayerid, 'content deleted')
+          await waitfor(200)
+          process.exit(0)
+        })
+        break
+      }
       case 'savemem': {
-        doasync(registerserver, message.player, async () => {
+        doasync(rackserver, message.player, async () => {
           if (isarray(message.data)) {
             const [maybelabel, maybecontent, maybebooks] = message.data
             if (
@@ -208,6 +244,7 @@ function ensurestub(books: BOOK[]): BOOK[] {
   if (books.length === 0) {
     return [createstubbook()]
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- b.name is string, MEMORY_LABEL.MAIN is enum
   const mainBook = books.find((b) => b.name === MEMORY_LABEL.MAIN) ?? books[0]
   const hasPlayer =
     memorylistcodepagebytypeandstat(
@@ -255,16 +292,21 @@ async function loadmem(content: string | BOOK[]) {
   } else if (content.length === 0) {
     books = [createstubbook()]
   } else {
-    apierror(registerserver, myplayerid, 'content', 'compressed content not supported in server mode')
-    vmzsswords(registerserver, myplayerid)
-    registerterminalfull(registerserver, myplayerid)
+    apierror(
+      rackserver,
+      myplayerid,
+      'content',
+      'compressed content not supported in server mode',
+    )
+    vmzsswords(rackserver, myplayerid)
+    registerterminalfull(rackserver, myplayerid)
     return
   }
-  vmbooks(registerserver, myplayerid, books)
+  vmbooks(rackserver, myplayerid, books)
   await netterminalhost()
   const topic = readsubscribetopic()
   if (ispresent(topic)) {
     const joinUrl = `https://zed.cafe/join/#${topic}`
-    apilog(registerserver, myplayerid, `join $white${joinUrl}`)
+    apilog(rackserver, myplayerid, `join $white${joinUrl}`)
   }
 }

@@ -5,13 +5,12 @@
 import {
   memorycreatebook,
   memoryensurebookcodepagewithtype,
-  memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
-  BOARD_WIDTH,
-  BOARD_HEIGHT,
 } from 'zss/memory/types'
 
 export function createstubbook() {
@@ -25,7 +24,19 @@ export function createstubbook() {
     MEMORY_LABEL.PLAYER,
   )
   if (playerPage) {
-    playerPage.code = `@${MEMORY_LABEL.PLAYER}\n`
+    playerPage.code = `@${MEMORY_LABEL.PLAYER}
+@char 2
+@color blue
+@cycle 1
+:think
+"
+"Stub World
+#if inputmove do 
+ ?inputmove
+#else idle
+#done
+#think
+`
   }
 
   // @board title - required for memoryloginplayer (default spawn board)

@@ -2,9 +2,9 @@
  * Server-side platform: spawns simspace and heavyspace via child_process.fork.
  * Fork is used instead of worker_threads so the child processes can run with tsx (TypeScript).
  */
+import { fork } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { fork } from 'child_process'
 
 import { MESSAGE } from '../device/api'
 import {
@@ -51,7 +51,10 @@ export function createplatformserver() {
     const base = path.basename(entry, path.extname(entry))
     const ext = process.platform === 'win32' ? '.exe' : ''
     simWorker = path.join(workerDir, base.replace(/server/, 'simspace') + ext)
-    heavyWorker = path.join(workerDir, base.replace(/server/, 'heavyspace') + ext)
+    heavyWorker = path.join(
+      workerDir,
+      base.replace(/server/, 'heavyspace') + ext,
+    )
   } else if (isBundled) {
     simWorker = path.join(workerDir, 'simspace.cjs')
     heavyWorker = path.join(workerDir, 'heavyspace.cjs')
@@ -82,10 +85,14 @@ export function createplatformserver() {
     console.error('simProc error:', err)
   })
   heavyProc.on('exit', (code) => {
-    if (code !== 0) console.error('heavyProc exited with', code)
+    if (code !== 0) {
+      console.error('heavyProc exited with', code)
+    }
   })
   simProc.on('exit', (code) => {
-    if (code !== 0) console.error('simProc exited with', code)
+    if (code !== 0) {
+      console.error('simProc exited with', code)
+    }
   })
 
   heavyProc.on('message', (message: MESSAGE) => {

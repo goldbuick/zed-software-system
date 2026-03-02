@@ -3,12 +3,15 @@
  * Maps ZSS color tokens to ANSI 256/16-color escape sequences.
  * CP437 codes ($0-255) are mapped to Unicode for correct terminal display.
  */
+import { colorconsts } from 'zss/words/color'
 import { cp437ToChar } from 'zss/words/cp437'
 import { tokenize } from 'zss/words/textformat'
-import { colorconsts } from 'zss/words/color'
 import { COLOR } from 'zss/words/types'
 
-const metakey = typeof process !== 'undefined' && process.platform === 'darwin' ? 'cmd' : 'ctrl'
+const metakey =
+  typeof process !== 'undefined' && process.platform === 'darwin'
+    ? 'cmd'
+    : 'ctrl'
 
 // Map COLOR enum index to ANSI SGR codes (foreground)
 const COLOR_TO_ANSI: Record<number, number> = {
@@ -73,13 +76,17 @@ const useColor =
   process.stdout?.isTTY
 
 function ansiFg(color: number): string {
-  if (!useColor) return ''
+  if (!useColor) {
+    return ''
+  }
   const code = COLOR_TO_ANSI[color]
   return code !== undefined ? `\x1b[${code}m` : ''
 }
 
 function ansiBg(color: number): string {
-  if (!useColor) return ''
+  if (!useColor) {
+    return ''
+  }
   const code = BG_TO_ANSI[color]
   return code !== undefined ? `\x1b[${code}m` : ''
 }
@@ -91,10 +98,7 @@ export function textformatToAnsi(text: string): string {
   }
 
   const { tokens } = result
-  const allcolors = Object.keys(colorconsts)
   let output = ''
-  let fg: number | undefined
-  let bg: number | undefined
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
@@ -123,7 +127,10 @@ export function textformatToAnsi(text: string): string {
         !isNaN(code) && code >= 0 && code <= 255 ? cp437ToChar(code) : ''
       continue
     }
-    if (tokenType.name === 'Whitespace' || tokenType.name === 'WhitespaceSkipped') {
+    if (
+      tokenType.name === 'Whitespace' ||
+      tokenType.name === 'WhitespaceSkipped'
+    ) {
       output += image
       continue
     }
@@ -146,14 +153,10 @@ export function textformatToAnsi(text: string): string {
       if (colorVal !== undefined) {
         if (constName === 'ONCLEAR') {
           output += RESET
-          fg = undefined
-          bg = undefined
         } else if (constName.startsWith('ON') && constName !== 'ONCLEAR') {
           output += ansiBg(colorVal)
-          bg = colorVal
         } else {
           output += ansiFg(colorVal)
-          fg = colorVal
         }
         continue
       }

@@ -31,7 +31,7 @@ if (isViteGlob) {
   })
   objectKeys(romfiles).forEach((name: string) => {
     const p = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
-    romcontent[p] = (romfiles[name] as any).default
+    romcontent[p] = romfiles[name].default
   })
 }
 
@@ -39,9 +39,15 @@ let romReadyPromise: Promise<void> | null = null
 
 /** Resolve when ROM is ready. In browser this is immediate; in Node it awaits fs-based load. */
 export function ensureRomReady(): Promise<void> {
-  if (romcontent && Object.keys(romcontent).length > 0) return Promise.resolve()
-  if (romReadyPromise) return romReadyPromise
-  if (isViteGlob) return Promise.resolve()
+  if (romcontent && Object.keys(romcontent).length > 0) {
+    return Promise.resolve()
+  }
+  if (romReadyPromise) {
+    return romReadyPromise
+  }
+  if (isViteGlob) {
+    return Promise.resolve()
+  }
   romReadyPromise = import('./loader-node').then(({ loadRomFiles }) => {
     romcontent = loadRomFiles()
   })

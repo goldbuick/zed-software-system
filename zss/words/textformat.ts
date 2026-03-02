@@ -414,13 +414,10 @@ export function tokenizeandstriptextformat(text: string) {
     })
     .map((token) => {
       if (token.tokenType === NumberLiteral) {
-        const code = parseInt(
-          (token.image as string).replace(/^\$-?/, ''),
-          10,
-        )
+        const code = parseInt(token.image.replace(/^\$-?/, ''), 10)
         return !isNaN(code) && code >= 0 && code <= 255 ? cp437ToChar(code) : ''
       }
-      return token.image as string
+      return token.image
     })
     .join('')
 

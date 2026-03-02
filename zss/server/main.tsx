@@ -3,17 +3,19 @@
  * Headless ZSS simulation with a React-based terminal interface.
  * Requires a TTY (run in an interactive terminal).
  */
-import React from 'react'
+/* eslint-disable react-refresh/only-export-components */
 import { render } from 'ink'
+import React from 'react'
 import { sessionreset, vmcli } from 'zss/device/api'
 import {
+  rackserver,
   registerreadplayer,
-  registerserver,
   setServerLogOutput,
-} from 'zss/device/registerserver'
+} from 'zss/device/rackserver'
 import { SOFTWARE } from 'zss/device/session'
 import { ensureRomReady } from 'zss/feature/rom'
 import { createplatformserver } from 'zss/server/platform-server'
+
 import { ServerApp } from './app'
 
 sessionreset(SOFTWARE)
@@ -21,7 +23,7 @@ sessionreset(SOFTWARE)
 function App() {
   const handleSubmit = (line: string) => {
     const playerid = registerreadplayer()
-    vmcli(registerserver, playerid, line)
+    vmcli(rackserver, playerid, line)
   }
 
   const handleLogOutput = (fn: (line: string) => void) => {
@@ -48,6 +50,6 @@ if (!process.stdin.isTTY) {
 }
 
 const app = render(<App />)
-app.waitUntilExit().then(() => {
+void app.waitUntilExit().then(() => {
   process.exit(0)
 })

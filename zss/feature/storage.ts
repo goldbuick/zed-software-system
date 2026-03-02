@@ -11,9 +11,7 @@ import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
 import { shorturl } from './url'
-import { write, writecopyit } from './writeui'
-
-const FILE_SOURCE = 'zss-content.json'
+import { writecopyit } from './writeui'
 
 // read / write from indexdb
 
@@ -172,7 +170,7 @@ export async function storagewritevar(name: string, value: any) {
 }
 
 let currenturlhash = ''
-export async function storagewatchcontent(player: string) {
+export function storagewatchcontent(player: string) {
   window.addEventListener('hashchange', () => {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
@@ -202,7 +200,8 @@ export async function storagesharecontent(player: string) {
   writecopyit(SOFTWARE, player, url, url)
 }
 
-export function storagenukecontent(player: string) {
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+export function storagenukecontent(_player: string) {
   // nuke is the only valid case for reload
   location.hash = ''
   currenturlhash = location.hash

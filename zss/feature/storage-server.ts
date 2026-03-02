@@ -58,8 +58,7 @@ export async function storagereadconfig(name: string) {
 }
 
 export async function storagewriteconfig(name: string, value: string) {
-  const config =
-    (await readJsonFile<Record<string, string>>(CONFIG_FILE)) ?? {}
+  const config = (await readJsonFile<Record<string, string>>(CONFIG_FILE)) ?? {}
   config[`config_${name}`] = value
   await writeJsonFile(CONFIG_FILE, config)
 }
@@ -92,7 +91,7 @@ export async function storagewritehistorybuffer(historybuffer: string[]) {
 }
 
 export async function storagereadcontent(
-  _player: string,
+  _player: string, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): Promise<string | BOOK[]> {
   const contentFile = path.join(CONTENT_DIR, FILE_SOURCE)
   try {
@@ -126,16 +125,26 @@ export async function storagewritevar(name: string, value: any) {
   await writeJsonFile(STORAGE_FILE, storage)
 }
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export async function storagewatchcontent(_player: string) {
   // No-op in server: no hashchange, content is file-based
 }
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export async function storagesharecontent(_player: string) {
   // No-op or print join URL
 }
 
-export function storagenukecontent(_player: string) {
-  // Server: could delete content file; for now no-op
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+export async function storagenukecontent(_player: string): Promise<void> {
+  const contentFile = path.join(CONTENT_DIR, FILE_SOURCE)
+  try {
+    await fs.unlink(contentFile)
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
+      throw err
+    }
+  }
 }
 
 /** Server-only: read player ID from session file */
