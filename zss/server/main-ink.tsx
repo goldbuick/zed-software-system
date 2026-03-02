@@ -12,6 +12,7 @@ import {
   setServerLogOutput,
 } from 'zss/device/registerserver'
 import { SOFTWARE } from 'zss/device/session'
+import { ensureRomReady } from 'zss/feature/rom'
 import { createplatformserver } from 'zss/server/platform-server'
 import { ServerApp } from './app'
 
@@ -27,7 +28,8 @@ function App() {
     setServerLogOutput(fn)
   }
 
-  const handleReady = () => {
+  const handleReady = async () => {
+    await ensureRomReady()
     createplatformserver()
   }
 

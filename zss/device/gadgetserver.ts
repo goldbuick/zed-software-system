@@ -135,20 +135,22 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], async (message) => {
             continue
           }
 
-          // write patch
+          // write patch (fast-json-patch produces RFC 6902; json-joy binary encoder expects Op[])
           const previous = gadgetsync.get(player) ?? []
-          const { compare } = await import('fast-json-patch')
-
-          // this should be the compressed json
-          const patch = compare(previous, slim)
+          const [{ compare }, { decode: decodeToOps }] = await Promise.all([
+            import('fast-json-patch'),
+            import('json-joy/esm/json-patch/codec/json'),
+          ])
+          const rfcPatch = compare(previous, slim)
 
           // reset sync
           gadgetsync.set(player, slim)
 
           // only send when we have changes
-          if (patch.length) {
+          if (rfcPatch.length) {
             const encoder = await getPatchCodec()
-            const data = encoder.encode(patch)
+            const ops = decodeToOps(rfcPatch)
+            const data = encoder.encode(ops)
             gadgetclientpatch(gadgetserver, player, data)
           }
         }

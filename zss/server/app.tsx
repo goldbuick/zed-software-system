@@ -13,7 +13,7 @@ const PROMPT_COLOR = 'magenta'
 export type ServerAppProps = {
   onSubmit: (line: string) => void
   onLogOutput: (fn: (line: string) => void) => void
-  onReady: () => void
+  onReady: () => void | Promise<void>
 }
 
 export function ServerApp({
@@ -33,7 +33,7 @@ export function ServerApp({
       })
     })
     setMounted(true)
-    onReady()
+    void Promise.resolve(onReady())
   }, [onLogOutput, onReady])
 
   const handleSubmit = (value: string) => {

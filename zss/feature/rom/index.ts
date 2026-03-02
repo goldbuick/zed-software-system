@@ -1,6 +1,3 @@
-import { readdirSync, readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
 import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import { SOFTWARE } from 'zss/device/session'
@@ -14,46 +11,42 @@ import {
 import {
   gadgetheader,
   gadgethyperlink,
+  gadgetoption,
   gadgetsection,
   gadgettext,
 } from 'zss/gadget/data/api'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-function loadRomFiles(): Record<string, string> {
-  const content: Record<string, string> = {}
-  if (typeof (import.meta as any).glob === 'function') {
-    const romfiles = (import.meta as any).glob('./**/*.txt', {
-      eager: true,
-      query: 'raw',
-    })
-    objectKeys(romfiles).forEach((name: string) => {
-      const p = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
-      content[p] = (romfiles[name] as any).default
-    })
-  } else {
-    try {
-      const __dirname = dirname(fileURLToPath(import.meta.url))
-      function walk(dir: string, base = '') {
-        for (const entry of readdirSync(dir, { withFileTypes: true })) {
-          const full = join(dir, entry.name)
-          if (entry.isDirectory()) {
-            walk(full, base ? `${base}/${entry.name}` : entry.name)
-          } else if (entry.name.endsWith('.txt')) {
-            const p =
-              (base ? `${base}/` : '') + entry.name.replace('.txt', '')
-            content[p.replaceAll('/', ':')] = readFileSync(full, 'utf-8')
-          }
-        }
-      }
-      walk(__dirname)
-    } catch {
-      // no rom files in Node
-    }
-  }
-  return content
+// ROM content. In browser: populated sync via import.meta.glob. In Node: populated async via loader-node.
+let romcontent: Record<string, string> = {}
+
+const isViteGlob = typeof (import.meta as any).glob === 'function'
+
+if (isViteGlob) {
+  // Browser/Vite: import.meta.glob available – load synchronously (no Node builtins)
+  const romfiles = (import.meta as any).glob('./**/*.txt', {
+    eager: true,
+    query: 'raw',
+  })
+  objectKeys(romfiles).forEach((name: string) => {
+    const p = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
+    romcontent[p] = (romfiles[name] as any).default
+  })
 }
-const romcontent = loadRomFiles()
+
+let romReadyPromise: Promise<void> | null = null
+
+/** Resolve when ROM is ready. In browser this is immediate; in Node it awaits fs-based load. */
+export function ensureRomReady(): Promise<void> {
+  if (romcontent && Object.keys(romcontent).length > 0) return Promise.resolve()
+  if (romReadyPromise) return romReadyPromise
+  if (isViteGlob) return Promise.resolve()
+  romReadyPromise = import('./loader-node').then(({ loadRomFiles }) => {
+    romcontent = loadRomFiles()
+  })
+  return romReadyPromise
+}
 
 export function romread(address: string): MAYBE<string> {
   const withaddress = NAME(
