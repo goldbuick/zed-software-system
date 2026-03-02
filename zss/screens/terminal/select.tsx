@@ -1,14 +1,14 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
-import { WORD } from 'zss/words/types'
 import { inputcolor } from 'zss/screens/panel/common'
 import {
   TapeTerminalItemInputProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
+import { WORD } from 'zss/words/types'
 
 export function TerminalSelect({
   active,
@@ -18,14 +18,16 @@ export function TerminalSelect({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
-  const pairs = words.slice(2)
-  const valuelabels: WORD[] = []
-  const values: WORD[] = []
-
-  for (let i = 0; i < pairs.length; i += 2) {
-    valuelabels.push(pairs[i])
-    values.push(pairs[i + 1])
-  }
+  const { valuelabels, values } = useMemo(() => {
+    const pairs = words.slice(2)
+    const valuelabels: WORD[] = []
+    const values: WORD[] = []
+    for (let i = 0; i < pairs.length; i += 2) {
+      valuelabels.push(pairs[i])
+      values.push(pairs[i + 1])
+    }
+    return { valuelabels, values }
+  }, [words])
 
   const address = prefix
   const value = useWaitForValueNumber(address)

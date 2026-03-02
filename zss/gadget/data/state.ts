@@ -29,11 +29,9 @@ export const useGadgetClient = create<{
 }>(() => ({
   desync: false,
   zsswords: {
-    cli: [],
+    langcommands: {},
     clicommands: {},
-    loader: [],
     loadercommands: {},
-    runtime: [],
     runtimecommands: {},
     flags: [],
     statsboard: [],

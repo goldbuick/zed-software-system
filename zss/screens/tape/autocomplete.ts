@@ -1,3 +1,4 @@
+import { romread } from 'zss/feature/rom'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
@@ -8,10 +9,54 @@ import {
   applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { ARG_TYPE, COLOR } from 'zss/words/types'
+import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
 import { zsswordcolor } from './colors'
+import type { ZSS_WORD_LIST_KEY } from './colors'
 import { EDITOR_CODE_ROW } from './common'
+
+const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
+  'flags',
+  'objects',
+  'terrains',
+  'boards',
+  'palettes',
+  'charsets',
+  'loaders',
+  'colors',
+  'dirs',
+  'dirmods',
+  'exprs',
+]
+
+/**
+ * Builds a map from word (lowercase) to category name using GADGET_ZSS_WORDS.
+ * Word lists and command record keys are included. Later categories overwrite
+ * if a word appears in multiple.
+ */
+function buildwordcategorymap(words: GADGET_ZSS_WORDS): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const key of WORD_LIST_KEYS) {
+    const list = words[key]
+    if (isarray(list)) {
+      for (const w of list) {
+        map.set(w.toLowerCase(), key)
+      }
+    }
+  }
+  // flatten stats lists
+  for (const k of [
+    ...words.statsboard,
+    ...words.statshelper,
+    ...words.statssender,
+    ...words.statsinteraction,
+    ...words.statsboolean,
+    ...words.statsconfig,
+  ]) {
+    map.set(k.toLowerCase(), 'stats')
+  }
+  return map
+}
 
 export type AUTO_COMPLETE_SUGGESTION = {
   word: string
@@ -23,8 +68,8 @@ export type AUTO_COMPLETE = {
   prefix: string
   wordcol: number
   wordstart: number
-  checkforargshint: boolean
-  checkforargswords: string[]
+  endoflinehint: boolean
+  endoflineargs: COMMAND_ARGS_SIGNATURE
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
@@ -32,8 +77,8 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   prefix: '',
   wordcol: 0,
   wordstart: 0,
-  checkforargshint: false,
-  checkforargswords: [],
+  endoflinehint: false,
+  endoflineargs: [''],
 }
 
 const MAX_SUGGESTIONS = 8
@@ -74,6 +119,21 @@ function tagrecordkeys(
   return Object.keys(rec).map((word) => ({ word, category }))
 }
 
+function hintfromrom(category: string, word = ''): string {
+  const rompath = word ? `editor:${category}:${word}` : `editor:${category}`
+  const rom = romread(rompath)
+  if (ispresent(rom)) {
+    const [, desc] = rom.split('\n')[0].split(';')
+    return desc ?? ''
+  }
+  switch (category) {
+    case 'flags':
+      return `flag ${word}`
+    default:
+      return ''
+  }
+}
+
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
@@ -89,9 +149,9 @@ function getautocompletefromtokens(
   for (let t = 0; t < tokens.length; t++) {
     const tok = tokens[t]
     const startx = tok.startColumn ?? 1
-    const endx = tok.endColumn ?? 1
-    if (cursor >= startx && cursor <= endx) {
+    if (startx <= cursor && tok.tokenTypeIdx !== lexer.newline.tokenTypeIdx) {
       activetokenidx = t
+    } else if (startx > cursor) {
       break
     }
   }
@@ -105,103 +165,55 @@ function getautocompletefromtokens(
       --activetokenidx
     }
 
-    // detect command token to our left and first token after it (command name)
-    let commandTokenIdx = -1
-    for (let i = activetokenidx - 1; i >= 0; i--) {
-      if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
-        commandTokenIdx = i
-        break
-      }
-    }
-    const checkforargshint = commandTokenIdx >= 0
-    const checkforargswords =
-      commandTokenIdx >= 0
-        ? tokens
-            .slice(commandTokenIdx + 1, activetokenidx + 1)
-            .map((t) => t.image ?? '')
-        : []
+    const wordcategorymap = buildwordcategorymap(words)
 
     // get token context
     const token = tokens[activetokenidx]
-    const prev = tokens[activetokenidx - 1]
     const wordcol = (token.startColumn ?? 1) - 1
     const wordstart = row.start + wordcol
 
-    const prefix = token.image
-    switch (token.tokenTypeIdx) {
-      case lexer.text.tokenTypeIdx:
-      case lexer.stringliteral.tokenTypeIdx:
-      case lexer.stringliteraldouble.tokenTypeIdx:
-        switch (prev?.tokenTypeIdx) {
-          case lexer.command.tokenTypeIdx:
-            return {
-              suggestions: filtersuggestions(prefix, [
-                ...tagrecordkeys(words.clicommands, 'clicommands'),
-                ...tagrecordkeys(words.loadercommands, 'loadercommands'),
-                ...tagrecordkeys(words.runtimecommands, 'runtimecommands'),
-              ]),
-              prefix,
-              wordcol,
-              wordstart,
-              checkforargshint,
-              checkforargswords,
-            }
-          case lexer.stat.tokenTypeIdx:
-            return {
-              suggestions: filtersuggestions(prefix, [
-                ...tagwords(words.statsboard, 'stats'),
-                ...tagwords(words.statshelper, 'stats'),
-                ...tagwords(words.statssender, 'stats'),
-                ...tagwords(words.statsinteraction, 'stats'),
-                ...tagwords(words.statsboolean, 'stats'),
-                ...tagwords(words.statsconfig, 'stats'),
-              ]),
-              prefix,
-              wordcol,
-              wordstart,
-              checkforargshint,
-              checkforargswords,
-            }
-          default:
-            return {
-              suggestions: filtersuggestions(prefix, [
-                ...tagwords(words.flags, 'flags'),
-                ...tagwords(words.statsboard, 'stats'),
-                ...tagwords(words.statshelper, 'stats'),
-                ...tagwords(words.statssender, 'stats'),
-                ...tagwords(words.statsinteraction, 'stats'),
-                ...tagwords(words.statsboolean, 'stats'),
-                ...tagwords(words.statsconfig, 'stats'),
-                ...tagwords(words.objects, 'objects'),
-                ...tagwords(words.terrains, 'terrains'),
-                ...tagwords(words.boards, 'boards'),
-                ...tagwords(words.palettes, 'palettes'),
-                ...tagwords(words.charsets, 'charsets'),
-                ...tagwords(words.loaders, 'loaders'),
-                ...tagwords(words.colors, 'colors'),
-                ...tagwords(words.dirs, 'dirs'),
-                ...tagwords(words.dirmods, 'dirmods'),
-                ...tagwords(words.exprs, 'exprs'),
-              ]),
-              prefix,
-              wordcol,
-              wordstart,
-              checkforargshint,
-              checkforargswords,
-            }
-        }
-      case lexer.stat.tokenTypeIdx:
-        // only consider autocomplete for stats if we are in the editor
+    // detect command token to our left and first token after it (command name)
+    let cmdidx = -1
+    for (let i = activetokenidx - 1; i >= 0; i--) {
+      if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
+        cmdidx = i
         break
-      case lexer.label.tokenTypeIdx:
-      case lexer.comment.tokenTypeIdx:
+      }
+    }
+
+    let endoflinehint = cmdidx >= 0
+    const maybecommand = tokens[cmdidx + 1].image ?? ''
+    const maybesig =
+      words.langcommands[maybecommand] ??
+      words.clicommands[maybecommand] ??
+      words.loadercommands[maybecommand] ??
+      words.runtimecommands[maybecommand]
+
+    let endoflineargs = ispresent(maybesig)
+      ? maybesig
+      : ([`send the message ${maybecommand}`] as COMMAND_ARGS_SIGNATURE)
+
+    let prefix = ''
+    let activecategory = ''
+    switch (token.tokenTypeIdx) {
+      case lexer.command.tokenTypeIdx:
         // skip
         break
-      case lexer.command_play.tokenTypeIdx:
-        // notes ??
+      case lexer.stat.tokenTypeIdx:
+        activecategory = 'stat'
         break
-      case lexer.command_toast.tokenTypeIdx:
-      case lexer.command_ticker.tokenTypeIdx:
+      case lexer.label.tokenTypeIdx:
+        activecategory = 'label'
+        break
+      case lexer.hyperlink.tokenTypeIdx:
+        activecategory = 'hyperlink'
+        break
+      case lexer.hyperlinktext.tokenTypeIdx:
+        activecategory = 'hyperlinktext'
+        break
+      case lexer.comment.tokenTypeIdx:
+        activecategory = 'comment'
+        break
       case lexer.command_if.tokenTypeIdx:
       case lexer.command_do.tokenTypeIdx:
       case lexer.command_done.tokenTypeIdx:
@@ -212,19 +224,90 @@ function getautocompletefromtokens(
       case lexer.command_foreach.tokenTypeIdx:
       case lexer.command_break.tokenTypeIdx:
       case lexer.command_continue.tokenTypeIdx:
+        activecategory = 'commands'
+        prefix = token.image ?? ''
         break
       default:
-        console.info('token unknown', token.image)
+      case lexer.text.tokenTypeIdx:
+      case lexer.stringliteral.tokenTypeIdx:
+      case lexer.numberliteral.tokenTypeIdx:
+        if (cmdidx >= 0 && activetokenidx === cmdidx + 1) {
+          prefix = tokens[cmdidx + 1].image ?? ''
+          activecategory = 'commands'
+        } else {
+          prefix = NAME(token.image).toLowerCase()
+          activecategory = wordcategorymap.get(prefix) ?? 'text'
+        }
         break
     }
 
-    return {
-      suggestions: [],
-      prefix: '',
-      wordcol: 0,
-      wordstart: 0,
-      checkforargshint,
-      checkforargswords: [],
+    switch (activecategory) {
+      case 'commands': {
+        const items = [
+          ...tagrecordkeys(words.langcommands, 'commands'),
+          ...tagrecordkeys(words.clicommands, 'commands'),
+          ...tagrecordkeys(words.loadercommands, 'commands'),
+          ...tagrecordkeys(words.runtimecommands, 'commands'),
+        ]
+        const suggestions = [
+          ...filtersuggestions(prefix, items),
+          { word: prefix, category: 'commands' },
+        ]
+        return {
+          suggestions,
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+        }
+      }
+      case 'stat':
+      case 'label':
+      case 'comment':
+      case 'hyperlink':
+      case 'hyperlinktext': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom(activecategory)]
+        return {
+          suggestions: [],
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+        }
+      }
+      default: {
+        const items = [
+          ...tagwords(words.flags, 'flags'),
+          ...tagwords(words.statsboard, 'stats'),
+          ...tagwords(words.statshelper, 'stats'),
+          ...tagwords(words.statssender, 'stats'),
+          ...tagwords(words.statsinteraction, 'stats'),
+          ...tagwords(words.statsboolean, 'stats'),
+          ...tagwords(words.statsconfig, 'stats'),
+          ...tagwords(words.objects, 'objects'),
+          ...tagwords(words.terrains, 'terrains'),
+          ...tagwords(words.boards, 'boards'),
+          ...tagwords(words.palettes, 'palettes'),
+          ...tagwords(words.charsets, 'charsets'),
+          ...tagwords(words.loaders, 'loaders'),
+          ...tagwords(words.colors, 'colors'),
+          ...tagwords(words.dirs, 'dirs'),
+          ...tagwords(words.dirmods, 'dirmods'),
+          ...tagwords(words.exprs, 'exprs'),
+        ]
+        const suggestions = filtersuggestions(prefix, items)
+        return {
+          suggestions,
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+        }
+      }
     }
   }
 
@@ -298,6 +381,57 @@ function drawhinttext(
   )
 }
 
+function argsliststring(args: ARG_TYPE[]) {
+  const list = []
+  for (const arg of args) {
+    switch (arg) {
+      case ARG_TYPE.COLOR:
+        list.push('<color>')
+        break
+      case ARG_TYPE.KIND:
+        list.push('<kind>')
+        break
+      case ARG_TYPE.DIR:
+        list.push('<dir>')
+        break
+      case ARG_TYPE.NAME:
+        list.push('<name>')
+        break
+      case ARG_TYPE.NUMBER:
+        list.push('<number>')
+        break
+      case ARG_TYPE.STRING:
+        list.push('<string>')
+        break
+      case ARG_TYPE.NUMBER_OR_STRING:
+        list.push('<num|str>')
+        break
+      case ARG_TYPE.COLOR_OR_KIND:
+        list.push('<color|kind>')
+        break
+      case ARG_TYPE.MAYBE_KIND:
+        list.push('[kind]')
+        break
+      case ARG_TYPE.MAYBE_NAME:
+        list.push('[name]')
+        break
+      case ARG_TYPE.MAYBE_NUMBER:
+        list.push('[number]')
+        break
+      case ARG_TYPE.MAYBE_STRING:
+        list.push('[string]')
+        break
+      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
+        list.push('[num|str]')
+        break
+      case ARG_TYPE.ANY:
+        list.push('<any>')
+        break
+    }
+  }
+  return list.join(' ')
+}
+
 /**
  * Draws the argument hint for a command (e.g. above the terminal input).
  * Uses the trailing hint string from the command's single signature.
@@ -315,54 +449,10 @@ export function drawcommandarghint(
     return
   }
   let cursor = px
-  for (const arg of withsig) {
-    let arglabel = ''
-    switch (arg) {
-      case ARG_TYPE.COLOR:
-        arglabel = '<color>'
-        break
-      case ARG_TYPE.KIND:
-        arglabel = '<kind>'
-        break
-      case ARG_TYPE.DIR:
-        arglabel = '<dir>'
-        break
-      case ARG_TYPE.NAME:
-        arglabel = '<name>'
-        break
-      case ARG_TYPE.NUMBER:
-        arglabel = '<number>'
-        break
-      case ARG_TYPE.STRING:
-        arglabel = '<string>'
-        break
-      case ARG_TYPE.NUMBER_OR_STRING:
-        arglabel = '<number or string>'
-        break
-      case ARG_TYPE.COLOR_OR_KIND:
-        arglabel = '<color or kind>'
-        break
-      case ARG_TYPE.MAYBE_KIND:
-        arglabel = '[kind]'
-        break
-      case ARG_TYPE.MAYBE_NAME:
-        arglabel = '[name]'
-        break
-      case ARG_TYPE.MAYBE_NUMBER:
-        arglabel = '[number]'
-        break
-      case ARG_TYPE.MAYBE_STRING:
-        arglabel = '[string]'
-        break
-      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
-        arglabel = '[number or string]'
-        break
-      case ARG_TYPE.ANY:
-        arglabel = '<any>'
-        break
-    }
-    drawhinttext(arglabel, cursor, py, edge.right, context)
-    cursor += arglabel.length + 1
+  const argsStr = argsliststring(withsig as ARG_TYPE[])
+  if (argsStr) {
+    drawhinttext(argsStr, cursor, py, edge.right, context)
+    cursor += argsStr.length + 1
   }
   drawhinttext(hint, cursor, py, edge.right, context)
 }
@@ -459,32 +549,20 @@ export function drawautocomplete(
         case 'loaders':
           hint = 'loader codepage'
           break
-        case 'clicommands':
-        case 'loadercommands':
-        case 'runtimecommands': {
-          const sigs = words[suggestion.category]?.[suggestion.word]
-          if (sigs && Array.isArray(sigs)) {
-            const seen = new Set<string>()
-            for (const sig of sigs) {
-              if (!Array.isArray(sig) || sig.length === 0) {
-                continue
-              }
-              const last = sig[sig.length - 1]
-              if (typeof last === 'string') {
-                const trimmed = last.trim()
-                if (trimmed && !seen.has(trimmed)) {
-                  seen.add(trimmed)
-                }
-              }
-            }
-            if (seen.size > 0) {
-              hint = Array.from(seen).join(' | ')
-            }
+        case 'commands': {
+          const sig =
+            words.clicommands[suggestion.word] ??
+            words.loadercommands[suggestion.word] ??
+            words.runtimecommands[suggestion.word]
+          if (isarray(sig)) {
+            const args = [...sig] as ARG_TYPE[]
+            const cmd = args.pop()
+            hint = `${argsliststring(args)} ${cmd}`
           }
           break
         }
         default:
-          hint = suggestion.category
+          hint = hintfromrom(suggestion.category, suggestion.word)
           break
       }
       if (hint) {

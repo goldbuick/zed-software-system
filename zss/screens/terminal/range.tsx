@@ -28,10 +28,10 @@ export function TerminalRange({
     labelmax = ' H'
   } else if (maybelabelmax === '') {
     labelmin = 'L '
-    labelmax = ` ${maybelabelmin}`
+    labelmax = ` ${String(maybelabelmin)}`
   } else {
-    labelmin = `${maybelabelmin} `
-    labelmax = ` ${maybelabelmax}`
+    labelmin = `${String(maybelabelmin)} `
+    labelmax = ` ${String(maybelabelmax)}`
   }
 
   const min = 0
