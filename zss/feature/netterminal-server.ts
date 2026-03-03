@@ -5,7 +5,14 @@
 import 'zss/feature/peerjs-node-polyfill'
 import peerjs from 'peerjs'
 import type { DataConnection } from 'peerjs'
-import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
+import {
+  MESSAGE,
+  apierror,
+  apilog,
+  gadgetserverdesync,
+  vmsearch,
+  vmtopic,
+} from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,
@@ -13,7 +20,10 @@ import {
   shouldnotforwardonpeerclient,
   shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
-import { registerreadplayer } from 'zss/device/rackregister'
+import {
+  rackregister,
+  registerreadplayer,
+} from 'zss/device/rackregister'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage-server'
 import { doasync } from 'zss/mapping/func'
@@ -62,9 +72,22 @@ function handledataconnection(dataconnection: DataConnection) {
         shouldforwardservertoclient(message) &&
         shouldnotforwardonpeerserver(message) === false
       ) {
-        void dataconnection.send(message)
+        let payload = message
+        // Flatten data to avoid PeerJS binarypack stack overflow on deep gadget state
+        if (
+          (message.target === 'paint' || message.target === 'patch') &&
+          message.data !== undefined
+        ) {
+          payload = {
+            ...message,
+            data: JSON.stringify(message.data),
+          }
+        }
+        void dataconnection.send(payload)
       }
     })
+    // Request fresh paint so joiner gets initial display state
+    gadgetserverdesync(rackregister, player)
   }
 
   function joinbridge() {

@@ -48,7 +48,7 @@ export function createstubbook() {
   if (boardPage) {
     const cx = Math.round(BOARD_WIDTH * 0.5)
     const cy = Math.round(BOARD_HEIGHT * 0.5)
-    boardPage.code = `@board ${MEMORY_LABEL.TITLE}\nstartx ${cx}\nstarty ${cy}\n`
+    boardPage.code = `@board ${MEMORY_LABEL.TITLE}\n@startx ${cx}\n@starty ${cy}\n`
   }
 
   return book

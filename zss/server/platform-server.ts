@@ -33,11 +33,17 @@ export function createplatformserver() {
   const workerEnv = { ...process.env, ZSS_HEADLESS: '1' }
 
   const { forward, disconnect } = createforward((message) => {
-    if (shouldforwardclienttoserver(message) && simProc) {
-      simProc.send(message)
-    }
-    if (shouldforwardclienttoheavy(message) && heavyProc) {
-      heavyProc.send(message)
+    try {
+      if (shouldforwardclienttoserver(message) && simProc?.connected) {
+        simProc.send(message)
+      }
+      if (shouldforwardclienttoheavy(message) && heavyProc?.connected) {
+        heavyProc.send(message)
+      }
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'ERR_IPC_CHANNEL_CLOSED') {
+        console.error('platform-server forward:', err)
+      }
     }
   })
 
@@ -63,19 +69,34 @@ export function createplatformserver() {
     heavyWorker = path.join(workerDir, 'heavyspace.fork.ts')
   }
 
+  const projectRoot = path.resolve(workerDir, '../..')
+  const loaderPath = path.join(projectRoot, 'zss/server/loader.mjs')
+  // Loader must run first to redirect maath/misc before tsx resolves it
+  const execArgv = isBundled
+    ? []
+    : [
+        '--disable-warning=ExperimentalWarning',
+        '--experimental-loader',
+        loaderPath,
+        '--import',
+        'tsx',
+      ]
+
   heavyProc = fork(heavyWorker, [], {
     env: workerEnv,
-    execArgv: isBundled ? [] : ['--import', 'tsx'],
+    execArgv,
     stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   })
 
   simProc = fork(simWorker, [], {
     env: workerEnv,
-    execArgv: isBundled ? [] : ['--import', 'tsx'],
+    execArgv,
     stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   })
 
+  heavyProc.stdout?.on('data', (d) => process.stdout.write(`[heavy] ${d}`))
   heavyProc.stderr?.on('data', (d) => process.stderr.write(`[heavy] ${d}`))
+  simProc.stdout?.on('data', (d) => process.stdout.write(`[sim] ${d}`))
   simProc.stderr?.on('data', (d) => process.stderr.write(`[sim] ${d}`))
 
   heavyProc.on('error', (err) => {
@@ -85,34 +106,48 @@ export function createplatformserver() {
     console.error('simProc error:', err)
   })
   heavyProc.on('exit', (code) => {
+    heavyProc = undefined
     if (code !== 0) {
       console.error('heavyProc exited with', code)
     }
   })
   simProc.on('exit', (code) => {
+    simProc = undefined
     if (code !== 0) {
       console.error('simProc exited with', code)
     }
   })
 
   heavyProc.on('message', (message: MESSAGE) => {
-    if (shouldforwardclienttoserver(message) && simProc) {
-      simProc.send(message)
+    try {
+      if (shouldforwardclienttoserver(message) && simProc?.connected) {
+        simProc.send(message)
+      }
+      if (shouldforwardclienttoheavy(message) && heavyProc?.connected) {
+        heavyProc.send(message)
+      }
+      forward(message)
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'ERR_IPC_CHANNEL_CLOSED') {
+        console.error('platform-server heavy message:', err)
+      }
     }
-    if (shouldforwardclienttoheavy(message) && heavyProc) {
-      heavyProc.send(message)
-    }
-    forward(message)
   })
 
   simProc.on('message', (message: MESSAGE) => {
-    if (shouldforwardclienttoserver(message) && simProc) {
-      simProc.send(message)
+    try {
+      if (shouldforwardclienttoserver(message) && simProc?.connected) {
+        simProc.send(message)
+      }
+      if (shouldforwardclienttoheavy(message) && heavyProc?.connected) {
+        heavyProc.send(message)
+      }
+      forward(message)
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'ERR_IPC_CHANNEL_CLOSED') {
+        console.error('platform-server sim message:', err)
+      }
     }
-    if (shouldforwardclienttoheavy(message) && heavyProc) {
-      heavyProc.send(message)
-    }
-    forward(message)
   })
 
   platformHalt = () => {

@@ -135,10 +135,14 @@ const gadgetserver = createdevice(
 
             // write patch (fast-json-patch produces RFC 6902; json-joy binary encoder expects Op[])
             const previous = gadgetsync.get(player) ?? []
-            const [{ compare }, { decode: decodeToOps }] = await Promise.all([
+            const [fjp, jsonCodec] = await Promise.all([
               import('fast-json-patch'),
               import('json-joy/esm/json-patch/codec/json'),
             ])
+            const compare =
+              (fjp as { compare?: (a: any, b: any) => any }).compare ??
+              (fjp as { default?: { compare?: (a: any, b: any) => any } }).default?.compare
+            const { decode: decodeToOps } = jsonCodec
             const rfcPatch = compare(previous, slim)
 
             // reset sync
