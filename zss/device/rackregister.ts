@@ -3,10 +3,7 @@
  * Uses storage-server for config/content. No React, no Zustand, no DOM.
  */
 import { createdevice } from 'zss/device'
-import {
-  netterminalhost,
-  readsubscribetopic,
-} from 'zss/feature/netterminal-server'
+import { netterminalhost, readsubscribetopic } from 'zss/feature/netterminal'
 import {
   storagenukecontent,
   storagereadcontent,
@@ -81,7 +78,7 @@ export function registerwritehistorybuffer(buf: string[]) {
   historyBuffer = buf
 }
 
-export const rackregister = createdevice(
+const rackregister = createdevice(
   'register',
   ['ready', 'second', 'log', 'chat', 'toast'],
   function (message) {
@@ -310,3 +307,6 @@ async function loadmem(content: string | BOOK[]) {
     apilog(rackregister, myplayerid, `join $white${joinUrl}`)
   }
 }
+
+// API compatibility: server builds alias zss/device/register → rackregister
+export const register = rackregister

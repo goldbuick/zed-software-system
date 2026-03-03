@@ -1,60 +1,27 @@
 #!/usr/bin/env node
 /**
  * Bundle the ZSS server for standalone distribution.
- * Produces dist-server/server.js, simspace.js, heavyspace.js for pkg.
+ * Uses Vite (vite.server.config.ts). Produces dist-server/server.cjs, simspace.cjs, heavyspace.cjs for pkg.
+ *
+ * Override pattern: storage, register, netterminal resolve to server implementations.
  */
-import * as esbuild from 'esbuild'
-import * as path from 'path'
+import { build } from 'vite'
+import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, '..')
-const outDir = path.join(root, 'dist-server')
 
-const shared = {
-  platform: 'node',
-  format: 'cjs',
-  target: 'node20',
-  sourcemap: false,
-  bundle: true,
-  minify: false,
-  external: [
-    'onnxruntime-node',
-    '@huggingface/transformers',
-    'source-map',
-    '@roamhq/wrtc',
-  ],
-  alias: {
-    'zss/feature/storage': path.join(root, 'zss/feature/storage-server.ts'),
-    'maath/misc': path.join(root, 'zss/server/stubs/maath-misc.ts'),
-  },
-  define: {
-    'process.env.NODE_ENV': '"production"',
-  },
-}
-
-async function build() {
-  await Promise.all([
-    esbuild.build({
-      ...shared,
-      entryPoints: [path.join(root, 'zss/server/main.tsx')],
-      outfile: path.join(outDir, 'server.cjs'),
-    }),
-    esbuild.build({
-      ...shared,
-      entryPoints: [path.join(root, 'zss/server/simspace.fork.ts')],
-      outfile: path.join(outDir, 'simspace.cjs'),
-    }),
-    esbuild.build({
-      ...shared,
-      entryPoints: [path.join(root, 'zss/server/heavyspace.fork.ts')],
-      outfile: path.join(outDir, 'heavyspace.cjs'),
-    }),
-  ])
+async function buildServer() {
+  const configPath = path.join(root, 'vite.server.config.ts')
+  await build({
+    configFile: configPath,
+    logLevel: 'info',
+  })
   console.log('Server bundles written to dist-server/')
 }
 
-build().catch((err) => {
+buildServer().catch((err) => {
   console.error(err)
   process.exit(1)
 })

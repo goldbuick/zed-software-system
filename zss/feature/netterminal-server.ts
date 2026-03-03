@@ -1,9 +1,9 @@
 /**
  * Server-side netterminal: PeerJS host using storage-server for peer ID.
  * Uses official peerjs + @roamhq/wrtc polyfill. No idb-keyval, no window.
+ * PeerJS is loaded dynamically so the polyfill runs before it.
  */
 import 'zss/feature/peerjs-node-polyfill'
-import peerjs from 'peerjs'
 import type { DataConnection } from 'peerjs'
 import {
   MESSAGE,
@@ -20,20 +20,27 @@ import {
   shouldnotforwardonpeerclient,
   shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
-import {
-  rackregister,
-  registerreadplayer,
-} from 'zss/device/rackregister'
+import { register, registerreadplayer } from 'zss/device/rackregister'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage-server'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-const Peer = (peerjs as { Peer?: typeof peerjs }).Peer ?? peerjs
+let PeerConstructor: typeof import('peerjs').default | null = null
+
+async function getPeer(): Promise<
+  typeof import('peerjs').default | { Peer: typeof import('peerjs').default }
+> {
+  if (!PeerConstructor) {
+    const m = await import('peerjs')
+    PeerConstructor = m.default
+  }
+  return PeerConstructor
+}
 
 async function readpeerid(): Promise<string | undefined> {
-  return storagereadnetid()
+  return await storagereadnetid()
 }
 
 async function writepeerid(
@@ -49,7 +56,8 @@ export function readsubscribetopic() {
   return subscribetopic
 }
 
-let networkpeer: MAYBE<InstanceType<typeof Peer>>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Peer instance from dynamic import
+let networkpeer: MAYBE<any>
 
 function ishost() {
   return networkpeer?.id === subscribetopic
@@ -72,22 +80,21 @@ function handledataconnection(dataconnection: DataConnection) {
         shouldforwardservertoclient(message) &&
         shouldnotforwardonpeerserver(message) === false
       ) {
-        let payload = message
-        // Flatten data to avoid PeerJS binarypack stack overflow on deep gadget state
-        if (
-          (message.target === 'paint' || message.target === 'patch') &&
-          message.data !== undefined
-        ) {
-          payload = {
-            ...message,
-            data: JSON.stringify(message.data),
-          }
-        }
+        // peerjs-js-binarypack recurses on deep objects; Node's smaller stack overflows.
+        // Stringify gadget state so binarypack gets a flat string.
+        const target =
+          typeof message === 'object' && message !== null && 'target' in message
+            ? String((message as { target?: string }).target)
+            : ''
+        const payload =
+          target === 'gadgetclient:paint' || target === 'gadgetclient:patch'
+            ? JSON.stringify(message)
+            : message
         void dataconnection.send(payload)
       }
     })
     // Request fresh paint so joiner gets initial display state
-    gadgetserverdesync(rackregister, player)
+    gadgetserverdesync(register, player)
   }
 
   function joinbridge() {
@@ -127,10 +134,12 @@ function handledataconnection(dataconnection: DataConnection) {
   })
 
   dataconnection.on('data', (netmsg: any) => {
-    const message = netmsg as MESSAGE
     if (!ispresent(networkpeer)) {
       return
     }
+    const message = (
+      typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
+    ) as MESSAGE
     topicbridge?.forward({
       ...message,
       session: SOFTWARE.session(),
@@ -149,20 +158,23 @@ function handledataconnection(dataconnection: DataConnection) {
   handleopen()
 }
 
-function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
+async function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   subscribetopic = topicpeerid
   vmtopic(SOFTWARE, registerreadplayer(), subscribetopic)
 
   const player = registerreadplayer()
   const peerid = selfpeerid ?? topicpeerid
-  networkpeer = new Peer(peerid, {
+  const m = await getPeer()
+  const PeerClass = (m as { Peer?: typeof m }).Peer ?? m
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return -- Peer from dynamic import
+  networkpeer = new (PeerClass as any)(peerid, {
     debug: 2,
     host: 'terminal.zed.cafe',
   })
 
   apilog(SOFTWARE, player, `netterminal for ${peerid}`)
 
-  networkpeer.on('open', () => {
+  networkpeer!.on('open', () => {
     apilog(SOFTWARE, player, `connected to netterminal`)
     if (topicpeerid !== peerid) {
       apilog(SOFTWARE, player, `joining topic ${subscribetopic}`)
@@ -177,9 +189,9 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     }
   })
 
-  networkpeer.on('connection', handledataconnection)
+  networkpeer!.on('connection', handledataconnection)
 
-  networkpeer.on('disconnected', () => {
+  networkpeer!.on('disconnected', () => {
     apierror(SOFTWARE, player, `netterminal`, `lost connection to netterminal`)
     setTimeout(() => {
       apierror(
@@ -192,7 +204,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     }, 5000)
   })
 
-  networkpeer.on('error', (err: any) => {
+  networkpeer!.on('error', (err: any) => {
     switch (err?.type) {
       case 'disconnected':
       case 'peer-unavailable':
@@ -227,5 +239,5 @@ export async function netterminalhost() {
 
   const topicpeerid = netterminaltopic(stickypeerid ?? player)
 
-  netterminalcreate(topicpeerid)
+  await netterminalcreate(topicpeerid)
 }

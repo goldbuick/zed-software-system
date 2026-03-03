@@ -3,6 +3,7 @@
  * Fork is used instead of worker_threads so the child processes can run with tsx (TypeScript).
  */
 import { fork } from 'child_process'
+import { existsSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -42,15 +43,25 @@ export function createplatformserver() {
       }
     } catch (err) {
       if ((err as NodeJS.ErrnoException)?.code !== 'ERR_IPC_CHANNEL_CLOSED') {
-        console.error('platform-server forward:', err)
+        console.error('platform forward:', err)
       }
     }
   })
 
-  // Bundled: .cjs in same dir, or pkg exe (server[-target], simspace[-target], heavyspace[-target])
+  // Bundled: .js/.cjs/.mjs in same dir, or pkg exe (server[-target], simspace[-target], heavyspace[-target])
   const entry = process.argv[1] ?? process.execPath ?? ''
-  const isBundled = entry.endsWith('.cjs')
+  const isBundled =
+    entry.endsWith('.cjs') ||
+    entry.endsWith('.mjs') ||
+    (entry.endsWith('.js') && path.basename(entry).startsWith('server'))
   const isPkg = !!(process as NodeJS.Process & { pkg?: unknown }).pkg
+  const ext = path.extname(entry)
+  const bundleExt = ext === '.cjs' ? '.cjs' : ext === '.mjs' ? '.mjs' : '.js'
+  const projectRoot = path.resolve(workerDir, '../..')
+  const distSim = path.join(projectRoot, 'dist-server', 'simspace.js')
+  const distHeavy = path.join(projectRoot, 'dist-server', 'heavyspace.js')
+  const useDistWorkers =
+    !isBundled && existsSync(distSim) && existsSync(distHeavy)
   let simWorker: string
   let heavyWorker: string
   if (isPkg) {
@@ -61,26 +72,31 @@ export function createplatformserver() {
       workerDir,
       base.replace(/server/, 'heavyspace') + ext,
     )
-  } else if (isBundled) {
-    simWorker = path.join(workerDir, 'simspace.cjs')
-    heavyWorker = path.join(workerDir, 'heavyspace.cjs')
+  } else if (isBundled || useDistWorkers) {
+    const dir = isBundled ? workerDir : path.join(projectRoot, 'dist-server')
+    const ext = isBundled ? bundleExt : '.js'
+    simWorker = path.join(dir, `simspace${ext}`)
+    heavyWorker = path.join(dir, `heavyspace${ext}`)
   } else {
     simWorker = path.join(workerDir, 'simspace.fork.ts')
     heavyWorker = path.join(workerDir, 'heavyspace.fork.ts')
   }
 
-  const projectRoot = path.resolve(workerDir, '../..')
   const loaderPath = path.join(projectRoot, 'zss/server/loader.mjs')
   // Loader must run first to redirect maath/misc before tsx resolves it
-  const execArgv = isBundled
-    ? []
-    : [
-        '--disable-warning=ExperimentalWarning',
-        '--experimental-loader',
-        loaderPath,
-        '--import',
-        'tsx',
-      ]
+  // --stack-size=4096 avoids overflow in deep gadget state / binarypack recursion
+  // Prefer bundled workers when available (json-joy doesn't work with Node ESM in dev)
+  const execArgv =
+    isBundled || useDistWorkers
+      ? ['--stack-size=4096']
+      : [
+          '--stack-size=4096',
+          '--disable-warning=ExperimentalWarning',
+          '--experimental-loader',
+          loaderPath,
+          '--import',
+          'tsx',
+        ]
 
   heavyProc = fork(heavyWorker, [], {
     env: workerEnv,
@@ -129,7 +145,30 @@ export function createplatformserver() {
       forward(message)
     } catch (err) {
       if ((err as NodeJS.ErrnoException)?.code !== 'ERR_IPC_CHANNEL_CLOSED') {
-        console.error('platform-server heavy message:', err)
+        const e = err as Error
+        console.error(
+          'platform heavy message:',
+          e?.message ?? String(err),
+          '\n  stack:',
+          e?.stack ?? '(no stack)',
+        )
+        try {
+          const target =
+            typeof message === 'object' &&
+            message !== null &&
+            'target' in message
+              ? String((message as { target?: string }).target)
+              : '?'
+          const msgPreview =
+            typeof message === 'object' && message !== null
+              ? JSON.stringify(message, (_, v) =>
+                  typeof v === 'object' && v !== null ? '[object]' : v,
+                ).slice(0, 500)
+              : String(message).slice(0, 200)
+          console.error('  target:', target, '| preview:', msgPreview)
+        } catch {
+          console.error('  message preview: (unserializable)')
+        }
       }
     }
   })
@@ -145,7 +184,30 @@ export function createplatformserver() {
       forward(message)
     } catch (err) {
       if ((err as NodeJS.ErrnoException)?.code !== 'ERR_IPC_CHANNEL_CLOSED') {
-        console.error('platform-server sim message:', err)
+        const e = err as Error
+        console.error(
+          'platform sim message:',
+          e?.message ?? String(err),
+          '\n  stack:',
+          e?.stack ?? '(no stack)',
+        )
+        try {
+          const target =
+            typeof message === 'object' &&
+            message !== null &&
+            'target' in message
+              ? String((message as { target?: string }).target)
+              : '?'
+          const msgPreview =
+            typeof message === 'object' && message !== null
+              ? JSON.stringify(message, (_, v) =>
+                  typeof v === 'object' && v !== null ? '[object]' : v,
+                ).slice(0, 500)
+              : String(message).slice(0, 200)
+          console.error('  target:', target, '| preview:', msgPreview)
+        } catch {
+          console.error('  message preview: (unserializable)')
+        }
       }
     }
   })

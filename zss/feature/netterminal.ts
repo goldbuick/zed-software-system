@@ -99,14 +99,15 @@ function handledataconnection(dataconnection: DataConnection) {
   })
 
   dataconnection.on('data', (netmsg: any) => {
-    const message = netmsg as MESSAGE
     if (!ispresent(networkpeer)) {
       return
     }
-    // bridge incoming messages from other peers
+    // Server may send gadgetclient:paint/patch as JSON string (avoids binarypack stack overflow)
+    const message = (
+      typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
+    ) as MESSAGE
     topicbridge?.forward({
       ...message,
-      // translate to software session
       session: SOFTWARE.session(),
     })
   })

@@ -7,13 +7,13 @@
 import { render } from 'ink'
 import { sessionreset, vmcli } from 'zss/device/api'
 import {
-  rackregister,
+  register,
   registerreadplayer,
   setServerLogOutput,
-} from 'zss/device/rackregister'
+} from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { ensureRomReady } from 'zss/feature/rom'
-import { createplatformserver } from 'zss/server/platform-server'
+import { createplatformserver } from 'zss/server/platform'
 
 import { ServerApp } from './app'
 
@@ -22,7 +22,7 @@ sessionreset(SOFTWARE)
 function App() {
   const handleSubmit = (line: string) => {
     const playerid = registerreadplayer()
-    vmcli(rackregister, playerid, line)
+    vmcli(register, playerid, line)
   }
 
   const handleLogOutput = (fn: (line: string) => void) => {

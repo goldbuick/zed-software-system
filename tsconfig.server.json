@@ -7,6 +7,8 @@
     "noEmit": true,
     "paths": {
       "zss/feature/storage": ["./zss/feature/storage-server.ts"],
+      "zss/device/register": ["./zss/device/rackregister.ts"],
+      "zss/feature/netterminal": ["./zss/feature/netterminal-server.ts"],
       "maath/misc": ["./zss/server/stubs/maath-misc.ts"],
       "zss/*": ["./zss/*"]
     }

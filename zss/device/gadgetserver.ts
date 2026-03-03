@@ -22,12 +22,13 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
 
+import { Encoder as BinEncoder } from 'json-joy/esm/json-patch/codec/binary'
+import { decode as jsonDecodeToOps } from 'json-joy/esm/json-patch/codec/json'
+
 let _patchencoder: any
 async function getPatchCodec() {
   if (!_patchencoder) {
-    const binMod = await import('json-joy/esm/json-patch/codec/binary')
-    const Encoder = binMod.Encoder ?? binMod.default
-    _patchencoder = new Encoder()
+    _patchencoder = new (BinEncoder as any)()
   }
   return _patchencoder
 }
@@ -135,15 +136,12 @@ const gadgetserver = createdevice(
 
             // write patch (fast-json-patch produces RFC 6902; json-joy binary encoder expects Op[])
             const previous = gadgetsync.get(player) ?? []
-            const [fjp, jsonCodec] = await Promise.all([
-              import('fast-json-patch'),
-              import('json-joy/esm/json-patch/codec/json'),
-            ])
+            const fjp = await import('fast-json-patch')
             const compare =
               (fjp as { compare?: (a: any, b: any) => any }).compare ??
               (fjp as { default?: { compare?: (a: any, b: any) => any } }).default?.compare
-            const { decode: decodeToOps } = jsonCodec
-            const rfcPatch = compare(previous, slim)
+            const decodeToOps = jsonDecodeToOps
+            const rfcPatch = (compare ?? (() => []))(previous, slim)
 
             // reset sync
             gadgetsync.set(player, slim)
