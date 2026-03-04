@@ -29,8 +29,6 @@ const ext = os.platform() === 'win32' ? '.exe' : ''
 const outDir = path.join(root, 'dist-bin')
 const scripts = [
   { in: 'dist-server/server.js', out: `zss-server${ext}` },
-  { in: 'dist-server/simspace.js', out: `zss-simspace${ext}` },
-  { in: 'dist-server/heavyspace.js', out: `zss-heavyspace${ext}` },
 ]
 
 for (const { in: input, out: output } of scripts) {

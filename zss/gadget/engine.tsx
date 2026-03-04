@@ -6,7 +6,8 @@ import { VignetteTechnique } from 'postprocessing'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { RUNTIME, STATS_DEV } from 'zss/config'
-import { registerreadplayer } from 'zss/device/register'
+import { vmcli } from 'zss/device/api'
+import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
 import { storagereadconfig } from 'zss/feature/storage'
@@ -38,6 +39,12 @@ export function Engine() {
   // runs the SIM
   useEffect(() => {
     createplatform(isjoin())
+    // headless server mode: Node wires storage + log; we provide cli handler
+    if (typeof (window as any).__nodeStorageReadPlayer === 'function') {
+      ;(window as any).__onCliInput = (line: string) =>
+        vmcli(register, registerreadplayer(), line)
+      ;(window as any).__nodeReady?.()
+    }
     return () => {
       haltplatform()
     }

@@ -9,6 +9,9 @@
       "cafe/*": [
         "./cafe/*"
       ],
+      "server/*": [
+        "./server/*"
+      ],
     },
     "lib": [
       "ES2021",
@@ -35,7 +38,8 @@
   },
   "include": [
     "zss",
-    "cafe"
+    "cafe",
+    "server"
   ],
   "references": [
     {

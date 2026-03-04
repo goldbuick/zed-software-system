@@ -18,13 +18,9 @@ import {
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-// ROM content. In browser: populated sync via import.meta.glob. In Node: populated async via loader-node.
-let romcontent: Record<string, string> = {}
-
 const isViteGlob = typeof (import.meta as any).glob === 'function'
-
+const romcontent: Record<string, string> = {}
 if (isViteGlob) {
-  // Browser/Vite: import.meta.glob available – load synchronously (no Node builtins)
   const romfiles = (import.meta as any).glob('./**/*.txt', {
     eager: true,
     query: 'raw',
@@ -33,25 +29,6 @@ if (isViteGlob) {
     const p = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
     romcontent[p] = romfiles[name].default
   })
-}
-
-let romReadyPromise: Promise<void> | null = null
-
-/** Resolve when ROM is ready. In browser this is immediate; in Node it awaits fs-based load. */
-export function ensureRomReady(): Promise<void> {
-  if (romcontent && Object.keys(romcontent).length > 0) {
-    return Promise.resolve()
-  }
-  if (romReadyPromise) {
-    return romReadyPromise
-  }
-  if (isViteGlob) {
-    return Promise.resolve()
-  }
-  romReadyPromise = import('./loader-node').then(({ loadRomFiles }) => {
-    romcontent = loadRomFiles()
-  })
-  return romReadyPromise
 }
 
 export function romread(address: string): MAYBE<string> {

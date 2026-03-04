@@ -23,8 +23,8 @@ const targets = [
   { name: 'win-x64', t: 'node22-win-x64', ext: '.exe', tag: 'win' },
 ].filter((t) => !filter || t.tag === filter)
 
-const scripts = ['server.js', 'simspace.js', 'heavyspace.js']
-const outNames = ['zss-server', 'zss-simspace', 'zss-heavyspace']
+const scripts = ['server.js']
+const outNames = ['zss-server']
 
 for (const target of targets) {
   const outDir = path.join(root, 'dist-bin', target.name)

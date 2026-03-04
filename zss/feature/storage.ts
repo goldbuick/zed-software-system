@@ -169,6 +169,14 @@ export async function storagewritevar(name: string, value: any) {
   return writeidb('storage', () => storage)
 }
 
+export async function storagereadnetid(): Promise<string | undefined> {
+  return readidb<string>('netid')
+}
+
+export async function storagewritenetid(netid: string) {
+  return writeidb('netid', () => netid)
+}
+
 let currenturlhash = ''
 export function storagewatchcontent(player: string) {
   window.addEventListener('hashchange', () => {

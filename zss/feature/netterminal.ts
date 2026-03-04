@@ -1,4 +1,3 @@
-import { get as idbget, update as idbupdate } from 'idb-keyval'
 import Peer, { DataConnection } from 'peerjs'
 import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
 import {
@@ -9,21 +8,22 @@ import {
   shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
+import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-// read / write from indexdb
-
 async function readpeerid(): Promise<string | undefined> {
-  return idbget('netid')
+  return storagereadnetid()
 }
 
 async function writepeerid(
   updater: (oldValue: string | undefined) => string,
 ): Promise<void> {
-  return idbupdate('netid', updater)
+  const oldValue = await storagereadnetid()
+  const newValue = updater(oldValue)
+  await storagewritenetid(newValue)
 }
 
 let subscribetopic = ''

@@ -15,11 +15,24 @@ import {
   PlaneGeometry,
   Points,
 } from 'three'
+import { vmcli } from 'zss/device/api'
+import { register, registerreadplayer } from 'zss/device/register'
+import { isjoin } from 'zss/feature/url'
+import { createplatform } from 'zss/platform'
 import { RUNTIME } from 'zss/config'
 import { useDeviceData } from 'zss/gadget/hooks'
 import { makeeven } from 'zss/mapping/number'
 
 import { App } from './app'
+
+// Headless server mode: set up CLI handler before WebGL/Engine so Node bridge works
+// even if WebGL fails or Engine never mounts.
+if (typeof (window as any).__nodeStorageReadPlayer === 'function') {
+  createplatform(isjoin())
+  ;(window as any).__onCliInput = (line: string) =>
+    vmcli(register, registerreadplayer(), line)
+  ;(window as any).__nodeReady?.()
+}
 
 extend({
   Mesh,

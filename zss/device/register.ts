@@ -161,6 +161,13 @@ function terminaladdlog(message: MESSAGE) {
       logs,
     },
   }))
+  // headless server mode: forward log to Node for Ink REPL (with format for fg/bg colors)
+  const nodeLog = (window as { __nodeLog?: (line: string) => void }).__nodeLog
+  if (typeof nodeLog === 'function' && isarray(message.data)) {
+    if (tokenizeandstriptextformat(row).replace(countregex, '').trim().length) {
+      nodeLog(row)
+    }
+  }
 }
 
 function terminalinclayout(inc: boolean) {
@@ -214,7 +221,7 @@ export function registerreadplayer() {
   return myplayerid
 }
 
-const register = createdevice(
+export const register = createdevice(
   'register',
   ['ready', 'second', 'log', 'chat', 'toast'],
   function (message) {

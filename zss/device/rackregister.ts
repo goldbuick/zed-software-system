@@ -22,8 +22,8 @@ import { waitfor } from 'zss/mapping/tick'
 import { isarray, isbook, ispresent, isstring } from 'zss/mapping/types'
 import { memorylistcodepagebytypeandstat } from 'zss/memory/bookoperations'
 import { BOOK, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
-import { createstubbook } from 'zss/server/stubbook'
-import { textformatToAnsi } from 'zss/server/terminal-format'
+import { createstubbook } from 'server/stubbook'
+import { textformatToAnsi } from 'server/terminal-format'
 
 import {
   MESSAGE,

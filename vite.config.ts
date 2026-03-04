@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
   return {
     root,
     envPrefix: envprefix,
+    worker: { format: 'es' },
     build: {
       rollupOptions: {
         output: {

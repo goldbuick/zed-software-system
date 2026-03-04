@@ -14,15 +14,7 @@
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
-    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
-    "server": "node --stack-size=4096 ./node_modules/.bin/tsx --tsconfig tsconfig.server.json zss/server/main.tsx",
-    "server:dist": "node --stack-size=4096 dist-server/server.js",
-    "build:server": "node scripts/build-server.mjs",
-    "pkg:host": "yarn build:server && node scripts/pkg-host.mjs",
-    "pkg:linux": "yarn build:server && node scripts/pkg-all.mjs linux",
-    "pkg:mac": "yarn build:server && node scripts/pkg-all.mjs mac",
-    "pkg:win": "yarn build:server && node scripts/pkg-all.mjs win",
-    "pkg:all": "yarn build:server && node scripts/pkg-all.mjs"
+    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
@@ -115,8 +107,8 @@
     "zustand": "^5.0.1"
   },
   "dependencies": {
-    "@roamhq/wrtc": "^0.9.1",
     "ink": "^6.8.0",
+    "playwright": "^1.49.0",
     "ink-text-input": "^6.0.0"
   }
 }
