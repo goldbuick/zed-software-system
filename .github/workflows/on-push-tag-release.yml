@@ -9,6 +9,26 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build frontend
+        run: yarn build
+
+      - name: Build CLI binary (Linux; runs on ubuntu)
+        run: |
+          yarn build:cli
+          PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell
+          node scripts/pkg-cli.mjs linux
+
       - name: Build Changelog
         id: github_release
         uses: mikepenz/release-changelog-builder-action@v4
@@ -16,6 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        uses: mikepenz/action-gh-release@v0.2.0-a03 #softprops/action-gh-release
+        uses: mikepenz/action-gh-release@v0.2.0-a03
         with:
-          body: ${{steps.github_release.outputs.changelog}}
+          body: ${{ steps.github_release.outputs.changelog }}
+          files: dist-bin-cli/linux-x64/zss-cli

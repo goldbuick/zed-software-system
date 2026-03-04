@@ -3,6 +3,13 @@
   "private": true,
   "version": "0.89.74",
   "type": "module",
+  "pkg": {
+    "assets": [
+      "cafe/dist/**",
+      "server/stub-book.json",
+      "node_modules/playwright-core/.local-browsers/**"
+    ]
+  },
   "scripts": {
     "sloc": "npx sloc -e .js zss",
     "test": "yarn jest --verbose",
@@ -14,6 +21,10 @@
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
+    "server": "yarn build && tsx server/cli.tsx",
+    "build:cli": "node scripts/build-cli.mjs",
+    "build:cli:binary": "yarn build && yarn build:cli && yarn build:cli:binary:pkg",
+    "build:cli:binary:pkg": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell && node scripts/pkg-cli.mjs",
     "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build"
   },
   "devDependencies": {

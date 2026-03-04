@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { FORMAT_OBJECT } from 'zss/feature/format'
+import { FORMAT_OBJECT, sanitizeForPack } from 'zss/feature/format'
 import {
   gadgetclearscroll,
   gadgetstate,
@@ -128,8 +128,9 @@ const gadgetserver = createdevice(
             // read synth state
             gadget.synthstate = memoryreadsynth(boardid)
 
-            // create compressed json from gadget
-            const slim = exportgadgetstate(gadget)
+            // create compressed json from gadget (sanitize to avoid Set/Map/function in binary encoder)
+            const raw = exportgadgetstate(gadget)
+            const slim = sanitizeForPack(raw) as MAYBE<FORMAT_OBJECT>
             if (!ispresent(slim)) {
               continue
             }
@@ -154,7 +155,9 @@ const gadgetserver = createdevice(
                 rfcPatch as Parameters<typeof decodeToOps>[0],
                 {},
               )
-              const data = encoder.encode(ops)
+              // json-joy binary encoder does not support Set/Map/function; sanitize ops
+              const sanitizedOps = sanitizeForPack(ops)
+              const data = encoder.encode(sanitizedOps)
               gadgetclientpatch(gadgetserver, player, data)
             }
           }
@@ -163,8 +166,9 @@ const gadgetserver = createdevice(
       case 'desync': {
         // get current state
         const gadget = gadgetstate(message.player)
-        // create compressed json from gadget
-        const slim = exportgadgetstate(gadget)
+        // create compressed json from gadget (sanitize to avoid Set/Map/function in binary encoder)
+        const raw = exportgadgetstate(gadget)
+        const slim = sanitizeForPack(raw) as MAYBE<FORMAT_OBJECT>
         if (!ispresent(slim)) {
           break
         }

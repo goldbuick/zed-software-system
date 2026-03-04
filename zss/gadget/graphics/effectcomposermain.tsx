@@ -68,10 +68,11 @@ export const EffectComposerMain = /* @__PURE__ */ memo(
         ).__r3f
 
         if (groupInstance && composer) {
-          const children = groupInstance.children
+          const children = groupInstance.children ?? []
 
           for (let i = 0; i < children.length; i++) {
-            const child = children[i].object
+            const child = children[i]?.object
+            if (!child) continue
 
             if (child instanceof Effect) {
               const effects: Effect[] = [child]

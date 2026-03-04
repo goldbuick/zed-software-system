@@ -2,7 +2,9 @@ import { renderUnicodeCompact } from 'uqr'
 
 export function qrlines(content: string): string[] {
   const lines: string[] = []
-  const ascii = renderUnicodeCompact(content).split('\n')
+  const ascii = renderUnicodeCompact(content)
+    .split('\n')
+    .filter((line) => line.length > 0)
   const rendermap: Record<number, number> = {
     [32]: 32, // space
     [9600]: 223, // top half

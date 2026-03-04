@@ -13,6 +13,17 @@ import { BOOK } from 'zss/memory/types'
 import { shorturl } from './url'
 import { writecopyit } from './writeui'
 
+// CLI mode: Playwright exposes disk bindings. Safe for workers (no window).
+export function isCliMode(): boolean {
+  try {
+    const w =
+      typeof globalThis !== 'undefined' && (globalThis as any).window
+    return !!(w && typeof w.__nodeStorageReadContent === 'function')
+  } catch {
+    return false
+  }
+}
+
 // read / write from indexdb
 
 async function readidb<T>(key: string): Promise<T | undefined> {
@@ -36,20 +47,37 @@ export function storagereadconfigdefault(name: string) {
 }
 
 export async function storagereadconfig(name: string) {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageReadConfig === 'function'
+  ) {
+    const value = await (window as any).__nodeStorageReadConfig(name)
+    return value && value !== 'off' ? 'on' : 'off'
+  }
   const value = await readidb<string>(`config_${name}`)
-
   if (!value) {
     return storagereadconfigdefault(name)
   }
-
   return value && value !== 'off' ? 'on' : 'off'
 }
 
 export async function storagewriteconfig(name: string, value: string) {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageWriteConfig === 'function'
+  ) {
+    return (window as any).__nodeStorageWriteConfig(name, value)
+  }
   return writeidb(`config_${name}`, () => value)
 }
 
 export async function storagereadconfigall() {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageReadConfigAll === 'function'
+  ) {
+    return (window as any).__nodeStorageReadConfigAll()
+  }
   const lookup = [
     'config_crt',
     'config_lowrez',
@@ -69,10 +97,22 @@ export async function storagereadconfigall() {
 }
 
 export async function storagereadhistorybuffer() {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageReadHistoryBuffer === 'function'
+  ) {
+    return (window as any).__nodeStorageReadHistoryBuffer()
+  }
   return readidb<string[]>('HISTORYBUFFER')
 }
 
 export async function storagewritehistorybuffer(historybuffer: string[]) {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageWriteHistoryBuffer === 'function'
+  ) {
+    return (window as any).__nodeStorageWriteHistoryBuffer(historybuffer)
+  }
   return writeidb('HISTORYBUFFER', () => historybuffer)
 }
 
@@ -119,6 +159,13 @@ function readurlhash(player: string) {
 export async function storagereadcontent(
   player: string,
 ): Promise<string | BOOK[]> {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageReadContent === 'function'
+  ) {
+    const content = await (window as any).__nodeStorageReadContent(player)
+    return content ?? ''
+  }
   const urlcontent = readurlhash(player)
   if (urlcontent.length) {
     // see if its a shorturlhash
@@ -141,6 +188,23 @@ export async function storagewritecontent(
   compressed: string,
   books: BOOK[],
 ) {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageWriteContent === 'function'
+  ) {
+    await (window as any).__nodeStorageWriteContent(
+      player,
+      label,
+      longcontent,
+      compressed,
+      books,
+    )
+    const msg = `wrote ${longcontent.length} chars [${longcontent.slice(0, 8)}...${longcontent.slice(-8)}]`
+    if (!label.includes('autosave')) {
+      apilog(SOFTWARE, player, msg)
+    }
+    return
+  }
   if (compressed.length > 2048) {
     const short = await writelocalurl(compressed)
     return storagewritecontent(player, label, longcontent, short, books)
@@ -159,11 +223,23 @@ export async function storagewritecontent(
 }
 
 export async function storagereadvars(): Promise<Record<string, any>> {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageReadVars === 'function'
+  ) {
+    return (window as any).__nodeStorageReadVars()
+  }
   const storage = await readidb<Record<string, any>>('storage')
   return storage ?? {}
 }
 
 export async function storagewritevar(name: string, value: any) {
+  if (
+    isCliMode() &&
+    typeof (window as any).__nodeStorageWriteVar === 'function'
+  ) {
+    return (window as any).__nodeStorageWriteVar(name, value)
+  }
   const storage = await storagereadvars()
   storage[name] = value
   return writeidb('storage', () => storage)
@@ -179,6 +255,9 @@ export async function storagewritenetid(netid: string) {
 
 let currenturlhash = ''
 export function storagewatchcontent(player: string) {
+  if (isCliMode()) {
+    return
+  }
   window.addEventListener('hashchange', () => {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
@@ -193,6 +272,10 @@ export function storagewatchcontent(player: string) {
 }
 
 export async function storagesharecontent(player: string) {
+  if (isCliMode()) {
+    apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
+    return
+  }
   // unpack short url before sharing
   const urlcontent = await storagereadcontent(player)
   if (isarray(urlcontent)) {
@@ -210,6 +293,12 @@ export async function storagesharecontent(player: string) {
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function storagenukecontent(_player: string) {
+  if (isCliMode()) {
+    if (typeof (window as any).__nodeStorageNukeContent === 'function') {
+      ;(window as any).__nodeStorageNukeContent()
+    }
+    return
+  }
   // nuke is the only valid case for reload
   location.hash = ''
   currenturlhash = location.hash

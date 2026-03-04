@@ -133,10 +133,11 @@ export function hascenter(text: string): MAYBE<string> {
 }
 
 export function tokenize(text: string, noWhitespace = false) {
+  const input = text ?? ''
   if (noWhitespace) {
-    return scriptLexerNoWhitespace.tokenize(text)
+    return scriptLexerNoWhitespace.tokenize(input)
   }
-  return scriptLexer.tokenize(text)
+  return scriptLexer.tokenize(input)
 }
 
 export type WRITE_PEN_CONTEXT = {
@@ -390,7 +391,7 @@ export function tokenizeandwritetextformat(
 }
 
 export function tokenizeandstriptextformat(text: string) {
-  const result = tokenize(text)
+  const result = tokenize(text ?? '')
   if (!result.tokens) {
     return ''
   }
@@ -429,7 +430,7 @@ export function tokenizeandmeasuretextformat(
   width: number,
   height: number,
 ): MAYBE<WRITE_TEXT_CONTEXT> {
-  const result = tokenize(text)
+  const result = tokenize(text ?? '')
   if (!result.tokens) {
     return undefined
   }

@@ -1,8 +1,14 @@
 import { compress, decompress, init } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { SOFTWARE } from 'zss/device/session'
-import { packformat, unpackformat } from 'zss/feature/format'
+import { getCliMode, SOFTWARE } from 'zss/device/session'
 import {
+  formatobject,
+  packformat,
+  unformatobject,
+  unpackformat,
+} from 'zss/feature/format'
+import {
+  isCliMode,
   storagereadconfigall,
   storagereadconfigdefault,
   storagewriteconfig,
@@ -26,8 +32,12 @@ import {
   memoryimportbook,
   memoryreadelementdisplay,
 } from './bookoperations'
+import {
+  memoryexportcodepage,
+  memoryimportcodepage,
+} from './codepageoperations'
 import { memoryreadplayerboard } from './playermanagement'
-import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
+import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
 
 import {
   memoryisoperator,
@@ -165,9 +175,11 @@ export async function memoryadminmenu(
   gadgettext(player, DIVIDER)
   const topic = memoryreadtopic()
   if (topic) {
+    const base =
+      getCliMode() && !isjoin() ? 'https://zed.cafe' : location.origin
     const joinurl = isjoin()
       ? location.href
-      : `${location.origin}/join/#${topic}`
+      : `${base}/join/#${topic}`
     gadgethyperlink(player, 'adminop', topic, ['copyit', joinurl])
     gadgettext(player, ``)
     const ascii = qrlines(joinurl)
@@ -189,7 +201,48 @@ export async function memoryadminmenu(
   shared.scroll = gadgetcheckqueue(player)
 }
 
+export function memoryexportbooksasjson(books: BOOK[]): string {
+  const plainObjs: object[] = []
+  for (let i = 0; i < books.length; ++i) {
+    const exported = memoryexportbook(books[i])
+    if (ispresent(exported)) {
+      const plain = unformatobject(exported, BOOK_KEYS, {
+        pages: (pages) => pages.map(memoryimportcodepage),
+      })
+      if (ispresent(plain)) {
+        plainObjs.push(plain)
+      }
+    }
+  }
+  return JSON.stringify(plainObjs, null, 2)
+}
+
+export function memoryimportbooksfromjson(json: string): BOOK[] {
+  const arr = JSON.parse(json) as object[]
+  if (!Array.isArray(arr)) {
+    return []
+  }
+  const books: BOOK[] = []
+  for (let i = 0; i < arr.length; ++i) {
+    const plain = arr[i] as Record<string, unknown>
+    const formatted = formatobject(plain, BOOK_KEYS, {
+      pages: (p: unknown[]) =>
+        (p ?? []).map((page) => memoryexportcodepage(page as any)),
+    })
+    if (ispresent(formatted)) {
+      const book = memoryimportbook(formatted)
+      if (ispresent(book)) {
+        books.push(book)
+      }
+    }
+  }
+  return books
+}
+
 export async function memorycompressbooks(books: BOOK[]) {
+  if (getCliMode() || isCliMode()) {
+    return memoryexportbooksasjson(books)
+  }
   await getzstdlib()
 
   console.info('saved', books)
@@ -217,6 +270,10 @@ export async function memorycompressbooks(books: BOOK[]) {
 }
 
 export async function memorydecompressbooks(base64bytes: string) {
+  const trimmed = base64bytes.trim()
+  if (trimmed.startsWith('[')) {
+    return memoryimportbooksfromjson(base64bytes)
+  }
   await getzstdlib()
 
   const books: BOOK[] = []

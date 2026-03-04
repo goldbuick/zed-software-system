@@ -89,7 +89,11 @@ async function runnetworkfetch(
 }
 
 function joinurlread() {
-  const joinurl = `${location.origin}/join/#${readsubscribetopic()}`
+  const isHeadless =
+    typeof (window as any).__nodeStorageReadContent === 'function' ||
+    typeof (window as any).__nodeStorageReadPlayer === 'function'
+  const base = isHeadless ? 'https://zed.cafe' : location.origin
+  const joinurl = `${base}/join/#${readsubscribetopic()}`
   // also copy joinurl
   if (ispresent(withclipboard())) {
     withclipboard()

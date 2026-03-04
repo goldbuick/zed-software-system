@@ -14,18 +14,18 @@ let heavy: MAYBE<Worker>
 let platform: MAYBE<Worker>
 let platformhalt: MAYBE<() => void>
 
-export function createplatform(isstub = false) {
+export function createplatform(isstub = false, cliMode = false) {
   if (ispresent(platform)) {
     return
   }
   // reset session
   sessionreset(SOFTWARE)
-
   // create heavy worker
   heavy = new heavyspace()
 
   // create backend
   platform = isstub ? new stubspace() : new simspace()
+  platform.postMessage({ target: 'config', data: { cliMode } })
 
   // create bridge
   const { forward, disconnect } = createforward((message) => {

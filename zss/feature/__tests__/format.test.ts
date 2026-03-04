@@ -74,6 +74,25 @@ describe('format', () => {
       expect(result).toBeInstanceOf(Uint8Array)
       expect(result!.length).toBeGreaterThan(0)
     })
+
+    it('packs FORMAT_OBJECT with Set (msgpackr does not support Set natively)', () => {
+      const entry: [string?, any?, ...any[]] = ['ids', new Set(['a', 'b'])]
+      const result = packformat(entry)
+      expect(result).toBeInstanceOf(Uint8Array)
+      const unpacked = unpackformat(result!)
+      expect(unpacked).toEqual(['ids', ['a', 'b']])
+    })
+
+    it('packs FORMAT_OBJECT with function/constructor (json-pack does not support functions)', () => {
+      const entry: [string?, any?, ...any[]] = [
+        'meta',
+        { constructor: Set, label: 'copyit' },
+      ]
+      const result = packformat(entry)
+      expect(result).toBeInstanceOf(Uint8Array)
+      const unpacked = unpackformat(result!)
+      expect(unpacked).toEqual(['meta', { constructor: null, label: 'copyit' }])
+    })
   })
 
   describe('unpackformat', () => {

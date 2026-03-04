@@ -38,7 +38,8 @@ export function TerminalComponent() {
 
   // measure rows
   const logsrowmaxwidth = context.width - 1
-  const logsrowheights: number[] = terminallogs.map((item) => {
+  const logs = terminallogs ?? []
+  const logsrowheights: number[] = logs.map((item) => {
     return measurerow(item, logsrowmaxwidth, edge.height)
   })
 

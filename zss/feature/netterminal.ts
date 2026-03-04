@@ -8,14 +8,14 @@ import {
   shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
-import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { SOFTWARE } from 'zss/device/session'
+import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 async function readpeerid(): Promise<string | undefined> {
-  return storagereadnetid()
+  return await storagereadnetid()
 }
 
 async function writepeerid(
@@ -135,6 +135,8 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   networkpeer = new Peer(peerid, {
     debug: 2,
     host: 'terminal.zed.cafe',
+    secure: true,
+    port: 443,
   })
 
   // attempt disconnect on page close

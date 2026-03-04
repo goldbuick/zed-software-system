@@ -1,4 +1,5 @@
 import { createforward, shouldforwardservertoclient } from './device/forward'
+import { setCliMode } from './device/session'
 // these are all back-end devices that operate within the web worker
 import './device/clock'
 import './device/gadgetserver'
@@ -11,7 +12,12 @@ const { forward } = createforward((message) => {
   }
 })
 
-onmessage = function handleMessage(event) {
+onmessage = function handleMessage(event: MessageEvent<{ target?: string; data?: { cliMode?: boolean } }>) {
+  const msg = event.data
+  if (msg?.target === 'config' && msg?.data?.cliMode === true) {
+    setCliMode(true)
+    return
+  }
   forward(event.data)
 }
 

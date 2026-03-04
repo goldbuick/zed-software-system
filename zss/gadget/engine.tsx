@@ -38,9 +38,15 @@ export function Engine() {
 
   // runs the SIM
   useEffect(() => {
-    createplatform(isjoin())
-    // headless server mode: Node wires storage + log; we provide cli handler
-    if (typeof (window as any).__nodeStorageReadPlayer === 'function') {
+    const cli =
+      typeof (window as any).__nodeStorageReadContent === 'function' ||
+      typeof (window as any).__nodeStorageReadPlayer === 'function'
+    createplatform(isjoin(), cli)
+    // CLI mode: Node wires storage + log; we provide cli handler, signal ready
+    if (
+      typeof (window as any).__nodeStorageReadContent === 'function' ||
+      typeof (window as any).__nodeStorageReadPlayer === 'function'
+    ) {
       ;(window as any).__onCliInput = (line: string) =>
         vmcli(register, registerreadplayer(), line)
       ;(window as any).__nodeReady?.()

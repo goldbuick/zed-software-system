@@ -1,116 +1,122 @@
-import { Canvas, createRoot, events, extend } from '@react-three/fiber'
-import debounce from 'debounce'
-import {
-  BoxGeometry,
-  BufferAttribute,
-  BufferGeometry,
-  Group,
-  InstancedBufferAttribute,
-  InstancedMesh,
-  Intersection,
-  Mesh,
-  MeshBasicMaterial,
-  OrthographicCamera,
-  PerspectiveCamera,
-  PlaneGeometry,
-  Points,
-} from 'three'
 import { vmcli } from 'zss/device/api'
-import { register, registerreadplayer } from 'zss/device/register'
+import {
+  register,
+  registerreadplayer,
+  registerSetPlayerId,
+} from 'zss/device/register'
 import { isjoin } from 'zss/feature/url'
 import { createplatform } from 'zss/platform'
-import { RUNTIME } from 'zss/config'
-import { useDeviceData } from 'zss/gadget/hooks'
-import { makeeven } from 'zss/mapping/number'
 
-import { App } from './app'
+// CLI/headless mode: Playwright exposes __nodeStorageReadContent (or __nodeStorageReadPlayer)
+function isCliMode(): boolean {
+  return (
+    typeof (window as any).__nodeStorageReadContent === 'function' ||
+    typeof (window as any).__nodeStorageReadPlayer === 'function'
+  )
+}
 
-// Headless server mode: set up CLI handler before WebGL/Engine so Node bridge works
-// even if WebGL fails or Engine never mounts.
-if (typeof (window as any).__nodeStorageReadPlayer === 'function') {
-  createplatform(isjoin())
+async function bootHeadless(): Promise<void> {
+  const readPlayer = (window as any).__nodeStorageReadPlayer
+  if (typeof readPlayer === 'function') {
+    const playerId = await readPlayer()
+    registerSetPlayerId(playerId)
+  }
   ;(window as any).__onCliInput = (line: string) =>
     vmcli(register, registerreadplayer(), line)
+  await import('zss/userspace')
+  createplatform(isjoin(), true)
   ;(window as any).__nodeReady?.()
 }
 
-extend({
-  Mesh,
-  OrthographicCamera,
-  Group,
-  PlaneGeometry,
-  MeshBasicMaterial,
-  BufferAttribute,
-  BufferGeometry,
-  Points,
-  BoxGeometry,
-  PerspectiveCamera,
-  InstancedMesh,
-  InstancedBufferAttribute,
-})
+// Headless path: no WebGL, no Canvas, no UI — just platform + CLI
+async function main() {
+  if (isCliMode()) {
+    await bootHeadless()
+    return
+  }
 
-const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
-  state,
-) => ({
-  // Default configuration
-  ...events(state),
+  const {
+    Canvas,
+    createRoot,
+    events,
+    extend,
+  } = await import('@react-three/fiber')
+  const debounce = (await import('debounce')).default
+  const {
+    BoxGeometry,
+    BufferAttribute,
+    BufferGeometry,
+    Group,
+    InstancedBufferAttribute,
+    InstancedMesh,
+    Intersection,
+    Mesh,
+    MeshBasicMaterial,
+    OrthographicCamera,
+    PerspectiveCamera,
+    PlaneGeometry,
+    Points,
+  } = await import('three')
+  const { RUNTIME } = await import('zss/config')
+  const { useDeviceData } = await import('zss/gadget/hooks')
+  const { makeeven } = await import('zss/mapping/number')
 
-  // The filter can re-order or re-structure the intersections
-  filter: (items: Intersection[]) => {
-    const list = items.filter((item) => {
-      if (!item.object.visible) {
-        return false
-      }
-      return true
-    })
-
-    const blockingIndex = list.findIndex(
-      (item) => item.object.userData.blocking,
-    )
-
-    const result =
-      blockingIndex === -1 ? list : list.slice(0, blockingIndex + 1)
-
-    let cursor = 'default'
-    result.some((item) => {
-      if (item.object.userData.cursor) {
-        cursor = item.object.userData.cursor
-        return true
-      }
-      return false
-    })
-
-    document.querySelectorAll<HTMLElement>('html, body').forEach((node) => {
-      node.style.cursor = cursor
-    })
-
-    return result
-  },
-})
-
-// @ts-expect-error fuuuu
-const root = createRoot(document.getElementById('frame'))
-
-function applyconfig() {
-  const innerwidth = window.innerWidth
-  const innerheight = window.innerHeight
-  const width = makeeven(innerwidth)
-  const height = makeeven(innerheight)
-  const safeheight = window.visualViewport
-    ? Math.min(innerheight, window.visualViewport.height)
-    : innerheight
-  const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
-  useDeviceData.setState({
-    saferows,
+  extend({
+    Mesh,
+    OrthographicCamera,
+    Group,
+    PlaneGeometry,
+    MeshBasicMaterial,
+    BufferAttribute,
+    BufferGeometry,
+    Points,
+    BoxGeometry,
+    PerspectiveCamera,
+    InstancedMesh,
+    InstancedBufferAttribute,
   })
-  root
-    .configure({
-      size: {
-        left: 0,
-        top: 0,
-        width,
-        height,
-      },
+
+  const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
+    state,
+  ) => ({
+    ...events(state),
+    filter: (items: Intersection[]) => {
+      const list = items.filter((item) => item.object.visible)
+      const blockingIndex = list.findIndex(
+        (item) => item.object.userData.blocking,
+      )
+      const result =
+        blockingIndex === -1 ? list : list.slice(0, blockingIndex + 1)
+      let cursor = 'default'
+      result.some((item) => {
+        if (item.object.userData.cursor) {
+          cursor = item.object.userData.cursor
+          return true
+        }
+        return false
+      })
+      document
+        .querySelectorAll<HTMLElement>('html, body')
+        .forEach((node) => { node.style.cursor = cursor })
+      return result
+    },
+  })
+
+  // @ts-expect-error fuuuu
+  const root = createRoot(document.getElementById('frame')!)
+
+  function applyconfig() {
+    const innerwidth = window.innerWidth
+    const innerheight = window.innerHeight
+    const width = makeeven(innerwidth)
+    const height = makeeven(innerheight)
+    const safeheight = window.visualViewport
+      ? Math.min(innerheight, window.visualViewport.height)
+      : innerheight
+    const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
+    useDeviceData.setState({ saferows })
+    root.configure({
+      size: { left: 0, top: 0, width, height },
       events: eventManagerFactory,
       dpr: 1,
       flat: true,
@@ -122,38 +128,31 @@ function applyconfig() {
         antialias: false,
         preserveDrawingBuffer: true,
       },
-    })
-    .catch(console.error)
-}
-const handleresize = debounce(applyconfig, 256)
-
-function detectWebGL(): boolean {
-  try {
-    const canvas = document.createElement('canvas')
-    const gl =
-      canvas.getContext('webgl') ?? canvas.getContext('experimental-webgl')
-    return !!(window.WebGLRenderingContext && gl)
-  } catch {
-    return false
+    }).catch(console.error)
   }
-}
+  const handleresize = debounce(applyconfig, 256)
 
-function showWebGLRequired() {
-  const frame = document.getElementById('frame')
-  if (!frame) {
-    return
+  function detectWebGL(): boolean {
+    try {
+      const canvas = document.createElement('canvas')
+      const gl =
+        canvas.getContext('webgl') ?? canvas.getContext('experimental-webgl')
+      return !!(window.WebGLRenderingContext && gl)
+    } catch {
+      return false
+    }
   }
-  frame.style.display = 'none'
-  const div = document.createElement('div')
-  div.id = 'webgl-required'
-  div.innerHTML = `
-    <p>WebGL is not enabled or not supported in your browser.</p>
-    <p><a href="https://get.webgl.org" target="_blank" rel="noopener noreferrer">Check WebGL support at get.webgl.org</a></p>
-  `
-  document.body.appendChild(div)
-}
 
-async function bootup() {
+  function showWebGLRequired() {
+    const frame = document.getElementById('frame')
+    if (!frame) return
+    frame.style.display = 'none'
+    const div = document.createElement('div')
+    div.id = 'webgl-required'
+    div.innerHTML = `<p>WebGL is not enabled or not supported.</p><p><a href="https://get.webgl.org" target="_blank" rel="noopener noreferrer">Check WebGL support</a></p>`
+    document.body.appendChild(div)
+  }
+
   if (!detectWebGL()) {
     showWebGLRequired()
     return
@@ -174,17 +173,13 @@ async function bootup() {
   })
 
   window.addEventListener('resize', handleresize)
-  handleresize()
-
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', handleresize)
     window.visualViewport.addEventListener('scroll', handleresize)
   }
-
-  // Initial check
   handleresize()
-
+  const { App } = await import('./app')
   root.render(<App />)
 }
 
-bootup().catch(console.error)
+main().catch(console.error)

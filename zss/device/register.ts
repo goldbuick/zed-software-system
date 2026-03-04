@@ -4,6 +4,7 @@ import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import {
+  isCliMode,
   storagenukecontent,
   storagereadcontent,
   storagereadhistorybuffer,
@@ -105,6 +106,9 @@ function writepages() {
 }
 
 function renderrow(content: string[]) {
+  if (!content || !Array.isArray(content)) {
+    return ''
+  }
   const messagetext = content.map((v) => `${v}`).join(' ')
   const ishyperlink = messagetext.startsWith('!')
   if (ishyperlink) {
@@ -114,10 +118,13 @@ function renderrow(content: string[]) {
 }
 
 const countregex = /\((\d+)\)/
+let lastNodeLogRow = ''
 
 function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
   const row = renderrow(message.data)
+  const rowplain = tokenizeandstriptextformat(row).replace(countregex, '').trim()
+  if (!rowplain.length) return
   const [firstrow = ''] = terminal.logs
   const logs = [...terminal.logs]
 
@@ -126,7 +133,6 @@ function terminaladdlog(message: MESSAGE) {
     countregex,
     '',
   )
-  const rowplain = tokenizeandstriptextformat(row)
 
   const dupecheck = firstrowplain.indexOf(rowplain)
   if (rowplain.length && firstrowplain.length && dupecheck === 0) {
@@ -164,7 +170,18 @@ function terminaladdlog(message: MESSAGE) {
   // headless server mode: forward log to Node for Ink REPL (with format for fg/bg colors)
   const nodeLog = (window as { __nodeLog?: (line: string) => void }).__nodeLog
   if (typeof nodeLog === 'function' && isarray(message.data)) {
-    if (tokenizeandstriptextformat(row).replace(countregex, '').trim().length) {
+    const plain = tokenizeandstriptextformat(row).replace(countregex, '').trim()
+    // skip empty lines
+    if (!plain.length) return
+    // skip sidebar/ticker: "element: status" pattern (may have leading display char)
+    const withoutLeadingChar = plain.replace(/^.\s*/, '')
+    const isSidebar =
+      (withoutLeadingChar.length < 80 &&
+        /^[a-zA-Z0-9_]+: .+$/.test(withoutLeadingChar)) ||
+      plain.includes(' player: ')
+    // skip consecutive duplicates (ticker floods the same line every tick)
+    if (!isSidebar && row !== lastNodeLogRow) {
+      lastNodeLogRow = row
       nodeLog(row)
     }
   }
@@ -192,7 +209,7 @@ function terminalinclayout(inc: boolean) {
 }
 
 async function loadmem(books: string | BOOK[]) {
-  if (books.length === 0) {
+  if (!books || books.length === 0) {
     apierror(register, myplayerid, 'content', 'no content found')
     await writewikilink()
     vmzsswords(register, myplayerid)
@@ -210,9 +227,13 @@ let keepalive = 0
 // send keepalive message every 10 seconds
 const DOOT_RATE = 10
 
-// stable unique id
-const myplayerid = readsession('PLAYER') ?? createpid()
+// stable unique id (CLI mode injects via registerSetPlayerId)
+let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
+
+export function registerSetPlayerId(id: string) {
+  myplayerid = id
+}
 
 // timeout for TOAST
 let toasttimer: any
@@ -295,6 +316,10 @@ export const register = createdevice(
           registerterminalclose(register, myplayerid)
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
+          // CLI mode: start multiplayer after confirmed login (player is on board)
+          if (isCliMode()) {
+            vmcli(register, myplayerid, '#joincode')
+          }
         } else {
           doasync(register, message.player, async () => {
             await writewikilink()
