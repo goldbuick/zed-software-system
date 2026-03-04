@@ -27,3 +27,8 @@ dist-headless
 *.njsproj
 *.sln
 *.sw?
+
+# runtime data
+.zss-data
+
+
