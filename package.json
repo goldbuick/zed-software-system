@@ -11,6 +11,7 @@
     ]
   },
   "scripts": {
+    "postinstall": "patch-package",
     "sloc": "npx sloc -e .js zss",
     "test": "yarn jest --verbose",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -24,7 +25,8 @@
     "server": "yarn build && tsx server/cli.tsx",
     "build:cli": "node scripts/build-cli.mjs",
     "build:cli:binary": "yarn build && yarn build:cli && yarn build:cli:binary:pkg",
-    "build:cli:binary:pkg": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell && node scripts/pkg-cli.mjs",
+    "build:cli:binary:pkg": "NODE_OPTIONS=--no-deprecation PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell && node scripts/pkg-cli.mjs",
+    "build:cli:binary:mac-all": "NODE_OPTIONS=--no-deprecation PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell && PKG_ALLOW_CROSS_ARCH=1 node scripts/pkg-cli.mjs mac",
     "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build"
   },
   "devDependencies": {
@@ -87,6 +89,7 @@
     "nanoid": "^5.0.3",
     "nanoid-dictionary": "^4.3.0",
     "onnxruntime-web": "^1.23.2",
+    "patch-package": "^8.0.1",
     "path-browserify": "^1.0.0",
     "peerjs": "^1.5.5",
     "phonemizer": "^1.2.1",
@@ -119,7 +122,7 @@
   },
   "dependencies": {
     "ink": "^6.8.0",
-    "playwright": "^1.49.0",
-    "ink-text-input": "^6.0.0"
+    "ink-text-input": "^6.0.0",
+    "playwright": "^1.49.0"
   }
 }

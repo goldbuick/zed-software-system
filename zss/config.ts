@@ -1,29 +1,15 @@
 import { CHAR_HEIGHT, CHAR_WIDTH } from './gadget/data/types'
 
-/* eslint-disable @typescript-eslint/prefer-optional-chain -- typeof guard needed for Node */
-const env =
-  typeof import.meta !== 'undefined' && import.meta?.env
-    ? import.meta.env
-    : (process?.env ?? {})
-/* eslint-enable @typescript-eslint/prefer-optional-chain */
-
-function envBool(key: string) {
-  return !!JSON.parse(env[key] ?? 'false')
-}
-function envStr(key: string) {
-  return `${env[key] ?? ''}`
-}
-
 // cli config
-const LANG_DEV = envBool('ZSS_LANG_DEV')
-const LANG_TYPES = envBool('ZSS_LANG_TYPES')
-const STATS_DEV = envBool('ZSS_STATS_DEV')
-const SHOW_CODE = envBool('ZSS_SHOW_CODE')
-const TRACE_CODE = envStr('ZSS_TRACE_CODE')
-const LOG_DEBUG = envBool('ZSS_LOG_DEBUG')
-const FORCE_CRT_OFF = envBool('ZSS_FORCE_CRT_OFF')
-const FORCE_LOW_REZ = envBool('ZSS_FORCE_LOW_REZ')
-const FORCE_TOUCH_UI = envBool('ZSS_FORCE_TOUCH_UI')
+const LANG_DEV = !!JSON.parse(import.meta.env.ZSS_LANG_DEV)
+const LANG_TYPES = !!JSON.parse(import.meta.env.ZSS_LANG_TYPES)
+const STATS_DEV = !!JSON.parse(import.meta.env.ZSS_STATS_DEV)
+const SHOW_CODE = !!JSON.parse(import.meta.env.ZSS_SHOW_CODE)
+const TRACE_CODE = `${import.meta.env.ZSS_TRACE_CODE}`
+const LOG_DEBUG = !!JSON.parse(import.meta.env.ZSS_LOG_DEBUG)
+const FORCE_CRT_OFF = !!JSON.parse(import.meta.env.ZSS_FORCE_CRT_OFF)
+const FORCE_LOW_REZ = !!JSON.parse(import.meta.env.ZSS_FORCE_LOW_REZ)
+const FORCE_TOUCH_UI = !!JSON.parse(import.meta.env.ZSS_FORCE_TOUCH_UI)
 
 // runtime config
 export const RUNTIME = {

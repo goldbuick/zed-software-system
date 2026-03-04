@@ -29,3 +29,48 @@ jobs:
 
       - name: Build copy CNAME
         run: yarn build:copy-cname
+
+      - name: Build CLI binaries (Linux, macOS, Windows)
+        run: |
+          yarn build:cli
+          PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell
+          node scripts/pkg-cli.mjs
+
+      - name: Upload CLI binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-binaries
+          path: |
+            dist-bin-cli/linux-x64/zss-cli
+            dist-bin-cli/macos-x64/zss-cli
+            dist-bin-cli/macos-arm64/zss-cli
+            dist-bin-cli/win-x64/zss-cli.exe
+
+  release:
+    name: Create Release
+    needs: build-web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download CLI binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-binaries
+
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: mikepenz/action-gh-release@v0.2.0-a03
+        with:
+          body: ${{ steps.github_release.outputs.changelog }}
+          files: |
+            dist-bin-cli/linux-x64/zss-cli
+            dist-bin-cli/macos-x64/zss-cli
+            dist-bin-cli/macos-arm64/zss-cli
+            dist-bin-cli/win-x64/zss-cli.exe

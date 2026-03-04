@@ -9,6 +9,22 @@ import { createServer } from 'http'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
+const isPkgSnapshot = (p: string) => p.startsWith('/snapshot/') || p.includes(path.sep + 'snapshot' + path.sep)
+
+function copyDirSync(source: string, target: string, executablePattern?: RegExp): void {
+  fs.mkdirSync(target, { recursive: true })
+  for (const name of fs.readdirSync(source)) {
+    const src = path.join(source, name)
+    const dst = path.join(target, name)
+    if (fs.statSync(src).isDirectory()) {
+      copyDirSync(src, dst, executablePattern)
+    } else {
+      fs.copyFileSync(src, dst)
+      if (executablePattern?.test(name)) fs.chmodSync(dst, 0o755)
+    }
+  }
+}
+
 import { Box, Text, render } from 'ink'
 import TextInput from 'ink-text-input'
 import { chromium } from 'playwright'
@@ -37,8 +53,25 @@ function getBundledChromiumPath(): string | null {
         ? 'chrome-headless-shell-win64'
         : `chrome-headless-shell-linux-${process.arch}`
   const exeName = process.platform === 'win32' ? 'chrome-headless-shell.exe' : 'chrome-headless-shell'
-  const exePath = path.join(browsersDir, shellDir, platform, exeName)
-  return fs.existsSync(exePath) ? exePath : null
+  const sourceExePath = path.join(browsersDir, shellDir, platform, exeName)
+  if (!fs.existsSync(sourceExePath)) return null
+
+  // When running as pkg binary, the browser is inside the snapshot and cannot be exec'd.
+  // Extract to a temp dir next to the binary (copyFileSync works with pkg snapshot; cpSync may not).
+  if (isPkgSnapshot(sourceExePath)) {
+    const extractDir = path.join(path.dirname(process.execPath), '.zss-chromium')
+    const targetPlatformDir = path.join(extractDir, shellDir, platform)
+    const targetExePath = path.join(targetPlatformDir, exeName)
+    if (!fs.existsSync(targetExePath)) {
+      const sourcePlatformDir = path.join(browsersDir, shellDir, platform)
+      const exePattern = process.platform === 'win32' ? /\.exe$/i : /^chrome-headless-shell$/i
+      copyDirSync(sourcePlatformDir, targetPlatformDir, exePattern)
+    }
+    fs.chmodSync(targetExePath, 0o755)
+    return targetExePath
+  }
+
+  return sourceExePath
 }
 
 const dataDir = process.env.ZSS_DATA_DIR ?? defaultDataDir

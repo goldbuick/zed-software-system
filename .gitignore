@@ -10,11 +10,11 @@ lerna-debug.log*
 node_modules
 dist
 dist-bin
-dist-bin-cli
 dist-cli
 dist-server
-.pkg-cache
+dist-bin-cli
 dist-headless
+.pkg-cache
 *.local
 
 # Editor directories and files

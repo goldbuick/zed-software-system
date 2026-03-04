@@ -34,10 +34,10 @@ async function buildCli() {
     outfile: path.join(outDir, 'cli.mjs'),
     external: [
       'playwright', // native bindings, pkg will include from node_modules
-      'react-devtools-core', // optional ink dev dependency
     ],
     alias: {
       'zss/words/cp437': path.join(root, 'zss', 'words', 'cp437.ts'),
+      'react-devtools-core': path.join(root, 'scripts', 'stubs', 'react-devtools-core.mjs'),
     },
     loader: { '.ts': 'ts', '.tsx': 'tsx' },
     logLevel: 'info',
