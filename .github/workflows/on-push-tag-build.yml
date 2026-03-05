@@ -30,21 +30,20 @@ jobs:
       - name: Build copy CNAME
         run: yarn build:copy-cname
 
-      - name: Build CLI binaries (Linux, macOS, Windows)
+      - name: Install 7-zip (required for Windows tarballs)
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Build CLI tarballs (Linux, macOS, Windows)
         run: |
           yarn build:cli
-          PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell
-          node scripts/pkg-cli.mjs
+          NODE_OPTIONS=--no-deprecation PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell
+          npx oclif pack tarballs
 
-      - name: Upload CLI binaries
+      - name: Upload CLI tarballs
         uses: actions/upload-artifact@v4
         with:
-          name: cli-binaries
-          path: |
-            dist-bin-cli/linux-x64/zss-cli
-            dist-bin-cli/macos-x64/zss-cli
-            dist-bin-cli/macos-arm64/zss-cli
-            dist-bin-cli/win-x64/zss-cli.exe
+          name: cli-tarballs
+          path: dist/*.tar.gz
 
   release:
     name: Create Release
@@ -54,10 +53,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download CLI binaries
+      - name: Download CLI tarballs
         uses: actions/download-artifact@v4
         with:
-          name: cli-binaries
+          name: cli-tarballs
 
       - name: Build Changelog
         id: github_release
@@ -69,8 +68,4 @@ jobs:
         uses: mikepenz/action-gh-release@v0.2.0-a03
         with:
           body: ${{ steps.github_release.outputs.changelog }}
-          files: |
-            dist-bin-cli/linux-x64/zss-cli
-            dist-bin-cli/macos-x64/zss-cli
-            dist-bin-cli/macos-arm64/zss-cli
-            dist-bin-cli/win-x64/zss-cli.exe
+          files: dist/*.tar.gz

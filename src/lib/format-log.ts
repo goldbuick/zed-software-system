@@ -3,7 +3,7 @@
  * with CP437 Unicode characters. Supports foreground, background, and blinking
  * foreground colors. Used by the CLI Ink REPL.
  */
-import { cp437ToChar } from 'zss/words/cp437'
+import { cp437ToChar } from './cp437.js'
 
 // Name aliases → canonical color (matches zss/words/colorconsts)
 const COLOR_ALIASES: Record<string, string> = {
@@ -97,7 +97,6 @@ const FG_ANSI: Record<string, string> = {
   PURPLE: '\x1b[95m',
   YELLOW: '\x1b[93m',
   WHITE: '\x1b[97m',
-  // Blink foreground (SGR 5)
   BLBLACK: '\x1b[5;30m',
   BLDKBLUE: '\x1b[5;34m',
   BLDKGREEN: '\x1b[5;32m',
@@ -139,13 +138,14 @@ const BG_ANSI: Record<string, string> = {
 const RESET = '\x1b[0m'
 
 function resolveColor(name: string): string | undefined {
-  const canonical = COLOR_ALIASES[name.toLowerCase()]
-  return canonical
+  return COLOR_ALIASES[name.toLowerCase()]
 }
 
 function applyColor(name: string, out: string[]): void {
   const canonical = resolveColor(name)
-  if (!canonical) return
+  if (!canonical) {
+    return
+  }
   const fg = FG_ANSI[canonical]
   const bg = BG_ANSI[canonical]
   if (canonical === 'ONCLEAR') {
