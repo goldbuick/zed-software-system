@@ -11,12 +11,8 @@ node_modules
 tmp
 dist
 dist-bin
-dist-cli
 dist-server
-dist-bin-cli
 oclif.manifest.json
-dist-headless
-.pkg-cache
 *.local
 
 # Editor directories and files
