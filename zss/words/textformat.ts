@@ -3,7 +3,6 @@ import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { colorconsts, colortobg, colortofg } from 'zss/words/color'
-import { cp437ToChar } from 'zss/words/cp437'
 import { COLOR } from 'zss/words/types'
 
 import { metakey } from './system'
@@ -133,11 +132,10 @@ export function hascenter(text: string): MAYBE<string> {
 }
 
 export function tokenize(text: string, noWhitespace = false) {
-  const input = text ?? ''
   if (noWhitespace) {
-    return scriptLexerNoWhitespace.tokenize(input)
+    return scriptLexerNoWhitespace.tokenize(text)
   }
-  return scriptLexer.tokenize(input)
+  return scriptLexer.tokenize(text)
 }
 
 export type WRITE_PEN_CONTEXT = {
@@ -278,12 +276,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         writeStr('$')
         break
 
-      case NumberLiteral: {
-        const code = parseInt(token.image.replace(/^\$-?/, ''), 10)
-        const charCode = !isNaN(code) && code >= 0 && code <= 255 ? code : 32
+      case NumberLiteral:
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
-          context.char[i] = charCode
+
+          context.char[i] = parseFloat(token.image.replace('$', ''))
           if (context.active.color !== undefined) {
             context.color[i] = context.active.color
           }
@@ -293,7 +290,6 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         }
         incCursor()
         break
-      }
 
       case StringLiteralDouble:
         writeStr(
@@ -391,7 +387,7 @@ export function tokenizeandwritetextformat(
 }
 
 export function tokenizeandstriptextformat(text: string) {
-  const result = tokenize(text ?? '')
+  const result = tokenize(text)
   if (!result.tokens) {
     return ''
   }
@@ -413,13 +409,7 @@ export function tokenizeandstriptextformat(text: string) {
           return false
       }
     })
-    .map((token) => {
-      if (token.tokenType === NumberLiteral) {
-        const code = parseInt(token.image.replace(/^\$-?/, ''), 10)
-        return !isNaN(code) && code >= 0 && code <= 255 ? cp437ToChar(code) : ''
-      }
-      return token.image
-    })
+    .map((token) => token.image)
     .join('')
 
   return plain.trim().length === 0 ? '' : plain
@@ -430,7 +420,7 @@ export function tokenizeandmeasuretextformat(
   width: number,
   height: number,
 ): MAYBE<WRITE_TEXT_CONTEXT> {
-  const result = tokenize(text ?? '')
+  const result = tokenize(text)
   if (!result.tokens) {
     return undefined
   }

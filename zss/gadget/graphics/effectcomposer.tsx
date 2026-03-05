@@ -67,11 +67,10 @@ export const EffectComposer = /* @__PURE__ */ memo(
         ).__r3f
 
         if (groupInstance && composer) {
-          const children = groupInstance.children ?? []
+          const children = groupInstance.children
 
           for (let i = 0; i < children.length; i++) {
-            const child = children[i]?.object
-            if (!child) continue
+            const child = children[i].object
 
             if (child instanceof Effect) {
               const effects: Effect[] = [child]
@@ -79,9 +78,7 @@ export const EffectComposer = /* @__PURE__ */ memo(
               if (!isConvolution(child)) {
                 let next: unknown = null
                 while ((next = children[i + 1]?.object) instanceof Effect) {
-                  if (isConvolution(next)) {
-                    break
-                  }
+                  if (isConvolution(next)) break
                   effects.push(next)
                   i++
                 }
@@ -94,15 +91,11 @@ export const EffectComposer = /* @__PURE__ */ memo(
             }
           }
 
-          for (const pass of passes) {
-            composer?.addPass(pass)
-          }
+          for (const pass of passes) composer?.addPass(pass)
         }
 
         return () => {
-          for (const pass of passes) {
-            composer?.removePass(pass)
-          }
+          for (const pass of passes) composer?.removePass(pass)
         }
       }, [composer, children, camera])
 
