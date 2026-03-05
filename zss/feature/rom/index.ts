@@ -18,18 +18,13 @@ import {
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-const isViteGlob = typeof (import.meta as any).glob === 'function'
+const romfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })
 const romcontent: Record<string, string> = {}
-if (isViteGlob) {
-  const romfiles = (import.meta as any).glob('./**/*.txt', {
-    eager: true,
-    query: 'raw',
-  })
-  objectKeys(romfiles).forEach((name: string) => {
-    const p = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
-    romcontent[p] = romfiles[name].default
-  })
-}
+objectKeys(romfiles).forEach((name) => {
+  const path = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
+  // @ts-expect-error yes
+  romcontent[path] = romfiles[name].default
+})
 
 export function romread(address: string): MAYBE<string> {
   const withaddress = NAME(
