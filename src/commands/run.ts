@@ -8,8 +8,14 @@ export default class Run extends Command {
   static flags = {
     port: Flags.integer({
       description: 'HTTP port for the static server',
-      default: 7778,
+      default: 7777,
       env: 'ZSS_SERVER_PORT',
+    }),
+    dev: Flags.boolean({
+      description:
+        'Use existing Vite dev server (e.g. yarn dev) instead of serving cafe/dist',
+      default: false,
+      env: 'ZSS_DEV',
     }),
     'data-dir': Flags.string({
       description: 'Data directory for player content, config, etc.',

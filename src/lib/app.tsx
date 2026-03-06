@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 /**
  * CLI app logic: runs the built cafe SPA in a Playwright webview.
  * Exposes Node bindings for logs, disk I/O (content, config, vars, history).
@@ -7,7 +8,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import { Box, Text, render } from 'ink'
+import { Box, Text, render, useStdin } from 'ink'
 import TextInput from 'ink-text-input'
 import { chromium } from 'playwright'
 import React, { useEffect, useState } from 'react'
@@ -22,8 +23,11 @@ import {
 const root = getRoot()
 const distDir = path.join(root, 'cafe', 'dist')
 
+const VITE_DEV_PORT = Number(process.env.ZSS_DEV_SERVER_PORT ?? '7777')
+
 export type RunAppFlags = {
   port: number
+  dev: boolean
   'data-dir': string
 }
 
@@ -75,6 +79,7 @@ function CliApp({
 }: {
   onInput: (line: string) => void
 }): React.ReactElement {
+  const { isRawModeSupported } = useStdin()
   const [logLines, setLogLines] = useState<string[]>(() => [...logs])
   const [value, setValue] = useState('')
 
@@ -95,17 +100,21 @@ function CliApp({
       </Box>
       <Box flexShrink={0}>
         <Text color="magenta">zed.cafe{'>'}</Text>
-        <TextInput
-          value={value}
-          onChange={setValue}
-          onSubmit={(v) => {
-            if (v != null && v !== undefined) {
-              onInput(v)
-              setValue('')
-            }
-          }}
-          showCursor
-        />
+        {isRawModeSupported ? (
+          <TextInput
+            value={value}
+            onChange={setValue}
+            onSubmit={(v) => {
+              if (v != null && v !== undefined) {
+                onInput(v)
+                setValue('')
+              }
+            }}
+            showCursor
+          />
+        ) : (
+          <Text dimColor>(stdin not a TTY — run in a terminal for input)</Text>
+        )}
       </Box>
     </Box>
   )
@@ -114,15 +123,21 @@ function CliApp({
 export async function runApp(flags: RunAppFlags): Promise<void> {
   const dataDir = path.resolve(flags['data-dir'])
   const port = flags.port
+  const useDevServer = flags.dev
 
-  if (!fs.existsSync(distDir)) {
-    console.error('cafe/dist not found. Run: yarn build')
-    process.exit(1)
+  let baseUrl: string
+  if (useDevServer) {
+    baseUrl = `http://localhost:${VITE_DEV_PORT}`
+    addLog(`Using Vite dev server at ${baseUrl}`)
+  } else {
+    if (!fs.existsSync(distDir)) {
+      console.error('cafe/dist not found. Run: yarn build')
+      process.exit(1)
+    }
+    await createStaticServer(distDir, port)
+    baseUrl = `http://localhost:${port}`
+    addLog(`Serving cafe at ${baseUrl}`)
   }
-
-  await createStaticServer(distDir, port)
-  const baseUrl = `http://localhost:${port}`
-  addLog(`Serving cafe at ${baseUrl}`)
 
   const executablePath = getBundledChromiumPath(root)
   let browser
@@ -299,19 +314,17 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
 
   render(
     <CliApp
-      onInput={async (line) => {
+      onInput={(line) => {
         if (line == null) {
           return
         }
-        try {
-          await page.evaluate((l: string) => {
+        page
+          .evaluate((l: string) => {
             ;(
               window as unknown as { __onCliInput?: (s: string) => void }
             ).__onCliInput?.(l)
           }, line)
-        } catch (err) {
-          addLog(String(err))
-        }
+          .catch((err) => addLog(String(err)))
       }}
     />,
   )
