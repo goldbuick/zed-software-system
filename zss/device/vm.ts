@@ -337,9 +337,7 @@ const vm = createdevice(
         }
         break
       case 'admin':
-        doasync(vm, message.player, async () => {
-          await memoryadminmenu(message.player, lastinputtime)
-        })
+        memoryadminmenu(message.player, lastinputtime)
         break
       case 'zsswords': {
         const langcommands: GADGET_ZSS_WORDS['langcommands'] = {
@@ -982,9 +980,7 @@ const vm = createdevice(
           case 'refscroll':
             switch (path) {
               case 'adminscroll':
-                doasync(vm, message.player, async () => {
-                  await memoryadminmenu(message.player, lastinputtime)
-                })
+                memoryadminmenu(message.player, lastinputtime)
                 break
               case 'objectlistscroll': {
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)

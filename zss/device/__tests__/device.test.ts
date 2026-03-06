@@ -20,9 +20,9 @@ describe('device', () => {
   })
 
   describe('parsetarget', () => {
-    it('is re-exported from device', () => {
+    it('splits target string on colon', () => {
       expect(parsetarget('a:b')).toEqual({ target: 'a', path: 'b' })
-      expect(parsetarget('ready')).toEqual({ target: 'self', path: 'ready' })
+      expect(parsetarget('ready')).toEqual({ target: 'ready', path: '' })
     })
   })
 

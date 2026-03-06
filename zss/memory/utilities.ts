@@ -17,7 +17,6 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { doasync } from 'zss/mapping/func'
 import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
@@ -84,7 +83,7 @@ function formatidleseconds(ms: number | undefined): string {
   return `${Math.floor(min / 60)}h`
 }
 
-export async function memoryadminmenu(
+export function memoryadminmenu(
   player: string,
   idletimes?: Record<string, number>,
 ) {
