@@ -24,7 +24,7 @@ import {
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags, memoryreadoperator } from './memory'
 import {
-  COMMANDS_THAT_REQUIRE_PERMISSION_CHECK,
+  PERMISSION_CONTROLLED_COMMANDS,
   memorycanruncommand,
 } from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
@@ -563,7 +563,7 @@ export function createchip(
     if (
       READ_CONTEXT.elementisplayer &&
       READ_CONTEXT.elementfocus !== memoryreadoperator() &&
-      COMMANDS_THAT_REQUIRE_PERMISSION_CHECK.has(command) &&
+      PERMISSION_CONTROLLED_COMMANDS.has(command) &&
       !memorycanruncommand(READ_CONTEXT.elementfocus, command)
     ) {
       apierror(
