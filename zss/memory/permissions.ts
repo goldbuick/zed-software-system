@@ -8,33 +8,13 @@ import { memoryreadoperator } from './index'
 export const PERMISSION_ROLES = ['operator', 'admin', 'mod', 'player'] as const
 export type PERMISSION_ROLE = (typeof PERMISSION_ROLES)[number]
 
-const ROLE_ORDER: Record<string, number> = {
-  operator: 0,
-  admin: 1,
-  mod: 2,
-  player: 3,
-}
-
 const PERMISSION_STATE = {
   playertotoken: {} as Record<string, string>,
   allowlistbyrole: {} as Record<string, Set<string>>,
   rolebytoken: {} as Record<string, string>,
 }
 
-export function rolemeets(tokenrole: string, requiredrole: string): boolean {
-  const t = ROLE_ORDER[tokenrole]
-  const r = ROLE_ORDER[requiredrole]
-  if (typeof t !== 'number' || typeof r !== 'number') {
-    return false
-  }
-  return t <= r
-}
-
-export function memorycanruncommand(
-  player: string,
-  command: string,
-  requiredrole: string,
-): boolean {
+export function memorycanruncommand(player: string, command: string): boolean {
   const operator = memoryreadoperator()
   if (player === operator) {
     return true
@@ -47,16 +27,8 @@ export function memorycanruncommand(
   }
 
   const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
-  if (!rolemeets(tokenrole, requiredrole)) {
-    apierror(SOFTWARE, player, 'permissions', 'role insufficient')
-    return false
-  }
-
   const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
-  if (allowlist === undefined || allowlist.size === 0) {
-    return false
-  }
-  return allowlist.has(command)
+  return allowlist?.has(command)
 }
 
 export function memorysetplayertotoken(player: string, token: string) {

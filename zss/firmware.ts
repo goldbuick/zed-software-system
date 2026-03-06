@@ -34,12 +34,10 @@ export type FIRMWARE = {
   aftertick: FIRMWARE_CYCLE
   getcommand: (name: string) => FIRMWARE_COMMAND | undefined
   getcommandargs: (name: string) => COMMAND_ARGS_SIGNATURE | undefined
-  getcommandrequiredrole?: (name: string) => COMMAND_REQUIRED_ROLE | undefined
   command: (
     name: string,
     args: COMMAND_ARGS_SIGNATURE,
     func: FIRMWARE_COMMAND,
-    requiredRole?: COMMAND_REQUIRED_ROLE,
   ) => FIRMWARE
   listcommands: () => string[]
 }
@@ -47,7 +45,6 @@ export type FIRMWARE = {
 export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
   const commands: Record<string, FIRMWARE_COMMAND> = {}
   const commandArgs: Record<string, COMMAND_ARGS_SIGNATURE> = {}
-  const commandRequiredRole: Record<string, COMMAND_REQUIRED_ROLE> = {}
 
   const firmware: FIRMWARE = {
     everytick() {},
@@ -62,15 +59,9 @@ export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
     getcommandargs(name) {
       return commandArgs[name]
     },
-    getcommandrequiredrole(name) {
-      return commandRequiredRole[name]
-    },
-    command(name, args, func, requiredRole): FIRMWARE {
+    command(name, args, func): FIRMWARE {
       commands[name] = func
       commandArgs[name] = args
-      if (requiredRole !== undefined) {
-        commandRequiredRole[name] = requiredRole
-      }
       return firmware
     },
   }

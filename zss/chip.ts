@@ -9,7 +9,6 @@ import {
   firmwareeverytick,
   firmwareget,
   firmwaregetcommand,
-  firmwaregetcommandrequiredrole,
   firmwareset,
 } from './firmware/runner'
 import { GeneratorBuild, GeneratorFunc } from './lang/generator'
@@ -23,11 +22,21 @@ import {
   ispresent,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
-import { memoryclearflags, memoryreadflags } from './memory'
+import { memoryclearflags, memoryreadflags, memoryreadoperator } from './memory'
 import { memorycanruncommand } from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
+
+/** Commands any player may run without a permission check (deny-by-default for all others). */
+const COMMANDS_THAT_REQUIRE_PERMISSION_CHECK = new Set<string>([
+  'go',
+  'idle',
+  'stat',
+  'text',
+  'send',
+  'shortsend',
+])
 
 /**
  * CHIP represents a virtual machine instance that executes compiled code.
@@ -551,19 +560,25 @@ export function createchip(
    */
   function invokecommand(command: string, args: WORD[]): 0 | 1 {
     READ_CONTEXT.words = args
-    if (READ_CONTEXT.elementisplayer) {
-      const requiredrole = firmwaregetcommandrequiredrole(command)
-      if (
-        !memorycanruncommand(READ_CONTEXT.elementfocus, command, requiredrole)
-      ) {
-        return 0
-      }
-    }
     const commandinvoke = firmwaregetcommand(driver, command)
     if (!ispresent(commandinvoke)) {
       if (command !== 'send') {
         return invokecommand('shortsend', [command, ...args])
       }
+      return 0
+    }
+    if (
+      READ_CONTEXT.elementisplayer &&
+      READ_CONTEXT.elementfocus !== memoryreadoperator() &&
+      COMMANDS_THAT_REQUIRE_PERMISSION_CHECK.has(command) &&
+      !memorycanruncommand(READ_CONTEXT.elementfocus, command)
+    ) {
+      apierror(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'permissions',
+        `${command} (deny)`,
+      )
       return 0
     }
     return commandinvoke(chip, args)

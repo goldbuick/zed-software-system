@@ -1,7 +1,6 @@
 import { CHIP } from 'zss/chip'
 import {
   COMMAND_ARGS_SIGNATURE,
-  COMMAND_REQUIRED_ROLE,
   FIRMWARE,
   FIRMWARE_COMMAND,
 } from 'zss/firmware'
@@ -120,27 +119,6 @@ export function firmwarecommandargshint(
   }
   const last = sig[sig.length - 1]
   return typeof last === 'string' ? last.trim() : ''
-}
-
-/** Required role for permission check; default 'player' if not set. */
-export function firmwaregetcommandrequiredrole(
-  method: string,
-): COMMAND_REQUIRED_ROLE {
-  const drivers: DRIVER_TYPE[] = [
-    DRIVER_TYPE.CLI,
-    DRIVER_TYPE.LOADER,
-    DRIVER_TYPE.RUNTIME,
-  ]
-  for (const driver of drivers) {
-    const wares = getfimrwares(driver)
-    for (let i = 0; i < wares.length; ++i) {
-      const role = wares[i].getcommandrequiredrole?.(method)
-      if (ispresent(role)) {
-        return role
-      }
-    }
-  }
-  return 'player'
 }
 
 export function firmwareget(
