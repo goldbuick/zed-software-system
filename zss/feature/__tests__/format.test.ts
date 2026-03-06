@@ -91,7 +91,10 @@ describe('format', () => {
       const result = packformat(entry)
       expect(result).toBeInstanceOf(Uint8Array)
       const unpacked = unpackformat(result!)
-      expect(unpacked).toEqual(['meta', { constructor: undefined, label: 'copyit' }])
+      expect(unpacked).toEqual([
+        'meta',
+        { constructor: undefined, label: 'copyit' },
+      ])
     })
   })
 

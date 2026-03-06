@@ -1,16 +1,19 @@
 import { createdevice } from 'zss/device'
 import { fetchwiki } from 'zss/feature/fetchwiki'
+import { getfingerprint } from 'zss/feature/fingerprint'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import {
   isCliMode,
   storagenukecontent,
+  storagereadconfigall,
   storagereadcontent,
   storagereadhistorybuffer,
   storagereadvars,
   storagesharecontent,
   storagewatchcontent,
+  storagewriteconfig,
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
@@ -56,6 +59,7 @@ import {
   vmloader,
   vmlogin,
   vmoperator,
+  vmplayertoken,
   vmzsswords,
 } from './api'
 
@@ -123,8 +127,12 @@ let lastNodeLogRow = ''
 function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
   const row = renderrow(message.data)
-  const rowplain = tokenizeandstriptextformat(row).replace(countregex, '').trim()
-  if (!rowplain.length) return
+  const rowplain = tokenizeandstriptextformat(row)
+    .replace(countregex, '')
+    .trim()
+  if (!rowplain.length) {
+    return
+  }
   const [firstrow = ''] = terminal.logs
   const logs = [...terminal.logs]
 
@@ -172,7 +180,9 @@ function terminaladdlog(message: MESSAGE) {
   if (typeof nodeLog === 'function' && isarray(message.data)) {
     const plain = tokenizeandstriptextformat(row).replace(countregex, '').trim()
     // skip empty lines
-    if (!plain.length) return
+    if (!plain.length) {
+      return
+    }
     // skip sidebar/ticker: "element: status" pattern (may have leading display char)
     const withoutLeadingChar = plain.replace(/^.\s*/, '')
     const isSidebar =
@@ -306,7 +316,8 @@ export const register = createdevice(
       case 'loginready':
         doasync(register, message.player, async () => {
           const storage = await storagereadvars()
-          vmlogin(register, myplayerid, storage)
+          const config = await storagereadconfigall()
+          vmlogin(register, myplayerid, { ...storage, config })
           vmzsswords(register, myplayerid)
         })
         break
@@ -316,6 +327,8 @@ export const register = createdevice(
           registerterminalclose(register, myplayerid)
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
+          // send device fingerprint so session can associate player id → token (permissions)
+          vmplayertoken(register, message.player, getfingerprint())
           // CLI mode: start multiplayer after confirmed login (player is on board)
           if (isCliMode()) {
             vmcli(register, myplayerid, '#joincode')
@@ -365,9 +378,18 @@ export const register = createdevice(
         doasync(register, message.player, async () => {
           if (isarray(message.data)) {
             const [name, value] = message.data
-            await storagewritevar(name, value)
+            if (typeof name === 'string' && name.startsWith('config_')) {
+              await storagewriteconfig(name.slice(7), value)
+            } else {
+              await storagewritevar(name, value)
+            }
           }
         })
+        break
+      case 'token':
+        if (isstring(message.data)) {
+          vmplayertoken(register, message.player, message.data)
+        }
         break
       case 'copy':
         if (isstring(message.data)) {

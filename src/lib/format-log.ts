@@ -162,7 +162,9 @@ function applyColor(name: string, out: string[]): void {
  * Handles: $COLOR (fg), $ON* (bg), $BL* (blink fg), $0-255 (CP437), $$
  */
 export function formatLogForTerminal(raw: string): string {
-  if (!raw || typeof raw !== 'string') return ''
+  if (!raw || typeof raw !== 'string') {
+    return ''
+  }
   const out: string[] = []
   let i = 0
   while (i < raw.length) {
@@ -176,7 +178,7 @@ export function formatLogForTerminal(raw: string): string {
       i += 2
       continue
     }
-    const numMatch = raw.slice(i + 1).match(/^(-?\d+)/)
+    const numMatch = /^(-?\d+)/.exec(raw.slice(i + 1))
     if (numMatch) {
       const code = parseInt(numMatch[1], 10)
       if (code >= 0 && code <= 255) {
@@ -185,7 +187,7 @@ export function formatLogForTerminal(raw: string): string {
       i += 1 + numMatch[1].length
       continue
     }
-    const wordMatch = raw.slice(i + 1).match(/^([A-Za-z][A-Za-z0-9]*)/)
+    const wordMatch = /^([A-Za-z][A-Za-z0-9]*)/.exec(raw.slice(i + 1))
     if (wordMatch) {
       const word = wordMatch[1]
       applyColor(word, out)

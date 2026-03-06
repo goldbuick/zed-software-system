@@ -1,6 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { fetchwiki } from 'zss/feature/fetchwiki'
+import { createagent } from 'zss/feature/heavy/agent'
 import {
   markzipfilelistitem,
   parsewebfile,
@@ -10,7 +11,6 @@ import {
 } from 'zss/feature/parse/file'
 import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
 import { romparse, romread, romscroll } from 'zss/feature/rom'
-import { storagereadconfig } from 'zss/feature/storage'
 import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
@@ -43,9 +43,11 @@ import {
   memoryreadbooklist,
   memoryreadflags,
   memoryreadhalt,
+  memoryreadloaderlogging,
   memoryreadoperator,
   memoryreadsession,
   memoryresetbooks,
+  memorysetconfig,
   memorywritebook,
   memorywritehalt,
   memorywriteoperator,
@@ -78,6 +80,10 @@ import {
 } from 'zss/memory/inspectionmakeit'
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import { memoryloader } from 'zss/memory/loader'
+import {
+  memorysetcommandpermissions,
+  memorysetplayertotoken,
+} from 'zss/memory/permissions'
 import {
   memoryloginplayer,
   memorylogoutplayer,
@@ -501,7 +507,16 @@ const vm = createdevice(
         // ack
         registerloginready(vm, message.player)
         break
-      case 'login':
+      case 'login': {
+        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, config)
+        const storage = message.data ?? {}
+        memorysetcommandpermissions(
+          storage.allowlistbyrole ?? {},
+          storage.rolebytoken ?? {},
+        )
+        if (isarray(storage.config)) {
+          memorysetconfig(storage.config)
+        }
         // attempt login
         if (memoryloginplayer(message.player, message.data)) {
           // start tracking
@@ -513,6 +528,12 @@ const vm = createdevice(
         } else {
           // ack failure
           vm.replynext(message, 'acklogin', false)
+        }
+        break
+      }
+      case 'playertoken':
+        if (isstring(message.data)) {
+          memorysetplayertotoken(message.player, message.data)
         }
         break
       case 'local':
@@ -580,14 +601,11 @@ const vm = createdevice(
         break
       }
       case 'agentstart': {
-        doasync(vm, message.player, async () => {
-          const { createagent } = await import('zss/feature/heavy/agent')
-          const agent = createagent()
-          const id = agent.id()
-          agents[id] = agent
-          write(vm, message.player, `agent ${id} started`)
-          vmagentlist(vm, message.player)
-        })
+        const agent = createagent()
+        const id = agent.id()
+        agents[id] = agent
+        write(vm, message.player, `agent ${id} started`)
+        vmagentlist(vm, message.player)
         break
       }
       case 'agentstop':
@@ -878,12 +896,10 @@ const vm = createdevice(
         // or events from devices
         if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
-          doasync(vm, message.player, async () => {
-            if ((await storagereadconfig('loaderlogging')) === 'on') {
-              console.info('loader event', eventname, format, arg, content)
-              apilog(vm, message.player, `loader event ${eventname} ${format}`)
-            }
-          })
+          if (memoryreadloaderlogging()) {
+            console.info('loader event', eventname, format, arg, content)
+            apilog(vm, message.player, `loader event ${eventname} ${format}`)
+          }
           switch (format) {
             case 'file':
               parsewebfile(message.player, content)

@@ -16,8 +16,7 @@ import { writecopyit } from './writeui'
 // CLI mode: Playwright exposes disk bindings. Safe for workers (no window).
 export function isCliMode(): boolean {
   try {
-    const w =
-      typeof globalThis !== 'undefined' && (globalThis as any).window
+    const w = typeof globalThis !== 'undefined' && (globalThis as any).window
     return !!(w && typeof w.__nodeStorageReadContent === 'function')
   } catch {
     return false
@@ -83,7 +82,6 @@ export async function storagereadconfigall() {
     'config_lowrez',
     'config_scanlines',
     'config_voice2text',
-    'config_loaderlogging',
   ]
   const configs = await idbgetmany<string>(lookup)
   return configs.map((value, index) => {

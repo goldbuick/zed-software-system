@@ -60,9 +60,11 @@ We use a **deterministic fingerprint**: derive the token from stable browser/dev
 
 ## 2. Enforcement point
 
-**Where:** In `zss/chip.ts`, inside `invokecommand(command, args)`, for **every** driver (CLI, LOADER, RUNTIME). No branch on driver type.
+**Where:** In `zss/chip.ts`, inside `invokecommand(command, args)`, for **every** driver (CLI, LOADER, RUNTIME). No branch on driver type. Use **READ_CONTEXT** for the current element and focus.
 
-**What:** Before invoking the firmware handler, call `memorycanruncommand(readcontext.elementfocus, command)`. If it returns false, return `0` and optionally notify (e.g. "Permission denied").
+**When to check:** Apply the permission check **only when `READ_CONTEXT.elementisplayer === true`**. When `elementisplayer` is false (e.g. a board element running code, not a human player), skip the check and allow the command to run as today.
+
+**What:** When `READ_CONTEXT.elementisplayer` is true, before invoking the firmware handler, call `memorycanruncommand(READ_CONTEXT.elementfocus, command)`. If it returns false, return `0` and optionally notify (e.g. "Permission denied").
 
 **Logic:** See §4 (permission flow) and §6 (pseudocode). In short: operator → allow; else resolve player → token, check token’s role vs command’s required role, then check command in that role’s allowlist.
 
@@ -162,13 +164,13 @@ See §3 for data shapes and §4 for the permission flow. If the player is not in
 
 ## 7. Implementation checklist
 
-- [ ] **Loaderlogging toggle** — Replace `storagereadconfig('loaderlogging')` in `vm.ts` with an in-memory toggle like **#dev** mode: add a CLI command (e.g. `#loaderlogging`) that toggles a flag in memory (e.g. `memoryreadloaderlogging()` / `memorywriteloaderlogging()` in `zss/memory`), and have the VM read that flag instead of storage. No storage config for loaderlogging.
-- [ ] **Config in admin menu (no storage in utilities)** — Remove use of `storagereadconfigall`, `storagereadconfigdefault`, and `storagewriteconfig` from `zss/memory/utilities.ts`. Register sends current config values to the client/VM (e.g. at login or when opening admin). When the user changes a config in the admin menu, the update is sent to register; register writes the new value to storage. Utilities only render and emit changes; it does not read or write storage.
+- [x] **Loaderlogging toggle** — Replace `storagereadconfig('loaderlogging')` in `vm.ts` with an in-memory toggle like **#dev** mode: add a CLI command (e.g. `#loaderlogging`) that toggles a flag in memory (e.g. `memoryreadloaderlogging()` / `memorywriteloaderlogging()` in `zss/memory`), and have the VM read that flag instead of storage. No storage config for loaderlogging.
+- [x] **Config in admin menu (no storage in utilities)** — Remove use of `storagereadconfigall`, `storagereadconfigdefault`, and `storagewriteconfig` from `zss/memory/utilities.ts`. Register sends current config values to the client/VM (e.g. at login or when opening admin). When the user changes a config in the admin menu, the update is sent to register; register writes the new value to storage. Utilities only render and emit changes; it does not read or write storage.
 - [ ] **Fingerprint token (client)** — Compute deterministic fingerprint; send token after **acklogin**. Session stores player id → token.
 - [ ] **Lookup** — Maintain `playertotoken` in memory; update in register **acklogin** handler when client sends token.
 - [ ] **Command metadata** — Required role per command in firmware (`operator` | `admin` | `mod` | `player`); expose `firmwaregetcommandrequiredrole(command)`; strict order operator > admin > mod > player.
 - [ ] **Permission data** — `allowlistbyrole`, `rolebytoken`; persist in **storage** via existing `storagereadvars` / `storagewritevar` with keys `allowlistbyrole`, `rolebytoken`. Permission data is **read on the client** and sent to the VM when needed (VM does not read storage directly). Serialize allowlists as arrays, deserialize to `Set`. Default role `player` for unknown token; empty allowlist = no commands for that role.
-- [ ] **Enforcement** — In `zss/chip.ts` `invokecommand()`, call `memorycanruncommand(readcontext.elementfocus, command)` for every driver; if false, return 0 and `apierror()`.
+- [ ] **Enforcement** — In `zss/chip.ts` `invokecommand()`, use READ_CONTEXT; **only when `READ_CONTEXT.elementisplayer === true`** call `memorycanruncommand(READ_CONTEXT.elementfocus, command)`; if false, return 0 and `apierror()`. When `elementisplayer` is false, skip the check.
 - [ ] **Operator CLI** — `#permissions`, `#allow <role> <command>`, `#revoke <role> <command>`, `#role <player> <role>` in `zss/firmware/cli.ts` (operator-only); role names: operator, admin, mod, player (no aliases).
 - [ ] **Docs** — Roles, allowlist-by-role, permission commands.
 - [ ] **Admin UI** — Deferred (not v1).
@@ -184,6 +186,7 @@ See §3 for data shapes and §4 for the permission flow. If the player is not in
 | Token not in `rolebytoken` | Default role **player**. |
 | Role missing or empty in `allowlistbyrole` | No commands allowed for that role. |
 | Operator | By player id; bypass does not require operator token in table. |
+| READ_CONTEXT.elementisplayer false | Skip permission check; allow (e.g. board element running code). |
 | localStorage cleared | Same token recomputed (deterministic fingerprint); permissions unchanged. |
 
 ---
@@ -192,7 +195,7 @@ See §3 for data shapes and §4 for the permission flow. If the player is not in
 
 | Item | Choice |
 |------|--------|
-| Enforcement | `chip.ts` `invokecommand()` → `memorycanruncommand(player, command)` (every driver) |
+| Enforcement | `chip.ts` `invokecommand()`; only when **READ_CONTEXT.elementisplayer** call `memorycanruncommand(READ_CONTEXT.elementfocus, command)`; else skip check |
 | Roles | Operator > Admin > Mod > Player (strict); required role per command in firmware |
 | Model | Allowlist by role; token → role; empty allowlist = no commands for that role |
 | Identity | Token (deterministic fingerprint); `playertotoken` after acklogin |
@@ -226,3 +229,4 @@ See §3 for data shapes and §4 for the permission flow. If the player is not in
 | 19 | Role name | Use **mod** as the role name (not "moderator"); no aliases. Roles: operator, admin, mod, player. |
 | 20 | `#permissions` when no players | Show only the **role → command** list. |
 | 21 | Migration | **Greenfield**; no legacy data to migrate. |
+| 22 | When to apply check | Use **READ_CONTEXT**; apply permission check **only when READ_CONTEXT.elementisplayer === true**. When false, skip check. |

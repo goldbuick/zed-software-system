@@ -1,4 +1,6 @@
 import { createdevice } from 'zss/device'
+import { createmodelcaller } from 'zss/feature/heavy/model'
+import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
@@ -18,7 +20,6 @@ const heavy = createdevice('heavy', [], (message) => {
     case 'ttsinfo':
       doasync(heavy, message.player, async () => {
         if (isarray(message.data)) {
-          const { requestinfo } = await import('zss/feature/heavy/tts')
           const [engine, info] = message.data as [
             engine: 'kitten' | 'piper',
             info: string,
@@ -33,7 +34,6 @@ const heavy = createdevice('heavy', [], (message) => {
     case 'ttsrequest':
       doasync(heavy, message.player, async () => {
         if (isarray(message.data)) {
-          const { requestaudiobytes } = await import('zss/feature/heavy/tts')
           const [engine, config, voice, phrase] = message.data as [
             engine: 'kitten' | 'piper',
             config: string,
@@ -61,7 +61,6 @@ const heavy = createdevice('heavy', [], (message) => {
         const [agentid, prompt] = message.data as [string, string]
         let modelcaller = modelcallers[agentid]
         if (!ispresent(modelcaller)) {
-          const { createmodelcaller } = await import('zss/feature/heavy/model')
           modelcallers[agentid] = modelcaller = await createmodelcaller(
             agentid,
             (msg) => apilog(heavy, message.player, '$21', msg),

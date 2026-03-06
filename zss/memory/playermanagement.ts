@@ -1,5 +1,5 @@
 import { apierror } from 'zss/device/api'
-import { getCliMode, SOFTWARE } from 'zss/device/session'
+import { SOFTWARE, getCliMode } from 'zss/device/session'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'

@@ -15,6 +15,7 @@ import {
   registernuke,
   registerscreenshot,
   registershare,
+  registerstore,
   vmadmin,
   vmagentlist,
   vmagentprompt,
@@ -65,7 +66,9 @@ import {
   memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadflags,
+  memoryreadloaderlogging,
   memoryreadoperator,
+  memorywriteloaderlogging,
   memorywritesoftwarebook,
 } from 'zss/memory'
 import {
@@ -82,6 +85,16 @@ import {
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
+import {
+  PERMISSION_ROLES,
+  memoryallowcommand,
+  memoryreadallowlistbyrole,
+  memoryreadplayertotoken,
+  memoryreadrolebytoken,
+  memoryrevokecommand,
+  memoryserializepermissions,
+  memorysetrolefortoken,
+} from 'zss/memory/permissions'
 import {
   memorymoveplayertoboard,
   memoryreadplayerboard,
@@ -107,10 +120,6 @@ function isemail(email: string) {
   return /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.exec(
     String(email).toLowerCase(),
   )
-}
-
-function isoperator(player: string) {
-  return player === memoryreadoperator()
 }
 
 function codepagepicksuffix(codepage: MAYBE<CODE_PAGE>): string {
@@ -179,46 +188,49 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
-    const [label, ...words] = args
-    const { user } = memoryreadflags(READ_CONTEXT.elementid)
-    const withuser = isstring(user) ? user : 'player'
-    const icon = memoryreadelementdisplay(READ_CONTEXT.element)
-    const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
-    const labelstr = chip.template(maptostring(label).split(' '))
-    apilog(
-      SOFTWARE,
-      READ_CONTEXT.elementid,
-      `!${chip.template(words)};${player}${labelstr}`,
-    )
-    return 0
-  })
-  // --- book & pages commands
-  .command('bookrename', ['the main book (operator only)'], () => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-
-    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-    memoryupdatebookname(mainbook)
-    if (ispresent(mainbook)) {
-      writeoption(
+  .command(
+    'hyperlink',
+    ['clickable link in scroll or log'],
+    (chip, args) => {
+      const [label, ...words] = args
+      const { user } = memoryreadflags(READ_CONTEXT.elementid)
+      const withuser = isstring(user) ? user : 'player'
+      const icon = memoryreadelementdisplay(READ_CONTEXT.element)
+      const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
+      const labelstr = chip.template(maptostring(label).split(' '))
+      apilog(
         SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        'main',
-        `${mainbook?.name ?? 'empty'} $GREEN${mainbook?.id ?? ''}`,
+        READ_CONTEXT.elementid,
+        `!${chip.template(words)};${player}${labelstr}`,
       )
-    }
+      return 0
+    },
+    'player',
+  )
+  // --- book & pages commands
+  .command(
+    'bookrename',
+    ['the main book (operator only)'],
+    () => {
+      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      memoryupdatebookname(mainbook)
+      if (ispresent(mainbook)) {
+        writeoption(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'main',
+          `${mainbook?.name ?? 'empty'} $GREEN${mainbook?.id ?? ''}`,
+        )
+      }
 
-    return 0
-  })
+      return 0
+    },
+    'operator',
+  )
   .command(
     'booktrash',
     [ARG_TYPE.NAME, 'a book by address (operator only)'],
     (chip, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [address] = readargs(words, 0, [ARG_TYPE.NAME])
 
       const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -241,6 +253,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       return 0
     },
+    'operator',
   )
   .command(
     'boardopen',
@@ -262,6 +275,7 @@ export const CLI_FIRMWARE = createfirmware()
 
       return 0
     },
+    'player',
   )
   .command(
     'pageopen',
@@ -325,9 +339,6 @@ export const CLI_FIRMWARE = createfirmware()
     'pagetrash',
     [ARG_TYPE.NAME, 'a code page (operator only)'],
     (chip, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [page] = readargs(words, 0, [ARG_TYPE.NAME])
 
       const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
@@ -346,46 +357,53 @@ export const CLI_FIRMWARE = createfirmware()
 
       return 0
     },
+    'operator',
   )
   .command('help', ['help scroll'], () => {
     vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('books', ['all books'], () => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
+  .command(
+    'books',
+    ['all books'],
+    () => {
+      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
+      const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      writeoption(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'main',
+        `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
+      )
+      const content = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      writeoption(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'content',
+        `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
+      )
+      writebbar(SOFTWARE, READ_CONTEXT.elementfocus, 7)
+      const list = memoryreadbooklist()
+      if (list.length) {
+        list.forEach((book) => {
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!bookopen ${book.id};${book.name}`,
+          )
+        })
+      } else {
+        writetext(SOFTWARE, READ_CONTEXT.elementfocus, `no books found`)
+      }
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `!bookcreate;create a new book`,
+      )
       return 0
-    }
-    writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
-    const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    writeoption(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      'main',
-      `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
-    )
-    const content = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    writeoption(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      'content',
-      `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
-    )
-    writebbar(SOFTWARE, READ_CONTEXT.elementfocus, 7)
-    const list = memoryreadbooklist()
-    if (list.length) {
-      list.forEach((book) => {
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `!bookopen ${book.id};${book.name}`,
-        )
-      })
-    } else {
-      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `no books found`)
-    }
-    write(SOFTWARE, READ_CONTEXT.elementfocus, `!bookcreate;create a new book`)
-    return 0
-  })
+    },
+    'operator',
+  )
   .command('pages', ['all pages in all loaded books'], () => {
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (!ispresent(mainbook)) {
@@ -502,95 +520,109 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('trash', ['books/codepages to delete (operator only)'], () => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
+  .command(
+    'trash',
+    ['books/codepages to delete (operator only)'],
+    () => {
+      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `$REDTRASH`)
+      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
+      const list = memoryreadbooklist()
+      if (list.length) {
+        list.forEach((book) => {
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!booktrash ${book.id};$REDTRASH ${book.name}`,
+          )
+        })
+        write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      }
+      const book = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      if (ispresent(book)) {
+        writetext(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `pages in open ${book.name} book`,
+        )
+        book.pages.forEach((page) => {
+          const name = memoryreadcodepagename(page)
+          const type = memoryreadcodepagetypeasstring(page)
+          const prefix = memorycodepagetoprefix(page)
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!pagetrash ${page.id};$REDTRASH [${type}] ${prefix}${name}`,
+          )
+        })
+        write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      }
       return 0
-    }
-    writesection(SOFTWARE, READ_CONTEXT.elementfocus, `$REDTRASH`)
-    writetext(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
-    const list = memoryreadbooklist()
-    if (list.length) {
-      list.forEach((book) => {
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `!booktrash ${book.id};$REDTRASH ${book.name}`,
-        )
-      })
-      write(SOFTWARE, READ_CONTEXT.elementfocus, '')
-    }
-    const book = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    if (ispresent(book)) {
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `pages in open ${book.name} book`,
-      )
-      book.pages.forEach((page) => {
-        const name = memoryreadcodepagename(page)
-        const type = memoryreadcodepagetypeasstring(page)
-        const prefix = memorycodepagetoprefix(page)
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `!pagetrash ${page.id};$REDTRASH [${type}] ${prefix}${name}`,
-        )
-      })
-      write(SOFTWARE, READ_CONTEXT.elementfocus, '')
-    }
-    return 0
-  })
+    },
+    'operator',
+  )
   // -- game state related commands
-  .command('dev', ['dev mode / halt execution (operator only)'], () => {
-    if (isoperator(READ_CONTEXT.elementfocus)) {
+  .command(
+    'dev',
+    ['dev mode / halt execution (operator only)'],
+    () => {
       vmflushop()
       vmhalt(SOFTWARE, READ_CONTEXT.elementfocus)
-    } else {
-      // no-op
-    }
-    return 0
-  })
-  .command('share', ['share url (operator only)'], () => {
-    if (isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    },
+    'operator',
+  )
+  .command(
+    'loaderlogging',
+    ['toggle loader event logging (operator only)'],
+    () => {
+      const on = !memoryreadloaderlogging()
+      memorywriteloaderlogging(on)
+      apilog(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `loader logging is ${on ? '$greenon' : '$redoff'}`,
+      )
+      return 0
+    },
+    'operator',
+  )
+  .command(
+    'share',
+    ['share url (operator only)'],
+    () => {
       vmflushop()
       registershare(SOFTWARE, READ_CONTEXT.elementfocus)
-    } else {
-      // no-op
-    }
-    return 0
-  })
-  .command('save', ['and persist current state (operator only)'], () => {
-    if (isoperator(READ_CONTEXT.elementfocus)) {
+      return 0
+    },
+    'operator',
+  )
+  .command(
+    'save',
+    ['and persist current state (operator only)'],
+    () => {
       vmflushop()
-    } else {
-      // no-op
-    }
-    return 0
-  })
+      return 0
+    },
+    'operator',
+  )
   .command(
     'fork',
     [ARG_TYPE.MAYBE_NAME, 'tab with copy of state (operator only)'],
     (_, words) => {
-      if (isoperator(READ_CONTEXT.elementfocus)) {
-        const [address] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-        vmfork(SOFTWARE, READ_CONTEXT.elementfocus, address ?? '')
-      } else {
-        // no-op
-      }
+      const [address] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      vmfork(SOFTWARE, READ_CONTEXT.elementfocus, address ?? '')
       return 0
     },
+    'operator',
   )
   .command(
     'nuke',
     ['a countdown and reloads into an empty state (operator only)'],
     () => {
-      if (isoperator(READ_CONTEXT.elementfocus)) {
-        registernuke(SOFTWARE, READ_CONTEXT.elementfocus)
-      } else {
-        // no-op
-      }
+      registernuke(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0
     },
+    'operator',
   )
   .command('endgame', ['health to 0'], () => {
     vmlogout(SOFTWARE, READ_CONTEXT.elementfocus, false)
@@ -600,41 +632,37 @@ export const CLI_FIRMWARE = createfirmware()
     'restart',
     ['software, deletes all chip and player state (operator only)'],
     () => {
-      if (isoperator(READ_CONTEXT.elementfocus)) {
-        vmrestart(SOFTWARE, READ_CONTEXT.elementfocus)
-        vmflushop()
-      } else {
-        // no-op
+      vmrestart(SOFTWARE, READ_CONTEXT.elementfocus)
+      vmflushop()
+      return 0
+    },
+    'operator',
+  )
+  // -- export content related commands
+  .command(
+    'export',
+    ['export menu (operator only)'],
+    () => {
+      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
+      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
+      const list = memoryreadbooklist()
+      if (list.length) {
+        list.forEach((book) =>
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!bookexport ${book.id};${book.name}`,
+          ),
+        )
       }
       return 0
     },
+    'operator',
   )
-  // -- export content related commands
-  .command('export', ['export menu (operator only)'], () => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
-      return 0
-    }
-    writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
-    writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
-    const list = memoryreadbooklist()
-    if (list.length) {
-      list.forEach((book) =>
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `!bookexport ${book.id};${book.name}`,
-        ),
-      )
-    }
-    return 0
-  })
   .command(
     'bookexport',
     [ARG_TYPE.NAME, 'book export options (operator only)'],
     (_, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [address] = readargs(words, 0, [ARG_TYPE.NAME])
       const book = memoryreadbookbyaddress(address)
       if (ispresent(book)) {
@@ -663,14 +691,12 @@ export const CLI_FIRMWARE = createfirmware()
       }
       return 0
     },
+    'operator',
   )
   .command(
     'bookallexport',
     [ARG_TYPE.NAME, 'entire book as JSON (operator only)'],
     (_, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [address] = readargs(words, 0, [ARG_TYPE.NAME])
       const book = memoryreadbookbyaddress(address)
       if (ispresent(book)) {
@@ -683,14 +709,12 @@ export const CLI_FIRMWARE = createfirmware()
       }
       return 0
     },
+    'operator',
   )
   .command(
     'pageexport',
     [ARG_TYPE.NAME, 'code page as JSON (operator only)'],
     (_, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [address] = readargs(words, 0, [ARG_TYPE.NAME])
       const { target, path } = parsetarget(address)
       const book = memoryreadbookbyaddress(target)
@@ -705,20 +729,23 @@ export const CLI_FIRMWARE = createfirmware()
       }
       return 0
     },
+    'operator',
   )
-  .command('itchiopublish', ['zip file for itch.io (operator only)'], () => {
-    if (!isoperator(READ_CONTEXT.elementfocus)) {
+  .command(
+    'itchiopublish',
+    ['zip file for itch.io (operator only)'],
+    () => {
+      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      vmpublish(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'itchio',
+        mainbook?.name ?? '',
+      )
       return 0
-    }
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    vmpublish(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      'itchio',
-      mainbook?.name ?? '',
-    )
-    return 0
-  })
+    },
+    'operator',
+  )
   // -- editing related commands
   .command('gadget', ['built-in inspector'], () => {
     // gadget will turn on / off the built-in inspector
@@ -763,9 +790,6 @@ export const CLI_FIRMWARE = createfirmware()
     'joincode',
     [ARG_TYPE.MAYBE_NAME, 'multiplayer session (operator only)'],
     (_, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const playerboard = memoryreadplayerboard(READ_CONTEXT.elementfocus)
       if (ispresent(playerboard)) {
@@ -780,27 +804,23 @@ export const CLI_FIRMWARE = createfirmware()
       }
       return 0
     },
+    'operator',
   )
   .command(
     'jointab',
     [ARG_TYPE.MAYBE_NAME, 'new tab with the join url (operator only)'],
     (_, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       bridgetab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
       return 0
     },
+    'operator',
   )
   // -- audience related commands
   .command(
     'chat',
     [ARG_TYPE.MAYBE_NAME, 'twitch chat integration (operator only)'],
     (_, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       if (channel) {
         bridgechatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
@@ -809,14 +829,12 @@ export const CLI_FIRMWARE = createfirmware()
       }
       return 0
     },
+    'operator',
   )
   .command(
     'broadcast',
     [ARG_TYPE.MAYBE_NAME, 'stream broadcast (operator only)'],
     (_, words) => {
-      if (!isoperator(READ_CONTEXT.elementfocus)) {
-        return 0
-      }
       const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       if (streamkey) {
         bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
@@ -825,6 +843,126 @@ export const CLI_FIRMWARE = createfirmware()
       }
       return 0
     },
+    'operator',
+  )
+  // -- permissions (operator only)
+  .command(
+    'permissions',
+    ['list player→role and role→command'],
+    () => {
+      const playertotoken = memoryreadplayertotoken()
+      const rolebytoken = memoryreadrolebytoken()
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      const players = Object.keys(playertotoken)
+      if (players.length > 0) {
+        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'player → role')
+        for (const player of players) {
+          const token = playertotoken[player]
+          const role = rolebytoken[token] ?? 'player'
+          write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${player} → ${role}`)
+        }
+        write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      }
+      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'role → commands')
+      for (const role of PERMISSION_ROLES) {
+        const set = allowlistbyrole[role]
+        const list = set ? [...set].sort() : []
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `  ${role}: ${list.length ? list.join(', ') : '(none)'}`,
+        )
+      }
+      return 0
+    },
+    'operator',
+  )
+  .command(
+    'allow',
+    [ARG_TYPE.NAME, ARG_TYPE.ANY, 'add command(s) to role allowlist'],
+    (_, words) => {
+      const op = memoryreadoperator()
+      const [role] = readargs(words, 0, [ARG_TYPE.NAME])
+      const r = NAME(role)
+      if (!PERMISSION_ROLES.includes(r as (typeof PERMISSION_ROLES)[number])) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          `role: ${r}`,
+        )
+        return 0
+      }
+      const rest = words.slice(1).map(maptostring).filter(ispresent)
+      for (const cmd of rest) {
+        if (cmd && cmd !== 'allow') {
+          memoryallowcommand(r, cmd)
+        }
+      }
+      const data = memoryserializepermissions()
+      registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
+      registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
+      return 0
+    },
+    'operator',
+  )
+  .command(
+    'revoke',
+    [ARG_TYPE.NAME, ARG_TYPE.NAME, 'remove command from role or revoke all'],
+    (_, words) => {
+      const op = memoryreadoperator()
+      const [role, cmd] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
+      const r = NAME(role)
+      if (!PERMISSION_ROLES.includes(r as (typeof PERMISSION_ROLES)[number])) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          `role: ${r}`,
+        )
+        return 0
+      }
+      memoryrevokecommand(r, cmd ? NAME(cmd) : 'all')
+      const data = memoryserializepermissions()
+      registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
+      registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
+      return 0
+    },
+    'operator',
+  )
+  .command(
+    'role',
+    [ARG_TYPE.NAME, ARG_TYPE.NAME, 'set player token to role'],
+    (_, words) => {
+      const op = memoryreadoperator()
+      const [player, role] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
+      const p = maptostring(player)
+      const r = NAME(role)
+      if (!PERMISSION_ROLES.includes(r as (typeof PERMISSION_ROLES)[number])) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          `role: ${r}`,
+        )
+        return 0
+      }
+      const token = memoryreadplayertotoken()[p]
+      if (!ispresent(token)) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          'no token for player',
+        )
+        return 0
+      }
+      memorysetrolefortoken(token, r)
+      const data = memoryserializepermissions()
+      registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
+      return 0
+    },
+    'operator',
   )
   .command(
     'agent',

@@ -9,6 +9,7 @@ import {
   firmwareeverytick,
   firmwareget,
   firmwaregetcommand,
+  firmwaregetcommandrequiredrole,
   firmwareset,
 } from './firmware/runner'
 import { GeneratorBuild, GeneratorFunc } from './lang/generator'
@@ -23,6 +24,7 @@ import {
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
+import { memorycanruncommand } from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
@@ -549,6 +551,14 @@ export function createchip(
    */
   function invokecommand(command: string, args: WORD[]): 0 | 1 {
     READ_CONTEXT.words = args
+    if (READ_CONTEXT.elementisplayer) {
+      const requiredrole = firmwaregetcommandrequiredrole(command)
+      if (
+        !memorycanruncommand(READ_CONTEXT.elementfocus, command, requiredrole)
+      ) {
+        return 0
+      }
+    }
     const commandinvoke = firmwaregetcommand(driver, command)
     if (!ispresent(commandinvoke)) {
       if (command !== 'send') {

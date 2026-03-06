@@ -1,18 +1,14 @@
 import { compress, decompress, init } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { getCliMode, SOFTWARE } from 'zss/device/session'
+import { registerstore } from 'zss/device/api'
+import { SOFTWARE, getCliMode } from 'zss/device/session'
 import {
   formatobject,
   packformat,
   unformatobject,
   unpackformat,
 } from 'zss/feature/format'
-import {
-  isCliMode,
-  storagereadconfigall,
-  storagereadconfigdefault,
-  storagewriteconfig,
-} from 'zss/feature/storage'
+import { isCliMode } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
@@ -42,10 +38,12 @@ import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
 import {
   memoryisoperator,
   memoryreadbookbysoftware,
+  memoryreadconfigall,
   memoryreadflags,
   memoryreadhalt,
   memoryreadoperator,
   memoryreadtopic,
+  memorywriteconfig,
 } from '.'
 
 let zstdenabled = false
@@ -142,8 +140,8 @@ export async function memoryadminmenu(
     )
   }
 
-  // build config list
-  const configlist = await storagereadconfigall()
+  // build config list (from in-memory config; register owns storage read/write)
+  const configlist = memoryreadconfigall()
   const configstate: Record<string, string> = {}
   gadgettext(player, ``)
   gadgettext(player, `config list`)
@@ -156,15 +154,14 @@ export async function memoryadminmenu(
       key,
       [key, 'select', 'off', '0', 'on', '1'],
       (name) => {
-        const newval =
-          configstate[name] ?? value ?? storagereadconfigdefault(name)
+        const newval = configstate[name] ?? value
         return newval === 'on' ? 1 : 0
       },
-      (name, value) => {
-        configstate[name] = value ? 'on' : 'off'
-        doasync(SOFTWARE, player, async () => {
-          await storagewriteconfig(name, configstate[name])
-        })
+      (name, val) => {
+        const newval = val ? 'on' : 'off'
+        configstate[name] = newval
+        memorywriteconfig(name, newval)
+        registerstore(SOFTWARE, player, `config_${name}`, newval)
       },
     )
   }
@@ -177,9 +174,7 @@ export async function memoryadminmenu(
   if (topic) {
     const base =
       getCliMode() && !isjoin() ? 'https://zed.cafe' : location.origin
-    const joinurl = isjoin()
-      ? location.href
-      : `${base}/join/#${topic}`
+    const joinurl = isjoin() ? location.href : `${base}/join/#${topic}`
     gadgethyperlink(player, 'adminop', topic, ['copyit', joinurl])
     gadgettext(player, ``)
     const ascii = qrlines(joinurl)
