@@ -4,6 +4,16 @@ import { ispresent, isstring } from 'zss/mapping/types'
 
 import { memoryreadoperator } from './index'
 
+/** Commands any player may run without a permission check (deny-by-default for all others). */
+export const COMMANDS_THAT_REQUIRE_PERMISSION_CHECK = new Set<string>([
+  'go',
+  'idle',
+  'stat',
+  'text',
+  'send',
+  'shortsend',
+])
+
 /** Roles in strict order: operator > admin > mod > player */
 export const PERMISSION_ROLES = ['operator', 'admin', 'mod', 'player'] as const
 export type PERMISSION_ROLE = (typeof PERMISSION_ROLES)[number]

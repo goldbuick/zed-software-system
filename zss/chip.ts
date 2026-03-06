@@ -23,20 +23,13 @@ import {
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags, memoryreadoperator } from './memory'
-import { memorycanruncommand } from './memory/permissions'
+import {
+  COMMANDS_THAT_REQUIRE_PERMISSION_CHECK,
+  memorycanruncommand,
+} from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
-
-/** Commands any player may run without a permission check (deny-by-default for all others). */
-const COMMANDS_THAT_REQUIRE_PERMISSION_CHECK = new Set<string>([
-  'go',
-  'idle',
-  'stat',
-  'text',
-  'send',
-  'shortsend',
-])
 
 /**
  * CHIP represents a virtual machine instance that executes compiled code.
