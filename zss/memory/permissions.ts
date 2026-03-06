@@ -24,30 +24,32 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'jointab',
   'joincode',
   'loaderlogging',
+  // admin UI / inspector / auth
+  'admin',
+  'gadget',
+  'findany',
+  // session / world
+  'save',
+  'nuke',
+  'endgame',
+  'restart',
+  // content management
   'pageopen',
   'pagetrash',
   'share',
   'trash',
-  // admin UI / inspector / auth
-  'admin',
-  'bbs',
-  'gadget',
-  'findany',
-  'screenshot',
-  // session / world
-  'endgame',
-  'nuke',
-  'restart',
-  'save',
-  // export / publish
-  'bookallexport',
-  'bookexport',
   'export',
-  'itchiopublish',
   'pageexport',
-  // discovery / content / navigation
+  'bookexport',
+  'bookallexport',
+  // publish content
+  'bbs',
+  'screenshot',
+  'itchiopublish',
+  // movement
   'goto',
   'transport',
+  // import content
   'zztsearch',
   'zztrandom',
   // board transforms
@@ -70,78 +72,95 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'putwith',
   'push',
   'shoot',
-  'shootwith',
-  'shove',
-  'throwstar',
-  'throwstarwith',
   'write',
   // element / code execution
   'bind',
   'die',
   'run',
-  'runwith',
   'toast',
   // network
   'fetch',
   'fetchwith',
-  // audio
-  'autofilter',
-  'autofilter1',
-  'autofilter2',
-  'autofilter3',
-  'autofilter4',
-  'autowah',
-  'autowah1',
-  'autowah2',
-  'autowah3',
-  'autowah4',
-  'bgplay',
-  'bgplayon16n',
-  'bgplayon1n',
-  'bgplayon2n',
-  'bgplayon32n',
-  'bgplayon4n',
-  'bgplayon64n',
-  'bgplayon8n',
+  // audio, we should always allow vol, bgvol, ttsvol, bgplay
   'bpm',
-  'distort',
-  'distort1',
-  'distort2',
-  'distort3',
-  'distort4',
-  'echo',
-  'echo1',
-  'echo2',
-  'echo3',
-  'echo4',
-  'fcrush',
-  'fcrush1',
-  'fcrush2',
-  'fcrush3',
-  'fcrush4',
   'play',
-  'reverb',
-  'reverb1',
-  'reverb2',
-  'reverb3',
-  'reverb4',
   'synth',
-  'synth1',
-  'synth2',
-  'synth3',
-  'synth4',
-  'synth5',
-  'synthflush',
-  'synthrecord',
   'tts',
   'ttsengine',
-  'ttsqueue',
-  'vibrato',
-  'vibrato1',
-  'vibrato2',
-  'vibrato3',
-  'vibrato4',
 ])
+
+/**
+ * Variant commands that inherit permission from a single family key.
+ * Example: allowlist has 'autofilter' → grants autofilter, autofilter1, autofilter2, autofilter3, autofilter4.
+ */
+export const COMMAND_PERMISSION_FAMILIES: Record<string, string> = {
+  dupewith: 'dupe',
+  dupe: 'dupe',
+  duplicate: 'dupe',
+  duplicatewith: 'dupe',
+  //
+  shootwith: 'shoot',
+  shove: 'shoot',
+  throwstar: 'shoot',
+  throwstarwith: 'shoot',
+  //
+  runwith: 'run',
+  //
+  ttsqueue: 'tts',
+
+  //
+  bgplayon16n: 'bgplay',
+  bgplayon1n: 'bgplay',
+  bgplayon2n: 'bgplay',
+  bgplayon32n: 'bgplay',
+  bgplayon4n: 'bgplay',
+  bgplayon64n: 'bgplay',
+  bgplayon8n: 'bgplay',
+  //
+  synthflush: 'synth',
+  synthrecord: 'synth',
+  autofilter1: 'synth',
+  autofilter2: 'synth',
+  autofilter3: 'synth',
+  autofilter4: 'synth',
+  autowah1: 'synth',
+  autowah2: 'synth',
+  autowah3: 'synth',
+  autowah4: 'synth',
+  distort1: 'synth',
+  distort2: 'synth',
+  distort3: 'synth',
+  distort4: 'synth',
+  echo1: 'synth',
+  echo2: 'synth',
+  echo3: 'synth',
+  echo4: 'synth',
+  fcrush1: 'synth',
+  fcrush2: 'synth',
+  fcrush3: 'synth',
+  fcrush4: 'synth',
+  reverb1: 'synth',
+  reverb2: 'synth',
+  reverb3: 'synth',
+  reverb4: 'synth',
+  synth1: 'synth',
+  synth2: 'synth',
+  synth3: 'synth',
+  synth4: 'synth',
+  synth5: 'synth',
+  vibrato1: 'synth',
+  vibrato2: 'synth',
+  vibrato3: 'synth',
+  vibrato4: 'synth',
+}
+
+/** True if the command is permission-controlled (either listed or a variant of a family). */
+export function ispermissioncontrolledcommand(command: string): boolean {
+  return (
+    PERMISSION_CONTROLLED_COMMANDS.has(command) ||
+    command in COMMAND_PERMISSION_FAMILIES
+  )
+}
 
 /** Roles in strict order: operator > admin > mod > player */
 export const PERMISSION_ROLES = ['operator', 'admin', 'mod', 'player'] as const
@@ -167,7 +186,11 @@ export function memorycanruncommand(player: string, command: string): boolean {
 
   const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
   const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
-  return allowlist?.has(command)
+  if (allowlist?.has(command)) {
+    return true
+  }
+  const family = COMMAND_PERMISSION_FAMILIES[command]
+  return family !== undefined && (allowlist?.has(family) ?? false)
 }
 
 export function memorysetplayertotoken(player: string, token: string) {
