@@ -12,7 +12,7 @@
     "sloc": "npx sloc -e .js zss",
     "test": "yarn jest --verbose",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "clear": "rimraf dist && rimraf dist-ssr && rimraf node_modules/.vite",
+    "clear": "rimraf tmp && rimraf dist && rimraf cafe/dist && rimraf node_modules/.vite",
     "dev:vite": "vite --host 0.0.0.0 --port 7777",
     "dev": "yarn && yarn clear && yarn dev:vite",
     "preview": "yarn && yarn clear && vite preview --host 0.0.0.0 --port 7777",
