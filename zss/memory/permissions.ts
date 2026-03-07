@@ -12,7 +12,6 @@ export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
   ['operator', 'dangerous tooling'],
   ['discovery', 'list books, pages, and boards'],
   ['bridge', 'use integrations like chat and broadcast'],
-  ['admin', ' '],
   ['save', 'save sim state'],
   ['nuke', 'reset state to blank'],
   ['restart', 'clear all book flags from main'],
@@ -31,11 +30,6 @@ export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
 
 /** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
 export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
-  // admin
-  admin: 'admin',
-  findany: 'world',
-  gadget: 'world',
-
   // audio
   autofilter1: 'audio',
   autofilter2: 'audio',
@@ -89,6 +83,8 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   chat: 'bridge',
 
   // discovery
+  boardopen: 'discovery',
+  boards: 'discovery',
   books: 'discovery',
   pages: 'discovery',
 
@@ -103,10 +99,11 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   fetchwith: 'fetch',
 
   // import
-  zztsearch: 'import',
   zztrandom: 'import',
+  zztsearch: 'import',
 
   // moderation
+  admin: 'moderation',
   ban: 'moderation',
   unban: 'moderation',
 
@@ -119,9 +116,13 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
 
   // publish
   bbs: 'publish',
+  bookallexport: 'publish',
+  bookexport: 'publish',
+  export: 'publish',
+  itchiopublish: 'publish',
+  pageexport: 'publish',
   publish: 'publish',
   screenshot: 'publish',
-  itchiopublish: 'publish',
 
   // restart
   restart: 'restart',
@@ -136,10 +137,6 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   save: 'save',
 
   // share
-  bookallexport: 'workspace',
-  bookexport: 'workspace',
-  export: 'workspace',
-  pageexport: 'workspace',
   share: 'share',
 
   // toast
@@ -155,6 +152,8 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   weave: 'transform',
 
   // trash
+  booktrash: 'trash',
+  pagetrash: 'trash',
   trash: 'trash',
 
   // tts
@@ -169,6 +168,8 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   dupewith: 'world',
   duplicate: 'world',
   duplicatewith: 'world',
+  findany: 'world',
+  gadget: 'world',
   oneof: 'world',
   oneofwith: 'world',
   put: 'world',
@@ -180,16 +181,12 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   write: 'world',
 
   // workspace
-  boardopen: 'discovery',
-  boards: 'discovery',
-  book: 'workspace',
-  bookrename: 'workspace',
-  booktrash: 'trash',
+  stat: 'workspace', // create a new codepage
+  pageopen: 'workspace', // open an existing codepage
+  bookrename: 'workspace', // rename a book
   fork: 'workspace',
-  joincode: 'workspace',
-  jointab: 'workspace',
-  pageopen: 'workspace',
-  pagetrash: 'trash',
+  joincode: 'bridge',
+  jointab: 'bridge',
 }
 
 /** Groups withheld from admin by default (roles, publish, import, nuke, restart). */
