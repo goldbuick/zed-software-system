@@ -47,14 +47,14 @@ describe('permissions', () => {
   })
 
   describe('memorymapcommandtofamily', () => {
-    it('returns family key for variant commands', () => {
-      expect(memorymapcommandtofamily('pageexport')).toBe('export')
-      expect(memorymapcommandtofamily('synth1')).toBe('synth')
+    it('returns group for variant commands', () => {
+      expect(memorymapcommandtofamily('pageexport')).toBe('share')
+      expect(memorymapcommandtofamily('synth1')).toBe('audio')
     })
 
-    it('returns command as-is when not a variant', () => {
-      expect(memorymapcommandtofamily('run')).toBe('run')
-      expect(memorymapcommandtofamily('build')).toBe('build')
+    it('returns group for base commands', () => {
+      expect(memorymapcommandtofamily('run')).toBe('execution')
+      expect(memorymapcommandtofamily('build')).toBe('world')
     })
   })
 

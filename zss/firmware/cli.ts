@@ -84,7 +84,7 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import {
-  PERMISSION_CONTROLLED_COMMANDS,
+  PERMISSION_CONTROLLED_GROUPS,
   PERMISSION_ROLES,
   memoryallowcommand,
   memorybantoken,
@@ -770,18 +770,13 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  // -- permissions (operator only)
-  .command('permissionlist', ['list permission-controlled commands'], () => {
-    const all = Object.keys(PERMISSION_CONTROLLED_COMMANDS).sort()
-    writeheader(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      'permission-controlled commands',
-    )
-    write(SOFTWARE, READ_CONTEXT.elementfocus, all.join(', '))
-    return 0
-  })
   .command('permissions', ['list player→role and role→command'], () => {
+    writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'permissions')
+    for (const [group, desc] of PERMISSION_CONTROLLED_GROUPS) {
+      write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${group}: ${desc}`)
+    }
+    write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+
     const playertotoken = memoryreadplayertotoken()
     const rolebytoken = memoryreadrolebytoken()
     const allowlistbyrole = memoryreadallowlistbyrole()

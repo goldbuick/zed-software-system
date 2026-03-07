@@ -4,276 +4,199 @@ import { ispresent, isstring } from 'zss/mapping/types'
 
 import { memoryreadoperator } from './index'
 
-/** Group names used in allowlists (internal; not exported). */
-const PERMISSION_CONTROLLED_GROUPS = new Set<string>([
-  // permissions (role management)
-  'allow',
-  'revoke',
-  'role',
-  'permissions',
-  'ban',
-  'unban',
-  // admin / operator (books, pages, session, roles, streaming)
-  'agent',
-  'book',
-  'codepage',
-  'dev',
-  'fork',
-  'joincode',
-  'jointab',
-  // list / discovery (optional: restrict to hide book/page list from non-operator)
-  'books',
-  'pages',
-  // integrations
-  'broadcast',
-  'chat',
-  // admin / inspector
-  'admin',
-  'gadget',
-  'findany',
-  // session / world
-  'save',
-  'nuke',
-  'restart',
-  // content management
-  'share',
-  'export',
-  // publish content
-  'publish',
-  // import content
-  'zztsearch',
-  'zztrandom',
-  // board transforms
-  'transform',
-  // board mutation (create/move/destroy elements)
-  'build',
-  'change',
-  'put',
-  'shoot',
-  'write',
-  // element / code execution
-  'bind',
-  'die',
-  'run',
-  'toast',
-  // network
-  'fetch',
-  // audio, we should always allow vol, bgvol, ttsvol, bgplay
-  'bpm',
-  'play',
-  'synth',
-  'tts',
-  'ttsengine',
-  // variant-only families
-  'trash',
-  'bgplay',
+/** Group names and descriptions for allowlists (~20 toggles). */
+export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
+  [
+    'roles',
+    'Manage role assignments and allowlists (allow, revoke, role, permissions)',
+  ],
+  ['moderation', 'Ban and unban player tokens'],
+  [
+    'workspace',
+    'Create and manage books, pages, join codes (book, codepage, fork, joincode, jointab)',
+  ],
+  ['operator', 'Agent and dev tooling'],
+  ['discovery', 'List books and pages'],
+  ['bridge', 'Broadcast and chat integrations'],
+  ['admin', 'Admin, gadget, and findany inspector tools'],
+  ['save', 'Save session state'],
+  ['nuke', 'Clear session/world'],
+  ['restart', 'Restart session'],
+  ['share', 'Share and export content'],
+  ['publish', 'Publish content (BBS, screenshot, itch.io)'],
+  ['import', 'Import content (zztsearch, zztrandom)'],
+  [
+    'transform',
+    'Board transforms (copy, pivot, weave, remix, revert, snapshot)',
+  ],
+  ['world', 'Board mutation (build, change, put, shoot, write)'],
+  ['execution', 'Element and code execution (bind, die, run)'],
+  ['toast', 'Show toast messages'],
+  ['fetch', 'Network fetch'],
+  ['audio', 'Audio (bpm, play, synth, bgplay)'],
+  ['tts', 'Text-to-speech'],
+  ['trash', 'Trash books, pages, or elements'],
 ])
 
-/** Variant commands that inherit permission from a single family key (no base-group self-entries). */
-const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
-  // permissions (role management)
-  allow: 'allow',
-  revoke: 'revoke',
-  role: 'role',
-  permissions: 'permissions',
-  ban: 'ban',
-  unban: 'unban',
-  // admin / operator (books, pages, session, roles, streaming)
-  agent: 'agent',
-  book: 'book',
-  codepage: 'codepage',
-  dev: 'dev',
-  fork: 'fork',
-  joincode: 'joincode',
-  jointab: 'jointab',
-  // list / discovery (optional: restrict to hide book/page list from non-operator)
-  books: 'books',
-  pages: 'pages',
-  // integrations
-  broadcast: 'broadcast',
-  chat: 'chat',
-  // admin / inspector
+/** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
+export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
+  allow: 'roles',
+  revoke: 'roles',
+  role: 'roles',
+  permissions: 'roles',
+  ban: 'moderation',
+  unban: 'moderation',
+  agent: 'operator',
+  book: 'workspace',
+  bookrename: 'workspace',
+  booktrash: 'workspace',
+  codepage: 'workspace',
+  boards: 'workspace',
+  pageopen: 'workspace',
+  pagetrash: 'workspace',
+  boardopen: 'workspace',
+  dev: 'operator',
+  fork: 'workspace',
+  joincode: 'workspace',
+  jointab: 'workspace',
+  books: 'discovery',
+  pages: 'discovery',
+  broadcast: 'bridge',
+  chat: 'bridge',
   admin: 'admin',
-  gadget: 'gadget',
-  findany: 'findany',
-  // session / world
+  gadget: 'admin',
+  findany: 'admin',
   save: 'save',
   nuke: 'nuke',
   restart: 'restart',
-  // content management
   share: 'share',
-  export: 'export',
-  // publish content
+  export: 'share',
+  pageexport: 'share',
+  bookexport: 'share',
+  bookallexport: 'share',
   publish: 'publish',
-  // import content
-  zztsearch: 'zztsearch',
-  zztrandom: 'zztrandom',
-  // board transforms
-  transform: 'transform',
-  // board mutation (create/move/destroy elements)
-  build: 'build',
-  change: 'change',
-  put: 'put',
-  shoot: 'shoot',
-  write: 'write',
-  // element / code execution
-  bind: 'bind',
-  die: 'die',
-  run: 'run',
-  toast: 'toast',
-  // network
-  fetch: 'fetch',
-  // audio, we should always allow vol, bgvol, ttsvol, bgplay
-  bpm: 'bpm',
-  play: 'play',
-  synth: 'synth',
-  tts: 'tts',
-  ttsengine: 'ttsengine',
-  // variant-only families
-  trash: 'trash',
-  bgplay: 'bgplay',
-  //
-  boards: 'codepage',
-  pageopen: 'codepage',
-  pagetrash: 'codepage',
-  boardopen: 'codepage',
-  //
-  bookrename: 'book',
-  booktrash: 'book',
-  //
-  trash: 'trash',
-  //
-  pageexport: 'export',
-  bookexport: 'export',
-  bookallexport: 'export',
-  //
   bbs: 'publish',
   screenshot: 'publish',
   itchiopublish: 'publish',
-  //
+  zztsearch: 'import',
+  zztrandom: 'import',
+  transform: 'transform',
   copy: 'transform',
   pivot: 'transform',
   weave: 'transform',
   remix: 'transform',
   revert: 'transform',
   snapshot: 'transform',
-  //
+  build: 'world',
+  change: 'world',
+  put: 'world',
+  putwith: 'world',
+  oneof: 'world',
+  oneofwith: 'world',
+  dupe: 'world',
+  dupewith: 'world',
+  duplicate: 'world',
+  duplicatewith: 'world',
+  shoot: 'world',
+  shootwith: 'world',
+  throwstar: 'world',
+  throwstarwith: 'world',
+  write: 'world',
+  bind: 'execution',
+  die: 'execution',
+  run: 'execution',
+  runwith: 'execution',
+  toast: 'toast',
+  fetch: 'fetch',
   fetchwith: 'fetch',
-  //
-  putwith: 'put',
-  oneof: 'put',
-  oneofwith: 'put',
-  dupe: 'put',
-  dupewith: 'put',
-  duplicate: 'put',
-  duplicatewith: 'put',
-  //
-  shootwith: 'shoot',
-  throwstar: 'shoot',
-  throwstarwith: 'shoot',
-  //
-  runwith: 'run',
-  //
+  bpm: 'audio',
+  play: 'audio',
+  synth: 'audio',
+  synthflush: 'audio',
+  synthrecord: 'audio',
+  autofilter1: 'audio',
+  autofilter2: 'audio',
+  autofilter3: 'audio',
+  autofilter4: 'audio',
+  autowah1: 'audio',
+  autowah2: 'audio',
+  autowah3: 'audio',
+  autowah4: 'audio',
+  distort1: 'audio',
+  distort2: 'audio',
+  distort3: 'audio',
+  distort4: 'audio',
+  echo1: 'audio',
+  echo2: 'audio',
+  echo3: 'audio',
+  echo4: 'audio',
+  fcrush1: 'audio',
+  fcrush2: 'audio',
+  fcrush3: 'audio',
+  fcrush4: 'audio',
+  reverb1: 'audio',
+  reverb2: 'audio',
+  reverb3: 'audio',
+  reverb4: 'audio',
+  synth1: 'audio',
+  synth2: 'audio',
+  synth3: 'audio',
+  synth4: 'audio',
+  synth5: 'audio',
+  vibrato1: 'audio',
+  vibrato2: 'audio',
+  vibrato3: 'audio',
+  vibrato4: 'audio',
+  bgplay: 'audio',
+  bgplayon16n: 'audio',
+  bgplayon1n: 'audio',
+  bgplayon2n: 'audio',
+  bgplayon32n: 'audio',
+  bgplayon4n: 'audio',
+  bgplayon64n: 'audio',
+  bgplayon8n: 'audio',
+  tts: 'tts',
   ttsqueue: 'tts',
-  //
-  bgplayon16n: 'bgplay',
-  bgplayon1n: 'bgplay',
-  bgplayon2n: 'bgplay',
-  bgplayon32n: 'bgplay',
-  bgplayon4n: 'bgplay',
-  bgplayon64n: 'bgplay',
-  bgplayon8n: 'bgplay',
-  //
-  synthflush: 'synth',
-  synthrecord: 'synth',
-  autofilter1: 'synth',
-  autofilter2: 'synth',
-  autofilter3: 'synth',
-  autofilter4: 'synth',
-  autowah1: 'synth',
-  autowah2: 'synth',
-  autowah3: 'synth',
-  autowah4: 'synth',
-  distort1: 'synth',
-  distort2: 'synth',
-  distort3: 'synth',
-  distort4: 'synth',
-  echo1: 'synth',
-  echo2: 'synth',
-  echo3: 'synth',
-  echo4: 'synth',
-  fcrush1: 'synth',
-  fcrush2: 'synth',
-  fcrush3: 'synth',
-  fcrush4: 'synth',
-  reverb1: 'synth',
-  reverb2: 'synth',
-  reverb3: 'synth',
-  reverb4: 'synth',
-  synth1: 'synth',
-  synth2: 'synth',
-  synth3: 'synth',
-  synth4: 'synth',
-  synth5: 'synth',
-  vibrato1: 'synth',
-  vibrato2: 'synth',
-  vibrato3: 'synth',
-  vibrato4: 'synth',
+  ttsengine: 'tts',
+  trash: 'trash',
 }
 
-/** Commands withheld from admin by default (role management, publish, import content, session nuke/restart). */
+/** Groups withheld from admin by default (roles, publish, import, nuke, restart). */
 const ADMIN_DEFAULT_DENY = new Set([
-  'role',
+  'roles',
   'nuke',
-  'allow',
-  'revoke',
   'restart',
   'publish',
-  'zztsearch',
-  'zztrandom',
+  'import',
 ])
 
-/** Default command allowlist for admin: all permission-controlled groups except role/nuke/restart/publish/zztsearch/zztrandom. */
+/** Default allowlist for admin: all groups except ADMIN_DEFAULT_DENY. */
 export const DEFAULT_ALLOWLIST_ADMIN: string[] = [
-  ...PERMISSION_CONTROLLED_GROUPS,
+  ...PERMISSION_CONTROLLED_GROUPS.keys(),
 ].filter((c) => !ADMIN_DEFAULT_DENY.has(c))
 
-/** Default command allowlist for mod: moderate and create content; no role management, session nuke/restart, or admin tools. */
+/** Default allowlist for mod: moderate and create content; no roles, workspace/operator/admin, nuke/restart. */
 export const DEFAULT_ALLOWLIST_MOD: string[] = [
-  'ban',
-  'unban',
-  'broadcast',
-  'chat',
+  'moderation',
+  'bridge',
   'save',
   'share',
-  'export',
   'publish',
-  'zztsearch',
-  'zztrandom',
+  'import',
   'transform',
-  'build',
-  'change',
-  'put',
-  'shoot',
-  'write',
-  'bind',
-  'die',
-  'run',
+  'world',
+  'execution',
   'toast',
   'fetch',
-  'bpm',
-  'play',
-  'synth',
+  'audio',
   'tts',
-  'ttsengine',
 ]
 
-/** Default command allowlist for player: consume content, share/export own, basic audio and toast/fetch. */
+/** Default allowlist for player: share/export own, toast, basic audio and tts. */
 export const DEFAULT_ALLOWLIST_PLAYER: string[] = [
   'share',
   'toast',
-  'play',
-  'synth',
+  'audio',
   'tts',
 ]
 
@@ -289,8 +212,8 @@ export function ispermissioncontrolledcommand(command: string): boolean {
   return command in PERMISSION_CONTROLLED_COMMANDS
 }
 
-/** Roles in strict order: operator > admin > mod > player */
-export const PERMISSION_ROLES = ['operator', 'admin', 'mod', 'player'] as const
+/** Assignable roles (operator is session identity, not assignable). Order: admin > mod > player */
+export const PERMISSION_ROLES = ['admin', 'mod', 'player'] as const
 export type PERMISSION_ROLE = (typeof PERMISSION_ROLES)[number]
 
 const PERMISSION_STATE = {
