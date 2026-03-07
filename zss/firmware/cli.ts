@@ -1066,51 +1066,51 @@ export const CLI_FIRMWARE = createfirmware()
       'unban player by playerid, or list banned players if no id',
     ],
     (_, words) => {
-      // const op = memoryreadoperator()
-      // const [player] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-      // if (isstring(player)) {
-      //   // unban given player
-      //   const playertotoken = memoryreadplayertotoken()
-      //   const token = playertotoken[player]
-      //   if (!ispresent(token)) {
-      //     apierror(
-      //       SOFTWARE,
-      //       READ_CONTEXT.elementfocus,
-      //       'unban',
-      //       'no token for player (they may not have logged in this session)',
-      //     )
-      //     return 0
-      //   }
-      //   memoryunbantoken(token)
-      //   const data = memoryserializepermissions()
-      //   registerstore(SOFTWARE, op, 'bannedtokens', data.bannedtokens)
-      //   write(
-      //     SOFTWARE,
-      //     READ_CONTEXT.elementfocus,
-      //     `unbanned player ${player} (token; login allowed)`,
-      //   )
-      // } else {
-      //   // get list of banned players
-      //   const playertotoken = memoryreadplayertotoken()
-      //   const bannedSet = new Set(memoryreadbannedtokens())
-      //   const bannedPlayers = Object.keys(playertotoken)
-      //     .filter((pid) => bannedSet.has(playertotoken[pid]))
-      //     .sort()
-      //   writeheader(
-      //     SOFTWARE,
-      //     READ_CONTEXT.elementfocus,
-      //     'banned players (use #unban <playerid> to unban)',
-      //   )
-      //   if (bannedPlayers.length === 0) {
-      //     write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
-      //   } else {
-      //     for (const pid of bannedPlayers) {
-      //       const flags = memoryreadflags(pid)
-      //       const name = isstring(flags?.user) ? flags.user : pid
-      //       write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${pid}  ${name}`)
-      //     }
-      //   }
-      // }
+      const [player] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      if (isstring(player)) {
+        // unban given player
+        const playertotoken = memoryreadplayertotoken()
+        const token = playertotoken[player]
+        if (!ispresent(token)) {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'ban',
+            'no token for player (they may not have logged in this session)',
+          )
+          return 0
+        }
+        memoryunbantoken(token)
+
+        // persist changes
+        const op = memoryreadoperator()
+        const data = memoryserializepermissions()
+        registerstore(SOFTWARE, op, 'bannedtokens', data.bannedtokens)
+
+        // signal success
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `unbanned player ${player} (token; login allowed)`,
+        )
+      } else {
+        // get list of banned players
+        const bannedtokens = memoryreadbannedtokens()
+        // list banned players
+        writeheader(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'banned players (use #unban <playerid> to unban)',
+        )
+        if (bannedtokens.length === 0) {
+          write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
+        } else {
+          for (const token of bannedtokens) {
+            const player = memoryreadrolebytoken()[token]
+            write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${player}`)
+          }
+        }
+      }
       return 0
     },
   )

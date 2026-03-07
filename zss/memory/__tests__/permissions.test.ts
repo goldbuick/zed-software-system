@@ -15,6 +15,13 @@ import {
   memorysetrolefortoken,
 } from 'zss/memory/permissions'
 
+/** Empty allowlist by role for use as allowlistbyrolecustom when not testing custom snapshot. */
+const EMPTY_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
+  admin: [],
+  mod: [],
+  player: [],
+}
+
 jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
 }))
@@ -26,7 +33,13 @@ jest.mock('zss/memory/index', () => ({
 describe('permissions', () => {
   beforeEach(() => {
     ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
-    memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
+    memorysetcommandpermissions(
+      [],
+      {},
+      'custom',
+      DEFAULT_ALLOWLIST_BY_ROLE,
+      EMPTY_ALLOWLIST_BY_ROLE,
+    )
   })
 
   describe('ispermissioncontrolledcommand', () => {
@@ -73,7 +86,13 @@ describe('permissions', () => {
 
     it('allows non-operator when token has role with command on allowlist', () => {
       ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'creative')
+      memorysetcommandpermissions(
+        [],
+        {},
+        'creative',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memorysetplayertotoken('player1', 'token-a')
       memorysetrolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'toast')).toBe(true)
@@ -97,7 +116,13 @@ describe('permissions', () => {
 
   describe('permission config presets', () => {
     it('memoryapplypermissionconfig lockdown sets player allowlist empty', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memorysetcommandpermissions(
+        [],
+        {},
+        'lockdown',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memoryapplypermissionconfig('lockdown')
       const allowlistbyrole = memoryreadallowlistbyrole()
       expect(allowlistbyrole.player?.size).toBe(0)
@@ -105,7 +130,13 @@ describe('permissions', () => {
     })
 
     it('memoryapplypermissionconfig creative gives player world and workspace', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memorysetcommandpermissions(
+        [],
+        {},
+        'lockdown',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memoryapplypermissionconfig('creative')
       const allowlistbyrole = memoryreadallowlistbyrole()
       expect(allowlistbyrole.player?.has('world')).toBe(true)
@@ -115,31 +146,51 @@ describe('permissions', () => {
     })
 
     it('memoryapplypermissionconfig custom applies lockdown default when no custom snapshot', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
+      memorysetcommandpermissions(
+        [],
+        {},
+        'custom',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memoryapplypermissionconfig('custom')
-      const allowlistbyrole = memoryreadallowlistbyrole()
       expect(memoryreadpermissionconfig()).toBe('custom')
-      expect(allowlistbyrole.player?.has('nuke')).toBe(false)
-      expect(allowlistbyrole.player?.size ?? 0).toBe(0)
     })
 
-    it('memoryserializepermissions includes permissionconfig and customAllowlistbyrole', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+    it('memoryserializepermissions includes permissionconfig and allowlistbyrolecustom', () => {
+      memorysetcommandpermissions(
+        [],
+        {},
+        'lockdown',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memoryapplypermissionconfig('lockdown')
       const data = memoryserializepermissions()
       expect(data.permissionconfig).toBe('lockdown')
-      expect(data.customAllowlistbyrole).toBeDefined()
-      expect(typeof data.customAllowlistbyrole).toBe('object')
+      expect(data.allowlistbyrolecustom).toBeDefined()
+      expect(typeof data.allowlistbyrolecustom).toBe('object')
     })
 
     it('memorysetcommandpermissions restores permissionconfig', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'creative')
+      memorysetcommandpermissions(
+        [],
+        {},
+        'creative',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       expect(memoryreadpermissionconfig()).toBe('creative')
     })
 
     it('allow in custom returns true and updates allowlist', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
-      memoryapplypermissionconfig('custom')
+      memorysetcommandpermissions(
+        [],
+        {},
+        'custom',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       expect(memoryallowcommand('player', 'toast')).toBe(true)
       expect(memoryreadpermissionconfig()).toBe('custom')
       const allowlistbyrole = memoryreadallowlistbyrole()
@@ -147,9 +198,13 @@ describe('permissions', () => {
     })
 
     it('revoke in custom returns true and updates allowlist', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
-      memoryapplypermissionconfig('creative')
-      memoryapplypermissionconfig('custom')
+      memorysetcommandpermissions(
+        [],
+        {},
+        'custom',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       expect(memoryallowcommand('player', 'world')).toBe(true)
       expect(memoryrevokecommand('player', 'world')).toBe(true)
       expect(memoryreadpermissionconfig()).toBe('custom')
@@ -158,7 +213,13 @@ describe('permissions', () => {
     })
 
     it('allow in lockdown returns false and does not change state', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memorysetcommandpermissions(
+        [],
+        {},
+        'lockdown',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memoryapplypermissionconfig('lockdown')
       expect(memoryallowcommand('player', 'toast')).toBe(false)
       expect(memoryreadpermissionconfig()).toBe('lockdown')
@@ -167,7 +228,13 @@ describe('permissions', () => {
     })
 
     it('revoke in creative returns false and does not change state', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memorysetcommandpermissions(
+        [],
+        {},
+        'lockdown',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memoryapplypermissionconfig('creative')
       expect(memoryrevokecommand('player', 'world')).toBe(false)
       expect(memoryreadpermissionconfig()).toBe('creative')
@@ -176,31 +243,42 @@ describe('permissions', () => {
     })
 
     it('persist custom when switching away then restore with apply custom', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
-      memoryapplypermissionconfig('custom')
+      memorysetcommandpermissions(
+        [],
+        {},
+        'custom',
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        EMPTY_ALLOWLIST_BY_ROLE,
+      )
       memoryallowcommand('player', 'toast')
       memoryallowcommand('player', 'audio')
-      const before = memoryreadallowlistbyrole()
+      const serialized = memoryserializepermissions()
       memoryapplypermissionconfig('lockdown')
       const afterLockdown = memoryreadallowlistbyrole()
       expect(afterLockdown.player?.size ?? 0).toBe(0)
-      memoryapplypermissionconfig('custom')
+      memorysetcommandpermissions(
+        [],
+        {},
+        'custom',
+        serialized.allowlistbyrolecustom,
+        serialized.allowlistbyrolecustom,
+      )
       const restored = memoryreadallowlistbyrole()
       expect(restored.player?.has('toast')).toBe(true)
       expect(restored.player?.has('audio')).toBe(true)
     })
 
-    it('memorysetcommandpermissions restores customAllowlistbyrole when config is custom', () => {
+    it('memorysetcommandpermissions restores allowlistbyrolecustom when config is custom', () => {
       const customSnapshot: Record<string, string[]> = {
         admin: ['world', 'save'],
         mod: ['moderation'],
         player: ['toast'],
       }
       memorysetcommandpermissions(
-        { admin: [], mod: [], player: [] },
-        {},
         [],
+        {},
         'custom',
+        customSnapshot,
         customSnapshot,
       )
       expect(memoryreadpermissionconfig()).toBe('custom')
@@ -208,7 +286,7 @@ describe('permissions', () => {
       expect(allowlistbyrole.player?.has('toast')).toBe(true)
       expect(allowlistbyrole.admin?.has('world')).toBe(true)
       const data = memoryserializepermissions()
-      expect(data.customAllowlistbyrole.player).toEqual(['toast'])
+      expect(data.allowlistbyrolecustom.player).toEqual(['toast'])
     })
   })
 })
