@@ -102,7 +102,12 @@ import {
   memorytickmain,
   memoryunlockscroll,
 } from 'zss/memory/runtime'
-import { BOOK, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import {
+  BOOK,
+  BOOK_FLAGS,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
 import {
   memoryadminmenu,
   memorycompressbooks,
@@ -508,38 +513,49 @@ const vm = createdevice(
         registerloginready(vm, message.player)
         break
       case 'login': {
-        const storage = message.data ?? {}
-        console.info('VM => storage', storage)
+        const {
+          bannedtokens,
+          rolebytoken,
+          permissionconfig,
+          allowlistbyrole,
+          allowlistbyrolecustom,
+          config,
+          token,
+          ...flags
+        } = message.data ?? {}
+        console.info('VM => storage', flags)
 
-        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, bannedtokens, config)
+        // this is only done for operators, not for other players logging in
+        // this feels like a bug that you can't change your own config while in a /join/
         if (memoryisoperator(message.player)) {
+          // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, bannedtokens, config)
           memorysetcommandpermissions(
-            storage.bannedtokens ?? [],
-            storage.rolebytoken ?? {},
-            storage.permissionconfig ?? 'creative',
-            storage.allowlistbyrole ?? {},
-            storage.allowlistbyrolecustom ?? {},
+            bannedtokens ?? [],
+            rolebytoken ?? {},
+            permissionconfig ?? 'creative',
+            allowlistbyrole ?? {},
+            allowlistbyrolecustom ?? {},
           )
-        }
 
-        // hydrate config from storage (config)
-        if (isarray(storage.config)) {
-          memorysetconfig(storage.config)
+          // hydrate config from storage (config)
+          if (isarray(config)) {
+            memorysetconfig(config)
+          }
         }
 
         // token on login so permissions (rolebytoken) resolve before/during login
-        if (isstring(storage.token)) {
-          memorysetplayertotoken(message.player, storage.token)
+        if (isstring(token)) {
+          memorysetplayertotoken(message.player, token)
         }
 
         // reject login if token is banned
-        if (isstring(storage.token) && memoryistokenbanned(storage.token)) {
+        if (isstring(token) && memoryistokenbanned(token)) {
           vm.replynext(message, 'acklogin', false)
           break
         }
 
         // attempt login
-        if (memoryloginplayer(message.player, message.data)) {
+        if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
           // start tracking
           tracking[message.player] = 0
           lastinputtime[message.player] = Date.now()
