@@ -134,37 +134,6 @@ export function memoryreadloaderlogging() {
   return MEMORY.loaderlogging
 }
 
-// In-memory config (register sends at login; utilities render/emit only)
-export const CONFIG_KEYS = ['crt', 'lowrez', 'scanlines', 'voice2text'] as const
-const CONFIG_DEFAULTS: Record<string, string> = {
-  crt: 'on',
-  lowrez: 'off',
-  scanlines: 'off',
-  voice2text: 'off',
-}
-const CONFIG_STATE: Record<string, string> = {}
-
-export function memorysetconfig(list: [string, string][]) {
-  for (const [key, value] of list) {
-    if (key && (value === 'on' || value === 'off')) {
-      CONFIG_STATE[key] = value
-    }
-  }
-}
-
-export function memoryreadconfigall(): [string, string][] {
-  return CONFIG_KEYS.map((key) => [
-    key,
-    CONFIG_STATE[key] ?? CONFIG_DEFAULTS[key] ?? 'off',
-  ])
-}
-
-export function memorywriteconfig(name: string, value: string) {
-  if (CONFIG_KEYS.includes(name as (typeof CONFIG_KEYS)[number])) {
-    CONFIG_STATE[name] = value === 'on' ? 'on' : 'off'
-  }
-}
-
 export function memoryreadbooklist(): BOOK[] {
   return [...MEMORY.books.values()]
 }

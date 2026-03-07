@@ -8,7 +8,7 @@ import {
   unformatobject,
   unpackformat,
 } from 'zss/feature/format'
-import { isCliMode } from 'zss/feature/storage'
+import { isclimode } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
@@ -37,13 +37,43 @@ import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
 import {
   memoryisoperator,
   memoryreadbookbysoftware,
-  memoryreadconfigall,
   memoryreadflags,
   memoryreadhalt,
   memoryreadoperator,
   memoryreadtopic,
-  memorywriteconfig,
 } from '.'
+
+// In-memory config (register sends at login; utilities render/emit only)
+export const CONFIG_KEYS = ['crt', 'lowrez', 'scanlines', 'voice2text'] as const
+const CONFIG_DEFAULTS: Record<string, string> = {
+  crt: 'on',
+  lowrez: 'off',
+  scanlines: 'off',
+  voice2text: 'off',
+}
+
+const CONFIG_STATE: Record<string, string> = {}
+
+export function memorysetconfig(list: [string, string][]) {
+  for (const [key, value] of list) {
+    if (key && (value === 'on' || value === 'off')) {
+      CONFIG_STATE[key] = value
+    }
+  }
+}
+
+export function memoryreadconfigall(): [string, string][] {
+  return CONFIG_KEYS.map((key) => [
+    key,
+    CONFIG_STATE[key] ?? CONFIG_DEFAULTS[key] ?? 'off',
+  ])
+}
+
+export function memorywriteconfig(name: string, value: string) {
+  if (CONFIG_KEYS.includes(name as (typeof CONFIG_KEYS)[number])) {
+    CONFIG_STATE[name] = value === 'on' ? 'on' : 'off'
+  }
+}
 
 let zstdenabled = false
 async function getzstdlib(): Promise<void> {
@@ -234,7 +264,7 @@ export function memoryimportbooksfromjson(json: string): BOOK[] {
 }
 
 export async function memorycompressbooks(books: BOOK[]) {
-  if (getCliMode() || isCliMode()) {
+  if (getCliMode() || isclimode()) {
     return memoryexportbooksasjson(books)
   }
   await getzstdlib()

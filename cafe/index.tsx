@@ -26,7 +26,6 @@ import { isjoin } from 'zss/feature/url'
 import { useDeviceData } from 'zss/gadget/hooks'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
-import 'zss/userspace'
 
 import { App } from './app'
 
@@ -38,7 +37,7 @@ function isCliMode(): boolean {
   )
 }
 
-async function bootHeadless(): Promise<void> {
+async function bootheadless(): Promise<void> {
   const readPlayer = (window as any).__nodeStorageReadPlayer
   if (typeof readPlayer === 'function') {
     const playerId = await readPlayer()
@@ -48,6 +47,7 @@ async function bootHeadless(): Promise<void> {
   globby.__onCliInput = (line: string) => {
     vmcli(register, registerreadplayer(), line)
   }
+  await import('zss/userspace')
   createplatform(isjoin(), true)
   globby.__nodeReady?.()
 }
@@ -55,9 +55,11 @@ async function bootHeadless(): Promise<void> {
 // Headless path: no WebGL, no Canvas, no UI — just platform + CLI
 async function main() {
   if (isCliMode()) {
-    await bootHeadless()
+    await bootheadless()
     return
   }
+
+  await import('zss/userspace')
 
   extend({
     Mesh,

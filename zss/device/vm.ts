@@ -508,12 +508,17 @@ const vm = createdevice(
       case 'login': {
         // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, config)
         const storage = message.data ?? {}
+        console.info('VM => storage', storage)
         memorysetcommandpermissions(
           storage.allowlistbyrole ?? {},
           storage.rolebytoken ?? {},
         )
         if (isarray(storage.config)) {
           memorysetconfig(storage.config)
+        }
+        // token on login so permissions (rolebytoken) resolve before/during login
+        if (isstring(storage.token)) {
+          memorysetplayertotoken(message.player, storage.token)
         }
         // attempt login
         if (memoryloginplayer(message.player, message.data)) {

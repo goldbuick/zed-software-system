@@ -5,7 +5,7 @@ import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import {
-  isCliMode,
+  isclimode,
   storagenukecontent,
   storagereadconfigall,
   storagereadcontent,
@@ -260,6 +260,8 @@ export const register = createdevice(
       return
     }
 
+    console.info('register', message.target)
+
     // player filter
     switch (message.target) {
       case 'ready':
@@ -317,7 +319,12 @@ export const register = createdevice(
         doasync(register, message.player, async () => {
           const storage = await storagereadvars()
           const config = await storagereadconfigall()
-          vmlogin(register, myplayerid, { ...storage, config })
+          const token = await getfingerprint()
+          vmlogin(register, myplayerid, {
+            ...storage,
+            config,
+            token,
+          })
           vmzsswords(register, myplayerid)
         })
         break
@@ -327,10 +334,8 @@ export const register = createdevice(
           registerterminalclose(register, myplayerid)
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
-          // send device fingerprint so session can associate player id → token (permissions)
-          vmplayertoken(register, message.player, getfingerprint())
           // CLI mode: start multiplayer after confirmed login (player is on board)
-          if (isCliMode()) {
+          if (isclimode()) {
             vmcli(register, myplayerid, '#joincode')
           }
         } else {

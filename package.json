@@ -29,6 +29,7 @@
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
     "@breezystack/lamejs": "^1.2.7",
+    "@fingerprintjs/fingerprintjs": "^5.1.0",
     "@henrygd/queue": "^1.0.7",
     "@huggingface/transformers": "^3.0.0",
     "@metrichor/jmespath": "^0.3.1",

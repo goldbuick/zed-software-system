@@ -1341,6 +1341,11 @@
   resolved "https://registry.npmjs.org/@eslint/js/-/js-8.57.1.tgz#de633db3ec2ef6a3c89e2f19038063e8a122e2c2"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
+"@fingerprintjs/fingerprintjs@^5.1.0":
+  version "5.1.0"
+  resolved "https://registry.npmjs.org/@fingerprintjs/fingerprintjs/-/fingerprintjs-5.1.0.tgz#d14b8012f3612659e302f9e38161092c9e8098ca"
+  integrity sha512-8h/CscV3xQ4KSLyXbSK8YFpZ5AaezzHfkl82mn8NJIEWNi1zLfbZSIu7MGGtx4pqa10oejhEk4u0MNutuE63Fw==
+
 "@henrygd/queue@^1.0.7":
   version "1.2.0"
   resolved "https://registry.npmjs.org/@henrygd/queue/-/queue-1.2.0.tgz#fc37ff50a2f3dc89d0ef380860c72e7467a7e127"

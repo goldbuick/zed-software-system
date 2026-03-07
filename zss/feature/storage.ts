@@ -14,7 +14,7 @@ import { shorturl } from './url'
 import { writecopyit } from './writeui'
 
 // CLI mode: Playwright exposes disk bindings. Safe for workers (no window).
-export function isCliMode(): boolean {
+export function isclimode(): boolean {
   try {
     const w = typeof globalThis !== 'undefined' && (globalThis as any).window
     return !!(w && typeof w.__nodeStorageReadContent === 'function')
@@ -47,7 +47,7 @@ export function storagereadconfigdefault(name: string) {
 
 export async function storagereadconfig(name: string) {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageReadConfig === 'function'
   ) {
     const value = await (window as any).__nodeStorageReadConfig(name)
@@ -62,7 +62,7 @@ export async function storagereadconfig(name: string) {
 
 export async function storagewriteconfig(name: string, value: string) {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageWriteConfig === 'function'
   ) {
     return (window as any).__nodeStorageWriteConfig(name, value)
@@ -72,7 +72,7 @@ export async function storagewriteconfig(name: string, value: string) {
 
 export async function storagereadconfigall() {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageReadConfigAll === 'function'
   ) {
     return (window as any).__nodeStorageReadConfigAll()
@@ -96,7 +96,7 @@ export async function storagereadconfigall() {
 
 export async function storagereadhistorybuffer() {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageReadHistoryBuffer === 'function'
   ) {
     return (window as any).__nodeStorageReadHistoryBuffer()
@@ -106,7 +106,7 @@ export async function storagereadhistorybuffer() {
 
 export async function storagewritehistorybuffer(historybuffer: string[]) {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageWriteHistoryBuffer === 'function'
   ) {
     return (window as any).__nodeStorageWriteHistoryBuffer(historybuffer)
@@ -158,7 +158,7 @@ export async function storagereadcontent(
   player: string,
 ): Promise<string | BOOK[]> {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageReadContent === 'function'
   ) {
     const content = await (window as any).__nodeStorageReadContent(player)
@@ -187,7 +187,7 @@ export async function storagewritecontent(
   books: BOOK[],
 ) {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageWriteContent === 'function'
   ) {
     await (window as any).__nodeStorageWriteContent(
@@ -222,7 +222,7 @@ export async function storagewritecontent(
 
 export async function storagereadvars(): Promise<Record<string, any>> {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageReadVars === 'function'
   ) {
     return (window as any).__nodeStorageReadVars()
@@ -233,7 +233,7 @@ export async function storagereadvars(): Promise<Record<string, any>> {
 
 export async function storagewritevar(name: string, value: any) {
   if (
-    isCliMode() &&
+    isclimode() &&
     typeof (window as any).__nodeStorageWriteVar === 'function'
   ) {
     return (window as any).__nodeStorageWriteVar(name, value)
@@ -253,7 +253,7 @@ export async function storagewritenetid(netid: string) {
 
 let currenturlhash = ''
 export function storagewatchcontent(player: string) {
-  if (isCliMode()) {
+  if (isclimode()) {
     return
   }
   window.addEventListener('hashchange', () => {
@@ -270,7 +270,7 @@ export function storagewatchcontent(player: string) {
 }
 
 export async function storagesharecontent(player: string) {
-  if (isCliMode()) {
+  if (isclimode()) {
     apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
     return
   }
@@ -291,7 +291,7 @@ export async function storagesharecontent(player: string) {
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function storagenukecontent(_player: string) {
-  if (isCliMode()) {
+  if (isclimode()) {
     if (typeof (window as any).__nodeStorageNukeContent === 'function') {
       ;(window as any).__nodeStorageNukeContent()
     }
