@@ -63,8 +63,11 @@ function ensureDataDir(dataDir: string): void {
 
 function readJsonFile<T>(filePath: string, defaultValue: T): T {
   try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8')) as T
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8')) as T
+    addLog(`[JSON read] ${filePath}`)
+    return data
   } catch {
+    addLog(`[JSON read] ${filePath} (using default)`)
     return defaultValue
   }
 }
@@ -72,6 +75,7 @@ function readJsonFile<T>(filePath: string, defaultValue: T): T {
 function writeJsonFile(filePath: string, data: unknown, dataDir: string): void {
   ensureDataDir(dataDir)
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8')
+  addLog(`[JSON write] ${filePath}`)
 }
 
 function CliApp({
@@ -237,6 +241,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     'config_lowrez',
     'config_scanlines',
     'config_voice2text',
+    'config_loaderlogging',
   ]
   await page.exposeFunction('__nodeStorageReadConfigAll', async () => {
     const config = readJsonFile<Record<string, string>>(configPath, {})

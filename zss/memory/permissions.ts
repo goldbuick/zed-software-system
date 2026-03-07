@@ -1,193 +1,363 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, isstring } from 'zss/mapping/types'
 
 import { memoryreadoperator } from './index'
 
-/** Commands that require a permission check for non-operator players (deny unless on role allowlist). */
-export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
-  // permissions (role management)
-  'allow',
-  'revoke',
-  'role',
-  'permissions',
-  // admin / operator (books, pages, session, roles, streaming)
-  'agent',
-  'book',
-  'codepage',
-  // integrations
-  'broadcast',
-  'chat',
-  // admin / inspector
-  'admin',
-  'gadget',
-  'findany',
-  // session / world
-  'save',
-  'nuke',
-  'restart',
-  // content management
-  'share',
-  'export',
-  // publish content
-  'publish',
-  // import content
-  'zztsearch',
-  'zztrandom',
-  // board transforms
-  'transform',
-  // board mutation (create/move/destroy elements)
-  'build',
-  'change',
-  'put',
-  'shoot',
-  'write',
-  // element / code execution
-  'bind',
-  'die',
-  'run',
-  'toast',
-  // network
-  'fetch',
-  // audio, we should always allow vol, bgvol, ttsvol, bgplay
-  'bpm',
-  'play',
-  'synth',
-  'tts',
-  'ttsengine',
+/** Group names and descriptions for allowlists (~20 toggles). */
+export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
+  ['audio', 'audio (bpm, play, synth, bgplay, ...)'],
+  ['bridge', 'use integrations like chat, join codes, and broadcast'],
+  ['coder', 'create and edit codepages'],
+  ['discovery', 'list books, pages, and boards'],
+  ['execution', 'bind, die, run'],
+  ['fetch', 'network fetch'],
+  ['import', 'import content (zztsearch, zztrandom)'],
+  ['moderation', 'ban and unban players'],
+  ['nuke', 'reset state to blank'],
+  ['operator', 'dangerous tooling'],
+  ['publish', 'publish to bbs, screenshot, itch.io'],
+  ['roles', 'manage role and permission assignments'],
+  ['save', 'save sim state'],
+  ['share', 'share, export content'],
+  ['toast', 'Show toast messages'],
+  ['transform', 'copy, pivot, weave, remix, revert, snapshot'],
+  ['trash', 'trash books or pages'],
+  ['tts', 'text-to-speech'],
+  ['world', 'build, change, put, shoot, write'],
 ])
 
-/**
- * Variant commands that inherit permission from a single family key.
- * Example: allowlist has 'autofilter' → grants autofilter, autofilter1, autofilter2, autofilter3, autofilter4.
- */
-export const COMMAND_PERMISSION_FAMILIES: Record<string, string> = {
-  //
-  boards: 'codepage',
-  pageopen: 'codepage',
-  pagetrash: 'codepage',
-  boardopen: 'codepage',
-  //
-  bookrename: 'book',
-  booktrash: 'book',
-  //
-  trash: 'trash',
-  //
-  pageexport: 'export',
-  bookexport: 'export',
-  bookallexport: 'export',
-  //
+/** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
+export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
+  // audio
+  autofilter1: 'audio',
+  autofilter2: 'audio',
+  autofilter3: 'audio',
+  autofilter4: 'audio',
+  autowah1: 'audio',
+  autowah2: 'audio',
+  autowah3: 'audio',
+  autowah4: 'audio',
+  bgplay: 'audio',
+  bgplayon16n: 'audio',
+  bgplayon1n: 'audio',
+  bgplayon2n: 'audio',
+  bgplayon32n: 'audio',
+  bgplayon4n: 'audio',
+  bgplayon64n: 'audio',
+  bgplayon8n: 'audio',
+  bpm: 'audio',
+  distort1: 'audio',
+  distort2: 'audio',
+  distort3: 'audio',
+  distort4: 'audio',
+  echo1: 'audio',
+  echo2: 'audio',
+  echo3: 'audio',
+  echo4: 'audio',
+  fcrush1: 'audio',
+  fcrush2: 'audio',
+  fcrush3: 'audio',
+  fcrush4: 'audio',
+  play: 'audio',
+  reverb1: 'audio',
+  reverb2: 'audio',
+  reverb3: 'audio',
+  reverb4: 'audio',
+  synth: 'audio',
+  synth1: 'audio',
+  synth2: 'audio',
+  synth3: 'audio',
+  synth4: 'audio',
+  synth5: 'audio',
+  synthflush: 'audio',
+  synthrecord: 'audio',
+  vibrato1: 'audio',
+  vibrato2: 'audio',
+  vibrato3: 'audio',
+  vibrato4: 'audio',
+
+  // bridge
+  broadcast: 'bridge',
+  chat: 'bridge',
+  joincode: 'bridge',
+  jointab: 'bridge',
+
+  // coder
+  pageopen: 'coder', // open an existing codepage
+  stat: 'coder', // create a new codepage
+
+  // discovery
+  boardopen: 'discovery',
+  boards: 'discovery',
+  books: 'discovery',
+  pages: 'discovery',
+
+  // execution
+  bind: 'execution',
+  die: 'execution',
+  run: 'execution',
+  runwith: 'execution',
+
+  // fetch
+  fetch: 'fetch',
+  fetchwith: 'fetch',
+
+  // import
+  zztrandom: 'import',
+  zztsearch: 'import',
+
+  // moderation
+  admin: 'moderation',
+  ban: 'moderation',
+  unban: 'moderation',
+
+  // nuke
+  nuke: 'nuke',
+
+  // operator
+  dev: 'operator',
+  fork: 'operator',
+  agent: 'operator',
+  restart: 'operator',
+  bookrename: 'operator',
+
+  // publish
   bbs: 'publish',
+  export: 'publish',
   screenshot: 'publish',
+  pageexport: 'publish',
+  bookexport: 'publish',
+  bookallexport: 'publish',
   itchiopublish: 'publish',
-  //
+
+  // roles
+  allow: 'roles',
+  permissions: 'roles',
+  revoke: 'roles',
+  role: 'roles',
+
+  // save
+  save: 'save',
+
+  // share
+  share: 'share',
+
+  // toast
+  toast: 'toast',
+
+  // transform
   copy: 'transform',
   pivot: 'transform',
-  weave: 'transform',
   remix: 'transform',
   revert: 'transform',
   snapshot: 'transform',
-  //
-  fetchwith: 'fetch',
-  //
-  putwith: 'put',
-  oneof: 'put',
-  oneofwith: 'put',
-  dupe: 'put',
-  dupewith: 'put',
-  duplicate: 'put',
-  duplicatewith: 'put',
-  //
-  shootwith: 'shoot',
-  throwstar: 'shoot',
-  throwstarwith: 'shoot',
-  //
-  runwith: 'run',
-  //
+  transform: 'transform',
+  weave: 'transform',
+
+  // trash
+  booktrash: 'trash',
+  pagetrash: 'trash',
+  trash: 'trash',
+
+  // tts
+  tts: 'tts',
+  ttsengine: 'tts',
   ttsqueue: 'tts',
-  //
-  bgplayon16n: 'bgplay',
-  bgplayon1n: 'bgplay',
-  bgplayon2n: 'bgplay',
-  bgplayon32n: 'bgplay',
-  bgplayon4n: 'bgplay',
-  bgplayon64n: 'bgplay',
-  bgplayon8n: 'bgplay',
-  //
-  synthflush: 'synth',
-  synthrecord: 'synth',
-  autofilter1: 'synth',
-  autofilter2: 'synth',
-  autofilter3: 'synth',
-  autofilter4: 'synth',
-  autowah1: 'synth',
-  autowah2: 'synth',
-  autowah3: 'synth',
-  autowah4: 'synth',
-  distort1: 'synth',
-  distort2: 'synth',
-  distort3: 'synth',
-  distort4: 'synth',
-  echo1: 'synth',
-  echo2: 'synth',
-  echo3: 'synth',
-  echo4: 'synth',
-  fcrush1: 'synth',
-  fcrush2: 'synth',
-  fcrush3: 'synth',
-  fcrush4: 'synth',
-  reverb1: 'synth',
-  reverb2: 'synth',
-  reverb3: 'synth',
-  reverb4: 'synth',
-  synth1: 'synth',
-  synth2: 'synth',
-  synth3: 'synth',
-  synth4: 'synth',
-  synth5: 'synth',
-  vibrato1: 'synth',
-  vibrato2: 'synth',
-  vibrato3: 'synth',
-  vibrato4: 'synth',
+
+  // world
+  build: 'world',
+  change: 'world',
+  dupe: 'world',
+  dupewith: 'world',
+  duplicate: 'world',
+  duplicatewith: 'world',
+  findany: 'world',
+  gadget: 'world',
+  oneof: 'world',
+  oneofwith: 'world',
+  put: 'world',
+  putwith: 'world',
+  shoot: 'world',
+  shootwith: 'world',
+  throwstar: 'world',
+  throwstarwith: 'world',
+  write: 'world',
 }
 
-/** True if the command is permission-controlled (either listed or a variant of a family). */
+/** Groups withheld from admin by default (roles, publish, import, nuke, restart). */
+const ADMIN_DEFAULT_DENY = new Set([
+  'roles',
+  'nuke',
+  'restart',
+  'publish',
+  'import',
+])
+
+/** Default allowlist for admin: all groups except ADMIN_DEFAULT_DENY. */
+export const DEFAULT_ALLOWLIST_ADMIN: string[] = [
+  ...PERMISSION_CONTROLLED_GROUPS.keys(),
+].filter((c) => !ADMIN_DEFAULT_DENY.has(c))
+
+/** Default allowlist for mod: moderate and create content; no roles, workspace/operator/admin, nuke/restart. */
+export const DEFAULT_ALLOWLIST_MOD: string[] = [
+  'moderation',
+  'bridge',
+  'save',
+  'share',
+  'publish',
+  'import',
+  'transform',
+  'world',
+  'execution',
+  'toast',
+  'fetch',
+  'audio',
+  'tts',
+]
+
+/** Default allowlist for player: share/export own, toast, basic audio and tts. */
+export const DEFAULT_ALLOWLIST_PLAYER: string[] = [
+  'share',
+  'toast',
+  'audio',
+  'tts',
+]
+
+/** Default allowlistbyrole for admin, mod, player (operator bypasses; use when initializing or resetting permissions). */
+export const DEFAULT_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
+  admin: DEFAULT_ALLOWLIST_ADMIN,
+  mod: DEFAULT_ALLOWLIST_MOD,
+  player: DEFAULT_ALLOWLIST_PLAYER,
+}
+
+/** True if the command is permission-controlled (key in PERMISSION_CONTROLLED_COMMANDS table). */
 export function ispermissioncontrolledcommand(command: string): boolean {
-  return (
-    PERMISSION_CONTROLLED_COMMANDS.has(command) ||
-    command in COMMAND_PERMISSION_FAMILIES
-  )
+  return command in PERMISSION_CONTROLLED_COMMANDS
 }
 
-/** Roles in strict order: operator > admin > mod > player */
-export const PERMISSION_ROLES = ['operator', 'admin', 'mod', 'player'] as const
-export type PERMISSION_ROLE = (typeof PERMISSION_ROLES)[number]
+/** Assignable roles (operator is session identity, not assignable). Order: admin > mod > player */
+export const PERMISSION_ROLES: string[] = ['admin', 'mod', 'player']
+
+/** Permission config preset names. Custom = current allowlists; lockdown/creative replace allowlistbyrole. */
+export const PERMISSION_CONFIG_NAMES = [
+  'custom',
+  'lockdown',
+  'creative',
+] as const
+
+export type PERMISSION_CONFIG_NAME = (typeof PERMISSION_CONFIG_NAMES)[number]
+
+/** Lockdown: player nothing; mod observe + moderate only; admin unchanged. */
+const LOCKDOWN_ALLOWLIST_PLAYER: string[] = []
+const LOCKDOWN_ALLOWLIST_MOD: string[] = [
+  'moderation',
+  'bridge',
+  'save',
+  'share',
+  'discovery',
+  'toast',
+]
+
+/** Creative: player create/edit content and world; mod and admin unchanged. */
+const CREATIVE_ALLOWLIST_PLAYER: string[] = [
+  'discovery',
+  'workspace',
+  'world',
+  'transform',
+  'execution',
+  'share',
+  'toast',
+  'fetch',
+  'audio',
+  'tts',
+  'trash',
+]
+
+/** Preset allowlistbyrole by config name. custom defaults to same values as lockdown. */
+export const PERMISSION_PRESETS: Record<
+  PERMISSION_CONFIG_NAME,
+  Record<string, string[]>
+> = {
+  custom: {
+    admin: [...DEFAULT_ALLOWLIST_ADMIN],
+    mod: [...LOCKDOWN_ALLOWLIST_MOD],
+    player: [...LOCKDOWN_ALLOWLIST_PLAYER],
+  },
+  lockdown: {
+    admin: [...DEFAULT_ALLOWLIST_ADMIN],
+    mod: [...LOCKDOWN_ALLOWLIST_MOD],
+    player: [...LOCKDOWN_ALLOWLIST_PLAYER],
+  },
+  creative: {
+    admin: [...DEFAULT_ALLOWLIST_ADMIN],
+    mod: [...DEFAULT_ALLOWLIST_MOD],
+    player: [...CREATIVE_ALLOWLIST_PLAYER],
+  },
+}
+
+function allowlistbyrolefrompreset(
+  preset: Record<string, string[]>,
+): Record<string, Set<string>> {
+  const out: Record<string, Set<string>> = {}
+  for (const role of Object.keys(preset)) {
+    const arr = preset[role]
+    out[role] = Array.isArray(arr) ? new Set(arr.filter(isstring)) : new Set()
+  }
+  return out
+}
+
+function allowlistbyroletoserialized(
+  byrole: Record<string, Set<string>>,
+): Record<string, string[]> {
+  const out: Record<string, string[]> = {}
+  for (const role of Object.keys(byrole)) {
+    out[role] = [...byrole[role]]
+  }
+  return out
+}
+
+/** In-memory custom config snapshot; used when applying custom or when switching away from custom. */
 
 const PERMISSION_STATE = {
   playertotoken: {} as Record<string, string>,
-  allowlistbyrole: {} as Record<string, Set<string>>,
   rolebytoken: {} as Record<string, string>,
+  bannedtokens: new Set<string>(),
+  permissionconfig: 'creative' as PERMISSION_CONFIG_NAME,
+  allowlistbyrole: allowlistbyrolefrompreset(PERMISSION_PRESETS.creative),
+  allowlistbyrolecustom: allowlistbyrolefrompreset(PERMISSION_PRESETS.lockdown),
 }
 
 export function memorymapcommandtofamily(command: string): string {
-  return COMMAND_PERMISSION_FAMILIES[command] ?? command
+  return PERMISSION_CONTROLLED_COMMANDS[command] ?? command
 }
 
+/**
+ * Returns true if this player may run the command. Operator always may; non-operator
+ * must have a token and a role whose allowlist includes the command (or its family).
+ * On deny, reports apierror and returns false. Call only for CLI driver + player context.
+ */
 export function memorycanruncommand(player: string, command: string): boolean {
-  const operator = memoryreadoperator()
-  if (player === operator) {
+  if (player === memoryreadoperator()) {
     return true
   }
-
+  if (!ispermissioncontrolledcommand(command)) {
+    return true
+  }
+  const family = memorymapcommandtofamily(command)
   const token = PERMISSION_STATE.playertotoken[player]
   if (token === undefined) {
     apierror(SOFTWARE, player, 'permissions', 'no token (deny)')
     return false
   }
-
   const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
   const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
-  return allowlist?.has(command)
+  const allowed = allowlist?.has(family) ?? false
+  if (!allowed) {
+    apierror(SOFTWARE, player, 'permissions', `${family} (deny)`)
+    return false
+  }
+  return true
 }
 
 export function memorysetplayertotoken(player: string, token: string) {
@@ -196,19 +366,41 @@ export function memorysetplayertotoken(player: string, token: string) {
   }
 }
 
-/** Deserialize storage shape: allowlistbyrole values as arrays, rolebytoken as Record. */
+/** Deserialize storage shape: allowlistbyrole values as arrays, rolebytoken as Record, bannedtokens as array. */
 export function memorysetcommandpermissions(
-  allowlistbyrole: Record<string, string[]>,
+  bannedtokens: string[],
   rolebytoken: Record<string, string>,
+  permissionconfig: PERMISSION_CONFIG_NAME,
+  allowlistbyrole: Record<string, string[]>,
+  allowlistbyrolecustom: Record<string, string[]>,
 ) {
-  PERMISSION_STATE.rolebytoken = { ...rolebytoken }
-  PERMISSION_STATE.allowlistbyrole = {}
-  for (const role of Object.keys(allowlistbyrole ?? {})) {
-    const arr = allowlistbyrole[role]
-    PERMISSION_STATE.allowlistbyrole[role] = Array.isArray(arr)
-      ? new Set(arr.filter(isstring))
-      : new Set()
+  PERMISSION_STATE.bannedtokens = new Set(bannedtokens)
+  PERMISSION_STATE.rolebytoken = deepcopy(rolebytoken)
+  PERMISSION_STATE.permissionconfig = permissionconfig
+  PERMISSION_STATE.allowlistbyrole = allowlistbyrolefrompreset(allowlistbyrole)
+  PERMISSION_STATE.allowlistbyrolecustom = allowlistbyrolefrompreset(
+    allowlistbyrolecustom,
+  )
+}
+
+export function memoryistokenbanned(token: string): boolean {
+  return isstring(token) && PERMISSION_STATE.bannedtokens.has(token)
+}
+
+export function memorybantoken(token: string) {
+  if (isstring(token)) {
+    PERMISSION_STATE.bannedtokens.add(token)
   }
+}
+
+export function memoryunbantoken(token: string) {
+  if (isstring(token)) {
+    PERMISSION_STATE.bannedtokens.delete(token)
+  }
+}
+
+export function memoryreadbannedtokens(): string[] {
+  return [...PERMISSION_STATE.bannedtokens]
 }
 
 export function memoryreadplayertotoken(): Record<string, string> {
@@ -227,29 +419,38 @@ export function memoryreadrolebytoken(): Record<string, string> {
   return { ...PERMISSION_STATE.rolebytoken }
 }
 
-export function memoryallowcommand(role: string, command: string) {
-  if (!PERMISSION_ROLES.includes(role as PERMISSION_ROLE)) {
-    return
+export function memoryallowcommand(role: string, command: string): boolean {
+  if (
+    PERMISSION_STATE.permissionconfig !== 'custom' ||
+    !PERMISSION_ROLES.includes(role)
+  ) {
+    return false
   }
-  if (!PERMISSION_STATE.allowlistbyrole[role]) {
-    PERMISSION_STATE.allowlistbyrole[role] = new Set()
-  }
+  // update active state
+  PERMISSION_STATE.allowlistbyrole[role] ??= new Set()
   PERMISSION_STATE.allowlistbyrole[role].add(command)
+  // update custompermissionconfig
+  PERMISSION_STATE.allowlistbyrolecustom[role] ??= new Set()
+  PERMISSION_STATE.allowlistbyrolecustom[role].add(command)
+  return true
 }
 
-export function memoryrevokecommand(role: string, command: string) {
-  if (command === 'all') {
-    PERMISSION_STATE.allowlistbyrole[role] = new Set()
-    return
+export function memoryrevokecommand(role: string, command: string): boolean {
+  if (
+    PERMISSION_STATE.permissionconfig !== 'custom' ||
+    !PERMISSION_ROLES.includes(role)
+  ) {
+    return false
   }
-  const set = PERMISSION_STATE.allowlistbyrole[role]
-  if (ispresent(set)) {
-    set.delete(command)
-  }
+  // update active state
+  PERMISSION_STATE.allowlistbyrole[role]?.delete(command)
+  // update custompermissionconfig
+  PERMISSION_STATE.allowlistbyrolecustom[role]?.delete(command)
+  return true
 }
 
 export function memorysetrolefortoken(token: string, role: string) {
-  if (!PERMISSION_ROLES.includes(role as PERMISSION_ROLE)) {
+  if (!PERMISSION_ROLES.includes(role)) {
     return
   }
   if (isstring(token)) {
@@ -257,17 +458,44 @@ export function memorysetrolefortoken(token: string, role: string) {
   }
 }
 
+export function memoryreadpermissionconfig(): PERMISSION_CONFIG_NAME {
+  return PERMISSION_STATE.permissionconfig
+}
+
+/**
+ * Apply a permission preset. Replaces allowlistbyrole with the preset (custom defaults to lockdown values).
+ * Does not change rolebytoken or bannedtokens. When switching from custom, saves current allowlist to custom snapshot.
+ */
+export function memoryapplypermissionconfig(name: PERMISSION_CONFIG_NAME) {
+  PERMISSION_STATE.permissionconfig = name
+  if (name === 'custom') {
+    PERMISSION_STATE.allowlistbyrole = deepcopy(
+      PERMISSION_STATE.allowlistbyrolecustom,
+    )
+  } else {
+    PERMISSION_STATE.allowlistbyrole = allowlistbyrolefrompreset(
+      PERMISSION_PRESETS[name],
+    )
+  }
+}
+
 /** Serialize allowlistbyrole for storage (Sets → arrays). */
 export function memoryserializepermissions(): {
-  allowlistbyrole: Record<string, string[]>
   rolebytoken: Record<string, string>
+  bannedtokens: string[]
+  permissionconfig: PERMISSION_CONFIG_NAME
+  allowlistbyrole: Record<string, string[]>
+  allowlistbyrolecustom: Record<string, string[]>
 } {
-  const allowlistbyrole: Record<string, string[]> = {}
-  for (const role of Object.keys(PERMISSION_STATE.allowlistbyrole)) {
-    allowlistbyrole[role] = [...PERMISSION_STATE.allowlistbyrole[role]]
-  }
   return {
-    allowlistbyrole,
-    rolebytoken: { ...PERMISSION_STATE.rolebytoken },
+    rolebytoken: deepcopy(PERMISSION_STATE.rolebytoken),
+    bannedtokens: memoryreadbannedtokens(),
+    permissionconfig: deepcopy(PERMISSION_STATE.permissionconfig),
+    allowlistbyrole: allowlistbyroletoserialized(
+      PERMISSION_STATE.allowlistbyrole,
+    ),
+    allowlistbyrolecustom: allowlistbyroletoserialized(
+      PERMISSION_STATE.allowlistbyrolecustom,
+    ),
   }
 }

@@ -17,6 +17,8 @@
 | `LOADER` | Importing content into books (loader + standardlib) |
 | `RUNTIME` | Codepage execution (runtime + standardlib) |
 
+**Permissions**: Role/allowlist permission checks are enforced only for the **CLI** driver (terminal input). Commands run via LOADER or RUNTIME are not permission-checked.
+
 ## Firmware Composition
 
 **Standard library** (included in CLI, LOADER, RUNTIME):

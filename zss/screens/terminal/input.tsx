@@ -197,7 +197,9 @@ export function TerminalInput({
   drawterminalcursor(blink, tapeterminal.xcursor, tapeycursor, context)
 
   const autocompleteactive =
-    autocompleteindex >= 0 && autocomplete.suggestions.length > 0
+    !quickterminal &&
+    autocompleteindex >= 0 &&
+    autocomplete.suggestions.length > 0
 
   const startx = edge.left
   const starty = edge.top + edge.height - 1

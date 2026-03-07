@@ -36,6 +36,7 @@ import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryhasflags,
+  memoryisoperator,
   memorylistallcodepagewithtype,
   memorylistcodepagewithtype,
   memoryreadbookbyaddress,
@@ -43,7 +44,6 @@ import {
   memoryreadbooklist,
   memoryreadflags,
   memoryreadhalt,
-  memoryreadloaderlogging,
   memoryreadoperator,
   memoryreadsession,
   memoryresetbooks,
@@ -80,6 +80,7 @@ import {
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import { memoryloader } from 'zss/memory/loader'
 import {
+  memoryistokenbanned,
   memorysetcommandpermissions,
   memorysetplayertotoken,
 } from 'zss/memory/permissions'
@@ -101,11 +102,17 @@ import {
   memorytickmain,
   memoryunlockscroll,
 } from 'zss/memory/runtime'
-import { BOOK, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import {
+  BOOK,
+  BOOK_FLAGS,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
 import {
   memoryadminmenu,
   memorycompressbooks,
   memorydecompressbooks,
+  memoryreadconfig,
   memorysetconfig,
 } from 'zss/memory/utilities'
 import { categoryconsts } from 'zss/words/category'
@@ -506,22 +513,49 @@ const vm = createdevice(
         registerloginready(vm, message.player)
         break
       case 'login': {
-        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, config)
-        const storage = message.data ?? {}
-        console.info('VM => storage', storage)
-        memorysetcommandpermissions(
-          storage.allowlistbyrole ?? {},
-          storage.rolebytoken ?? {},
-        )
-        if (isarray(storage.config)) {
-          memorysetconfig(storage.config)
+        const {
+          bannedtokens,
+          rolebytoken,
+          permissionconfig,
+          allowlistbyrole,
+          allowlistbyrolecustom,
+          config,
+          token,
+          ...flags
+        } = message.data ?? {}
+        console.info('VM => storage', flags)
+
+        // this is only done for operators, not for other players logging in
+        // this feels like a bug that you can't change your own config while in a /join/
+        if (memoryisoperator(message.player)) {
+          // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, bannedtokens, config)
+          memorysetcommandpermissions(
+            bannedtokens ?? [],
+            rolebytoken ?? {},
+            permissionconfig ?? 'creative',
+            allowlistbyrole ?? {},
+            allowlistbyrolecustom ?? {},
+          )
+
+          // hydrate config from storage (config)
+          if (isarray(config)) {
+            memorysetconfig(config)
+          }
         }
+
         // token on login so permissions (rolebytoken) resolve before/during login
-        if (isstring(storage.token)) {
-          memorysetplayertotoken(message.player, storage.token)
+        if (isstring(token)) {
+          memorysetplayertotoken(message.player, token)
         }
+
+        // reject login if token is banned
+        if (isstring(token) && memoryistokenbanned(token)) {
+          vm.replynext(message, 'acklogin', false)
+          break
+        }
+
         // attempt login
-        if (memoryloginplayer(message.player, message.data)) {
+        if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
           // start tracking
           tracking[message.player] = 0
           lastinputtime[message.player] = Date.now()
@@ -899,7 +933,7 @@ const vm = createdevice(
         // or events from devices
         if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
-          if (memoryreadloaderlogging()) {
+          if (memoryreadconfig('loaderlogging') === 'on') {
             console.info('loader event', eventname, format, arg, content)
             apilog(vm, message.player, `loader event ${eventname} ${format}`)
           }

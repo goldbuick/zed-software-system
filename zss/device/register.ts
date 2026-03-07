@@ -122,7 +122,6 @@ function renderrow(content: string[]) {
 }
 
 const countregex = /\((\d+)\)/
-let lastNodeLogRow = ''
 
 function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
@@ -177,23 +176,8 @@ function terminaladdlog(message: MESSAGE) {
   }))
   // headless server mode: forward log to Node for Ink REPL (with format for fg/bg colors)
   const nodeLog = (window as { __nodeLog?: (line: string) => void }).__nodeLog
-  if (typeof nodeLog === 'function' && isarray(message.data)) {
-    const plain = tokenizeandstriptextformat(row).replace(countregex, '').trim()
-    // skip empty lines
-    if (!plain.length) {
-      return
-    }
-    // skip sidebar/ticker: "element: status" pattern (may have leading display char)
-    const withoutLeadingChar = plain.replace(/^.\s*/, '')
-    const isSidebar =
-      (withoutLeadingChar.length < 80 &&
-        /^[a-zA-Z0-9_]+: .+$/.test(withoutLeadingChar)) ||
-      plain.includes(' player: ')
-    // skip consecutive duplicates (ticker floods the same line every tick)
-    if (!isSidebar && row !== lastNodeLogRow) {
-      lastNodeLogRow = row
-      nodeLog(row)
-    }
+  if (typeof nodeLog === 'function' && isstring(row)) {
+    nodeLog(row)
   }
 }
 
