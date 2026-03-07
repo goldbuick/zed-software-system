@@ -286,7 +286,7 @@ export const register = createdevice(
           const historybuffer = await storagereadhistorybuffer()
           if (ispresent(historybuffer)) {
             useTerminal.setState({
-              buffer: historybuffer.filter((line) => {
+              buffer: historybuffer.filter((line: string) => {
                 // may need to add other checks here
                 return line.includes('#broadcast') === false
               }),
@@ -393,8 +393,9 @@ export const register = createdevice(
         break
       case 'copy':
         if (isstring(message.data)) {
-          if (ispresent(withclipboard())) {
-            withclipboard()
+          const clipboard = withclipboard()
+          if (ispresent(clipboard)) {
+            clipboard
               .writeText(message.data)
               .then(() =>
                 apitoast(

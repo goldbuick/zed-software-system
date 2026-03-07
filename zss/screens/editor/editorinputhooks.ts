@@ -168,7 +168,6 @@ export function useEditorSplice(
       useEditor.setState({
         cursor,
         select: undefined,
-        autocompleteactive: true,
       })
     },
     [codepage, updatescrolling, editorCursor, cursorBeforeEditRef],
@@ -185,7 +184,7 @@ export function useEditorSplice(
       }
       const cursor = index + (insert ?? '').length
       updatescrolling(cursor)
-      useEditor.setState({ cursor, autocompleteactive: true })
+      useEditor.setState({ cursor })
     },
     [codepage, updatescrolling, editorCursor, cursorBeforeEditRef],
   )

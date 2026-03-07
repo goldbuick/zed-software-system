@@ -365,9 +365,10 @@ export function EditorInput({
                     updatescrolling(codeend)
                     useEditor.setState({ cursor: codeend, select: 0 })
                     break
-                  case 'c':
-                    if (ispresent(withclipboard())) {
-                      withclipboard()
+                  case 'c': {
+                    const clipboard = withclipboard()
+                    if (ispresent(clipboard)) {
+                      clipboard
                         .writeText(strvalueselected)
                         .catch((err) =>
                           apierror(SOFTWARE, player, 'clipboard', err),
@@ -376,9 +377,11 @@ export function EditorInput({
                       resettoend()
                     }
                     break
-                  case 'v':
-                    if (ispresent(withclipboard())) {
-                      withclipboard()
+                  }
+                  case 'v': {
+                    const clipboard = withclipboard()
+                    if (ispresent(clipboard)) {
+                      clipboard
                         .readText()
                         .then((text) => {
                           const cleantext = text.replaceAll('\r', '')
@@ -395,9 +398,11 @@ export function EditorInput({
                       resettoend()
                     }
                     break
-                  case 'x':
-                    if (ispresent(withclipboard()) && hasselection) {
-                      withclipboard()
+                  }
+                  case 'x': {
+                    const clipboard = withclipboard()
+                    if (ispresent(clipboard) && hasselection) {
+                      clipboard
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
                         .catch((err) =>
@@ -407,6 +412,7 @@ export function EditorInput({
                       resettoend()
                     }
                     break
+                  }
                   case 'p':
                     if (hasselection) {
                       vmcli(SOFTWARE, player, strvalueselected)

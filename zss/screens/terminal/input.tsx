@@ -465,16 +465,16 @@ export function TerminalInput({
                     })
                     break
                   case 'c':
-                    if (inputstateactive && ispresent(withclipboard())) {
-                      void withclipboard().writeText(inputstateselected)
+                    if (inputstateactive) {
+                      void withclipboard()?.writeText(inputstateselected)
                     } else {
                       resettoend()
                     }
                     break
                   case 'v':
-                    if (inputstateactive && ispresent(withclipboard())) {
+                    if (inputstateactive) {
                       withclipboard()
-                        .readText()
+                        ?.readText()
                         .then((text) => {
                           try {
                             const json = JSON.parse(text)
@@ -512,9 +512,9 @@ export function TerminalInput({
                     }
                     break
                   case 'x':
-                    if (inputstateactive && ispresent(withclipboard())) {
+                    if (inputstateactive) {
                       void withclipboard()
-                        .writeText(inputstateselected)
+                        ?.writeText(inputstateselected)
                         .then(() => deleteselection())
                     } else {
                       resettoend()

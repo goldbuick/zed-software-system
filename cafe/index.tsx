@@ -26,6 +26,7 @@ import { isjoin } from 'zss/feature/url'
 import { useDeviceData } from 'zss/gadget/hooks'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
+import 'zss/userspace'
 
 import { App } from './app'
 
@@ -43,11 +44,12 @@ async function bootHeadless(): Promise<void> {
     const playerId = await readPlayer()
     registerSetPlayerId(playerId)
   }
-  ;(window as any).__onCliInput = (line: string) =>
+  const globby = window as any
+  globby.__onCliInput = (line: string) => {
     vmcli(register, registerreadplayer(), line)
-  await import('zss/userspace')
+  }
   createplatform(isjoin(), true)
-  ;(window as any).__nodeReady?.()
+  globby.__nodeReady?.()
 }
 
 // Headless path: no WebGL, no Canvas, no UI — just platform + CLI

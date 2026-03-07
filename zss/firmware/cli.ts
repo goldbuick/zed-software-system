@@ -190,25 +190,20 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command(
-    'hyperlink',
-    ['clickable link in scroll or log'],
-    (chip, args) => {
-      const [label, ...words] = args
-      const { user } = memoryreadflags(READ_CONTEXT.elementid)
-      const withuser = isstring(user) ? user : 'player'
-      const icon = memoryreadelementdisplay(READ_CONTEXT.element)
-      const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
-      const labelstr = chip.template(maptostring(label).split(' '))
-      apilog(
-        SOFTWARE,
-        READ_CONTEXT.elementid,
-        `!${chip.template(words)};${player}${labelstr}`,
-      )
-      return 0
-    },
-    'player',
-  )
+  .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
+    const [label, ...words] = args
+    const { user } = memoryreadflags(READ_CONTEXT.elementid)
+    const withuser = isstring(user) ? user : 'player'
+    const icon = memoryreadelementdisplay(READ_CONTEXT.element)
+    const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
+    const labelstr = chip.template(maptostring(label).split(' '))
+    apilog(
+      SOFTWARE,
+      READ_CONTEXT.elementid,
+      `!${chip.template(words)};${player}${labelstr}`,
+    )
+    return 0
+  })
   // --- book & pages commands
   .command('bookrename', ['the main book (operator only)'], () => {
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
@@ -271,7 +266,6 @@ export const CLI_FIRMWARE = createfirmware()
 
       return 0
     },
-    'player',
   )
   .command(
     'pageopen',

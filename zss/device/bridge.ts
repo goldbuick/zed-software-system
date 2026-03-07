@@ -95,10 +95,9 @@ function joinurlread() {
   const base = isHeadless ? 'https://zed.cafe' : location.origin
   const joinurl = `${base}/join/#${readsubscribetopic()}`
   // also copy joinurl
-  if (ispresent(withclipboard())) {
-    withclipboard()
-      .writeText(joinurl)
-      .catch((err) => console.error(err))
+  const clipboard = withclipboard()
+  if (ispresent(clipboard)) {
+    clipboard.writeText(joinurl).catch((err) => console.error(err))
   }
   return joinurl
 }
