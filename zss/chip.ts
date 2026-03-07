@@ -561,7 +561,7 @@ export function createchip(
     if (
       driver === DRIVER_TYPE.CLI &&
       READ_CONTEXT.elementisplayer &&
-      !memorycanruncommand(READ_CONTEXT.elementid, command)
+      !memorycanruncommand(READ_CONTEXT.elementfocus, command)
     ) {
       return 0
     }

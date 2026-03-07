@@ -6,10 +6,7 @@ import { memoryreadoperator } from './index'
 
 /** Group names and descriptions for allowlists (~20 toggles). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
-  [
-    'roles',
-    'Manage role assignments and allowlists (allow, revoke, role, permissions)',
-  ],
+  ['roles', 'Manage role assignments and permissions'],
   ['moderation', 'Ban and unban player tokens'],
   [
     'workspace',

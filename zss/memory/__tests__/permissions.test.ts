@@ -1,17 +1,18 @@
+import { memoryreadoperator } from 'zss/memory/index'
 import {
   DEFAULT_ALLOWLIST_BY_ROLE,
   ispermissioncontrolledcommand,
+  memoryallowcommand,
   memoryapplypermissionconfig,
   memorycanruncommand,
   memorymapcommandtofamily,
   memoryreadallowlistbyrole,
   memoryreadpermissionconfig,
+  memoryrevokecommand,
   memoryserializepermissions,
   memorysetcommandpermissions,
   memorysetplayertotoken,
   memorysetrolefortoken,
-  memoryallowcommand,
-  memoryrevokecommand,
 } from 'zss/memory/permissions'
 
 jest.mock('zss/device/api', () => ({
@@ -22,17 +23,10 @@ jest.mock('zss/memory/index', () => ({
   memoryreadoperator: jest.fn(() => 'operator'),
 }))
 
-import { memoryreadoperator } from 'zss/memory/index'
-
 describe('permissions', () => {
   beforeEach(() => {
     ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
-    memorysetcommandpermissions(
-      DEFAULT_ALLOWLIST_BY_ROLE,
-      {},
-      [],
-      'custom',
-    )
+    memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
   })
 
   describe('ispermissioncontrolledcommand', () => {
@@ -136,12 +130,7 @@ describe('permissions', () => {
     })
 
     it('memorysetcommandpermissions restores permissionconfig', () => {
-      memorysetcommandpermissions(
-        DEFAULT_ALLOWLIST_BY_ROLE,
-        {},
-        [],
-        'creative',
-      )
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'creative')
       expect(memoryreadpermissionconfig()).toBe('creative')
     })
 
