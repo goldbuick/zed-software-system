@@ -511,10 +511,11 @@ const vm = createdevice(
         const storage = message.data ?? {}
         console.info('VM => storage', storage)
         memorysetcommandpermissions(
-          storage.allowlistbyrole ?? {},
+          storage.bannedtokens ?? [],
           storage.rolebytoken ?? {},
-          storage.bannedtokens,
-          storage.permissionconfig,
+          storage.permissionconfig ?? 'creative',
+          storage.allowlistbyrole ?? {},
+          storage.allowlistbyrolecustom ?? {},
         )
         if (isarray(storage.config)) {
           memorysetconfig(storage.config)

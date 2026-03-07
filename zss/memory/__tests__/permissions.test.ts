@@ -49,7 +49,7 @@ describe('permissions', () => {
 
   describe('memorymapcommandtofamily', () => {
     it('returns group for variant commands', () => {
-      expect(memorymapcommandtofamily('pageexport')).toBe('share')
+      expect(memorymapcommandtofamily('pageexport')).toBe('publish')
       expect(memorymapcommandtofamily('synth1')).toBe('audio')
     })
 
@@ -73,6 +73,7 @@ describe('permissions', () => {
 
     it('allows non-operator when token has role with command on allowlist', () => {
       ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'creative')
       memorysetplayertotoken('player1', 'token-a')
       memorysetrolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'toast')).toBe(true)
@@ -113,20 +114,22 @@ describe('permissions', () => {
       expect(memoryreadpermissionconfig()).toBe('creative')
     })
 
-    it('memoryapplypermissionconfig custom does not overwrite allowlists', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
-      memoryallowcommand('player', 'nuke')
+    it('memoryapplypermissionconfig custom applies lockdown default when no custom snapshot', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
       memoryapplypermissionconfig('custom')
       const allowlistbyrole = memoryreadallowlistbyrole()
-      expect(allowlistbyrole.player?.has('nuke')).toBe(true)
       expect(memoryreadpermissionconfig()).toBe('custom')
+      expect(allowlistbyrole.player?.has('nuke')).toBe(false)
+      expect(allowlistbyrole.player?.size ?? 0).toBe(0)
     })
 
-    it('memoryserializepermissions includes permissionconfig', () => {
+    it('memoryserializepermissions includes permissionconfig and customAllowlistbyrole', () => {
       memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
       memoryapplypermissionconfig('lockdown')
       const data = memoryserializepermissions()
       expect(data.permissionconfig).toBe('lockdown')
+      expect(data.customAllowlistbyrole).toBeDefined()
+      expect(typeof data.customAllowlistbyrole).toBe('object')
     })
 
     it('memorysetcommandpermissions restores permissionconfig', () => {
@@ -134,18 +137,78 @@ describe('permissions', () => {
       expect(memoryreadpermissionconfig()).toBe('creative')
     })
 
-    it('allow sets config to custom', () => {
-      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
-      memoryapplypermissionconfig('lockdown')
-      memoryallowcommand('player', 'toast')
+    it('allow in custom returns true and updates allowlist', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
+      memoryapplypermissionconfig('custom')
+      expect(memoryallowcommand('player', 'toast')).toBe(true)
       expect(memoryreadpermissionconfig()).toBe('custom')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.has('toast')).toBe(true)
     })
 
-    it('revoke sets config to custom', () => {
+    it('revoke in custom returns true and updates allowlist', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
+      memoryapplypermissionconfig('creative')
+      memoryapplypermissionconfig('custom')
+      expect(memoryallowcommand('player', 'world')).toBe(true)
+      expect(memoryrevokecommand('player', 'world')).toBe(true)
+      expect(memoryreadpermissionconfig()).toBe('custom')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.has('world')).toBe(false)
+    })
+
+    it('allow in lockdown returns false and does not change state', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memoryapplypermissionconfig('lockdown')
+      expect(memoryallowcommand('player', 'toast')).toBe(false)
+      expect(memoryreadpermissionconfig()).toBe('lockdown')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.size ?? 0).toBe(0)
+    })
+
+    it('revoke in creative returns false and does not change state', () => {
       memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
       memoryapplypermissionconfig('creative')
-      memoryrevokecommand('player', 'world')
+      expect(memoryrevokecommand('player', 'world')).toBe(false)
+      expect(memoryreadpermissionconfig()).toBe('creative')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.has('world')).toBe(true)
+    })
+
+    it('persist custom when switching away then restore with apply custom', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [], 'custom')
+      memoryapplypermissionconfig('custom')
+      memoryallowcommand('player', 'toast')
+      memoryallowcommand('player', 'audio')
+      const before = memoryreadallowlistbyrole()
+      memoryapplypermissionconfig('lockdown')
+      const afterLockdown = memoryreadallowlistbyrole()
+      expect(afterLockdown.player?.size ?? 0).toBe(0)
+      memoryapplypermissionconfig('custom')
+      const restored = memoryreadallowlistbyrole()
+      expect(restored.player?.has('toast')).toBe(true)
+      expect(restored.player?.has('audio')).toBe(true)
+    })
+
+    it('memorysetcommandpermissions restores customAllowlistbyrole when config is custom', () => {
+      const customSnapshot: Record<string, string[]> = {
+        admin: ['world', 'save'],
+        mod: ['moderation'],
+        player: ['toast'],
+      }
+      memorysetcommandpermissions(
+        { admin: [], mod: [], player: [] },
+        {},
+        [],
+        'custom',
+        customSnapshot,
+      )
       expect(memoryreadpermissionconfig()).toBe('custom')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.has('toast')).toBe(true)
+      expect(allowlistbyrole.admin?.has('world')).toBe(true)
+      const data = memoryserializepermissions()
+      expect(data.customAllowlistbyrole.player).toEqual(['toast'])
     })
   })
 })

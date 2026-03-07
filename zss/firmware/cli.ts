@@ -786,11 +786,6 @@ export const CLI_FIRMWARE = createfirmware()
         const configname = NAME(maybename) as PERMISSION_CONFIG_NAME
         if (PERMISSION_CONFIG_NAMES.includes(configname)) {
           memoryapplypermissionconfig(configname)
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `applied config: $GREEN${configname}`,
-          )
         } else {
           apierror(
             SOFTWARE,
@@ -863,30 +858,52 @@ export const CLI_FIRMWARE = createfirmware()
   )
   .command(
     'allow',
-    [ARG_TYPE.NAME, ARG_TYPE.ANY, 'add command(s) to role allowlist'],
+    [ARG_TYPE.NAME, ARG_TYPE.NAME, 'add command(s) to role allowlist'],
     (_, words) => {
-      const op = memoryreadoperator()
-      const [role] = readargs(words, 0, [ARG_TYPE.NAME])
-      const r = NAME(role)
-      if (!PERMISSION_ROLES.includes(r as (typeof PERMISSION_ROLES)[number])) {
+      const [mayberole, maybecmd] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+      ])
+      const role = NAME(mayberole)
+      if (!PERMISSION_ROLES.includes(role)) {
         apierror(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           'permissions',
-          `role: ${r}`,
+          `invalid role: ${role}`,
         )
         return 0
       }
-      const rest = words.slice(1).map(maptostring).filter(ispresent)
-      for (const cmd of rest) {
-        if (cmd && cmd !== 'allow') {
-          memoryallowcommand(r, cmd)
-        }
+      const cmd = NAME(maybecmd)
+      if (!memoryallowcommand(role, cmd)) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          'Switch to custom config to change permissions',
+        )
+        return 0
       }
+
+      // persist changes
+      const op = memoryreadoperator()
       const data = memoryserializepermissions()
-      registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
       registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
       registerstore(SOFTWARE, op, 'permissionconfig', data.permissionconfig)
+      registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
+      registerstore(
+        SOFTWARE,
+        op,
+        'allowlistbyrolecustom',
+        data.allowlistbyrolecustom,
+      )
+
+      // signal success
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `allowed command ${cmd} for role ${role}`,
+      )
       return 0
     },
   )
@@ -894,23 +911,50 @@ export const CLI_FIRMWARE = createfirmware()
     'revoke',
     [ARG_TYPE.NAME, ARG_TYPE.NAME, 'remove command from role or revoke all'],
     (_, words) => {
-      const op = memoryreadoperator()
-      const [role, cmd] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
-      const r = NAME(role)
-      if (!PERMISSION_ROLES.includes(r as (typeof PERMISSION_ROLES)[number])) {
+      const [mayberole, maybecmd] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+      ])
+      const role = NAME(mayberole)
+      if (!PERMISSION_ROLES.includes(role)) {
         apierror(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           'permissions',
-          `role: ${r}`,
+          `invalid role: ${role}`,
         )
         return 0
       }
-      memoryrevokecommand(r, cmd ? NAME(cmd) : 'all')
+      const cmd = NAME(maybecmd)
+      if (!memoryrevokecommand(role, cmd)) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          'Switch to custom config to change permissions',
+        )
+        return 0
+      }
+
+      // persist changes
+      const op = memoryreadoperator()
       const data = memoryserializepermissions()
-      registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
       registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
       registerstore(SOFTWARE, op, 'permissionconfig', data.permissionconfig)
+      registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
+      registerstore(
+        SOFTWARE,
+        op,
+        'allowlistbyrolecustom',
+        data.allowlistbyrolecustom,
+      )
+
+      // signal success
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `revoked command ${cmd} for role ${role}`,
+      )
       return 0
     },
   )
@@ -918,20 +962,22 @@ export const CLI_FIRMWARE = createfirmware()
     'role',
     [ARG_TYPE.NAME, ARG_TYPE.NAME, 'set player token to role'],
     (_, words) => {
-      const op = memoryreadoperator()
-      const [player, role] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.NAME])
-      const p = maptostring(player)
-      const r = NAME(role)
-      if (!PERMISSION_ROLES.includes(r as (typeof PERMISSION_ROLES)[number])) {
+      // const op = memoryreadoperator()
+      const [player, mayberole] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NAME,
+      ])
+      const role = NAME(mayberole)
+      if (!PERMISSION_ROLES.includes(role)) {
         apierror(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           'permissions',
-          `role: ${r}`,
+          `invalid role: ${role}`,
         )
         return 0
       }
-      const token = memoryreadplayertotoken()[p]
+      const token = memoryreadplayertotoken()[player]
       if (!ispresent(token)) {
         apierror(
           SOFTWARE,
@@ -941,9 +987,19 @@ export const CLI_FIRMWARE = createfirmware()
         )
         return 0
       }
-      memorysetrolefortoken(token, r)
+      memorysetrolefortoken(token, role)
+
+      // persist changes
+      const op = memoryreadoperator()
       const data = memoryserializepermissions()
       registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
+
+      // signal success
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `set role ${role} for player ${player}`,
+      )
       return 0
     },
   )
@@ -951,7 +1007,6 @@ export const CLI_FIRMWARE = createfirmware()
     'ban',
     [ARG_TYPE.MAYBE_NAME, 'ban player by playerid, or list players if no id'],
     (_, words) => {
-      const op = memoryreadoperator()
       const [player] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       if (isstring(player)) {
         // ban given player
@@ -967,8 +1022,13 @@ export const CLI_FIRMWARE = createfirmware()
           return 0
         }
         memorybantoken(token)
+
+        // persist changes
+        const op = memoryreadoperator()
         const data = memoryserializepermissions()
         registerstore(SOFTWARE, op, 'bannedtokens', data.bannedtokens)
+
+        // signal success
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
@@ -1006,51 +1066,51 @@ export const CLI_FIRMWARE = createfirmware()
       'unban player by playerid, or list banned players if no id',
     ],
     (_, words) => {
-      const op = memoryreadoperator()
-      const [player] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-      if (isstring(player)) {
-        // unban given player
-        const playertotoken = memoryreadplayertotoken()
-        const token = playertotoken[player]
-        if (!ispresent(token)) {
-          apierror(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            'unban',
-            'no token for player (they may not have logged in this session)',
-          )
-          return 0
-        }
-        memoryunbantoken(token)
-        const data = memoryserializepermissions()
-        registerstore(SOFTWARE, op, 'bannedtokens', data.bannedtokens)
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `unbanned player ${player} (token; login allowed)`,
-        )
-      } else {
-        // get list of banned players
-        const playertotoken = memoryreadplayertotoken()
-        const bannedSet = new Set(memoryreadbannedtokens())
-        const bannedPlayers = Object.keys(playertotoken)
-          .filter((pid) => bannedSet.has(playertotoken[pid]))
-          .sort()
-        writeheader(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          'banned players (use #unban <playerid> to unban)',
-        )
-        if (bannedPlayers.length === 0) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
-        } else {
-          for (const pid of bannedPlayers) {
-            const flags = memoryreadflags(pid)
-            const name = isstring(flags?.user) ? flags.user : pid
-            write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${pid}  ${name}`)
-          }
-        }
-      }
+      // const op = memoryreadoperator()
+      // const [player] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      // if (isstring(player)) {
+      //   // unban given player
+      //   const playertotoken = memoryreadplayertotoken()
+      //   const token = playertotoken[player]
+      //   if (!ispresent(token)) {
+      //     apierror(
+      //       SOFTWARE,
+      //       READ_CONTEXT.elementfocus,
+      //       'unban',
+      //       'no token for player (they may not have logged in this session)',
+      //     )
+      //     return 0
+      //   }
+      //   memoryunbantoken(token)
+      //   const data = memoryserializepermissions()
+      //   registerstore(SOFTWARE, op, 'bannedtokens', data.bannedtokens)
+      //   write(
+      //     SOFTWARE,
+      //     READ_CONTEXT.elementfocus,
+      //     `unbanned player ${player} (token; login allowed)`,
+      //   )
+      // } else {
+      //   // get list of banned players
+      //   const playertotoken = memoryreadplayertotoken()
+      //   const bannedSet = new Set(memoryreadbannedtokens())
+      //   const bannedPlayers = Object.keys(playertotoken)
+      //     .filter((pid) => bannedSet.has(playertotoken[pid]))
+      //     .sort()
+      //   writeheader(
+      //     SOFTWARE,
+      //     READ_CONTEXT.elementfocus,
+      //     'banned players (use #unban <playerid> to unban)',
+      //   )
+      //   if (bannedPlayers.length === 0) {
+      //     write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
+      //   } else {
+      //     for (const pid of bannedPlayers) {
+      //       const flags = memoryreadflags(pid)
+      //       const name = isstring(flags?.user) ? flags.user : pid
+      //       write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${pid}  ${name}`)
+      //     }
+      //   }
+      // }
       return 0
     },
   )
