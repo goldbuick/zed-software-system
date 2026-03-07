@@ -791,22 +791,18 @@ export const CLI_FIRMWARE = createfirmware()
     },
   )
   // -- permissions (operator only)
-  .command(
-    'controlledcommands',
-    ['list permission-controlled commands'],
-    () => {
-      const base = [...PERMISSION_CONTROLLED_COMMANDS].sort()
-      const variants = Object.keys(COMMAND_PERMISSION_FAMILIES).sort()
-      const all = [...new Set([...base, ...variants])].sort()
-      writeheader(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        'permission-controlled commands',
-      )
-      write(SOFTWARE, READ_CONTEXT.elementfocus, all.join(', '))
-      return 0
-    },
-  )
+  .command('permissionlist', ['list permission-controlled commands'], () => {
+    const base = [...PERMISSION_CONTROLLED_COMMANDS].sort()
+    const variants = Object.keys(COMMAND_PERMISSION_FAMILIES).sort()
+    const all = [...new Set([...base, ...variants])].sort()
+    writeheader(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      'permission-controlled commands',
+    )
+    write(SOFTWARE, READ_CONTEXT.elementfocus, all.join(', '))
+    return 0
+  })
   .command('permissions', ['list player→role and role→command'], () => {
     const playertotoken = memoryreadplayertotoken()
     const rolebytoken = memoryreadrolebytoken()
