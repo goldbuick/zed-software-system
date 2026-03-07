@@ -246,7 +246,8 @@ export const PERMISSION_CONFIG_NAMES = [
   'lockdown',
   'creative',
 ] as const
-export type PermissionConfigName = (typeof PERMISSION_CONFIG_NAMES)[number]
+
+export type PERMISSION_CONFIG_NAME = (typeof PERMISSION_CONFIG_NAMES)[number]
 
 /** Lockdown: player nothing; mod observe + moderate only; admin unchanged. */
 const LOCKDOWN_ALLOWLIST_PLAYER: string[] = []
@@ -276,7 +277,7 @@ const CREATIVE_ALLOWLIST_PLAYER: string[] = [
 
 /** Preset allowlistbyrole by config name. custom = do not overwrite when applying. */
 export const PERMISSION_PRESETS: Record<
-  PermissionConfigName,
+  PERMISSION_CONFIG_NAME,
   Record<string, string[]>
 > = {
   custom: {},
@@ -297,7 +298,7 @@ const PERMISSION_STATE = {
   allowlistbyrole: {} as Record<string, Set<string>>,
   rolebytoken: {} as Record<string, string>,
   bannedtokens: new Set<string>(),
-  permissionconfig: 'custom' as PermissionConfigName,
+  permissionconfig: 'custom' as PERMISSION_CONFIG_NAME,
 }
 
 export function memorymapcommandtofamily(command: string): string {
@@ -361,9 +362,10 @@ export function memorysetcommandpermissions(
   }
   if (
     isstring(permissionconfig) &&
-    PERMISSION_CONFIG_NAMES.includes(permissionconfig as PermissionConfigName)
+    PERMISSION_CONFIG_NAMES.includes(permissionconfig as PERMISSION_CONFIG_NAME)
   ) {
-    PERMISSION_STATE.permissionconfig = permissionconfig as PermissionConfigName
+    PERMISSION_STATE.permissionconfig =
+      permissionconfig as PERMISSION_CONFIG_NAME
   }
 }
 
@@ -436,11 +438,11 @@ export function memorysetrolefortoken(token: string, role: string) {
   }
 }
 
-export function memoryreadpermissionconfig(): PermissionConfigName {
+export function memoryreadpermissionconfig(): PERMISSION_CONFIG_NAME {
   return PERMISSION_STATE.permissionconfig
 }
 
-export function memorysetpermissionconfig(name: PermissionConfigName) {
+export function memorysetpermissionconfig(name: PERMISSION_CONFIG_NAME) {
   PERMISSION_STATE.permissionconfig = name
 }
 
@@ -448,7 +450,7 @@ export function memorysetpermissionconfig(name: PermissionConfigName) {
  * Apply a permission preset. Replaces allowlistbyrole for lockdown/creative;
  * for custom only sets config name. Does not change rolebytoken or bannedtokens.
  */
-export function memoryapplypermissionconfig(name: PermissionConfigName) {
+export function memoryapplypermissionconfig(name: PERMISSION_CONFIG_NAME) {
   PERMISSION_STATE.permissionconfig = name
   if (name === 'custom') {
     return
@@ -468,7 +470,7 @@ export function memoryserializepermissions(): {
   allowlistbyrole: Record<string, string[]>
   rolebytoken: Record<string, string>
   bannedtokens: string[]
-  permissionconfig: PermissionConfigName
+  permissionconfig: PERMISSION_CONFIG_NAME
 } {
   const allowlistbyrole: Record<string, string[]> = {}
   for (const role of Object.keys(PERMISSION_STATE.allowlistbyrole)) {

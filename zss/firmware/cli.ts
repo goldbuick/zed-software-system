@@ -85,10 +85,10 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import {
+  PERMISSION_CONFIG_NAME,
   PERMISSION_CONFIG_NAMES,
   PERMISSION_CONTROLLED_GROUPS,
   PERMISSION_ROLES,
-  type PermissionConfigName,
   memoryallowcommand,
   memoryapplypermissionconfig,
   memorybantoken,
@@ -779,53 +779,27 @@ export const CLI_FIRMWARE = createfirmware()
     'permissions',
     [ARG_TYPE.MAYBE_NAME, 'list player→role and role→command'],
     (_, words) => {
-      const [configname] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-      // const sub = maptostring(words[0])
-      // if (sub === 'config') {
-      //   const [name] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
-      //   const configName = name ? NAME(name) : ''
-      //   if (configName) {
-      //     if (
-      //       !PERMISSION_CONFIG_NAMES.includes(configName as PermissionConfigName)
-      //     ) {
-      //       apierror(
-      //         SOFTWARE,
-      //         READ_CONTEXT.elementfocus,
-      //         'permissions',
-      //         `config: ${configName} (use custom, lockdown, or creative)`,
-      //       )
-      //       return 0
-      //     }
-      //     memoryapplypermissionconfig(configName as PermissionConfigName)
-      //     const data = memoryserializepermissions()
-      //     registerstore(
-      //       SOFTWARE,
-      //       memoryreadoperator(),
-      //       'allowlistbyrole',
-      //       data.allowlistbyrole,
-      //     )
-      //     registerstore(
-      //       SOFTWARE,
-      //       memoryreadoperator(),
-      //       'permissionconfig',
-      //       data.permissionconfig,
-      //     )
-      //     write(
-      //       SOFTWARE,
-      //       READ_CONTEXT.elementfocus,
-      //       `permissions config: ${data.permissionconfig}`,
-      //     )
-      //   } else {
-      //     write(
-      //       SOFTWARE,
-      //       READ_CONTEXT.elementfocus,
-      //       `config: ${memoryreadpermissionconfig()}`,
-      //     )
-      //   }
-      //   return 0
-      // }
-
       const nonestr = '(none)'
+      const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+
+      if (ispresent(maybename)) {
+        const configname = NAME(maybename) as PERMISSION_CONFIG_NAME
+        if (PERMISSION_CONFIG_NAMES.includes(configname)) {
+          memoryapplypermissionconfig(configname)
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `applied config: $GREEN${configname}`,
+          )
+        } else {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'permissions',
+            `config: ${configname} (use custom, lockdown, or creative)`,
+          )
+        }
+      }
 
       writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'permissions')
       const currentconfig = memoryreadpermissionconfig()
@@ -839,12 +813,12 @@ export const CLI_FIRMWARE = createfirmware()
         READ_CONTEXT.elementfocus,
         `other configs: $GRAY${PERMISSION_CONFIG_NAMES.filter((name) => name !== currentconfig).join(', ')}`,
       )
-      write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
 
       for (const [group, desc] of PERMISSION_CONTROLLED_GROUPS) {
         write(SOFTWARE, READ_CONTEXT.elementfocus, `${group}: $GRAY${desc}`)
       }
-      write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
 
       const playertotoken = memoryreadplayertotoken()
       const rolebytoken = memoryreadrolebytoken()
@@ -862,7 +836,7 @@ export const CLI_FIRMWARE = createfirmware()
             `${player} $26 $GREEN${role}`,
           )
         }
-        write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+        write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
       }
 
       const allowlistbyrole = memoryreadallowlistbyrole()
