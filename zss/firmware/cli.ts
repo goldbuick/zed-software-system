@@ -61,6 +61,7 @@ import { maptostring } from 'zss/mapping/value'
 import {
   memoryclearbook,
   memoryensuresoftwarebook,
+  memoryisoperator,
   memoryreadboardbyaddress,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
@@ -774,98 +775,118 @@ export const CLI_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('permissions', ['list player→role and role→command'], (_, words) => {
-    const sub = maptostring(words[0])
-    if (sub === 'config') {
-      const [name] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
-      const configName = name ? NAME(name) : ''
-      if (configName) {
-        if (
-          !PERMISSION_CONFIG_NAMES.includes(configName as PermissionConfigName)
-        ) {
-          apierror(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            'permissions',
-            `config: ${configName} (use custom, lockdown, or creative)`,
-          )
-          return 0
-        }
-        memoryapplypermissionconfig(configName as PermissionConfigName)
-        const data = memoryserializepermissions()
-        registerstore(
-          SOFTWARE,
-          memoryreadoperator(),
-          'allowlistbyrole',
-          data.allowlistbyrole,
-        )
-        registerstore(
-          SOFTWARE,
-          memoryreadoperator(),
-          'permissionconfig',
-          data.permissionconfig,
-        )
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `permissions config: ${data.permissionconfig}`,
-        )
-      } else {
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `config: ${memoryreadpermissionconfig()}`,
-        )
-      }
-      return 0
-    }
-    writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'permissions')
-    write(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      `config: ${memoryreadpermissionconfig()}`,
-    )
-    write(SOFTWARE, READ_CONTEXT.elementfocus, '')
-    for (const [group, desc] of PERMISSION_CONTROLLED_GROUPS) {
-      write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${group}: ${desc}`)
-    }
-    write(SOFTWARE, READ_CONTEXT.elementfocus, '')
-    const playertotoken = memoryreadplayertotoken()
-    const rolebytoken = memoryreadrolebytoken()
-    const allowlistbyrole = memoryreadallowlistbyrole()
-    const players = Object.keys(playertotoken)
-    if (players.length > 0) {
-      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'player → role')
-      for (const player of players) {
-        const token = playertotoken[player]
-        const role = rolebytoken[token] ?? 'player'
-        write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${player} → ${role}`)
-      }
-      write(SOFTWARE, READ_CONTEXT.elementfocus, '')
-    }
-    writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'role → commands')
-    for (const role of PERMISSION_ROLES) {
-      const set = allowlistbyrole[role]
-      const list = set ? [...set].sort() : []
+  .command(
+    'permissions',
+    [ARG_TYPE.MAYBE_NAME, 'list player→role and role→command'],
+    (_, words) => {
+      const [configname] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      // const sub = maptostring(words[0])
+      // if (sub === 'config') {
+      //   const [name] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
+      //   const configName = name ? NAME(name) : ''
+      //   if (configName) {
+      //     if (
+      //       !PERMISSION_CONFIG_NAMES.includes(configName as PermissionConfigName)
+      //     ) {
+      //       apierror(
+      //         SOFTWARE,
+      //         READ_CONTEXT.elementfocus,
+      //         'permissions',
+      //         `config: ${configName} (use custom, lockdown, or creative)`,
+      //       )
+      //       return 0
+      //     }
+      //     memoryapplypermissionconfig(configName as PermissionConfigName)
+      //     const data = memoryserializepermissions()
+      //     registerstore(
+      //       SOFTWARE,
+      //       memoryreadoperator(),
+      //       'allowlistbyrole',
+      //       data.allowlistbyrole,
+      //     )
+      //     registerstore(
+      //       SOFTWARE,
+      //       memoryreadoperator(),
+      //       'permissionconfig',
+      //       data.permissionconfig,
+      //     )
+      //     write(
+      //       SOFTWARE,
+      //       READ_CONTEXT.elementfocus,
+      //       `permissions config: ${data.permissionconfig}`,
+      //     )
+      //   } else {
+      //     write(
+      //       SOFTWARE,
+      //       READ_CONTEXT.elementfocus,
+      //       `config: ${memoryreadpermissionconfig()}`,
+      //     )
+      //   }
+      //   return 0
+      // }
+
+      const nonestr = '(none)'
+
+      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'permissions')
+      const currentconfig = memoryreadpermissionconfig()
       write(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
-        `  ${role}: ${list.length ? list.join(', ') : '(none)'}`,
+        `selected config: $GREEN${currentconfig}`,
       )
-    }
-    const banned = memoryreadbannedtokens()
-    writeheader(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      'banned tokens (login blocked)',
-    )
-    write(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      banned.length ? banned.join(', ') : '  (none)',
-    )
-    return 0
-  })
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `other configs: $GRAY${PERMISSION_CONFIG_NAMES.filter((name) => name !== currentconfig).join(', ')}`,
+      )
+      write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+
+      for (const [group, desc] of PERMISSION_CONTROLLED_GROUPS) {
+        write(SOFTWARE, READ_CONTEXT.elementfocus, `${group}: $GRAY${desc}`)
+      }
+      write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+
+      const playertotoken = memoryreadplayertotoken()
+      const rolebytoken = memoryreadrolebytoken()
+      const players = Object.keys(playertotoken)
+      if (players.length > 0) {
+        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'player $26 role')
+        for (const player of players) {
+          const token = playertotoken[player]
+          const role =
+            rolebytoken[token] ??
+            (memoryisoperator(player) ? 'operator' : 'player')
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `${player} $26 $GREEN${role}`,
+          )
+        }
+        write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      }
+
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'role $26 commands')
+      for (const role of PERMISSION_ROLES) {
+        const set = allowlistbyrole[role]
+        const list = set ? [...set].sort() : []
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `$GREEN${role}: $GRAY${list.length ? list.join(', ') : nonestr}`,
+        )
+      }
+
+      const banned = memoryreadbannedtokens()
+      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'banned players')
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `$GRAY${banned.length ? banned.join(', ') : nonestr}`,
+      )
+      return 0
+    },
+  )
   .command(
     'allow',
     [ARG_TYPE.NAME, ARG_TYPE.ANY, 'add command(s) to role allowlist'],

@@ -6,41 +6,35 @@ import { memoryreadoperator } from './index'
 
 /** Group names and descriptions for allowlists (~20 toggles). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
-  ['roles', 'Manage role assignments and permissions'],
-  ['moderation', 'Ban and unban player tokens'],
-  [
-    'workspace',
-    'Create and manage books, pages, join codes (book, codepage, fork, joincode, jointab)',
-  ],
-  ['operator', 'Agent and dev tooling'],
-  ['discovery', 'List books and pages'],
-  ['bridge', 'Broadcast and chat integrations'],
-  ['admin', 'Admin, gadget, and findany inspector tools'],
-  ['save', 'Save session state'],
-  ['nuke', 'Clear session/world'],
-  ['restart', 'Restart session'],
-  ['share', 'Share and export content'],
-  ['publish', 'Publish content (BBS, screenshot, itch.io)'],
-  ['import', 'Import content (zztsearch, zztrandom)'],
-  [
-    'transform',
-    'Board transforms (copy, pivot, weave, remix, revert, snapshot)',
-  ],
-  ['world', 'Board mutation (build, change, put, shoot, write)'],
-  ['execution', 'Element and code execution (bind, die, run)'],
+  ['roles', 'manage role and permission assignments'],
+  ['moderation', 'ban and unban players'],
+  ['workspace', 'create and manage books, pages, join codes'],
+  ['operator', 'dangerous tooling'],
+  ['discovery', 'list books, pages, and boards'],
+  ['bridge', 'use integrations like chat and broadcast'],
+  ['admin', ' '],
+  ['save', 'save sim state'],
+  ['nuke', 'reset state to blank'],
+  ['restart', 'clear all book flags from main'],
+  ['share', 'share, export content'],
+  ['publish', 'publish to bbs, screenshot, itch.io'],
+  ['import', 'import content (zztsearch, zztrandom)'],
+  ['transform', 'copy, pivot, weave, remix, revert, snapshot'],
+  ['world', 'build, change, put, shoot, write'],
+  ['execution', 'bind, die, run'],
   ['toast', 'Show toast messages'],
   ['fetch', 'Network fetch'],
-  ['audio', 'Audio (bpm, play, synth, bgplay)'],
-  ['tts', 'Text-to-speech'],
-  ['trash', 'Trash books, pages, or elements'],
+  ['audio', 'audio (bpm, play, synth, bgplay, ...)'],
+  ['tts', 'text-to-speech'],
+  ['trash', 'trash books or pages'],
 ])
 
 /** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
 export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   // admin
   admin: 'admin',
-  findany: 'admin',
-  gadget: 'admin',
+  findany: 'world',
+  gadget: 'world',
 
   // audio
   autofilter1: 'audio',
@@ -111,6 +105,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   // import
   zztsearch: 'import',
   zztrandom: 'import',
+
   // moderation
   ban: 'moderation',
   unban: 'moderation',
@@ -124,9 +119,9 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
 
   // publish
   bbs: 'publish',
-  itchiopublish: 'publish',
   publish: 'publish',
   screenshot: 'publish',
+  itchiopublish: 'publish',
 
   // restart
   restart: 'restart',
@@ -141,10 +136,10 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   save: 'save',
 
   // share
-  bookallexport: 'share',
-  bookexport: 'share',
-  export: 'share',
-  pageexport: 'share',
+  bookallexport: 'workspace',
+  bookexport: 'workspace',
+  export: 'workspace',
+  pageexport: 'workspace',
   share: 'share',
 
   // toast
@@ -185,17 +180,16 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   write: 'world',
 
   // workspace
-  boardopen: 'workspace',
-  boards: 'workspace',
+  boardopen: 'discovery',
+  boards: 'discovery',
   book: 'workspace',
   bookrename: 'workspace',
-  booktrash: 'workspace',
-  codepage: 'workspace',
+  booktrash: 'trash',
   fork: 'workspace',
   joincode: 'workspace',
   jointab: 'workspace',
   pageopen: 'workspace',
-  pagetrash: 'workspace',
+  pagetrash: 'trash',
 }
 
 /** Groups withheld from admin by default (roles, publish, import, nuke, restart). */
