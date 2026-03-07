@@ -26,6 +26,7 @@ import { memoryclearflags, memoryreadflags, memoryreadoperator } from './memory'
 import {
   ispermissioncontrolledcommand,
   memorycanruncommand,
+  memorymapcommandtofamily,
 } from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
@@ -563,15 +564,17 @@ export function createchip(
     if (
       READ_CONTEXT.elementisplayer &&
       READ_CONTEXT.elementfocus !== memoryreadoperator() &&
-      ispermissioncontrolledcommand(command) &&
-      !memorycanruncommand(READ_CONTEXT.elementfocus, command)
+      ispermissioncontrolledcommand(command)
     ) {
-      apierror(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        'permissions',
-        `${command} (deny)`,
-      )
+      const family = memorymapcommandtofamily(command)
+      if (!memorycanruncommand(READ_CONTEXT.elementfocus, family)) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          `${family} (deny)`,
+        )
+      }
       return 0
     }
     return commandinvoke(chip, args)

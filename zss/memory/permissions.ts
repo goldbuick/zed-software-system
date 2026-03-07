@@ -169,6 +169,10 @@ const PERMISSION_STATE = {
   rolebytoken: {} as Record<string, string>,
 }
 
+export function memorymapcommandtofamily(command: string): string {
+  return COMMAND_PERMISSION_FAMILIES[command] ?? command
+}
+
 export function memorycanruncommand(player: string, command: string): boolean {
   const operator = memoryreadoperator()
   if (player === operator) {
@@ -183,11 +187,7 @@ export function memorycanruncommand(player: string, command: string): boolean {
 
   const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
   const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
-  if (allowlist?.has(command)) {
-    return true
-  }
-  const family = COMMAND_PERMISSION_FAMILIES[command]
-  return family !== undefined && (allowlist?.has(family) ?? false)
+  return allowlist?.has(command)
 }
 
 export function memorysetplayertotoken(player: string, token: string) {
