@@ -13,64 +13,33 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'permissions',
   // admin / operator (books, pages, session, roles, streaming)
   'agent',
-  'boardopen',
-  'boards',
-  'bookrename',
-  'booktrash',
+  'book',
+  'codepage',
+  // integrations
   'broadcast',
   'chat',
-  'dev',
-  'fork',
-  'jointab',
-  'joincode',
-  'loaderlogging',
-  // admin UI / inspector / auth
+  // admin / inspector
   'admin',
   'gadget',
   'findany',
   // session / world
   'save',
   'nuke',
-  'endgame',
   'restart',
   // content management
-  'pageopen',
-  'pagetrash',
   'share',
-  'trash',
   'export',
-  'pageexport',
-  'bookexport',
-  'bookallexport',
   // publish content
-  'bbs',
-  'screenshot',
-  'itchiopublish',
-  // movement
-  'goto',
-  'transport',
+  'publish',
   // import content
   'zztsearch',
   'zztrandom',
   // board transforms
-  'copy',
-  'pivot',
-  'remix',
-  'revert',
-  'snapshot',
-  'weave',
+  'transform',
   // board mutation (create/move/destroy elements)
   'build',
   'change',
-  'dupe',
-  'dupewith',
-  'duplicate',
-  'duplicatewith',
-  'oneof',
-  'oneofwith',
   'put',
-  'putwith',
-  'push',
   'shoot',
   'write',
   // element / code execution
@@ -80,7 +49,6 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'toast',
   // network
   'fetch',
-  'fetchwith',
   // audio, we should always allow vol, bgvol, ttsvol, bgplay
   'bpm',
   'play',
@@ -94,20 +62,49 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
  * Example: allowlist has 'autofilter' → grants autofilter, autofilter1, autofilter2, autofilter3, autofilter4.
  */
 export const COMMAND_PERMISSION_FAMILIES: Record<string, string> = {
-  dupewith: 'dupe',
-  dupe: 'dupe',
-  duplicate: 'dupe',
-  duplicatewith: 'dupe',
+  //
+  boards: 'codepage',
+  pageopen: 'codepage',
+  pagetrash: 'codepage',
+  boardopen: 'codepage',
+  //
+  bookrename: 'book',
+  booktrash: 'book',
+  //
+  trash: 'trash',
+  //
+  pageexport: 'export',
+  bookexport: 'export',
+  bookallexport: 'export',
+  //
+  bbs: 'publish',
+  screenshot: 'publish',
+  itchiopublish: 'publish',
+  //
+  copy: 'transform',
+  pivot: 'transform',
+  weave: 'transform',
+  remix: 'transform',
+  revert: 'transform',
+  snapshot: 'transform',
+  //
+  fetchwith: 'fetch',
+  //
+  putwith: 'put',
+  oneof: 'put',
+  oneofwith: 'put',
+  dupe: 'put',
+  dupewith: 'put',
+  duplicate: 'put',
+  duplicatewith: 'put',
   //
   shootwith: 'shoot',
-  shove: 'shoot',
   throwstar: 'shoot',
   throwstarwith: 'shoot',
   //
   runwith: 'run',
   //
   ttsqueue: 'tts',
-
   //
   bgplayon16n: 'bgplay',
   bgplayon1n: 'bgplay',
