@@ -36,6 +36,7 @@ import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryhasflags,
+  memoryisoperator,
   memorylistallcodepagewithtype,
   memorylistcodepagewithtype,
   memoryreadbookbyaddress,
@@ -507,28 +508,36 @@ const vm = createdevice(
         registerloginready(vm, message.player)
         break
       case 'login': {
-        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, bannedtokens, config)
         const storage = message.data ?? {}
         console.info('VM => storage', storage)
-        memorysetcommandpermissions(
-          storage.bannedtokens ?? [],
-          storage.rolebytoken ?? {},
-          storage.permissionconfig ?? 'creative',
-          storage.allowlistbyrole ?? {},
-          storage.allowlistbyrolecustom ?? {},
-        )
+
+        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, bannedtokens, config)
+        if (memoryisoperator(message.player)) {
+          memorysetcommandpermissions(
+            storage.bannedtokens ?? [],
+            storage.rolebytoken ?? {},
+            storage.permissionconfig ?? 'creative',
+            storage.allowlistbyrole ?? {},
+            storage.allowlistbyrolecustom ?? {},
+          )
+        }
+
+        // hydrate config from storage (config)
         if (isarray(storage.config)) {
           memorysetconfig(storage.config)
         }
+
         // token on login so permissions (rolebytoken) resolve before/during login
         if (isstring(storage.token)) {
           memorysetplayertotoken(message.player, storage.token)
         }
+
         // reject login if token is banned
         if (isstring(storage.token) && memoryistokenbanned(storage.token)) {
           vm.replynext(message, 'acklogin', false)
           break
         }
+
         // attempt login
         if (memoryloginplayer(message.player, message.data)) {
           // start tracking
