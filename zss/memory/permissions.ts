@@ -40,80 +40,12 @@ export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
 
 /** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
 export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
-  allow: 'roles',
-  revoke: 'roles',
-  role: 'roles',
-  permissions: 'roles',
-  ban: 'moderation',
-  unban: 'moderation',
-  agent: 'operator',
-  book: 'workspace',
-  bookrename: 'workspace',
-  booktrash: 'workspace',
-  codepage: 'workspace',
-  boards: 'workspace',
-  pageopen: 'workspace',
-  pagetrash: 'workspace',
-  boardopen: 'workspace',
-  dev: 'operator',
-  fork: 'workspace',
-  joincode: 'workspace',
-  jointab: 'workspace',
-  books: 'discovery',
-  pages: 'discovery',
-  broadcast: 'bridge',
-  chat: 'bridge',
+  // admin
   admin: 'admin',
-  gadget: 'admin',
   findany: 'admin',
-  save: 'save',
-  nuke: 'nuke',
-  restart: 'restart',
-  share: 'share',
-  export: 'share',
-  pageexport: 'share',
-  bookexport: 'share',
-  bookallexport: 'share',
-  publish: 'publish',
-  bbs: 'publish',
-  screenshot: 'publish',
-  itchiopublish: 'publish',
-  zztsearch: 'import',
-  zztrandom: 'import',
-  transform: 'transform',
-  copy: 'transform',
-  pivot: 'transform',
-  weave: 'transform',
-  remix: 'transform',
-  revert: 'transform',
-  snapshot: 'transform',
-  build: 'world',
-  change: 'world',
-  put: 'world',
-  putwith: 'world',
-  oneof: 'world',
-  oneofwith: 'world',
-  dupe: 'world',
-  dupewith: 'world',
-  duplicate: 'world',
-  duplicatewith: 'world',
-  shoot: 'world',
-  shootwith: 'world',
-  throwstar: 'world',
-  throwstarwith: 'world',
-  write: 'world',
-  bind: 'execution',
-  die: 'execution',
-  run: 'execution',
-  runwith: 'execution',
-  toast: 'toast',
-  fetch: 'fetch',
-  fetchwith: 'fetch',
-  bpm: 'audio',
-  play: 'audio',
-  synth: 'audio',
-  synthflush: 'audio',
-  synthrecord: 'audio',
+  gadget: 'admin',
+
+  // audio
   autofilter1: 'audio',
   autofilter2: 'audio',
   autofilter3: 'audio',
@@ -122,6 +54,15 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   autowah2: 'audio',
   autowah3: 'audio',
   autowah4: 'audio',
+  bgplay: 'audio',
+  bgplayon16n: 'audio',
+  bgplayon1n: 'audio',
+  bgplayon2n: 'audio',
+  bgplayon32n: 'audio',
+  bgplayon4n: 'audio',
+  bgplayon64n: 'audio',
+  bgplayon8n: 'audio',
+  bpm: 'audio',
   distort1: 'audio',
   distort2: 'audio',
   distort3: 'audio',
@@ -134,31 +75,130 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   fcrush2: 'audio',
   fcrush3: 'audio',
   fcrush4: 'audio',
+  play: 'audio',
   reverb1: 'audio',
   reverb2: 'audio',
   reverb3: 'audio',
   reverb4: 'audio',
+  synth: 'audio',
   synth1: 'audio',
   synth2: 'audio',
   synth3: 'audio',
   synth4: 'audio',
   synth5: 'audio',
+  synthflush: 'audio',
+  synthrecord: 'audio',
   vibrato1: 'audio',
   vibrato2: 'audio',
   vibrato3: 'audio',
   vibrato4: 'audio',
-  bgplay: 'audio',
-  bgplayon16n: 'audio',
-  bgplayon1n: 'audio',
-  bgplayon2n: 'audio',
-  bgplayon32n: 'audio',
-  bgplayon4n: 'audio',
-  bgplayon64n: 'audio',
-  bgplayon8n: 'audio',
-  tts: 'tts',
-  ttsqueue: 'tts',
-  ttsengine: 'tts',
+
+  // bridge
+  broadcast: 'bridge',
+  chat: 'bridge',
+
+  // discovery
+  books: 'discovery',
+  pages: 'discovery',
+
+  // execution
+  bind: 'execution',
+  die: 'execution',
+  run: 'execution',
+  runwith: 'execution',
+
+  // fetch
+  fetch: 'fetch',
+  fetchwith: 'fetch',
+
+  // import
+  zztsearch: 'import',
+  zztrandom: 'import',
+  // moderation
+  ban: 'moderation',
+  unban: 'moderation',
+
+  // nuke
+  nuke: 'nuke',
+
+  // operator
+  agent: 'operator',
+  dev: 'operator',
+
+  // publish
+  bbs: 'publish',
+  itchiopublish: 'publish',
+  publish: 'publish',
+  screenshot: 'publish',
+
+  // restart
+  restart: 'restart',
+
+  // roles
+  allow: 'roles',
+  permissions: 'roles',
+  revoke: 'roles',
+  role: 'roles',
+
+  // save
+  save: 'save',
+
+  // share
+  bookallexport: 'share',
+  bookexport: 'share',
+  export: 'share',
+  pageexport: 'share',
+  share: 'share',
+
+  // toast
+  toast: 'toast',
+
+  // transform
+  copy: 'transform',
+  pivot: 'transform',
+  remix: 'transform',
+  revert: 'transform',
+  snapshot: 'transform',
+  transform: 'transform',
+  weave: 'transform',
+
+  // trash
   trash: 'trash',
+
+  // tts
+  tts: 'tts',
+  ttsengine: 'tts',
+  ttsqueue: 'tts',
+
+  // world
+  build: 'world',
+  change: 'world',
+  dupe: 'world',
+  dupewith: 'world',
+  duplicate: 'world',
+  duplicatewith: 'world',
+  oneof: 'world',
+  oneofwith: 'world',
+  put: 'world',
+  putwith: 'world',
+  shoot: 'world',
+  shootwith: 'world',
+  throwstar: 'world',
+  throwstarwith: 'world',
+  write: 'world',
+
+  // workspace
+  boardopen: 'workspace',
+  boards: 'workspace',
+  book: 'workspace',
+  bookrename: 'workspace',
+  booktrash: 'workspace',
+  codepage: 'workspace',
+  fork: 'workspace',
+  joincode: 'workspace',
+  jointab: 'workspace',
+  pageopen: 'workspace',
+  pagetrash: 'workspace',
 }
 
 /** Groups withheld from admin by default (roles, publish, import, nuke, restart). */
