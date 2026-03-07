@@ -1,11 +1,11 @@
 import { createdevice } from 'zss/device'
+import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { getfingerprint } from 'zss/feature/fingerprint'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import {
-  isclimode,
   storagenukecontent,
   storagereadconfigall,
   storagereadcontent,
@@ -259,8 +259,6 @@ export const register = createdevice(
     if (!register.session(message)) {
       return
     }
-
-    console.info('register', message.target)
 
     // player filter
     switch (message.target) {

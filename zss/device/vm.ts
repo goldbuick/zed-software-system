@@ -47,7 +47,6 @@ import {
   memoryreadoperator,
   memoryreadsession,
   memoryresetbooks,
-  memorysetconfig,
   memorywritebook,
   memorywritehalt,
   memorywriteoperator,
@@ -107,6 +106,7 @@ import {
   memoryadminmenu,
   memorycompressbooks,
   memorydecompressbooks,
+  memorysetconfig,
 } from 'zss/memory/utilities'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'

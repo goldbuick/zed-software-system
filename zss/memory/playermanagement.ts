@@ -1,5 +1,6 @@
 import { apierror } from 'zss/device/api'
-import { SOFTWARE, getCliMode } from 'zss/device/session'
+import { SOFTWARE } from 'zss/device/session'
+import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -245,15 +246,15 @@ export function memoryloginplayer(
   }
 
   // plotting a new player
-  const isHeadlessOperator = getCliMode() && memoryisoperator(player)
+  const isheadlessop = getclimode() && memoryisoperator(player)
   const startx = currentboard.startx ?? 0
   const starty = currentboard.starty ?? 0
-  const px = isHeadlessOperator
+  const px = isheadlessop
     ? -100000
     : isnumber(startx)
       ? startx
       : Math.round(BOARD_WIDTH * 0.5)
-  const py = isHeadlessOperator
+  const py = isheadlessop
     ? -100000
     : isnumber(starty)
       ? starty

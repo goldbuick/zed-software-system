@@ -1,14 +1,14 @@
 import { compress, decompress, init } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
 import { registerstore } from 'zss/device/api'
-import { SOFTWARE, getCliMode } from 'zss/device/session'
+import { SOFTWARE } from 'zss/device/session'
+import { getclimode } from 'zss/feature/detect'
 import {
   formatobject,
   packformat,
   unformatobject,
   unpackformat,
 } from 'zss/feature/format'
-import { isclimode } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
@@ -202,7 +202,7 @@ export function memoryadminmenu(
   const topic = memoryreadtopic()
   if (topic) {
     const base =
-      getCliMode() && !isjoin() ? 'https://zed.cafe' : location.origin
+      getclimode() && !isjoin() ? 'https://zed.cafe' : location.origin
     const joinurl = isjoin() ? location.href : `${base}/join/#${topic}`
     gadgethyperlink(player, 'adminop', topic, ['copyit', joinurl])
     gadgettext(player, ``)
@@ -264,7 +264,7 @@ export function memoryimportbooksfromjson(json: string): BOOK[] {
 }
 
 export async function memorycompressbooks(books: BOOK[]) {
-  if (getCliMode() || isclimode()) {
+  if (getclimode()) {
     return memoryexportbooksasjson(books)
   }
   await getzstdlib()

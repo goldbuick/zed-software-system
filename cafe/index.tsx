@@ -22,20 +22,13 @@ import {
   registerSetPlayerId,
   registerreadplayer,
 } from 'zss/device/register'
+import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
 import { useDeviceData } from 'zss/gadget/hooks'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
 
 import { App } from './app'
-
-// CLI/headless mode: Playwright exposes __nodeStorageReadContent (or __nodeStorageReadPlayer)
-function isCliMode(): boolean {
-  return (
-    typeof (window as any).__nodeStorageReadContent === 'function' ||
-    typeof (window as any).__nodeStorageReadPlayer === 'function'
-  )
-}
 
 async function bootheadless(): Promise<void> {
   const readPlayer = (window as any).__nodeStorageReadPlayer
@@ -54,7 +47,7 @@ async function bootheadless(): Promise<void> {
 
 // Headless path: no WebGL, no Canvas, no UI — just platform + CLI
 async function main() {
-  if (isCliMode()) {
+  if (isclimode()) {
     await bootheadless()
     return
   }

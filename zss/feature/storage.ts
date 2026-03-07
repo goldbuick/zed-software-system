@@ -6,22 +6,13 @@ import {
 } from 'idb-keyval'
 import { apierror, apilog, vmbooks } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { isclimode } from 'zss/feature/detect'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
 import { shorturl } from './url'
 import { writecopyit } from './writeui'
-
-// CLI mode: Playwright exposes disk bindings. Safe for workers (no window).
-export function isclimode(): boolean {
-  try {
-    const w = typeof globalThis !== 'undefined' && (globalThis as any).window
-    return !!(w && typeof w.__nodeStorageReadContent === 'function')
-  } catch {
-    return false
-  }
-}
 
 // read / write from indexdb
 
