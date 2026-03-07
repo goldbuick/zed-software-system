@@ -15,11 +15,11 @@ const { forward } = createforward((message) => {
 })
 
 onmessage = function handleMessage(
-  event: MessageEvent<{ target?: string; data?: { climode?: boolean } }>,
+  event: MessageEvent<{ target?: string; data?: any }>,
 ) {
   const msg = event.data
-  if (msg?.target === 'config' && msg?.data?.climode === true) {
-    setclimode(true)
+  if (msg?.target === 'config') {
+    setclimode(!!msg?.data)
     return
   }
   forward(event.data)

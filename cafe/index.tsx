@@ -19,8 +19,8 @@ import { RUNTIME } from 'zss/config'
 import { vmcli } from 'zss/device/api'
 import {
   register,
-  registerSetPlayerId,
   registerreadplayer,
+  registersetmyplayerid,
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
@@ -31,10 +31,10 @@ import { createplatform } from 'zss/platform'
 import { App } from './app'
 
 async function bootheadless(): Promise<void> {
-  const readPlayer = (window as any).__nodeStorageReadPlayer
-  if (typeof readPlayer === 'function') {
-    const playerId = await readPlayer()
-    registerSetPlayerId(playerId)
+  const readplayer = (window as any).__nodeStorageReadPlayer
+  if (typeof readplayer === 'function') {
+    const playerId = await readplayer()
+    registersetmyplayerid(playerId)
   }
   const globby = window as any
   globby.__onCliInput = (line: string) => {

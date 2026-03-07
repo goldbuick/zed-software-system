@@ -10,6 +10,7 @@ import { vmcli } from 'zss/device/api'
 import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
+import { isclimode } from 'zss/feature/detect'
 import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { CRTShape } from 'zss/gadget/fx/crt'
@@ -35,19 +36,7 @@ export function Engine() {
 
   // runs the SIM
   useEffect(() => {
-    const cli =
-      typeof (window as any).__nodeStorageReadContent === 'function' ||
-      typeof (window as any).__nodeStorageReadPlayer === 'function'
-    createplatform(isjoin(), cli)
-    // CLI mode: Node wires storage + log; we provide cli handler, signal ready
-    if (
-      typeof (window as any).__nodeStorageReadContent === 'function' ||
-      typeof (window as any).__nodeStorageReadPlayer === 'function'
-    ) {
-      ;(window as any).__onCliInput = (line: string) =>
-        vmcli(register, registerreadplayer(), line)
-      ;(window as any).__nodeReady?.()
-    }
+    createplatform(isjoin(), isclimode())
     return () => {
       haltplatform()
     }

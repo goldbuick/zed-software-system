@@ -241,7 +241,7 @@ const DOOT_RATE = 10
 let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
 
-export function registerSetPlayerId(id: string) {
+export function registersetmyplayerid(id: string) {
   myplayerid = id
 }
 
