@@ -6,26 +6,26 @@ import { memoryreadoperator } from './index'
 
 /** Group names and descriptions for allowlists (~20 toggles). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
-  ['roles', 'manage role and permission assignments'],
-  ['moderation', 'ban and unban players'],
-  ['workspace', 'create and manage books, pages, join codes'],
-  ['operator', 'dangerous tooling'],
-  ['discovery', 'list books, pages, and boards'],
-  ['bridge', 'use integrations like chat and broadcast'],
-  ['save', 'save sim state'],
-  ['nuke', 'reset state to blank'],
-  ['restart', 'clear all book flags from main'],
-  ['share', 'share, export content'],
-  ['publish', 'publish to bbs, screenshot, itch.io'],
-  ['import', 'import content (zztsearch, zztrandom)'],
-  ['transform', 'copy, pivot, weave, remix, revert, snapshot'],
-  ['world', 'build, change, put, shoot, write'],
-  ['execution', 'bind, die, run'],
-  ['toast', 'Show toast messages'],
-  ['fetch', 'Network fetch'],
   ['audio', 'audio (bpm, play, synth, bgplay, ...)'],
-  ['tts', 'text-to-speech'],
+  ['bridge', 'use integrations like chat, join codes, and broadcast'],
+  ['coder', 'create and edit codepages'],
+  ['discovery', 'list books, pages, and boards'],
+  ['execution', 'bind, die, run'],
+  ['fetch', 'network fetch'],
+  ['import', 'import content (zztsearch, zztrandom)'],
+  ['moderation', 'ban and unban players'],
+  ['nuke', 'reset state to blank'],
+  ['operator', 'dangerous tooling'],
+  ['publish', 'publish to bbs, screenshot, itch.io'],
+  ['restart', 'clear all book flags from main'],
+  ['roles', 'manage role and permission assignments'],
+  ['save', 'save sim state'],
+  ['share', 'share, export content'],
+  ['toast', 'Show toast messages'],
+  ['transform', 'copy, pivot, weave, remix, revert, snapshot'],
   ['trash', 'trash books or pages'],
+  ['tts', 'text-to-speech'],
+  ['world', 'build, change, put, shoot, write'],
 ])
 
 /** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
@@ -81,6 +81,12 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   // bridge
   broadcast: 'bridge',
   chat: 'bridge',
+  joincode: 'bridge',
+  jointab: 'bridge',
+
+  // coder
+  pageopen: 'coder', // open an existing codepage
+  stat: 'coder', // create a new codepage
 
   // discovery
   boardopen: 'discovery',
@@ -112,7 +118,9 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
 
   // operator
   agent: 'operator',
+  bookrename: 'operator',
   dev: 'operator',
+  fork: 'operator',
 
   // publish
   bbs: 'publish',
@@ -179,14 +187,6 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   throwstar: 'world',
   throwstarwith: 'world',
   write: 'world',
-
-  // workspace
-  stat: 'workspace', // create a new codepage
-  pageopen: 'workspace', // open an existing codepage
-  bookrename: 'workspace', // rename a book
-  fork: 'workspace',
-  joincode: 'bridge',
-  jointab: 'bridge',
 }
 
 /** Groups withheld from admin by default (roles, publish, import, nuke, restart). */
