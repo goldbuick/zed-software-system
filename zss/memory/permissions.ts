@@ -17,7 +17,6 @@ export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
   ['nuke', 'reset state to blank'],
   ['operator', 'dangerous tooling'],
   ['publish', 'publish to bbs, screenshot, itch.io'],
-  ['restart', 'clear all book flags from main'],
   ['roles', 'manage role and permission assignments'],
   ['save', 'save sim state'],
   ['share', 'share, export content'],
@@ -117,23 +116,20 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   nuke: 'nuke',
 
   // operator
-  agent: 'operator',
-  bookrename: 'operator',
   dev: 'operator',
   fork: 'operator',
+  agent: 'operator',
+  restart: 'operator',
+  bookrename: 'operator',
 
   // publish
   bbs: 'publish',
-  bookallexport: 'publish',
-  bookexport: 'publish',
   export: 'publish',
-  itchiopublish: 'publish',
-  pageexport: 'publish',
-  publish: 'publish',
   screenshot: 'publish',
-
-  // restart
-  restart: 'restart',
+  pageexport: 'publish',
+  bookexport: 'publish',
+  bookallexport: 'publish',
+  itchiopublish: 'publish',
 
   // roles
   allow: 'roles',
