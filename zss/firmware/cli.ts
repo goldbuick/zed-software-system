@@ -84,7 +84,6 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import {
-  COMMAND_PERMISSION_FAMILIES,
   PERMISSION_CONTROLLED_COMMANDS,
   PERMISSION_ROLES,
   memoryallowcommand,
@@ -773,9 +772,7 @@ export const CLI_FIRMWARE = createfirmware()
   )
   // -- permissions (operator only)
   .command('permissionlist', ['list permission-controlled commands'], () => {
-    const base = [...PERMISSION_CONTROLLED_COMMANDS].sort()
-    const variants = Object.keys(COMMAND_PERMISSION_FAMILIES).sort()
-    const all = [...new Set([...base, ...variants])].sort()
+    const all = Object.keys(PERMISSION_CONTROLLED_COMMANDS).sort()
     writeheader(
       SOFTWARE,
       READ_CONTEXT.elementfocus,

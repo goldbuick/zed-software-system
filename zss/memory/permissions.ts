@@ -4,8 +4,8 @@ import { ispresent, isstring } from 'zss/mapping/types'
 
 import { memoryreadoperator } from './index'
 
-/** Commands that require a permission check for non-operator players (deny unless on role allowlist). */
-export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
+/** Group names used in allowlists (internal; not exported). */
+const PERMISSION_CONTROLLED_GROUPS = new Set<string>([
   // permissions (role management)
   'allow',
   'revoke',
@@ -64,76 +64,74 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'synth',
   'tts',
   'ttsengine',
+  // variant-only families
+  'trash',
+  'bgplay',
 ])
 
-/** Commands withheld from admin by default (role management, publish, import content, session nuke/restart). */
-const ADMIN_DEFAULT_DENY = new Set([
-  'role',
-  'nuke',
-  'allow',
-  'revoke',
-  'restart',
-  'publish',
-  'zztsearch',
-  'zztrandom',
-])
-
-/** Default command allowlist for admin: all permission-controlled commands except role/nuke/restart/publish/zztsearch/zztrandom. */
-export const DEFAULT_ALLOWLIST_ADMIN: string[] = [
-  ...PERMISSION_CONTROLLED_COMMANDS,
-].filter((c) => !ADMIN_DEFAULT_DENY.has(c))
-
-/** Default command allowlist for mod: moderate and create content; no role management, session nuke/restart, or admin tools. */
-export const DEFAULT_ALLOWLIST_MOD: string[] = [
-  'ban',
-  'unban',
-  'broadcast',
-  'chat',
-  'save',
-  'share',
-  'export',
-  'publish',
-  'zztsearch',
-  'zztrandom',
-  'transform',
-  'build',
-  'change',
-  'put',
-  'shoot',
-  'write',
-  'bind',
-  'die',
-  'run',
-  'toast',
-  'fetch',
-  'bpm',
-  'play',
-  'synth',
-  'tts',
-  'ttsengine',
-]
-
-/** Default command allowlist for player: consume content, share/export own, basic audio and toast/fetch. */
-export const DEFAULT_ALLOWLIST_PLAYER: string[] = [
-  'share',
-  'toast',
-  'play',
-  'synth',
-  'tts',
-]
-
-/** Default allowlistbyrole for admin, mod, player (operator bypasses; use when initializing or resetting permissions). */
-export const DEFAULT_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
-  admin: DEFAULT_ALLOWLIST_ADMIN,
-  mod: DEFAULT_ALLOWLIST_MOD,
-  player: DEFAULT_ALLOWLIST_PLAYER,
-}
-
-/**
- * Variant commands that inherit permission from a single family key.
- * Example: allowlist has 'autofilter' → grants autofilter, autofilter1, autofilter2, autofilter3, autofilter4.
- */
-export const COMMAND_PERMISSION_FAMILIES: Record<string, string> = {
+/** Variant commands that inherit permission from a single family key (no base-group self-entries). */
+const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
+  // permissions (role management)
+  allow: 'allow',
+  revoke: 'revoke',
+  role: 'role',
+  permissions: 'permissions',
+  ban: 'ban',
+  unban: 'unban',
+  // admin / operator (books, pages, session, roles, streaming)
+  agent: 'agent',
+  book: 'book',
+  codepage: 'codepage',
+  dev: 'dev',
+  fork: 'fork',
+  joincode: 'joincode',
+  jointab: 'jointab',
+  // list / discovery (optional: restrict to hide book/page list from non-operator)
+  books: 'books',
+  pages: 'pages',
+  // integrations
+  broadcast: 'broadcast',
+  chat: 'chat',
+  // admin / inspector
+  admin: 'admin',
+  gadget: 'gadget',
+  findany: 'findany',
+  // session / world
+  save: 'save',
+  nuke: 'nuke',
+  restart: 'restart',
+  // content management
+  share: 'share',
+  export: 'export',
+  // publish content
+  publish: 'publish',
+  // import content
+  zztsearch: 'zztsearch',
+  zztrandom: 'zztrandom',
+  // board transforms
+  transform: 'transform',
+  // board mutation (create/move/destroy elements)
+  build: 'build',
+  change: 'change',
+  put: 'put',
+  shoot: 'shoot',
+  write: 'write',
+  // element / code execution
+  bind: 'bind',
+  die: 'die',
+  run: 'run',
+  toast: 'toast',
+  // network
+  fetch: 'fetch',
+  // audio, we should always allow vol, bgvol, ttsvol, bgplay
+  bpm: 'bpm',
+  play: 'play',
+  synth: 'synth',
+  tts: 'tts',
+  ttsengine: 'ttsengine',
+  // variant-only families
+  trash: 'trash',
+  bgplay: 'bgplay',
   //
   boards: 'codepage',
   pageopen: 'codepage',
@@ -223,12 +221,72 @@ export const COMMAND_PERMISSION_FAMILIES: Record<string, string> = {
   vibrato4: 'synth',
 }
 
-/** True if the command is permission-controlled (either listed or a variant of a family). */
+/** Commands withheld from admin by default (role management, publish, import content, session nuke/restart). */
+const ADMIN_DEFAULT_DENY = new Set([
+  'role',
+  'nuke',
+  'allow',
+  'revoke',
+  'restart',
+  'publish',
+  'zztsearch',
+  'zztrandom',
+])
+
+/** Default command allowlist for admin: all permission-controlled groups except role/nuke/restart/publish/zztsearch/zztrandom. */
+export const DEFAULT_ALLOWLIST_ADMIN: string[] = [
+  ...PERMISSION_CONTROLLED_GROUPS,
+].filter((c) => !ADMIN_DEFAULT_DENY.has(c))
+
+/** Default command allowlist for mod: moderate and create content; no role management, session nuke/restart, or admin tools. */
+export const DEFAULT_ALLOWLIST_MOD: string[] = [
+  'ban',
+  'unban',
+  'broadcast',
+  'chat',
+  'save',
+  'share',
+  'export',
+  'publish',
+  'zztsearch',
+  'zztrandom',
+  'transform',
+  'build',
+  'change',
+  'put',
+  'shoot',
+  'write',
+  'bind',
+  'die',
+  'run',
+  'toast',
+  'fetch',
+  'bpm',
+  'play',
+  'synth',
+  'tts',
+  'ttsengine',
+]
+
+/** Default command allowlist for player: consume content, share/export own, basic audio and toast/fetch. */
+export const DEFAULT_ALLOWLIST_PLAYER: string[] = [
+  'share',
+  'toast',
+  'play',
+  'synth',
+  'tts',
+]
+
+/** Default allowlistbyrole for admin, mod, player (operator bypasses; use when initializing or resetting permissions). */
+export const DEFAULT_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
+  admin: DEFAULT_ALLOWLIST_ADMIN,
+  mod: DEFAULT_ALLOWLIST_MOD,
+  player: DEFAULT_ALLOWLIST_PLAYER,
+}
+
+/** True if the command is permission-controlled (key in PERMISSION_CONTROLLED_COMMANDS table). */
 export function ispermissioncontrolledcommand(command: string): boolean {
-  return (
-    PERMISSION_CONTROLLED_COMMANDS.has(command) ||
-    command in COMMAND_PERMISSION_FAMILIES
-  )
+  return command in PERMISSION_CONTROLLED_COMMANDS
 }
 
 /** Roles in strict order: operator > admin > mod > player */
@@ -243,7 +301,7 @@ const PERMISSION_STATE = {
 }
 
 export function memorymapcommandtofamily(command: string): string {
-  return COMMAND_PERMISSION_FAMILIES[command] ?? command
+  return PERMISSION_CONTROLLED_COMMANDS[command] ?? command
 }
 
 /**

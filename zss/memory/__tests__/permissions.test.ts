@@ -29,7 +29,7 @@ describe('permissions', () => {
   })
 
   describe('ispermissioncontrolledcommand', () => {
-    it('returns true for commands in PERMISSION_CONTROLLED_COMMANDS', () => {
+    it('returns true for commands in the permission-controlled command table', () => {
       expect(ispermissioncontrolledcommand('allow')).toBe(true)
       expect(ispermissioncontrolledcommand('run')).toBe(true)
       expect(ispermissioncontrolledcommand('build')).toBe(true)
