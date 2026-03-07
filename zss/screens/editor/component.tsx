@@ -22,9 +22,9 @@ import { EditorRows, EditorRowsProps } from './editorrows'
 
 export function EditorComponent() {
   const player = registerreadplayer()
+  const zsswords = useGadgetClient((state) => state.zsswords)
   const [editor] = useTape(useShallow((state) => [state.editor]))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
-  const zsswords = useGadgetClient((state) => state.zsswords)
 
   const tapeeditor = useEditor()
   const codepage = useWaitForValueString(

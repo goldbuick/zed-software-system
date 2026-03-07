@@ -88,7 +88,6 @@ export const useTape = create<{
   inspector: boolean
   quickterminal: boolean
   autocompleteindex: number
-  autocompleteactive: boolean
   toast: string
   terminal: {
     open: boolean
@@ -107,7 +106,6 @@ export const useTape = create<{
   inspector: false,
   quickterminal: false,
   autocompleteindex: 0,
-  autocompleteactive: false,
   toast: '',
   terminal: {
     open: true,
