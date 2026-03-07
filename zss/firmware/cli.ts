@@ -111,7 +111,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from 'zss/memory/types'
-import { memoryreadconfig, memorywriteconfig } from 'zss/memory/utilities'
 import { ispt } from 'zss/words/dir'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
@@ -543,27 +542,6 @@ export const CLI_FIRMWARE = createfirmware()
     vmhalt(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command(
-    'loaderlogging',
-    ['toggle loader event logging (operator only)'],
-    () => {
-      const on = memoryreadconfig('loaderlogging') !== 'on'
-      const value = on ? 'on' : 'off'
-      memorywriteconfig('loaderlogging', value)
-      registerstore(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `config_loaderlogging`,
-        value,
-      )
-      apilog(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `loader logging is ${on ? '$greenon' : '$redoff'}`,
-      )
-      return 0
-    },
-  )
   .command('share', ['share url (operator only)'], () => {
     vmflushop()
     registershare(SOFTWARE, READ_CONTEXT.elementfocus)
