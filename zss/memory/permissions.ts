@@ -11,6 +11,8 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'revoke',
   'role',
   'permissions',
+  'ban',
+  'unban',
   // admin / operator (books, pages, session, roles, streaming)
   'agent',
   'book',
@@ -167,6 +169,7 @@ const PERMISSION_STATE = {
   playertotoken: {} as Record<string, string>,
   allowlistbyrole: {} as Record<string, Set<string>>,
   rolebytoken: {} as Record<string, string>,
+  bannedtokens: new Set<string>(),
 }
 
 export function memorymapcommandtofamily(command: string): string {
@@ -196,10 +199,11 @@ export function memorysetplayertotoken(player: string, token: string) {
   }
 }
 
-/** Deserialize storage shape: allowlistbyrole values as arrays, rolebytoken as Record. */
+/** Deserialize storage shape: allowlistbyrole values as arrays, rolebytoken as Record, bannedtokens as array. */
 export function memorysetcommandpermissions(
   allowlistbyrole: Record<string, string[]>,
   rolebytoken: Record<string, string>,
+  bannedtokens?: string[],
 ) {
   PERMISSION_STATE.rolebytoken = { ...rolebytoken }
   PERMISSION_STATE.allowlistbyrole = {}
@@ -209,6 +213,32 @@ export function memorysetcommandpermissions(
       ? new Set(arr.filter(isstring))
       : new Set()
   }
+  // Only overwrite banned list when explicitly provided (e.g. by operator storage), so bans persist when other players log in
+  if (bannedtokens !== undefined) {
+    PERMISSION_STATE.bannedtokens = new Set(
+      (Array.isArray(bannedtokens) ? bannedtokens : []).filter(isstring),
+    )
+  }
+}
+
+export function memoryistokenbanned(token: string): boolean {
+  return isstring(token) && PERMISSION_STATE.bannedtokens.has(token)
+}
+
+export function memorybantoken(token: string) {
+  if (isstring(token)) {
+    PERMISSION_STATE.bannedtokens.add(token)
+  }
+}
+
+export function memoryunbantoken(token: string) {
+  if (isstring(token)) {
+    PERMISSION_STATE.bannedtokens.delete(token)
+  }
+}
+
+export function memoryreadbannedtokens(): string[] {
+  return [...PERMISSION_STATE.bannedtokens]
 }
 
 export function memoryreadplayertotoken(): Record<string, string> {
@@ -261,6 +291,7 @@ export function memorysetrolefortoken(token: string, role: string) {
 export function memoryserializepermissions(): {
   allowlistbyrole: Record<string, string[]>
   rolebytoken: Record<string, string>
+  bannedtokens: string[]
 } {
   const allowlistbyrole: Record<string, string[]> = {}
   for (const role of Object.keys(PERMISSION_STATE.allowlistbyrole)) {
@@ -269,5 +300,6 @@ export function memoryserializepermissions(): {
   return {
     allowlistbyrole,
     rolebytoken: { ...PERMISSION_STATE.rolebytoken },
+    bannedtokens: memoryreadbannedtokens(),
   }
 }

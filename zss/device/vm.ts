@@ -80,6 +80,7 @@ import {
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import { memoryloader } from 'zss/memory/loader'
 import {
+  memoryistokenbanned,
   memorysetcommandpermissions,
   memorysetplayertotoken,
 } from 'zss/memory/permissions'
@@ -506,12 +507,13 @@ const vm = createdevice(
         registerloginready(vm, message.player)
         break
       case 'login': {
-        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, config)
+        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, bannedtokens, config)
         const storage = message.data ?? {}
         console.info('VM => storage', storage)
         memorysetcommandpermissions(
           storage.allowlistbyrole ?? {},
           storage.rolebytoken ?? {},
+          storage.bannedtokens,
         )
         if (isarray(storage.config)) {
           memorysetconfig(storage.config)
@@ -519,6 +521,11 @@ const vm = createdevice(
         // token on login so permissions (rolebytoken) resolve before/during login
         if (isstring(storage.token)) {
           memorysetplayertotoken(message.player, storage.token)
+        }
+        // reject login if token is banned
+        if (isstring(storage.token) && memoryistokenbanned(storage.token)) {
+          vm.replynext(message, 'acklogin', false)
+          break
         }
         // attempt login
         if (memoryloginplayer(message.player, message.data)) {
