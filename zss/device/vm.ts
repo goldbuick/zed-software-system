@@ -514,6 +514,7 @@ const vm = createdevice(
           storage.allowlistbyrole ?? {},
           storage.rolebytoken ?? {},
           storage.bannedtokens,
+          storage.permissionconfig,
         )
         if (isarray(storage.config)) {
           memorysetconfig(storage.config)

@@ -216,11 +216,64 @@ export function ispermissioncontrolledcommand(command: string): boolean {
 export const PERMISSION_ROLES = ['admin', 'mod', 'player'] as const
 export type PERMISSION_ROLE = (typeof PERMISSION_ROLES)[number]
 
+/** Permission config preset names. Custom = current allowlists; lockdown/creative replace allowlistbyrole. */
+export const PERMISSION_CONFIG_NAMES = [
+  'custom',
+  'lockdown',
+  'creative',
+] as const
+export type PermissionConfigName = (typeof PERMISSION_CONFIG_NAMES)[number]
+
+/** Lockdown: player nothing; mod observe + moderate only; admin unchanged. */
+const LOCKDOWN_ALLOWLIST_PLAYER: string[] = []
+const LOCKDOWN_ALLOWLIST_MOD: string[] = [
+  'moderation',
+  'bridge',
+  'save',
+  'share',
+  'discovery',
+  'toast',
+]
+
+/** Creative: player create/edit content and world; mod and admin unchanged. */
+const CREATIVE_ALLOWLIST_PLAYER: string[] = [
+  'discovery',
+  'workspace',
+  'world',
+  'transform',
+  'execution',
+  'share',
+  'toast',
+  'fetch',
+  'audio',
+  'tts',
+  'trash',
+]
+
+/** Preset allowlistbyrole by config name. custom = do not overwrite when applying. */
+export const PERMISSION_PRESETS: Record<
+  PermissionConfigName,
+  Record<string, string[]>
+> = {
+  custom: {},
+  lockdown: {
+    admin: DEFAULT_ALLOWLIST_ADMIN,
+    mod: LOCKDOWN_ALLOWLIST_MOD,
+    player: LOCKDOWN_ALLOWLIST_PLAYER,
+  },
+  creative: {
+    admin: DEFAULT_ALLOWLIST_ADMIN,
+    mod: DEFAULT_ALLOWLIST_MOD,
+    player: CREATIVE_ALLOWLIST_PLAYER,
+  },
+}
+
 const PERMISSION_STATE = {
   playertotoken: {} as Record<string, string>,
   allowlistbyrole: {} as Record<string, Set<string>>,
   rolebytoken: {} as Record<string, string>,
   bannedtokens: new Set<string>(),
+  permissionconfig: 'custom' as PermissionConfigName,
 }
 
 export function memorymapcommandtofamily(command: string): string {
@@ -266,6 +319,7 @@ export function memorysetcommandpermissions(
   allowlistbyrole: Record<string, string[]>,
   rolebytoken: Record<string, string>,
   bannedtokens?: string[],
+  permissionconfig?: string,
 ) {
   PERMISSION_STATE.rolebytoken = { ...rolebytoken }
   PERMISSION_STATE.allowlistbyrole = {}
@@ -280,6 +334,12 @@ export function memorysetcommandpermissions(
     PERMISSION_STATE.bannedtokens = new Set(
       (Array.isArray(bannedtokens) ? bannedtokens : []).filter(isstring),
     )
+  }
+  if (
+    isstring(permissionconfig) &&
+    PERMISSION_CONFIG_NAMES.includes(permissionconfig as PermissionConfigName)
+  ) {
+    PERMISSION_STATE.permissionconfig = permissionconfig as PermissionConfigName
   }
 }
 
@@ -327,16 +387,19 @@ export function memoryallowcommand(role: string, command: string) {
     PERMISSION_STATE.allowlistbyrole[role] = new Set()
   }
   PERMISSION_STATE.allowlistbyrole[role].add(command)
+  PERMISSION_STATE.permissionconfig = 'custom'
 }
 
 export function memoryrevokecommand(role: string, command: string) {
   if (command === 'all') {
     PERMISSION_STATE.allowlistbyrole[role] = new Set()
+    PERMISSION_STATE.permissionconfig = 'custom'
     return
   }
   const set = PERMISSION_STATE.allowlistbyrole[role]
   if (ispresent(set)) {
     set.delete(command)
+    PERMISSION_STATE.permissionconfig = 'custom'
   }
 }
 
@@ -349,11 +412,39 @@ export function memorysetrolefortoken(token: string, role: string) {
   }
 }
 
+export function memoryreadpermissionconfig(): PermissionConfigName {
+  return PERMISSION_STATE.permissionconfig
+}
+
+export function memorysetpermissionconfig(name: PermissionConfigName) {
+  PERMISSION_STATE.permissionconfig = name
+}
+
+/**
+ * Apply a permission preset. Replaces allowlistbyrole for lockdown/creative;
+ * for custom only sets config name. Does not change rolebytoken or bannedtokens.
+ */
+export function memoryapplypermissionconfig(name: PermissionConfigName) {
+  PERMISSION_STATE.permissionconfig = name
+  if (name === 'custom') {
+    return
+  }
+  const preset = PERMISSION_PRESETS[name]
+  PERMISSION_STATE.allowlistbyrole = {}
+  for (const role of Object.keys(preset)) {
+    const arr = preset[role]
+    PERMISSION_STATE.allowlistbyrole[role] = Array.isArray(arr)
+      ? new Set(arr.filter(isstring))
+      : new Set()
+  }
+}
+
 /** Serialize allowlistbyrole for storage (Sets → arrays). */
 export function memoryserializepermissions(): {
   allowlistbyrole: Record<string, string[]>
   rolebytoken: Record<string, string>
   bannedtokens: string[]
+  permissionconfig: PermissionConfigName
 } {
   const allowlistbyrole: Record<string, string[]> = {}
   for (const role of Object.keys(PERMISSION_STATE.allowlistbyrole)) {
@@ -363,5 +454,6 @@ export function memoryserializepermissions(): {
     allowlistbyrole,
     rolebytoken: { ...PERMISSION_STATE.rolebytoken },
     bannedtokens: memoryreadbannedtokens(),
+    permissionconfig: PERMISSION_STATE.permissionconfig,
   }
 }

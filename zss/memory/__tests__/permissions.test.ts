@@ -1,11 +1,17 @@
 import {
   DEFAULT_ALLOWLIST_BY_ROLE,
   ispermissioncontrolledcommand,
+  memoryapplypermissionconfig,
   memorycanruncommand,
   memorymapcommandtofamily,
+  memoryreadallowlistbyrole,
+  memoryreadpermissionconfig,
+  memoryserializepermissions,
   memorysetcommandpermissions,
   memorysetplayertotoken,
   memorysetrolefortoken,
+  memoryallowcommand,
+  memoryrevokecommand,
 } from 'zss/memory/permissions'
 
 jest.mock('zss/device/api', () => ({
@@ -25,6 +31,7 @@ describe('permissions', () => {
       DEFAULT_ALLOWLIST_BY_ROLE,
       {},
       [],
+      'custom',
     )
   })
 
@@ -90,6 +97,66 @@ describe('permissions', () => {
       memorysetrolefortoken('token-admin', 'admin')
       expect(memorycanruncommand('player1', 'nuke')).toBe(false)
       expect(memorycanruncommand('player1', 'book')).toBe(true)
+    })
+  })
+
+  describe('permission config presets', () => {
+    it('memoryapplypermissionconfig lockdown sets player allowlist empty', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memoryapplypermissionconfig('lockdown')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.size).toBe(0)
+      expect(memoryreadpermissionconfig()).toBe('lockdown')
+    })
+
+    it('memoryapplypermissionconfig creative gives player world and workspace', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memoryapplypermissionconfig('creative')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.has('world')).toBe(true)
+      expect(allowlistbyrole.player?.has('workspace')).toBe(true)
+      expect(allowlistbyrole.player?.has('transform')).toBe(true)
+      expect(memoryreadpermissionconfig()).toBe('creative')
+    })
+
+    it('memoryapplypermissionconfig custom does not overwrite allowlists', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memoryallowcommand('player', 'nuke')
+      memoryapplypermissionconfig('custom')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(allowlistbyrole.player?.has('nuke')).toBe(true)
+      expect(memoryreadpermissionconfig()).toBe('custom')
+    })
+
+    it('memoryserializepermissions includes permissionconfig', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memoryapplypermissionconfig('lockdown')
+      const data = memoryserializepermissions()
+      expect(data.permissionconfig).toBe('lockdown')
+    })
+
+    it('memorysetcommandpermissions restores permissionconfig', () => {
+      memorysetcommandpermissions(
+        DEFAULT_ALLOWLIST_BY_ROLE,
+        {},
+        [],
+        'creative',
+      )
+      expect(memoryreadpermissionconfig()).toBe('creative')
+    })
+
+    it('allow sets config to custom', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memoryapplypermissionconfig('lockdown')
+      memoryallowcommand('player', 'toast')
+      expect(memoryreadpermissionconfig()).toBe('custom')
+    })
+
+    it('revoke sets config to custom', () => {
+      memorysetcommandpermissions(DEFAULT_ALLOWLIST_BY_ROLE, {}, [])
+      memoryapplypermissionconfig('creative')
+      memoryrevokecommand('player', 'world')
+      expect(memoryreadpermissionconfig()).toBe('custom')
     })
   })
 })
