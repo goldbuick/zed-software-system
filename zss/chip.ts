@@ -22,7 +22,12 @@ import {
   ispresent,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
-import { memoryclearflags, memoryreadflags } from './memory'
+import { memoryclearflags, memoryreadflags, memoryreadoperator } from './memory'
+import {
+  ispermissioncontrolledcommand,
+  memorycanruncommand,
+  memorymapcommandtofamily,
+} from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
@@ -553,6 +558,22 @@ export function createchip(
     if (!ispresent(commandinvoke)) {
       if (command !== 'send') {
         return invokecommand('shortsend', [command, ...args])
+      }
+      return 0
+    }
+    if (
+      READ_CONTEXT.elementisplayer &&
+      READ_CONTEXT.elementfocus !== memoryreadoperator() &&
+      ispermissioncontrolledcommand(command)
+    ) {
+      const family = memorymapcommandtofamily(command)
+      if (!memorycanruncommand(READ_CONTEXT.elementfocus, family)) {
+        apierror(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions',
+          `${family} (deny)`,
+        )
       }
       return 0
     }

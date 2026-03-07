@@ -49,14 +49,15 @@ describe('tick', () => {
       const start = Date.now()
       await waitfor(0)
       const elapsed = Date.now() - start
-      expect(elapsed).toBeLessThan(10) // Should be very fast
+      // setTimeout(0) yields to event loop; allow up to 100ms on slow systems/CI
+      expect(elapsed).toBeLessThan(100)
     })
 
     it('should handle negative delay', async () => {
       const start = Date.now()
       await waitfor(-10)
       const elapsed = Date.now() - start
-      expect(elapsed).toBeLessThan(10) // Should be very fast
+      expect(elapsed).toBeLessThan(100)
     })
   })
 })

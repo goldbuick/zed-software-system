@@ -1,55 +1,43 @@
-import { apierror } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
-import { AUDIO_SYNTH } from 'zss/feature/synth'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { isnumber, isstring } from 'zss/mapping/types'
 
-export function synthvoicefxautofilterconfig(
-  player: string,
-  synth: MAYBE<AUDIO_SYNTH>,
-  index: number,
-  config: number | string,
-  value: number | string,
-) {
-  if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
-    apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
-    return
-  }
-  const autofilter = synth.FXCHAIN.autofilter
-  try {
+import { createVoiceFxConfigHandler } from './common'
+
+export const synthvoicefxautofilterconfig = createVoiceFxConfigHandler(
+  'autofilter',
+  (synth) => synth.FXCHAIN.autofilter,
+  (autofilter, config, value) => {
     switch (config) {
       case 'type':
         if (isstring(value)) {
           autofilter.set({ filter: { type: value as BiquadFilterType } })
-          return
+          return true
         }
         break
       case 'q':
         if (isnumber(value)) {
           autofilter.set({ filter: { Q: value } })
-          return
+          return true
         }
         break
       case 'depth':
         if (isnumber(value)) {
           autofilter.set({ depth: value })
-          return
+          return true
         }
         break
       case 'frequency':
         if (isnumber(value)) {
           autofilter.set({ frequency: value })
-          return
+          return true
         }
         break
       case 'octaves':
         if (isnumber(value)) {
           autofilter.set({ octaves: value })
-          return
+          return true
         }
         break
     }
-    throw new Error(`unknown autofilter|${config}|${value}`)
-  } catch (err) {
-    apierror(SOFTWARE, player, 'synth', err)
-  }
-}
+    return false
+  },
+)

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "main",
+    "name": "main",
+    "timestamp": 0,
+    "activelist": [],
+    "pages": [
+      {
+        "id": "title",
+        "code": "@board TITLE\n@startx 29\n@starty 12\n"
+      },
+      {
+        "id": "player",
+        "code": "@player\n@char 2\n@color blue\n@cycle 1\n:think\n\"\n\"Stub World\n#if inputmove do ?inputmove\n#else idle\n#done\n#think\n"
+      }
+    ],
+    "flags": {}
+  }
+]

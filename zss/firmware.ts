@@ -24,6 +24,9 @@ export type FIRMWARE_EVENTS = {
   list?: FIRMWARE_LIST
 }
 
+/** Required role for permission check: operator | admin | mod | player. Default 'player'. */
+export type COMMAND_REQUIRED_ROLE = 'operator' | 'admin' | 'mod' | 'player'
+
 export type FIRMWARE = {
   get?: FIRMWARE_GET
   set?: FIRMWARE_SET

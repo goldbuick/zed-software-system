@@ -196,19 +196,17 @@ export function memoryconverttogadgetlayers(
       whichlayer === DIR.OVER ? COLOR.ONCLEAR : COLOR.BLACK,
     )
     const collision = memoryreadelementstat(tile, 'collision')
-    tiles.char[i] = display.char
+    let char = display.char
+    if (
+      withgraphics === 'fpv' &&
+      (multi || ispresent(memoryreadelementstat(tile, 'sky')))
+    ) {
+      char = -char
+    }
+    tiles.char[i] = char
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
     tiles.stats[i] = collision
-  }
-
-  if (withgraphics === 'fpv') {
-    for (let i = 0; i < board.terrain.length; ++i) {
-      const tile = board.terrain[i]
-      if (multi || ispresent(memoryreadelementstat(tile, 'sky'))) {
-        tiles.char[i] = -tiles.char[i]
-      }
-    }
   }
 
   const boardobjects = Object.values(board.objects ?? {})

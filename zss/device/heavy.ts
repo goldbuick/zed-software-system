@@ -1,12 +1,16 @@
 import { createdevice } from 'zss/device'
-import { MODEL_CALLER, createmodelcaller } from 'zss/feature/heavy/model'
+import { createmodelcaller } from 'zss/feature/heavy/model'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { apierror, apilog } from './api'
 
-const modelcallers: Record<string, MODEL_CALLER> = {}
+/** Lazy-loaded to defer heavy deps (transformers, onnx) until first use */
+const modelcallers: Record<
+  string,
+  { call: any; clearpastvalues: any; destroy: any }
+> = {}
 
 const heavy = createdevice('heavy', [], (message) => {
   if (!heavy.session(message)) {

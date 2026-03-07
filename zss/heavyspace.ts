@@ -3,7 +3,7 @@ import { createforward, shouldforwardheavytoclient } from 'zss/device/forward'
 import './device/heavy'
 
 const { forward } = createforward((message) => {
-  if (shouldforwardheavytoclient(message)) {
+  if (shouldforwardheavytoclient()) {
     postMessage(message)
   }
 })

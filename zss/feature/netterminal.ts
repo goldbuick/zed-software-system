@@ -1,4 +1,3 @@
-import { get as idbget, update as idbupdate } from 'idb-keyval'
 import Peer, { DataConnection } from 'peerjs'
 import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
 import {
@@ -10,20 +9,21 @@ import {
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-// read / write from indexdb
-
 async function readpeerid(): Promise<string | undefined> {
-  return idbget('netid')
+  return await storagereadnetid()
 }
 
 async function writepeerid(
   updater: (oldValue: string | undefined) => string,
 ): Promise<void> {
-  return idbupdate('netid', updater)
+  const oldValue = await storagereadnetid()
+  const newValue = updater(oldValue)
+  await storagewritenetid(newValue)
 }
 
 let subscribetopic = ''
@@ -41,6 +41,35 @@ function netterminaltopic(player: string) {
   return createinfohash(player)
 }
 
+/** Convert only Set & Map so PeerJS binary pack does not hit "Type Set not yet supported". Leaves Uint8Array etc. alone. */
+function serializable<T>(value: T): T {
+  if (value instanceof Set) {
+    return [...value] as T
+  }
+  if (value instanceof Map) {
+    return Object.fromEntries(value) as T
+  }
+  if (Array.isArray(value)) {
+    return value.map(serializable) as T
+  }
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    (value as object).constructor === Object
+  ) {
+    const out: Record<string, unknown> = {}
+    for (const k of Object.keys(value as object)) {
+      out[k] = serializable((value as Record<string, unknown>)[k])
+    }
+    return out as T
+  }
+  return value
+}
+
+function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
+  void dataconnection.send(serializable(message))
+}
+
 function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
   let topicbridge: MAYBE<ReturnType<typeof createforward>>
@@ -55,7 +84,7 @@ function handledataconnection(dataconnection: DataConnection) {
         shouldforwardservertoclient(message) &&
         shouldnotforwardonpeerserver(message) === false
       ) {
-        void dataconnection.send(message)
+        sendpeer(dataconnection, message)
       }
     })
   }
@@ -70,7 +99,7 @@ function handledataconnection(dataconnection: DataConnection) {
         shouldforwardclienttoserver(message) &&
         shouldnotforwardonpeerclient(message) === false
       ) {
-        void dataconnection.send(message)
+        sendpeer(dataconnection, message)
       }
     })
     // signal ready to login
@@ -99,14 +128,15 @@ function handledataconnection(dataconnection: DataConnection) {
   })
 
   dataconnection.on('data', (netmsg: any) => {
-    const message = netmsg as MESSAGE
     if (!ispresent(networkpeer)) {
       return
     }
-    // bridge incoming messages from other peers
+    // Server may send gadgetclient:paint/patch as JSON string (avoids binarypack stack overflow)
+    const message = (
+      typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
+    ) as MESSAGE
     topicbridge?.forward({
       ...message,
-      // translate to software session
       session: SOFTWARE.session(),
     })
   })
@@ -134,6 +164,8 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   networkpeer = new Peer(peerid, {
     debug: 2,
     host: 'terminal.zed.cafe',
+    secure: true,
+    port: 443,
   })
 
   // attempt disconnect on page close

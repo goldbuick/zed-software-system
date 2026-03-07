@@ -1,15 +1,19 @@
 import { createdevice } from 'zss/device'
+import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
+import { getfingerprint } from 'zss/feature/fingerprint'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import {
   storagenukecontent,
+  storagereadconfigall,
   storagereadcontent,
   storagereadhistorybuffer,
   storagereadvars,
   storagesharecontent,
   storagewatchcontent,
+  storagewriteconfig,
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
@@ -55,6 +59,7 @@ import {
   vmloader,
   vmlogin,
   vmoperator,
+  vmplayertoken,
   vmzsswords,
 } from './api'
 
@@ -105,6 +110,9 @@ function writepages() {
 }
 
 function renderrow(content: string[]) {
+  if (!content || !Array.isArray(content)) {
+    return ''
+  }
   const messagetext = content.map((v) => `${v}`).join(' ')
   const ishyperlink = messagetext.startsWith('!')
   if (ishyperlink) {
@@ -114,10 +122,17 @@ function renderrow(content: string[]) {
 }
 
 const countregex = /\((\d+)\)/
+let lastNodeLogRow = ''
 
 function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
   const row = renderrow(message.data)
+  const rowplain = tokenizeandstriptextformat(row)
+    .replace(countregex, '')
+    .trim()
+  if (!rowplain.length) {
+    return
+  }
   const [firstrow = ''] = terminal.logs
   const logs = [...terminal.logs]
 
@@ -126,7 +141,6 @@ function terminaladdlog(message: MESSAGE) {
     countregex,
     '',
   )
-  const rowplain = tokenizeandstriptextformat(row)
 
   const dupecheck = firstrowplain.indexOf(rowplain)
   if (rowplain.length && firstrowplain.length && dupecheck === 0) {
@@ -161,6 +175,26 @@ function terminaladdlog(message: MESSAGE) {
       logs,
     },
   }))
+  // headless server mode: forward log to Node for Ink REPL (with format for fg/bg colors)
+  const nodeLog = (window as { __nodeLog?: (line: string) => void }).__nodeLog
+  if (typeof nodeLog === 'function' && isarray(message.data)) {
+    const plain = tokenizeandstriptextformat(row).replace(countregex, '').trim()
+    // skip empty lines
+    if (!plain.length) {
+      return
+    }
+    // skip sidebar/ticker: "element: status" pattern (may have leading display char)
+    const withoutLeadingChar = plain.replace(/^.\s*/, '')
+    const isSidebar =
+      (withoutLeadingChar.length < 80 &&
+        /^[a-zA-Z0-9_]+: .+$/.test(withoutLeadingChar)) ||
+      plain.includes(' player: ')
+    // skip consecutive duplicates (ticker floods the same line every tick)
+    if (!isSidebar && row !== lastNodeLogRow) {
+      lastNodeLogRow = row
+      nodeLog(row)
+    }
+  }
 }
 
 function terminalinclayout(inc: boolean) {
@@ -185,7 +219,7 @@ function terminalinclayout(inc: boolean) {
 }
 
 async function loadmem(books: string | BOOK[]) {
-  if (books.length === 0) {
+  if (!books || books.length === 0) {
     apierror(register, myplayerid, 'content', 'no content found')
     await writewikilink()
     vmzsswords(register, myplayerid)
@@ -203,9 +237,13 @@ let keepalive = 0
 // send keepalive message every 10 seconds
 const DOOT_RATE = 10
 
-// stable unique id
-const myplayerid = readsession('PLAYER') ?? createpid()
+// stable unique id (CLI mode injects via registerSetPlayerId)
+let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
+
+export function registersetmyplayerid(id: string) {
+  myplayerid = id
+}
 
 // timeout for TOAST
 let toasttimer: any
@@ -214,7 +252,7 @@ export function registerreadplayer() {
   return myplayerid
 }
 
-const register = createdevice(
+export const register = createdevice(
   'register',
   ['ready', 'second', 'log', 'chat', 'toast'],
   function (message) {
@@ -243,12 +281,12 @@ const register = createdevice(
       case 'ready': {
         doasync(register, message.player, async () => {
           // setup content watcher
-          await storagewatchcontent(myplayerid)
+          storagewatchcontent(myplayerid)
           // setup history buffer
           const historybuffer = await storagereadhistorybuffer()
           if (ispresent(historybuffer)) {
             useTerminal.setState({
-              buffer: historybuffer.filter((line) => {
+              buffer: historybuffer.filter((line: string) => {
                 // may need to add other checks here
                 return line.includes('#broadcast') === false
               }),
@@ -278,7 +316,13 @@ const register = createdevice(
       case 'loginready':
         doasync(register, message.player, async () => {
           const storage = await storagereadvars()
-          vmlogin(register, myplayerid, storage)
+          const config = await storagereadconfigall()
+          const token = await getfingerprint()
+          vmlogin(register, myplayerid, {
+            ...storage,
+            config,
+            token,
+          })
           vmzsswords(register, myplayerid)
         })
         break
@@ -288,6 +332,10 @@ const register = createdevice(
           registerterminalclose(register, myplayerid)
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
+          // CLI mode: start multiplayer after confirmed login (player is on board)
+          if (isclimode()) {
+            vmcli(register, myplayerid, '#joincode')
+          }
         } else {
           doasync(register, message.player, async () => {
             await writewikilink()
@@ -333,14 +381,24 @@ const register = createdevice(
         doasync(register, message.player, async () => {
           if (isarray(message.data)) {
             const [name, value] = message.data
-            await storagewritevar(name, value)
+            if (typeof name === 'string' && name.startsWith('config_')) {
+              await storagewriteconfig(name.slice(7), value)
+            } else {
+              await storagewritevar(name, value)
+            }
           }
         })
         break
+      case 'token':
+        if (isstring(message.data)) {
+          vmplayertoken(register, message.player, message.data)
+        }
+        break
       case 'copy':
         if (isstring(message.data)) {
-          if (ispresent(withclipboard())) {
-            withclipboard()
+          const clipboard = withclipboard()
+          if (ispresent(clipboard)) {
+            clipboard
               .writeText(message.data)
               .then(() =>
                 apitoast(

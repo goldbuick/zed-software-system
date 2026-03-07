@@ -1,28 +1,35 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.89.67",
+  "version": "0.89.96",
   "type": "module",
+  "files": [
+    "dist",
+    "bin",
+    "src/stub-book.json"
+  ],
   "scripts": {
     "sloc": "npx sloc -e .js zss",
     "test": "yarn jest --verbose",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "clear": "rimraf dist && rimraf dist-ssr && rimraf node_modules/.vite",
-    "dev": "yarn && yarn clear && vite --host 0.0.0.0 --port 7777",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
+    "clear": "rimraf tmp && rimraf dist && rimraf cafe/dist && rimraf node_modules/.vite",
+    "dev:vite": "vite --host 0.0.0.0 --port 7777",
+    "dev": "yarn && yarn clear && yarn dev:vite",
     "preview": "yarn && yarn clear && vite preview --host 0.0.0.0 --port 7777",
     "build": "yarn && yarn clear && vite build",
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
-    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
-    "tauri": "tauri",
-    "tauri:version": "npx tsx sync-version.ts",
-    "tauri:win": "tauri build -t x86_64-pc-windows-msvc",
-    "tauri:macos": "tauri build -t universal-apple-darwin"
+    "server": "yarn build && yarn build:cli && ./bin/dev.js",
+    "server:dev": "yarn build:cli && npx concurrently -k \"ZSS_NO_HTTPS=1 yarn dev:vite\" \"sleep 8 && ./bin/dev.js --dev\"",
+    "build:cli": "tsc -p tsconfig.cli.json && oclif manifest",
+    "build:cli:binary": "yarn build && yarn build:cli && NODE_OPTIONS=--no-deprecation PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell && oclif pack tarballs",
+    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
     "@breezystack/lamejs": "^1.2.7",
+    "@fingerprintjs/fingerprintjs": "^5.1.0",
     "@henrygd/queue": "^1.0.7",
     "@huggingface/transformers": "^3.0.0",
     "@metrichor/jmespath": "^0.3.1",
@@ -30,10 +37,6 @@
     "@react-three/eslint-plugin": "^0.1.2",
     "@react-three/fiber": "^9.4.0",
     "@react-three/postprocessing": "^3.0.4",
-    "@tauri-apps/api": "^2.9.1",
-    "@tauri-apps/cli": "^2.9.6",
-    "@tauri-apps/plugin-fs": "^2.4.5",
-    "@tauri-apps/plugin-opener": "^2.5.3",
     "@twurple/auth": "^8.0.3",
     "@twurple/chat": "^7.4.0",
     "@types/audioworklet": "^0.0.72",
@@ -56,6 +59,7 @@
     "debounce": "^2.2.0",
     "detect-it": "^4.0.1",
     "error-stack-parser": "^2.1.4",
+    "esbuild": "^0.27.3",
     "eslint": "8.57.1",
     "eslint-config-prettier": "8.10.0",
     "eslint-import-resolver-custom-alias": "^1.3.2",
@@ -81,6 +85,7 @@
     "msgpackr": "^1.11.2",
     "nanoid": "^5.0.3",
     "nanoid-dictionary": "^4.3.0",
+    "oclif": "^4.22.82",
     "onnxruntime-web": "^1.23.2",
     "path-browserify": "^1.0.0",
     "peerjs": "^1.5.5",
@@ -100,6 +105,7 @@
     "ts-extras": "^0.13.0",
     "ts-jest": "^29.1.3",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.0",
     "typescript": "^5.2.2",
     "uint8-util": "^2.2.5",
     "uqr": "^0.1.2",
@@ -110,5 +116,23 @@
     "vite-plugin-node-polyfills": "^0.24.0",
     "wavefunctioncollapse": "^2.1.0",
     "zustand": "^5.0.1"
+  },
+  "dependencies": {
+    "@oclif/core": "^4.8.3",
+    "ink": "^6.8.0",
+    "ink-text-input": "^6.0.0",
+    "playwright": "^1.49.0"
+  },
+  "bin": {
+    "zss": "./bin/run.js"
+  },
+  "oclif": {
+    "bin": "zss",
+    "commands": {
+      "strategy": "single",
+      "target": "./dist/src/commands/run.js"
+    },
+    "dirname": "zss",
+    "topicSeparator": " "
   }
 }

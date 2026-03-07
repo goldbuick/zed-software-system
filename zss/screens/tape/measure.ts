@@ -6,6 +6,9 @@ export function measureminwidth(width: number) {
 }
 
 export function measurerow(item: string, width: number, height: number) {
+  if (!item || typeof item !== 'string') {
+    return 1
+  }
   if (item.startsWith('!')) {
     return 1
   }

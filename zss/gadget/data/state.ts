@@ -87,6 +87,7 @@ export const useTape = create<{
   layout: TAPE_DISPLAY
   inspector: boolean
   quickterminal: boolean
+  autocompleteindex: number
   toast: string
   terminal: {
     open: boolean
@@ -99,13 +100,12 @@ export const useTape = create<{
     type: string
     title: string
   }
-  autocompleteindex: number
-  argslookup: string
   reset: () => void
 }>((set) => ({
   layout: TAPE_DISPLAY.TOP,
   inspector: false,
   quickterminal: false,
+  autocompleteindex: 0,
   toast: '',
   terminal: {
     open: true,
@@ -119,8 +119,6 @@ export const useTape = create<{
     type: '',
     title: '',
   },
-  autocompleteindex: -1,
-  argslookup: '',
   reset() {
     set({
       layout: TAPE_DISPLAY.TOP,
@@ -138,8 +136,6 @@ export const useTape = create<{
         type: '',
         title: '',
       },
-      autocompleteindex: -1,
-      argslookup: '',
     })
   },
 }))
@@ -169,12 +165,16 @@ export const useTerminal = create<{
   buffer: [''],
   reset() {
     set({
+      // panning offset
       pan: 0,
+      // scrolling offset
       scroll: 0,
+      // cursor position & selection
       xcursor: 0,
       ycursor: 0,
       xselect: undefined,
       yselect: undefined,
+      // input history
       bufferindex: 0,
       buffer: [''],
     })
@@ -188,14 +188,18 @@ export const useEditor = create<{
   select: MAYBE<number>
   reset: () => void
 }>((set) => ({
+  // scrolling offset
   xscroll: 0,
   yscroll: 0,
+  // cursor position & selection (text index)
   cursor: 0,
   select: undefined,
   reset() {
     set({
+      // scrolling offset
       xscroll: 0,
       yscroll: 0,
+      // cursor position & selection (text index)
       cursor: 0,
       select: undefined,
     })

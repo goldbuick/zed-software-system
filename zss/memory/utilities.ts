@@ -1,12 +1,14 @@
 import { compress, decompress, init } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
+import { registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { packformat, unpackformat } from 'zss/feature/format'
+import { getclimode } from 'zss/feature/detect'
 import {
-  storagereadconfigall,
-  storagereadconfigdefault,
-  storagewriteconfig,
-} from 'zss/feature/storage'
+  formatobject,
+  packformat,
+  unformatobject,
+  unpackformat,
+} from 'zss/feature/format'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
@@ -15,7 +17,6 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { doasync } from 'zss/mapping/func'
 import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
@@ -26,8 +27,12 @@ import {
   memoryimportbook,
   memoryreadelementdisplay,
 } from './bookoperations'
+import {
+  memoryexportcodepage,
+  memoryimportcodepage,
+} from './codepageoperations'
 import { memoryreadplayerboard } from './playermanagement'
-import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
+import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
 
 import {
   memoryisoperator,
@@ -37,6 +42,38 @@ import {
   memoryreadoperator,
   memoryreadtopic,
 } from '.'
+
+// In-memory config (register sends at login; utilities render/emit only)
+export const CONFIG_KEYS = ['crt', 'lowrez', 'scanlines', 'voice2text'] as const
+const CONFIG_DEFAULTS: Record<string, string> = {
+  crt: 'on',
+  lowrez: 'off',
+  scanlines: 'off',
+  voice2text: 'off',
+}
+
+const CONFIG_STATE: Record<string, string> = {}
+
+export function memorysetconfig(list: [string, string][]) {
+  for (const [key, value] of list) {
+    if (key && (value === 'on' || value === 'off')) {
+      CONFIG_STATE[key] = value
+    }
+  }
+}
+
+export function memoryreadconfigall(): [string, string][] {
+  return CONFIG_KEYS.map((key) => [
+    key,
+    CONFIG_STATE[key] ?? CONFIG_DEFAULTS[key] ?? 'off',
+  ])
+}
+
+export function memorywriteconfig(name: string, value: string) {
+  if (CONFIG_KEYS.includes(name as (typeof CONFIG_KEYS)[number])) {
+    CONFIG_STATE[name] = value === 'on' ? 'on' : 'off'
+  }
+}
 
 let zstdenabled = false
 async function getzstdlib(): Promise<void> {
@@ -76,7 +113,7 @@ function formatidleseconds(ms: number | undefined): string {
   return `${Math.floor(min / 60)}h`
 }
 
-export async function memoryadminmenu(
+export function memoryadminmenu(
   player: string,
   idletimes?: Record<string, number>,
 ) {
@@ -132,8 +169,8 @@ export async function memoryadminmenu(
     )
   }
 
-  // build config list
-  const configlist = await storagereadconfigall()
+  // build config list (from in-memory config; register owns storage read/write)
+  const configlist = memoryreadconfigall()
   const configstate: Record<string, string> = {}
   gadgettext(player, ``)
   gadgettext(player, `config list`)
@@ -146,15 +183,14 @@ export async function memoryadminmenu(
       key,
       [key, 'select', 'off', '0', 'on', '1'],
       (name) => {
-        const newval =
-          configstate[name] ?? value ?? storagereadconfigdefault(name)
+        const newval = configstate[name] ?? value
         return newval === 'on' ? 1 : 0
       },
-      (name, value) => {
-        configstate[name] = value ? 'on' : 'off'
-        doasync(SOFTWARE, player, async () => {
-          await storagewriteconfig(name, configstate[name])
-        })
+      (name, val) => {
+        const newval = val ? 'on' : 'off'
+        configstate[name] = newval
+        memorywriteconfig(name, newval)
+        registerstore(SOFTWARE, player, `config_${name}`, newval)
       },
     )
   }
@@ -165,9 +201,9 @@ export async function memoryadminmenu(
   gadgettext(player, DIVIDER)
   const topic = memoryreadtopic()
   if (topic) {
-    const joinurl = isjoin()
-      ? location.href
-      : `${location.origin}/join/#${topic}`
+    const base =
+      getclimode() && !isjoin() ? 'https://zed.cafe' : location.origin
+    const joinurl = isjoin() ? location.href : `${base}/join/#${topic}`
     gadgethyperlink(player, 'adminop', topic, ['copyit', joinurl])
     gadgettext(player, ``)
     const ascii = qrlines(joinurl)
@@ -189,7 +225,48 @@ export async function memoryadminmenu(
   shared.scroll = gadgetcheckqueue(player)
 }
 
+export function memoryexportbooksasjson(books: BOOK[]): string {
+  const plainObjs: object[] = []
+  for (let i = 0; i < books.length; ++i) {
+    const exported = memoryexportbook(books[i])
+    if (ispresent(exported)) {
+      const plain = unformatobject(exported, BOOK_KEYS, {
+        pages: (pages) => pages.map(memoryimportcodepage),
+      })
+      if (ispresent(plain)) {
+        plainObjs.push(plain)
+      }
+    }
+  }
+  return JSON.stringify(plainObjs, null, 2)
+}
+
+export function memoryimportbooksfromjson(json: string): BOOK[] {
+  const arr = JSON.parse(json) as object[]
+  if (!Array.isArray(arr)) {
+    return []
+  }
+  const books: BOOK[] = []
+  for (let i = 0; i < arr.length; ++i) {
+    const plain = arr[i] as Record<string, unknown>
+    const formatted = formatobject(plain, BOOK_KEYS, {
+      pages: (p: unknown[]) =>
+        (p ?? []).map((page) => memoryexportcodepage(page as any)),
+    })
+    if (ispresent(formatted)) {
+      const book = memoryimportbook(formatted)
+      if (ispresent(book)) {
+        books.push(book)
+      }
+    }
+  }
+  return books
+}
+
 export async function memorycompressbooks(books: BOOK[]) {
+  if (getclimode()) {
+    return memoryexportbooksasjson(books)
+  }
   await getzstdlib()
 
   console.info('saved', books)
@@ -217,6 +294,10 @@ export async function memorycompressbooks(books: BOOK[]) {
 }
 
 export async function memorydecompressbooks(base64bytes: string) {
+  const trimmed = base64bytes.trim()
+  if (trimmed.startsWith('[')) {
+    return memoryimportbooksfromjson(base64bytes)
+  }
   await getzstdlib()
 
   const books: BOOK[] = []

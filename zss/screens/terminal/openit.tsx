@@ -6,6 +6,7 @@ import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
 import { useWriteText } from 'zss/gadget/hooks'
 import { UserInput } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
+import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
 import {
   TapeTerminalItemInputProps,
@@ -23,8 +24,8 @@ export function TerminalOpenIt({
   const context = useWriteText()
 
   const invoke = useCallback(() => {
-    const [, openmethod, ...values] = words
-    const content = values.join(' ')
+    const [, openmethod] = words
+    const content = extractcontentfromargs(words, 2)
     const player = registerreadplayer()
     setTimeout(() => {
       switch (openmethod) {

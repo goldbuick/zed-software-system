@@ -552,6 +552,14 @@ export function vmlogin(
   device.emit(player, 'vm:login', storage)
 }
 
+export function vmplayertoken(
+  device: DEVICELIKE,
+  player: string,
+  token: string,
+) {
+  device.emit(player, 'vm:playertoken', token)
+}
+
 export function vmlocal(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:local')
 }

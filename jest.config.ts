@@ -6,6 +6,7 @@ const config: Config = {
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^zss/(.*)$': '<rootDir>/zss/$1',
+    '^uint8-util$': '<rootDir>/zss/__mocks__/uint8-util.ts',
   },
   transform: {
     '^.+\\.tsx?$': [
@@ -26,7 +27,7 @@ const config: Config = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three)/)',
+    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|uint8-util)/)',
   ],
   testMatch: [
     '**/__tests__/**/*.ts',
@@ -38,6 +39,7 @@ const config: Config = {
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'mjs'],
   collectCoverageFrom: ['zss/**/*.{ts,tsx}'],
+  coveragePathIgnorePatterns: ['/node_modules/', '/__mocks__/', '/__tests__/'],
 }
 
 export default config

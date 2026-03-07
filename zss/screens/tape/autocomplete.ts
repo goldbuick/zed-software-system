@@ -92,17 +92,18 @@ function filtersuggestions(
   }
   const lower = prefix.toLowerCase()
   const seen = new Set<string>()
-  return items
+  const matches = items
     .filter(({ word }) => {
       const wl = word.toLowerCase()
-      if (seen.has(wl) || !wl.startsWith(lower) || wl === lower) {
-        return false
+      if (!seen.has(wl) && wl.startsWith(lower) && wl !== lower) {
+        seen.add(wl)
+        return true
       }
-      seen.add(wl)
-      return true
+      return false
     })
     .sort((a, b) => a.word.localeCompare(b.word))
     .slice(0, MAX_SUGGESTIONS)
+  return matches
 }
 
 function tagwords(
@@ -249,10 +250,7 @@ function getautocompletefromtokens(
           ...tagrecordkeys(words.loadercommands, 'commands'),
           ...tagrecordkeys(words.runtimecommands, 'commands'),
         ]
-        const suggestions = [
-          ...filtersuggestions(prefix, items),
-          { word: prefix, category: 'commands' },
-        ]
+        const suggestions = filtersuggestions(prefix, items)
         return {
           suggestions,
           prefix,

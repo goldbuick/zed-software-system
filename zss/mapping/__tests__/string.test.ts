@@ -1,4 +1,4 @@
-import { stringsplice, totarget } from 'zss/mapping/string'
+import { parsetarget, stringsplice, totarget } from 'zss/mapping/string'
 
 describe('string', () => {
   describe('stringsplice', () => {
@@ -60,10 +60,9 @@ describe('string', () => {
     })
 
     it('should handle multiple colons', () => {
-      // split(':') splits on all colons, so only first part is target
       const [target, label] = totarget('target:label:extra')
       expect(target).toBe('target')
-      expect(label).toBe('label') // Only first part after colon
+      expect(label).toBe('label:extra') // Path preserves everything after first colon
     })
 
     it('should handle scope starting with colon', () => {
@@ -82,6 +81,13 @@ describe('string', () => {
       const [target, label] = totarget(':')
       expect(target).toBe('')
       expect(label).toBe('')
+    })
+  })
+
+  describe('parsetarget', () => {
+    it('returns target and path matching totarget', () => {
+      expect(parsetarget('a:b:c')).toEqual({ target: 'a', path: 'b:c' })
+      expect(parsetarget('self')).toEqual({ target: 'self', path: 'self' })
     })
   })
 })

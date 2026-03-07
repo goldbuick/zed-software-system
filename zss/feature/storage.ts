@@ -1,11 +1,3 @@
-import { appDataDir, join } from '@tauri-apps/api/path'
-import {
-  BaseDirectory,
-  mkdir,
-  readTextFile,
-  writeTextFile,
-} from '@tauri-apps/plugin-fs'
-import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import humanid from 'human-id'
 import {
   get as idbget,
@@ -14,19 +6,13 @@ import {
 } from 'idb-keyval'
 import { apierror, apilog, vmbooks } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { isclimode } from 'zss/feature/detect'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
 import { shorturl } from './url'
-import { write, writecopyit } from './writeui'
-
-// detect what kind of container we are in
-const istauri =
-  typeof window !== 'undefined' &&
-  ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)
-
-const FILE_SOURCE = 'zss-content.json'
+import { writecopyit } from './writeui'
 
 // read / write from indexdb
 
@@ -51,26 +37,42 @@ export function storagereadconfigdefault(name: string) {
 }
 
 export async function storagereadconfig(name: string) {
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageReadConfig === 'function'
+  ) {
+    const value = await (window as any).__nodeStorageReadConfig(name)
+    return value && value !== 'off' ? 'on' : 'off'
+  }
   const value = await readidb<string>(`config_${name}`)
-
   if (!value) {
     return storagereadconfigdefault(name)
   }
-
   return value && value !== 'off' ? 'on' : 'off'
 }
 
 export async function storagewriteconfig(name: string, value: string) {
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageWriteConfig === 'function'
+  ) {
+    return (window as any).__nodeStorageWriteConfig(name, value)
+  }
   return writeidb(`config_${name}`, () => value)
 }
 
 export async function storagereadconfigall() {
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageReadConfigAll === 'function'
+  ) {
+    return (window as any).__nodeStorageReadConfigAll()
+  }
   const lookup = [
     'config_crt',
     'config_lowrez',
     'config_scanlines',
     'config_voice2text',
-    'config_loaderlogging',
   ]
   const configs = await idbgetmany<string>(lookup)
   return configs.map((value, index) => {
@@ -84,10 +86,22 @@ export async function storagereadconfigall() {
 }
 
 export async function storagereadhistorybuffer() {
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageReadHistoryBuffer === 'function'
+  ) {
+    return (window as any).__nodeStorageReadHistoryBuffer()
+  }
   return readidb<string[]>('HISTORYBUFFER')
 }
 
 export async function storagewritehistorybuffer(historybuffer: string[]) {
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageWriteHistoryBuffer === 'function'
+  ) {
+    return (window as any).__nodeStorageWriteHistoryBuffer(historybuffer)
+  }
   return writeidb('HISTORYBUFFER', () => historybuffer)
 }
 
@@ -134,26 +148,14 @@ function readurlhash(player: string) {
 export async function storagereadcontent(
   player: string,
 ): Promise<string | BOOK[]> {
-  const urlcontent = readurlhash(player)
-  if (istauri) {
-    if (urlcontent.length) {
-      write(SOFTWARE, player, `reading url content, make sure to save`)
-      // clear the hash
-      location.hash = ''
-      // we only support long urls in tauri mode
-      return urlcontent
-    }
-    try {
-      write(SOFTWARE, player, `reading ${FILE_SOURCE}`)
-      const content = await readTextFile(FILE_SOURCE, {
-        baseDir: BaseDirectory.AppData,
-      })
-      return JSON.parse(content)
-    } catch (err: any) {
-      apierror(SOFTWARE, player, 'readcontent', err.toString())
-      return []
-    }
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageReadContent === 'function'
+  ) {
+    const content = await (window as any).__nodeStorageReadContent(player)
+    return content ?? ''
   }
+  const urlcontent = readurlhash(player)
   if (urlcontent.length) {
     // see if its a shorturlhash
     const maybefullurlcontent = await readlocalurl(urlcontent)
@@ -175,21 +177,26 @@ export async function storagewritecontent(
   compressed: string,
   books: BOOK[],
 ) {
-  if (istauri) {
-    try {
-      write(SOFTWARE, player, `writing ${FILE_SOURCE}`)
-      await writeTextFile(FILE_SOURCE, JSON.stringify(books, null, 2), {
-        baseDir: BaseDirectory.AppData,
-        create: true,
-      })
-    } catch (err: any) {
-      apierror(SOFTWARE, player, 'writecontent', err.toString())
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageWriteContent === 'function'
+  ) {
+    await (window as any).__nodeStorageWriteContent(
+      player,
+      label,
+      longcontent,
+      compressed,
+      books,
+    )
+    const msg = `wrote ${longcontent.length} chars [${longcontent.slice(0, 8)}...${longcontent.slice(-8)}]`
+    if (!label.includes('autosave')) {
+      apilog(SOFTWARE, player, msg)
     }
     return
   }
   if (compressed.length > 2048) {
-    const shorturl = await writelocalurl(compressed)
-    return storagewritecontent(player, label, longcontent, shorturl, books)
+    const short = await writelocalurl(compressed)
+    return storagewritecontent(player, label, longcontent, short, books)
   }
   const newurlhash = `#${compressed}`
   if (location.hash !== newurlhash) {
@@ -205,29 +212,39 @@ export async function storagewritecontent(
 }
 
 export async function storagereadvars(): Promise<Record<string, any>> {
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageReadVars === 'function'
+  ) {
+    return (window as any).__nodeStorageReadVars()
+  }
   const storage = await readidb<Record<string, any>>('storage')
   return storage ?? {}
 }
 
 export async function storagewritevar(name: string, value: any) {
+  if (
+    isclimode() &&
+    typeof (window as any).__nodeStorageWriteVar === 'function'
+  ) {
+    return (window as any).__nodeStorageWriteVar(name, value)
+  }
   const storage = await storagereadvars()
   storage[name] = value
   return writeidb('storage', () => storage)
 }
 
-// either browser or tauri setup here ...
+export async function storagereadnetid(): Promise<string | undefined> {
+  return readidb<string>('netid')
+}
+
+export async function storagewritenetid(netid: string) {
+  return writeidb('netid', () => netid)
+}
 
 let currenturlhash = ''
-export async function storagewatchcontent(player: string) {
-  if (istauri) {
-    await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true })
-    try {
-      const appdata = await appDataDir()
-      const item = await join(appdata, FILE_SOURCE)
-      await revealItemInDir(item)
-    } catch (err: any) {
-      apierror(SOFTWARE, player, 'storage', err.toString())
-    }
+export function storagewatchcontent(player: string) {
+  if (isclimode()) {
     return
   }
   window.addEventListener('hashchange', () => {
@@ -244,6 +261,10 @@ export async function storagewatchcontent(player: string) {
 }
 
 export async function storagesharecontent(player: string) {
+  if (isclimode()) {
+    apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
+    return
+  }
   // unpack short url before sharing
   const urlcontent = await storagereadcontent(player)
   if (isarray(urlcontent)) {
@@ -259,9 +280,12 @@ export async function storagesharecontent(player: string) {
   writecopyit(SOFTWARE, player, url, url)
 }
 
-export function storagenukecontent(player: string) {
-  if (istauri) {
-    apierror(SOFTWARE, player, 'storage', '#nuke not supported in server mode')
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+export function storagenukecontent(_player: string) {
+  if (isclimode()) {
+    if (typeof (window as any).__nodeStorageNukeContent === 'function') {
+      ;(window as any).__nodeStorageNukeContent()
+    }
     return
   }
   // nuke is the only valid case for reload

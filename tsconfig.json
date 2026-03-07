@@ -35,7 +35,8 @@
   },
   "include": [
     "zss",
-    "cafe"
+    "cafe",
+    "src"
   ],
   "references": [
     {

@@ -9,6 +9,7 @@ import { RUNTIME, STATS_DEV } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
+import { isclimode } from 'zss/feature/detect'
 import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { CRTShape } from 'zss/gadget/fx/crt'
@@ -28,16 +29,13 @@ import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
 
-// include all front-end devices
-import 'zss/userspace'
-
 export function Engine() {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
 
   // runs the SIM
   useEffect(() => {
-    createplatform(isjoin())
+    createplatform(isjoin(), isclimode())
     return () => {
       haltplatform()
     }

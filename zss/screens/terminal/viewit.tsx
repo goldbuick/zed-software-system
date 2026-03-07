@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useMedia, useWriteText } from 'zss/gadget/hooks'
 import { UserInput } from 'zss/gadget/userinput'
+import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
 import {
   TapeTerminalItemInputProps,
@@ -19,8 +20,7 @@ export function TerminalViewIt({
   const { setviewimage } = useMedia()
 
   const invoke = useCallback(() => {
-    const [, ...values] = words
-    const content = values.join(' ')
+    const content = extractcontentfromargs(words)
     setTimeout(() => setviewimage(content), 100)
   }, [setviewimage, words])
 

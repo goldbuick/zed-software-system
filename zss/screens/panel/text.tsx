@@ -161,16 +161,19 @@ export function PanelText({
                         setSelection(0)
                         setCursor(state.length)
                         break
-                      case 'c':
-                        if (ispresent(withclipboard())) {
-                          withclipboard()
+                      case 'c': {
+                        const clipboard = withclipboard()
+                        if (ispresent(clipboard)) {
+                          clipboard
                             .writeText(value.toJSON())
                             .catch((err) => console.error(err))
                         }
                         break
-                      case 'v':
-                        if (ispresent(withclipboard())) {
-                          withclipboard()
+                      }
+                      case 'v': {
+                        const clipboard = withclipboard()
+                        if (ispresent(clipboard)) {
+                          clipboard
                             .readText()
                             .then((text) => {
                               if (hasselection) {
@@ -182,14 +185,17 @@ export function PanelText({
                             .catch((err) => console.error(err))
                         }
                         break
-                      case 'x':
-                        if (ispresent(withclipboard())) {
-                          withclipboard()
+                      }
+                      case 'x': {
+                        const clipboard = withclipboard()
+                        if (ispresent(clipboard)) {
+                          clipboard
                             .writeText(value.toJSON())
                             .then(() => deleteselection())
                             .catch((err) => console.error(err))
                         }
                         break
+                      }
                     }
                   } else if (mods.alt) {
                     // no-op ?? - could this shove text around ??

@@ -1,7 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { fetchwiki } from 'zss/feature/fetchwiki'
-import { AGENT, createagent } from 'zss/feature/heavy/agent'
+import { createagent } from 'zss/feature/heavy/agent'
 import {
   markzipfilelistitem,
   parsewebfile,
@@ -11,7 +11,6 @@ import {
 } from 'zss/feature/parse/file'
 import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
 import { romparse, romread, romscroll } from 'zss/feature/rom'
-import { storagereadconfig } from 'zss/feature/storage'
 import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
@@ -44,6 +43,7 @@ import {
   memoryreadbooklist,
   memoryreadflags,
   memoryreadhalt,
+  memoryreadloaderlogging,
   memoryreadoperator,
   memoryreadsession,
   memoryresetbooks,
@@ -80,6 +80,10 @@ import {
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import { memoryloader } from 'zss/memory/loader'
 import {
+  memorysetcommandpermissions,
+  memorysetplayertotoken,
+} from 'zss/memory/permissions'
+import {
   memoryloginplayer,
   memorylogoutplayer,
   memorymoveplayertoboard,
@@ -102,6 +106,7 @@ import {
   memoryadminmenu,
   memorycompressbooks,
   memorydecompressbooks,
+  memorysetconfig,
 } from 'zss/memory/utilities'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -148,8 +153,8 @@ let flushtick = 0
 const watching: Record<string, Set<string>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
-// track running agents
-const agents: Record<string, AGENT> = {}
+// track running agents (lazy-loaded from zss/feature/heavy/agent)
+const agents: Record<string, { id: () => string; stop: () => void }> = {}
 
 // stat categories for zsswords (flattened for wire format)
 const STATS_BOARD = [
@@ -332,9 +337,7 @@ const vm = createdevice(
         }
         break
       case 'admin':
-        doasync(vm, message.player, async () => {
-          await memoryadminmenu(message.player, lastinputtime)
-        })
+        memoryadminmenu(message.player, lastinputtime)
         break
       case 'zsswords': {
         const langcommands: GADGET_ZSS_WORDS['langcommands'] = {
@@ -502,7 +505,21 @@ const vm = createdevice(
         // ack
         registerloginready(vm, message.player)
         break
-      case 'login':
+      case 'login': {
+        // hydrate permission state and config from storage (allowlistbyrole, rolebytoken, config)
+        const storage = message.data ?? {}
+        console.info('VM => storage', storage)
+        memorysetcommandpermissions(
+          storage.allowlistbyrole ?? {},
+          storage.rolebytoken ?? {},
+        )
+        if (isarray(storage.config)) {
+          memorysetconfig(storage.config)
+        }
+        // token on login so permissions (rolebytoken) resolve before/during login
+        if (isstring(storage.token)) {
+          memorysetplayertotoken(message.player, storage.token)
+        }
         // attempt login
         if (memoryloginplayer(message.player, message.data)) {
           // start tracking
@@ -514,6 +531,12 @@ const vm = createdevice(
         } else {
           // ack failure
           vm.replynext(message, 'acklogin', false)
+        }
+        break
+      }
+      case 'playertoken':
+        if (isstring(message.data)) {
+          memorysetplayertotoken(message.player, message.data)
         }
         break
       case 'local':
@@ -876,12 +899,10 @@ const vm = createdevice(
         // or events from devices
         if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
-          doasync(vm, message.player, async () => {
-            if ((await storagereadconfig('loaderlogging')) === 'on') {
-              console.info('loader event', eventname, format, arg, content)
-              apilog(vm, message.player, `loader event ${eventname} ${format}`)
-            }
-          })
+          if (memoryreadloaderlogging()) {
+            console.info('loader event', eventname, format, arg, content)
+            apilog(vm, message.player, `loader event ${eventname} ${format}`)
+          }
           switch (format) {
             case 'file':
               parsewebfile(message.player, content)
@@ -964,9 +985,7 @@ const vm = createdevice(
           case 'refscroll':
             switch (path) {
               case 'adminscroll':
-                doasync(vm, message.player, async () => {
-                  await memoryadminmenu(message.player, lastinputtime)
-                })
+                memoryadminmenu(message.player, lastinputtime)
                 break
               case 'objectlistscroll': {
                 const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)

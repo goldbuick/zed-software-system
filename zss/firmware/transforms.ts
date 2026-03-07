@@ -72,7 +72,6 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       const sourceboard = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.BOARD,
         stat,
-        true,
       )
       if (!ispresent(sourceboard)) {
         chip.set('didfail', 1)
@@ -115,7 +114,6 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       const sourceboard = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.BOARD,
         stat,
-        true,
       )
       if (!ispresent(sourceboard)) {
         chip.set('didfail', 1)
