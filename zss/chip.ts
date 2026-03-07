@@ -22,12 +22,8 @@ import {
   ispresent,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
-import { memoryclearflags, memoryreadflags, memoryreadoperator } from './memory'
-import {
-  ispermissioncontrolledcommand,
-  memorycanruncommand,
-  memorymapcommandtofamily,
-} from './memory/permissions'
+import { memoryclearflags, memoryreadflags } from './memory'
+import { memorycanruncommand } from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
@@ -561,20 +557,12 @@ export function createchip(
       }
       return 0
     }
+    // Only CLI driver enforces permissions; non-operator players need role/allowlist.
     if (
+      driver === DRIVER_TYPE.CLI &&
       READ_CONTEXT.elementisplayer &&
-      READ_CONTEXT.elementfocus !== memoryreadoperator() &&
-      ispermissioncontrolledcommand(command)
+      !memorycanruncommand(READ_CONTEXT.elementid, command)
     ) {
-      const family = memorymapcommandtofamily(command)
-      if (!memorycanruncommand(READ_CONTEXT.elementfocus, family)) {
-        apierror(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          'permissions',
-          `${family} (deny)`,
-        )
-      }
       return 0
     }
     return commandinvoke(chip, args)

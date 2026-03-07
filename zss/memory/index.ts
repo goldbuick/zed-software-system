@@ -67,8 +67,6 @@ import {
 const MEMORY = {
   // halting state
   halt: false,
-  // loader event logging (in-memory only; toggled via #loaderlogging)
-  loaderlogging: false,
   // unique id for messages
   session: createsid(),
   // player id in charge of vm
@@ -124,14 +122,6 @@ export function memorywritehalt(halt: boolean) {
 
 export function memoryreadhalt() {
   return MEMORY.halt
-}
-
-export function memorywriteloaderlogging(on: boolean) {
-  MEMORY.loaderlogging = on
-}
-
-export function memoryreadloaderlogging() {
-  return MEMORY.loaderlogging
 }
 
 export function memoryreadbooklist(): BOOK[] {

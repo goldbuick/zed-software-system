@@ -43,7 +43,6 @@ import {
   memoryreadbooklist,
   memoryreadflags,
   memoryreadhalt,
-  memoryreadloaderlogging,
   memoryreadoperator,
   memoryreadsession,
   memoryresetbooks,
@@ -107,6 +106,7 @@ import {
   memoryadminmenu,
   memorycompressbooks,
   memorydecompressbooks,
+  memoryreadconfig,
   memorysetconfig,
 } from 'zss/memory/utilities'
 import { categoryconsts } from 'zss/words/category'
@@ -906,7 +906,7 @@ const vm = createdevice(
         // or events from devices
         if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
-          if (memoryreadloaderlogging()) {
+          if (memoryreadconfig('loaderlogging') === 'on') {
             console.info('loader event', eventname, format, arg, content)
             apilog(vm, message.player, `loader event ${eventname} ${format}`)
           }

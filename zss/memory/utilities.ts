@@ -44,12 +44,19 @@ import {
 } from '.'
 
 // In-memory config (register sends at login; utilities render/emit only)
-export const CONFIG_KEYS = ['crt', 'lowrez', 'scanlines', 'voice2text'] as const
+export const CONFIG_KEYS = [
+  'crt',
+  'lowrez',
+  'scanlines',
+  'voice2text',
+  'loaderlogging',
+] as const
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',
   lowrez: 'off',
   scanlines: 'off',
   voice2text: 'off',
+  loaderlogging: 'off',
 }
 
 const CONFIG_STATE: Record<string, string> = {}
@@ -60,6 +67,10 @@ export function memorysetconfig(list: [string, string][]) {
       CONFIG_STATE[key] = value
     }
   }
+}
+
+export function memoryreadconfig(name: string): string {
+  return CONFIG_STATE[name] ?? CONFIG_DEFAULTS[name] ?? 'off'
 }
 
 export function memoryreadconfigall(): [string, string][] {

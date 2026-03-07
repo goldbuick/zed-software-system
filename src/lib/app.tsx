@@ -241,6 +241,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     'config_lowrez',
     'config_scanlines',
     'config_voice2text',
+    'config_loaderlogging',
   ]
   await page.exposeFunction('__nodeStorageReadConfigAll', async () => {
     const config = readJsonFile<Record<string, string>>(configPath, {})

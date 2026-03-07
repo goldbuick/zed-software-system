@@ -17,6 +17,13 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'agent',
   'book',
   'codepage',
+  'dev',
+  'fork',
+  'joincode',
+  'jointab',
+  // list / discovery (optional: restrict to hide book/page list from non-operator)
+  'books',
+  'pages',
   // integrations
   'broadcast',
   'chat',
@@ -58,6 +65,69 @@ export const PERMISSION_CONTROLLED_COMMANDS = new Set<string>([
   'tts',
   'ttsengine',
 ])
+
+/** Commands withheld from admin by default (role management, publish, import content, session nuke/restart). */
+const ADMIN_DEFAULT_DENY = new Set([
+  'role',
+  'nuke',
+  'allow',
+  'revoke',
+  'restart',
+  'publish',
+  'zztsearch',
+  'zztrandom',
+])
+
+/** Default command allowlist for admin: all permission-controlled commands except role/nuke/restart/publish/zztsearch/zztrandom. */
+export const DEFAULT_ALLOWLIST_ADMIN: string[] = [
+  ...PERMISSION_CONTROLLED_COMMANDS,
+].filter((c) => !ADMIN_DEFAULT_DENY.has(c))
+
+/** Default command allowlist for mod: moderate and create content; no role management, session nuke/restart, or admin tools. */
+export const DEFAULT_ALLOWLIST_MOD: string[] = [
+  'ban',
+  'unban',
+  'broadcast',
+  'chat',
+  'save',
+  'share',
+  'export',
+  'publish',
+  'zztsearch',
+  'zztrandom',
+  'transform',
+  'build',
+  'change',
+  'put',
+  'shoot',
+  'write',
+  'bind',
+  'die',
+  'run',
+  'toast',
+  'fetch',
+  'bpm',
+  'play',
+  'synth',
+  'tts',
+  'ttsengine',
+]
+
+/** Default command allowlist for player: consume content, share/export own, basic audio and toast/fetch. */
+export const DEFAULT_ALLOWLIST_PLAYER: string[] = [
+  'share',
+  'toast',
+  'play',
+  'synth',
+  'tts',
+]
+
+/** Default allowlistbyrole for admin, mod, player (operator bypasses; use when initializing or resetting permissions). */
+export const DEFAULT_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
+  admin: DEFAULT_ALLOWLIST_ADMIN,
+  mod: DEFAULT_ALLOWLIST_MOD,
+  player: DEFAULT_ALLOWLIST_PLAYER,
+}
 
 /**
  * Variant commands that inherit permission from a single family key.
@@ -176,21 +246,32 @@ export function memorymapcommandtofamily(command: string): string {
   return COMMAND_PERMISSION_FAMILIES[command] ?? command
 }
 
+/**
+ * Returns true if this player may run the command. Operator always may; non-operator
+ * must have a token and a role whose allowlist includes the command (or its family).
+ * On deny, reports apierror and returns false. Call only for CLI driver + player context.
+ */
 export function memorycanruncommand(player: string, command: string): boolean {
-  const operator = memoryreadoperator()
-  if (player === operator) {
+  if (player === memoryreadoperator()) {
     return true
   }
-
+  if (!ispermissioncontrolledcommand(command)) {
+    return true
+  }
+  const family = memorymapcommandtofamily(command)
   const token = PERMISSION_STATE.playertotoken[player]
   if (token === undefined) {
     apierror(SOFTWARE, player, 'permissions', 'no token (deny)')
     return false
   }
-
   const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
   const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
-  return allowlist?.has(command)
+  const allowed = allowlist?.has(family) ?? false
+  if (!allowed) {
+    apierror(SOFTWARE, player, 'permissions', `${family} (deny)`)
+    return false
+  }
+  return true
 }
 
 export function memorysetplayertotoken(player: string, token: string) {
