@@ -46,9 +46,7 @@ export function memoryensuresoftwarebook(
   maybename?: string,
 ) {
   const prev = memoryreadbookbysoftware(slot)
-  let book = ispresent(maybename)
-    ? memoryensurebookbyname(maybename)
-    : prev
+  let book = ispresent(maybename) ? memoryensurebookbyname(maybename) : prev
 
   if (!ispresent(book)) {
     book = memoryreadfirstbook()
