@@ -192,6 +192,8 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
   }
 }
 
+const TOUCHTEXT_ID = 'touchtext'
+
 function handlekeydown(event: KeyboardEvent) {
   const key = NAME(event.key)
   const mods = modsfromevent(event)
@@ -381,7 +383,7 @@ function handlekeyup(event: KeyboardEvent) {
 }
 
 function bindtouchtextkeyboard() {
-  const touchtext = document.getElementById('touchtext')
+  const touchtext = document.getElementById(TOUCHTEXT_ID)
   if (!touchtext) {
     return
   }
@@ -421,9 +423,19 @@ window.addEventListener(
   { passive: false },
 )
 
-window.addEventListener('keydown', (event) => handlekeydown(event), {
-  capture: true,
-})
+window.addEventListener(
+  'keydown',
+  (event) => {
+    // when focus is on the hidden touchtext input (editor/terminal), only
+    // the touchtext listener should handle keys so we don't get duplicate chars
+    const target = event.target as HTMLElement | null
+    if (target?.id === TOUCHTEXT_ID) {
+      return
+    }
+    handlekeydown(event)
+  },
+  { capture: true },
+)
 
 window.addEventListener('keyup', (event) => handlekeyup(event), {
   capture: true,
