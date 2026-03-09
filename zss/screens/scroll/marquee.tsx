@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useBlink } from 'zss/gadget/blink'
+import { useFrame } from '@react-three/fiber'
+import { useRef, useState } from 'react'
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
+
+const SCROLL_SPEED = 0.5
 
 type ScrollMarqueeProps = {
   line: string
@@ -27,7 +29,6 @@ export function ScrollMarquee({
   context,
 }: ScrollMarqueeProps) {
   // we assume context is setup
-  const blink = useBlink()
 
   // measure line
   const strcolor = COLOR[color] ?? ''
@@ -36,15 +37,15 @@ export function ScrollMarquee({
   const contentmax = measure?.measuredwidth ?? 1
 
   // moves offset along
+  const acc = useRef(0)
   const [offset, setoffset] = useState(0)
-  useEffect(() => {
-    setoffset((state) => {
-      if (blink) {
-        return state
-      }
-      return (state - 1) % contentmax
-    })
-  }, [blink, contentmax])
+  useFrame((_, delta) => {
+    acc.current += delta
+    if (acc.current >= SCROLL_SPEED) {
+      acc.current -= SCROLL_SPEED
+      setoffset((state) => (state - 1) % contentmax)
+    }
+  })
 
   // cycle line if too long
   context.disablewrap = true
@@ -66,6 +67,11 @@ export function ScrollMarquee({
   context.active.leftedge = 0
   context.active.rightedge = rightedge
   context.disablewrap = false
+
+  // Force tile layer to re-render after marquee writes. In the editor, TilesRender is a
+  // sibling of the provider and only re-renders when the store notifies; without this,
+  // the marquee would only appear to update when the editor tree re-renders (e.g. cursor).
+  context.changed()
 
   return null
 }

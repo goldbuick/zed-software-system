@@ -112,33 +112,48 @@ export function EditorComponent() {
     }
 
     // warn when a label name shadows a command
-    // if (ispresent(parsed.tokens)) {
-    //   for (let i = 0; i < parsed.tokens.length; ++i) {
-    //     const token = parsed.tokens[i]
-    //     if (
-    //       token.tokenTypeIdx === lexer.label.tokenTypeIdx &&
-    //       token.startColumn === 1
-    //     ) {
-    //       const labelname = token.image.slice(1).trim().toLowerCase()
-    //       if (commandnames.has(labelname)) {
-    //         const row = rows[(token.startLine ?? 1) - 1]
-    //         if (ispresent(row)) {
-    //           row.errors = row.errors ?? []
-    //           row.errors.push({
-    //             offset: token.startOffset,
-    //             line: token.startLine,
-    //             column: token.startColumn,
-    //             length: token.image.length,
-    //             message: `label ':${labelname}' shadows #${labelname} command`,
-    //           })
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
+    const commandnames = new Set<string>()
+    if (ispresent(zsswords)) {
+      for (const k of objectKeys(zsswords.langcommands ?? {})) {
+        commandnames.add(k.toLowerCase())
+      }
+      for (const k of objectKeys(zsswords.clicommands ?? {})) {
+        commandnames.add(k.toLowerCase())
+      }
+      for (const k of objectKeys(zsswords.loadercommands ?? {})) {
+        commandnames.add(k.toLowerCase())
+      }
+      for (const k of objectKeys(zsswords.runtimecommands ?? {})) {
+        commandnames.add(k.toLowerCase())
+      }
+    }
+    if (ispresent(parsed.tokens)) {
+      for (let i = 0; i < parsed.tokens.length; ++i) {
+        const token = parsed.tokens[i]
+        if (
+          token.tokenTypeIdx === lexer.label.tokenTypeIdx &&
+          token.startColumn === 1
+        ) {
+          const labelname = token.image.slice(1).trim().toLowerCase()
+          if (commandnames.has(labelname)) {
+            const row = rows[(token.startLine ?? 1) - 1]
+            if (ispresent(row)) {
+              row.errors = row.errors ?? []
+              row.errors.push({
+                offset: token.startOffset,
+                line: token.startLine,
+                column: token.startColumn,
+                length: token.image.length,
+                message: `label ':${labelname}' shadows #${labelname} command`,
+              })
+            }
+          }
+        }
+      }
+    }
 
     return rows
-  }, [strvalue])
+  }, [strvalue, zsswords])
 
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
