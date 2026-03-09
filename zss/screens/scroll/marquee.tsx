@@ -1,7 +1,8 @@
 import { useFrame } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useContext, useRef, useState } from 'react'
+import { TilesContext } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import {
-  WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
@@ -16,7 +17,6 @@ type ScrollMarqueeProps = {
   y: number
   leftedge: number
   rightedge: number
-  context: WRITE_TEXT_CONTEXT
 }
 
 export function ScrollMarquee({
@@ -26,9 +26,9 @@ export function ScrollMarquee({
   y,
   leftedge,
   rightedge,
-  context,
 }: ScrollMarqueeProps) {
   // we assume context is setup
+  const context = useWriteText()
 
   // measure line
   const strcolor = COLOR[color] ?? ''

@@ -66,7 +66,6 @@ export function TapeToast({ toast }: TapeToastProps) {
             leftedge={0}
             rightedge={rightedge}
             line={`${toast}$32$19$32`}
-            context={context}
           />
           <group position={[0, 0, 998]}>
             <ShadeBoxDither

@@ -9,6 +9,7 @@ import { Scrollable } from 'zss/gadget/scrollable'
 import { useTiles } from 'zss/gadget/tiles'
 import { UserFocus, UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { TilesData } from 'zss/gadget/usetiles'
+import { WriteTextContext } from 'zss/gadget/writetext'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
@@ -151,45 +152,41 @@ export function ScrollComponent({
           CANCEL_BUTTON={scroll.sendclose}
         />
         <TilesData store={tilesstore}>
-          <ScrollBackPlate
-            name={scrollname}
-            width={width}
-            height={height}
-            context={context}
-          />
-          <ScrollMarquee
-            margin={3}
-            color={COLOR.BLUE}
-            y={0}
-            leftedge={0}
-            rightedge={width}
-            line={`
+          <WriteTextContext.Provider value={context}>
+            <ScrollBackPlate name={scrollname} width={width} height={height} />
+            <ScrollMarquee
+              margin={3}
+              color={COLOR.BLUE}
+              y={0}
+              leftedge={0}
+              rightedge={width}
+              line={`
 keys: $whiteup/down$green.SCROLL UP/DOWN 
 $whiteesc/cancel$green.CLOSE SCROLL 
 $whiteenter$green.ACTION ON SELECTED LINE 
 $whitealt+up/down$green.JUMP 10 LINES 
 $white$meta+up/down$green.JUMP TOP/BOTTOM $blue
 `}
-            context={context}
-          />
-          <ScrollControls
-            row={row}
-            width={width}
-            height={height}
-            panelwidth={panelwidth}
-            panelheight={panelheight}
-          >
-            <PanelComponent
-              width={panelwidth}
-              height={panelheight}
-              xmargin={0}
-              ymargin={0}
-              color={color}
-              bg={COLOR.ONCLEAR}
-              text={visibletext}
-              selected={row}
             />
-          </ScrollControls>
+            <ScrollControls
+              row={row}
+              width={width}
+              height={height}
+              panelwidth={panelwidth}
+              panelheight={panelheight}
+            >
+              <PanelComponent
+                width={panelwidth}
+                height={panelheight}
+                xmargin={0}
+                ymargin={0}
+                color={color}
+                bg={COLOR.ONCLEAR}
+                text={visibletext}
+                selected={row}
+              />
+            </ScrollControls>
+          </WriteTextContext.Provider>
         </TilesData>
       </UserFocus>
     </group>

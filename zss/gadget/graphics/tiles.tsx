@@ -70,7 +70,6 @@ export function Tiles({
       color,
       bg,
     )
-    // console.info('Tiles set data texture', label)
   }, [material.uniforms.data.value, width, height, char, color, bg, label])
 
   // create / config material

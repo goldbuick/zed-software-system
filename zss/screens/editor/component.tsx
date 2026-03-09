@@ -214,7 +214,6 @@ $white${metaundo}$green.REDO
 $white$meta+p$green.RUN SELECTED CODE 
 $white$meta+h$green.OPEN HELPSCROLL $blue
     `}
-        context={context}
       />
       <EditorRows {...props} />
       <EditorInput

@@ -61,7 +61,7 @@ export function EditorRows({
     tokenizeandwritetextformat(
       ` $BLWHITE${fibble}$WHITE LOADING $BLWHITE${fibble}$WHITE `,
       context,
-      true,
+      false,
     )
     return null
   }
@@ -87,7 +87,9 @@ export function EditorRows({
 
   // render lines
   const baseleft = edge.left + 1 - 4
-  setupeditoritem(false, false, -xoffset, -yoffset, context, 1, 2, 1)
+  context.active.leftedge = edge.left + 1
+  context.x = context.active.leftedge - xoffset
+  context.y = context.active.topedge ?? 0 - yoffset + 2
   for (let i = 0; i < withrows.length; ++i) {
     if (context.y <= edge.top + 1) {
       ++context.y

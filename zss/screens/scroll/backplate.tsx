@@ -1,6 +1,6 @@
 import { useTilesData, writetile } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import {
-  WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
@@ -10,18 +10,12 @@ type ScrollBackPlateProps = {
   name: string
   width: number
   height: number
-  context: WRITE_TEXT_CONTEXT
 }
 
-export function ScrollBackPlate({
-  name,
-  width,
-  height,
-  context,
-}: ScrollBackPlateProps) {
+export function ScrollBackPlate({ name, width, height }: ScrollBackPlateProps) {
   // write to tiles
   const tiles = useTilesData()
-
+  const context = useWriteText()
   // edges
   for (let x = 1; x < width - 1; ++x) {
     if (x > 2 && x < width - 1) {
