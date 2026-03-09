@@ -1,11 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { vmlocal } from 'zss/device/api'
+import { lastinputtime } from 'zss/device/vm/state'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
-
-import { lastinputtime } from '../state'
 
 export function handleinput(vm: DEVICE, message: MESSAGE): void {
   if (message.player.includes('local') && !memoryhasflags(message.player)) {

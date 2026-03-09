@@ -1,11 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apierror, heavymodelprompt, vmagentlist } from 'zss/device/api'
+import { agents } from 'zss/device/vm/state'
 import { createagent } from 'zss/feature/heavy/agent'
 import { write, writeheader } from 'zss/feature/writeui'
 import { isarray, ispresent } from 'zss/mapping/types'
-
-import { agents } from '../state'
 
 export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   const agent = createagent()

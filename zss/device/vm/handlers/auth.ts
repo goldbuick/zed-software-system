@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apilog, registerloginready, vmclearscroll } from 'zss/device/api'
+import { lastinputtime, tracking } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
@@ -15,8 +16,6 @@ import {
 import { memoryisoperator, memoryreadoperator } from 'zss/memory/session'
 import type { BOOK_FLAGS } from 'zss/memory/types'
 import { memorysetconfig } from 'zss/memory/utilities'
-
-import { lastinputtime, tracking } from '../state'
 
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
   if (!memoryreadplayeractive(message.player)) {

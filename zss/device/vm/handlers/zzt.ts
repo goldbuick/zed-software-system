@@ -1,6 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
+  writezztcontentlinks,
+  writezztcontentwait,
+} from 'zss/device/vm/helpers'
+import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
   museumofzztrandom,
@@ -8,8 +12,6 @@ import {
 } from 'zss/feature/url'
 import { doasync } from 'zss/mapping/func'
 import { isarray } from 'zss/mapping/types'
-
-import { writezztcontentlinks, writezztcontentwait } from '../helpers'
 
 export function handlezztsearch(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {

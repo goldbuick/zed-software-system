@@ -8,10 +8,9 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
+import { vmflushop } from 'zss/firmware/cli/utils'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
-
-import { vmflushop } from '../utils'
 
 export function registerstatecommands(fw: FIRMWARE): FIRMWARE {
   return fw

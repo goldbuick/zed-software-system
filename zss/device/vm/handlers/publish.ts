@@ -1,11 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { registerpublishmem } from 'zss/device/api'
+import { compressedbookstate } from 'zss/device/vm/helpers'
 import { doasync } from 'zss/mapping/func'
 import { isarray } from 'zss/mapping/types'
 import { memoryreadoperator } from 'zss/memory/session'
-
-import { compressedbookstate } from '../helpers'
 
 export function handlepublish(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {

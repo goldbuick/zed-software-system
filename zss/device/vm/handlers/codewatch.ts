@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { vmcodeaddress } from 'zss/device/api'
 import { modemobservevaluestring } from 'zss/device/modem'
+import { observers, watching } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
@@ -15,8 +16,6 @@ import {
 import { memoryhaltchip } from 'zss/memory/runtime'
 import { memoryreadbookbyaddress } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
-
-import { observers, watching } from '../state'
 
 export function handlecodewatch(_vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {

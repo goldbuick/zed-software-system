@@ -1,17 +1,16 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { vmlogout } from 'zss/device/api'
-import { doasync } from 'zss/mapping/func'
-import { memoryscanplayers } from 'zss/memory/playermanagement'
-
-import { savestate } from '../helpers'
+import { savestate } from 'zss/device/vm/helpers'
 import {
   FLUSH_RATE,
   SECOND_TIMEOUT,
   incflushtick,
   setflushtick,
   tracking,
-} from '../state'
+} from 'zss/device/vm/state'
+import { doasync } from 'zss/mapping/func'
+import { memoryscanplayers } from 'zss/memory/playermanagement'
 
 export function handlesecond(vm: DEVICE, message: MESSAGE): void {
   memoryscanplayers(tracking)

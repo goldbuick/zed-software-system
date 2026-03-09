@@ -16,6 +16,7 @@ import {
   writetext,
 } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
+import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
@@ -50,8 +51,6 @@ import {
 } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
-
-import { codepagepicksuffix, vmflushop } from '../utils'
 
 export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
   return fw

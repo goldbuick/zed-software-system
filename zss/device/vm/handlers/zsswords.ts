@@ -2,6 +2,14 @@ import { objectKeys } from 'ts-extras'
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
+  STATS_BOARD,
+  STATS_BOOLEAN,
+  STATS_CONFIG,
+  STATS_HELPER,
+  STATS_INTERACTION,
+  STATS_SENDER,
+} from 'zss/device/vm/state'
+import {
   DRIVER_TYPE,
   firmwaregetcommandargs,
   firmwarelistcommands,
@@ -17,15 +25,6 @@ import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
 import { DIR_CONSTS } from 'zss/words/dir'
 import { ARG_TYPE } from 'zss/words/types'
-
-import {
-  STATS_BOARD,
-  STATS_BOOLEAN,
-  STATS_CONFIG,
-  STATS_HELPER,
-  STATS_INTERACTION,
-  STATS_SENDER,
-} from '../state'
 
 const dirmods = [
   'cw',

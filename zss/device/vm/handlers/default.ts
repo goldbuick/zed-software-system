@@ -2,6 +2,7 @@ import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { registercopy, vmcli, vmloader } from 'zss/device/api'
+import { lastinputtime } from 'zss/device/vm/state'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
@@ -36,8 +37,6 @@ import {
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { NAME } from 'zss/words/types'
-
-import { lastinputtime } from '../state'
 
 import { handlezztbridge } from './zzt'
 

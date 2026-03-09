@@ -14,10 +14,9 @@ import {
   LAYER_TYPE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
+import { useMedia } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
-
-import { useMedia } from '../hooks'
 
 function istileslayer(l: LAYER): l is LAYER_TILES {
   return l.type === LAYER_TYPE.TILES

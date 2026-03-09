@@ -1,9 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { forkstate } from 'zss/device/vm/helpers'
 import { doasync } from 'zss/mapping/func'
 import { memoryreadoperator } from 'zss/memory/session'
-
-import { forkstate } from '../helpers'
 
 export function handlefork(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()

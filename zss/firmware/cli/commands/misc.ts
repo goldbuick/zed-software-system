@@ -3,11 +3,10 @@ import { SOFTWARE } from 'zss/device/session'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import { writeopenit, writetext } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
+import { isemail } from 'zss/firmware/cli/utils'
 import { doasync } from 'zss/mapping/func'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
-
-import { isemail } from '../utils'
 
 let bbscode = ''
 let bbsemail = ''
