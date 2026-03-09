@@ -1,6 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useContext, useRef, useState } from 'react'
-import { TilesContext } from 'zss/gadget/tiles'
+import { useRef, useState } from 'react'
 import { useWriteText } from 'zss/gadget/writetext'
 import {
   tokenizeandmeasuretextformat,

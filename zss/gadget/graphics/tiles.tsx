@@ -18,7 +18,7 @@ const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
 type TilesProps = {
-  label: string
+  label?: string
   width: number
   height: number
   char: number[]

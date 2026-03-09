@@ -182,7 +182,7 @@ function terminaladdlog(message: MESSAGE) {
 }
 
 function terminalinclayout(inc: boolean) {
-  const { layout, editor } = useTape.getState()
+  const { layout } = useTape.getState()
   const step = inc ? 1 : -1
   let nextlayout = (layout as number) + step
   if (nextlayout < 0) {
