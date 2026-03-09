@@ -30,8 +30,9 @@ export const ZSS_TYPE_DIR_MOD = COLOR.LTGRAY
 // ---------------------------------------------------------------------------
 // Editor UI (cursor, remote presence)
 // ---------------------------------------------------------------------------
+export const ZSS_CURSOR_FG = COLOR.BLWHITE
 export const ZSS_CURSOR_BG = COLOR.DKBLUE
-export const ZSS_REMOTE_CURSOR_FG = COLOR.WHITE
+export const ZSS_REMOTE_CURSOR_FG = COLOR.BLWHITE
 export const ZSS_REMOTE_CURSOR_BG = COLOR.CYAN
 export const ZSS_REMOTE_SELECTION_FG = COLOR.BLACK
 export const ZSS_REMOTE_SELECTION_BG = COLOR.DKGRAY

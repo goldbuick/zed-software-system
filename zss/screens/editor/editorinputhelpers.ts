@@ -9,6 +9,7 @@ import {
 } from 'zss/screens/inputcommon'
 import {
   ZSS_CURSOR_BG,
+  ZSS_CURSOR_FG,
   ZSS_REMOTE_CURSOR_BG,
   ZSS_REMOTE_CURSOR_FG,
   ZSS_REMOTE_SELECTION_BG,
@@ -38,7 +39,6 @@ export function computeselection(
 
 export function drawlocalcursor(
   codepage: MAYBE<SharedTextHandle>,
-  blink: boolean,
   xblink: number,
   yblink: number,
   blinkdelta: RefObject<PT | undefined>,
@@ -48,7 +48,7 @@ export function drawlocalcursor(
   if (ispresent(codepage)) {
     const moving =
       blinkdelta.current?.x !== xblink || blinkdelta.current?.y !== yblink
-    if (blink || moving) {
+    if (moving) {
       const x = edge.left + xblink
       const y = edge.top + yblink
       if (
@@ -58,6 +58,7 @@ export function drawlocalcursor(
         x < edge.right
       ) {
         drawblockcursor(xblink, yblink, edge as TextEdge, context, {
+          fg: ZSS_CURSOR_FG,
           bg: ZSS_CURSOR_BG,
         })
       }

@@ -4,6 +4,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 type ScrollBackPlateProps = {
   name: string
@@ -46,6 +47,7 @@ export function ScrollBackPlate({
   // corners
   // top left-right
   writetile(tiles, width, height, 0, 0, { char: 213, color: 15 })
+  writetile(tiles, width, height, 1, 1, { char: 232, color: COLOR.BLWHITE })
   writetile(tiles, width, height, width - 1, 0, { char: 191, color: 15 })
   writetile(tiles, width, height, width - 1, 1, { char: 181, color: 15 })
   // bottom left-right

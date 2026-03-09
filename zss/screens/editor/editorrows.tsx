@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
-import { useBlink } from 'zss/gadget/blink'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -43,7 +42,6 @@ export function EditorRows({
   rows,
   codepage,
 }: EditorRowsProps) {
-  const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
   // const editortype = useTape((state) => state.editor.type)
@@ -58,9 +56,13 @@ export function EditorRows({
   }, [rows])
 
   if (!ispresent(codepage)) {
-    const fibble = (blink ? '|' : '-').repeat(3)
+    const fibble = '*'.repeat(3)
     setupeditoritem(false, false, 0, 0, context, 1, 2, 1)
-    tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
+    tokenizeandwritetextformat(
+      ` $BLWHITE${fibble}$WHITE LOADING $BLWHITE${fibble}$WHITE `,
+      context,
+      true,
+    )
     return null
   }
 
