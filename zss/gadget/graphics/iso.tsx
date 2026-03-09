@@ -144,7 +144,8 @@ export const IsoGraphics = memo(function IsoGraphics({
     underref.current.scale.setScalar(rscale)
   })
 
-  // re-render only when layer count changes
+  // re-render when board or layer counts change (board change must trigger re-render)
+  useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
