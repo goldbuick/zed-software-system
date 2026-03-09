@@ -101,7 +101,7 @@ export function drawblockcursor(
   const atchar = px + py * context.width
   const fg = options?.fg ?? COLOR.WHITE
   const bg = options?.bg ?? context.reset.bg
-  applystrtoindex(atchar, String.fromCharCode(221), context)
+  applystrtoindex(atchar, String.fromCharCode(219), context)
   applycolortoindexes(atchar, atchar, fg, bg, context)
 }
 

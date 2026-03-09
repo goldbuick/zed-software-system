@@ -119,7 +119,7 @@ export function EditorInput({
   const xblink = xcursor + 1 - xoffset
   const yblink = ycursor + 2 - yoffset
 
-  drawlocalcursor(codepage, blink, xblink, yblink, blinkdelta, edge, context)
+  drawlocalcursor(codepage, xblink, yblink, blinkdelta, edge, context)
   drawremotecursors(
     codepage,
     remotePresence,

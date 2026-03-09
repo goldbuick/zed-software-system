@@ -2,16 +2,18 @@
 import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
 import { Rect } from 'zss/gadget/rect'
+import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
+
 import {
   PanelItemProps,
   ScrollContext,
   chiptarget,
   inputcolor,
   setuppanelitem,
-} from 'zss/screens/panel/common'
-import { HotkeyInput } from 'zss/screens/shared/hotkeyinput'
+} from './common'
 
 export function PanelHotkey({
   sidebar,
@@ -22,6 +24,8 @@ export function PanelHotkey({
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(sidebar, row, context)
+
   const [target, shortcut, maybetext, maybenoclose, ...data] = args.map((v) =>
     maptovalue(v, ''),
   )
@@ -35,6 +39,8 @@ export function PanelHotkey({
   const content = `${
     context.iseven ? '$black$onltgray' : '$black$ondkcyan'
   }${text}${tcolor}$onclear ${label}${ispresent(row) ? `\n` : ``}`
+
+  tokenizeandwritetextformat(content, context, true)
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
@@ -52,24 +58,15 @@ export function PanelHotkey({
         1,
       ]}
     >
-      <HotkeyInput
-        active={active}
-        shortcut={shortcut}
-        content={content}
-        adapter={{
-          context,
-          setup: () => setuppanelitem(sidebar, row, context),
-          invoke,
-        }}
-      >
-        <Rect
-          visible={false}
-          width={text.length + 0.5}
-          height={1.5}
-          blocking
-          onClick={invoke}
-        />
-      </HotkeyInput>
+      <Rect
+        visible={false}
+        width={text.length + 0.5}
+        height={1.5}
+        blocking
+        onClick={invoke}
+      />
+      {active && <UserInput OK_BUTTON={invoke} />}
+      {shortcut && <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>}
     </group>
   )
 }
