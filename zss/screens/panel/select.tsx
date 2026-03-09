@@ -42,15 +42,13 @@ export function PanelSelect({
     stateindex = 0
   }
 
-  const blink = useBlink()
-
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
   tokenizeandwritetextformat(`$dkred ? ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
-  const knob = active ? (blink ? '$26' : '$27') : '/'
+  const knob = active ? '$BLWHITE$26$WHITE' : '/'
   tokenizeandwritetextformat(
     `${stateindex + 1}$green${knob}${tcolor}${values.length}`,
     context,

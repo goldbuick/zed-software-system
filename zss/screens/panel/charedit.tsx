@@ -7,7 +7,6 @@ import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { readcharfrombytes } from 'zss/feature/bytes'
-import { useBlink } from 'zss/gadget/blink'
 import { paneladdress } from 'zss/gadget/data/types'
 import { useMedia } from 'zss/gadget/media'
 import { Rect } from 'zss/gadget/rect'
@@ -51,7 +50,6 @@ export function PanelCharEdit({
   const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
-  const blink = useBlink()
   const [focus, setfocus] = useState(false)
 
   useLayoutEffect(() => {
@@ -70,8 +68,7 @@ export function PanelCharEdit({
       chars.push(`\n`)
     }
     if (i === state) {
-      const highlight = blink ? `$green$onwhite` : `$white$ongreen`
-      chars.push(`${highlight}$${i}$white$ondkblue`)
+      chars.push(`$blwhite$ongreen$${i}$white$ondkblue`)
     } else {
       chars.push(`$${i}`)
     }

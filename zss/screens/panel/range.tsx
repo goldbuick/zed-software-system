@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
-import { useBlink } from 'zss/gadget/blink'
 import { paneladdress } from 'zss/gadget/data/types'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { maptovalue } from 'zss/mapping/value'
@@ -46,14 +45,13 @@ export function PanelRange({
   const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
-  const blink = useBlink()
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
   tokenizeandwritetextformat(`$red $29 ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
-  const knob = active ? (blink ? '$26' : '$27') : '$4'
+  const knob = active ? '$BLWHITE$26$WHITE' : '$4'
   const bar = strsplice('----:----', state, 1, `$green${knob}${tcolor}`)
     .replaceAll('-', '$7')
     .replaceAll(':', '$9')

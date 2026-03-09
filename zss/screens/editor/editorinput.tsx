@@ -11,7 +11,6 @@ import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { useBlink } from 'zss/gadget/blink'
 import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
@@ -62,7 +61,6 @@ export function EditorInput({
   autocomplete,
   autocompleteactive,
 }: EditorInputProps) {
-  const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
   const zsswords = useGadgetClient((state) => state.zsswords)

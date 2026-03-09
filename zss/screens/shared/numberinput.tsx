@@ -47,7 +47,6 @@ export function NumberInput({
   const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
-  const blink = useBlink()
   const [strvalue, setstrValue] = useState('')
   const [cursor, setcursor] = useState(0)
   const [focus, setfocus] = useState(false)
@@ -57,7 +56,7 @@ export function NumberInput({
   const tcolor = inputcolor(active)
 
   if (focus) {
-    tvalue = blink ? strsplice(strvalue, cursor, 1, '$219+') : strvalue
+    tvalue = strsplice(strvalue, cursor, 1, '$BLWHITE$219$WHITE+')
   }
 
   context.writefullwidth = 32
