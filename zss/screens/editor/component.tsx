@@ -5,6 +5,7 @@ import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useWriteText } from 'zss/gadget/writetext'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { createlineindexes } from 'zss/lang/transformer'
@@ -14,13 +15,19 @@ import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { buildzsswordcolors } from 'zss/screens/tape/colors'
 import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
+import { ismac, metakey } from 'zss/words/system'
+import { textformatreadedges } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
+
+import { ScrollMarquee } from '../scroll/marquee'
 
 import { EditorFrame } from './editorframe'
 import { EditorInput } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
 
 export function EditorComponent() {
+  const context = useWriteText()
   const player = registerreadplayer()
   const zsswords = useGadgetClient((state) => state.zsswords)
   const [editor] = useTape(useShallow((state) => [state.editor]))
@@ -177,10 +184,38 @@ export function EditorComponent() {
     yoffset: tapeeditor.yscroll,
   }
 
+  const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
+  const edge = textformatreadedges(context)
+
   return (
     <>
       <TapeBackPlate bump />
       <EditorFrame />
+      <ScrollMarquee
+        margin={3}
+        color={COLOR.BLUE}
+        y={edge.top}
+        leftedge={0}
+        rightedge={edge.width - 1}
+        line={`
+keys: $whiteesc/cancel$green.CLOSE 
+$whitetab$green.CHANGE LAYOUT 
+$whitehold shift$green.SELECT TEXT 
+$whitealt+up/down$green.JUMP 10 LINES 
+$whitealt+left/right$green.JUMP 10 COLS 
+$white$meta+up/down$green.JUMP TOP/BOTTOM 
+$white$meta+left/right$green.JUMP TO START/END OF LINE 
+$white$meta+a$green.SELECT ALL 
+$white$meta+c$green.COPY 
+$white$meta+x$green.CUT 
+$white$meta+v$green.PASTE 
+$white$meta+z$green.UNDO 
+$white${metaundo}$green.REDO 
+$white$meta+p$green.RUN SELECTED CODE 
+$white$meta+h$green.OPEN HELPSCROLL $blue
+    `}
+        context={context}
+      />
       <EditorRows {...props} />
       <EditorInput
         {...props}

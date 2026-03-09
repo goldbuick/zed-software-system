@@ -71,7 +71,7 @@ export function ScrollMarquee({
   // Force tile layer to re-render after marquee writes. In the editor, TilesRender is a
   // sibling of the provider and only re-renders when the store notifies; without this,
   // the marquee would only appear to update when the editor tree re-renders (e.g. cursor).
-  context.changed()
+  // context.changed()
 
   return null
 }
