@@ -8,7 +8,7 @@ export default class Run extends Command {
   static flags = {
     port: Flags.integer({
       description: 'HTTP port for the static server',
-      default: 7777,
+      default: 4175,
       env: 'ZSS_SERVER_PORT',
     }),
     dev: Flags.boolean({

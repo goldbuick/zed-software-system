@@ -50,8 +50,8 @@ export function ScrollControls({
           <DitherRender width={panelwidth} height={panelheight} />
         </DitherData>
         {children}
-        <TapeBlinker x={1} y={1} />
-        <TapeBlinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} />
+        {/* <TapeBlinker x={1} y={1} />
+        <TapeBlinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} /> */}
       </group>
     </>
   )

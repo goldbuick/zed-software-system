@@ -1,4 +1,3 @@
-import { useBlink } from 'zss/gadget/blink'
 import { useTape } from 'zss/gadget/data/state'
 import { writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -51,12 +50,10 @@ export function EditorFrame() {
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
   tokenizeandwritetextformat(`$212${bottomchrs}$190`, context, true)
 
-  const blink = useBlink()
-
   const egbottom = `$205`.repeat(edge.width - 4)
   setupeditoritem(false, false, 0, 1, context, 0, 0, 0)
   tokenizeandwritetextformat(
-    `$179$${blink ? '7' : '232'}$200${egbottom}$181`,
+    `$179$BLWHITE$232$WHITE$200${egbottom}$181`,
     context,
     true,
   )
