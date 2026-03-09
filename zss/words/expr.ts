@@ -7,12 +7,12 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memoryreadboardbyevaldir } from 'zss/memory'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import {
   memoryreadelement,
   memoryreadterrain,
 } from 'zss/memory/boardoperations'
+import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryruncodepage } from 'zss/memory/runtime'
 import {

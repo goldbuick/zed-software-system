@@ -4,10 +4,10 @@ import { Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import {
-  resetTiles,
+  resettiles,
   useDeviceData,
   useWriteText,
-  writeTile,
+  writetile,
 } from 'zss/gadget/hooks'
 import { snap } from 'zss/mapping/number'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
@@ -32,18 +32,18 @@ const LABEL = 'tap to toggle '
 export function Elements({ width, height, onReset }: ElementsProps) {
   const context = useWriteText()
 
-  resetTiles(context, DECO, FG, BG)
+  resettiles(context, DECO, FG, BG)
 
   const leftedge = Math.floor(width * 0.333)
   const rightedge = Math.round(width * 0.666)
   for (let y = 1; y < height; ++y) {
     for (let x = leftedge; x <= rightedge; ++x) {
-      writeTile(context, width, height, x, y, { char: 176 })
+      writetile(context, width, height, x, y, { char: 176 })
     }
   }
   for (let x = 0; x < width; ++x) {
     const i = x - (width - LABEL.length)
-    writeTile(context, width, height, x, 0, {
+    writetile(context, width, height, x, 0, {
       char: i < 0 ? 32 : LABEL.charCodeAt(i),
       color: COLOR.WHITE,
       bg: COLOR.ONCLEAR,

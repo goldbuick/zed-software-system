@@ -2,13 +2,6 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import {
-  memoryinitboard,
-  memoryreadboardbyaddress,
-  memoryreadelementkind,
-  memoryreadelementstat,
-  memorywriteelementfromkind,
-} from 'zss/memory'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
   memoryreadelement,
@@ -16,6 +9,13 @@ import {
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardoperations'
+import {
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadelementkind,
+  memoryreadelementstat,
+  memorywriteelementfromkind,
+} from 'zss/memory/boards'
 import { memorylistboardnamedelements } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'

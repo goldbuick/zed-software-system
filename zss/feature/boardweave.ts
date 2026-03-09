@@ -1,11 +1,5 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import {
-  memorycheckelementpushable,
-  memoryinitboard,
-  memoryreadboardbyaddress,
-  memoryreadelementstat,
-} from 'zss/memory'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
@@ -16,6 +10,12 @@ import {
   memoryreadterrain,
   memorywriteterrain,
 } from 'zss/memory/boardoperations'
+import {
+  memorycheckelementpushable,
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadelementstat,
+} from 'zss/memory/boards'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'

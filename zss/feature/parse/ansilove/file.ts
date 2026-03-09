@@ -154,6 +154,6 @@ export class File implements FileObj {
   }
 }
 
-export function sauceBytes(bytes: Uint8Array): Sauce | undefined {
+export function saucebytes(bytes: Uint8Array): Sauce | undefined {
   return new File(bytes).sauce
 }

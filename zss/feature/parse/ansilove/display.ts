@@ -35,7 +35,7 @@ export function display(
   }
 }
 
-export function validateOptions(options?: RenderOptions): RenderOptions {
+export function validateoptions(options?: RenderOptions): RenderOptions {
   options = options ?? {}
   const validatedOptions: RenderOptions = {}
 

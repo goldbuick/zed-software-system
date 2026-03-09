@@ -1,0 +1,76 @@
+---
+description: Naming conventions for methods, variables, and constants
+globs: **/*.ts,**/*.tsx
+alwaysApply: true
+---
+
+# Naming conventions
+
+Apply these names consistently. Do not use camelCase for methods or non-const variables.
+
+## Methods and functions (non-React)
+
+- **Format:** `lowercaseoneword` (all lowercase, no separators).
+- Use for: function names, method names, exported helpers.
+
+```typescript
+// ✅ GOOD
+function getuser(id: string) {}
+function memoryreadoperator() {}
+export function applypermissionconfig(name: string) {}
+
+// ❌ BAD
+function getUser(id: string) {}
+function memoryReadOperator() {}
+```
+
+## Non-const variables
+
+- **Format:** `lowercaseoneword`.
+- Use for: `let`, `var`, parameters, and any variable that is not a constant.
+
+```typescript
+// ✅ GOOD
+let playertoken = ''
+const result = fetchdata()
+function run(name: string, count: number) {}
+
+// ❌ BAD
+let playerToken = ''
+function run(userName: string, itemCount: number) {}
+```
+
+## Constants
+
+- **Format:** `UPPER_SNAKE_CASE` (e.g. `TOTAL_ROWS`, `MEMORY_LABEL`).
+- Use for: `const` values that are configuration, enums, or fixed values.
+
+```typescript
+// ✅ GOOD
+const TOTAL_ROWS = 25
+const MEMORY_LABEL = { MAIN: 'main' }
+const DEFAULT_TIMEOUT_MS = 5000
+```
+
+## React components
+
+- **Unchanged:** React component functions stay PascalCase (e.g. `function TapeEditor() {}`).
+- Apply lowercaseoneword only to non-component functions and variables inside components.
+
+```typescript
+// ✅ GOOD
+export function TerminalInput() {
+  const [value, setvalue] = useState('')
+  const handlechange = () => {}
+  return <input onChange={handlechange} />
+}
+```
+
+## Summary
+
+| Kind                    | Format              | Example            |
+|-------------------------|---------------------|--------------------|
+| Methods / functions     | lowercaseoneword    | `memoryreadflags`   |
+| Non-const variables     | lowercaseoneword    | `playertoken`       |
+| Constants (`const`)     | UPPER_SNAKE_CASE    | `TOTAL_ROWS`       |
+| React component names   | PascalCase          | `TerminalInput`    |

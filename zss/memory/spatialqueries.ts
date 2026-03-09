@@ -17,6 +17,7 @@ import {
   memoryreadelement,
   memoryreadterrain,
 } from './boardoperations'
+import { memoryreadelementstat } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   BOARD,
@@ -25,8 +26,6 @@ import {
   BOARD_SIZE,
   BOARD_WIDTH,
 } from './types'
-
-import { memoryreadelementstat } from '.'
 
 function filterelement(
   element: MAYBE<BOARD_ELEMENT>,

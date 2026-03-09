@@ -42,8 +42,8 @@ describe('qr', () => {
     })
 
     it('should handle long strings', () => {
-      const longString = 'a'.repeat(100)
-      const lines = qrlines(longString)
+      const longstring = 'a'.repeat(100)
+      const lines = qrlines(longstring)
       expect(Array.isArray(lines)).toBe(true)
       expect(lines.length).toBeGreaterThan(0)
     })

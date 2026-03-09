@@ -24,6 +24,10 @@ import {
   drawcommandarghint,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
+import {
+  applycodetokencolors,
+  buildzsswordcolors,
+} from 'zss/screens/tape/colors'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
@@ -33,8 +37,6 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
-
-import { applycodetokencolors, buildzsswordcolors } from '../tape/colors'
 
 import {
   computeterminalselection,

@@ -175,9 +175,9 @@ function terminaladdlog(message: MESSAGE) {
     },
   }))
   // headless server mode: forward log to Node for Ink REPL (with format for fg/bg colors)
-  const nodeLog = (window as { __nodeLog?: (line: string) => void }).__nodeLog
-  if (typeof nodeLog === 'function' && isstring(row)) {
-    nodeLog(row)
+  const nodelog = (window as { __nodeLog?: (line: string) => void }).__nodeLog
+  if (typeof nodelog === 'function' && isstring(row)) {
+    nodelog(row)
   }
 }
 

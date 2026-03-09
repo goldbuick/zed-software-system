@@ -150,8 +150,8 @@ describe('guid', () => {
 
     it('should only contain valid hex characters', () => {
       const hash = createinfohash('test')
-      const validChars = /^[A-Za-z0-9]+$/
-      expect(hash).toMatch(validChars)
+      const VALID_CHARS = /^[A-Za-z0-9]+$/
+      expect(hash).toMatch(VALID_CHARS)
     })
   })
 })

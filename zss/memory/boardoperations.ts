@@ -42,7 +42,14 @@ import {
   memorycleanupboard,
   memorymoveboardobject,
 } from './boardmovement'
+import {
+  memoryreadboardbyaddress,
+  memoryreadelementkind,
+  memoryreadelementstat,
+} from './boards'
 import { memoryreadbookflag, memoryreadelementdisplay } from './bookoperations'
+import { memorypickcodepagewithtypeandstat } from './codepages'
+import { memoryreadflags } from './flags'
 import { memorymoveplayertoboard } from './playermanagement'
 import {
   memorylistboardelementsbykind,
@@ -61,14 +68,6 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from './types'
-
-import {
-  memorypickcodepagewithtypeandstat,
-  memoryreadboardbyaddress,
-  memoryreadelementkind,
-  memoryreadelementstat,
-  memoryreadflags,
-} from '.'
 
 // From board.ts
 

@@ -14,12 +14,14 @@ import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
 import { memorylistcodepagebystat, memoryreadcodepage } from './bookoperations'
+import { memoryensuresoftwarecodepage } from './books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
 import { memorymoveplayertoboard } from './playermanagement'
+import { memoryreadbookbysoftware, memoryreadbooklist } from './session'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -27,12 +29,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-
-import {
-  memoryensuresoftwarecodepage,
-  memoryreadbookbysoftware,
-  memoryreadbooklist,
-} from '.'
 
 function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
   switch (type) {

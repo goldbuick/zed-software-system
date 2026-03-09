@@ -161,7 +161,7 @@ function applyColor(name: string, out: string[]): void {
  * Convert a ZSS format string to ANSI + CP437 for terminal display.
  * Handles: $COLOR (fg), $ON* (bg), $BL* (blink fg), $0-255 (CP437), $$
  */
-export function formatLogForTerminal(raw: string): string {
+export function formatlogforterminal(raw: string): string {
   if (!raw || typeof raw !== 'string') {
     return ''
   }

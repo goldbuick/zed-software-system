@@ -3,12 +3,7 @@ import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import {
-  memoryinitboard,
-  memoryreadfirstcontentbook,
-  memorywritebook,
-  memorywriteelementfromkind,
-} from 'zss/memory'
+import { memoryinitboard, memorywriteelementfromkind } from 'zss/memory/boards'
 import {
   memorycreatebook,
   memorywritecodepage,
@@ -17,6 +12,7 @@ import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
+import { memoryreadfirstcontentbook, memorywritebook } from 'zss/memory/session'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'

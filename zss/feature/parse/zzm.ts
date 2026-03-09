@@ -2,13 +2,13 @@ import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadfirstcontentbook } from 'zss/memory'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
+import { memoryreadfirstcontentbook } from 'zss/memory/session'
 import { NAME } from 'zss/words/types'
 
 type ZZM_SONG = {

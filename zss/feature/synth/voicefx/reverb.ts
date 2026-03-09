@@ -1,8 +1,8 @@
 import { isnumber } from 'zss/mapping/types'
 
-import { createVoiceFxConfigHandler } from './common'
+import { createvoicefxconfighandler } from './common'
 
-export const synthvoicefxreverbconfig = createVoiceFxConfigHandler(
+export const synthvoicefxreverbconfig = createvoicefxconfighandler(
   'reverb',
   (synth) => synth.FXCHAIN.reverb,
   (reverb, config, value) => {

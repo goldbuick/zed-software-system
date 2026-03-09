@@ -6,9 +6,8 @@ import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadbookflag, memorywritebookflag } from './bookoperations'
+import { memoryreadbookbysoftware } from './session'
 import { MEMORY_LABEL } from './types'
-
-import { memoryreadbookbysoftware } from '.'
 
 const SYNTH_STATE_FLAG = 'synthstate'
 const SYNTH_STATE_DEFAULT: SYNTH_STATE = {

@@ -12,7 +12,6 @@ import {
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryreadbookbysoftware, memoryreadoperator } from 'zss/memory'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
@@ -20,6 +19,10 @@ import {
   memoryconverttogadgetcontrollayer,
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
+import {
+  memoryreadbookbysoftware,
+  memoryreadoperator,
+} from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
 

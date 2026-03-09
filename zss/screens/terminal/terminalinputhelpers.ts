@@ -4,8 +4,8 @@ import { tokenize } from 'zss/lang/lexer'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   type InputSelectionRange,
-  computeSelectionRange,
-  drawBlockCursor,
+  computeselectionrange,
+  drawblockcursor,
 } from 'zss/screens/inputcommon'
 import {
   WRITE_TEXT_CONTEXT,
@@ -33,7 +33,7 @@ export function computeterminalselection(
   yselect: MAYBE<number>,
   inputstate: string,
 ): TerminalSelection {
-  const r = computeSelectionRange(xcursor, xselect, inputstate, {
+  const r = computeselectionrange(xcursor, xselect, inputstate, {
     hasSelection: ispresent(xselect) && ispresent(yselect),
   })
   return { ...r, inputstateselected: r.selected }
@@ -74,7 +74,7 @@ export function drawterminalcursor(
     return
   }
   const edge = textformatreadedges(context)
-  drawBlockCursor(xcursor, tapeycursor, edge, context)
+  drawblockcursor(xcursor, tapeycursor, edge, context)
 }
 
 export function drawterminalselection(

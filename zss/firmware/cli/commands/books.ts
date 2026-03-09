@@ -1,0 +1,376 @@
+import {
+  apierror,
+  apilog,
+  registereditoropen,
+  vmcodeaddress,
+  vmrefscroll,
+} from 'zss/device/api'
+import { modemwriteinitstring } from 'zss/device/modem'
+import { SOFTWARE } from 'zss/device/session'
+import { romparse, romprint, romread } from 'zss/feature/rom'
+import {
+  write,
+  writebbar,
+  writeoption,
+  writesection,
+  writetext,
+} from 'zss/feature/writeui'
+import { FIRMWARE } from 'zss/firmware'
+import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
+import { randominteger } from 'zss/mapping/number'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
+import {
+  memoryclearbookcodepage,
+  memorylistcodepagessorted,
+  memoryreadcodepage,
+  memoryupdatebookname,
+} from 'zss/memory/bookoperations'
+import { memoryensuresoftwarebook } from 'zss/memory/books'
+import {
+  memoryreadcodepagename,
+  memoryreadcodepagetype,
+  memoryreadcodepagetypeasstring,
+} from 'zss/memory/codepageoperations'
+import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
+import { memorycodepagetoprefix } from 'zss/memory/rendering'
+import {
+  memoryclearbook,
+  memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
+  memoryreadbooklist,
+  memorywritesoftwarebook,
+} from 'zss/memory/session'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE } from 'zss/words/types'
+
+export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
+  return fw
+    .command('bookrename', ['the main book (operator only)'], () => {
+      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      memoryupdatebookname(mainbook)
+      if (ispresent(mainbook)) {
+        writeoption(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'main',
+          `${mainbook?.name ?? 'empty'} $GREEN${mainbook?.id ?? ''}`,
+        )
+      }
+      return 0
+    })
+    .command(
+      'booktrash',
+      [ARG_TYPE.NAME, 'a book by address (operator only)'],
+      (chip, words) => {
+        const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+        const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const book = memoryreadbookbyaddress(address)
+        if (ispresent(book)) {
+          if (opened === book) {
+            memorywritesoftwarebook(MEMORY_LABEL.MAIN, '')
+          }
+          memoryclearbook(address)
+          apilog(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `trashed [book] ${book.name}`,
+          )
+          vmflushop()
+          chip.command('pages')
+        }
+        return 0
+      },
+    )
+    .command(
+      'boardopen',
+      [ARG_TYPE.NAME, 'to move player to board'],
+      (_, words) => {
+        const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
+        const target = memoryreadboardbyaddress(stat)
+        if (ispresent(target)) {
+          memorymoveplayertoboard(
+            READ_CONTEXT.book,
+            READ_CONTEXT.elementfocus,
+            target.id,
+            {
+              x: randominteger(0, BOARD_WIDTH - 1),
+              y: randominteger(0, BOARD_HEIGHT - 1),
+            },
+          )
+        }
+        return 0
+      },
+    )
+    .command(
+      'pageopen',
+      [ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'a code page editor'],
+      (_, words) => {
+        const [page, maybeobject] = readargs(words, 0, [
+          ARG_TYPE.NAME,
+          ARG_TYPE.MAYBE_NAME,
+        ])
+        let codepage: MAYBE<CODE_PAGE> = undefined
+        let codepagebook: MAYBE<BOOK> = undefined
+        const booklist = memoryreadbooklist()
+        for (let i = 0; i < booklist.length; ++i) {
+          codepagebook = booklist[i]
+          codepage = memoryreadcodepage(codepagebook, page)
+          if (ispresent(codepage)) {
+            break
+          }
+        }
+        if (ispresent(codepage) && ispresent(codepagebook)) {
+          const name = memoryreadcodepagename(codepage)
+          const path = [codepage.id, maybeobject]
+          modemwriteinitstring(
+            vmcodeaddress(codepagebook.id, path),
+            codepage.code,
+          )
+          const type = memoryreadcodepagetypeasstring(codepage)
+          const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
+          registereditoropen(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            codepagebook.id,
+            path,
+            type,
+            title,
+          )
+        } else {
+          apierror(
+            SOFTWARE,
+            'pageopen',
+            `page ${page} not found`,
+            READ_CONTEXT.elementfocus,
+          )
+        }
+        return 0
+      },
+    )
+    .command(
+      'pagetrash',
+      [ARG_TYPE.NAME, 'a code page (operator only)'],
+      (chip, words) => {
+        const [page] = readargs(words, 0, [ARG_TYPE.NAME])
+        const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+        const codepage = memoryclearbookcodepage(mainbook, page)
+        if (ispresent(page)) {
+          const name = memoryreadcodepagename(codepage)
+          const pagetype = memoryreadcodepagetypeasstring(codepage)
+          apilog(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `trashed [${pagetype}] ${name}`,
+          )
+          vmflushop()
+          chip.command('pages')
+        }
+        return 0
+      },
+    )
+    .command('help', ['help scroll'], () => {
+      vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
+      return 0
+    })
+    .command('books', ['all books'], () => {
+      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
+      const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      writeoption(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'main',
+        `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
+      )
+      const content = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      writeoption(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'content',
+        `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
+      )
+      writebbar(SOFTWARE, READ_CONTEXT.elementfocus, 7)
+      const list = memoryreadbooklist()
+      if (list.length) {
+        list.forEach((book) => {
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!bookopen ${book.id};${book.name}`,
+          )
+        })
+      } else {
+        writetext(SOFTWARE, READ_CONTEXT.elementfocus, `no books found`)
+      }
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `!bookcreate;create a new book`,
+      )
+      return 0
+    })
+    .command('pages', ['all pages in all loaded books'], () => {
+      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      if (!ispresent(mainbook)) {
+        return 0
+      }
+      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
+      writeoption(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'main',
+        `${mainbook.name} $GREEN${mainbook.id}`,
+      )
+      if (mainbook.pages.length) {
+        const sorted = memorylistcodepagessorted(mainbook)
+        sorted.forEach((page: CODE_PAGE) => {
+          const name = memoryreadcodepagename(page)
+          const type = memoryreadcodepagetypeasstring(page)
+          const prefix = memorycodepagetoprefix(page)
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}${codepagepicksuffix(page)}`,
+          )
+        })
+      } else {
+        write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
+        romparse(romread(`help:nopages`), (line) =>
+          romprint(READ_CONTEXT.elementfocus, line),
+        )
+      }
+      const booklist = memoryreadbooklist()
+      for (let i = 0; i < booklist.length; ++i) {
+        const book = booklist[i]
+        if (book.id !== mainbook.id) {
+          writeoption(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'content',
+            `${book.name} $GREEN${book.id}`,
+          )
+          const sorted = memorylistcodepagessorted(book)
+          sorted.forEach((page: CODE_PAGE) => {
+            const name = memoryreadcodepagename(page)
+            const type = memoryreadcodepagetypeasstring(page)
+            const prefix = memorycodepagetoprefix(page)
+            write(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}${codepagepicksuffix(page)}`,
+            )
+          })
+        }
+      }
+      return 0
+    })
+    .command('boards', ['all boards as goto hyperlinks'], () => {
+      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `boards`)
+      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      if (ispresent(mainbook)) {
+        writeoption(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'main',
+          `${mainbook.name} $GREEN${mainbook.id}`,
+        )
+        const sorted = memorylistcodepagessorted(mainbook)
+        sorted
+          .filter(
+            (page: CODE_PAGE) =>
+              memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
+          )
+          .forEach((page: CODE_PAGE) => {
+            const name = memoryreadcodepagename(page)
+            write(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `!boardopen ${page.id};$blue[#goto]$white ${name}`,
+            )
+          })
+        if (sorted.length === 0) {
+          write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
+          writetext(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `$white no boards found`,
+          )
+          writetext(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `$white use @board name to create a board`,
+          )
+        }
+      }
+      const booklist = memoryreadbooklist()
+      for (let i = 0; i < booklist.length; ++i) {
+        const book = booklist[i]
+        if (book.id !== mainbook?.id) {
+          writeoption(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'content',
+            `${book.name} $GREEN${book.id}`,
+          )
+          const sorted = memorylistcodepagessorted(book)
+          sorted
+            .filter(
+              (page: CODE_PAGE) =>
+                memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
+            )
+            .forEach((page: CODE_PAGE) => {
+              const name = memoryreadcodepagename(page)
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `!boardopen ${page.id};$blue[#goto]$white ${name}`,
+              )
+            })
+        }
+      }
+      return 0
+    })
+    .command('trash', ['books/codepages to delete (operator only)'], () => {
+      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `$REDTRASH`)
+      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
+      const list = memoryreadbooklist()
+      if (list.length) {
+        list.forEach((book) => {
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!booktrash ${book.id};$REDTRASH ${book.name}`,
+          )
+        })
+        write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      }
+      const book = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      if (ispresent(book)) {
+        writetext(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `pages in open ${book.name} book`,
+        )
+        book.pages.forEach((page) => {
+          const name = memoryreadcodepagename(page)
+          const type = memoryreadcodepagetypeasstring(page)
+          const prefix = memorycodepagetoprefix(page)
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!pagetrash ${page.id};$REDTRASH [${type}] ${prefix}${name}`,
+          )
+        })
+        write(SOFTWARE, READ_CONTEXT.elementfocus, '')
+      }
+      return 0
+    })
+}

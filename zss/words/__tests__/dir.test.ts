@@ -1,8 +1,8 @@
 jest.mock('zss/words/reader', () => ({ READ_CONTEXT: { words: [] } }))
-jest.mock('zss/memory', () => ({}))
+jest.mock('zss/memory/session', () => ({}))
 
 import {
-  dirconsts,
+  DIR_CONSTS,
   dirfromdelta,
   dirfrompts,
   ispt,
@@ -93,20 +93,20 @@ describe('dir', () => {
     })
   })
 
-  describe('dirconsts', () => {
+  describe('DIR_CONSTS', () => {
     it('maps common direction names', () => {
-      expect(dirconsts.up).toBe('NORTH')
-      expect(dirconsts.down).toBe('SOUTH')
-      expect(dirconsts.left).toBe('WEST')
-      expect(dirconsts.right).toBe('EAST')
-      expect(dirconsts.idle).toBe('IDLE')
+      expect(DIR_CONSTS.up).toBe('NORTH')
+      expect(DIR_CONSTS.down).toBe('SOUTH')
+      expect(DIR_CONSTS.left).toBe('WEST')
+      expect(DIR_CONSTS.right).toBe('EAST')
+      expect(DIR_CONSTS.idle).toBe('IDLE')
     })
 
     it('has single-letter aliases', () => {
-      expect(dirconsts.n).toBe('NORTH')
-      expect(dirconsts.s).toBe('SOUTH')
-      expect(dirconsts.e).toBe('EAST')
-      expect(dirconsts.w).toBe('WEST')
+      expect(DIR_CONSTS.n).toBe('NORTH')
+      expect(DIR_CONSTS.s).toBe('SOUTH')
+      expect(DIR_CONSTS.e).toBe('EAST')
+      expect(DIR_CONSTS.w).toBe('WEST')
     })
   })
 

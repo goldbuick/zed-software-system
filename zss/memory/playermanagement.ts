@@ -21,13 +21,20 @@ import {
   memoryupdateboardvisuals,
 } from './boardoperations'
 import {
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadelementstat,
+} from './boards'
+import {
   memoryclearbookflags,
   memoryreadbookflag,
   memoryreadbookflags,
   memorywritebookflag,
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
+import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhaltchip } from './runtime'
+import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -38,15 +45,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-
-import {
-  memoryinitboard,
-  memoryisoperator,
-  memorypickcodepagewithtypeandstat,
-  memoryreadboardbyaddress,
-  memoryreadbookbysoftware,
-  memoryreadelementstat,
-} from './index'
 
 // Player Management Functions
 

@@ -13,11 +13,11 @@ export function issid(id: MAYBE<string>): id is string {
   return id?.startsWith('sid_') ?? false
 }
 
-const justNumberChars = customAlphabet(numbers, 4)
-const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
+const JUST_NUMBER_CHARS = customAlphabet(numbers, 4)
+const MIXED_CHARS = customAlphabet(`${numbers}${lowercase}`, 16)
 
 export function createpid() {
-  return `pid_${justNumberChars()}_${mixedChars()}`
+  return `pid_${JUST_NUMBER_CHARS()}_${MIXED_CHARS()}`
 }
 
 export function createtopic() {

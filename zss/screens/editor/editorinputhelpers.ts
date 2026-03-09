@@ -4,8 +4,8 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   type InputSelectionRange,
   type TextEdge,
-  computeSelectionRange,
-  drawBlockCursor,
+  computeselectionrange,
+  drawblockcursor,
 } from 'zss/screens/inputcommon'
 import {
   ZSS_CURSOR_BG,
@@ -27,16 +27,16 @@ export type EditorEdge = ReturnType<typeof textformatreadedges>
 
 export type SelectionRange = InputSelectionRange & { strvalueselected: string }
 
-export function computeSelection(
+export function computeselection(
   cursor: number,
   select: MAYBE<number>,
   strvalue: string,
 ): SelectionRange {
-  const r = computeSelectionRange(cursor, select, strvalue)
+  const r = computeselectionrange(cursor, select, strvalue)
   return { ...r, strvalueselected: r.selected }
 }
 
-export function drawLocalCursor(
+export function drawlocalcursor(
   codepage: MAYBE<SharedTextHandle>,
   blink: boolean,
   xblink: number,
@@ -57,7 +57,7 @@ export function drawLocalCursor(
         x > edge.left &&
         x < edge.right
       ) {
-        drawBlockCursor(xblink, yblink, edge as TextEdge, context, {
+        drawblockcursor(xblink, yblink, edge as TextEdge, context, {
           bg: ZSS_CURSOR_BG,
         })
       }
@@ -66,7 +66,7 @@ export function drawLocalCursor(
   blinkdelta.current = { x: xblink, y: yblink }
 }
 
-export function drawRemoteCursors(
+export function drawremotecursors(
   codepage: MAYBE<SharedTextHandle>,
   remotePresence: PresenceState[],
   player: string,
@@ -170,7 +170,7 @@ function drawRemoteSelection(
   }
 }
 
-export function toggleComments(
+export function togglecomments(
   strvalueselected: string,
   ii1: number,
   iic: number,
@@ -189,7 +189,7 @@ export function toggleComments(
   strvaluesplice(ii1, iic, lines.join('\n'))
 }
 
-export function changeIndent(
+export function changeindent(
   strvalueselected: string,
   ii1: number,
   iic: number,

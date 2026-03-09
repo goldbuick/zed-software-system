@@ -4,9 +4,8 @@ import { WORD } from 'zss/words/types'
 
 import { memorylistcodepagebytype, memoryreadcodepage } from './bookoperations'
 import { memoryreadcodepagestats } from './codepageoperations'
+import { memoryreadbookbysoftware, memorystartloader } from './session'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
-
-import { memoryreadbookbysoftware, memorystartloader } from '.'
 
 type LOADER_ENTRY = {
   arg: any

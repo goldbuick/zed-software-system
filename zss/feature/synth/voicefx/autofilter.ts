@@ -1,8 +1,8 @@
 import { isnumber, isstring } from 'zss/mapping/types'
 
-import { createVoiceFxConfigHandler } from './common'
+import { createvoicefxconfighandler } from './common'
 
-export const synthvoicefxautofilterconfig = createVoiceFxConfigHandler(
+export const synthvoicefxautofilterconfig = createvoicefxconfighandler(
   'autofilter',
   (synth) => synth.FXCHAIN.autofilter,
   (autofilter, config, value) => {

@@ -9,7 +9,7 @@ export type BITMAP = {
   bits: Uint8Array
 }
 
-export function bitmapToCanvas(bitmap: BITMAP) {
+export function bitmaptocanvas(bitmap: BITMAP) {
   const canvas = document.createElement('canvas')
   canvas.width = bitmap?.width || 1
   canvas.height = bitmap?.height || 1

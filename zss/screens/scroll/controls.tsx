@@ -1,5 +1,5 @@
 import { RUNTIME } from 'zss/config'
-import { resetDither, useDither, writeDither } from 'zss/gadget/hooks'
+import { resetdither, useDither, writedither } from 'zss/gadget/hooks'
 import { DitherData, DitherRender } from 'zss/gadget/usedither'
 import { TilesRender } from 'zss/gadget/usetiles'
 import { TapeBlinker } from 'zss/screens/tape/blinker'
@@ -25,13 +25,13 @@ export function ScrollControls({
   const wither = [0.001, 0.05, 0.1, 0.2]
   const WITHER_CENTER = 0.4
   const { dither } = ditherstore.getState()
-  resetDither(dither)
+  resetdither(dither)
   for (let x = 0; x < panelwidth; ++x) {
-    writeDither(dither, panelwidth, panelheight, x, row, WITHER_CENTER)
+    writedither(dither, panelwidth, panelheight, x, row, WITHER_CENTER)
     for (let i = 0; i < wither.length; ++i) {
       const edge = wither.length - i
-      writeDither(dither, panelwidth, panelheight, x, row - edge, wither[i])
-      writeDither(dither, panelwidth, panelheight, x, row + edge, wither[i])
+      writedither(dither, panelwidth, panelheight, x, row - edge, wither[i])
+      writedither(dither, panelwidth, panelheight, x, row + edge, wither[i])
     }
   }
 

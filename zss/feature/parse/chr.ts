@@ -2,13 +2,13 @@ import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { loadcharsetfrombytes } from 'zss/feature/bytes'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadfirstcontentbook } from 'zss/memory'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
   memoryreadcodepagename,
 } from 'zss/memory/codepageoperations'
+import { memoryreadfirstcontentbook } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 export function parsechr(

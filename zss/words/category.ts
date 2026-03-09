@@ -4,12 +4,12 @@ import { readexpr } from './expr'
 import { READ_CONTEXT } from './reader'
 import { CATEGORY, NAME, WORD } from './types'
 
-export const categoryconsts = {
+export const CATEGORY_CONSTS = {
   isterrain: 'ISTERRAIN',
   isobject: 'ISOBJECT',
 } as const
 
-export type STR_CATEGORY_TYPE = typeof categoryconsts
+export type STR_CATEGORY_TYPE = typeof CATEGORY_CONSTS
 export type STR_CATEGORY_KEYS = keyof STR_CATEGORY_TYPE
 export type STR_CATEGORY_CONST = STR_CATEGORY_TYPE[STR_CATEGORY_KEYS]
 export type STR_CATEGORY = STR_CATEGORY_CONST[]
@@ -24,7 +24,7 @@ function isstrcategoryconst(value: any): value is STR_CATEGORY_CONST {
 
 export function mapstrcategory(value: any): MAYBE<STR_CATEGORY_CONST> {
   if (isstring(value)) {
-    return categoryconsts[NAME(value) as STR_CATEGORY_KEYS]
+    return CATEGORY_CONSTS[NAME(value) as STR_CATEGORY_KEYS]
   }
   return undefined
 }
