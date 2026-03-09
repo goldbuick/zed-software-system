@@ -1,11 +1,14 @@
+import { useCallback } from 'react'
+import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { maptonumber } from 'zss/mapping/value'
-import { inputcolor, strsplice } from 'zss/screens/panel/common'
-import { NumberInput } from 'zss/screens/shared/numberinput'
+import { inputcolor } from 'zss/screens/panel/common'
 import {
   TapeTerminalItemInputProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 const maybedefault = -111111
 
@@ -34,20 +37,38 @@ export function TerminalNumber({
     max = maybemax
   }
 
-  return (
-    <NumberInput
-      active={!!active}
-      address={prefix}
-      label={label}
-      min={min}
-      max={max}
-      adapter={{
-        context,
-        setup: () => setuplogitem(!!active, 0, y, context),
-        writeaddress: prefix,
-        inputcolor,
-        strsplice,
-      }}
-    />
+  const address = prefix
+  const value = useWaitForValueNumber(address)
+  const state = value ?? min
+  const clamped = Math.min(max, Math.max(min, state))
+
+  const tlabel = label.trim()
+  const tcolor = inputcolor(!!active)
+
+  setuplogitem(!!active, 0, y, context)
+  tokenizeandwritetextformat(
+    `$red $29 ${tcolor}${tlabel} $green${clamped}`,
+    context,
+    false,
   )
+
+  const up = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods.alt ? 10 : 1
+      const next = Math.min(max, clamped + step)
+      modemwritevaluenumber(address, next)
+    },
+    [address, clamped, max],
+  )
+
+  const down = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods.alt ? 10 : 1
+      const next = Math.max(min, clamped - step)
+      modemwritevaluenumber(address, next)
+    },
+    [address, clamped, min],
+  )
+
+  return <>{active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>
 }

@@ -1,12 +1,14 @@
+import { useCallback } from 'react'
+import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
+import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { maptonumber, maptovalue } from 'zss/mapping/value'
 import {
   PanelItemProps,
   inputcolor,
   setuppanelitem,
-  strsplice,
 } from 'zss/screens/panel/common'
-import { NumberInput } from 'zss/screens/shared/numberinput'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 const maybedefault = -111111
 
@@ -19,6 +21,8 @@ export function PanelNumber({
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(sidebar, row, context)
+
   const [target, maybemin, maybemax] = [
     maptovalue(args[0], ''),
     maptonumber(args[1], maybedefault),
@@ -39,21 +43,36 @@ export function PanelNumber({
   }
 
   const address = paneladdress(chip, target)
+  const value = useWaitForValueNumber(address)
+  const state = value ?? min
+  const clamped = Math.min(max, Math.max(min, state))
 
-  return (
-    <NumberInput
-      active={active}
-      address={address}
-      label={label}
-      min={min}
-      max={max}
-      adapter={{
-        context,
-        setup: () => setuppanelitem(sidebar, row, context),
-        writeaddress: target,
-        inputcolor,
-        strsplice,
-      }}
-    />
+  const tlabel = label.trim()
+  const tcolor = inputcolor(active)
+
+  tokenizeandwritetextformat(
+    `$red $29 ${tcolor}${tlabel} $green${clamped}`,
+    context,
+    false,
   )
+
+  const up = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods.alt ? 10 : 1
+      const next = Math.min(max, clamped + step)
+      modemwritevaluenumber(address, next)
+    },
+    [address, clamped, max],
+  )
+
+  const down = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods.alt ? 10 : 1
+      const next = Math.max(min, clamped - step)
+      modemwritevaluenumber(address, next)
+    },
+    [address, clamped, min],
+  )
+
+  return <>{active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>
 }
