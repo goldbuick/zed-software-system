@@ -272,8 +272,11 @@ export function TerminalInput({
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
-  const yoffset = context.y * context.width
-  applycodetokencolors(0, yoffset, edge.width, inputlinetokens, context)
+
+  if (!quickterminal) {
+    const yoffset = (context.y - 1) * context.width
+    applycodetokencolors(0, yoffset, edge.width, inputlinetokens, context)
+  }
 
   // draw selection
   if (
