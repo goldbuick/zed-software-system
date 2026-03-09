@@ -12,10 +12,11 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
+import { useBlink } from 'zss/gadget/blink'
 import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
-import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
+import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -357,12 +358,12 @@ export function TerminalInput({
             })
             return
           }
-          if (mods.ctrl) {
+          if (inputstateactive) {
             inputstateswitch(tapeterminal.bufferindex + 1)
-          } else {
-            trackselection(mods.shift)
-            inputstateycursor(mods.alt ? 10 : 1)
+            return
           }
+          trackselection(mods.shift)
+          inputstateycursor(mods.alt ? 10 : 1)
         }}
         MOVE_DOWN={(mods) => {
           if (autocompleteactive) {
@@ -371,12 +372,12 @@ export function TerminalInput({
             })
             return
           }
-          if (mods.ctrl) {
+          if (inputstateactive) {
             inputstateswitch(tapeterminal.bufferindex - 1)
-          } else {
-            trackselection(mods.shift)
-            inputstateycursor(-(mods.alt ? 10 : 1))
+            return
           }
+          trackselection(mods.shift)
+          inputstateycursor(-(mods.alt ? 10 : 1))
         }}
         OK_BUTTON={() => {
           if (autocompleteactive) {

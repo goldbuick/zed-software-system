@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
+import { useBlink } from 'zss/gadget/blink'
 import { useEditor, useTape } from 'zss/gadget/data/state'
-import { useBlink, useWriteText } from 'zss/gadget/hooks'
+import { useWriteText } from 'zss/gadget/writetext'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   ZSS_TYPE_ERROR,

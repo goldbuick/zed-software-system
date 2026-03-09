@@ -1,5 +1,7 @@
+import { useBlink } from 'zss/gadget/blink'
 import { useTape } from 'zss/gadget/data/state'
-import { useBlink, useWriteText, writetile } from 'zss/gadget/hooks'
+import { writetile } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import { bgcolor, setupeditoritem } from 'zss/screens/tape/common'
 import { ismac, metakey } from 'zss/words/system'

@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -20,7 +20,10 @@ type GraphicsProps = {
   height: number
 }
 
-export function FlatGraphics({ width, height }: GraphicsProps) {
+export const FlatGraphics = memo(function FlatGraphics({
+  width,
+  height,
+}: GraphicsProps) {
   const { viewport } = useThree()
   const screensize = useScreenSize()
 
@@ -197,4 +200,4 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
       )}
     </>
   )
-}
+})

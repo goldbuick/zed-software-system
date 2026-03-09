@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { gadgetserverclearscroll } from 'zss/device/api'
@@ -7,8 +7,8 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
+import { useDeviceData } from 'zss/gadget/device'
 import { StaticDither } from 'zss/gadget/graphics/dither'
-import { useDeviceData } from 'zss/gadget/hooks'
 import { Rect } from 'zss/gadget/rect'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
@@ -82,6 +82,21 @@ export function ScreenUIComponent() {
   const [hasscroll, sethasscroll] = useState(false)
   const sidebar = useGadgetClient(
     useEqual((state) => state.gadget.sidebar ?? []),
+  )
+  const player = registerreadplayer()
+  const scrollcontextvalue = useMemo(
+    () => ({
+      sendmessage(target: string, data: any[]) {
+        SOFTWARE.emit(player, target, data)
+      },
+      sendclose() {
+        gadgetserverclearscroll(SOFTWARE, player)
+      },
+      didclose() {
+        sethasscroll(false)
+      },
+    }),
+    [player],
   )
 
   // bail on odd states
@@ -166,24 +181,8 @@ export function ScreenUIComponent() {
   // add the frame to display the game
   rects.unshift(frame)
 
-  const player = registerreadplayer()
-
   return (
-    <ScrollContext.Provider
-      value={{
-        sendmessage(target, data) {
-          // send a hyperlink message
-          SOFTWARE.emit(player, target, data)
-        },
-        sendclose() {
-          // send a message to trigger the close
-          gadgetserverclearscroll(SOFTWARE, player)
-        },
-        didclose() {
-          sethasscroll(false)
-        },
-      }}
-    >
+    <ScrollContext.Provider value={scrollcontextvalue}>
       <group
         position={[
           -RUNTIME.DRAW_CHAR_WIDTH(),

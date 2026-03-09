@@ -1,5 +1,6 @@
 import { useRef } from 'react'
-import { useBlink, useTilesData, writetile } from 'zss/gadget/hooks'
+import { useBlink } from 'zss/gadget/blink'
+import { useTilesData, writetile } from 'zss/gadget/tiles'
 import { ispresent } from 'zss/mapping/types'
 
 type TapeBlinkerProps = {

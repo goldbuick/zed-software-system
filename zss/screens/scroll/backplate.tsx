@@ -1,4 +1,4 @@
-import { useTilesData, writetile } from 'zss/gadget/hooks'
+import { useTilesData, writetile } from 'zss/gadget/tiles'
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,

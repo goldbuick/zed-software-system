@@ -24,7 +24,7 @@ import {
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
-import { useDeviceData } from 'zss/gadget/hooks'
+import { useDeviceData } from 'zss/gadget/device'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
 

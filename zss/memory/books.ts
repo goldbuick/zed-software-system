@@ -45,9 +45,10 @@ export function memoryensuresoftwarebook(
   slot: SoftwareSlot,
   maybename?: string,
 ) {
+  const prev = memoryreadbookbysoftware(slot)
   let book = ispresent(maybename)
     ? memoryensurebookbyname(maybename)
-    : memoryreadbookbysoftware(slot)
+    : prev
 
   if (!ispresent(book)) {
     book = memoryreadfirstbook()
@@ -55,7 +56,8 @@ export function memoryensuresoftwarebook(
   if (!ispresent(book)) {
     book = memorycreatesoftwarebook(maybename)
   }
-  if (ispresent(book)) {
+  const firstopen = ispresent(book) && (!ispresent(prev) || prev.id !== book.id)
+  if (firstopen) {
     apilog(
       SOFTWARE,
       memoryreadoperator(),

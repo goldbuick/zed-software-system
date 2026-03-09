@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react'
-import { useWriteText } from 'zss/gadget/hooks'
 import { UserInput } from 'zss/gadget/userinput'
+import { useWriteText } from 'zss/gadget/writetext'
 import { inputcolor } from 'zss/screens/panel/common'
 import {
   TapeTerminalContext,

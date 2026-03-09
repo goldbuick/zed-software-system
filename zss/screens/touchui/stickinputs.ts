@@ -1,5 +1,5 @@
 import { INPUT } from 'zss/gadget/data/types'
-import { useDeviceData } from 'zss/gadget/hooks'
+import { useDeviceData } from 'zss/gadget/device'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 
 export function handlestickclear() {

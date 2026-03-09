@@ -12,7 +12,7 @@ import {
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
-import { useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 
 const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))

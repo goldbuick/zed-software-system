@@ -1,42 +1,26 @@
 /* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp, damp3 } from 'maath/easing'
+import { damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import {
-  LAYER,
-  LAYER_TYPE,
-  VIEWSCALE,
-  layersreadcontrol,
-} from 'zss/gadget/data/types'
+import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
+import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
+import { IsoLayer } from 'zss/gadget/graphics/isolayer'
+import { maptolayerz } from 'zss/gadget/graphics/layerz'
+import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-
-import { FlatLayer } from './flatlayer'
-import { IsoLayer } from './isolayer'
-import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
   width: number
   height: number
-}
-
-function maptolayerz(layer: LAYER): number {
-  switch (layer.type) {
-    case LAYER_TYPE.TILES:
-      return 0
-    case LAYER_TYPE.DITHER:
-      return RUNTIME.DRAW_CHAR_HEIGHT()
-    case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.75
-  }
-  return 0
 }
 
 function maptoscale(viewscale: VIEWSCALE): number {
@@ -51,7 +35,10 @@ function maptoscale(viewscale: VIEWSCALE): number {
   }
 }
 
-export function IsoGraphics({ width, height }: GraphicsProps) {
+export const IsoGraphics = memo(function IsoGraphics({
+  width,
+  height,
+}: GraphicsProps) {
   const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
@@ -91,20 +78,17 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     const animrate = 0.05
     const currentboard = useGadgetClient.getState().gadget.board
 
-    // setup tracking state
-    if (!ispresent(cameraref.current.userData.focusx)) {
-      cameraref.current.userData = {
-        focusx: control.focusx,
-        focusy: control.focusy,
-        facing: control.facing,
-        currentboard,
-      }
+    const userData = cameraref.current.userData as FocusUserData
+    const didinit = initfocusifneeded(userData, control, currentboard, {
+      withfacing: true,
+    })
+    if (didinit) {
       zoomref.current.scale.setScalar(control.viewscale)
     }
 
-    const userData = cameraref.current.userData ?? {}
-    const fx = (userData.focusx + 0.5) * drawwidth
-    const fy = (userData.focusy + 0.5) * drawheight
+    const ud = cameraref.current.userData ?? {}
+    const fx = (ud.focusx! + 0.5) * drawwidth
+    const fy = (ud.focusy! + 0.5) * drawheight
 
     // zoom
     damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
@@ -113,18 +97,17 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
     // smoothed change in focus
-    if (currentboard !== userData.currentboard) {
-      userData.focusx = control.focusx
-      userData.focusy = control.focusy
-      userData.currentboard = currentboard
+    if (currentboard !== ud.currentboard) {
+      ud.focusx = control.focusx
+      ud.focusy = control.focusy
+      ud.currentboard = currentboard
       cornerref.current.position.set(
-        -((userData.focusx + 0.5) * drawwidth),
-        -((userData.focusy + 0.5) * drawheight),
+        -((ud.focusx + 0.5) * drawwidth),
+        -((ud.focusy + 0.5) * drawheight),
         0,
       )
     } else {
-      damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
-      damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
+      dampfocus(userData, control, animrate)
     }
 
     // update dof
@@ -209,7 +192,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                         key={layer.id}
                         id={layer.id}
                         from="layers"
-                        z={maptolayerz(layer)}
+                        z={maptolayerz(layer, 'iso')}
                       />
                     ))}
                     {over.map((layer) => (
@@ -217,7 +200,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                         key={layer.id}
                         from="over"
                         id={layer.id}
-                        z={maptolayerz(layer) + drawheight + 1}
+                        z={maptolayerz(layer, 'iso') + drawheight + 1}
                       />
                     ))}
                     {exiteast.length && (
@@ -227,7 +210,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                             key={layer.id}
                             id={layer.id}
                             layers={exiteast}
-                            z={maptolayerz(layer)}
+                            z={maptolayerz(layer, 'iso')}
                           />
                         ))}
                       </group>
@@ -239,7 +222,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                             key={layer.id}
                             id={layer.id}
                             layers={exitwest}
-                            z={maptolayerz(layer)}
+                            z={maptolayerz(layer, 'iso')}
                           />
                         ))}
                       </group>
@@ -251,7 +234,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                             key={layer.id}
                             id={layer.id}
                             layers={exitnorth}
-                            z={maptolayerz(layer)}
+                            z={maptolayerz(layer, 'iso')}
                           />
                         ))}
                       </group>
@@ -263,7 +246,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
                             key={layer.id}
                             id={layer.id}
                             layers={exitsouth}
-                            z={maptolayerz(layer)}
+                            z={maptolayerz(layer, 'iso')}
                           />
                         ))}
                       </group>
@@ -282,4 +265,4 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
       </group>
     </>
   )
-}
+})

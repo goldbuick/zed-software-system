@@ -13,7 +13,7 @@ import TextInput from 'ink-text-input'
 import { chromium } from 'playwright'
 import React, { useEffect, useState } from 'react'
 
-import { formatlogforterminal } from './format-log.js'
+import { formatlogforterminal } from './formatlog.js'
 import {
   createstaticserver,
   getbundledchromiumpath,

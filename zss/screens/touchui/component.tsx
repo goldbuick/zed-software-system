@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
+import { useTiles } from 'zss/gadget/tiles'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
+import { WriteTextContext } from 'zss/gadget/writetext'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,

@@ -1,5 +1,6 @@
 import { useTape } from 'zss/gadget/data/state'
-import { useWriteText, writetile } from 'zss/gadget/hooks'
+import { writetile } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import { textformatreadedges } from 'zss/words/textformat'
 
 import { BKG_PTRN, BKG_PTRN_ALT, FG, bgcolor } from './common'

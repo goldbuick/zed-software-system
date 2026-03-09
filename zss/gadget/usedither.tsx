@@ -1,9 +1,9 @@
 import { useContext } from 'react'
+import { DITHER_DATA, DitherContext } from 'zss/gadget/dither'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Dither } from './graphics/dither'
-import { DITHER_DATA, DitherContext } from './hooks'
 
 type DitherDataProps = React.PropsWithChildren<{
   store: StoreApi<DITHER_DATA>

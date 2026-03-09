@@ -17,7 +17,7 @@ import { time } from 'zss/gadget/display/anim'
 import { createBlocksBillboardMaterial } from 'zss/gadget/display/blocks'
 import { useSpritePool } from 'zss/gadget/display/spritepool'
 import { createBillboardBufferGeometryAttributes } from 'zss/gadget/display/tiles'
-import { useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 

@@ -15,7 +15,7 @@ import {
   createBillboardsMaterial,
   createSpritesMaterial,
 } from 'zss/gadget/display/sprites'
-import { useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 

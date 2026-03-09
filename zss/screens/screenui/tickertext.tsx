@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { resettiles, useTiles } from 'zss/gadget/hooks'
+import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { ispresent } from 'zss/mapping/types'
 import {

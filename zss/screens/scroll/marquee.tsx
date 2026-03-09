@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useBlink } from 'zss/gadget/hooks'
+import { useBlink } from 'zss/gadget/blink'
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,

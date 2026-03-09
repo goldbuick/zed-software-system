@@ -14,7 +14,7 @@ import {
   LAYER_TYPE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
-import { useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 

@@ -20,64 +20,76 @@ import {
 import type { Camera, Group } from 'three'
 import { HalfFloatType } from 'three'
 
-export type EffectComposerProps = {
-  children: JSX.Element | JSX.Element[]
-  camera: Camera
-  width: number
-  height: number
-}
-
 const isConvolution = (effect: Effect): boolean =>
   (effect.getAttributes() & EffectAttribute.CONVOLUTION) ===
   EffectAttribute.CONVOLUTION
 
-export const EffectComposer = /* @__PURE__ */ memo(
-  /* @__PURE__ */ forwardRef<EffectComposerImpl, EffectComposerProps>(
-    ({ children, camera, width, height }, ref) => {
+export type EffectComposerProps = {
+  children: JSX.Element | JSX.Element[]
+  camera?: Camera
+  width: number
+  height: number
+  clearBeforeRender?: boolean
+}
+
+type EffectComposerInternalProps = EffectComposerProps & {
+  camera: Camera
+  clearBeforeRender: boolean
+}
+
+const EffectComposerInternal = memo(
+  forwardRef<EffectComposerImpl, EffectComposerInternalProps>(
+    ({ children, camera, width, height, clearBeforeRender }, ref) => {
       const { gl, scene } = useThree()
 
       const [composer] = useMemo(() => {
-        // Initialize composer
         const effectComposer = new EffectComposerImpl(gl, {
           depthBuffer: true,
           stencilBuffer: false,
           multisampling: 0,
           frameBufferType: HalfFloatType,
         })
-        effectComposer.autoRenderToScreen = false
-
-        // Add render pass
+        if (!clearBeforeRender) {
+          effectComposer.autoRenderToScreen = false
+        }
         effectComposer.addPass(new RenderPass(scene, camera))
-
         return [effectComposer]
-      }, [camera, gl, scene])
+      }, [camera, gl, scene, clearBeforeRender])
 
-      useFrame((_, delta) => {
-        composer.setSize(width, height)
-        composer.render(delta)
-      }, 1)
+      useFrame(
+        (_, delta) => {
+          if (clearBeforeRender) {
+            const currentAutoClear = gl.autoClear
+            gl.autoClear = true
+            composer.setSize(width, height)
+            composer.render(delta)
+            gl.autoClear = currentAutoClear
+          } else {
+            composer.setSize(width, height)
+            composer.render(delta)
+          }
+        },
+        clearBeforeRender ? 2 : 1,
+      )
 
       const group = useRef<Group>(null!)
       useLayoutEffect(() => {
         const passes: Pass[] = []
-
-        // TODO: rewrite all of this with R3F v9
         const groupInstance = (
           group.current as Group & { __r3f: Instance<Group> }
         ).__r3f
 
         if (groupInstance && composer) {
-          const children = groupInstance.children
-
-          for (let i = 0; i < children.length; i++) {
-            const child = children[i].object
-
+          const groupchildren = groupInstance.children
+          for (let i = 0; i < groupchildren.length; i++) {
+            const child = groupchildren[i].object
             if (child instanceof Effect) {
               const effects: Effect[] = [child]
-
               if (!isConvolution(child)) {
                 let next: unknown = null
-                while ((next = children[i + 1]?.object) instanceof Effect) {
+                while (
+                  (next = groupchildren[i + 1]?.object) instanceof Effect
+                ) {
                   if (isConvolution(next)) {
                     break
                   }
@@ -85,19 +97,15 @@ export const EffectComposer = /* @__PURE__ */ memo(
                   i++
                 }
               }
-
-              const pass = new EffectPass(camera, ...effects)
-              passes.push(pass)
+              passes.push(new EffectPass(camera, ...effects))
             } else if (child instanceof Pass) {
               passes.push(child)
             }
           }
-
           for (const pass of passes) {
-            composer?.addPass(pass)
+            composer.addPass(pass)
           }
         }
-
         return () => {
           for (const pass of passes) {
             composer?.removePass(pass)
@@ -105,7 +113,6 @@ export const EffectComposer = /* @__PURE__ */ memo(
         }
       }, [composer, children, camera])
 
-      // Memoize state, otherwise it would trigger all consumers on every render
       const state = useMemo(
         () => ({
           composer,
@@ -118,7 +125,6 @@ export const EffectComposer = /* @__PURE__ */ memo(
         [composer, camera, scene],
       )
 
-      // Expose the composer
       useImperativeHandle(ref, () => composer, [composer])
 
       return (
@@ -128,4 +134,39 @@ export const EffectComposer = /* @__PURE__ */ memo(
       )
     },
   ),
+)
+
+export type EffectComposerWithCameraProps = {
+  children: JSX.Element | JSX.Element[]
+  camera: Camera
+  width: number
+  height: number
+}
+
+export const EffectComposer = /* @__PURE__ */ memo(
+  forwardRef<EffectComposerImpl, EffectComposerWithCameraProps>(
+    (props, ref) => (
+      <EffectComposerInternal {...props} ref={ref} clearBeforeRender={false} />
+    ),
+  ),
+)
+
+export type EffectComposerMainProps = {
+  children: JSX.Element | JSX.Element[]
+  width: number
+  height: number
+}
+
+export const EffectComposerMain = /* @__PURE__ */ memo(
+  forwardRef<EffectComposerImpl, EffectComposerMainProps>((props, ref) => {
+    const { camera } = useThree()
+    return (
+      <EffectComposerInternal
+        {...props}
+        camera={camera}
+        ref={ref}
+        clearBeforeRender
+      />
+    )
+  }),
 )

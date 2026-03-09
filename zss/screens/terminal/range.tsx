@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
-import { useBlink, useWriteText } from 'zss/gadget/hooks'
+import { useBlink } from 'zss/gadget/blink'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
+import { useWriteText } from 'zss/gadget/writetext'
 import { maptovalue } from 'zss/mapping/value'
 import { inputcolor, strsplice } from 'zss/screens/panel/common'
 import {

@@ -1,4 +1,5 @@
 /* eslint-disable react/no-unknown-property */
+import { useTiles } from 'zss/gadget/tiles'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import {
   WRITE_TEXT_CONTEXT,
@@ -7,7 +8,6 @@ import {
 import { COLOR } from 'zss/words/types'
 
 import { ShadeBoxDither } from './graphics/dither'
-import { useTiles } from './hooks'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'
 

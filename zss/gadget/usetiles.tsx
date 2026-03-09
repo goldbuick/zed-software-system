@@ -1,9 +1,9 @@
 import { useContext } from 'react'
+import { TILE_DATA, TilesContext } from 'zss/gadget/tiles'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Tiles } from './graphics/tiles'
-import { TILE_DATA, TilesContext } from './hooks'
 
 type TilesDataProps = React.PropsWithChildren<{
   store: StoreApi<TILE_DATA>

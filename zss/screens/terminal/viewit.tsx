@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
-import { useMedia, useWriteText } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 import { UserInput } from 'zss/gadget/userinput'
+import { useWriteText } from 'zss/gadget/writetext'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
 import {
