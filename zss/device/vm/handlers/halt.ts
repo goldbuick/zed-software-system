@@ -7,7 +7,7 @@ import {
   memorywritehalt,
 } from 'zss/memory/session'
 
-export function handleHalt(vm: DEVICE, message: MESSAGE): void {
+export function handlehalt(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
   if (message.player !== operator) {
     return

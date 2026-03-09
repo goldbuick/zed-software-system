@@ -18,24 +18,24 @@ describe('func', () => {
 
   describe('doasync', () => {
     it('should execute async function', async () => {
-      const mockDevice = {} as any
-      const mockPlayer = 'test-player'
-      const asyncFunc = jest.fn().mockResolvedValue(undefined)
+      const mockdevice = {} as any
+      const mockplayer = 'test-player'
+      const asyncfunc = jest.fn().mockResolvedValue(undefined)
 
-      doasync(mockDevice, mockPlayer, asyncFunc)
+      doasync(mockdevice, mockplayer, asyncfunc)
 
       // Wait for async function to complete
       await new Promise((resolve) => setTimeout(resolve, 10))
 
-      expect(asyncFunc).toHaveBeenCalledTimes(1)
+      expect(asyncfunc).toHaveBeenCalledTimes(1)
     })
 
     it('should handle successful async execution', async () => {
-      const mockDevice = {} as any
-      const mockPlayer = 'test-player'
-      const asyncFunc = jest.fn().mockResolvedValue(undefined)
+      const mockdevice = {} as any
+      const mockplayer = 'test-player'
+      const asyncfunc = jest.fn().mockResolvedValue(undefined)
 
-      doasync(mockDevice, mockPlayer, asyncFunc)
+      doasync(mockdevice, mockplayer, asyncfunc)
 
       await new Promise((resolve) => setTimeout(resolve, 10))
 
@@ -44,52 +44,52 @@ describe('func', () => {
     })
 
     it('should catch and handle errors', async () => {
-      const mockDevice = {} as any
-      const mockPlayer = 'test-player'
+      const mockdevice = {} as any
+      const mockplayer = 'test-player'
       const error = new Error('Test error')
-      const asyncFunc = jest.fn().mockRejectedValue(error)
+      const asyncfunc = jest.fn().mockRejectedValue(error)
 
-      doasync(mockDevice, mockPlayer, asyncFunc)
+      doasync(mockdevice, mockplayer, asyncfunc)
 
       await new Promise((resolve) => setTimeout(resolve, 10))
 
       expect(console.error).toHaveBeenCalledWith(error)
       expect(apierror).toHaveBeenCalledWith(
-        mockDevice,
-        mockPlayer,
+        mockdevice,
+        mockplayer,
         'crash',
         'Test error',
       )
     })
 
     it('should handle errors without message', async () => {
-      const mockDevice = {} as any
-      const mockPlayer = 'test-player'
+      const mockdevice = {} as any
+      const mockplayer = 'test-player'
       const error = new Error()
-      const asyncFunc = jest.fn().mockRejectedValue(error)
+      const asyncfunc = jest.fn().mockRejectedValue(error)
 
-      doasync(mockDevice, mockPlayer, asyncFunc)
+      doasync(mockdevice, mockplayer, asyncfunc)
 
       await new Promise((resolve) => setTimeout(resolve, 10))
 
       expect(console.error).toHaveBeenCalledWith(error)
-      expect(apierror).toHaveBeenCalledWith(mockDevice, mockPlayer, 'crash', '')
+      expect(apierror).toHaveBeenCalledWith(mockdevice, mockplayer, 'crash', '')
     })
 
     it('should handle non-Error rejections', async () => {
-      const mockDevice = {} as any
-      const mockPlayer = 'test-player'
-      const asyncFunc = jest.fn().mockRejectedValue('string error')
+      const mockdevice = {} as any
+      const mockplayer = 'test-player'
+      const asyncfunc = jest.fn().mockRejectedValue('string error')
 
-      doasync(mockDevice, mockPlayer, asyncFunc)
+      doasync(mockdevice, mockplayer, asyncfunc)
 
       await new Promise((resolve) => setTimeout(resolve, 10))
 
       expect(console.error).toHaveBeenCalledWith('string error')
       // When rejecting with a string, error?.message is undefined
       expect(apierror).toHaveBeenCalledWith(
-        mockDevice,
-        mockPlayer,
+        mockdevice,
+        mockplayer,
         'crash',
         undefined,
       )

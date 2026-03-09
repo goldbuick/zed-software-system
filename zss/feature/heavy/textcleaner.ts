@@ -1,4 +1,4 @@
-export function cleanTextForTTS(text: string) {
+export function cleantextfortts(text: string) {
   if (!text || typeof text !== 'string') {
     return ''
   }
@@ -23,7 +23,7 @@ export function cleanTextForTTS(text: string) {
   return cleanedText.trim()
 }
 
-export function chunkText(text: string) {
+export function chunktext(text: string) {
   if (!text || typeof text !== 'string') {
     return []
   }

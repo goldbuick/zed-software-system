@@ -52,7 +52,7 @@ export function dirfrompts(last: PT, current: PT) {
   return dirfromdelta(current.x - last.x, current.y - last.y)
 }
 
-export const dirconsts = {
+export const DIR_CONSTS = {
   idle: 'IDLE',
   up: 'NORTH',
   down: 'SOUTH',
@@ -103,7 +103,7 @@ export const dirconsts = {
   select: 'SELECT',
 } as const
 
-export type STR_DIR_TYPE = typeof dirconsts
+export type STR_DIR_TYPE = typeof DIR_CONSTS
 export type STR_DIR_KEYS = keyof STR_DIR_TYPE
 export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
 export type STR_DIR = (STR_DIR_CONST | STR_KIND | number | string)[]
@@ -135,7 +135,7 @@ export function mapstrdirtoconst(value: any): DIR {
 
 export function mapstrdir(value: any): MAYBE<STR_DIR_CONST> {
   if (isstring(value)) {
-    return dirconsts[NAME(value) as STR_DIR_KEYS]
+    return DIR_CONSTS[NAME(value) as STR_DIR_KEYS]
   }
   return undefined
 }

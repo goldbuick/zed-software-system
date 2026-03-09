@@ -1,5 +1,5 @@
 import { useTape } from 'zss/gadget/data/state'
-import { useWriteText, writeTile } from 'zss/gadget/hooks'
+import { useWriteText, writetile } from 'zss/gadget/hooks'
 import { textformatreadedges } from 'zss/words/textformat'
 
 import { BKG_PTRN, BKG_PTRN_ALT, FG, bgcolor } from './common'
@@ -21,7 +21,7 @@ export function TapeBackPlate({ bump }: TapeBackPlateProps) {
   if (quickterminal) {
     for (let y = edge.top; y <= edge.bottom; ++y) {
       for (let x = edge.left; x <= edge.right; ++x) {
-        writeTile(context, context.width, context.height, x, y, {
+        writetile(context, context.width, context.height, x, y, {
           char: 0,
           color: FG,
           bg: BG,
@@ -39,7 +39,7 @@ export function TapeBackPlate({ bump }: TapeBackPlateProps) {
           ? BKG_PTRN
           : BKG_PTRN_ALT
       }
-      writeTile(context, context.width, context.height, x, y, {
+      writetile(context, context.width, context.height, x, y, {
         char,
         color: FG,
         bg: BG,

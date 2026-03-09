@@ -7,7 +7,7 @@ import { isarray, ispresent } from 'zss/mapping/types'
 
 import { agents } from '../state'
 
-export function handleAgentstart(vm: DEVICE, message: MESSAGE): void {
+export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   const agent = createagent()
   const id = agent.id()
   agents[id] = agent
@@ -15,7 +15,7 @@ export function handleAgentstart(vm: DEVICE, message: MESSAGE): void {
   vmagentlist(vm, message.player)
 }
 
-export function handleAgentstop(vm: DEVICE, message: MESSAGE): void {
+export function handleagentstop(vm: DEVICE, message: MESSAGE): void {
   if (typeof message.data !== 'string') {
     return
   }
@@ -31,7 +31,7 @@ export function handleAgentstop(vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handleAgentlist(vm: DEVICE, message: MESSAGE): void {
+export function handleagentlist(vm: DEVICE, message: MESSAGE): void {
   const instances = Object.values(agents)
   if (instances.length === 0) {
     write(vm, message.player, 'no agents running')
@@ -44,7 +44,7 @@ export function handleAgentlist(vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handleAgentprompt(vm: DEVICE, message: MESSAGE): void {
+export function handleagentprompt(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }

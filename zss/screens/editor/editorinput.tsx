@@ -27,11 +27,11 @@ import { textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
 
 import {
-  changeIndent,
-  computeSelection,
-  drawLocalCursor,
-  drawRemoteCursors,
-  toggleComments,
+  changeindent,
+  computeselection,
+  drawlocalcursor,
+  drawremotecursors,
+  togglecomments,
 } from './editorinputhelpers'
 import {
   useCursorNavigation,
@@ -120,8 +120,8 @@ export function EditorInput({
   const xblink = xcursor + 1 - xoffset
   const yblink = ycursor + 2 - yoffset
 
-  drawLocalCursor(codepage, blink, xblink, yblink, blinkdelta, edge, context)
-  drawRemoteCursors(
+  drawlocalcursor(codepage, blink, xblink, yblink, blinkdelta, edge, context)
+  drawremotecursors(
     codepage,
     remotePresence,
     player,
@@ -162,7 +162,7 @@ export function EditorInput({
 
   // --- selection state ---
 
-  const { ii1, iic, hasselection, strvalueselected } = computeSelection(
+  const { ii1, iic, hasselection, strvalueselected } = computeselection(
     tapeeditor.cursor,
     tapeeditor.select,
     strvalue,
@@ -432,7 +432,7 @@ export function EditorInput({
                     break
                   case `'`:
                     if (hasselection) {
-                      toggleComments(strvalueselected, ii1, iic, strvaluesplice)
+                      togglecomments(strvalueselected, ii1, iic, strvaluesplice)
                     }
                     break
                 }
@@ -441,9 +441,9 @@ export function EditorInput({
               } else if (event.key.length === 1) {
                 if (hasselection) {
                   if (event.key === `'`) {
-                    toggleComments(strvalueselected, ii1, iic, strvaluesplice)
+                    togglecomments(strvalueselected, ii1, iic, strvaluesplice)
                   } else if (event.key === ' ') {
-                    changeIndent(
+                    changeindent(
                       strvalueselected,
                       ii1,
                       iic,

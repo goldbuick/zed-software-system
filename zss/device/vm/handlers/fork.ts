@@ -5,7 +5,7 @@ import { memoryreadoperator } from 'zss/memory/session'
 
 import { forkstate } from '../helpers'
 
-export function handleFork(vm: DEVICE, message: MESSAGE): void {
+export function handlefork(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
   if (message.player !== operator) {
     return

@@ -102,14 +102,14 @@ function joinurlread() {
   return joinurl
 }
 
-function removeUrls(text: string) {
+function removeurls(text: string) {
   // Regular expression to match URLs
   // This regex matches URLs starting with http, https, or ftp,
   // and captures the rest of the URL until a space or end of string.
-  const urlRegex = /(?:https?|ftp):\/\/[\n\S]+/g
+  const urlregex = /(?:https?|ftp):\/\/[\n\S]+/g
 
   // Replace all matched URLs with an empty string
-  return text.replace(urlRegex, '')
+  return text.replace(urlregex, '')
 }
 
 function striptext(msg: ChatMessage) {
@@ -122,7 +122,7 @@ function striptext(msg: ChatMessage) {
       plaintext = plaintext.substring(0, start) + plaintext.substring(end + 1)
     }
   }
-  return removeUrls(plaintext)
+  return removeurls(plaintext)
 }
 
 const bridge = createdevice('bridge', [], (message) => {

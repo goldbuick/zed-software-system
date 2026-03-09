@@ -3,16 +3,16 @@ jest.mock('zss/words/expr', () => ({ readexpr: () => [undefined, 0] }))
 jest.mock('zss/memory/session', () => ({}))
 
 import {
-  categoryconsts,
+  CATEGORY_CONSTS,
   isstrcategory,
   mapstrcategory,
 } from 'zss/words/category'
 
 describe('category', () => {
-  describe('categoryconsts', () => {
+  describe('CATEGORY_CONSTS', () => {
     it('has expected keys', () => {
-      expect(categoryconsts.isterrain).toBe('ISTERRAIN')
-      expect(categoryconsts.isobject).toBe('ISOBJECT')
+      expect(CATEGORY_CONSTS.isterrain).toBe('ISTERRAIN')
+      expect(CATEGORY_CONSTS.isobject).toBe('ISOBJECT')
     })
   })
 

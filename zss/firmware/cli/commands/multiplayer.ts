@@ -15,7 +15,7 @@ import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
-export function registerMultiplayerCommands(fw: FIRMWARE): FIRMWARE {
+export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('admin', ['admin scroll'], () => {
       vmadmin(SOFTWARE, READ_CONTEXT.elementfocus)

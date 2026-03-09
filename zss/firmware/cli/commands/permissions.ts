@@ -31,7 +31,7 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
-export function registerPermissionsCommands(fw: FIRMWARE): FIRMWARE {
+export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command(
       'permissions',

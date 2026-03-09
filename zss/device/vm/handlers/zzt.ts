@@ -11,7 +11,7 @@ import { isarray } from 'zss/mapping/types'
 
 import { writezztcontentlinks, writezztcontentwait } from '../helpers'
 
-export function handleZztsearch(vm: DEVICE, message: MESSAGE): void {
+export function handlezztsearch(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {
     if (!isarray(message.data)) {
       return
@@ -32,7 +32,7 @@ export function handleZztsearch(vm: DEVICE, message: MESSAGE): void {
   })
 }
 
-export function handleZztrandom(vm: DEVICE, message: MESSAGE): void {
+export function handlezztrandom(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {
     writezztcontentwait(message.player)
     const list = await museumofzztrandom()
@@ -40,7 +40,7 @@ export function handleZztrandom(vm: DEVICE, message: MESSAGE): void {
   })
 }
 
-export function handleZztbridge(vm: DEVICE, message: MESSAGE): void {
+export function handlezztbridge(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {
     if (isarray(message.data)) {
       const [filename] = message.data

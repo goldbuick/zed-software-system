@@ -4,6 +4,6 @@ import { memoryadminmenu } from 'zss/memory/utilities'
 
 import { lastinputtime } from '../state'
 
-export function handleAdmin(_vm: DEVICE, message: MESSAGE): void {
+export function handleadmin(_vm: DEVICE, message: MESSAGE): void {
   memoryadminmenu(message.player, lastinputtime)
 }

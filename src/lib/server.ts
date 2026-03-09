@@ -6,12 +6,12 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** Root directory (project root when running from dist). */
-export function getRoot(): string {
+export function getroot(): string {
   return path.join(__dirname, '..', '..', '..')
 }
 
 /** Resolve path to Chromium headless shell from playwright install. */
-export function getBundledChromiumPath(root: string): string | null {
+export function getbundledchromiumpath(root: string): string | null {
   const browsersDir = path.join(
     root,
     'node_modules',
@@ -43,7 +43,7 @@ export function getBundledChromiumPath(root: string): string | null {
 }
 
 /** Create static file server for cafe/dist. */
-export function createStaticServer(
+export function createstaticserver(
   distDir: string,
   port: number,
 ): Promise<ReturnType<typeof createServer>> {

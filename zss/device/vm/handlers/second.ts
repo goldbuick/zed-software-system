@@ -13,7 +13,7 @@ import {
   tracking,
 } from '../state'
 
-export function handleSecond(vm: DEVICE, message: MESSAGE): void {
+export function handlesecond(vm: DEVICE, message: MESSAGE): void {
   memoryscanplayers(tracking)
 
   const players = Object.keys(tracking)

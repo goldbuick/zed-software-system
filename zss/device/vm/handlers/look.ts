@@ -3,7 +3,7 @@ import type { MESSAGE } from 'zss/device/api'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 
-export function handleLook(vm: DEVICE, message: MESSAGE): void {
+export function handlelook(vm: DEVICE, message: MESSAGE): void {
   const board = memoryreadplayerboard(message.player)
   const gadget = gadgetstate(message.player)
   vm.reply(message, 'acklook', {

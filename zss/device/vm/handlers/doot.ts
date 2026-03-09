@@ -4,7 +4,7 @@ import { apilog } from 'zss/device/api'
 
 import { tracking, trackinglastlog } from '../state'
 
-export function handleDoot(vm: DEVICE, message: MESSAGE): void {
+export function handledoot(vm: DEVICE, message: MESSAGE): void {
   tracking[message.player] = 0
   trackinglastlog[message.player] = trackinglastlog[message.player] ?? 0
   if (trackinglastlog[message.player] % 32 === 0) {

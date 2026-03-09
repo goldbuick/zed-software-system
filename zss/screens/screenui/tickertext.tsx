@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { resetTiles, useTiles } from 'zss/gadget/hooks'
+import { resettiles, useTiles } from 'zss/gadget/hooks'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -30,7 +30,7 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
     context.y = height - 1
     context.disablewrap = true
     const state = store.getState()
-    resetTiles(state, 0, COLOR.WHITE, COLOR.ONCLEAR)
+    resettiles(state, 0, COLOR.WHITE, COLOR.ONCLEAR)
     for (let i = 0; i < tickers.length; ++i) {
       const line = tickers[i]
       tokenizeandwritetextformat(line, context, false)

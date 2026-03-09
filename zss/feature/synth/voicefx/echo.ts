@@ -1,8 +1,8 @@
 import { isnumber } from 'zss/mapping/types'
 
-import { createVoiceFxConfigHandler } from './common'
+import { createvoicefxconfighandler } from './common'
 
-export const synthvoicefxechoconfig = createVoiceFxConfigHandler(
+export const synthvoicefxechoconfig = createvoicefxconfighandler(
   'echo',
   (synth) => synth.FXCHAIN.echo,
   (echo, config, value) => {

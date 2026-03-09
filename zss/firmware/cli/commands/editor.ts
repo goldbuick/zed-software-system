@@ -6,7 +6,7 @@ import { ispt } from 'zss/words/dir'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
-export function registerEditorCommands(fw: FIRMWARE): FIRMWARE {
+export function registereditorcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('gadget', ['built-in inspector'], () => {
       registerinspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)

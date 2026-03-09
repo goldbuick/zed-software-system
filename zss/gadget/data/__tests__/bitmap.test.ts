@@ -1,5 +1,5 @@
 import {
-  bitmapToCanvas,
+  bitmaptocanvas,
   createbitmap,
   createbitmapfromarray,
   createspritebitmapfrombitmap,
@@ -81,20 +81,20 @@ describe('bitmap', () => {
   describe('bitmapToCanvas', () => {
     it('should create a canvas element', () => {
       const bitmap = createbitmap(10, 20)
-      bitmapToCanvas(bitmap)
+      bitmaptocanvas(bitmap)
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(global.document.createElement).toHaveBeenCalledWith('canvas')
     })
 
     it('should set canvas dimensions from bitmap', () => {
       const bitmap = createbitmap(10, 20)
-      bitmapToCanvas(bitmap)
+      bitmaptocanvas(bitmap)
       expect(mockCanvas.width).toBe(10)
       expect(mockCanvas.height).toBe(20)
     })
 
     it('should handle undefined bitmap by creating 1x1 canvas', () => {
-      bitmapToCanvas(undefined as any)
+      bitmaptocanvas(undefined as any)
       expect(mockCanvas.width).toBe(1)
       expect(mockCanvas.height).toBe(1)
     })
@@ -110,7 +110,7 @@ describe('bitmap', () => {
       const imageDataSize = 2 * 2 * 4
       mockImageData.data = new Uint8ClampedArray(imageDataSize)
 
-      bitmapToCanvas(bitmap)
+      bitmaptocanvas(bitmap)
 
       expect(mockContext.getImageData).toHaveBeenCalledWith(0, 0, 2, 2)
       expect(mockContext.putImageData).toHaveBeenCalled()
@@ -131,7 +131,7 @@ describe('bitmap', () => {
     it('should handle missing context gracefully', () => {
       mockCanvas.getContext.mockReturnValue(null)
       const bitmap = createbitmap(10, 20)
-      const canvas = bitmapToCanvas(bitmap)
+      const canvas = bitmaptocanvas(bitmap)
       expect(canvas).toBe(mockCanvas)
     })
   })

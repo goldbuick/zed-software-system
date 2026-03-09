@@ -7,7 +7,7 @@ import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 
 import { lastinputtime } from '../state'
 
-export function handleInput(vm: DEVICE, message: MESSAGE): void {
+export function handleinput(vm: DEVICE, message: MESSAGE): void {
   if (message.player.includes('local') && !memoryhasflags(message.player)) {
     vmlocal(vm, message.player)
   }

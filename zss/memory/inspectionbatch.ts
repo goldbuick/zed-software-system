@@ -107,7 +107,7 @@ function createboardelementbuffer(
 }
 
 async function writesecretheap(
-  updater: (oldValue: BOARD_ELEMENT_BUFFER | undefined) => BOARD_ELEMENT_BUFFER,
+  updater: (oldvalue: BOARD_ELEMENT_BUFFER | undefined) => BOARD_ELEMENT_BUFFER,
 ): Promise<void> {
   return idbupdate('secretheap', updater)
 }

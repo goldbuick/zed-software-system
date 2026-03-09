@@ -135,7 +135,7 @@ Need a function that returns instructions, and describes args
 export type ROM_LOOKUP = Record<string, string>
 
 /** Strip leading $COLOR token from ROM value for plain display (e.g. args hint). */
-export function stripRomValue(value: string): string {
+export function stripromvalue(value: string): string {
   return value.replace(/^\$\w+/i, '').trim()
 }
 

@@ -1,6 +1,6 @@
 // Parser module for AnsiLove
 
-import { display, validateOptions } from './display'
+import { display, validateoptions } from './display'
 import { File } from './file'
 import { FontModule } from './font'
 import { PaletteModule } from './palette'
@@ -774,13 +774,13 @@ function xb(bytes: Uint8Array, options: RenderOptions): ParsedData {
   }
 }
 
-export function readBytes(
+export function readbytes(
   bytes: Uint8Array,
   callback: (data: DisplayData | DisplayData[], sauce?: Sauce) => void,
   splitRows: number,
   options?: RenderOptions,
 ): void {
-  options = validateOptions(options)
+  options = validateoptions(options)
 
   let data: ParsedData
   switch (options.filetype) {
@@ -831,5 +831,5 @@ export function readBytes(
 }
 
 export const ParserModule = {
-  readBytes,
+  readbytes,
 }

@@ -5,7 +5,7 @@ import { ispresent } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
-export function registerZztCommands(fw: FIRMWARE): FIRMWARE {
+export function registerzztcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command(
       'zztsearch',

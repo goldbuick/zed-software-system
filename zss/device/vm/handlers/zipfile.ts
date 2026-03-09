@@ -13,7 +13,7 @@ import {
 } from 'zss/gadget/data/api'
 import { NAME, WORD } from 'zss/words/types'
 
-export function handleReadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
+export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
   const list = readzipfilelist()
   gadgettext(message.player, `$CENTER Select Files`)
   gadgethyperlink(message.player, 'zipfilelist', 'import selected', [

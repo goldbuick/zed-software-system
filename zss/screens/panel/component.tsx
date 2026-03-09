@@ -1,5 +1,5 @@
 import { PANEL_ITEM } from 'zss/gadget/data/types'
-import { WriteTextContext, resetTiles, useTiles } from 'zss/gadget/hooks'
+import { WriteTextContext, resettiles, useTiles } from 'zss/gadget/hooks'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import {
   WRITE_TEXT_CONTEXT,
@@ -49,7 +49,7 @@ export function PanelComponent({
     y: ymargin,
   }
 
-  resetTiles(state, 0, color, bg)
+  resettiles(state, 0, color, bg)
 
   return (
     <TilesData store={store}>

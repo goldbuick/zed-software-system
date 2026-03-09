@@ -200,14 +200,14 @@ describe('types', () => {
 
   describe('isbook', () => {
     it('should identify valid book objects', () => {
-      const validBook = {
+      const validbook = {
         id: 'test-id',
         name: 'test-name',
         flags: {},
         pages: [],
         activelist: [],
       }
-      expect(isbook(validBook)).toBe(true)
+      expect(isbook(validbook)).toBe(true)
     })
 
     it('should reject objects missing required fields', () => {

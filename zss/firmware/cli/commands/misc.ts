@@ -12,7 +12,7 @@ import { isemail } from '../utils'
 let bbscode = ''
 let bbsemail = ''
 
-export function registerMiscCommands(fw: FIRMWARE): FIRMWARE {
+export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('screenshot', ['screenshot for capture'], () => {
       registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)

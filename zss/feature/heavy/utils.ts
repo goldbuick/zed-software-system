@@ -1,5 +1,5 @@
 /// <reference types="@webgpu/types" />
-import { chunkText, cleanTextForTTS } from './textcleaner'
+import { chunktext, cleantextfortts } from './textcleaner'
 
 export async function detectWebGPU() {
   try {
@@ -19,15 +19,15 @@ export class TextSplitterStream {
     this.closed = false
   }
 
-  chunkText(text: string) {
+  chunktext(text: string) {
     // Clean the text first, then chunk it
-    const cleanedText = cleanTextForTTS(text)
-    return chunkText(cleanedText)
+    const cleanedtext = cleantextfortts(text)
+    return chunktext(cleanedtext)
   }
 
   push(text: string) {
     // Simple sentence splitting for now
-    const sentences = this.chunkText(text) ?? [text]
+    const sentences = this.chunktext(text) ?? [text]
     this.chunks.push(...sentences)
   }
 
@@ -116,7 +116,7 @@ export class RawAudio {
   }
 }
 
-export function normalizePeak(f32: Float32Array<ArrayBuffer>, target = 0.9) {
+export function normalizepeak(f32: Float32Array<ArrayBuffer>, target = 0.9) {
   if (!f32?.length) {
     return
   }
@@ -132,7 +132,7 @@ export function normalizePeak(f32: Float32Array<ArrayBuffer>, target = 0.9) {
   }
 }
 
-export function trimSilence(
+export function trimsilence(
   f32: Float32Array<ArrayBuffer>,
   thresh = 0.002,
   minSamples = 480,

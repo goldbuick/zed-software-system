@@ -13,14 +13,14 @@ import TextInput from 'ink-text-input'
 import { chromium } from 'playwright'
 import React, { useEffect, useState } from 'react'
 
-import { formatLogForTerminal } from './format-log.js'
+import { formatlogforterminal } from './format-log.js'
 import {
-  createStaticServer,
-  getBundledChromiumPath,
-  getRoot,
+  createstaticserver,
+  getbundledchromiumpath,
+  getroot,
 } from './server.js'
 
-const root = getRoot()
+const root = getroot()
 const distDir = path.join(root, 'cafe', 'dist')
 
 const VITE_DEV_PORT = Number(process.env.ZSS_DEV_SERVER_PORT ?? '7777')
@@ -138,12 +138,12 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
       console.error('cafe/dist not found. Run: yarn build')
       process.exit(1)
     }
-    await createStaticServer(distDir, port)
+    await createstaticserver(distDir, port)
     baseUrl = `http://localhost:${port}`
     addLog(`Serving cafe at ${baseUrl}`)
   }
 
-  const executablePath = getBundledChromiumPath(root)
+  const executablePath = getbundledchromiumpath(root)
   let browser
   try {
     browser = await chromium.launch({
@@ -179,7 +179,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
   })
 
   await page.exposeFunction('__nodeLog', (line: string) => {
-    addLog(formatLogForTerminal(line))
+    addLog(formatlogforterminal(line))
   })
 
   let clipboardBuffer = ''

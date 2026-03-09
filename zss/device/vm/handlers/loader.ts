@@ -9,7 +9,7 @@ import { memoryreadbookbysoftware, memorywritebook } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
 
-export function handleLoader(vm: DEVICE, message: MESSAGE): void {
+export function handleloader(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }

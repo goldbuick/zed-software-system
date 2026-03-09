@@ -13,7 +13,7 @@ import { ARG_TYPE } from 'zss/words/types'
 
 import { vmflushop } from '../utils'
 
-export function registerStateCommands(fw: FIRMWARE): FIRMWARE {
+export function registerstatecommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('dev', ['dev mode / halt execution (operator only)'], () => {
       vmflushop()

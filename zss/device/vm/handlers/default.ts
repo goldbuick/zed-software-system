@@ -39,9 +39,9 @@ import { NAME } from 'zss/words/types'
 
 import { lastinputtime } from '../state'
 
-import { handleZztbridge } from './zzt'
+import { handlezztbridge } from './zzt'
 
-export function handleDefault(vm: DEVICE, message: MESSAGE): void {
+export function handledefault(vm: DEVICE, message: MESSAGE): void {
   const { target, path } = parsetarget(message.target)
   switch (NAME(target)) {
     case 'adminop': {
@@ -202,7 +202,7 @@ export function handleDefault(vm: DEVICE, message: MESSAGE): void {
       memorymakeitcommand(path, message.data ?? '', message.player)
       break
     case 'zztbridge':
-      handleZztbridge(vm, message)
+      handlezztbridge(vm, message)
       break
     case 'zipfilelist':
       doasync(vm, message.player, async () => {

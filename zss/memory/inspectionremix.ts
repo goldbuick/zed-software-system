@@ -131,7 +131,7 @@ export async function memoryreadremixconfig(): Promise<
 }
 
 export async function memorywriteremixconfig(
-  updater: (oldValue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
+  updater: (oldvalue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
 ): Promise<void> {
   return idbupdate('remixconfig', updater)
 }

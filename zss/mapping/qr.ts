@@ -5,7 +5,7 @@ export function qrlines(content: string): string[] {
   const ascii = renderUnicodeCompact(content)
     .split('\n')
     .filter((line) => line.length > 0)
-  const rendermap: Record<number, number> = {
+  const RENDER_MAP: Record<number, number> = {
     [32]: 32, // space
     [9600]: 223, // top half
     [9604]: 220, // bottom half
@@ -15,7 +15,7 @@ export function qrlines(content: string): string[] {
   for (let i = 0; i < ascii.length; i++) {
     const lineascii = [...ascii[i]]
       .map((c) => {
-        const chr = rendermap[c.charCodeAt(0)]
+        const chr = RENDER_MAP[c.charCodeAt(0)]
         return `$${chr}`
       })
       .join('')

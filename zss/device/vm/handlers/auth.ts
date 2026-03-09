@@ -18,13 +18,13 @@ import { memorysetconfig } from 'zss/memory/utilities'
 
 import { lastinputtime, tracking } from '../state'
 
-export function handleSearch(vm: DEVICE, message: MESSAGE): void {
+export function handlesearch(vm: DEVICE, message: MESSAGE): void {
   if (!memoryreadplayeractive(message.player)) {
     registerloginready(vm, message.player)
   }
 }
 
-export function handleLogout(vm: DEVICE, message: MESSAGE): void {
+export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   vmclearscroll(vm, message.player)
   memorylogoutplayer(message.player, !!message.data)
   delete tracking[message.player]
@@ -33,7 +33,7 @@ export function handleLogout(vm: DEVICE, message: MESSAGE): void {
   registerloginready(vm, message.player)
 }
 
-export function handleLogin(vm: DEVICE, message: MESSAGE): void {
+export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   const {
     bannedtokens,
     rolebytoken,
@@ -78,13 +78,13 @@ export function handleLogin(vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handlePlayertoken(_vm: DEVICE, message: MESSAGE): void {
+export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {
   if (isstring(message.data)) {
     memorysetplayertotoken(message.player, message.data)
   }
 }
 
-export function handleLocal(vm: DEVICE, message: MESSAGE): void {
+export function handlelocal(vm: DEVICE, message: MESSAGE): void {
   if (memoryloginplayer(message.player, {})) {
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()

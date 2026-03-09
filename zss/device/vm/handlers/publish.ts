@@ -7,7 +7,7 @@ import { memoryreadoperator } from 'zss/memory/session'
 
 import { compressedbookstate } from '../helpers'
 
-export function handlePublish(vm: DEVICE, message: MESSAGE): void {
+export function handlepublish(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {
     const operator = memoryreadoperator()
     if (message.player !== operator || !isarray(message.data)) {

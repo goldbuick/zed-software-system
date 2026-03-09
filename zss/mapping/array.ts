@@ -112,21 +112,21 @@ export function addtoarray<T>(array: T[], value: T) {
 }
 
 export function setindex<T>(array: T[], index: number, value: T) {
-  const newArray = [...array]
-  newArray[index] = value
-  return newArray
+  const newarray = [...array]
+  newarray[index] = value
+  return newarray
 }
 
 export function removeindex<T>(array: T[], index: number) {
-  const newArray = [...array]
-  newArray.splice(index, 1)
-  return newArray
+  const newarray = [...array]
+  newarray.splice(index, 1)
+  return newarray
 }
 
 export function setatindex<T>(array: T[], index: number, value: T) {
-  const newArray = [...array]
-  newArray[index] = value
-  return newArray
+  const newarray = [...array]
+  newarray[index] = value
+  return newarray
 }
 
 export function applytoindex<T>(
@@ -134,12 +134,12 @@ export function applytoindex<T>(
   index: number,
   props: Record<string, T>,
 ) {
-  const newArray = [...array]
-  newArray[index] = {
-    ...newArray[index],
+  const newarray = [...array]
+  newarray[index] = {
+    ...newarray[index],
     ...props,
   }
-  return newArray
+  return newarray
 }
 
 export function removefromindex<T>(
@@ -147,10 +147,10 @@ export function removefromindex<T>(
   index: number,
   key: string,
 ) {
-  const newArray = [...array]
-  newArray[index] = { ...newArray[index] }
-  delete newArray[index][key]
-  return newArray
+  const newarray = [...array]
+  newarray[index] = { ...newarray[index] }
+  delete newarray[index][key]
+  return newarray
 }
 
 export function findindexbykey<T>(

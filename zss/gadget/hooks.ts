@@ -52,11 +52,11 @@ function createditherstore() {
   })
 }
 
-export function resetDither(dither: number[]) {
+export function resetdither(dither: number[]) {
   dither.fill(0)
 }
 
-export function writeDither(
+export function writedither(
   dither: number[],
   width: number,
   height: number,
@@ -119,7 +119,7 @@ function createtilesstore() {
   })
 }
 
-export function resetTiles(
+export function resettiles(
   tiles: TILES,
   char: number,
   color: number,
@@ -136,7 +136,7 @@ type WRITE_TILE_VALUE = {
   bg: number
 }
 
-export function writeTile(
+export function writetile(
   tiles: TILES,
   width: number,
   height: number,

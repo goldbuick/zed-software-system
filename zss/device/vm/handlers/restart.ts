@@ -4,7 +4,7 @@ import { vmflush } from 'zss/device/api'
 import { memoryrestartallchipsandflags } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'
 
-export function handleRestart(vm: DEVICE, message: MESSAGE): void {
+export function handlerestart(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
   if (message.player !== operator) {
     return

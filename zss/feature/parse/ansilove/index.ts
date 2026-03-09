@@ -1,19 +1,19 @@
 // AnsiLove.js TypeScript version
 // Main module that exports all public APIs
 
-import { sauceBytes } from './file'
+import { saucebytes } from './file'
 import { ParserModule } from './parser'
 import type { DisplayData, RenderOptions, Sauce } from './types'
 
 // Render functions
-export function renderBytes(
+export function renderbytes(
   bytes: Uint8Array,
   callback: (data: DisplayData, sauce?: Sauce) => void,
   options?: RenderOptions,
   callbackFail?: (error: unknown) => void,
 ): void {
   try {
-    ParserModule.readBytes(
+    ParserModule.readbytes(
       bytes,
       callback as (data: DisplayData | DisplayData[], sauce?: Sauce) => void,
       0,
@@ -29,7 +29,7 @@ export function renderBytes(
 }
 
 // Split render functions
-export function splitRenderBytes(
+export function splitrenderbytes(
   bytes: Uint8Array,
   callback: (data: DisplayData | DisplayData[], sauce?: Sauce) => void,
   splitRows?: number,
@@ -37,7 +37,7 @@ export function splitRenderBytes(
   callbackFail?: (error: unknown) => void,
 ): void {
   try {
-    ParserModule.readBytes(
+    ParserModule.readbytes(
       bytes,
       callback as (data: DisplayData | DisplayData[], sauce?: Sauce) => void,
       splitRows ?? 27,
@@ -54,9 +54,9 @@ export function splitRenderBytes(
 
 // Main AnsiLove object for compatibility
 export const AnsiLove = {
-  sauceBytes,
-  renderBytes,
-  splitRenderBytes,
+  sauceBytes: saucebytes,
+  renderBytes: renderbytes,
+  splitRenderBytes: splitrenderbytes,
 }
 
 export default AnsiLove

@@ -5,7 +5,7 @@ import { memoryreadoperator } from 'zss/memory/session'
 
 import { savestate } from '../helpers'
 
-export function handleFlush(vm: DEVICE, message: MESSAGE): void {
+export function handleflush(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
   if (message.player !== operator) {
     return

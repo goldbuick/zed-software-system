@@ -1,5 +1,5 @@
 import { useTape } from 'zss/gadget/data/state'
-import { useBlink, useWriteText, writeTile } from 'zss/gadget/hooks'
+import { useBlink, useWriteText, writetile } from 'zss/gadget/hooks'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import { bgcolor, setupeditoritem } from 'zss/screens/tape/common'
 import { ismac, metakey } from 'zss/words/system'
@@ -27,12 +27,12 @@ export function EditorFrame() {
 
   // left - right - bottom of frame
   for (let y = edge.top; y < edge.bottom; ++y) {
-    writeTile(context, context.width, context.height, edge.left, y, {
+    writetile(context, context.width, context.height, edge.left, y, {
       char: 179,
       color: FG,
       bg: BG,
     })
-    writeTile(context, context.width, context.height, edge.right, y, {
+    writetile(context, context.width, context.height, edge.right, y, {
       char: 179,
       color: FG,
       bg: BG,

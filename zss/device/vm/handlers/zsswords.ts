@@ -12,10 +12,10 @@ import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
 import { memoryreadflags } from 'zss/memory/flags'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { categoryconsts } from 'zss/words/category'
+import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
-import { dirconsts } from 'zss/words/dir'
+import { DIR_CONSTS } from 'zss/words/dir'
 import { ARG_TYPE } from 'zss/words/types'
 
 import {
@@ -41,7 +41,7 @@ const dirmods = [
   'elements',
 ]
 
-export function handleZsswords(vm: DEVICE, message: MESSAGE): void {
+export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
   const langcommands: GADGET_ZSS_WORDS['langcommands'] = {
     if: [ARG_TYPE.ANY, 'conditional logic'],
     try: [ARG_TYPE.ANY, 'try moving with a fallback command'],
@@ -122,10 +122,10 @@ export function handleZsswords(vm: DEVICE, message: MESSAGE): void {
     loaders: memorylistallcodepagewithtype(CODE_PAGE_TYPE.LOADER).map(
       (codepage) => memoryreadcodepagename(codepage),
     ),
-    categories: [...objectKeys(categoryconsts)],
+    categories: [...objectKeys(CATEGORY_CONSTS)],
     colors: [...objectKeys(colorconsts)],
     dirs: [
-      ...objectKeys(dirconsts).filter(
+      ...objectKeys(DIR_CONSTS).filter(
         (item) => dirmods.includes(item) === false,
       ),
     ],

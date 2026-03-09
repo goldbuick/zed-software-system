@@ -1,8 +1,8 @@
 import { isnumber, isstring } from 'zss/mapping/types'
 
-import { createVoiceFxConfigHandler } from './common'
+import { createvoicefxconfighandler } from './common'
 
-export const synthvoicefxdistortionconfig = createVoiceFxConfigHandler(
+export const synthvoicefxdistortionconfig = createvoicefxconfighandler(
   'distort',
   (synth) => synth.FXCHAIN.distortion,
   (distortion, config, value) => {

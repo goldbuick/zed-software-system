@@ -2,7 +2,7 @@ import { InferenceSession, Tensor, env } from 'onnxruntime-web'
 
 import { cachedfetch } from './modelcache'
 import { phonemize } from './phonemizerparser'
-import { RawAudio, normalizePeak, trimSilence } from './utils'
+import { RawAudio, normalizepeak, trimsilence } from './utils'
 
 // Piper TTS class for local model
 export class PiperTTS {
@@ -252,8 +252,8 @@ export class PiperTTS {
         }
 
         // Normalize peaks & trim silence
-        normalizePeak(waveform, 0.9)
-        waveform = trimSilence(
+        normalizepeak(waveform, 0.9)
+        waveform = trimsilence(
           waveform,
           0.002,
           Math.floor(originalSamplingRate * 0.02),

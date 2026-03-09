@@ -98,9 +98,9 @@ function base64urltobase64(base64UrlString: string) {
   // Replace non-url compatible chars with base64 standard chars
   const base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/')
   // Pad out with standard base64 required padding characters if missing
-  const missingPadding = '='.repeat((4 - (base64.length % 4)) % 4)
+  const missingpadding = '='.repeat((4 - (base64.length % 4)) % 4)
   // return full str
-  return base64 + missingPadding
+  return base64 + missingpadding
 }
 
 function base64tobase64url(base64String: string) {
@@ -236,7 +236,7 @@ export function memoryadminmenu(
 }
 
 export function memoryexportbooksasjson(books: BOOK[]): string {
-  const plainObjs: object[] = []
+  const plainobjs: object[] = []
   for (let i = 0; i < books.length; ++i) {
     const exported = memoryexportbook(books[i])
     if (ispresent(exported)) {
@@ -244,11 +244,11 @@ export function memoryexportbooksasjson(books: BOOK[]): string {
         pages: (pages) => pages.map(memoryimportcodepage),
       })
       if (ispresent(plain)) {
-        plainObjs.push(plain)
+        plainobjs.push(plain)
       }
     }
   }
-  return JSON.stringify(plainObjs, null, 2)
+  return JSON.stringify(plainobjs, null, 2)
 }
 
 export function memoryimportbooksfromjson(json: string): BOOK[] {

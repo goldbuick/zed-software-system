@@ -53,7 +53,7 @@ import { ARG_TYPE } from 'zss/words/types'
 
 import { codepagepicksuffix, vmflushop } from '../utils'
 
-export function registerBooksCommands(fw: FIRMWARE): FIRMWARE {
+export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('bookrename', ['the main book (operator only)'], () => {
       const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)

@@ -7,13 +7,13 @@ describe('anim', () => {
       const CHAR_HEIGHT = 14
       const CHAR_SCALE = 2
       const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
-      const snapValue = DRAW_CHAR_HEIGHT * 0.5
+      const snapvalue = DRAW_CHAR_HEIGHT * 0.5
 
       expect(animsnapy(0)).toBe(0)
-      expect(animsnapy(snapValue)).toBe(snapValue)
-      expect(animsnapy(snapValue + 1)).toBe(snapValue)
-      expect(animsnapy(snapValue - 1)).toBe(snapValue)
-      expect(animsnapy(snapValue * 2)).toBe(snapValue * 2)
+      expect(animsnapy(snapvalue)).toBe(snapvalue)
+      expect(animsnapy(snapvalue + 1)).toBe(snapvalue)
+      expect(animsnapy(snapvalue - 1)).toBe(snapvalue)
+      expect(animsnapy(snapvalue * 2)).toBe(snapvalue * 2)
     })
   })
 
@@ -22,13 +22,13 @@ describe('anim', () => {
       const CHAR_WIDTH = 8
       const CHAR_SCALE = 2
       const DRAW_CHAR_WIDTH = CHAR_WIDTH * CHAR_SCALE
-      const snapValue = DRAW_CHAR_WIDTH * 0.5
+      const snapvalue = DRAW_CHAR_WIDTH * 0.5
 
       expect(animsnapx(0)).toBe(0)
-      expect(animsnapx(snapValue)).toBe(snapValue)
-      expect(animsnapx(snapValue + 1)).toBe(snapValue)
-      expect(animsnapx(snapValue - 1)).toBe(snapValue)
-      expect(animsnapx(snapValue * 2)).toBe(snapValue * 2)
+      expect(animsnapx(snapvalue)).toBe(snapvalue)
+      expect(animsnapx(snapvalue + 1)).toBe(snapvalue)
+      expect(animsnapx(snapvalue - 1)).toBe(snapvalue)
+      expect(animsnapx(snapvalue * 2)).toBe(snapvalue * 2)
     })
   })
 
@@ -80,8 +80,8 @@ describe('anim', () => {
       const CHAR_HEIGHT = 14
       const CHAR_SCALE = 2
       const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
-      const snapValue = DRAW_CHAR_HEIGHT * 0.5 // 14
-      const target = snapValue * 7 // 98, which is a snap point
+      const snapvalue = DRAW_CHAR_HEIGHT * 0.5 // 14
+      const target = snapvalue * 7 // 98, which is a snap point
 
       // Set position to target (which is a snap point)
       object.position.y = target

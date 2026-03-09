@@ -12,7 +12,7 @@ import { maptostring } from 'zss/mapping/value'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
-export function registerAgentCommands(fw: FIRMWARE): FIRMWARE {
+export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'agent',
     [ARG_TYPE.MAYBE_NAME, '/stop/list AI agents; prompt with <id> <values>'],

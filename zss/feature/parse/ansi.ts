@@ -23,7 +23,7 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 
-import { renderBytes } from './ansilove'
+import { renderbytes } from './ansilove'
 
 export function parseansi(
   player: string,
@@ -36,7 +36,7 @@ export function parseansi(
     return
   }
 
-  renderBytes(
+  renderbytes(
     content,
     (screendata, sauce) => {
       // create a new board codepage

@@ -45,7 +45,7 @@ export type SelectionRangeOptions = {
  * Compute selection range from cursor, optional select end, and full string.
  * Use for both editor (cursor/select) and terminal (xcursor/xselect with hasSelection from yselect).
  */
-export function computeSelectionRange(
+export function computeselectionrange(
   cursor: number,
   selectEnd: MAYBE<number>,
   strvalue: string,
@@ -86,7 +86,7 @@ export type TextEdge = {
  * Draw a single block cursor character at (x, y) in screen coordinates relative to edge.
  * Caller provides edge and context; optional fg/bg (defaults: white, DKBLUE or context.reset.bg).
  */
-export function drawBlockCursor(
+export function drawblockcursor(
   x: number,
   y: number,
   edge: TextEdge,
@@ -109,7 +109,7 @@ export function drawBlockCursor(
 // Presence / multiplayer (editor; terminal can reuse if needed)
 // ---------------------------------------------------------------------------
 
-export function getColorForPlayer(playerId: string): string {
+export function getcolorforplayer(playerId: string): string {
   let hash = 0
   for (let i = 0; i < playerId.length; i++) {
     hash = playerId.charCodeAt(i) + ((hash << 5) - hash)

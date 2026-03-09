@@ -18,7 +18,7 @@ import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { observers, watching } from '../state'
 
-export function handleCodewatch(_vm: DEVICE, message: MESSAGE): void {
+export function handlecodewatch(_vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }
@@ -54,7 +54,7 @@ export function handleCodewatch(_vm: DEVICE, message: MESSAGE): void {
   watching[address].add(message.player)
 }
 
-export function handleCoderelease(_vm: DEVICE, message: MESSAGE): void {
+export function handlecoderelease(_vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }

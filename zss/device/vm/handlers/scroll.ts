@@ -7,7 +7,7 @@ import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryunlockscroll } from 'zss/memory/runtime'
 
-export function handleClearscroll(_vm: DEVICE, message: MESSAGE): void {
+export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
   const maybeboard = memoryreadplayerboard(message.player)
   if (ispresent(maybeboard)) {
     const objids = Object.keys(maybeboard.objects)
@@ -17,13 +17,13 @@ export function handleClearscroll(_vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handleMakeitscroll(_vm: DEVICE, message: MESSAGE): void {
+export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
   if (typeof message.data === 'string') {
     memorymakeitscroll(message.data, message.player)
   }
 }
 
-export function handleRefscroll(_vm: DEVICE, message: MESSAGE): void {
+export function handlerefscroll(_vm: DEVICE, message: MESSAGE): void {
   romparse(romread('refscroll:menu'), (line) => romscroll(message.player, line))
   const shared = gadgetstate(message.player)
   shared.scrollname = '#help or $meta+h'

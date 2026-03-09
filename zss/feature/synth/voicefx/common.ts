@@ -13,7 +13,7 @@ export type VoiceFxConfigHandler = (
  * Shared wrapper for VoiceFX config handlers.
  * Handles guards (synth present, index in bounds), try/catch, and apierror.
  */
-export function createVoiceFxConfigHandler(
+export function createvoicefxconfighandler(
   fxname: string,
   getFx: (synth: AUDIO_SYNTH) => any,
   handle: VoiceFxConfigHandler,

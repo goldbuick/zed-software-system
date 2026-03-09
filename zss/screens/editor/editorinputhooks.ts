@@ -11,7 +11,7 @@ import {
 import { useEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { getColorForPlayer } from 'zss/screens/inputcommon'
+import { getcolorforplayer } from 'zss/screens/inputcommon'
 import {
   EDITOR_CODE_ROW,
   findcursorinrows,
@@ -53,7 +53,7 @@ export function usePresenceBroadcast(
         cursor,
         select,
         `User ${player.slice(0, 6)}`,
-        getColorForPlayer(player),
+        getcolorforplayer(player),
       )
     }, 100)
 

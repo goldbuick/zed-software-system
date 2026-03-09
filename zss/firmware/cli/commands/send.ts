@@ -10,7 +10,7 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { COLOR } from 'zss/words/types'
 
-export function registerSendCommands(fw: FIRMWARE): FIRMWARE {
+export function registersendcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command(
       'shortsend',

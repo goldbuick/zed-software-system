@@ -42,7 +42,7 @@ import {
   memorylistboardnamedelements,
 } from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT } from 'zss/memory/types'
-import { categoryconsts } from 'zss/words/category'
+import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import {
   colorconsts,
@@ -50,7 +50,7 @@ import {
   mapcolortostrcolor,
   mapstrcolortoattributes,
 } from 'zss/words/color'
-import { dirconsts, isstrdir } from 'zss/words/dir'
+import { DIR_CONSTS, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
@@ -237,7 +237,7 @@ function readinput(
 }
 
 function maptoconst(value: string) {
-  const maybecategory = (categoryconsts as any)[value]
+  const maybecategory = (CATEGORY_CONSTS as any)[value]
   if (ispresent(maybecategory)) {
     return maybecategory
   }
@@ -249,7 +249,7 @@ function maptoconst(value: string) {
   if (ispresent(maybecolor)) {
     return maybecolor
   }
-  const maybedir = (dirconsts as any)[value]
+  const maybedir = (DIR_CONSTS as any)[value]
   if (ispresent(maybedir)) {
     return maybedir
   }

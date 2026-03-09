@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { CanvasTexture, NearestFilter, Texture } from 'three'
-import { BITMAP, bitmapToCanvas } from 'zss/gadget/data/bitmap'
+import { BITMAP, bitmaptocanvas } from 'zss/gadget/data/bitmap'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 export function updateTexture<T extends Texture | CanvasTexture>(texture: T) {
@@ -17,7 +17,7 @@ export function createbitmaptexture(
   if (!ispresent(bitmap)) {
     return undefined
   }
-  return updateTexture(new CanvasTexture(bitmapToCanvas(bitmap)))
+  return updateTexture(new CanvasTexture(bitmaptocanvas(bitmap)))
 }
 
 export default function useBitmapTexture(bitmap: BITMAP | undefined) {

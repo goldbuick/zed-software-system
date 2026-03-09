@@ -22,7 +22,7 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
-export function registerExportCommands(fw: FIRMWARE): FIRMWARE {
+export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('export', ['export menu (operator only)'], () => {
       writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)

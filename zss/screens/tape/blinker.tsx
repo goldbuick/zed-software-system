@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useBlink, useTilesData, writeTile } from 'zss/gadget/hooks'
+import { useBlink, useTilesData, writetile } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 
 type TapeBlinkerProps = {
@@ -25,7 +25,7 @@ export function TapeBlinker({
   const withchar = ispresent(alt) ? (state.current % 2 === 0 ? on : alt) : on
 
   // toggle char between two values
-  writeTile(tiles, tiles.width, tiles.height, x, y, {
+  writetile(tiles, tiles.width, tiles.height, x, y, {
     char: blink ? withchar : off,
     color,
   })

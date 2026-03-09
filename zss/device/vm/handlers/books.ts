@@ -7,7 +7,7 @@ import { memoryreadoperator, memoryresetbooks } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { memorydecompressbooks } from 'zss/memory/utilities'
 
-export function handleBooks(vm: DEVICE, message: MESSAGE): void {
+export function handlebooks(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
   if (message.player !== operator) {
     return
