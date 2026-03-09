@@ -54,7 +54,7 @@ export function PanelComponent({
 
   return (
     <TilesData store={store}>
-      <TilesRender width={width} height={height} />
+      <TilesRender label="panel" width={width} height={height} />
       <WriteTextContext.Provider value={context}>
         {text.map((item, index) => (
           <PanelItem

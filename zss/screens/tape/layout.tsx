@@ -23,6 +23,7 @@ export function TapeLayout({
   if (editoropen) {
     return (
       <TapeLayoutTiles
+        label="editor"
         quickterminal={quickterminal}
         top={top}
         left={0}
@@ -36,6 +37,7 @@ export function TapeLayout({
   const terminalwidth = measureminwidth(width)
   return (
     <TapeLayoutTiles
+      label="terminal"
       quickterminal={quickterminal}
       top={top}
       left={-pan}

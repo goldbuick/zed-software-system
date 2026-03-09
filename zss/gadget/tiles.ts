@@ -17,7 +17,9 @@ export type TILE_DATA = {
 function createtilesstore() {
   return createStore<TILE_DATA>((set) => {
     function changed() {
-      set((state) => ({ render: state.render + 1 }))
+      set((state) => {
+        return { render: state.render + 1 }
+      })
     }
     return {
       width: 0,

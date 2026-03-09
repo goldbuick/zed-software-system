@@ -29,7 +29,7 @@ export function InspectorPts() {
   return (
     <group position-z={100}>
       <TilesData store={store}>
-        <TilesRender width={BOARD_WIDTH} height={BOARD_HEIGHT} />
+        <TilesRender label="pts" width={BOARD_WIDTH} height={BOARD_HEIGHT} />
       </TilesData>
     </group>
   )

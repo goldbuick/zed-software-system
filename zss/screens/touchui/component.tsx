@@ -42,7 +42,7 @@ export function TouchUI({ width, height }: TouchUIProps) {
           }}
         />
       </WriteTextContext.Provider>
-      <TilesRender width={width} height={height} />
+      <TilesRender label="touchui" width={width} height={height} />
     </TilesData>
   )
 }

@@ -9,10 +9,10 @@ import {
   createwritetextcontext,
 } from 'zss/words/textformat'
 
-import { TapeBackPlate } from './backplate'
 import { FG, bgcolor } from './common'
 
 type TapeLayoutTilesProps = {
+  label: string
   quickterminal: boolean
   top: number
   left: number
@@ -22,6 +22,7 @@ type TapeLayoutTilesProps = {
 }
 
 export function TapeLayoutTiles({
+  label,
   quickterminal,
   top,
   left,
@@ -37,11 +38,9 @@ export function TapeLayoutTiles({
       ...store.getState(),
     }
   }, [BG, width, height, store])
-  console.info('layouttiles render', left, top, width, height)
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>
-        <TapeBackPlate />
         {children}
       </WriteTextContext.Provider>
       <group
@@ -51,7 +50,7 @@ export function TapeLayoutTiles({
           0,
         ]}
       >
-        <TilesRender width={width} height={height} />
+        <TilesRender label={label} width={width} height={height} />
       </group>
     </TilesData>
   )

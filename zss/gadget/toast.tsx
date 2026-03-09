@@ -18,7 +18,11 @@ type TapeActiveToastProps = {
 function TapeActiveToast({ context }: TapeActiveToastProps) {
   return (
     <group position={[0, 0, 999]}>
-      <TilesRender width={context.width} height={context.height} />
+      <TilesRender
+        label="toast"
+        width={context.width}
+        height={context.height}
+      />
     </group>
   )
 }
