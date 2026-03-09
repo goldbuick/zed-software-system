@@ -191,14 +191,6 @@ function terminalinclayout(inc: boolean) {
   if (nextlayout >= (TAPE_DISPLAY.MAX as number)) {
     nextlayout -= TAPE_DISPLAY.MAX
   }
-  if (!editor.open) {
-    switch (nextlayout as TAPE_DISPLAY) {
-      case TAPE_DISPLAY.SPLIT_X:
-        // skip over these to right
-        nextlayout = TAPE_DISPLAY.TOP
-        break
-    }
-  }
   useTape.setState({ layout: nextlayout })
 }
 

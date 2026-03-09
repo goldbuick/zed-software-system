@@ -37,6 +37,7 @@ export function TapeLayoutTiles({
       ...store.getState(),
     }
   }, [BG, width, height, store])
+  console.info('layouttiles render', left, top, width, height)
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>
