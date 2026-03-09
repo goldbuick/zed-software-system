@@ -1,9 +1,10 @@
-import { CstNode, CstNodeLocation, IToken } from 'chevrotain'
+import { CstNode, CstNodeLocation } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 
 import { parser } from './parser'
+import { tokenstring } from './visitor/helpers'
 import {
   And_testCstChildren,
   And_test_valueCstChildren,
@@ -334,12 +335,6 @@ export type CodeNode = CodeNodeData &
       end: number
     }
   }
-
-function tokenstring(token: IToken[] | undefined, defaultstr: string) {
-  const [first] = token ?? []
-  const tokenstr = (first?.image ?? defaultstr).trimStart()
-  return tokenstr.replaceAll(/^"|"$/g, '')
-}
 
 class ScriptVisitor
   extends CstVisitor

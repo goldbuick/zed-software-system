@@ -22,7 +22,7 @@ import {
   ispresent,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
-import { memoryclearflags, memoryreadflags } from './memory'
+import { memoryclearflags, memoryreadflags } from './memory/flags'
 import { memorycanruncommand } from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'

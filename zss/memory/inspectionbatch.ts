@@ -23,6 +23,7 @@ import {
   memorywriteterrain,
 } from './boardoperations'
 import { memoryreadelementdisplay } from './bookoperations'
+import { memoryensuresoftwarebook } from './books'
 import {
   memoryinspectbgarea,
   memoryinspectchararea,
@@ -33,8 +34,6 @@ import {
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
 import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from './types'
-
-import { memoryensuresoftwarebook } from '.'
 
 // COPY & PASTE buffers
 

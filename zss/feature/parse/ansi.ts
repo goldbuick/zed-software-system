@@ -6,7 +6,6 @@ import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { memoryreadfirstcontentbook } from 'zss/memory'
 import {
   memoryptwithinboard,
   memorywriteterrain,
@@ -16,6 +15,7 @@ import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
+import { memoryreadfirstcontentbook } from 'zss/memory/session'
 import {
   BOARD,
   BOARD_HEIGHT,

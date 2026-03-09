@@ -1,5 +1,5 @@
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelementkind } from 'zss/memory'
+import { memoryreadelementkind } from 'zss/memory/boards'
 
 import {
   STR_COLOR,

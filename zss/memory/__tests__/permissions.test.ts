@@ -1,4 +1,3 @@
-import { memoryreadoperator } from 'zss/memory/index'
 import {
   DEFAULT_ALLOWLIST_BY_ROLE,
   ispermissioncontrolledcommand,
@@ -14,6 +13,7 @@ import {
   memorysetplayertotoken,
   memorysetrolefortoken,
 } from 'zss/memory/permissions'
+import { memoryreadoperator } from 'zss/memory/session'
 
 /** Empty allowlist by role for use as allowlistbyrolecustom when not testing custom snapshot. */
 const EMPTY_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
@@ -26,7 +26,7 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
 }))
 
-jest.mock('zss/memory/index', () => ({
+jest.mock('zss/memory/session', () => ({
   memoryreadoperator: jest.fn(() => 'operator'),
 }))
 

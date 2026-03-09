@@ -31,17 +31,16 @@ import {
   memoryexportcodepage,
   memoryimportcodepage,
 } from './codepageoperations'
+import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
-import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
-
 import {
   memoryisoperator,
   memoryreadbookbysoftware,
-  memoryreadflags,
   memoryreadhalt,
   memoryreadoperator,
   memoryreadtopic,
-} from '.'
+} from './session'
+import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
 
 // In-memory config (register sends at login; utilities render/emit only)
 export const CONFIG_KEYS = [

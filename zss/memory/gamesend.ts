@@ -16,13 +16,13 @@ import {
   memoryreadobject,
   memorysafedeleteelement,
 } from './boardoperations'
+import { memoryreadelementstat } from './boards'
 import { memoryreadbookplayerboards } from './playermanagement'
 import { memoryelementtologprefix } from './rendering'
 import { memorymessagechip } from './runtime'
+import { memoryreadbookbysoftware } from './session'
 import { memorylistboardelementsbyidnameorpts } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH, MEMORY_LABEL } from './types'
-
-import { memoryreadbookbysoftware, memoryreadelementstat } from './index'
 
 // Game Message Functions
 

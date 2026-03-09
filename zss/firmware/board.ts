@@ -6,16 +6,6 @@ import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
-  memoryensuresoftwarecodepage,
-  memoryinitboard,
-  memoryreadboardbyaddress,
-  memoryreadboardbyevaldir,
-  memoryreadelementkind,
-  memoryreadelementstat,
-  memorywritebullet,
-  memorywriteelementfromkind,
-} from 'zss/memory'
-import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
@@ -30,7 +20,17 @@ import {
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardoperations'
+import {
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadboardbyevaldir,
+  memoryreadelementkind,
+  memoryreadelementstat,
+  memorywritebullet,
+  memorywriteelementfromkind,
+} from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
+import { memoryensuresoftwarecodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
 import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'

@@ -13,6 +13,7 @@ import {
   memoryreadobject,
   memoryreadterrain,
 } from './boardoperations'
+import { memorycheckelementpushable, memoryreadelementstat } from './boards'
 import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
@@ -23,8 +24,6 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from './types'
-
-import { memorycheckelementpushable, memoryreadelementstat } from '.'
 
 export function memorycheckblockedboardobject(
   board: MAYBE<BOARD>,

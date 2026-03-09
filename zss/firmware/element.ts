@@ -19,13 +19,6 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
-import {
-  memoryreadboardbyevaldir,
-  memoryreadelementstat,
-  memoryreadflags,
-  memoryreadoperator,
-  memorywriteelementfromkind,
-} from 'zss/memory'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
 import { memorymoveobject } from 'zss/memory/boardmovement'
@@ -34,9 +27,16 @@ import {
   memoryreadelementbyidorindex,
   memorysafedeleteelement,
 } from 'zss/memory/boardoperations'
+import {
+  memoryreadboardbyevaldir,
+  memoryreadelementstat,
+  memorywriteelementfromkind,
+} from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
+import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
+import { memoryreadoperator } from 'zss/memory/session'
 import {
   memoryfindplayerforelement,
   memorylistboardnamedelements,

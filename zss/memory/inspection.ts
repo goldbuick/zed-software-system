@@ -36,15 +36,19 @@ import {
   memorysafedeleteelement,
   memorywriteterrain,
 } from './boardoperations'
+import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memoryreadelementcodepage } from './bookoperations'
+import { memoryensuresoftwarebook } from './books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagestatdefaults,
 } from './codepageoperations'
+import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhassecretheap } from './inspectionbatch'
 import { memoryloadermatches } from './loader'
 import { memoryreadplayerboard } from './playermanagement'
 import { memoryelementtodisplayprefix } from './rendering'
+import { memoryreadbookbysoftware, memoryreadoperator } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -52,15 +56,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-
-import {
-  memoryensuresoftwarebook,
-  memoryinitboard,
-  memorypickcodepagewithtypeandstat,
-  memoryreadbookbysoftware,
-  memoryreadelementstat,
-  memoryreadoperator,
-} from '.'
 
 function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
   const id = element?.id ?? memoryboardelementindex(board, element)

@@ -6,10 +6,8 @@ import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
-import {
-  memorypickcodepagewithtypeandstat,
-  memoryreadboardbyevaldir,
-} from 'zss/memory'
+import { memoryreadboardbyevaldir } from 'zss/memory/boards'
+import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, PT, WORD } from 'zss/words/types'

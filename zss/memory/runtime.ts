@@ -17,13 +17,22 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadobject, memorytickboard } from './boardoperations'
+import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memoryreadcodepage } from './bookoperations'
+import { memoryensuresoftwarebook } from './books'
 import { memoryreadcodepagestats } from './codepageoperations'
+import { memorypickcodepagewithtypeandstat } from './codepages'
+import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
 import {
   memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from './playermanagement'
+import {
+  memoryreadbookbysoftware,
+  memoryreadloaders,
+  memoryreadoperator,
+} from './session'
 import {
   memorymergesynthvoice,
   memorymergesynthvoicefx,
@@ -36,17 +45,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-
-import {
-  memoryensuresoftwarebook,
-  memoryinitboard,
-  memorypickcodepagewithtypeandstat,
-  memoryreadbookbysoftware,
-  memoryreadelementstat,
-  memoryreadflags,
-  memoryreadloaders,
-  memoryreadoperator,
-} from './index'
 
 // manages chips
 const os = createos()

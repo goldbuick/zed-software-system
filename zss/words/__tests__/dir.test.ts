@@ -1,5 +1,5 @@
 jest.mock('zss/words/reader', () => ({ READ_CONTEXT: { words: [] } }))
-jest.mock('zss/memory', () => ({}))
+jest.mock('zss/memory/session', () => ({}))
 
 import {
   dirconsts,

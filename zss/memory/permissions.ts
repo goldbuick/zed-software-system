@@ -2,7 +2,7 @@ import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { deepcopy, isstring } from 'zss/mapping/types'
 
-import { memoryreadoperator } from './index'
+import { memoryreadoperator } from './session'
 
 /** Group names and descriptions for allowlists (~20 toggles). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([

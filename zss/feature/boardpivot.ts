@@ -1,7 +1,7 @@
 import { linepoints } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory'
 import { memorycreateboard } from 'zss/memory/boardoperations'
+import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'

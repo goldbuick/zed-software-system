@@ -33,12 +33,22 @@ import {
   memoryreadobject,
   memoryupdateboardvisuals,
 } from './boardoperations'
+import {
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadelementkind,
+  memoryreadelementstat,
+  memoryreadoverboard,
+  memoryreadunderboard,
+} from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagetype,
 } from './codepageoperations'
+import { memorypickcodepagewithtypeandstat } from './codepages'
+import { memoryreadflags } from './flags'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -49,17 +59,6 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-
-import {
-  memoryinitboard,
-  memorypickcodepagewithtypeandstat,
-  memoryreadboardbyaddress,
-  memoryreadelementkind,
-  memoryreadelementstat,
-  memoryreadflags,
-  memoryreadoverboard,
-  memoryreadunderboard,
-} from '.'
 
 // Display & Formatting Functions
 

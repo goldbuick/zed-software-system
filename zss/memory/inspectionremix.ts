@@ -15,9 +15,8 @@ import { waitfor } from 'zss/mapping/tick'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
+import { memoryreadboardbyaddress } from './boards'
 import { memoryreadplayerboard } from './playermanagement'
-
-import { memoryreadboardbyaddress } from '.'
 
 // Remix operations
 type REMIX_CONFIG = {

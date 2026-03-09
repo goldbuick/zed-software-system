@@ -1,6 +1,6 @@
 jest.mock('zss/words/reader', () => ({ READ_CONTEXT: { words: [] } }))
 jest.mock('zss/words/expr', () => ({ readexpr: () => [undefined, 0] }))
-jest.mock('zss/memory', () => ({}))
+jest.mock('zss/memory/session', () => ({}))
 
 import {
   collisionconsts,

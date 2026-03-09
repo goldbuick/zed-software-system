@@ -6,7 +6,7 @@ import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
 import { createsid } from './mapping/guid'
 import { MAYBE, ispresent, isstring } from './mapping/types'
-import { memoryreadoperator } from './memory'
+import { memoryreadoperator } from './memory/session'
 
 export type OS = {
   ids: () => string[]

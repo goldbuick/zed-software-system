@@ -2,14 +2,13 @@ import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, NAME } from 'zss/words/types'
 
 import { memoryboardelementindex } from './boardoperations'
+import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   memoryapplyelementstats,
   memoryreadcodepagestatsfromtext,
 } from './codepageoperations'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
-
-import { memoryreadelementkind, memoryreadelementstat } from '.'
 
 // quick lookup utils
 

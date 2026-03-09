@@ -237,12 +237,41 @@ function writelookupline(lines: CodeNode[], type: NODE, line: number) {
   }
 }
 
+function writeLiteral(
+  ast: Extract<CodeNode, { type: NODE.LITERAL }>,
+): SourceNode {
+  switch (ast.literal) {
+    case LITERAL.NUMBER:
+      return write(ast, `${ast.value}`)
+    case LITERAL.STRING:
+      return write(ast, writestring(ast.value))
+    case LITERAL.TEMPLATE:
+      return write(ast, writeTemplateString(ast.value))
+    default:
+      return blank(ast)
+  }
+}
+
+function applyLoopBreakContinue(
+  lines: CodeNode[],
+  done: number,
+  loop: number,
+  source: SourceNode,
+) {
+  lines.forEach((item) => {
+    if (item.type === NODE.BREAK) {
+      item.goto = done
+    } else if (item.type === NODE.CONTINUE) {
+      item.goto = loop
+    }
+    source.add(transformNode(item))
+  })
+}
+
 function transformNode(ast: CodeNode): SourceNode {
   switch (ast.type) {
-    // categories
     case NODE.PROGRAM:
       return write(ast, [
-        // error capture for source maps
         `try { // first-line\n`,
         `while (true) {\n`,
         `if (api.sy()) { return 1; }\n`,
@@ -269,13 +298,12 @@ function transformNode(ast: CodeNode): SourceNode {
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `;\n`,
       ])
-    case NODE.LINE: {
+    case NODE.LINE:
       return write(ast, [
         `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformNode).flat(),
         `  break;\n`,
       ])
-    }
     case NODE.MARK:
       return write(ast, `  // ${ast.comment}\n`)
     case NODE.GOTO: {
@@ -285,15 +313,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.COUNT:
       return write(ast, `${ast.index}`)
     case NODE.LITERAL:
-      switch (ast.literal) {
-        case LITERAL.NUMBER:
-          return write(ast, `${ast.value}`)
-        case LITERAL.STRING:
-          return write(ast, writestring(ast.value))
-        case LITERAL.TEMPLATE:
-          return write(ast, writeTemplateString(ast.value))
-      }
-      return blank(ast)
+      return writeLiteral(ast)
     case NODE.TEXT:
       return write(ast, [
         `  `,
@@ -315,7 +335,6 @@ function transformNode(ast: CodeNode): SourceNode {
       }
       const lindex = (ast.active ? 1 : -1) * ast.lineindex
       context.labels[llabel].push(lindex)
-      // document label
       return write(ast, `  // ${lindex} '${llabel}' ${ltype}\n`)
     }
     case NODE.HYPERLINK:
@@ -325,7 +344,7 @@ function transformNode(ast: CodeNode): SourceNode {
           writeTemplateString(ast.text),
           ...ast.link
             .split(' ')
-            .filter((str) => str.length > 0)
+            .filter((str: string) => str.length > 0)
             .map(writestring),
         ]),
         `;\n`,
@@ -347,26 +366,16 @@ function transformNode(ast: CodeNode): SourceNode {
         writeApi(ast, `command`, transformNodes(ast.words)),
         `) { continue; };\n`,
       ])
-    // core / structure
     case NODE.IF: {
       const block = ast.block?.type === NODE.IF_BLOCK ? ast.block : undefined
       if (ispresent(block)) {
-        // check if conditional
         writelookup([ast.check], NODE.IF_CHECK, block.skip)
         const source = write(ast, transformNode(ast.check))
-
-        // if true logic
         block.lines.forEach((item) => source.add(transformNode(item)))
-
-        // start of (alt) logic
         writelookupline(block.altlines, NODE.ELSE_IF, readlookup(block.done))
         block.altlines.forEach((item) => source.add(transformNode(item)))
-
-        // all done
         return source
       }
-
-      // check if conditional only inline nested commands only
       return write(ast, transformNode(ast.check))
     }
     case NODE.IF_CHECK: {
@@ -396,87 +405,36 @@ function transformNode(ast: CodeNode): SourceNode {
       const loop = readlookup(ast.loop)
       const done = readlookup(ast.done)
       const source = write(ast, ``)
-
-      // while true logic
       writelookup(ast.lines, NODE.IF_CHECK, ast.done)
-      ast.lines.forEach((item) => {
-        switch (item.type) {
-          case NODE.BREAK:
-            item.goto = done
-            break
-          case NODE.CONTINUE:
-            item.goto = loop
-            break
-        }
-        source.add(transformNode(item))
-      })
-
-      // done logic
+      applyLoopBreakContinue(ast.lines, done, loop, source)
       return source
     }
     case NODE.REPEAT: {
       const loop = readlookup(ast.loop)
       const done = readlookup(ast.done)
       const source = write(ast, ``)
-
-      // repeat true logic
       writelookup(ast.lines, NODE.IF_CHECK, ast.done)
-      ast.lines.forEach((item) => {
-        switch (item.type) {
-          case NODE.BREAK:
-            item.goto = done
-            break
-          case NODE.CONTINUE:
-            item.goto = loop
-            break
-        }
-        source.add(transformNode(item))
-      })
-
-      // done logic
+      applyLoopBreakContinue(ast.lines, done, loop, source)
       return source
     }
     case NODE.WAITFOR: {
       const source = write(ast, ``)
-
-      // waitfor logic
       writelookup(ast.lines, NODE.IF_CHECK, ast.loop)
-      ast.lines.forEach((item) => {
-        source.add(transformNode(item))
-      })
-
-      // done logic
+      ast.lines.forEach((item) => source.add(transformNode(item)))
       return source
     }
     case NODE.FOREACH: {
       const loop = readlookup(ast.loop)
       const done = readlookup(ast.done)
       const source = write(ast, ``)
-
-      // foreach true logic
       writelookup(ast.lines, NODE.IF_CHECK, ast.done)
-      ast.lines.forEach((item) => {
-        switch (item.type) {
-          case NODE.BREAK:
-            item.goto = done
-            break
-          case NODE.CONTINUE:
-            item.goto = loop
-            break
-        }
-        source.add(transformNode(item))
-      })
-
-      // done logic
+      applyLoopBreakContinue(ast.lines, done, loop, source)
       return source
     }
     case NODE.BREAK:
-      // escape while / repeat loop
       return write(ast, [`  `, writegoto(ast, ast.goto), `\n`])
     case NODE.CONTINUE:
-      // skip to next while / repeat iteration
       return write(ast, [`  `, writegoto(ast, ast.goto), `\n`])
-    // expressions
     case NODE.OR:
       return writeApi(ast, 'or', ast.items.map(transformNode))
     case NODE.AND:
