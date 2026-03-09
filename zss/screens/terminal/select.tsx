@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
-import { useBlink } from 'zss/gadget/blink'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { inputcolor } from 'zss/screens/panel/common'
@@ -38,14 +37,13 @@ export function TerminalSelect({
     stateindex = 0
   }
 
-  const blink = useBlink()
   const tlabel = label.trim()
   const tcolor = inputcolor(!!active)
 
   setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(`$dkred ? ${tcolor}${tlabel} `, context, false)
 
-  const knob = active ? (blink ? '$26' : '$27') : '/'
+  const knob = active ? '$BLWHITE$26$WHITE' : '/'
   tokenizeandwritetextformat(
     `${stateindex + 1}$green${knob}${tcolor}${values.length}`,
     context,

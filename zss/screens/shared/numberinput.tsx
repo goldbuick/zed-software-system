@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
-import { useBlink } from 'zss/gadget/blink'
 import {
   UserFocus,
   UserHotkey,
