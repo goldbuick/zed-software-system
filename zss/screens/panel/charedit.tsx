@@ -8,7 +8,7 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { readcharfrombytes } from 'zss/feature/bytes'
 import { paneladdress } from 'zss/gadget/data/types'
-import { useBlink, useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 import { Rect } from 'zss/gadget/rect'
 import { UserFocus, UserInput } from 'zss/gadget/userinput'
 import { pttoindex } from 'zss/mapping/2d'
@@ -50,7 +50,6 @@ export function PanelCharEdit({
   const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
-  const blink = useBlink()
   const [focus, setfocus] = useState(false)
 
   useLayoutEffect(() => {
@@ -69,8 +68,7 @@ export function PanelCharEdit({
       chars.push(`\n`)
     }
     if (i === state) {
-      const highlight = blink ? `$green$onwhite` : `$white$ongreen`
-      chars.push(`${highlight}$${i}$white$ondkblue`)
+      chars.push(`$blwhite$ongreen$${i}$white$ondkblue`)
     } else {
       chars.push(`$${i}`)
     }

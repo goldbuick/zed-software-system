@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -20,7 +20,10 @@ type GraphicsProps = {
   height: number
 }
 
-export function FlatGraphics({ width, height }: GraphicsProps) {
+export const FlatGraphics = memo(function FlatGraphics({
+  width,
+  height,
+}: GraphicsProps) {
   const { viewport } = useThree()
   const screensize = useScreenSize()
 
@@ -123,7 +126,8 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
     inspectzoomref.current.scale.setScalar(viewscale)
   })
 
-  // re-render only when layer count changes
+  // re-render when board or layer counts change (board change must trigger re-render)
+  useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
@@ -197,4 +201,4 @@ export function FlatGraphics({ width, height }: GraphicsProps) {
       )}
     </>
   )
-}
+})

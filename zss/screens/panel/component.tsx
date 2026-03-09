@@ -1,6 +1,7 @@
 import { PANEL_ITEM } from 'zss/gadget/data/types'
-import { WriteTextContext, resettiles, useTiles } from 'zss/gadget/hooks'
+import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
+import { WriteTextContext } from 'zss/gadget/writetext'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -53,7 +54,7 @@ export function PanelComponent({
 
   return (
     <TilesData store={store}>
-      <TilesRender width={width} height={height} />
+      <TilesRender label="panel" width={width} height={height} />
       <WriteTextContext.Provider value={context}>
         {text.map((item, index) => (
           <PanelItem

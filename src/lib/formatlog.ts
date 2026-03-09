@@ -137,6 +137,11 @@ const BG_ANSI: Record<string, string> = {
 
 const RESET = '\x1b[0m'
 
+// Longest-first so e.g. $REDfish matches RED not REDf
+const COLOR_ALIAS_KEYS_SORTED = Object.keys(COLOR_ALIASES).sort(
+  (a, b) => b.length - a.length,
+)
+
 function resolveColor(name: string): string | undefined {
   return COLOR_ALIASES[name.toLowerCase()]
 }
@@ -187,11 +192,20 @@ export function formatlogforterminal(raw: string): string {
       i += 1 + numMatch[1].length
       continue
     }
-    const wordMatch = /^([A-Za-z][A-Za-z0-9]*)/.exec(raw.slice(i + 1))
-    if (wordMatch) {
-      const word = wordMatch[1]
-      applyColor(word, out)
-      i += 1 + word.length
+    const rest = raw.slice(i + 1)
+    let colorconsumed = 0
+    for (const key of COLOR_ALIAS_KEYS_SORTED) {
+      if (
+        key.length <= rest.length &&
+        rest.slice(0, key.length).toLowerCase() === key
+      ) {
+        applyColor(rest.slice(0, key.length), out)
+        colorconsumed = key.length
+        break
+      }
+    }
+    if (colorconsumed > 0) {
+      i += 1 + colorconsumed
       continue
     }
     out.push('$')

@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
-import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
+import { useWriteText } from 'zss/gadget/writetext'
 import { maptovalue } from 'zss/mapping/value'
 import { inputcolor, strsplice } from 'zss/screens/panel/common'
 import {
@@ -40,14 +40,13 @@ export function TerminalRange({
   const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
-  const blink = useBlink()
   const tlabel = label.trim()
   const tcolor = inputcolor(!!active)
 
   setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(`$red $29 ${tcolor}${tlabel} `, context, false)
 
-  const knob = active ? (blink ? '$26' : '$27') : '$4'
+  const knob = active ? '$BLWHITE$26$WHITE' : '$4'
   const bar = strsplice('----:----', state, 1, `$green${knob}${tcolor}`)
     .replaceAll('-', '$7')
     .replaceAll(':', '$9')

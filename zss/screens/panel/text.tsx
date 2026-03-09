@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
 import { withclipboard } from 'zss/feature/keyboard'
 import { paneladdress } from 'zss/gadget/data/types'
-import { useBlink } from 'zss/gadget/hooks'
 import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
@@ -35,7 +34,6 @@ export function PanelText({
   const value = useWaitForValueString(address)
   const state = value?.toJSON() ?? ''
 
-  const blink = useBlink()
   const [cursor, setCursor] = useState(0)
   const [focus, setFocus] = useState(false)
   const [selection, setSelection] = useState<number | undefined>(undefined)
@@ -70,8 +68,8 @@ export function PanelText({
     }
     applycolortoindexes(tx + left + tyw, tx + right + tyw, 15, 8, context)
   }
-  if (focus && blink) {
-    applystrtoindex(tx + cursor + tyw, String.fromCharCode(219), context)
+  if (focus) {
+    applystrtoindex(tx + cursor + tyw, '$BLWHITE$219$WHITE', context)
   }
 
   function deleteselection() {

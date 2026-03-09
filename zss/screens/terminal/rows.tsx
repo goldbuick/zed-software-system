@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTape, useTerminal } from 'zss/gadget/data/state'
-import { WriteTextContext, useWriteText } from 'zss/gadget/hooks'
 import { useScreenSize } from 'zss/gadget/userscreen'
+import { WriteTextContext, useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { measurerow } from 'zss/screens/tape/measure'
 import { textformatreadedges } from 'zss/words/textformat'

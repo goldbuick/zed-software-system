@@ -6,7 +6,7 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
-import { useDeviceData } from 'zss/gadget/hooks'
+import { useDeviceData } from 'zss/gadget/device'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { metakey } from 'zss/words/system'
 

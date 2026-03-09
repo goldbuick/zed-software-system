@@ -1,42 +1,26 @@
 /* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp, damp3, dampE } from 'maath/easing'
+import { damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import {
-  LAYER,
-  LAYER_TYPE,
-  VIEWSCALE,
-  layersreadcontrol,
-} from 'zss/gadget/data/types'
+import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
+import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
+import { maptolayerz } from 'zss/gadget/graphics/layerz'
+import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
+import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-
-import { FlatLayer } from './flatlayer'
-import { Mode7Layer } from './mode7layer'
-import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
   width: number
   height: number
-}
-
-function maptolayerz(layer: LAYER): number {
-  switch (layer.type) {
-    case LAYER_TYPE.TILES:
-      return 0
-    case LAYER_TYPE.DITHER:
-      return RUNTIME.DRAW_CHAR_HEIGHT() + 1
-    case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5
-  }
-  return 0
 }
 
 function mapviewtoz(viewscale: number) {
@@ -63,7 +47,10 @@ function mapviewtotilt(viewscale: number) {
   }
 }
 
-export function Mode7Graphics({ width, height }: GraphicsProps) {
+export const Mode7Graphics = memo(function Mode7Graphics({
+  width,
+  height,
+}: GraphicsProps) {
   const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
@@ -103,18 +90,12 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     const animrate = 0.05
     const currentboard = useGadgetClient.getState().gadget.board
 
-    // setup tracking state
-    if (!ispresent(cameraref.current.userData.focusx)) {
-      cameraref.current.userData = {
-        focusx: control.focusx,
-        focusy: control.focusy,
-        currentboard,
-      }
-    }
+    const userData = cameraref.current.userData as FocusUserData
+    initfocusifneeded(userData, control, currentboard)
 
-    const userData = cameraref.current.userData ?? {}
-    const fx = (userData.focusx + 0.5) * drawwidth
-    const fy = (userData.focusy + 0.5) * drawheight
+    const ud = cameraref.current.userData ?? {}
+    const fx = (ud.focusx! + 0.5) * drawwidth
+    const fy = (ud.focusy! + 0.5) * drawheight
 
     // zoom
     damp3(
@@ -136,18 +117,17 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
     // smoothed change in focus
-    if (currentboard !== userData.currentboard) {
-      userData.focusx = control.focusx
-      userData.focusy = control.focusy
-      userData.currentboard = currentboard
+    if (currentboard !== ud.currentboard) {
+      ud.focusx = control.focusx
+      ud.focusy = control.focusy
+      ud.currentboard = currentboard
       cornerref.current.position.set(
-        -((userData.focusx + 0.5) * drawwidth),
-        -((userData.focusy + 0.5) * drawheight),
+        -((ud.focusx + 0.5) * drawwidth),
+        -((ud.focusy + 0.5) * drawheight),
         0,
       )
     } else {
-      damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
-      damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
+      dampfocus(userData, control, animrate)
     }
 
     // update dof
@@ -185,7 +165,8 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     underref.current.scale.setScalar(rscale)
   })
 
-  // re-render only when layer count changes
+  // re-render when board or layer counts change (board change must trigger re-render)
+  useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
@@ -228,7 +209,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                       key={layer.id}
                       id={layer.id}
                       from="layers"
-                      z={maptolayerz(layer)}
+                      z={maptolayerz(layer, 'mode7')}
                     />
                   ))}
                   {over.map((layer) => (
@@ -236,7 +217,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                       key={layer.id}
                       from="over"
                       id={layer.id}
-                      z={maptolayerz(layer) + drawheight * 1.125}
+                      z={maptolayerz(layer, 'mode7') + drawheight * 1.125}
                     />
                   ))}
                   {exiteast.length && (
@@ -246,7 +227,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                           key={layer.id}
                           id={layer.id}
                           layers={exiteast}
-                          z={maptolayerz(layer)}
+                          z={maptolayerz(layer, 'mode7')}
                         />
                       ))}
                     </group>
@@ -258,7 +239,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                           key={layer.id}
                           id={layer.id}
                           layers={exitwest}
-                          z={maptolayerz(layer)}
+                          z={maptolayerz(layer, 'mode7')}
                         />
                       ))}
                     </group>
@@ -270,7 +251,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                           key={layer.id}
                           id={layer.id}
                           layers={exitnorth}
-                          z={maptolayerz(layer)}
+                          z={maptolayerz(layer, 'mode7')}
                         />
                       ))}
                     </group>
@@ -282,7 +263,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
                           key={layer.id}
                           id={layer.id}
                           layers={exitsouth}
-                          z={maptolayerz(layer)}
+                          z={maptolayerz(layer, 'mode7')}
                         />
                       ))}
                     </group>
@@ -300,4 +281,4 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
       </group>
     </>
   )
-}
+})

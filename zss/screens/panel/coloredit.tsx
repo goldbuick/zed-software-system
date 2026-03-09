@@ -7,7 +7,7 @@ import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { paneladdress } from 'zss/gadget/data/types'
-import { useBlink, useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 import { Rect } from 'zss/gadget/rect'
 import { UserFocus, UserInput } from 'zss/gadget/userinput'
 import { pttoindex } from 'zss/mapping/2d'
@@ -80,7 +80,6 @@ export function PanelColorEdit({
   const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
-  const blink = useBlink()
   const [focus, setfocus] = useState(false)
 
   useLayoutEffect(() => {
@@ -108,12 +107,8 @@ export function PanelColorEdit({
     const c = withlist[i]
     const ccolor = (COLOR[c] || COLOR[COLOR.BLACK]).toLowerCase()
     if (c === state) {
-      if (blink) {
-        const alt = i % 16 < 8 ? `white` : `black`
-        colors.push(c > 32 ? `$onwhite$219` : `$${alt}$219`)
-      } else {
-        colors.push(`$onblack$${ccolor}$219`)
-      }
+      const bg = c > 32 ? 'onwhite' : 'onblack'
+      colors.push(`$${bg}$bl${ccolor}$219`)
     } else {
       colors.push(`$onblack$${ccolor}$219`)
     }

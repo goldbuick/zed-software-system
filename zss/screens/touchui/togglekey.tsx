@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { useWriteText } from 'zss/gadget/hooks'
+import { useWriteText } from 'zss/gadget/writetext'
 import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,

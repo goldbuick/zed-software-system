@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
-import { useBlink } from 'zss/gadget/hooks'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
@@ -42,15 +41,13 @@ export function PanelSelect({
     stateindex = 0
   }
 
-  const blink = useBlink()
-
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
   tokenizeandwritetextformat(`$dkred ? ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
-  const knob = active ? (blink ? '$26' : '$27') : '/'
+  const knob = active ? '$BLWHITE$26$WHITE' : '/'
   tokenizeandwritetextformat(
     `${stateindex + 1}$green${knob}${tcolor}${values.length}`,
     context,

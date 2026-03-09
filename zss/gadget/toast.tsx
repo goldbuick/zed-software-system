@@ -1,4 +1,5 @@
 /* eslint-disable react/no-unknown-property */
+import { useTiles } from 'zss/gadget/tiles'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import {
   WRITE_TEXT_CONTEXT,
@@ -7,7 +8,6 @@ import {
 import { COLOR } from 'zss/words/types'
 
 import { ShadeBoxDither } from './graphics/dither'
-import { useTiles } from './hooks'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'
 
@@ -18,7 +18,11 @@ type TapeActiveToastProps = {
 function TapeActiveToast({ context }: TapeActiveToastProps) {
   return (
     <group position={[0, 0, 999]}>
-      <TilesRender width={context.width} height={context.height} />
+      <TilesRender
+        label="toast"
+        width={context.width}
+        height={context.height}
+      />
     </group>
   )
 }
@@ -62,7 +66,6 @@ export function TapeToast({ toast }: TapeToastProps) {
             leftedge={0}
             rightedge={rightedge}
             line={`${toast}$32$19$32`}
-            context={context}
           />
           <group position={[0, 0, 998]}>
             <ShadeBoxDither

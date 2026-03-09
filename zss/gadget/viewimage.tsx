@@ -3,10 +3,10 @@ import { useLoader } from '@react-three/fiber'
 import { Suspense, useEffect } from 'react'
 import { TextureLoader } from 'three'
 import { RUNTIME } from 'zss/config'
+import { useMedia } from 'zss/gadget/media'
 
 import { updateTexture } from './display/textures'
 import { ShadeBoxDither } from './graphics/dither'
-import { useMedia } from './hooks'
 import { UserFocus, UserInput } from './userinput'
 import { useScreenSize } from './userscreen'
 

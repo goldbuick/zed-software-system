@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
 import { useEditor, useTape } from 'zss/gadget/data/state'
-import { useBlink, useWriteText } from 'zss/gadget/hooks'
+import { useWriteText } from 'zss/gadget/writetext'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   ZSS_TYPE_ERROR,
@@ -42,7 +42,6 @@ export function EditorRows({
   rows,
   codepage,
 }: EditorRowsProps) {
-  const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
   // const editortype = useTape((state) => state.editor.type)
@@ -57,9 +56,13 @@ export function EditorRows({
   }, [rows])
 
   if (!ispresent(codepage)) {
-    const fibble = (blink ? '|' : '-').repeat(3)
+    const fibble = '*'.repeat(3)
     setupeditoritem(false, false, 0, 0, context, 1, 2, 1)
-    tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
+    tokenizeandwritetextformat(
+      ` $BLWHITE${fibble}$WHITE LOADING $BLWHITE${fibble}$WHITE `,
+      context,
+      false,
+    )
     return null
   }
 
@@ -84,7 +87,9 @@ export function EditorRows({
 
   // render lines
   const baseleft = edge.left + 1 - 4
-  setupeditoritem(false, false, -xoffset, -yoffset, context, 1, 2, 1)
+  context.active.leftedge = edge.left + 1
+  context.x = context.active.leftedge - xoffset
+  context.y = context.active.topedge ?? 0 - yoffset + 2
   for (let i = 0; i < withrows.length; ++i) {
     if (context.y <= edge.top + 1) {
       ++context.y

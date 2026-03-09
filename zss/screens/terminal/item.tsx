@@ -1,5 +1,5 @@
 import { useTape } from 'zss/gadget/data/state'
-import { useBlink, useWriteText } from 'zss/gadget/hooks'
+import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -138,6 +138,5 @@ export function TapeTerminalActiveItem({
   text,
   y,
 }: TapeTerminalItemProps) {
-  useBlink()
   return <TerminalItem active={active} text={text} y={y} />
 }

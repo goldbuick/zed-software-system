@@ -3,12 +3,12 @@ import { useFBO } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { Bloom, Glitch, Noise } from '@react-three/postprocessing'
 import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
-import { Fragment, ReactNode, useEffect, useState } from 'react'
+import { Fragment, ReactNode, memo, useEffect, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, Vector2, WebGLRenderTarget } from 'three'
-import { useMedia } from 'zss/gadget/hooks'
+import { EffectComposer } from 'zss/gadget/graphics/effectcomposer'
+import { useMedia } from 'zss/gadget/media'
 
-import { EffectComposer } from './effectcomposer'
 import { RenderTexture } from './rendertexture'
 
 type RenderToTargetProps = {
@@ -70,7 +70,7 @@ type RenderLayerProps = {
   children?: ReactNode
 }
 
-export function RenderLayer({
+export const RenderLayer = memo(function RenderLayer({
   camera,
   viewwidth,
   viewheight,
@@ -107,4 +107,4 @@ export function RenderLayer({
       </mesh>
     </>
   )
-}
+})

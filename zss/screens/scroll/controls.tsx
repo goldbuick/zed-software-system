@@ -1,8 +1,7 @@
 import { RUNTIME } from 'zss/config'
-import { resetdither, useDither, writedither } from 'zss/gadget/hooks'
+import { resetdither, useDither, writedither } from 'zss/gadget/dither'
 import { DitherData, DitherRender } from 'zss/gadget/usedither'
 import { TilesRender } from 'zss/gadget/usetiles'
-import { TapeBlinker } from 'zss/screens/tape/blinker'
 
 type ScrollControlsProps = {
   row: number
@@ -37,7 +36,7 @@ export function ScrollControls({
 
   return (
     <>
-      <TilesRender width={width} height={height} />
+      <TilesRender label="controls" width={width} height={height} />
       <group
         // eslint-disable-next-line react/no-unknown-property
         position={[
@@ -50,8 +49,6 @@ export function ScrollControls({
           <DitherRender width={panelwidth} height={panelheight} />
         </DitherData>
         {children}
-        <TapeBlinker x={1} y={1} />
-        <TapeBlinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} />
       </group>
     </>
   )

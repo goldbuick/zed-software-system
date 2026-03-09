@@ -1,8 +1,7 @@
 import { useTape } from 'zss/gadget/data/state'
-import { useBlink, useWriteText, writetile } from 'zss/gadget/hooks'
-import { ScrollMarquee } from 'zss/screens/scroll/marquee'
+import { writetile } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import { bgcolor, setupeditoritem } from 'zss/screens/tape/common'
-import { ismac, metakey } from 'zss/words/system'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
@@ -49,12 +48,10 @@ export function EditorFrame() {
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
   tokenizeandwritetextformat(`$212${bottomchrs}$190`, context, true)
 
-  const blink = useBlink()
-
   const egbottom = `$205`.repeat(edge.width - 4)
   setupeditoritem(false, false, 0, 1, context, 0, 0, 0)
   tokenizeandwritetextformat(
-    `$179$${blink ? '7' : '232'}$200${egbottom}$181`,
+    `$179$BLWHITE$232$WHITE$200${egbottom}$181`,
     context,
     true,
   )
@@ -72,32 +69,5 @@ export function EditorFrame() {
   setupeditoritem(false, false, titlex, 1, context, 0, 0, 0)
   tokenizeandwritetextformat(title, context, true)
 
-  const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
-  return (
-    <ScrollMarquee
-      margin={3}
-      color={COLOR.BLUE}
-      y={edge.top}
-      leftedge={0}
-      rightedge={edge.width - 1}
-      line={`
-keys: $whiteesc/cancel$green.CLOSE 
-$whitetab$green.CHANGE LAYOUT 
-$whitehold shift$green.SELECT TEXT 
-$whitealt+up/down$green.JUMP 10 LINES 
-$whitealt+left/right$green.JUMP 10 COLS 
-$white$meta+up/down$green.JUMP TOP/BOTTOM 
-$white$meta+left/right$green.JUMP TO START/END OF LINE 
-$white$meta+a$green.SELECT ALL 
-$white$meta+c$green.COPY 
-$white$meta+x$green.CUT 
-$white$meta+v$green.PASTE 
-$white$meta+z$green.UNDO 
-$white${metaundo}$green.REDO 
-$white$meta+p$green.RUN SELECTED CODE 
-$white$meta+h$green.OPEN HELPSCROLL $blue
-    `}
-      context={context}
-    />
-  )
+  return null
 }

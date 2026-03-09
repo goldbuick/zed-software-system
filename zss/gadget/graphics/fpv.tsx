@@ -2,43 +2,28 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import {
-  LAYER,
-  LAYER_TYPE,
-  VIEWSCALE,
-  layersreadcontrol,
-} from 'zss/gadget/data/types'
+import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
+import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
+import { dampfocus } from 'zss/gadget/graphics/camerafocus'
+import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
+import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
+import { maptolayerz } from 'zss/gadget/graphics/layerz'
+import { PillarwMeshes } from 'zss/gadget/graphics/pillarmeshes'
+import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
 
-import { FlatLayer } from './flatlayer'
-import { FPVLayer } from './fpvlayer'
-import { PillarwMeshes } from './pillarmeshes'
-import { RenderLayer } from './renderlayer'
-
 type GraphicsProps = {
   width: number
   height: number
-}
-
-function maptolayerz(layer: LAYER): number {
-  switch (layer.type) {
-    case LAYER_TYPE.TILES:
-      return 0
-    case LAYER_TYPE.DITHER:
-      return RUNTIME.DRAW_CHAR_HEIGHT() + 1
-    case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5
-  }
-  return 0
 }
 
 function maptofov(viewscale: VIEWSCALE): number {
@@ -71,7 +56,10 @@ for (let y = 0; y < BOARD_HEIGHT; ++y) {
   }
 }
 
-export function FPVGraphics({ width, height }: GraphicsProps) {
+export const FPVGraphics = memo(function FPVGraphics({
+  width,
+  height,
+}: GraphicsProps) {
   const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
@@ -234,8 +222,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       cameraref.current.position.set(swx, 0, swy)
       cameraref.current.rotation.set(Math.PI * -0.49, 0, userData.lean)
     } else {
-      damp(cameraref.current.userData, 'focusx', control.focusx, animrate)
-      damp(cameraref.current.userData, 'focusy', control.focusy, animrate)
+      dampfocus(cameraref.current.userData as FocusUserData, control, animrate)
     }
 
     // update fov & matrix
@@ -249,7 +236,8 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
     underref.current.scale.setScalar(rscale)
   })
 
-  // re-render only when layer count changes
+  // re-render when board or layer counts change (board change must trigger re-render)
+  useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
@@ -306,7 +294,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                   key={layer.id}
                   id={layer.id}
                   from="layers"
-                  z={maptolayerz(layer)}
+                  z={maptolayerz(layer, 'fpv')}
                   multi={multi}
                 />
               ))}
@@ -315,7 +303,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                   key={layer.id}
                   from="over"
                   id={layer.id}
-                  z={maptolayerz(layer) + drawheight + 1}
+                  z={maptolayerz(layer, 'fpv') + drawheight + 1}
                   multi={multi}
                 />
               ))}
@@ -327,7 +315,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         key={layer.id}
                         id={layer.id}
                         layers={exiteast}
-                        z={maptolayerz(layer)}
+                        z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
@@ -351,7 +339,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         key={layer.id}
                         id={layer.id}
                         layers={exitwest}
-                        z={maptolayerz(layer)}
+                        z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
@@ -375,7 +363,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         key={layer.id}
                         id={layer.id}
                         layers={exitnorth}
-                        z={maptolayerz(layer)}
+                        z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
@@ -399,7 +387,7 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
                         key={layer.id}
                         id={layer.id}
                         layers={exitsouth}
-                        z={maptolayerz(layer)}
+                        z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
@@ -421,4 +409,4 @@ export function FPVGraphics({ width, height }: GraphicsProps) {
       </group>
     </>
   )
-}
+})

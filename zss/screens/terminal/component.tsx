@@ -1,10 +1,10 @@
-import { useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
 import { useTape, useTerminal } from 'zss/gadget/data/state'
-import { useWriteText } from 'zss/gadget/hooks'
+import { useWriteText } from 'zss/gadget/writetext'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
@@ -53,22 +53,25 @@ export function TerminalComponent() {
   // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
 
+  const tapecontextvalue = useMemo(
+    () => ({
+      sendmessage(maybetarget: string, data: any[]) {
+        const [target, message] = totarget(maybetarget)
+        if (target === 'self') {
+          const input = `#${message} ${data.join(' ')}`
+          vmcli(SOFTWARE, player, input)
+        } else {
+          SOFTWARE.emit(player, `${target}:${message}`, data)
+        }
+      },
+    }),
+    [player],
+  )
+
   return (
     <>
       <TapeBackPlate />
-      <TapeTerminalContext.Provider
-        value={{
-          sendmessage(maybetarget, data) {
-            const [target, message] = totarget(maybetarget)
-            if (target === 'self') {
-              const input = `#${message} ${data.join(' ')}`
-              vmcli(SOFTWARE, player, input)
-            } else {
-              SOFTWARE.emit(player, `${target}:${message}`, data)
-            }
-          },
-        }}
-      >
+      <TapeTerminalContext.Provider value={tapecontextvalue}>
         <TerminalRows />
         {!editoropen && voice2text !== undefined && (
           <TerminalInput

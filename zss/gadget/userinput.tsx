@@ -192,6 +192,229 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
   }
 }
 
+const TOUCHTEXT_ID = 'touchtext'
+
+function handlekeydown(event: KeyboardEvent) {
+  const key = NAME(event.key)
+  const mods = modsfromevent(event)
+  const player = registerreadplayer()
+
+  // block default browser behavior that messes with things
+  switch (key) {
+    case 's': // override default behavior
+    case 'j':
+    case 'o':
+    case 'f':
+    case 'z':
+    case 'y':
+    case 'a':
+    case 'p':
+    case 'h':
+    case 'k':
+    case 'n': // prevent default behavior
+    case '[':
+    case ']':
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    case 'delete':
+    case 'backspace':
+      if (mods.alt || mods.ctrl || mods.shift) {
+        event.preventDefault()
+      }
+      break
+    case 'tab':
+    case 'arrowleft':
+    case 'arrowright':
+    case 'arrowup':
+    case 'arrowdown':
+    case `'`:
+    case '"':
+    case '/':
+      // << for firefox :<
+      event.preventDefault()
+      break
+  }
+
+  if (mods.alt) {
+    inputdown(0, INPUT.ALT)
+  } else {
+    inputup(0, INPUT.ALT)
+  }
+  if (mods.ctrl) {
+    inputdown(0, INPUT.CTRL)
+  } else {
+    inputup(0, INPUT.CTRL)
+  }
+  if (mods.shift) {
+    inputdown(0, INPUT.SHIFT)
+  } else {
+    inputup(0, INPUT.SHIFT)
+  }
+
+  // keyboard built-in player inputs
+  switch (key) {
+    case 'arrowleft':
+      inputdown(0, INPUT.MOVE_LEFT)
+      if (event.metaKey) {
+        inputup(0, INPUT.MOVE_LEFT)
+      }
+      break
+    case 'arrowright':
+      inputdown(0, INPUT.MOVE_RIGHT)
+      if (event.metaKey) {
+        inputup(0, INPUT.MOVE_RIGHT)
+      }
+      break
+    case 'arrowup':
+      inputdown(0, INPUT.MOVE_UP)
+      if (event.metaKey) {
+        inputup(0, INPUT.MOVE_UP)
+      }
+      break
+    case 'arrowdown':
+      inputdown(0, INPUT.MOVE_DOWN)
+      if (event.metaKey) {
+        inputup(0, INPUT.MOVE_DOWN)
+      }
+      break
+    case 'enter':
+      inputdown(0, INPUT.OK_BUTTON)
+      break
+    case 'esc':
+    case 'escape':
+      inputdown(0, INPUT.CANCEL_BUTTON)
+      break
+    case 'tab':
+      inputdown(0, INPUT.MENU_BUTTON)
+      break
+    case 's':
+      if (mods.ctrl) {
+        vmcli(SOFTWARE, player, '#save')
+      }
+      break
+    case 'j':
+      if (mods.ctrl) {
+        vmcli(SOFTWARE, player, mods.shift ? '#jointab hush' : '#jointab')
+      }
+      break
+    case 'o':
+      if (mods.ctrl) {
+        vmcli(SOFTWARE, player, mods.shift ? '#joincode hush' : '#joincode')
+      }
+      break
+    case 'l':
+      if (mods.ctrl) {
+        // open merge login request
+      }
+      break
+    case 'k':
+      if (mods.ctrl) {
+        vmcli(SOFTWARE, player, '#fork')
+      }
+      break
+    case 'h':
+      if (mods.ctrl) {
+        vmrefscroll(SOFTWARE, player)
+      }
+  }
+  user.root.emit('keydown', event)
+}
+
+function handlekeyup(event: KeyboardEvent) {
+  const key = NAME(event.key)
+  const mods = modsfromevent(event)
+
+  if (mods.alt) {
+    inputdown(0, INPUT.ALT)
+  } else {
+    inputup(0, INPUT.ALT)
+  }
+  if (mods.ctrl) {
+    inputdown(0, INPUT.CTRL)
+  } else {
+    inputup(0, INPUT.CTRL)
+  }
+  if (mods.shift) {
+    inputdown(0, INPUT.SHIFT)
+  } else {
+    inputup(0, INPUT.SHIFT)
+  }
+
+  // keyboard built-in player inputs
+  switch (key) {
+    case 'meta':
+      // special case for macos cmd + arrow keys
+      // inputup(0, INPUT.MOVE_LEFT)
+      // inputup(0, INPUT.MOVE_RIGHT)
+      // inputup(0, INPUT.MOVE_UP)
+      // inputup(0, INPUT.MOVE_DOWN)
+      break
+    case 'arrowleft':
+      inputup(0, INPUT.MOVE_LEFT)
+      break
+    case 'arrowright':
+      inputup(0, INPUT.MOVE_RIGHT)
+      break
+    case 'arrowup':
+      inputup(0, INPUT.MOVE_UP)
+      break
+    case 'arrowdown':
+      inputup(0, INPUT.MOVE_DOWN)
+      break
+    case 'enter':
+      inputup(0, INPUT.OK_BUTTON)
+      break
+    case 'esc':
+    case 'escape':
+      inputup(0, INPUT.CANCEL_BUTTON)
+      break
+    case 'tab':
+      inputup(0, INPUT.MENU_BUTTON)
+      break
+  }
+}
+
+function bindtouchtextkeyboard() {
+  const touchtext = document.getElementById(TOUCHTEXT_ID)
+  if (!touchtext) {
+    return
+  }
+  touchtext.addEventListener(
+    'keydown',
+    (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      handlekeydown(event)
+    },
+    { capture: true },
+  )
+  touchtext.addEventListener(
+    'keyup',
+    (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      handlekeyup(event)
+    },
+    { capture: true },
+  )
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindtouchtextkeyboard)
+  } else {
+    bindtouchtextkeyboard()
+  }
+}
+
 window.addEventListener(
   'wheel',
   (event) => {
@@ -203,198 +426,20 @@ window.addEventListener(
 window.addEventListener(
   'keydown',
   (event) => {
-    const key = NAME(event.key)
-    const mods = modsfromevent(event)
-    const player = registerreadplayer()
-
-    // block default browser behavior that messes with things
-    switch (key) {
-      case 's': // override default behavior
-      case 'j':
-      case 'o':
-      case 'f':
-      case 'z':
-      case 'y':
-      case 'a':
-      case 'p':
-      case 'h':
-      case 'k':
-      case 'n': // prevent default behavior
-      case '[':
-      case ']':
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case 'delete':
-      case 'backspace':
-        if (mods.alt || mods.ctrl || mods.shift) {
-          event.preventDefault()
-        }
-        break
-      case 'tab':
-      case 'arrowleft':
-      case 'arrowright':
-      case 'arrowup':
-      case 'arrowdown':
-      case `'`:
-      case '"':
-      case '/':
-        // << for firefox :<
-        event.preventDefault()
-        break
+    // when focus is on the hidden touchtext input (editor/terminal), only
+    // the touchtext listener should handle keys so we don't get duplicate chars
+    const target = event.target as HTMLElement | null
+    if (target?.id === TOUCHTEXT_ID) {
+      return
     }
-
-    if (mods.alt) {
-      inputdown(0, INPUT.ALT)
-    } else {
-      inputup(0, INPUT.ALT)
-    }
-    if (mods.ctrl) {
-      inputdown(0, INPUT.CTRL)
-    } else {
-      inputup(0, INPUT.CTRL)
-    }
-    if (mods.shift) {
-      inputdown(0, INPUT.SHIFT)
-    } else {
-      inputup(0, INPUT.SHIFT)
-    }
-
-    // keyboard built-in player inputs
-    switch (key) {
-      case 'arrowleft':
-        inputdown(0, INPUT.MOVE_LEFT)
-        if (event.metaKey) {
-          inputup(0, INPUT.MOVE_LEFT)
-        }
-        break
-      case 'arrowright':
-        inputdown(0, INPUT.MOVE_RIGHT)
-        if (event.metaKey) {
-          inputup(0, INPUT.MOVE_RIGHT)
-        }
-        break
-      case 'arrowup':
-        inputdown(0, INPUT.MOVE_UP)
-        if (event.metaKey) {
-          inputup(0, INPUT.MOVE_UP)
-        }
-        break
-      case 'arrowdown':
-        inputdown(0, INPUT.MOVE_DOWN)
-        if (event.metaKey) {
-          inputup(0, INPUT.MOVE_DOWN)
-        }
-        break
-      case 'enter':
-        inputdown(0, INPUT.OK_BUTTON)
-        break
-      case 'esc':
-      case 'escape':
-        inputdown(0, INPUT.CANCEL_BUTTON)
-        break
-      case 'tab':
-        inputdown(0, INPUT.MENU_BUTTON)
-        break
-      case 's':
-        if (mods.ctrl) {
-          vmcli(SOFTWARE, player, '#save')
-        }
-        break
-      case 'j':
-        if (mods.ctrl) {
-          vmcli(SOFTWARE, player, mods.shift ? '#jointab hush' : '#jointab')
-        }
-        break
-      case 'o':
-        if (mods.ctrl) {
-          vmcli(SOFTWARE, player, mods.shift ? '#joincode hush' : '#joincode')
-        }
-        break
-      case 'l':
-        if (mods.ctrl) {
-          // open merge login request
-        }
-        break
-      case 'k':
-        if (mods.ctrl) {
-          vmcli(SOFTWARE, player, '#fork')
-        }
-        break
-      case 'h':
-        if (mods.ctrl) {
-          vmrefscroll(SOFTWARE, player)
-        }
-    }
-    user.root.emit('keydown', event)
+    handlekeydown(event)
   },
   { capture: true },
 )
 
-window.addEventListener(
-  'keyup',
-  (event) => {
-    const key = NAME(event.key)
-    const mods = modsfromevent(event)
-
-    if (mods.alt) {
-      inputdown(0, INPUT.ALT)
-    } else {
-      inputup(0, INPUT.ALT)
-    }
-    if (mods.ctrl) {
-      inputdown(0, INPUT.CTRL)
-    } else {
-      inputup(0, INPUT.CTRL)
-    }
-    if (mods.shift) {
-      inputdown(0, INPUT.SHIFT)
-    } else {
-      inputup(0, INPUT.SHIFT)
-    }
-
-    // keyboard built-in player inputs
-    switch (key) {
-      case 'meta':
-        // special case for macos cmd + arrow keys
-        // inputup(0, INPUT.MOVE_LEFT)
-        // inputup(0, INPUT.MOVE_RIGHT)
-        // inputup(0, INPUT.MOVE_UP)
-        // inputup(0, INPUT.MOVE_DOWN)
-        break
-      case 'arrowleft':
-        inputup(0, INPUT.MOVE_LEFT)
-        break
-      case 'arrowright':
-        inputup(0, INPUT.MOVE_RIGHT)
-        break
-      case 'arrowup':
-        inputup(0, INPUT.MOVE_UP)
-        break
-      case 'arrowdown':
-        inputup(0, INPUT.MOVE_DOWN)
-        break
-      case 'enter':
-        inputup(0, INPUT.OK_BUTTON)
-        break
-      case 'esc':
-      case 'escape':
-        inputup(0, INPUT.CANCEL_BUTTON)
-        break
-      case 'tab':
-        inputup(0, INPUT.MENU_BUTTON)
-        break
-    }
-  },
-  { capture: true },
-)
+window.addEventListener('keyup', (event) => handlekeyup(event), {
+  capture: true,
+})
 
 window.addEventListener('blur', () => {
   inputup(0, INPUT.ALT)

@@ -77,7 +77,6 @@ export enum TAPE_DISPLAY {
   TOP,
   FULL,
   BOTTOM,
-  SPLIT_X,
   MAX,
 }
 

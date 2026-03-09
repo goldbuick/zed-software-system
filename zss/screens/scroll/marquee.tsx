@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useBlink } from 'zss/gadget/hooks'
+import { useFrame } from '@react-three/fiber'
+import { useRef, useState } from 'react'
+import { useWriteText } from 'zss/gadget/writetext'
 import {
-  WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
+
+const SCROLL_SPEED = 0.5
 
 type ScrollMarqueeProps = {
   line: string
@@ -14,7 +16,6 @@ type ScrollMarqueeProps = {
   y: number
   leftedge: number
   rightedge: number
-  context: WRITE_TEXT_CONTEXT
 }
 
 export function ScrollMarquee({
@@ -24,10 +25,9 @@ export function ScrollMarquee({
   y,
   leftedge,
   rightedge,
-  context,
 }: ScrollMarqueeProps) {
   // we assume context is setup
-  const blink = useBlink()
+  const context = useWriteText()
 
   // measure line
   const strcolor = COLOR[color] ?? ''
@@ -36,15 +36,15 @@ export function ScrollMarquee({
   const contentmax = measure?.measuredwidth ?? 1
 
   // moves offset along
+  const acc = useRef(0)
   const [offset, setoffset] = useState(0)
-  useEffect(() => {
-    setoffset((state) => {
-      if (blink) {
-        return state
-      }
-      return (state - 1) % contentmax
-    })
-  }, [blink, contentmax])
+  useFrame((_, delta) => {
+    acc.current += delta
+    if (acc.current >= SCROLL_SPEED) {
+      acc.current -= SCROLL_SPEED
+      setoffset((state) => (state - 1) % contentmax)
+    }
+  })
 
   // cycle line if too long
   context.disablewrap = true

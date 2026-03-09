@@ -13,7 +13,7 @@ import {
   LAYER_TYPE,
   PALETTE_COLORS,
 } from 'zss/gadget/data/types'
-import { useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 import { MAYBE, isarray, isstring } from 'zss/mapping/types'
 
 const defaultpalette = loadpalettefrombytes(PALETTE)

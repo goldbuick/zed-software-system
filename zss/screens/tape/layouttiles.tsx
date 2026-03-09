@@ -1,17 +1,18 @@
 /* eslint-disable react/no-unknown-property */
 import { ReactNode, useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
-import { WriteTextContext, useTiles } from 'zss/gadget/hooks'
+import { useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
+import { WriteTextContext } from 'zss/gadget/writetext'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
 
-import { TapeBackPlate } from './backplate'
 import { FG, bgcolor } from './common'
 
 type TapeLayoutTilesProps = {
+  label: string
   quickterminal: boolean
   top: number
   left: number
@@ -21,6 +22,7 @@ type TapeLayoutTilesProps = {
 }
 
 export function TapeLayoutTiles({
+  label,
   quickterminal,
   top,
   left,
@@ -39,7 +41,6 @@ export function TapeLayoutTiles({
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>
-        <TapeBackPlate />
         {children}
       </WriteTextContext.Provider>
       <group
@@ -49,7 +50,7 @@ export function TapeLayoutTiles({
           0,
         ]}
       >
-        <TilesRender width={width} height={height} />
+        <TilesRender label={label} width={width} height={height} />
       </group>
     </TilesData>
   )

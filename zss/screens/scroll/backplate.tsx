@@ -1,26 +1,21 @@
-import { useTilesData, writetile } from 'zss/gadget/hooks'
+import { useTilesData, writetile } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import {
-  WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 type ScrollBackPlateProps = {
   name: string
   width: number
   height: number
-  context: WRITE_TEXT_CONTEXT
 }
 
-export function ScrollBackPlate({
-  name,
-  width,
-  height,
-  context,
-}: ScrollBackPlateProps) {
+export function ScrollBackPlate({ name, width, height }: ScrollBackPlateProps) {
   // write to tiles
   const tiles = useTilesData()
-
+  const context = useWriteText()
   // edges
   for (let x = 1; x < width - 1; ++x) {
     if (x > 2 && x < width - 1) {
@@ -46,6 +41,7 @@ export function ScrollBackPlate({
   // corners
   // top left-right
   writetile(tiles, width, height, 0, 0, { char: 213, color: 15 })
+  writetile(tiles, width, height, 1, 1, { char: 232, color: COLOR.BLWHITE })
   writetile(tiles, width, height, width - 1, 0, { char: 191, color: 15 })
   writetile(tiles, width, height, width - 1, 1, { char: 181, color: 15 })
   // bottom left-right

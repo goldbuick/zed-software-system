@@ -147,7 +147,7 @@ Tape and gadget client state management.
 ### Types & Constants
 - `TAPE_ROW` - Type for tape row data
 - `TAPE_MAX_LINES` - Maximum number of lines in tape (1024)
-- `TAPE_DISPLAY` - Enum for tape display modes (TOP, FULL, BOTTOM, SPLIT_X, MAX)
+- `TAPE_DISPLAY` - Enum for tape display modes (TOP, FULL, BOTTOM, MAX)
 
 ---
 

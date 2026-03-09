@@ -182,7 +182,7 @@ function terminaladdlog(message: MESSAGE) {
 }
 
 function terminalinclayout(inc: boolean) {
-  const { layout, editor } = useTape.getState()
+  const { layout } = useTape.getState()
   const step = inc ? 1 : -1
   let nextlayout = (layout as number) + step
   if (nextlayout < 0) {
@@ -190,14 +190,6 @@ function terminalinclayout(inc: boolean) {
   }
   if (nextlayout >= (TAPE_DISPLAY.MAX as number)) {
     nextlayout -= TAPE_DISPLAY.MAX
-  }
-  if (!editor.open) {
-    switch (nextlayout as TAPE_DISPLAY) {
-      case TAPE_DISPLAY.SPLIT_X:
-        // skip over these to right
-        nextlayout = TAPE_DISPLAY.TOP
-        break
-    }
   }
   useTape.setState({ layout: nextlayout })
 }

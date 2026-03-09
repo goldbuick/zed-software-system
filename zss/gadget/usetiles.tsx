@@ -1,9 +1,9 @@
 import { useContext } from 'react'
+import { TILE_DATA, TilesContext } from 'zss/gadget/tiles'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Tiles } from './graphics/tiles'
-import { TILE_DATA, TilesContext } from './hooks'
 
 type TilesDataProps = React.PropsWithChildren<{
   store: StoreApi<TILE_DATA>
@@ -14,11 +14,12 @@ export function TilesData({ store, children }: TilesDataProps) {
 }
 
 type TilesRenderProps = {
+  label: string
   width: number
   height: number
 }
 
-export function TilesRender({ width, height }: TilesRenderProps) {
+export function TilesRender({ label, width, height }: TilesRenderProps) {
   const store = useContext(TilesContext)
   const [char, color, bg] = useStore(
     store,
@@ -28,6 +29,7 @@ export function TilesRender({ width, height }: TilesRenderProps) {
     width > 0 &&
     height > 0 && (
       <Tiles
+        label={label}
         char={char.slice()}
         color={color.slice()}
         bg={bg.slice()}

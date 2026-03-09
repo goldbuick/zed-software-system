@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unknown-property */
 import { useInspector } from 'zss/gadget/data/state'
-import { resettiles, useTiles, writetile } from 'zss/gadget/hooks'
+import { resettiles, useTiles, writetile } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
@@ -29,7 +29,7 @@ export function InspectorPts() {
   return (
     <group position-z={100}>
       <TilesData store={store}>
-        <TilesRender width={BOARD_WIDTH} height={BOARD_HEIGHT} />
+        <TilesRender label="pts" width={BOARD_WIDTH} height={BOARD_HEIGHT} />
       </TilesData>
     </group>
   )

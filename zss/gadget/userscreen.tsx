@@ -3,9 +3,8 @@
 import { useThree } from '@react-three/fiber'
 import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
 import { RUNTIME } from 'zss/config'
+import { useDeviceData } from 'zss/gadget/device'
 import { TouchUI } from 'zss/screens/touchui/component'
-
-import { useDeviceData } from './hooks'
 
 // screensize in chars
 const Screensize = createContext({

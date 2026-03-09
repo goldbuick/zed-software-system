@@ -12,12 +12,13 @@ import {
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
-import { useMedia } from 'zss/gadget/hooks'
+import { useMedia } from 'zss/gadget/media'
 
 const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
 type TilesProps = {
+  label?: string
   width: number
   height: number
   char: number[]
@@ -28,6 +29,7 @@ type TilesProps = {
 }
 
 export function Tiles({
+  label,
   width,
   height,
   char,
@@ -68,7 +70,7 @@ export function Tiles({
       color,
       bg,
     )
-  }, [material.uniforms.data.value, width, height, char, color, bg])
+  }, [material.uniforms.data.value, width, height, char, color, bg, label])
 
   // create / config material
   useEffect(() => {

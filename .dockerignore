@@ -1,0 +1,17 @@
+node_modules
+tmp
+dist
+!dist/*.tar.gz
+dist-bin
+dist-server
+oclif.manifest.json
+*.local
+
+.git
+.github
+.vscode
+.idea
+.DS_Store
+
+.zss-data
+

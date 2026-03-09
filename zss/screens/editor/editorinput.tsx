@@ -12,9 +12,9 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
-import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
+import { useWriteText } from 'zss/gadget/writetext'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   AUTO_COMPLETE,
@@ -61,7 +61,6 @@ export function EditorInput({
   autocomplete,
   autocompleteactive,
 }: EditorInputProps) {
-  const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useEditor()
   const zsswords = useGadgetClient((state) => state.zsswords)
@@ -120,7 +119,7 @@ export function EditorInput({
   const xblink = xcursor + 1 - xoffset
   const yblink = ycursor + 2 - yoffset
 
-  drawlocalcursor(codepage, blink, xblink, yblink, blinkdelta, edge, context)
+  drawlocalcursor(codepage, xblink, yblink, blinkdelta, edge, context)
   drawremotecursors(
     codepage,
     remotePresence,

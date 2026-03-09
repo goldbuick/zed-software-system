@@ -2,13 +2,10 @@
 import { degToRad, radToDeg } from 'maath/misc'
 import { Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
+import { useDeviceData } from 'zss/gadget/device'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
-import {
-  resettiles,
-  useDeviceData,
-  useWriteText,
-  writetile,
-} from 'zss/gadget/hooks'
+import { resettiles, writetile } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import { snap } from 'zss/mapping/number'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
