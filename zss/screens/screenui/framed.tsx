@@ -121,12 +121,12 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
       {graphics === 'mode7' && <Mode7Graphics width={width} height={height} />}
       {graphics === 'iso' && <IsoGraphics width={width} height={height} />}
       {graphics === 'fpv' && <FPVGraphics width={width} height={height} />}
-      {/* <group position-z={512}>
+      <group position-z={512}>
         <ScreenUITickerText
           width={Math.floor(width)}
           height={Math.floor(height)}
         />
-      </group> */}
+      </group>
     </>
   )
 }
