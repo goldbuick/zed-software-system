@@ -109,9 +109,9 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('readbin', ['binary data'], loaderbinary)
   .command(
     'withboard',
-    [ARG_TYPE.STRING, 'to target board by id, name, or stat'],
+    [ARG_TYPE.NAME, 'to target board by id, name, or stat'],
     (_, words) => {
-      const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
+      const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
       // this will update the READ_CONTEXT so element centric
       // commands will work
       const target = memoryreadboardbyaddress(stat)
@@ -125,30 +125,26 @@ export const LOADER_FIRMWARE = createfirmware({
       return 0
     },
   )
-  .command(
-    'withobject',
-    [ARG_TYPE.STRING, 'to target object id'],
-    (_, words) => {
-      // the idea here is we can give an object id
-      // and it'll update the READ_CONTEXT to point to the given object
-      // the intent here is afford !chat to drive behavior of a __specific__ object
-      const [id] = readargs(words, 0, [ARG_TYPE.STRING])
-      const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
-      // #oneof chatuser chatdroid
-      // #withobject chatuser
-      // #goup ' <- this code
-      if (ispresent(maybeobject)) {
-        // write context
-        READ_CONTEXT.element = maybeobject
-        READ_CONTEXT.elementid = maybeobject.id ?? ''
-        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-        READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
-          ? READ_CONTEXT.elementid
-          : (READ_CONTEXT.element?.player ?? memoryreadoperator())
-      }
-      return 0
-    },
-  )
+  .command('withobject', [ARG_TYPE.NAME, 'to target object id'], (_, words) => {
+    // the idea here is we can give an object id
+    // and it'll update the READ_CONTEXT to point to the given object
+    // the intent here is afford !chat to drive behavior of a __specific__ object
+    const [id] = readargs(words, 0, [ARG_TYPE.NAME])
+    const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
+    // #oneof chatuser chatdroid
+    // #withobject chatuser
+    // #goup ' <- this code
+    if (ispresent(maybeobject)) {
+      // write context
+      READ_CONTEXT.element = maybeobject
+      READ_CONTEXT.elementid = maybeobject.id ?? ''
+      READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+      READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
+        ? READ_CONTEXT.elementid
+        : (READ_CONTEXT.element?.player ?? memoryreadoperator())
+    }
+    return 0
+  })
   .command(
     'userinput',
     [ARG_TYPE.NAME, 'user input actions (up/down/left/right/etc)'],

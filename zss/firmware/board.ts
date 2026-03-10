@@ -4,7 +4,6 @@ import { createfirmware } from 'zss/firmware'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { maptostring } from 'zss/mapping/value'
 import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
@@ -52,7 +51,7 @@ import {
   readstrkindname,
   strkindtostr,
 } from 'zss/words/kind'
-import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
@@ -687,7 +686,8 @@ export const BOARD_FIRMWARE = createfirmware()
       // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
 
-      const text = words.slice(ii).map(maptostring).join(' ')
+      const [textwords] = readargsuntilend(words, ii, ARG_TYPE.NUMBER_OR_NAME)
+      const text = textwords.join(' ')
       const { color, bg } = mapstrcolortoattributes(strcolor)
       const measuredwidth =
         tokenizeandmeasuretextformat(text, 256, 1)?.measuredwidth ?? 1

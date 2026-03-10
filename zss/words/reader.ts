@@ -92,7 +92,7 @@ export function readargs<T extends ARG_TYPES>(
   const tmp = READ_CONTEXT.words
   READ_CONTEXT.words = words
 
-  const values = []
+  const values: any[] = []
 
   let ii = index
   for (let i = 0; i < args.length; ++i) {
@@ -317,8 +317,7 @@ export function readargs<T extends ARG_TYPES>(
 
   READ_CONTEXT.words = tmp
 
-  // @ts-expect-error any[] doesn't work
-  return [...values, ii]
+  return [...values, ii] as [...ARG_TYPE_VALUES<T>, number]
 }
 
 export function readargsuntilend(
