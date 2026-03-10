@@ -52,7 +52,7 @@ import {
 } from 'zss/words/color'
 import { DIR_CONSTS, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { ARG_TYPE, COLOR, NAME, PT, WORD } from 'zss/words/types'
 
@@ -1049,13 +1049,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
     },
   )
   .command('array', [ARG_TYPE.NAME, 'array variable'], (chip, words) => {
-    const values: any[] = []
     const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
-    for (let i = ii; i < words.length; ) {
-      const [val, iii] = readargs(words, i, [ARG_TYPE.ANY])
-      values.push(val)
-      i = iii
-    }
+    const [values] = readargsuntilend(words, ii, ARG_TYPE.ANY)
     chip.set(name, values)
     return 0
   })

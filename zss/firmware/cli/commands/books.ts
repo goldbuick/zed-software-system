@@ -49,7 +49,7 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from 'zss/memory/types'
-import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
 export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
@@ -115,14 +115,14 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       [
         ARG_TYPE.NAME,
         ARG_TYPE.MAYBE_NAME,
-        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
         'a code page editor',
       ],
       (_, words) => {
         const [page, maybeobject, scrollto] = readargs(words, 0, [
           ARG_TYPE.NAME,
           ARG_TYPE.MAYBE_NAME,
-          ARG_TYPE.MAYBE_NUMBER,
+          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
         ])
         let codepage: MAYBE<CODE_PAGE> = undefined
         let codepagebook: MAYBE<BOOK> = undefined
@@ -284,17 +284,8 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       'search',
       [ARG_TYPE.NAME, 'codepage code for query'],
       (_, words) => {
-        const [query] = readargs(words, 0, [ARG_TYPE.NAME])
-        if (!ispresent(query) || String(query).trim() === '') {
-          apierror(
-            SOFTWARE,
-            'search',
-            'usage: #search <query>',
-            READ_CONTEXT.elementfocus,
-          )
-          return 0
-        }
-        const q = String(query).trim()
+        const [querywords] = readargsuntilend(words, 0, ARG_TYPE.NAME)
+        const q = querywords.join(' ')
         writesection(SOFTWARE, READ_CONTEXT.elementfocus, `search: ${q}`)
         const booklist = memoryreadbooklist()
         let count = 0

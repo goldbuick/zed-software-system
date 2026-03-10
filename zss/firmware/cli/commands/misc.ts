@@ -5,7 +5,7 @@ import { writeopenit, writetext } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
 import { isemail } from 'zss/firmware/cli/utils'
 import { doasync } from 'zss/mapping/func'
-import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
 let bbscode = ''
@@ -121,12 +121,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
             )
           } else {
             const [filename, iii] = readargs(words, ii, [ARG_TYPE.NAME])
-            const tags: string[] = []
-            for (let iiii = iii; iiii < words.length; ) {
-              const [tag, iiiii] = readargs(words, iiii, [ARG_TYPE.NAME])
-              iiii = iiiii
-              tags.push(tag)
-            }
+            const [tags] = readargsuntilend(words, iii, ARG_TYPE.NAME)
             vmpublish(
               SOFTWARE,
               READ_CONTEXT.elementfocus,

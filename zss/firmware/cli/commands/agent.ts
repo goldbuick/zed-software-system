@@ -9,7 +9,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
 export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
@@ -42,13 +42,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           break
         default: {
           if (isstring(action)) {
-            let iii = ii
-            const values: any[] = []
-            while (iii < words.length) {
-              const [value, iiii] = readargs(words, iii, [ARG_TYPE.ANY])
-              values.push(value)
-              iii = iiii
-            }
+            const [values] = readargsuntilend(words, ii, ARG_TYPE.ANY)
             vmagentprompt(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
