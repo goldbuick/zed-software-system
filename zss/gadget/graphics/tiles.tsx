@@ -26,7 +26,6 @@ type TilesProps = {
   color: number[]
   bg: number[]
   fliptexture?: boolean
-  alwaysdefaults?: boolean
 }
 
 export function Tiles({
@@ -37,14 +36,13 @@ export function Tiles({
   color,
   bg,
   fliptexture = true,
-  alwaysdefaults = false,
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
   const mediaaltcharset = useMedia((state) => state.altcharsetdata)
-  const palette = alwaysdefaults ? defaultpalette : mediapalette
-  const charset = alwaysdefaults ? defaultcharset : mediacharset
-  const altcharset = alwaysdefaults ? defaultcharset : mediaaltcharset
+  const palette = mediapalette ?? defaultpalette
+  const charset = mediacharset ?? defaultcharset
+  const altcharset = mediaaltcharset ?? defaultcharset
 
   const [material] = useState(() => createTilemapMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
@@ -114,14 +112,15 @@ export function Tiles({
         </bufferGeometry>
         <primitive object={material} attach="material" />
       </mesh>
-      <UnicodeOverlay
-        width={width}
-        height={height}
-        char={char}
-        color={color}
-        bg={bg}
-        alwaysdefaults={alwaysdefaults}
-      />
+      <group position-z={1}>
+        <UnicodeOverlay
+          width={width}
+          height={height}
+          char={char}
+          color={color}
+          bg={bg}
+        />
+      </group>
     </>
   )
 }

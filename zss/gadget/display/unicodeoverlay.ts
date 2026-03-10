@@ -47,14 +47,14 @@ export function createunicodeoverlaymaterial(palette: Color[]) {
     `,
     fragmentShader: `
       precision highp float;
-      uniform sampler2D atlas;
+      uniform usampler2D atlas;
       uniform vec3 palette[16];
       varying vec2 vUv;
       varying float vColorIndex;
       void main() {
-        float d = texture2D(atlas, vUv).r;
+        float d = float(texture2D(atlas, vUv).r);
         float alpha = smoothstep(0.2, 0.5, d / 255.0);
-        int idx = int(vColorIndex + 0.5);
+        int idx = int(vColorIndex);
         idx = clamp(idx, 0, 15);
         gl_FragColor.rgb = palette[idx];
         gl_FragColor.a = alpha;

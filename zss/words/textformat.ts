@@ -254,10 +254,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   function writeStr(str: string) {
-    for (let t = 0; t < str.length; ++t) {
+    for (let t = 0; t < str.length; ) {
+      const cp = str.codePointAt(t) ?? 0
       if (context.measureonly !== true && isVisible()) {
         const i = context.x + context.y * context.width
-        context.char[i] = str.charCodeAt(t)
+        context.char[i] = cp
         if (context.active.color !== undefined) {
           context.color[i] = context.active.color
         }
@@ -266,6 +267,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         }
       }
       incCursor()
+      t += cp > 0xffff ? 2 : 1
     }
   }
 
@@ -353,11 +355,12 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     const fill = rightedge - context.x
     if (fill > 0) {
       writetextreset(context)
-      const pttrn = String.fromCharCode(context.writefullwidth).repeat(fill)
+      const fillcp = context.writefullwidth ?? 0x20
+      const pttrn = String.fromCodePoint(fillcp).repeat(fill)
       const i = context.x + context.y * context.width
       applycolortoindexes(
         i,
-        i + pttrn.length,
+        i + fill,
         context.active.color,
         context.active.bg,
         context,
@@ -448,9 +451,12 @@ export function applystrtoindex(
   context: WRITE_TEXT_CONTEXT,
 ) {
   let t = 0
-  const p2 = p1 + str.length
-  for (let i = p1; i < p2; ++i) {
-    context.char[i] = str.charCodeAt(t++)
+  let i = p1
+  while (t < str.length) {
+    const cp = str.codePointAt(t) ?? 0
+    context.char[i] = cp
+    i++
+    t += cp > 0xffff ? 2 : 1
   }
 
   // yolo

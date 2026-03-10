@@ -23,7 +23,6 @@ type UnicodeOverlayProps = {
   char: number[]
   color: number[]
   bg: number[]
-  alwaysdefaults?: boolean
 }
 
 export function UnicodeOverlay({
@@ -31,26 +30,26 @@ export function UnicodeOverlay({
   height,
   char,
   color,
-  alwaysdefaults = false,
 }: UnicodeOverlayProps) {
   const mediapalette = useMedia((state) => state.palettedata)
-  const resolvedpalette =
-    (alwaysdefaults ? defaultpalette : mediapalette) ?? defaultpalette
+  const resolvedpalette = mediapalette ?? defaultpalette
   const cellw = RUNTIME.DRAW_CHAR_WIDTH()
   const cellh = RUNTIME.DRAW_CHAR_HEIGHT()
 
-  // const [meshref, setmeshref] = useState<InstancedMesh | null>(null)
-  // const [offsetattr, setoffsetattr] = useState<InstancedBufferAttribute | null>(
-  //   null,
-  // )
-  // const [uvattr, setuvattr] = useState<InstancedBufferAttribute | null>(null)
-  // const [colorattr, setcolorattr] = useState<InstancedBufferAttribute | null>(
-  //   null,
-  // )
-  // const materialref = useRef<ReturnType<
-  //   typeof createunicodeoverlaymaterial
-  // > | null>(null)
+  // instanced mesh data
+  const [meshref, setmeshref] = useState<InstancedMesh | null>(null)
+  const [offsetattr, setoffsetattr] = useState<InstancedBufferAttribute | null>(
+    null,
+  )
+  const [uvattr, setuvattr] = useState<InstancedBufferAttribute | null>(null)
+  const [colorattr, setcolorattr] = useState<InstancedBufferAttribute | null>(
+    null,
+  )
+  const materialref = useRef<ReturnType<
+    typeof createunicodeoverlaymaterial
+  > | null>(null)
 
+  // cell data
   const maxcells = width * height
   const offsetarray = useMemo(() => new Float32Array(maxcells * 2), [maxcells])
   const uvarray = useMemo(() => new Float32Array(maxcells * 2), [maxcells])
@@ -71,95 +70,90 @@ export function UnicodeOverlay({
     return list
   }, [char, color])
 
-  console.info({ cells })
+  const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])
 
-  return null
+  useLayoutEffect(() => {
+    materialref.current ??= createunicodeoverlaymaterial(resolvedpalette)
+    materialref.current.uniforms.palette.value = resolvedpalette
+    materialref.current.uniforms.cellsize.value.set(cellw, cellh)
+  }, [resolvedpalette, cellw, cellh])
 
-  // const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])
+  useEffect(() => {
+    if (
+      width === 0 ||
+      height === 0 ||
+      !meshref ||
+      !offsetattr ||
+      !uvattr ||
+      !colorattr
+    ) {
+      return
+    }
+    let n = 0
+    for (const cell of cells) {
+      const slot = lookupglyph(cell.codepoint)
+      if (!slot) {
+        continue
+      }
+      const cx = cell.index % width
+      const cy = Math.floor(cell.index / width)
+      offsetarray[n * 2] = cx * cellw
+      offsetarray[n * 2 + 1] = cy * cellh
+      uvarray[n * 2] = slot.slotx
+      uvarray[n * 2 + 1] = slot.sloty
+      colorarray[n] = cell.colori
+      n++
+    }
+    meshref.count = n
+    offsetattr.needsUpdate = true
+    uvattr.needsUpdate = true
+    colorattr.needsUpdate = true
+  }, [
+    cells,
+    width,
+    height,
+    cellw,
+    cellh,
+    meshref,
+    offsetattr,
+    uvattr,
+    colorattr,
+    offsetarray,
+    uvarray,
+    colorarray,
+  ])
 
-  // useLayoutEffect(() => {
-  //   materialref.current ??= createunicodeoverlaymaterial(resolvedpalette)
-  //   materialref.current.uniforms.palette.value = resolvedpalette
-  //   materialref.current.uniforms.cellsize.value.set(cellw, cellh)
-  // }, [resolvedpalette, cellw, cellh])
+  if (cells.length === 0) {
+    return null
+  }
 
-  // useEffect(() => {
-  //   if (
-  //     width === 0 ||
-  //     height === 0 ||
-  //     !meshref ||
-  //     !offsetattr ||
-  //     !uvattr ||
-  //     !colorattr
-  //   ) {
-  //     return
-  //   }
-  //   let n = 0
-  //   for (const cell of cells) {
-  //     const slot = lookupglyph(cell.codepoint)
-  //     if (!slot) {
-  //       continue
-  //     }
-  //     const cx = cell.index % width
-  //     const cy = Math.floor(cell.index / width)
-  //     offsetarray[n * 2] = cx * cellw
-  //     offsetarray[n * 2 + 1] = cy * cellh
-  //     uvarray[n * 2] = slot.slotx
-  //     uvarray[n * 2 + 1] = slot.sloty
-  //     colorarray[n] = cell.colori
-  //     n++
-  //   }
-  //   meshref.count = n
-  //   offsetattr.needsUpdate = true
-  //   uvattr.needsUpdate = true
-  //   colorattr.needsUpdate = true
-  // }, [
-  //   cells,
-  //   width,
-  //   height,
-  //   cellw,
-  //   cellh,
-  //   meshref,
-  //   offsetattr,
-  //   uvattr,
-  //   colorattr,
-  //   offsetarray,
-  //   uvarray,
-  //   colorarray,
-  // ])
-
-  // if (cells.length === 0) {
-  //   return null
-  // }
-
-  // materialref.current ??= createunicodeoverlaymaterial(resolvedpalette)
-  // const material = materialref.current
-
-  // return (
-  //   <instancedMesh ref={setmeshref} args={[undefined, undefined, maxcells]}>
-  //     <bufferGeometry>
-  //       <bufferAttribute attach="attributes-position" args={[position, 3]} />
-  //       <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
-  //       <instancedBufferAttribute
-  //         ref={setoffsetattr}
-  //         attach="attributes-offset"
-  //         args={[offsetarray, 2]}
-  //         usage={DynamicDrawUsage}
-  //       />
-  //       <instancedBufferAttribute
-  //         ref={setuvattr}
-  //         attach="attributes-uvOffset"
-  //         args={[uvarray, 2]}
-  //         usage={DynamicDrawUsage}
-  //       />
-  //       <instancedBufferAttribute
-  //         ref={setcolorattr}
-  //         attach="attributes-colorIndex"
-  //         args={[colorarray, 1]}
-  //         usage={DynamicDrawUsage}
-  //       />
-  //     </bufferGeometry>
-  //     <primitive object={material} attach="material" />
-  //   </instancedMesh>
-  // )
+  return (
+    <instancedMesh ref={setmeshref} args={[undefined, undefined, maxcells]}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[position, 3]} />
+        <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
+        <instancedBufferAttribute
+          ref={setoffsetattr}
+          attach="attributes-offset"
+          args={[offsetarray, 2]}
+          usage={DynamicDrawUsage}
+        />
+        <instancedBufferAttribute
+          ref={setuvattr}
+          attach="attributes-uvOffset"
+          args={[uvarray, 2]}
+          usage={DynamicDrawUsage}
+        />
+        <instancedBufferAttribute
+          ref={setcolorattr}
+          attach="attributes-colorIndex"
+          args={[colorarray, 1]}
+          usage={DynamicDrawUsage}
+        />
+      </bufferGeometry>
+      {materialref.current && (
+        <primitive object={materialref.current} attach="material" />
+      )}
+    </instancedMesh>
+  )
 }
