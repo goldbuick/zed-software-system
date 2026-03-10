@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useInspector } from 'zss/gadget/data/state'
 import { resettiles, useTiles, writetile } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'

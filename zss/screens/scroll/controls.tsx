@@ -38,7 +38,6 @@ export function ScrollControls({
     <>
       <TilesRender label="controls" width={width} height={height} />
       <group
-        // eslint-disable-next-line react/no-unknown-property
         position={[
           2 * RUNTIME.DRAW_CHAR_WIDTH(),
           2 * RUNTIME.DRAW_CHAR_HEIGHT(),

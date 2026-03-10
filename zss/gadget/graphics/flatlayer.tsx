@@ -24,7 +24,6 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
       return null
     case LAYER_TYPE.TILES: {
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <Tiles
             width={layer.width}
@@ -38,7 +37,6 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
     }
     case LAYER_TYPE.SPRITES: {
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <SpriteMeshes sprites={layer.sprites} />
         </group>
@@ -46,7 +44,6 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
     }
     case LAYER_TYPE.DITHER: {
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
           <Dither
             width={layer.width}

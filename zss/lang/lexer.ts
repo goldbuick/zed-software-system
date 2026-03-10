@@ -206,15 +206,16 @@ export const hyperlinktext = createSimpleToken({
   start_chars_hint: [';'],
 })
 
+// u flag: match by Unicode code point so surrogate pairs (e.g. emoji) are one character
 export const stringliteral = createSimpleToken({
   name: 'stringliteral',
-  pattern: /[^-0-9"!:;@#/?()\s]+[^-"!:;@#/?()\s]*/,
+  pattern: /[^-0-9"!:;@#/?()\s]+[^-"!:;@#/?()\s]*/u,
   start_chars_hint: all_chars,
 })
 
 export const stringliteraldouble = createSimpleToken({
   name: 'stringliteraldouble',
-  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
+  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}|u\{[0-9a-fA-F]{1,6}\}))*"/u,
 })
 
 export const numberliteral = createSimpleToken({

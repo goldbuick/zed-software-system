@@ -272,8 +272,11 @@ export function TerminalInput({
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
-  const yoffset = context.y * context.width
-  applycodetokencolors(0, yoffset, edge.width, inputlinetokens, context)
+
+  if (!quickterminal) {
+    const yoffset = (context.y - 1) * context.width
+    applycodetokencolors(0, yoffset, edge.width, inputlinetokens, context)
+  }
 
   // draw selection
   if (
@@ -404,8 +407,9 @@ export function TerminalInput({
       )
       listener = speechlistener
       listener?.startListening()
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error: any) {
-      console.error(error.message)
+      // console.error(error.message)
     }
 
     // Cleanup function
@@ -601,7 +605,7 @@ export function TerminalInput({
                     break
                   case 'v':
                     if (inputstateactive && ispresent(withclipboard())) {
-                      withclipboard()
+                      void withclipboard()
                         ?.readText()
                         .then((text) => {
                           // did we paste json ??
@@ -621,8 +625,9 @@ export function TerminalInput({
                               )
                               return
                             }
-                          } catch (err) {
-                            console.error(err)
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                          } catch (err: any) {
+                            // console.error(err)
                           }
                           const cleantext = text.replaceAll('\r', '')
                           if (hasselection) {
@@ -635,7 +640,6 @@ export function TerminalInput({
                             )
                           }
                         })
-                        .catch((err) => console.error(err))
                     } else {
                       resettoend()
                     }

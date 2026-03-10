@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import React, { useMemo, useState } from 'react'
 import { Color } from 'three'
 import { RUNTIME } from 'zss/config'

@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useEffect, useMemo, useState } from 'react'
 import { Box2, MathUtils, Vector2 } from 'three'
 import {

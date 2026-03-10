@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { memo, useLayoutEffect, useRef, useState } from 'react'
@@ -126,7 +125,8 @@ export const FlatGraphics = memo(function FlatGraphics({
     inspectzoomref.current.scale.setScalar(viewscale)
   })
 
-  // re-render only when layer count changes
+  // re-render when board or layer counts change (board change must trigger re-render)
+  useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)

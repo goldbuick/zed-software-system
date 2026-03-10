@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
