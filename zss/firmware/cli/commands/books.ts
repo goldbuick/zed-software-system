@@ -274,9 +274,9 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
     })
     .command(
       'search',
-      [ARG_TYPE.ANY, 'codepage code for query'],
+      [ARG_TYPE.NAME, 'codepage code for query'],
       (_, words) => {
-        const [query] = readargs(words, 0, [ARG_TYPE.ANY])
+        const [query] = readargs(words, 0, [ARG_TYPE.NAME])
         if (!ispresent(query) || String(query).trim() === '') {
           apierror(
             SOFTWARE,
@@ -302,7 +302,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             const lines = code.split('\n')
             for (let ln = 0; ln < lines.length; ++ln) {
               const line = lines[ln]
-              if (line.indexOf(q) !== -1) {
+              if (line.includes(q)) {
                 const lineNum = ln + 1
                 const snippet = line.trim().slice(0, 60)
                 const label = `@${name}:${lineNum}: ${snippet}${snippet.length >= line.trim().length ? '' : '…'}`
@@ -325,11 +325,6 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         }
         return 0
       },
-    )
-    .command(
-      'grep',
-      [ARG_TYPE.ANY, 'codepage code for query (alias of search)'],
-      (chip, words) => chip.command('search', words),
     )
     .command('boards', ['all boards as goto hyperlinks'], () => {
       writesection(SOFTWARE, READ_CONTEXT.elementfocus, `boards`)

@@ -4,18 +4,12 @@ import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  useEditor,
-  useEditorSearch,
-  useGadgetClient,
-  useTape,
-} from 'zss/gadget/data/state'
+import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
-import { searchintext } from 'zss/mapping/string'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
@@ -31,7 +25,6 @@ import { ScrollMarquee } from '../scroll/marquee'
 import { EditorFrame } from './editorframe'
 import { EditorInput } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
-import { EditorSearchBar } from './editorsearchbar'
 
 export function EditorComponent() {
   const context = useWriteText()
@@ -41,8 +34,6 @@ export function EditorComponent() {
   const autocompleteindex = useTape((state) => state.autocompleteindex)
 
   const tapeeditor = useEditor()
-  const searchopen = useEditorSearch((s) => s.searchopen)
-  const searchquery = useEditorSearch((s) => s.searchquery)
   const codepage = useWaitForValueString(
     vmcodeaddress(editor.book, editor.path),
   )
@@ -56,12 +47,6 @@ export function EditorComponent() {
 
   // get current string value of code
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
-
-  const searchmatches = useMemo(
-    () =>
-      searchopen && searchquery ? searchintext(searchquery, strvalue) : [],
-    [searchopen, searchquery, strvalue],
-  )
 
   // tokenize, parse, and fold into rows (only re-run when text changes)
   const rows = useMemo(() => {
@@ -197,7 +182,6 @@ export function EditorComponent() {
     codepage,
     xoffset: -4 + tapeeditor.xscroll,
     yoffset: tapeeditor.yscroll,
-    searchopen,
   }
 
   const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
@@ -207,7 +191,6 @@ export function EditorComponent() {
     <>
       <TapeBackPlate bump />
       <EditorFrame />
-      {searchopen && <EditorSearchBar searchmatches={searchmatches} />}
       <ScrollMarquee
         margin={3}
         color={COLOR.BLUE}
@@ -228,8 +211,7 @@ $white$meta+x$green.CUT
 $white$meta+v$green.PASTE 
 $white$meta+z$green.UNDO 
 $white${metaundo}$green.REDO 
-$white$meta+p$green.RUN SELECTED CODE 
-$white$meta+f$green.FIND IN PAGE 
+$white$meta+p / $meta+r$green.RUN SELECTED CODE 
 $white$meta+h$green.OPEN HELPSCROLL $blue
     `}
       />
@@ -238,7 +220,6 @@ $white$meta+h$green.OPEN HELPSCROLL $blue
         {...props}
         autocomplete={autocomplete}
         autocompleteactive={autocompleteactive}
-        searchmatches={searchmatches}
       />
     </>
   )
