@@ -304,11 +304,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
               if (line.includes(q)) {
                 const lineNum = ln + 1
                 const snippet = line.trim().slice(0, 60)
-                const label = `@${name}:${lineNum}: ${snippet}${snippet.length >= line.trim().length ? '' : '…'}`
+                const label = `${name}:${lineNum} $26 ${snippet}${snippet.length >= line.trim().length ? '' : '...'}`
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  `!pageopen ${page.id}  ${ln};$blue[${type}] ${prefix}$white${label}`,
+                  `!pageopen ${page.id} ${ln};$blue[${type}] ${prefix}$white${label}`,
                 )
                 count++
               }
