@@ -272,6 +272,65 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       }
       return 0
     })
+    .command(
+      'search',
+      [ARG_TYPE.ANY, 'codepage code for query'],
+      (_, words) => {
+        const [query] = readargs(words, 0, [ARG_TYPE.ANY])
+        if (!ispresent(query) || String(query).trim() === '') {
+          apierror(
+            SOFTWARE,
+            'search',
+            'usage: #search <query>',
+            READ_CONTEXT.elementfocus,
+          )
+          return 0
+        }
+        const q = String(query).trim()
+        writesection(SOFTWARE, READ_CONTEXT.elementfocus, `search: ${q}`)
+        const booklist = memoryreadbooklist()
+        let count = 0
+        for (let i = 0; i < booklist.length; ++i) {
+          const book = booklist[i]
+          const sorted = memorylistcodepagessorted(book)
+          for (let p = 0; p < sorted.length; ++p) {
+            const page = sorted[p]
+            const code = page.code ?? ''
+            const name = memoryreadcodepagename(page)
+            const type = memoryreadcodepagetypeasstring(page)
+            const prefix = memorycodepagetoprefix(page)
+            const lines = code.split('\n')
+            for (let ln = 0; ln < lines.length; ++ln) {
+              const line = lines[ln]
+              if (line.indexOf(q) !== -1) {
+                const lineNum = ln + 1
+                const snippet = line.trim().slice(0, 60)
+                const label = `@${name}:${lineNum}: ${snippet}${snippet.length >= line.trim().length ? '' : '…'}`
+                write(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  `!pageopen ${page.id};$blue[${type}] ${prefix}$white${label}`,
+                )
+                count++
+              }
+            }
+          }
+        }
+        if (count === 0) {
+          writetext(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `$white no matches for "${q}"`,
+          )
+        }
+        return 0
+      },
+    )
+    .command(
+      'grep',
+      [ARG_TYPE.ANY, 'codepage code for query (alias of search)'],
+      (chip, words) => chip.command('search', words),
+    )
     .command('boards', ['all boards as goto hyperlinks'], () => {
       writesection(SOFTWARE, READ_CONTEXT.elementfocus, `boards`)
       const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)

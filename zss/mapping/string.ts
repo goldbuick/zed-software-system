@@ -1,3 +1,21 @@
+/**
+ * Returns all start offsets in text where query appears (case-sensitive).
+ */
+export function searchintext(query: string, text: string): number[] {
+  if (query.length === 0) {
+    return []
+  }
+  const out: number[] = []
+  let pos = 0
+  for (;;) {
+    const idx = text.indexOf(query, pos)
+    if (idx === -1) break
+    out.push(idx)
+    pos = idx + 1
+  }
+  return out
+}
+
 export function stringsplice(
   str: string,
   index: number,

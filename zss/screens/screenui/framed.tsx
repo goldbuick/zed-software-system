@@ -107,7 +107,7 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
                 vmclirepeatlast(SOFTWARE, player)
               }
               break
-            case 'a':
+            case 'f':
               if (mods.ctrl) {
                 vmfindany(SOFTWARE, player)
               }

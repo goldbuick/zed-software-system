@@ -11,7 +11,12 @@ import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
+import {
+  useEditor,
+  useEditorSearch,
+  useGadgetClient,
+  useTape,
+} from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -49,6 +54,7 @@ export type EditorInputProps = {
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
   autocompleteactive: boolean
+  searchmatches: number[]
 }
 
 export function EditorInput({
@@ -60,10 +66,18 @@ export function EditorInput({
   codepage,
   autocomplete,
   autocompleteactive,
+  searchmatches,
 }: EditorInputProps) {
   const context = useWriteText()
   const tapeeditor = useEditor()
   const zsswords = useGadgetClient((state) => state.zsswords)
+  const searchopen = useEditorSearch((s) => s.searchopen)
+  const searchquery = useEditorSearch((s) => s.searchquery)
+  const searchmatchindex = useEditorSearch((s) => s.searchmatchindex)
+  const searchopenui = useEditorSearch((s) => s.searchopenui)
+  const searchclose = useEditorSearch((s) => s.searchclose)
+  const searchsetquery = useEditorSearch((s) => s.searchsetquery)
+  const searchsetmatchindex = useEditorSearch((s) => s.searchsetmatchindex)
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const player = registerreadplayer()
   const blinkdelta = useRef<PT>(undefined)
@@ -304,6 +318,10 @@ export function EditorInput({
             useTape.setState({ autocompleteindex: -1 })
             return
           }
+          if (searchopen) {
+            searchclose()
+            return
+          }
           if (mods.shift || mods.alt || mods.ctrl) {
             registerterminalclose(SOFTWARE, player)
           } else {
@@ -325,6 +343,57 @@ export function EditorInput({
           const { key } = event
           const lkey = NAME(key)
           const mods = modsfromevent(event)
+
+          if (mods.ctrl && lkey === 'f') {
+            if (searchopen) {
+              searchclose()
+            } else {
+              searchopenui()
+            }
+            event.preventDefault()
+            return
+          }
+
+          if (searchopen) {
+            if (lkey === 'escape') {
+              searchclose()
+              event.preventDefault()
+              return
+            }
+            if (lkey === 'f3') {
+              if (searchmatches.length > 0) {
+                const nextindex = mods.shift
+                  ? (searchmatchindex - 1 + searchmatches.length) %
+                    searchmatches.length
+                  : (searchmatchindex + 1) % searchmatches.length
+                const pos = searchmatches[nextindex]
+                if (pos !== undefined) {
+                  useEditor.setState({ cursor: pos })
+                  searchsetmatchindex(nextindex)
+                  updatescrolling(pos)
+                }
+              }
+              event.preventDefault()
+              return
+            }
+            if (lkey === 'backspace') {
+              searchsetquery(searchquery.slice(0, -1))
+              event.preventDefault()
+              return
+            }
+            if (
+              event.key.length === 1 &&
+              !mods.ctrl &&
+              !mods.alt &&
+              !event.metaKey
+            ) {
+              searchsetquery(searchquery + event.key)
+              event.preventDefault()
+              return
+            }
+            event.preventDefault()
+            return
+          }
 
           switch (lkey) {
             case 'delete':

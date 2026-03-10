@@ -205,6 +205,32 @@ export const useEditor = create<{
   },
 }))
 
+export const useEditorSearch = create<{
+  searchopen: boolean
+  searchquery: string
+  searchmatchindex: number
+  searchopenui: () => void
+  searchclose: () => void
+  searchsetquery: (query: string) => void
+  searchsetmatchindex: (index: number) => void
+}>((set) => ({
+  searchopen: false,
+  searchquery: '',
+  searchmatchindex: 0,
+  searchopenui() {
+    set({ searchopen: true, searchmatchindex: 0 })
+  },
+  searchclose() {
+    set({ searchopen: false })
+  },
+  searchsetquery(query: string) {
+    set({ searchquery: query, searchmatchindex: 0 })
+  },
+  searchsetmatchindex(index: number) {
+    set({ searchmatchindex: index })
+  },
+}))
+
 export const useInspector = create<{
   pts: PT[]
   cursor: MAYBE<number>

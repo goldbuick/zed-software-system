@@ -33,6 +33,7 @@ export type EditorRowsProps = {
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<SharedTextHandle>
+  searchopen?: boolean
 }
 
 export function EditorRows({
@@ -41,6 +42,7 @@ export function EditorRows({
   yoffset,
   rows,
   codepage,
+  searchopen = false,
 }: EditorRowsProps) {
   const context = useWriteText()
   const tapeeditor = useEditor()
@@ -85,11 +87,12 @@ export function EditorRows({
     }
   }
 
-  // render lines
+  // render lines (when search bar open, start one row lower)
+  const contentstart = searchopen ? 3 : 2
   const baseleft = edge.left + 1 - 4
   context.active.leftedge = edge.left + 1
   context.x = context.active.leftedge - xoffset
-  context.y = context.active.topedge ?? 0 - yoffset + 2
+  context.y = edge.top - yoffset + contentstart
   for (let i = 0; i < withrows.length; ++i) {
     if (context.y <= edge.top + 1) {
       ++context.y
