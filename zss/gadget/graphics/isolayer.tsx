@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'

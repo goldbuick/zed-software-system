@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 /* eslint-disable react-refresh/only-export-components */
 import { useThree } from '@react-three/fiber'
 import { PropsWithChildren, createContext, useContext, useEffect } from 'react'

@@ -46,26 +46,26 @@ export function TapeComponent() {
 
   return (
     <>
-      {showterminal && (
-        <ShadeBoxDither
-          width={screensize.cols}
-          height={screensize.rows}
-          top={top}
-          left={0}
-          right={screensize.cols - 1}
-          bottom={top + height - 1}
-          alpha={quickterminal ? 0.666 : 0.333}
-        />
-      )}
       {showterminal ? (
-        <UserFocus blockhotkeys>
-          <TapeLayout
-            quickterminal={quickterminal}
-            top={top}
+        <group position={[screensize.marginx, screensize.marginy * 0.25, 0]}>
+          <ShadeBoxDither
             width={screensize.cols}
-            height={height}
+            height={screensize.rows}
+            top={top}
+            left={0}
+            right={screensize.cols - 1}
+            bottom={top + height - 1}
+            alpha={quickterminal ? 0.666 : 0.333}
           />
-        </UserFocus>
+          <UserFocus blockhotkeys>
+            <TapeLayout
+              quickterminal={quickterminal}
+              top={top}
+              width={screensize.cols}
+              height={height}
+            />
+          </UserFocus>
+        </group>
       ) : (
         <>
           <UserHotkey hotkey="Shift+?" althotkey="/">

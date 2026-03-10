@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTape, useTerminal } from 'zss/gadget/data/state'
 import { useScreenSize } from 'zss/gadget/userscreen'
-import { WriteTextContext, useWriteText } from 'zss/gadget/writetext'
+import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { measurerow } from 'zss/screens/tape/measure'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -79,15 +79,13 @@ export function TerminalRows() {
 
   return (
     <>
-      <WriteTextContext.Provider value={context}>
-        {visiblelogs.map(([index, text, y, active]) =>
-          active ? (
-            <TapeTerminalActiveItem key={index} active text={text} y={y} />
-          ) : (
-            <TerminalItem key={index} text={text} y={y} />
-          ),
-        )}
-      </WriteTextContext.Provider>
+      {visiblelogs.map(([index, text, y, active]) =>
+        active ? (
+          <TapeTerminalActiveItem key={index} active text={text} y={y} />
+        ) : (
+          <TerminalItem key={index} text={text} y={y} />
+        ),
+      )}
     </>
   )
 }

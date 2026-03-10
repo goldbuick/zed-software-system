@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
 import { Rect } from 'zss/gadget/rect'

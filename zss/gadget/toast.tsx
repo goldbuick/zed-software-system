@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useTiles } from 'zss/gadget/tiles'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import {

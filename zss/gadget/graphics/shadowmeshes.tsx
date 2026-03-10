@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import {
   DynamicDrawUsage,

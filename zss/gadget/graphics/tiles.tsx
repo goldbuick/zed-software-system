@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useEffect, useMemo, useState } from 'react'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
@@ -14,6 +13,8 @@ import {
 } from 'zss/gadget/display/tiles'
 import { useMedia } from 'zss/gadget/media'
 
+import { UnicodeOverlay } from './unicodeoverlay'
+
 const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
@@ -25,7 +26,6 @@ type TilesProps = {
   color: number[]
   bg: number[]
   fliptexture?: boolean
-  alwaysdefaults?: boolean
 }
 
 export function Tiles({
@@ -36,14 +36,13 @@ export function Tiles({
   color,
   bg,
   fliptexture = true,
-  alwaysdefaults = false,
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
   const mediaaltcharset = useMedia((state) => state.altcharsetdata)
-  const palette = alwaysdefaults ? defaultpalette : mediapalette
-  const charset = alwaysdefaults ? defaultcharset : mediacharset
-  const altcharset = alwaysdefaults ? defaultcharset : mediaaltcharset
+  const palette = mediapalette ?? defaultpalette
+  const charset = mediacharset ?? defaultcharset
+  const altcharset = mediaaltcharset ?? defaultcharset
 
   const [material] = useState(() => createTilemapMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
@@ -105,12 +104,21 @@ export function Tiles({
   )
 
   return (
-    <mesh>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[position, 3]} />
-        <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
-      </bufferGeometry>
-      <primitive object={material} attach="material" />
-    </mesh>
+    <>
+      <mesh>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[position, 3]} />
+          <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
+        </bufferGeometry>
+        <primitive object={material} attach="material" />
+      </mesh>
+      <UnicodeOverlay
+        width={width}
+        height={height}
+        char={char}
+        color={color}
+        bg={bg}
+      />
+    </>
   )
 }

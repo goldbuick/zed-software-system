@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'

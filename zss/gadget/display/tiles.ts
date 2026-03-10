@@ -56,12 +56,14 @@ export function updateTilemapDataTexture(
   tbg: TILE_COLORS,
 ) {
   const size = width * height * 4
+  const UNICODE_SENTINEL = 255
   for (let i = 0, t = 0; i < size; ++t) {
     const char = tchar[t] ?? 0
-    // x, y, color, bg
-    texture.image.data[i++] = char % CHARS_PER_ROW
-    texture.image.data[i++] = Math.floor(char / CHARS_PER_ROW)
-    texture.image.data[i++] = tcolor[t] ?? 16
+    const isunicode = char > 255
+    // x, y, color, bg (sentinel color 255 = unicode cell, bg only)
+    texture.image.data[i++] = isunicode ? 0 : char % CHARS_PER_ROW
+    texture.image.data[i++] = isunicode ? 0 : Math.floor(char / CHARS_PER_ROW)
+    texture.image.data[i++] = isunicode ? UNICODE_SENTINEL : (tcolor[t] ?? 16)
     texture.image.data[i++] = tbg[t] ?? 16
   }
   texture.needsUpdate = true
@@ -292,6 +294,11 @@ const tilemapMaterial = new ShaderMaterial({
       uvec4 tiledata = texture(data, vUv);
       int colori = int(tiledata.z);
       int bgi = int(tiledata.w);
+      if (colori == 255) {
+        gl_FragColor.rgb = palette[bgi];
+        gl_FragColor.a = 1.0;
+        return;
+      }
 
       vec2 charPosition = mod(vUv, size) / size;
       vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);

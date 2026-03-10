@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useLoader } from '@react-three/fiber'
 import { Suspense, useEffect } from 'react'
 import { TextureLoader } from 'three'

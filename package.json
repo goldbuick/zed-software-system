@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.91.5",
+  "version": "0.91.11",
   "type": "module",
   "files": [
     "dist",
@@ -105,6 +105,7 @@
     "ts-extras": "^0.13.0",
     "ts-jest": "^29.1.3",
     "ts-node": "^10.9.2",
+    "@mapbox/tiny-sdf": "^2.0.7",
     "tsx": "^4.19.0",
     "typescript": "^5.2.2",
     "uint8-util": "^2.2.5",
