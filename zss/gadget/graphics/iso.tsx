@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp3 } from 'maath/easing'

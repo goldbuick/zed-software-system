@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useEffect } from 'react'
 import {
   registerterminalopen,

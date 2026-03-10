@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { ReactNode, useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
 import { useTiles } from 'zss/gadget/tiles'

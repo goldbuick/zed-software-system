@@ -46,7 +46,7 @@ function writestring(value: string): string {
 function writetemplatestring(value: string): string {
   const result = tokenize(value)
   if (result.errors.length) {
-    return value
+    return writestring(value)
   }
 
   const template = result.tokens.map((token) => {

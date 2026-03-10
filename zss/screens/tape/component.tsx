@@ -47,10 +47,7 @@ export function TapeComponent() {
   return (
     <>
       {showterminal ? (
-        <group
-          position-x={screensize.marginx}
-          position-y={screensize.marginy * 0.25}
-        >
+        <group position={[screensize.marginx, screensize.marginy * 0.25, 0]}>
           <ShadeBoxDither
             width={screensize.cols}
             height={screensize.rows}

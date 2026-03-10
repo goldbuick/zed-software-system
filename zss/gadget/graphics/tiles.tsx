@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useEffect, useMemo, useState } from 'react'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
@@ -13,6 +12,8 @@ import {
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
 import { useMedia } from 'zss/gadget/media'
+
+import { UnicodeOverlay } from './unicodeoverlay'
 
 const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
@@ -105,12 +106,22 @@ export function Tiles({
   )
 
   return (
-    <mesh>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[position, 3]} />
-        <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
-      </bufferGeometry>
-      <primitive object={material} attach="material" />
-    </mesh>
+    <>
+      <mesh>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[position, 3]} />
+          <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
+        </bufferGeometry>
+        <primitive object={material} attach="material" />
+      </mesh>
+      <UnicodeOverlay
+        width={width}
+        height={height}
+        char={char}
+        color={color}
+        bg={bg}
+        alwaysdefaults={alwaysdefaults}
+      />
+    </>
   )
 }

@@ -407,8 +407,9 @@ export function TerminalInput({
       )
       listener = speechlistener
       listener?.startListening()
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error: any) {
-      console.error(error.message)
+      // console.error(error.message)
     }
 
     // Cleanup function
@@ -604,7 +605,7 @@ export function TerminalInput({
                     break
                   case 'v':
                     if (inputstateactive && ispresent(withclipboard())) {
-                      withclipboard()
+                      void withclipboard()
                         ?.readText()
                         .then((text) => {
                           // did we paste json ??
@@ -624,8 +625,9 @@ export function TerminalInput({
                               )
                               return
                             }
-                          } catch (err) {
-                            console.error(err)
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                          } catch (err: any) {
+                            // console.error(err)
                           }
                           const cleantext = text.replaceAll('\r', '')
                           if (hasselection) {
@@ -638,7 +640,6 @@ export function TerminalInput({
                             )
                           }
                         })
-                        .catch((err) => console.error(err))
                     } else {
                       resettoend()
                     }

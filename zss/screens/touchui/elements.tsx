@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { degToRad, radToDeg } from 'maath/misc'
 import { Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'

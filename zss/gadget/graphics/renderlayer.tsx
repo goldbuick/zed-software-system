@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import { useFBO } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { Bloom, Glitch, Noise } from '@react-three/postprocessing'
