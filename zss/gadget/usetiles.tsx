@@ -28,16 +28,14 @@ export function TilesRender({ label, width, height }: TilesRenderProps) {
   return (
     width > 0 &&
     height > 0 && (
-      <>
-        <Tiles
-          label={label}
-          char={char.slice()}
-          color={color.slice()}
-          bg={bg.slice()}
-          width={width}
-          height={height}
-        />
-      </>
+      <Tiles
+        label={label}
+        char={char.slice()}
+        color={color.slice()}
+        bg={bg.slice()}
+        width={width}
+        height={height}
+      />
     )
   )
 }
