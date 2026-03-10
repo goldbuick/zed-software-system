@@ -491,8 +491,15 @@ export function registereditoropen(
   path: MAYBE<string>[],
   type: string,
   title: string,
+  scrollto?: number,
 ) {
-  device.emit(player, 'register:editor:open', [book, path, type, title])
+  device.emit(player, 'register:editor:open', [
+    book,
+    path,
+    type,
+    title,
+    scrollto ?? 0,
+  ])
 }
 
 export function registereditorclose(device: DEVICELIKE, player: string) {

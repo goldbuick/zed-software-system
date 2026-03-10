@@ -112,11 +112,17 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
     )
     .command(
       'pageopen',
-      [ARG_TYPE.NAME, ARG_TYPE.MAYBE_NAME, 'a code page editor'],
+      [
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_NAME,
+        ARG_TYPE.MAYBE_NUMBER,
+        'a code page editor',
+      ],
       (_, words) => {
-        const [page, maybeobject] = readargs(words, 0, [
+        const [page, maybeobject, scrollto] = readargs(words, 0, [
           ARG_TYPE.NAME,
           ARG_TYPE.MAYBE_NAME,
+          ARG_TYPE.MAYBE_NUMBER,
         ])
         let codepage: MAYBE<CODE_PAGE> = undefined
         let codepagebook: MAYBE<BOOK> = undefined
@@ -137,6 +143,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           )
           const type = memoryreadcodepagetypeasstring(codepage)
           const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
+          const scrollline = typeof scrollto === 'number' ? scrollto : 0
           registereditoropen(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
@@ -144,6 +151,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             path,
             type,
             title,
+            scrollline,
           )
         } else {
           apierror(
@@ -309,7 +317,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  `!pageopen ${page.id};$blue[${type}] ${prefix}$white${label}`,
+                  `!pageopen ${page.id}  ${ln};$blue[${type}] ${prefix}$white${label}`,
                 )
                 count++
               }

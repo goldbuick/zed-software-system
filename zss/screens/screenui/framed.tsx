@@ -9,7 +9,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape } from 'zss/gadget/data/state'
 import {
   INPUT,
   INPUT_ALT,
@@ -53,6 +53,7 @@ type ScreenUIFramedProps = {
 
 export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const player = registerreadplayer()
+  const inspector = useTape((state) => state.inspector)
 
   // re-render only when layer count, board render id, or graphics changes
   useGadgetClient(
@@ -108,7 +109,7 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
               }
               break
             case 'f':
-              if (mods.ctrl) {
+              if (mods.ctrl && inspector) {
                 vmfindany(SOFTWARE, player)
               }
               break

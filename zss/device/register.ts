@@ -23,6 +23,7 @@ import { capturecurrentboardtopng } from 'zss/gadget/capture'
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
+  useEditor,
   useGadgetClient,
   useInspector,
   useTape,
@@ -657,7 +658,9 @@ export const register = createdevice(
         break
       case 'editor:open':
         if (isarray(message.data)) {
-          const [book, path, type, title] = message.data
+          const [book, path, type, title, scrollto] = message.data
+          const yscroll = Math.max(0, scrollto ?? 0)
+          useEditor.setState({ yscroll })
           useTape.setState(() => ({
             editor: {
               open: true,
