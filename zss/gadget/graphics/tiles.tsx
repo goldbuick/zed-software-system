@@ -112,15 +112,13 @@ export function Tiles({
         </bufferGeometry>
         <primitive object={material} attach="material" />
       </mesh>
-      <group position-z={1}>
-        <UnicodeOverlay
-          width={width}
-          height={height}
-          char={char}
-          color={color}
-          bg={bg}
-        />
-      </group>
+      <UnicodeOverlay
+        width={width}
+        height={height}
+        char={char}
+        color={color}
+        bg={bg}
+      />
     </>
   )
 }
