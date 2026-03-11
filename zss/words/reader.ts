@@ -320,12 +320,12 @@ export function readargs<T extends ARG_TYPES>(
   return [...values, ii] as [...ARG_TYPE_VALUES<T>, number]
 }
 
-export function readargsuntilend(
+export function readargsuntilend<T extends ARG_TYPE>(
   words: WORD[],
   index: number,
-  argtype: ARG_TYPE,
-): [WORD[], number] {
-  const values: WORD[] = []
+  argtype: T,
+): [ARG_TYPE_MAP[T][], number] {
+  const values: ARG_TYPE_MAP[T][] = []
   let cursor = index
   while (cursor < words.length) {
     const [value, ii] = readargs(words, cursor, [argtype])
