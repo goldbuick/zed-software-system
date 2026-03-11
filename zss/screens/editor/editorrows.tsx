@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -44,7 +44,6 @@ export function EditorRows({
 }: EditorRowsProps) {
   const context = useWriteText()
   const tapeeditor = useEditor()
-  // const editortype = useTape((state) => state.editor.type)
   const { quickterminal } = useTape()
 
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
@@ -54,6 +53,17 @@ export function EditorRows({
     }
     return []
   }, [rows])
+
+  useEffect(() => {
+    const mayberow = withrows[tapeeditor.startline]
+    if (ispresent(mayberow)) {
+      useEditor.setState({
+        yscroll: Math.max(0, tapeeditor.startline - 4),
+        cursor: mayberow.start,
+        startline: -1,
+      })
+    }
+  }, [withrows, tapeeditor.startline, tapeeditor.cursor])
 
   if (!ispresent(codepage)) {
     const fibble = '*'.repeat(3)
@@ -89,7 +99,7 @@ export function EditorRows({
   const baseleft = edge.left + 1 - 4
   context.active.leftedge = edge.left + 1
   context.x = context.active.leftedge - xoffset
-  context.y = context.active.topedge ?? 0 - yoffset + 2
+  context.y = edge.top - yoffset + 2
   for (let i = 0; i < withrows.length; ++i) {
     if (context.y <= edge.top + 1) {
       ++context.y

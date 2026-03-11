@@ -6,9 +6,9 @@ import { maptostring } from 'zss/mapping/value'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
-import { READ_CONTEXT } from 'zss/words/reader'
+import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { COLOR } from 'zss/words/types'
+import { ARG_TYPE, COLOR } from 'zss/words/types'
 
 export function registersendcommands(fw: FIRMWARE): FIRMWARE {
   return fw
@@ -38,15 +38,13 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('stat', ['text in a scroll window'], (_, words) => {
-      vmmakeitscroll(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        words.map(maptostring).join(' '),
-      )
+      const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
+      vmmakeitscroll(SOFTWARE, READ_CONTEXT.elementfocus, textwords.join(' '))
       return 0
     })
     .command('text', ['text on element or in sidebar'], (_, words) => {
-      const ticker = words.map(maptostring).join(' ')
+      const [tickerwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
+      const ticker = tickerwords.join(' ')
       if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
         READ_CONTEXT.element.tickertext = ticker
         READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp

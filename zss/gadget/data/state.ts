@@ -181,12 +181,15 @@ export const useTerminal = create<{
 }))
 
 export const useEditor = create<{
+  startline: number
   xscroll: number
   yscroll: number
   cursor: number
   select: MAYBE<number>
   reset: () => void
 }>((set) => ({
+  // starting line
+  startline: 0,
   // scrolling offset
   xscroll: 0,
   yscroll: 0,
@@ -195,6 +198,8 @@ export const useEditor = create<{
   select: undefined,
   reset() {
     set({
+      // starting line
+      startline: 0,
       // scrolling offset
       xscroll: 0,
       yscroll: 0,
@@ -202,6 +207,32 @@ export const useEditor = create<{
       cursor: 0,
       select: undefined,
     })
+  },
+}))
+
+export const useEditorSearch = create<{
+  searchopen: boolean
+  searchquery: string
+  searchmatchindex: number
+  searchopenui: () => void
+  searchclose: () => void
+  searchsetquery: (query: string) => void
+  searchsetmatchindex: (index: number) => void
+}>((set) => ({
+  searchopen: false,
+  searchquery: '',
+  searchmatchindex: 0,
+  searchopenui() {
+    set({ searchopen: true, searchmatchindex: 0 })
+  },
+  searchclose() {
+    set({ searchopen: false })
+  },
+  searchsetquery(query: string) {
+    set({ searchquery: query, searchmatchindex: 0 })
+  },
+  searchsetmatchindex(index: number) {
+    set({ searchmatchindex: index })
   },
 }))
 

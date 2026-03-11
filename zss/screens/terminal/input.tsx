@@ -585,6 +585,11 @@ export function TerminalInput({
                   case 'p':
                     vmclirepeatlast(SOFTWARE, player)
                     break
+                  case 'f':
+                    if (!inputstate.startsWith('#search')) {
+                      inputstatereplace(`#search ${inputstate}`)
+                    }
+                    break
                   case 'a':
                     useTerminal.setState({
                       // start

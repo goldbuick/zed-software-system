@@ -85,6 +85,8 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
 
   // coder
   pageopen: 'coder', // open an existing codepage
+  search: 'coder', // search codepage code
+  grep: 'coder', // search codepage code (alias)
   stat: 'coder', // create a new codepage
 
   // discovery

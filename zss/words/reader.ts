@@ -1,4 +1,4 @@
-import { MAYBE, isnumber, isstring } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryevaldir } from 'zss/memory/boardoperations'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
@@ -41,12 +41,14 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.NAME]: string
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
+  [ARG_TYPE.NUMBER_OR_NAME]: number | string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
   [ARG_TYPE.COLOR_OR_KIND]: STR_COLOR | STR_KIND
   [ARG_TYPE.MAYBE_KIND]: MAYBE<STR_KIND>
   [ARG_TYPE.MAYBE_NAME]: MAYBE<string>
   [ARG_TYPE.MAYBE_NUMBER]: MAYBE<number>
   [ARG_TYPE.MAYBE_STRING]: MAYBE<string>
+  [ARG_TYPE.MAYBE_NUMBER_OR_NAME]: MAYBE<number | string>
   [ARG_TYPE.MAYBE_NUMBER_OR_STRING]: MAYBE<number | string>
   [ARG_TYPE.ANY]: any
 }
@@ -90,7 +92,7 @@ export function readargs<T extends ARG_TYPES>(
   const tmp = READ_CONTEXT.words
   READ_CONTEXT.words = words
 
-  const values = []
+  const values: any[] = []
 
   let ii = index
   for (let i = 0; i < args.length; ++i) {
@@ -174,6 +176,15 @@ export function readargs<T extends ARG_TYPES>(
           didexpect('number', value, words)
         }
         ii = iii
+        break
+      }
+      case ARG_TYPE.NUMBER_OR_NAME: {
+        const value = READ_CONTEXT.words[ii]
+        if (!isnumber(value) && !isstring(value)) {
+          didexpect('string', value, words)
+        }
+        ++ii
+        values.push(value)
         break
       }
       case ARG_TYPE.STRING: {
@@ -270,6 +281,15 @@ export function readargs<T extends ARG_TYPES>(
         values.push(value)
         break
       }
+      case ARG_TYPE.MAYBE_NUMBER_OR_NAME: {
+        const value = READ_CONTEXT.words[ii]
+        if (ispresent(value) && !isnumber(value) && !isstring(value)) {
+          didexpect('optional number or string', value, words)
+        }
+        ++ii
+        values.push(value)
+        break
+      }
       case ARG_TYPE.MAYBE_NUMBER_OR_STRING: {
         const [value, iii] = readexpr(ii)
         let maybevalue = value
@@ -297,6 +317,24 @@ export function readargs<T extends ARG_TYPES>(
 
   READ_CONTEXT.words = tmp
 
-  // @ts-expect-error any[] doesn't work
-  return [...values, ii]
+  return [...values, ii] as [...ARG_TYPE_VALUES<T>, number]
+}
+
+export function readargsuntilend(
+  words: WORD[],
+  index: number,
+  argtype: ARG_TYPE,
+): [WORD[], number] {
+  const values: WORD[] = []
+  let cursor = index
+  while (cursor < words.length) {
+    const [value, ii] = readargs(words, cursor, [argtype])
+    if (value === '|') {
+      cursor = ii
+      break
+    }
+    values.push(value)
+    cursor = ii
+  }
+  return [values, cursor]
 }

@@ -8,10 +8,12 @@
 import fs from 'fs'
 import path from 'path'
 
-import { Box, Text, render, useStdin } from 'ink'
+import { Box, Text, render, useInput, useStdin } from 'ink'
 import TextInput from 'ink-text-input'
 import { chromium } from 'playwright'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+
+const MAX_HISTORY = 100
 
 import { formatlogforterminal } from './formatlog.js'
 import {
@@ -86,6 +88,8 @@ function CliApp({
   const { isRawModeSupported } = useStdin()
   const [logLines, setLogLines] = useState<string[]>(() => [...logs])
   const [value, setValue] = useState('')
+  const [history, setHistory] = useState<string[]>([])
+  const [, setHistoryIndex] = useState(-1)
 
   useEffect(() => {
     const tick = () => setLogLines([...logs])
@@ -94,6 +98,52 @@ function CliApp({
       logListeners.delete(tick)
     }
   }, [])
+
+  const commitline = useCallback(
+    (line: string) => {
+      if (line == null || line === undefined) {
+        return
+      }
+      const trimmed = line.trim()
+      if (trimmed !== '') {
+        setHistory((prev) => {
+          const next =
+            prev[prev.length - 1] === trimmed ? prev : [...prev, trimmed]
+          return next.slice(-MAX_HISTORY)
+        })
+      }
+      setHistoryIndex(-1)
+      onInput(line)
+      setValue('')
+    },
+    [onInput],
+  )
+
+  useInput((_input, key) => {
+    if (!isRawModeSupported || history.length === 0) {
+      return
+    }
+    if (key.upArrow) {
+      setHistoryIndex((prev) => {
+        const idx = prev < 0 ? history.length - 1 : Math.max(0, prev - 1)
+        setValue(history[idx])
+        return idx
+      })
+    } else if (key.downArrow) {
+      setHistoryIndex((prev) => {
+        if (prev < 0) {
+          return -1
+        }
+        const next = prev + 1
+        if (next >= history.length) {
+          setValue('')
+          return -1
+        }
+        setValue(history[next])
+        return next
+      })
+    }
+  })
 
   return (
     <Box flexDirection="column" gap={0} padding={0}>
@@ -107,13 +157,11 @@ function CliApp({
         {isRawModeSupported ? (
           <TextInput
             value={value}
-            onChange={setValue}
-            onSubmit={(v) => {
-              if (v != null && v !== undefined) {
-                onInput(v)
-                setValue('')
-              }
+            onChange={(v) => {
+              setHistoryIndex(-1)
+              setValue(v)
             }}
+            onSubmit={commitline}
             showCursor
           />
         ) : (

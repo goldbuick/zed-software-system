@@ -12,8 +12,9 @@ import {
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
-import { READ_CONTEXT } from 'zss/words/reader'
+import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
+import { ARG_TYPE } from 'zss/words/types'
 
 export const RUNTIME_FIRMWARE = createfirmware({
   set(chip, name, value) {
@@ -82,7 +83,8 @@ export const RUNTIME_FIRMWARE = createfirmware({
     return 0
   })
   .command('text', ['text on element or in sidebar'], (_, words) => {
-    const text = words.map(maptostring).join('')
+    const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
+    const text = textwords.join(' ')
     gadgettext(READ_CONTEXT.elementid, text)
     return 0
   })
