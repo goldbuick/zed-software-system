@@ -211,7 +211,7 @@ $white$meta+x$green.CUT
 $white$meta+v$green.PASTE 
 $white$meta+z$green.UNDO 
 $white${metaundo}$green.REDO 
-$white$meta+p / $meta+r$green.RUN SELECTED CODE 
+$white$meta+p$green.RUN SELECTED CODE 
 $white$meta+h$green.OPEN HELPSCROLL $blue
     `}
       />
