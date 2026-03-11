@@ -13,7 +13,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
-import { UserInput, modsfromevent } from 'zss/gadget/userinput'
+import { UserInput, modsfromevent, touchtextfocus } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
@@ -220,7 +220,7 @@ export function EditorInput({
         width={edge.width}
         height={edge.height}
         onClick={() => {
-          document.getElementById('touchtext')?.focus()
+          touchtextfocus()
         }}
         onScroll={(ydelta: number) => moveycursor(ydelta * 0.75)}
       />
