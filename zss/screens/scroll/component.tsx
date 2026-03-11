@@ -22,6 +22,7 @@ import { COLOR } from 'zss/words/types'
 
 import { ScrollBackPlate } from './backplate'
 import { ScrollControls } from './controls'
+import { ScrollCursor } from './cursor'
 import { ScrollMarquee } from './marquee'
 
 type ScrollComponentProps = {
@@ -153,20 +154,6 @@ export function ScrollComponent({
         <TilesData store={tilesstore}>
           <WriteTextContext.Provider value={context}>
             <ScrollBackPlate name={scrollname} width={width} height={height} />
-            <ScrollMarquee
-              margin={3}
-              color={COLOR.BLUE}
-              y={0}
-              leftedge={0}
-              rightedge={width}
-              line={`
-keys: $whiteup/down$green.SCROLL UP/DOWN 
-$whiteesc/cancel$green.CLOSE SCROLL 
-$whiteenter$green.ACTION ON SELECTED LINE 
-$whitealt+up/down$green.JUMP 10 LINES 
-$white$meta+up/down$green.JUMP TOP/BOTTOM $blue
-`}
-            />
             <ScrollControls
               row={row}
               width={width}
@@ -174,6 +161,21 @@ $white$meta+up/down$green.JUMP TOP/BOTTOM $blue
               panelwidth={panelwidth}
               panelheight={panelheight}
             >
+              <ScrollMarquee
+                margin={3}
+                color={COLOR.BLUE}
+                y={0}
+                leftedge={0}
+                rightedge={width}
+                line={`
+keys: $whiteup/down$green.SCROLL UP/DOWN 
+$whiteesc/cancel$green.CLOSE SCROLL 
+$whiteenter$green.ACTION ON SELECTED LINE 
+$whitealt+up/down$green.JUMP 10 LINES 
+$white$meta+up/down$green.JUMP TOP/BOTTOM $blue
+`}
+              />
+              <ScrollCursor row={row} />
               <PanelComponent
                 width={panelwidth}
                 height={panelheight}

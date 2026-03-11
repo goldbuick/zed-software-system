@@ -41,7 +41,7 @@ export function ScrollMarquee({
   useFrame((_, delta) => {
     acc.current += delta
     if (acc.current >= SCROLL_SPEED) {
-      acc.current -= SCROLL_SPEED
+      acc.current %= SCROLL_SPEED
       setoffset((state) => (state - 1) % contentmax)
     }
   })

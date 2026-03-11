@@ -9,22 +9,7 @@ import { COLOR } from 'zss/words/types'
 import { ShadeBoxDither } from './graphics/dither'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'
-
-type TapeActiveToastProps = {
-  context: WRITE_TEXT_CONTEXT
-}
-
-function TapeActiveToast({ context }: TapeActiveToastProps) {
-  return (
-    <group position={[0, 0, 999]}>
-      <TilesRender
-        label="toast"
-        width={context.width}
-        height={context.height}
-      />
-    </group>
-  )
-}
+import { WriteTextContext } from './writetext'
 
 type TapeToastProps = {
   toast: string
@@ -58,15 +43,7 @@ export function TapeToast({ toast }: TapeToastProps) {
     <TilesData store={store}>
       {toast && (
         <>
-          <ScrollMarquee
-            margin={1}
-            color={COLOR.YELLOW}
-            y={0}
-            leftedge={0}
-            rightedge={rightedge}
-            line={`${toast}$32$19$32`}
-          />
-          <group position={[0, 0, 998]}>
+          <group position={[0, 0, 999]}>
             <ShadeBoxDither
               alpha={0.4}
               width={screensize.cols}
@@ -76,8 +53,18 @@ export function TapeToast({ toast }: TapeToastProps) {
               right={rightedge}
               bottom={0}
             />
+            <TilesRender label="toast" width={screensize.cols} height={1} />
           </group>
-          <TapeActiveToast context={context} />
+          <WriteTextContext.Provider value={context}>
+            <ScrollMarquee
+              margin={1}
+              color={COLOR.YELLOW}
+              y={0}
+              leftedge={0}
+              rightedge={rightedge}
+              line={`${toast}$32$19$32`}
+            />
+          </WriteTextContext.Provider>
         </>
       )}
     </TilesData>
