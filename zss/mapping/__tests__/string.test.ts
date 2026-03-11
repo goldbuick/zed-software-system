@@ -1,6 +1,31 @@
-import { parsetarget, stringsplice, totarget } from 'zss/mapping/string'
+import {
+  parsetarget,
+  searchintext,
+  stringsplice,
+  totarget,
+} from 'zss/mapping/string'
 
 describe('string', () => {
+  describe('searchintext', () => {
+    it('returns correct offsets for exact match', () => {
+      expect(searchintext('ab', 'abxab')).toEqual([0, 3])
+    })
+
+    it('returns at least one offset for fuzzy match with typo', () => {
+      const offsets = searchintext('helo', 'hello world')
+      expect(offsets.length).toBeGreaterThanOrEqual(1)
+      expect(offsets.some((i) => i === 0)).toBe(true)
+    })
+
+    it('returns empty array for empty query', () => {
+      expect(searchintext('', 'hello')).toEqual([])
+    })
+
+    it('returns empty array when no match', () => {
+      expect(searchintext('xyz', 'hello world')).toEqual([])
+    })
+  })
+
   describe('stringsplice', () => {
     it('should remove characters at index', () => {
       expect(stringsplice('hello', 1, 2)).toBe('hlo')

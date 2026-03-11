@@ -1,19 +1,38 @@
+import Fuse from 'fuse.js'
+
+const SEARCHINTEXT_KEY = 't'
+
 /**
- * Returns all start offsets in text where query appears (case-sensitive).
+ * Returns all start offsets in text where query fuzzily matches (case-insensitive by default).
  */
 export function searchintext(query: string, text: string): number[] {
   if (query.length === 0) {
     return []
   }
-  const out: number[] = []
-  let pos = 0
-  for (;;) {
-    const idx = text.indexOf(query, pos)
-    if (idx === -1) break
-    out.push(idx)
-    pos = idx + 1
+  const fuse = new Fuse([{ [SEARCHINTEXT_KEY]: text }], {
+    keys: [SEARCHINTEXT_KEY],
+    includeMatches: true,
+    ignoreLocation: true,
+    threshold: 0.6,
+  })
+  const results = fuse.search(query)
+  const starts = new Set<number>()
+  for (const result of results) {
+    const matches = result.matches
+    if (!matches) {
+      continue
+    }
+    for (const match of matches) {
+      const indices = match.indices
+      if (!indices) {
+        continue
+      }
+      for (const [start] of indices) {
+        starts.add(start)
+      }
+    }
   }
-  return out
+  return [...starts].sort((a, b) => a - b)
 }
 
 export function stringsplice(
