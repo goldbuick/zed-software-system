@@ -194,6 +194,10 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
 
 const TOUCHTEXT_ID = 'touchtext'
 
+export function touchtextfocus() {
+  document.getElementById(TOUCHTEXT_ID)?.focus()
+}
+
 function handlekeydown(event: KeyboardEvent) {
   const key = NAME(event.key)
   const mods = modsfromevent(event)
@@ -390,6 +394,10 @@ function bindtouchtextkeyboard() {
   touchtext.addEventListener(
     'keydown',
     (event) => {
+      const target = event.target as HTMLElement | null
+      if (target?.id !== TOUCHTEXT_ID) {
+        return
+      }
       event.preventDefault()
       event.stopPropagation()
       handlekeydown(event)
@@ -399,6 +407,10 @@ function bindtouchtextkeyboard() {
   touchtext.addEventListener(
     'keyup',
     (event) => {
+      const target = event.target as HTMLElement | null
+      if (target?.id !== TOUCHTEXT_ID) {
+        return
+      }
       event.preventDefault()
       event.stopPropagation()
       handlekeyup(event)

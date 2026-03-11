@@ -14,7 +14,7 @@ import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
 import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
-import { UserInput, modsfromevent } from 'zss/gadget/userinput'
+import { UserInput, modsfromevent, touchtextfocus } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
@@ -436,7 +436,7 @@ export function TerminalInput({
         width={edge.width}
         height={edge.height}
         onClick={() => {
-          document.getElementById('touchtext')?.focus()
+          touchtextfocus()
         }}
         onScroll={(deltay: number) => {
           trackselection(false)
