@@ -19,6 +19,7 @@ import { FIRMWARE } from 'zss/firmware'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryclearbookcodepage,
@@ -28,12 +29,16 @@ import {
 } from 'zss/memory/bookoperations'
 import { memoryensuresoftwarebook } from 'zss/memory/books'
 import {
+  memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
 import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
-import { memorycodepagetoprefix } from 'zss/memory/rendering'
+import {
+  memorycodepagetoprefix,
+  memoryelementtodisplayprefix,
+} from 'zss/memory/rendering'
 import {
   memoryclearbook,
   memoryreadbookbyaddress,
@@ -42,6 +47,7 @@ import {
   memorywritesoftwarebook,
 } from 'zss/memory/session'
 import {
+  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
@@ -141,13 +147,31 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         if (ispresent(codepage) && ispresent(codepagebook)) {
           const name = memoryreadcodepagename(codepage)
           const path = [codepage.id, maybeobject]
-          modemwriteinitstring(
-            vmcodeaddress(codepagebook.id, path),
-            codepage.code,
-          )
-          const type = memoryreadcodepagetypeasstring(codepage)
-          const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
+
+          let type = memoryreadcodepagetypeasstring(codepage)
+
+          // read the element if it's an object
+          let element: MAYBE<BOARD_ELEMENT> = undefined
+          if (ispresent(maybeobject) && type === 'board') {
+            const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
+            element = memoryreadobject(board, maybeobject)
+            if (ispresent(element)) {
+              type = 'object'
+            }
+          }
+
+          // config values
+          const code = ispresent(element) ? (element.code ?? '') : codepage.code
+
+          // write to modem
+          modemwriteinitstring(vmcodeaddress(codepagebook.id, path), code)
+
+          // open the editor
+          const title = ispresent(element)
+            ? `${memoryelementtodisplayprefix(element)}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${codepagebook.name}`
+            : `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
           const scrollline = isnumber(maybescrollto) ? maybescrollto : 0
+
           registereditoropen(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
@@ -308,14 +332,76 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
               if (line.includes(q)) {
                 const lineNum = ln + 1
                 const snippet = line.trim().slice(0, 60)
-                const label = `${name}:${lineNum}$GREEN ${snippet}${snippet.length >= line.trim().length ? '' : '...'}`
+                const label = [
+                  `$blue[${type}] ${prefix}$white`,
+                  `${name}:${lineNum}$GREEN`,
+                  `${snippet}${snippet.length >= line.trim().length ? '' : '...'}`,
+                ].join(' ')
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  `!pageopen ${page.id} ${ln};$blue[${type}] ${prefix}$white${label}`,
+                  `!pageopen ${page.id} ${ln};${label}`,
                 )
                 count++
               }
+            }
+          }
+        }
+        for (let i = 0; i < booklist.length; ++i) {
+          const book = booklist[i]
+          const sorted = memorylistcodepagessorted(book)
+          const boardpages = sorted.filter(
+            (page: CODE_PAGE) =>
+              memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
+          )
+          for (let b = 0; b < boardpages.length; ++b) {
+            const boardpage = boardpages[b]
+            const board = memoryreadboardbyaddress(boardpage.id)
+            if (!ispresent(board) || !ispresent(board.objects)) {
+              continue
+            }
+            const boardname = memoryreadcodepagename(boardpage)
+            const objects = Object.values(board.objects)
+            const objectmatches: string[] = []
+            for (let o = 0; o < objects.length; ++o) {
+              const object = objects[o]
+              const code = object.code ?? ''
+              if (!code) {
+                continue
+              }
+              const lines = code.split('\n')
+              for (let ln = 0; ln < lines.length; ++ln) {
+                const line = lines[ln]
+                if (line.includes(q)) {
+                  const lineNum = ln + 1
+                  const snippet = line.trim().slice(0, 60)
+                  const objid = object.id ?? ''
+                  const objlabel = object.name ?? object.kind ?? objid
+                  const label = [
+                    `$blue[board]$white`,
+                    boardname,
+                    `$blue[object]$white`,
+                    memoryelementtodisplayprefix(object),
+                    `${objlabel}:${lineNum}$GREEN`,
+                    `${snippet}${snippet.length >= line.trim().length ? '' : '...'}`,
+                  ].join(' ')
+                  objectmatches.push(
+                    `!pageopen ${boardpage.id} ${objid} ${ln};${label}`,
+                  )
+                  count++
+                }
+              }
+            }
+            if (objectmatches.length) {
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `!boardopen ${boardpage.id};$blue[#goto]$white ${boardname}`,
+              )
+            }
+            for (let o = 0; o < objectmatches.length; ++o) {
+              const label = objectmatches[o]
+              write(SOFTWARE, READ_CONTEXT.elementfocus, label)
             }
           }
         }
