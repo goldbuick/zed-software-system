@@ -22,7 +22,7 @@ type TilesProps = {
   label?: string
   width: number
   height: number
-  char: number[]
+  char: (string | number)[]
   color: number[]
   bg: number[]
   fliptexture?: boolean
@@ -118,6 +118,7 @@ export function Tiles({
         char={char}
         color={color}
         bg={bg}
+        scale={1.15}
       />
     </>
   )

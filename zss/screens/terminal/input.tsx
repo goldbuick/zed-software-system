@@ -275,7 +275,14 @@ export function TerminalInput({
 
   if (!quickterminal) {
     const yoffset = (context.y - 1) * context.width
-    applycodetokencolors(0, yoffset, edge.width, inputlinetokens, context)
+    applycodetokencolors(
+      0,
+      yoffset,
+      edge.width,
+      inputlinetokens,
+      context,
+      inputline,
+    )
   }
 
   // draw selection
@@ -309,7 +316,7 @@ export function TerminalInput({
     cx <= edge.right
   ) {
     const atchar = cx + cy * context.width
-    applystrtoindex(atchar, String.fromCharCode(221), context)
+    applystrtoindex(atchar, String.fromCharCode(219), context)
     applycolortoindexes(
       atchar,
       atchar,
@@ -525,6 +532,7 @@ export function TerminalInput({
                 yselect: undefined,
                 buffer: historybuffer,
               })
+              apilog(SOFTWARE, player, invoke)
               vmcli(SOFTWARE, player, invoke)
               if (quickterminal) {
                 registerterminalclose(SOFTWARE, player)

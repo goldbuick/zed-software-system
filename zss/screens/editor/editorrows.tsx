@@ -20,6 +20,7 @@ import {
 import {
   clippedapplybgtoindexes,
   clippedapplycolortoindexes,
+  codeunitoffsettocellindex,
   textformatreadedges,
   tokenizeandwritetextformat,
   writeplaintext,
@@ -169,8 +170,18 @@ export function EditorRows({
       context,
     )
 
-    // apply token colors
-    applycodetokencolors(xoffset, index, edge.right, row.tokens ?? [], context)
+    // apply token colors (line = code part; prefix = line number + space)
+    const prefix = `${i < rows.length ? linenumber : '   '} `
+    const prefixcells = codeunitoffsettocellindex(prefix, prefix.length)
+    applycodetokencolors(
+      xoffset,
+      index,
+      edge.right,
+      row.tokens ?? [],
+      context,
+      text,
+      prefixcells,
+    )
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {

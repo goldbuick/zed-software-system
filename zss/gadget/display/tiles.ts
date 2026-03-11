@@ -18,9 +18,11 @@ import { MAYBE } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { cloneMaterial, interval, time } from './anim'
+import { celltorendervalue } from './cellvalue'
 import { createbitmaptexture } from './textures'
 
-type TILE_CHARS = MAYBE<number>[]
+type TILE_CHAR = MAYBE<string | number>
+type TILE_CHARS = TILE_CHAR[]
 type TILE_COLORS = MAYBE<number>[]
 
 const QUAD_BOTTOM_LEFT = [0, 1, 0]
@@ -58,11 +60,11 @@ export function updateTilemapDataTexture(
   const size = width * height * 4
   const UNICODE_SENTINEL = 255
   for (let i = 0, t = 0; i < size; ++t) {
-    const char = tchar[t] ?? 0
-    const isunicode = char > 255
+    const num = celltorendervalue(tchar[t] ?? 0)
+    const isunicode = num > 255
     // x, y, color, bg (sentinel color 255 = unicode cell, bg only)
-    texture.image.data[i++] = isunicode ? 0 : char % CHARS_PER_ROW
-    texture.image.data[i++] = isunicode ? 0 : Math.floor(char / CHARS_PER_ROW)
+    texture.image.data[i++] = isunicode ? 0 : num % CHARS_PER_ROW
+    texture.image.data[i++] = isunicode ? 0 : Math.floor(num / CHARS_PER_ROW)
     texture.image.data[i++] = isunicode ? UNICODE_SENTINEL : (tcolor[t] ?? 16)
     texture.image.data[i++] = tbg[t] ?? 16
   }
