@@ -18,7 +18,7 @@ import {
 import { FIRMWARE } from 'zss/firmware'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryclearbookcodepage,
@@ -114,16 +114,19 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       'pageopen',
       [
         ARG_TYPE.NAME,
-        ARG_TYPE.MAYBE_NAME,
-        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_NAME,
+        ARG_TYPE.MAYBE_NUMBER_OR_NAME,
         'a code page editor',
       ],
       (_, words) => {
-        const [page, maybeobject, scrollto] = readargs(words, 0, [
+        const [page, arg1, arg2] = readargs(words, 0, [
           ARG_TYPE.NAME,
-          ARG_TYPE.MAYBE_NAME,
-          ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+          ARG_TYPE.MAYBE_NUMBER_OR_NAME,
+          ARG_TYPE.MAYBE_NUMBER_OR_NAME,
         ])
+        const maybescrollto = arg2 ?? arg1
+        const maybeobject = isstring(arg1) ? arg1 : undefined
+
         let codepage: MAYBE<CODE_PAGE> = undefined
         let codepagebook: MAYBE<BOOK> = undefined
         const booklist = memoryreadbooklist()
@@ -134,6 +137,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             break
           }
         }
+
         if (ispresent(codepage) && ispresent(codepagebook)) {
           const name = memoryreadcodepagename(codepage)
           const path = [codepage.id, maybeobject]
@@ -143,7 +147,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           )
           const type = memoryreadcodepagetypeasstring(codepage)
           const title = `${memorycodepagetoprefix(codepage)}$ONCLEAR$GREEN ${name} - ${codepagebook.name}`
-          const scrollline = typeof scrollto === 'number' ? scrollto : 0
+          const scrollline = isnumber(maybescrollto) ? maybescrollto : 0
           registereditoropen(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
@@ -304,7 +308,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
               if (line.includes(q)) {
                 const lineNum = ln + 1
                 const snippet = line.trim().slice(0, 60)
-                const label = `${name}:${lineNum} $26 ${snippet}${snippet.length >= line.trim().length ? '' : '...'}`
+                const label = `${name}:${lineNum}$GREEN ${snippet}${snippet.length >= line.trim().length ? '' : '...'}`
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,

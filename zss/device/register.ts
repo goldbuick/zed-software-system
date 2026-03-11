@@ -658,9 +658,8 @@ export const register = createdevice(
         break
       case 'editor:open':
         if (isarray(message.data)) {
-          const [book, path, type, title, scrollto] = message.data
-          const yscroll = Math.max(0, scrollto ?? 0)
-          useEditor.setState({ yscroll })
+          const [book, path, type, title, startline] = message.data
+          useEditor.setState({ startline })
           useTape.setState(() => ({
             editor: {
               open: true,

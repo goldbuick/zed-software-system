@@ -181,12 +181,15 @@ export const useTerminal = create<{
 }))
 
 export const useEditor = create<{
+  startline: number
   xscroll: number
   yscroll: number
   cursor: number
   select: MAYBE<number>
   reset: () => void
 }>((set) => ({
+  // starting line
+  startline: 0,
   // scrolling offset
   xscroll: 0,
   yscroll: 0,
@@ -195,6 +198,8 @@ export const useEditor = create<{
   select: undefined,
   reset() {
     set({
+      // starting line
+      startline: 0,
       // scrolling offset
       xscroll: 0,
       yscroll: 0,
