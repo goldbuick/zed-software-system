@@ -532,7 +532,6 @@ export function TerminalInput({
                 yselect: undefined,
                 buffer: historybuffer,
               })
-              apilog(SOFTWARE, player, invoke)
               vmcli(SOFTWARE, player, invoke)
               if (quickterminal) {
                 registerterminalclose(SOFTWARE, player)
