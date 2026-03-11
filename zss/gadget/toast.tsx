@@ -39,7 +39,6 @@ export function TapeToast({ toast }: TapeToastProps) {
   }
 
   const rightedge = screensize.cols - 1
-  console.info('???', rightedge, toast)
   return (
     <TilesData store={store}>
       {toast && (
