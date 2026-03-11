@@ -1,6 +1,7 @@
 import { CHIP } from 'zss/chip'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
+import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -709,7 +710,7 @@ export const BOARD_FIRMWARE = createfirmware()
               x: dir.destpt.x + i,
               y: dir.destpt.y,
               name: 'text',
-              char: context.char[i],
+              char: celltorendervalue(context.char[i]),
               color: context.color[i],
               bg: context.bg[i],
             })
@@ -722,7 +723,7 @@ export const BOARD_FIRMWARE = createfirmware()
               x: dir.destpt.x + i - last,
               y: dir.destpt.y,
               name: 'text',
-              char: context.char[i],
+              char: celltorendervalue(context.char[i]),
               color: context.color[i],
               bg: context.bg[i],
             })
@@ -735,7 +736,7 @@ export const BOARD_FIRMWARE = createfirmware()
               x: dir.destpt.x,
               y: dir.destpt.y + i - last,
               name: 'text',
-              char: context.char[i],
+              char: celltorendervalue(context.char[i]),
               color: context.color[i],
               bg: context.bg[i],
             })
@@ -748,7 +749,7 @@ export const BOARD_FIRMWARE = createfirmware()
               x: dir.destpt.x,
               y: dir.destpt.y + i,
               name: 'text',
-              char: context.char[i],
+              char: celltorendervalue(context.char[i]),
               color: context.color[i],
               bg: context.bg[i],
             })

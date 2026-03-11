@@ -207,10 +207,10 @@ export const hyperlinktext = createSimpleToken({
 })
 
 // u flag: match by Unicode code point so surrogate pairs (e.g. emoji) are one character
+// no start_chars_hint so Unicode-initial words (e.g. ∯) are matched
 export const stringliteral = createSimpleToken({
   name: 'stringliteral',
   pattern: /[^-0-9"!:;@#/?()\s]+[^-"!:;@#/?()\s]*/u,
-  start_chars_hint: all_chars,
 })
 
 export const stringliteraldouble = createSimpleToken({

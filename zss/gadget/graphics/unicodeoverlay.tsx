@@ -8,6 +8,7 @@ import { RUNTIME } from 'zss/config'
 import { loadpalettefrombytes } from 'zss/feature/bytes'
 import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { lookupglyph } from 'zss/gadget/display/unicodeatlas'
 import {
   createunicodeoverlaymaterial,
@@ -20,9 +21,11 @@ const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 type UnicodeOverlayProps = {
   width: number
   height: number
-  char: number[]
+  char: (string | number)[]
   color: number[]
   bg: number[]
+  /** Scale factor for glyph size (default 1). Only affects overlay chars, not grid position. */
+  scale?: number
 }
 
 export function UnicodeOverlay({
@@ -30,11 +33,14 @@ export function UnicodeOverlay({
   height,
   char,
   color,
+  scale = 1,
 }: UnicodeOverlayProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const resolvedpalette = mediapalette ?? defaultpalette
-  const cellw = RUNTIME.DRAW_CHAR_WIDTH()
-  const cellh = RUNTIME.DRAW_CHAR_HEIGHT()
+  const basew = RUNTIME.DRAW_CHAR_WIDTH()
+  const baseh = RUNTIME.DRAW_CHAR_HEIGHT()
+  const cellw = basew * scale
+  const cellh = baseh * scale
 
   // instanced mesh data
   const [meshref, setmeshref] = useState<InstancedMesh | null>(null)
@@ -58,11 +64,11 @@ export function UnicodeOverlay({
   const cells = useMemo(() => {
     const list: { index: number; codepoint: number; colori: number }[] = []
     for (let i = 0; i < char.length; i++) {
-      const c = char[i] ?? 0
-      if (c > 255) {
+      const codepoint = celltorendervalue(char[i] ?? 0)
+      if (codepoint > 255) {
         list.push({
           index: i,
-          codepoint: c,
+          codepoint,
           colori: (color[i] ?? 0) % 16,
         })
       }
@@ -97,8 +103,11 @@ export function UnicodeOverlay({
       }
       const cx = cell.index % width
       const cy = Math.floor(cell.index / width)
-      offsetarray[n * 2] = cx * cellw
-      offsetarray[n * 2 + 1] = cy * cellh
+      // center scaled glyph on cell: cell center (cx*basew + basew*0.5) minus half quad size (cellw*0.5)
+      const halfpadx = basew * 0.5 * (1 - scale)
+      const halfpady = baseh * 0.5 * (1 - scale)
+      offsetarray[n * 2] = cx * basew + halfpadx
+      offsetarray[n * 2 + 1] = cy * baseh + halfpady
       uvarray[n * 2] = slot.slotx
       uvarray[n * 2 + 1] = slot.sloty
       colorarray[n] = cell.colori
@@ -112,6 +121,9 @@ export function UnicodeOverlay({
     cells,
     width,
     height,
+    scale,
+    basew,
+    baseh,
     cellw,
     cellh,
     meshref,

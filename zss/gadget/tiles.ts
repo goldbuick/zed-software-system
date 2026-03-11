@@ -1,18 +1,20 @@
 import { createContext, useContext, useState } from 'react'
 import { objectKeys } from 'ts-extras'
-import { TILES } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 import { StoreApi, createStore } from 'zustand'
 
 export type TILE_DATA = {
   width: number
   height: number
-  char: number[]
+  char: (string | number)[]
   color: number[]
   bg: number[]
   render: number
   changed: () => void
 }
+
+/** Minimal shape needed for resettiles/writetile; accept store state or WRITE_TEXT_CONTEXT. */
+type TILES_LIKE = Pick<TILE_DATA, 'char' | 'color' | 'bg'>
 
 function createtilesstore() {
   return createStore<TILE_DATA>((set) => {
@@ -36,7 +38,7 @@ function createtilesstore() {
 }
 
 export function resettiles(
-  tiles: TILES,
+  tiles: TILES_LIKE,
   char: number,
   color: number,
   bg: number,
@@ -47,13 +49,13 @@ export function resettiles(
 }
 
 type WRITE_TILE_VALUE = {
-  char: number
-  color: number
-  bg: number
+  char?: string | number
+  color?: number
+  bg?: number
 }
 
 export function writetile(
-  tiles: TILES,
+  tiles: TILES_LIKE,
   width: number,
   height: number,
   x: number,

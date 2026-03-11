@@ -6,6 +6,7 @@ import { statformat } from 'zss/words/stats'
 import {
   type WRITE_TEXT_CONTEXT,
   clippedapplycolortoindexes,
+  codeunitoffsettocellindex,
 } from 'zss/words/textformat'
 import { COLOR, STAT_TYPE } from 'zss/words/types'
 
@@ -441,7 +442,8 @@ export function parsestatformat(image: string): string[] {
 
 /**
  * Applies syntax highlighting for a single editor row's tokens.
- * Returns the index of the token under the cursor, or -1.
+ * When line is provided, token startColumn/endColumn (code-unit) are mapped to cell (grapheme) indices.
+ * prefixCells is added when the tokenized line is not the full buffer line (e.g. code-only tokens with line-number prefix).
  */
 export function applycodetokencolors(
   xoffset: number,
@@ -449,11 +451,18 @@ export function applycodetokencolors(
   rightedge: number,
   tokens: IToken[],
   context: WRITE_TEXT_CONTEXT,
+  line?: string,
+  prefixcells = 0,
 ) {
+  const tocell = (codeunit: number) =>
+    ispresent(line)
+      ? prefixcells + codeunitoffsettocellindex(line, codeunit) - xoffset
+      : codeunit - xoffset
+
   for (let t = 0; t < tokens.length; ++t) {
     const token = tokens[t]
-    const left = (token.startColumn ?? 1) - 1 - xoffset
-    const right = (token.endColumn ?? 1) - 1 - xoffset
+    const left = tocell((token.startColumn ?? 1) - 1)
+    const right = tocell((token.endColumn ?? 1) - 1)
     const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
     if (!ispresent(maybecolor)) {
       continue
@@ -544,11 +553,12 @@ export function applycodetokencolors(
           case STAT_TYPE.CHAREDIT:
           case STAT_TYPE.COLOREDIT: {
             const [first] = words
+            const firstcells = codeunitoffsettocellindex(first, first.length)
             clippedapplycolortoindexes(
               yoffset,
               rightedge,
               left,
-              left + first.length,
+              left + firstcells - 1,
               ZSS_TYPE_STATNAME,
               context.active.bg,
               context,
@@ -557,7 +567,7 @@ export function applycodetokencolors(
               clippedapplycolortoindexes(
                 yoffset,
                 rightedge,
-                left + first.length + 1,
+                left + firstcells + 1,
                 right,
                 ZSS_TYPE_NUMBER,
                 context.active.bg,

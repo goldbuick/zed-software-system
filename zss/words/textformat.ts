@@ -1,13 +1,41 @@
+import './intl-segmenter.d.ts'
 import { IToken, Lexer, createToken, createTokenInstance } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
-import { range } from 'zss/mapping/array'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { colorconsts, colortobg, colortofg } from 'zss/words/color'
 import { COLOR } from 'zss/words/types'
 
 import { metakey } from './system'
 
-const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
+const graphemesegmenter = new Intl.Segmenter(undefined, {
+  granularity: 'grapheme',
+})
+
+function* graphemes(str: string): Generator<string> {
+  for (const { segment } of graphemesegmenter.segment(str)) {
+    yield segment
+  }
+}
+
+/**
+ * Map a code-unit offset (e.g. from lexer startColumn/endColumn) to cell (grapheme) index
+ * so token-based positions align with the grapheme-per-cell buffer.
+ */
+export function codeunitoffsettocellindex(
+  line: string,
+  codeunitoffset: number,
+): number {
+  let cell = 0
+  let offset = 0
+  for (const { segment } of graphemesegmenter.segment(line)) {
+    if (offset >= codeunitoffset) {
+      return cell
+    }
+    offset += segment.length
+    cell++
+  }
+  return cell
+}
 
 export const Whitespace = createToken({
   name: 'Whitespace',
@@ -29,13 +57,13 @@ export const Newline = createToken({
 
 export const StringLiteral = createToken({
   name: 'StringLiteral',
-  pattern: /[^ $;\r\n]+/,
-  start_chars_hint: all_chars,
+  pattern: /[^ $;\r\n]+/u,
+  // no start_chars_hint so Unicode-initial segments (e.g. ∯) are matched
 })
 
 export const StringLiteralDouble = createToken({
   name: 'StringLiteralDouble',
-  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
+  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}|u\{[0-9a-fA-F]{1,6}\}))*"/u,
 })
 
 export const EscapedDollar = createToken({
@@ -165,7 +193,7 @@ export type WRITE_TEXT_CONTEXT = {
   // resets
   reset: WRITE_PEN_CONTEXT
   // output
-  char: number[]
+  char: (string | number)[]
   color: number[]
   bg: number[]
   // flag as changed
@@ -254,11 +282,10 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   function writeStr(str: string) {
-    for (let t = 0; t < str.length; ) {
-      const cp = str.codePointAt(t) ?? 0
+    for (const segment of graphemes(str)) {
       if (context.measureonly !== true && isVisible()) {
         const i = context.x + context.y * context.width
-        context.char[i] = cp
+        context.char[i] = segment
         if (context.active.color !== undefined) {
           context.color[i] = context.active.color
         }
@@ -267,7 +294,6 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         }
       }
       incCursor()
-      t += cp > 0xffff ? 2 : 1
     }
   }
 
@@ -450,13 +476,10 @@ export function applystrtoindex(
   str: string,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  let t = 0
   let i = p1
-  while (t < str.length) {
-    const cp = str.codePointAt(t) ?? 0
-    context.char[i] = cp
+  for (const segment of graphemes(str)) {
+    context.char[i] = segment
     i++
-    t += cp > 0xffff ? 2 : 1
   }
 
   // yolo
