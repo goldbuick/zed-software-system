@@ -167,10 +167,10 @@ export function EditorRows({
       prefixcells,
     )
 
-    // render selection (maybestart/maybeend are offsets within code; add prefixcells for line-relative columns)
+    // render selection (maybestart/maybeend are offsets within code; add prefixcells for line-relative columns; xoffset includes -4 layout shift so subtract 4 so selection aligns)
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const maybestart = Math.max(row.start, ii1) - row.start - xoffset
-      const maybeend = Math.min(row.end, ii2) - row.start - xoffset
+      const maybestart = Math.max(row.start, ii1) - row.start - xoffset - 4
+      const maybeend = Math.min(row.end, ii2) - row.start - xoffset - 4
 
       const right = edge.width - 3
       const start = Math.max(0, maybestart)
