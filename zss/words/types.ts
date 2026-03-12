@@ -105,6 +105,8 @@ export enum DIR {
   ELEMENTS,
   // multi-target sequences
   SELECT,
+  FLOOD,
+  BEAM,
 }
 
 export enum STAT_TYPE {

@@ -25,7 +25,7 @@ function gettinysdf(): InstanceType<typeof TinySDF> {
     radius: 4,
     buffer: 1,
     cutoff: 0.6,
-    fontWeight: '300',
+    fontWeight: '200',
     fontFamily: 'monospace',
   })
   return tinysdf

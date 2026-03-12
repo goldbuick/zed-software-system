@@ -25,6 +25,7 @@ import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
+import { useShallow } from 'zustand/react/shallow'
 
 import {
   changeindent,
@@ -62,7 +63,9 @@ export function EditorInput({
   autocompleteactive,
 }: EditorInputProps) {
   const context = useWriteText()
-  const tapeeditor = useEditor()
+  const tapeeditor = useEditor(
+    useShallow((state) => ({ cursor: state.cursor, select: state.select })),
+  )
   const zsswords = useGadgetClient((state) => state.zsswords)
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const player = registerreadplayer()

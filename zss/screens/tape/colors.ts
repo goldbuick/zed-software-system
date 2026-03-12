@@ -213,6 +213,8 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.dir_within.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_elements.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_select.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
+  [lexer.dir_flood.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
+  [lexer.dir_beam.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_i.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_u.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_n.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
@@ -446,7 +448,7 @@ export function parsestatformat(image: string): string[] {
  * prefixCells is added when the tokenized line is not the full buffer line (e.g. code-only tokens with line-number prefix).
  */
 export function applycodetokencolors(
-  xoffset: number,
+  _xoffset: number,
   yoffset: number,
   rightedge: number,
   tokens: IToken[],
@@ -456,8 +458,8 @@ export function applycodetokencolors(
 ) {
   const tocell = (codeunit: number) =>
     ispresent(line)
-      ? prefixcells + codeunitoffsettocellindex(line, codeunit) - xoffset
-      : codeunit - xoffset
+      ? prefixcells + codeunitoffsettocellindex(line, codeunit)
+      : codeunit
 
   for (let t = 0; t < tokens.length; ++t) {
     const token = tokens[t]
@@ -554,20 +556,23 @@ export function applycodetokencolors(
           case STAT_TYPE.COLOREDIT: {
             const [first] = words
             const firstcells = codeunitoffsettocellindex(first, first.length)
+            // stat token image is "@" + name + " " + value; name length in cells includes leading "@"
+            const statnamecells = 1 + firstcells
             clippedapplycolortoindexes(
               yoffset,
               rightedge,
               left,
-              left + firstcells - 1,
+              left + statnamecells - 1,
               ZSS_TYPE_STATNAME,
               context.active.bg,
               context,
             )
             if (words.length > 1) {
+              // value starts after stat name and the space
               clippedapplycolortoindexes(
                 yoffset,
                 rightedge,
-                left + firstcells + 1,
+                left + statnamecells + 1,
                 right,
                 ZSS_TYPE_NUMBER,
                 context.active.bg,

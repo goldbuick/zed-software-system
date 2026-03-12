@@ -26,6 +26,7 @@ import {
   writeplaintext,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
+import { useShallow } from 'zustand/react/shallow'
 
 export type EditorRowsProps = {
   xcursor: number
@@ -44,8 +45,16 @@ export function EditorRows({
   codepage,
 }: EditorRowsProps) {
   const context = useWriteText()
-  const tapeeditor = useEditor()
-  const { quickterminal } = useTape()
+  const tapeeditor = useEditor(
+    useShallow((state) => ({
+      cursor: state.cursor,
+      select: state.select,
+      xscroll: state.xscroll,
+      yscroll: state.yscroll,
+      startline: state.startline,
+    })),
+  )
+  const quickterminal = useTape((state) => state.quickterminal)
 
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
@@ -124,19 +133,17 @@ export function EditorRows({
     context.active.rightedge = rightedge
 
     const linenumber = `${i + 1}`.padStart(3, ' ')
-    writeplaintext(
-      `${i < rows.length ? linenumber : '   '} ${text} `,
-      context,
-      false,
-    )
+    const prefix = `${i < rows.length ? linenumber : '   '} `
+    const prefixcells = codeunitoffsettocellindex(prefix, prefix.length)
+    writeplaintext(`${prefix}${text} `, context, false)
 
-    // calc base index
-    const index = 1 + context.y * context.width
+    // base index = first cell of this line in the buffer (where writeplaintext started)
+    const index = leftedge + context.y * context.width
     clippedapplycolortoindexes(
       index,
       edge.right,
-      -xoffset - 4,
-      -xoffset,
+      0,
+      prefixcells - 1,
       ZSS_TYPE_LINE,
       context.active.bg,
       context,
@@ -144,35 +151,12 @@ export function EditorRows({
 
     // apply helper ranges
     // sidebar can be 20 characters wide
-    clippedapplybgtoindexes(
-      index,
-      edge.right,
-      -xoffset + 20,
-      -xoffset + 20,
-      COLOR.DKCYAN,
-      context,
-    )
+    clippedapplybgtoindexes(index, edge.right, 20, 20, COLOR.DKCYAN, context)
     // scroll can be 40 to 50 characters wide
-    clippedapplybgtoindexes(
-      index,
-      edge.right,
-      -xoffset + 36,
-      -xoffset + 36,
-      COLOR.DKCYAN,
-      context,
-    )
-    clippedapplybgtoindexes(
-      index,
-      edge.right,
-      -xoffset + 46,
-      -xoffset + 46,
-      COLOR.DKCYAN,
-      context,
-    )
+    clippedapplybgtoindexes(index, edge.right, 36, 36, COLOR.DKCYAN, context)
+    clippedapplybgtoindexes(index, edge.right, 46, 46, COLOR.DKCYAN, context)
 
     // apply token colors (line = code part; prefix = line number + space)
-    const prefix = `${i < rows.length ? linenumber : '   '} `
-    const prefixcells = codeunitoffsettocellindex(prefix, prefix.length)
     applycodetokencolors(
       xoffset,
       index,
@@ -183,22 +167,21 @@ export function EditorRows({
       prefixcells,
     )
 
-    // render selection
+    // render selection (maybestart/maybeend are offsets within code; add prefixcells for line-relative columns)
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
       const maybestart = Math.max(row.start, ii1) - row.start - xoffset
       const maybeend = Math.min(row.end, ii2) - row.start - xoffset
 
-      // start of drawn line
       const right = edge.width - 3
       const start = Math.max(0, maybestart)
       const end = Math.min(right, maybeend)
 
-      if (start <= right && end >= baseleft) {
+      if (start <= right && end >= 0) {
         clippedapplycolortoindexes(
           index,
           edge.right,
-          start,
-          end,
+          prefixcells + start,
+          prefixcells + end,
           FG_SELECTED,
           BG_SELECTED,
           context,
@@ -223,13 +206,13 @@ export function EditorRows({
         context,
       )
     } else if (ispresent(maybeerror)) {
-      const column = 3 + (maybeerror.column ?? 1)
+      const column = prefixcells + ((maybeerror.column ?? 1) - 1)
       const length = maybeerror.length ?? 1
       clippedapplybgtoindexes(
         index,
         edge.right,
         0,
-        2,
+        prefixcells - 1,
         ZSS_TYPE_ERROR_LINE,
         context,
       )

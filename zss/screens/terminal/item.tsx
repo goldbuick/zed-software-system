@@ -32,7 +32,7 @@ import { TerminalViewIt } from './viewit'
 
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
-  const { quickterminal } = useTape()
+  const quickterminal = useTape((state) => state.quickterminal)
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
