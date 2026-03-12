@@ -115,7 +115,7 @@ export function Engine() {
   }, [islowrez, islandscape, showtouchcontrols])
 
   // current toast message
-  const { toast } = useTape()
+  const toast = useTape((state) => state.toast)
 
   // click to un-mute overlay for firefox
   const [showunmute, setshowunmute] = useState(isfirefox)
