@@ -745,6 +745,27 @@ export type Dir_awaybyCstChildren = {
   simple_token: Simple_tokenCstNode[]
 }
 
+export type Dir_floodCstNode = {
+  name: 'dir_flood'
+  children: Dir_floodCstChildren
+} & CstNode
+
+export type Dir_floodCstChildren = {
+  token_flood: IToken[]
+  dir: DirCstNode[]
+}
+
+export type Dir_beamCstNode = {
+  name: 'dir_beam'
+  children: Dir_beamCstChildren
+} & CstNode
+
+export type Dir_beamCstChildren = {
+  token_beam: IToken[]
+  simple_token: Simple_tokenCstNode[]
+  dir: DirCstNode[]
+}
+
 export type DirCstNode = {
   name: 'dir'
   children: DirCstChildren
@@ -770,6 +791,8 @@ export type DirCstChildren = {
   dir_flee?: Dir_fleeCstNode[]
   dir_to?: Dir_toCstNode[]
   dir_select?: Dir_selectCstNode[]
+  dir_flood?: Dir_floodCstNode[]
+  dir_beam?: Dir_beamCstNode[]
   token_i?: IToken[]
   token_u?: IToken[]
   token_north?: IToken[]
@@ -1089,6 +1112,8 @@ export type ICstNodeVisitor<IN, OUT> = {
   dir_to(children: Dir_toCstChildren, param?: IN): OUT
   dir_select(children: Dir_selectCstChildren, param?: IN): OUT
   dir_within(children: Dir_withinCstChildren, param?: IN): OUT
+  dir_flood(children: Dir_floodCstChildren, param?: IN): OUT
+  dir_beam(children: Dir_beamCstChildren, param?: IN): OUT
   dir_awayby(children: Dir_awaybyCstChildren, param?: IN): OUT
   dir(children: DirCstChildren, param?: IN): OUT
   expr_any(children: Expr_anyCstChildren, param?: IN): OUT

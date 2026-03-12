@@ -190,7 +190,18 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     let anyfailed = false
     for (let i = 0; i < dir.targets.length; ++i) {
       const target = dir.targets[i]
-      commandput(chip, [dirstr, 'at', target.x, target.y, ...kindstr], id, arg)
+      commandput(
+        chip,
+        [
+          ...(dir.layer !== DIR.MID ? [dirstr] : []),
+          'at',
+          target.x,
+          target.y,
+          ...kindstr,
+        ],
+        id,
+        arg,
+      )
       if (chip.get('didfail') === 1) {
         anyfailed = true
       }

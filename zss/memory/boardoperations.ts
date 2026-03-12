@@ -4,7 +4,13 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
-import { indextopt, linepoints, ptdist, pttoindex, ptwithin } from 'zss/mapping/2d'
+import {
+  indextopt,
+  linepoints,
+  ptdist,
+  pttoindex,
+  ptwithin,
+} from 'zss/mapping/2d'
 import { inorder, pick, shuffle } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import {
@@ -235,14 +241,33 @@ function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
   return results
 }
 
+function memorybeamedgept(startpt: PT, towardpt: PT): PT {
+  let dx = towardpt.x - startpt.x
+  let dy = towardpt.y - startpt.y
+  if (dx === 0 && dy === 0) {
+    dx = 1
+    dy = 0
+  }
+  const len = Math.sqrt(dx * dx + dy * dy) || 1
+  const max = 2 * Math.max(BOARD_WIDTH, BOARD_HEIGHT)
+  const endpt: PT = {
+    x: Math.round(startpt.x + (dx / len) * max),
+    y: Math.round(startpt.y + (dy / len) * max),
+  }
+  const line = linepoints(startpt.x, startpt.y, endpt.x, endpt.y)
+  let edgept = startpt
+  for (const pt of line) {
+    if (!memoryptwithinboard(pt)) {
+      break
+    }
+    edgept = pt
+  }
+  return edgept
+}
+
 function memorythicklinepts(startpt: PT, destpt: PT, width: number): PT[] {
   const halfwidth = Math.max(0, Math.floor((width - 1) / 2))
-  const line = linepoints(
-    startpt.x,
-    startpt.y,
-    destpt.x,
-    destpt.y,
-  )
+  const line = linepoints(startpt.x, startpt.y, destpt.x, destpt.y)
   const seen = new Set<number>()
   const results: PT[] = []
   for (let li = 0; li < line.length; ++li) {
@@ -655,11 +680,21 @@ export function memoryevaldir(
           startpt,
         )
         const w = isnumber(width) && width >= 1 ? Math.floor(width) : 1
-        const beamtargets = memorythicklinepts(
-          startpt,
-          modeval.destpt,
-          w,
+        const edgept = memorybeamedgept(startpt, modeval.destpt)
+        const beamdir = {
+          x: edgept.x - startpt.x,
+          y: edgept.y - startpt.y,
+        }
+        let beamtargets = memorythicklinepts(startpt, edgept, w).filter(
+          (pt) => pt.x !== startpt.x || pt.y !== startpt.y,
         )
+        if (w > 1) {
+          beamtargets = beamtargets.filter((pt) => {
+            const along =
+              (pt.x - startpt.x) * beamdir.x + (pt.y - startpt.y) * beamdir.y
+            return along >= 0
+          })
+        }
         return {
           ...modeval,
           targets: beamtargets,

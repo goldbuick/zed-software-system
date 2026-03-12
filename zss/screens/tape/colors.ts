@@ -213,6 +213,8 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.dir_within.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_elements.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_select.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
+  [lexer.dir_flood.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
+  [lexer.dir_beam.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_i.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_u.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
   [lexer.dir_n.tokenTypeIdx ?? 0]: ZSS_TYPE_DIR,
