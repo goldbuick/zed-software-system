@@ -1,4 +1,14 @@
-jest.mock('zss/words/reader', () => ({ READ_CONTEXT: { words: [] } }))
+jest.mock('zss/words/reader', () => {
+  const READ_CONTEXT = { words: [] as unknown[] }
+  const ARG_TYPE_NUMBER = 4
+  const readargs = (words: unknown[], index: number, args: { 0: number }[]) => {
+    if (args[0] === ARG_TYPE_NUMBER && index < words.length) {
+      return [words[index], index + 1]
+    }
+    return [undefined, index]
+  }
+  return { READ_CONTEXT, readargs }
+})
 jest.mock('zss/memory/session', () => ({}))
 
 import {
@@ -9,7 +19,9 @@ import {
   mapstrdir,
   mapstrdirtoconst,
   ptapplydir,
+  readdir,
 } from 'zss/words/dir'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { DIR, PT } from 'zss/words/types'
 
 describe('dir', () => {
@@ -137,6 +149,29 @@ describe('dir', () => {
 
     it('returns IDLE for unknown', () => {
       expect(mapstrdirtoconst(['UNKNOWN' as any])).toBe(DIR.IDLE)
+    })
+  })
+
+  describe('readdir', () => {
+    it('parses FLOOD followed by direction', () => {
+      READ_CONTEXT.words = ['FLOOD', 'NORTH']
+      const [strdir, nextindex] = readdir(0)
+      expect(strdir).toEqual(['FLOOD', 'NORTH'])
+      expect(nextindex).toBe(2)
+    })
+
+    it('parses BEAM width followed by direction', () => {
+      READ_CONTEXT.words = ['BEAM', 1, 'NORTH']
+      const [strdir, nextindex] = readdir(0)
+      expect(strdir).toEqual(['BEAM', 1, 'NORTH'])
+      expect(nextindex).toBe(3)
+    })
+
+    it('parses WITHIN 5 BEAM 1 NORTH for composition', () => {
+      READ_CONTEXT.words = ['WITHIN', 5, 'BEAM', 1, 'NORTH']
+      const [strdir, nextindex] = readdir(0)
+      expect(strdir).toEqual(['WITHIN', 5, 'BEAM', 1, 'NORTH'])
+      expect(nextindex).toBe(5)
     })
   })
 })

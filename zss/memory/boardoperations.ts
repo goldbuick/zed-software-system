@@ -4,7 +4,7 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
-import { indextopt, ptdist, pttoindex, ptwithin } from 'zss/mapping/2d'
+import { indextopt, linepoints, ptdist, pttoindex, ptwithin } from 'zss/mapping/2d'
 import { inorder, pick, shuffle } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import {
@@ -44,6 +44,7 @@ import {
 } from './boardmovement'
 import {
   memoryreadboardbyaddress,
+  memoryreadboardbyevaldir,
   memoryreadelementkind,
   memoryreadelementstat,
 } from './boards'
@@ -198,6 +199,73 @@ function memoryevaldirtoward(
   } else {
     ptapplydir(pt, dirfromdelta(dx, dy))
   }
+}
+
+function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
+  if (!ispresent(board) || !memoryptwithinboard(startpt)) {
+    return []
+  }
+  const startterrain = memoryreadterrain(board, startpt.x, startpt.y)
+  const startkind = startterrain?.kind ?? ''
+  const results: PT[] = []
+  const visited = new Set<number>()
+  const queue: PT[] = [{ ...startpt }]
+  while (queue.length) {
+    const pt = queue.shift()
+    if (!ispresent(pt) || !memoryptwithinboard(pt)) {
+      continue
+    }
+    const idx = pttoindex(pt, BOARD_WIDTH)
+    if (visited.has(idx)) {
+      continue
+    }
+    visited.add(idx)
+    const terrain = memoryreadterrain(board, pt.x, pt.y)
+    if ((terrain?.kind ?? '') !== startkind) {
+      continue
+    }
+    results.push({ ...pt })
+    queue.push(
+      { x: pt.x, y: pt.y - 1 },
+      { x: pt.x, y: pt.y + 1 },
+      { x: pt.x - 1, y: pt.y },
+      { x: pt.x + 1, y: pt.y },
+    )
+  }
+  return results
+}
+
+function memorythicklinepts(startpt: PT, destpt: PT, width: number): PT[] {
+  const halfwidth = Math.max(0, Math.floor((width - 1) / 2))
+  const line = linepoints(
+    startpt.x,
+    startpt.y,
+    destpt.x,
+    destpt.y,
+  )
+  const seen = new Set<number>()
+  const results: PT[] = []
+  for (let li = 0; li < line.length; ++li) {
+    const pt = line[li]
+    for (let dy = -halfwidth; dy <= halfwidth; ++dy) {
+      for (let dx = -halfwidth; dx <= halfwidth; ++dx) {
+        if (Math.abs(dx) + Math.abs(dy) > halfwidth) {
+          continue
+        }
+        const q = { x: pt.x + dx, y: pt.y + dy }
+        if (!memoryptwithinboard(q)) {
+          continue
+        }
+        const idx = pttoindex(q, BOARD_WIDTH)
+        if (seen.has(idx)) {
+          continue
+        }
+        seen.add(idx)
+        results.push(q)
+      }
+    }
+  }
+  return results
 }
 
 export function memoryevaldir(
@@ -561,6 +629,41 @@ export function memoryevaldir(
         )
 
         return modeval
+      }
+      case DIR.FLOOD: {
+        const modeval = memoryevaldir(
+          board,
+          element,
+          player,
+          dir.slice(i + 1),
+          startpt,
+        )
+        const floodboard = memoryreadboardbyevaldir(modeval, board)
+        const floodtargets = memoryfloodfrompt(floodboard, modeval.destpt)
+        return {
+          ...modeval,
+          targets: floodtargets,
+        }
+      }
+      case DIR.BEAM: {
+        const [width] = dir.slice(i + 1)
+        const modeval = memoryevaldir(
+          board,
+          element,
+          player,
+          dir.slice(i + 2),
+          startpt,
+        )
+        const w = isnumber(width) && width >= 1 ? Math.floor(width) : 1
+        const beamtargets = memorythicklinepts(
+          startpt,
+          modeval.destpt,
+          w,
+        )
+        return {
+          ...modeval,
+          targets: beamtargets,
+        }
       }
       case DIR.SELECT: {
         const [selectmode, kind] = dir.slice(i + 1)

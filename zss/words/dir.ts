@@ -101,6 +101,8 @@ export const DIR_CONSTS = {
   elements: 'ELEMENTS',
   // multi-target sequences
   select: 'SELECT',
+  flood: 'FLOOD',
+  beam: 'BEAM',
 } as const
 
 export type STR_DIR_TYPE = typeof DIR_CONSTS
@@ -229,6 +231,14 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         ii = iii
         break
       }
+      case 'BEAM': {
+        const [width, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.NUMBER,
+        ])
+        strdir.push(width)
+        ii = iii
+        break
+      }
       case 'SELECT': {
         const [selectmode, kind, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.STRING,
@@ -254,6 +264,8 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'WITHIN':
       case 'AWAYBY':
       case 'ELEMENTS':
+      case 'FLOOD':
+      case 'BEAM':
         break
       default:
         return [strdir, ii]
