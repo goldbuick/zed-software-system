@@ -41,6 +41,8 @@ export function UnicodeOverlay({
   const baseh = RUNTIME.DRAW_CHAR_HEIGHT()
   const cellw = basew * scale
   const cellh = baseh * scale
+  /** Square size so glyph fits in rect; glyph is centered in cell */
+  const cellsize = Math.min(cellw, cellh)
 
   // instanced mesh data
   const [meshref, setmeshref] = useState<InstancedMesh | null>(null)
@@ -81,8 +83,8 @@ export function UnicodeOverlay({
   useLayoutEffect(() => {
     materialref.current ??= createunicodeoverlaymaterial(resolvedpalette)
     materialref.current.uniforms.palette.value = resolvedpalette
-    materialref.current.uniforms.cellsize.value.set(cellw, cellh)
-  }, [resolvedpalette, cellw, cellh])
+    materialref.current.uniforms.cellsize.value.set(cellsize, cellsize)
+  }, [resolvedpalette, cellsize])
 
   useEffect(() => {
     if (
@@ -103,9 +105,9 @@ export function UnicodeOverlay({
       }
       const cx = cell.index % width
       const cy = Math.floor(cell.index / width)
-      // center scaled glyph on cell: cell center (cx*basew + basew*0.5) minus half quad size (cellw*0.5)
-      const halfpadx = basew * 0.5 * (1 - scale)
-      const halfpady = baseh * 0.5 * (1 - scale)
+      // square glyph centered in cell: offset so quad (cellsize x cellsize) is centered in (basew x baseh)
+      const halfpadx = (basew - cellsize) * 0.5
+      const halfpady = (baseh - cellsize) * 0.5
       offsetarray[n * 2] = cx * basew + halfpadx
       offsetarray[n * 2 + 1] = cy * baseh + halfpady
       uvarray[n * 2] = slot.slotx
@@ -124,8 +126,7 @@ export function UnicodeOverlay({
     scale,
     basew,
     baseh,
-    cellw,
-    cellh,
+    cellsize,
     meshref,
     offsetattr,
     uvattr,
