@@ -26,6 +26,7 @@ import {
   writeplaintext,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
+import { useShallow } from 'zustand/react/shallow'
 
 export type EditorRowsProps = {
   xcursor: number
@@ -44,8 +45,14 @@ export function EditorRows({
   codepage,
 }: EditorRowsProps) {
   const context = useWriteText()
-  const tapeeditor = useEditor()
-  const { quickterminal } = useTape()
+  const tapeeditor = useEditor(
+    useShallow((state) => ({
+      cursor: state.cursor,
+      xscroll: state.xscroll,
+      yscroll: state.yscroll,
+    })),
+  )
+  const quickterminal = useTape((state) => state.quickterminal)
 
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
@@ -126,11 +133,7 @@ export function EditorRows({
     const linenumber = `${i + 1}`.padStart(3, ' ')
     const prefix = `${i < rows.length ? linenumber : '   '} `
     const prefixcells = codeunitoffsettocellindex(prefix, prefix.length)
-    writeplaintext(
-      `${prefix}${text} `,
-      context,
-      false,
-    )
+    writeplaintext(`${prefix}${text} `, context, false)
 
     // base index = first cell of this line in the buffer (where writeplaintext started)
     const index = leftedge + context.y * context.width
@@ -146,31 +149,10 @@ export function EditorRows({
 
     // apply helper ranges
     // sidebar can be 20 characters wide
-    clippedapplybgtoindexes(
-      index,
-      edge.right,
-      20,
-      20,
-      COLOR.DKCYAN,
-      context,
-    )
+    clippedapplybgtoindexes(index, edge.right, 20, 20, COLOR.DKCYAN, context)
     // scroll can be 40 to 50 characters wide
-    clippedapplybgtoindexes(
-      index,
-      edge.right,
-      36,
-      36,
-      COLOR.DKCYAN,
-      context,
-    )
-    clippedapplybgtoindexes(
-      index,
-      edge.right,
-      46,
-      46,
-      COLOR.DKCYAN,
-      context,
-    )
+    clippedapplybgtoindexes(index, edge.right, 36, 36, COLOR.DKCYAN, context)
+    clippedapplybgtoindexes(index, edge.right, 46, 46, COLOR.DKCYAN, context)
 
     // apply token colors (line = code part; prefix = line number + space)
     applycodetokencolors(

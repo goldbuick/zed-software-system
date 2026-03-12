@@ -33,7 +33,13 @@ export function EditorComponent() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
 
-  const tapeeditor = useEditor()
+  const tapeeditor = useEditor(
+    useShallow((state) => ({
+      cursor: state.cursor,
+      xscroll: state.xscroll,
+      yscroll: state.yscroll,
+    })),
+  )
   const codepage = useWaitForValueString(
     vmcodeaddress(editor.book, editor.path),
   )

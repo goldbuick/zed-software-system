@@ -12,6 +12,7 @@ import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
 import { textformatreadedges } from 'zss/words/textformat'
+import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
@@ -31,7 +32,12 @@ export function TerminalComponent() {
   }, [])
 
   const context = useWriteText()
-  const tapeterminal = useTerminal()
+  const tapeterminal = useTerminal(
+    useShallow((state) => ({
+      ycursor: state.ycursor,
+      scroll: state.scroll,
+    })),
+  )
 
   // terminal edges
   const edge = textformatreadedges(context)
