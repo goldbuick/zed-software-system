@@ -232,9 +232,7 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         break
       }
       case 'BEAM': {
-        const [width, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.NUMBER,
-        ])
+        const [width, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         strdir.push(width)
         ii = iii
         break

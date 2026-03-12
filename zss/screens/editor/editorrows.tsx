@@ -48,8 +48,10 @@ export function EditorRows({
   const tapeeditor = useEditor(
     useShallow((state) => ({
       cursor: state.cursor,
+      select: state.select,
       xscroll: state.xscroll,
       yscroll: state.yscroll,
+      startline: state.startline,
     })),
   )
   const quickterminal = useTape((state) => state.quickterminal)

@@ -448,7 +448,7 @@ export function parsestatformat(image: string): string[] {
  * prefixCells is added when the tokenized line is not the full buffer line (e.g. code-only tokens with line-number prefix).
  */
 export function applycodetokencolors(
-  xoffset: number,
+  _xoffset: number,
   yoffset: number,
   rightedge: number,
   tokens: IToken[],
