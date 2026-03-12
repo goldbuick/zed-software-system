@@ -697,6 +697,7 @@ export function memoryevaldir(
         }
         return {
           ...modeval,
+          destpt: modeval.startpt,
           targets: beamtargets,
         }
       }
