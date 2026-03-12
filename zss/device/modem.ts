@@ -126,6 +126,11 @@ export function patchAffectsNode(patch: Patch, nodeId: NodeId): boolean {
   return false
 }
 
+/** Character count for undo/redo batching; zero-span patches count as 1. */
+export function patchcharsmodified(patch: Patch): number {
+  return Math.max(1, patch.span())
+}
+
 // tape editor uses this to wait for shared value to populate
 // scroll hyperlinks use this to wait for shared value to populate
 function useWaitForValue<T extends MODEM_SHARED_TYPE>(

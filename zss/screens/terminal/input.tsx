@@ -57,7 +57,16 @@ export function TerminalInput({
   logrowtotalheight,
 }: TerminalInputProps) {
   const context = useWriteText()
-  const tapeterminal = useTerminal()
+  const tapeterminal = useTerminal(
+    useShallow((state) => ({
+      buffer: state.buffer,
+      bufferindex: state.bufferindex,
+      xcursor: state.xcursor,
+      xselect: state.xselect,
+      yselect: state.yselect,
+      ycursor: state.ycursor,
+    })),
+  )
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const zsswords = useGadgetClient((state) => state.zsswords)

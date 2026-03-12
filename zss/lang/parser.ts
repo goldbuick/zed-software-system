@@ -616,6 +616,17 @@ class ScriptParser extends CstParser {
     this.SUBRULE1(this.simple_token)
   })
 
+  dir_flood = this.RULED('dir_flood', () => {
+    this.CONSUME(lexer.dir_flood)
+    this.SUBRULE(this.dir)
+  })
+
+  dir_beam = this.RULED('dir_beam', () => {
+    this.CONSUME(lexer.dir_beam)
+    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.dir)
+  })
+
   dir_awayby = this.RULED('dir_awayby', () => {
     this.CONSUME(lexer.dir_awayby)
     this.SUBRULE1(this.simple_token)
@@ -642,6 +653,8 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.dir_flee) },
       { ALT: () => this.SUBRULE(this.dir_to) },
       { ALT: () => this.SUBRULE(this.dir_select) },
+      { ALT: () => this.SUBRULE(this.dir_flood) },
+      { ALT: () => this.SUBRULE(this.dir_beam) },
       { ALT: () => this.CONSUME(lexer.dir_i) },
       { ALT: () => this.CONSUME(lexer.dir_u) },
       { ALT: () => this.CONSUME(lexer.dir_north) },

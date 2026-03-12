@@ -1,6 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useThree } from '@react-three/fiber'
-import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+} from 'react'
 import { RUNTIME } from 'zss/config'
 import { useDeviceData } from 'zss/gadget/device'
 import { TouchUI } from 'zss/screens/touchui/component'
@@ -66,8 +72,13 @@ export function UserScreen({ children }: UserScreenProps) {
     }))
   }, [insetcols, insetrows])
 
+  const screensize = useMemo(
+    () => ({ cols, rows, marginx, marginy }),
+    [cols, rows, marginx, marginy],
+  )
+
   return (
-    <Screensize.Provider value={{ cols, rows, marginx, marginy }}>
+    <Screensize.Provider value={screensize}>
       {cols >= 10 && rows >= 10 && (
         <group scale-x={-1} rotation-z={Math.PI}>
           <group

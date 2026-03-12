@@ -34,9 +34,11 @@ import {
   Dir_atCstChildren,
   Dir_awayCstChildren,
   Dir_awaybyCstChildren,
+  Dir_beamCstChildren,
   Dir_byCstChildren,
   Dir_findCstChildren,
   Dir_fleeCstChildren,
+  Dir_floodCstChildren,
   Dir_modCstChildren,
   Dir_selectCstChildren,
   Dir_toCstChildren,
@@ -1626,6 +1628,29 @@ class ScriptVisitor
     ]
   }
 
+  dir_flood(ctx: Dir_floodCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'flood',
+      }),
+      ...this.go(ctx.dir),
+    ]
+  }
+
+  dir_beam(ctx: Dir_beamCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'beam',
+      }),
+      ...this.go(ctx.simple_token),
+      ...this.go(ctx.dir),
+    ]
+  }
+
   dir_awayby(ctx: Dir_awaybyCstChildren, location: CstNodeLocation) {
     return [
       ...this.createcodenode(location, {
@@ -1876,6 +1901,15 @@ class ScriptVisitor
     }
     if (ctx.dir_to) {
       values.push(...this.go(ctx.dir_to))
+    }
+    if (ctx.dir_select) {
+      values.push(...this.go(ctx.dir_select))
+    }
+    if (ctx.dir_flood) {
+      values.push(...this.go(ctx.dir_flood))
+    }
+    if (ctx.dir_beam) {
+      values.push(...this.go(ctx.dir_beam))
     }
 
     return values.flat()

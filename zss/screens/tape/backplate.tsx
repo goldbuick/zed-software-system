@@ -12,7 +12,7 @@ type TapeBackPlateProps = {
 export function TapeBackPlate({ bump }: TapeBackPlateProps) {
   const context = useWriteText()
   const edge = textformatreadedges(context)
-  const { quickterminal } = useTape()
+  const quickterminal = useTape((state) => state.quickterminal)
   const BG = bgcolor(quickterminal)
 
   if (bump) {
