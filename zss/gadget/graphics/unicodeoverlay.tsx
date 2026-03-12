@@ -9,7 +9,7 @@ import { loadpalettefrombytes } from 'zss/feature/bytes'
 import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
-import { lookupglyph } from 'zss/gadget/display/unicodeatlas'
+import { lookupglyphasync } from 'zss/gadget/display/unicodeatlas'
 import {
   createunicodeoverlaymaterial,
   getunicodeoverlayquadgeometry,
@@ -43,6 +43,8 @@ export function UnicodeOverlay({
   const cellh = baseh * scale
   /** Square size so glyph fits in rect; glyph is centered in cell */
   const cellsize = Math.min(cellw, cellh)
+  /** Fraction of cell height where baseline sits (0..1 from top) for vertical alignment */
+  const baseline_fraction = 0.8
 
   // instanced mesh data
   const [meshref, setmeshref] = useState<InstancedMesh | null>(null)
@@ -86,6 +88,8 @@ export function UnicodeOverlay({
     materialref.current.uniforms.cellsize.value.set(cellsize, cellsize)
   }, [resolvedpalette, cellsize])
 
+  const runidref = useRef(0)
+
   useEffect(() => {
     if (
       width === 0 ||
@@ -97,28 +101,39 @@ export function UnicodeOverlay({
     ) {
       return
     }
-    let n = 0
-    for (const cell of cells) {
-      const slot = lookupglyph(cell.codepoint)
-      if (!slot) {
-        continue
+    const runid = ++runidref.current
+    type SlotResult = Awaited<ReturnType<typeof lookupglyphasync>>
+    const apply = (slots: SlotResult[]) => {
+      if (runid !== runidref.current) {
+        return
       }
-      const cx = cell.index % width
-      const cy = Math.floor(cell.index / width)
-      // square glyph centered in cell: offset so quad (cellsize x cellsize) is centered in (basew x baseh)
-      const halfpadx = (basew - cellsize) * 0.5
-      const halfpady = (baseh - cellsize) * 0.5
-      offsetarray[n * 2] = cx * basew + halfpadx
-      offsetarray[n * 2 + 1] = cy * baseh + halfpady
-      uvarray[n * 2] = slot.slotx
-      uvarray[n * 2 + 1] = slot.sloty
-      colorarray[n] = cell.colori
-      n++
+      let n = 0
+      const cellbaseline_y = baseh * baseline_fraction
+      for (let i = 0; i < cells.length; i++) {
+        const slot = slots[i]
+        if (!slot) {
+          continue
+        }
+        const cell = cells[i]
+        const cx = cell.index % width
+        const cy = Math.floor(cell.index / width)
+        const halfpadx = (basew - cellsize) * 0.5
+        offsetarray[n * 2] = cx * basew + halfpadx
+        offsetarray[n * 2 + 1] =
+          cy * baseh + cellbaseline_y - slot.baseline_from_top * cellsize
+        uvarray[n * 2] = slot.slotx
+        uvarray[n * 2 + 1] = slot.sloty
+        colorarray[n] = cell.colori
+        n++
+      }
+      meshref.count = n
+      offsetattr.needsUpdate = true
+      uvattr.needsUpdate = true
+      colorattr.needsUpdate = true
     }
-    meshref.count = n
-    offsetattr.needsUpdate = true
-    uvattr.needsUpdate = true
-    colorattr.needsUpdate = true
+    void Promise.all(cells.map((c) => lookupglyphasync(c.codepoint))).then(
+      apply,
+    )
   }, [
     cells,
     width,
@@ -127,6 +142,7 @@ export function UnicodeOverlay({
     basew,
     baseh,
     cellsize,
+    baseline_fraction,
     meshref,
     offsetattr,
     uvattr,

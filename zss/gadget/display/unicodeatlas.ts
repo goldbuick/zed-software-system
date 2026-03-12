@@ -6,9 +6,11 @@ const ATLAS_COLS = 32
 const ATLAS_SIZE = ATLAS_COLS * SLOT_SIZE
 const SLOT_PADDING = 2
 
-type GlyphSlot = {
+export type GlyphSlot = {
   slotx: number
   sloty: number
+  /** 0..1, distance from top of slot to baseline (for vertical alignment) */
+  baseline_from_top: number
 }
 
 let nextslot = 0
@@ -25,7 +27,7 @@ function gettinysdf(): InstanceType<typeof TinySDF> {
     radius: 4,
     buffer: 1,
     cutoff: 0.6,
-    fontWeight: '200',
+    fontWeight: '300',
     fontFamily: 'monospace',
   })
   return tinysdf
@@ -67,11 +69,16 @@ function ensureglyph(codepoint: number): GlyphSlot | null {
       atlasdata[dst] = glyph.data[src]
     }
   }
-  glyphcache.set(codepoint, { slotx, sloty })
+  const baseline_from_top = Math.max(
+    0,
+    Math.min(1, (SLOT_PADDING + offsety + glyph.glyphTop) / SLOT_SIZE),
+  )
+  const slot: GlyphSlot = { slotx, sloty, baseline_from_top }
+  glyphcache.set(codepoint, slot)
   if (atlastexture) {
     atlastexture.needsUpdate = true
   }
-  return { slotx, sloty }
+  return slot
 }
 
 export function getunicodeatlas(): DataTexture {
@@ -90,6 +97,27 @@ export function getunicodeatlas(): DataTexture {
 
 export function lookupglyph(codepoint: number): GlyphSlot | null {
   return ensureglyph(codepoint)
+}
+
+/**
+ * Resolves with the glyph slot after creating it asynchronously so the main
+ * thread is not blocked. Use this when building the overlay for many cells.
+ */
+export function lookupglyphasync(codepoint: number): Promise<GlyphSlot | null> {
+  const cached = glyphcache.get(codepoint)
+  if (cached) {
+    return Promise.resolve(cached)
+  }
+  return new Promise((resolve) => {
+    const run = (): void => {
+      resolve(ensureglyph(codepoint))
+    }
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(run, { timeout: 50 })
+    } else {
+      setTimeout(run, 0)
+    }
+  })
 }
 
 export function invalidateatlas(): void {
