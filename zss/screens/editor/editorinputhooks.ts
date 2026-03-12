@@ -6,6 +6,7 @@ import {
   modemApplyAndSyncPatch,
   modembroadcastpresence,
   patchAffectsNode,
+  patchcharsmodified,
   usePresence,
 } from 'zss/device/modem'
 import { useEditor } from 'zss/gadget/data/state'
@@ -196,13 +197,15 @@ export function useEditorSplice(
 // Undo / Redo
 // -------------------------------------------------------------------
 
-const UNDO_REDO_BATCH_SIZE = 5
+const UNDO_REDO_CHAR_THRESHOLD = 20
+const UNDO_REDO_MAX_STEPS = 5
 
 type UndoEntry = {
   patch: Patch
   undoPatch: Patch
   cursorBefore: number
   cursorAfter?: number
+  charsModified: number
 }
 
 export function useUndoRedo(
@@ -216,18 +219,27 @@ export function useUndoRedo(
 
   const undomanager = ispresent(codepage)
     ? {
-        undo(count: number = UNDO_REDO_BATCH_SIZE) {
-          const n = Math.min(count, undoStack.current.length)
-          if (n <= 0) {
+        undo() {
+          if (undoStack.current.length === 0) {
             return
           }
           const batch: UndoEntry[] = []
-          for (let i = 0; i < n; i++) {
+          let totalchars = 0
+          const popone = () => {
             const top = undoStack.current.pop()
-            if (!top) {
-              break
+            if (top) {
+              batch.push(top)
+              totalchars += top.charsModified
             }
-            batch.push(top)
+            return top
+          }
+          popone()
+          while (
+            undoStack.current.length > 0 &&
+            totalchars < UNDO_REDO_CHAR_THRESHOLD &&
+            batch.length < UNDO_REDO_MAX_STEPS
+          ) {
+            popone()
           }
           const currentCursor = editorCursor
           for (let i = batch.length - 1; i >= 0; i--) {
@@ -246,18 +258,31 @@ export function useUndoRedo(
             select: undefined,
           })
         },
-        redo(count: number = UNDO_REDO_BATCH_SIZE) {
-          const n = Math.min(count, redoStack.current.length)
-          if (n <= 0) {
+        redo() {
+          if (redoStack.current.length === 0) {
             return
+          }
+          const batch: UndoEntry[] = []
+          let totalchars = 0
+          const popone = () => {
+            const top = redoStack.current.pop()
+            if (top) {
+              batch.push(top)
+              totalchars += top.charsModified
+            }
+            return top
+          }
+          popone()
+          while (
+            redoStack.current.length > 0 &&
+            totalchars < UNDO_REDO_CHAR_THRESHOLD &&
+            batch.length < UNDO_REDO_MAX_STEPS
+          ) {
+            popone()
           }
           const log = getModemLog()
           let newCursor = editorCursor
-          for (let i = 0; i < n; i++) {
-            const top = redoStack.current.pop()
-            if (!top) {
-              break
-            }
+          for (const top of batch) {
             let redoPatch: Patch
             try {
               redoPatch = log.undo(top.undoPatch)
@@ -280,6 +305,7 @@ export function useUndoRedo(
               undoPatch: newUndoPatch,
               cursorBefore: top.cursorBefore,
               cursorAfter: editorCursor,
+              charsModified: top.charsModified,
             })
             newCursor = top.cursorAfter ?? editorCursor
           }
@@ -304,6 +330,7 @@ export function useUndoRedo(
           patch,
           undoPatch,
           cursorBefore: cursorBeforeEditRef.current,
+          charsModified: patchcharsmodified(patch),
         })
         redoStack.current = []
       } catch {

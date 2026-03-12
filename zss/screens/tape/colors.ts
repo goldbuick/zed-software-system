@@ -458,8 +458,8 @@ export function applycodetokencolors(
 ) {
   const tocell = (codeunit: number) =>
     ispresent(line)
-      ? prefixcells + codeunitoffsettocellindex(line, codeunit) - xoffset
-      : codeunit - xoffset
+      ? prefixcells + codeunitoffsettocellindex(line, codeunit)
+      : codeunit
 
   for (let t = 0; t < tokens.length; ++t) {
     const token = tokens[t]
@@ -556,20 +556,23 @@ export function applycodetokencolors(
           case STAT_TYPE.COLOREDIT: {
             const [first] = words
             const firstcells = codeunitoffsettocellindex(first, first.length)
+            // stat token image is "@" + name + " " + value; name length in cells includes leading "@"
+            const statnamecells = 1 + firstcells
             clippedapplycolortoindexes(
               yoffset,
               rightedge,
               left,
-              left + firstcells - 1,
+              left + statnamecells - 1,
               ZSS_TYPE_STATNAME,
               context.active.bg,
               context,
             )
             if (words.length > 1) {
+              // value starts after stat name and the space
               clippedapplycolortoindexes(
                 yoffset,
                 rightedge,
-                left + firstcells + 1,
+                left + statnamecells + 1,
                 right,
                 ZSS_TYPE_NUMBER,
                 context.active.bg,
