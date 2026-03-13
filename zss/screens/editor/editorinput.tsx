@@ -102,17 +102,11 @@ export function EditorInput({
     ycursor,
   )
 
-  const { undomanager, cursorBeforeEditRef, cursorAfterEditRef } = useUndoRedo(
-    codepage,
-    updatescrolling,
-  )
+  const { undomanager } = useUndoRedo(codepage, updatescrolling)
 
   const { strvaluesplice, strvaluespliceonly } = useEditorSplice(
     codepage,
     updatescrolling,
-    cursorBeforeEditRef,
-    cursorAfterEditRef,
-    tapeeditor.cursor,
   )
 
   // --- drawing ---

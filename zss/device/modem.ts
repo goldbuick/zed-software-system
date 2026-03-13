@@ -94,9 +94,37 @@ const ROOT_OBJ = () => SYNC_MODEL.api.obj()
 /** CRDT log for undo - captures patches, can produce revert patches */
 let SYNC_LOG: Log
 
+const LOG_RESET_LISTENERS: (() => void)[] = []
+
 function initSyncLog() {
   SYNC_LOG?.destroy?.()
   SYNC_LOG = Log.from(SYNC_MODEL)
+  for (const fn of LOG_RESET_LISTENERS) {
+    fn()
+  }
+}
+
+/** Subscribe to log reset (e.g. after joinack). Returns unsubscribe. */
+export function subscribeToLogReset(fn: () => void): () => void {
+  LOG_RESET_LISTENERS.push(fn)
+  return () => {
+    const i = LOG_RESET_LISTENERS.indexOf(fn)
+    if (i !== -1) {
+      LOG_RESET_LISTENERS.splice(i, 1)
+    }
+  }
+}
+
+/** Set before local edit (insert/delete); consumed by onFlush so only local patches go to undo stack. */
+let nextPatchIsLocal = false
+export function markNextPatchAsLocal(): void {
+  nextPatchIsLocal = true
+}
+/** Consume the local flag; returns true if the patch that just flushed was from a local edit. */
+export function consumeLocalPatchFlag(): boolean {
+  const was = nextPatchIsLocal
+  nextPatchIsLocal = false
+  return was
 }
 
 initSyncLog()
