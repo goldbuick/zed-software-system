@@ -1,6 +1,7 @@
 import { Model, Patch } from 'json-joy/lib/json-crdt'
 import { Log } from 'json-joy/lib/json-crdt/log/Log'
 import type { StrApi } from 'json-joy/lib/json-crdt/model/api/nodes'
+import { DelOp, InsStrOp } from 'json-joy/lib/json-crdt-patch/operations'
 import { useEffect, useState } from 'react'
 import { arr2hex, hex2arr } from 'uint8-util'
 import { createdevice } from 'zss/device'
@@ -105,6 +106,41 @@ export function getModemLog(): Log {
   return SYNC_LOG
 }
 
+/** Derive cursor index from an applied undo/redo patch (json-joy-style).
+ * Returns character index for the string identified by nodeId, or undefined. */
+export function placeCursorForPatch(
+  nodeId: NodeId,
+  patch: Patch,
+): number | undefined {
+  const log = getModemLog()
+  const model = log.end
+  const node = model.index.get(nodeId as { sid: number; time: number })
+  if (!node) {
+    return undefined
+  }
+  const strApi = model.api.wrap(node) as unknown as StrApi
+  const ops = patch.ops
+  for (let i = ops.length - 1; i >= 0; i--) {
+    const op = ops[i]
+    const opObj = (op as { obj?: { sid?: number; time?: number } }).obj
+    if (!opObj || !sameId(nodeId, opObj)) {
+      continue
+    }
+    if (op instanceof InsStrOp) {
+      const lasttime = op.id.time + op.span() - 1
+      const lastcharid = { sid: op.id.sid, time: lasttime }
+      const pos = strApi.findPos(lastcharid)
+      return pos === -1 ? 0 : pos + 1
+    }
+    if (op instanceof DelOp && op.what.length > 0) {
+      const firstspan = op.what[0]
+      const pos = strApi.findPos(firstspan)
+      return pos === -1 ? 0 : pos
+    }
+  }
+  return undefined
+}
+
 /** Apply a patch to the shared model and sync to peers. Used for undo/redo. */
 export function modemApplyAndSyncPatch(patch: Patch) {
   SYNC_MODEL.applyPatch(patch)
@@ -124,11 +160,6 @@ export function patchAffectsNode(patch: Patch, nodeId: NodeId): boolean {
     }
   }
   return false
-}
-
-/** Character count for undo/redo batching; zero-span patches count as 1. */
-export function patchcharsmodified(patch: Patch): number {
-  return Math.max(1, patch.span())
 }
 
 // tape editor uses this to wait for shared value to populate
