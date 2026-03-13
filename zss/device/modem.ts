@@ -108,14 +108,17 @@ export function getModemLog(): Log {
 
 /** Derive cursor index from an applied undo/redo patch (json-joy-style).
  * Returns character index for the string identified by nodeId, or undefined. */
-export function placeCursorForPatch(nodeId: NodeId, patch: Patch): number | undefined {
+export function placeCursorForPatch(
+  nodeId: NodeId,
+  patch: Patch,
+): number | undefined {
   const log = getModemLog()
   const model = log.end
   const node = model.index.get(nodeId as { sid: number; time: number })
   if (!node) {
     return undefined
   }
-  const strApi = model.api.wrap(node) as StrApi
+  const strApi = model.api.wrap(node) as unknown as StrApi
   const ops = patch.ops
   for (let i = ops.length - 1; i >= 0; i--) {
     const op = ops[i]
