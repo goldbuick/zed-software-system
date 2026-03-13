@@ -1,26 +1,16 @@
-import type { Patch } from 'json-joy/lib/json-crdt-patch'
 import { useCallback, useEffect, useRef } from 'react'
 import {
   type SharedTextHandle,
-  consumeLocalPatchFlag,
-  getModemLog,
+  getUndoManager,
   markNextPatchAsLocal,
-  modemApplyAndSyncPatch,
   modembroadcastpresence,
-  patchAffectsNode,
-  placeCursorForPatch,
-  subscribeToLogReset,
+  registerCursorRestore,
+  setCursorBeforeEdit,
   usePresence,
 } from 'zss/device/modem'
 import { useEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import {
-  type RedoStackItem,
-  type UndoCallback,
-  type UndoStackItem,
-  createundoredostacks,
-} from 'zss/screens/editor/undoRedoStacks'
 import { getcolorforplayer } from 'zss/screens/inputcommon'
 import {
   EDITOR_CODE_ROW,
@@ -155,101 +145,38 @@ export function useCursorNavigation(
 }
 
 // -------------------------------------------------------------------
-// Undo / Redo (json-joy-style: lazy stack, single log, cursor from patch)
+// Undo / Redo (Yjs UndoManager per text; cursor restored via stack-item-popped)
 // -------------------------------------------------------------------
 
 export function useUndoRedo(
   codepage: MAYBE<SharedTextHandle>,
   updatescrolling: (cursor: number) => void,
 ) {
-  const stacksRef = useRef<ReturnType<
-    typeof createundoredostacks<Patch>
-  > | null>(null)
-  const codepageRef = useRef(codepage)
-  codepageRef.current = codepage
+  const key = codepage?.nodeId?.key
 
   useEffect(() => {
-    const sid = codepage?.nodeId?.sid
-    const time = codepage?.nodeId?.time
-    if (sid == null || time == null) {
-      stacksRef.current = null
+    if (!key) {
       return
     }
-
-    const stacks = createundoredostacks<Patch>()
-    stacksRef.current = stacks
-
-    const log = getModemLog()
-
-    const undocallback = (patch: Patch): ReturnType<UndoCallback<Patch>> => {
-      const undoPatch = log.undo(patch)
-      modemApplyAndSyncPatch(undoPatch)
-      const redocallback = (dopatch: Patch) => {
-        const redoPatch = dopatch.rebase(log.end.clock.time)
-        modemApplyAndSyncPatch(redoPatch)
-        const nextundo = (redone: Patch) => {
-          const revert = log.undo(redone)
-          modemApplyAndSyncPatch(revert)
-          return {
-            redoitem: [redone, redocallback] as RedoStackItem<Patch>,
-            applied: revert,
-          }
-        }
-        return {
-          undoitem: [redoPatch, nextundo] as UndoStackItem<Patch>,
-          applied: redoPatch,
-        }
-      }
-      return { redoitem: [patch, redocallback], applied: undoPatch }
+    const restore = (cursor: number) => {
+      updatescrolling(cursor)
+      useEditor.setState({ cursor, select: undefined })
     }
+    return registerCursorRestore(key, restore)
+  }, [key, updatescrolling])
 
-    const unsubflush = log.end.api.onFlush.listen((patch: Patch) => {
-      if (!consumeLocalPatchFlag()) {
-        return
-      }
-      const cp = codepageRef.current
-      if (!ispresent(cp)) {
-        return
-      }
-      if (!patchAffectsNode(patch, cp.nodeId)) {
-        return
-      }
-      stacks.recordpatch(patch, undocallback)
-    })
-    const unsubreset = subscribeToLogReset(() => {
-      stacks.clear()
-    })
-    return () => {
-      unsubflush()
-      unsubreset()
-      stacksRef.current = null
-    }
-  }, [codepage?.nodeId?.sid, codepage?.nodeId?.time])
-
-  const undomanager = ispresent(codepage)
-    ? {
-        undo() {
-          const result = stacksRef.current?.undo()
-          if (result) {
-            const index = placeCursorForPatch(codepage.nodeId, result.applied)
-            if (index !== undefined) {
-              updatescrolling(index)
-              useEditor.setState({ cursor: index, select: undefined })
-            }
-          }
-        },
-        redo() {
-          const result = stacksRef.current?.redo()
-          if (result) {
-            const index = placeCursorForPatch(codepage.nodeId, result.applied)
-            if (index !== undefined) {
-              updatescrolling(index)
-              useEditor.setState({ cursor: index, select: undefined })
-            }
-          }
-        },
-      }
-    : undefined
+  const um = key ? getUndoManager(key) : undefined
+  const undomanager =
+    ispresent(codepage) && um
+      ? {
+          undo() {
+            um.undo()
+          },
+          redo() {
+            um.redo()
+          },
+        }
+      : undefined
 
   return { undomanager }
 }
@@ -264,6 +191,9 @@ export function useEditorSplice(
 ) {
   const strvaluesplice = useCallback(
     function (index: number, count: number, insert?: string) {
+      if (codepage) {
+        setCursorBeforeEdit(codepage.nodeId.key, index)
+      }
       markNextPatchAsLocal()
       if (count > 0) {
         codepage?.delete(index, count)
@@ -280,6 +210,9 @@ export function useEditorSplice(
 
   const strvaluespliceonly = useCallback(
     function (index: number, count: number, insert?: string) {
+      if (codepage) {
+        setCursorBeforeEdit(codepage.nodeId.key, index)
+      }
       markNextPatchAsLocal()
       if (count > 0) {
         codepage?.delete(index, count)

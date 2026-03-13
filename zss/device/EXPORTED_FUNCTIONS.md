@@ -256,11 +256,18 @@ Functions for managing message forwarding between peers, server, client, and hea
 
 **File:** `modem.ts`
 
-Functions for shared state synchronization using Yjs (CRDT).
+Functions for shared state synchronization using Yjs (CRDT) and y-protocols (Awareness for presence).
+
+### Types
+- `PresenceState` - Presence info (clientId, name, color, cursor, select, codepageKey, lastSeen)
+- `NodeId` - Identifies a shared text by key (for undo scope)
+- `SharedTextHandle` - Handle for collaborative text (toJSON, insert, delete, length, nodeId)
+- `MODEM_SHARED_TYPE` - Enum for shared type (NUMBER, STRING)
 
 ### React Hooks
 - `useWaitForValueNumber(key)` - React hook to wait for number value
 - `useWaitForValueString(key)` - React hook to wait for string value
+- `usePresence(codepageKey)` - React hook to observe presence for a codepage
 
 ### Value Initialization
 - `modemwriteinitnumber(key, value)` - Initialize number value in shared state
@@ -274,9 +281,17 @@ Functions for shared state synchronization using Yjs (CRDT).
 - `modemobservevaluenumber(key, callback)` - Observe number value changes
 - `modemobservevaluestring(key, callback)` - Observe string value changes
 
-### Exports
-- `Y` - Yjs library export
-- `MODEM_SHARED_TYPE` - Enum for shared type (NUMBER, STRING)
+### Undo / Redo
+- `subscribeToLogReset(fn)` - Subscribe to log reset (e.g. after joinack). Returns unsubscribe.
+- `markNextPatchAsLocal()` - Mark the next edit as local (for undo tracking)
+- `consumeLocalPatchFlag()` - Consume the local-patch flag; returns true if next tx was local
+- `setCursorBeforeEdit(key, cursor)` - Store cursor before edit (for cursor restore on undo/redo)
+- `getUndoManager(key)` - Get Y.UndoManager for the shared text at key
+- `registerCursorRestore(key, restore)` - Register callback to restore cursor after undo/redo. Returns unregister.
+
+### Presence (Awareness)
+- `modembroadcastpresence(clientId, codepageKey, cursor, select?, name?, color?)` - Update local awareness state
+- `getpresenceforcodepage(codepageKey)` - Get all presence states for a codepage
 
 ---
 

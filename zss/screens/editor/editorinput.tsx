@@ -72,9 +72,7 @@ export function EditorInput({
   const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
 
-  const codepageKey = ispresent(codepage)
-    ? `${codepage.nodeId.sid}:${codepage.nodeId.time}`
-    : undefined
+  const codepageKey = ispresent(codepage) ? codepage.nodeId.key : undefined
 
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
   const rowsend = rows.length - 1

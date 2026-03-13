@@ -1,9 +1,7 @@
-import { Model, Patch } from 'json-joy/lib/json-crdt'
-import { Log } from 'json-joy/lib/json-crdt/log/Log'
-import type { StrApi } from 'json-joy/lib/json-crdt/model/api/nodes'
-import { DelOp, InsStrOp } from 'json-joy/lib/json-crdt-patch/operations'
 import { useEffect, useState } from 'react'
 import { arr2hex, hex2arr } from 'uint8-util'
+import * as awarenessProtocol from 'y-protocols/awareness'
+import * as Y from 'yjs'
 import { createdevice } from 'zss/device'
 import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
@@ -26,47 +24,125 @@ export type PresenceState = {
   lastSeen: number
 }
 
-/** Timestamp id for matching patches to a specific string node (undo scope) */
+/** Identifies a shared text for undo scope (Yjs: the map key) */
 export type NodeId = {
-  sid: number
-  time: number
+  key: string
 }
 
 /**
- * Shared text handle - Y.Text-compatible API for json-joy StrApi.
+ * Shared text handle - Y.Text-based API.
  * Used by editor and panels for collaborative string editing.
- * nodeId enables undo/redo filtering (only undo edits to this string).
+ * nodeId.key enables undo/redo per text.
  */
 export type SharedTextHandle = {
   toJSON(): string
   insert(index: number, text: string): void
   delete(index: number, length: number): void
   get length(): number
-  /** For undo: match patches that affect this string */
+  /** For undo: which text this handle refers to */
   readonly nodeId: NodeId
 }
 
-function createSharedTextHandle(strApi: StrApi): SharedTextHandle {
-  const nodeId = (strApi as { node?: { id: NodeId } }).node?.id ?? {
-    sid: -1,
-    time: -1,
+const SYNC_DOC = new Y.Doc()
+const ROOT = SYNC_DOC.getMap('root')
+const AWARENESS = new awarenessProtocol.Awareness(SYNC_DOC)
+
+/** One UndoManager per text key; created on first use */
+const undomanagers = new Map<string, { um: Y.UndoManager; text: Y.Text }>()
+/** Cursor position to store in stack-item-added (set by editor before edit) */
+const cursorbeforeedit = new Map<string, number>()
+/** Callbacks to restore cursor after undo/redo (registered by editor) */
+const cursorrestorecallbacks = new Map<string, (cursor: number) => void>()
+
+const LOCAL_ORIGIN = Symbol('local')
+
+function getorcreatetext(key: string): Y.Text {
+  let text = ROOT.get(key) as Y.Text | undefined
+  if (!text || !(text instanceof Y.Text)) {
+    text = new Y.Text()
+    ROOT.set(key, text)
   }
+  return text
+}
+
+function getorcreateundomanager(key: string): {
+  um: Y.UndoManager
+  text: Y.Text
+} {
+  let entry = undomanagers.get(key)
+  if (!entry) {
+    const text = getorcreatetext(key)
+    const um = new Y.UndoManager(text, {
+      captureTimeout: 0,
+      trackedOrigins: new Set([LOCAL_ORIGIN]),
+    })
+    um.on(
+      'stack-item-added',
+      (event: { stackItem: { meta: Map<unknown, unknown> } }) => {
+        const cursor = cursorbeforeedit.get(key) ?? 0
+        try {
+          const rel = Y.createRelativePositionFromTypeIndex(text, cursor)
+          event.stackItem.meta.set('cursor-location', rel)
+        } catch {
+          event.stackItem.meta.set('cursor-location', null)
+        }
+      },
+    )
+    um.on(
+      'stack-item-popped',
+      (event: { stackItem: { meta: Map<unknown, unknown> }; type: string }) => {
+        const cb = cursorrestorecallbacks.get(key)
+        if (!cb) {
+          return
+        }
+        const rel = event.stackItem.meta.get('cursor-location')
+        if (rel != null && typeof rel === 'object') {
+          try {
+            const pos = Y.createAbsolutePositionFromRelativePosition(
+              rel as Y.RelativePosition,
+              SYNC_DOC,
+            )
+            if (pos?.type === text) {
+              const index = pos.index
+              cb(index)
+              return
+            }
+          } catch {
+            // fallback
+          }
+        }
+        const len = text.length
+        cb(len > 0 ? len : 0)
+      },
+    )
+    entry = { um, text }
+    undomanagers.set(key, entry)
+  }
+  return entry
+}
+
+function createSharedTextHandle(key: string, text: Y.Text): SharedTextHandle {
+  const nodeId: NodeId = { key }
   return {
     get nodeId() {
       return nodeId
     },
     toJSON() {
-      const view = strApi.view()
-      return typeof view === 'string' ? view : ''
+      // Y.Text has custom toString returning document content
+      return (text as { toString(): string }).toString()
     },
-    insert(index: number, text: string) {
-      strApi.ins(index, text)
+    insert(index: number, str: string) {
+      SYNC_DOC.transact(() => {
+        text.insert(index, str)
+      }, LOCAL_ORIGIN)
     },
     delete(index: number, length: number) {
-      strApi.del(index, length)
+      SYNC_DOC.transact(() => {
+        text.delete(index, length)
+      }, LOCAL_ORIGIN)
     },
     get length() {
-      return strApi.length()
+      return text.length
     },
   }
 }
@@ -82,23 +158,10 @@ type SHARED_TYPE_MAP = {
 }
 
 let joined = false
-const SYNC_MODEL = Model.create()
-
-// ensure root is empty object for key-value map
-if (SYNC_MODEL.view() === undefined || typeof SYNC_MODEL.view() !== 'object') {
-  SYNC_MODEL.api.set({})
-}
-
-const ROOT_OBJ = () => SYNC_MODEL.api.obj()
-
-/** CRDT log for undo - captures patches, can produce revert patches */
-let SYNC_LOG: Log
 
 const LOG_RESET_LISTENERS: (() => void)[] = []
 
-function initSyncLog() {
-  SYNC_LOG?.destroy?.()
-  SYNC_LOG = Log.from(SYNC_MODEL)
+function firelogreset() {
   for (const fn of LOG_RESET_LISTENERS) {
     fn()
   }
@@ -115,121 +178,111 @@ export function subscribeToLogReset(fn: () => void): () => void {
   }
 }
 
-/** Set before local edit (insert/delete); consumed by onFlush so only local patches go to undo stack. */
+/** Set before local edit (insert/delete); used so only local edits are tracked for undo. */
 let nextPatchIsLocal = false
 export function markNextPatchAsLocal(): void {
   nextPatchIsLocal = true
 }
-/** Consume the local flag; returns true if the patch that just flushed was from a local edit. */
+
+/** Consume the local flag; returns true if the next transaction is from a local edit. */
 export function consumeLocalPatchFlag(): boolean {
   const was = nextPatchIsLocal
   nextPatchIsLocal = false
   return was
 }
 
-initSyncLog()
-
-/** Get the modem's CRDT log for undo/redo (Log.undo) */
-export function getModemLog(): Log {
-  return SYNC_LOG
+/** Call before a local edit so we can store cursor for undo/redo. */
+export function setCursorBeforeEdit(key: string, cursor: number): void {
+  cursorbeforeedit.set(key, cursor)
 }
 
-/** Derive cursor index from an applied undo/redo patch (json-joy-style).
- * Returns character index for the string identified by nodeId, or undefined. */
-export function placeCursorForPatch(
-  nodeId: NodeId,
-  patch: Patch,
-): number | undefined {
-  const log = getModemLog()
-  const model = log.end
-  const node = model.index.get(nodeId as { sid: number; time: number })
-  if (!node) {
-    return undefined
-  }
-  const strApi = model.api.wrap(node) as unknown as StrApi
-  const ops = patch.ops
-  for (let i = ops.length - 1; i >= 0; i--) {
-    const op = ops[i]
-    const opObj = (op as { obj?: { sid?: number; time?: number } }).obj
-    if (!opObj || !sameId(nodeId, opObj)) {
-      continue
-    }
-    if (op instanceof InsStrOp) {
-      const lasttime = op.id.time + op.span() - 1
-      const lastcharid = { sid: op.id.sid, time: lasttime }
-      const pos = strApi.findPos(lastcharid)
-      return pos === -1 ? 0 : pos + 1
-    }
-    if (op instanceof DelOp && op.what.length > 0) {
-      const firstspan = op.what[0]
-      const pos = strApi.findPos(firstspan)
-      return pos === -1 ? 0 : pos
-    }
+/** Get the UndoManager for a shared text by key. */
+export function getUndoManager(key: string): Y.UndoManager | undefined {
+  return getorcreateundomanager(key).um
+}
+
+/** Test-only: get SharedTextHandle for a key if it exists and is text. */
+export function getSharedTextHandleForTest(
+  key: string,
+): SharedTextHandle | undefined {
+  const val = ROOT.get(key)
+  if (val instanceof Y.Text) {
+    return createSharedTextHandle(key, val)
   }
   return undefined
 }
 
-/** Apply a patch to the shared model and sync to peers. Used for undo/redo. */
-export function modemApplyAndSyncPatch(patch: Patch) {
-  SYNC_MODEL.applyPatch(patch)
-  modem.emit('', 'modem:sync', arr2hex(patch.toBinary()))
+/** Test-only: reset a text key to empty and clear its UndoManager so tests start clean. */
+export function resetKeyForTest(key: string): void {
+  undomanagers.delete(key)
+  const text = new Y.Text()
+  ROOT.set(key, text)
 }
 
-function sameId(a: NodeId, b: { sid?: number; time?: number }): boolean {
-  return a?.sid === b?.sid && a?.time === b?.time
-}
-
-/** True if the patch affects the given string node (for undo scope) */
-export function patchAffectsNode(patch: Patch, nodeId: NodeId): boolean {
-  for (const op of patch.ops) {
-    const obj = (op as { obj?: { sid?: number; time?: number } }).obj
-    if (obj && sameId(nodeId, obj)) {
-      return true
-    }
+/** Register a callback to restore cursor after undo/redo for the given key. Returns unregister. */
+export function registerCursorRestore(
+  key: string,
+  restore: (cursor: number) => void,
+): () => void {
+  cursorrestorecallbacks.set(key, restore)
+  return () => {
+    cursorrestorecallbacks.delete(key)
   }
-  return false
 }
 
-// tape editor uses this to wait for shared value to populate
-// scroll hyperlinks use this to wait for shared value to populate
+// ---------------------------------------------------------------------------
+// Value access and subscription
+// ---------------------------------------------------------------------------
+
+function getValueForKey(key: string): unknown {
+  const val = ROOT.get(key)
+  if (val === undefined) {
+    return undefined
+  }
+  if (typeof val === 'number') {
+    return val
+  }
+  if (val instanceof Y.Text) {
+    getorcreateundomanager(key)
+    return createSharedTextHandle(key, val)
+  }
+  return undefined
+}
+
 function useWaitForValue<T extends MODEM_SHARED_TYPE>(
   key: string,
   type: T,
 ): MAYBE<SHARED_TYPE_MAP[T]> {
   const [, settoggle] = useState(0)
   useEffect(() => {
-    const unsub = SYNC_MODEL.api.subscribe(() => settoggle((s) => 1 - s))
-    return () => unsub()
+    const handler = () => settoggle((s) => 1 - s)
+    SYNC_DOC.on('update', handler)
+    return () => SYNC_DOC.off('update', handler)
   }, [])
 
   try {
-    const obj = ROOT_OBJ()
-    if (!obj.has(key)) {
+    if (!ROOT.has(key)) {
       return undefined
     }
-    const childApi = obj.get(key)
-    if (!childApi) {
+    const val = getValueForKey(key)
+    if (val === undefined) {
       return undefined
     }
 
     if (type === MODEM_SHARED_TYPE.NUMBER) {
-      const view = childApi.view()
-      return (typeof view === 'number' ? view : undefined) as MAYBE<
+      return (typeof val === 'number' ? val : undefined) as MAYBE<
         SHARED_TYPE_MAP[T]
       >
     }
     if (type === MODEM_SHARED_TYPE.STRING) {
-      const valApi = childApi as { get?: () => { asStr?: () => StrApi } }
-      const inner = valApi.get?.() ?? childApi
-      const strApi = (inner as { asStr?: () => StrApi }).asStr?.() ?? inner
-      if (strApi && typeof (strApi as StrApi).ins === 'function') {
-        return createSharedTextHandle(strApi as StrApi) as MAYBE<
-          SHARED_TYPE_MAP[T]
-        >
-      }
+      return (
+        val && typeof (val as SharedTextHandle).toJSON === 'function'
+          ? val
+          : undefined
+      ) as MAYBE<SHARED_TYPE_MAP[T]>
     }
   } catch {
-    // model may be mid-mutation when subscriber fires
+    // mid-mutation
   }
   return undefined
 }
@@ -256,66 +309,45 @@ export function useWaitForValueString(key: string) {
   return value
 }
 
-// non react code uses this to setup values
-function modemwriteinit<T extends MODEM_SHARED_TYPE>(
-  key: string,
-  type: T,
-  value: SHARED_TYPE_MAP[T],
-) {
-  const obj = ROOT_OBJ()
-  if (obj.has(key)) {
+export function modemwriteinitnumber(key: string, value: number) {
+  if (ROOT.has(key)) {
     return
   }
-  const toSet =
-    type === MODEM_SHARED_TYPE.STRING
-      ? (value as SharedTextHandle).toJSON()
-      : (value as number)
-  obj.set({ [key]: toSet })
-}
-
-export function modemwriteinitnumber(key: string, value: number) {
-  modemwriteinit(key, MODEM_SHARED_TYPE.NUMBER, value)
+  ROOT.set(key, value)
 }
 
 export function modemwriteinitstring(key: string, value: string) {
-  const obj = ROOT_OBJ()
-  if (obj.has(key)) {
+  if (ROOT.has(key)) {
     return
   }
-  obj.set({ [key]: value })
+  const text = new Y.Text()
+  if (value.length > 0) {
+    text.insert(0, value)
+  }
+  ROOT.set(key, text)
 }
 
-// for scrolls
 export function modemwritevaluenumber(key: string, value: number) {
-  ROOT_OBJ().set({ [key]: value })
+  ROOT.set(key, value)
 }
 
 export function modemwritevaluestring(key: string, value: string) {
-  ROOT_OBJ().set({ [key]: value })
-}
-
-function getValueForKey(key: string): unknown {
-  try {
-    const obj = ROOT_OBJ()
-    if (!obj.has(key)) {
-      return undefined
+  if (!ROOT.has(key)) {
+    const text = new Y.Text()
+    if (value.length > 0) {
+      text.insert(0, value)
     }
-    const childApi = obj.get(key)
-    if (!childApi) {
-      return undefined
-    }
-    const valApi = childApi as {
-      get?: () => { view?: () => unknown; asStr?: () => StrApi }
-    }
-    const inner = valApi.get?.() ?? childApi
-    const view = (inner as { view?: () => unknown })?.view?.()
-    if (typeof view === 'string') {
-      const strApi = (inner as { asStr?: () => StrApi }).asStr?.()
-      return strApi ? createSharedTextHandle(strApi) : view
-    }
-    return view
-  } catch {
-    return undefined
+    ROOT.set(key, text)
+    return
+  }
+  const existing = ROOT.get(key)
+  if (existing instanceof Y.Text) {
+    SYNC_DOC.transact(() => {
+      existing.delete(0, existing.length)
+      if (value.length > 0) {
+        existing.insert(0, value)
+      }
+    }, LOCAL_ORIGIN)
   }
 }
 
@@ -323,17 +355,15 @@ function modemobservevalue(
   key: string,
   callback: (value: unknown) => void,
 ): UNOBSERVE_FUNC {
-  const unsub = SYNC_MODEL.api.subscribe(() => {
+  const handler = () => {
     const value = getValueForKey(key)
     if (value !== undefined) {
       callback(value)
     }
-  })
-  const value = getValueForKey(key)
-  if (value !== undefined) {
-    callback(value)
   }
-  return () => unsub()
+  SYNC_DOC.on('update', handler)
+  handler()
+  return () => SYNC_DOC.off('update', handler)
 }
 
 export function modemobservevaluenumber(
@@ -358,6 +388,85 @@ export function modemobservevaluestring(
   })
 }
 
+// ---------------------------------------------------------------------------
+// Presence (Awareness)
+// ---------------------------------------------------------------------------
+
+function awarenessstatetopresence(
+  clientIdNum: number,
+  state: Record<string, unknown> | null,
+): PresenceState | null {
+  if (!state || typeof state !== 'object') {
+    return null
+  }
+  const clientId = state.clientId as string | undefined
+  const codepageKey = state.codepageKey as string | undefined
+  if (clientId == null || codepageKey == null) {
+    return null
+  }
+  return {
+    clientId,
+    name: (state.name as string) ?? `User ${String(clientIdNum).slice(0, 6)}`,
+    color: (state.color as string) ?? '#3b82f6',
+    cursor: (state.cursor as number) ?? 0,
+    select: state.select as number | undefined,
+    codepageKey,
+    lastSeen: Date.now(),
+  }
+}
+
+/** Get all presence states for a specific codepage */
+export function getpresenceforcodepage(codepageKey: string): PresenceState[] {
+  const result: PresenceState[] = []
+  const states = AWARENESS.getStates()
+  states.forEach((state: Record<string, unknown> | null, _clientId: number) => {
+    const p = awarenessstatetopresence(_clientId, state)
+    if (p?.codepageKey === codepageKey) {
+      result.push(p)
+    }
+  })
+  return result
+}
+
+/** Broadcast presence information to all peers (updates local Awareness state). */
+export function modembroadcastpresence(
+  clientId: string,
+  codepageKey: string,
+  cursor: number,
+  select?: number,
+  name?: string,
+  color?: string,
+) {
+  AWARENESS.setLocalStateField('clientId', clientId)
+  AWARENESS.setLocalStateField('codepageKey', codepageKey)
+  AWARENESS.setLocalStateField('cursor', cursor)
+  AWARENESS.setLocalStateField('select', select ?? null)
+  AWARENESS.setLocalStateField('name', name ?? `User ${clientId.slice(0, 6)}`)
+  AWARENESS.setLocalStateField('color', color ?? '#3b82f6')
+}
+
+/** Hook to observe presence for a codepage */
+export function usePresence(codepageKey: string | undefined): PresenceState[] {
+  const [presence, setPresence] = useState<PresenceState[]>([])
+
+  useEffect(() => {
+    if (!codepageKey) {
+      setPresence([])
+      return
+    }
+    const update = () => setPresence(getpresenceforcodepage(codepageKey))
+    update()
+    AWARENESS.on('change', update)
+    return () => AWARENESS.off('change', update)
+  }, [codepageKey])
+
+  return presence
+}
+
+// ---------------------------------------------------------------------------
+// Modem device and sync
+// ---------------------------------------------------------------------------
+
 const modem = createdevice('modem', ['second'], (message) => {
   if (!modem.session(message)) {
     return
@@ -370,7 +479,21 @@ const modem = createdevice('modem', ['second'], (message) => {
       break
     case 'join':
       if (message.sender !== modem.id()) {
-        modem.reply(message, 'joinack', arr2hex(SYNC_MODEL.toBinary()))
+        modem.reply(
+          message,
+          'joinack',
+          arr2hex(Y.encodeStateAsUpdate(SYNC_DOC)),
+        )
+        const myclientids = Array.from(AWARENESS.getStates().keys())
+        if (myclientids.length > 0) {
+          modem.emit(
+            message.sender,
+            'modem:awareness',
+            arr2hex(
+              awarenessProtocol.encodeAwarenessUpdate(AWARENESS, myclientids),
+            ),
+          )
+        }
       }
       break
     case 'joinack':
@@ -378,9 +501,9 @@ const modem = createdevice('modem', ['second'], (message) => {
         joined = true
         try {
           const data = hex2arr(message.data)
-          const incoming = Model.fromBinary(data)
-          SYNC_MODEL.reset(incoming)
-          initSyncLog()
+          Y.applyUpdate(SYNC_DOC, data)
+          undomanagers.clear()
+          firelogreset()
         } catch (e) {
           console.error('modem joinack decode', e)
         }
@@ -389,25 +512,23 @@ const modem = createdevice('modem', ['second'], (message) => {
     case 'sync': {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
-          const patch = Patch.fromBinary(hex2arr(message.data))
-          SYNC_MODEL.applyPatch(patch)
+          Y.applyUpdate(SYNC_DOC, hex2arr(message.data))
         } catch (e) {
           console.error('modem sync decode', e)
         }
       }
       break
     }
-    case 'presence': {
+    case 'modem:awareness': {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
-          const presence = message.data as Omit<PresenceState, 'lastSeen'>
-          // Update presence map (no relay needed - each client broadcasts directly)
-          presenceMap.set(presence.clientId, {
-            ...presence,
-            lastSeen: Date.now(),
-          })
+          awarenessProtocol.applyAwarenessUpdate(
+            AWARENESS,
+            hex2arr(message.data),
+            null,
+          )
         } catch (e) {
-          console.error('modem presence decode', e)
+          console.error('modem awareness decode', e)
         }
       }
       break
@@ -415,80 +536,40 @@ const modem = createdevice('modem', ['second'], (message) => {
   }
 })
 
-function handleflush(patch: Patch) {
-  modem.emit('', 'modem:sync', arr2hex(patch.toBinary()))
-}
-
-SYNC_MODEL.api.autoFlush(true)
-SYNC_MODEL.api.onFlush.listen(handleflush)
-
-// Presence state management (ephemeral, not in CRDT)
-const presenceMap = new Map<string, PresenceState>()
-const PRESENCE_TIMEOUT = 30000 // Remove presence after 30 seconds of inactivity
-
-/** Broadcast presence information to all peers */
-export function modembroadcastpresence(
-  clientId: string,
-  codepageKey: string,
-  cursor: number,
-  select?: number,
-  name?: string,
-  color?: string,
-) {
-  const presence: Omit<PresenceState, 'lastSeen'> = {
-    clientId,
-    codepageKey,
-    cursor,
-    select,
-    name: name ?? `User ${clientId.slice(0, 6)}`,
-    color: color ?? '#3b82f6', // Default blue
+SYNC_DOC.on('update', (update: Uint8Array, origin: unknown) => {
+  if (origin === LOCAL_ORIGIN) {
+    modem.emit('', 'modem:sync', arr2hex(update))
   }
-  modem.emit('', 'modem:presence', presence)
+})
 
-  // Update local presence immediately
-  presenceMap.set(clientId, {
-    ...presence,
-    lastSeen: Date.now(),
+AWARENESS.on(
+  'update',
+  ({
+    added,
+    updated,
+    removed,
+  }: {
+    added: number[]
+    updated: number[]
+    removed: number[]
+  }) => {
+    const changed = added.concat(updated).concat(removed)
+    if (changed.length > 0) {
+      modem.emit(
+        '',
+        'modem:awareness',
+        arr2hex(awarenessProtocol.encodeAwarenessUpdate(AWARENESS, changed)),
+      )
+    }
+  },
+)
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    awarenessProtocol.removeAwarenessStates(
+      AWARENESS,
+      [SYNC_DOC.clientID],
+      'beforeunload',
+    )
   })
-}
-
-/** Get all presence states for a specific codepage */
-export function getpresenceforcodepage(codepageKey: string): PresenceState[] {
-  const now = Date.now()
-  const result: PresenceState[] = []
-
-  // Clean up stale entries and collect active ones
-  for (const [clientId, presence] of presenceMap.entries()) {
-    if (now - presence.lastSeen > PRESENCE_TIMEOUT) {
-      presenceMap.delete(clientId)
-    } else if (presence.codepageKey === codepageKey) {
-      result.push(presence)
-    }
-  }
-
-  return result
-}
-
-/** Hook to observe presence for a codepage */
-export function usePresence(codepageKey: string | undefined): PresenceState[] {
-  const [presence, setPresence] = useState<PresenceState[]>([])
-
-  useEffect(() => {
-    if (!codepageKey) {
-      setPresence([])
-      return
-    }
-
-    // Update presence periodically and on changes
-    const updatePresence = () => {
-      setPresence(getpresenceforcodepage(codepageKey))
-    }
-
-    updatePresence()
-    const interval = setInterval(updatePresence, 500) // Check every 500ms
-
-    return () => clearInterval(interval)
-  }, [codepageKey])
-
-  return presence
 }
