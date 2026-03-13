@@ -41,6 +41,7 @@ export function createfx() {
     reverb.set({
       ...resetreverb,
       wet: 0.5,
+      decay: 2.5,
     })
     echo.set({
       ...resetecho,
@@ -59,7 +60,7 @@ export function createfx() {
     distortion.set({
       ...resetdistortion,
       wet: 1,
-      oversample: '4x',
+      oversample: 'none',
     })
     vibrato.set({
       ...resetvibrato,
