@@ -70,7 +70,6 @@ export function EditorInput({
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const player = registerreadplayer()
   const blinkdelta = useRef<PT>(undefined)
-  const cursorBeforeEditRef = useRef(0)
   const edge = textformatreadedges(context)
 
   const codepageKey = ispresent(codepage)
@@ -103,18 +102,17 @@ export function EditorInput({
     ycursor,
   )
 
+  const { undomanager, cursorBeforeEditRef, cursorAfterEditRef } = useUndoRedo(
+    codepage,
+    updatescrolling,
+  )
+
   const { strvaluesplice, strvaluespliceonly } = useEditorSplice(
     codepage,
     updatescrolling,
     cursorBeforeEditRef,
+    cursorAfterEditRef,
     tapeeditor.cursor,
-  )
-
-  const undomanager = useUndoRedo(
-    codepage,
-    tapeeditor.cursor,
-    updatescrolling,
-    cursorBeforeEditRef,
   )
 
   // --- drawing ---
@@ -294,11 +292,7 @@ export function EditorInput({
             return
           }
           if (ispresent(codepage)) {
-            cursorBeforeEditRef.current = tapeeditor.cursor
-            codepage.insert(tapeeditor.cursor, `\n`)
-            const cursor = tapeeditor.cursor + 1
-            updatescrolling(cursor)
-            useEditor.setState({ cursor })
+            strvaluesplice(tapeeditor.cursor, 0, `\n`)
             useTape.setState({ autocompleteindex: -1 })
           }
         }}
@@ -459,11 +453,7 @@ export function EditorInput({
                     autocompleteindex: event.key === ' ' ? -1 : 0,
                   })
                 } else {
-                  cursorBeforeEditRef.current = tapeeditor.cursor
-                  const cursor = tapeeditor.cursor + event.key.length
-                  codepage.insert(tapeeditor.cursor, event.key)
-                  updatescrolling(cursor)
-                  useEditor.setState({ cursor })
+                  strvaluesplice(tapeeditor.cursor, 0, event.key)
                   useTape.setState({
                     autocompleteindex: event.key === ' ' ? -1 : 0,
                   })
