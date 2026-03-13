@@ -216,8 +216,8 @@ export function useUndoRedo(
 
   const undomanager = ispresent(codepage)
     ? {
-        undo() {
-          const n = Math.min(UNDO_REDO_BATCH_SIZE, undoStack.current.length)
+        undo(count: number = UNDO_REDO_BATCH_SIZE) {
+          const n = Math.min(count, undoStack.current.length)
           if (n <= 0) {
             return
           }
@@ -229,75 +229,62 @@ export function useUndoRedo(
             }
             batch.push(top)
           }
+          const currentCursor = editorCursor
           for (let i = batch.length - 1; i >= 0; i--) {
             const entry = batch[i]
             const cursorAfter =
-              entry.cursorAfter ??
-              (i === 0 ? editorCursor : batch[i - 1].cursorBefore)
+              i === 0 ? currentCursor : batch[i - 1].cursorBefore
             redoStack.current.push({ ...entry, cursorAfter })
           }
           for (const entry of batch) {
             modemApplyAndSyncPatch(entry.undoPatch)
           }
           const oldest = batch[batch.length - 1]
-          const doclen = codepage.length
-          const cursor = clamp(oldest.cursorBefore, 0, doclen)
-          updatescrolling(cursor)
+          updatescrolling(oldest.cursorBefore)
           useEditor.setState({
-            cursor,
+            cursor: oldest.cursorBefore,
             select: undefined,
           })
         },
-        redo() {
-          const n = Math.min(UNDO_REDO_BATCH_SIZE, redoStack.current.length)
+        redo(count: number = UNDO_REDO_BATCH_SIZE) {
+          const n = Math.min(count, redoStack.current.length)
           if (n <= 0) {
             return
           }
-          const batch: UndoEntry[] = []
+          const log = getModemLog()
+          let newCursor = editorCursor
           for (let i = 0; i < n; i++) {
             const top = redoStack.current.pop()
             if (!top) {
               break
             }
-            batch.push(top)
-          }
-          const log = getModemLog()
-          const toapply: { redoPatch: Patch; entry: UndoEntry }[] = []
-          for (let i = batch.length - 1; i >= 0; i--) {
-            const entry = batch[i]
             let redoPatch: Patch
             try {
-              redoPatch = log.undo(entry.undoPatch)
+              redoPatch = log.undo(top.undoPatch)
             } catch {
-              const [rebased] = log.rebaseBatch([entry.patch])
+              const [rebased] = log.rebaseBatch([top.patch])
               if (!rebased) {
                 continue
               }
               redoPatch = rebased
             }
-            toapply.push({ redoPatch, entry })
-          }
-          let newCursor = editorCursor
-          for (const { redoPatch, entry } of toapply) {
             modemApplyAndSyncPatch(redoPatch)
             let newUndoPatch: Patch
             try {
               newUndoPatch = log.undo(redoPatch)
             } catch {
-              newUndoPatch = entry.undoPatch
+              newUndoPatch = top.undoPatch
             }
             undoStack.current.push({
               patch: redoPatch,
               undoPatch: newUndoPatch,
-              cursorBefore: entry.cursorBefore,
-              cursorAfter: entry.cursorAfter ?? editorCursor,
+              cursorBefore: top.cursorBefore,
+              cursorAfter: editorCursor,
             })
-            newCursor = entry.cursorAfter ?? newCursor
+            newCursor = top.cursorAfter ?? editorCursor
           }
-          const doclen = codepage.length
-          const cursor = clamp(newCursor, 0, doclen)
-          updatescrolling(cursor)
-          useEditor.setState({ cursor, select: undefined })
+          updatescrolling(newCursor)
+          useEditor.setState({ cursor: newCursor, select: undefined })
         },
       }
     : undefined
@@ -313,18 +300,10 @@ export function useUndoRedo(
       }
       try {
         const undoPatch = log.undo(patch)
-        const cursorbefore = cursorBeforeEditRef.current
-        let cursordelta = 0
-        for (const op of patch.ops) {
-          if ((op as { name?: () => string }).name?.() === 'ins_str') {
-            cursordelta += op.span()
-          }
-        }
         undoStack.current.push({
           patch,
           undoPatch,
-          cursorBefore: cursorbefore,
-          cursorAfter: cursorbefore + cursordelta,
+          cursorBefore: cursorBeforeEditRef.current,
         })
         redoStack.current = []
       } catch {
