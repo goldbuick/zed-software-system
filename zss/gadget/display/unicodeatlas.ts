@@ -1,10 +1,10 @@
 import TinySDF from '@mapbox/tiny-sdf'
 import { DataTexture, RedIntegerFormat, UnsignedByteType } from 'three'
 
-const SLOT_SIZE = 64
+const SLOT_SIZE = 32
 const ATLAS_COLS = 32
 const ATLAS_SIZE = ATLAS_COLS * SLOT_SIZE
-const SLOT_PADDING = 2
+const SLOT_PADDING = 1
 
 export type GlyphSlot = {
   slotx: number
@@ -24,10 +24,10 @@ function gettinysdf(): InstanceType<typeof TinySDF> {
   const fontSize = SLOT_SIZE - SLOT_PADDING * 2
   tinysdf ??= new TinySDF({
     fontSize,
-    radius: 4,
+    radius: 2,
     buffer: 1,
-    cutoff: 0.6,
-    fontWeight: '300',
+    cutoff: 0.666,
+    fontWeight: '400',
     fontFamily: 'monospace',
   })
   return tinysdf
