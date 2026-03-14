@@ -7,11 +7,10 @@ import {
 } from '@huggingface/transformers'
 import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
 
-const DTYPE = 'q4'
+const DTYPE = 'q4f16'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-/** Qwen2.5-0.5B ONNX for WebGPU; smaller, supports tool calling via <tool_call> JSON. */
-const MODEL_ID = 'onnx-community/Qwen2.5-0.5B-Instruct'
+const MODEL_ID = 'onnx-community/Qwen3-0.6B-ONNX'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
@@ -419,12 +418,15 @@ export async function modelgenerate(
     ...messages,
   ]
 
+  // Chat template: HF docs say any extra kwargs are passed into the template.
+  // Qwen3 template supports enable_thinking; TS types don't list it so we cast.
   const input = tokenizer.apply_chat_template(convo, {
     tokenize: true,
     return_dict: true,
     tools: MODEL_TOOLS,
     add_generation_prompt: true,
-  })
+    enable_thinking: false,
+  } as Parameters<typeof tokenizer.apply_chat_template>[1])
   if (typeof input !== 'object' || !('input_ids' in input)) {
     throw new Error('apply_chat_template returned unexpected type')
   }
@@ -432,7 +434,7 @@ export async function modelgenerate(
     input.input_ids as Parameters<typeof tokenizer.batch_decode>[0],
     { skip_special_tokens: false },
   )
-  console.info('input (decoded):', decodedinput.join('\n---\n'))
+  console.info('input:', decodedinput.join('\n'))
 
   const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
   const streamer = new TextStreamer(tokenizer, {
@@ -463,13 +465,7 @@ export async function modelgenerate(
   const parsed = parseresult(raw)
 
   // Debug: why no tool calls? Inspect raw model output and parsed result.
-  if (parsed.toolcalls.length === 0 && raw) {
-    console.info('[heavy] model raw output (no tool calls parsed):', raw)
-    console.info('[heavy] parsed text:', parsed.text)
-    console.info(
-      '[heavy] parser looks for <tool_call>...</tool_call> with JSON { name, arguments }, or JSON array, or name(args)',
-    )
-  } else if (parsed.toolcalls.length > 0) {
+  if (parsed.toolcalls.length > 0) {
     console.info('[heavy] parsed toolcalls:', parsed.toolcalls)
   }
 

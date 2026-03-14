@@ -326,6 +326,19 @@ Use lookatboard when you need up-to-date surroundings; prefer the Current contex
 Prefer runcommand for game actions (#go, #put, #change, #shoot); use pressinput only for raw button simulation (e.g. menu, ok/cancel).
 Use pathfind to get the next direction toward (x,y) or away; then runcommand with that direction (e.g. #go n).
 Use getboardlist when the user asks what boards/rooms/areas are available or where they can go.
+
+To call a tool you MUST output exactly this format (no other text before or inside the tags):
+<tool_call>
+{"name": "<toolname>", "arguments": {<key-value pairs>}}
+</tool_call>
+Use the exact tool name (e.g. getagentinfo, lookatboard, runcommand). Put all parameters in "arguments" as a JSON object. Example — when the user asks "where am I?" reply with only:
+<tool_call>
+{"name": "getagentinfo", "arguments": {}}
+</tool_call>
+Another example — to move north:
+<tool_call>
+{"name": "runcommand", "arguments": {"command": "#go n"}}
+</tool_call>
 `
   if (ispresent(context)) {
     base += `\n\nCurrent context (below) is your board state; use it when sufficient, otherwise call lookatboard.\n\n${context}`
