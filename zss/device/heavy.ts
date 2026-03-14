@@ -328,8 +328,8 @@ async function runagentprompt(
       if (ispresent(toolresults[i])) {
         hasdataresults = true
         history.push({
-          role: 'user',
-          content: `[tool result] ${toolresults[i]}`,
+          role: 'tool',
+          content: String(toolresults[i]),
         })
       }
     }

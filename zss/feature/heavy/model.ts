@@ -10,7 +10,7 @@ import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
 const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_ID = 'onnx-community/Qwen2.5-Coder-0.5B-Instruct'
+const MODEL_ID = 'onnx-community/LFM2-350M-ONNX'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
@@ -162,13 +162,23 @@ const MODEL_TOOLS = [
   },
 ]
 
+/** LFM2 chat template expects tools as flat { name, description, parameters }. */
+function lfm2tools(): {
+  name: string
+  description: string
+  parameters: object
+}[] {
+  return MODEL_TOOLS.map((t) => ({
+    name: t.function.name,
+    description: t.function.description,
+    parameters: t.function.parameters,
+  }))
+}
+
 const TOOL_CALL_REGEX = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g
 const THINK_REGEX = /<think>[\s\S]*?<\/think>/gi
-/** Fallback: Pythonic tool call e.g. get_weather(location="NYC") from some models. */
+/** LFM2-700M-ONNX outputs Pythonic tool calls e.g. get_weather(location="NYC") or [toolname(args)]. */
 const PYTHONIC_CALL_REGEX = /(\w+)\s*\(\s*([^)]*)\s*\)/g
-/** Extract tool name from malformed JSON e.g. '{"name": "getboardlist", "arguments": {"boardnames": }}}' */
-const TOOL_NAME_REGEX = /"name"\s*:\s*"([^"]+)"/
-
 export type TOOL_CALL = { name: string; args: Record<string, string> }
 
 export type MODEL_RESULT = {
@@ -350,10 +360,7 @@ function findtoolobject(
             return { name, args: normalizetoolarg(parsed.arguments), slice }
           }
         } catch {
-          const namematch = TOOL_NAME_REGEX.exec(slice)
-          if (namematch?.[1]) {
-            return { name: namematch[1], args: {}, slice }
-          }
+          // Invalid JSON; skip this object
         }
         return null
       }
@@ -362,6 +369,7 @@ function findtoolobject(
   return null
 }
 
+/** Parse raw model output. Handles <tool_call> JSON, JSON array/object, and LFM2 Pythonic format. */
 function parseresult(raw: string): MODEL_RESULT {
   const toolcalls: TOOL_CALL[] = []
   let text = raw
@@ -376,10 +384,7 @@ function parseresult(raw: string): MODEL_RESULT {
         args: normalizetoolarg(parsed.arguments),
       })
     } catch {
-      const namematch = TOOL_NAME_REGEX.exec(match[1])
-      if (namematch?.[1]) {
-        toolcalls.push({ name: namematch[1], args: {} })
-      }
+      // Invalid JSON inside <tool_call>; skip
     }
   }
 
@@ -491,15 +496,13 @@ export async function modelgenerate(
     ...messages,
   ]
 
-  // Chat template: HF docs say any extra kwargs are passed into the template.
-  // Qwen3 template supports enable_thinking; TS types don't list it so we cast.
+  // LFM2 chat template: system + tool list <|tool_list_start|[...]<|tool_list_end|, then messages.
   const input = tokenizer.apply_chat_template(convo, {
     tokenize: true,
     return_dict: true,
-    tools: MODEL_TOOLS,
+    tools: lfm2tools(),
     add_generation_prompt: true,
-    enable_thinking: false,
-  } as Parameters<typeof tokenizer.apply_chat_template>[1])
+  })
   if (typeof input !== 'object' || !('input_ids' in input)) {
     throw new Error('apply_chat_template returned unexpected type')
   }
