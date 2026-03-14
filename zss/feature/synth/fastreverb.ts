@@ -7,10 +7,10 @@ const DEFAULT_WET = 0.5
 const MIN_DECAY = 0.001
 const DAMPENING_HZ = 3000
 
-export interface FastReverbOptions extends EffectOptions {
+export type FastReverbOptions = {
   decay: number
   preDelay: number
-}
+} & EffectOptions
 
 function decaytoroomsize(decay: number): number {
   return Math.min(0.98, 1 - Math.exp(-decay / 2))

@@ -1,10 +1,4 @@
-import {
-  AutoFilter,
-  AutoWah,
-  Distortion,
-  FeedbackDelay,
-  Vibrato,
-} from 'tone'
+import { AutoFilter, AutoWah, Distortion, FeedbackDelay, Vibrato } from 'tone'
 import { deepcopy } from 'zss/mapping/types'
 
 import { FastReverb } from './fastreverb'

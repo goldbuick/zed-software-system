@@ -17,7 +17,7 @@
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `ttsengine` | `engine` [, `config`] | Set TTS engine and optional config |
+| `ttsengine` | [ `engine` [, `config` ] ] | List engines (no args) or set TTS engine and optional config |
 | `tts` | [voice] [, phrase] | Speak phrase with voice; no args = clear queue; voice only = info |
 | `ttsqueue` | `voice`, `phrase` | Queue TTS text |
 | `ttsvol` | `volume` | Set TTS volume |

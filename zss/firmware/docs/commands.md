@@ -169,7 +169,7 @@ All firmware commands and their descriptions. Commands are available depending o
 
 | Command | Description |
 |---------|-------------|
-| `ttsengine` | TTS engine and config |
+| `ttsengine` | List TTS engines (no args) or set engine and config |
 | `tts` | Text with voice (or clear queue) |
 | `ttsqueue` | TTS phrase |
 | `bpm` | BPM |
