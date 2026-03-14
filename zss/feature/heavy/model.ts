@@ -6,10 +6,10 @@ import {
   TextStreamer,
 } from '@huggingface/transformers'
 
-const DTYPE = 'q4'
+const DTYPE = 'q4f16'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_ID = 'onnx-community/Qwen2.5-0.5B-Instruct'
+const MODEL_ID = 'Mozilla/Qwen2.5-0.5B-Instruct'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 600
@@ -34,7 +34,8 @@ const MODEL_TOOLS = [
     type: 'function',
     function: {
       name: 'set_agent_name',
-      description: 'Change your display name.',
+      description:
+        'Change your display name. Use when the user asks you to rename yourself.',
       parameters: {
         type: 'object',
         properties: {
@@ -47,9 +48,18 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'get_agent_info',
+      description:
+        'Get your current identity and location. Returns your name, board, and position. Use when the user asks who you are, what your name is, or what board you are on.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'look_at_board',
       description:
-        'See your current board. Returns a text summary of all objects, terrain, and your position.',
+        'See your current board. Returns board name, your position, objects, terrain, and board exits. Use when the user asks where you are, what board you are on, or what is around you.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -136,6 +146,7 @@ const MODEL_TOOLS = [
 ]
 
 const TOOL_CALL_REGEX = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g
+const THINK_REGEX = /<think>[\s\S]*?<\/think>/gi
 
 export type TOOL_CALL = { name: string; args: Record<string, string> }
 
@@ -244,6 +255,7 @@ function parseresult(raw: string): MODEL_RESULT {
   }
 
   text = text.replace(/<\|[^|]*\|>/g, '').trim()
+  text = text.replace(THINK_REGEX, '').trim()
 
   return { text, toolcalls }
 }

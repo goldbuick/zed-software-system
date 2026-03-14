@@ -11,7 +11,10 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
-import { memoryreadelementkind } from 'zss/memory/boards'
+import {
+  memoryreadboardbyaddress,
+  memoryreadelementkind,
+} from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
@@ -177,7 +180,43 @@ export function formatboardfortext(agentid: string): string {
     .map(([name, count]) => `${count} ${name}`)
   parts.push(`TERRAIN: ${terrainentries.join(', ')}`)
 
+  const exitlines: string[] = []
+  const exitdirs: [string, string | undefined][] = [
+    ['north', board.exitnorth],
+    ['south', board.exitsouth],
+    ['west', board.exitwest],
+    ['east', board.exiteast],
+  ]
+  for (let i = 0; i < exitdirs.length; ++i) {
+    const [dir, addr] = exitdirs[i]
+    if (ispresent(addr) && addr !== '') {
+      const dest = memoryreadboardbyaddress(addr)
+      const label = dest?.name ?? dest?.id ?? addr
+      exitlines.push(`${dir} -> ${label}`)
+    }
+  }
+  if (exitlines.length > 0) {
+    parts.push(`EXITS: ${exitlines.join(', ')}`)
+  }
+
   return parts.join('\n')
+}
+
+export function formatagentinfofortext(
+  agentid: string,
+  agentname: string,
+): string {
+  const board = memoryreadplayerboard(agentid)
+  if (!ispresent(board)) {
+    return `You are ${agentname} (id: ${agentid}). You are not on any board.`
+  }
+  const self = memoryreadobject(board, agentid)
+  const pos =
+    ispresent(self) && isnumber(self.x) && isnumber(self.y)
+      ? `(${self.x}, ${self.y})`
+      : '(unknown)'
+  const boardlabel = board.name || board.id
+  return `You are ${agentname} (id: ${agentid}), on board "${boardlabel}", at ${pos}.`
 }
 
 export function readcodepagefortext(name: string, type?: string): string {
@@ -260,8 +299,11 @@ export function formatpathfindfortext(
   return `${verb} ${dirtostring(dir)} to reach (${nextpt.x}, ${nextpt.y}).`
 }
 
-export function formatsystemprompt(agentname: string): string {
-  return `You are ${agentname}, an NPC in a game world.
+export function formatsystemprompt(
+  agentname: string,
+  agentid?: string,
+): string {
+  let base = `You are ${agentname}, an NPC in a game world.
 You respond naturally to what players and other NPCs say to you.
 Keep responses brief and in-character.
 
@@ -270,15 +312,22 @@ When someone says "you", "your", or "yourself" they are referring to you, ${agen
 
 You have these tools:
 - set_agent_name: change your display name
-- look_at_board: see your surroundings (objects, terrain, your position)
+- get_agent_info: get your current name, board, and position (use when asked who you are or what board you're on)
+- look_at_board: see your surroundings (objects, terrain, your position, board exits)
 - run_command: execute a ZSS command like #put <dir> <kind>, #change <from> <to>, #go <dir>, #shoot <dir>
 - read_codepage: read the source script of a named object, terrain, or board
 - pathfind: get the best direction to move toward or away from a target (x, y)
 - press_input: simulate button presses (up, down, left, right, ok, cancel, menu)
 
+If asked about your location, the current board, or what's around you, use the current context below or call look_at_board for full details.
 Use look_at_board to understand your surroundings before acting.
 Use pathfind to navigate toward a target position.
 Use press_input for movement and interaction as a player would.
 Use run_command for direct world modification like placing or changing elements.
 `
+  if (ispresent(agentid)) {
+    const context = formatboardfortext(agentid)
+    base += `\n\nCurrent context:\n${context}`
+  }
+  return base
 }

@@ -1,6 +1,7 @@
 import { Message } from '@huggingface/transformers'
 import { createdevice } from 'zss/device'
 import {
+  formatagentinfofortext,
   formatboardfortext,
   formatpathfindfortext,
   formatsystemprompt,
@@ -68,6 +69,7 @@ function parseinputmods(tokens: string[]): number {
 function executetoolcalls(
   player: string,
   agentid: string,
+  agentname: string,
   toolcalls: TOOL_CALL[],
 ): MAYBE<string>[] {
   const results: MAYBE<string>[] = []
@@ -80,6 +82,10 @@ function executetoolcalls(
           heavy.emit(player, 'vm:agentname', [agentid, call.args.name])
         }
         results.push(undefined)
+        break
+
+      case 'get_agent_info':
+        results.push(formatagentinfofortext(agentid, agentname))
         break
 
       case 'look_at_board':
@@ -164,7 +170,7 @@ async function runagentprompt(
 
   apilog(heavy, player, '$21 input $7', prompt)
 
-  const systemprompt = formatsystemprompt(agentname)
+  const systemprompt = formatsystemprompt(agentname, agentid)
 
   for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
     const result = await modelgenerate(systemprompt, history, onworking)
@@ -174,14 +180,18 @@ async function runagentprompt(
       if (reply) {
         history.push({ role: 'assistant', content: reply })
         agenthistories[agentid] = history
-        console.info('>>>', reply)
         apilog(heavy, player, '$21', reply)
         heavy.emit(player, 'vm:agentresponse', [agentid, reply])
       }
       return
     }
 
-    const toolresults = executetoolcalls(player, agentid, result.toolcalls)
+    const toolresults = executetoolcalls(
+      player,
+      agentid,
+      agentname,
+      result.toolcalls,
+    )
 
     history.push({ role: 'assistant', content: result.text || '(tool calls)' })
     agenthistories[agentid] = history
@@ -205,7 +215,6 @@ async function runagentprompt(
     if (!hasdataresults) {
       const reply = isstring(result.text) ? result.text : ''
       if (reply) {
-        console.info('>>>', reply)
         apilog(heavy, player, '$21', reply)
         heavy.emit(player, 'vm:agentresponse', [agentid, reply])
       }

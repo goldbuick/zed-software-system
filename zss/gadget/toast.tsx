@@ -26,6 +26,7 @@ export function TapeToastConnected() {
 }
 
 const charwidth = () => RUNTIME.DRAW_CHAR_WIDTH()
+const charheight = () => RUNTIME.DRAW_CHAR_HEIGHT()
 
 export function TapeToast({ toast }: TapeToastProps) {
   const screensize = useScreenSize()
@@ -112,15 +113,17 @@ export function TapeToast({ toast }: TapeToastProps) {
     <group ref={containerref} position={[0, 0, 999]}>
       {toast && (
         <>
-          <ShadeBoxDither
-            alpha={0.666}
-            width={screensize.cols}
-            height={10}
-            top={0}
-            left={0}
-            right={rightedge}
-            bottom={0}
-          />
+          <group position-y={charheight() * -4}>
+            <ShadeBoxDither
+              alpha={0.777}
+              width={screensize.cols}
+              height={6}
+              top={0}
+              left={0}
+              right={rightedge}
+              bottom={0}
+            />
+          </group>
           <group ref={slidingref}>
             <TilesData store={widestore}>
               <TilesRender
