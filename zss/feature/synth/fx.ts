@@ -3,11 +3,11 @@ import {
   AutoWah,
   Distortion,
   FeedbackDelay,
-  Reverb,
   Vibrato,
 } from 'tone'
 import { deepcopy } from 'zss/mapping/types'
 
+import { FastReverb } from './fastreverb'
 import { FrequencyCrusher } from './fcrushworkletnode'
 
 // 0 to 100
@@ -16,7 +16,7 @@ export function volumetodb(value: number) {
 }
 
 export function createfx() {
-  const reverb = new Reverb()
+  const reverb = new FastReverb()
   const resetreverb = deepcopy(reverb.get())
 
   const echo = new FeedbackDelay()
