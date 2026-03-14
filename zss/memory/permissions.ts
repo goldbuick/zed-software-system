@@ -271,6 +271,7 @@ const CREATIVE_ALLOWLIST_PLAYER: string[] = [
   'share',
   'toast',
   'fetch',
+  'coder',
   'audio',
   'tts',
   'trash',

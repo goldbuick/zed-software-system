@@ -3,6 +3,7 @@ import { createdevice } from 'zss/device'
 import {
   formatagentinfofortext,
   formatboardfortext,
+  formatboardlistfortext,
   formatpathfindfortext,
   formatsystemprompt,
   readcodepagefortext,
@@ -78,29 +79,29 @@ function executetoolcalls(
   for (let i = 0; i < toolcalls.length; ++i) {
     const call = toolcalls[i]
     switch (call.name) {
-      case 'set_agent_name':
+      case 'setagentname':
         if (isstring(call.args.name)) {
           heavy.emit(player, 'vm:agentname', [agentid, NAME(call.args.name)])
         }
         results.push(undefined)
         break
 
-      case 'get_agent_info':
+      case 'getagentinfo':
         results.push(formatagentinfofortext(agentid, agentname))
         break
 
-      case 'look_at_board':
+      case 'lookatboard':
         results.push(formatboardfortext(agentid))
         break
 
-      case 'run_command':
+      case 'runcommand':
         if (isstring(call.args.command)) {
           heavy.emit(player, 'vm:cli', call.args.command)
         }
         results.push(undefined)
         break
 
-      case 'read_codepage':
+      case 'readcodepage':
         if (isstring(call.args.name)) {
           results.push(readcodepagefortext(call.args.name, call.args.type))
         } else {
@@ -109,8 +110,8 @@ function executetoolcalls(
         break
 
       case 'pathfind': {
-        const tx = parseFloat(String(call.args.target_x))
-        const ty = parseFloat(String(call.args.target_y))
+        const tx = parseFloat(String(call.args.targetx))
+        const ty = parseFloat(String(call.args.targety))
         if (isnumber(tx) && isnumber(ty)) {
           const flee = call.args.flee === 'true'
           results.push(formatpathfindfortext(agentid, tx, ty, flee))
@@ -120,7 +121,7 @@ function executetoolcalls(
         break
       }
 
-      case 'press_input':
+      case 'pressinput':
         if (isstring(call.args.inputs)) {
           const tokens = call.args.inputs.split(',')
           const modbits = parseinputmods(tokens)
@@ -138,6 +139,10 @@ function executetoolcalls(
           }
         }
         results.push(undefined)
+        break
+
+      case 'getboardlist':
+        results.push(formatboardlistfortext(agentid))
         break
 
       default:

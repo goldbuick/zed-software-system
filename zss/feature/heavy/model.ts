@@ -5,6 +5,7 @@ import {
   ProgressInfo,
   TextStreamer,
 } from '@huggingface/transformers'
+import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
 
 const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
@@ -34,9 +35,9 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'set_agent_name',
+      name: 'setagentname',
       description:
-        'Change your display name. Use when the user asks you to rename yourself.',
+        'Change your display name. Call with the new display name only when the user explicitly asks you to rename yourself.',
       parameters: {
         type: 'object',
         properties: {
@@ -49,33 +50,33 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'get_agent_info',
+      name: 'getagentinfo',
       description:
-        'Get your current identity and location. Returns your name, board, and position. Use when the user asks who you are, what your name is, or what board you are on.',
+        'Get your current identity and location. Returns your name, id, board name, and (x,y) position. Use when the user asks who you are, what your name is, or what board you are on.',
       parameters: { type: 'object', properties: {} },
     },
   },
   {
     type: 'function',
     function: {
-      name: 'look_at_board',
+      name: 'lookatboard',
       description:
-        'See your current board. Returns board name, your position, objects, terrain, and board exits. Use when the user asks where you are, what board you are on, or what is around you.',
+        'See your current board. Returns board name, your (x,y), objects with positions and [player] marker, terrain summary, exits. Call when you need fresh surroundings or the prompt has no Current context.',
       parameters: { type: 'object', properties: {} },
     },
   },
   {
     type: 'function',
     function: {
-      name: 'run_command',
-      description:
-        'Execute a ZSS command. Examples: #put n boulder, #change gem empty, #shoot n, #go e',
+      name: 'runcommand',
+      description: `Execute a single ZSS command as the agent (e.g. move, place, change, shoot). ${AGENT_ZSS_COMMANDS} Command must start with #. Full command including #, e.g. #go n, #put n boulder, #change gem empty, #shoot n.`,
       parameters: {
         type: 'object',
         properties: {
           command: {
             type: 'string',
-            description: 'The full command string starting with #',
+            description:
+              'Full command including #, e.g. #go n, #put n boulder, #change gem empty, #shoot n',
           },
         },
         required: ['command'],
@@ -85,9 +86,9 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'read_codepage',
+      name: 'readcodepage',
       description:
-        'Read the source script of a codepage by name. Use to understand how an element or board works.',
+        'Read the source script of a codepage by name. Use to understand how an element, terrain, or board works.',
       parameters: {
         type: 'object',
         properties: {
@@ -98,7 +99,7 @@ const MODEL_TOOLS = [
           type: {
             type: 'string',
             description:
-              'Codepage type: object, terrain, or board. Defaults to object.',
+              'One of: object (default), terrain, board. Defaults to object.',
           },
         },
         required: ['name'],
@@ -110,38 +111,54 @@ const MODEL_TOOLS = [
     function: {
       name: 'pathfind',
       description:
-        'Get the best direction to move toward or away from a target position.',
+        'Get the best direction to move toward or away from a target position. Returns a direction (e.g. north) and next step; use that with runcommand (#go <dir>) to move. Coordinates are on the current board.',
       parameters: {
         type: 'object',
         properties: {
-          target_x: { type: 'number', description: 'Target x coordinate' },
-          target_y: { type: 'number', description: 'Target y coordinate' },
+          targetx: {
+            type: 'number',
+            description: 'Target x coordinate (board coordinates)',
+          },
+          targety: {
+            type: 'number',
+            description: 'Target y coordinate (board coordinates)',
+          },
           flee: {
             type: 'boolean',
-            description: 'If true, move away from target. Defaults to false.',
+            description:
+              'If true, direction to move away from target. Defaults to false.',
           },
         },
-        required: ['target_x', 'target_y'],
+        required: ['targetx', 'targety'],
       },
     },
   },
   {
     type: 'function',
     function: {
-      name: 'press_input',
+      name: 'pressinput',
       description:
-        'Simulate player button presses. Triggers movement, interaction, and menus like a real player.',
+        'Simulate raw button presses (e.g. up, down, ok, cancel, menu). Use for menu/interaction when runcommand is not the right fit.',
       parameters: {
         type: 'object',
         properties: {
           inputs: {
             type: 'string',
             description:
-              'Comma-separated inputs: up, down, left, right, ok, cancel, menu, shift, alt, ctrl',
+              'Comma-separated: up, down, left, right, ok, cancel, menu, shift, alt, ctrl',
           },
         },
         required: ['inputs'],
       },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getboardlist',
+      description:
+        'List boards you can reach from the current board (exits). Returns direction and destination board name for each exit. Use when the user asks what boards/rooms/areas are available or where they can go.',
+      parameters: { type: 'object', properties: {} },
     },
   },
 ]

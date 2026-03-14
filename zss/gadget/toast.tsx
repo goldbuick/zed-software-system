@@ -117,7 +117,7 @@ export function TapeToast({ toast }: TapeToastProps) {
             <ShadeBoxDither
               alpha={0.777}
               width={screensize.cols}
-              height={9}
+              height={10}
               top={0}
               left={0}
               right={rightedge}

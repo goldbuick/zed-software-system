@@ -22,6 +22,12 @@ import { memoryreadboardpath } from 'zss/memory/spatialqueries'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { COLLISION, DIR } from 'zss/words/types'
 
+/** Agent-relevant ZSS commands; used in system prompt and runcommand tool description. */
+export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
+#put <dir> <kind> — create element in direction (e.g. #put n boulder)
+#change <from> <to> — change all elements of one kind to another (e.g. #change gem empty)
+#shoot <dir> or #shoot <dir> <kind> — fire projectile`
+
 export type LOOK_STATE = {
   board?: BOARD
   tickers?: string[]
@@ -202,6 +208,32 @@ export function formatboardfortext(agentid: string): string {
   return parts.join('\n')
 }
 
+export function formatboardlistfortext(agentid: string): string {
+  const board = memoryreadplayerboard(agentid)
+  if (!ispresent(board)) {
+    return 'You are not on any board.'
+  }
+  const exitlines: string[] = []
+  const exitdirs: [string, string | undefined][] = [
+    ['north', board.exitnorth],
+    ['south', board.exitsouth],
+    ['west', board.exitwest],
+    ['east', board.exiteast],
+  ]
+  for (let i = 0; i < exitdirs.length; ++i) {
+    const [dir, addr] = exitdirs[i]
+    if (ispresent(addr) && addr !== '') {
+      const dest = memoryreadboardbyaddress(addr)
+      const label = dest?.name ?? dest?.id ?? addr
+      exitlines.push(`${dir} -> ${label}`)
+    }
+  }
+  if (exitlines.length === 0) {
+    return 'Boards you can reach: (none from here)'
+  }
+  return `Boards you can reach: ${exitlines.join(', ')}`
+}
+
 export function formatagentinfofortext(
   agentid: string,
   agentname: string,
@@ -306,28 +338,34 @@ export function formatsystemprompt(
   let base = `You are ${agentname}, an NPC in a game world.
 You respond naturally to what players and other NPCs say to you.
 Keep responses brief and in-character.
+Only use tools when they are needed to answer or act; avoid unnecessary lookatboard when context is already present.
 
 When someone says "I", "me", or "myself" they are referring to themselves.
 When someone says "you", "your", or "yourself" they are referring to you, ${agentname}.
 
-You have these tools:
-- set_agent_name: change your display name
-- get_agent_info: get your current name, board, and position (use when asked who you are or what board you're on)
-- look_at_board: see your surroundings (objects, terrain, your position, board exits)
-- run_command: execute a ZSS command like #put <dir> <kind>, #change <from> <to>, #go <dir>, #shoot <dir>
-- read_codepage: read the source script of a named object, terrain, or board
-- pathfind: get the best direction to move toward or away from a target (x, y)
-- press_input: simulate button presses (up, down, left, right, ok, cancel, menu)
+A board is a room or area in the game; you are on one board at a time, and exits connect to other boards.
 
-If asked about your location, the current board, or what's around you, use the current context below or call look_at_board for full details.
-Use look_at_board to understand your surroundings before acting.
-Use pathfind to navigate toward a target position.
-Use press_input for movement and interaction as a player would.
-Use run_command for direct world modification like placing or changing elements.
+You have these tools:
+- setagentname: change your display name
+- getagentinfo: get your current name, board, and position (use when asked who you are or what board you're on)
+- lookatboard: see your surroundings (objects, terrain, your position, board exits)
+- runcommand: execute a ZSS command (see commands below)
+- readcodepage: read the source script of a named object, terrain, or board
+- pathfind: get the best direction to move toward or away from a target (x, y)
+- pressinput: simulate button presses (up, down, left, right, ok, cancel, menu)
+- getboardlist: list boards you can reach from the current board (exits)
+
+ZSS commands (use with runcommand; command must start with #):
+${AGENT_ZSS_COMMANDS}
+
+Use lookatboard when you need up-to-date surroundings; prefer the Current context block when it's already in the prompt.
+Prefer runcommand for game actions (#go, #put, #change, #shoot); use pressinput only for raw button simulation (e.g. menu, ok/cancel).
+Use pathfind to get the next direction toward (x,y) or away; then runcommand with that direction (e.g. #go n).
+Use getboardlist when the user asks what boards/rooms/areas are available or where they can go.
 `
   if (ispresent(agentid)) {
     const context = formatboardfortext(agentid)
-    base += `\n\nCurrent context:\n${context}`
+    base += `\n\nCurrent context (below) is your board state; use it when sufficient, otherwise call lookatboard.\n\n${context}`
   }
   return base
 }
