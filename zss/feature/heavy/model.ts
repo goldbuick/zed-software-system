@@ -12,10 +12,10 @@ import {
 } from 'zss/feature/heavy/llm'
 import type { MODEL_RESULT, TOOL_DEF } from 'zss/feature/heavy/llm'
 
-const DTYPE = 'q4f16'
+const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-export const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX'
+export const MODEL_ID = 'onnx-community/Qwen2.5-0.5B-Instruct'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50

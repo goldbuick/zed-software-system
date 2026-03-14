@@ -1,9 +1,9 @@
 import { Message } from '@huggingface/transformers'
 import { createdevice } from 'zss/device'
 import {
+  formatagentinfofortext,
   formatboardfortext,
   formatboardlistfortext,
-  formatcurrentreminder,
   formatpathfindfortext,
   formatsystemprompt,
   readcodepagefortext,
@@ -267,7 +267,9 @@ async function runagentprompt(
       context = 'You are not on any board.'
     }
   }
-  const reminder = boarddata ? formatcurrentreminder(agentname, boarddata) : ''
+  const reminder = boarddata
+    ? formatagentinfofortext(boarddata, agentid, agentname)
+    : ''
   const usercontent = reminder ? `[Current: ${reminder}]\n${prompt}` : prompt
   history.push({ role: 'user', content: usercontent })
   if (history.length > MAX_HISTORY) {
@@ -323,16 +325,8 @@ async function runagentprompt(
         })
       }
     }
-    agenthistories[agentid] = history
 
-    let hasdataresults = false
-    for (let i = 0; i < toolresults.length; ++i) {
-      if (ispresent(toolresults[i])) {
-        hasdataresults = true
-        break
-      }
-    }
-
+    const hasdataresults = toolresults.some(ispresent)
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)
     }
@@ -346,6 +340,17 @@ async function runagentprompt(
       }
       return
     }
+  }
+
+  const lastreply = readreplytext(result)
+  if (lastreply) {
+    history.push({ role: 'assistant', content: lastreply })
+    if (history.length > MAX_HISTORY) {
+      history = history.slice(-MAX_HISTORY)
+    }
+    agenthistories[agentid] = history
+    apilog(heavy, player, '$21', lastreply)
+    heavy.emit(player, 'vm:agentresponse', [agentid, lastreply])
   }
 }
 
