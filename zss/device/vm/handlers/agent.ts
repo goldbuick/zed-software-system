@@ -6,12 +6,15 @@ import {
   heavymodelprompt,
   heavymodelstop,
   vmagentlist,
+  vmcli,
   vmloader,
 } from 'zss/device/api'
 import { agentlastresponse, agents } from 'zss/device/vm/state'
 import { createagent } from 'zss/feature/heavy/agent'
 import { write, writeheader } from 'zss/feature/writeui'
+import { doasync } from 'zss/mapping/func'
 import { createshortnameid } from 'zss/mapping/guid'
+import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
@@ -132,21 +135,28 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
     return
   }
 
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  element.tickertext = reply
-  element.tickertime = mainbook?.timestamp ?? 0
-  memorysendtolog(board.id, element, reply)
-
+  // update last response time
   agentlastresponse[agentid] = Date.now()
 
-  vmloader(
-    vm,
-    agentid,
-    undefined,
-    'text',
-    `chat:message:${board.id}`,
-    `${agent.name()}:${reply}`,
-  )
+  // can we async emit reply line by line ?
+  doasync(vm, agentid, async function () {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const timestamp = mainbook?.timestamp ?? 0
+    const lines = reply
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line !== '')
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      // update ticker
+      element.tickertext = line
+      element.tickertime = timestamp
+      // send cli text
+      vmcli(vm, agentid, `"${line}`)
+      // wait for next line
+      await waitfor(1000)
+    }
+  })
 }
 
 export function restoreagentsfrommainbook(vm: DEVICE, player: string): void {
