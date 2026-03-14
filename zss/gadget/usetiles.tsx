@@ -1,4 +1,5 @@
 import { useContext } from 'react'
+import type { Plane } from 'three'
 import { TILE_DATA, TilesContext } from 'zss/gadget/tiles'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
@@ -17,9 +18,15 @@ type TilesRenderProps = {
   label: string
   width: number
   height: number
+  clippingplanes?: Plane[]
 }
 
-export function TilesRender({ label, width, height }: TilesRenderProps) {
+export function TilesRender({
+  label,
+  width,
+  height,
+  clippingplanes,
+}: TilesRenderProps) {
   const store = useContext(TilesContext)
   const [char, color, bg] = useStore(
     store,
@@ -35,6 +42,7 @@ export function TilesRender({ label, width, height }: TilesRenderProps) {
         bg={bg.slice()}
         width={width}
         height={height}
+        clippingplanes={clippingplanes}
       />
     )
   )

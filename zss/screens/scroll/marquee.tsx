@@ -1,5 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef, useState } from 'react'
+import type { WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { useWriteText } from 'zss/gadget/writetext'
 import {
   tokenizeandmeasuretextformat,
@@ -7,7 +8,43 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-const SCROLL_SPEED = 0.5
+export const SCROLL_SPEED = 0.5
+
+/** Write marquee content into context at given offset; used by ScrollMarquee and toast one-time fill. */
+export function fillmarqueebuffer(
+  context: WRITE_TEXT_CONTEXT,
+  content: string,
+  contentmax: number,
+  leftedge: number,
+  margin: number,
+  rightedge: number,
+  offset: number,
+  y: number,
+) {
+  context.disablewrap = true
+  context.active.leftedge = margin
+  context.active.rightedge = rightedge - margin
+  for (
+    let start = leftedge + margin + offset;
+    start <= rightedge;
+    start += contentmax
+  ) {
+    context.x = start
+    context.y = y
+    tokenizeandwritetextformat(content, context, false)
+  }
+  context.active.leftedge = 0
+  context.active.rightedge = rightedge
+  context.disablewrap = false
+}
+
+export function measuremarqueeline(line: string, color: COLOR) {
+  const strcolor = COLOR[color] ?? ''
+  const content = `$${strcolor.toLowerCase()}${line.replaceAll('\n', '').trim()}`
+  const measure = tokenizeandmeasuretextformat(content, 10000, 1)
+  const contentmax = measure?.measuredwidth ?? 1
+  return { content, contentmax }
+}
 
 type ScrollMarqueeProps = {
   line: string
@@ -26,16 +63,9 @@ export function ScrollMarquee({
   leftedge,
   rightedge,
 }: ScrollMarqueeProps) {
-  // we assume context is setup
   const context = useWriteText()
+  const { content, contentmax } = measuremarqueeline(line, color)
 
-  // measure line
-  const strcolor = COLOR[color] ?? ''
-  const content = `$${strcolor.toLowerCase()}${line.replaceAll('\n', '').trim()}`
-  const measure = tokenizeandmeasuretextformat(content, 10000, 1)
-  const contentmax = measure?.measuredwidth ?? 1
-
-  // moves offset along
   const acc = useRef(0)
   const [offset, setoffset] = useState(0)
   useFrame((_, delta) => {
@@ -46,26 +76,16 @@ export function ScrollMarquee({
     }
   })
 
-  // cycle line if too long
-  context.disablewrap = true
-  context.active.leftedge = margin
-  context.active.rightedge = rightedge - margin
-
-  // render to fill it out
-  for (
-    let start = leftedge + margin + offset;
-    start <= rightedge;
-    start += contentmax
-  ) {
-    context.x = start
-    context.y = y
-    tokenizeandwritetextformat(content, context, false)
-  }
-
-  // reset values
-  context.active.leftedge = 0
-  context.active.rightedge = rightedge
-  context.disablewrap = false
+  fillmarqueebuffer(
+    context,
+    content,
+    contentmax,
+    leftedge,
+    margin,
+    rightedge,
+    offset,
+    y,
+  )
 
   return null
 }
