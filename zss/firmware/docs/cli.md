@@ -90,7 +90,7 @@
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `agent` | [action] [args…] | start, stop &lt;id&gt;, list, or prompt &lt;id&gt; &lt;prompt&gt; |
+| `agent` | [action] [args…] | start, stop &lt;id&gt;, list (prompt agents via in-world chat only) |
 
 ## Internal State
 

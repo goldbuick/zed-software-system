@@ -1,9 +1,9 @@
 import { Message } from '@huggingface/transformers'
 import { createdevice } from 'zss/device'
 import {
-  formatagentinfofortext,
   formatboardfortext,
   formatboardlistfortext,
+  formatcurrentreminder,
   formatpathfindfortext,
   formatsystemprompt,
   readcodepagefortext,
@@ -86,10 +86,20 @@ function parseinputmods(tokens: string[]): number {
   return bits
 }
 
+function readreplytext(result: { text?: unknown; raw?: unknown }): string {
+  const reply =
+    isstring(result.text) && result.text.trim() !== ''
+      ? result.text.trim()
+      : isstring(result.raw)
+        ? result.raw.trim()
+        : ''
+  return reply
+}
+
 async function executetoolcalls(
   player: string,
   agentid: string,
-  agentname: string,
+  _agentname: string,
   toolcalls: TOOL_CALL[],
 ): Promise<MAYBE<string>[]> {
   const results: MAYBE<string>[] = []
@@ -103,44 +113,6 @@ async function executetoolcalls(
         }
         results.push(undefined)
         break
-
-      case 'get_agent_info': {
-        try {
-          const data = await memoryquery(heavy, player, {
-            type: 'boardstate',
-            agentid,
-          })
-          results.push(
-            formatagentinfofortext(
-              data as Parameters<typeof formatagentinfofortext>[0],
-              agentid,
-              agentname,
-            ),
-          )
-        } catch {
-          results.push(
-            `You are ${agentname} (id: ${agentid}). You are not on any board.`,
-          )
-        }
-        break
-      }
-
-      case 'look_at_board': {
-        try {
-          const data = await memoryquery(heavy, player, {
-            type: 'boardstate',
-            agentid,
-          })
-          results.push(
-            formatboardfortext(
-              data as Parameters<typeof formatboardfortext>[0],
-            ),
-          )
-        } catch {
-          results.push('You are not on any board.')
-        }
-        break
-      }
 
       case 'run_command':
         if (isstring(call.args.command)) {
@@ -280,7 +252,24 @@ async function runagentprompt(
   onworking: (msg: string) => void,
 ) {
   let history: Heavymessage[] = agenthistories[agentid] ?? []
-  history.push({ role: 'user', content: prompt })
+
+  let context: string | undefined
+  let boarddata: Parameters<typeof formatboardfortext>[0] | undefined
+  if (ispresent(agentid)) {
+    try {
+      const data = await memoryquery(heavy, player, {
+        type: 'boardstate',
+        agentid,
+      })
+      boarddata = data as Parameters<typeof formatboardfortext>[0]
+      context = formatboardfortext(boarddata)
+    } catch {
+      context = 'You are not on any board.'
+    }
+  }
+  const reminder = boarddata ? formatcurrentreminder(agentname, boarddata) : ''
+  const usercontent = reminder ? `[Current: ${reminder}]\n${prompt}` : prompt
+  history.push({ role: 'user', content: usercontent })
   if (history.length > MAX_HISTORY) {
     history = history.slice(-MAX_HISTORY)
   }
@@ -288,33 +277,13 @@ async function runagentprompt(
 
   apilog(heavy, player, '$21 input $7', prompt)
 
-  let context: string | undefined
-  if (ispresent(agentid)) {
-    try {
-      const data = await memoryquery(heavy, player, {
-        type: 'boardstate',
-        agentid,
-      })
-      context = formatboardfortext(
-        data as Parameters<typeof formatboardfortext>[0],
-      )
-    } catch {
-      context = 'You are not on any board.'
-    }
-  }
   const systemprompt = formatsystemprompt(agentname, context)
 
   for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
     const result = await modelgenerate(systemprompt, history, onworking)
 
     if (result.toolcalls.length === 0) {
-      const reply = isstring(result.text) ? result.text : ''
-      console.info(
-        '[heavy] no tool calls this turn. reply length:',
-        reply.length,
-        'text preview:',
-        reply.slice(0, 200),
-      )
+      const reply = readreplytext(result)
       if (reply) {
         history.push({ role: 'assistant', content: reply })
         agenthistories[agentid] = history
@@ -370,7 +339,7 @@ async function runagentprompt(
     agenthistories[agentid] = history
 
     if (!hasdataresults) {
-      const reply = isstring(result.text) ? result.text : ''
+      const reply = readreplytext(result)
       if (reply) {
         apilog(heavy, player, '$21', reply)
         heavy.emit(player, 'vm:agentresponse', [agentid, reply])
@@ -432,6 +401,7 @@ const heavy = createdevice('heavy', [], (message) => {
           string,
           string,
         ]
+        apitoast(heavy, message.player, `${agentname} is thinking...`)
         const onworking = createonworking(message.player)
         await runagentprompt(
           message.player,

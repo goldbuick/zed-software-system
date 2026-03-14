@@ -24,6 +24,7 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
     apilog(vm, message.player, `loading ${booknames.join(', ')}`)
     memoryresetbooks(books)
     registerloginready(vm, message.player)
+    // Restore agents from main book flag (agentlist.running) so they survive reload
     restoreagentsfrommainbook(vm, message.player)
   })
 }

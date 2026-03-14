@@ -49,7 +49,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `allow` | Add command(s) to role allowlist |
 | `revoke` | Remove command from role or revoke all |
 | `role` | Set player token to role |
-| `agent` | /stop/list AI agents; prompt with \<id\> \<values\> |
+| `agent` | start/stop/list AI agents; prompt agents via in-world chat only |
 | `screenshot` | Screenshot for capture |
 | `bbs` | Login/publish actions |
 
