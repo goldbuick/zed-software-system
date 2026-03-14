@@ -6,15 +6,15 @@ import {
   TextStreamer,
 } from '@huggingface/transformers'
 
-const DTYPE = 'q4f16'
+const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-/** Qwen2.5-1.5B ONNX for WebGPU; supports tool calling via <tool_call> JSON. */
-const MODEL_ID = 'onnx-community/Qwen2.5-1.5B-Instruct'
+/** Qwen2.5-0.5B ONNX for WebGPU; smaller, supports tool calling via <tool_call> JSON. */
+const MODEL_ID = 'onnx-community/Qwen2.5-0.5B-Instruct'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
-const TOAST_THROTTLE_MS = 600
-const PROGRESS_THROTTLE_MS = 500
+const TOAST_THROTTLE_MS = 50
+const PROGRESS_THROTTLE_MS = 100
 
 function throttle(
   fn: (message: string) => void,
