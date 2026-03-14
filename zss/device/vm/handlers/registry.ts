@@ -4,7 +4,9 @@ import type { MESSAGE } from 'zss/device/api'
 import { handleadmin } from './admin'
 import {
   handleagentlist,
+  handleagentname,
   handleagentprompt,
+  handleagentresponse,
   handleagentstart,
   handleagentstop,
 } from './agent'
@@ -62,6 +64,8 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   agentstop: handleagentstop,
   agentlist: handleagentlist,
   agentprompt: handleagentprompt,
+  agentname: handleagentname,
+  agentresponse: handleagentresponse,
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,

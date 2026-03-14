@@ -1,16 +1,34 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apierror, heavymodelprompt, vmagentlist } from 'zss/device/api'
+import {
+  apierror,
+  heavymodelprompt,
+  heavymodelstop,
+  vmagentlist,
+  vmloader,
+} from 'zss/device/api'
 import { agents } from 'zss/device/vm/state'
 import { createagent } from 'zss/feature/heavy/agent'
 import { write, writeheader } from 'zss/feature/writeui'
-import { isarray, ispresent } from 'zss/mapping/types'
+import { createnameid } from 'zss/mapping/guid'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadobject } from 'zss/memory/boardoperations'
+import { memorywritebookflag } from 'zss/memory/bookoperations'
+import { memorysendtolog } from 'zss/memory/gamesend'
+import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 
 export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
-  const agent = createagent()
+  const agentname = isstring(message.data) ? message.data : createnameid()
+  const agent = createagent(agentname)
   const id = agent.id()
   agents[id] = agent
-  write(vm, message.player, `agent ${id} started`)
+
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  memorywritebookflag(mainbook, id, 'user', agentname)
+
+  write(vm, message.player, `agent ${agentname} (${id}) started`)
   vmagentlist(vm, message.player)
 }
 
@@ -21,6 +39,7 @@ export function handleagentstop(vm: DEVICE, message: MESSAGE): void {
   const agentid = message.data
   const agent = agents[agentid]
   if (ispresent(agent)) {
+    heavymodelstop(vm, message.player, agentid)
     agent.stop()
     delete agents[agentid]
     write(vm, message.player, `agent ${agentid} stopped`)
@@ -39,7 +58,11 @@ export function handleagentlist(vm: DEVICE, message: MESSAGE): void {
   writeheader(vm, message.player, 'agents')
   for (let i = 0; i < instances.length; ++i) {
     const agent = instances[i]
-    write(vm, message.player, `!copyit ${agent.id()};agent ${agent.id()}`)
+    write(
+      vm,
+      message.player,
+      `!copyit ${agent.id()};${agent.name()} (${agent.id()})`,
+    )
   }
 }
 
@@ -50,8 +73,54 @@ export function handleagentprompt(vm: DEVICE, message: MESSAGE): void {
   const [agentid, prompt] = message.data
   const agent = agents[agentid]
   if (ispresent(agent)) {
-    heavymodelprompt(vm, message.player, agentid, prompt)
+    heavymodelprompt(vm, message.player, agentid, agent.name(), prompt)
   } else {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
   }
+}
+
+export function handleagentname(vm: DEVICE, message: MESSAGE): void {
+  if (!isarray(message.data)) {
+    return
+  }
+  const [agentid, newname] = message.data as [string, string]
+  const agent = agents[agentid]
+  if (!ispresent(agent)) {
+    apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
+    return
+  }
+  agent.setname(newname)
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  memorywritebookflag(mainbook, agentid, 'user', newname)
+  write(vm, message.player, `agent ${agentid} renamed to ${newname}`)
+}
+
+export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
+  if (!isarray(message.data)) {
+    return
+  }
+  const [agentid, response] = message.data as [string, string]
+  const agent = agents[agentid]
+  if (!ispresent(agent)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(agentid)
+  const element = memoryreadobject(board, agentid)
+  if (!ispresent(board) || !ispresent(element)) {
+    return
+  }
+
+  element.tickertext = response
+  element.tickertime = Date.now()
+  memorysendtolog(board.id, element, response)
+
+  vmloader(
+    vm,
+    agentid,
+    undefined,
+    'text',
+    `chat:message:${board.id}`,
+    `${agent.name()}:${response}`,
+  )
 }

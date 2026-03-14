@@ -173,9 +173,10 @@ export function heavymodelprompt(
   device: DEVICELIKE,
   player: string,
   agentid: string,
+  agentname: string,
   prompt: string,
 ) {
-  device.emit(player, 'heavy:modelprompt', [agentid, prompt])
+  device.emit(player, 'heavy:modelprompt', [agentid, agentname, prompt])
 }
 
 export function heavymodelstop(
@@ -596,8 +597,21 @@ export function vmlook(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:look')
 }
 
-export function vmagentstart(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:agentstart')
+export function vmagentstart(
+  device: DEVICELIKE,
+  player: string,
+  agentname?: string,
+) {
+  device.emit(player, 'vm:agentstart', agentname)
+}
+
+export function vmagentname(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+  agentname: string,
+) {
+  device.emit(player, 'vm:agentname', [agentid, agentname])
 }
 
 export function vmagentstop(

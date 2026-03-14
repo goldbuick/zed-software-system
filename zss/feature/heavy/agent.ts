@@ -7,9 +7,10 @@ import { isboolean } from 'zss/mapping/types'
 
 const DOOT_RATE = 10
 
-export function createagent() {
+export function createagent(agentname: string) {
   const pid = createpid()
   let keepalive = DOOT_RATE
+  let currentname = agentname
 
   const device = createdevice(
     `agent_${pid}`,
@@ -28,7 +29,7 @@ export function createagent() {
             write(
               device,
               message.player,
-              `agent login ${message.data ? 'success' : 'failure'}`,
+              `agent ${currentname} (${pid}) login ${message.data ? 'success' : 'failure'}`,
             )
           }
           break
@@ -37,12 +38,17 @@ export function createagent() {
     SOFTWARE.session(),
   )
 
-  // attempt login
-  vmlogin(device, pid, {})
+  vmlogin(device, pid, { user: currentname })
 
   return {
     id() {
       return pid
+    },
+    name() {
+      return currentname
+    },
+    setname(n: string) {
+      currentname = n
     },
     stop() {
       vmlogout(device, pid, false)
