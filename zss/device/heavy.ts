@@ -24,7 +24,7 @@ const heavy = createdevice('heavy', [], (message) => {
             engine: 'piper' | 'supertonic',
             info: string,
           ]
-          const data = await requestinfo(message.player, engine, info)
+          const data = await requestinfo(heavy, message.player, engine, info)
           heavy.reply(message, 'heavy:ttsinfo', ispresent(data) ? data : [])
         }
       })
@@ -39,6 +39,7 @@ const heavy = createdevice('heavy', [], (message) => {
             phrase: string,
           ]
           const audiobytes = await requestaudiobytes(
+            heavy,
             message.player,
             engine,
             config,
@@ -61,6 +62,7 @@ const heavy = createdevice('heavy', [], (message) => {
         const [agentid, prompt] = message.data as [string, string]
         let modelcaller = modelcallers[agentid]
         if (!ispresent(modelcaller)) {
+          apilog(heavy, message.player, '$21', 'model loading ...')
           modelcallers[agentid] = modelcaller = await createmodelcaller(
             agentid,
             (msg) => apilog(heavy, message.player, '$21', msg),
