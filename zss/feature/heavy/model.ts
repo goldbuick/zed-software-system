@@ -9,7 +9,8 @@ import {
 const DTYPE = 'q4f16'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_ID = 'Mozilla/Qwen2.5-0.5B-Instruct'
+/** Qwen2.5-1.5B ONNX for WebGPU; supports tool calling via <tool_call> JSON. */
+const MODEL_ID = 'onnx-community/Qwen2.5-1.5B-Instruct'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 600
@@ -147,6 +148,8 @@ const MODEL_TOOLS = [
 
 const TOOL_CALL_REGEX = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g
 const THINK_REGEX = /<think>[\s\S]*?<\/think>/gi
+/** Fallback: Pythonic tool call e.g. get_weather(location="NYC") from some models. */
+const PYTHONIC_CALL_REGEX = /(\w+)\s*\(\s*([^)]*)\s*\)/g
 
 export type TOOL_CALL = { name: string; args: Record<string, string> }
 
@@ -167,6 +170,66 @@ function normalizetoolarg(arg: unknown): Record<string, string> {
       out[k] = JSON.stringify(v)
     } else if (v !== undefined && v !== null) {
       out[k] = String(v)
+    }
+  }
+  return out
+}
+
+/** Parse Pythonic args string, e.g. location="New York", unit="fahrenheit" → { location: "New York", unit: "fahrenheit" }. */
+function parsepythonicargs(argsstr: string): Record<string, string> {
+  const out: Record<string, string> = {}
+  if (!argsstr.trim()) {
+    return out
+  }
+  let i = 0
+  const s = argsstr
+  while (i < s.length) {
+    while (i < s.length && /[\s,]/.test(s[i])) {
+      i++
+    }
+    if (i >= s.length) {
+      break
+    }
+    const keystart = i
+    while (i < s.length && /[a-zA-Z0-9_]/.test(s[i])) {
+      i++
+    }
+    const key = s.slice(keystart, i)
+    if (!key) {
+      break
+    }
+    while (i < s.length && s[i] !== '=') {
+      i++
+    }
+    if (i >= s.length || s[i] !== '=') {
+      break
+    }
+    i++
+    while (i < s.length && /\s/.test(s[i])) {
+      i++
+    }
+    if (i >= s.length) {
+      break
+    }
+    if (s[i] === '"' || s[i] === "'") {
+      const quote = s[i]
+      i++
+      const valstart = i
+      while (i < s.length && s[i] !== quote) {
+        if (s[i] === '\\') {
+          i++
+        }
+        i++
+      }
+      out[key] = s.slice(valstart, i)
+      i++
+    } else {
+      const valstart = i
+      while (i < s.length && !/[\s,]/.test(s[i])) {
+        i++
+      }
+      const raw = s.slice(valstart, i).trim()
+      out[key] = raw === 'true' ? 'true' : raw === 'false' ? 'false' : raw
     }
   }
   return out
@@ -253,6 +316,12 @@ function parseresult(raw: string): MODEL_RESULT {
     }
     text = text.replace(arrayresult.slice, '').trim()
   }
+
+  text = text.replace(PYTHONIC_CALL_REGEX, (_full, name, argsstr) => {
+    toolcalls.push({ name, args: parsepythonicargs(argsstr) })
+    return ' '
+  })
+  text = text.trim()
 
   text = text.replace(/<\|[^|]*\|>/g, '').trim()
   text = text.replace(THINK_REGEX, '').trim()
