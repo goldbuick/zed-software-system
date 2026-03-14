@@ -379,7 +379,7 @@ async function loadsharedmodel(
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
-          const progress = Math.round(info.progress / 10) * 10
+          const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
             onworkingprogress(`${info.file} ${progress}% ...`)
@@ -425,9 +425,14 @@ export async function modelgenerate(
     tools: MODEL_TOOLS,
     add_generation_prompt: true,
   })
-  if (typeof input !== 'object') {
+  if (typeof input !== 'object' || !('input_ids' in input)) {
     throw new Error('apply_chat_template returned unexpected type')
   }
+  const decodedinput = tokenizer.batch_decode(
+    input.input_ids as Parameters<typeof tokenizer.batch_decode>[0],
+    { skip_special_tokens: false },
+  )
+  console.info('input (decoded):', decodedinput.join('\n---\n'))
 
   const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
   const streamer = new TextStreamer(tokenizer, {
@@ -454,7 +459,21 @@ export async function modelgenerate(
     skip_special_tokens: false,
   })
 
-  return parseresult(decoded.join('\n').trim())
+  const raw = decoded.join('\n').trim()
+  const parsed = parseresult(raw)
+
+  // Debug: why no tool calls? Inspect raw model output and parsed result.
+  if (parsed.toolcalls.length === 0 && raw) {
+    console.info('[heavy] model raw output (no tool calls parsed):', raw)
+    console.info('[heavy] parsed text:', parsed.text)
+    console.info(
+      '[heavy] parser looks for <tool_call>...</tool_call> with JSON { name, arguments }, or JSON array, or name(args)',
+    )
+  } else if (parsed.toolcalls.length > 0) {
+    console.info('[heavy] parsed toolcalls:', parsed.toolcalls)
+  }
+
+  return parsed
 }
 
 export async function modelclassify(

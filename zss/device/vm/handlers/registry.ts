@@ -29,6 +29,7 @@ import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
 import { handleloader } from './loader'
 import { handlelook } from './look'
+import { handlememoryquery } from './memoryquery'
 import { handleoperator } from './operator'
 import { handlepublish } from './publish'
 import { handlerestart } from './restart'
@@ -60,6 +61,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   doot: handledoot,
   input: handleinput,
   look: handlelook,
+  memoryquery: handlememoryquery,
   agentstart: handleagentstart,
   agentstop: handleagentstop,
   agentlist: handleagentlist,

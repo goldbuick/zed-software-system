@@ -9,6 +9,10 @@ import {
   readcodepagefortext,
 } from 'zss/feature/heavy/formatstate'
 import {
+  query as memoryquery,
+  resolvemessage as memoryqueryresolvemessage,
+} from 'zss/feature/heavy/memoryquery'
+import {
   TOOL_CALL,
   destroysharedmodel,
   modelclassify,
@@ -37,6 +41,9 @@ const MAX_HISTORY = 40
 const MAX_REPROMPT = 3
 const MAX_CLASSIFY_CONTEXT = 3
 const agenthistories: Record<string, Message[]> = {}
+
+/** Codepage type values for memory query (must match zss/memory/types CODE_PAGE_TYPE). */
+const CODE_PAGE_TYPE = { OBJECT: 3, TERRAIN: 4, BOARD: 2 } as const
 
 const INPUT_MAP: Record<string, INPUT> = {
   up: INPUT.MOVE_UP,
@@ -68,12 +75,12 @@ function parseinputmods(tokens: string[]): number {
   return bits
 }
 
-function executetoolcalls(
+async function executetoolcalls(
   player: string,
   agentid: string,
   agentname: string,
   toolcalls: TOOL_CALL[],
-): MAYBE<string>[] {
+): Promise<MAYBE<string>[]> {
   const results: MAYBE<string>[] = []
 
   for (let i = 0; i < toolcalls.length; ++i) {
@@ -86,13 +93,43 @@ function executetoolcalls(
         results.push(undefined)
         break
 
-      case 'getagentinfo':
-        results.push(formatagentinfofortext(agentid, agentname))
+      case 'getagentinfo': {
+        try {
+          const data = await memoryquery(heavy, player, {
+            type: 'boardstate',
+            agentid,
+          })
+          results.push(
+            formatagentinfofortext(
+              data as Parameters<typeof formatagentinfofortext>[0],
+              agentid,
+              agentname,
+            ),
+          )
+        } catch {
+          results.push(
+            `You are ${agentname} (id: ${agentid}). You are not on any board.`,
+          )
+        }
         break
+      }
 
-      case 'lookatboard':
-        results.push(formatboardfortext(agentid))
+      case 'lookatboard': {
+        try {
+          const data = await memoryquery(heavy, player, {
+            type: 'boardstate',
+            agentid,
+          })
+          results.push(
+            formatboardfortext(
+              data as Parameters<typeof formatboardfortext>[0],
+            ),
+          )
+        } catch {
+          results.push('You are not on any board.')
+        }
         break
+      }
 
       case 'runcommand':
         if (isstring(call.args.command)) {
@@ -101,22 +138,73 @@ function executetoolcalls(
         results.push(undefined)
         break
 
-      case 'readcodepage':
-        if (isstring(call.args.name)) {
-          results.push(readcodepagefortext(call.args.name, call.args.type))
-        } else {
+      case 'readcodepage': {
+        if (!isstring(call.args.name)) {
           results.push('Missing codepage name.')
+          break
+        }
+        let pagetype: number = CODE_PAGE_TYPE.OBJECT
+        if (call.args.type === 'terrain') {
+          pagetype = CODE_PAGE_TYPE.TERRAIN
+        } else if (call.args.type === 'board') {
+          pagetype = CODE_PAGE_TYPE.BOARD
+        }
+        try {
+          const data = await memoryquery(heavy, player, {
+            type: 'codepage',
+            pagetype,
+            name: call.args.name,
+          })
+          results.push(
+            readcodepagefortext(
+              data as Parameters<typeof readcodepagefortext>[0],
+              call.args.name,
+              call.args.type,
+            ),
+          )
+        } catch {
+          results.push(
+            `No ${call.args.type ?? 'object'} codepage found for "${call.args.name}".`,
+          )
         }
         break
+      }
 
       case 'pathfind': {
         const tx = parseFloat(String(call.args.targetx))
         const ty = parseFloat(String(call.args.targety))
-        if (isnumber(tx) && isnumber(ty)) {
-          const flee = call.args.flee === 'true'
-          results.push(formatpathfindfortext(agentid, tx, ty, flee))
-        } else {
+        if (!isnumber(tx) || !isnumber(ty)) {
           results.push('Invalid target coordinates.')
+          break
+        }
+        const flee = call.args.flee === 'true'
+        try {
+          const boarddata = await memoryquery(heavy, player, {
+            type: 'boardstate',
+            agentid,
+          })
+          const pathdata = await memoryquery(heavy, player, {
+            type: 'pathfind',
+            agentid,
+            targetx: tx,
+            targety: ty,
+            flee,
+          })
+          const bd = boarddata as Parameters<typeof formatboardfortext>[0]
+          const fromx = bd && !('error' in bd) && bd.self ? bd.self.x : 0
+          const fromy = bd && !('error' in bd) && bd.self ? bd.self.y : 0
+          results.push(
+            formatpathfindfortext(
+              pathdata as Parameters<typeof formatpathfindfortext>[0],
+              fromx,
+              fromy,
+              tx,
+              ty,
+              flee,
+            ),
+          )
+        } catch {
+          results.push('Cannot determine your position.')
         }
         break
       }
@@ -141,9 +229,22 @@ function executetoolcalls(
         results.push(undefined)
         break
 
-      case 'getboardlist':
-        results.push(formatboardlistfortext(agentid))
+      case 'getboardlist': {
+        try {
+          const data = await memoryquery(heavy, player, {
+            type: 'boardstate',
+            agentid,
+          })
+          results.push(
+            formatboardlistfortext(
+              data as Parameters<typeof formatboardlistfortext>[0],
+            ),
+          )
+        } catch {
+          results.push('You are not on any board.')
+        }
         break
+      }
 
       default:
         results.push(undefined)
@@ -176,13 +277,33 @@ async function runagentprompt(
 
   apilog(heavy, player, '$21 input $7', prompt)
 
-  const systemprompt = formatsystemprompt(agentname, agentid)
+  let context: string | undefined
+  if (ispresent(agentid)) {
+    try {
+      const data = await memoryquery(heavy, player, {
+        type: 'boardstate',
+        agentid,
+      })
+      context = formatboardfortext(
+        data as Parameters<typeof formatboardfortext>[0],
+      )
+    } catch {
+      context = 'You are not on any board.'
+    }
+  }
+  const systemprompt = formatsystemprompt(agentname, context)
 
   for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
     const result = await modelgenerate(systemprompt, history, onworking)
 
     if (result.toolcalls.length === 0) {
       const reply = isstring(result.text) ? result.text : ''
+      console.info(
+        '[heavy] no tool calls this turn. reply length:',
+        reply.length,
+        'text preview:',
+        reply.slice(0, 200),
+      )
       if (reply) {
         history.push({ role: 'assistant', content: reply })
         agenthistories[agentid] = history
@@ -192,7 +313,7 @@ async function runagentprompt(
       return
     }
 
-    const toolresults = executetoolcalls(
+    const toolresults = await executetoolcalls(
       player,
       agentid,
       agentname,
@@ -346,6 +467,9 @@ const heavy = createdevice('heavy', [], (message) => {
           destroysharedmodel()
         }
       }
+      break
+    case 'memoryresult':
+      memoryqueryresolvemessage(message)
       break
     default:
       apierror(

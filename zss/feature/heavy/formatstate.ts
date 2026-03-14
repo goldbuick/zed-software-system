@@ -1,6 +1,7 @@
 /**
  * Serialize acklook data to plain text for LLM consumption.
  * Strips color codes and formats board, scroll, sidebar, and tickers.
+ * Formatters accept data blobs from memory queries (no zss/memory imports).
  */
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import {
@@ -10,17 +11,38 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardoperations'
-import {
-  memoryreadboardbyaddress,
-  memoryreadelementkind,
-} from 'zss/memory/boards'
-import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryreadboardpath } from 'zss/memory/spatialqueries'
-import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
-import { COLLISION, DIR } from 'zss/words/types'
+import { DIR } from 'zss/words/types'
+
+/** Data shape returned by boardstate memory query (heavy:memoryresult). */
+export type BOARDSTATE_DATA = {
+  board: {
+    id: string
+    name: string
+    objects: Record<
+      string,
+      {
+        x?: number
+        y?: number
+        label: string
+        player?: string
+        removed?: boolean
+      }
+    >
+    exitnorth?: string
+    exitsouth?: string
+    exitwest?: string
+    exiteast?: string
+  }
+  self: { x: number; y: number } | null
+  exits: { dir: string; label: string }[]
+  terrainlabels: Record<string, number>
+}
+
+/** Data shape returned by codepage memory query. */
+export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
+
+/** Data shape returned by pathfind memory query. */
+export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
 
 /** Agent-relevant ZSS commands; used in system prompt and runcommand tool description. */
 export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
@@ -29,7 +51,7 @@ export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
 #shoot <dir> or #shoot <dir> <kind> — fire projectile`
 
 export type LOOK_STATE = {
-  board?: BOARD
+  board?: unknown
   tickers?: string[]
   scrollname?: string
   scroll?: PANEL_ITEM[]
@@ -66,13 +88,9 @@ function panelitemstotext(items: PANEL_ITEM[] | undefined): string {
   return lines.join('\n')
 }
 
-function boardtotext(board: BOARD | undefined): string {
-  if (!ispresent(board)) {
-    return ''
-  }
-  const rows: string[] = []
-  void board
-  return rows.join('\n')
+function boardtotext(__: unknown): string {
+  void __
+  return ''
 }
 
 export function formatlookfortext(data: LOOK_STATE): string {
@@ -106,14 +124,6 @@ export function formatlookfortext(data: LOOK_STATE): string {
   return parts.join('\n').trimEnd()
 }
 
-function elementlabel(element: BOARD_ELEMENT): string {
-  memoryreadelementkind(element)
-  const display = memoryreadelementdisplay(element)
-  const kind = element.kind ?? ''
-  const name = display.name || kind
-  return name
-}
-
 function dirtostring(dir: DIR): string {
   switch (dir) {
     case DIR.NORTH:
@@ -129,32 +139,30 @@ function dirtostring(dir: DIR): string {
   }
 }
 
-export function formatboardfortext(agentid: string): string {
-  const board = memoryreadplayerboard(agentid)
-  if (!ispresent(board)) {
+export function formatboardfortext(
+  data: BOARDSTATE_DATA | { error: string },
+): string {
+  if ('error' in data && data.error === 'no_board') {
     return 'You are not on any board.'
   }
-
+  const d = data as BOARDSTATE_DATA
+  const board = d.board
   const parts: string[] = []
   parts.push(`BOARD: ${board.name || board.id}`)
 
-  const self = memoryreadobject(board, agentid)
-  if (ispresent(self)) {
-    parts.push(`YOU: (${self.x ?? '?'}, ${self.y ?? '?'})`)
+  if (ispresent(d.self)) {
+    parts.push(`YOU: (${d.self.x ?? '?'}, ${d.self.y ?? '?'})`)
   }
 
   const objectlines: string[] = []
   const ids = Object.keys(board.objects)
   for (let i = 0; i < ids.length; ++i) {
     const id = ids[i]
-    if (id === agentid) {
-      continue
-    }
     const obj = board.objects[id]
     if (!ispresent(obj) || obj.removed) {
       continue
     }
-    const label = elementlabel(obj)
+    const label = obj.label
     const playermarker = ispresent(obj.player) ? ' [player]' : ''
     objectlines.push(
       `- ${label}${playermarker} at (${obj.x ?? '?'}, ${obj.y ?? '?'})`,
@@ -168,110 +176,62 @@ export function formatboardfortext(agentid: string): string {
     parts.push('OBJECTS: none')
   }
 
-  const terraincounts: Record<string, number> = {}
-  for (let i = 0; i < board.terrain.length; ++i) {
-    const tile = board.terrain[i]
-    if (!ispresent(tile)) {
-      terraincounts.empty = (terraincounts.empty ?? 0) + 1
-      continue
-    }
-    memoryreadelementkind(tile)
-    const display = memoryreadelementdisplay(tile)
-    const label = display.name ?? tile.kind ?? ''
-    terraincounts[label] = (terraincounts[label] ?? 0) + 1
-  }
-
-  const terrainentries = Object.entries(terraincounts)
+  const terrainentries = Object.entries(d.terrainlabels)
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => `${count} ${name}`)
   parts.push(`TERRAIN: ${terrainentries.join(', ')}`)
 
-  const exitlines: string[] = []
-  const exitdirs: [string, string | undefined][] = [
-    ['north', board.exitnorth],
-    ['south', board.exitsouth],
-    ['west', board.exitwest],
-    ['east', board.exiteast],
-  ]
-  for (let i = 0; i < exitdirs.length; ++i) {
-    const [dir, addr] = exitdirs[i]
-    if (ispresent(addr) && addr !== '') {
-      const dest = memoryreadboardbyaddress(addr)
-      const label = dest?.name ?? dest?.id ?? addr
-      exitlines.push(`${dir} -> ${label}`)
-    }
-  }
-  if (exitlines.length > 0) {
+  if (d.exits.length > 0) {
+    const exitlines = d.exits.map((e) => `${e.dir} -> ${e.label}`)
     parts.push(`EXITS: ${exitlines.join(', ')}`)
   }
 
   return parts.join('\n')
 }
 
-export function formatboardlistfortext(agentid: string): string {
-  const board = memoryreadplayerboard(agentid)
-  if (!ispresent(board)) {
+export function formatboardlistfortext(
+  data: BOARDSTATE_DATA | { error: string },
+): string {
+  if ('error' in data && data.error === 'no_board') {
     return 'You are not on any board.'
   }
-  const exitlines: string[] = []
-  const exitdirs: [string, string | undefined][] = [
-    ['north', board.exitnorth],
-    ['south', board.exitsouth],
-    ['west', board.exitwest],
-    ['east', board.exiteast],
-  ]
-  for (let i = 0; i < exitdirs.length; ++i) {
-    const [dir, addr] = exitdirs[i]
-    if (ispresent(addr) && addr !== '') {
-      const dest = memoryreadboardbyaddress(addr)
-      const label = dest?.name ?? dest?.id ?? addr
-      exitlines.push(`${dir} -> ${label}`)
-    }
-  }
-  if (exitlines.length === 0) {
+  const d = data as BOARDSTATE_DATA
+  if (d.exits.length === 0) {
     return 'Boards you can reach: (none from here)'
   }
+  const exitlines = d.exits.map((e) => `${e.dir} -> ${e.label}`)
   return `Boards you can reach: ${exitlines.join(', ')}`
 }
 
 export function formatagentinfofortext(
+  data: BOARDSTATE_DATA | { error: string },
   agentid: string,
   agentname: string,
 ): string {
-  const board = memoryreadplayerboard(agentid)
-  if (!ispresent(board)) {
+  if ('error' in data && data.error === 'no_board') {
     return `You are ${agentname} (id: ${agentid}). You are not on any board.`
   }
-  const self = memoryreadobject(board, agentid)
+  const d = data as BOARDSTATE_DATA
   const pos =
-    ispresent(self) && isnumber(self.x) && isnumber(self.y)
-      ? `(${self.x}, ${self.y})`
+    ispresent(d.self) && isnumber(d.self.x) && isnumber(d.self.y)
+      ? `(${d.self.x}, ${d.self.y})`
       : '(unknown)'
-  const boardlabel = board.name || board.id
+  const boardlabel = d.board.name || d.board.id
   return `You are ${agentname} (id: ${agentid}), on board "${boardlabel}", at ${pos}.`
 }
 
-export function readcodepagefortext(name: string, type?: string): string {
-  let pagetype = CODE_PAGE_TYPE.OBJECT
-  switch (type) {
-    case 'terrain':
-      pagetype = CODE_PAGE_TYPE.TERRAIN
-      break
-    case 'board':
-      pagetype = CODE_PAGE_TYPE.BOARD
-      break
-  }
-
-  const codepage = memorypickcodepagewithtypeandstat(pagetype, name)
-  if (!ispresent(codepage)) {
+export function readcodepagefortext(
+  data: CODEPAGE_DATA | { error: string },
+  name: string,
+  type?: string,
+): string {
+  if (data === null || (typeof data === 'object' && 'error' in data)) {
     return `No ${type ?? 'object'} codepage found for "${name}".`
   }
-
-  const source = codepage.code ?? ''
+  const source = data.codepage?.code ?? ''
   if (!source) {
     return `Codepage "${name}" exists but has no source code.`
   }
-
   if (source.length > MAX_CODEPAGE_LENGTH) {
     return source.slice(0, MAX_CODEPAGE_LENGTH) + '\n... (truncated)'
   }
@@ -279,39 +239,43 @@ export function readcodepagefortext(name: string, type?: string): string {
 }
 
 export function formatpathfindfortext(
-  agentid: string,
+  data: PATHFIND_DATA | { error: string },
+  fromx: number,
+  fromy: number,
   targetx: number,
   targety: number,
   flee?: boolean,
 ): string {
-  const board = memoryreadplayerboard(agentid)
-  if (!ispresent(board)) {
-    return 'You are not on any board.'
-  }
-
-  const self = memoryreadobject(board, agentid)
-  if (!ispresent(self) || !isnumber(self.x) || !isnumber(self.y)) {
-    return 'Cannot determine your position.'
-  }
-
-  const frompt = { x: self.x, y: self.y }
-  const topt = { x: targetx, y: targety }
-  const nextpt = memoryreadboardpath(
-    board,
-    COLLISION.ISWALK,
-    frompt,
-    topt,
-    flee ?? false,
-  )
-
-  if (!ispresent(nextpt)) {
+  if (data === null) {
     return flee
       ? `No path away from (${targetx}, ${targety}).`
       : `No path to (${targetx}, ${targety}).`
   }
-
-  const dx = nextpt.x - frompt.x
-  const dy = nextpt.y - frompt.y
+  if ('error' in data) {
+    if (data.error === 'no_board') {
+      return 'You are not on any board.'
+    }
+    if (data.error === 'no_self') {
+      return 'Cannot determine your position.'
+    }
+  }
+  if (typeof data !== 'object' || !('nextpoint' in data)) {
+    return flee
+      ? `No path away from (${targetx}, ${targety}).`
+      : `No path to (${targetx}, ${targety}).`
+  }
+  const nextpt = (
+    data as {
+      nextpoint: { x: number; y: number } | null
+    }
+  ).nextpoint
+  if (!nextpt) {
+    return flee
+      ? `No path away from (${targetx}, ${targety}).`
+      : `No path to (${targetx}, ${targety}).`
+  }
+  const dx = nextpt.x - fromx
+  const dy = nextpt.y - fromy
   let dir: MAYBE<DIR>
   if (dy < 0) {
     dir = DIR.NORTH
@@ -333,9 +297,9 @@ export function formatpathfindfortext(
 
 export function formatsystemprompt(
   agentname: string,
-  agentid?: string,
+  context?: string,
 ): string {
-  let base = `You are ${agentname}, an NPC in a game world.
+  let base = `You are ${agentname}, a helpful ai agent in a game world.
 You respond naturally to what players and other NPCs say to you.
 Keep responses brief and in-character.
 Only use tools when they are needed to answer or act; avoid unnecessary lookatboard when context is already present.
@@ -363,8 +327,7 @@ Prefer runcommand for game actions (#go, #put, #change, #shoot); use pressinput 
 Use pathfind to get the next direction toward (x,y) or away; then runcommand with that direction (e.g. #go n).
 Use getboardlist when the user asks what boards/rooms/areas are available or where they can go.
 `
-  if (ispresent(agentid)) {
-    const context = formatboardfortext(agentid)
+  if (ispresent(context)) {
     base += `\n\nCurrent context (below) is your board state; use it when sufficient, otherwise call lookatboard.\n\n${context}`
   }
   return base
