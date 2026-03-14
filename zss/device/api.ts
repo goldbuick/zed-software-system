@@ -179,6 +179,16 @@ export function heavymodelprompt(
   device.emit(player, 'heavy:modelprompt', [agentid, agentname, prompt])
 }
 
+export function heavymodelclassify(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+  agentname: string,
+  prompt: string,
+) {
+  device.emit(player, 'heavy:modelclassify', [agentid, agentname, prompt])
+}
+
 export function heavymodelstop(
   device: DEVICELIKE,
   player: string,

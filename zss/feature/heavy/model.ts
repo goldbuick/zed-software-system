@@ -175,6 +175,39 @@ export async function modelgenerate(
   return parseresult(decoded.join('\n').trim())
 }
 
+export async function modelclassify(
+  messages: Message[],
+  onworking: (message: string) => void,
+): Promise<string> {
+  const { tokenizer, model } = await loadsharedmodel(onworking)
+
+  const input = tokenizer.apply_chat_template(messages, {
+    tokenize: true,
+    return_dict: true,
+    add_generation_prompt: true,
+  })
+  if (typeof input !== 'object') {
+    throw new Error('apply_chat_template returned unexpected type')
+  }
+
+  onworking(`classifying ...`)
+  const { sequences } = (await model.generate({
+    ...input,
+    do_sample: false,
+    max_new_tokens: 3,
+    return_dict_in_generate: true,
+  } as any)) as any
+
+  // @ts-expect-error this should be the shape of the input ids
+  const values = sequences.slice(null, [input.input_ids.dims[1], null])
+
+  const decoded = tokenizer.batch_decode(values, {
+    skip_special_tokens: true,
+  })
+
+  return decoded.join('').trim().toLowerCase()
+}
+
 export function destroysharedmodel() {
   if (sharedmodel) {
     void sharedmodel.model.dispose()

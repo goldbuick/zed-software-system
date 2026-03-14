@@ -1,15 +1,53 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, TEXT_READER } from 'zss/device/api'
-import { apilog, heavymodelprompt } from 'zss/device/api'
-import { agents } from 'zss/device/vm/state'
+import { apilog, heavymodelclassify, heavymodelprompt } from 'zss/device/api'
+import {
+  ATTENTION_WINDOW_MS,
+  agentlastresponse,
+  agents,
+} from 'zss/device/vm/state'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import { memorypickboardnearestpt } from 'zss/memory/spatialqueries'
 import { memoryreadbookbysoftware, memorywritebook } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
+
+const GENERIC_AGENT_PHRASES = [
+  /\bhey\s+agent\b/i,
+  /\bhi\s+agent\b/i,
+  /\bhello\s+agent\b/i,
+  /\byo\s+agent\b/i,
+  /\bagent\s+what\b/i,
+  /\bagent\s+what'?s\b/i,
+  /\bagent\s*,\s*what\b/i,
+]
+
+function genericphrasematches(messagetext: string): boolean {
+  const normalized = messagetext.trim().toLowerCase()
+  for (let i = 0; i < GENERIC_AGENT_PHRASES.length; ++i) {
+    if (GENERIC_AGENT_PHRASES[i].test(normalized)) {
+      return true
+    }
+  }
+  return false
+}
+
+function namematches(agentname: string, message: string): boolean {
+  const words = agentname.split(/[-\s]+/)
+  for (let i = 0; i < words.length; ++i) {
+    const pattern = new RegExp('\\b' + words[i] + '\\b', 'i')
+    if (pattern.test(message)) {
+      return true
+    }
+  }
+  return false
+}
 
 function routechattoagents(
   vm: DEVICE,
@@ -34,6 +72,50 @@ function routechattoagents(
 
   const sendername = chatline.slice(0, colonidx)
   const messagetext = chatline.slice(colonidx + 1)
+  const now = Date.now()
+
+  if (genericphrasematches(messagetext)) {
+    const board = memoryreadboardbyaddress(boardid)
+    if (!ispresent(board)) {
+      return
+    }
+    const senderelement = memoryreadobject(board, message.player)
+    if (!ispresent(senderelement)) {
+      return
+    }
+    const senderpt = { x: senderelement.x ?? 0, y: senderelement.y ?? 0 }
+    const agentlist = Object.values(agents)
+    const agentelements: (typeof senderelement)[] = []
+    for (let i = 0; i < agentlist.length; ++i) {
+      const agent = agentlist[i]
+      if (agent.name() === sendername) {
+        continue
+      }
+      const agentboard = memoryreadplayerboard(agent.id())
+      if (!ispresent(agentboard) || agentboard.id !== boardid) {
+        continue
+      }
+      const el = memoryreadobject(board, agent.id())
+      if (ispresent(el)) {
+        agentelements.push(el)
+      }
+    }
+    const nearest = memorypickboardnearestpt(senderpt, agentelements)
+    const nearestid = nearest?.id
+    if (ispresent(nearest) && isstring(nearestid)) {
+      const agent = agents[nearestid]
+      if (ispresent(agent)) {
+        heavymodelprompt(
+          vm,
+          message.player,
+          nearestid,
+          agent.name(),
+          messagetext,
+        )
+      }
+    }
+    return
+  }
 
   const agentlist = Object.values(agents)
   for (let i = 0; i < agentlist.length; ++i) {
@@ -48,17 +130,26 @@ function routechattoagents(
       continue
     }
 
-    if (!messagetext.toLowerCase().includes(agent.name().toLowerCase())) {
-      continue
-    }
+    const lastresponse = agentlastresponse[agent.id()] ?? 0
+    const hasattention = now - lastresponse < ATTENTION_WINDOW_MS
 
-    heavymodelprompt(
-      vm,
-      message.player,
-      agent.id(),
-      agent.name(),
-      messagetext,
-    )
+    if (hasattention || namematches(agent.name(), messagetext)) {
+      heavymodelprompt(
+        vm,
+        message.player,
+        agent.id(),
+        agent.name(),
+        messagetext,
+      )
+    } else if (lastresponse > 0) {
+      heavymodelclassify(
+        vm,
+        message.player,
+        agent.id(),
+        agent.name(),
+        messagetext,
+      )
+    }
   }
 }
 

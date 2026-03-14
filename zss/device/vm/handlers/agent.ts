@@ -2,15 +2,16 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apierror,
+  apitoast,
   heavymodelprompt,
   heavymodelstop,
   vmagentlist,
   vmloader,
 } from 'zss/device/api'
-import { agents } from 'zss/device/vm/state'
+import { agentlastresponse, agents } from 'zss/device/vm/state'
 import { createagent } from 'zss/feature/heavy/agent'
 import { write, writeheader } from 'zss/feature/writeui'
-import { createnameid } from 'zss/mapping/guid'
+import { createshortnameid } from 'zss/mapping/guid'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memorywritebookflag } from 'zss/memory/bookoperations'
@@ -20,7 +21,7 @@ import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
 export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
-  const agentname = isstring(message.data) ? message.data : createnameid()
+  const agentname = isstring(message.data) ? message.data : createshortnameid()
   const agent = createagent(agentname)
   const id = agent.id()
   agents[id] = agent
@@ -28,7 +29,7 @@ export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   memorywritebookflag(mainbook, id, 'user', agentname)
 
-  write(vm, message.player, `agent ${agentname} (${id}) started`)
+  apitoast(vm, message.player, `agent ${agentname} (${id}) started`)
   vmagentlist(vm, message.player)
 }
 
@@ -42,7 +43,8 @@ export function handleagentstop(vm: DEVICE, message: MESSAGE): void {
     heavymodelstop(vm, message.player, agentid)
     agent.stop()
     delete agents[agentid]
-    write(vm, message.player, `agent ${agentid} stopped`)
+    delete agentlastresponse[agentid]
+    apitoast(vm, message.player, `agent ${agentid} stopped`)
     vmagentlist(vm, message.player)
   } else {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
@@ -92,7 +94,7 @@ export function handleagentname(vm: DEVICE, message: MESSAGE): void {
   agent.setname(newname)
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   memorywritebookflag(mainbook, agentid, 'user', newname)
-  write(vm, message.player, `agent ${agentid} renamed to ${newname}`)
+  apitoast(vm, message.player, `agent ${agentid} renamed to ${newname}`)
 }
 
 export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
@@ -111,9 +113,12 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
     return
   }
 
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   element.tickertext = response
-  element.tickertime = Date.now()
+  element.tickertime = mainbook?.timestamp ?? 0
   memorysendtolog(board.id, element, response)
+
+  agentlastresponse[agentid] = Date.now()
 
   vmloader(
     vm,

@@ -1,7 +1,6 @@
 import { createdevice } from 'zss/device'
-import { vmdoot, vmlogin, vmlogout } from 'zss/device/api'
+import { apitoast, vmdoot, vmlogin, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { write } from 'zss/feature/writeui'
 import { createpid } from 'zss/mapping/guid'
 import { isboolean } from 'zss/mapping/types'
 
@@ -26,7 +25,7 @@ export function createagent(agentname: string) {
           break
         case 'acklogin':
           if (isboolean(message.data)) {
-            write(
+            apitoast(
               device,
               message.player,
               `agent ${currentname} (${pid}) login ${message.data ? 'success' : 'failure'}`,
