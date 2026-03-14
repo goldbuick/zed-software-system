@@ -4,10 +4,9 @@ import { Group, Plane, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import {
-  SCROLL_SPEED,
   fillmarqueebuffer,
   measuremarqueeline,
-} from 'zss/screens/scroll/marquee'
+} from 'zss/screens/scroll/marqueebuffer'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -114,9 +113,9 @@ export function TapeToast({ toast }: TapeToastProps) {
       {toast && (
         <>
           <ShadeBoxDither
-            alpha={0.777}
+            alpha={0.666}
             width={screensize.cols}
-            height={1}
+            height={10}
             top={0}
             left={0}
             right={rightedge}

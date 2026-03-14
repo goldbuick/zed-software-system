@@ -1,4 +1,9 @@
-import { apierror, vmagentlist, vmagentstart, vmagentstop } from 'zss/device/api'
+import {
+  apierror,
+  vmagentlist,
+  vmagentstart,
+  vmagentstop,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'

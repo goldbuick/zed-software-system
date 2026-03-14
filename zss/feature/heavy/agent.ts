@@ -6,8 +6,8 @@ import { isboolean } from 'zss/mapping/types'
 
 const DOOT_RATE = 10
 
-export function createagent(agentname: string) {
-  const pid = createpid()
+export function createagent(agentname: string, existingid?: string) {
+  const pid = existingid ?? createpid()
   let keepalive = DOOT_RATE
   let currentname = agentname
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
 import {
   AutoModelForCausalLM,
   AutoTokenizer,
@@ -10,7 +9,7 @@ import {
 const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_ID = 'onnx-community/Qwen2-0.5B-Instruct-ONNX'
+const MODEL_ID = 'onnx-community/Qwen2.5-0.5B-Instruct'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 600

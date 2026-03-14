@@ -3,10 +3,16 @@
  * Strips color codes and formats board, scroll, sidebar, and tickers.
  */
 import { PANEL_ITEM } from 'zss/gadget/data/types'
-import { MAYBE, isarray, ispresent, isnumber, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
-import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadelementkind } from 'zss/memory/boards'
+import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadboardpath } from 'zss/memory/spatialqueries'
@@ -157,12 +163,12 @@ export function formatboardfortext(agentid: string): string {
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
     if (!ispresent(tile)) {
-      terraincounts['empty'] = (terraincounts['empty'] ?? 0) + 1
+      terraincounts.empty = (terraincounts.empty ?? 0) + 1
       continue
     }
     memoryreadelementkind(tile)
     const display = memoryreadelementdisplay(tile)
-    const label = display.name || tile.kind || 'unknown'
+    const label = display.name ?? tile.kind ?? ''
     terraincounts[label] = (terraincounts[label] ?? 0) + 1
   }
 
@@ -174,10 +180,7 @@ export function formatboardfortext(agentid: string): string {
   return parts.join('\n')
 }
 
-export function readcodepagefortext(
-  name: string,
-  type?: string,
-): string {
+export function readcodepagefortext(name: string, type?: string): string {
   let pagetype = CODE_PAGE_TYPE.OBJECT
   switch (type) {
     case 'terrain':

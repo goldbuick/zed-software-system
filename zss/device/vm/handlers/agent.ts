@@ -14,11 +14,16 @@ import { write, writeheader } from 'zss/feature/writeui'
 import { createshortnameid } from 'zss/mapping/guid'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
-import { memorywritebookflag } from 'zss/memory/bookoperations'
+import {
+  memoryreadbookflag,
+  memorywritebookflag,
+} from 'zss/memory/bookoperations'
 import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
+
+const AGENTLIST_FLAG_ID = 'agentlist'
 
 export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   const agentname = isstring(message.data) ? message.data : createshortnameid()
@@ -28,6 +33,12 @@ export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
 
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   memorywritebookflag(mainbook, id, 'user', agentname)
+  const running =
+    (memoryreadbookflag(mainbook, AGENTLIST_FLAG_ID, 'running') as
+      | string[]
+      | undefined) ?? []
+  const updated = isarray(running) ? [...running, id] : [id]
+  memorywritebookflag(mainbook, AGENTLIST_FLAG_ID, 'running', updated)
 
   apitoast(vm, message.player, `agent ${agentname} (${id}) started`)
   vmagentlist(vm, message.player)
@@ -40,6 +51,13 @@ export function handleagentstop(vm: DEVICE, message: MESSAGE): void {
   const agentid = message.data
   const agent = agents[agentid]
   if (ispresent(agent)) {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const running =
+      (memoryreadbookflag(mainbook, AGENTLIST_FLAG_ID, 'running') as
+        | string[]
+        | undefined) ?? []
+    const updated = isarray(running) ? running.filter((x) => x !== agentid) : []
+    memorywritebookflag(mainbook, AGENTLIST_FLAG_ID, 'running', updated)
     heavymodelstop(vm, message.player, agentid)
     agent.stop()
     delete agents[agentid]
@@ -129,4 +147,32 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
     `chat:message:${board.id}`,
     `${agent.name()}:${reply}`,
   )
+}
+
+export function restoreagentsfrommainbook(vm: DEVICE, player: string): void {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  const raw = memoryreadbookflag(mainbook, AGENTLIST_FLAG_ID, 'running')
+  const running = isarray(raw) ? (raw as string[]) : []
+  if (running.length === 0) {
+    return
+  }
+  let count = 0
+  for (let i = 0; i < running.length; ++i) {
+    const id = running[i]
+    if (agents[id]) {
+      continue
+    }
+    const user = memoryreadbookflag(mainbook, id, 'user')
+    const name = isstring(user) ? user : id
+    const agent = createagent(name, id)
+    agents[id] = agent
+    count += 1
+  }
+  if (count > 0) {
+    apitoast(vm, player, `Restored ${count} agent(s)`)
+  }
+  vmagentlist(vm, player)
 }

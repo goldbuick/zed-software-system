@@ -7,15 +7,26 @@ import {
   readcodepagefortext,
 } from 'zss/feature/heavy/formatstate'
 import {
+  TOOL_CALL,
   destroysharedmodel,
   modelclassify,
   modelgenerate,
-  TOOL_CALL,
 } from 'zss/feature/heavy/model'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
-import { INPUT, INPUT_ALT, INPUT_CTRL, INPUT_SHIFT } from 'zss/gadget/data/types'
+import {
+  INPUT,
+  INPUT_ALT,
+  INPUT_CTRL,
+  INPUT_SHIFT,
+} from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { MAYBE, isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 
 import { apierror, apilog, apitoast } from './api'
 
@@ -84,9 +95,7 @@ function executetoolcalls(
 
       case 'read_codepage':
         if (isstring(call.args.name)) {
-          results.push(
-            readcodepagefortext(call.args.name, call.args.type),
-          )
+          results.push(readcodepagefortext(call.args.name, call.args.type))
         } else {
           results.push('Missing codepage name.')
         }
@@ -181,7 +190,10 @@ async function runagentprompt(
     for (let i = 0; i < toolresults.length; ++i) {
       if (ispresent(toolresults[i])) {
         hasdataresults = true
-        history.push({ role: 'user', content: `[tool result] ${toolresults[i]}` })
+        history.push({
+          role: 'user',
+          content: `[tool result] ${toolresults[i]}`,
+        })
       }
     }
 
@@ -283,9 +295,7 @@ const heavy = createdevice('heavy', [], (message) => {
         if (recenthistory.length > 0) {
           contextsnippet =
             '\nRecent conversation:\n' +
-            recenthistory
-              .map((m) => `${m.role}: ${m.content}`)
-              .join('\n') +
+            recenthistory.map((m) => `${m.role}: ${m.content}`).join('\n') +
             '\n'
         }
 
