@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
   memoryreadboardbyaddress,
@@ -11,7 +12,6 @@ import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadboardpath } from 'zss/memory/spatialqueries'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
-import { ispresent, isstring } from 'zss/mapping/types'
 
 export type BOARDSTATE_RESULT = {
   board: {
@@ -19,7 +19,13 @@ export type BOARDSTATE_RESULT = {
     name: string
     objects: Record<
       string,
-      { x?: number; y?: number; label: string; player?: string; removed?: boolean }
+      {
+        x?: number
+        y?: number
+        label: string
+        player?: string
+        removed?: boolean
+      }
     >
     exitnorth?: string
     exitsouth?: string
@@ -35,7 +41,10 @@ export type PATHFIND_RESULT = { nextpoint: { x: number; y: number } } | null
 
 export type CODEPAGE_RESULT = { codepage: { id: string; code: string } } | null
 
-function elementlabel(element: { kind?: string; [k: string]: unknown }): string {
+function elementlabel(element: {
+  kind?: string
+  [k: string]: unknown
+}): string {
   const display = memoryreadelementdisplay(element as any)
   const kind = element.kind ?? ''
   return display.name || kind
@@ -67,7 +76,7 @@ function runboardstate(agentid: string): BOARDSTATE_RESULT | { error: string } {
       y: obj.y,
       label,
       player: obj.player,
-      removed: obj.removed,
+      removed: !!obj.removed,
     }
   }
 
@@ -167,8 +176,8 @@ export function handlememoryquery(vm: DEVICE, message: MESSAGE): void {
   if (
     !payload ||
     typeof payload !== 'object' ||
-    !isstring((payload as any).id) ||
-    !isstring((payload as any).type)
+    !isstring(payload.id) ||
+    !isstring(payload.type)
   ) {
     return
   }
@@ -177,14 +186,20 @@ export function handlememoryquery(vm: DEVICE, message: MESSAGE): void {
     let result: unknown
     switch (type) {
       case 'boardstate': {
-        const agentid = (payload as any).agentid
+        const agentid = payload.agentid
         if (!isstring(agentid)) {
-          vm.emit(message.player, 'heavy:memoryresult', { id, error: 'missing_agentid' })
+          vm.emit(message.player, 'heavy:memoryresult', {
+            id,
+            error: 'missing_agentid',
+          })
           return
         }
         const out = runboardstate(agentid)
         if ('error' in out) {
-          vm.emit(message.player, 'heavy:memoryresult', { id, error: out.error })
+          vm.emit(message.player, 'heavy:memoryresult', {
+            id,
+            error: out.error,
+          })
           return
         }
         result = out
@@ -192,41 +207,60 @@ export function handlememoryquery(vm: DEVICE, message: MESSAGE): void {
       }
       case 'codepage': {
         const pagetype =
-          typeof (payload as any).pagetype === 'number'
-            ? (payload as any).pagetype
+          typeof payload.pagetype === 'number'
+            ? payload.pagetype
             : CODE_PAGE_TYPE.OBJECT
-        const name = (payload as any).name
+        const name = payload.name
         if (!isstring(name)) {
-          vm.emit(message.player, 'heavy:memoryresult', { id, error: 'missing_name' })
+          vm.emit(message.player, 'heavy:memoryresult', {
+            id,
+            error: 'missing_name',
+          })
           return
         }
         const out = runcodepage(pagetype, name)
-        if ('error' in out) {
-          vm.emit(message.player, 'heavy:memoryresult', { id, error: out.error })
+        if (typeof out === 'object' && out !== null && 'error' in out) {
+          vm.emit(message.player, 'heavy:memoryresult', {
+            id,
+            error: out.error,
+          })
           return
         }
         result = out
         break
       }
       case 'pathfind': {
-        const agentid = (payload as any).agentid
-        const targetx = Number((payload as any).targetx)
-        const targety = Number((payload as any).targety)
-        const flee = (payload as any).flee === true
-        if (!isstring(agentid) || !Number.isFinite(targetx) || !Number.isFinite(targety)) {
-          vm.emit(message.player, 'heavy:memoryresult', { id, error: 'invalid_params' })
+        const agentid = payload.agentid
+        const targetx = Number(payload.targetx)
+        const targety = Number(payload.targety)
+        const flee = payload.flee === true
+        if (
+          !isstring(agentid) ||
+          !Number.isFinite(targetx) ||
+          !Number.isFinite(targety)
+        ) {
+          vm.emit(message.player, 'heavy:memoryresult', {
+            id,
+            error: 'invalid_params',
+          })
           return
         }
         const out = runpathfind(agentid, targetx, targety, flee)
         if (typeof out === 'object' && out !== null && 'error' in out) {
-          vm.emit(message.player, 'heavy:memoryresult', { id, error: (out as any).error })
+          vm.emit(message.player, 'heavy:memoryresult', {
+            id,
+            error: (out as any).error,
+          })
           return
         }
         result = out
         break
       }
       default:
-        vm.emit(message.player, 'heavy:memoryresult', { id, error: 'unknown_type' })
+        vm.emit(message.player, 'heavy:memoryresult', {
+          id,
+          error: 'unknown_type',
+        })
         return
     }
     vm.emit(message.player, 'heavy:memoryresult', { id, result })

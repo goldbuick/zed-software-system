@@ -8,11 +8,11 @@ import {
   formatsystemprompt,
   readcodepagefortext,
 } from 'zss/feature/heavy/formatstate'
+import { getadapter } from 'zss/feature/heavy/llm'
 import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/memoryquery'
-import { getadapter } from 'zss/feature/heavy/llm'
 import {
   MODEL_ID,
   TOOL_CALL,
@@ -41,11 +41,11 @@ import { apierror, apilog, apitoast } from './api'
 
 /** Message plus optional tool_calls for chat template (adapter-defined shape). */
 type Heavymessage = Message & {
-  tool_calls?: Array<{
+  tool_calls?: {
     id: string
     type: 'function'
     function: { name: string; arguments: Record<string, string> }
-  }>
+  }[]
 }
 
 const MAX_HISTORY = 40

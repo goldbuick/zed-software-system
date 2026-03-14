@@ -7,7 +7,6 @@ import {
   heavymodelstop,
   vmagentlist,
   vmcli,
-  vmloader,
 } from 'zss/device/api'
 import { agentlastresponse, agents } from 'zss/device/vm/state'
 import { createagent } from 'zss/feature/heavy/agent'

@@ -55,11 +55,11 @@ export type PARSE_OPTIONS = {
 export type MESSAGE_WITH_TOOL_CALLS = {
   role: string
   content: string
-  tool_calls?: Array<{
+  tool_calls?: {
     id: string
     type: 'function'
     function: { name: string; arguments: Record<string, string> }
-  }>
+  }[]
 }
 
 /** Adapter: how to talk to a specific model (template options + parsing + history shape). */
@@ -69,7 +69,9 @@ export type LLM_ADAPTER = {
   /** Convert tool definitions to the shape the chat template expects. */
   toolsfortemplate: (tools: TOOL_DEF[]) => TEMPLATE_TOOL[]
   /** Options to pass to tokenizer.apply_chat_template (tools, tools_in_user_message, etc.). */
-  getchattemplateoptions: (templatetools: TEMPLATE_TOOL[]) => Record<string, unknown>
+  getchattemplateoptions: (
+    templatetools: TEMPLATE_TOOL[],
+  ) => Record<string, unknown>
   /** Options for parsing this model's output. */
   parseoptions: PARSE_OPTIONS
   /** Build the assistant message(s) to append to history for a turn that had tool calls. */

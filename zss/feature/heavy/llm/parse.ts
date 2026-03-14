@@ -190,9 +190,9 @@ function findtoolobject(
         const hasname = /"name"\s*:/.test(slice)
         const hasnested =
           nestedkey &&
-          new RegExp(`"${nestedkey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"\\s*:`).test(
-            slice,
-          )
+          new RegExp(
+            `"${nestedkey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"\\s*:`,
+          ).test(slice)
         if (!hasname && !hasnested) {
           return null
         }
@@ -202,7 +202,11 @@ function findtoolobject(
           let argsobj = parsed[argkey] ?? parsed.arguments ?? parsed.parameters
           if (!name && nestedkey) {
             const nested = parsed[nestedkey]
-            if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+            if (
+              nested &&
+              typeof nested === 'object' &&
+              !Array.isArray(nested)
+            ) {
               const n = nested as Record<string, unknown>
               name = typeof n.name === 'string' ? n.name : ''
               argsobj = n.arguments ?? n.parameters ?? argsobj
@@ -225,7 +229,10 @@ function findtoolobject(
  * Parse raw model output into text and tool calls.
  * Uses options to decide which formats to try (XML, JSON object/array, Pythonic) and cleanup.
  */
-export function parseresult(raw: string, options?: PARSE_OPTIONS): MODEL_RESULT {
+export function parseresult(
+  raw: string,
+  options?: PARSE_OPTIONS,
+): MODEL_RESULT {
   const opts = { ...DEFAULT_PARSE_OPTIONS, ...options }
   const toolcalls: TOOL_CALL[] = []
   let text = raw
@@ -260,7 +267,10 @@ export function parseresult(raw: string, options?: PARSE_OPTIONS): MODEL_RESULT 
       PYTHONIC_CALL_REGEX.lastIndex = 0
       let pymatch
       while ((pymatch = PYTHONIC_CALL_REGEX.exec(inner)) !== null) {
-        toolcalls.push({ name: pymatch[1], args: parsepythonicargs(pymatch[2]) })
+        toolcalls.push({
+          name: pymatch[1],
+          args: parsepythonicargs(pymatch[2]),
+        })
       }
     }
     text = text.replace(TOOL_CALL_TOKEN_REGEX, '').trim()

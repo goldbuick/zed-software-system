@@ -18,7 +18,7 @@ export const QWEN25_ADAPTER: LLM_ADAPTER = {
     return tools.map((t) => ({
       name: t.function.name,
       description: t.function.description,
-      parameters: t.function.parameters as Record<string, unknown>,
+      parameters: t.function.parameters,
     }))
   },
 
