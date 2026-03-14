@@ -99,7 +99,7 @@ function readreplytext(result: { text?: unknown; raw?: unknown }): string {
 async function executetoolcalls(
   player: string,
   agentid: string,
-  _agentname: string,
+  agentname: string,
   toolcalls: TOOL_CALL[],
 ): Promise<MAYBE<string>[]> {
   const results: MAYBE<string>[] = []
@@ -113,6 +113,27 @@ async function executetoolcalls(
         }
         results.push(undefined)
         break
+
+      case 'get_agent_info': {
+        try {
+          const data = await memoryquery(heavy, player, {
+            type: 'boardstate',
+            agentid,
+          })
+          results.push(
+            formatagentinfofortext(
+              data as Parameters<typeof formatagentinfofortext>[0],
+              agentid,
+              agentname,
+            ),
+          )
+        } catch {
+          results.push(
+            `You are ${agentname} (id: ${agentid}). You are not on any board.`,
+          )
+        }
+        break
+      }
 
       case 'run_command':
         if (isstring(call.args.command)) {
