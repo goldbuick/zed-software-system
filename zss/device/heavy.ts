@@ -75,6 +75,7 @@ const heavy = createdevice('heavy', [], (message) => {
           // log response lines
           console.info('>>>', response)
           apilog(heavy, message.player, '$21', response)
+          heavy.reply(message, 'heavy:modelprompt', response)
           // clean up memory
           modelcaller.clearpastvalues()
         } else {
