@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.91.58",
+  "version": "0.91.59",
   "type": "module",
   "files": [
     "dist",
