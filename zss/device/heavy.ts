@@ -12,7 +12,9 @@ import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/memoryquery'
+import { getadapter } from 'zss/feature/heavy/llm'
 import {
+  MODEL_ID,
   TOOL_CALL,
   destroysharedmodel,
   modelclassify,
@@ -37,10 +39,19 @@ import { NAME } from 'zss/words/types'
 
 import { apierror, apilog, apitoast } from './api'
 
+/** Message plus optional tool_calls for chat template (adapter-defined shape). */
+type Heavymessage = Message & {
+  tool_calls?: Array<{
+    id: string
+    type: 'function'
+    function: { name: string; arguments: Record<string, string> }
+  }>
+}
+
 const MAX_HISTORY = 40
 const MAX_REPROMPT = 3
 const MAX_CLASSIFY_CONTEXT = 3
-const agenthistories: Record<string, Message[]> = {}
+const agenthistories: Record<string, Heavymessage[]> = {}
 
 /** Codepage type values for memory query (must match zss/memory/types CODE_PAGE_TYPE). */
 const CODE_PAGE_TYPE = { OBJECT: 3, TERRAIN: 4, BOARD: 2 } as const
@@ -268,7 +279,7 @@ async function runagentprompt(
   prompt: string,
   onworking: (msg: string) => void,
 ) {
-  let history = agenthistories[agentid] ?? []
+  let history: Heavymessage[] = agenthistories[agentid] ?? []
   history.push({ role: 'user', content: prompt })
   if (history.length > MAX_HISTORY) {
     history = history.slice(-MAX_HISTORY)
@@ -320,23 +331,36 @@ async function runagentprompt(
       result.toolcalls,
     )
 
-    history.push({
-      role: 'assistant',
-      content:
-        (result.toolcalls.length > 0 && result.raw
-          ? result.raw
-          : result.text) || '(tool calls)',
-    })
+    const adapter = getadapter(MODEL_ID)
+    const assistantmessages = adapter
+      ? adapter.buildassistanttoolcallmessages(
+          result.toolcalls,
+          result.raw ?? result.text ?? '',
+        )
+      : [
+          {
+            role: 'assistant',
+            content: (result.raw ?? result.text) || '(tool calls)',
+          } as Heavymessage,
+        ]
+    for (let i = 0; i < result.toolcalls.length; ++i) {
+      if (i < assistantmessages.length) {
+        history.push(assistantmessages[i] as Heavymessage)
+      }
+      if (ispresent(toolresults[i])) {
+        history.push({
+          role: 'tool',
+          content: String(toolresults[i]),
+        })
+      }
+    }
     agenthistories[agentid] = history
 
     let hasdataresults = false
     for (let i = 0; i < toolresults.length; ++i) {
       if (ispresent(toolresults[i])) {
         hasdataresults = true
-        history.push({
-          role: 'tool',
-          content: String(toolresults[i]),
-        })
+        break
       }
     }
 

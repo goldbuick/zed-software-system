@@ -6,11 +6,16 @@ import {
   TextStreamer,
 } from '@huggingface/transformers'
 import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
+import {
+  getadapter,
+  parseresult as llmparseresult,
+} from 'zss/feature/heavy/llm'
+import type { MODEL_RESULT, TOOL_DEF } from 'zss/feature/heavy/llm'
 
-const DTYPE = 'q4'
+const DTYPE = 'q4f16'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_ID = 'onnx-community/LFM2-700M-ONNX'
+export const MODEL_ID = 'onnx-community/LFM2-1.2B-Tool-ONNX'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
@@ -30,7 +35,7 @@ function throttle(
   }
 }
 
-const MODEL_TOOLS = [
+const MODEL_TOOLS: TOOL_DEF[] = [
   {
     type: 'function',
     function: {
@@ -162,274 +167,7 @@ const MODEL_TOOLS = [
   },
 ]
 
-/**
- * LFM2 (onnx-community/LFM2-700M-ONNX) tool-calling alignment:
- * - Chat template injects tools into system prompt as <|tool_list_start|[{...}, ...]<|tool_list_end|>.
- * - Tool responses in history (role: 'tool') are wrapped as <|tool_response_start|content<|tool_response_end|>.
- * - Model outputs Pythonic calls (e.g. get_agent_info()) or JSON; we parse both and preserve raw in history for multi-turn.
- */
-/** LFM2 chat template expects tools as flat { name, description, parameters }. */
-function lfm2tools(): {
-  name: string
-  description: string
-  parameters: object
-}[] {
-  return MODEL_TOOLS.map((t) => ({
-    name: t.function.name,
-    description: t.function.description,
-    parameters: t.function.parameters,
-  }))
-}
-
-const TOOL_CALL_REGEX = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g
-const THINK_REGEX = /<think>[\s\S]*?<\/think>/gi
-/** LFM2-700M-ONNX outputs Pythonic tool calls e.g. get_weather(location="NYC") or [toolname(args)]. */
-const PYTHONIC_CALL_REGEX = /(\w+)\s*\(\s*([^)]*)\s*\)/g
-export type TOOL_CALL = { name: string; args: Record<string, string> }
-
-export type MODEL_RESULT = {
-  text: string
-  toolcalls: TOOL_CALL[]
-  /** Raw model output before parsing; use as assistant content when toolcalls.length > 0 for correct multi-turn context. */
-  raw?: string
-}
-
-function normalizetoolarg(arg: unknown): Record<string, string> {
-  if (arg === null || typeof arg !== 'object') {
-    return {}
-  }
-  const out: Record<string, string> = {}
-  for (const [k, v] of Object.entries(arg)) {
-    if (typeof v === 'string') {
-      out[k] = v
-    } else if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
-      out[k] = JSON.stringify(v)
-    } else if (v !== undefined && v !== null) {
-      out[k] = String(v)
-    }
-  }
-  return out
-}
-
-/** Parse Pythonic args string, e.g. location="New York", unit="fahrenheit" → { location: "New York", unit: "fahrenheit" }. */
-function parsepythonicargs(argsstr: string): Record<string, string> {
-  const out: Record<string, string> = {}
-  if (!argsstr.trim()) {
-    return out
-  }
-  let i = 0
-  const s = argsstr
-  while (i < s.length) {
-    while (i < s.length && /[\s,]/.test(s[i])) {
-      i++
-    }
-    if (i >= s.length) {
-      break
-    }
-    const keystart = i
-    while (i < s.length && /[a-zA-Z0-9_]/.test(s[i])) {
-      i++
-    }
-    const key = s.slice(keystart, i)
-    if (!key) {
-      break
-    }
-    while (i < s.length && s[i] !== '=') {
-      i++
-    }
-    if (i >= s.length || s[i] !== '=') {
-      break
-    }
-    i++
-    while (i < s.length && /\s/.test(s[i])) {
-      i++
-    }
-    if (i >= s.length) {
-      break
-    }
-    if (s[i] === '"' || s[i] === "'") {
-      const quote = s[i]
-      i++
-      const valstart = i
-      while (i < s.length && s[i] !== quote) {
-        if (s[i] === '\\') {
-          i++
-        }
-        i++
-      }
-      out[key] = s.slice(valstart, i)
-      i++
-    } else {
-      const valstart = i
-      while (i < s.length && !/[\s,]/.test(s[i])) {
-        i++
-      }
-      const raw = s.slice(valstart, i).trim()
-      out[key] = raw === 'true' ? 'true' : raw === 'false' ? 'false' : raw
-    }
-  }
-  return out
-}
-
-/** Find first complete JSON array in string by bracket count; return parsed array and slice, or null. */
-function findtoolarray(str: string): { arr: unknown[]; slice: string } | null {
-  const start = str.indexOf('[')
-  if (start === -1) {
-    return null
-  }
-  let depth = 0
-  let instring = false
-  let escape = false
-  let quote = ''
-  for (let i = start; i < str.length; i++) {
-    const c = str[i]
-    if (escape) {
-      escape = false
-      continue
-    }
-    if (instring) {
-      if (c === '\\') {
-        escape = true
-      } else if (c === quote) {
-        instring = false
-      }
-      continue
-    }
-    if (c === '"' || c === "'") {
-      instring = true
-      quote = c
-      continue
-    }
-    if (c === '[') {
-      depth++
-    } else if (c === ']') {
-      depth--
-      if (depth === 0) {
-        const slice = str.slice(start, i + 1)
-        try {
-          const arr = JSON.parse(slice) as unknown
-          return Array.isArray(arr) ? { arr, slice } : null
-        } catch {
-          return null
-        }
-      }
-    }
-  }
-  return null
-}
-
-/** Find first complete JSON object in string that looks like a tool call (has "name"). */
-function findtoolobject(
-  str: string,
-): { name: string; args: Record<string, string>; slice: string } | null {
-  const start = str.indexOf('{')
-  if (start === -1) {
-    return null
-  }
-  let depth = 0
-  let instring = false
-  let escape = false
-  let quote = ''
-  for (let i = start; i < str.length; i++) {
-    const c = str[i]
-    if (escape) {
-      escape = false
-      continue
-    }
-    if (instring) {
-      if (c === '\\') {
-        escape = true
-      } else if (c === quote) {
-        instring = false
-      }
-      continue
-    }
-    if (c === '"' || c === "'") {
-      instring = true
-      quote = c
-      continue
-    }
-    if (c === '{') {
-      depth++
-    } else if (c === '}') {
-      depth--
-      if (depth === 0) {
-        const slice = str.slice(start, i + 1)
-        if (!/"name"\s*:/.test(slice)) {
-          return null
-        }
-        try {
-          const parsed = JSON.parse(slice) as {
-            name?: unknown
-            arguments?: unknown
-          }
-          const name = typeof parsed.name === 'string' ? parsed.name : ''
-          if (name) {
-            return { name, args: normalizetoolarg(parsed.arguments), slice }
-          }
-        } catch {
-          // Invalid JSON; skip this object
-        }
-        return null
-      }
-    }
-  }
-  return null
-}
-
-/** Parse raw model output. Handles <tool_call> JSON, JSON array/object, and LFM2 Pythonic format. */
-function parseresult(raw: string): MODEL_RESULT {
-  const toolcalls: TOOL_CALL[] = []
-  let text = raw
-
-  TOOL_CALL_REGEX.lastIndex = 0
-  let match
-  while ((match = TOOL_CALL_REGEX.exec(raw)) !== null) {
-    try {
-      const parsed = JSON.parse(match[1])
-      toolcalls.push({
-        name: parsed.name ?? '',
-        args: normalizetoolarg(parsed.arguments),
-      })
-    } catch {
-      // Invalid JSON inside <tool_call>; skip
-    }
-  }
-
-  text = text.replace(TOOL_CALL_REGEX, '').trim()
-
-  const arrayresult = findtoolarray(text)
-  if (arrayresult) {
-    for (const item of arrayresult.arr) {
-      if (item && typeof item === 'object' && 'name' in item) {
-        const name = (item as { name?: unknown }).name
-        const args = (item as { arguments?: unknown }).arguments
-        toolcalls.push({
-          name: typeof name === 'string' ? name : '',
-          args: normalizetoolarg(args),
-        })
-      }
-    }
-    text = text.replace(arrayresult.slice, '').trim()
-  }
-
-  let objresult: ReturnType<typeof findtoolobject>
-  while ((objresult = findtoolobject(text)) !== null) {
-    toolcalls.push({ name: objresult.name, args: objresult.args })
-    text = text.replace(objresult.slice, '').trim()
-  }
-
-  text = text.replace(PYTHONIC_CALL_REGEX, (_full, name, argsstr) => {
-    toolcalls.push({ name, args: parsepythonicargs(argsstr) })
-    return ' '
-  })
-  text = text.trim()
-
-  text = text.replace(/<\|[^|]*\|>/g, '').trim()
-  text = text.replace(THINK_REGEX, '').trim()
-
-  return { text, toolcalls, raw }
-}
+export type { MODEL_RESULT, TOOL_CALL } from 'zss/feature/heavy/llm'
 
 type SHARED_MODEL = {
   tokenizer: Awaited<ReturnType<typeof AutoTokenizer.from_pretrained>>
@@ -499,18 +237,23 @@ export async function modelgenerate(
 ): Promise<MODEL_RESULT> {
   const { tokenizer, model } = await loadsharedmodel(onworking)
 
+  const adapter = getadapter(MODEL_ID)
+  if (!adapter) {
+    throw new Error(`No LLM adapter registered for model: ${MODEL_ID}`)
+  }
+
   const convo: Message[] = [
     { role: 'system', content: systemprompt },
     ...messages,
   ]
 
-  // LFM2 chat template: system + tool list <|tool_list_start|[...]<|tool_list_end|, then messages.
+  const templatetools = adapter.toolsfortemplate(MODEL_TOOLS)
+  const templateopts = adapter.getchattemplateoptions(templatetools)
   const input = tokenizer.apply_chat_template(convo, {
     tokenize: true,
     return_dict: true,
-    tools: lfm2tools(),
-    add_generation_prompt: true,
-  })
+    ...templateopts,
+  } as Parameters<typeof tokenizer.apply_chat_template>[1])
   if (typeof input !== 'object' || !('input_ids' in input)) {
     throw new Error('apply_chat_template returned unexpected type')
   }
@@ -546,7 +289,7 @@ export async function modelgenerate(
   })
 
   const raw = decoded.join('\n').trim()
-  const parsed = parseresult(raw)
+  const parsed = llmparseresult(raw, adapter.parseoptions)
 
   // Debug: why no tool calls? Inspect raw model output and parsed result.
   if (parsed.toolcalls.length > 0) {
