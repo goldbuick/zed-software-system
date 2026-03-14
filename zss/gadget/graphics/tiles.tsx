@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { Plane } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
@@ -26,6 +27,7 @@ type TilesProps = {
   color: number[]
   bg: number[]
   fliptexture?: boolean
+  clippingplanes?: Plane[]
 }
 
 export function Tiles({
@@ -36,6 +38,7 @@ export function Tiles({
   color,
   bg,
   fliptexture = true,
+  clippingplanes,
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
@@ -96,6 +99,11 @@ export function Tiles({
     imageHeight,
     fliptexture,
   ])
+
+  useEffect(() => {
+    material.clippingPlanes = clippingplanes ?? []
+    material.needsUpdate = true
+  }, [material, clippingplanes])
 
   // create buffer geo attributes
   const { position, uv } = useMemo(

@@ -202,18 +202,15 @@ export const DEFAULT_ALLOWLIST_ADMIN: string[] = [
 ].filter((c) => !ADMIN_DEFAULT_DENY.has(c))
 
 /** Default allowlist for mod: moderate and create content; no roles, workspace/operator/admin, nuke/restart. */
-export const DEFAULT_ALLOWLIST_MOD: string[] = [
+export const CREATIVE_ALLOWLIST_MOD: string[] = [
   'moderation',
   'bridge',
   'save',
-  'share',
-  'publish',
-  'import',
   'transform',
-  'world',
   'execution',
+  'world',
+  'share',
   'toast',
-  'fetch',
   'audio',
   'tts',
 ]
@@ -229,7 +226,7 @@ export const DEFAULT_ALLOWLIST_PLAYER: string[] = [
 /** Default allowlistbyrole for admin, mod, player (operator bypasses; use when initializing or resetting permissions). */
 export const DEFAULT_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
   admin: DEFAULT_ALLOWLIST_ADMIN,
-  mod: DEFAULT_ALLOWLIST_MOD,
+  mod: CREATIVE_ALLOWLIST_MOD,
   player: DEFAULT_ALLOWLIST_PLAYER,
 }
 
@@ -265,15 +262,19 @@ const LOCKDOWN_ALLOWLIST_MOD: string[] = [
 const CREATIVE_ALLOWLIST_PLAYER: string[] = [
   'discovery',
   'workspace',
-  'world',
   'transform',
   'execution',
+  'export',
+  'import',
+  'world',
+  'trash',
   'share',
   'toast',
   'fetch',
+  'share',
+  'toast',
   'audio',
   'tts',
-  'trash',
 ]
 
 /** Preset allowlistbyrole by config name. custom defaults to same values as lockdown. */
@@ -293,7 +294,7 @@ export const PERMISSION_PRESETS: Record<
   },
   creative: {
     admin: [...DEFAULT_ALLOWLIST_ADMIN],
-    mod: [...DEFAULT_ALLOWLIST_MOD],
+    mod: [...CREATIVE_ALLOWLIST_MOD],
     player: [...CREATIVE_ALLOWLIST_PLAYER],
   },
 }

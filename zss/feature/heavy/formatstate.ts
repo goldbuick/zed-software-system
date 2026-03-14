@@ -1,20 +1,65 @@
 /**
  * Serialize acklook data to plain text for LLM consumption.
  * Strips color codes and formats board, scroll, sidebar, and tickers.
+ * Formatters accept data blobs from memory queries (no zss/memory imports).
  */
 import { PANEL_ITEM } from 'zss/gadget/data/types'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { BOARD } from 'zss/memory/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+import { DIR } from 'zss/words/types'
+
+/** Data shape returned by boardstate memory query (heavy:memoryresult). */
+export type BOARDSTATE_DATA = {
+  board: {
+    id: string
+    name: string
+    objects: Record<
+      string,
+      {
+        x?: number
+        y?: number
+        label: string
+        player?: string
+        removed?: boolean
+      }
+    >
+    exitnorth?: string
+    exitsouth?: string
+    exitwest?: string
+    exiteast?: string
+  }
+  self: { x: number; y: number } | null
+  exits: { dir: string; label: string }[]
+  terrainlabels: Record<string, number>
+}
+
+/** Data shape returned by codepage memory query. */
+export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
+
+/** Data shape returned by pathfind memory query. */
+export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
+
+/** Agent-relevant ZSS commands; used in system prompt and runcommand tool description. */
+export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
+#put <dir> <kind> — create element in direction (e.g. #put n boulder)
+#change <from> <to> — change all elements of one kind to another (e.g. #change gem empty)
+#shoot <dir> or #shoot <dir> <kind> — fire projectile`
 
 export type LOOK_STATE = {
-  board?: BOARD
+  board?: unknown
   tickers?: string[]
   scrollname?: string
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]
 }
 
-/** Remove $color / $meta tokens for readable text. */
+const MAX_CODEPAGE_LENGTH = 1500
+
 function stripcodes(s: string): string {
   return s.replace(/\$[a-zA-Z0-9]+/g, '').trim()
 }
@@ -43,47 +88,11 @@ function panelitemstotext(items: PANEL_ITEM[] | undefined): string {
   return lines.join('\n')
 }
 
-// function elementchar(el: BOARD_ELEMENT | null | undefined): string {
-//   if (!ispresent(el)) {
-//     return ' '
-//   }
-//   const c = el.char ?? 32
-//   return c >= 32 && c < 127 ? String.fromCharCode(c) : ' '
-// }
-
-/** Render board as a 60x25 grid of characters (terrain + objects). */
-function boardtotext(board: BOARD | undefined): string {
-  if (!ispresent(board)) {
-    return ''
-  }
-  const rows: string[] = []
-  // TODO: render grid when elementchar is re-enabled
-  void board
-
-  // for (let y = 0; y < h; y++) {
-  //   let row = ''
-  //   for (let x = 0; x < w; x++) {
-  //     const idx = y * w + x
-  //     const ter = terrain[idx]
-  //     let ch = elementchar(ter)
-  //     for (const id of Object.keys(objects)) {
-  //       const obj = objects[id]
-  //       if (obj?.x === x && obj?.y === y) {
-  //         ch = elementchar(obj)
-  //         break
-  //       }
-  //     }
-  //     row += ch
-  //   }
-  //   rows.push(row)
-  // }
-  return rows.join('\n')
+function boardtotext(__: unknown): string {
+  void __
+  return ''
 }
 
-/**
- * Format acklook data into a single string suitable for an LLM prompt.
- * Sections: board (grid), scroll name + content, sidebar, tickers.
- */
 export function formatlookfortext(data: LOOK_STATE): string {
   const parts: string[] = []
 
@@ -115,15 +124,187 @@ export function formatlookfortext(data: LOOK_STATE): string {
   return parts.join('\n').trimEnd()
 }
 
-/**
- * Creates a system prompt with instructions
- */
-export function formatsystemprompt(): string {
-  return `You are a helpful ai agent.
-You are a NPC in a game world.
-You have a name and role in the game world.
-You have a board location in the game world.
-When the user inputs "I", "me", or "myself" they are referring to the user.
-When the user inputs "you", "your", or "yourself" they are referring to the ai agent.
-`
+function dirtostring(dir: DIR): string {
+  switch (dir) {
+    case DIR.NORTH:
+      return 'north'
+    case DIR.SOUTH:
+      return 'south'
+    case DIR.WEST:
+      return 'west'
+    case DIR.EAST:
+      return 'east'
+    default:
+      return 'idle'
+  }
+}
+
+export function formatboardfortext(
+  data: BOARDSTATE_DATA | { error: string },
+): string {
+  if ('error' in data && data.error === 'no_board') {
+    return 'You are not on any board.'
+  }
+  const d = data as BOARDSTATE_DATA
+  const board = d.board
+  const parts: string[] = []
+  parts.push(`BOARD: ${board.name || board.id}`)
+
+  if (ispresent(d.self)) {
+    parts.push(`YOU: (${d.self.x ?? '?'}, ${d.self.y ?? '?'})`)
+  }
+
+  const objectlines: string[] = []
+  const ids = Object.keys(board.objects)
+  for (let i = 0; i < ids.length; ++i) {
+    const id = ids[i]
+    const obj = board.objects[id]
+    if (!ispresent(obj) || obj.removed) {
+      continue
+    }
+    const label = obj.label
+    const playermarker = ispresent(obj.player) ? ' [player]' : ''
+    objectlines.push(
+      `- ${label}${playermarker} at (${obj.x ?? '?'}, ${obj.y ?? '?'})`,
+    )
+  }
+
+  if (objectlines.length > 0) {
+    parts.push('OBJECTS:')
+    parts.push(...objectlines)
+  } else {
+    parts.push('OBJECTS: none')
+  }
+
+  const terrainentries = Object.entries(d.terrainlabels)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => `${count} ${name}`)
+  parts.push(`TERRAIN: ${terrainentries.join(', ')}`)
+
+  if (d.exits.length > 0) {
+    const exitlines = d.exits.map((e) => `${e.dir} -> ${e.label}`)
+    parts.push(`EXITS: ${exitlines.join(', ')}`)
+  }
+
+  return parts.join('\n')
+}
+
+export function formatboardlistfortext(
+  data: BOARDSTATE_DATA | { error: string },
+): string {
+  if ('error' in data && data.error === 'no_board') {
+    return 'You are not on any board.'
+  }
+  const d = data as BOARDSTATE_DATA
+  if (d.exits.length === 0) {
+    return 'Boards you can reach: (none from here)'
+  }
+  const exitlines = d.exits.map((e) => `${e.dir} -> ${e.label}`)
+  return `Boards you can reach: ${exitlines.join(', ')}`
+}
+
+export function formatagentinfofortext(
+  data: BOARDSTATE_DATA | { error: string },
+  agentid: string,
+  agentname: string,
+): string {
+  if ('error' in data && data.error === 'no_board') {
+    return `You are ${agentname} (id: ${agentid}). You are not on any board.`
+  }
+  const d = data as BOARDSTATE_DATA
+  const pos =
+    ispresent(d.self) && isnumber(d.self.x) && isnumber(d.self.y)
+      ? `(${d.self.x}, ${d.self.y})`
+      : '(unknown)'
+  const boardlabel = d.board.name || d.board.id
+  return `You are ${agentname} (id: ${agentid}), on board "${boardlabel}", at ${pos}.`
+}
+
+export function readcodepagefortext(
+  data: CODEPAGE_DATA | { error: string },
+  name: string,
+  type?: string,
+): string {
+  if (data === null || (typeof data === 'object' && 'error' in data)) {
+    return `No ${type ?? 'object'} codepage found for "${name}".`
+  }
+  const source = data.codepage?.code ?? ''
+  if (!source) {
+    return `Codepage "${name}" exists but has no source code.`
+  }
+  if (source.length > MAX_CODEPAGE_LENGTH) {
+    return source.slice(0, MAX_CODEPAGE_LENGTH) + '\n... (truncated)'
+  }
+  return source
+}
+
+export function formatpathfindfortext(
+  data: PATHFIND_DATA | { error: string },
+  fromx: number,
+  fromy: number,
+  targetx: number,
+  targety: number,
+  flee?: boolean,
+): string {
+  if (data === null) {
+    return flee
+      ? `No path away from (${targetx}, ${targety}).`
+      : `No path to (${targetx}, ${targety}).`
+  }
+  if ('error' in data) {
+    if (data.error === 'no_board') {
+      return 'You are not on any board.'
+    }
+    if (data.error === 'no_self') {
+      return 'Cannot determine your position.'
+    }
+  }
+  if (typeof data !== 'object' || !('nextpoint' in data)) {
+    return flee
+      ? `No path away from (${targetx}, ${targety}).`
+      : `No path to (${targetx}, ${targety}).`
+  }
+  const nextpt = (
+    data as {
+      nextpoint: { x: number; y: number } | null
+    }
+  ).nextpoint
+  if (!nextpt) {
+    return flee
+      ? `No path away from (${targetx}, ${targety}).`
+      : `No path to (${targetx}, ${targety}).`
+  }
+  const dx = nextpt.x - fromx
+  const dy = nextpt.y - fromy
+  let dir: MAYBE<DIR>
+  if (dy < 0) {
+    dir = DIR.NORTH
+  } else if (dy > 0) {
+    dir = DIR.SOUTH
+  } else if (dx < 0) {
+    dir = DIR.WEST
+  } else if (dx > 0) {
+    dir = DIR.EAST
+  }
+
+  if (!ispresent(dir)) {
+    return 'Already at target.'
+  }
+
+  const verb = flee ? 'Flee' : 'Move'
+  return `${verb} ${dirtostring(dir)} to reach (${nextpt.x}, ${nextpt.y}).`
+}
+
+export function formatsystemprompt(
+  agentname: string,
+  context?: string,
+): string {
+  let base = `You are ${agentname}, an NPC in a game world. Keep responses brief and in-character.
+
+A board is a room or area. Exits connect boards. Directions: n, s, e, w.
+ZSS commands for run_command must start with #: #go <dir>, #put <dir> <kind>, #change <from> <to>, #shoot <dir>.`
+  if (ispresent(context)) {
+    base += `\n\nCurrent state:\n${context}`
+  }
+  return base
 }

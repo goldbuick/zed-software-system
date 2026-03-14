@@ -1,5 +1,5 @@
-import { SOFTWARE } from 'zss/device/session'
-import { write } from 'zss/feature/writeui'
+import { apitoast } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/api'
 import { doasync } from 'zss/mapping/func'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -16,12 +16,13 @@ function convertarraybytes(rawaudio: RawAudio) {
 }
 
 export function requestinfo(
+  device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
   info: string,
 ): Promise<any> {
   return new Promise((resolve) => {
-    doasync(SOFTWARE, player, async () => {
+    doasync(device, player, async () => {
       try {
         switch (engine) {
           case 'supertonic':
@@ -33,7 +34,7 @@ export function requestinfo(
             return
           case 'piper':
             if (!ispresent(pipertts)) {
-              write(SOFTWARE, player, `${engine} loading...`)
+              apitoast(device, player, `${engine} loading...`)
               const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
               pipertts = await PiperTTS.from_pretrained(
                 baseurl,
@@ -64,6 +65,7 @@ export function requestinfo(
 }
 
 export function requestaudiobytes(
+  device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
   config: string,
@@ -78,19 +80,19 @@ export function requestaudiobytes(
         timer = null
       }
     }
-    doasync(SOFTWARE, player, async () => {
+    doasync(device, player, async () => {
       try {
         switch (engine) {
           case 'supertonic': {
             if (!ispresent(supertonictts)) {
-              write(SOFTWARE, player, 'supertonic loading...')
+              apitoast(device, player, 'supertonic loading...')
               supertonictts = await SupertonicTTS.from_pretrained()
             }
             if (!ispresent(supertonictts) || !supertonictts.pipeline) {
               resolve(undefined)
               return
             }
-            write(SOFTWARE, player, 'supertonic working...')
+            apitoast(device, player, 'supertonic working...')
             timer = setTimeout(() => {
               cleartimer()
               supertonictts?.clearAudio()
@@ -108,13 +110,13 @@ export function requestaudiobytes(
             )
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             for await (const _ of stream) {
-              write(SOFTWARE, player, 'supertonic reading...')
+              apitoast(device, player, 'supertonic reading...')
             }
             const rawaudio = supertonictts?.merge_audio()
             cleartimer()
             supertonictts?.clearAudio()
             if (ispresent(rawaudio)) {
-              write(SOFTWARE, player, 'supertonic done...')
+              apitoast(device, player, 'supertonic done...')
               resolve(convertarraybytes(rawaudio))
             } else {
               resolve(undefined)
@@ -123,7 +125,7 @@ export function requestaudiobytes(
           }
           case 'piper': {
             if (!ispresent(pipertts)) {
-              write(SOFTWARE, player, `${engine} loading...`)
+              apitoast(device, player, `${engine} loading...`)
               if (config) {
                 const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${config}`
                 pipertts = await PiperTTS.from_pretrained(
@@ -142,7 +144,7 @@ export function requestaudiobytes(
               resolve(undefined)
               return
             }
-            write(SOFTWARE, player, `${engine} working...`)
+            apitoast(device, player, `${engine} working...`)
             timer = setTimeout(() => {
               cleartimer()
               pipertts?.clearAudio()
@@ -156,12 +158,12 @@ export function requestaudiobytes(
             })
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             for await (const _ of stream) {
-              write(SOFTWARE, player, `${engine} reading...`)
+              apitoast(device, player, `${engine} reading...`)
             }
             const rawaudio = pipertts?.merge_audio()
             cleartimer()
             pipertts?.clearAudio()
-            write(SOFTWARE, player, `${engine} done...`)
+            apitoast(device, player, `${engine} done...`)
             resolve(
               ispresent(rawaudio) ? convertarraybytes(rawaudio) : undefined,
             )

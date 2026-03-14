@@ -1,26 +1,31 @@
 import {
   apierror,
   vmagentlist,
-  vmagentprompt,
   vmagentstart,
   vmagentstop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
-import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
 export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'agent',
-    [ARG_TYPE.MAYBE_NAME, '/stop/list AI agents; prompt with <id> <values>'],
+    [ARG_TYPE.MAYBE_NAME, 'start/stop/list AI agents'],
     (_, words) => {
-      const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       switch (NAME(action)) {
-        case 'start':
-          vmagentstart(SOFTWARE, READ_CONTEXT.elementfocus)
+        case 'start': {
+          const [agentname] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
+          vmagentstart(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            isstring(agentname) ? agentname : undefined,
+          )
           break
+        }
         case 'stop': {
           const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
           if (ispresent(agentid)) {
@@ -37,31 +42,9 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
         }
         case '':
         case 'list':
+        default:
           vmagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
           break
-        default: {
-          if (isstring(action)) {
-            const [values] = readargsuntilend(
-              words,
-              ii,
-              ARG_TYPE.NUMBER_OR_NAME,
-            )
-            vmagentprompt(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
-              action,
-              values.join(' '),
-            )
-          } else {
-            apierror(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
-              'agent',
-              '#agent <id> <prompt>',
-            )
-          }
-          break
-        }
       }
       return 0
     },

@@ -21,10 +21,9 @@ import { ScreenUIComponent } from 'zss/screens/screenui/component'
 import { TapeComponent } from 'zss/screens/tape/component'
 import { isfirefox } from 'zss/words/system'
 
-import { useTape } from './data/state'
 import { Scanlines } from './fx/scanlines'
 import { Rect } from './rect'
-import { TapeToast } from './toast'
+import { TapeToast, TapeToastConnected } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
@@ -117,9 +116,6 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols, usetouchtextsync])
 
-  // current toast message
-  const toast = useTape((state) => state.toast)
-
   // click to un-mute overlay for firefox
   const [showunmute, setshowunmute] = useState(isfirefox)
 
@@ -135,7 +131,7 @@ export function Engine() {
         <UserScreen>
           <ScreenUIComponent />
           <TapeComponent />
-          <TapeToast toast={toast} />
+          <TapeToastConnected />
           <TapeViewImage />
           {showunmute && (
             <>

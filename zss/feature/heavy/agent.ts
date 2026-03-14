@@ -1,15 +1,15 @@
 import { createdevice } from 'zss/device'
-import { vmdoot, vmlogin, vmlogout } from 'zss/device/api'
+import { apitoast, vmdoot, vmlogin, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { write } from 'zss/feature/writeui'
 import { createpid } from 'zss/mapping/guid'
 import { isboolean } from 'zss/mapping/types'
 
 const DOOT_RATE = 10
 
-export function createagent() {
-  const pid = createpid()
+export function createagent(agentname: string, existingid?: string) {
+  const pid = existingid ?? createpid()
   let keepalive = DOOT_RATE
+  let currentname = agentname
 
   const device = createdevice(
     `agent_${pid}`,
@@ -25,10 +25,10 @@ export function createagent() {
           break
         case 'acklogin':
           if (isboolean(message.data)) {
-            write(
+            apitoast(
               device,
               message.player,
-              `agent login ${message.data ? 'success' : 'failure'}`,
+              `agent ${currentname} (${pid}) login ${message.data ? 'success' : 'failure'}`,
             )
           }
           break
@@ -37,12 +37,17 @@ export function createagent() {
     SOFTWARE.session(),
   )
 
-  // attempt login
-  vmlogin(device, pid, {})
+  vmlogin(device, pid, { user: currentname })
 
   return {
     id() {
       return pid
+    },
+    name() {
+      return currentname
+    },
+    setname(n: string) {
+      currentname = n
     },
     stop() {
       vmlogout(device, pid, false)

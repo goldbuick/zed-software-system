@@ -47,14 +47,14 @@ Comprehensive input handling system supporting keyboard, gamepad, and touch inpu
 ### Input State Management
 - `inputdown(index, input)` - Sets an input state to pressed for a given player index
 - `inputup(index, input)` - Sets an input state to released for a given player index
-- `modsfromevent(event)` - Extracts modifier keys (alt, ctrl, shift) from a keyboard event
+- `modsfromevent(event)` - Extracts modifier keys (alt, ctrl, meta, shift) from a keyboard event
 
 ### Constants
 - `INPUT_RATE` - Input polling rate constant (100ms)
 - `UserInputContext` - React context for input event handling
 
 ### Types
-- `UserInputMods` - Type for modifier keys (alt, ctrl, shift)
+- `UserInputMods` - Type for modifier keys (alt, ctrl, meta, shift)
 - `KeyboardInputHandler` - Type for keyboard event handlers
 - `UserInputHandler` - Type for input event handlers with modifiers
 

@@ -23,7 +23,18 @@ export function incflushtick(): number {
 
 export const watching: Record<string, Set<string>> = {}
 export const observers: Record<string, (() => void) | undefined> = {}
-export const agents: Record<string, { id: () => string; stop: () => void }> = {}
+export const ATTENTION_WINDOW_MS = 30_000
+export const agentlastresponse: Record<string, number> = {}
+
+export const agents: Record<
+  string,
+  {
+    id: () => string
+    name: () => string
+    setname: (n: string) => void
+    stop: () => void
+  }
+> = {}
 
 export const STATS_BOARD = [
   'currenttick',
