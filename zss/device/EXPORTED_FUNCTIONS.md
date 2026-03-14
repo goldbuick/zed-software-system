@@ -282,7 +282,6 @@ Functions for shared state synchronization using Yjs (CRDT) and y-protocols (Awa
 - `modemobservevaluestring(key, callback)` - Observe string value changes
 
 ### Undo / Redo
-- `subscribeToLogReset(fn)` - Subscribe to log reset (e.g. after joinack). Returns unsubscribe.
 - `markNextPatchAsLocal()` - Mark the next edit as local (for undo tracking)
 - `consumeLocalPatchFlag()` - Consume the local-patch flag; returns true if next tx was local
 - `setCursorBeforeEdit(key, cursor)` - Store cursor before edit (for cursor restore on undo/redo)

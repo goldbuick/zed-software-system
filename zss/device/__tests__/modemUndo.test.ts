@@ -1,5 +1,6 @@
 import {
   consumeLocalPatchFlag,
+  destroyModemForTest,
   getSharedTextHandleForTest,
   getUndoManager,
   markNextPatchAsLocal,
@@ -9,6 +10,9 @@ import {
 } from 'zss/device/modem'
 
 describe('modemUndo', () => {
+  afterAll(() => {
+    destroyModemForTest()
+  })
   describe('markNextPatchAsLocal / consumeLocalPatchFlag', () => {
     it('consumeLocalPatchFlag returns false by default', () => {
       expect(consumeLocalPatchFlag()).toBe(false)

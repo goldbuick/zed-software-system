@@ -43,7 +43,8 @@ export type SharedTextHandle = {
   readonly nodeId: NodeId
 }
 
-const SYNC_DOC = new Y.Doc()
+const SYNC_DOC_GUID = 'zss_modem_sync'
+const SYNC_DOC = new Y.Doc({ guid: SYNC_DOC_GUID })
 const ROOT = SYNC_DOC.getMap('root')
 const AWARENESS = new awarenessProtocol.Awareness(SYNC_DOC)
 
@@ -57,12 +58,13 @@ const cursorrestorecallbacks = new Map<string, (cursor: number) => void>()
 const LOCAL_ORIGIN = Symbol('local')
 
 function getorcreatetext(key: string): Y.Text {
-  let text = ROOT.get(key) as Y.Text | undefined
-  if (!text || !(text instanceof Y.Text)) {
-    text = new Y.Text()
+  const raw = ROOT.get(key)
+  if (!raw || !(raw instanceof Y.Text)) {
+    const text = new Y.Text()
     ROOT.set(key, text)
+    return text
   }
-  return text
+  return raw
 }
 
 function getorcreateundomanager(key: string): {
@@ -158,25 +160,6 @@ type SHARED_TYPE_MAP = {
 }
 
 let joined = false
-
-const LOG_RESET_LISTENERS: (() => void)[] = []
-
-function firelogreset() {
-  for (const fn of LOG_RESET_LISTENERS) {
-    fn()
-  }
-}
-
-/** Subscribe to log reset (e.g. after joinack). Returns unsubscribe. */
-export function subscribeToLogReset(fn: () => void): () => void {
-  LOG_RESET_LISTENERS.push(fn)
-  return () => {
-    const i = LOG_RESET_LISTENERS.indexOf(fn)
-    if (i !== -1) {
-      LOG_RESET_LISTENERS.splice(i, 1)
-    }
-  }
-}
 
 /** Set before local edit (insert/delete); used so only local edits are tracked for undo. */
 let nextPatchIsLocal = false
@@ -313,40 +296,40 @@ export function modemwriteinitnumber(key: string, value: number) {
   if (ROOT.has(key)) {
     return
   }
-  ROOT.set(key, value)
+  SYNC_DOC.transact(() => {
+    ROOT.set(key, value)
+  }, LOCAL_ORIGIN)
 }
 
 export function modemwriteinitstring(key: string, value: string) {
   if (ROOT.has(key)) {
     return
   }
-  const text = new Y.Text()
-  if (value.length > 0) {
-    text.insert(0, value)
-  }
-  ROOT.set(key, text)
+  SYNC_DOC.transact(() => {
+    const text = new Y.Text(value)
+    ROOT.set(key, text)
+  }, LOCAL_ORIGIN)
 }
 
 export function modemwritevaluenumber(key: string, value: number) {
-  ROOT.set(key, value)
+  SYNC_DOC.transact(() => {
+    ROOT.set(key, value)
+  }, LOCAL_ORIGIN)
 }
 
 export function modemwritevaluestring(key: string, value: string) {
   if (!ROOT.has(key)) {
-    const text = new Y.Text()
-    if (value.length > 0) {
-      text.insert(0, value)
-    }
-    ROOT.set(key, text)
+    SYNC_DOC.transact(() => {
+      const text = new Y.Text(value)
+      ROOT.set(key, text)
+    }, LOCAL_ORIGIN)
     return
   }
   const existing = ROOT.get(key)
   if (existing instanceof Y.Text) {
     SYNC_DOC.transact(() => {
       existing.delete(0, existing.length)
-      if (value.length > 0) {
-        existing.insert(0, value)
-      }
+      existing.insert(0, value)
     }, LOCAL_ORIGIN)
   }
 }
@@ -503,7 +486,6 @@ const modem = createdevice('modem', ['second'], (message) => {
           const data = hex2arr(message.data)
           Y.applyUpdate(SYNC_DOC, data)
           undomanagers.clear()
-          firelogreset()
         } catch (e) {
           console.error('modem joinack decode', e)
         }
@@ -572,4 +554,16 @@ if (typeof window !== 'undefined') {
       'beforeunload',
     )
   })
+}
+
+/**
+ * Teardown for test environments. Destroys the shared Y.Doc and Awareness so
+ * Jest workers can exit without open handles. Call in afterAll() in tests that
+ * import this module. Only safe to call when the process is about to exit.
+ */
+export function destroyModemForTest(): void {
+  const doc = SYNC_DOC as Y.Doc & { isDestroyed?: boolean }
+  if (!doc.isDestroyed) {
+    SYNC_DOC.destroy()
+  }
 }

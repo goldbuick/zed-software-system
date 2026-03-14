@@ -4,6 +4,7 @@
  */
 
 import {
+  destroyModemForTest,
   getSharedTextHandleForTest,
   getUndoManager,
   markNextPatchAsLocal,
@@ -36,6 +37,10 @@ async function localinsert(text: string): Promise<void> {
 }
 
 describe('undo/redo integration', () => {
+  afterAll(() => {
+    destroyModemForTest()
+  })
+
   function getUm() {
     return getUndoManager(CODEKEY)
   }
