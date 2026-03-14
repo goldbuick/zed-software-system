@@ -1,6 +1,6 @@
 # tts.ts
 
-**Purpose**: Text-to-speech orchestration. Supports multiple engines (Edge, Piper, Kitten). Dispatches to device for Edge TTS; uses `heavy/tts` for Piper/Kitten. Queues playback and integrates with synth.
+**Purpose**: Text-to-speech orchestration. Supports multiple engines (Edge, Piper, Supertonic). Dispatches to device for Edge TTS; uses `heavy/tts` for Piper/Supertonic. Queues playback and integrates with synth.
 
 ## Dependencies
 
@@ -17,9 +17,9 @@
 
 | Function | Args | Description |
 |----------|------|-------------|
-| `selectttsengine` | `engine`, `config` | Set engine (`'piper'` \| `'kitten'`) and config |
+| `selectttsengine` | `engine`, `config` | Set engine (`'piper'` \| `'supertonic'`) and config |
 | `requestaudiobuffer` | `player`, `voice`, `input` | Request audio buffer (Edge TTS via device) |
-| `requestaudiobytes` | `player`, `engine`, `config`, `voice`, `input` | Request raw bytes (Piper/Kitten via heavy) |
+| `requestaudiobytes` | `player`, `engine`, `config`, `voice`, `input` | Request raw bytes (Piper/Supertonic via heavy) |
 | `ttsinfo` | `player`, `info` | Request engine info (e.g. voices list) |
 | `ttsplay` | `player`, `voice`, `input` | Play text as speech |
 | `ttsqueue` | `player`, `voice`, `input` | Queue text for playback |
@@ -28,4 +28,4 @@
 ## Engine Flow
 
 - **Edge**: Device sends request; responds with `heavy:ttsrequest` data
-- **Piper/Kitten**: `heavy/tts.ts` loads model, generates audio, returns bytes; decoded and played via synth
+- **Piper/Supertonic**: `heavy/tts.ts` loads model, generates audio, returns bytes; decoded and played via synth

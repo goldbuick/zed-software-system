@@ -4,6 +4,11 @@ import { cachedfetch } from './modelcache'
 import { phonemize } from './phonemizerparser'
 import { RawAudio, normalizepeak, trimsilence } from './utils'
 
+function tosafeint(x: unknown): number {
+  const n = Number(x)
+  return Number.isFinite(n) ? n | 0 : 0
+}
+
 // Piper TTS class for local model
 export class PiperTTS {
   voiceConfig: any
@@ -156,16 +161,18 @@ export class PiperTTS {
             const textPhonemes = await this.textToPhonemes(text)
             const phonemeIds = this.phonemesToIds(textPhonemes)
 
-            // Prepare tensors for Piper model
+            // Prepare tensors for Piper model (safe ints to avoid NaN → BigInt throw)
+            const safeids = phonemeIds.map((id) => tosafeint(id))
+            const safelen = tosafeint(phonemeIds.length)
             const inputs: Record<string, any> = {
               input: new Tensor(
                 'int64',
-                new BigInt64Array(phonemeIds.map((id) => BigInt(id))),
-                [1, phonemeIds.length],
+                new BigInt64Array(safeids.map((id) => BigInt(id))),
+                [1, safeids.length],
               ),
               input_lengths: new Tensor(
                 'int64',
-                BigInt64Array.from([BigInt(phonemeIds.length)]),
+                BigInt64Array.from([BigInt(safelen)]),
                 [1],
               ),
               scales: new Tensor(
@@ -179,7 +186,7 @@ export class PiperTTS {
             if (this.voiceConfig.num_speakers > 1) {
               inputs.sid = new Tensor(
                 'int64',
-                BigInt64Array.from([BigInt(speakerId)]),
+                BigInt64Array.from([BigInt(tosafeint(speakerId))]),
                 [1],
               )
             }

@@ -76,10 +76,10 @@ export function EditorRows({
   }, [withrows, tapeeditor.startline, tapeeditor.cursor])
 
   if (!ispresent(codepage)) {
-    const fibble = '*'.repeat(3)
+    const fibble = '$196'.repeat(5)
     setupeditoritem(false, false, 0, 0, context, 1, 2, 1)
     tokenizeandwritetextformat(
-      ` $BLWHITE${fibble}$WHITE LOADING $BLWHITE${fibble}$WHITE `,
+      `$BLWHITE${fibble}$WHITELOADING$BLWHITE${fibble}$WHITE`,
       context,
       false,
     )

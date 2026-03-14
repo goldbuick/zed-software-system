@@ -21,13 +21,11 @@ const heavy = createdevice('heavy', [], (message) => {
       doasync(heavy, message.player, async () => {
         if (isarray(message.data)) {
           const [engine, info] = message.data as [
-            engine: 'kitten' | 'piper',
+            engine: 'piper' | 'supertonic',
             info: string,
           ]
           const data = await requestinfo(message.player, engine, info)
-          if (ispresent(data)) {
-            heavy.reply(message, 'heavy:ttsinfo', data)
-          }
+          heavy.reply(message, 'heavy:ttsinfo', ispresent(data) ? data : [])
         }
       })
       break
@@ -35,7 +33,7 @@ const heavy = createdevice('heavy', [], (message) => {
       doasync(heavy, message.player, async () => {
         if (isarray(message.data)) {
           const [engine, config, voice, phrase] = message.data as [
-            engine: 'kitten' | 'piper',
+            engine: 'piper' | 'supertonic',
             config: string,
             voice: string,
             phrase: string,
@@ -47,9 +45,11 @@ const heavy = createdevice('heavy', [], (message) => {
             voice,
             phrase,
           )
-          if (ispresent(audiobytes)) {
-            heavy.reply(message, 'heavy:ttsrequest', audiobytes)
-          }
+          heavy.reply(
+            message,
+            'heavy:ttsrequest',
+            ispresent(audiobytes) ? audiobytes : undefined,
+          )
         }
       })
       break
@@ -75,6 +75,7 @@ const heavy = createdevice('heavy', [], (message) => {
           // log response lines
           console.info('>>>', response)
           apilog(heavy, message.player, '$21', response)
+          heavy.reply(message, 'heavy:modelprompt', response)
           // clean up memory
           modelcaller.clearpastvalues()
         } else {

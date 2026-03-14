@@ -72,9 +72,7 @@ export function EditorInput({
   const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
 
-  const codepageKey = ispresent(codepage)
-    ? `${codepage.nodeId.sid}:${codepage.nodeId.time}`
-    : undefined
+  const codepageKey = ispresent(codepage) ? codepage.nodeId.key : undefined
 
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
   const rowsend = rows.length - 1
@@ -102,17 +100,11 @@ export function EditorInput({
     ycursor,
   )
 
-  const { undomanager, cursorBeforeEditRef, cursorAfterEditRef } = useUndoRedo(
-    codepage,
-    updatescrolling,
-  )
+  const { undomanager } = useUndoRedo(codepage, updatescrolling)
 
   const { strvaluesplice, strvaluespliceonly } = useEditorSplice(
     codepage,
     updatescrolling,
-    cursorBeforeEditRef,
-    cursorAfterEditRef,
-    tapeeditor.cursor,
   )
 
   // --- drawing ---

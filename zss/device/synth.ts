@@ -44,8 +44,8 @@ export function enableaudio() {
   // synth setup
   locked = true
 
-  // create new context
-  setContext(new Context({ latencyHint: 'playback' }), true)
+  // create new context (lookAhead gives scheduler more time, reduces glitches on slow devices)
+  setContext(new Context({ latencyHint: 'playback', lookAhead: 0.15 }), true)
 
   // resume audio context
   start()

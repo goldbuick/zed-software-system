@@ -16,6 +16,7 @@ import {
   synthvoicefx,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -171,12 +172,24 @@ function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
 export const AUDIO_FIRMWARE = createfirmware()
   .command(
     'ttsengine',
-    [ARG_TYPE.STRING, ARG_TYPE.MAYBE_STRING, 'TTS engine and config'],
+    [
+      ARG_TYPE.MAYBE_STRING,
+      ARG_TYPE.MAYBE_STRING,
+      'TTS engine and config (no args: list engines)',
+    ],
     (_, words) => {
       const [engine, config] = readargs(words, 0, [
-        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_STRING,
         ARG_TYPE.MAYBE_STRING,
       ])
+      if (!ispresent(engine)) {
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'TTS engines: piper, supertonic',
+        )
+        return 0
+      }
       synthttsengine(
         SOFTWARE,
         READ_CONTEXT.elementfocus,

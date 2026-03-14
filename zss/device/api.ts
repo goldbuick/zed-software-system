@@ -152,7 +152,7 @@ export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {
 export function heavyttsinfo(
   device: DEVICELIKE,
   player: string,
-  engine: 'kitten' | 'piper',
+  engine: 'piper' | 'supertonic',
   info: string,
 ) {
   device.emit(player, 'heavy:ttsinfo', [engine, info])
@@ -161,7 +161,7 @@ export function heavyttsinfo(
 export function heavyttsrequest(
   device: DEVICELIKE,
   player: string,
-  engine: 'kitten' | 'piper',
+  engine: 'piper' | 'supertonic',
   config: string,
   voice: string | number,
   phrase: string,

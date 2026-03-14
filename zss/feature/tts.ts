@@ -8,10 +8,13 @@ import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 // engine config
-let ttsengine: 'piper' | 'kitten' = 'piper'
+let ttsengine: 'piper' | 'supertonic' = 'piper'
 let ttsconfig = ''
 
-export function selectttsengine(engine: 'piper' | 'kitten', config: string) {
+export function selectttsengine(
+  engine: 'piper' | 'supertonic',
+  config: string,
+) {
   ttsengine = engine
   ttsconfig = config
 }

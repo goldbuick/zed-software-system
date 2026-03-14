@@ -1,14 +1,14 @@
 # heavy/
 
-**Purpose**: Heavy processing workloads — TTS engines (Piper, Kitten), transformers models, agent with tool calls. Runs in main thread or workers; loads models on demand.
+**Purpose**: Heavy processing workloads — TTS engines (Piper, Supertonic), transformers models, agent with tool calls. Runs in main thread or workers; loads models on demand.
 
 ## Modules
 
 | File | Purpose |
 |------|---------|
-| `tts.ts` | Piper/Kitten TTS; `requestinfo`, `requestaudiobytes` |
+| `tts.ts` | Piper/Supertonic TTS; `requestinfo`, `requestaudiobytes` |
 | `pipertts.ts` | PiperTTS class — ONNX-based TTS |
-| `kittentts.ts` | KittenTTS class — Transformers.js TTS |
+| `supertonictts.ts` | SupertonicTTS class — Supertonic-TTS-2-ONNX via Transformers.js |
 | `model.ts` | AutoModelForCausalLM/Seq2SeqLM loading; `createmodelcaller`, `parsetoolcalls` |
 | `agent.ts` | Agent with tool-calling; `createagent`, `AGENT` |
 | `modelcache.ts` | ModelCache — fetch/cache for model files |
@@ -22,7 +22,7 @@
 | Function | Description |
 |----------|-------------|
 | `requestinfo` | TTS engine info (voices) |
-| `requestaudiobytes` | Generate audio bytes from Piper/Kitten |
+| `requestaudiobytes` | Generate audio bytes from Piper/Supertonic |
 | `createmodelcaller` | Create model caller for LLM inference |
 | `createagent` | Create agent with tool-calling support |
 | `parsetoolcalls` | Parse tool calls from model output |

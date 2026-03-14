@@ -50,14 +50,14 @@ Helper functions for writing formatted log lines to the terminal with various UI
 
 **Files:** `tts.ts`, `heavy/tts.ts`
 
-Text-to-speech functionality with support for multiple engines (Edge, Piper, Kitten).
+Text-to-speech functionality with support for multiple engines (Edge, Piper, Supertonic).
 
 ### Engine Configuration
-- `selectttsengine(engine, config)` - Select TTS engine ('edge' | 'piper' | 'kitten') with config
+- `selectttsengine(engine, config)` - Select TTS engine ('edge' | 'piper' | 'supertonic') with config
 
 ### Audio Generation
 - `requestaudiobuffer(player, voice, input)` - Request audio buffer for text (Edge TTS)
-- `requestaudiobytes(player, engine, config, voice, input)` - Request audio bytes (Piper/Kitten TTS)
+- `requestaudiobytes(player, engine, config, voice, input)` - Request audio bytes (Piper/Supertonic TTS)
 - `requestinfo(player, engine, info)` - Request TTS engine information (e.g., list of available voices)
 
 ### Playback
@@ -336,7 +336,7 @@ Various utility functions for browser APIs and external services.
 
 ## Heavy Processing Module
 
-**Files:** `heavy/tts.ts`, `heavy/pipertts.ts`, `heavy/kittentts.ts`, `heavy/utils.ts`, `heavy/textcleaner.ts`, `heavy/modelcache.ts`
+**Files:** `heavy/tts.ts`, `heavy/pipertts.ts`, `heavy/supertonictts.ts`, `heavy/utils.ts`, `heavy/textcleaner.ts`, `heavy/modelcache.ts`
 
 Heavy processing functions for TTS engines that run in workers or use heavy computations.
 
@@ -346,7 +346,7 @@ Heavy processing functions for TTS engines that run in workers or use heavy comp
 
 ### TTS Classes
 - `PiperTTS` - Piper TTS engine class
-- `KittenTTS` - Kitten TTS engine class
+- `SupertonicTTS` - Supertonic TTS engine class (Supertonic-TTS-2-ONNX)
 
 ### Utilities
 - `detectWebGPU()` - Detect WebGPU support

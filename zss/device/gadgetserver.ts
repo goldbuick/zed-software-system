@@ -1,6 +1,4 @@
 import { compare } from 'fast-json-patch'
-import { Encoder as BinEncoder } from 'json-joy/esm/json-patch/codec/binary'
-import { decode as jsondecode } from 'json-joy/esm/json-patch/codec/json'
 import { createdevice } from 'zss/device'
 import { FORMAT_OBJECT } from 'zss/feature/format'
 import {
@@ -27,8 +25,6 @@ import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
-
-const patchencoder = new BinEncoder()
 
 gadgetstateprovider((element) => {
   if (ispid(element)) {
@@ -136,10 +132,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
 
           // only send when we have changes
           if (patch.length) {
-            // convert to binary encoding
-            const data = patchencoder.encode(jsondecode(patch as any, {}))
-            // this should be the patch for compressed json
-            gadgetclientpatch(gadgetserver, player, data)
+            gadgetclientpatch(gadgetserver, player, patch)
           }
         }
       }
