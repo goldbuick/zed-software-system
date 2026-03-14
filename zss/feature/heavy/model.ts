@@ -10,7 +10,7 @@ import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
 const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_ID = 'onnx-community/LFM2-350M-ONNX'
+const MODEL_ID = 'onnx-community/LFM2-700M-ONNX'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
@@ -34,13 +34,13 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'setagentname',
+      name: 'set_agent_name',
       description:
-        'Change your display name. Call with the new display name only when the user explicitly asks you to rename yourself.',
+        'Change your display name. Call with the new name only when the user explicitly asks you to rename yourself.',
       parameters: {
         type: 'object',
         properties: {
-          name: { type: 'string', description: 'The new name' },
+          name: { type: 'string', description: 'The new display name' },
         },
         required: ['name'],
       },
@@ -49,26 +49,26 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'getagentinfo',
+      name: 'get_agent_info',
       description:
-        'Get your current identity and location. Returns your name, id, board name, and (x,y) position. Use when the user asks who you are, what your name is, or what board you are on.',
+        'Get your current identity and location. Returns name, id, board name, and (x,y). Use when the user asks who you are, what your name is, or what board you are on.',
       parameters: { type: 'object', properties: {} },
     },
   },
   {
     type: 'function',
     function: {
-      name: 'lookatboard',
+      name: 'look_at_board',
       description:
-        'See your current board. Returns board name, your (x,y), objects with positions and [player] marker, terrain summary, exits. Call when you need fresh surroundings or the prompt has no Current context.',
+        'See your current board: name, your (x,y), objects with positions and [player], terrain summary, exits. Call when you need fresh surroundings or the prompt has no Current context.',
       parameters: { type: 'object', properties: {} },
     },
   },
   {
     type: 'function',
     function: {
-      name: 'runcommand',
-      description: `Execute a single ZSS command as the agent (e.g. move, place, change, shoot). ${AGENT_ZSS_COMMANDS} Command must start with #. Full command including #, e.g. #go n, #put n boulder, #change gem empty, #shoot n.`,
+      name: 'run_command',
+      description: `Execute a single ZSS command (move, place, change, shoot). ${AGENT_ZSS_COMMANDS} Command must start with #. Example: #go n, #put n boulder, #change gem empty, #shoot n.`,
       parameters: {
         type: 'object',
         properties: {
@@ -85,9 +85,9 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'readcodepage',
+      name: 'read_codepage',
       description:
-        'Read the source script of a codepage by name. Use to understand how an element, terrain, or board works.',
+        'Read the source script of a codepage by name. Use to understand how an object, terrain, or board works.',
       parameters: {
         type: 'object',
         properties: {
@@ -108,9 +108,9 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'pathfind',
+      name: 'get_path_direction',
       description:
-        'Get the best direction to move toward or away from a target position. Returns a direction (e.g. north) and next step; use that with runcommand (#go <dir>) to move. Coordinates are on the current board.',
+        'Get the best direction to move toward or away from a target (x,y). Returns a direction (e.g. north); then use run_command with #go <dir> to move. Coordinates are on the current board.',
       parameters: {
         type: 'object',
         properties: {
@@ -125,7 +125,7 @@ const MODEL_TOOLS = [
           flee: {
             type: 'boolean',
             description:
-              'If true, direction to move away from target. Defaults to false.',
+              'If true, returns direction away from target. Defaults to false.',
           },
         },
         required: ['targetx', 'targety'],
@@ -135,9 +135,9 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'pressinput',
+      name: 'press_input',
       description:
-        'Simulate raw button presses (e.g. up, down, ok, cancel, menu). Use for menu/interaction when runcommand is not the right fit.',
+        'Simulate raw button presses (up, down, ok, cancel, menu). Use for menus when run_command is not the right fit.',
       parameters: {
         type: 'object',
         properties: {
@@ -154,14 +154,20 @@ const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'getboardlist',
+      name: 'list_board_exits',
       description:
-        'List boards you can reach from the current board (exits). Returns direction and destination board name for each exit. Use when the user asks what boards/rooms/areas are available or where they can go.',
+        'List boards you can reach from the current board. Returns direction and destination name per exit. Use when the user asks what boards/rooms/areas exist or where they can go.',
       parameters: { type: 'object', properties: {} },
     },
   },
 ]
 
+/**
+ * LFM2 (onnx-community/LFM2-700M-ONNX) tool-calling alignment:
+ * - Chat template injects tools into system prompt as <|tool_list_start|[{...}, ...]<|tool_list_end|>.
+ * - Tool responses in history (role: 'tool') are wrapped as <|tool_response_start|content<|tool_response_end|>.
+ * - Model outputs Pythonic calls (e.g. get_agent_info()) or JSON; we parse both and preserve raw in history for multi-turn.
+ */
 /** LFM2 chat template expects tools as flat { name, description, parameters }. */
 function lfm2tools(): {
   name: string
@@ -184,6 +190,8 @@ export type TOOL_CALL = { name: string; args: Record<string, string> }
 export type MODEL_RESULT = {
   text: string
   toolcalls: TOOL_CALL[]
+  /** Raw model output before parsing; use as assistant content when toolcalls.length > 0 for correct multi-turn context. */
+  raw?: string
 }
 
 function normalizetoolarg(arg: unknown): Record<string, string> {
@@ -420,7 +428,7 @@ function parseresult(raw: string): MODEL_RESULT {
   text = text.replace(/<\|[^|]*\|>/g, '').trim()
   text = text.replace(THINK_REGEX, '').trim()
 
-  return { text, toolcalls }
+  return { text, toolcalls, raw }
 }
 
 type SHARED_MODEL = {

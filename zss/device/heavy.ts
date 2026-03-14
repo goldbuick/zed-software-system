@@ -86,14 +86,14 @@ async function executetoolcalls(
   for (let i = 0; i < toolcalls.length; ++i) {
     const call = toolcalls[i]
     switch (call.name) {
-      case 'setagentname':
+      case 'set_agent_name':
         if (isstring(call.args.name)) {
           heavy.emit(player, 'vm:agentname', [agentid, NAME(call.args.name)])
         }
         results.push(undefined)
         break
 
-      case 'getagentinfo': {
+      case 'get_agent_info': {
         try {
           const data = await memoryquery(heavy, player, {
             type: 'boardstate',
@@ -114,7 +114,7 @@ async function executetoolcalls(
         break
       }
 
-      case 'lookatboard': {
+      case 'look_at_board': {
         try {
           const data = await memoryquery(heavy, player, {
             type: 'boardstate',
@@ -131,14 +131,14 @@ async function executetoolcalls(
         break
       }
 
-      case 'runcommand':
+      case 'run_command':
         if (isstring(call.args.command)) {
           heavy.emit(player, 'vm:cli', call.args.command)
         }
         results.push(undefined)
         break
 
-      case 'readcodepage': {
+      case 'read_codepage': {
         if (!isstring(call.args.name)) {
           results.push('Missing codepage name.')
           break
@@ -170,7 +170,7 @@ async function executetoolcalls(
         break
       }
 
-      case 'pathfind': {
+      case 'get_path_direction': {
         const tx = parseFloat(String(call.args.targetx))
         const ty = parseFloat(String(call.args.targety))
         if (!isnumber(tx) || !isnumber(ty)) {
@@ -209,7 +209,7 @@ async function executetoolcalls(
         break
       }
 
-      case 'pressinput':
+      case 'press_input':
         if (isstring(call.args.inputs)) {
           const tokens = call.args.inputs.split(',')
           const modbits = parseinputmods(tokens)
@@ -229,7 +229,7 @@ async function executetoolcalls(
         results.push(undefined)
         break
 
-      case 'getboardlist': {
+      case 'list_board_exits': {
         try {
           const data = await memoryquery(heavy, player, {
             type: 'boardstate',
@@ -320,7 +320,13 @@ async function runagentprompt(
       result.toolcalls,
     )
 
-    history.push({ role: 'assistant', content: result.text || '(tool calls)' })
+    history.push({
+      role: 'assistant',
+      content:
+        (result.toolcalls.length > 0 && result.raw
+          ? result.raw
+          : result.text) || '(tool calls)',
+    })
     agenthistories[agentid] = history
 
     let hasdataresults = false
