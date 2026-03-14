@@ -7,10 +7,10 @@ import {
 } from '@huggingface/transformers'
 import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
 
-const DTYPE = 'q4f16'
+const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_ID = 'onnx-community/Qwen3-0.6B-ONNX'
+const MODEL_ID = 'onnx-community/Qwen2.5-Coder-0.5B-Instruct'
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
@@ -166,6 +166,8 @@ const TOOL_CALL_REGEX = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g
 const THINK_REGEX = /<think>[\s\S]*?<\/think>/gi
 /** Fallback: Pythonic tool call e.g. get_weather(location="NYC") from some models. */
 const PYTHONIC_CALL_REGEX = /(\w+)\s*\(\s*([^)]*)\s*\)/g
+/** Extract tool name from malformed JSON e.g. '{"name": "getboardlist", "arguments": {"boardnames": }}}' */
+const TOOL_NAME_REGEX = /"name"\s*:\s*"([^"]+)"/
 
 export type TOOL_CALL = { name: string; args: Record<string, string> }
 
@@ -298,6 +300,68 @@ function findtoolarray(str: string): { arr: unknown[]; slice: string } | null {
   return null
 }
 
+/** Find first complete JSON object in string that looks like a tool call (has "name"). */
+function findtoolobject(
+  str: string,
+): { name: string; args: Record<string, string>; slice: string } | null {
+  const start = str.indexOf('{')
+  if (start === -1) {
+    return null
+  }
+  let depth = 0
+  let instring = false
+  let escape = false
+  let quote = ''
+  for (let i = start; i < str.length; i++) {
+    const c = str[i]
+    if (escape) {
+      escape = false
+      continue
+    }
+    if (instring) {
+      if (c === '\\') {
+        escape = true
+      } else if (c === quote) {
+        instring = false
+      }
+      continue
+    }
+    if (c === '"' || c === "'") {
+      instring = true
+      quote = c
+      continue
+    }
+    if (c === '{') {
+      depth++
+    } else if (c === '}') {
+      depth--
+      if (depth === 0) {
+        const slice = str.slice(start, i + 1)
+        if (!/"name"\s*:/.test(slice)) {
+          return null
+        }
+        try {
+          const parsed = JSON.parse(slice) as {
+            name?: unknown
+            arguments?: unknown
+          }
+          const name = typeof parsed.name === 'string' ? parsed.name : ''
+          if (name) {
+            return { name, args: normalizetoolarg(parsed.arguments), slice }
+          }
+        } catch {
+          const namematch = TOOL_NAME_REGEX.exec(slice)
+          if (namematch?.[1]) {
+            return { name: namematch[1], args: {}, slice }
+          }
+        }
+        return null
+      }
+    }
+  }
+  return null
+}
+
 function parseresult(raw: string): MODEL_RESULT {
   const toolcalls: TOOL_CALL[] = []
   let text = raw
@@ -312,7 +376,10 @@ function parseresult(raw: string): MODEL_RESULT {
         args: normalizetoolarg(parsed.arguments),
       })
     } catch {
-      // skip malformed tool calls
+      const namematch = TOOL_NAME_REGEX.exec(match[1])
+      if (namematch?.[1]) {
+        toolcalls.push({ name: namematch[1], args: {} })
+      }
     }
   }
 
@@ -331,6 +398,12 @@ function parseresult(raw: string): MODEL_RESULT {
       }
     }
     text = text.replace(arrayresult.slice, '').trim()
+  }
+
+  let objresult: ReturnType<typeof findtoolobject>
+  while ((objresult = findtoolobject(text)) !== null) {
+    toolcalls.push({ name: objresult.name, args: objresult.args })
+    text = text.replace(objresult.slice, '').trim()
   }
 
   text = text.replace(PYTHONIC_CALL_REGEX, (_full, name, argsstr) => {
