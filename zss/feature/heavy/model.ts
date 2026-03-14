@@ -8,25 +8,129 @@ import {
 } from '@huggingface/transformers'
 
 const DTYPE = 'q4'
+const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
 const MODEL_ID = 'onnx-community/Qwen2.5-0.5B-Instruct'
+
+/** Minimum ms between progress/toast updates to avoid flooding the main thread. */
+const TOAST_THROTTLE_MS = 600
+const PROGRESS_THROTTLE_MS = 500
+
+function throttle(
+  fn: (message: string) => void,
+  intervalms: number,
+): (message: string) => void {
+  let last = 0
+  return (message: string) => {
+    const now = Date.now()
+    if (now - last >= intervalms) {
+      last = now
+      fn(message)
+    }
+  }
+}
 
 const MODEL_TOOLS = [
   {
     type: 'function',
     function: {
       name: 'set_agent_name',
+      description: 'Change your display name.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'The new name' },
+        },
+        required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'look_at_board',
       description:
-        'Change your display name. Use when asked to rename yourself or given a new name.',
+        'See your current board. Returns a text summary of all objects, terrain, and your position.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'run_command',
+      description:
+        'Execute a ZSS command. Examples: #put n boulder, #change gem empty, #shoot n, #go e',
+      parameters: {
+        type: 'object',
+        properties: {
+          command: {
+            type: 'string',
+            description: 'The full command string starting with #',
+          },
+        },
+        required: ['command'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'read_codepage',
+      description:
+        'Read the source script of a codepage by name. Use to understand how an element or board works.',
       parameters: {
         type: 'object',
         properties: {
           name: {
             type: 'string',
-            description: 'The new name',
+            description: 'The codepage name or kind to look up',
+          },
+          type: {
+            type: 'string',
+            description:
+              'Codepage type: object, terrain, or board. Defaults to object.',
           },
         },
         required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'pathfind',
+      description:
+        'Get the best direction to move toward or away from a target position.',
+      parameters: {
+        type: 'object',
+        properties: {
+          target_x: { type: 'number', description: 'Target x coordinate' },
+          target_y: { type: 'number', description: 'Target y coordinate' },
+          flee: {
+            type: 'boolean',
+            description: 'If true, move away from target. Defaults to false.',
+          },
+        },
+        required: ['target_x', 'target_y'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'press_input',
+      description:
+        'Simulate player button presses. Triggers movement, interaction, and menus like a real player.',
+      parameters: {
+        type: 'object',
+        properties: {
+          inputs: {
+            type: 'string',
+            description:
+              'Comma-separated inputs: up, down, left, right, ok, cancel, menu, shift, alt, ctrl',
+          },
+        },
+        required: ['inputs'],
       },
     },
   },
@@ -41,8 +145,73 @@ export type MODEL_RESULT = {
   toolcalls: TOOL_CALL[]
 }
 
+function normalizetoolarg(arg: unknown): Record<string, string> {
+  if (arg === null || typeof arg !== 'object') {
+    return {}
+  }
+  const out: Record<string, string> = {}
+  for (const [k, v] of Object.entries(arg)) {
+    if (typeof v === 'string') {
+      out[k] = v
+    } else if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      out[k] = JSON.stringify(v)
+    } else if (v !== undefined && v !== null) {
+      out[k] = String(v)
+    }
+  }
+  return out
+}
+
+/** Find first complete JSON array in string by bracket count; return parsed array and slice, or null. */
+function findtoolarray(str: string): { arr: unknown[]; slice: string } | null {
+  const start = str.indexOf('[')
+  if (start === -1) {
+    return null
+  }
+  let depth = 0
+  let instring = false
+  let escape = false
+  let quote = ''
+  for (let i = start; i < str.length; i++) {
+    const c = str[i]
+    if (escape) {
+      escape = false
+      continue
+    }
+    if (instring) {
+      if (c === '\\') {
+        escape = true
+      } else if (c === quote) {
+        instring = false
+      }
+      continue
+    }
+    if (c === '"' || c === "'") {
+      instring = true
+      quote = c
+      continue
+    }
+    if (c === '[') {
+      depth++
+    } else if (c === ']') {
+      depth--
+      if (depth === 0) {
+        const slice = str.slice(start, i + 1)
+        try {
+          const arr = JSON.parse(slice) as unknown
+          return Array.isArray(arr) ? { arr, slice } : null
+        } catch {
+          return null
+        }
+      }
+    }
+  }
+  return null
+}
+
 function parseresult(raw: string): MODEL_RESULT {
   const toolcalls: TOOL_CALL[] = []
+  let text = raw
 
   TOOL_CALL_REGEX.lastIndex = 0
   let match
@@ -51,17 +220,31 @@ function parseresult(raw: string): MODEL_RESULT {
       const parsed = JSON.parse(match[1])
       toolcalls.push({
         name: parsed.name ?? '',
-        args: parsed.arguments ?? {},
+        args: normalizetoolarg(parsed.arguments),
       })
     } catch {
       // skip malformed tool calls
     }
   }
 
-  const text = raw
-    .replace(TOOL_CALL_REGEX, '')
-    .replace(/<\|[^|]*\|>/g, '')
-    .trim()
+  text = text.replace(TOOL_CALL_REGEX, '').trim()
+
+  const arrayresult = findtoolarray(text)
+  if (arrayresult) {
+    for (const item of arrayresult.arr) {
+      if (item && typeof item === 'object' && 'name' in item) {
+        const name = (item as { name?: unknown }).name
+        const args = (item as { arguments?: unknown }).arguments
+        toolcalls.push({
+          name: typeof name === 'string' ? name : '',
+          args: normalizetoolarg(args),
+        })
+      }
+    }
+    text = text.replace(arrayresult.slice, '').trim()
+  }
+
+  text = text.replace(/<\|[^|]*\|>/g, '').trim()
 
   return { text, toolcalls }
 }
@@ -88,6 +271,7 @@ async function loadsharedmodel(
     const lastprogress: Record<string, number> = {}
 
     onworking(`${MODEL_ID} loading ...`)
+    const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
@@ -101,7 +285,7 @@ async function loadsharedmodel(
           const progress = Math.round(info.progress / 10) * 10
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworking(`${info.file} ${progress}% ...`)
+            onworkingprogress(`${info.file} ${progress}% ...`)
           }
           break
         }
@@ -148,11 +332,12 @@ export async function modelgenerate(
     throw new Error('apply_chat_template returned unexpected type')
   }
 
+  const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
   const streamer = new TextStreamer(tokenizer, {
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function() {
-      onworking(`working ...`)
+      onworkingthrottled(`working ...`)
     },
   })
 
@@ -161,7 +346,7 @@ export async function modelgenerate(
     ...input,
     streamer,
     do_sample: false,
-    max_new_tokens: 512,
+    max_new_tokens: MAX_NEW_TOKENS,
     return_dict_in_generate: true,
   } as any)) as any
 

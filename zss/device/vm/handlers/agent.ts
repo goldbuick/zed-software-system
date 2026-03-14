@@ -107,6 +107,7 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
     return
   }
 
+  const reply = isstring(response) ? response : ''
   const board = memoryreadplayerboard(agentid)
   const element = memoryreadobject(board, agentid)
   if (!ispresent(board) || !ispresent(element)) {
@@ -114,9 +115,9 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
   }
 
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  element.tickertext = response
+  element.tickertext = reply
   element.tickertime = mainbook?.timestamp ?? 0
-  memorysendtolog(board.id, element, response)
+  memorysendtolog(board.id, element, reply)
 
   agentlastresponse[agentid] = Date.now()
 
@@ -126,6 +127,6 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
     undefined,
     'text',
     `chat:message:${board.id}`,
-    `${agent.name()}:${response}`,
+    `${agent.name()}:${reply}`,
   )
 }

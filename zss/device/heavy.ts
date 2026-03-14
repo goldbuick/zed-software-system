@@ -1,6 +1,11 @@
 import { Message } from '@huggingface/transformers'
 import { createdevice } from 'zss/device'
-import { formatsystemprompt } from 'zss/feature/heavy/formatstate'
+import {
+  formatboardfortext,
+  formatpathfindfortext,
+  formatsystemprompt,
+  readcodepagefortext,
+} from 'zss/feature/heavy/formatstate'
 import {
   destroysharedmodel,
   modelclassify,
@@ -8,20 +13,54 @@ import {
   TOOL_CALL,
 } from 'zss/feature/heavy/model'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
+import { INPUT, INPUT_ALT, INPUT_CTRL, INPUT_SHIFT } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 import { apierror, apilog, apitoast } from './api'
 
 const MAX_HISTORY = 40
+const MAX_REPROMPT = 3
 const MAX_CLASSIFY_CONTEXT = 3
 const agenthistories: Record<string, Message[]> = {}
+
+const INPUT_MAP: Record<string, INPUT> = {
+  up: INPUT.MOVE_UP,
+  down: INPUT.MOVE_DOWN,
+  left: INPUT.MOVE_LEFT,
+  right: INPUT.MOVE_RIGHT,
+  ok: INPUT.OK_BUTTON,
+  cancel: INPUT.CANCEL_BUTTON,
+  menu: INPUT.MENU_BUTTON,
+  alt: INPUT.ALT,
+  ctrl: INPUT.CTRL,
+  shift: INPUT.SHIFT,
+}
+
+function parseinputmods(tokens: string[]): number {
+  let bits = 0
+  for (let i = 0; i < tokens.length; ++i) {
+    const token = tokens[i].trim().toLowerCase()
+    if (token === 'alt') {
+      bits |= INPUT_ALT
+    }
+    if (token === 'ctrl') {
+      bits |= INPUT_CTRL
+    }
+    if (token === 'shift') {
+      bits |= INPUT_SHIFT
+    }
+  }
+  return bits
+}
 
 function executetoolcalls(
   player: string,
   agentid: string,
   toolcalls: TOOL_CALL[],
-) {
+): MAYBE<string>[] {
+  const results: MAYBE<string>[] = []
+
   for (let i = 0; i < toolcalls.length; ++i) {
     const call = toolcalls[i]
     switch (call.name) {
@@ -29,9 +68,69 @@ function executetoolcalls(
         if (isstring(call.args.name)) {
           heavy.emit(player, 'vm:agentname', [agentid, call.args.name])
         }
+        results.push(undefined)
+        break
+
+      case 'look_at_board':
+        results.push(formatboardfortext(agentid))
+        break
+
+      case 'run_command':
+        if (isstring(call.args.command)) {
+          heavy.emit(player, 'vm:cli', call.args.command)
+        }
+        results.push(undefined)
+        break
+
+      case 'read_codepage':
+        if (isstring(call.args.name)) {
+          results.push(
+            readcodepagefortext(call.args.name, call.args.type),
+          )
+        } else {
+          results.push('Missing codepage name.')
+        }
+        break
+
+      case 'pathfind': {
+        const tx = parseFloat(String(call.args.target_x))
+        const ty = parseFloat(String(call.args.target_y))
+        if (isnumber(tx) && isnumber(ty)) {
+          const flee = call.args.flee === 'true'
+          results.push(formatpathfindfortext(agentid, tx, ty, flee))
+        } else {
+          results.push('Invalid target coordinates.')
+        }
+        break
+      }
+
+      case 'press_input':
+        if (isstring(call.args.inputs)) {
+          const tokens = call.args.inputs.split(',')
+          const modbits = parseinputmods(tokens)
+          for (let ii = 0; ii < tokens.length; ++ii) {
+            const token = tokens[ii].trim().toLowerCase()
+            const input = INPUT_MAP[token]
+            if (
+              ispresent(input) &&
+              input !== INPUT.ALT &&
+              input !== INPUT.CTRL &&
+              input !== INPUT.SHIFT
+            ) {
+              heavy.emit(player, 'vm:input', [input, modbits])
+            }
+          }
+        }
+        results.push(undefined)
+        break
+
+      default:
+        results.push(undefined)
         break
     }
   }
+
+  return results
 }
 
 function createonworking(player: string) {
@@ -57,17 +156,49 @@ async function runagentprompt(
   apilog(heavy, player, '$21 input $7', prompt)
 
   const systemprompt = formatsystemprompt(agentname)
-  const result = await modelgenerate(systemprompt, history, onworking)
 
-  executetoolcalls(player, agentid, result.toolcalls)
+  for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
+    const result = await modelgenerate(systemprompt, history, onworking)
 
-  if (result.text) {
-    history.push({ role: 'assistant', content: result.text })
+    if (result.toolcalls.length === 0) {
+      const reply = isstring(result.text) ? result.text : ''
+      if (reply) {
+        history.push({ role: 'assistant', content: reply })
+        agenthistories[agentid] = history
+        console.info('>>>', reply)
+        apilog(heavy, player, '$21', reply)
+        heavy.emit(player, 'vm:agentresponse', [agentid, reply])
+      }
+      return
+    }
+
+    const toolresults = executetoolcalls(player, agentid, result.toolcalls)
+
+    history.push({ role: 'assistant', content: result.text || '(tool calls)' })
     agenthistories[agentid] = history
 
-    console.info('>>>', result.text)
-    apilog(heavy, player, '$21', result.text)
-    heavy.emit(player, 'vm:agentresponse', [agentid, result.text])
+    let hasdataresults = false
+    for (let i = 0; i < toolresults.length; ++i) {
+      if (ispresent(toolresults[i])) {
+        hasdataresults = true
+        history.push({ role: 'user', content: `[tool result] ${toolresults[i]}` })
+      }
+    }
+
+    if (history.length > MAX_HISTORY) {
+      history = history.slice(-MAX_HISTORY)
+    }
+    agenthistories[agentid] = history
+
+    if (!hasdataresults) {
+      const reply = isstring(result.text) ? result.text : ''
+      if (reply) {
+        console.info('>>>', reply)
+        apilog(heavy, player, '$21', reply)
+        heavy.emit(player, 'vm:agentresponse', [agentid, reply])
+      }
+      return
+    }
   }
 }
 
