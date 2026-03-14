@@ -21,7 +21,6 @@ import {
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'

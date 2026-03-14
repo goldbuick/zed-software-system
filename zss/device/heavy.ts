@@ -28,6 +28,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import { NAME } from 'zss/words/types'
 
 import { apierror, apilog, apitoast } from './api'
 
@@ -79,7 +80,7 @@ function executetoolcalls(
     switch (call.name) {
       case 'set_agent_name':
         if (isstring(call.args.name)) {
-          heavy.emit(player, 'vm:agentname', [agentid, call.args.name])
+          heavy.emit(player, 'vm:agentname', [agentid, NAME(call.args.name)])
         }
         results.push(undefined)
         break
