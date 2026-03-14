@@ -17,6 +17,9 @@ const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
 export const MODEL_ID = 'onnx-community/Qwen2.5-0.5B-Instruct'
 
+/** Model used only for attention classification (idle → "is this message for this agent?"). Can be a smaller/faster model. */
+export const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
+
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
 const PROGRESS_THROTTLE_MS = 100
@@ -177,6 +180,65 @@ type SHARED_MODEL = {
 let sharedmodel: SHARED_MODEL | undefined
 let sharedmodelpromise: Promise<SHARED_MODEL> | undefined
 
+let classifiermodel: SHARED_MODEL | undefined
+let classifiermodelpromise: Promise<SHARED_MODEL> | undefined
+
+async function loadclassifiermodel(
+  onworking: (message: string) => void,
+): Promise<SHARED_MODEL> {
+  if (classifiermodel) {
+    return classifiermodel
+  }
+  if (classifiermodelpromise) {
+    return classifiermodelpromise
+  }
+
+  classifiermodelpromise = (async () => {
+    const lastprogress: Record<string, number> = {}
+
+    onworking(`${CLASSIFIER_MODEL_ID} loading ...`)
+    const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
+    function progress_callback(info: ProgressInfo) {
+      switch (info.status) {
+        case 'initiate':
+          onworking(`${info.file} loading ...`)
+          break
+        case 'download':
+          onworking(`${info.file} downloading ...`)
+          break
+        case 'progress': {
+          const index = `${info.name}-${info.file}`
+          const progress = Math.round(info.progress)
+          if (progress !== lastprogress[index]) {
+            lastprogress[index] = progress
+            onworkingprogress(`${info.file} ${progress}% ...`)
+          }
+          break
+        }
+      }
+    }
+
+    const tokenizer = await AutoTokenizer.from_pretrained(CLASSIFIER_MODEL_ID, {
+      progress_callback,
+    })
+
+    const model = await AutoModelForCausalLM.from_pretrained(
+      CLASSIFIER_MODEL_ID,
+      {
+        dtype: DTYPE,
+        device: MODEL_DEVICE,
+        progress_callback,
+      },
+    )
+
+    classifiermodel = { tokenizer, model }
+    classifiermodelpromise = undefined
+    return classifiermodel
+  })()
+
+  return classifiermodelpromise
+}
+
 async function loadsharedmodel(
   onworking: (message: string) => void,
 ): Promise<SHARED_MODEL> {
@@ -303,7 +365,7 @@ export async function modelclassify(
   messages: Message[],
   onworking: (message: string) => void,
 ): Promise<string> {
-  const { tokenizer, model } = await loadsharedmodel(onworking)
+  const { tokenizer, model } = await loadclassifiermodel(onworking)
 
   const input = tokenizer.apply_chat_template(messages, {
     tokenize: true,
@@ -336,5 +398,9 @@ export function destroysharedmodel() {
   if (sharedmodel) {
     void sharedmodel.model.dispose()
     sharedmodel = undefined
+  }
+  if (classifiermodel) {
+    void classifiermodel.model.dispose()
+    classifiermodel = undefined
   }
 }

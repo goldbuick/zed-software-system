@@ -299,10 +299,9 @@ export function formatsystemprompt(
   agentname: string,
   context?: string,
 ): string {
-  let base = `You are ${agentname}, an NPC in a game world. Keep responses brief and in-character.
+  let base = `You are an AI agent named ${agentname}, you are operating in a game world.
 
-A board is a room or area. Exits connect boards. Directions: n, s, e, w.
-ZSS commands for run_command must start with #: #go <dir>, #put <dir> <kind>, #change <from> <to>, #shoot <dir>.`
+`
   if (ispresent(context)) {
     base += `\n\nCurrent state:\n${context}`
   }

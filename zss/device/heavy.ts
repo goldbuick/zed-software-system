@@ -447,7 +447,7 @@ const heavy = createdevice('heavy', [], (message) => {
           },
           {
             role: 'user',
-            content: `Is the following message directed at or relevant to an NPC named "${agentname}"?${contextsnippet}\nMessage: "${messagetext}"\nAnswer:`,
+            content: `Is the following message directed at or relevant to an ai agent named "${agentname}"?${contextsnippet}\nMessage: "${messagetext}"\nAnswer:`,
           },
         ]
 

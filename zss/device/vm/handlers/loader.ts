@@ -141,7 +141,7 @@ function routechattoagents(
         agent.name(),
         messagetext,
       )
-    } else if (lastresponse > 0) {
+    } else {
       heavymodelclassify(
         vm,
         message.player,
