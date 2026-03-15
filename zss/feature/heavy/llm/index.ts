@@ -9,6 +9,7 @@ export {
   getadapter,
   LFM2_ADAPTER,
   LLAMA32_ADAPTER,
+  NOTOOLS_ADAPTER,
   QWEN25_ADAPTER,
   SMOLLM2_ADAPTER,
 } from './adapters'

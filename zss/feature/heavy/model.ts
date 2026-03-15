@@ -38,13 +38,14 @@ function throttle(
   }
 }
 
-const MODEL_TOOLS: TOOL_DEF[] = [
+/** Tool definitions for agent; exported for formattoolsforsystemprompt when toolsInSystemPrompt. */
+export const MODEL_TOOLS: TOOL_DEF[] = [
   {
     type: 'function',
     function: {
       name: 'set_agent_name',
       description:
-        'Change your display name. Call with the new name only when the user explicitly asks you to rename yourself.',
+        'Change your display name. Use only when the user explicitly asks you to rename yourself. Example: set_agent_name(name="Bob").',
       parameters: {
         type: 'object',
         properties: {
@@ -59,7 +60,7 @@ const MODEL_TOOLS: TOOL_DEF[] = [
     function: {
       name: 'get_agent_info',
       description:
-        'Get your current identity and location. Returns name, id, board name, and (x,y). Use when the user asks who you are, what your name is, or what board you are on.',
+        'Get your identity and location: name, id, board name, (x,y). Use when asked who you are, your name, or what board you are on.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -68,7 +69,7 @@ const MODEL_TOOLS: TOOL_DEF[] = [
     function: {
       name: 'look_at_board',
       description:
-        'See your current board: name, your (x,y), objects with positions and [player], terrain summary, exits. Call when you need fresh surroundings or the prompt has no Current context.',
+        'See current board: name, your (x,y), objects with [player], terrain, exits. Use when context is stale or you need fresh surroundings.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -76,7 +77,7 @@ const MODEL_TOOLS: TOOL_DEF[] = [
     type: 'function',
     function: {
       name: 'run_command',
-      description: `Execute a single ZSS command (move, place, change, shoot). ${AGENT_ZSS_COMMANDS} Command must start with #. Example: #go n, #put n boulder, #change gem empty, #shoot n.`,
+      description: `Execute a ZSS command. ${AGENT_ZSS_COMMANDS} Command must start with #. Examples: #go n, #put n boulder, #change gem empty, #shoot n.`,
       parameters: {
         type: 'object',
         properties: {
@@ -95,7 +96,7 @@ const MODEL_TOOLS: TOOL_DEF[] = [
     function: {
       name: 'read_codepage',
       description:
-        'Read the source script of a codepage by name. Use to understand how an object, terrain, or board works.',
+        'Read the source script of an object, terrain, or board codepage by name. Use to understand how things work before acting.',
       parameters: {
         type: 'object',
         properties: {
@@ -118,7 +119,7 @@ const MODEL_TOOLS: TOOL_DEF[] = [
     function: {
       name: 'get_path_direction',
       description:
-        'Get the best direction to move toward or away from a target (x,y). Returns a direction (e.g. north); then use run_command with #go <dir> to move. Coordinates are on the current board.',
+        'Get direction toward or away from (targetx, targety). Returns e.g. north; then use run_command with #go n to move. Use flee=true to move away.',
       parameters: {
         type: 'object',
         properties: {
@@ -145,7 +146,7 @@ const MODEL_TOOLS: TOOL_DEF[] = [
     function: {
       name: 'press_input',
       description:
-        'Simulate raw button presses (up, down, ok, cancel, menu). Use for menus when run_command is not the right fit.',
+        'Simulate button presses (up, down, ok, cancel, menu). Use for menus and UI when run_command is not appropriate.',
       parameters: {
         type: 'object',
         properties: {
@@ -164,7 +165,7 @@ const MODEL_TOOLS: TOOL_DEF[] = [
     function: {
       name: 'list_board_exits',
       description:
-        'List boards you can reach from the current board. Returns direction and destination name per exit. Use when the user asks what boards/rooms/areas exist or where they can go.',
+        'List boards reachable from current board (direction and destination per exit). Use when asked what rooms/areas exist or where to go.',
       parameters: { type: 'object', properties: {} },
     },
   },

@@ -6,6 +6,7 @@ import {
   formatboardlistfortext,
   formatpathfindfortext,
   formatsystemprompt,
+  formattoolsforsystemprompt,
   readcodepagefortext,
 } from 'zss/feature/heavy/formatstate'
 import { getadapter } from 'zss/feature/heavy/llm'
@@ -13,8 +14,10 @@ import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/memoryquery'
+import type { MODEL_RESULT } from 'zss/feature/heavy/model'
 import {
   MODEL_ID,
+  MODEL_TOOLS,
   TOOL_CALL,
   destroysharedmodel,
   modelclassify,
@@ -300,10 +303,15 @@ async function runagentprompt(
 
   apilog(heavy, player, '$21 input $7', prompt)
 
-  const systemprompt = formatsystemprompt(agentname, context)
+  const adapter = getadapter(MODEL_ID)
+  let systemprompt = formatsystemprompt(agentname, context)
+  if (adapter?.toolsInSystemPrompt) {
+    systemprompt += '\n\n' + formattoolsforsystemprompt(MODEL_TOOLS)
+  }
 
+  let result!: MODEL_RESULT
   for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
-    const result = await modelgenerate(systemprompt, history, onworking)
+    result = await modelgenerate(systemprompt, history, onworking)
 
     if (result.toolcalls.length === 0) {
       const reply = readreplytext(result)
@@ -323,7 +331,6 @@ async function runagentprompt(
       result.toolcalls,
     )
 
-    const adapter = getadapter(MODEL_ID)
     const assistantmessages = adapter
       ? adapter.buildassistanttoolcallmessages(
           result.toolcalls,

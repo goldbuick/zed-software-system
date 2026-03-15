@@ -66,6 +66,8 @@ export type MESSAGE_WITH_TOOL_CALLS = {
 export type LLM_ADAPTER = {
   /** Model IDs this adapter handles (e.g. 'onnx-community/Llama-3.2-1B-Instruct-ONNX'). */
   modelids: string[]
+  /** If true, tools are documented in system prompt instead of chat template (for non-tool-calling models). */
+  toolsInSystemPrompt?: boolean
   /** Convert tool definitions to the shape the chat template expects. */
   toolsfortemplate: (tools: TOOL_DEF[]) => TEMPLATE_TOOL[]
   /** Options to pass to tokenizer.apply_chat_template (tools, tools_in_user_message, etc.). */
