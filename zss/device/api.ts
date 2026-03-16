@@ -657,6 +657,19 @@ export function vmagentprompt(
   device.emit(player, 'vm:agentprompt', [agentid, prompt])
 }
 
+export function vmpilotstart(
+  device: DEVICELIKE,
+  player: string,
+  x: number,
+  y: number,
+) {
+  device.emit(player, 'vm:pilotstart', { x, y })
+}
+
+export function vmpilotstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:pilotstop')
+}
+
 export function vmmakeitscroll(
   device: DEVICELIKE,
   player: string,

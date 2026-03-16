@@ -26,40 +26,15 @@ const MAX_REPROMPT = 3
 const MAX_CLASSIFY_CONTEXT = 3
 const agenthistories: Record<string, Message[]> = {}
 
-function executepilot(agentid: string, line: string) {
-  const args = line
-    .replace(/^#pilot\s+/i, '')
-    .split(/\s+/)
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean)
-
-  if (args[0] === 'stop') {
-    heavy.emit(agentid, 'vm:pilotstop')
-    return
-  }
-
-  const x = Number(args[0])
-  const y = Number(args[1])
-  if (!isFinite(x) || !isFinite(y)) {
-    return
-  }
-  heavy.emit(agentid, 'vm:pilotstart', { x, y })
-}
-
 async function executeclicommands(
   agentid: string,
   commands: string[],
 ): Promise<void> {
   for (let i = 0; i < commands.length; ++i) {
-    const line = commands[i]
-    if (/^#pilot\s/i.test(line)) {
-      executepilot(agentid, line)
-    } else {
-      await memoryquery(heavy, agentid, {
-        type: 'runcli',
-        command: line,
-      })
-    }
+    await memoryquery(heavy, agentid, {
+      type: 'runcli',
+      command: commands[i],
+    })
   }
 }
 
@@ -69,7 +44,7 @@ function splitresponse(text: string): { reply: string; commands: string[] } {
   const commands: string[] = []
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
-    if (line.startsWith('#')) {
+    if (line.startsWith('#') || line.startsWith('!')) {
       commands.push(line)
     } else if (line) {
       replylines.push(line)
@@ -154,10 +129,7 @@ async function runagentprompt(
       return
     }
 
-    history.push({
-      role: 'assistant',
-      content: result.text,
-    })
+    history.push({ role: 'assistant', content: reply })
 
     await executeclicommands(agentid, commands)
 
