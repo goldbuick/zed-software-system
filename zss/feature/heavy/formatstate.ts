@@ -45,10 +45,10 @@ export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
 export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
 
 /** Agent-relevant ZSS commands; used in system prompt. */
-export const AGENT_ZSS_COMMANDS = `#input <action> — trigger input (e.g. #input up, #input shift right)
+export const AGENT_ZSS_COMMANDS = `#userinput <action> — trigger input (e.g. #userinput up, #userinput shootright)
   move: up, down, left, right
-  shoot: shift up, shift down, shift left, shift right
-  buttons: ok, cancel, menu
+  shoot: shootup, shootdown, shootleft, shootright
+  buttons: ok, cancel
 #pilot <x> <y> — walk to coordinates using pathfinding (e.g. #pilot 10 5)
 #pilot stop — cancel current navigation
 #goto <board> — move to another board (e.g. #goto cave)

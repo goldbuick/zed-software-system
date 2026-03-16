@@ -2,12 +2,11 @@ import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
 
 const INTENT_HINTS: Record<string, string> = {
   movement:
-    'INTENT: The user wants movement. You MUST respond with #input or #pilot or #goto.',
-  action:
-    'INTENT: The user wants an action. You MUST respond with a # command.',
+    'HINT: The user likely wants movement. Prefer #userinput, #pilot, or #goto.',
+  action: 'HINT: The user likely wants an action. Prefer a # command.',
   question:
-    'INTENT: The user is asking a question. Answer from STATE.',
-  chat: 'INTENT: Casual conversation. Respond with plain text only.',
+    'HINT: The user may be asking a question. Prefer answering from STATE.',
+  chat: 'HINT: This may be casual conversation.',
 }
 
 function intenthint(intent: string): string {
@@ -29,7 +28,7 @@ Objects marked [player] are other players you can talk to.
 Walking past the board edge takes you to the connected board if an exit exists.
 
 RULES:
-- NEVER describe an action without including its # command. Saying "I'll move north" without #input up does NOTHING.
+- NEVER describe an action without including its # command. Saying "I'll move north" without #userinput up does NOTHING.
 - When the user asks you to DO something, ALWAYS output a # command line.
 - # command lines MUST start with # at the beginning of the line.
 - Plain text lines are spoken aloud as speech.
@@ -42,11 +41,15 @@ ${AGENT_ZSS_COMMANDS}
 FORMAT: Always put the # command first, then optional speech.
 
 User: "go north"
-#input up
+#userinput up
 Moving north.
 
 User: "move left"
-#input left
+#userinput left
+
+User: "go down twice"
+#userinput down
+#userinput down
 
 User: "go to 10 5"
 #pilot 10 5
@@ -62,15 +65,35 @@ User: "go to the cave"
 #goto cave
 
 User: "shoot north"
-#input shift up
+#userinput shootup
+
+User: "fire left"
+#userinput shootleft
 
 User: "stop"
 #pilot stop
+
+User: "place a boulder to the east"
+#put e boulder
+Done.
+
+User: "turn all gems into empty space"
+#change gem empty
+
+User: "call yourself Rex"
+#set user Rex
+I'm Rex now!
+
+User: "press ok"
+#userinput ok
 
 User: "hello"
 Hey there!
 
 User: "where are you?"
 I'm at (15, 10) on the town board.
+
+User: "what's on this board?"
+There are 3 gems, a passage, and a bear to the south.
 ${context ? `\nSTATE:\n${context}` : ''}`.trimEnd()
 }

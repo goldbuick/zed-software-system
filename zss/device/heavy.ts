@@ -4,10 +4,6 @@ import {
   formatagentinfofortext,
   formatboardfortext,
 } from 'zss/feature/heavy/formatstate'
-import {
-  query as memoryquery,
-  resolvemessage as memoryqueryresolvemessage,
-} from 'zss/feature/heavy/memoryquery'
 import type { MODEL_RESULT } from 'zss/feature/heavy/model'
 import {
   destroysharedmodel,
@@ -17,11 +13,9 @@ import {
 import { buildsystemprompt } from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
-  INPUT,
-  INPUT_ALT,
-  INPUT_CTRL,
-  INPUT_SHIFT,
-} from 'zss/gadget/data/types'
+  query as memoryquery,
+  resolvemessage as memoryqueryresolvemessage,
+} from 'zss/feature/heavy/vmquery'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
@@ -31,54 +25,6 @@ const MAX_HISTORY = 40
 const MAX_REPROMPT = 3
 const MAX_CLASSIFY_CONTEXT = 3
 const agenthistories: Record<string, Message[]> = {}
-
-const INPUT_MAP: Record<string, INPUT> = {
-  up: INPUT.MOVE_UP,
-  down: INPUT.MOVE_DOWN,
-  left: INPUT.MOVE_LEFT,
-  right: INPUT.MOVE_RIGHT,
-  ok: INPUT.OK_BUTTON,
-  cancel: INPUT.CANCEL_BUTTON,
-  menu: INPUT.MENU_BUTTON,
-  alt: INPUT.ALT,
-  ctrl: INPUT.CTRL,
-  shift: INPUT.SHIFT,
-}
-
-function executeinput(player: string, line: string) {
-  const tokens = line
-    .replace(/^#input\s+/i, '')
-    .split(/\s+/)
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean)
-
-  let modbits = 0
-  for (let i = 0; i < tokens.length; ++i) {
-    const token = tokens[i]
-    if (token === 'alt') {
-      modbits |= INPUT_ALT
-    }
-    if (token === 'ctrl') {
-      modbits |= INPUT_CTRL
-    }
-    if (token === 'shift') {
-      modbits |= INPUT_SHIFT
-    }
-  }
-
-  for (let i = 0; i < tokens.length; ++i) {
-    const token = tokens[i]
-    const input = INPUT_MAP[token]
-    if (
-      ispresent(input) &&
-      input !== INPUT.ALT &&
-      input !== INPUT.CTRL &&
-      input !== INPUT.SHIFT
-    ) {
-      heavy.emit(player, 'vm:input', [input, modbits])
-    }
-  }
-}
 
 function executepilot(agentid: string, line: string) {
   const args = line
@@ -106,9 +52,7 @@ async function executeclicommands(
 ): Promise<void> {
   for (let i = 0; i < commands.length; ++i) {
     const line = commands[i]
-    if (/^#input\s/i.test(line)) {
-      executeinput(agentid, line)
-    } else if (/^#pilot\s/i.test(line)) {
+    if (/^#pilot\s/i.test(line)) {
       executepilot(agentid, line)
     } else {
       await memoryquery(heavy, agentid, {

@@ -1,4 +1,4 @@
-import { createModel, type KaldiRecognizer, type Model } from 'vosk-browser'
+import { type KaldiRecognizer, type Model, createModel } from 'vosk-browser'
 import type {
   ServerMessagePartialResult,
   ServerMessageResult,
@@ -11,9 +11,7 @@ const AUDIO_BUFFER_SIZE = 4096
 let sharedmodel: MAYBE<Model>
 let sharedmodelpromise: MAYBE<Promise<Model>>
 
-async function loadmodel(
-  onworking: (message: string) => void,
-): Promise<Model> {
+async function loadmodel(onworking: (message: string) => void): Promise<Model> {
   if (sharedmodel) {
     return sharedmodel
   }
