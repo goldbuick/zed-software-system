@@ -126,7 +126,6 @@ async function runagentprompt(
     )
 
     await executeclicommands(agentid, commands)
-
     history.push({ role: 'assistant', content: result.text })
 
     if (!hasactions) {
@@ -140,8 +139,9 @@ async function runagentprompt(
     const executed = commands.filter((line) => !line.startsWith('"')).join('\n')
     history.push({
       role: 'user',
-      content: `[EXECUTED]\n${executed}\n[/EXECUTED]\nThe board state has been updated. Review the new STATE and either issue more # commands or respond with speech only if done.`,
+      content: `[EXECUTED]\n${executed}\n[/EXECUTED]\n`,
     })
+
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)
     }

@@ -14,9 +14,9 @@
     "lint": "eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
     "clear": "rimraf tmp && rimraf dist && rimraf cafe/dist && rimraf node_modules/.vite",
     "dev:vite": "vite --host 0.0.0.0 --port 7777",
-    "dev": "yarn && yarn clear && yarn dev:vite",
+    "dev": "yarn && yarn clear && yarn ensure:vosk-model && yarn dev:vite",
     "preview": "yarn && yarn clear && vite preview --host 0.0.0.0 --port 7777",
-    "build": "yarn && yarn clear && vite build",
+    "build": "yarn && yarn clear && yarn ensure:vosk-model && vite build",
     "build:strict": "tsc && vite build",
     "build:copy-404": "cp .github/404.html ./cafe/dist",
     "build:copy-cname": "cp .github/CNAME ./cafe/dist",
@@ -24,7 +24,8 @@
     "server:dev": "yarn build:cli && npx concurrently -k \"ZSS_NO_HTTPS=1 yarn dev:vite\" \"sleep 8 && ./bin/dev.js --dev\"",
     "build:cli": "tsc -p tsconfig.cli.json && oclif manifest",
     "build:cli:binary": "yarn build && yarn build:cli && NODE_OPTIONS=--no-deprecation PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell && oclif pack tarballs",
-    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build"
+    "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
+    "ensure:vosk-model": "test -f cafe/public/models/vosk-model-small-en-us-0.15.tar.gz || (mkdir -p cafe/public/models && curl -L -o cafe/public/models/vosk-model-small-en-us-0.15.tar.gz https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.tar.gz)"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
