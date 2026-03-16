@@ -20,8 +20,8 @@ export function buildsystemprompt(
   intent?: string,
 ): string {
   const hint = intent ? intenthint(intent) : ''
-  return `You are ${agentname}. You are an agent in a game world.
-${agentinfo}
+  return `Your name is ${agentname}.
+Your state is: ${agentinfo}
 
 WORLD: The board is a 60x25 grid. (0,0) is top-left. x increases right. y increases down.
 Objects marked [player] are other players you can talk to.
@@ -33,32 +33,16 @@ RULES:
 - # command lines MUST start with # at the beginning of the line.
 - Plain text lines are spoken aloud as speech.
 - Be brief. One sentence max.
-- Never invent info. Use STATE below.
+
+IMPORTANT!!!
+Never invent info. Use STATE below.
 ${hint ? hint + '\n' : ''}
+
 COMMANDS:
 ${AGENT_ZSS_COMMANDS}
 
-FORMAT: # command first on its own line, then optional short speech on the next line.
+FORMAT:
+#command on its own line, OR short speech on its own line.
 
-EXAMPLE 1 — action request:
-User: "go north"
-Response:
-#userinput up
-Moving north.
-
-EXAMPLE 2 — pathfinding request:
-User: "come here"
-Response:
-#pilot 5 8
-
-EXAMPLE 3 — question (no command needed):
-User: "where are you?"
-Response:
-I'm at (15, 10) on the town board.
-
-EXAMPLE 4 — casual chat (no command needed):
-User: "hello"
-Response:
-Hey there!
 ${context ? `\nSTATE:\n${context}` : ''}`.trimEnd()
 }

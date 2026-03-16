@@ -137,9 +137,10 @@ async function runagentprompt(
       break
     }
 
+    const executed = commands.filter((line) => !line.startsWith('"')).join('\n')
     history.push({
-      role: 'system',
-      content: `commands executed: ${commands.filter((line) => !line.startsWith('"')).join(', ')}`,
+      role: 'user',
+      content: `[EXECUTED]\n${executed}\n[/EXECUTED]\nThe board state has been updated. Review the new STATE and either issue more # commands or respond with speech only if done.`,
     })
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)

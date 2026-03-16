@@ -45,16 +45,32 @@ export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
 export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
 
 /** Agent-relevant ZSS commands; used in system prompt. */
-export const AGENT_ZSS_COMMANDS = `#userinput <action> — trigger input (e.g. #userinput up, #userinput shootright)
-  move: up, down, left, right
-  shoot: shootup, shootdown, shootleft, shootright
-  buttons: ok, cancel
-#pilot <x> <y> — walk to coordinates using pathfinding (e.g. #pilot 10 5)
-#pilot stop — cancel current navigation
-#goto <board> — move to another board (e.g. #goto cave)
-#put <dir> <kind> — create element in direction (e.g. #put n boulder)
-#change <from> <to> — change all elements of one kind to another (e.g. #change gem empty)
-#set user <name> — change your display name`
+export const AGENT_ZSS_COMMANDS = `#userinput <action>
+description: trigger input (e.g. #userinput up, #userinput shootright)
+  - move: up, down, left, right
+  - shoot: shootup, shootdown, shootleft, shootright
+  - buttons: ok, cancel
+#pilot <x> <y>
+description: walk to coordinates using pathfinding (e.g. #pilot 10 5)
+  - x: x coordinate
+  - y: y coordinate
+#pilot stop
+description: cancel current navigation
+  - stop: stop navigation
+#goto <board>
+description: move to another board (e.g. #goto title)
+  - board: board name
+#put <dir> <kind>
+description: create element in direction (e.g. #put n boulder)
+  - dir: direction
+  - kind: element kind
+#change <from> <to>
+description: change all elements of one kind to another (e.g. #change gem empty)
+  - from: element kind
+  - to: element kind
+#set user <name>
+description: change your display name
+  - name: display name`
 
 export type LOOK_STATE = {
   board?: unknown
