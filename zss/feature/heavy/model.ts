@@ -11,7 +11,7 @@ import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
 const MODEL_CONTEXT_TOKENS = 8192
-export const MODEL_ID = 'onnx-community/Qwen3-0.6B-ONNX'
+const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
 const MODEL_DTYPE = 'q4f16'
 
 const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}
