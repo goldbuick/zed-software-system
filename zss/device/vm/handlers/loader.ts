@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, TEXT_READER } from 'zss/device/api'
 import { apilog, heavymodelclassify, heavymodelprompt } from 'zss/device/api'
+import { readagentname } from 'zss/device/vm/handlers/agent'
 import {
   ATTENTION_WINDOW_MS,
   agentlastresponse,
@@ -88,7 +89,7 @@ function routechattoagents(
     const agentelements: (typeof senderelement)[] = []
     for (let i = 0; i < agentlist.length; ++i) {
       const agent = agentlist[i]
-      if (agent.name() === sendername) {
+      if (readagentname(agent.id()) === sendername) {
         continue
       }
       const agentboard = memoryreadplayerboard(agent.id())
@@ -109,7 +110,7 @@ function routechattoagents(
           vm,
           message.player,
           nearestid,
-          agent.name(),
+          readagentname(nearestid),
           messagetext,
         )
       }
@@ -121,7 +122,7 @@ function routechattoagents(
   for (let i = 0; i < agentlist.length; ++i) {
     const agent = agentlist[i]
 
-    if (sendername === agent.name()) {
+    if (sendername === readagentname(agent.id())) {
       continue
     }
 
@@ -133,12 +134,13 @@ function routechattoagents(
     const lastresponse = agentlastresponse[agent.id()] ?? 0
     const hasattention = now - lastresponse < ATTENTION_WINDOW_MS
 
-    if (hasattention || namematches(agent.name(), messagetext)) {
+    const name = readagentname(agent.id())
+    if (hasattention || namematches(name, messagetext)) {
       heavymodelprompt(
         vm,
         message.player,
         agent.id(),
-        agent.name(),
+        name,
         messagetext,
       )
     } else {
@@ -146,7 +148,7 @@ function routechattoagents(
         vm,
         message.player,
         agent.id(),
-        agent.name(),
+        name,
         messagetext,
       )
     }

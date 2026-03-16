@@ -26,6 +26,12 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 
 const AGENTLIST_FLAG_ID = 'agentlist'
 
+export function readagentname(agentid: string): string {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const user = memoryreadbookflag(mainbook, agentid, 'user')
+  return isstring(user) ? user : agentid
+}
+
 export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   const agentname = isstring(message.data) ? message.data : createshortnameid()
   const agent = createagent(agentname)
@@ -79,10 +85,11 @@ export function handleagentlist(vm: DEVICE, message: MESSAGE): void {
   writeheader(vm, message.player, 'agents')
   for (let i = 0; i < instances.length; ++i) {
     const agent = instances[i]
+    const name = readagentname(agent.id())
     write(
       vm,
       message.player,
-      `!copyit ${agent.id()};${agent.name()} (${agent.id()})`,
+      `!copyit ${agent.id()};${name} (${agent.id()})`,
     )
   }
 }
@@ -94,7 +101,7 @@ export function handleagentprompt(vm: DEVICE, message: MESSAGE): void {
   const [agentid, prompt] = message.data
   const agent = agents[agentid]
   if (ispresent(agent)) {
-    heavymodelprompt(vm, message.player, agentid, agent.name(), prompt)
+    heavymodelprompt(vm, message.player, agentid, readagentname(agentid), prompt)
   } else {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
   }
@@ -110,7 +117,6 @@ export function handleagentname(vm: DEVICE, message: MESSAGE): void {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
     return
   }
-  agent.setname(newname)
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   memorywritebookflag(mainbook, agentid, 'user', newname)
   apitoast(vm, message.player, `agent ${agentid} renamed to ${newname}`)

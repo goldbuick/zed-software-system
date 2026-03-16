@@ -30,8 +30,6 @@ export const agents: Record<
   string,
   {
     id: () => string
-    name: () => string
-    setname: (n: string) => void
     stop: () => void
   }
 > = {}

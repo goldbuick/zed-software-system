@@ -8,11 +8,11 @@ import {
 import { parseresult as llmparseresult } from 'zss/feature/heavy/llm'
 import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
 
-const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
 const MODEL_CONTEXT_TOKENS = 8192
 export const MODEL_ID = 'onnx-community/Qwen3-0.6B-ONNX'
+const MODEL_DTYPE = 'q4f16'
 
 const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}
 {{ message.content }}<|im_end|>
@@ -21,6 +21,7 @@ const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.rol
 
 /** Model used only for attention classification (idle -> "is this message for this agent?"). Can be a smaller/faster model. */
 export const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
+const CLASSIFIER_DTYPE = 'q4'
 
 const PARSE_CONFIG: PARSE_OPTIONS = {
   stripThink: true,
@@ -76,17 +77,17 @@ async function loadclassifiermodel(
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`${info.file} loading ...`)
+          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} loading ...`)
           break
         case 'download':
-          onworking(`${info.file} downloading ...`)
+          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} downloading ...`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`${info.file} ${progress}% ...`)
+            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
           }
           break
         }
@@ -100,7 +101,7 @@ async function loadclassifiermodel(
     const model = await AutoModelForCausalLM.from_pretrained(
       CLASSIFIER_MODEL_ID,
       {
-        dtype: DTYPE,
+        dtype: CLASSIFIER_DTYPE,
         device: MODEL_DEVICE,
         progress_callback,
       },
@@ -132,17 +133,17 @@ async function loadsharedmodel(
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`${info.file} loading ...`)
+          onworking(`[${MODEL_ID}] ${info.file} loading ...`)
           break
         case 'download':
-          onworking(`${info.file} downloading ...`)
+          onworking(`[${MODEL_ID}] ${info.file} downloading ...`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`${info.file} ${progress}% ...`)
+            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
           }
           break
         }
@@ -154,7 +155,7 @@ async function loadsharedmodel(
     })
 
     const model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, {
-      dtype: DTYPE,
+      dtype: MODEL_DTYPE,
       device: MODEL_DEVICE,
       progress_callback,
     })

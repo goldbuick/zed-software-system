@@ -93,7 +93,6 @@ async function executeclicommands(
       await memoryquery(heavy, agentid, {
         type: 'runcli',
         command: line,
-        player: agentid,
       })
     }
   }
@@ -121,14 +120,12 @@ function createonworking(player: string) {
 }
 
 async function queryboardstate(
-  player: string,
   agentid: string,
   agentname: string,
 ): Promise<{ context: string; agentinfo: string }> {
   try {
-    const data = await memoryquery(heavy, player, {
+    const data = await memoryquery(heavy, agentid, {
       type: 'boardstate',
-      agentid,
     })
     const boarddata = data as Parameters<typeof formatboardfortext>[0]
     return {
@@ -162,11 +159,7 @@ async function runagentprompt(
 
   let result!: MODEL_RESULT
   for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
-    const { context, agentinfo } = await queryboardstate(
-      player,
-      agentid,
-      agentname,
-    )
+    const { context, agentinfo } = await queryboardstate(agentid, agentname)
     const systemprompt = buildsystemprompt(agentname, agentinfo, context)
 
     if (memoryreadconfig('promptlogging') === 'on') {
@@ -194,7 +187,7 @@ async function runagentprompt(
       content: result.text,
     })
 
-    await executeclicommands(player, commands)
+    await executeclicommands(agentid, commands)
 
     history.push({
       role: 'user',
