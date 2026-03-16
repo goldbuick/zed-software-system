@@ -123,12 +123,13 @@ async function runagentprompt(
       return
     }
 
+    // execute commands
     await executeclicommands(agentid, commands)
 
     // track and manage history
     history.push({
       role: 'user',
-      content: `[Commands executed: ${commands.join(', ')}]`,
+      content: `[Commands executed: ${commands.filter((line) => !line.startsWith('"')).join('\n')}]`,
     })
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)

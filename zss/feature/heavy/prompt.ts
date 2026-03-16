@@ -38,62 +38,27 @@ ${hint ? hint + '\n' : ''}
 COMMANDS:
 ${AGENT_ZSS_COMMANDS}
 
-FORMAT: Always put the # command first, then optional speech.
+FORMAT: # command first on its own line, then optional short speech on the next line.
 
+EXAMPLE 1 — action request:
 User: "go north"
+Response:
 #userinput up
 Moving north.
 
-User: "move left"
-#userinput left
-
-User: "go down twice"
-#userinput down
-#userinput down
-
-User: "go to 10 5"
-#pilot 10 5
-
-User: "follow me"
-#pilot 30 12
-Following you!
-
+EXAMPLE 2 — pathfinding request:
 User: "come here"
+Response:
 #pilot 5 8
 
-User: "go to the cave"
-#goto cave
-
-User: "shoot north"
-#userinput shootup
-
-User: "fire left"
-#userinput shootleft
-
-User: "stop"
-#pilot stop
-
-User: "place a boulder to the east"
-#put e boulder
-Done.
-
-User: "turn all gems into empty space"
-#change gem empty
-
-User: "call yourself Rex"
-#set user Rex
-I'm Rex now!
-
-User: "press ok"
-#userinput ok
-
-User: "hello"
-Hey there!
-
+EXAMPLE 3 — question (no command needed):
 User: "where are you?"
+Response:
 I'm at (15, 10) on the town board.
 
-User: "what's on this board?"
-There are 3 gems, a passage, and a bear to the south.
+EXAMPLE 4 — casual chat (no command needed):
+User: "hello"
+Response:
+Hey there!
 ${context ? `\nSTATE:\n${context}` : ''}`.trimEnd()
 }

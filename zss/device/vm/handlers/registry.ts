@@ -6,7 +6,6 @@ import {
   handleagentlist,
   handleagentname,
   handleagentprompt,
-  handleagentresponse,
   handleagentstart,
   handleagentstop,
 } from './agent'
@@ -68,7 +67,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   agentlist: handleagentlist,
   agentprompt: handleagentprompt,
   agentname: handleagentname,
-  agentresponse: handleagentresponse,
   pilotstart: handlepilotstart,
   pilotstop: handlepilotstop,
   codewatch: handlecodewatch,

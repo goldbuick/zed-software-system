@@ -6,21 +6,16 @@ import {
   heavymodelprompt,
   heavymodelstop,
   vmagentlist,
-  vmcli,
 } from 'zss/device/api'
 import { agentlastresponse, agents } from 'zss/device/vm/state'
 import { createagent } from 'zss/feature/heavy/agent'
 import { write, writeheader } from 'zss/feature/writeui'
-import { doasync } from 'zss/mapping/func'
 import { createshortnameid } from 'zss/mapping/guid'
-import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
@@ -127,53 +122,6 @@ export function handleagentname(vm: DEVICE, message: MESSAGE): void {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   memorywritebookflag(mainbook, agentid, 'user', newname)
   apitoast(vm, message.player, `agent ${agentid} renamed to ${newname}`)
-}
-
-export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
-  if (!isstring(message.data)) {
-    return
-  }
-  // const response = message.data
-  const agentid = message.player
-
-  // check if agent exists
-  const agent = agents[agentid]
-  if (!ispresent(agent)) {
-    return
-  }
-
-  // get reply and board/element
-  // const reply = isstring(response) ? response : ''
-  const board = memoryreadplayerboard(agentid)
-  const element = memoryreadobject(board, agentid)
-  if (!ispresent(board) || !ispresent(element)) {
-    return
-  }
-
-  // update last response time
-  agentlastresponse[agentid] = Date.now()
-
-  // for ticker text updates
-  // const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  // const timestamp = mainbook?.timestamp ?? 0
-
-  // // emit reply line by line
-  // doasync(vm, agentid, async function () {
-  //   const lines = reply
-  //     .split(/\r?\n/)
-  //     .map((line) => line.trim())
-  //     .filter((line) => line !== '')
-  //   for (let i = 0; i < lines.length; i++) {
-  //     const line = lines[i]
-  //     // update ticker
-  //     element.tickertext = line
-  //     element.tickertime = timestamp
-  //     // send cli text
-  //     vmcli(vm, agentid, `"${line}`)
-  //     // wait for next line
-  //     await waitfor(1000)
-  //   }
-  // })
 }
 
 export function restoreagentsfrommainbook(vm: DEVICE, player: string): void {
