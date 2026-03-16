@@ -10,7 +10,7 @@ import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
 
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
-const MODEL_CONTEXT_TOKENS = 8192
+const MODEL_CONTEXT_TOKENS = 32768
 
 // We like the Llama-3 model (Llama-3.2-1B-Instruct-ONNX).
 const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
