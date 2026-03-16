@@ -290,6 +290,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     'config_scanlines',
     'config_voice2text',
     'config_loaderlogging',
+    'config_promptlogging',
   ]
   await page.exposeFunction('__nodeStorageReadConfigAll', async () => {
     const config = readJsonFile<Record<string, string>>(configPath, {})

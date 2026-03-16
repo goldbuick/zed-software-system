@@ -32,6 +32,7 @@ export function storagereadconfigdefault(name: string) {
     case 'crt':
       return 'on'
     case 'loaderlogging':
+    case 'promptlogging':
       return 'off'
     default:
       return 'off'
@@ -76,6 +77,7 @@ export async function storagereadconfigall() {
     'config_scanlines',
     'config_voice2text',
     'config_loaderlogging',
+    'config_promptlogging',
   ]
   const configs = await idbgetmany<string>(lookup)
   return configs.map((value, index) => {

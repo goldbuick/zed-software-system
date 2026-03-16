@@ -3,27 +3,24 @@ import { createdevice } from 'zss/device'
 import {
   formatagentinfofortext,
   formatboardfortext,
-  formatboardlistfortext,
   formatpathfindfortext,
-  formatsystemprompt,
-  formattoolsforsystemprompt,
   readcodepagefortext,
 } from 'zss/feature/heavy/formatstate'
-import { getadapter } from 'zss/feature/heavy/llm'
 import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/memoryquery'
 import type { MODEL_RESULT } from 'zss/feature/heavy/model'
 import {
-  MODEL_ID,
   MODEL_TOOLS,
   TOOL_CALL,
   destroysharedmodel,
   modelclassify,
   modelgenerate,
 } from 'zss/feature/heavy/model'
+import { buildsystemprompt } from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
+import { memoryreadconfig } from 'zss/memory/utilities'
 import {
   INPUT,
   INPUT_ALT,
@@ -42,19 +39,10 @@ import { NAME } from 'zss/words/types'
 
 import { apierror, apilog, apitoast } from './api'
 
-/** Message plus optional tool_calls for chat template (adapter-defined shape). */
-type Heavymessage = Message & {
-  tool_calls?: {
-    id: string
-    type: 'function'
-    function: { name: string; arguments: Record<string, string> }
-  }[]
-}
-
 const MAX_HISTORY = 40
 const MAX_REPROMPT = 3
 const MAX_CLASSIFY_CONTEXT = 3
-const agenthistories: Record<string, Heavymessage[]> = {}
+const agenthistories: Record<string, Message[]> = {}
 
 /** Codepage type values for memory query (must match zss/memory/types CODE_PAGE_TYPE). */
 const CODE_PAGE_TYPE = { OBJECT: 3, TERRAIN: 4, BOARD: 2 } as const
@@ -102,7 +90,6 @@ function readreplytext(result: { text?: unknown; raw?: unknown }): string {
 async function executetoolcalls(
   player: string,
   agentid: string,
-  agentname: string,
   toolcalls: TOOL_CALL[],
 ): Promise<MAYBE<string>[]> {
   const results: MAYBE<string>[] = []
@@ -116,27 +103,6 @@ async function executetoolcalls(
         }
         results.push(undefined)
         break
-
-      case 'get_agent_info': {
-        try {
-          const data = await memoryquery(heavy, player, {
-            type: 'boardstate',
-            agentid,
-          })
-          results.push(
-            formatagentinfofortext(
-              data as Parameters<typeof formatagentinfofortext>[0],
-              agentid,
-              agentname,
-            ),
-          )
-        } catch {
-          results.push(
-            `You are ${agentname} (id: ${agentid}). You are not on any board.`,
-          )
-        }
-        break
-      }
 
       case 'run_command':
         if (isstring(call.args.command)) {
@@ -236,23 +202,6 @@ async function executetoolcalls(
         results.push(undefined)
         break
 
-      case 'list_board_exits': {
-        try {
-          const data = await memoryquery(heavy, player, {
-            type: 'boardstate',
-            agentid,
-          })
-          results.push(
-            formatboardlistfortext(
-              data as Parameters<typeof formatboardlistfortext>[0],
-            ),
-          )
-        } catch {
-          results.push('You are not on any board.')
-        }
-        break
-      }
-
       default:
         results.push(undefined)
         break
@@ -268,6 +217,29 @@ function createonworking(player: string) {
   }
 }
 
+async function queryboardstate(
+  player: string,
+  agentid: string,
+  agentname: string,
+): Promise<{ context: string; agentinfo: string }> {
+  try {
+    const data = await memoryquery(heavy, player, {
+      type: 'boardstate',
+      agentid,
+    })
+    const boarddata = data as Parameters<typeof formatboardfortext>[0]
+    return {
+      context: formatboardfortext(boarddata),
+      agentinfo: formatagentinfofortext(boarddata, agentid, agentname),
+    }
+  } catch {
+    return {
+      context: 'You are not on any board.',
+      agentinfo: `You are ${agentname} (id: ${agentid}). You are not on any board.`,
+    }
+  }
+}
+
 async function runagentprompt(
   player: string,
   agentid: string,
@@ -275,27 +247,9 @@ async function runagentprompt(
   prompt: string,
   onworking: (msg: string) => void,
 ) {
-  let history: Heavymessage[] = agenthistories[agentid] ?? []
+  let history: Message[] = agenthistories[agentid] ?? []
 
-  let context: string | undefined
-  let boarddata: Parameters<typeof formatboardfortext>[0] | undefined
-  if (ispresent(agentid)) {
-    try {
-      const data = await memoryquery(heavy, player, {
-        type: 'boardstate',
-        agentid,
-      })
-      boarddata = data as Parameters<typeof formatboardfortext>[0]
-      context = formatboardfortext(boarddata)
-    } catch {
-      context = 'You are not on any board.'
-    }
-  }
-  const reminder = boarddata
-    ? formatagentinfofortext(boarddata, agentid, agentname)
-    : ''
-  const usercontent = reminder ? `[Current: ${reminder}]\n${prompt}` : prompt
-  history.push({ role: 'user', content: usercontent })
+  history.push({ role: 'user', content: prompt })
   if (history.length > MAX_HISTORY) {
     history = history.slice(-MAX_HISTORY)
   }
@@ -303,14 +257,27 @@ async function runagentprompt(
 
   apilog(heavy, player, '$21 input $7', prompt)
 
-  const adapter = getadapter(MODEL_ID)
-  let systemprompt = formatsystemprompt(agentname, context)
-  if (adapter?.toolsInSystemPrompt) {
-    systemprompt += '\n\n' + formattoolsforsystemprompt(MODEL_TOOLS)
-  }
-
   let result!: MODEL_RESULT
   for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
+    const { context, agentinfo } = await queryboardstate(
+      player,
+      agentid,
+      agentname,
+    )
+    const systemprompt = buildsystemprompt(
+      agentname,
+      agentinfo,
+      MODEL_TOOLS,
+      context,
+    )
+
+    if (memoryreadconfig('promptlogging') === 'on') {
+      console.info(
+        `[heavy] system prompt (${history.length} messages):\n`,
+        systemprompt,
+      )
+    }
+
     result = await modelgenerate(systemprompt, history, onworking)
 
     if (result.toolcalls.length === 0) {
@@ -327,29 +294,18 @@ async function runagentprompt(
     const toolresults = await executetoolcalls(
       player,
       agentid,
-      agentname,
       result.toolcalls,
     )
 
-    const assistantmessages = adapter
-      ? adapter.buildassistanttoolcallmessages(
-          result.toolcalls,
-          result.raw ?? result.text ?? '',
-        )
-      : [
-          {
-            role: 'assistant',
-            content: (result.raw ?? result.text) || '(tool calls)',
-          } as Heavymessage,
-        ]
+    history.push({
+      role: 'assistant',
+      content: (result.raw ?? result.text) || '(tool calls)',
+    })
     for (let i = 0; i < result.toolcalls.length; ++i) {
-      if (i < assistantmessages.length) {
-        history.push(assistantmessages[i] as Heavymessage)
-      }
       if (ispresent(toolresults[i])) {
         history.push({
-          role: 'tool',
-          content: String(toolresults[i]),
+          role: 'user',
+          content: `[Tool result for ${result.toolcalls[i].name}]: ${String(toolresults[i])}`,
         })
       }
     }

@@ -3,7 +3,6 @@
  * Strips color codes and formats board, scroll, sidebar, and tickers.
  * Formatters accept data blobs from memory queries (no zss/memory imports).
  */
-import type { TOOL_DEF } from 'zss/feature/heavy/llm'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import {
   MAYBE,
@@ -296,90 +295,3 @@ export function formatpathfindfortext(
   return `${verb} ${dirtostring(dir)} to reach (${nextpt.x}, ${nextpt.y}).`
 }
 
-/**
- * Serialize tool definitions to plain text for system prompt (e.g. non-tool-calling models).
- * Includes full docs plus explicit output format instruction.
- */
-export function formattoolsforsystemprompt(tools: TOOL_DEF[]): string {
-  const lines: string[] = []
-  lines.push('AVAILABLE TOOLS:')
-  for (let i = 0; i < tools.length; i++) {
-    const t = tools[i]
-    if (t.type !== 'function' || !t.function) {
-      continue
-    }
-    const f = t.function
-    lines.push(`- ${f.name}: ${f.description}`)
-    const params = f.parameters as {
-      type?: string
-      properties?: Record<string, unknown>
-      required?: string[]
-    }
-    if (params?.properties && typeof params.properties === 'object') {
-      const props = Object.entries(params.properties) as [
-        string,
-        { type?: string; description?: string },
-      ][]
-      for (let j = 0; j < props.length; j++) {
-        const [k, v] = props[j]
-        const desc = v?.description ?? ''
-        lines.push(`  - ${k}: ${desc}`)
-      }
-    }
-  }
-  lines.push('')
-  lines.push(
-    'To invoke a tool, output exactly: <tool_call>{"name":"tool_name","arguments":{...}}</tool_call>',
-  )
-  lines.push(
-    'Example: <tool_call>{"name":"get_agent_info","arguments":{}}</tool_call>',
-  )
-  lines.push(
-    'Example: <tool_call>{"name":"run_command","arguments":{"command":"#go n"}}</tool_call>',
-  )
-  return lines.join('\n')
-}
-
-export function formatsystemprompt(
-  agentname: string,
-  context?: string,
-): string {
-  const parts: string[] = []
-
-  parts.push(
-    `You are an AI agent named ${agentname}, operating in a game world.`,
-  )
-  parts.push('')
-  parts.push(
-    'ROLE: You are helpful, concise, and grounded in the current board state.',
-  )
-  parts.push('')
-  parts.push(
-    'CAPABILITIES: You can move, act on the board, inspect objects and terrain, run commands, read codepages (scripts), and navigate. Use tools when you need up-to-date state or must perform actions.',
-  )
-  parts.push('')
-  parts.push('GUIDELINES:')
-  parts.push(
-    '- Use look_at_board when context is stale or you need fresh surroundings.',
-  )
-  parts.push(
-    '- Use get_agent_info when asked who you are, your name, or what board you are on.',
-  )
-  parts.push(
-    '- Prefer one or few tools per turn when acting; be clear over brief.',
-  )
-  parts.push(
-    '- Reply in plain text when a tool is not needed (e.g. greeting, clarification).',
-  )
-  parts.push('')
-  parts.push('ZSS COMMANDS (for run_command):')
-  parts.push(AGENT_ZSS_COMMANDS)
-  parts.push('')
-
-  if (ispresent(context)) {
-    parts.push('Current state:')
-    parts.push(context)
-  }
-
-  return parts.join('\n').trimEnd()
-}
