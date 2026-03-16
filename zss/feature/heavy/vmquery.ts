@@ -18,6 +18,7 @@ export function query(
   payload: { type: string; [k: string]: unknown },
 ): Promise<unknown> {
   const id = createsid()
+  console.info('[vmquery]', agentid, payload)
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
     device.emit(agentid, 'vm:memoryquery', { id, ...payload })

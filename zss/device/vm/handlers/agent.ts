@@ -133,7 +133,7 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
   if (!isstring(message.data)) {
     return
   }
-  const response = message.data
+  // const response = message.data
   const agentid = message.player
 
   // check if agent exists
@@ -143,7 +143,7 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
   }
 
   // get reply and board/element
-  const reply = isstring(response) ? response : ''
+  // const reply = isstring(response) ? response : ''
   const board = memoryreadplayerboard(agentid)
   const element = memoryreadobject(board, agentid)
   if (!ispresent(board) || !ispresent(element)) {
@@ -154,26 +154,26 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
   agentlastresponse[agentid] = Date.now()
 
   // for ticker text updates
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const timestamp = mainbook?.timestamp ?? 0
+  // const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  // const timestamp = mainbook?.timestamp ?? 0
 
-  // emit reply line by line
-  doasync(vm, agentid, async function () {
-    const lines = reply
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line !== '')
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      // update ticker
-      element.tickertext = line
-      element.tickertime = timestamp
-      // send cli text
-      vmcli(vm, agentid, `"${line}`)
-      // wait for next line
-      await waitfor(1000)
-    }
-  })
+  // // emit reply line by line
+  // doasync(vm, agentid, async function () {
+  //   const lines = reply
+  //     .split(/\r?\n/)
+  //     .map((line) => line.trim())
+  //     .filter((line) => line !== '')
+  //   for (let i = 0; i < lines.length; i++) {
+  //     const line = lines[i]
+  //     // update ticker
+  //     element.tickertext = line
+  //     element.tickertime = timestamp
+  //     // send cli text
+  //     vmcli(vm, agentid, `"${line}`)
+  //     // wait for next line
+  //     await waitfor(1000)
+  //   }
+  // })
 }
 
 export function restoreagentsfrommainbook(vm: DEVICE, player: string): void {

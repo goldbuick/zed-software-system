@@ -38,19 +38,19 @@ async function executeclicommands(
   }
 }
 
-function splitresponse(text: string): { reply: string; commands: string[] } {
+function splitresponse(text: string): string[] {
   const lines = text.split('\n')
-  const replylines: string[] = []
   const commands: string[] = []
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
     if (line.startsWith('#') || line.startsWith('!')) {
       commands.push(line)
     } else if (line) {
-      replylines.push(line)
+      // ensure line starts with " to indicate a text message
+      commands.push(`"${line}`)
     }
   }
-  return { reply: replylines.join('\n').trim(), commands }
+  return commands
 }
 
 function createonworking(player: string) {
@@ -118,44 +118,22 @@ async function runagentprompt(
 
     result = await modelgenerate(systemprompt, history, onworking)
 
-    const { reply, commands } = splitresponse(result.text)
-
+    const commands = splitresponse(result.text)
     if (commands.length === 0) {
-      if (reply) {
-        history.push({ role: 'assistant', content: reply })
-        agenthistories[agentid] = history
-        heavy.emit(agentid, 'vm:agentresponse', reply)
-      }
       return
     }
 
-    history.push({ role: 'assistant', content: reply })
-
     await executeclicommands(agentid, commands)
 
+    // track and manage history
     history.push({
       role: 'user',
       content: `[Commands executed: ${commands.join(', ')}]`,
     })
-
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)
     }
     agenthistories[agentid] = history
-
-    if (reply) {
-      heavy.emit(agentid, 'vm:agentresponse', reply)
-    }
-  }
-
-  const { reply } = splitresponse(result.text)
-  if (reply) {
-    history.push({ role: 'assistant', content: reply })
-    if (history.length > MAX_HISTORY) {
-      history = history.slice(-MAX_HISTORY)
-    }
-    agenthistories[agentid] = history
-    heavy.emit(agentid, 'vm:agentresponse', reply)
   }
 }
 

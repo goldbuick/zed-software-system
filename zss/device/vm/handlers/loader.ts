@@ -89,7 +89,10 @@ function routechattoagents(
     const agentelements: (typeof senderelement)[] = []
     for (let i = 0; i < agentlist.length; ++i) {
       const agent = agentlist[i]
-      if (readagentname(agent.id()) === sendername) {
+      if (
+        agent.id() === message.player ||
+        readagentname(agent.id()) === sendername
+      ) {
         continue
       }
       const agentboard = memoryreadplayerboard(agent.id())
@@ -123,7 +126,10 @@ function routechattoagents(
   for (let i = 0; i < agentlist.length; ++i) {
     const agent = agentlist[i]
 
-    if (sendername === readagentname(agent.id())) {
+    if (
+      agent.id() === message.player ||
+      sendername === readagentname(agent.id())
+    ) {
       continue
     }
 
