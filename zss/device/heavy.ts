@@ -22,7 +22,7 @@ import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { apierror, apilog, apitoast } from './api'
 
 const MAX_HISTORY = 40
-const MAX_REPROMPT = 3
+const MAX_REPROMPT = 5
 const MAX_CLASSIFY_CONTEXT = 3
 const agenthistories: Record<string, Message[]> = {}
 
@@ -121,13 +121,25 @@ async function runagentprompt(
       return
     }
 
-    // execute commands
+    const hasactions = commands.some(
+      (line) => line.startsWith('#') || line.startsWith('!'),
+    )
+
     await executeclicommands(agentid, commands)
 
-    // track and manage history
+    history.push({ role: 'assistant', content: result.text })
+
+    if (!hasactions) {
+      if (history.length > MAX_HISTORY) {
+        history = history.slice(-MAX_HISTORY)
+      }
+      agenthistories[agentid] = history
+      break
+    }
+
     history.push({
-      role: 'user',
-      content: `[Commands executed: ${commands.filter((line) => !line.startsWith('"')).join('\n')}]`,
+      role: 'system',
+      content: `commands executed: ${commands.filter((line) => !line.startsWith('"')).join(', ')}`,
     })
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)
