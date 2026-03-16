@@ -280,14 +280,7 @@ export async function modelclassify(
 ): Promise<string> {
   const { tokenizer, model } = await loadclassifiermodel(onworking)
 
-  const input = tokenizer.apply_chat_template(messages, {
-    tokenize: true,
-    return_dict: true,
-    add_generation_prompt: true,
-  })
-  if (typeof input !== 'object') {
-    throw new Error('apply_chat_template returned unexpected type')
-  }
+  const input = applychattemplate(tokenizer, messages)
 
   onworking(`classifying ...`)
   const { sequences } = (await model.generate({
@@ -297,7 +290,6 @@ export async function modelclassify(
     return_dict_in_generate: true,
   } as any)) as any
 
-  // @ts-expect-error this should be the shape of the input ids
   const values = sequences.slice(null, [input.input_ids.dims[1], null])
 
   const decoded = tokenizer.batch_decode(values, {

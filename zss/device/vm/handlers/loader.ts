@@ -112,6 +112,7 @@ function routechattoagents(
           nearestid,
           readagentname(nearestid),
           messagetext,
+          memoryreadconfig('promptlogging'),
         )
       }
     }
@@ -142,6 +143,7 @@ function routechattoagents(
         agent.id(),
         name,
         messagetext,
+        memoryreadconfig('promptlogging'),
       )
     } else {
       heavymodelclassify(
@@ -150,6 +152,7 @@ function routechattoagents(
         agent.id(),
         name,
         messagetext,
+        memoryreadconfig('promptlogging'),
       )
     }
   }

@@ -24,7 +24,6 @@ import {
 } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadconfig } from 'zss/memory/utilities'
 
 import { apierror, apilog, apitoast } from './api'
 
@@ -146,6 +145,7 @@ async function runagentprompt(
   agentname: string,
   prompt: string,
   onworking: (msg: string) => void,
+  promptlogging: string,
 ) {
   let history: Message[] = agenthistories[agentid] ?? []
 
@@ -162,7 +162,7 @@ async function runagentprompt(
     const { context, agentinfo } = await queryboardstate(agentid, agentname)
     const systemprompt = buildsystemprompt(agentname, agentinfo, context)
 
-    if (memoryreadconfig('promptlogging') === 'on') {
+    if (promptlogging === 'on') {
       console.info(
         `[heavy] system prompt (${history.length} messages):\n`,
         systemprompt,
@@ -262,11 +262,9 @@ const heavy = createdevice('heavy', [], (message) => {
         if (!isarray(message.data) || message.data.length < 3) {
           return
         }
-        const [agentid, agentname, prompt] = message.data as [
-          string,
-          string,
-          string,
-        ]
+        const data = message.data as [string, string, string, string?]
+        const [agentid, agentname, prompt] = data
+        const promptlogging = data.length >= 4 ? (data[3] ?? '') : ''
         apitoast(heavy, message.player, `${agentname} is thinking...`)
         const onworking = createonworking(message.player)
         await runagentprompt(
@@ -275,6 +273,7 @@ const heavy = createdevice('heavy', [], (message) => {
           agentname,
           prompt,
           onworking,
+          promptlogging,
         )
       })
       break
@@ -283,11 +282,9 @@ const heavy = createdevice('heavy', [], (message) => {
         if (!isarray(message.data) || message.data.length < 3) {
           return
         }
-        const [agentid, agentname, messagetext] = message.data as [
-          string,
-          string,
-          string,
-        ]
+        const data = message.data as [string, string, string, string?]
+        const [agentid, agentname, messagetext] = data
+        const promptlogging = data.length >= 4 ? (data[3] ?? '') : ''
         const onworking = createonworking(message.player)
 
         const recenthistory = (agenthistories[agentid] ?? []).slice(
@@ -321,6 +318,7 @@ const heavy = createdevice('heavy', [], (message) => {
             agentname,
             messagetext,
             onworking,
+            promptlogging,
           )
         }
       })

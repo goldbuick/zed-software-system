@@ -23,6 +23,7 @@ import {
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
+import { memoryreadconfig } from 'zss/memory/utilities'
 
 const AGENTLIST_FLAG_ID = 'agentlist'
 
@@ -86,11 +87,7 @@ export function handleagentlist(vm: DEVICE, message: MESSAGE): void {
   for (let i = 0; i < instances.length; ++i) {
     const agent = instances[i]
     const name = readagentname(agent.id())
-    write(
-      vm,
-      message.player,
-      `!copyit ${agent.id()};${name} (${agent.id()})`,
-    )
+    write(vm, message.player, `!copyit ${agent.id()};${name} (${agent.id()})`)
   }
 }
 
@@ -101,7 +98,14 @@ export function handleagentprompt(vm: DEVICE, message: MESSAGE): void {
   const [agentid, prompt] = message.data
   const agent = agents[agentid]
   if (ispresent(agent)) {
-    heavymodelprompt(vm, message.player, agentid, readagentname(agentid), prompt)
+    heavymodelprompt(
+      vm,
+      message.player,
+      agentid,
+      readagentname(agentid),
+      prompt,
+      memoryreadconfig('promptlogging'),
+    )
   } else {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
   }
@@ -123,15 +127,19 @@ export function handleagentname(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
-  if (!isarray(message.data)) {
+  if (!isstring(message.data)) {
     return
   }
-  const [agentid, response] = message.data as [string, string]
+  const response = message.data
+  const agentid = message.player
+
+  // check if agent exists
   const agent = agents[agentid]
   if (!ispresent(agent)) {
     return
   }
 
+  // get reply and board/element
   const reply = isstring(response) ? response : ''
   const board = memoryreadplayerboard(agentid)
   const element = memoryreadobject(board, agentid)
@@ -142,10 +150,12 @@ export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
   // update last response time
   agentlastresponse[agentid] = Date.now()
 
-  // can we async emit reply line by line ?
+  // for ticker text updates
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const timestamp = mainbook?.timestamp ?? 0
+
+  // emit reply line by line
   doasync(vm, agentid, async function () {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const timestamp = mainbook?.timestamp ?? 0
     const lines = reply
       .split(/\r?\n/)
       .map((line) => line.trim())

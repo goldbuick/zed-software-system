@@ -175,8 +175,14 @@ export function heavymodelprompt(
   agentid: string,
   agentname: string,
   prompt: string,
+  promptlogging = '',
 ) {
-  device.emit(player, 'heavy:modelprompt', [agentid, agentname, prompt])
+  device.emit(player, 'heavy:modelprompt', [
+    agentid,
+    agentname,
+    prompt,
+    promptlogging,
+  ])
 }
 
 export function heavymodelclassify(
@@ -185,8 +191,14 @@ export function heavymodelclassify(
   agentid: string,
   agentname: string,
   prompt: string,
+  promptlogging = '',
 ) {
-  device.emit(player, 'heavy:modelclassify', [agentid, agentname, prompt])
+  device.emit(player, 'heavy:modelclassify', [
+    agentid,
+    agentname,
+    prompt,
+    promptlogging,
+  ])
 }
 
 export function heavymodelstop(
