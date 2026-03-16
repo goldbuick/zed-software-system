@@ -7,11 +7,8 @@ import {
   memoryreadelementkind,
 } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryreadboardpath } from 'zss/memory/spatialqueries'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { COLLISION } from 'zss/words/types'
+import { memoryruncli } from 'zss/memory/runtime'
 
 export type BOARDSTATE_RESULT = {
   board: {
@@ -50,7 +47,9 @@ function elementlabel(element: {
   return display.name || kind
 }
 
-function runboardstate(agentid: string): BOARDSTATE_RESULT | { error: string } {
+function readboardstate(
+  agentid: string,
+): BOARDSTATE_RESULT | { error: string } {
   const board = memoryreadplayerboard(agentid)
   if (!ispresent(board)) {
     return { error: 'no_board' }
@@ -125,78 +124,20 @@ function runboardstate(agentid: string): BOARDSTATE_RESULT | { error: string } {
   }
 }
 
-function runcodepage(
-  pagetype: number,
-  name: string,
-): CODEPAGE_RESULT | { error: string } {
-  const codepage = memorypickcodepagewithtypeandstat(pagetype, name)
-  if (!ispresent(codepage)) {
-    return { error: 'not_found' }
-  }
-  return {
-    codepage: { id: codepage.id, code: codepage.code ?? '' },
-  }
-}
-
-function runpathfind(
-  agentid: string,
-  targetx: number,
-  targety: number,
-  flee: boolean,
-): PATHFIND_RESULT | { error: string } {
-  const board = memoryreadplayerboard(agentid)
-  if (!ispresent(board)) {
-    return { error: 'no_board' }
-  }
-  const self = memoryreadobject(board, agentid)
-  if (
-    !ispresent(self) ||
-    typeof self.x !== 'number' ||
-    typeof self.y !== 'number'
-  ) {
-    return { error: 'no_self' }
-  }
-  const frompt = { x: self.x, y: self.y }
-  const topt = { x: targetx, y: targety }
-  const nextpt = memoryreadboardpath(
-    board,
-    COLLISION.ISWALK,
-    frompt,
-    topt,
-    flee,
-  )
-  if (!ispresent(nextpt)) {
-    return null
-  }
-  return { nextpoint: { x: nextpt.x, y: nextpt.y } }
-}
-
 export function handlememoryquery(vm: DEVICE, message: MESSAGE): void {
   const payload = message.data
-  if (
-    !payload ||
-    typeof payload !== 'object' ||
-    !isstring(payload.id) ||
-    !isstring(payload.type)
-  ) {
+  if (!ispresent(payload) || !isstring(payload.id) || !isstring(payload.type)) {
     return
   }
+  const agentid = message.player
   const { id, type } = payload as { id: string; type: string }
   try {
     let result: unknown
     switch (type) {
       case 'boardstate': {
-        const agentid = payload.agentid
-        if (!isstring(agentid)) {
-          vm.emit(message.player, 'heavy:memoryresult', {
-            id,
-            error: 'missing_agentid',
-          })
-          return
-        }
-        const out = runboardstate(agentid)
+        const out = readboardstate(agentid)
         if ('error' in out) {
-          vm.emit(message.player, 'heavy:memoryresult', {
+          vm.emit(agentid, 'heavy:memoryresult', {
             id,
             error: out.error,
           })
@@ -205,67 +146,29 @@ export function handlememoryquery(vm: DEVICE, message: MESSAGE): void {
         result = out
         break
       }
-      case 'codepage': {
-        const pagetype =
-          typeof payload.pagetype === 'number'
-            ? payload.pagetype
-            : CODE_PAGE_TYPE.OBJECT
-        const name = payload.name
-        if (!isstring(name)) {
-          vm.emit(message.player, 'heavy:memoryresult', {
+      case 'runcli': {
+        const command = payload.command
+        if (!isstring(command)) {
+          vm.emit(agentid, 'heavy:memoryresult', {
             id,
-            error: 'missing_name',
+            error: 'missing_command',
           })
           return
         }
-        const out = runcodepage(pagetype, name)
-        if (typeof out === 'object' && out !== null && 'error' in out) {
-          vm.emit(message.player, 'heavy:memoryresult', {
-            id,
-            error: out.error,
-          })
-          return
-        }
-        result = out
-        break
-      }
-      case 'pathfind': {
-        const agentid = payload.agentid
-        const targetx = Number(payload.targetx)
-        const targety = Number(payload.targety)
-        const flee = payload.flee === true
-        if (
-          !isstring(agentid) ||
-          !Number.isFinite(targetx) ||
-          !Number.isFinite(targety)
-        ) {
-          vm.emit(message.player, 'heavy:memoryresult', {
-            id,
-            error: 'invalid_params',
-          })
-          return
-        }
-        const out = runpathfind(agentid, targetx, targety, flee)
-        if (typeof out === 'object' && out !== null && 'error' in out) {
-          vm.emit(message.player, 'heavy:memoryresult', {
-            id,
-            error: (out as any).error,
-          })
-          return
-        }
-        result = out
+        memoryruncli(agentid, command, false)
+        result = { ok: true }
         break
       }
       default:
-        vm.emit(message.player, 'heavy:memoryresult', {
+        vm.emit(agentid, 'heavy:memoryresult', {
           id,
           error: 'unknown_type',
         })
         return
     }
-    vm.emit(message.player, 'heavy:memoryresult', { id, result })
+    vm.emit(agentid, 'heavy:memoryresult', { id, result })
   } catch (err) {
-    vm.emit(message.player, 'heavy:memoryresult', {
+    vm.emit(agentid, 'heavy:memoryresult', {
       id,
       error: err instanceof Error ? err.message : 'unknown_error',
     })

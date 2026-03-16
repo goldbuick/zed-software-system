@@ -44,11 +44,15 @@ export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
 /** Data shape returned by pathfind memory query. */
 export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
 
-/** Agent-relevant ZSS commands; used in system prompt and runcommand tool description. */
+/** Agent-relevant ZSS commands; used in system prompt. */
 export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
 #put <dir> <kind> — create element in direction (e.g. #put n boulder)
 #change <from> <to> — change all elements of one kind to another (e.g. #change gem empty)
-#shoot <dir> or #shoot <dir> <kind> — fire projectile`
+#shoot <dir> — fire projectile (e.g. #shoot n)
+#set user <name> — change your display name
+#input <action> — trigger input event, space-separated (e.g. #input up, #input shift ok)
+  actions: up, down, left, right, ok, cancel, menu
+  modifiers: shift, alt, ctrl`
 
 export type LOOK_STATE = {
   board?: unknown

@@ -5,26 +5,27 @@ import {
   ProgressInfo,
   TextStreamer,
 } from '@huggingface/transformers'
-import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
-import {
-  getadapter,
-  parseresult as llmparseresult,
-} from 'zss/feature/heavy/llm'
-import type { MODEL_RESULT, TOOL_DEF } from 'zss/feature/heavy/llm'
+import { parseresult as llmparseresult } from 'zss/feature/heavy/llm'
+import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
 
 const DTYPE = 'q4'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
 const MODEL_CONTEXT_TOKENS = 8192
-export const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
+export const MODEL_ID = 'onnx-community/Qwen3-0.6B-ONNX'
 
 const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}
 {{ message.content }}<|im_end|>
 {% endfor %}{% if add_generation_prompt %}<|im_start|>assistant
 {% endif %}`
 
-/** Model used only for attention classification (idle → "is this message for this agent?"). Can be a smaller/faster model. */
+/** Model used only for attention classification (idle -> "is this message for this agent?"). Can be a smaller/faster model. */
 export const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
+
+const PARSE_CONFIG: PARSE_OPTIONS = {
+  stripThink: true,
+  stripSpecialTokens: true,
+}
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
@@ -44,112 +45,7 @@ function throttle(
   }
 }
 
-export const MODEL_TOOLS: TOOL_DEF[] = [
-  {
-    type: 'function',
-    function: {
-      name: 'set_agent_name',
-      description:
-        'Change your display name. Use only when the user explicitly asks you to rename yourself.',
-      parameters: {
-        type: 'object',
-        properties: {
-          name: { type: 'string', description: 'The new display name' },
-        },
-        required: ['name'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'run_command',
-      description: `Execute a ZSS command. ${AGENT_ZSS_COMMANDS} Command must start with #.`,
-      parameters: {
-        type: 'object',
-        properties: {
-          command: {
-            type: 'string',
-            description:
-              'Full command including #, e.g. #go n, #put n boulder, #change gem empty, #shoot n',
-          },
-        },
-        required: ['command'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'read_codepage',
-      description:
-        'Read the source script of an object, terrain, or board codepage by name.',
-      parameters: {
-        type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            description: 'The codepage name or kind to look up',
-          },
-          type: {
-            type: 'string',
-            description:
-              'One of: object (default), terrain, board. Defaults to object.',
-          },
-        },
-        required: ['name'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_path_direction',
-      description:
-        'Get direction toward or away from (targetx, targety). Returns e.g. north; then use run_command with #go n to move. Use flee=true to move away.',
-      parameters: {
-        type: 'object',
-        properties: {
-          targetx: {
-            type: 'number',
-            description: 'Target x coordinate (board coordinates)',
-          },
-          targety: {
-            type: 'number',
-            description: 'Target y coordinate (board coordinates)',
-          },
-          flee: {
-            type: 'boolean',
-            description:
-              'If true, returns direction away from target. Defaults to false.',
-          },
-        },
-        required: ['targetx', 'targety'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'press_input',
-      description:
-        'Simulate button presses (up, down, ok, cancel, menu). Use for menus and UI when run_command is not appropriate.',
-      parameters: {
-        type: 'object',
-        properties: {
-          inputs: {
-            type: 'string',
-            description:
-              'Comma-separated: up, down, left, right, ok, cancel, menu, shift, alt, ctrl',
-          },
-        },
-        required: ['inputs'],
-      },
-    },
-  },
-]
-
-export type { MODEL_RESULT, TOOL_CALL } from 'zss/feature/heavy/llm'
+export type { MODEL_RESULT } from 'zss/feature/heavy/llm'
 
 type SHARED_MODEL = {
   tokenizer: Awaited<ReturnType<typeof AutoTokenizer.from_pretrained>>
@@ -341,11 +237,6 @@ export async function modelgenerate(
 ): Promise<MODEL_RESULT> {
   const { tokenizer, model } = await loadsharedmodel(onworking)
 
-  const adapter = getadapter(MODEL_ID)
-  if (!adapter) {
-    throw new Error(`No LLM adapter registered for model: ${MODEL_ID}`)
-  }
-
   const trimmed = trimhistory(tokenizer, systemprompt, messages)
   const convo: Message[] = [
     { role: 'system', content: systemprompt },
@@ -379,13 +270,7 @@ export async function modelgenerate(
   })
 
   const raw = decoded.join('\n').trim()
-  const parsed = llmparseresult(raw, adapter.parseoptions)
-
-  if (parsed.toolcalls.length > 0) {
-    console.info('[heavy] parsed toolcalls:', parsed.toolcalls)
-  }
-
-  return parsed
+  return llmparseresult(raw, PARSE_CONFIG)
 }
 
 export async function modelclassify(

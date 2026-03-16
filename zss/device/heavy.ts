@@ -3,8 +3,6 @@ import { createdevice } from 'zss/device'
 import {
   formatagentinfofortext,
   formatboardfortext,
-  formatpathfindfortext,
-  readcodepagefortext,
 } from 'zss/feature/heavy/formatstate'
 import {
   query as memoryquery,
@@ -12,15 +10,12 @@ import {
 } from 'zss/feature/heavy/memoryquery'
 import type { MODEL_RESULT } from 'zss/feature/heavy/model'
 import {
-  MODEL_TOOLS,
-  TOOL_CALL,
   destroysharedmodel,
   modelclassify,
   modelgenerate,
 } from 'zss/feature/heavy/model'
 import { buildsystemprompt } from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
-import { memoryreadconfig } from 'zss/memory/utilities'
 import {
   INPUT,
   INPUT_ALT,
@@ -28,14 +23,8 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import {
-  MAYBE,
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
-import { NAME } from 'zss/words/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadconfig } from 'zss/memory/utilities'
 
 import { apierror, apilog, apitoast } from './api'
 
@@ -43,9 +32,6 @@ const MAX_HISTORY = 40
 const MAX_REPROMPT = 3
 const MAX_CLASSIFY_CONTEXT = 3
 const agenthistories: Record<string, Message[]> = {}
-
-/** Codepage type values for memory query (must match zss/memory/types CODE_PAGE_TYPE). */
-const CODE_PAGE_TYPE = { OBJECT: 3, TERRAIN: 4, BOARD: 2 } as const
 
 const INPUT_MAP: Record<string, INPUT> = {
   up: INPUT.MOVE_UP,
@@ -60,155 +46,72 @@ const INPUT_MAP: Record<string, INPUT> = {
   shift: INPUT.SHIFT,
 }
 
-function parseinputmods(tokens: string[]): number {
-  let bits = 0
+function executeinput(player: string, line: string) {
+  const tokens = line
+    .replace(/^#input\s+/i, '')
+    .split(/\s+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+
+  let modbits = 0
   for (let i = 0; i < tokens.length; ++i) {
-    const token = tokens[i].trim().toLowerCase()
+    const token = tokens[i]
     if (token === 'alt') {
-      bits |= INPUT_ALT
+      modbits |= INPUT_ALT
     }
     if (token === 'ctrl') {
-      bits |= INPUT_CTRL
+      modbits |= INPUT_CTRL
     }
     if (token === 'shift') {
-      bits |= INPUT_SHIFT
+      modbits |= INPUT_SHIFT
     }
   }
-  return bits
+
+  for (let i = 0; i < tokens.length; ++i) {
+    const token = tokens[i]
+    const input = INPUT_MAP[token]
+    if (
+      ispresent(input) &&
+      input !== INPUT.ALT &&
+      input !== INPUT.CTRL &&
+      input !== INPUT.SHIFT
+    ) {
+      heavy.emit(player, 'vm:input', [input, modbits])
+    }
+  }
 }
 
-function readreplytext(result: { text?: unknown; raw?: unknown }): string {
-  const reply =
-    isstring(result.text) && result.text.trim() !== ''
-      ? result.text.trim()
-      : isstring(result.raw)
-        ? result.raw.trim()
-        : ''
-  return reply
-}
-
-async function executetoolcalls(
-  player: string,
+async function executeclicommands(
   agentid: string,
-  toolcalls: TOOL_CALL[],
-): Promise<MAYBE<string>[]> {
-  const results: MAYBE<string>[] = []
-
-  for (let i = 0; i < toolcalls.length; ++i) {
-    const call = toolcalls[i]
-    switch (call.name) {
-      case 'set_agent_name':
-        if (isstring(call.args.name)) {
-          heavy.emit(player, 'vm:agentname', [agentid, NAME(call.args.name)])
-        }
-        results.push(undefined)
-        break
-
-      case 'run_command':
-        if (isstring(call.args.command)) {
-          heavy.emit(player, 'vm:cli', call.args.command)
-        }
-        results.push(undefined)
-        break
-
-      case 'read_codepage': {
-        if (!isstring(call.args.name)) {
-          results.push('Missing codepage name.')
-          break
-        }
-        let pagetype: number = CODE_PAGE_TYPE.OBJECT
-        if (call.args.type === 'terrain') {
-          pagetype = CODE_PAGE_TYPE.TERRAIN
-        } else if (call.args.type === 'board') {
-          pagetype = CODE_PAGE_TYPE.BOARD
-        }
-        try {
-          const data = await memoryquery(heavy, player, {
-            type: 'codepage',
-            pagetype,
-            name: call.args.name,
-          })
-          results.push(
-            readcodepagefortext(
-              data as Parameters<typeof readcodepagefortext>[0],
-              call.args.name,
-              call.args.type,
-            ),
-          )
-        } catch {
-          results.push(
-            `No ${call.args.type ?? 'object'} codepage found for "${call.args.name}".`,
-          )
-        }
-        break
-      }
-
-      case 'get_path_direction': {
-        const tx = parseFloat(String(call.args.targetx))
-        const ty = parseFloat(String(call.args.targety))
-        if (!isnumber(tx) || !isnumber(ty)) {
-          results.push('Invalid target coordinates.')
-          break
-        }
-        const flee = call.args.flee === 'true'
-        try {
-          const boarddata = await memoryquery(heavy, player, {
-            type: 'boardstate',
-            agentid,
-          })
-          const pathdata = await memoryquery(heavy, player, {
-            type: 'pathfind',
-            agentid,
-            targetx: tx,
-            targety: ty,
-            flee,
-          })
-          const bd = boarddata as Parameters<typeof formatboardfortext>[0]
-          const fromx = bd && !('error' in bd) && bd.self ? bd.self.x : 0
-          const fromy = bd && !('error' in bd) && bd.self ? bd.self.y : 0
-          results.push(
-            formatpathfindfortext(
-              pathdata as Parameters<typeof formatpathfindfortext>[0],
-              fromx,
-              fromy,
-              tx,
-              ty,
-              flee,
-            ),
-          )
-        } catch {
-          results.push('Cannot determine your position.')
-        }
-        break
-      }
-
-      case 'press_input':
-        if (isstring(call.args.inputs)) {
-          const tokens = call.args.inputs.split(',')
-          const modbits = parseinputmods(tokens)
-          for (let ii = 0; ii < tokens.length; ++ii) {
-            const token = tokens[ii].trim().toLowerCase()
-            const input = INPUT_MAP[token]
-            if (
-              ispresent(input) &&
-              input !== INPUT.ALT &&
-              input !== INPUT.CTRL &&
-              input !== INPUT.SHIFT
-            ) {
-              heavy.emit(player, 'vm:input', [input, modbits])
-            }
-          }
-        }
-        results.push(undefined)
-        break
-
-      default:
-        results.push(undefined)
-        break
+  commands: string[],
+): Promise<void> {
+  for (let i = 0; i < commands.length; ++i) {
+    const line = commands[i]
+    if (/^#input\s/i.test(line)) {
+      executeinput(agentid, line)
+    } else {
+      await memoryquery(heavy, agentid, {
+        type: 'runcli',
+        command: line,
+        player: agentid,
+      })
     }
   }
+}
 
-  return results
+function splitresponse(text: string): { reply: string; commands: string[] } {
+  const lines = text.split('\n')
+  const replylines: string[] = []
+  const commands: string[] = []
+  for (let i = 0; i < lines.length; ++i) {
+    const line = lines[i].trim()
+    if (line.startsWith('#')) {
+      commands.push(line)
+    } else if (line) {
+      replylines.push(line)
+    }
+  }
+  return { reply: replylines.join('\n').trim(), commands }
 }
 
 function createonworking(player: string) {
@@ -264,12 +167,7 @@ async function runagentprompt(
       agentid,
       agentname,
     )
-    const systemprompt = buildsystemprompt(
-      agentname,
-      agentinfo,
-      MODEL_TOOLS,
-      context,
-    )
+    const systemprompt = buildsystemprompt(agentname, agentinfo, context)
 
     if (memoryreadconfig('promptlogging') === 'on') {
       console.info(
@@ -280,61 +178,47 @@ async function runagentprompt(
 
     result = await modelgenerate(systemprompt, history, onworking)
 
-    if (result.toolcalls.length === 0) {
-      const reply = readreplytext(result)
+    const { reply, commands } = splitresponse(result.text)
+
+    if (commands.length === 0) {
       if (reply) {
         history.push({ role: 'assistant', content: reply })
         agenthistories[agentid] = history
-        apilog(heavy, player, '$21', reply)
-        heavy.emit(player, 'vm:agentresponse', [agentid, reply])
+        heavy.emit(agentid, 'vm:agentresponse', reply)
       }
       return
     }
-
-    const toolresults = await executetoolcalls(
-      player,
-      agentid,
-      result.toolcalls,
-    )
 
     history.push({
       role: 'assistant',
-      content: (result.raw ?? result.text) || '(tool calls)',
+      content: result.text,
     })
-    for (let i = 0; i < result.toolcalls.length; ++i) {
-      if (ispresent(toolresults[i])) {
-        history.push({
-          role: 'user',
-          content: `[Tool result for ${result.toolcalls[i].name}]: ${String(toolresults[i])}`,
-        })
-      }
-    }
 
-    const hasdataresults = toolresults.some(ispresent)
+    await executeclicommands(player, commands)
+
+    history.push({
+      role: 'user',
+      content: `[Commands executed: ${commands.join(', ')}]`,
+    })
+
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)
     }
     agenthistories[agentid] = history
 
-    if (!hasdataresults) {
-      const reply = readreplytext(result)
-      if (reply) {
-        apilog(heavy, player, '$21', reply)
-        heavy.emit(player, 'vm:agentresponse', [agentid, reply])
-      }
-      return
+    if (reply) {
+      heavy.emit(agentid, 'vm:agentresponse', reply)
     }
   }
 
-  const lastreply = readreplytext(result)
-  if (lastreply) {
-    history.push({ role: 'assistant', content: lastreply })
+  const { reply } = splitresponse(result.text)
+  if (reply) {
+    history.push({ role: 'assistant', content: reply })
     if (history.length > MAX_HISTORY) {
       history = history.slice(-MAX_HISTORY)
     }
     agenthistories[agentid] = history
-    apilog(heavy, player, '$21', lastreply)
-    heavy.emit(player, 'vm:agentresponse', [agentid, lastreply])
+    heavy.emit(agentid, 'vm:agentresponse', reply)
   }
 }
 
