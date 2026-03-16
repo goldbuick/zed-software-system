@@ -11,18 +11,19 @@ import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
 const MAX_NEW_TOKENS = 512
 const MODEL_DEVICE = 'webgpu'
 const MODEL_CONTEXT_TOKENS = 8192
+
 // We like the Llama-3 model (Llama-3.2-1B-Instruct-ONNX).
 const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
 const MODEL_DTYPE = 'q4f16'
+
+/** Model used for attention classification and intent detection. Can be a smaller/faster model. */
+const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
+const CLASSIFIER_DTYPE = 'q4'
 
 const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}
 {{ message.content }}<|im_end|>
 {% endfor %}{% if add_generation_prompt %}<|im_start|>assistant
 {% endif %}`
-
-/** Model used only for attention classification (idle -> "is this message for this agent?"). Can be a smaller/faster model. */
-export const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
-const CLASSIFIER_DTYPE = 'q4'
 
 const PARSE_CONFIG: PARSE_OPTIONS = {
   stripThink: true,
@@ -287,7 +288,7 @@ export async function modelclassify(
   const { sequences } = (await model.generate({
     ...input,
     do_sample: false,
-    max_new_tokens: 3,
+    max_new_tokens: 10,
     return_dict_in_generate: true,
   } as any)) as any
 

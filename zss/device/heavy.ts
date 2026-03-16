@@ -168,6 +168,7 @@ async function runagentprompt(
   prompt: string,
   onworking: (msg: string) => void,
   promptlogging: string,
+  intent?: string,
 ) {
   let history: Message[] = agenthistories[agentid] ?? []
 
@@ -182,7 +183,12 @@ async function runagentprompt(
   let result!: MODEL_RESULT
   for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
     const { context, agentinfo } = await queryboardstate(agentid, agentname)
-    const systemprompt = buildsystemprompt(agentname, agentinfo, context)
+    const systemprompt = buildsystemprompt(
+      agentname,
+      agentinfo,
+      context,
+      intent,
+    )
 
     if (promptlogging === 'on') {
       console.info(
@@ -323,17 +329,19 @@ const heavy = createdevice('heavy', [], (message) => {
         const classifymessages: Message[] = [
           {
             role: 'system',
-            content: 'You are a message router. Answer only yes or no.',
+            content:
+              'You are a message classifier. Answer with exactly one word: movement, action, question, chat, or none.',
           },
           {
             role: 'user',
-            content: `Is the following message directed at or relevant to an ai agent named "${agentname}"?${contextsnippet}\nMessage: "${messagetext}"\nAnswer:`,
+            content: `Is the following message directed at or relevant to an ai agent named "${agentname}"? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).${contextsnippet}\nMessage: "${messagetext}"\nAnswer:`,
           },
         ]
 
         const answer = await modelclassify(classifymessages, onworking)
+        const intent = answer.split(/\s+/)[0] ?? ''
 
-        if (answer.startsWith('yes')) {
+        if (intent !== 'none') {
           await runagentprompt(
             message.player,
             agentid,
@@ -341,6 +349,7 @@ const heavy = createdevice('heavy', [], (message) => {
             messagetext,
             onworking,
             promptlogging,
+            intent,
           )
         }
       })

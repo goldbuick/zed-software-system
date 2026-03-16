@@ -45,16 +45,16 @@ export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
 export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
 
 /** Agent-relevant ZSS commands; used in system prompt. */
-export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
+export const AGENT_ZSS_COMMANDS = `#input <action> — trigger input (e.g. #input up, #input shift right)
+  move: up, down, left, right
+  shoot: shift up, shift down, shift left, shift right
+  buttons: ok, cancel, menu
+#pilot <x> <y> — walk to coordinates using pathfinding (e.g. #pilot 10 5)
+#pilot stop — cancel current navigation
+#goto <board> — move to another board (e.g. #goto cave)
 #put <dir> <kind> — create element in direction (e.g. #put n boulder)
 #change <from> <to> — change all elements of one kind to another (e.g. #change gem empty)
-#shoot <dir> — fire projectile (e.g. #shoot n)
-#set user <name> — change your display name
-#input <action> — trigger input event, space-separated (e.g. #input up, #input shift ok)
-  actions: up, down, left, right, ok, cancel, menu
-  modifiers: shift, alt, ctrl
-#pilot <x> <y> — walk to coordinates using pathfinding (e.g. #pilot 10 5)
-#pilot stop — cancel current navigation`
+#set user <name> — change your display name`
 
 export type LOOK_STATE = {
   board?: unknown
@@ -300,4 +300,3 @@ export function formatpathfindfortext(
   const verb = flee ? 'Flee' : 'Move'
   return `${verb} ${dirtostring(dir)} to reach (${nextpt.x}, ${nextpt.y}).`
 }
-
