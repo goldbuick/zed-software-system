@@ -237,6 +237,7 @@ export async function modelgenerate(
   systemprompt: string,
   messages: Message[],
   onworking: (message: string) => void,
+  promptlogging = false,
 ): Promise<MODEL_RESULT> {
   const { tokenizer, model } = await loadsharedmodel(onworking)
 
@@ -247,6 +248,13 @@ export async function modelgenerate(
   ]
 
   const input = applychattemplate(tokenizer, convo)
+
+  if (promptlogging) {
+    const decoded = tokenizer.batch_decode([input.input_ids], {
+      skip_special_tokens: false,
+    })
+    console.info('[heavy] decoded input:\n', decoded.join(''))
+  }
 
   const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
   const streamer = new TextStreamer(tokenizer, {

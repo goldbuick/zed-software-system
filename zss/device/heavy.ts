@@ -109,14 +109,12 @@ async function runagentprompt(
       intent,
     )
 
-    if (promptlogging === 'on') {
-      console.info(
-        `[heavy] system prompt (${history.length} messages):\n`,
-        systemprompt,
-      )
-    }
-
-    result = await modelgenerate(systemprompt, history, onworking)
+    result = await modelgenerate(
+      systemprompt,
+      history,
+      onworking,
+      promptlogging === 'on',
+    )
 
     const commands = splitresponse(result.text)
     if (commands.length === 0) {
