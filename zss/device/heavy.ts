@@ -80,6 +80,26 @@ function executeinput(player: string, line: string) {
   }
 }
 
+function executepilot(agentid: string, line: string) {
+  const args = line
+    .replace(/^#pilot\s+/i, '')
+    .split(/\s+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+
+  if (args[0] === 'stop') {
+    heavy.emit(agentid, 'vm:pilotstop')
+    return
+  }
+
+  const x = Number(args[0])
+  const y = Number(args[1])
+  if (!isFinite(x) || !isFinite(y)) {
+    return
+  }
+  heavy.emit(agentid, 'vm:pilotstart', { x, y })
+}
+
 async function executeclicommands(
   agentid: string,
   commands: string[],
@@ -88,6 +108,8 @@ async function executeclicommands(
     const line = commands[i]
     if (/^#input\s/i.test(line)) {
       executeinput(agentid, line)
+    } else if (/^#pilot\s/i.test(line)) {
+      executepilot(agentid, line)
     } else {
       await memoryquery(heavy, agentid, {
         type: 'runcli',
@@ -332,6 +354,25 @@ const heavy = createdevice('heavy', [], (message) => {
         }
       }
       break
+    case 'pilotnotify': {
+      const notify = message.data as
+        | { agentid?: string; message?: string }
+        | undefined
+      if (
+        ispresent(notify) &&
+        isstring(notify.agentid) &&
+        isstring(notify.message)
+      ) {
+        const history = agenthistories[notify.agentid]
+        if (isarray(history)) {
+          history.push({ role: 'user', content: notify.message })
+          if (history.length > MAX_HISTORY) {
+            agenthistories[notify.agentid] = history.slice(-MAX_HISTORY)
+          }
+        }
+      }
+      break
+    }
     case 'memoryresult':
       memoryqueryresolvemessage(message)
       break

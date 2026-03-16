@@ -25,6 +25,8 @@ import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
 
+import { pilotclear } from './pilot'
+
 const AGENTLIST_FLAG_ID = 'agentlist'
 
 export function readagentname(agentid: string): string {
@@ -66,6 +68,7 @@ export function handleagentstop(vm: DEVICE, message: MESSAGE): void {
         | undefined) ?? []
     const updated = isarray(running) ? running.filter((x) => x !== agentid) : []
     memorywritebookflag(mainbook, AGENTLIST_FLAG_ID, 'running', updated)
+    pilotclear(agentid)
     heavymodelstop(vm, message.player, agentid)
     agent.stop()
     delete agents[agentid]

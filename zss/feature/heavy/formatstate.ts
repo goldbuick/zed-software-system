@@ -52,7 +52,9 @@ export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
 #set user <name> — change your display name
 #input <action> — trigger input event, space-separated (e.g. #input up, #input shift ok)
   actions: up, down, left, right, ok, cancel, menu
-  modifiers: shift, alt, ctrl`
+  modifiers: shift, alt, ctrl
+#pilot <x> <y> — walk to coordinates using pathfinding (e.g. #pilot 10 5)
+#pilot stop — cancel current navigation`
 
 export type LOOK_STATE = {
   board?: unknown
