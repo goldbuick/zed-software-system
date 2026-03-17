@@ -49,28 +49,38 @@ export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   vmagentlist(vm, message.player)
 }
 
+export function stopagentbyid(
+  vm: DEVICE,
+  agentid: string,
+  requestplayer: string,
+): boolean {
+  const agent = agents[agentid]
+  if (!ispresent(agent)) {
+    return false
+  }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const running =
+    (memoryreadbookflag(mainbook, AGENTLIST_FLAG_ID, 'running') as
+      | string[]
+      | undefined) ?? []
+  const updated = isarray(running) ? running.filter((x) => x !== agentid) : []
+  memorywritebookflag(mainbook, AGENTLIST_FLAG_ID, 'running', updated)
+  pilotclear(agentid)
+  heavymodelstop(vm, requestplayer, agentid)
+  agent.stop()
+  delete agents[agentid]
+  delete agentlastresponse[agentid]
+  apitoast(vm, requestplayer, `agent ${agentid} stopped`)
+  vmagentlist(vm, requestplayer)
+  return true
+}
+
 export function handleagentstop(vm: DEVICE, message: MESSAGE): void {
   if (typeof message.data !== 'string') {
     return
   }
   const agentid = message.data
-  const agent = agents[agentid]
-  if (ispresent(agent)) {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const running =
-      (memoryreadbookflag(mainbook, AGENTLIST_FLAG_ID, 'running') as
-        | string[]
-        | undefined) ?? []
-    const updated = isarray(running) ? running.filter((x) => x !== agentid) : []
-    memorywritebookflag(mainbook, AGENTLIST_FLAG_ID, 'running', updated)
-    pilotclear(agentid)
-    heavymodelstop(vm, message.player, agentid)
-    agent.stop()
-    delete agents[agentid]
-    delete agentlastresponse[agentid]
-    apitoast(vm, message.player, `agent ${agentid} stopped`)
-    vmagentlist(vm, message.player)
-  } else {
+  if (!stopagentbyid(vm, agentid, message.player)) {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
   }
 }

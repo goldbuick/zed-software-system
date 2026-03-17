@@ -1,7 +1,12 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apilog, registerloginready, vmclearscroll } from 'zss/device/api'
-import { agents, lastinputtime, tracking } from 'zss/device/vm/state'
+import {
+  apilog,
+  registerloginready,
+  vmagentstop,
+  vmclearscroll,
+} from 'zss/device/api'
+import { lastinputtime, tracking } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
@@ -29,11 +34,8 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   delete tracking[message.player]
   delete lastinputtime[message.player]
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
-  if (agents[message.player]) {
-    vm.emit(message.player, 'agent:loginready', true)
-  } else {
-    registerloginready(vm, message.player)
-  }
+  registerloginready(vm, message.player)
+  vmagentstop(vm, message.player, message.player)
 }
 
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {
