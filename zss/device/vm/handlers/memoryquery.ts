@@ -7,8 +7,13 @@ import {
   memoryreadelementkind,
 } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
+import {
+  memoryreadcodepagename,
+} from 'zss/memory/codepageoperations'
+import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryruncli } from 'zss/memory/runtime'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 export type BOARDSTATE_RESULT = {
   board: {
@@ -32,6 +37,8 @@ export type BOARDSTATE_RESULT = {
   self: { x: number; y: number } | null
   exits: { dir: string; label: string }[]
   terrainlabels: Record<string, number>
+  objectkinds: string[]
+  terrainkinds: string[]
 }
 
 export type PATHFIND_RESULT = { nextpoint: { x: number; y: number } } | null
@@ -108,6 +115,23 @@ function readboardstate(
     }
   }
 
+  const objectpages = memorylistallcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
+  const objectkinds = [
+    ...new Set(
+      objectpages
+        .map((p) => memoryreadcodepagename(p))
+        .filter((n) => n && n !== 'player'),
+    ),
+  ]
+
+  const terrainpages = memorylistallcodepagewithtype(CODE_PAGE_TYPE.TERRAIN)
+  const terrainkinds = [
+    'empty',
+    ...new Set(
+      terrainpages.map((p) => memoryreadcodepagename(p)).filter(Boolean),
+    ),
+  ]
+
   return {
     board: {
       id: board.id,
@@ -121,6 +145,8 @@ function readboardstate(
     self: selfpt,
     exits,
     terrainlabels,
+    objectkinds,
+    terrainkinds,
   }
 }
 

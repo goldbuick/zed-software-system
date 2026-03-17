@@ -27,11 +27,15 @@ const MAX_CLASSIFY_CONTEXT = 3
 const agenthistories: Record<string, Message[]> = {}
 
 async function executeclicommands(
+  player: string,
   agentid: string,
   commands: string[],
   promptloggingenabled: boolean,
 ): Promise<void> {
   for (let i = 0; i < commands.length; ++i) {
+    if (commands[i].startsWith('#') || commands[i].startsWith('!')) {
+      apilog(heavy, player, '$22 command $7', commands[i])
+    }
     if (promptloggingenabled) {
       console.info(
         '%c[heavy] executing command:\n%c%s',
@@ -52,10 +56,12 @@ function splitresponse(text: string): string[] {
   const commands: string[] = []
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
+    if (line.startsWith('[') && line.endsWith(']')) {
+      continue
+    }
     if (line.startsWith('#') || line.startsWith('!')) {
       commands.push(line)
     } else if (line) {
-      // ensure line starts with " to indicate a text message
       commands.push(`"${line}`)
     }
   }
@@ -143,7 +149,12 @@ async function runagentprompt(
       break
     }
 
-    await executeclicommands(agentid, execcommands, promptloggingenabled)
+    await executeclicommands(
+      player,
+      agentid,
+      execcommands,
+      promptloggingenabled,
+    )
 
     const executed = execcommands.join('\n')
     history.push({

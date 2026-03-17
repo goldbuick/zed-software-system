@@ -13,6 +13,12 @@ export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
       (_, words) => {
         const player = READ_CONTEXT.elementfocus
         const [action] = readargs(words, 0, [ARG_TYPE.NAME])
+        console.info(
+          '%c[input] userinput:\n%c%s',
+          'color: purple; font-weight: bold',
+          'color: green',
+          action,
+        )
         switch (NAME(action)) {
           case 'up':
             registerinput(SOFTWARE, player, INPUT.MOVE_UP, false)
