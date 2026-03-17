@@ -21,10 +21,8 @@ import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { apierror, apilog, apitoast } from './api'
 
-const MAX_HISTORY = 40
 const MAX_REPROMPT = 5
-const MAX_CLASSIFY_CONTEXT = 3
-const agenthistories: Record<string, Message[]> = {}
+const activeagents = new Set<string>()
 
 async function executeclicommands(
   player: string,
@@ -105,13 +103,8 @@ async function runagentprompt(
   intent?: string,
 ) {
   const promptloggingenabled = promptlogging === 'on'
-  let history: Message[] = agenthistories[agentid] ?? []
-
-  history.push({ role: 'user', content: prompt })
-  if (history.length > MAX_HISTORY) {
-    history = history.slice(-MAX_HISTORY)
-  }
-  agenthistories[agentid] = history
+  activeagents.add(agentid)
+  const history: Message[] = [{ role: 'user', content: prompt }]
 
   apilog(heavy, player, '$21 input $7', prompt)
 
@@ -166,14 +159,6 @@ async function runagentprompt(
       break
     }
   }
-
-  // trim history if too long
-  if (history.length > MAX_HISTORY) {
-    history = history.slice(-MAX_HISTORY)
-  }
-
-  // update history
-  agenthistories[agentid] = history
 }
 
 const heavy = createdevice('heavy', [], (message) => {
@@ -248,17 +233,6 @@ const heavy = createdevice('heavy', [], (message) => {
         const promptlogging = data.length >= 4 ? (data[3] ?? '') : ''
         const onworking = createonworking(message.player)
 
-        const recenthistory = (agenthistories[agentid] ?? []).slice(
-          -MAX_CLASSIFY_CONTEXT,
-        )
-        let contextsnippet = ''
-        if (recenthistory.length > 0) {
-          contextsnippet =
-            '\nRecent conversation:\n' +
-            recenthistory.map((m) => `${m.role}: ${m.content}`).join('\n') +
-            '\n'
-        }
-
         const classifymessages: Message[] = [
           {
             role: 'system',
@@ -267,7 +241,7 @@ const heavy = createdevice('heavy', [], (message) => {
           },
           {
             role: 'user',
-            content: `Is the following message directed at or relevant to an ai agent named "${agentname}"? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).${contextsnippet}\nMessage: "${messagetext}"\nAnswer:`,
+            content: `Is the following message directed at or relevant to an ai agent named "${agentname}"? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).\nMessage: "${messagetext}"\nAnswer:`,
           },
         ]
 
@@ -289,32 +263,14 @@ const heavy = createdevice('heavy', [], (message) => {
       break
     case 'modelstop':
       if (isstring(message.data)) {
-        const agentid = message.data
-        delete agenthistories[agentid]
-        if (Object.keys(agenthistories).length === 0) {
+        activeagents.delete(message.data)
+        if (activeagents.size === 0) {
           destroysharedmodel()
         }
       }
       break
-    case 'pilotnotify': {
-      const notify = message.data as
-        | { agentid?: string; message?: string }
-        | undefined
-      if (
-        ispresent(notify) &&
-        isstring(notify.agentid) &&
-        isstring(notify.message)
-      ) {
-        const history = agenthistories[notify.agentid]
-        if (isarray(history)) {
-          history.push({ role: 'user', content: notify.message })
-          if (history.length > MAX_HISTORY) {
-            agenthistories[notify.agentid] = history.slice(-MAX_HISTORY)
-          }
-        }
-      }
+    case 'pilotnotify':
       break
-    }
     case 'memoryresult':
       memoryqueryresolvemessage(message)
       break
