@@ -36,13 +36,22 @@ RULES:
 
 IMPORTANT!!!
 Never invent info. Use STATE below.
-${hint ? hint + '\n' : ''}
+
+STATE:\n
+${context ?? ''}
 
 COMMANDS:
 ${AGENT_ZSS_COMMANDS}
 
-FORMAT:
-#command on its own line, OR short speech on its own line.
+- Each line is EITHER a # command OR a short speech sentence. Never both.
+- To act: write a # command alone on its own line.
+- To speak: write a plain sentence alone on its own line.
+- If no action is needed, reply with speech only. Do NOT force a # command.
+Example:
+#userinput up
+I'm heading north!
 
-${context ? `\nSTATE:\n${context}` : ''}`.trimEnd()
+${hint ? hint + '\n' : ''}
+
+`.trimEnd()
 }

@@ -29,8 +29,17 @@ const agenthistories: Record<string, Message[]> = {}
 async function executeclicommands(
   agentid: string,
   commands: string[],
+  promptloggingenabled: boolean,
 ): Promise<void> {
   for (let i = 0; i < commands.length; ++i) {
+    if (promptloggingenabled) {
+      console.info(
+        '%c[heavy] executing command:\n%c%s',
+        'color: purple; font-weight: bold',
+        'color: green',
+        commands[i],
+      )
+    }
     await memoryquery(heavy, agentid, {
       type: 'runcli',
       command: commands[i],
@@ -89,6 +98,7 @@ async function runagentprompt(
   promptlogging: string,
   intent?: string,
 ) {
+  const promptloggingenabled = promptlogging === 'on'
   let history: Message[] = agenthistories[agentid] ?? []
 
   history.push({ role: 'user', content: prompt })
@@ -113,40 +123,51 @@ async function runagentprompt(
       systemprompt,
       history,
       onworking,
-      promptlogging === 'on',
+      promptloggingenabled,
     )
-
-    const commands = splitresponse(result.text)
-    if (commands.length === 0) {
-      return
+    if (promptloggingenabled) {
+      console.info(
+        '%c[heavy] generated response:\n%c%s',
+        'color: purple; font-weight: bold',
+        'color: orange',
+        result.text,
+      )
     }
 
-    const hasactions = commands.some(
-      (line) => line.startsWith('#') || line.startsWith('!'),
-    )
-
-    await executeclicommands(agentid, commands)
     history.push({ role: 'assistant', content: result.text })
+    const commands = splitresponse(result.text)
 
-    if (!hasactions) {
-      if (history.length > MAX_HISTORY) {
-        history = history.slice(-MAX_HISTORY)
-      }
-      agenthistories[agentid] = history
+    // bail out if no commands
+    if (commands.length === 0) {
       break
     }
 
-    const executed = commands.filter((line) => !line.startsWith('"')).join('\n')
+    // execute commands
+    await executeclicommands(agentid, commands, promptloggingenabled)
+
+    // add executed commands to history
+    const executed = commands.join('\n')
     history.push({
       role: 'user',
       content: `[EXECUTED]\n${executed}\n[/EXECUTED]\n`,
     })
 
-    if (history.length > MAX_HISTORY) {
-      history = history.slice(-MAX_HISTORY)
+    // bail out if no actions
+    const hasactions = commands.some(
+      (line) => line.startsWith('#') || line.startsWith('!'),
+    )
+    if (!hasactions) {
+      break
     }
-    agenthistories[agentid] = history
   }
+
+  // trim history if too long
+  if (history.length > MAX_HISTORY) {
+    history = history.slice(-MAX_HISTORY)
+  }
+
+  // update history
+  agenthistories[agentid] = history
 }
 
 const heavy = createdevice('heavy', [], (message) => {

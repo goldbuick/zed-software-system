@@ -8,9 +8,9 @@ import {
 import { parseresult as llmparseresult } from 'zss/feature/heavy/llm'
 import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
 
-const MAX_NEW_TOKENS = 512
+const MAX_NEW_TOKENS = 768
 const MODEL_DEVICE = 'webgpu'
-const MODEL_CONTEXT_TOKENS = 32768
+const MODEL_CONTEXT_TOKENS = 16384
 
 // We like the Llama-3 model (Llama-3.2-1B-Instruct-ONNX).
 const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
@@ -253,7 +253,12 @@ export async function modelgenerate(
     const decoded = tokenizer.batch_decode([input.input_ids], {
       skip_special_tokens: false,
     })
-    console.info('[heavy] decoded input:\n', decoded.join(''))
+    console.info(
+      '%c[heavy] decoded input:\n%c%s',
+      'color: purple; font-weight: bold',
+      'color: red',
+      decoded.join(''),
+    )
   }
 
   const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
