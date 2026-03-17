@@ -1,9 +1,22 @@
-import { registerinput, vmpilotstart, vmpilotstop } from 'zss/device/api'
+import { vminput, vmpilotstart, vmpilotstop } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
-import { INPUT } from 'zss/gadget/data/types'
+import { INPUT, INPUT_SHIFT } from 'zss/gadget/data/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
+
+const USERINPUT_MAP: Record<string, [INPUT, number]> = {
+  up: [INPUT.MOVE_UP, 0],
+  down: [INPUT.MOVE_DOWN, 0],
+  left: [INPUT.MOVE_LEFT, 0],
+  right: [INPUT.MOVE_RIGHT, 0],
+  shootup: [INPUT.MOVE_UP, INPUT_SHIFT],
+  shootdown: [INPUT.MOVE_DOWN, INPUT_SHIFT],
+  shootleft: [INPUT.MOVE_LEFT, INPUT_SHIFT],
+  shootright: [INPUT.MOVE_RIGHT, INPUT_SHIFT],
+  ok: [INPUT.OK_BUTTON, 0],
+  cancel: [INPUT.CANCEL_BUTTON, 0],
+}
 
 export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
   return fw
@@ -13,43 +26,9 @@ export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
       (_, words) => {
         const player = READ_CONTEXT.elementfocus
         const [action] = readargs(words, 0, [ARG_TYPE.NAME])
-        console.info(
-          '%c[input] userinput:\n%c%s',
-          'color: purple; font-weight: bold',
-          'color: green',
-          action,
-        )
-        switch (NAME(action)) {
-          case 'up':
-            registerinput(SOFTWARE, player, INPUT.MOVE_UP, false)
-            break
-          case 'down':
-            registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, false)
-            break
-          case 'left':
-            registerinput(SOFTWARE, player, INPUT.MOVE_LEFT, false)
-            break
-          case 'right':
-            registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
-            break
-          case 'shootup':
-            registerinput(SOFTWARE, player, INPUT.MOVE_UP, true)
-            break
-          case 'shootdown':
-            registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, true)
-            break
-          case 'shootleft':
-            registerinput(SOFTWARE, player, INPUT.MOVE_LEFT, true)
-            break
-          case 'shootright':
-            registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
-            break
-          case 'ok':
-            registerinput(SOFTWARE, player, INPUT.OK_BUTTON, false)
-            break
-          case 'cancel':
-            registerinput(SOFTWARE, player, INPUT.CANCEL_BUTTON, false)
-            break
+        const entry = USERINPUT_MAP[NAME(action)]
+        if (entry) {
+          vminput(SOFTWARE, player, entry[0], entry[1])
         }
         return 0
       },
