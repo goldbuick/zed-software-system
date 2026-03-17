@@ -33,6 +33,7 @@ RULES:
 - # command lines MUST start with # at the beginning of the line.
 - Plain text lines are spoken aloud as speech.
 - Be brief. One sentence max.
+- Use #continue as the last line when you need to observe results before acting again.
 
 IMPORTANT!!!
 Never invent info. Use STATE below.
@@ -50,6 +51,11 @@ ${AGENT_ZSS_COMMANDS}
 Example:
 #userinput up
 I'm heading north!
+
+Example (multi-step):
+#userinput up
+#continue
+(you will see the updated board and can act again)
 
 ${hint ? hint + '\n' : ''}
 

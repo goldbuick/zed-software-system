@@ -70,7 +70,9 @@ description: change all elements of one kind to another (e.g. #change gem empty)
   - to: element kind
 #set user <name>
 description: change your display name
-  - name: display name`
+  - name: display name
+#continue
+description: request another turn to observe the result of your commands before deciding what to do next`
 
 export type LOOK_STATE = {
   board?: unknown

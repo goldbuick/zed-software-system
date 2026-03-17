@@ -136,27 +136,22 @@ async function runagentprompt(
 
     history.push({ role: 'assistant', content: result.text })
     const commands = splitresponse(result.text)
+    const hascontinue = commands.some((line) => line.trim() === '#continue')
+    const execcommands = commands.filter((line) => line.trim() !== '#continue')
 
-    // bail out if no commands
-    if (commands.length === 0) {
+    if (execcommands.length === 0 && !hascontinue) {
       break
     }
 
-    // execute commands
-    await executeclicommands(agentid, commands, promptloggingenabled)
+    await executeclicommands(agentid, execcommands, promptloggingenabled)
 
-    // add executed commands to history
-    const executed = commands.join('\n')
+    const executed = execcommands.join('\n')
     history.push({
       role: 'user',
       content: `[EXECUTED]\n${executed}\n[/EXECUTED]\n`,
     })
 
-    // bail out if no actions
-    const hasactions = commands.some(
-      (line) => line.startsWith('#') || line.startsWith('!'),
-    )
-    if (!hasactions) {
+    if (!hascontinue) {
       break
     }
   }
