@@ -12,7 +12,7 @@ export function createagent(agentname: string, existingid?: string) {
 
   const device = createdevice(
     `agent_${pid}`,
-    ['second'],
+    ['second', 'agent:loginready'],
     (message) => {
       switch (message.target) {
         case 'second':
@@ -21,6 +21,9 @@ export function createagent(agentname: string, existingid?: string) {
             keepalive -= DOOT_RATE
             vmdoot(device, pid)
           }
+          break
+        case 'agent:loginready':
+          vmlogin(device, pid, { user: agentname })
           break
         case 'acklogin':
           if (isboolean(message.data)) {
