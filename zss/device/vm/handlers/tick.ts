@@ -3,8 +3,10 @@ import type { MESSAGE } from 'zss/device/api'
 import { memorytickmain } from 'zss/memory/runtime'
 import { memoryreadhalt } from 'zss/memory/session'
 
-export function handletick(_vm: DEVICE, _message: MESSAGE): void {
-  void _vm
+import { pilottick } from './pilot'
+
+export function handletick(vm: DEVICE, _message: MESSAGE): void {
   void _message
+  pilottick(vm)
   memorytickmain(memoryreadhalt())
 }

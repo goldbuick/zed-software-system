@@ -49,6 +49,7 @@ export const CONFIG_KEYS = [
   'scanlines',
   'voice2text',
   'loaderlogging',
+  'promptlogging',
 ] as const
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',
@@ -56,6 +57,7 @@ const CONFIG_DEFAULTS: Record<string, string> = {
   scanlines: 'off',
   voice2text: 'off',
   loaderlogging: 'off',
+  promptlogging: 'off',
 }
 
 const CONFIG_STATE: Record<string, string> = {}

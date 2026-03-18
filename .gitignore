@@ -29,4 +29,7 @@ oclif.manifest.json
 # runtime data
 .zss-data
 
+# vosk speech recognition models (large binaries)
+cafe/public/models/
+
 

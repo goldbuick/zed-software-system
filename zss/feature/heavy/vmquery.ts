@@ -14,13 +14,14 @@ const pending = new Map<
 
 export function query(
   device: { emit: emitlike },
-  player: string,
+  agentid: string,
   payload: { type: string; [k: string]: unknown },
 ): Promise<unknown> {
   const id = createsid()
+  console.info('[vmquery]', agentid, payload)
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
-    device.emit(player, 'vm:memoryquery', { id, ...payload })
+    device.emit(agentid, 'vm:memoryquery', { id, ...payload })
   })
 }
 

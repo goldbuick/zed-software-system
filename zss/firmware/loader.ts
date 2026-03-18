@@ -22,9 +22,9 @@ import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
-import { loaderbinary } from './loaderbinary'
-import { loaderjson } from './loaderjson'
-import { loadertext } from './loadertext'
+import { loaderbinary } from './loader/binary'
+import { loaderjson } from './loader/json'
+import { loadertext } from './loader/text'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {

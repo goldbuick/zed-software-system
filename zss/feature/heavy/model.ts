@@ -5,17 +5,30 @@ import {
   ProgressInfo,
   TextStreamer,
 } from '@huggingface/transformers'
-import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
-import {
-  getadapter,
-  parseresult as llmparseresult,
-} from 'zss/feature/heavy/llm'
-import type { MODEL_RESULT, TOOL_DEF } from 'zss/feature/heavy/llm'
+import { parseresult as llmparseresult } from 'zss/feature/heavy/llm'
+import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
 
-const DTYPE = 'q4f16'
-const MAX_NEW_TOKENS = 512
+const MAX_NEW_TOKENS = 768
 const MODEL_DEVICE = 'webgpu'
-export const MODEL_ID = 'onnx-community/LFM2-1.2B-Tool-ONNX'
+const MODEL_CONTEXT_TOKENS = 16384
+
+// We like the Llama-3 model (Llama-3.2-1B-Instruct-ONNX).
+const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
+const MODEL_DTYPE = 'q4f16'
+
+/** Model used for attention classification and intent detection. Can be a smaller/faster model. */
+const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
+const CLASSIFIER_DTYPE = 'q4'
+
+const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}
+{{ message.content }}<|im_end|>
+{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant
+{% endif %}`
+
+const PARSE_CONFIG: PARSE_OPTIONS = {
+  stripThink: true,
+  stripSpecialTokens: true,
+}
 
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
@@ -35,139 +48,7 @@ function throttle(
   }
 }
 
-const MODEL_TOOLS: TOOL_DEF[] = [
-  {
-    type: 'function',
-    function: {
-      name: 'set_agent_name',
-      description:
-        'Change your display name. Call with the new name only when the user explicitly asks you to rename yourself.',
-      parameters: {
-        type: 'object',
-        properties: {
-          name: { type: 'string', description: 'The new display name' },
-        },
-        required: ['name'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_agent_info',
-      description:
-        'Get your current identity and location. Returns name, id, board name, and (x,y). Use when the user asks who you are, what your name is, or what board you are on.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'look_at_board',
-      description:
-        'See your current board: name, your (x,y), objects with positions and [player], terrain summary, exits. Call when you need fresh surroundings or the prompt has no Current context.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'run_command',
-      description: `Execute a single ZSS command (move, place, change, shoot). ${AGENT_ZSS_COMMANDS} Command must start with #. Example: #go n, #put n boulder, #change gem empty, #shoot n.`,
-      parameters: {
-        type: 'object',
-        properties: {
-          command: {
-            type: 'string',
-            description:
-              'Full command including #, e.g. #go n, #put n boulder, #change gem empty, #shoot n',
-          },
-        },
-        required: ['command'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'read_codepage',
-      description:
-        'Read the source script of a codepage by name. Use to understand how an object, terrain, or board works.',
-      parameters: {
-        type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            description: 'The codepage name or kind to look up',
-          },
-          type: {
-            type: 'string',
-            description:
-              'One of: object (default), terrain, board. Defaults to object.',
-          },
-        },
-        required: ['name'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_path_direction',
-      description:
-        'Get the best direction to move toward or away from a target (x,y). Returns a direction (e.g. north); then use run_command with #go <dir> to move. Coordinates are on the current board.',
-      parameters: {
-        type: 'object',
-        properties: {
-          targetx: {
-            type: 'number',
-            description: 'Target x coordinate (board coordinates)',
-          },
-          targety: {
-            type: 'number',
-            description: 'Target y coordinate (board coordinates)',
-          },
-          flee: {
-            type: 'boolean',
-            description:
-              'If true, returns direction away from target. Defaults to false.',
-          },
-        },
-        required: ['targetx', 'targety'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'press_input',
-      description:
-        'Simulate raw button presses (up, down, ok, cancel, menu). Use for menus when run_command is not the right fit.',
-      parameters: {
-        type: 'object',
-        properties: {
-          inputs: {
-            type: 'string',
-            description:
-              'Comma-separated: up, down, left, right, ok, cancel, menu, shift, alt, ctrl',
-          },
-        },
-        required: ['inputs'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'list_board_exits',
-      description:
-        'List boards you can reach from the current board. Returns direction and destination name per exit. Use when the user asks what boards/rooms/areas exist or where they can go.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-]
-
-export type { MODEL_RESULT, TOOL_CALL } from 'zss/feature/heavy/llm'
+export type { MODEL_RESULT } from 'zss/feature/heavy/llm'
 
 type SHARED_MODEL = {
   tokenizer: Awaited<ReturnType<typeof AutoTokenizer.from_pretrained>>
@@ -176,6 +57,65 @@ type SHARED_MODEL = {
 
 let sharedmodel: SHARED_MODEL | undefined
 let sharedmodelpromise: Promise<SHARED_MODEL> | undefined
+
+let classifiermodel: SHARED_MODEL | undefined
+let classifiermodelpromise: Promise<SHARED_MODEL> | undefined
+
+async function loadclassifiermodel(
+  onworking: (message: string) => void,
+): Promise<SHARED_MODEL> {
+  if (classifiermodel) {
+    return classifiermodel
+  }
+  if (classifiermodelpromise) {
+    return classifiermodelpromise
+  }
+
+  classifiermodelpromise = (async () => {
+    const lastprogress: Record<string, number> = {}
+
+    onworking(`${CLASSIFIER_MODEL_ID} loading ...`)
+    const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
+    function progress_callback(info: ProgressInfo) {
+      switch (info.status) {
+        case 'initiate':
+          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} loading ...`)
+          break
+        case 'download':
+          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} downloading ...`)
+          break
+        case 'progress': {
+          const index = `${info.name}-${info.file}`
+          const progress = Math.round(info.progress)
+          if (progress !== lastprogress[index]) {
+            lastprogress[index] = progress
+            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
+          }
+          break
+        }
+      }
+    }
+
+    const tokenizer = await AutoTokenizer.from_pretrained(CLASSIFIER_MODEL_ID, {
+      progress_callback,
+    })
+
+    const model = await AutoModelForCausalLM.from_pretrained(
+      CLASSIFIER_MODEL_ID,
+      {
+        dtype: CLASSIFIER_DTYPE,
+        device: MODEL_DEVICE,
+        progress_callback,
+      },
+    )
+
+    classifiermodel = { tokenizer, model }
+    classifiermodelpromise = undefined
+    return classifiermodel
+  })()
+
+  return classifiermodelpromise
+}
 
 async function loadsharedmodel(
   onworking: (message: string) => void,
@@ -195,17 +135,17 @@ async function loadsharedmodel(
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`${info.file} loading ...`)
+          onworking(`[${MODEL_ID}] ${info.file} loading ...`)
           break
         case 'download':
-          onworking(`${info.file} downloading ...`)
+          onworking(`[${MODEL_ID}] ${info.file} downloading ...`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`${info.file} ${progress}% ...`)
+            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
           }
           break
         }
@@ -217,7 +157,7 @@ async function loadsharedmodel(
     })
 
     const model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, {
-      dtype: DTYPE,
+      dtype: MODEL_DTYPE,
       device: MODEL_DEVICE,
       progress_callback,
     })
@@ -230,38 +170,96 @@ async function loadsharedmodel(
   return sharedmodelpromise
 }
 
+function counttokens(
+  tokenizer: SHARED_MODEL['tokenizer'],
+  text: string,
+): number {
+  const ids = tokenizer(text, { add_special_tokens: false })
+  return (ids.input_ids as { dims: number[] }).dims[1] ?? 0
+}
+
+function trimhistory(
+  tokenizer: SHARED_MODEL['tokenizer'],
+  systemprompt: string,
+  messages: Message[],
+): Message[] {
+  const systemtokens = counttokens(tokenizer, systemprompt)
+  const budget = MODEL_CONTEXT_TOKENS - MAX_NEW_TOKENS - systemtokens
+  if (budget <= 0) {
+    return []
+  }
+
+  let total = 0
+  let cutoff = 0
+  for (let i = messages.length - 1; i >= 0; --i) {
+    const msgtokens = counttokens(
+      tokenizer,
+      typeof messages[i].content === 'string' ? messages[i].content : '',
+    )
+    if (total + msgtokens > budget) {
+      break
+    }
+    total += msgtokens
+    cutoff = i
+  }
+  return messages.slice(cutoff)
+}
+
+function applychattemplate(
+  tokenizer: SHARED_MODEL['tokenizer'],
+  convo: Message[],
+): { input_ids: any; attention_mask?: any } {
+  try {
+    const input = tokenizer.apply_chat_template(convo, {
+      tokenize: true,
+      return_dict: true,
+      add_generation_prompt: true,
+    })
+    if (typeof input === 'object' && input !== null && 'input_ids' in input) {
+      return input as { input_ids: any; attention_mask?: any }
+    }
+  } catch {
+    // model has no built-in chat template; fall through to ChatML
+  }
+  const input = tokenizer.apply_chat_template(convo, {
+    tokenize: true,
+    return_dict: true,
+    add_generation_prompt: true,
+    chat_template: CHATML_TEMPLATE,
+  } as Parameters<typeof tokenizer.apply_chat_template>[1])
+  if (typeof input !== 'object' || input === null || !('input_ids' in input)) {
+    throw new Error('apply_chat_template returned unexpected type')
+  }
+  return input as { input_ids: any; attention_mask?: any }
+}
+
 export async function modelgenerate(
   systemprompt: string,
   messages: Message[],
   onworking: (message: string) => void,
+  promptlogging = false,
 ): Promise<MODEL_RESULT> {
   const { tokenizer, model } = await loadsharedmodel(onworking)
 
-  const adapter = getadapter(MODEL_ID)
-  if (!adapter) {
-    throw new Error(`No LLM adapter registered for model: ${MODEL_ID}`)
-  }
-
+  const trimmed = trimhistory(tokenizer, systemprompt, messages)
   const convo: Message[] = [
     { role: 'system', content: systemprompt },
-    ...messages,
+    ...trimmed,
   ]
 
-  const templatetools = adapter.toolsfortemplate(MODEL_TOOLS)
-  const templateopts = adapter.getchattemplateoptions(templatetools)
-  const input = tokenizer.apply_chat_template(convo, {
-    tokenize: true,
-    return_dict: true,
-    ...templateopts,
-  } as Parameters<typeof tokenizer.apply_chat_template>[1])
-  if (typeof input !== 'object' || !('input_ids' in input)) {
-    throw new Error('apply_chat_template returned unexpected type')
+  const input = applychattemplate(tokenizer, convo)
+
+  if (promptlogging) {
+    const decoded = tokenizer.batch_decode([input.input_ids], {
+      skip_special_tokens: false,
+    })
+    console.info(
+      '%c[heavy] decoded input:\n%c%s',
+      'color: purple; font-weight: bold',
+      'color: red',
+      decoded.join(''),
+    )
   }
-  const decodedinput = tokenizer.batch_decode(
-    input.input_ids as Parameters<typeof tokenizer.batch_decode>[0],
-    { skip_special_tokens: false },
-  )
-  console.info('input:', decodedinput.join('\n'))
 
   const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
   const streamer = new TextStreamer(tokenizer, {
@@ -281,7 +279,6 @@ export async function modelgenerate(
     return_dict_in_generate: true,
   } as any)) as any
 
-  // @ts-expect-error this should be the shape of the input ids
   const values = sequences.slice(null, [input.input_ids.dims[1], null])
 
   const decoded = tokenizer.batch_decode(values, {
@@ -289,40 +286,25 @@ export async function modelgenerate(
   })
 
   const raw = decoded.join('\n').trim()
-  const parsed = llmparseresult(raw, adapter.parseoptions)
-
-  // Debug: why no tool calls? Inspect raw model output and parsed result.
-  if (parsed.toolcalls.length > 0) {
-    console.info('[heavy] parsed toolcalls:', parsed.toolcalls)
-  }
-
-  return parsed
+  return llmparseresult(raw, PARSE_CONFIG)
 }
 
 export async function modelclassify(
   messages: Message[],
   onworking: (message: string) => void,
 ): Promise<string> {
-  const { tokenizer, model } = await loadsharedmodel(onworking)
+  const { tokenizer, model } = await loadclassifiermodel(onworking)
 
-  const input = tokenizer.apply_chat_template(messages, {
-    tokenize: true,
-    return_dict: true,
-    add_generation_prompt: true,
-  })
-  if (typeof input !== 'object') {
-    throw new Error('apply_chat_template returned unexpected type')
-  }
+  const input = applychattemplate(tokenizer, messages)
 
   onworking(`classifying ...`)
   const { sequences } = (await model.generate({
     ...input,
     do_sample: false,
-    max_new_tokens: 3,
+    max_new_tokens: 10,
     return_dict_in_generate: true,
   } as any)) as any
 
-  // @ts-expect-error this should be the shape of the input ids
   const values = sequences.slice(null, [input.input_ids.dims[1], null])
 
   const decoded = tokenizer.batch_decode(values, {
@@ -336,5 +318,9 @@ export function destroysharedmodel() {
   if (sharedmodel) {
     void sharedmodel.model.dispose()
     sharedmodel = undefined
+  }
+  if (classifiermodel) {
+    void classifiermodel.model.dispose()
+    classifiermodel = undefined
   }
 }

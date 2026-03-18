@@ -6,7 +6,6 @@ import {
   handleagentlist,
   handleagentname,
   handleagentprompt,
-  handleagentresponse,
   handleagentstart,
   handleagentstop,
 } from './agent'
@@ -31,6 +30,7 @@ import { handleloader } from './loader'
 import { handlelook } from './look'
 import { handlememoryquery } from './memoryquery'
 import { handleoperator } from './operator'
+import { handlepilotstart, handlepilotstop } from './pilot'
 import { handlepublish } from './publish'
 import { handlerestart } from './restart'
 import {
@@ -67,7 +67,8 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   agentlist: handleagentlist,
   agentprompt: handleagentprompt,
   agentname: handleagentname,
-  agentresponse: handleagentresponse,
+  pilotstart: handlepilotstart,
+  pilotstop: handlepilotstop,
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,

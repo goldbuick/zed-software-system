@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import {
   apierror,
+  apitoast,
   registerterminalclose,
   registerterminalinclayout,
   vmcli,
@@ -409,6 +410,7 @@ export function TerminalInput({
   // handle speech to text
   useEffect(() => {
     let listener: MAYBE<SpeechToText>
+    let cancelled = false
 
     // #config voice2text on, use # or C to open terminal to start
     if (!voice2text || !quickterminal) {
@@ -423,8 +425,7 @@ export function TerminalInput({
       return
     }
 
-    // handlers
-    function onFinalised(value: string) {
+    function onfinalised(value: string) {
       inputstatereplace(`${inputstart}${value}`)
       setTimeout(() => {
         const { buffer, bufferindex } = useTerminal.getState()
@@ -434,7 +435,6 @@ export function TerminalInput({
           inputstate,
           ...buffer.slice(1).filter((item) => item !== inputstate),
         ].filter((item) => item.includes('#broadcast') === false)
-        // cache history
         storagewritehistorybuffer(historybuffer).catch((err: any) =>
           apierror(SOFTWARE, player, 'terminalinput', err.message),
         )
@@ -450,29 +450,32 @@ export function TerminalInput({
       }, 512)
     }
 
-    function onEndEvent() {}
+    function onendevent() {}
 
-    function onAnythingSaid(value: string) {
+    function onanythingsaid(value: string) {
       inputstatereplace(`${inputstart}${value}`)
     }
 
-    // start
-    try {
-      const speechlistener = new SpeechToText(
-        onFinalised,
-        onEndEvent,
-        onAnythingSaid,
-      )
-      listener = speechlistener
-      listener?.startListening()
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error: any) {
-      // console.error(error.message)
+    function onworking(message: string) {
+      apitoast(SOFTWARE, player, message)
     }
 
-    // Cleanup function
+    const speechlistener = new SpeechToText(
+      onfinalised,
+      onendevent,
+      onanythingsaid,
+      onworking,
+    )
+    listener = speechlistener
+    void speechlistener.startlistening().then(() => {
+      if (cancelled) {
+        speechlistener.stoplistening()
+      }
+    })
+
     return () => {
-      listener?.stopListening()
+      cancelled = true
+      listener?.stoplistening()
       listener = undefined
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

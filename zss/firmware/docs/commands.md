@@ -25,6 +25,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `trash` | Books/codepages to delete (operator only) |
 | `dev` | Dev mode / halt execution (operator only) |
 | `loaderlogging` | Toggle loader event logging (operator only) |
+| `promptlogging` | Toggle agent system prompt logging (operator only) |
 | `share` | Share url (operator only) |
 | `save` | And persist current state (operator only) |
 | `fork` | Tab with copy of state (operator only) |
@@ -49,7 +50,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `allow` | Add command(s) to role allowlist |
 | `revoke` | Remove command from role or revoke all |
 | `role` | Set player token to role |
-| `agent` | /stop/list AI agents; prompt with \<id\> \<values\> |
+| `agent` | start/stop/list AI agents; prompt agents via in-world chat only |
 | `screenshot` | Screenshot for capture |
 | `bbs` | Login/publish actions |
 

@@ -36,6 +36,8 @@ export type BOARDSTATE_DATA = {
   self: { x: number; y: number } | null
   exits: { dir: string; label: string }[]
   terrainlabels: Record<string, number>
+  objectkinds: string[]
+  terrainkinds: string[]
 }
 
 /** Data shape returned by codepage memory query. */
@@ -44,11 +46,20 @@ export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
 /** Data shape returned by pathfind memory query. */
 export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
 
-/** Agent-relevant ZSS commands; used in system prompt and runcommand tool description. */
-export const AGENT_ZSS_COMMANDS = `#go <dir> — move one step (dir: n, s, e, w)
-#put <dir> <kind> — create element in direction (e.g. #put n boulder)
-#change <from> <to> — change all elements of one kind to another (e.g. #change gem empty)
-#shoot <dir> or #shoot <dir> <kind> — fire projectile`
+const AGENT_COLORS =
+  'black, dkblue, dkgreen, dkcyan, dkred, dkpurple, dkyellow, ltgray, dkgray, blue, green, cyan, red, purple, yellow, white, onblack, ondkblue, ondkgreen, ondkcyan, ondkred, ondkpurple, ondkyellow, onltgray, ondkgray, onblue, ongreen, oncyan, onred, onpurple, onyellow, onwhite'
+
+/** Agent-relevant ZSS commands; used in system prompt. */
+export const AGENT_ZSS_COMMANDS = `
+- \`#userinput <key>\`: press a game key. ONLY one key per line: up, down, left, right, shootup, shootdown, shootleft, shootright, ok, cancel. To repeat, use multiple lines (e.g. 3x up = three lines of \`#userinput up\`)
+- \`#pilot <x> <y>\`: pathfind to coordinates (cannot cross board edges), e.g. \`#pilot 10 5\`
+- \`#pilot stop\`: cancel current navigation
+- \`#goto <board>\`: move to another board, e.g. \`#goto title\`
+- \`#put <dir> <color?> <kind>\`: place element in direction, e.g. \`#put n purple solid\`
+- \`#change <color?> <from> <color?> <to>\`: change elements, e.g. \`#change gem red gem\`
+- \`#set user <name>\`: change your display name
+- \`#continue\`: request another turn to observe results before acting again
+`.trim()
 
 export type LOOK_STATE = {
   board?: unknown
@@ -186,6 +197,14 @@ export function formatboardfortext(
     parts.push(`EXITS: ${exitlines.join(', ')}`)
   }
 
+  parts.push(`COLORS: ${AGENT_COLORS}`)
+  if (d.objectkinds.length > 0) {
+    parts.push(`OBJECT KINDS: ${d.objectkinds.join(', ')}`)
+  }
+  if (d.terrainkinds.length > 0) {
+    parts.push(`TERRAIN KINDS: ${d.terrainkinds.join(', ')}`)
+  }
+
   return parts.join('\n')
 }
 
@@ -293,18 +312,4 @@ export function formatpathfindfortext(
 
   const verb = flee ? 'Flee' : 'Move'
   return `${verb} ${dirtostring(dir)} to reach (${nextpt.x}, ${nextpt.y}).`
-}
-
-export function formatsystemprompt(
-  agentname: string,
-  context?: string,
-): string {
-  let base = `You are ${agentname}, an NPC in a game world. Keep responses brief and in-character.
-
-A board is a room or area. Exits connect boards. Directions: n, s, e, w.
-ZSS commands for run_command must start with #: #go <dir>, #put <dir> <kind>, #change <from> <to>, #shoot <dir>.`
-  if (ispresent(context)) {
-    base += `\n\nCurrent state:\n${context}`
-  }
-  return base
 }

@@ -6,26 +6,29 @@ import {
   heavymodelprompt,
   heavymodelstop,
   vmagentlist,
-  vmcli,
-  vmloader,
 } from 'zss/device/api'
 import { agentlastresponse, agents } from 'zss/device/vm/state'
 import { createagent } from 'zss/feature/heavy/agent'
 import { write, writeheader } from 'zss/feature/writeui'
-import { doasync } from 'zss/mapping/func'
 import { createshortnameid } from 'zss/mapping/guid'
-import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
+import { memoryreadconfig } from 'zss/memory/utilities'
+
+import { pilotclear } from './pilot'
 
 const AGENTLIST_FLAG_ID = 'agentlist'
+
+export function readagentname(agentid: string): string {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const user = memoryreadbookflag(mainbook, agentid, 'user')
+  return isstring(user) ? user : agentid
+}
 
 export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   const agentname = isstring(message.data) ? message.data : createshortnameid()
@@ -46,27 +49,38 @@ export function handleagentstart(vm: DEVICE, message: MESSAGE): void {
   vmagentlist(vm, message.player)
 }
 
+export function stopagentbyid(
+  vm: DEVICE,
+  agentid: string,
+  requestplayer: string,
+): boolean {
+  const agent = agents[agentid]
+  if (!ispresent(agent)) {
+    return false
+  }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const running =
+    (memoryreadbookflag(mainbook, AGENTLIST_FLAG_ID, 'running') as
+      | string[]
+      | undefined) ?? []
+  const updated = isarray(running) ? running.filter((x) => x !== agentid) : []
+  memorywritebookflag(mainbook, AGENTLIST_FLAG_ID, 'running', updated)
+  pilotclear(agentid)
+  heavymodelstop(vm, requestplayer, agentid)
+  agent.stop()
+  delete agents[agentid]
+  delete agentlastresponse[agentid]
+  apitoast(vm, requestplayer, `agent ${agentid} stopped`)
+  vmagentlist(vm, requestplayer)
+  return true
+}
+
 export function handleagentstop(vm: DEVICE, message: MESSAGE): void {
   if (typeof message.data !== 'string') {
     return
   }
   const agentid = message.data
-  const agent = agents[agentid]
-  if (ispresent(agent)) {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const running =
-      (memoryreadbookflag(mainbook, AGENTLIST_FLAG_ID, 'running') as
-        | string[]
-        | undefined) ?? []
-    const updated = isarray(running) ? running.filter((x) => x !== agentid) : []
-    memorywritebookflag(mainbook, AGENTLIST_FLAG_ID, 'running', updated)
-    heavymodelstop(vm, message.player, agentid)
-    agent.stop()
-    delete agents[agentid]
-    delete agentlastresponse[agentid]
-    apitoast(vm, message.player, `agent ${agentid} stopped`)
-    vmagentlist(vm, message.player)
-  } else {
+  if (!stopagentbyid(vm, agentid, message.player)) {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
   }
 }
@@ -80,11 +94,8 @@ export function handleagentlist(vm: DEVICE, message: MESSAGE): void {
   writeheader(vm, message.player, 'agents')
   for (let i = 0; i < instances.length; ++i) {
     const agent = instances[i]
-    write(
-      vm,
-      message.player,
-      `!copyit ${agent.id()};${agent.name()} (${agent.id()})`,
-    )
+    const name = readagentname(agent.id())
+    write(vm, message.player, `!copyit ${agent.id()};${name} (${agent.id()})`)
   }
 }
 
@@ -95,7 +106,14 @@ export function handleagentprompt(vm: DEVICE, message: MESSAGE): void {
   const [agentid, prompt] = message.data
   const agent = agents[agentid]
   if (ispresent(agent)) {
-    heavymodelprompt(vm, message.player, agentid, agent.name(), prompt)
+    heavymodelprompt(
+      vm,
+      message.player,
+      agentid,
+      readagentname(agentid),
+      prompt,
+      memoryreadconfig('promptlogging'),
+    )
   } else {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
   }
@@ -111,51 +129,9 @@ export function handleagentname(vm: DEVICE, message: MESSAGE): void {
     apierror(vm, message.player, 'vm', `agent ${agentid} not found`)
     return
   }
-  agent.setname(newname)
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   memorywritebookflag(mainbook, agentid, 'user', newname)
   apitoast(vm, message.player, `agent ${agentid} renamed to ${newname}`)
-}
-
-export function handleagentresponse(vm: DEVICE, message: MESSAGE): void {
-  if (!isarray(message.data)) {
-    return
-  }
-  const [agentid, response] = message.data as [string, string]
-  const agent = agents[agentid]
-  if (!ispresent(agent)) {
-    return
-  }
-
-  const reply = isstring(response) ? response : ''
-  const board = memoryreadplayerboard(agentid)
-  const element = memoryreadobject(board, agentid)
-  if (!ispresent(board) || !ispresent(element)) {
-    return
-  }
-
-  // update last response time
-  agentlastresponse[agentid] = Date.now()
-
-  // can we async emit reply line by line ?
-  doasync(vm, agentid, async function () {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const timestamp = mainbook?.timestamp ?? 0
-    const lines = reply
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line !== '')
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      // update ticker
-      element.tickertext = line
-      element.tickertime = timestamp
-      // send cli text
-      vmcli(vm, agentid, `"${line}`)
-      // wait for next line
-      await waitfor(1000)
-    }
-  })
 }
 
 export function restoreagentsfrommainbook(vm: DEVICE, player: string): void {

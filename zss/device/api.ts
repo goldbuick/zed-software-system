@@ -175,8 +175,14 @@ export function heavymodelprompt(
   agentid: string,
   agentname: string,
   prompt: string,
+  promptlogging = '',
 ) {
-  device.emit(player, 'heavy:modelprompt', [agentid, agentname, prompt])
+  device.emit(player, 'heavy:modelprompt', [
+    agentid,
+    agentname,
+    prompt,
+    promptlogging,
+  ])
 }
 
 export function heavymodelclassify(
@@ -185,8 +191,14 @@ export function heavymodelclassify(
   agentid: string,
   agentname: string,
   prompt: string,
+  promptlogging = '',
 ) {
-  device.emit(player, 'heavy:modelclassify', [agentid, agentname, prompt])
+  device.emit(player, 'heavy:modelclassify', [
+    agentid,
+    agentname,
+    prompt,
+    promptlogging,
+  ])
 }
 
 export function heavymodelstop(
@@ -643,6 +655,19 @@ export function vmagentprompt(
   prompt: string,
 ) {
   device.emit(player, 'vm:agentprompt', [agentid, prompt])
+}
+
+export function vmpilotstart(
+  device: DEVICELIKE,
+  player: string,
+  x: number,
+  y: number,
+) {
+  device.emit(player, 'vm:pilotstart', { x, y })
+}
+
+export function vmpilotstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:pilotstop')
 }
 
 export function vmmakeitscroll(
