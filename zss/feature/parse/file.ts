@@ -13,8 +13,16 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parseansi } from './ansi'
 import { parsechr } from './chr'
+import { parsemidi } from './midi'
+import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
-import { parsebrd, parsezzt } from './zzt'
+import {
+  iszztworldbytes,
+  isszztworldbytes,
+  parsebrd,
+  parseszt,
+  parsezzt,
+} from './zzt'
 import { parsezztobj } from './zztobj'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
@@ -24,6 +32,8 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
     .join('')
     .toUpperCase()
   switch (signature) {
+    case '4D546864':
+      return 'audio/midi'
     case '89504E47':
       return 'image/png'
     case '47494638':
@@ -40,6 +50,25 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   return mime.getType(filename) ?? 'application/octet-stream'
 }
 
+function sniffbinaryimport(bytes: Uint8Array): string {
+  if (bytes.byteLength >= 4) {
+    const b0 = bytes[0]
+    const b1 = bytes[1]
+    const b2 = bytes[2]
+    const b3 = bytes[3]
+    if (b0 === 0x4d && b1 === 0x54 && b2 === 0x68 && b3 === 0x64) {
+      return 'mid'
+    }
+  }
+  if (iszztworldbytes(bytes)) {
+    return 'zzt'
+  }
+  if (isszztworldbytes(bytes)) {
+    return 'szt'
+  }
+  return ''
+}
+
 export function mapfiletype(type: string, file: File | undefined) {
   if (!ispresent(file)) {
     return ''
@@ -48,6 +77,9 @@ export function mapfiletype(type: string, file: File | undefined) {
     case 'model/obj':
       return 'obj'
     case 'text/plain':
+      if (/.nfo$/i.test(file.name)) {
+        return 'nfotext'
+      }
       return 'txt'
     case 'application/json':
       return 'json'
@@ -78,8 +110,19 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'xb'
       } else if (/.diz$/i.test(file.name)) {
         return 'diz'
-      } // idf
+      } else if (/.nfo$/i.test(file.name)) {
+        return 'nfotext'
+      } else if (/.szt$/i.test(file.name)) {
+        return 'szt'
+      } else if (/.mid$/i.test(file.name)) {
+        return 'mid'
+      } else if (/.pet$/i.test(file.name)) {
+        return 'pet'
+      }
       break
+    case 'audio/midi':
+    case 'audio/x-midi':
+      return 'mid'
   }
   return ''
 }
@@ -161,11 +204,71 @@ export async function parsebinaryfile(
   }
 }
 
+function handlebinarykind(
+  player: string,
+  kind: string,
+  file: File,
+  bytes: Uint8Array,
+) {
+  switch (kind) {
+    case 'zzt':
+      parsezzt(player, bytes)
+      break
+    case 'szt':
+      parseszt(player, bytes)
+      break
+    case 'brd':
+      parsebrd(player, bytes)
+      break
+    case 'mid':
+      parsemidi(player, file).catch((err) =>
+        apierror(SOFTWARE, player, 'crash', err.message),
+      )
+      break
+    case 'pet':
+      parsepetscii(player, file.name, bytes)
+      break
+    case 'chr':
+      parsechr(player, file.name, bytes)
+      break
+    default:
+      break
+  }
+}
+
 function handlefiletype(player: string, type: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  const filetype = mapfiletype(type, file)
+  let filetype = mapfiletype(type, file)
+  if (
+    !filetype &&
+    (type === 'application/octet-stream' || type === '')
+  ) {
+    file
+      .arrayBuffer()
+      .then((arraybuffer) => {
+        const bytes = new Uint8Array(arraybuffer)
+        const sniffed = sniffbinaryimport(bytes)
+        if (sniffed) {
+          handlebinarykind(player, sniffed, file, bytes)
+          return
+        }
+        const guessed = mimetypeofbytesread(file.name, bytes)
+        if (guessed && guessed !== 'application/octet-stream') {
+          handlefiletype(player, guessed, file)
+          return
+        }
+        apierror(
+          SOFTWARE,
+          player,
+          'parsewebfile',
+          `unsupported file ${file.name}`,
+        )
+      })
+      .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+    return
+  }
   switch (filetype) {
     case 'obj':
       file
@@ -216,6 +319,14 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
+    case 'szt':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          parseszt(player, new Uint8Array(arraybuffer))
+        })
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      break
     case 'brd':
       file
         .arrayBuffer()
@@ -240,6 +351,27 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
+    case 'mid':
+      parsemidi(player, file).catch((err) =>
+        apierror(SOFTWARE, player, 'crash', err.message),
+      )
+      break
+    case 'pet':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          parsepetscii(player, file.name, new Uint8Array(arraybuffer))
+        })
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'nfotext':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          parseansi(player, file.name, 'txt', new Uint8Array(arraybuffer))
+        })
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      break
     case 'ans':
     case 'adf':
     case 'bin':
@@ -247,6 +379,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
     case 'pcb':
     case 'tnd':
     case 'xb':
+    case 'diz':
       file
         .arrayBuffer()
         .then((arraybuffer) => {

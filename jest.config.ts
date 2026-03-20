@@ -27,7 +27,7 @@ const config: Config = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|uint8-util)/)',
+    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|uint8-util|@tonejs/midi|midi-file)/)',
   ],
   testMatch: [
     '**/__tests__/**/*.ts',
