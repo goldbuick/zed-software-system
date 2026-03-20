@@ -49,7 +49,7 @@ flowchart TB
   end
   subgraph collect [collectmidilayers]
     Loop[For each track with notes]
-    Melodic[Melodic: channel not 9, max 8 tracks, file order]
+    Melodic[Melodic: channel not 9, max 4 voices per play, file order]
     DrumB[Drum buckets: channel 9]
     Merge[mergedrumtracksnotelist sort by tick]
     Cap[Note count cap 12000, truncation flag]
@@ -58,7 +58,7 @@ flowchart TB
     Span["start = m * measureTicks, end = start + span"]
     M0[monophonelineinmeasure per melodic track]
     D0[drumlineinmeasure merged drums]
-    Join["segs.join ';'"]
+    Join["segs.join PLAY_VOICE_SEPARATOR"]
     Pad{m equals 0 and drums only?}
     Unshift["prepend playreststringforticks span"]
     Pad2{m equals 0 and empty voice0?}
@@ -81,10 +81,12 @@ flowchart TB
   Fill0 --> Out
 ```
 
+- **Track cap:** only the **first four** MIDI tracks with notes (file order) are imported (`MAX_MIDI_TRACKS` in [`midiplay.ts`](../midiplay.ts)).
+- **Voice cap:** at most **four** `;`-separated segments per `#play` (`MAX_VOICES_PER_PLAY`): up to four melodic lines if none of those tracks are drums, else three melodic plus one merged drum voice among the selected tracks (see [`collectmidilayers`](../midiplay.ts)).
 - **Measure length:** [`miditickspersmeasure`](../midiplay.ts) from time signature (default `4 * ppq`).
 - **Per voice in bar:** [`monophonelineinmeasure`](../midiplay.ts) / [`drumlineinmeasure`](../midiplay.ts) — notes filtered to `[start, end)`, gaps filled with [`appendplayrests`](../midiplay.ts) (internal).
 - **Token shape (ZZT-style):** **Melodic:** for each note, `+`/`-` to target octave (from baseline 3), then duration op (`ytsiqhw`), then letter + optional `#`/`!` (see [`playnotation.ts`](../../synth/playnotation.ts)). **Drums:** duration then drum token (digits `0`–`9` or `p` for GM note 39 hand clap; see map in [`midiplay.ts`](../midiplay.ts)). **Rests:** duration then `x` (duration carries until the next op). [`playreststringforticks`](../midiplay.ts) builds a rest-only first voice when needed.
-- **Drum-only:** on **measure 0 only**, prepend full-bar rest (e.g. `wx;`) so the first `;` segment is silent and drums land on the next parseplay voice; later measures omit this pad (see [`midiplaysnippetsbymeasure`](../midiplay.ts) tail).
+- **Drum-only:** on **measure 0 only**, prepend full-bar rest (e.g. `wx; ` before drums) so the first voice is silent and drums land on the next parseplay segment; later measures omit this pad (see [`midiplaysnippetsbymeasure`](../midiplay.ts) tail).
 
 ## 3. Target codepage layout (`parsemidi` output)
 
@@ -102,7 +104,7 @@ Structure matches [`.zzm` import](../zzm.ts): one `:song_0` block with **multipl
 #end
 
 :song_0
-#play <measure0 all voices joined by ;>
+#play <measure0 all voices joined by ; >
 #play <measure1 ...>
 ...
 #end
@@ -110,18 +112,16 @@ Structure matches [`.zzm` import](../zzm.ts): one `:song_0` block with **multipl
 
 Example (two melodic tracks, no drums), from [`midi.ts`](../midi.ts):
 
-Imported `#play` lines pad each `;`-separated voice with trailing spaces so columns line up across measures (`parseplay` skips spaces).
-
 ```text
-#play +qcdef  ;wx
-#play +qgaa#+c;+qefga
+#play +qcdef; wx
+#play +qgaa#+c; +qefga
 ```
 
 ## 4. One `#play` line → runtime (`parseplay`)
 
 ```mermaid
 flowchart LR
-  Line["#play voice0;voice1;drums"]
+  Line["#play voice0; voice1; drums"]
   Split[parseplay split on ';']
   V0[synth index 0 invokeplay]
   V1[synth index 1 invokeplay]

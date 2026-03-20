@@ -5,10 +5,10 @@ import { Midi } from '@tonejs/midi'
 import {
   drumline,
   durationticksToOp,
+  MAX_VOICES_PER_PLAY,
   midiplaysnippetsbymeasure,
   midivoicesfrommidi,
   monophoneline,
-  padplaysnippetsforcolumns,
   playpitchfromscientificname,
   playreststringforticks,
 } from 'zss/feature/parse/midiplay'
@@ -68,13 +68,6 @@ describe('midiplay helpers', () => {
   it('playreststringforticks uses duration-before-rest for 4/4 bar', () => {
     expect(playreststringforticks(1920, 480)).toBe('wx')
   })
-
-  it('padplaysnippetsforcolumns aligns voices with spaces', () => {
-    expect(padplaysnippetsforcolumns(['wx;wx', 'qcdef;spxxxpxxx'])).toEqual([
-      'wx   ;wx       ',
-      'qcdef;spxxxpxxx',
-    ])
-  })
 })
 
 describe('midivoicesfrommidi', () => {
@@ -118,6 +111,59 @@ describe('midivoicesfrommidi', () => {
     b.addNote({ midi: 72, ticks: 0, durationTicks: 480, velocity: 0.8 })
     const { voices } = midivoicesfrommidi(midi)
     expect(voices).toEqual(['+qc', '++qc'])
+  })
+
+  it(`keeps at most ${MAX_VOICES_PER_PLAY} melodic voices when no drums`, () => {
+    const midi = new Midi()
+    for (let ch = 0; ch < 5; ch++) {
+      const tr = midi.addTrack()
+      tr.channel = ch
+      tr.addNote({
+        midi: 60 + ch,
+        ticks: 0,
+        durationTicks: 480,
+        velocity: 0.8,
+      })
+    }
+    const { voices } = midivoicesfrommidi(midi)
+    expect(voices).toHaveLength(MAX_VOICES_PER_PLAY)
+  })
+
+  it('reserves one voice for merged drums when drum is among first four tracks', () => {
+    const midi = new Midi()
+    const a = midi.addTrack()
+    a.channel = 0
+    a.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    const b = midi.addTrack()
+    b.channel = 1
+    b.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    const d = midi.addTrack()
+    d.channel = 9
+    d.addNote({ midi: 36, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    const c = midi.addTrack()
+    c.channel = 2
+    c.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    const tail = midi.addTrack()
+    tail.channel = 3
+    tail.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    const { voices } = midivoicesfrommidi(midi)
+    expect(voices).toHaveLength(MAX_VOICES_PER_PLAY)
+    expect(voices[MAX_VOICES_PER_PLAY - 1]).toBe('q9')
+  })
+
+  it('ignores a drum track if it is after the fourth track-with-notes', () => {
+    const midi = new Midi()
+    for (let ch = 0; ch < 4; ch++) {
+      const tr = midi.addTrack()
+      tr.channel = ch
+      tr.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    }
+    const d = midi.addTrack()
+    d.channel = 9
+    d.addNote({ midi: 36, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    const { voices } = midivoicesfrommidi(midi)
+    expect(voices).toHaveLength(MAX_VOICES_PER_PLAY)
+    expect(voices.join('')).not.toContain('9')
   })
 
   it('drums merged into one voice after all melodic tracks', () => {
@@ -166,7 +212,7 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
     d.addNote({ midi: 36, ticks: 0, durationTicks: 480, velocity: 0.8 })
     d.addNote({ midi: 36, ticks: 1920, durationTicks: 480, velocity: 0.8 })
     const { snippets } = midiplaysnippetsbymeasure(midi)
-    expect(snippets[0]).toMatch(/^wx\s+;/)
+    expect(snippets[0]).toMatch(/^wx; /)
     expect(snippets[0]).toContain('q9')
     expect(snippets[1]).toMatch(/^q9/)
     expect(snippets[1]).not.toMatch(/^wx/)
@@ -178,9 +224,6 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
     const { snippets, truncatedbynotes } = midiplaysnippetsbymeasure(midi)
     expect(truncatedbynotes).toBe(false)
     const playlines = snippets.map((s) => `#play ${s}`)
-    expect(playlines).toEqual([
-      '#play +qcdef  ;wx    ',
-      '#play +qgaa#+c;+qefga',
-    ])
+    expect(playlines).toEqual(['#play +qcdef; wx', '#play +qgaa#+c; +qefga'])
   })
 })

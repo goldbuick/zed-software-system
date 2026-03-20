@@ -3,17 +3,16 @@
  *
  * Diagrams and pipeline: [docs/midi-import.md](docs/midi-import.md).
  *
- * Each bar is one `#play`. Voices in a bar are joined with `;` (parseplay): melodic tracks first,
+ * Each bar is one `#play`. Only the **first four MIDI tracks that have notes** (file order) are read (`MAX_MIDI_TRACKS`). Output has at most four `;`-separated voices (`MAX_VOICES_PER_PLAY`): if a drum track is among those four, at most three melodic lines plus one merged drum voice.
+ * Voices are joined with `"; "` (see `PLAY_VOICE_SEPARATOR` in midiplay): melodic tracks first,
  * then one merged GM drum channel (MIDI ch.10). Drum-only files get a leading rest voice on **bar 0 only**
- * (`wx;…`) so that bar’s drums are not assigned to synth channel 0. Melodic voices: `+`/`-` (octave from baseline 3), then
+ * (`wx; …`) so that bar’s drums are not assigned to synth channel 0. Melodic voices: `+`/`-` (octave from baseline 3), then
  * duration (`ytsiqhw`), then pitch (`c#`, `b!`). Drums: duration then token (`0`–`9`, `p`, …); rests: duration then `x`.
  * Example (twomeasures.mid, 4/4, two melodic tracks):
  *
- * Voices are space-padded per column across measures so `;` aligns in the source. Spaces are ignored by `parseplay`.
- *
  * ```
- * #play +qcdef  ;wx
- * #play +qgaa#+c;+qefga
+ * #play +qcdef; wx
+ * #play +qgaa#+c; +qefga
  * ```
  */
 

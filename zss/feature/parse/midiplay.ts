@@ -5,7 +5,8 @@
  * emit **`+` / `-` first**, then duration **`ytsiqhw`**, then pitch (`c#`, `b!`, …). Duration still applies
  * to following notes, drum tokens (`0`–`9`, **`p`** clap), and rests **`x`** (drum/rest lines keep duration
  * before hit or rest).
- * Sharp/flat **after** the letter (`c#`, `b!`). Polyphony: `;` separates voices.
+ * Sharp/flat **after** the letter (`c#`, `b!`). Polyphony: `PLAY_VOICE_SEPARATOR` separates voices.
+ * At most **`MAX_MIDI_TRACKS` (4)** MIDI tracks (with notes, file order) are read; output has at most **`MAX_VOICES_PER_PLAY` (4)** segments per `#play` (with drums, up to three melodic plus merged drums).
  * GM drum tracks merge into one trailing voice (channel 10 / index 9). Drum-only imports prepend a
  * full-bar rest voice on **measure 0 only** so the first bar’s drums are not synth 0; later bars omit that pad.
  */
@@ -13,7 +14,18 @@
 import type { Midi } from '@tonejs/midi'
 
 export const MAX_NOTE_EVENTS_MIDI = 12000
-export const MAX_TRACKS_VOICES_MIDI = 8
+
+/** Max `;`-separated segments per `#play` (melodic tracks + one merged drum voice). */
+export const MAX_VOICES_PER_PLAY = 4
+
+/** Max MIDI tracks (with notes, file order) read during import; must match `MAX_VOICES_PER_PLAY`. */
+export const MAX_MIDI_TRACKS = MAX_VOICES_PER_PLAY
+
+/** @deprecated Use `MAX_VOICES_PER_PLAY` / `MAX_MIDI_TRACKS`. */
+export const MAX_TRACKS_VOICES_MIDI = MAX_VOICES_PER_PLAY
+
+/** Between voices in one `#play` line (`parseplay` ignores spaces). */
+export const PLAY_VOICE_SEPARATOR = '; '
 
 /** Initial octave per `#play` segment; must match `invokeplay` in playnotation.ts. */
 export const PLAYNOTATION_START_OCTAVE = 3
@@ -202,6 +214,17 @@ type MIDINOTE = {
   name: string
 }
 
+/** First `maxcount` track indices (file order) that have at least one note. */
+function midiselectedtrackindices(midi: Midi, maxcount: number): number[] {
+  const selected: number[] = []
+  for (let t = 0; t < midi.tracks.length && selected.length < maxcount; ++t) {
+    if (midi.tracks[t]!.notes.length > 0) {
+      selected.push(t)
+    }
+  }
+  return selected
+}
+
 function mergedrumtracksnotelist(buckets: MIDINOTE[][]): MIDINOTE[] {
   const all: MIDINOTE[] = []
   for (let b = 0; b < buckets.length; ++b) {
@@ -214,12 +237,18 @@ function mergedrumtracksnotelist(buckets: MIDINOTE[][]): MIDINOTE[] {
   return all
 }
 
-/** Melodic tracks (non-drum) in file order, capped by `maxtracks`; all drum notes merged for one trailing voice. */
+/**
+ * Reads at most `MAX_MIDI_TRACKS` tracks that have notes (file order).
+ * Melodic lines + merged drum voice still respect `MAX_VOICES_PER_PLAY`.
+ */
 function collectmidilayers(
   midi: Midi,
   options?: {
     maxnoteevents?: number
+    /** Upper bound on melodic tracks; clamped so total voices never exceed `MAX_VOICES_PER_PLAY`. */
     maxtracks?: number
+    /** Override max MIDI tracks considered (default `MAX_MIDI_TRACKS`). */
+    maxmiditracks?: number
   },
 ): {
   melodic: MIDINOTE[][]
@@ -227,17 +256,24 @@ function collectmidilayers(
   truncatedbynotes: boolean
 } {
   const maxnoteevents = options?.maxnoteevents ?? MAX_NOTE_EVENTS_MIDI
-  const maxtracks = options?.maxtracks ?? MAX_TRACKS_VOICES_MIDI
+  const maxmiditracks = options?.maxmiditracks ?? MAX_MIDI_TRACKS
+  const selected = midiselectedtrackindices(midi, maxmiditracks)
+  const drumslots = selected.some((ti) => midi.tracks[ti]!.channel === 9)
+    ? 1
+    : 0
+  const maxmelodicdefault = MAX_VOICES_PER_PLAY - drumslots
+  const maxmelodic = Math.min(
+    options?.maxtracks ?? maxmelodicdefault,
+    maxmelodicdefault,
+  )
   let eventcount = 0
   let truncatedbynotes = false
   const melodic: MIDINOTE[][] = []
   const drumbuckets: MIDINOTE[][] = []
-  for (let t = 0; t < midi.tracks.length; ++t) {
-    const track = midi.tracks[t]
+  for (let k = 0; k < selected.length; ++k) {
+    const t = selected[k]!
+    const track = midi.tracks[t]!
     const notes = track.notes
-    if (!notes.length) {
-      continue
-    }
     eventcount += notes.length
     if (eventcount > maxnoteevents) {
       truncatedbynotes = true
@@ -245,7 +281,7 @@ function collectmidilayers(
     }
     if (track.channel === 9) {
       drumbuckets.push(notes)
-    } else if (melodic.length < maxtracks) {
+    } else if (melodic.length < maxmelodic) {
       melodic.push(notes)
     }
   }
@@ -338,51 +374,20 @@ export function drumlineinmeasure(
 }
 
 export type midimeasuresresult = {
-  /** One parseplay string per measure (`voice0;voice1;…`). */
+  /** One parseplay string per measure (`voice0; voice1; …`). */
   snippets: string[]
   truncatedbynotes: boolean
 }
 
 /**
- * Right-pad each `;`-separated voice so column widths match across all measures (spaces are ignored by `parseplay`).
- */
-export function padplaysnippetsforcolumns(snippets: string[]): string[] {
-  if (snippets.length === 0) {
-    return []
-  }
-  const rows = snippets.map((line) => line.split(';'))
-  let maxcols = 0
-  for (let r = 0; r < rows.length; ++r) {
-    maxcols = Math.max(maxcols, rows[r]!.length)
-  }
-  const colwidths: number[] = []
-  for (let c = 0; c < maxcols; ++c) {
-    let w = 0
-    for (let r = 0; r < rows.length; ++r) {
-      const seg = rows[r]![c] ?? ''
-      w = Math.max(w, seg.length)
-    }
-    colwidths.push(w)
-  }
-  return rows.map((cells) => {
-    const parts: string[] = []
-    for (let c = 0; c < maxcols; ++c) {
-      const raw = cells[c] ?? ''
-      parts.push(raw.padEnd(colwidths[c]!))
-    }
-    return parts.join(';')
-  })
-}
-
-/**
- * One merged play string per measure: `voice0;voice1;…` — use one `#play` per snippet (same as .zzm lines).
- * Snippets are passed through `padplaysnippetsforcolumns` so voices align across measures.
+ * One merged play string per measure: `voice0; voice1; …` — use one `#play` per snippet (same as .zzm lines).
  */
 export function midiplaysnippetsbymeasure(
   midi: Midi,
   options?: {
     maxnoteevents?: number
     maxtracks?: number
+    maxmiditracks?: number
   },
 ): midimeasuresresult {
   const ppq = midi.header.ppq || 480
@@ -421,12 +426,9 @@ export function midiplaysnippetsbymeasure(
     } else if (m === 0 && segs.length >= 2 && segs[0] === '') {
       segs[0] = playreststringforticks(span, ppq)
     }
-    snippets.push(segs.join(';'))
+    snippets.push(segs.join(PLAY_VOICE_SEPARATOR))
   }
-  return {
-    snippets: padplaysnippetsforcolumns(snippets),
-    truncatedbynotes,
-  }
+  return { snippets, truncatedbynotes }
 }
 
 export function monophoneline(notes: MIDINOTE[], ppq: number): string {
@@ -481,6 +483,7 @@ export function midivoicesfrommidi(
   options?: {
     maxnoteevents?: number
     maxtracks?: number
+    maxmiditracks?: number
   },
 ): midivoicesresult {
   const ppq = midi.header.ppq || 480
