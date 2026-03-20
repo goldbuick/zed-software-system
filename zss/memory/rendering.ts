@@ -1,8 +1,5 @@
-import { degToRad, radToDeg } from 'maath/misc'
-import { Vector2 } from 'three'
+import { degToRad } from 'maath/misc'
 import {
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
   LAYER,
   LAYER_CONTROL,
   LAYER_DITHER,
@@ -22,21 +19,17 @@ import {
 } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
-import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import {
-  memoryboardelementindex,
-  memoryevaldir,
-  memoryreadobject,
-  memoryupdateboardvisuals,
-} from './boardoperations'
+  memoryboardlightingapplyobject,
+  memoryboardlightingmarkplayer,
+} from './boardlighting'
+import { memoryreadobject, memoryupdateboardvisuals } from './boardoperations'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,
-  memoryreadelementkind,
   memoryreadelementstat,
   memoryreadoverboard,
   memoryreadunderboard,
@@ -49,16 +42,20 @@ import {
 } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
-import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
-  CHAR_RAY_MARGIN,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
+
+export {
+  LIGHTING_RAY_TILE_YSCALE,
+  lightingmixmaxrange,
+  memorylightingaddrangetoblocked,
+} from './lightinggeometry'
 
 // Display & Formatting Functions
 
@@ -253,125 +250,15 @@ export function memoryconverttogadgetlayers(
     // write lighting if needed
     if (isdark) {
       if (display.light > 0) {
-        const center = memoryboardelementindex(board, sprite)
-        const radius = clamp(Math.round(display.light), 1, BOARD_HEIGHT)
-        const step = 1 / (radius * 0.5)
-
-        lighting.alphas[center] = 0
-        if (radius > 1) {
-          // min, max, value
-          const blocked: [number, number, number][] = []
-          for (let r = 1; r <= radius; ++r) {
-            // light dir for a cone of light
-            if (r === 2) {
-              const maybedir = memoryreadelementstat(object, 'lightdir')
-              if (isstrdir(maybedir)) {
-                const lightdir = memoryevaldir(
-                  board,
-                  object,
-                  '',
-                  maybedir,
-                  sprite,
-                )
-                switch (dirfrompts(sprite, lightdir.destpt)) {
-                  case DIR.EAST:
-                    blocked.push([45, 315, 1])
-                    break
-                  case DIR.WEST:
-                    blocked.push([225, 135, 1])
-                    break
-                  case DIR.NORTH:
-                    blocked.push([315, 225, 1])
-                    break
-                  case DIR.SOUTH:
-                    blocked.push([135, 45, 1])
-                    break
-                }
-              }
-            }
-            const nextblocked: [number, number, number][] = []
-            for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                sprite.x - r,
-                y,
-              )
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                sprite.x + r,
-                y,
-              )
-            }
-            const inset = r - 1
-            for (let x = sprite.x - inset; x <= sprite.x + inset; ++x) {
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                x,
-                sprite.y - r,
-              )
-              raycheck(
-                board,
-                lighting.alphas,
-                blocked,
-                nextblocked,
-                sprite,
-                radius,
-                step,
-                x,
-                sprite.y + r,
-              )
-            }
-            // process newly blocked angles
-            for (let nb = 0; nb < nextblocked.length; ++nb) {
-              const range = nextblocked[nb]
-              let b = 0
-              for (b = 0; b < blocked.length; ++b) {
-                const block = blocked[b]
-                if (block[1] > block[0]) {
-                  if (
-                    range[1] >= block[0] &&
-                    range[0] <= block[1] &&
-                    range[2] >= 1 &&
-                    block[2] >= 1
-                  ) {
-                    // merged
-                    blocked[b] = [
-                      Math.min(range[0], block[0]),
-                      Math.max(range[1], block[1]),
-                      1,
-                    ]
-                    break
-                  }
-                }
-              }
-              if (b === blocked.length) {
-                blocked.push(range)
-              }
-            }
-          }
-        }
+        memoryboardlightingapplyobject(
+          board,
+          lighting.alphas,
+          object,
+          sprite,
+          display.light,
+        )
       } else if (ispid(id)) {
-        // always show player
-        const index = memoryboardelementindex(board, sprite)
-        lighting.alphas[index] = 0
+        memoryboardlightingmarkplayer(board, lighting.alphas, sprite)
       }
     }
   }
@@ -548,120 +435,6 @@ function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
   return LAYER_CACHE[id] as LAYER_CONTROL
 }
 
-function mixmaxrange(from: PT, dest: PT): [number, number] {
-  // calc corners
-  const angles: number[] = []
-
-  const fromx = (from.x + 0.5) * CHAR_WIDTH
-  const fromy = (from.y + 0.5) * CHAR_HEIGHT
-  const destx = dest.x * CHAR_WIDTH
-  const desty = dest.y * CHAR_HEIGHT
-  const dx = destx - fromx
-  const dy = desty - fromy
-
-  pt1.x = dx - CHAR_RAY_MARGIN
-  pt1.y = dy - CHAR_RAY_MARGIN
-  angles.push(pt1.angle())
-  pt1.x = dx + CHAR_WIDTH + CHAR_RAY_MARGIN
-  pt1.y = dy - CHAR_RAY_MARGIN
-  angles.push(pt1.angle())
-  pt1.x = dx - CHAR_RAY_MARGIN
-  pt1.y = dy + CHAR_HEIGHT + CHAR_RAY_MARGIN
-  angles.push(pt1.angle())
-  pt1.x = dx + CHAR_WIDTH + CHAR_RAY_MARGIN
-  pt1.y = dy + CHAR_HEIGHT + CHAR_RAY_MARGIN
-  angles.push(pt1.angle())
-
-  const degs = angles.map((v) => Math.round(radToDeg(v)))
-  const minangle = Math.min(...degs)
-  const maxangle = Math.max(...degs)
-  const diff = maxangle - minangle
-
-  // handle inverted case
-  if (diff > 180) {
-    // acute angles
-    const a1 = degs.filter((angle) => angle < 180)
-    // obtuse angles
-    const a2 = degs.filter((angle) => angle > 180)
-    // we go from the largest acute angle
-    const newminangle = Math.max(...a1)
-    // to the smallest obtuse angle
-    const newmaxangle = Math.min(...a2)
-    return [newmaxangle, newminangle]
-  }
-  return [minangle, maxangle]
-}
-
-function raycheck(
-  board: BOARD,
-  alphas: number[],
-  blocked: [number, number, number][],
-  nextblocked: [number, number, number][],
-  sprite: SPRITE,
-  radius: number,
-  falloff: number,
-  x: number,
-  y: number,
-) {
-  // check index
-  const pt = { x, y }
-  const idx = memoryboardelementindex(board, pt)
-  if (idx === -1) {
-    return
-  }
-
-  // check distance
-  pt1.x = x - sprite.x
-  pt1.y = Math.round((y - sprite.y) * 1.333)
-  const raydist = pt1.length()
-  if (raydist > radius) {
-    return
-  }
-
-  // check angle
-  const angle = Math.round(radToDeg(pt1.angle()))
-
-  // current falloff
-  let current = 0
-  for (let b = 0; b < blocked.length; ++b) {
-    const [minangle, maxangle, value] = blocked[b]
-    // inverted edge case
-    if (minangle > maxangle) {
-      if (angle >= minangle || angle <= maxangle) {
-        current = Math.max(current, value)
-      }
-    } else if (angle >= minangle && angle <= maxangle) {
-      // take highest value
-      current = Math.max(current, value)
-    }
-  }
-
-  // update shading
-  const hradius = radius * 0.5
-  alphas[idx] = Math.min(
-    alphas[idx],
-    current + (raydist < hradius ? 0 : (raydist - hradius) * falloff),
-  )
-  alphas[idx] = clamp(alphas[idx], 0, 1)
-
-  // check lookup
-  const object = memoryreadobject(board, board.lookup?.[idx] ?? '')
-  if (ispresent(object)) {
-    // half blocked
-    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.45]
-    nextblocked.push(range)
-  }
-
-  const maybeterrain = board.terrain[idx]
-  const terrainkind = memoryreadelementkind(maybeterrain)
-  const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
-  if (memorycheckcollision(COLLISION.ISBULLET, terraincollision)) {
-    // fully blocked
-    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 1]
-    nextblocked.push(range)
-  }
-}
-
 function readgraphics(player: string, board: BOARD) {
   // player flags, then board flags
   const { graphics, camera, facing } = memoryreadflags(player)
@@ -787,8 +560,6 @@ export function memoryreadgadgetlayers(
 }
 
 // Rendering & Gadget Conversion Functions
-
-const pt1 = new Vector2()
 
 const LAYER_CACHE: Record<string, LAYER> = {}
 const SPRITE_CACHE: Record<string, SPRITE> = {}

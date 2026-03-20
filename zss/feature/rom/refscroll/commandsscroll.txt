@@ -126,8 +126,6 @@ $whitebackground play
 $whitequantized bg play
 #vol / #bgvol <volume>
 $whiteset volume
-#bpm <bpm>
-$whiteset tempo
 section;audio - synthesis
 #synth [config]
 $whiteconfigure play voices

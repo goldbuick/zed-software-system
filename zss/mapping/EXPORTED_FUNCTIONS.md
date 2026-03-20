@@ -132,6 +132,7 @@
 ### Constants
 - **TICK_RATE** - Tick rate constant (currently 80ms)
 - **TICK_FPS** - Calculated frames per second from TICK_RATE
+- **DEFAULT_BPM** - Default beats per minute (136); beat-aligned timing (e.g. synth play queue duration, display `setAltInterval` default)
 - **CYCLE_DEFAULT** - Default cycle value (3)
 
 ## Async Error Handling

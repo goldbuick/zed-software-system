@@ -130,14 +130,6 @@ export function createsynth() {
     playback.pacercount = 0
   }
 
-  function setbpm(bpm: number) {
-    stopplay()
-    getTransport().bpm.setValueAtTime(bpm, 0)
-    // @ts-expect-error Part callback type mismatch with SYNTH_NOTE_ON
-    playback.pacer = new Part(synthtick)
-    playback.pacer.start(0)
-  }
-
   function setplayvolume(volume: number) {
     chain.mainvolume.volume.value = volumetodb(volume * 0.25)
   }
@@ -184,8 +176,8 @@ export function createsynth() {
   FXCHAIN.autofilter.start()
 
   return {
-    destroy,
     broadcastdestination: chain.broadcastdestination,
+    destroy,
     addplay,
     addbgplay,
     stopplay,
@@ -195,7 +187,6 @@ export function createsynth() {
     synthflush,
     synthreplay,
     addaudiobuffer,
-    setbpm,
     setplayvolume,
     setbgplayvolume,
     setttsvolume,

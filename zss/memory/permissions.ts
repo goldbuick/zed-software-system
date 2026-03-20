@@ -4,224 +4,172 @@ import { deepcopy, isstring } from 'zss/mapping/types'
 
 import { memoryreadoperator } from './session'
 
-/** Group names and descriptions for allowlists (~20 toggles). */
+/** Group names and descriptions for allowlists (nine families). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
-  ['audio', 'audio (bpm, play, synth, bgplay, ...)'],
-  ['bridge', 'use integrations like chat, join codes, and broadcast'],
-  ['coder', 'create and edit codepages'],
-  ['discovery', 'list books, pages, and boards'],
-  ['execution', 'bind, die, run'],
-  ['fetch', 'network fetch'],
-  ['import', 'import content (zztsearch, zztrandom)'],
+  ['bridge', 'chat, join, broadcast, fetch'],
+  ['build', 'world edit: put, shoot, copy, weave, and other transforms'],
+  ['coder', 'codepages, books/pages lists, bind, die, run'],
+  ['explore', 'boards, boardopen, goto'],
   ['moderation', 'ban and unban players'],
-  ['nuke', 'reset state to blank'],
-  ['operator', 'dangerous tooling'],
-  ['publish', 'publish to bbs, screenshot, itch.io'],
+  ['persist', 'save sim state, share content'],
+  ['risk', 'import, nuke, publish/export, trash, operator tooling'],
   ['roles', 'manage role and permission assignments'],
-  ['save', 'save sim state'],
-  ['share', 'share, export content'],
-  ['toast', 'Show toast messages'],
-  ['transform', 'copy, pivot, weave, remix, revert, snapshot'],
-  ['trash', 'trash books or pages'],
-  ['tts', 'text-to-speech'],
-  ['world', 'build, change, put, shoot, write'],
+  ['speaker', 'play, synth, bgplay, toast, TTS'],
 ])
 
 /** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
 export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
-  // audio
-  autofilter1: 'audio',
-  autofilter2: 'audio',
-  autofilter3: 'audio',
-  autofilter4: 'audio',
-  autowah1: 'audio',
-  autowah2: 'audio',
-  autowah3: 'audio',
-  autowah4: 'audio',
-  bgplay: 'audio',
-  bgplayon16n: 'audio',
-  bgplayon1n: 'audio',
-  bgplayon2n: 'audio',
-  bgplayon32n: 'audio',
-  bgplayon4n: 'audio',
-  bgplayon64n: 'audio',
-  bgplayon8n: 'audio',
-  bpm: 'audio',
-  distort1: 'audio',
-  distort2: 'audio',
-  distort3: 'audio',
-  distort4: 'audio',
-  echo1: 'audio',
-  echo2: 'audio',
-  echo3: 'audio',
-  echo4: 'audio',
-  fcrush1: 'audio',
-  fcrush2: 'audio',
-  fcrush3: 'audio',
-  fcrush4: 'audio',
-  play: 'audio',
-  reverb1: 'audio',
-  reverb2: 'audio',
-  reverb3: 'audio',
-  reverb4: 'audio',
-  synth: 'audio',
-  synth1: 'audio',
-  synth2: 'audio',
-  synth3: 'audio',
-  synth4: 'audio',
-  synth5: 'audio',
-  synthflush: 'audio',
-  synthrecord: 'audio',
-  vibrato1: 'audio',
-  vibrato2: 'audio',
-  vibrato3: 'audio',
-  vibrato4: 'audio',
-
-  // bridge
   broadcast: 'bridge',
   chat: 'bridge',
+  fetch: 'bridge',
+  fetchwith: 'bridge',
   joincode: 'bridge',
   jointab: 'bridge',
 
-  // coder
-  pageopen: 'coder', // open an existing codepage
-  search: 'coder', // search codepage code
-  grep: 'coder', // search codepage code (alias)
-  stat: 'coder', // create a new codepage
+  build: 'build',
+  change: 'build',
+  copy: 'build',
+  dupe: 'build',
+  dupewith: 'build',
+  duplicate: 'build',
+  duplicatewith: 'build',
+  findany: 'build',
+  gadget: 'build',
+  oneof: 'build',
+  oneofwith: 'build',
+  pivot: 'build',
+  put: 'build',
+  putwith: 'build',
+  remix: 'build',
+  revert: 'build',
+  shoot: 'build',
+  shootwith: 'build',
+  snapshot: 'build',
+  throwstar: 'build',
+  throwstarwith: 'build',
+  transform: 'build',
+  weave: 'build',
+  write: 'build',
 
-  // discovery
-  boardopen: 'discovery',
-  boards: 'discovery',
-  books: 'discovery',
-  pages: 'discovery',
+  bind: 'coder',
+  books: 'coder',
+  die: 'coder',
+  grep: 'coder',
+  pageopen: 'coder',
+  pages: 'coder',
+  run: 'coder',
+  runwith: 'coder',
+  search: 'coder',
+  stat: 'coder',
 
-  // execution
-  bind: 'execution',
-  die: 'execution',
-  run: 'execution',
-  runwith: 'execution',
+  boardopen: 'explore',
+  boards: 'explore',
+  goto: 'explore',
 
-  // fetch
-  fetch: 'fetch',
-  fetchwith: 'fetch',
-
-  // import
-  zztrandom: 'import',
-  zztsearch: 'import',
-
-  // moderation
   admin: 'moderation',
   ban: 'moderation',
   unban: 'moderation',
 
-  // nuke
-  nuke: 'nuke',
+  save: 'persist',
+  share: 'persist',
 
-  // operator
-  dev: 'operator',
-  fork: 'operator',
-  agent: 'operator',
-  restart: 'operator',
-  bookrename: 'operator',
+  access: 'risk',
+  agent: 'risk',
+  bbs: 'risk',
+  bookallexport: 'risk',
+  bookexport: 'risk',
+  bookrename: 'risk',
+  booktrash: 'risk',
+  dev: 'risk',
+  export: 'risk',
+  fork: 'risk',
+  itchiopublish: 'risk',
+  nuke: 'risk',
+  pageexport: 'risk',
+  pagetrash: 'risk',
+  restart: 'risk',
+  screenshot: 'risk',
+  trash: 'risk',
+  zztrandom: 'risk',
+  zztsearch: 'risk',
 
-  // publish
-  bbs: 'publish',
-  export: 'publish',
-  screenshot: 'publish',
-  pageexport: 'publish',
-  bookexport: 'publish',
-  bookallexport: 'publish',
-  itchiopublish: 'publish',
-
-  // roles
   allow: 'roles',
   permissions: 'roles',
   revoke: 'roles',
   role: 'roles',
 
-  // save
-  save: 'save',
-
-  // share
-  share: 'share',
-
-  // toast
-  toast: 'toast',
-
-  // transform
-  copy: 'transform',
-  pivot: 'transform',
-  remix: 'transform',
-  revert: 'transform',
-  snapshot: 'transform',
-  transform: 'transform',
-  weave: 'transform',
-
-  // trash
-  booktrash: 'trash',
-  pagetrash: 'trash',
-  trash: 'trash',
-
-  // tts
-  tts: 'tts',
-  ttsengine: 'tts',
-  ttsqueue: 'tts',
-
-  // world
-  build: 'world',
-  change: 'world',
-  dupe: 'world',
-  dupewith: 'world',
-  duplicate: 'world',
-  duplicatewith: 'world',
-  findany: 'world',
-  gadget: 'world',
-  oneof: 'world',
-  oneofwith: 'world',
-  put: 'world',
-  putwith: 'world',
-  shoot: 'world',
-  shootwith: 'world',
-  throwstar: 'world',
-  throwstarwith: 'world',
-  write: 'world',
+  autofilter1: 'speaker',
+  autofilter2: 'speaker',
+  autofilter3: 'speaker',
+  autofilter4: 'speaker',
+  autowah1: 'speaker',
+  autowah2: 'speaker',
+  autowah3: 'speaker',
+  autowah4: 'speaker',
+  bgplay: 'speaker',
+  bgplayon16n: 'speaker',
+  bgplayon1n: 'speaker',
+  bgplayon2n: 'speaker',
+  bgplayon32n: 'speaker',
+  bgplayon4n: 'speaker',
+  bgplayon64n: 'speaker',
+  bgplayon8n: 'speaker',
+  distort1: 'speaker',
+  distort2: 'speaker',
+  distort3: 'speaker',
+  distort4: 'speaker',
+  echo1: 'speaker',
+  echo2: 'speaker',
+  echo3: 'speaker',
+  echo4: 'speaker',
+  fcrush1: 'speaker',
+  fcrush2: 'speaker',
+  fcrush3: 'speaker',
+  fcrush4: 'speaker',
+  play: 'speaker',
+  reverb1: 'speaker',
+  reverb2: 'speaker',
+  reverb3: 'speaker',
+  reverb4: 'speaker',
+  synth: 'speaker',
+  synth1: 'speaker',
+  synth2: 'speaker',
+  synth3: 'speaker',
+  synth4: 'speaker',
+  synth5: 'speaker',
+  synthflush: 'speaker',
+  synthrecord: 'speaker',
+  toast: 'speaker',
+  tts: 'speaker',
+  ttsengine: 'speaker',
+  ttsqueue: 'speaker',
+  vibrato1: 'speaker',
+  vibrato2: 'speaker',
+  vibrato3: 'speaker',
+  vibrato4: 'speaker',
 }
 
-/** Groups withheld from admin by default (roles, publish, import, nuke, restart). */
-const ADMIN_DEFAULT_DENY = new Set([
-  'roles',
-  'nuke',
-  'restart',
-  'publish',
-  'import',
-])
+/** Groups withheld from admin by default (no import/nuke/publish/tooling surface). */
+const ADMIN_DEFAULT_DENY = new Set(['risk'])
 
 /** Default allowlist for admin: all groups except ADMIN_DEFAULT_DENY. */
 export const DEFAULT_ALLOWLIST_ADMIN: string[] = [
   ...PERMISSION_CONTROLLED_GROUPS.keys(),
 ].filter((c) => !ADMIN_DEFAULT_DENY.has(c))
 
-/** Default allowlist for mod: moderate and create content; no roles, workspace/operator/admin, nuke/restart. */
+/** Default allowlist for mod: same as creative mod (init / DEFAULT_ALLOWLIST_BY_ROLE). */
 export const CREATIVE_ALLOWLIST_MOD: string[] = [
   'moderation',
   'bridge',
-  'save',
-  'transform',
-  'execution',
-  'world',
-  'share',
-  'toast',
-  'audio',
-  'tts',
+  'explore',
+  'coder',
+  'build',
+  'persist',
+  'speaker',
 ]
 
-/** Default allowlist for player: share/export own, toast, basic audio and tts. */
-export const DEFAULT_ALLOWLIST_PLAYER: string[] = [
-  'share',
-  'toast',
-  'audio',
-  'tts',
-]
+/** Default allowlist for player: speaker only. */
+export const DEFAULT_ALLOWLIST_PLAYER: string[] = ['speaker']
 
 /** Default allowlistbyrole for admin, mod, player (operator bypasses; use when initializing or resetting permissions). */
 export const DEFAULT_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
@@ -235,58 +183,45 @@ export function ispermissioncontrolledcommand(command: string): boolean {
   return command in PERMISSION_CONTROLLED_COMMANDS
 }
 
+function normalizetofamilyforallowlist(input: string): string {
+  if (ispermissioncontrolledcommand(input)) {
+    return PERMISSION_CONTROLLED_COMMANDS[input]
+  }
+  return input
+}
+
 /** Assignable roles (operator is session identity, not assignable). Order: admin > mod > player */
 export const PERMISSION_ROLES: string[] = ['admin', 'mod', 'player']
 
-/** Permission config preset names. Custom = current allowlists; lockdown/creative replace allowlistbyrole. */
-export const PERMISSION_CONFIG_NAMES = [
-  'custom',
-  'lockdown',
-  'creative',
-] as const
+/** Base preset only: overrides are stored separately. */
+export const PERMISSION_CONFIG_NAMES = ['lockdown', 'creative'] as const
 
 export type PERMISSION_CONFIG_NAME = (typeof PERMISSION_CONFIG_NAMES)[number]
 
-/** Lockdown: player nothing; mod observe + moderate only; admin unchanged. */
 const LOCKDOWN_ALLOWLIST_PLAYER: string[] = []
 const LOCKDOWN_ALLOWLIST_MOD: string[] = [
   'moderation',
   'bridge',
-  'save',
-  'share',
-  'discovery',
-  'toast',
+  'explore',
+  'coder',
+  'speaker',
+  'persist',
 ]
 
-/** Creative: player create/edit content and world; mod and admin unchanged. */
 const CREATIVE_ALLOWLIST_PLAYER: string[] = [
-  'discovery',
-  'workspace',
-  'transform',
-  'execution',
-  'export',
-  'import',
-  'world',
-  'trash',
-  'share',
-  'toast',
-  'fetch',
-  'share',
-  'toast',
-  'audio',
-  'tts',
+  'explore',
+  'coder',
+  'build',
+  'bridge',
+  'persist',
+  'speaker',
 ]
 
-/** Preset allowlistbyrole by config name. custom defaults to same values as lockdown. */
+/** Preset allowlistbyrole by base config name. */
 export const PERMISSION_PRESETS: Record<
   PERMISSION_CONFIG_NAME,
   Record<string, string[]>
 > = {
-  custom: {
-    admin: [...DEFAULT_ALLOWLIST_ADMIN],
-    mod: [...LOCKDOWN_ALLOWLIST_MOD],
-    player: [...LOCKDOWN_ALLOWLIST_PLAYER],
-  },
   lockdown: {
     admin: [...DEFAULT_ALLOWLIST_ADMIN],
     mod: [...LOCKDOWN_ALLOWLIST_MOD],
@@ -305,7 +240,8 @@ function allowlistbyrolefrompreset(
   const out: Record<string, Set<string>> = {}
   for (const role of Object.keys(preset)) {
     const arr = preset[role]
-    out[role] = Array.isArray(arr) ? new Set(arr.filter(isstring)) : new Set()
+    const raw = Array.isArray(arr) ? arr.filter(isstring) : []
+    out[role] = new Set(raw)
   }
   return out
 }
@@ -315,21 +251,161 @@ function allowlistbyroletoserialized(
 ): Record<string, string[]> {
   const out: Record<string, string[]> = {}
   for (const role of Object.keys(byrole)) {
-    out[role] = [...byrole[role]]
+    out[role] = [...byrole[role]].sort()
   }
   return out
 }
 
-/** In-memory custom config snapshot; used when applying custom or when switching away from custom. */
+function emptyoverridebyrole(): Record<string, Set<string>> {
+  const out: Record<string, Set<string>> = {}
+  for (const role of PERMISSION_ROLES) {
+    out[role] = new Set()
+  }
+  return out
+}
+
+function presetrolefamilies(
+  base: PERMISSION_CONFIG_NAME,
+  role: string,
+): Set<string> {
+  const arr = PERMISSION_PRESETS[base][role]
+  return new Set(Array.isArray(arr) ? arr.filter(isstring) : [])
+}
+
+function isallowlistmeaningful(
+  allowlistbyrole: Record<string, string[]>,
+): boolean {
+  for (const role of PERMISSION_ROLES) {
+    const arr = allowlistbyrole[role]
+    if (Array.isArray(arr) && arr.some(isstring)) {
+      return true
+    }
+  }
+  return false
+}
+
+function recordtooverridesets(
+  r: Record<string, string[]> | undefined,
+): Record<string, Set<string>> {
+  const out = emptyoverridebyrole()
+  if (!r) {
+    return out
+  }
+  for (const role of PERMISSION_ROLES) {
+    const arr = r[role]
+    if (Array.isArray(arr)) {
+      for (const x of arr) {
+        if (isstring(x)) {
+          out[role].add(x)
+        }
+      }
+    }
+  }
+  return out
+}
+
+function hasanyoverrideentries(
+  add?: Record<string, string[]>,
+  remove?: Record<string, string[]>,
+): boolean {
+  const check = (rec?: Record<string, string[]>) => {
+    if (!rec) {
+      return false
+    }
+    for (const role of PERMISSION_ROLES) {
+      const arr = rec[role]
+      if (Array.isArray(arr) && arr.length > 0) {
+        return true
+      }
+    }
+    return false
+  }
+  return check(add) || check(remove)
+}
+
+function deriveoverridesfromeffective(
+  base: PERMISSION_CONFIG_NAME,
+  eff: Record<string, Set<string>>,
+): {
+  add: Record<string, Set<string>>
+  remove: Record<string, Set<string>>
+} {
+  const add = emptyoverridebyrole()
+  const remove = emptyoverridebyrole()
+  for (const role of PERMISSION_ROLES) {
+    const pr = presetrolefamilies(base, role)
+    const e = eff[role] ?? new Set()
+    for (const f of e) {
+      if (!pr.has(f)) {
+        add[role].add(f)
+      }
+    }
+    for (const f of pr) {
+      if (!e.has(f)) {
+        remove[role].add(f)
+      }
+    }
+  }
+  return { add, remove }
+}
+
+function sanitizerpermissionbase(raw: string): PERMISSION_CONFIG_NAME {
+  if (raw === 'lockdown' || raw === 'creative') {
+    return raw
+  }
+  return 'creative'
+}
+
+function recomputeallowlistbyrole() {
+  const base = PERMISSION_STATE.permissionconfig
+  for (const role of PERMISSION_ROLES) {
+    const preset = presetrolefamilies(base, role)
+    const add = PERMISSION_STATE.permissionoverrideadd[role] ?? new Set()
+    const remove = PERMISSION_STATE.permissionoverrideremove[role] ?? new Set()
+    const eff = new Set<string>()
+    for (const f of preset) {
+      if (!remove.has(f)) {
+        eff.add(f)
+      }
+    }
+    for (const f of add) {
+      eff.add(f)
+    }
+    PERMISSION_STATE.allowlistbyrole[role] = eff
+  }
+}
+
+function normalizeoverridesforrole(role: string) {
+  const base = PERMISSION_STATE.permissionconfig
+  const pr = presetrolefamilies(base, role)
+  const add = PERMISSION_STATE.permissionoverrideadd[role]
+  const remove = PERMISSION_STATE.permissionoverrideremove[role]
+  if (!add || !remove) {
+    return
+  }
+  for (const f of [...add]) {
+    if (pr.has(f)) {
+      add.delete(f)
+    }
+  }
+  for (const f of [...remove]) {
+    if (!pr.has(f)) {
+      remove.delete(f)
+    }
+  }
+}
 
 const PERMISSION_STATE = {
   playertotoken: {} as Record<string, string>,
   rolebytoken: {} as Record<string, string>,
   bannedtokens: new Set<string>(),
   permissionconfig: 'creative' as PERMISSION_CONFIG_NAME,
-  allowlistbyrole: allowlistbyrolefrompreset(PERMISSION_PRESETS.creative),
-  allowlistbyrolecustom: allowlistbyrolefrompreset(PERMISSION_PRESETS.lockdown),
+  permissionoverrideadd: emptyoverridebyrole(),
+  permissionoverrideremove: emptyoverridebyrole(),
+  allowlistbyrole: {} as Record<string, Set<string>>,
 }
+
+recomputeallowlistbyrole()
 
 export function memorymapcommandtofamily(command: string): string {
   return PERMISSION_CONTROLLED_COMMANDS[command] ?? command
@@ -350,14 +426,26 @@ export function memorycanruncommand(player: string, command: string): boolean {
   const family = memorymapcommandtofamily(command)
   const token = PERMISSION_STATE.playertotoken[player]
   if (token === undefined) {
-    apierror(SOFTWARE, player, 'permissions', 'no token (deny)')
+    apierror(
+      SOFTWARE,
+      player,
+      'permissions',
+      'no token (deny)',
+      `${family} - ${command}`,
+    )
     return false
   }
   const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
   const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
   const allowed = allowlist?.has(family) ?? false
   if (!allowed) {
-    apierror(SOFTWARE, player, 'permissions', `${family} (deny)`)
+    apierror(
+      SOFTWARE,
+      player,
+      'permissions',
+      `(deny)`,
+      `${family} - ${command}`,
+    )
     return false
   }
   return true
@@ -369,21 +457,62 @@ export function memorysetplayertotoken(player: string, token: string) {
   }
 }
 
-/** Deserialize storage shape: allowlistbyrole values as arrays, rolebytoken as Record, bannedtokens as array. */
+/**
+ * Restore permissions from storage / login payload.
+ * Legacy `custom` + allowlist snapshots are migrated to base `lockdown` + overrides.
+ * Empty allowlist payloads hydrate from the saved base preset.
+ */
 export function memorysetcommandpermissions(
   bannedtokens: string[],
   rolebytoken: Record<string, string>,
-  permissionconfig: PERMISSION_CONFIG_NAME,
+  permissionconfig: string,
   allowlistbyrole: Record<string, string[]>,
   allowlistbyrolecustom: Record<string, string[]>,
+  permissionoverrideaddbyrole?: Record<string, string[]>,
+  permissionoverrideremovebyrole?: Record<string, string[]>,
 ) {
   PERMISSION_STATE.bannedtokens = new Set(bannedtokens)
   PERMISSION_STATE.rolebytoken = deepcopy(rolebytoken)
-  PERMISSION_STATE.permissionconfig = permissionconfig
-  PERMISSION_STATE.allowlistbyrole = allowlistbyrolefrompreset(allowlistbyrole)
-  PERMISSION_STATE.allowlistbyrolecustom = allowlistbyrolefrompreset(
-    allowlistbyrolecustom,
-  )
+
+  const raw = isstring(permissionconfig) ? permissionconfig : 'creative'
+  let base: PERMISSION_CONFIG_NAME
+  let add = emptyoverridebyrole()
+  let remove = emptyoverridebyrole()
+
+  if (
+    hasanyoverrideentries(
+      permissionoverrideaddbyrole,
+      permissionoverrideremovebyrole,
+    )
+  ) {
+    base = sanitizerpermissionbase(raw === 'custom' ? 'creative' : raw)
+    add = recordtooverridesets(permissionoverrideaddbyrole)
+    remove = recordtooverridesets(permissionoverrideremovebyrole)
+  } else if (raw === 'custom') {
+    const effsource = isallowlistmeaningful(allowlistbyrole)
+      ? allowlistbyrole
+      : allowlistbyrolecustom
+    const eff = allowlistbyrolefrompreset(effsource)
+    base = 'lockdown'
+    const derived = deriveoverridesfromeffective('lockdown', eff)
+    add = derived.add
+    remove = derived.remove
+  } else {
+    base = sanitizerpermissionbase(raw)
+    if (!isallowlistmeaningful(allowlistbyrole)) {
+      /* overrides stay empty */
+    } else {
+      const eff = allowlistbyrolefrompreset(allowlistbyrole)
+      const derived = deriveoverridesfromeffective(base, eff)
+      add = derived.add
+      remove = derived.remove
+    }
+  }
+
+  PERMISSION_STATE.permissionconfig = base
+  PERMISSION_STATE.permissionoverrideadd = add
+  PERMISSION_STATE.permissionoverrideremove = remove
+  recomputeallowlistbyrole()
 }
 
 export function memoryistokenbanned(token: string): boolean {
@@ -418,37 +547,85 @@ export function memoryreadallowlistbyrole(): Record<string, Set<string>> {
   return out
 }
 
+/** Per-role breakdown: base grants, override grants, and families revoked vs base. */
+export type PERMISSION_ALLOWLIST_BREAKDOWN = {
+  effective: string[]
+  frombase: string[]
+  overridegrant: string[]
+  overridedeny: string[]
+}
+
+export function memoryreadallowlistbreakdownbyrole(): Record<
+  string,
+  PERMISSION_ALLOWLIST_BREAKDOWN
+> {
+  const base = PERMISSION_STATE.permissionconfig
+  const out: Record<string, PERMISSION_ALLOWLIST_BREAKDOWN> = {}
+  for (const role of PERMISSION_ROLES) {
+    const preset = presetrolefamilies(base, role)
+    const add = PERMISSION_STATE.permissionoverrideadd[role] ?? new Set()
+    const remove = PERMISSION_STATE.permissionoverrideremove[role] ?? new Set()
+    const eff = PERMISSION_STATE.allowlistbyrole[role] ?? new Set()
+    const frombase: string[] = []
+    const overridegrant: string[] = []
+    for (const f of [...eff].sort()) {
+      if (add.has(f)) {
+        overridegrant.push(f)
+      } else if (preset.has(f) && !remove.has(f)) {
+        frombase.push(f)
+      } else if (!preset.has(f)) {
+        overridegrant.push(f)
+      }
+    }
+    out[role] = {
+      effective: [...eff].sort(),
+      frombase,
+      overridegrant,
+      overridedeny: [...remove].sort(),
+    }
+  }
+  return out
+}
+
 export function memoryreadrolebytoken(): Record<string, string> {
   return { ...PERMISSION_STATE.rolebytoken }
 }
 
 export function memoryallowcommand(role: string, command: string): boolean {
-  if (
-    PERMISSION_STATE.permissionconfig !== 'custom' ||
-    !PERMISSION_ROLES.includes(role)
-  ) {
+  if (!PERMISSION_ROLES.includes(role)) {
     return false
   }
-  // update active state
-  PERMISSION_STATE.allowlistbyrole[role] ??= new Set()
-  PERMISSION_STATE.allowlistbyrole[role].add(command)
-  // update custompermissionconfig
-  PERMISSION_STATE.allowlistbyrolecustom[role] ??= new Set()
-  PERMISSION_STATE.allowlistbyrolecustom[role].add(command)
+  const family = normalizetofamilyforallowlist(command)
+  const base = PERMISSION_STATE.permissionconfig
+  const pr = presetrolefamilies(base, role)
+  const add = PERMISSION_STATE.permissionoverrideadd[role] ?? new Set()
+  const remove = PERMISSION_STATE.permissionoverrideremove[role] ?? new Set()
+  if (remove.has(family)) {
+    remove.delete(family)
+  } else if (!pr.has(family)) {
+    add.add(family)
+  }
+  normalizeoverridesforrole(role)
+  recomputeallowlistbyrole()
   return true
 }
 
 export function memoryrevokecommand(role: string, command: string): boolean {
-  if (
-    PERMISSION_STATE.permissionconfig !== 'custom' ||
-    !PERMISSION_ROLES.includes(role)
-  ) {
+  if (!PERMISSION_ROLES.includes(role)) {
     return false
   }
-  // update active state
-  PERMISSION_STATE.allowlistbyrole[role]?.delete(command)
-  // update custompermissionconfig
-  PERMISSION_STATE.allowlistbyrolecustom[role]?.delete(command)
+  const family = normalizetofamilyforallowlist(command)
+  const base = PERMISSION_STATE.permissionconfig
+  const pr = presetrolefamilies(base, role)
+  const add = PERMISSION_STATE.permissionoverrideadd[role] ?? new Set()
+  const remove = PERMISSION_STATE.permissionoverrideremove[role] ?? new Set()
+  if (add.has(family)) {
+    add.delete(family)
+  } else if (pr.has(family)) {
+    remove.add(family)
+  }
+  normalizeoverridesforrole(role)
+  recomputeallowlistbyrole()
   return true
 }
 
@@ -465,30 +642,24 @@ export function memoryreadpermissionconfig(): PERMISSION_CONFIG_NAME {
   return PERMISSION_STATE.permissionconfig
 }
 
-/**
- * Apply a permission preset. Replaces allowlistbyrole with the preset (custom defaults to lockdown values).
- * Does not change rolebytoken or bannedtokens. When switching from custom, saves current allowlist to custom snapshot.
- */
+/** Set base preset; overrides unchanged; effective allowlist recomputed. */
 export function memoryapplypermissionconfig(name: PERMISSION_CONFIG_NAME) {
-  PERMISSION_STATE.permissionconfig = name
-  if (name === 'custom') {
-    PERMISSION_STATE.allowlistbyrole = deepcopy(
-      PERMISSION_STATE.allowlistbyrolecustom,
-    )
-  } else {
-    PERMISSION_STATE.allowlistbyrole = allowlistbyrolefrompreset(
-      PERMISSION_PRESETS[name],
-    )
+  if (!PERMISSION_CONFIG_NAMES.includes(name)) {
+    return
   }
+  PERMISSION_STATE.permissionconfig = name
+  recomputeallowlistbyrole()
 }
 
-/** Serialize allowlistbyrole for storage (Sets → arrays). */
+/** Serialize for storage / registerstore. */
 export function memoryserializepermissions(): {
   rolebytoken: Record<string, string>
   bannedtokens: string[]
   permissionconfig: PERMISSION_CONFIG_NAME
   allowlistbyrole: Record<string, string[]>
   allowlistbyrolecustom: Record<string, string[]>
+  permissionoverrideaddbyrole: Record<string, string[]>
+  permissionoverrideremovebyrole: Record<string, string[]>
 } {
   return {
     rolebytoken: deepcopy(PERMISSION_STATE.rolebytoken),
@@ -497,8 +668,12 @@ export function memoryserializepermissions(): {
     allowlistbyrole: allowlistbyroletoserialized(
       PERMISSION_STATE.allowlistbyrole,
     ),
-    allowlistbyrolecustom: allowlistbyroletoserialized(
-      PERMISSION_STATE.allowlistbyrolecustom,
+    allowlistbyrolecustom: {},
+    permissionoverrideaddbyrole: allowlistbyroletoserialized(
+      PERMISSION_STATE.permissionoverrideadd,
+    ),
+    permissionoverrideremovebyrole: allowlistbyroletoserialized(
+      PERMISSION_STATE.permissionoverrideremove,
     ),
   }
 }

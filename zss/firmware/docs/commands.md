@@ -24,8 +24,6 @@ All firmware commands and their descriptions. Commands are available depending o
 | `boards` | All boards as goto hyperlinks |
 | `trash` | Books/codepages to delete (operator only) |
 | `dev` | Dev mode / halt execution (operator only) |
-| `loaderlogging` | Toggle loader event logging (operator only) |
-| `promptlogging` | Toggle agent system prompt logging (operator only) |
 | `share` | Share url (operator only) |
 | `save` | And persist current state (operator only) |
 | `fork` | Tab with copy of state (operator only) |
@@ -41,16 +39,21 @@ All firmware commands and their descriptions. Commands are available depending o
 | `findany` | Matched elements |
 | `zztsearch` | ZZT content by field and text |
 | `zztrandom` | Random ZZT content |
-| `admin` | Admin scroll |
+| `admin` | Admin scroll (active players, gadget/dev links for operator, multiplayer); config toggles crt, lowrez, scanlines, voice2text, loaderlogging, promptlogging |
 | `joincode` | Multiplayer session (operator only) |
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Twitch chat integration (operator only) |
 | `broadcast` | Stream broadcast (operator only) |
-| `permissions` | List player→role and role→command |
-| `allow` | Add command(s) to role allowlist |
-| `revoke` | Remove command from role or revoke all |
-| `role` | Set player token to role |
+| `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
+| `access` | Set base preset: `lockdown` or `creative` (overrides preserved) |
+| `allow` | Grant a permission family for a role (`admin` / `mod` / `player`); use a family name or any command that maps to that family |
+| `revoke` | Revoke a family relative to the preset for a role (or undo a prior `allow`) |
+| `role` | Assign role for a player id |
+| `ban` | Ban player by id (session token; blocks login) or list active players |
+| `unban` | Unban player by id or list banned tokens |
 | `agent` | start/stop/list AI agents; prompt agents via in-world chat only |
+| `userinput` | Inject player input (`up` / `down` / `left` / `right` / `ok` / `cancel` / `shoot*`…) |
+| `pilot` | Walk player toward coordinates (`#pilot x y`) or `#pilot stop` |
 | `screenshot` | Screenshot for capture |
 | `bbs` | Login/publish actions |
 
@@ -173,7 +176,6 @@ All firmware commands and their descriptions. Commands are available depending o
 | `ttsengine` | List TTS engines (no args) or set engine and config |
 | `tts` | Text with voice (or clear queue) |
 | `ttsqueue` | TTS phrase |
-| `bpm` | BPM |
 | `vol` | Main volume |
 | `bgvol` | Bgplay volume |
 | `ttsvol` | TTS volume |

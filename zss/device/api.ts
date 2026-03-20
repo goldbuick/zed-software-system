@@ -323,15 +323,6 @@ export function synthbgplay(
   device.emit(player, 'synth:bgplay', [board, buffer, quantize])
 }
 
-export function synthbpm(
-  device: DEVICELIKE,
-  player: string,
-  board: MAYBE<string>,
-  bpm: number,
-) {
-  device.emit(player, 'synth:bpm', [board, bpm])
-}
-
 export function synthplayvolume(
   device: DEVICELIKE,
   player: string,

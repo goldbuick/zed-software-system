@@ -43,7 +43,6 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | `bgplayon1n` | Play background audio quantized to whole note |
 | `vol` | Set playback volume |
 | `bgvol` | Set background playback volume |
-| `bpm` | Set BPM (beats per minute) |
 
 #### Synthesis
 | Command | Description |
