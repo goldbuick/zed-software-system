@@ -1,12 +1,11 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, TEXT_READER } from 'zss/device/api'
 import { apilog, heavymodelclassify, heavymodelprompt } from 'zss/device/api'
-import { readagentname } from 'zss/device/vm/handlers/agent'
 import {
-  ATTENTION_WINDOW_MS,
-  agentlastresponse,
-  agents,
-} from 'zss/device/vm/state'
+  readagentnamefromshadow,
+  readagentshadow,
+} from 'zss/device/vm/agentshadow'
+import { ATTENTION_WINDOW_MS, agentlastresponse } from 'zss/device/vm/state'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
@@ -85,21 +84,18 @@ function routechattoagents(
       return
     }
     const senderpt = { x: senderelement.x ?? 0, y: senderelement.y ?? 0 }
-    const agentlist = Object.values(agents)
+    const shadow = readagentshadow()
     const agentelements: (typeof senderelement)[] = []
-    for (let i = 0; i < agentlist.length; ++i) {
-      const agent = agentlist[i]
-      if (
-        agent.id() === message.player ||
-        readagentname(agent.id()) === sendername
-      ) {
+    for (let i = 0; i < shadow.ids.length; ++i) {
+      const agentid = shadow.ids[i]
+      if (agentid === message.player || readagentnamefromshadow(agentid) === sendername) {
         continue
       }
-      const agentboard = memoryreadplayerboard(agent.id())
+      const agentboard = memoryreadplayerboard(agentid)
       if (!ispresent(agentboard) || agentboard.id !== boardid) {
         continue
       }
-      const el = memoryreadobject(board, agent.id())
+      const el = memoryreadobject(board, agentid)
       if (ispresent(el)) {
         agentelements.push(el)
       }
@@ -107,13 +103,12 @@ function routechattoagents(
     const nearest = memorypickboardnearestpt(senderpt, agentelements)
     const nearestid = nearest?.id
     if (ispresent(nearest) && isstring(nearestid)) {
-      const agent = agents[nearestid]
-      if (ispresent(agent)) {
+      if (shadow.ids.includes(nearestid)) {
         heavymodelprompt(
           vm,
           message.player,
           nearestid,
-          readagentname(nearestid),
+          readagentnamefromshadow(nearestid),
           messagetext,
           memoryreadconfig('promptlogging'),
         )
@@ -122,31 +117,28 @@ function routechattoagents(
     return
   }
 
-  const agentlist = Object.values(agents)
-  for (let i = 0; i < agentlist.length; ++i) {
-    const agent = agentlist[i]
+  const shadow = readagentshadow()
+  for (let i = 0; i < shadow.ids.length; ++i) {
+    const agentid = shadow.ids[i]
 
-    if (
-      agent.id() === message.player ||
-      sendername === readagentname(agent.id())
-    ) {
+    if (agentid === message.player || sendername === readagentnamefromshadow(agentid)) {
       continue
     }
 
-    const agentboard = memoryreadplayerboard(agent.id())
+    const agentboard = memoryreadplayerboard(agentid)
     if (!ispresent(agentboard) || agentboard.id !== boardid) {
       continue
     }
 
-    const lastresponse = agentlastresponse[agent.id()] ?? 0
+    const lastresponse = agentlastresponse[agentid] ?? 0
     const hasattention = now - lastresponse < ATTENTION_WINDOW_MS
 
-    const name = readagentname(agent.id())
+    const name = readagentnamefromshadow(agentid)
     if (hasattention || namematches(name, messagetext)) {
       heavymodelprompt(
         vm,
         message.player,
-        agent.id(),
+        agentid,
         name,
         messagetext,
         memoryreadconfig('promptlogging'),
@@ -155,7 +147,7 @@ function routechattoagents(
       heavymodelclassify(
         vm,
         message.player,
-        agent.id(),
+        agentid,
         name,
         messagetext,
         memoryreadconfig('promptlogging'),

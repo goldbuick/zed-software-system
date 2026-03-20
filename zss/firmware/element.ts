@@ -1,6 +1,11 @@
 import { MathUtils } from 'three'
 import { CHIP } from 'zss/chip'
-import { apitoast, registerstore, vmlogout } from 'zss/device/api'
+import {
+  apitoast,
+  heavyagentsyncuserdisplay,
+  registerstore,
+  vmlogout,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -701,9 +706,16 @@ export const ELEMENT_FIRMWARE = createfirmware({
       flags[name] = value
       // sticky flags
       switch (name) {
-        case 'user':
+        case 'user': {
           registerstore(SOFTWARE, player, name, value)
+          heavyagentsyncuserdisplay(
+            SOFTWARE,
+            player,
+            player,
+            maptostring(value),
+          )
           break
+        }
       }
       return [true, value]
     }

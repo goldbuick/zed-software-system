@@ -26,14 +26,6 @@ export const observers: Record<string, (() => void) | undefined> = {}
 export const ATTENTION_WINDOW_MS = 30_000
 export const agentlastresponse: Record<string, number> = {}
 
-export const agents: Record<
-  string,
-  {
-    id: () => string
-    stop: () => void
-  }
-> = {}
-
 export const STATS_BOARD = [
   'currenttick',
   'boardid',

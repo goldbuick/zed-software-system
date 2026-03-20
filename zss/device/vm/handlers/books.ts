@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apilog, registerloginready } from 'zss/device/api'
-import { restoreagentsfrommainbook } from 'zss/device/vm/handlers/agent'
 import { doasync } from 'zss/mapping/func'
 import { isarray, isstring } from 'zss/mapping/types'
 import { memoryreadoperator, memoryresetbooks } from 'zss/memory/session'
@@ -24,7 +23,5 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
     apilog(vm, message.player, `loading ${booknames.join(', ')}`)
     memoryresetbooks(books)
     registerloginready(vm, message.player)
-    // Restore agents from main book flag (agentlist.running) so they survive reload
-    restoreagentsfrommainbook(vm, message.player)
   })
 }

@@ -17,6 +17,10 @@ import {
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
+import {
+  AGENTS_ROSTER_STORAGE_KEY,
+  isvalidagentsroster,
+} from 'zss/feature/heavy/agentsroster'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
@@ -52,6 +56,7 @@ import {
   apitoast,
   bridgejoin,
   gadgetserverdesync,
+  heavyrestoreagents,
   registerterminalclose,
   registerterminalfull,
   vmbooks,
@@ -313,6 +318,13 @@ export const register = createdevice(
           if (isclimode()) {
             vmcli(register, myplayerid, '#joincode')
           }
+          doasync(register, message.player, async () => {
+            const vars = await storagereadvars()
+            const raw = vars[AGENTS_ROSTER_STORAGE_KEY]
+            if (isvalidagentsroster(raw)) {
+              heavyrestoreagents(register, myplayerid, raw)
+            }
+          })
         } else {
           doasync(register, message.player, async () => {
             await writewikilink()

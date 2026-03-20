@@ -16,6 +16,15 @@ import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/vmquery'
+import {
+  heavyrunagentlist,
+  heavyrunagentname,
+  heavyrunagentprompt,
+  heavyrunagentstart,
+  heavyrunagentstop,
+  heavyrunrestoreagents,
+  heavyrunsyncuserdisplay,
+} from 'zss/feature/heavy/agentlifecycle'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
@@ -273,6 +282,27 @@ const heavy = createdevice('heavy', [], (message) => {
       break
     case 'memoryresult':
       memoryqueryresolvemessage(message)
+      break
+    case 'agentstart':
+      heavyrunagentstart(heavy, message)
+      break
+    case 'agentstop':
+      heavyrunagentstop(heavy, message)
+      break
+    case 'agentlist':
+      heavyrunagentlist(heavy, message)
+      break
+    case 'agentprompt':
+      heavyrunagentprompt(heavy, message)
+      break
+    case 'agentname':
+      heavyrunagentname(heavy, message)
+      break
+    case 'syncuserdisplay':
+      heavyrunsyncuserdisplay(heavy, message)
+      break
+    case 'restoreagents':
+      heavyrunrestoreagents(heavy, message)
       break
     default:
       apierror(

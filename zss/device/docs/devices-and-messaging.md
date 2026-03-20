@@ -100,8 +100,8 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../cafe/index.tsx)) skips Canvas b
 | `userinput` | main | — | Keyboard/gamepad → `vm:*` / `register:*`. Device is **not** loaded from [`userspace.ts`](../../userspace.ts); it is created as a **side effect** of importing [`userinput.tsx`](../../gadget/userinput.tsx) when the UI mounts (e.g. [`Engine`](../../gadget/engine.tsx) → `UserFocus`, tape/terminal/editor imports). |
 | `bridge` | main | — | `bridge:*` multiplayer / fetch / streams |
 | `synth` | main | — | `synth:*` audio |
-| `heavy` | **heavy worker** hub ([`heavyspace.ts`](../../heavyspace.ts)) | — | TTS / LLM; targets `heavy:*` (reached via main `forward` → `postMessage`) |
-| `agent_<pid>` | main (per agent) | `second` | Keepalive → `vm:doot` ([`agent.ts`](../../feature/heavy/agent.ts)) |
+| `heavy` | **heavy worker** hub ([`heavyspace.ts`](../../heavyspace.ts)) | — | TTS / LLM, **`heavy:agent*`** lifecycle ([`heavy.ts`](../heavy.ts), [`agentlifecycle.ts`](../../feature/heavy/agentlifecycle.ts)); reached via main `forward` → `postMessage` |
+| `agent_<pid>` | **heavy worker** (per agent) | `second` | Keepalive → `vm:doot` ([`agent.ts`](../../feature/heavy/agent.ts)); roster persisted in IDB `storage` as `agents_roster` via `register:store` |
 | `SOFTWARE` | whichever hub loaded it | — | Session holder + `emit` helper |
 | **Ephemeral** `createdevice` | varies | — | e.g. one-off TTS in [`feature/tts.ts`](../../feature/tts.ts) |
 
@@ -179,6 +179,7 @@ flowchart LR
   end
   subgraph Heavy_worker [Heavy_worker]
     Hy[heavy]
+    Ag[agent_*]
   end
   UI -->|vminput| VM
   RegIn -->|vmoperator_vmlogin_vmloader_vmcli| VM
@@ -188,6 +189,8 @@ flowchart LR
   GC -->|gadgetserver_desync| GS
   VM -->|heavy_colon_star| Hy
   VM -->|synth_colon_star| Sy
+  RegIn -->|heavy_agentstar_restoreagents| Hy
+  Ag -->|vm_doot_vmlogin| VM
 ```
 
 ---
@@ -221,12 +224,10 @@ flowchart TB
     gadgetclient
     bridge
     synth
-    agentpid[agent_pid]
     modemMain["modem main instance"]
     apihelpers[api_log_chat_toast]
     register -->|vm_colon| vm
     userinput -->|vm_colon| vm
-    agentpid -->|vm_doot| vm
     vm -->|register_colon| register
     vm -->|reply_register_paths| register
     vm -->|synth_colon| synth
@@ -236,27 +237,30 @@ flowchart TB
     register -->|gadgetserver_desync| gadgetserver
     apihelpers -->|log_chat_toast| register
     clock -->|second| register
-    clock -->|second| agentpid
     clock -->|second| modemMain
   end
   subgraph Heavy_worker [Heavy_worker]
     heavy
+    agenth[agent_*]
+    agenth -->|vm_doot_vmlogin| vm
   end
+  clock -->|second| agenth
   vm -->|heavy_colon| heavy
   vm -->|heavy_memoryresult_etc| heavy
+  heavy -->|vm_agentsync_vm_pilotagentclear| vm
 ```
 
 **Readout**
 
 - **Sim worker** — `clock`, `vm`, `gadgetserver`, one **`modem`** instance ([`simspace.ts`](../../simspace.ts)).
-- **Main thread** — `register`, `gadgetclient`, `userinput`, `bridge`, `synth`, **`agent_*`**, second **`modem`** instance ([`userspace.ts`](../../userspace.ts)), and `api`-driven emits (**`apihelpers`**); chips/UI often use **`SOFTWARE`** on whichever hub loaded them (sim for game logic).
-- **Heavy worker** — `heavy` only ([`heavyspace.ts`](../../heavyspace.ts)).
-- **`second`** — `clock` runs on sim, but `register`, `agent_*`, and **main `modem`** receive **`second`** only after **sim → main** forward (same tick as sim-local `vm` / `modemSim`).
+- **Main thread** — `register`, `gadgetclient`, `userinput`, `bridge`, `synth`, second **`modem`** instance ([`userspace.ts`](../../userspace.ts)), and `api`-driven emits (**`apihelpers`**); chips/UI often use **`SOFTWARE`** on whichever hub loaded them (sim for game logic).
+- **Heavy worker** — `heavy` plus dynamic **`agent_*`** devices ([`heavyspace.ts`](../../heavyspace.ts), [`feature/heavy/agent.ts`](../../feature/heavy/agent.ts)).
+- **`second`** — `clock` runs on sim; **`register`**, **main `modem`**, and **`heavy`/`agent_*`** receive **`second`** after **sim → main** forward (and main → heavy where applicable), same tick as sim-local `vm` / `modemSim`.
 
 Notes:
 
 - **`reply_register_paths`** — `vm.reply` / `vm.replynext` send to `register:ackoperator`, `register:acklogin`, `register:ackzsswords`, `register:acklook`, etc. (see [`vm/handlers/`](../vm/handlers/)).
-- **`agent_pid`** — Dynamic [`agent_${pid}`](../../feature/heavy/agent.ts) on the **main** hub; `second` drives `vm:doot`.
+- **`agent_*`** — Dynamic [`agent_${pid}`](../../feature/heavy/agent.ts) on the **heavy worker** hub; `second` (forwarded to heavy) drives `vm:doot`. Roster is stored under **`agents_roster`** in IDB (`storagewritevar`); **`register`** triggers **`heavy:restoreagents`** after successful **`acklogin`**. **`vm:agentsync`** updates a sim-side shadow for chat routing ([`agentshadow.ts`](../vm/agentshadow.ts), [`loader.ts`](../vm/handlers/loader.ts)).
 - **`apihelpers`** — [`api.ts`](../api.ts) `apilog` → `log`, `apichat` → `chat`, `apitoast` → `toast` (**`register`** subscribes to those topics). Call sites can be sim or main; **`emit`** always hits the **caller's** hub first.
 - **`ready`** — [`vm`](../vm.ts) or [`stub`](../stub.ts) (device name `vm`) emits via [`platformready`](../api.ts); all devices may capture session on first `ready` (not shown as edges to every node).
 - **`SOFTWARE.emit`** from chips / UI uses targets like `{chipId}:message`; routing is per-device id, not the `vm` node (see [`chip.ts`](../../chip.ts), [`gamesend.ts`](../../memory/gamesend.ts)).
@@ -269,15 +273,15 @@ Notes:
 | `tock` | `gadgetserver` | Sim worker | `clock` | Sim worker |
 | `second` | `vm` | Sim worker | `clock` | Sim worker |
 | `second` | `modem` | Sim **or** main (two instances) | `clock` | Sim → forward → main |
-| `second` | `register`, `agent_*` | Main thread | `clock` (forwarded) | Sim → main |
-| `second` | `heavy` | Heavy worker | `clock` / main forward | Sim / main → heavy |
+| `second` | `register` | Main thread | `clock` (forwarded) | Sim → main |
+| `second` | `heavy`, `agent_*` | Heavy worker | `clock` / main forward | Sim / main → heavy |
 | `ready` | all devices | per hub | `vm` / stub, [`platformready`](../api.ts) | Sim (or stub worker) |
 | `sessionreset` | all devices | per hub | [`sessionreset`](../api.ts) | usually main (`SOFTWARE`) |
-| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `agent_*`, `SOFTWARE` | Main / sim |
+| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `heavy` (`vm:agentsync`, `vm:pilotagentclear`), `SOFTWARE` | Main / sim / heavy → sim |
 | `register` | `register` | Main thread | `vm` (replies), `userinput`, `api` | Sim → main / main |
 | `gadgetserver` | `gadgetserver` | Sim worker | `gadgetclient`, `register`, `api` | Main → sim |
 | `gadgetclient` | `gadgetclient` | Main thread | `gadgetserver`, `api` | Sim → main / main |
-| `heavy` | `heavy` | Heavy worker | `vm`, `api`, [`memoryquery`](../vm/handlers/memoryquery.ts), [`pilot`](../vm/handlers/pilot.ts) | Sim / main → heavy |
+| `heavy` | `heavy` | Heavy worker | `vm`, `api`, [`memoryquery`](../vm/handlers/memoryquery.ts), [`pilot`](../vm/handlers/pilot.ts), **`heavy:agent*`** / `heavy:restoreagents` | Sim / main → heavy |
 | `synth` | `synth` | Main thread | `api` / firmware | Sim → main / main |
 | `bridge` | `bridge` | Main thread | `api` | Main |
 | `log` | `register` (topic) | Main thread | `api` `apilog`, firmware | any hub → often main |
