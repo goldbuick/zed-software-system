@@ -48,30 +48,29 @@ flowchart TB
     SIG[timeSignatures or default 4/4]
   end
   subgraph collect [collectmidilayers]
-    Loop[For each track with notes]
-    Melodic[Melodic: channel not 9, max 4 voices per play, file order]
-    DrumB[Drum buckets: channel 9]
-    Merge[mergedrumtracksnotelist sort by tick]
-    Cap[Note count cap 12000, truncation flag]
+    Flat[Flatten all notes sort ticks track midi]
+    Four[First four note events]
+    U[Unique track indices first appearance order]
+    Build[Build layers melodic or merged drums]
+    Cap[Note count cap 12000 truncation flag]
   end
   subgraph perbar [Per measure m]
-    Span["start = m * measureTicks, end = start + span"]
-    M0[monophonelineinmeasure per melodic track]
-    D0[drumlineinmeasure merged drums]
+    Span["start/end from midimeasurespans — active time sig per bar"]
+    L0[Per layer monophonelineinmeasure or drumlineinmeasure]
     Join["segs.join PLAY_VOICE_SEPARATOR"]
     Pad{m equals 0 and drums only?}
     Unshift["prepend playreststringforticks span"]
-    Pad2{m equals 0 and empty voice0?}
-    Fill0["segs0 equals playreststringforticks span"]
+    Pad2{m equals 0 empty melodic with other sound?}
+    Fill0["fill that melodic seg playreststringforticks span"]
   end
-  MidiObj --> Loop
-  Loop --> Melodic
-  Loop --> DrumB
-  DrumB --> Merge
-  Melodic --> M0
-  Merge --> D0
-  M0 --> Join
-  D0 --> Join
+  MidiObj --> Flat
+  Flat --> Four
+  Four --> U
+  U --> Build
+  Build --> Cap
+  Cap --> Span
+  Span --> L0
+  L0 --> Join
   Join --> Pad
   Pad -->|yes| Unshift
   Pad -->|no| Pad2
@@ -81,9 +80,9 @@ flowchart TB
   Fill0 --> Out
 ```
 
-- **Track cap:** only the **first four** MIDI tracks with notes (file order) are imported (`MAX_MIDI_TRACKS` in [`midiplay.ts`](../midiplay.ts)).
-- **Voice cap:** at most **four** `;`-separated segments per `#play` (`MAX_VOICES_PER_PLAY`): up to four melodic lines if none of those tracks are drums, else three melodic plus one merged drum voice among the selected tracks (see [`collectmidilayers`](../midiplay.ts)).
-- **Measure length:** [`miditickspersmeasure`](../midiplay.ts) from time signature (default `4 * ppq`).
+- **Track selection:** [`midiselecttracksfromfirstnotes`](../midiplay.ts) — take the **first four note-ons** in the whole file after sorting by **`(ticks, track index, MIDI pitch)`**; **U** = unique track indices in **order of first appearance** among those four events (**1–4** tracks; fewer if the same track supplies all four hits). There is **no** separate “always import drums from the whole file” pass; channel **9** is included only if it appears in **U** (multiple selected drum tracks still merge into **one** drum layer at the **first** drum position in **U**).
+- **Voice cap:** at most **four** `;`-separated segments per `#play` (`MAX_VOICES_PER_PLAY`). Layers follow **U** order (melodic track = one segment; selected drums = one merged segment).
+- **Measure boundaries:** [`midimeasurespans`](../midiplay.ts) walks the file using [`miditickspersmeasure`](../midiplay.ts) at each bar start so **meter changes** stay aligned (previously a single length from tick 0 was used for every bar).
 - **Per voice in bar:** [`monophonelineinmeasure`](../midiplay.ts) / [`drumlineinmeasure`](../midiplay.ts) — notes filtered to `[start, end)`, gaps filled with [`appendplayrests`](../midiplay.ts) (internal).
 - **Token shape (ZZT-style):** **Melodic:** for each note, `+`/`-` to target octave (from baseline 3), then duration op (`ytsiqhw`), then letter + optional `#`/`!` (see [`playnotation.ts`](../../synth/playnotation.ts)). **Drums:** duration then drum token (digits `0`–`9` or `p` for GM note 39 hand clap; see map in [`midiplay.ts`](../midiplay.ts)). **Rests:** duration then `x` (duration carries until the next op). [`playreststringforticks`](../midiplay.ts) builds a rest-only first voice when needed.
 - **Drum-only:** on **measure 0 only**, prepend full-bar rest (e.g. `wx; ` before drums) so the first voice is silent and drums land on the next parseplay segment; later measures omit this pad (see [`midiplaysnippetsbymeasure`](../midiplay.ts) tail).
@@ -110,11 +109,11 @@ Structure matches [`.zzm` import](../zzm.ts): one `:song_0` block with **multipl
 #end
 ```
 
-Example (two melodic tracks, no drums), from [`midi.ts`](../midi.ts):
+Example (`twomeasures.mid` fixture): the first four global note-ons all lie on **track 0**, so only that track is imported (track 1 is ignored):
 
 ```text
-#play +qcdef; wx
-#play +qgaa#+c; +qefga
+#play +qcdef
+#play +qgaa#+c
 ```
 
 ## 4. One `#play` line → runtime (`parseplay`)

@@ -6,7 +6,9 @@ import {
   drumline,
   durationticksToOp,
   MAX_VOICES_PER_PLAY,
+  midimeasurespans,
   midiplaysnippetsbymeasure,
+  midiselecttracksfromfirstnotes,
   midivoicesfrommidi,
   monophoneline,
   playpitchfromscientificname,
@@ -36,6 +38,17 @@ describe('midiplay helpers', () => {
       480,
     )
     expect(line).toBe('+qcxe')
+  })
+
+  it('monophoneline skips overlapping notes (chord → one voice keeps first by sort order)', () => {
+    const line = monophoneline(
+      [
+        { midi: 60, ticks: 0, durationTicks: 480, name: 'C4' },
+        { midi: 64, ticks: 0, durationTicks: 480, name: 'E4' },
+      ],
+      480,
+    )
+    expect(line).toBe('+qc')
   })
 
   it('drumline uses duration-before-digit', () => {
@@ -113,7 +126,7 @@ describe('midivoicesfrommidi', () => {
     expect(voices).toEqual(['+qc', '++qc'])
   })
 
-  it(`keeps at most ${MAX_VOICES_PER_PLAY} melodic voices when no drums`, () => {
+  it(`first four global note-ons across ${MAX_VOICES_PER_PLAY + 1} tracks yield ${MAX_VOICES_PER_PLAY} voices`, () => {
     const midi = new Midi()
     for (let ch = 0; ch < 5; ch++) {
       const tr = midi.addTrack()
@@ -129,7 +142,7 @@ describe('midivoicesfrommidi', () => {
     expect(voices).toHaveLength(MAX_VOICES_PER_PLAY)
   })
 
-  it('reserves one voice for merged drums when drum is among first four tracks', () => {
+  it('drum track in first-four note-ons is merged as one layer in sort order (not last)', () => {
     const midi = new Midi()
     const a = midi.addTrack()
     a.channel = 0
@@ -147,11 +160,15 @@ describe('midivoicesfrommidi', () => {
     tail.channel = 3
     tail.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
     const { voices } = midivoicesfrommidi(midi)
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0, 1, 2, 3])
     expect(voices).toHaveLength(MAX_VOICES_PER_PLAY)
-    expect(voices[MAX_VOICES_PER_PLAY - 1]).toBe('q9')
+    expect(voices[0]).toBe('+qc')
+    expect(voices[1]).toBe('+qc')
+    expect(voices[2]).toBe('q9')
+    expect(voices[3]).toBe('+qc')
   })
 
-  it('ignores a drum track if it is after the fourth track-with-notes', () => {
+  it('ignores drum track if its first note is not among first four global note-ons', () => {
     const midi = new Midi()
     for (let ch = 0; ch < 4; ch++) {
       const tr = midi.addTrack()
@@ -166,7 +183,7 @@ describe('midivoicesfrommidi', () => {
     expect(voices.join('')).not.toContain('9')
   })
 
-  it('drums merged into one voice after all melodic tracks', () => {
+  it('drum track before melodic in file order appears first in voices', () => {
     const midi = new Midi()
     const drumfirst = midi.addTrack()
     drumfirst.channel = 9
@@ -175,7 +192,8 @@ describe('midivoicesfrommidi', () => {
     mel.channel = 0
     mel.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
     const { voices } = midivoicesfrommidi(midi)
-    expect(voices).toEqual(['+qc', 'q9'])
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0, 1])
+    expect(voices).toEqual(['q9', '+qc'])
   })
 
   it('multiple drum tracks merge into one line', () => {
@@ -223,7 +241,65 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
     const midi = new Midi(new Uint8Array(buf))
     const { snippets, truncatedbynotes } = midiplaysnippetsbymeasure(midi)
     expect(truncatedbynotes).toBe(false)
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0])
     const playlines = snippets.map((s) => `#play ${s}`)
-    expect(playlines).toEqual(['#play +qcdef; wx', '#play +qgaa#+c; +qefga'])
+    expect(playlines).toEqual(['#play +qcdef', '#play +qgaa#+c'])
+  })
+
+  it('first four note-ons on one track collapse to one voice', () => {
+    const midi = new Midi()
+    const t = midi.addTrack()
+    t.channel = 0
+    for (let i = 0; i < 6; i++) {
+      t.addNote({
+        midi: 60 + i,
+        ticks: i * 120,
+        durationTicks: 120,
+        velocity: 0.8,
+      })
+    }
+    const b = midi.addTrack()
+    b.channel = 1
+    b.addNote({ midi: 72, ticks: 2000, durationTicks: 480, velocity: 0.8 })
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0])
+    const { voices } = midivoicesfrommidi(midi)
+    expect(voices).toHaveLength(1)
+  })
+
+  it('midiselecttracksfromfirstnotes uses ticks then track then midi', () => {
+    const midi = new Midi()
+    const late = midi.addTrack()
+    late.channel = 0
+    late.addNote({ midi: 60, ticks: 100, durationTicks: 480, velocity: 0.8 })
+    const early = midi.addTrack()
+    early.channel = 1
+    early.addNote({ midi: 72, ticks: 0, durationTicks: 480, velocity: 0.8 })
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([1, 0])
+  })
+
+  it('midimeasurespans follows each time signature at measure boundaries', () => {
+    const midi = new Midi()
+    midi.header.timeSignatures.push({ ticks: 0, timeSignature: [3, 4] })
+    midi.header.timeSignatures.push({ ticks: 1440, timeSignature: [4, 4] })
+    midi.header.update()
+    expect(midimeasurespans(midi, 2000)).toEqual([
+      { start: 0, end: 1440 },
+      { start: 1440, end: 3360 },
+    ])
+  })
+
+  it('aligns #play bars when meter changes mid-piece', () => {
+    const midi = new Midi()
+    midi.header.timeSignatures.push({ ticks: 0, timeSignature: [3, 4] })
+    midi.header.timeSignatures.push({ ticks: 1440, timeSignature: [4, 4] })
+    midi.header.update()
+    const tr = midi.addTrack()
+    tr.channel = 0
+    tr.addNote({ midi: 60, ticks: 1440, durationTicks: 480, velocity: 0.8 })
+    const { snippets } = midiplaysnippetsbymeasure(midi)
+    expect(snippets).toHaveLength(2)
+    expect(snippets[0]).toContain('x')
+    expect(snippets[1]).toMatch(/^\+qc/)
+    expect(snippets[1]).toMatch(/x$/)
   })
 })

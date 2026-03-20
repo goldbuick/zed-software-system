@@ -6,8 +6,8 @@
  * to following notes, drum tokens (`0`–`9`, **`p`** clap), and rests **`x`** (drum/rest lines keep duration
  * before hit or rest).
  * Sharp/flat **after** the letter (`c#`, `b!`). Polyphony: `PLAY_VOICE_SEPARATOR` separates voices.
- * At most **`MAX_MIDI_TRACKS` (4)** MIDI tracks (with notes, file order) are read; output has at most **`MAX_VOICES_PER_PLAY` (4)** segments per `#play` (with drums, up to three melodic plus merged drums).
- * GM drum tracks merge into one trailing voice (channel 10 / index 9). Drum-only imports prepend a
+ * At most **`MAX_VOICES_PER_PLAY` (4)** segments per `#play`. Tracks are chosen from the **first four note-ons** in global time order (sort `ticks`, then track index, then MIDI pitch); unique tracks among those events get a voice (1–4). Selected **channel 10** (index 9) tracks merge into **one** drum layer at the **first** selected drum track’s position in that order.
+ * Drum-only imports prepend a
  * full-bar rest voice on **measure 0 only** so the first bar’s drums are not synth 0; later bars omit that pad.
  */
 
@@ -18,7 +18,7 @@ export const MAX_NOTE_EVENTS_MIDI = 12000
 /** Max `;`-separated segments per `#play` (melodic tracks + one merged drum voice). */
 export const MAX_VOICES_PER_PLAY = 4
 
-/** Max MIDI tracks (with notes, file order) read during import; must match `MAX_VOICES_PER_PLAY`. */
+/** Legacy cap name; selection uses first four global note-ons (up to four unique tracks). */
 export const MAX_MIDI_TRACKS = MAX_VOICES_PER_PLAY
 
 /** @deprecated Use `MAX_VOICES_PER_PLAY` / `MAX_MIDI_TRACKS`. */
@@ -214,15 +214,50 @@ type MIDINOTE = {
   name: string
 }
 
-/** First `maxcount` track indices (file order) that have at least one note. */
-function midiselectedtrackindices(midi: Midi, maxcount: number): number[] {
-  const selected: number[] = []
-  for (let t = 0; t < midi.tracks.length && selected.length < maxcount; ++t) {
-    if (midi.tracks[t]!.notes.length > 0) {
-      selected.push(t)
+type midinotelayerkind = 'melodic' | 'drums'
+
+type midinotelayer = {
+  kind: midinotelayerkind
+  notes: MIDINOTE[]
+}
+
+/** Flat note ref for global sort (first-four note-on selection). */
+type midiflatnoteref = {
+  ticks: number
+  trackindex: number
+  midi: number
+}
+
+/**
+ * Unique track indices in first-appearance order among the first four notes in the whole file
+ * (stable sort: ticks, track index, MIDI note number).
+ */
+export function midiselecttracksfromfirstnotes(midi: Midi): number[] {
+  const flat: midiflatnoteref[] = []
+  for (let t = 0; t < midi.tracks.length; ++t) {
+    const notes = midi.tracks[t]!.notes
+    for (let i = 0; i < notes.length; ++i) {
+      const n = notes[i]!
+      flat.push({ ticks: n.ticks, trackindex: t, midi: n.midi })
     }
   }
-  return selected
+  flat.sort(
+    (a, b) =>
+      a.ticks - b.ticks ||
+      a.trackindex - b.trackindex ||
+      a.midi - b.midi,
+  )
+  const seen = new Set<number>()
+  const u: number[] = []
+  const ntake = Math.min(4, flat.length)
+  for (let i = 0; i < ntake; ++i) {
+    const t = flat[i]!.trackindex
+    if (!seen.has(t)) {
+      seen.add(t)
+      u.push(t)
+    }
+  }
+  return u
 }
 
 function mergedrumtracksnotelist(buckets: MIDINOTE[][]): MIDINOTE[] {
@@ -237,56 +272,72 @@ function mergedrumtracksnotelist(buckets: MIDINOTE[][]): MIDINOTE[] {
   return all
 }
 
+/** Voices in `#play` order: melodic lines and merged drums interleaved by first-four-note track order. */
+function midibuildlayersfortracks(
+  midi: Midi,
+  trackorder: number[],
+): midinotelayer[] {
+  const drumtracks = trackorder.filter((t) => midi.tracks[t]!.channel === 9)
+  const mergeddrums =
+    drumtracks.length > 0
+      ? mergedrumtracksnotelist(
+          drumtracks.map((t) => midi.tracks[t]!.notes as MIDINOTE[]),
+        )
+      : []
+  const layers: midinotelayer[] = []
+  let drumemitted = false
+  for (let k = 0; k < trackorder.length; ++k) {
+    const t = trackorder[k]!
+    const track = midi.tracks[t]!
+    if (track.channel === 9) {
+      if (!drumemitted) {
+        drumemitted = true
+        layers.push({ kind: 'drums', notes: mergeddrums })
+      }
+    } else {
+      layers.push({ kind: 'melodic', notes: track.notes as MIDINOTE[] })
+    }
+  }
+  return layers
+}
+
 /**
- * Reads at most `MAX_MIDI_TRACKS` tracks that have notes (file order).
- * Melodic lines + merged drum voice still respect `MAX_VOICES_PER_PLAY`.
+ * Builds play layers from tracks that appear among the first four global note-ons (`midiselecttracksfromfirstnotes`).
+ * Respects `MAX_NOTE_EVENTS_MIDI` in layer order (truncates before the layer that would exceed the cap).
  */
 function collectmidilayers(
   midi: Midi,
   options?: {
     maxnoteevents?: number
-    /** Upper bound on melodic tracks; clamped so total voices never exceed `MAX_VOICES_PER_PLAY`. */
+    /** @deprecated No longer used; selection is fixed by first-four note-ons. */
     maxtracks?: number
-    /** Override max MIDI tracks considered (default `MAX_MIDI_TRACKS`). */
+    /** @deprecated No longer used. */
     maxmiditracks?: number
   },
 ): {
-  melodic: MIDINOTE[][]
-  drums: MIDINOTE[]
+  layers: midinotelayer[]
   truncatedbynotes: boolean
 } {
   const maxnoteevents = options?.maxnoteevents ?? MAX_NOTE_EVENTS_MIDI
-  const maxmiditracks = options?.maxmiditracks ?? MAX_MIDI_TRACKS
-  const selected = midiselectedtrackindices(midi, maxmiditracks)
-  const drumslots = selected.some((ti) => midi.tracks[ti]!.channel === 9)
-    ? 1
-    : 0
-  const maxmelodicdefault = MAX_VOICES_PER_PLAY - drumslots
-  const maxmelodic = Math.min(
-    options?.maxtracks ?? maxmelodicdefault,
-    maxmelodicdefault,
-  )
+  const trackorder = midiselecttracksfromfirstnotes(midi)
+  if (trackorder.length === 0) {
+    return { layers: [], truncatedbynotes: false }
+  }
+  const built = midibuildlayersfortracks(midi, trackorder)
+  const layers: midinotelayer[] = []
   let eventcount = 0
   let truncatedbynotes = false
-  const melodic: MIDINOTE[][] = []
-  const drumbuckets: MIDINOTE[][] = []
-  for (let k = 0; k < selected.length; ++k) {
-    const t = selected[k]!
-    const track = midi.tracks[t]!
-    const notes = track.notes
-    eventcount += notes.length
-    if (eventcount > maxnoteevents) {
+  for (let i = 0; i < built.length; ++i) {
+    const layer = built[i]!
+    const n = layer.notes.length
+    if (eventcount + n > maxnoteevents) {
       truncatedbynotes = true
       break
     }
-    if (track.channel === 9) {
-      drumbuckets.push(notes)
-    } else if (melodic.length < maxmelodic) {
-      melodic.push(notes)
-    }
+    eventcount += n
+    layers.push(layer)
   }
-  const drums = mergedrumtracksnotelist(drumbuckets)
-  return { melodic, drums, truncatedbynotes }
+  return { layers, truncatedbynotes }
 }
 
 /** Ticks per measure at `attick` from MIDI time signature, default 4/4. */
@@ -311,6 +362,32 @@ export function miditickspersmeasure(
   return Math.round((num * 4 * ppq) / den)
 }
 
+/**
+ * Measure boundaries from tick 0 through the end of the measure that contains `maxendtick`
+ * (exclusive of trailing empty measures). Uses the active time signature at each measure
+ * start so meter changes stay aligned with the source file.
+ */
+export function midimeasurespans(
+  midi: Midi,
+  maxendtick: number,
+): { start: number; end: number }[] {
+  const spans: { start: number; end: number }[] = []
+  let start = 0
+  while (start < maxendtick) {
+    const mlen = miditickspersmeasure(midi, start)
+    if (mlen <= 0) {
+      break
+    }
+    spans.push({ start, end: start + mlen })
+    start += mlen
+  }
+  if (spans.length === 0) {
+    const mlen = Math.max(1, miditickspersmeasure(midi, 0))
+    spans.push({ start: 0, end: mlen })
+  }
+  return spans
+}
+
 export function monophonelineinmeasure(
   notes: MIDINOTE[],
   ppq: number,
@@ -325,6 +402,9 @@ export function monophonelineinmeasure(
   let cursor = starttick
   for (let i = 0; i < inslice.length; ++i) {
     const n = inslice[i]!
+    if (n.ticks < cursor) {
+      continue
+    }
     if (n.ticks > cursor) {
       appendplayrests(out, n.ticks - cursor, ppq, state)
     }
@@ -391,40 +471,50 @@ export function midiplaysnippetsbymeasure(
   },
 ): midimeasuresresult {
   const ppq = midi.header.ppq || 480
-  const { melodic, drums, truncatedbynotes } = collectmidilayers(midi, options)
-  if (!melodic.length && !drums.length) {
+  const { layers, truncatedbynotes } = collectmidilayers(midi, options)
+  if (!layers.length) {
     return { snippets: [], truncatedbynotes }
   }
-  const measureticks = miditickspersmeasure(midi, 0)
   let maxend = 0
-  for (let i = 0; i < melodic.length; ++i) {
-    const notes = melodic[i]!
+  for (let i = 0; i < layers.length; ++i) {
+    const notes = layers[i]!.notes
     for (let j = 0; j < notes.length; ++j) {
       const n = notes[j]!
       maxend = Math.max(maxend, n.ticks + n.durationTicks)
     }
   }
-  for (let j = 0; j < drums.length; ++j) {
-    const n = drums[j]!
-    maxend = Math.max(maxend, n.ticks + n.durationTicks)
-  }
-  const nmeasures = Math.max(1, Math.ceil(maxend / measureticks))
+  const boundaries = midimeasurespans(midi, maxend)
   const snippets: string[] = []
-  for (let m = 0; m < nmeasures; ++m) {
-    const start = m * measureticks
-    const end = start + measureticks
+  const drumonly =
+    layers.length === 1 && layers[0]!.kind === 'drums'
+  for (let m = 0; m < boundaries.length; ++m) {
+    const { start, end } = boundaries[m]!
     const segs: string[] = []
-    for (let v = 0; v < melodic.length; ++v) {
-      segs.push(monophonelineinmeasure(melodic[v]!, ppq, start, end))
-    }
-    if (drums.length) {
-      segs.push(drumlineinmeasure(drums, ppq, start, end))
+    for (let v = 0; v < layers.length; ++v) {
+      const layer = layers[v]!
+      if (layer.kind === 'melodic') {
+        segs.push(monophonelineinmeasure(layer.notes, ppq, start, end))
+      } else {
+        segs.push(drumlineinmeasure(layer.notes, ppq, start, end))
+      }
     }
     const span = end - start
-    if (m === 0 && drums.length && melodic.length === 0) {
+    if (m === 0 && drumonly) {
       segs.unshift(playreststringforticks(span, ppq))
-    } else if (m === 0 && segs.length >= 2 && segs[0] === '') {
-      segs[0] = playreststringforticks(span, ppq)
+    } else if (m === 0 && segs.length >= 2) {
+      const hasother = segs.some((s) => s !== '')
+      for (let i = 0; i < segs.length; ++i) {
+        if (segs[i] !== '') {
+          continue
+        }
+        if (layers[i]!.kind !== 'melodic') {
+          continue
+        }
+        if (hasother) {
+          segs[i] = playreststringforticks(span, ppq)
+          break
+        }
+      }
     }
     snippets.push(segs.join(PLAY_VOICE_SEPARATOR))
   }
@@ -438,6 +528,9 @@ export function monophoneline(notes: MIDINOTE[], ppq: number): string {
   let cursor = 0
   for (let i = 0; i < sorted.length; ++i) {
     const n = sorted[i]!
+    if (n.ticks < cursor) {
+      continue
+    }
     if (n.ticks > cursor) {
       appendplayrests(out, n.ticks - cursor, ppq, state)
     }
@@ -476,7 +569,7 @@ export type midivoicesresult = {
 }
 
 /**
- * One play string per melodic track (file order), then one merged drum line if any (channel 10).
+ * One play string per layer (melodic track or merged drums), in first-four-note-on selection order.
  */
 export function midivoicesfrommidi(
   midi: Midi,
@@ -487,18 +580,20 @@ export function midivoicesfrommidi(
   },
 ): midivoicesresult {
   const ppq = midi.header.ppq || 480
-  const { melodic, drums, truncatedbynotes } = collectmidilayers(midi, options)
+  const { layers, truncatedbynotes } = collectmidilayers(midi, options)
   const voices: string[] = []
-  for (let i = 0; i < melodic.length; ++i) {
-    const line = monophoneline(melodic[i]!, ppq)
-    if (line.length) {
-      voices.push(line)
-    }
-  }
-  if (drums.length) {
-    const drumstr = drumline(drums, ppq)
-    if (drumstr.length) {
-      voices.push(drumstr)
+  for (let i = 0; i < layers.length; ++i) {
+    const layer = layers[i]!
+    if (layer.kind === 'melodic') {
+      const line = monophoneline(layer.notes, ppq)
+      if (line.length) {
+        voices.push(line)
+      }
+    } else {
+      const drumstr = drumline(layer.notes, ppq)
+      if (drumstr.length) {
+        voices.push(drumstr)
+      }
     }
   }
   return { voices, truncatedbynotes }
