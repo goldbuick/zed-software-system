@@ -242,7 +242,6 @@ const tilemapMaterial = new ShaderMaterial({
     interval,
     palette: new Uniform(palette),
     map: new Uniform(charset),
-    alt: new Uniform(charset),
     data: new Uniform(null),
     size: new Uniform(new Vector2()),
     step: new Uniform(new Vector2()),
@@ -268,7 +267,6 @@ const tilemapMaterial = new ShaderMaterial({
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
-    uniform sampler2D alt;
     uniform usampler2D data;
     uniform vec3 palette[16];
     uniform vec2 size;
@@ -309,7 +307,6 @@ const tilemapMaterial = new ShaderMaterial({
       if (colori > 31) {
         vec3 bg = palette[bgi];
         color = palette[colori - 33];
-        float cycle = mod(time * 2.5, interval * 2.0) / interval;
         color = mix(bg, color, cyclefromtime());
       } else {
         color = palette[colori % 16];
@@ -321,8 +318,7 @@ const tilemapMaterial = new ShaderMaterial({
         uv.y = 1.0 - uv.y;
       }
 
-      bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
+      vec3 blip = texture(map, uv).rgb;
 
       if (blip.r == 0.0) {
         if (bgi >= ${COLOR.ONCLEAR}) {

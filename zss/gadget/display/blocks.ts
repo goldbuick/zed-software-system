@@ -22,7 +22,6 @@ const blocksMaterial = new ShaderMaterial({
     interval,
     palette: new Uniform(palette),
     map: new Uniform(charset),
-    alt: new Uniform(charset),
     cols: new Uniform(1),
     step: new Uniform(new Vector2()),
   },
@@ -54,7 +53,6 @@ const blocksMaterial = new ShaderMaterial({
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
-    uniform sampler2D alt;
     uniform vec3 palette[16];
     uniform vec2 step;
     uniform float cols;
@@ -92,7 +90,6 @@ const blocksMaterial = new ShaderMaterial({
       if (colori > 31) {
         vec3 bg = palette[bgi];
         color = palette[colori - 33];
-        float cycle = mod(time * 2.5, interval * 2.0) / interval;
         color = mix(bg, color, cyclefromtime());
       } else {
         color = palette[colori % 16];
@@ -103,8 +100,7 @@ const blocksMaterial = new ShaderMaterial({
       vec2 uv = vUv * step + vec2(tx * step.x, ty * step.y);
       uv.y = 1.0 - uv.y;
 
-      bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
+      vec3 blip = texture(map, uv).rgb;
 
       if (blip.r == 0.0) {
         if (bgi >= ${COLOR.ONCLEAR}) {
@@ -133,7 +129,6 @@ const blocksBillboardMaterial = new ShaderMaterial({
     smoothrate: new Uniform(TICK_FPS),
     palette: new Uniform(palette),
     map: new Uniform(charset),
-    alt: new Uniform(charset),
     cols: new Uniform(1),
     step: new Uniform(new Vector2()),
     flip: new Uniform(true),
@@ -244,13 +239,8 @@ const blocksBillboardMaterial = new ShaderMaterial({
   // fragment shader
   fragmentShader: `
     precision highp float;
-    uniform float time;
-    uniform float interval;
     uniform sampler2D map;
-    uniform sampler2D alt;
-    uniform vec3 palette[16];
     uniform vec2 step;
-    uniform float cols;
     uniform bool flip;
 
     varying float vVisible;
@@ -269,8 +259,7 @@ const blocksBillboardMaterial = new ShaderMaterial({
         uv.y = 1.0 - uv.y;
       }
 
-      bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+      vec3 blip = texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
         if (vBg.a < 0.001) {

@@ -15,20 +15,15 @@ export type MEDIA_DATA = {
   viewimage: string
   screen: Record<string, HTMLVideoElement>
   charset?: BITMAP
-  altcharset?: BITMAP
   palettedata?: Color[]
   charsetdata?: CanvasTexture
-  altcharsetdata?: CanvasTexture
   spritecharset?: BITMAP
-  spritealtcharset?: BITMAP
   spritecharsetdata?: CanvasTexture
-  spritealtcharsetdata?: CanvasTexture
   reset: () => void
   setmood: (mood: string) => void
   setviewimage: (viewimage: string) => void
   setpalette: (palette: MAYBE<BITMAP>) => void
   setcharset: (charset: MAYBE<BITMAP>) => void
-  setaltcharset: (altcharset: MAYBE<BITMAP>) => void
   setscreen: (peer: string, screen: MAYBE<HTMLVideoElement>) => void
 }
 
@@ -95,23 +90,6 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
         charsetdata: createbitmaptexture(charset),
         spritecharset,
         spritecharsetdata: createbitmaptexture(spritecharset),
-      }
-    })
-  },
-  setaltcharset(altcharset) {
-    set((state) => {
-      if (isequal(state.altcharset, altcharset)) {
-        return state
-      }
-      const spritealtcharset = ispresent(altcharset)
-        ? createspritebitmapfrombitmap(altcharset, CHAR_WIDTH, CHAR_HEIGHT)
-        : undefined
-      return {
-        ...state,
-        altcharset,
-        altcharsetdata: createbitmaptexture(altcharset),
-        spritealtcharset,
-        spritealtcharsetdata: createbitmaptexture(spritealtcharset),
       }
     })
   },

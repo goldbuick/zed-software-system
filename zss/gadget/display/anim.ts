@@ -8,9 +8,7 @@ export const time = {
   },
 }
 
-// flip ever _other_ beat
-// 60 + 60 second
-// so it should double the rate
+// Shader interval (seconds per half-cycle), derived from BPM — used for color shimmer / timing on bright glyphs.
 const INTERVAL_RATE = 120
 
 // 120 / 136 = 0.8823529411764706

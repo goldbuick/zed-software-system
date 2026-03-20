@@ -7,44 +7,132 @@ import { CHAR_RAY_MARGIN } from './types'
 /** Tile-space Y scale so ray length matches `lightingmixmaxrange` pixel geometry. */
 export const LIGHTING_RAY_TILE_YSCALE = CHAR_HEIGHT / CHAR_WIDTH
 
-/** Angular sector from source cell center to dest cell corners (degrees, inclusive). */
-export function lightingmixmaxrange(from: PT, dest: PT): [number, number] {
-  const angles: number[] = []
+/** Pad shadow wedges so integer-degree ray tests do not leak past cell silhouettes. */
+const LIGHTING_MIX_MAX_RANGE_PAD = 1
 
+/**
+ * Lookup objects use a centered occluder of this fraction of the glyph cell (terrain uses full cell).
+ * Smaller values narrow object shadows (e.g. boulders vs walls); too small risks corner light leaks.
+ */
+export const LIGHTING_OBJECT_OCCLUDER_CELL_FRAC = 0.5
+
+export type LightingOccluderKind = 'terrain' | 'object'
+
+function lightingdegmod360(d: number): number {
+  let x = d % 360
+  if (x < 0) {
+    x += 360
+  }
+  return x
+}
+
+/**
+ * Angular sector from source cell center to occluder corners (degrees, inclusive).
+ * Uses float corner angles then conservative floor/ceil (+ pad); avoids shrinking wedges
+ * from rounding each corner before min/max (corner light leaks).
+ * `object` uses a centered sub-rect of the tile so props do not cast wall-wide cones.
+ */
+export function lightingmixmaxrange(
+  from: PT,
+  dest: PT,
+  kind: LightingOccluderKind = 'terrain',
+): [number, number] {
   const fromx = (from.x + 0.5) * CHAR_WIDTH
   const fromy = (from.y + 0.5) * CHAR_HEIGHT
-  const destx = dest.x * CHAR_WIDTH
-  const desty = dest.y * CHAR_HEIGHT
-  const dx = destx - fromx
-  const dy = desty - fromy
 
-  angles.push(Math.atan2(dy - CHAR_RAY_MARGIN, dx - CHAR_RAY_MARGIN))
-  angles.push(
-    Math.atan2(dy - CHAR_RAY_MARGIN, dx + CHAR_WIDTH + CHAR_RAY_MARGIN),
-  )
-  angles.push(
-    Math.atan2(dy + CHAR_HEIGHT + CHAR_RAY_MARGIN, dx - CHAR_RAY_MARGIN),
-  )
-  angles.push(
-    Math.atan2(
-      dy + CHAR_HEIGHT + CHAR_RAY_MARGIN,
-      dx + CHAR_WIDTH + CHAR_RAY_MARGIN,
-    ),
-  )
+  let destleft: number
+  let desttop: number
+  let occw: number
+  let occh: number
+  let margin: number
 
-  const degs = angles.map((v) => Math.round(radToDeg(v)))
-  const minangle = Math.min(...degs)
-  const maxangle = Math.max(...degs)
-  const diff = maxangle - minangle
-
-  if (diff > 180) {
-    const a1 = degs.filter((angle) => angle < 180)
-    const a2 = degs.filter((angle) => angle > 180)
-    const newminangle = Math.max(...a1)
-    const newmaxangle = Math.min(...a2)
-    return [newmaxangle, newminangle]
+  if (kind === 'terrain') {
+    destleft = dest.x * CHAR_WIDTH
+    desttop = dest.y * CHAR_HEIGHT
+    occw = CHAR_WIDTH
+    occh = CHAR_HEIGHT
+    margin = CHAR_RAY_MARGIN
+  } else {
+    occw = CHAR_WIDTH * LIGHTING_OBJECT_OCCLUDER_CELL_FRAC
+    occh = CHAR_HEIGHT * LIGHTING_OBJECT_OCCLUDER_CELL_FRAC
+    const destcx = dest.x * CHAR_WIDTH + CHAR_WIDTH * 0.5
+    const destcy = dest.y * CHAR_HEIGHT + CHAR_HEIGHT * 0.5
+    destleft = destcx - occw * 0.5
+    desttop = destcy - occh * 0.5
+    margin = Math.max(
+      1,
+      Math.round(CHAR_RAY_MARGIN * LIGHTING_OBJECT_OCCLUDER_CELL_FRAC),
+    )
   }
-  return [minangle, maxangle]
+
+  const dx = destleft - fromx
+  const dy = desttop - fromy
+
+  const angles = [
+    Math.atan2(dy - margin, dx - margin),
+    Math.atan2(dy - margin, dx + occw + margin),
+    Math.atan2(dy + occh + margin, dx - margin),
+    Math.atan2(dy + occh + margin, dx + occw + margin),
+  ]
+
+  const degs = angles.map((v) => radToDeg(v))
+  const minfloat = Math.min(...degs)
+  const maxfloat = Math.max(...degs)
+  const spandeg = maxfloat - minfloat
+
+  if (spandeg <= 180) {
+    const lo = Math.floor(minfloat) - LIGHTING_MIX_MAX_RANGE_PAD
+    const hi = Math.ceil(maxfloat) + LIGHTING_MIX_MAX_RANGE_PAD
+    return [lo, hi]
+  }
+
+  const t = degs.map((d) => lightingdegmod360(d))
+  const minc = Math.min(...t)
+  const maxc = Math.max(...t)
+  const span360 = maxc - minc
+  const pad = LIGHTING_MIX_MAX_RANGE_PAD
+
+  if (span360 <= 180) {
+    const lo360 = minc - pad
+    const hi360 = maxc + pad
+    return lightingmixmaxrangefrom360arc(lo360, hi360, false)
+  }
+
+  const lo360 = maxc - pad
+  const hi360 = minc + pad
+  return lightingmixmaxrangefrom360arc(lo360, hi360, true)
+}
+
+/** Map a (possibly out-of-range) arc in degrees on [0,360) to signed pair for `lightingrayshade`. */
+function lightingmixmaxrangefrom360arc(
+  lo360: number,
+  hi360: number,
+  wrapped: boolean,
+): [number, number] {
+  const lo = lightingdegmod360(lo360)
+  const hi = lightingdegmod360(hi360)
+  if (!wrapped) {
+    if (lo <= 180 && hi <= 180) {
+      return [lo, hi]
+    }
+    if (lo > 180 && hi > 180) {
+      return [lo - 360, hi - 360]
+    }
+    if (lo > 180 && hi <= 180) {
+      return [lo - 360, hi]
+    }
+    return [lo, hi - 360]
+  }
+  if (lo <= 180 && hi <= 180) {
+    return [lo, hi]
+  }
+  if (lo > 180 && hi > 180) {
+    return [lo, hi]
+  }
+  if (lo > 180 && hi <= 180) {
+    return [lo, hi]
+  }
+  return [lo, hi - 360]
 }
 
 /**

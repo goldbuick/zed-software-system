@@ -5,6 +5,8 @@ Runtime lighting for `board.isdark` lives outside [`rendering.ts`](../rendering.
 - [`lightinggeometry.ts`](../lightinggeometry.ts) — angular frusta (`lightingmixmaxrange`), tile Y scale, full-shadow sector merge (`memorylightingaddrangetoblocked`).
 - [`boardlighting.ts`](../boardlighting.ts) — Chebyshev ring pass, occlusion collection, shading (`memoryboardlightingapplyobject`, `memoryboardlightingmarkplayer`). Occlusion strengths along a ray **add** (see `LIGHTING_OBJECT_OCCLUSION` / `LIGHTING_FULL_SHADOW_OCCLUSION`); combined occlusion plus distance falloff is **capped at 1** per shading step.
 
+Shading rays use **cell center to cell center** in aspect-corrected tile space (`LIGHTING_RAY_TILE_YSCALE`); `lightingmixmaxrange` uses the source cell **center** and the destination tile’s **full pixel rectangle** for angular sectors.
+
 [`rendering.ts`](../rendering.ts) still re-exports the geometry helpers for existing imports.
 
 ## Tests

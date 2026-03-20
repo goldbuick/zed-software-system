@@ -260,7 +260,38 @@ describe('boardlighting', () => {
       ])
       expect(plain).toBeLessThan(1)
       expect(one).toBeGreaterThan(plain)
-      expect(two).toBeGreaterThan(one)
+      /** Narrow object wedges can saturate alpha with one blocker on-axis; two never lighten. */
+      expect(two).toBeGreaterThanOrEqual(one)
+      expect(two).toBeGreaterThan(plain)
+    })
+
+    it('does not brighten floor beyond north/south walls of an east-west corridor (corner leak regression)', () => {
+      const corridor_y = 12
+      const x0 = 8
+      const x1 = 48
+      const board = makeboard((terrain) => {
+        for (let x = x0; x <= x1; x++) {
+          terrain[x + (corridor_y - 1) * BOARD_WIDTH] = {
+            collision: COLLISION.ISSOLID,
+          }
+          terrain[x + (corridor_y + 1) * BOARD_WIDTH] = {
+            collision: COLLISION.ISSOLID,
+          }
+        }
+      })
+      const sprite = testsprite(x1 - 2, corridor_y)
+      const alphas = new Array<number>(BOARD_SIZE).fill(1)
+      memoryboardlightingapplyobject(board, alphas, {}, sprite, 10)
+      const northbeyond = memoryboardelementindex(board, {
+        x: x0 + 5,
+        y: corridor_y - 2,
+      })
+      const southbeyond = memoryboardelementindex(board, {
+        x: x0 + 5,
+        y: corridor_y + 2,
+      })
+      expect(alphas[northbeyond]).toBe(1)
+      expect(alphas[southbeyond]).toBe(1)
     })
 
     it('terminates for many random light applications', () => {
