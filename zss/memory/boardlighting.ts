@@ -1,0 +1,241 @@
+import { radToDeg } from 'maath/misc'
+import { Vector2 } from 'three'
+import { SPRITE } from 'zss/gadget/data/types'
+import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
+import { dirfrompts, isstrdir } from 'zss/words/dir'
+import { COLLISION, DIR } from 'zss/words/types'
+
+import {
+  memoryboardelementindex,
+  memoryevaldir,
+  memoryreadobject,
+} from './boardoperations'
+import { memoryreadelementkind, memoryreadelementstat } from './boards'
+import {
+  LIGHTING_RAY_TILE_YSCALE,
+  lightingmixmaxrange,
+  memorylightingaddrangetoblocked,
+} from './lightinggeometry'
+import { memorycheckcollision } from './spatialqueries'
+import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT } from './types'
+
+const lightingraypt = new Vector2()
+
+type LightingRingOcclusion = {
+  x: number
+  y: number
+  range: [number, number, number]
+}
+
+function lightingforeachchebyshevingcell(
+  sx: number,
+  sy: number,
+  r: number,
+  fn: (x: number, y: number) => void,
+) {
+  for (let x = sx - r; x <= sx + r; x++) {
+    fn(x, sy - r)
+  }
+  for (let y = sy - r + 1; y <= sy + r - 1; y++) {
+    fn(sx + r, y)
+  }
+  for (let x = sx + r; x >= sx - r; x--) {
+    fn(x, sy + r)
+  }
+  for (let y = sy + r - 1; y >= sy - r + 1; y--) {
+    fn(sx - r, y)
+  }
+}
+
+function lightingappendringocclusions(
+  board: BOARD,
+  lookup: BOARD['lookup'],
+  sprite: SPRITE,
+  radius: number,
+  x: number,
+  y: number,
+  ringout: LightingRingOcclusion[],
+) {
+  const pt = { x, y }
+  const idx = memoryboardelementindex(board, pt)
+  if (idx === -1) {
+    return
+  }
+
+  lightingraypt.x = x - sprite.x
+  lightingraypt.y = Math.round((y - sprite.y) * LIGHTING_RAY_TILE_YSCALE)
+  if (lightingraypt.length() > radius) {
+    return
+  }
+
+  const object = memoryreadobject(board, lookup?.[idx] ?? '')
+  if (ispresent(object)) {
+    ringout.push({
+      x,
+      y,
+      range: [...lightingmixmaxrange(sprite, pt), 0.45],
+    })
+  }
+
+  const maybeterrain = board.terrain[idx]
+  const terrainkind = memoryreadelementkind(maybeterrain)
+  const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
+  if (memorycheckcollision(COLLISION.ISBULLET, terraincollision)) {
+    ringout.push({
+      x,
+      y,
+      range: [...lightingmixmaxrange(sprite, pt), 1],
+    })
+  }
+}
+
+function lightingrayshade(
+  board: BOARD,
+  alphas: number[],
+  blocked: [number, number, number][],
+  ringocclusions: LightingRingOcclusion[],
+  selfx: number,
+  selfy: number,
+  sprite: SPRITE,
+  radius: number,
+  falloff: number,
+  x: number,
+  y: number,
+) {
+  const pt = { x, y }
+  const idx = memoryboardelementindex(board, pt)
+  if (idx === -1) {
+    return
+  }
+
+  lightingraypt.x = x - sprite.x
+  lightingraypt.y = Math.round((y - sprite.y) * LIGHTING_RAY_TILE_YSCALE)
+  const raydist = lightingraypt.length()
+  if (raydist > radius) {
+    return
+  }
+
+  const angle = Math.round(radToDeg(lightingraypt.angle()))
+
+  let current = 0
+  for (let b = 0; b < blocked.length; ++b) {
+    const [minangle, maxangle, value] = blocked[b]
+    if (minangle > maxangle) {
+      if (angle >= minangle || angle <= maxangle) {
+        current = Math.max(current, value)
+      }
+    } else if (angle >= minangle && angle <= maxangle) {
+      current = Math.max(current, value)
+    }
+  }
+
+  for (let o = 0; o < ringocclusions.length; ++o) {
+    const oc = ringocclusions[o]
+    if (oc.x === selfx && oc.y === selfy) {
+      continue
+    }
+    const [minangle, maxangle, value] = oc.range
+    if (minangle > maxangle) {
+      if (angle >= minangle || angle <= maxangle) {
+        current = Math.max(current, value)
+      }
+    } else if (angle >= minangle && angle <= maxangle) {
+      current = Math.max(current, value)
+    }
+  }
+
+  const hradius = radius * 0.5
+  alphas[idx] = Math.min(
+    alphas[idx],
+    current + (raydist < hradius ? 0 : (raydist - hradius) * falloff),
+  )
+  alphas[idx] = clamp(alphas[idx], 0, 1)
+}
+
+/**
+ * Apply a light-emitting object to the dither `alphas` buffer (dark boards only).
+ */
+export function memoryboardlightingapplyobject(
+  board: BOARD,
+  alphas: number[],
+  object: BOARD_ELEMENT,
+  sprite: SPRITE,
+  light: number,
+) {
+  const center = memoryboardelementindex(board, sprite)
+  const radius = clamp(Math.round(light), 1, BOARD_HEIGHT)
+  const step = 1 / (radius * 0.5)
+
+  alphas[center] = 0
+  if (radius <= 1) {
+    return
+  }
+
+  const lookup = board.lookup
+  const blocked: [number, number, number][] = []
+  const ringocclusions: LightingRingOcclusion[] = []
+
+  for (let r = 1; r <= radius; ++r) {
+    if (r === 1) {
+      const maybedir = memoryreadelementstat(object, 'lightdir')
+      if (isstrdir(maybedir)) {
+        const lightdir = memoryevaldir(board, object, '', maybedir, sprite)
+        switch (dirfrompts(sprite, lightdir.destpt)) {
+          case DIR.EAST:
+            blocked.push([45, 315, 1])
+            break
+          case DIR.WEST:
+            blocked.push([225, 135, 1])
+            break
+          case DIR.NORTH:
+            blocked.push([315, 225, 1])
+            break
+          case DIR.SOUTH:
+            blocked.push([135, 45, 1])
+            break
+        }
+      }
+    }
+    ringocclusions.length = 0
+    lightingforeachchebyshevingcell(sprite.x, sprite.y, r, (x, y) => {
+      lightingappendringocclusions(
+        board,
+        lookup,
+        sprite,
+        radius,
+        x,
+        y,
+        ringocclusions,
+      )
+    })
+    lightingforeachchebyshevingcell(sprite.x, sprite.y, r, (x, y) => {
+      lightingrayshade(
+        board,
+        alphas,
+        blocked,
+        ringocclusions,
+        x,
+        y,
+        sprite,
+        radius,
+        step,
+        x,
+        y,
+      )
+    })
+    for (let o = 0; o < ringocclusions.length; ++o) {
+      memorylightingaddrangetoblocked(blocked, ringocclusions[o].range)
+    }
+  }
+}
+
+/** Full-bright cell for the local player on dark boards when they carry no light. */
+export function memoryboardlightingmarkplayer(
+  board: BOARD,
+  alphas: number[],
+  sprite: SPRITE,
+) {
+  const index = memoryboardelementindex(board, sprite)
+  alphas[index] = 0
+}
