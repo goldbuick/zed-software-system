@@ -360,6 +360,16 @@ export function registerdownloadjsonfile(
   device.emit(player, 'register:downloadjsonfile', [data, filename])
 }
 
+export function registerdownloadbinaryfile(
+  device: DEVICELIKE,
+  player: string,
+  bytes: Uint8Array,
+  filename: string,
+  mimetype = 'application/octet-stream',
+) {
+  device.emit(player, 'register:downloadbinaryfile', [bytes, filename, mimetype])
+}
+
 export function registerdev(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:dev', undefined)
 }

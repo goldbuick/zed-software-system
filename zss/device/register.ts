@@ -433,6 +433,29 @@ export const register = createdevice(
           }
         }
         break
+      case 'downloadbinaryfile':
+        if (isarray(message.data)) {
+          const [bytes, filename, mimetype] = message.data as [
+            Uint8Array,
+            string,
+            string,
+          ]
+          try {
+            const copy = new Uint8Array(bytes)
+            const datablob = new Blob([copy], {
+              type: isstring(mimetype) ? mimetype : 'application/octet-stream',
+            })
+            const dataurl = URL.createObjectURL(datablob)
+            const anchor = document.createElement('a')
+            anchor.href = dataurl
+            anchor.download = filename
+            anchor.click()
+            URL.revokeObjectURL(dataurl)
+          } catch (err) {
+            console.error(err)
+          }
+        }
+        break
       case 'share':
         doasync(register, message.player, async function () {
           await storagesharecontent(message.player)

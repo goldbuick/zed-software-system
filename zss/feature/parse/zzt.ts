@@ -26,6 +26,7 @@ import {
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import { memoryreadfirstcontentbook, memorywritebook } from 'zss/memory/session'
+import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -41,6 +42,7 @@ import { PT } from 'zss/words/types'
 import { zztoop } from './zztoop'
 
 export { isszztworldbytes, iszztworldbytes } from './zztmagic'
+export type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
 // --- ZZT element ids (ModdingWiki / ZZT internal) ---------------------------------
 
@@ -116,48 +118,6 @@ const ZZT_MAX_BOARDS = 128
 const ZZT_MAX_STATS_PER_BOARD = 2048
 const ZZT_NAME_FIELD_ZZT = 50
 const ZZT_NAME_FIELD_SZZT = 60
-
-type ZZT_ELEMENT = {
-  type: number
-  color: number
-}
-
-type ZZT_STAT = {
-  x?: number
-  y?: number
-  stepx?: number
-  stepy?: number
-  cycle?: number
-  p1?: number
-  p2?: number
-  p3?: number
-  follower?: number
-  leader?: number
-  underelement?: number
-  undercolor?: number
-  pointer?: number
-  currentinstruction?: number
-  bind?: number
-  code?: string
-}
-
-type ZZT_BOARD = {
-  boardname: string
-  elements: ZZT_ELEMENT[]
-  stats: ZZT_STAT[]
-  maxplayershots?: number
-  isdark?: number
-  exitnorth?: number
-  exitsouth?: number
-  exitwest?: number
-  exiteast?: number
-  restartonzap?: number
-  messagelength?: number
-  message?: string
-  playerenterx?: number
-  playerentery?: number
-  timelimit?: number
-}
 
 type BOARD_LAYOUT = {
   tilewidth: number
@@ -998,6 +958,39 @@ function readworldheaderszzt(reader: READER) {
   }
   reader.seek(SZZT_WORLD_HEADER_BYTES)
   return { numberofboards, playerboard, worldname }
+}
+
+/** Parse a ZZT world file to structs (no memory writes). For tests and export verification. */
+export function zztparseworld(
+  content: Uint8Array,
+):
+  | { ok: true; worldname: string; playerboard: number; boards: ZZT_BOARD[] }
+  | { ok: false; error: string } {
+  const reader = createreader(content)
+  const header = readworldheaderzzt(reader)
+  if (!header || reader.haserror()) {
+    return {
+      ok: false,
+      error: reader.geterror() ?? 'invalid or corrupt ZZT world file',
+    }
+  }
+  const zztboards: ZZT_BOARD[] = []
+  for (let i = 0; i < header.numberofboards; ++i) {
+    const board = readboardbytes(reader, LAYOUT_ZZT)
+    if (!board || reader.haserror()) {
+      return {
+        ok: false,
+        error: reader.geterror() ?? `corrupt ZZT world at board ${i}`,
+      }
+    }
+    zztboards.push(board)
+  }
+  return {
+    ok: true,
+    worldname: header.worldname,
+    playerboard: header.playerboard,
+    boards: zztboards,
+  }
 }
 
 export function parsebrd(player: string, content: Uint8Array) {
