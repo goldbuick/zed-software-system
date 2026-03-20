@@ -755,18 +755,28 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
   },
 })
-  .command('clear', ['variables (set to 0)'], (chip, words) => {
-    for (let i = 0; i < words.length; ++i) {
-      chip.set(maptostring(words[i]), 0)
+  .command('clear', [ARG_TYPE.NAME, 'variables (set to 0)'], (chip, words) => {
+    const [names] = readargsuntilend(words, 0, ARG_TYPE.NAME)
+    for (let i = 0; i < names.length; ++i) {
+      chip.set(names[i], 0)
     }
     return 0
   })
   .command(
     'set',
-    [ARG_TYPE.NAME, ARG_TYPE.ANY, 'variable to value'],
+    [ARG_TYPE.NAME, 'variable to value; multiple words joined with spaces'],
     (chip, words) => {
-      const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-      chip.set(name, value ?? 1)
+      const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+      const [parts] = readargsuntilend(words, ii, ARG_TYPE.ANY)
+      let value: any
+      if (parts.length === 0) {
+        value = 1
+      } else if (parts.length === 1) {
+        value = parts[0] ?? 1
+      } else {
+        value = parts.map(maptostring).join(' ')
+      }
+      chip.set(name, value)
       return 0
     },
   )
