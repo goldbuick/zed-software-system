@@ -20,11 +20,49 @@ import {
 import { memorycheckcollision } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT } from './types'
 
-const LIGHTING_OBJECT_OCCLUSION = 0.444
-const LIGHTING_TERRAIN_SOLID_OCCLUSION = 0.666
+const LIGHTING_OBJECT_OCCLUSION = 0.27
+const LIGHTING_TERRAIN_SOLID_OCCLUSION = 0.11
 
 /** Cell center to cell center in width-normalized space (Y × `LIGHTING_RAY_TILE_YSCALE`). */
 const lightingraypt = new Vector2()
+
+/** Map to signed degrees consistent with `lightingrayshade` / wedge ranges (≈ (−180, 180]). */
+function lightingcanonheadingdeg(deg: number): number {
+  let x = Math.round(deg) % 360
+  if (x > 180) {
+    x -= 360
+  }
+  if (x <= -180) {
+    x += 360
+  }
+  return x
+}
+
+function lightingheadinginblocked(
+  heading: number,
+  minangle: number,
+  maxangle: number,
+): boolean {
+  if (minangle > maxangle) {
+    return heading >= minangle || heading <= maxangle
+  }
+  return heading >= minangle && heading <= maxangle
+}
+
+/** True if center or ±1° (wrapped) lies in the sector — closes single-degree leaks (e.g. vertical streaks). */
+function lightingraysamplehitsblocked(
+  baserounded: number,
+  minangle: number,
+  maxangle: number,
+): boolean {
+  for (let d = -1; d <= 1; d++) {
+    const h = lightingcanonheadingdeg(baserounded + d)
+    if (lightingheadinginblocked(h, minangle, maxangle)) {
+      return true
+    }
+  }
+  return false
+}
 
 type LightingRingOcclusion = {
   x: number
@@ -78,7 +116,10 @@ function lightingappendringocclusions(
     ringout.push({
       x,
       y,
-      range: [...lightingmixmaxrange(sprite, pt), LIGHTING_OBJECT_OCCLUSION],
+      range: [
+        ...lightingmixmaxrange(sprite, pt, 'object'),
+        LIGHTING_OBJECT_OCCLUSION,
+      ],
     })
   }
 
@@ -128,11 +169,7 @@ function lightingrayshade(
   let current = 0
   for (let b = 0; b < blocked.length; ++b) {
     const [minangle, maxangle, value] = blocked[b]
-    if (minangle > maxangle) {
-      if (angle >= minangle || angle <= maxangle) {
-        current += value
-      }
-    } else if (angle >= minangle && angle <= maxangle) {
+    if (lightingraysamplehitsblocked(angle, minangle, maxangle)) {
       current += value
     }
   }
@@ -143,11 +180,7 @@ function lightingrayshade(
       continue
     }
     const [minangle, maxangle, value] = oc.range
-    if (minangle > maxangle) {
-      if (angle >= minangle || angle <= maxangle) {
-        current += value
-      }
-    } else if (angle >= minangle && angle <= maxangle) {
+    if (lightingraysamplehitsblocked(angle, minangle, maxangle)) {
       current += value
     }
   }

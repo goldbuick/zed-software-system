@@ -15,14 +15,30 @@ describe('lightinggeometry', () => {
   describe('lightingmixmaxrange', () => {
     it('returns a sector for a horizontal neighbor (east)', () => {
       expect(lightingmixmaxrange({ x: 0, y: 0 }, { x: 1, y: 0 })).toEqual([
-        -84, 84,
+        -86, 86,
       ])
     })
 
     it('returns a sector for a vertical neighbor', () => {
       expect(lightingmixmaxrange({ x: 10, y: 10 }, { x: 10, y: 11 })).toEqual([
-        30, 150,
+        28, 152,
       ])
+    })
+
+    it('uses a narrower sector for object occluders than full terrain tile', () => {
+      const from = { x: 0, y: 0 }
+      const dest = { x: 3, y: 0 }
+      const terrain = lightingmixmaxrange(from, dest, 'terrain')
+      const object = lightingmixmaxrange(from, dest, 'object')
+      const terrainspan =
+        terrain[0] <= terrain[1]
+          ? terrain[1] - terrain[0]
+          : 360 - terrain[0] + terrain[1]
+      const objectspan =
+        object[0] <= object[1]
+          ? object[1] - object[0]
+          : 360 - object[0] + object[1]
+      expect(objectspan).toBeLessThan(terrainspan)
     })
   })
 
