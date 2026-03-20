@@ -7,9 +7,7 @@ import {
   memoryreadelementkind,
 } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import {
-  memoryreadcodepagename,
-} from 'zss/memory/codepageoperations'
+import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryruncli } from 'zss/memory/runtime'

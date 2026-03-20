@@ -4,7 +4,7 @@ import {
   memoryboardlightingmarkplayer,
 } from 'zss/memory/boardlighting'
 import { memoryboardelementindex } from 'zss/memory/boardoperations'
-import { BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 
 const MOCK_BOARD_WIDTH = 60
@@ -126,14 +126,14 @@ function emptyterrain(): BOARD_ELEMENT[] {
   return Array.from({ length: BOARD_SIZE }, () => ({}))
 }
 
-function makeboard(patch?: (terrain: BOARD_ELEMENT[]) => void) {
+function makeboard(patch?: (terrain: BOARD_ELEMENT[]) => void): BOARD {
   const terrain = emptyterrain()
   patch?.(terrain)
   return {
     id: 'testboard',
     name: 'test',
     terrain,
-    objects: {} as Record<string, BOARD_ELEMENT>,
+    objects: {},
   }
 }
 

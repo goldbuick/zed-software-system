@@ -1,3 +1,4 @@
+import { apierror } from 'zss/device/api'
 import {
   DEFAULT_ALLOWLIST_BY_ROLE,
   ispermissioncontrolledcommand,
@@ -15,7 +16,6 @@ import {
   memorysetrolefortoken,
 } from 'zss/memory/permissions'
 import { memoryreadoperator } from 'zss/memory/session'
-import { apierror } from 'zss/device/api'
 
 jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
@@ -26,15 +26,7 @@ jest.mock('zss/memory/session', () => ({
 }))
 
 function resettocreativedefaults() {
-  memorysetcommandpermissions(
-    [],
-    {},
-    'creative',
-    {},
-    {},
-    undefined,
-    undefined,
-  )
+  memorysetcommandpermissions([], {}, 'creative', {}, {}, undefined, undefined)
 }
 
 describe('permissions', () => {
@@ -155,7 +147,15 @@ describe('permissions', () => {
     })
 
     it('hydrates empty allowlist from saved base preset', () => {
-      memorysetcommandpermissions([], {}, 'lockdown', {}, {}, undefined, undefined)
+      memorysetcommandpermissions(
+        [],
+        {},
+        'lockdown',
+        {},
+        {},
+        undefined,
+        undefined,
+      )
       const allowlistbyrole = memoryreadallowlistbyrole()
       expect(memoryreadpermissionconfig()).toBe('lockdown')
       expect(allowlistbyrole.player?.size ?? 0).toBe(0)
