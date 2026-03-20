@@ -2,6 +2,10 @@ import { createdevice } from 'zss/device'
 import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { getfingerprint } from 'zss/feature/fingerprint'
+import {
+  AGENTS_ROSTER_STORAGE_KEY,
+  isvalidagentsroster,
+} from 'zss/feature/heavy/agentsroster'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
@@ -17,10 +21,6 @@ import {
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
-import {
-  AGENTS_ROSTER_STORAGE_KEY,
-  isvalidagentsroster,
-} from 'zss/feature/heavy/agentsroster'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'

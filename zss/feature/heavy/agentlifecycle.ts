@@ -11,8 +11,8 @@ import {
 } from 'zss/device/api'
 import { createagent } from 'zss/feature/heavy/agent'
 import {
-  AGENTS_ROSTER_STORAGE_KEY,
   type AGENTS_ROSTER,
+  AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
 import { write, writeheader } from 'zss/feature/writeui'
@@ -29,7 +29,11 @@ function buildroster(): AGENTS_ROSTER {
   return { ids, names: { ...agentnames } }
 }
 
-function pushrostertosim(heavydev: DEVICE, requestplayer: string, roster: AGENTS_ROSTER) {
+function pushrostertosim(
+  heavydev: DEVICE,
+  requestplayer: string,
+  roster: AGENTS_ROSTER,
+) {
   vmagentsync(heavydev, requestplayer, roster)
 }
 
@@ -147,7 +151,10 @@ export function heavyrunagentname(heavydev: DEVICE, message: MESSAGE): void {
 }
 
 /** `#set user` from firmware: update heavy roster only when `agentid` is a running agent. */
-export function heavyrunsyncuserdisplay(heavydev: DEVICE, message: MESSAGE): void {
+export function heavyrunsyncuserdisplay(
+  heavydev: DEVICE,
+  message: MESSAGE,
+): void {
   if (!isarray(message.data)) {
     return
   }
@@ -162,7 +169,10 @@ export function heavyrunsyncuserdisplay(heavydev: DEVICE, message: MESSAGE): voi
   persistrostertostorage(heavydev, message.player)
 }
 
-export function heavyrunrestoreagents(heavydev: DEVICE, message: MESSAGE): void {
+export function heavyrunrestoreagents(
+  heavydev: DEVICE,
+  message: MESSAGE,
+): void {
   const roster = message.data
   if (!isvalidagentsroster(roster)) {
     return

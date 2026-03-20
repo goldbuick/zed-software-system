@@ -3,9 +3,9 @@ import { join } from 'path'
 
 import { Midi } from '@tonejs/midi'
 import {
+  MAX_VOICES_PER_PLAY,
   drumline,
   durationticksToOp,
-  MAX_VOICES_PER_PLAY,
   midimeasurespans,
   midiplaysnippetsbymeasure,
   midiselecttracksfromfirstnotes,

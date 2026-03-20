@@ -100,7 +100,7 @@ export function parsescientificname(name: string): {
   }
   const letter = m[1].toLowerCase()
   const acc = m[2] === '#' ? '#' : m[2] === 'b' ? '!' : null
-  const targetoctave = parseInt(m[3]!, 10)
+  const targetoctave = parseInt(m[3], 10)
   if (Number.isNaN(targetoctave)) {
     return null
   }
@@ -236,22 +236,20 @@ type midiflatnoteref = {
 export function midiselecttracksfromfirstnotes(midi: Midi): number[] {
   const flat: midiflatnoteref[] = []
   for (let t = 0; t < midi.tracks.length; ++t) {
-    const notes = midi.tracks[t]!.notes
+    const notes = midi.tracks[t].notes
     for (let i = 0; i < notes.length; ++i) {
-      const n = notes[i]!
+      const n = notes[i]
       flat.push({ ticks: n.ticks, trackindex: t, midi: n.midi })
     }
   }
   flat.sort(
     (a, b) =>
-      a.ticks - b.ticks ||
-      a.trackindex - b.trackindex ||
-      a.midi - b.midi,
+      a.ticks - b.ticks || a.trackindex - b.trackindex || a.midi - b.midi,
   )
   const seen = new Set<number>()
   const u: number[] = []
   for (let i = 0; i < flat.length && u.length < MAX_VOICES_PER_PLAY; ++i) {
-    const t = flat[i]!.trackindex
+    const t = flat[i].trackindex
     if (!seen.has(t)) {
       seen.add(t)
       u.push(t)
@@ -263,9 +261,9 @@ export function midiselecttracksfromfirstnotes(midi: Midi): number[] {
 function mergedrumtracksnotelist(buckets: MIDINOTE[][]): MIDINOTE[] {
   const all: MIDINOTE[] = []
   for (let b = 0; b < buckets.length; ++b) {
-    const part = buckets[b]!
+    const part = buckets[b]
     for (let i = 0; i < part.length; ++i) {
-      all.push(part[i]!)
+      all.push(part[i])
     }
   }
   all.sort((a, b) => a.ticks - b.ticks || a.midi - b.midi)
@@ -277,18 +275,18 @@ function midibuildlayersfortracks(
   midi: Midi,
   trackorder: number[],
 ): midinotelayer[] {
-  const drumtracks = trackorder.filter((t) => midi.tracks[t]!.channel === 9)
+  const drumtracks = trackorder.filter((t) => midi.tracks[t].channel === 9)
   const mergeddrums =
     drumtracks.length > 0
       ? mergedrumtracksnotelist(
-          drumtracks.map((t) => midi.tracks[t]!.notes as MIDINOTE[]),
+          drumtracks.map((t) => midi.tracks[t].notes as MIDINOTE[]),
         )
       : []
   const layers: midinotelayer[] = []
   let drumemitted = false
   for (let k = 0; k < trackorder.length; ++k) {
-    const t = trackorder[k]!
-    const track = midi.tracks[t]!
+    const t = trackorder[k]
+    const track = midi.tracks[t]
     if (track.channel === 9) {
       if (!drumemitted) {
         drumemitted = true
@@ -328,7 +326,7 @@ function collectmidilayers(
   let eventcount = 0
   let truncatedbynotes = false
   for (let i = 0; i < built.length; ++i) {
-    const layer = built[i]!
+    const layer = built[i]
     const n = layer.notes.length
     if (eventcount + n > maxnoteevents) {
       truncatedbynotes = true
@@ -341,16 +339,13 @@ function collectmidilayers(
 }
 
 /** Ticks per measure at `attick` from MIDI time signature, default 4/4. */
-export function miditickspersmeasure(
-  midi: Midi,
-  attick = 0,
-): number {
+export function miditickspersmeasure(midi: Midi, attick = 0): number {
   const ppq = midi.header.ppq || 480
   const sigs = midi.header.timeSignatures
   if (!sigs.length) {
     return 4 * ppq
   }
-  let active = sigs[0]!
+  let active = sigs[0]
   for (const s of sigs) {
     if (s.ticks <= attick) {
       active = s
@@ -401,7 +396,7 @@ export function monophonelineinmeasure(
   const state = createplaynotestate()
   let cursor = starttick
   for (let i = 0; i < inslice.length; ++i) {
-    const n = inslice[i]!
+    const n = inslice[i]
     if (n.ticks < cursor) {
       continue
     }
@@ -436,7 +431,7 @@ export function drumlineinmeasure(
   const state = createplaynotestate()
   let cursor = starttick
   for (let i = 0; i < inslice.length; ++i) {
-    const n = inslice[i]!
+    const n = inslice[i]
     if (n.ticks > cursor) {
       appendplayrests(out, n.ticks - cursor, ppq, state)
     }
@@ -477,21 +472,20 @@ export function midiplaysnippetsbymeasure(
   }
   let maxend = 0
   for (let i = 0; i < layers.length; ++i) {
-    const notes = layers[i]!.notes
+    const notes = layers[i].notes
     for (let j = 0; j < notes.length; ++j) {
-      const n = notes[j]!
+      const n = notes[j]
       maxend = Math.max(maxend, n.ticks + n.durationTicks)
     }
   }
   const boundaries = midimeasurespans(midi, maxend)
   const snippets: string[] = []
-  const drumonly =
-    layers.length === 1 && layers[0]!.kind === 'drums'
+  const drumonly = layers.length === 1 && layers[0].kind === 'drums'
   for (let m = 0; m < boundaries.length; ++m) {
-    const { start, end } = boundaries[m]!
+    const { start, end } = boundaries[m]
     const segs: string[] = []
     for (let v = 0; v < layers.length; ++v) {
-      const layer = layers[v]!
+      const layer = layers[v]
       if (layer.kind === 'melodic') {
         segs.push(monophonelineinmeasure(layer.notes, ppq, start, end))
       } else {
@@ -507,7 +501,7 @@ export function midiplaysnippetsbymeasure(
         if (segs[i] !== '') {
           continue
         }
-        if (layers[i]!.kind !== 'melodic') {
+        if (layers[i].kind !== 'melodic') {
           continue
         }
         if (hasother) {
@@ -527,7 +521,7 @@ export function monophoneline(notes: MIDINOTE[], ppq: number): string {
   const state = createplaynotestate()
   let cursor = 0
   for (let i = 0; i < sorted.length; ++i) {
-    const n = sorted[i]!
+    const n = sorted[i]
     if (n.ticks < cursor) {
       continue
     }
@@ -550,12 +544,16 @@ export function drumline(notes: MIDINOTE[], ppq: number): string {
   const state = createplaynotestate()
   let cursor = 0
   for (let i = 0; i < sorted.length; ++i) {
-    const n = sorted[i]!
+    const n = sorted[i]
     if (n.ticks > cursor) {
       appendplayrests(out, n.ticks - cursor, ppq, state)
     }
     const digit = GM_DRUM_TO_DIGIT[n.midi] ?? '0'
-    emitduration(out, durationticksToOp(Math.max(1, n.durationTicks), ppq), state)
+    emitduration(
+      out,
+      durationticksToOp(Math.max(1, n.durationTicks), ppq),
+      state,
+    )
     out.push(digit)
     cursor = n.ticks + n.durationTicks
   }
@@ -583,7 +581,7 @@ export function midivoicesfrommidi(
   const { layers, truncatedbynotes } = collectmidilayers(midi, options)
   const voices: string[] = []
   for (let i = 0; i < layers.length; ++i) {
-    const layer = layers[i]!
+    const layer = layers[i]
     if (layer.kind === 'melodic') {
       const line = monophoneline(layer.notes, ppq)
       if (line.length) {

@@ -367,7 +367,11 @@ export function registerdownloadbinaryfile(
   filename: string,
   mimetype = 'application/octet-stream',
 ) {
-  device.emit(player, 'register:downloadbinaryfile', [bytes, filename, mimetype])
+  device.emit(player, 'register:downloadbinaryfile', [
+    bytes,
+    filename,
+    mimetype,
+  ])
 }
 
 export function registerdev(device: DEVICELIKE, player: string) {

@@ -1,6 +1,15 @@
 import { Message } from '@huggingface/transformers'
 import { createdevice } from 'zss/device'
 import {
+  heavyrunagentlist,
+  heavyrunagentname,
+  heavyrunagentprompt,
+  heavyrunagentstart,
+  heavyrunagentstop,
+  heavyrunrestoreagents,
+  heavyrunsyncuserdisplay,
+} from 'zss/feature/heavy/agentlifecycle'
+import {
   formatagentinfofortext,
   formatboardfortext,
 } from 'zss/feature/heavy/formatstate'
@@ -16,15 +25,6 @@ import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/vmquery'
-import {
-  heavyrunagentlist,
-  heavyrunagentname,
-  heavyrunagentprompt,
-  heavyrunagentstart,
-  heavyrunagentstop,
-  heavyrunrestoreagents,
-  heavyrunsyncuserdisplay,
-} from 'zss/feature/heavy/agentlifecycle'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 

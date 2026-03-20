@@ -27,7 +27,12 @@ class Writer {
   }
 
   writeint32(v: number) {
-    this.bytes.push(v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff)
+    this.bytes.push(
+      v & 0xff,
+      (v >> 8) & 0xff,
+      (v >> 16) & 0xff,
+      (v >> 24) & 0xff,
+    )
   }
 
   writestringfixed(len: number, s: string) {
@@ -145,10 +150,7 @@ function writestat(w: Writer, s: ZZT_STAT) {
 /** Encode a single board blob (size field + payload) matching readboardbytes. */
 export function zztencodeboardblob(zztboard: ZZT_BOARD): Uint8Array {
   const body = new Writer()
-  const namelen = Math.min(
-    ZZT_BOARD_TITLE_FIELD_LEN,
-    zztboard.boardname.length,
-  )
+  const namelen = Math.min(ZZT_BOARD_TITLE_FIELD_LEN, zztboard.boardname.length)
   body.writeuint8(namelen)
   body.writestringfixed(ZZT_BOARD_TITLE_FIELD_LEN, zztboard.boardname)
   writerletiles(body, zztboard.elements)

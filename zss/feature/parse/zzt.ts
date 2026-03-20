@@ -26,7 +26,6 @@ import {
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import { memoryreadfirstcontentbook, memorywritebook } from 'zss/memory/session'
-import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -39,6 +38,7 @@ import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { PT } from 'zss/words/types'
 
+import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import { zztoop } from './zztoop'
 
 export { isszztworldbytes, iszztworldbytes } from './zztmagic'
@@ -249,7 +249,10 @@ function createreader(content: Uint8Array) {
 
 type READER = ReturnType<typeof createreader>
 
-function readboardbytes(reader: READER, layout: BOARD_LAYOUT): ZZT_BOARD | null {
+function readboardbytes(
+  reader: READER,
+  layout: BOARD_LAYOUT,
+): ZZT_BOARD | null {
   const start = reader.index()
 
   if (!reader.need(2)) {
@@ -260,7 +263,9 @@ function readboardbytes(reader: READER, layout: BOARD_LAYOUT): ZZT_BOARD | null 
   if (!reader.need(layout.namefield)) {
     return null
   }
-  const boardname = reader.readstring(layout.namefield).slice(0, boardnamelength)
+  const boardname = reader
+    .readstring(layout.namefield)
+    .slice(0, boardnamelength)
 
   const board: ZZT_BOARD = {
     boardname,
@@ -740,7 +745,9 @@ function processboards(
 
     const codepagestats: string[] = [`@zztboard${i}`, ``]
     if (croppedfromszzt) {
-      codepagestats.push(`@note Super ZZT board cropped to ${BOARD_WIDTH}x${BOARD_HEIGHT}`)
+      codepagestats.push(
+        `@note Super ZZT board cropped to ${BOARD_WIDTH}x${BOARD_HEIGHT}`,
+      )
     }
     if (i === 0) {
       codepagestats.push(`@title`)
@@ -833,23 +840,7 @@ function readworldheaderzzt(reader: READER) {
   }
   if (
     !reader.need(
-      2 +
-        2 +
-        2 +
-        7 +
-        2 +
-        2 +
-        2 +
-        2 +
-        2 +
-        2 +
-        2 +
-        1 +
-        20 +
-        10 * 21 +
-        2 +
-        2 +
-        1,
+      2 + 2 + 2 + 7 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 1 + 20 + 10 * 21 + 2 + 2 + 1,
     )
   ) {
     return null
@@ -1096,4 +1087,3 @@ export function parseszt(player: string, content: Uint8Array) {
   memorywritebook(book)
   apitoast(SOFTWARE, player, `imported Super ZZT into ${book.name} book`)
 }
-

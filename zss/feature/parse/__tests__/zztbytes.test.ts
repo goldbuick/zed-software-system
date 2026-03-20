@@ -1,7 +1,4 @@
-import {
-  isszztworldbytes,
-  iszztworldbytes,
-} from 'zss/feature/parse/zztmagic'
+import { isszztworldbytes, iszztworldbytes } from 'zss/feature/parse/zztmagic'
 
 describe('zzt magic bytes', () => {
   it('detects ZZT world type -1', () => {

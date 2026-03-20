@@ -3,10 +3,21 @@
  * Mirrors decode logic in zzt.ts (Shikadi Modding Wiki ZZT format).
  */
 
-export { zztencodeboardblob, zztencodeworld, zztencodeworldheader } from './zztencode'
+export {
+  zztencodeboardblob,
+  zztencodeworld,
+  zztencodeworldheader,
+} from './zztencode'
 
-import { NAME } from 'zss/words/types'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memoryboardelementisobject } from 'zss/memory/boardelement'
+import { memoryreadelement } from 'zss/memory/boardoperations'
+import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
+import {
+  memoryreadcodepagedata,
+  memoryreadcodepagename,
+  memoryreadcodepagestats,
+} from 'zss/memory/codepageoperations'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -14,18 +25,11 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
-import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
-import {
-  memoryreadcodepagedata,
-  memoryreadcodepagename,
-  memoryreadcodepagestats,
-} from 'zss/memory/codepageoperations'
-import { memoryreadelement } from 'zss/memory/boardoperations'
-import { memoryboardelementisobject } from 'zss/memory/boardelement'
+import { NAME } from 'zss/words/types'
 
-import { zztencodeworld, ZZT_BOARD_TITLE_FIELD_LEN } from './zztencode'
-import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import { ooptuzz } from './ooptuzz'
+import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
+import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
 const ZZT_BOARD_WIDTH = 60
 const ZZT_BOARD_HEIGHT = 25
@@ -85,9 +89,17 @@ function zztcolorbyte(fg: number, bg: number): number {
   return (fg & 15) + 16 * (bg & 15)
 }
 
-type SORTEDENTRY = { codepage: CODE_PAGE; board: BOARD; sortname: string; exportname: string }
+type SORTEDENTRY = {
+  codepage: CODE_PAGE
+  board: BOARD
+  sortname: string
+  exportname: string
+}
 
-function buildsortedboardentries(book: BOOK, errors: ZZTEXPORTERROR[]): SORTEDENTRY[] | null {
+function buildsortedboardentries(
+  book: BOOK,
+  errors: ZZTEXPORTERROR[],
+): SORTEDENTRY[] | null {
   const pages = memorylistcodepagebytype(book, CODE_PAGE_TYPE.BOARD)
   const raw: { codepage: CODE_PAGE; board: BOARD; sortname: string }[] = []
   for (let i = 0; i < pages.length; ++i) {
@@ -158,7 +170,10 @@ function resolveboardtouint8(
   return { ok: false }
 }
 
-function findstartboardindex(entries: SORTEDENTRY[], errors: ZZTEXPORTERROR[]): number | null {
+function findstartboardindex(
+  entries: SORTEDENTRY[],
+  errors: ZZTEXPORTERROR[],
+): number | null {
   for (let i = 0; i < entries.length; ++i) {
     const stats = memoryreadcodepagestats(entries[i].codepage)
     if (stats.zztstartboard !== undefined || stats.exportstart !== undefined) {
@@ -181,7 +196,9 @@ function kindtozzt(
   y: number,
   board: BOARD,
   entries: SORTEDENTRY[],
-): { ok: true; tile: ZZT_ELEMENT; stat?: ZZT_STAT } | { ok: false; message: string } {
+):
+  | { ok: true; tile: ZZT_ELEMENT; stat?: ZZT_STAT }
+  | { ok: false; message: string } {
   const sx = board.startx
   const sy = board.starty
   if (isnumber(sx) && isnumber(sy) && sx === x && sy === y) {
@@ -245,10 +262,17 @@ function kindtozzt(
     case 'door': {
       const origFg = bg & 15
       const origBg = ((fg & 15) + 16 - 8) % 16
-      return { ok: true, tile: { type: T_DOOR, color: zztcolorbyte(origFg, origBg) } }
+      return {
+        ok: true,
+        tile: { type: T_DOOR, color: zztcolorbyte(origFg, origBg) },
+      }
     }
     case 'scroll':
-      return { ok: true, tile: { type: T_SCROLL, color: z() }, stat: basestat() }
+      return {
+        ok: true,
+        tile: { type: T_SCROLL, color: z() },
+        stat: basestat(),
+      }
     case 'passage': {
       const st = basestat()
       if (isstring(el.p3)) {
@@ -277,7 +301,11 @@ function kindtozzt(
     case 'counter':
       return { ok: true, tile: { type: T_COUNTER, color: z() } }
     case 'bullet':
-      return { ok: true, tile: { type: T_BULLET, color: z() }, stat: basestat() }
+      return {
+        ok: true,
+        tile: { type: T_BULLET, color: z() },
+        stat: basestat(),
+      }
     case 'water':
       return { ok: true, tile: { type: T_WATER, color: z() } }
     case 'forest':
@@ -505,7 +533,10 @@ export function exportbooktozzt(book: BOOK): ZZTEXPORTRESULT {
 }
 
 /** Compare two parsed worlds for regression tests (not byte-identical RLE). */
-export function zztboardsstructurallyequal(a: ZZT_BOARD[], b: ZZT_BOARD[]): boolean {
+export function zztboardsstructurallyequal(
+  a: ZZT_BOARD[],
+  b: ZZT_BOARD[],
+): boolean {
   if (a.length !== b.length) {
     return false
   }

@@ -88,7 +88,10 @@ function routechattoagents(
     const agentelements: (typeof senderelement)[] = []
     for (let i = 0; i < shadow.ids.length; ++i) {
       const agentid = shadow.ids[i]
-      if (agentid === message.player || readagentnamefromshadow(agentid) === sendername) {
+      if (
+        agentid === message.player ||
+        readagentnamefromshadow(agentid) === sendername
+      ) {
         continue
       }
       const agentboard = memoryreadplayerboard(agentid)
@@ -121,7 +124,10 @@ function routechattoagents(
   for (let i = 0; i < shadow.ids.length; ++i) {
     const agentid = shadow.ids[i]
 
-    if (agentid === message.player || sendername === readagentnamefromshadow(agentid)) {
+    if (
+      agentid === message.player ||
+      sendername === readagentnamefromshadow(agentid)
+    ) {
       continue
     }
 
