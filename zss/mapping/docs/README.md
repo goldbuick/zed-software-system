@@ -14,6 +14,6 @@ The mapping system provides utilities for types, arrays, numbers, strings, 2D ge
 | [2d.md](2d.md) | Index/PT conversion, distance, rect/line points |
 | [guid.md](guid.md) | createsid, createpid, createnameid, etc. |
 | [anim.md](anim.md) | Animation snapping and damped movement |
-| [tick.md](tick.md) | TICK_RATE, TICK_FPS, waitfor |
+| [tick.md](tick.md) | TICK_RATE, TICK_FPS, DEFAULT_BPM, waitfor |
 | [func.md](func.md) | doasync — async error handling |
 | [qr.md](qr.md) | QR code to $char lines |

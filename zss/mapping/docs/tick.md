@@ -1,6 +1,6 @@
 # tick.ts
 
-**Purpose**: Tick rate and timing constants. Defines game loop timing and waitfor promise.
+**Purpose**: Tick rate, default BPM, and timing constants. Defines game loop timing and waitfor promise.
 
 ## Dependencies
 
@@ -12,6 +12,7 @@ None.
 |--------|-------------|
 | `TICK_RATE` | 80 ms per tick (~12.5 fps) |
 | `TICK_FPS` | 1000 / TICK_RATE |
+| `DEFAULT_BPM` | 136; app default for beat-aligned timing |
 | `CYCLE_DEFAULT` | 3 (cycle stat default) |
 | `waitfor(ms)` | Promise that resolves after ms |
 

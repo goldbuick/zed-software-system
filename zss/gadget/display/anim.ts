@@ -1,4 +1,5 @@
 import { ShaderMaterial } from 'three'
+import { DEFAULT_BPM } from 'zss/mapping/tick'
 const epoch = Date.now()
 
 export const time = {
@@ -15,7 +16,6 @@ export function setAltInterval(bpm: number) {
   intervalValue = INTERVAL_RATE / bpm
 }
 
-export const DEFAULT_BPM = 136
 setAltInterval(DEFAULT_BPM)
 
 export const interval = {

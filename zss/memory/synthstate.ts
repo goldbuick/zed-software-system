@@ -2,6 +2,7 @@ import { synthplay } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
+import { DEFAULT_BPM, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -109,6 +110,10 @@ export function memoryreadsynthplay(board: string): SYNTH_PLAY[] {
   return readsynthplayinternal(board)
 }
 
+function durationsecondsatdefaultbpm(duration: number) {
+  return (duration * 60) / (16 * DEFAULT_BPM)
+}
+
 export function memoryqueuesynthplay(board: string, play: string) {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(main)) {
@@ -137,11 +142,12 @@ export function memoryqueuesynthplay(board: string, play: string) {
       invoke,
       true,
       (duration) => `${duration}n` as any,
-      (duration) => Math.max(1, Math.round(duration * 0.5 - 2)),
+      durationsecondsatdefaultbpm,
     )
     const last = pattern[pattern.length - 1]
     if (ispresent(last)) {
-      endtime = Math.max(endtime, last[0])
+      const ticks = Math.max(1, Math.round(last[0] * TICK_FPS))
+      endtime = Math.max(endtime, ticks)
     }
   }
 

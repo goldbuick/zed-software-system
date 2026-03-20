@@ -309,8 +309,9 @@ Animation timing utilities.
 ### Constants & Functions
 - `time` - Object with value getter returning elapsed time in seconds
 - `interval` - Object with value getter returning interval value based on BPM
-- `DEFAULT_BPM` - Default beats per minute constant (136)
 - `setAltInterval(bpm)` - Sets the interval value based on BPM
+
+On load, `setAltInterval` is called with **`DEFAULT_BPM` from `zss/mapping/tick`** (136).
 - `cloneMaterial(material)` - Clones a shader material and adds time/interval uniforms
 
 ---
