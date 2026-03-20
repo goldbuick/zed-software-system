@@ -5,7 +5,7 @@
 ## Dependencies
 
 - `zss/chip` — CHIP type for execution context
-- `zss/device/api` — synth functions (synthplay, synthbpm, synthtts, etc.)
+- `zss/device/api` — synth functions (synthplay, synthtts, etc.)
 - `zss/device/session` — SOFTWARE session
 - `zss/firmware` — createfirmware
 - `zss/mapping/types` — type guards (isnumber, ispresent, isstring)
@@ -31,7 +31,6 @@
 | `bgplayon64n` … `bgplayon1n` | [buffer] | Same as `bgplay` but quantized to note length |
 | `vol` | `volume` | Set foreground playback volume |
 | `bgvol` | `volume` | Set background playback volume |
-| `bpm` | `bpm` | Set BPM |
 
 ### Synthesis
 

@@ -2,7 +2,6 @@ import { CHIP } from 'zss/chip'
 import {
   synthbgplay,
   synthbgplayvolume,
-  synthbpm,
   synthflush,
   synthplayvolume,
   synthrecord,
@@ -255,16 +254,6 @@ export const AUDIO_FIRMWARE = createfirmware()
       return 0
     },
   )
-  .command('bpm', [ARG_TYPE.NUMBER, 'BPM'], (_, words) => {
-    const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synthbpm(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      READ_CONTEXT.board?.id ?? '',
-      bpm,
-    )
-    return 0
-  })
   .command('vol', [ARG_TYPE.NUMBER, 'main volume'], (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synthplayvolume(

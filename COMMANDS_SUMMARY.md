@@ -73,7 +73,6 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 ### Playback
 
-- `bpm` - Set BPM
 - `vol` - Set play volume
 - `bgvol` - Set background play volume
 - `play` - Play music notes

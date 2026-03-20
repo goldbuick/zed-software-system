@@ -9,7 +9,8 @@ export const TICK_RATE = 80
 
 export const TICK_FPS = 1000 / TICK_RATE
 
-/** App default for beat-aligned timing (synth play queue, display interval, etc.). */
+/** App default for beat-aligned timing
+ * (synth play queue, display interval, etc.). */
 export const DEFAULT_BPM = 136
 
 export const CYCLE_DEFAULT = 3

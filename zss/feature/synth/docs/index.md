@@ -11,6 +11,7 @@ await setupsynth()
 ```
 
 One-time async initialization. Registers AudioWorklet modules:
+
 - Frequency Crusher
 - Sidechain Compressor
 
@@ -26,22 +27,21 @@ Creates and returns a full synth instance (`AUDIO_SYNTH`).
 
 ## Returned API
 
-| Method | Description |
-|--------|-------------|
-| `addplay(buffer)` | Parse notation and schedule playback |
-| `addbgplay(buffer, quantize)` | Schedule background SFX |
-| `stopplay()` | Clear scheduled notes |
-| `setbpm(bpm)` | Set tempo (clears playback) |
-| `setplayvolume(v)` | Main playback volume (0-100) |
-| `setbgplayvolume(v)` | Background SFX volume |
-| `setttsvolume(v)` | TTS volume |
-| `addaudiobuffer(buffer)` | Play external audio (e.g. TTS) |
-| `applyreset()` | Reset all sources and FX to defaults |
-| `applyreplay(source, fxchain, fx)` | Restore state for replay |
-| `synthreplay(pattern, maxtime)` | Schedule pattern for replay |
-| `synthrecord(filename)` | Render to MP3 and download |
-| `synthflush()` | Clear recording buffer |
-| `destroy()` | Dispose all nodes |
+| Method                             | Description                          |
+| ---------------------------------- | ------------------------------------ |
+| `addplay(buffer)`                  | Parse notation and schedule playback |
+| `addbgplay(buffer, quantize)`      | Schedule background SFX              |
+| `stopplay()`                       | Clear scheduled notes                |
+| `setplayvolume(v)`                 | Main playback volume (0-100)         |
+| `setbgplayvolume(v)`               | Background SFX volume                |
+| `setttsvolume(v)`                  | TTS volume                           |
+| `addaudiobuffer(buffer)`           | Play external audio (e.g. TTS)       |
+| `applyreset()`                     | Reset all sources and FX to defaults |
+| `applyreplay(source, fxchain, fx)` | Restore state for replay             |
+| `synthreplay(pattern, maxtime)`    | Schedule pattern for replay          |
+| `synthrecord(filename)`            | Render to MP3 and download           |
+| `synthflush()`                     | Clear recording buffer               |
+| `destroy()`                        | Dispose all nodes                    |
 
 ## Properties
 

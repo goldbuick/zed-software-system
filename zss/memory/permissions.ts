@@ -6,7 +6,7 @@ import { memoryreadoperator } from './session'
 
 /** Group names and descriptions for allowlists (~20 toggles). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
-  ['audio', 'audio (bpm, play, synth, bgplay, ...)'],
+  ['audio', 'audio (play, synth, bgplay, ...)'],
   ['bridge', 'use integrations like chat, join codes, and broadcast'],
   ['coder', 'create and edit codepages'],
   ['discovery', 'list books, pages, and boards'],
@@ -46,7 +46,6 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   bgplayon4n: 'audio',
   bgplayon64n: 'audio',
   bgplayon8n: 'audio',
-  bpm: 'audio',
   distort1: 'audio',
   distort2: 'audio',
   distort3: 'audio',

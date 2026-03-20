@@ -13,9 +13,8 @@ import {
 import { write } from 'zss/feature/writeui'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
-import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
-import { waitfor } from 'zss/mapping/tick'
+import { DEFAULT_BPM, waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -89,8 +88,9 @@ const synthdevice = createdevice('synth', [], (message) => {
 
   // validate synth state
   if (enabled && !ispresent(synth)) {
+    getTransport().bpm.value = DEFAULT_BPM
     synth = createsynth()
-    getTransport().start()
+    getTransport().start(0)
   }
   if (!ispresent(synth)) {
     return
@@ -122,15 +122,6 @@ const synthdevice = createdevice('synth', [], (message) => {
           '',
         )
       })
-      break
-    case 'bpm':
-      if (isarray(message.data)) {
-        const [, bpm] = message.data as [string, number]
-        if (isnumber(bpm)) {
-          synth.setbpm(Math.round(bpm))
-          setAltInterval(Math.round(bpm))
-        }
-      }
       break
     case 'playvolume':
       if (isarray(message.data)) {
