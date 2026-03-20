@@ -198,7 +198,7 @@ export const PERMISSION_CONFIG_NAMES = ['lockdown', 'creative'] as const
 
 export type PERMISSION_CONFIG_NAME = (typeof PERMISSION_CONFIG_NAMES)[number]
 
-const LOCKDOWN_ALLOWLIST_PLAYER: string[] = ['speaker']
+const LOCKDOWN_ALLOWLIST_PLAYER: string[] = []
 const LOCKDOWN_ALLOWLIST_MOD: string[] = [
   'moderation',
   'bridge',
