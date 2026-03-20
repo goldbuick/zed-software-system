@@ -34,11 +34,11 @@ flowchart LR
 1. **`tokenize`** ([lexer.ts](../lexer.ts)) — Chevrotain tokens + lexer errors.
 2. **`parser.program()`** ([parser.ts](../parser.ts)) — Concrete syntax tree (`CstNode`). Parser errors map to [`LANG_ERROR`](../lexer.ts)-shaped messages in [ast.ts](../ast.ts).
 3. **`visitor.go(cst)`** ([visitor.ts](../visitor.ts)) — Abstract tree of [`CodeNode`](../visitor.ts) with [`NODE`](../visitor.ts) discriminants.
-4. **`addRange(ast)`** ([ast.ts](../ast.ts)) — Fills `range` on nodes for editor / completion.
-5. **`transformast(ast)`** ([transformer.ts](../transformer.ts)) — JS source + `source-map` output; mutates shared [`context`](../transformer.ts) (labels, line indexes).
+4. **`addRange(ast)`** ([ast.ts](../ast.ts)) — Fills `range` on nodes for editor / completion (full AST walk; runs on every [`compileast`](../ast.ts), including editor tooling).
+5. **`transformast(ast)`** ([transformer.ts](../transformer.ts)) — JS source + `source-map` output; mutates shared [`context`](../transformer.ts) (labels, line indexes). The shared `context` is fine for today’s single-threaded compile path; parallel compilation would need isolation or a per-run context.
 6. **`new Function('api', code)`** ([generator.ts](../generator.ts)) — Produces `GeneratorFunc`: `(api: CHIP) => 0 | 1`.
 
-[`compile`](../generator.ts) runs steps 3–6 after `compileast` (steps 1–4). [`compileast`](../ast.ts) stops after the AST (no JS).
+[`compile`](../generator.ts) runs the full pipeline (steps 1–6): it calls [`compileast`](../ast.ts) for steps 1–4, then runs **`transformast`** and **`new Function`** (steps 5–6). [`compileast`](../ast.ts) alone stops after the AST (no JS). For debugging, `compile` wraps the `compileast` call in `console.time` / `console.timeEnd` using the `name` argument ([generator.ts](../generator.ts)).
 
 ## Data shapes
 
@@ -119,6 +119,8 @@ flowchart TB
   astRoot --> gen --> emit --> out --> jsOut
 ```
 
+The diagram separates indexing from emission for readability; **execution order is sequential**: [`createlineindexes`](../transformer.ts) finishes (and mutates [`context`](../transformer.ts)) before recursive [`transformnode`](../transformer.ts) runs on the AST.
+
 See [transformer.md](transformer.md).
 
 ## Operator precedence
@@ -162,7 +164,7 @@ flowchart TB
 
 ### Chained comparisons
 
-The parser’s `comparison` rule can repeat `comp_op` + `arith_expr`. The visitor’s [`comparison`](../visitor.ts) builds a single `NODE.COMPARE` from the first `comp_op` and paired operands. **Do not assume** Python-style `a < b < c` semantics until you confirm how multiple operators are represented in CST arrays and whether codegen should nest compares—verify before relying on chains.
+The parser’s `comparison` rule repeats `comp_op` + `arith_expr`. The visitor’s [`comparison`](../visitor.ts) lowers chains to **Python-style** semantics: `a < b < c` becomes `and(compare(a,b), compare(b,c))` (each compare uses its own operator). Single-operator comparisons still emit one `NODE.COMPARE`. Behavior is covered by [`comparisonchain.test.ts`](../__tests__/comparisonchain.test.ts).
 
 ## Error propagation
 
@@ -173,6 +175,8 @@ The parser’s `comparison` rule can repeat `comp_op` + `arith_expr`. The visito
 | Visitor | `visitor.go` | Missing AST yields `"no ast output"` in [ast.ts](../ast.ts) |
 | Transform | `transformast` / empty code | [generator.ts](../generator.ts) still returns a no-op `GeneratorFunc` in some paths |
 | `new Function` | Runtime compile | Caught; error string in `errors`; no-op function |
+
+After a successful `compileast`, [`compile`](../generator.ts) spreads `astResult` into the return value; if **`transformast`** or **`new Function`** then fails, `tokens` / `cst` / `ast` may still be present alongside `errors` (see early returns in [generator.ts](../generator.ts)).
 
 With **`recoveryEnabled: true`** on the parser, treat **`parser.errors.length === 0`** as the gate for a trustworthy CST ([parser.ts](../parser.ts) constructor)—recovery can produce partial trees.
 
@@ -213,6 +217,7 @@ flowchart LR
 
 ## Parsing footguns
 
+- **`new Function` / CSP** — The generator uses dynamic `Function` construction ([generator.ts](../generator.ts)); treat untrusted source like any eval-capable path (CSP, validation, supply chain).
 - **`maxLookahead: 2`** — LL(2)-style limits in [parser.ts](../parser.ts); some inputs may fail or parse differently than with unbounded lookahead.
 - **Recovery** — Partial CST possible after errors; always check parser errors before using the tree.
 - **Statement `/`** — Token `divide` (`/`) at **statement** level is [`short_go`](../parser.ts); inside `term_item` it is division. Context disambiguates.
