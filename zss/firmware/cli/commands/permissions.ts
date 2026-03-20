@@ -61,42 +61,24 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command(
       'permissions',
-      [ARG_TYPE.MAYBE_NAME, 'list player→role and role→command'],
-      (_, words) => {
+      ['list player $26 role and role $26 commands - #access to change preset'],
+      () => {
         const nonestr = '(none)'
-        const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-
-        if (ispresent(maybename)) {
-          const configname = NAME(maybename) as PERMISSION_CONFIG_NAME
-          if (PERMISSION_CONFIG_NAMES.includes(configname)) {
-            memoryapplypermissionconfig(configname)
-            persistpermissionstores()
-          } else {
-            apierror(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
-              'permissions',
-              `config: ${configname} (use lockdown or creative)`,
-            )
-          }
-        }
-
-        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'permissions')
+        writeheader(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'permissions (list) — #access lockdown | creative',
+        )
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `$GRAY($YELLOWyellow$GRAY = override on base preset; gray = from preset)`,
+        )
         const currentconfig = memoryreadpermissionconfig()
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `selected config: $GREEN${currentconfig}`,
-        )
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `other base: $GRAY${PERMISSION_CONFIG_NAMES.filter((name) => name !== currentconfig).join(', ')}`,
-        )
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$GRAY(* = override on top of base)`,
+          `current config: $GREEN${currentconfig}`,
         )
         write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
 
@@ -109,7 +91,11 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         const rolebytoken = memoryreadrolebytoken()
         const players = Object.keys(playertotoken)
         if (players.length > 0) {
-          writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'player $26 role')
+          writeheader(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'player $26 role - use #role to modify',
+          )
           for (const player of players) {
             const token = playertotoken[player]
             const role =
@@ -125,17 +111,24 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         }
 
         const breakdownbyrole = memoryreadallowlistbreakdownbyrole()
-        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'role $26 commands')
+        writeheader(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'role $26 commands - use #allow and #revoke to modify',
+        )
         for (const role of PERMISSION_ROLES) {
           const row = breakdownbyrole[role]
           const og = new Set(row.overridegrant)
-          const listed = row.effective.map((f) =>
-            og.has(f) ? `${f}*` : f,
+          const parts = row.effective.map((f) =>
+            og.has(f) ? `$YELLOW${f}` : `$GRAY${f}`,
           )
+          const commandsspan = parts.length
+            ? parts.join('$GRAY, ')
+            : `$GRAY${nonestr}`
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `$GREEN${role}: $GRAY${listed.length ? listed.join(', ') : nonestr}`,
+            `$GREEN${role}: ${commandsspan}`,
           )
           if (row.overridedeny.length > 0) {
             write(
@@ -152,6 +145,31 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           `$GRAY${banned.length ? banned.join(', ') : nonestr}`,
+        )
+        return 0
+      },
+    )
+    .command(
+      'access',
+      [ARG_TYPE.NAME, 'base preset: lockdown or creative'],
+      (_, words) => {
+        const [maybename] = readargs(words, 0, [ARG_TYPE.NAME])
+        const configname = NAME(maybename) as PERMISSION_CONFIG_NAME
+        if (!PERMISSION_CONFIG_NAMES.includes(configname)) {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'access',
+            `config: ${configname} (use lockdown or creative)`,
+          )
+          return 0
+        }
+        memoryapplypermissionconfig(configname)
+        persistpermissionstores()
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `$GREENpermission mode set to ${configname}`,
         )
         return 0
       },

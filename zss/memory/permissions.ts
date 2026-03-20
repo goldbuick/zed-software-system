@@ -96,6 +96,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   unban: 'moderation',
 
   allow: 'roles',
+  access: 'risk',
   permissions: 'roles',
   revoke: 'roles',
   role: 'roles',
@@ -197,7 +198,7 @@ export const PERMISSION_CONFIG_NAMES = ['lockdown', 'creative'] as const
 
 export type PERMISSION_CONFIG_NAME = (typeof PERMISSION_CONFIG_NAMES)[number]
 
-const LOCKDOWN_ALLOWLIST_PLAYER: string[] = []
+const LOCKDOWN_ALLOWLIST_PLAYER: string[] = ['speaker']
 const LOCKDOWN_ALLOWLIST_MOD: string[] = [
   'moderation',
   'bridge',
@@ -425,14 +426,26 @@ export function memorycanruncommand(player: string, command: string): boolean {
   const family = memorymapcommandtofamily(command)
   const token = PERMISSION_STATE.playertotoken[player]
   if (token === undefined) {
-    apierror(SOFTWARE, player, 'permissions', 'no token (deny)')
+    apierror(
+      SOFTWARE,
+      player,
+      'permissions',
+      'no token (deny)',
+      `${family} - ${command}`,
+    )
     return false
   }
   const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
   const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
   const allowed = allowlist?.has(family) ?? false
   if (!allowed) {
-    apierror(SOFTWARE, player, 'permissions', `${family} (deny)`)
+    apierror(
+      SOFTWARE,
+      player,
+      'permissions',
+      `(deny)`,
+      `${family} - ${command}`,
+    )
     return false
   }
   return true

@@ -15,6 +15,7 @@ import {
   memorysetrolefortoken,
 } from 'zss/memory/permissions'
 import { memoryreadoperator } from 'zss/memory/session'
+import { apierror } from 'zss/device/api'
 
 jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
@@ -45,6 +46,7 @@ describe('permissions', () => {
   describe('ispermissioncontrolledcommand', () => {
     it('returns true for commands in the permission-controlled command table', () => {
       expect(ispermissioncontrolledcommand('allow')).toBe(true)
+      expect(ispermissioncontrolledcommand('access')).toBe(true)
       expect(ispermissioncontrolledcommand('run')).toBe(true)
       expect(ispermissioncontrolledcommand('build')).toBe(true)
     })
@@ -62,6 +64,7 @@ describe('permissions', () => {
 
   describe('memorymapcommandtofamily', () => {
     it('maps variant and base commands to families', () => {
+      expect(memorymapcommandtofamily('access')).toBe('risk')
       expect(memorymapcommandtofamily('pageexport')).toBe('risk')
       expect(memorymapcommandtofamily('synth1')).toBe('speaker')
       expect(memorymapcommandtofamily('run')).toBe('coder')
@@ -81,6 +84,19 @@ describe('permissions', () => {
       expect(memorycanruncommand('player1', 'toast')).toBe(false)
     })
 
+    it('apierror includes family and command when no token', () => {
+      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      ;(apierror as jest.Mock).mockClear()
+      expect(memorycanruncommand('player1', 'toast')).toBe(false)
+      expect(apierror).toHaveBeenCalledWith(
+        expect.anything(),
+        'player1',
+        'permissions',
+        'no token (deny)',
+        'speaker - toast',
+      )
+    })
+
     it('allows non-operator when token has role with command on allowlist', () => {
       ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
       resettocreativedefaults()
@@ -94,6 +110,21 @@ describe('permissions', () => {
       memorysetplayertotoken('player1', 'token-a')
       memorysetrolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'allow')).toBe(false)
+    })
+
+    it('apierror includes family and command on allowlist deny', () => {
+      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      memorysetplayertotoken('player1', 'token-a')
+      memorysetrolefortoken('token-a', 'player')
+      ;(apierror as jest.Mock).mockClear()
+      expect(memorycanruncommand('player1', 'allow')).toBe(false)
+      expect(apierror).toHaveBeenCalledWith(
+        expect.anything(),
+        'player1',
+        'permissions',
+        '(deny)',
+        'roles - allow',
+      )
     })
 
     it('allows admin roles family; denies risk by default', () => {

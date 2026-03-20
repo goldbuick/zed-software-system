@@ -25,7 +25,9 @@
     "build:cli": "tsc -p tsconfig.cli.json && oclif manifest",
     "build:cli:binary": "yarn build && yarn build:cli && NODE_OPTIONS=--no-deprecation PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell && oclif pack tarballs",
     "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
-    "ensure:vosk-model": "test -f cafe/public/models/vosk-model-small-en-us-0.15.tar.gz || (mkdir -p cafe/public/models && curl -L -o cafe/public/models/vosk-model-small-en-us-0.15.tar.gz https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.tar.gz)"
+    "ensure:vosk-model": "test -f cafe/public/models/vosk-model-small-en-us-0.15.tar.gz || (mkdir -p cafe/public/models && curl -L -o cafe/public/models/vosk-model-small-en-us-0.15.tar.gz https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.tar.gz)",
+    "docker:build": "docker build -t zss:local .",
+    "docker:test": "yarn docker:build && docker run --rm zss:local node ./bin/run.js --version"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",

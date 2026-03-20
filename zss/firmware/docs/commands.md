@@ -46,7 +46,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Twitch chat integration (operator only) |
 | `broadcast` | Stream broadcast (operator only) |
-| `permissions` | List player→role and role→command |
+| `permissions` | List player→role and role→command (read-only) |
+| `access` | Set base preset: `lockdown` or `creative` |
 | `allow` | Add command(s) to role allowlist |
 | `revoke` | Remove command from role or revoke all |
 | `role` | Set player token to role |
