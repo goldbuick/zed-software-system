@@ -4,6 +4,8 @@ The lang system provides the compiler pipeline for the ZSS scripting language �
 
 ## Architecture Overview
 
+For a **single narrative** with diagrams (pipeline, parser / visitor / transformer, precedence, runtime OS–CHIP, errors, and footguns), see **[architecture.md](architecture.md)**.
+
 The compilation pipeline has four stages:
 
 1. **Lexer** — Tokenizes source text (labels, commands, text, literals, operators, etc.)
@@ -17,6 +19,7 @@ The main entry point is `compile()` in `generator.ts`, which orchestrates the fu
 
 | File | Purpose |
 |------|---------|
+| [architecture.md](architecture.md) | End-to-end lang architecture, diagrams, precedence, runtime |
 | [ast.md](ast.md) | AST compilation entry point (`compileast`) |
 | [generator.md](generator.md) | Full compilation pipeline (`compile`) |
 | [lexer.md](lexer.md) | Tokenization and token definitions |
