@@ -6,7 +6,7 @@
  * to following notes, drum tokens (`0`–`9`, **`p`** clap), and rests **`x`** (drum/rest lines keep duration
  * before hit or rest).
  * Sharp/flat **after** the letter (`c#`, `b!`). Polyphony: `PLAY_VOICE_SEPARATOR` separates voices.
- * At most **`MAX_VOICES_PER_PLAY` (4)** segments per `#play`. Tracks are chosen from the **first four note-ons** in global time order (sort `ticks`, then track index, then MIDI pitch); unique tracks among those events get a voice (1–4). Selected **channel 10** (index 9) tracks merge into **one** drum layer at the **first** selected drum track’s position in that order.
+ * At most **`MAX_VOICES_PER_PLAY` (4)** segments per `#play`. Tracks are chosen by scanning **all** notes in global time order (sort `ticks`, then track index, then MIDI pitch) and keeping each track the **first** time it appears, until four distinct tracks or end of file — so many same-tick notes on one track do not block other tracks. Selected **channel 10** (index 9) tracks merge into **one** drum layer at the **first** selected drum track’s position in that order.
  * Drum-only imports prepend a
  * full-bar rest voice on **measure 0 only** so the first bar’s drums are not synth 0; later bars omit that pad.
  */
@@ -221,7 +221,7 @@ type midinotelayer = {
   notes: MIDINOTE[]
 }
 
-/** Flat note ref for global sort (first-four note-on selection). */
+/** Flat note ref for global sort (per-track first-appearance selection). */
 type midiflatnoteref = {
   ticks: number
   trackindex: number
@@ -229,8 +229,9 @@ type midiflatnoteref = {
 }
 
 /**
- * Unique track indices in first-appearance order among the first four notes in the whole file
- * (stable sort: ticks, track index, MIDI note number).
+ * Up to four **distinct** track indices in order of each track’s **first** note in global time
+ * (stable sort: ticks, track index, MIDI note number). Scans the whole sorted list — extra notes on
+ * an already-seen track are skipped so dense chords on one staff do not hide other tracks.
  */
 export function midiselecttracksfromfirstnotes(midi: Midi): number[] {
   const flat: midiflatnoteref[] = []
@@ -249,8 +250,7 @@ export function midiselecttracksfromfirstnotes(midi: Midi): number[] {
   )
   const seen = new Set<number>()
   const u: number[] = []
-  const ntake = Math.min(4, flat.length)
-  for (let i = 0; i < ntake; ++i) {
+  for (let i = 0; i < flat.length && u.length < MAX_VOICES_PER_PLAY; ++i) {
     const t = flat[i]!.trackindex
     if (!seen.has(t)) {
       seen.add(t)
@@ -302,14 +302,14 @@ function midibuildlayersfortracks(
 }
 
 /**
- * Builds play layers from tracks that appear among the first four global note-ons (`midiselecttracksfromfirstnotes`).
+ * Builds play layers from tracks returned by `midiselecttracksfromfirstnotes`.
  * Respects `MAX_NOTE_EVENTS_MIDI` in layer order (truncates before the layer that would exceed the cap).
  */
 function collectmidilayers(
   midi: Midi,
   options?: {
     maxnoteevents?: number
-    /** @deprecated No longer used; selection is fixed by first-four note-ons. */
+    /** @deprecated No longer used; selection uses global first-appearance of up to four tracks. */
     maxtracks?: number
     /** @deprecated No longer used. */
     maxmiditracks?: number

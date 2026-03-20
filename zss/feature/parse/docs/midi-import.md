@@ -49,8 +49,8 @@ flowchart TB
   end
   subgraph collect [collectmidilayers]
     Flat[Flatten all notes sort ticks track midi]
-    Four[First four note events]
-    U[Unique track indices first appearance order]
+    Scan[Scan sorted notes for new tracks]
+    U[Up to four distinct tracks first global appearance]
     Build[Build layers melodic or merged drums]
     Cap[Note count cap 12000 truncation flag]
   end
@@ -64,8 +64,8 @@ flowchart TB
     Fill0["fill that melodic seg playreststringforticks span"]
   end
   MidiObj --> Flat
-  Flat --> Four
-  Four --> U
+  Flat --> Scan
+  Scan --> U
   U --> Build
   Build --> Cap
   Cap --> Span
@@ -80,7 +80,7 @@ flowchart TB
   Fill0 --> Out
 ```
 
-- **Track selection:** [`midiselecttracksfromfirstnotes`](../midiplay.ts) — take the **first four note-ons** in the whole file after sorting by **`(ticks, track index, MIDI pitch)`**; **U** = unique track indices in **order of first appearance** among those four events (**1–4** tracks; fewer if the same track supplies all four hits). There is **no** separate “always import drums from the whole file” pass; channel **9** is included only if it appears in **U** (multiple selected drum tracks still merge into **one** drum layer at the **first** drum position in **U**).
+- **Track selection:** [`midiselecttracksfromfirstnotes`](../midiplay.ts) — sort every note by **`(ticks, track index, MIDI pitch)`**, then walk the list and append a track to **U** the **first** time that track appears, stopping when **U** has four tracks or the list ends. Many simultaneous notes on one track only consume **one** slot in **U**, so other tracks that start later in the timeline are still reachable (**no** global “always import all drums” pass). Channel **9** is included only if it appears in **U**; multiple selected drum tracks still merge into **one** drum layer at the **first** drum position in **U**.
 - **Voice cap:** at most **four** `;`-separated segments per `#play` (`MAX_VOICES_PER_PLAY`). Layers follow **U** order (melodic track = one segment; selected drums = one merged segment).
 - **Measure boundaries:** [`midimeasurespans`](../midiplay.ts) walks the file using [`miditickspersmeasure`](../midiplay.ts) at each bar start so **meter changes** stay aligned (previously a single length from tick 0 was used for every bar).
 - **Per voice in bar:** [`monophonelineinmeasure`](../midiplay.ts) / [`drumlineinmeasure`](../midiplay.ts) — notes filtered to `[start, end)`, gaps filled with [`appendplayrests`](../midiplay.ts) (internal).
@@ -109,11 +109,11 @@ Structure matches [`.zzm` import](../zzm.ts): one `:song_0` block with **multipl
 #end
 ```
 
-Example (`twomeasures.mid` fixture): the first four global note-ons all lie on **track 0**, so only that track is imported (track 1 is ignored):
+Example (`twomeasures.mid` fixture): track **0** is seen first globally; track **1** is added when its first note appears at the next measure boundary, so both voices import:
 
 ```text
-#play +qcdef
-#play +qgaa#+c
+#play +qcdef; wx
+#play +qgaa#+c; +qefga
 ```
 
 ## 4. One `#play` line → runtime (`parseplay`)

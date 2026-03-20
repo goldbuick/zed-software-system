@@ -126,7 +126,7 @@ describe('midivoicesfrommidi', () => {
     expect(voices).toEqual(['+qc', '++qc'])
   })
 
-  it(`first four global note-ons across ${MAX_VOICES_PER_PLAY + 1} tracks yield ${MAX_VOICES_PER_PLAY} voices`, () => {
+  it(`first ${MAX_VOICES_PER_PLAY} distinct tracks by global note order when ${MAX_VOICES_PER_PLAY + 1} tracks have notes at tick 0`, () => {
     const midi = new Midi()
     for (let ch = 0; ch < 5; ch++) {
       const tr = midi.addTrack()
@@ -142,7 +142,7 @@ describe('midivoicesfrommidi', () => {
     expect(voices).toHaveLength(MAX_VOICES_PER_PLAY)
   })
 
-  it('drum track in first-four note-ons is merged as one layer in sort order (not last)', () => {
+  it('drum among first four distinct tracks by global order is merged as one layer in sort order', () => {
     const midi = new Midi()
     const a = midi.addTrack()
     a.channel = 0
@@ -168,7 +168,7 @@ describe('midivoicesfrommidi', () => {
     expect(voices[3]).toBe('+qc')
   })
 
-  it('ignores drum track if its first note is not among first four global note-ons', () => {
+  it('ignores drum track if four other tracks appear first in global note order', () => {
     const midi = new Midi()
     for (let ch = 0; ch < 4; ch++) {
       const tr = midi.addTrack()
@@ -241,12 +241,12 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
     const midi = new Midi(new Uint8Array(buf))
     const { snippets, truncatedbynotes } = midiplaysnippetsbymeasure(midi)
     expect(truncatedbynotes).toBe(false)
-    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0])
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0, 1])
     const playlines = snippets.map((s) => `#play ${s}`)
-    expect(playlines).toEqual(['#play +qcdef', '#play +qgaa#+c'])
+    expect(playlines).toEqual(['#play +qcdef; wx', '#play +qgaa#+c; +qefga'])
   })
 
-  it('first four note-ons on one track collapse to one voice', () => {
+  it('many early notes on one track still allow a later track in U', () => {
     const midi = new Midi()
     const t = midi.addTrack()
     t.channel = 0
@@ -261,9 +261,25 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
     const b = midi.addTrack()
     b.channel = 1
     b.addNote({ midi: 72, ticks: 2000, durationTicks: 480, velocity: 0.8 })
-    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0])
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0, 1])
     const { voices } = midivoicesfrommidi(midi)
-    expect(voices).toHaveLength(1)
+    expect(voices).toHaveLength(2)
+  })
+
+  it('single track with many notes yields one voice', () => {
+    const midi = new Midi()
+    const t = midi.addTrack()
+    t.channel = 0
+    for (let i = 0; i < 8; i++) {
+      t.addNote({
+        midi: 60 + i,
+        ticks: i * 120,
+        durationTicks: 120,
+        velocity: 0.8,
+      })
+    }
+    expect(midiselecttracksfromfirstnotes(midi)).toEqual([0])
+    expect(midivoicesfrommidi(midi).voices).toHaveLength(1)
   })
 
   it('midiselecttracksfromfirstnotes uses ticks then track then midi', () => {
