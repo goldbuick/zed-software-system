@@ -1,11 +1,26 @@
 /**
- * Standard MIDI (.mid) → ZZT-style #play codepage (multi-voice via `;`, see parseplay).
+ * Standard MIDI (.mid) → #play codepage (same layout as imported .zzm: one `:song_0`, many `#play` lines).
+ *
+ * Diagrams and pipeline: [docs/midi-import.md](docs/midi-import.md).
+ *
+ * Each bar is one `#play`. Voices in a bar are joined with `;` (parseplay): melodic tracks first,
+ * then one merged GM drum channel (MIDI ch.10). Drum-only files get a leading rest voice on **bar 0 only**
+ * (`wx;…`) so that bar’s drums are not assigned to synth channel 0. Melodic voices: `+`/`-` (octave from baseline 3), then
+ * duration (`ytsiqhw`), then pitch (`c#`, `b!`). Drums: duration then token (`0`–`9`, `p`, …); rests: duration then `x`.
+ * Example (twomeasures.mid, 4/4, two melodic tracks):
+ *
+ * Voices are space-padded per column across measures so `;` aligns in the source. Spaces are ignored by `parseplay`.
+ *
+ * ```
+ * #play +qcdef  ;wx
+ * #play +qgaa#+c;+qefga
+ * ```
  */
 
 import { Midi } from '@tonejs/midi'
-import { apitoast } from 'zss/device/api'
+import { apilog, apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { midivoicesfrommidi } from 'zss/feature/parse/midiplay'
+import { midiplaysnippetsbymeasure } from 'zss/feature/parse/midiplay'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
@@ -22,9 +37,12 @@ function escapestring(value: string): string {
 }
 
 export async function parsemidi(player: string, file: File) {
+  apilog(SOFTWARE, player, 'parsemidi', file.name)
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {
-    apitoast(SOFTWARE, player, 'no content book to import into')
+    const msg = 'no content book to import into'
+    apilog(SOFTWARE, player, 'parsemidi', msg)
+    apitoast(SOFTWARE, player, msg)
     return
   }
 
@@ -32,7 +50,9 @@ export async function parsemidi(player: string, file: File) {
   try {
     buffer = await file.arrayBuffer()
   } catch (err: any) {
-    apitoast(SOFTWARE, player, `midi read failed: ${err?.message ?? err}`)
+    const msg = `midi read failed: ${err?.message ?? err}`
+    apilog(SOFTWARE, player, 'parsemidi', msg)
+    apitoast(SOFTWARE, player, msg)
     return
   }
 
@@ -40,17 +60,23 @@ export async function parsemidi(player: string, file: File) {
   try {
     midi = new Midi(buffer)
   } catch (err: any) {
-    apitoast(SOFTWARE, player, `invalid MIDI: ${err?.message ?? err}`)
+    const msg = `invalid MIDI: ${err?.message ?? err}`
+    apilog(SOFTWARE, player, 'parsemidi', msg)
+    apitoast(SOFTWARE, player, msg)
     return
   }
 
-  const { voices, truncatedbynotes } = midivoicesfrommidi(midi)
+  const { snippets: playlines, truncatedbynotes } =
+    midiplaysnippetsbymeasure(midi)
   if (truncatedbynotes) {
+    apilog(SOFTWARE, player, 'parsemidi', 'truncated (note limit)')
     apitoast(SOFTWARE, player, 'MIDI too large; truncated for import')
   }
 
-  if (!voices.length) {
-    apitoast(SOFTWARE, player, 'no playable notes found in MIDI')
+  if (!playlines.length) {
+    const msg = 'no playable notes found in MIDI'
+    apilog(SOFTWARE, player, 'parsemidi', msg)
+    apitoast(SOFTWARE, player, msg)
     return
   }
 
@@ -63,27 +89,20 @@ export async function parsemidi(player: string, file: File) {
 
 :touch
 "MIDI: ${escapestring(albumtitle)}"
-${voices.map((_, i) => `!song_${i};${i + 1} voice ${i + 1}`).join('\n')}
+!song_0;play
 #end
 
-${voices
-  .map(
-    (v, index) => `:song_${index}
-#play ${v}
+:song_0
+${playlines.map((line) => `#play ${line}`).join('\n')}
 #end
-`,
-  )
-  .join('\n')}
 `
   const codepage = memorycreatecodepage(code, {})
   memorywritecodepage(contentbook, codepage)
   const codepagename = memoryreadcodepagename(codepage)
 
-  apitoast(
-    SOFTWARE,
-    player,
-    `imported MIDI ${codepagename} into ${contentbook.name} book`,
-  )
+  const done = `imported MIDI ${codepagename} into ${contentbook.name} book`
+  apilog(SOFTWARE, player, 'parsemidi', done)
+  apitoast(SOFTWARE, player, done)
   const name = memoryreadcodepagename(codepage)
   const type = memoryreadcodepagetypeasstring(codepage)
   write(

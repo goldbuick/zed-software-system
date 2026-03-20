@@ -14,6 +14,7 @@ How **devices** talk to each other in ZSS: **three JavaScript realms** (main thr
 - [Directed graph (full handler edges)](#directed-graph-who-handles-which-target)
 - [Client → worker forwarding (reference)](#client--worker-forwarding-reference)
 - [Discovering message targets](#discovering-message-targets)
+- [Related: MIDI → `#play` import](../../feature/parse/docs/midi-import.md) (file loader → `parsemidi`, diagrams)
 
 ## Rules of the road
 

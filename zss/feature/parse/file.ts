@@ -17,8 +17,8 @@ import { parsemidi } from './midi'
 import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
 import {
-  iszztworldbytes,
   isszztworldbytes,
+  iszztworldbytes,
   parsebrd,
   parseszt,
   parsezzt,
@@ -121,7 +121,9 @@ export function mapfiletype(type: string, file: File | undefined) {
       }
       break
     case 'audio/midi':
+    case 'audio/mid':
     case 'audio/x-midi':
+    case 'audio/x-mid':
       return 'mid'
   }
   return ''
@@ -240,10 +242,12 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  let filetype = mapfiletype(type, file)
+  const filetype = mapfiletype(type, file)
+  const sniffbyextension =
+    /\.mid$/i.test(file.name) || /\.midi$/i.test(file.name)
   if (
     !filetype &&
-    (type === 'application/octet-stream' || type === '')
+    (type === 'application/octet-stream' || type === '' || sniffbyextension)
   ) {
     file
       .arrayBuffer()
@@ -408,6 +412,13 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
             }
           })
           .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      } else if (!filetype) {
+        apierror(
+          SOFTWARE,
+          player,
+          'parsewebfile',
+          `unsupported mime type ${type} for ${file.name}`,
+        )
       }
       return
   }
