@@ -37,7 +37,6 @@ export function BillboardMeshes({
 }: BillboardMeshesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
-  const altcharset = useMedia((state) => state.altcharsetdata)
   const [material] = useState(() => createBlocksBillboardMaterial())
   const [spritepool, range] = useSpritePool(sprites, limit)
 
@@ -47,7 +46,6 @@ export function BillboardMeshes({
   // create / config material
   useEffect(() => {
     material.uniforms.map.value = charset
-    material.uniforms.alt.value = altcharset ?? charset
     material.uniforms.palette.value = palette
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
@@ -55,7 +53,7 @@ export function BillboardMeshes({
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
     material.needsUpdate = true
-  }, [palette, charset, altcharset, material, imageWidth, imageHeight])
+  }, [palette, charset, material, imageWidth, imageHeight])
 
   // create buffer geo attributes
   const { position, uv } = useMemo(

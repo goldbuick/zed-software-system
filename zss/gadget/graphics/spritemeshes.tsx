@@ -34,7 +34,6 @@ export function SpriteMeshes({
   const { viewport } = useThree()
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.spritecharsetdata)
-  const altcharset = useMedia((state) => state.spritealtcharsetdata)
   const material = useMemo(
     () =>
       withbillboards ? createBillboardsMaterial() : createSpritesMaterial(),
@@ -54,7 +53,6 @@ export function SpriteMeshes({
     const imageRows = Math.round(imageHeight / padheight)
     material.uniforms.palette.value = palette
     material.uniforms.map.value = charset
-    material.uniforms.alt.value = altcharset ?? charset
     material.uniforms.dpr.value = scale
     material.uniforms.screenwidth.value = viewport.width
     material.uniforms.screenheight.value = viewport.height
@@ -72,7 +70,6 @@ export function SpriteMeshes({
   }, [
     palette,
     charset,
-    altcharset,
     material,
     imageWidth,
     imageHeight,

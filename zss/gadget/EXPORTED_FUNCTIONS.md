@@ -110,13 +110,12 @@ Core hooks and state management utilities for tiles, dither, media, and device d
 - `TILE_DATA` - Type for tiles data store (width, height, char/color/bg arrays, render counter, changed callback)
 
 ### Media Management
-- `useMedia` - Zustand store for managing media assets (palette, charset, altcharset, sprites, screen videos, mood, viewimage)
+- `useMedia` - Zustand store for managing media assets (palette, charset, sprites, screen videos, mood, viewimage)
 - `useMedia.getState().reset()` - Resets media to default state
 - `useMedia.getState().setmood(mood)` - Sets the mood string
 - `useMedia.getState().setviewimage(viewimage)` - Sets the view image URL
 - `useMedia.getState().setpalette(palette)` - Sets the palette bitmap
 - `useMedia.getState().setcharset(charset)` - Sets the charset bitmap
-- `useMedia.getState().setaltcharset(altcharset)` - Sets the alternate charset bitmap
 - `useMedia.getState().setscreen(peer, screen)` - Sets a screen video element for a peer
 
 ### Types

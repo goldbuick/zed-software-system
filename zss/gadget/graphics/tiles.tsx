@@ -42,10 +42,8 @@ export function Tiles({
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
-  const mediaaltcharset = useMedia((state) => state.altcharsetdata)
   const palette = mediapalette ?? defaultpalette
   const charset = mediacharset ?? defaultcharset
-  const altcharset = mediaaltcharset ?? defaultcharset
 
   const [material] = useState(() => createTilemapMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
@@ -80,7 +78,6 @@ export function Tiles({
       return
     }
     material.uniforms.map.value = charset
-    material.uniforms.alt.value = altcharset ?? charset
     material.uniforms.palette.value = palette
     material.uniforms.size.value.x = 1 / width
     material.uniforms.size.value.y = 1 / height
@@ -91,7 +88,6 @@ export function Tiles({
   }, [
     palette,
     charset,
-    altcharset,
     material,
     width,
     height,

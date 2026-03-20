@@ -23,6 +23,7 @@ import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT } from './types'
 const LIGHTING_OBJECT_OCCLUSION = 0.444
 const LIGHTING_TERRAIN_SOLID_OCCLUSION = 0.666
 
+/** Cell center to cell center in width-normalized space (Y × `LIGHTING_RAY_TILE_YSCALE`). */
 const lightingraypt = new Vector2()
 
 type LightingRingOcclusion = {
@@ -67,7 +68,7 @@ function lightingappendringocclusions(
   }
 
   lightingraypt.x = x - sprite.x
-  lightingraypt.y = Math.round((y - sprite.y) * LIGHTING_RAY_TILE_YSCALE)
+  lightingraypt.y = (y - sprite.y) * LIGHTING_RAY_TILE_YSCALE
   if (lightingraypt.length() > radius) {
     return
   }
@@ -116,7 +117,7 @@ function lightingrayshade(
   }
 
   lightingraypt.x = x - sprite.x
-  lightingraypt.y = Math.round((y - sprite.y) * LIGHTING_RAY_TILE_YSCALE)
+  lightingraypt.y = (y - sprite.y) * LIGHTING_RAY_TILE_YSCALE
   const raydist = lightingraypt.length()
   if (raydist > radius) {
     return

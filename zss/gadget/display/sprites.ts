@@ -22,7 +22,6 @@ const spritesMaterial = new ShaderMaterial({
     smoothrate: new Uniform(TICK_FPS),
     palette: new Uniform(palette),
     map: new Uniform(charset),
-    alt: new Uniform(charset),
     dpr: new Uniform(1),
     screenwidth: new Uniform(1),
     screenheight: new Uniform(1),
@@ -143,10 +142,7 @@ const spritesMaterial = new ShaderMaterial({
   // fragment shader
   fragmentShader: `
     precision highp float;
-    uniform float time;
-    uniform float interval;
     uniform sampler2D map;
-    uniform sampler2D alt;
     uniform float rows;
     uniform vec2 step;
     uniform vec2 size;
@@ -175,8 +171,7 @@ const spritesMaterial = new ShaderMaterial({
       vec2 lookup = vec2(vDisplay.x, rows - vDisplay.y) * step * pixel;
       vec2 uv = lookup + idx + vec2(1.0, 1.0) * pixel;
 
-      bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+      vec3 blip = texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
         if (vBg.a < 0.001) {
@@ -206,7 +201,6 @@ const billboardsMaterial = new ShaderMaterial({
     smoothrate: new Uniform(TICK_FPS),
     palette: new Uniform(palette),
     map: new Uniform(charset),
-    alt: new Uniform(charset),
     dpr: new Uniform(1),
     screenwidth: new Uniform(1),
     screenheight: new Uniform(1),
@@ -342,10 +336,7 @@ const billboardsMaterial = new ShaderMaterial({
   // fragment shader
   fragmentShader: `
     precision highp float;
-    uniform float time;
-    uniform float interval;
     uniform sampler2D map;
-    uniform sampler2D alt;
     uniform float rows;
     uniform vec2 step;
     uniform vec2 size;
@@ -376,8 +367,7 @@ const billboardsMaterial = new ShaderMaterial({
       vec2 lookup = vec2(vDisplay.x, rows - vDisplay.y) * step * pixel;
       vec2 uv = lookup + idx + vec2(1.0, 1.0) * pixel;
 
-      bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+      vec3 blip = texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
         if (vBg.a < 0.001) {
