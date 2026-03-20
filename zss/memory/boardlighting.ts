@@ -20,6 +20,9 @@ import {
 import { memorycheckcollision } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT } from './types'
 
+const LIGHTING_OBJECT_OCCLUSION = 0.444
+const LIGHTING_TERRAIN_SOLID_OCCLUSION = 0.666
+
 const lightingraypt = new Vector2()
 
 type LightingRingOcclusion = {
@@ -74,7 +77,7 @@ function lightingappendringocclusions(
     ringout.push({
       x,
       y,
-      range: [...lightingmixmaxrange(sprite, pt), 0.45],
+      range: [...lightingmixmaxrange(sprite, pt), LIGHTING_OBJECT_OCCLUSION],
     })
   }
 
@@ -85,7 +88,10 @@ function lightingappendringocclusions(
     ringout.push({
       x,
       y,
-      range: [...lightingmixmaxrange(sprite, pt), 1],
+      range: [
+        ...lightingmixmaxrange(sprite, pt),
+        LIGHTING_TERRAIN_SOLID_OCCLUSION,
+      ],
     })
   }
 }
@@ -123,10 +129,10 @@ function lightingrayshade(
     const [minangle, maxangle, value] = blocked[b]
     if (minangle > maxangle) {
       if (angle >= minangle || angle <= maxangle) {
-        current = Math.max(current, value)
+        current += value
       }
     } else if (angle >= minangle && angle <= maxangle) {
-      current = Math.max(current, value)
+      current += value
     }
   }
 
@@ -138,18 +144,16 @@ function lightingrayshade(
     const [minangle, maxangle, value] = oc.range
     if (minangle > maxangle) {
       if (angle >= minangle || angle <= maxangle) {
-        current = Math.max(current, value)
+        current += value
       }
     } else if (angle >= minangle && angle <= maxangle) {
-      current = Math.max(current, value)
+      current += value
     }
   }
 
   const hradius = radius * 0.5
-  alphas[idx] = Math.min(
-    alphas[idx],
-    current + (raydist < hradius ? 0 : (raydist - hradius) * falloff),
-  )
+  const falloffterm = raydist < hradius ? 0 : (raydist - hradius) * falloff
+  alphas[idx] = Math.min(alphas[idx], Math.min(1, current + falloffterm))
   alphas[idx] = clamp(alphas[idx], 0, 1)
 }
 
@@ -183,16 +187,16 @@ export function memoryboardlightingapplyobject(
         const lightdir = memoryevaldir(board, object, '', maybedir, sprite)
         switch (dirfrompts(sprite, lightdir.destpt)) {
           case DIR.EAST:
-            blocked.push([45, 315, 1])
+            blocked.push([45, 315, LIGHTING_TERRAIN_SOLID_OCCLUSION])
             break
           case DIR.WEST:
-            blocked.push([225, 135, 1])
+            blocked.push([225, 135, LIGHTING_TERRAIN_SOLID_OCCLUSION])
             break
           case DIR.NORTH:
-            blocked.push([315, 225, 1])
+            blocked.push([315, 225, LIGHTING_TERRAIN_SOLID_OCCLUSION])
             break
           case DIR.SOUTH:
-            blocked.push([135, 45, 1])
+            blocked.push([135, 45, LIGHTING_TERRAIN_SOLID_OCCLUSION])
             break
         }
       }
