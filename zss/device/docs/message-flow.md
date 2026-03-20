@@ -2,6 +2,8 @@
 
 The **hub** is a pub/sub fan-out: every `emit` is delivered to every connected device. Each device filters by **topics** (broadcast) or **directed target** (e.g. `vm:operator`).
 
+**See also:** [devices-and-messaging.md](devices-and-messaging.md) — inventory of every device, three-realm topology, and cross-realm forwarding.
+
 ## Mermaid diagram
 
 ```mermaid
