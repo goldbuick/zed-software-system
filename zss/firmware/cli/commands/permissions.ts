@@ -12,7 +12,7 @@ import {
   memoryallowcommand,
   memoryapplypermissionconfig,
   memorybantoken,
-  memoryreadallowlistbyrole,
+  memoryreadallowlistbreakdownbyrole,
   memoryreadbannedtokens,
   memoryreadpermissionconfig,
   memoryreadplayertotoken,
@@ -31,6 +31,32 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
+function persistpermissionstores() {
+  const op = memoryreadoperator()
+  const data = memoryserializepermissions()
+  registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
+  registerstore(SOFTWARE, op, 'permissionconfig', data.permissionconfig)
+  registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
+  registerstore(
+    SOFTWARE,
+    op,
+    'allowlistbyrolecustom',
+    data.allowlistbyrolecustom,
+  )
+  registerstore(
+    SOFTWARE,
+    op,
+    'permissionoverrideaddbyrole',
+    data.permissionoverrideaddbyrole,
+  )
+  registerstore(
+    SOFTWARE,
+    op,
+    'permissionoverrideremovebyrole',
+    data.permissionoverrideremovebyrole,
+  )
+}
+
 export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command(
@@ -44,12 +70,13 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           const configname = NAME(maybename) as PERMISSION_CONFIG_NAME
           if (PERMISSION_CONFIG_NAMES.includes(configname)) {
             memoryapplypermissionconfig(configname)
+            persistpermissionstores()
           } else {
             apierror(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
               'permissions',
-              `config: ${configname} (use custom, lockdown, or creative)`,
+              `config: ${configname} (use lockdown or creative)`,
             )
           }
         }
@@ -64,7 +91,12 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `other configs: $GRAY${PERMISSION_CONFIG_NAMES.filter((name) => name !== currentconfig).join(', ')}`,
+          `other base: $GRAY${PERMISSION_CONFIG_NAMES.filter((name) => name !== currentconfig).join(', ')}`,
+        )
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `$GRAY(* = override on top of base)`,
         )
         write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
 
@@ -92,16 +124,26 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
         }
 
-        const allowlistbyrole = memoryreadallowlistbyrole()
+        const breakdownbyrole = memoryreadallowlistbreakdownbyrole()
         writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'role $26 commands')
         for (const role of PERMISSION_ROLES) {
-          const set = allowlistbyrole[role]
-          const list = set ? [...set].sort() : []
+          const row = breakdownbyrole[role]
+          const og = new Set(row.overridegrant)
+          const listed = row.effective.map((f) =>
+            og.has(f) ? `${f}*` : f,
+          )
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `$GREEN${role}: $GRAY${list.length ? list.join(', ') : nonestr}`,
+            `$GREEN${role}: $GRAY${listed.length ? listed.join(', ') : nonestr}`,
           )
+          if (row.overridedeny.length > 0) {
+            write(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `$GRAY  revoked vs base: ${row.overridedeny.join(', ')}`,
+            )
+          }
         }
 
         const banned = memoryreadbannedtokens()
@@ -138,22 +180,12 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             READ_CONTEXT.elementfocus,
             'permissions',
-            'Switch to custom config to change permissions',
+            'invalid role for allow',
           )
           return 0
         }
 
-        const op = memoryreadoperator()
-        const data = memoryserializepermissions()
-        registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
-        registerstore(SOFTWARE, op, 'permissionconfig', data.permissionconfig)
-        registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
-        registerstore(
-          SOFTWARE,
-          op,
-          'allowlistbyrolecustom',
-          data.allowlistbyrolecustom,
-        )
+        persistpermissionstores()
 
         write(
           SOFTWARE,
@@ -187,22 +219,12 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             READ_CONTEXT.elementfocus,
             'permissions',
-            'Switch to custom config to change permissions',
+            'invalid role for revoke',
           )
           return 0
         }
 
-        const op = memoryreadoperator()
-        const data = memoryserializepermissions()
-        registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
-        registerstore(SOFTWARE, op, 'permissionconfig', data.permissionconfig)
-        registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
-        registerstore(
-          SOFTWARE,
-          op,
-          'allowlistbyrolecustom',
-          data.allowlistbyrolecustom,
-        )
+        persistpermissionstores()
 
         write(
           SOFTWARE,

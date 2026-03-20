@@ -45,6 +45,8 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     permissionconfig,
     allowlistbyrole,
     allowlistbyrolecustom,
+    permissionoverrideaddbyrole,
+    permissionoverrideremovebyrole,
     config,
     token,
     ...flags
@@ -58,6 +60,8 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
       permissionconfig ?? 'creative',
       allowlistbyrole ?? {},
       allowlistbyrolecustom ?? {},
+      permissionoverrideaddbyrole,
+      permissionoverrideremovebyrole,
     )
     if (Array.isArray(config)) {
       memorysetconfig(config)
