@@ -30,6 +30,7 @@
     "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
     "docker:build": "yarn build:cli:linux && docker build --no-cache -t zss:local .",
     "docker:shell": "yarn docker:build && docker run --rm -it --init zss:local ./start.sh",
+    "docker:run": "sh scripts/docker-run.sh",
     "postinstall": "patch-package"
   },
   "devDependencies": {
