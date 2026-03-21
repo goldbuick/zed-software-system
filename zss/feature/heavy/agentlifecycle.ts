@@ -6,8 +6,7 @@ import {
   heavymodelprompt,
   heavymodelstop,
   registerstore,
-  vmagentsync,
-  vmpilotagentclear,
+  vmpilotclear,
 } from 'zss/device/api'
 import { createagent } from 'zss/feature/heavy/agent'
 import {
@@ -29,18 +28,9 @@ function buildroster(): AGENTS_ROSTER {
   return { ids, names: { ...agentnames } }
 }
 
-function pushrostertosim(
-  heavydev: DEVICE,
-  requestplayer: string,
-  roster: AGENTS_ROSTER,
-) {
-  vmagentsync(heavydev, requestplayer, roster)
-}
-
 function persistrostertostorage(heavydev: DEVICE, requestplayer: string) {
   const roster = buildroster()
   registerstore(heavydev, requestplayer, AGENTS_ROSTER_STORAGE_KEY, roster)
-  pushrostertosim(heavydev, requestplayer, roster)
 }
 
 function writeagentlistto(heavydev: DEVICE, requestplayer: string) {
@@ -94,7 +84,7 @@ function stopagentbyid(
   if (!ispresent(agent)) {
     return false
   }
-  vmpilotagentclear(heavydev, requestplayer, agentid)
+  vmpilotclear(heavydev, requestplayer, agentid)
   heavymodelstop(heavydev, requestplayer, agentid)
   agent.stop()
   delete agents[agentid]
@@ -193,6 +183,5 @@ export function heavyrunrestoreagents(
   if (count > 0) {
     apitoast(heavydev, requestplayer, `Restored ${count} agent(s)`)
   }
-  pushrostertosim(heavydev, requestplayer, buildroster())
   writeagentlistto(heavydev, requestplayer)
 }

@@ -36,7 +36,7 @@ export function createagent(agentname: string, existingid?: string) {
     SOFTWARE.session(),
   )
 
-  vmlogin(device, pid, { user: agentname })
+  vmlogin(device, pid, { user: agentname, agent: 1 })
 
   return {
     id() {

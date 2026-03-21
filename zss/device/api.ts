@@ -193,12 +193,16 @@ export function heavymodelclassify(
   agentname: string,
   prompt: string,
   promptlogging = '',
+  nearestrefid = '',
+  nearestrefname = '',
 ) {
   device.emit(player, 'heavy:modelclassify', [
     agentid,
     agentname,
     prompt,
     promptlogging,
+    nearestrefid,
+    nearestrefname,
   ])
 }
 
@@ -210,21 +214,21 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
-/** Sim-side shadow roster (from heavy); forwarded sim ← main ← heavy. */
-export function vmagentsync(
+/** Sim VM: refresh `lastinputtime` for a player (e.g. after an agent model turn). */
+export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,
-  roster: AGENTS_ROSTER,
+  targetplayer: string,
 ) {
-  device.emit(player, 'vm:agentsync', roster)
+  device.emit(player, 'vm:lastinputtouch', targetplayer)
 }
 
-export function vmpilotagentclear(
+export function vmpilotclear(
   device: DEVICELIKE,
   player: string,
-  agentid: string,
+  playerid: string,
 ) {
-  device.emit(player, 'vm:pilotagentclear', agentid)
+  device.emit(player, 'vm:pilotclear', playerid)
 }
 
 export function heavyagentstart(

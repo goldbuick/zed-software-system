@@ -8,6 +8,7 @@ import {
   memorysetcommandpermissions,
   memorysetplayertotoken,
 } from 'zss/memory/permissions'
+import { memoryreadflags } from 'zss/memory/flags'
 import {
   memoryloginplayer,
   memorylogoutplayer,
@@ -28,6 +29,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   memorylogoutplayer(message.player, !!message.data)
   delete tracking[message.player]
   delete lastinputtime[message.player]
+  delete memoryreadflags(message.player).agent
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
   registerloginready(vm, message.player)
 }

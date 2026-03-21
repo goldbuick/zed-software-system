@@ -19,6 +19,10 @@ import {
   modelclassify,
   modelgenerate,
 } from 'zss/feature/heavy/model'
+import {
+  enqueueheavymodelclassifyjob,
+  enqueueheavymodelpromptjob,
+} from 'zss/feature/heavy/modeljobqueue'
 import { buildsystemprompt } from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
@@ -28,7 +32,7 @@ import {
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
-import { apierror, apilog, apitoast } from './api'
+import { apierror, apilog, apitoast, vmlastinputtouch } from './api'
 
 const MAX_REPROMPT = 5
 const activeagents = new Set<string>()
@@ -117,56 +121,62 @@ async function runagentprompt(
 
   apilog(heavy, player, '$21 input $7', prompt)
 
-  let result!: MODEL_RESULT
-  for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
-    const { context, agentinfo } = await queryboardstate(agentid, agentname)
-    const systemprompt = buildsystemprompt(
-      agentname,
-      agentinfo,
-      context,
-      intent,
-    )
-
-    result = await modelgenerate(
-      systemprompt,
-      history,
-      onworking,
-      promptloggingenabled,
-    )
-    if (promptloggingenabled) {
-      console.info(
-        '%c[heavy] generated response:\n%c%s',
-        'color: purple; font-weight: bold',
-        'color: orange',
-        result.text,
+  try {
+    let result!: MODEL_RESULT
+    for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
+      const { context, agentinfo } = await queryboardstate(agentid, agentname)
+      const systemprompt = buildsystemprompt(
+        agentname,
+        agentinfo,
+        context,
+        intent,
       )
+
+      result = await modelgenerate(
+        systemprompt,
+        history,
+        onworking,
+        promptloggingenabled,
+      )
+      if (promptloggingenabled) {
+        console.info(
+          '%c[heavy] generated response:\n%c%s',
+          'color: purple; font-weight: bold',
+          'color: orange',
+          result.text,
+        )
+      }
+
+      history.push({ role: 'assistant', content: result.text })
+      const commands = splitresponse(result.text)
+      const hascontinue = commands.some((line) => line.trim() === '#continue')
+      const execcommands = commands.filter(
+        (line) => line.trim() !== '#continue',
+      )
+
+      if (execcommands.length === 0 && !hascontinue) {
+        break
+      }
+
+      await executeclicommands(
+        player,
+        agentid,
+        execcommands,
+        promptloggingenabled,
+      )
+
+      const executed = execcommands.join('\n')
+      history.push({
+        role: 'user',
+        content: `[EXECUTED]\n${executed}\n[/EXECUTED]\n`,
+      })
+
+      if (!hascontinue) {
+        break
+      }
     }
-
-    history.push({ role: 'assistant', content: result.text })
-    const commands = splitresponse(result.text)
-    const hascontinue = commands.some((line) => line.trim() === '#continue')
-    const execcommands = commands.filter((line) => line.trim() !== '#continue')
-
-    if (execcommands.length === 0 && !hascontinue) {
-      break
-    }
-
-    await executeclicommands(
-      player,
-      agentid,
-      execcommands,
-      promptloggingenabled,
-    )
-
-    const executed = execcommands.join('\n')
-    history.push({
-      role: 'user',
-      content: `[EXECUTED]\n${executed}\n[/EXECUTED]\n`,
-    })
-
-    if (!hascontinue) {
-      break
-    }
+  } finally {
+    vmlastinputtouch(heavy, player, agentid)
   }
 }
 
@@ -213,7 +223,7 @@ const heavy = createdevice('heavy', [], (message) => {
       })
       break
     case 'modelprompt':
-      doasync(heavy, message.player, async () => {
+      enqueueheavymodelpromptjob(heavy, message.player, async () => {
         if (!isarray(message.data) || message.data.length < 3) {
           return
         }
@@ -233,14 +243,27 @@ const heavy = createdevice('heavy', [], (message) => {
       })
       break
     case 'modelclassify':
-      doasync(heavy, message.player, async () => {
+      enqueueheavymodelclassifyjob(heavy, message.player, async () => {
         if (!isarray(message.data) || message.data.length < 3) {
           return
         }
-        const data = message.data as [string, string, string, string?]
+        const data = message.data as [
+          string,
+          string,
+          string,
+          string?,
+          string?,
+          string?,
+        ]
         const [agentid, agentname, messagetext] = data
-        const promptlogging = data.length >= 4 ? (data[3] ?? '') : ''
+        const promptlogging = isstring(data[3]) ? data[3] : ''
+        const nearestrefid = isstring(data[4]) ? data[4] : ''
+        const nearestrefname = isstring(data[5]) ? data[5] : ''
         const onworking = createonworking(message.player)
+
+        const nearestcontext = nearestrefid
+          ? `Proximity reference: the agent closest to the message sender on this board is "${nearestrefname}" (id: ${nearestrefid}). Use this when the message is vague (e.g. addressing "agent" or "you") to infer who is likely meant, but still answer "none" if the message clearly targets a different agent.\n\n`
+          : 'No nearest-agent proximity reference is available.\n\n'
 
         const classifymessages: Message[] = [
           {
@@ -250,7 +273,7 @@ const heavy = createdevice('heavy', [], (message) => {
           },
           {
             role: 'user',
-            content: `Is the following message directed at or relevant to an ai agent named "${agentname}"? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).\nMessage: "${messagetext}"\nAnswer:`,
+            content: `${nearestcontext}Is the following message directed at or relevant to the ai agent named "${agentname}" (id: ${agentid})? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).\nMessage: "${messagetext}"\nAnswer:`,
           },
         ]
 

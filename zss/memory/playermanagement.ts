@@ -207,6 +207,8 @@ export function memoryloginplayer(
   // if we have a current board, and a player on said board
   let currentboard = memoryreadplayerboard(player)
   if (ispresent(currentboard?.objects[player])) {
+    const flags = memoryreadbookflags(mainbook, player)
+    Object.assign(flags, stickyflags)
     return true
   }
 

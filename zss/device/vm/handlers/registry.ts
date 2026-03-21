@@ -2,7 +2,6 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 
 import { handleadmin } from './admin'
-import { handleagentsync } from './agentsync'
 import {
   handlelocal,
   handlelogin,
@@ -19,16 +18,13 @@ import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handleinput } from './input'
+import { handlelastinputtouch } from './lastinputtouch'
 import { handlefindany, handleinspect } from './inspect'
 import { handleloader } from './loader'
 import { handlelook } from './look'
 import { handlememoryquery } from './memoryquery'
 import { handleoperator } from './operator'
-import {
-  handlepilotagentclear,
-  handlepilotstart,
-  handlepilotstop,
-} from './pilot'
+import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
 import { handlepublish } from './publish'
 import { handlerestart } from './restart'
 import {
@@ -58,10 +54,10 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   local: handlelocal,
   doot: handledoot,
   input: handleinput,
+  lastinputtouch: handlelastinputtouch,
   look: handlelook,
   memoryquery: handlememoryquery,
-  agentsync: handleagentsync,
-  pilotagentclear: handlepilotagentclear,
+  pilotclear: handlepilotclear,
   pilotstart: handlepilotstart,
   pilotstop: handlepilotstop,
   codewatch: handlecodewatch,

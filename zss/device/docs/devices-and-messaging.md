@@ -248,7 +248,7 @@ flowchart TB
   clock -->|second| agenth
   vm -->|heavy_colon| heavy
   vm -->|heavy_memoryresult_etc| heavy
-  heavy -->|vm_agentsync_vm_pilotagentclear| vm
+  heavy -->|vm_pilotclear_vm_lastinputtouch| vm
 ```
 
 **Readout**
@@ -261,7 +261,7 @@ flowchart TB
 Notes:
 
 - **`reply_register_paths`** — `vm.reply` / `vm.replynext` send to `register:ackoperator`, `register:acklogin`, `register:ackzsswords`, `register:acklook`, etc. (see [`vm/handlers/`](../vm/handlers/)).
-- **`agent_*`** — Dynamic [`agent_${pid}`](../../feature/heavy/agent.ts) on the **heavy worker** hub; `second` (forwarded to heavy) drives `vm:doot`. Roster is stored under **`agents_roster`** in IDB (`storagewritevar`); **`register`** triggers **`heavy:restoreagents`** after successful **`acklogin`**. **`vm:agentsync`** updates a sim-side shadow for chat routing ([`agentshadow.ts`](../vm/agentshadow.ts), [`loader.ts`](../vm/handlers/loader.ts)).
+- **`agent_*`** — Dynamic [`agent_${pid}`](../../feature/heavy/agent.ts) on the **heavy worker** hub; `second` (forwarded to heavy) drives `vm:doot`. Roster is stored under **`agents_roster`** in IDB (`storagewritevar`); **`register`** triggers **`heavy:restoreagents`** after successful **`acklogin`**. Agent **`vm:login`** merges book flags on the sim (including **`agent: 1`**); chat routing in [`loader.ts`](../vm/handlers/loader.ts) uses board **player** elements whose book flags mark them as agents (`flags.agent === 1`), not a separate sim roster. For each line, the sim sends **`heavy:modelclassify`** with a **nearest-agent** reference (id + display name) when the message is not already routed by name or attention; the SmolLM classifier decides intent, then may run the main agent prompt. On [`heavy`](../heavy.ts), **`heavy:modelclassify`** and **`heavy:modelprompt`** each drain through a **serial FIFO** ([`modeljobqueue.ts`](../../feature/heavy/modeljobqueue.ts)) so classifier work and direct prompt work do not stack unbounded in parallel (merge to one queue there if WebGPU needs single-flight).
 - **`apihelpers`** — [`api.ts`](../api.ts) `apilog` → `log`, `apichat` → `chat`, `apitoast` → `toast` (**`register`** subscribes to those topics). Call sites can be sim or main; **`emit`** always hits the **caller's** hub first.
 - **`ready`** — [`vm`](../vm.ts) or [`stub`](../stub.ts) (device name `vm`) emits via [`platformready`](../api.ts); all devices may capture session on first `ready` (not shown as edges to every node).
 - **`SOFTWARE.emit`** from chips / UI uses targets like `{chipId}:message`; routing is per-device id, not the `vm` node (see [`chip.ts`](../../chip.ts), [`gamesend.ts`](../../memory/gamesend.ts)).
@@ -278,11 +278,11 @@ Notes:
 | `second` | `heavy`, `agent_*` | Heavy worker | `clock` / main forward | Sim / main → heavy |
 | `ready` | all devices | per hub | `vm` / stub, [`platformready`](../api.ts) | Sim (or stub worker) |
 | `sessionreset` | all devices | per hub | [`sessionreset`](../api.ts) | usually main (`SOFTWARE`) |
-| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `heavy` (`vm:agentsync`, `vm:pilotagentclear`), `SOFTWARE` | Main / sim / heavy → sim |
+| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `heavy` (`vm:pilotclear`, `vm:lastinputtouch`), `SOFTWARE` | Main / sim / heavy → sim |
 | `register` | `register` | Main thread | `vm` (replies), `userinput`, `api` | Sim → main / main |
 | `gadgetserver` | `gadgetserver` | Sim worker | `gadgetclient`, `register`, `api` | Main → sim |
 | `gadgetclient` | `gadgetclient` | Main thread | `gadgetserver`, `api` | Sim → main / main |
-| `heavy` | `heavy` | Heavy worker | `vm`, `api`, [`memoryquery`](../vm/handlers/memoryquery.ts), [`pilot`](../vm/handlers/pilot.ts), **`heavy:agent*`** / `heavy:restoreagents` | Sim / main → heavy |
+| `heavy` | `heavy` | Heavy worker | `vm`, `api`, [`memoryquery`](../vm/handlers/memoryquery.ts), [`pilot`](../vm/handlers/pilot.ts), **`heavy:modelclassify`** / **`heavy:modelprompt`** (queued), **`heavy:agent*`** / `heavy:restoreagents` | Sim / main → heavy |
 | `synth` | `synth` | Main thread | `api` / firmware | Sim → main / main |
 | `bridge` | `bridge` | Main thread | `api` | Main |
 | `log` | `register` (topic) | Main thread | `api` `apilog`, firmware | any hub → often main |

@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { lastinputtime } from 'zss/device/vm/state'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
@@ -41,37 +42,39 @@ export function handlepilotstop(_vm: DEVICE, message: MESSAGE): void {
   delete pilots[message.player]
 }
 
-export function pilotclear(agentid: string): void {
-  delete pilots[agentid]
+export function pilotclear(playerid: string): void {
+  delete pilots[playerid]
+  delete lastinputtime[playerid]
+  delete memoryreadflags(playerid).agent
 }
 
-export function handlepilotagentclear(_vm: DEVICE, message: MESSAGE): void {
+export function handlepilotclear(_vm: DEVICE, message: MESSAGE): void {
   if (isstring(message.data)) {
     pilotclear(message.data)
   }
 }
 
-function pilotnotify(vm: DEVICE, agentid: string, text: string): void {
-  vm.emit(agentid, 'heavy:pilotnotify', { agentid, message: text })
+function pilotnotify(vm: DEVICE, playerid: string, text: string): void {
+  vm.emit(playerid, 'heavy:pilotnotify', { agentid: playerid, message: text })
 }
 
 export function pilottick(vm: DEVICE): void {
   const ids = Object.keys(pilots)
   for (let i = 0; i < ids.length; ++i) {
-    const agentid = ids[i]
-    const pilot = pilots[agentid]
+    const playerid = ids[i]
+    const pilot = pilots[playerid]
 
     ++pilot.tickcounter
     if (pilot.tickcounter % PILOT_TICK_INTERVAL !== 0) {
       continue
     }
 
-    const board = memoryreadplayerboard(agentid)
+    const board = memoryreadplayerboard(playerid)
     if (!ispresent(board)) {
       continue
     }
 
-    const self = memoryreadobject(board, agentid)
+    const self = memoryreadobject(board, playerid)
     if (!ispresent(self) || !isnumber(self.x) || !isnumber(self.y)) {
       continue
     }
@@ -82,10 +85,10 @@ export function pilottick(vm: DEVICE): void {
     if (dx === 0 && dy === 0) {
       pilotnotify(
         vm,
-        agentid,
+        playerid,
         `[Pilot: arrived at (${pilot.targetx}, ${pilot.targety})]`,
       )
-      delete pilots[agentid]
+      delete pilots[playerid]
       continue
     }
 
@@ -94,10 +97,10 @@ export function pilottick(vm: DEVICE): void {
       if (pilot.stuckticks >= PILOT_STUCK_THRESHOLD) {
         pilotnotify(
           vm,
-          agentid,
+          playerid,
           `[Pilot: stuck, could not reach (${pilot.targetx}, ${pilot.targety})]`,
         )
-        delete pilots[agentid]
+        delete pilots[playerid]
         continue
       }
     } else {
@@ -138,11 +141,11 @@ export function pilottick(vm: DEVICE): void {
       continue
     }
 
-    if (!memoryhasflags(agentid)) {
+    if (!memoryhasflags(playerid)) {
       continue
     }
 
-    const flags = memoryreadflags(agentid)
+    const flags = memoryreadflags(playerid)
     if (!isarray(flags.inputqueue)) {
       flags.inputqueue = []
     }
