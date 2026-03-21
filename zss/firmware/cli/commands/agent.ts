@@ -1,8 +1,8 @@
 import {
   apierror,
-  vmagentlist,
-  vmagentstart,
-  vmagentstop,
+  heavyagentlist,
+  heavyagentstart,
+  heavyagentstop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
@@ -19,7 +19,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
       switch (NAME(action)) {
         case 'start': {
           const [agentname] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
-          vmagentstart(
+          heavyagentstart(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
             isstring(agentname) ? agentname : undefined,
@@ -29,7 +29,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
         case 'stop': {
           const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
           if (ispresent(agentid)) {
-            vmagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
+            heavyagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
           } else {
             apierror(
               SOFTWARE,
@@ -43,7 +43,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
         case '':
         case 'list':
         default:
-          vmagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
+          heavyagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
           break
       }
       return 0

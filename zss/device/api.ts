@@ -2,6 +2,7 @@
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
+import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -209,6 +210,86 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
+/** Sim-side shadow roster (from heavy); forwarded sim ← main ← heavy. */
+export function vmagentsync(
+  device: DEVICELIKE,
+  player: string,
+  roster: AGENTS_ROSTER,
+) {
+  device.emit(player, 'vm:agentsync', roster)
+}
+
+export function vmpilotagentclear(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'vm:pilotagentclear', agentid)
+}
+
+export function heavyagentstart(
+  device: DEVICELIKE,
+  player: string,
+  agentname?: string,
+) {
+  device.emit(player, 'heavy:agentstart', agentname)
+}
+
+export function heavyagentname(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+  agentname: string,
+) {
+  device.emit(player, 'heavy:agentname', [agentid, agentname])
+}
+
+/** When `#set user` updates player flags, sync display name to heavy roster if `player` is an agent (no-op for humans). */
+export function heavyagentsyncuserdisplay(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+  displayname: string,
+) {
+  device.emit(player, 'heavy:syncuserdisplay', [agentid, displayname])
+}
+
+export function heavyagentstop(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'heavy:agentstop', agentid)
+}
+
+export function heavyagentlist(device: DEVICELIKE, player: string) {
+  device.emit(player, 'heavy:agentlist')
+}
+
+export function heavyagentprompt(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+  prompt: string,
+  promptlogging?: string,
+) {
+  device.emit(
+    player,
+    'heavy:agentprompt',
+    promptlogging !== undefined
+      ? [agentid, prompt, promptlogging]
+      : [agentid, prompt],
+  )
+}
+
+export function heavyrestoreagents(
+  device: DEVICELIKE,
+  player: string,
+  roster: AGENTS_ROSTER,
+) {
+  device.emit(player, 'heavy:restoreagents', roster)
+}
+
 export function platformready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }
@@ -277,6 +358,20 @@ export function registerdownloadjsonfile(
   filename: string,
 ) {
   device.emit(player, 'register:downloadjsonfile', [data, filename])
+}
+
+export function registerdownloadbinaryfile(
+  device: DEVICELIKE,
+  player: string,
+  bytes: Uint8Array,
+  filename: string,
+  mimetype = 'application/octet-stream',
+) {
+  device.emit(player, 'register:downloadbinaryfile', [
+    bytes,
+    filename,
+    mimetype,
+  ])
 }
 
 export function registerdev(device: DEVICELIKE, player: string) {
@@ -608,44 +703,6 @@ export function vminput(
 
 export function vmlook(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:look')
-}
-
-export function vmagentstart(
-  device: DEVICELIKE,
-  player: string,
-  agentname?: string,
-) {
-  device.emit(player, 'vm:agentstart', agentname)
-}
-
-export function vmagentname(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  agentname: string,
-) {
-  device.emit(player, 'vm:agentname', [agentid, agentname])
-}
-
-export function vmagentstop(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-) {
-  device.emit(player, 'vm:agentstop', agentid)
-}
-
-export function vmagentlist(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:agentlist')
-}
-
-export function vmagentprompt(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  prompt: string,
-) {
-  device.emit(player, 'vm:agentprompt', [agentid, prompt])
 }
 
 export function vmpilotstart(

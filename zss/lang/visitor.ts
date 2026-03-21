@@ -960,16 +960,35 @@ class ScriptVisitor
   }
 
   comparison(ctx: ComparisonCstChildren, location: CstNodeLocation) {
-    if (ctx.RHS) {
-      const [compare] = this.go(ctx.comp_op)
-      return this.createcodenode(location, {
-        type: NODE.COMPARE,
-        compare,
-        lhs: this.createexprnodeondemand(this.go(ctx.LHS), location),
-        rhs: this.createexprnodeondemand(this.go(ctx.RHS), location),
-      })
+    const rhsitems = ctx.RHS
+    if (!rhsitems || rhsitems.length === 0) {
+      return this.go(ctx.LHS)
     }
-    return this.go(ctx.LHS)
+    const compareitems = this.go(ctx.comp_op)
+    let lhsnode = this.createexprnodeondemand(this.go(ctx.LHS), location)
+    const comparenodes: CodeNode[] = []
+    for (let index = 0; index < compareitems.length; index++) {
+      const rhsnode = this.createexprnodeondemand(
+        this.go([rhsitems[index]]),
+        location,
+      )
+      comparenodes.push(
+        this.createcodenode(location, {
+          type: NODE.COMPARE,
+          compare: compareitems[index],
+          lhs: lhsnode,
+          rhs: rhsnode,
+        })[0],
+      )
+      lhsnode = rhsnode
+    }
+    if (comparenodes.length === 1) {
+      return [comparenodes[0]]
+    }
+    return this.createcodenode(location, {
+      type: NODE.AND,
+      items: comparenodes,
+    })
   }
 
   comp_op(ctx: Comp_opCstChildren, location: CstNodeLocation) {

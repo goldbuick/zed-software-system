@@ -2,6 +2,10 @@ import { createdevice } from 'zss/device'
 import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { getfingerprint } from 'zss/feature/fingerprint'
+import {
+  AGENTS_ROSTER_STORAGE_KEY,
+  isvalidagentsroster,
+} from 'zss/feature/heavy/agentsroster'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
@@ -52,6 +56,7 @@ import {
   apitoast,
   bridgejoin,
   gadgetserverdesync,
+  heavyrestoreagents,
   registerterminalclose,
   registerterminalfull,
   vmbooks,
@@ -313,6 +318,13 @@ export const register = createdevice(
           if (isclimode()) {
             vmcli(register, myplayerid, '#joincode')
           }
+          doasync(register, message.player, async () => {
+            const vars = await storagereadvars()
+            const raw = vars[AGENTS_ROSTER_STORAGE_KEY]
+            if (isvalidagentsroster(raw)) {
+              heavyrestoreagents(register, myplayerid, raw)
+            }
+          })
         } else {
           doasync(register, message.player, async () => {
             await writewikilink()
@@ -415,6 +427,29 @@ export const register = createdevice(
             // Auto click on a element, trigger the file download
             anchor.click()
             // This is required
+            URL.revokeObjectURL(dataurl)
+          } catch (err) {
+            console.error(err)
+          }
+        }
+        break
+      case 'downloadbinaryfile':
+        if (isarray(message.data)) {
+          const [bytes, filename, mimetype] = message.data as [
+            Uint8Array,
+            string,
+            string,
+          ]
+          try {
+            const copy = new Uint8Array(bytes)
+            const datablob = new Blob([copy], {
+              type: isstring(mimetype) ? mimetype : 'application/octet-stream',
+            })
+            const dataurl = URL.createObjectURL(datablob)
+            const anchor = document.createElement('a')
+            anchor.href = dataurl
+            anchor.download = filename
+            anchor.click()
             URL.revokeObjectURL(dataurl)
           } catch (err) {
             console.error(err)

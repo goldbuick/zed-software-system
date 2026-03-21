@@ -1,6 +1,10 @@
 import { synthplay } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
+import {
+  type SYNTH_NOTE_ENTRY,
+  invokeplay,
+  parseplay,
+} from 'zss/feature/synth/playnotation'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { DEFAULT_BPM, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
@@ -114,6 +118,17 @@ function durationsecondsatdefaultbpm(duration: number) {
   return (duration * 60) / (16 * DEFAULT_BPM)
 }
 
+/** Added after converting pattern end time (seconds) to board ticks; tune if `#play` advances too early/late. */
+const SYNTH_PLAY_QUEUE_TICK_PAD = -2
+
+function synthplaypatterntickwait(pattern: SYNTH_NOTE_ENTRY[]): number {
+  const last = pattern[pattern.length - 1]
+  if (!ispresent(last)) {
+    return 1
+  }
+  return Math.max(1, Math.ceil(last[0] * TICK_FPS) + SYNTH_PLAY_QUEUE_TICK_PAD)
+}
+
 export function memoryqueuesynthplay(board: string, play: string) {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(main)) {
@@ -144,11 +159,7 @@ export function memoryqueuesynthplay(board: string, play: string) {
       (duration) => `${duration}n` as any,
       durationsecondsatdefaultbpm,
     )
-    const last = pattern[pattern.length - 1]
-    if (ispresent(last)) {
-      const ticks = Math.max(1, Math.round(last[0] * TICK_FPS))
-      endtime = Math.max(endtime, ticks)
-    }
+    endtime = Math.max(endtime, synthplaypatterntickwait(pattern))
   }
 
   const queue = readsynthplayinternal(board)

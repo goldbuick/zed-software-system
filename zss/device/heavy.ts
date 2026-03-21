@@ -1,6 +1,15 @@
 import { Message } from '@huggingface/transformers'
 import { createdevice } from 'zss/device'
 import {
+  heavyrunagentlist,
+  heavyrunagentname,
+  heavyrunagentprompt,
+  heavyrunagentstart,
+  heavyrunagentstop,
+  heavyrunrestoreagents,
+  heavyrunsyncuserdisplay,
+} from 'zss/feature/heavy/agentlifecycle'
+import {
   formatagentinfofortext,
   formatboardfortext,
 } from 'zss/feature/heavy/formatstate'
@@ -273,6 +282,27 @@ const heavy = createdevice('heavy', [], (message) => {
       break
     case 'memoryresult':
       memoryqueryresolvemessage(message)
+      break
+    case 'agentstart':
+      heavyrunagentstart(heavy, message)
+      break
+    case 'agentstop':
+      heavyrunagentstop(heavy, message)
+      break
+    case 'agentlist':
+      heavyrunagentlist(heavy, message)
+      break
+    case 'agentprompt':
+      heavyrunagentprompt(heavy, message)
+      break
+    case 'agentname':
+      heavyrunagentname(heavy, message)
+      break
+    case 'syncuserdisplay':
+      heavyrunsyncuserdisplay(heavy, message)
+      break
+    case 'restoreagents':
+      heavyrunrestoreagents(heavy, message)
       break
     default:
       apierror(

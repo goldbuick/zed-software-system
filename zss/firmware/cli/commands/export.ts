@@ -1,6 +1,11 @@
 import { parsetarget } from 'zss/device'
-import { registerdownloadjsonfile, vmpublish } from 'zss/device/api'
+import {
+  registerdownloadbinaryfile,
+  registerdownloadjsonfile,
+  vmpublish,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { exportbooktozzt } from 'zss/feature/parse/zztexport'
 import { write, writeheader, writesection } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
 import { deepcopy, ispresent } from 'zss/mapping/types'
@@ -56,6 +61,11 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
                 READ_CONTEXT.elementfocus,
                 `!bookallexport ${address};$blue[all] $whiteexport book`,
               )
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `!bookzztexport ${address};$magenta[zzt] $whiteexport ZZT world`,
+              )
               sorted.forEach((page) => {
                 const name = memoryreadcodepagename(page)
                 const type = memoryreadcodepagetypeasstring(page)
@@ -85,6 +95,36 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
             deepcopy(book),
             `${book.name}.book.json`,
           )
+        }
+        return 0
+      },
+    )
+    .command(
+      'bookzztexport',
+      [ARG_TYPE.NAME, 'entire book as .zzt world (operator only)'],
+      (_, words) => {
+        const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+        const book = memoryreadbookbyaddress(address)
+        if (ispresent(book)) {
+          const zztresult = exportbooktozzt(book)
+          if (zztresult.ok) {
+            const safefilename = `${book.name.replace(/[^\w.-]+/g, '_') || 'world'}.zzt`
+            registerdownloadbinaryfile(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              zztresult.bytes,
+              safefilename,
+              'application/octet-stream',
+            )
+          } else {
+            for (let i = 0; i < zztresult.errors.length; ++i) {
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `$red${zztresult.errors[i].message}`,
+              )
+            }
+          }
         }
         return 0
       },

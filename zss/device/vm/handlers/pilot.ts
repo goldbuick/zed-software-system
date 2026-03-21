@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { INPUT } from 'zss/gadget/data/types'
-import { isarray, isnumber, ispresent } from 'zss/mapping/types'
+import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
@@ -43,6 +43,12 @@ export function handlepilotstop(_vm: DEVICE, message: MESSAGE): void {
 
 export function pilotclear(agentid: string): void {
   delete pilots[agentid]
+}
+
+export function handlepilotagentclear(_vm: DEVICE, message: MESSAGE): void {
+  if (isstring(message.data)) {
+    pilotclear(message.data)
+  }
 }
 
 function pilotnotify(vm: DEVICE, agentid: string, text: string): void {

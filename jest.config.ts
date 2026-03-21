@@ -7,6 +7,14 @@ const config: Config = {
   moduleNameMapper: {
     '^zss/(.*)$': '<rootDir>/zss/$1',
     '^uint8-util$': '<rootDir>/zss/__mocks__/uint8-util.ts',
+    '^@chevrotain/utils$':
+      '<rootDir>/node_modules/@chevrotain/utils/lib/src/api.js',
+    '^@chevrotain/gast$':
+      '<rootDir>/node_modules/@chevrotain/gast/lib/src/api.js',
+    '^@chevrotain/regexp-to-ast$':
+      '<rootDir>/node_modules/@chevrotain/regexp-to-ast/lib/src/api.js',
+    '^@chevrotain/cst-dts-gen$':
+      '<rootDir>/node_modules/@chevrotain/cst-dts-gen/lib/src/api.js',
   },
   transform: {
     '^.+\\.tsx?$': [
@@ -27,7 +35,7 @@ const config: Config = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|uint8-util)/)',
+    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain)/)',
   ],
   testMatch: [
     '**/__tests__/**/*.ts',

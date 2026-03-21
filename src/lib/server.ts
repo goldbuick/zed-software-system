@@ -10,38 +10,6 @@ export function getroot(): string {
   return path.join(__dirname, '..', '..', '..')
 }
 
-/** Resolve path to Chromium headless shell from playwright install. */
-export function getbundledchromiumpath(root: string): string | null {
-  const browsersDir = path.join(
-    root,
-    'node_modules',
-    'playwright-core',
-    '.local-browsers',
-  )
-  if (!fs.existsSync(browsersDir)) {
-    return null
-  }
-  const entries = fs.readdirSync(browsersDir)
-  const shellDir = entries.find((e) => e.startsWith('chromium_headless_shell-'))
-  if (!shellDir) {
-    return null
-  }
-  const platform =
-    process.platform === 'darwin'
-      ? process.arch === 'arm64'
-        ? 'chrome-headless-shell-mac-arm64'
-        : 'chrome-headless-shell-mac-x64'
-      : process.platform === 'win32'
-        ? 'chrome-headless-shell-win64'
-        : `chrome-headless-shell-linux-${process.arch}`
-  const exeName =
-    process.platform === 'win32'
-      ? 'chrome-headless-shell.exe'
-      : 'chrome-headless-shell'
-  const exePath = path.join(browsersDir, shellDir, platform, exeName)
-  return fs.existsSync(exePath) ? exePath : null
-}
-
 /** Create static file server for cafe/dist. */
 export function createstaticserver(
   distDir: string,

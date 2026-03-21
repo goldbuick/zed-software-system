@@ -16,11 +16,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 const MAX_HISTORY = 100
 
 import { formatlogforterminal } from './formatlog.js'
-import {
-  createstaticserver,
-  getbundledchromiumpath,
-  getroot,
-} from './server.js'
+import { createstaticserver, getroot } from './server.js'
 
 const root = getroot()
 const distDir = path.join(root, 'cafe', 'dist')
@@ -191,12 +187,17 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     addLog(`Serving cafe at ${baseUrl}`)
   }
 
-  const executablePath = getbundledchromiumpath(root)
+  const executablePath = process.env.ZSS_CHROMIUM_EXECUTABLE_PATH?.trim()
+  const chromeargs =
+    process.env.ZSS_CHROMIUM_NO_SANDBOX === '1'
+      ? ['--no-sandbox', '--disable-setuid-sandbox']
+      : undefined
   let browser
   try {
     browser = await chromium.launch({
       headless: true,
       ...(executablePath ? { executablePath } : {}),
+      ...(chromeargs ? { args: chromeargs } : {}),
     })
   } catch (e: unknown) {
     const msg = (e as Error)?.message
