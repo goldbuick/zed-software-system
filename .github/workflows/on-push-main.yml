@@ -21,6 +21,7 @@ jobs:
 
       - name: setup and build
         run: |
+          yarn
           yarn build
           yarn build:copy-404
           yarn build:copy-cname
