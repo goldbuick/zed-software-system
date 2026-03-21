@@ -178,6 +178,10 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 [`package.json`](../package.json): `zss` binary via oclif; `build:cli` compiles `src/` and runs `oclif manifest`. The CLI serves `cafe/dist` or talks to the Vite dev server and injects Node hooks (`__nodeStorageReadPlayer`, `__onCliInput`) for headless operation ([`cafe/index.tsx`](../cafe/index.tsx)).
 
+**Production Linux tarball:** `yarn build:cli:linux` runs a **production** Vite build (`NODE_ENV=production`), compiles the CLI, installs Playwright’s headless shell for the pack target, then `oclif pack tarballs` (which runs `npm pack` and bundles production `node_modules`).
+
+**Embedding static content in the shipped CLI:** oclif’s pack step uses **`npm pack`**, which only includes paths listed under [`package.json` `files`](../package.json) (plus a few npm defaults). The built cafe UI must be listed there as **`cafe/dist`** (output of `yarn build`). Add other paths the same way if the CLI must ship extra assets; keep large or secret paths out of `files` so they are not published in the tarball.
+
 ---
 
 ## Mental model (one paragraph)

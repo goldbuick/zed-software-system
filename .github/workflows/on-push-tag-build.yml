@@ -1,13 +1,13 @@
-name: Push Tag Build - Web Release
+name: Push Tag - Docker Publish
 
 on:
   push:
     tags:
-      - 'v*' # Trigger on version tags (e.g., v1.0.0)
+      - 'v*'
 
 jobs:
-  build-web:
-    name: Build Web
+  publish-docker:
+    name: Publish Docker image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,51 +21,33 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build frontend
-        run: yarn build
+      - name: Build Linux CLI tarball
+        run: yarn build:cli:linux
 
-      - name: Build copy 404
-        run: yarn build:copy-404
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build copy CNAME
-        run: yarn build:copy-cname
-
-      - name: Install 7-zip (required for Windows tarballs)
-        run: sudo apt-get update && sudo apt-get install -y p7zip-full
-
-      - name: Build CLI tarballs (Linux, macOS, Windows)
-        run: |
-          yarn build:cli
-          NODE_OPTIONS=--no-deprecation PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --only-shell
-          npx oclif pack tarballs
-
-      - name: Upload CLI tarballs
-        uses: actions/upload-artifact@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
-          name: cli-tarballs
-          path: dist/*.tar.gz
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  release:
-    name: Create Release
-    needs: build-web
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download CLI tarballs
-        uses: actions/download-artifact@v4
+      - name: Extract metadata
+        uses: docker/metadata-action@v5
+        id: meta
         with:
-          name: cli-tarballs
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/zed-software-system
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest
 
-      - name: Build Changelog
-        id: github_release
-        uses: mikepenz/release-changelog-builder-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Release
-        uses: mikepenz/action-gh-release@v0.2.0-a03
+      - name: Build and push
+        uses: docker/build-push-action@v6
         with:
-          body: ${{ steps.github_release.outputs.changelog }}
-          files: dist/*.tar.gz
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
