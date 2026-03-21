@@ -3,7 +3,6 @@ import type { MESSAGE } from 'zss/device/api'
 import { apilog, registerloginready, vmclearscroll } from 'zss/device/api'
 import { lastinputtime, tracking } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory/flags'
 import {
   memoryistokenbanned,
   memorysetcommandpermissions,

@@ -3,7 +3,6 @@ import { memoryreadsession } from 'zss/memory/session'
 
 import { platformready } from './api'
 import { vmdefaulthandler, vmhandlers } from './vm/handlers/registry'
-import { lastinputtime } from './vm/state'
 
 const vm = createdevice(
   'vm',
@@ -20,9 +19,4 @@ const vm = createdevice(
 
 export function started() {
   platformready(vm)
-}
-
-/** Last input timestamp (ms) for a player. Use for AFK: (Date.now() - ts) > threshold */
-export function vmreadplayerlastinput(player: string): number | undefined {
-  return lastinputtime[player]
 }

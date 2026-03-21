@@ -212,7 +212,6 @@ const CREATIVE_ALLOWLIST_PLAYER: string[] = [
   'explore',
   'coder',
   'build',
-  'bridge',
   'persist',
   'speaker',
 ]

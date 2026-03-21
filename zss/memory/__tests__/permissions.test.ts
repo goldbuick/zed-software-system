@@ -138,12 +138,13 @@ describe('permissions', () => {
       expect(memoryreadpermissionconfig()).toBe('lockdown')
     })
 
-    it('memoryapplypermissionconfig creative gives player build explore bridge persist', () => {
+    it('memoryapplypermissionconfig creative gives player build explore persist without bridge', () => {
       memoryapplypermissionconfig('creative')
       const allowlistbyrole = memoryreadallowlistbyrole()
       expect(allowlistbyrole.player?.has('build')).toBe(true)
       expect(allowlistbyrole.player?.has('explore')).toBe(true)
-      expect(allowlistbyrole.player?.has('bridge')).toBe(true)
+      expect(allowlistbyrole.player?.has('persist')).toBe(true)
+      expect(allowlistbyrole.player?.has('bridge')).toBe(false)
     })
 
     it('hydrates empty allowlist from saved base preset', () => {

@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, TEXT_READER } from 'zss/device/api'
-import { apilog, heavymodelclassify, heavymodelprompt } from 'zss/device/api'
-import { ATTENTION_WINDOW_MS, lastinputtime } from 'zss/device/vm/state'
+import { apilog, heavymodelprompt } from 'zss/device/api'
+import { lastinputtime } from 'zss/device/vm/state'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -81,17 +81,6 @@ function boardnearestagentref(
   return { id: nearestid, name: playerdisplayname(nearestid) }
 }
 
-function namematches(agentname: string, message: string): boolean {
-  const words = agentname.split(/[-\s]+/)
-  for (let i = 0; i < words.length; ++i) {
-    const pattern = new RegExp('\\b' + words[i] + '\\b', 'i')
-    if (pattern.test(message)) {
-      return true
-    }
-  }
-  return false
-}
-
 function routechattoagents(
   vm: DEVICE,
   message: MESSAGE,
@@ -114,8 +103,7 @@ function routechattoagents(
   }
 
   const sendername = chatline.slice(0, colonidx)
-  const messagetext = chatline.slice(colonidx + 1)
-  const now = Date.now()
+  const prompt = chatline.slice(colonidx + 1)
 
   const board = memoryreadboardbyaddress(boardid)
   if (!ispresent(board)) {
@@ -131,47 +119,32 @@ function routechattoagents(
   const nearestrefid = nearestref?.id ?? ''
   const nearestrefname = nearestref?.name ?? ''
 
-  const candidates = boardagentelements(board, boardid)
-  for (let i = 0; i < candidates.length; ++i) {
-    const agentid = candidates[i].id
+  const defaulttime = new Date('2000-01-01').getTime()
+  const allagents = boardagentelements(board, boardid)
+  for (let i = 0; i < allagents.length; ++i) {
+    const agent = allagents[i]
+    const agentid = agent.id
     if (!isstring(agentid)) {
       continue
     }
 
-    if (
-      agentid === message.player ||
-      sendername === playerdisplayname(agentid)
-    ) {
+    const agentname = playerdisplayname(agentid)
+    if (agentid === message.player || sendername === agentname) {
       continue
     }
 
-    const lastresponse = lastinputtime[agentid] ?? 0
-    const hasattention = now - lastresponse < ATTENTION_WINDOW_MS
+    const withlastinputtime = lastinputtime[agentid] ?? defaulttime
+    const withpromptlogging = memoryreadconfig('promptlogging')
 
-    // TODO FIX THIS OUCH
-
-    const name = playerdisplayname(agentid)
-    if (hasattention || namematches(name, messagetext)) {
-      heavymodelprompt(
-        vm,
-        message.player,
-        agentid,
-        name,
-        messagetext,
-        memoryreadconfig('promptlogging'),
-      )
-    } else {
-      heavymodelclassify(
-        vm,
-        message.player,
-        agentid,
-        name,
-        messagetext,
-        memoryreadconfig('promptlogging'),
-        nearestrefid,
-        nearestrefname,
-      )
-    }
+    heavymodelprompt(vm, message.player, {
+      prompt,
+      agentid,
+      agentname,
+      nearestrefid,
+      nearestrefname,
+      lastinputtime: withlastinputtime,
+      promptlogging: withpromptlogging,
+    })
   }
 }
 

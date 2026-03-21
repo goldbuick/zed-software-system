@@ -170,39 +170,37 @@ export function heavyttsrequest(
   device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
 }
 
+type MODEL_PROMPT_ARGS = {
+  prompt: string
+  agentid: string
+  agentname: string
+  lastinputtime: number
+  nearestrefid: string
+  nearestrefname: string
+  promptlogging: string
+}
+
 export function heavymodelprompt(
   device: DEVICELIKE,
   player: string,
-  agentid: string,
-  agentname: string,
-  prompt: string,
-  promptlogging = '',
-) {
-  device.emit(player, 'heavy:modelprompt', [
+  {
+    prompt,
     agentid,
     agentname,
-    prompt,
-    promptlogging,
-  ])
-}
-
-export function heavymodelclassify(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  agentname: string,
-  prompt: string,
-  promptlogging = '',
-  nearestrefid = '',
-  nearestrefname = '',
-) {
-  device.emit(player, 'heavy:modelclassify', [
-    agentid,
-    agentname,
-    prompt,
-    promptlogging,
+    lastinputtime,
     nearestrefid,
     nearestrefname,
+    promptlogging,
+  }: MODEL_PROMPT_ARGS,
+) {
+  device.emit(player, 'heavy:modelprompt', [
+    prompt,
+    agentid,
+    agentname,
+    lastinputtime,
+    nearestrefid,
+    nearestrefname,
+    promptlogging,
   ])
 }
 
@@ -214,13 +212,12 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
-/** Sim VM: refresh `lastinputtime` for a player (e.g. after an agent model turn). */
-export function vmlastinputtouch(
+export function vmlastinputtime(
   device: DEVICELIKE,
   player: string,
   targetplayer: string,
 ) {
-  device.emit(player, 'vm:lastinputtouch', targetplayer)
+  device.emit(player, 'vm:lastinputtime', targetplayer)
 }
 
 export function vmpilotclear(

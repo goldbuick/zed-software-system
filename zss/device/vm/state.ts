@@ -14,16 +14,17 @@ let flushtick = 0
 export function getflushtick(): number {
   return flushtick
 }
+
 export function setflushtick(value: number): void {
   flushtick = value
 }
+
 export function incflushtick(): number {
   return ++flushtick
 }
 
 export const watching: Record<string, Set<string>> = {}
 export const observers: Record<string, (() => void) | undefined> = {}
-export const ATTENTION_WINDOW_MS = 30_000
 
 export const STATS_BOARD = [
   'currenttick',

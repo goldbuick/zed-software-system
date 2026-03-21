@@ -1,6 +1,5 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { lastinputtime } from 'zss/device/vm/state'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
@@ -44,8 +43,6 @@ export function handlepilotstop(_vm: DEVICE, message: MESSAGE): void {
 
 export function pilotclear(playerid: string): void {
   delete pilots[playerid]
-  delete lastinputtime[playerid]
-  delete memoryreadflags(playerid).agent
 }
 
 export function handlepilotclear(_vm: DEVICE, message: MESSAGE): void {
