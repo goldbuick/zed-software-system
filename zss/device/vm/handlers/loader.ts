@@ -148,6 +148,8 @@ function routechattoagents(
     const lastresponse = lastinputtime[agentid] ?? 0
     const hasattention = now - lastresponse < ATTENTION_WINDOW_MS
 
+    // TODO FIX THIS OUCH
+
     const name = playerdisplayname(agentid)
     if (hasattention || namematches(name, messagetext)) {
       heavymodelprompt(
