@@ -83,7 +83,7 @@ export function gadgetstate(element: string) {
   return GADGET_PROVIDER(element)
 }
 
-export function gadgetreadqueue(element: string) {
+function gadgetreadqueue(element: string) {
   if (!ispresent(panelqueue[element])) {
     panelqueue[element] = []
   }

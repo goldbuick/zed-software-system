@@ -555,8 +555,8 @@ export function registerstore(
   device.emit(player, 'register:store', [name, value])
 }
 
-export function registerbookmarkscrollopen(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:bookmarkscrollopen', true)
+export function registerbookmarkscroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:bookmarkscroll', true)
 }
 
 export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {

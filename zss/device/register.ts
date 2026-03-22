@@ -416,7 +416,7 @@ export const register = createdevice(
         })
         break
       }
-      case 'bookmarkscrollopen':
+      case 'bookmarkscroll':
         doasync(register, message.player, async () => {
           const blob = await readbookmarksfromstorage()
           vmbookmarkscroll(register, myplayerid, blob.url)
@@ -529,6 +529,8 @@ export const register = createdevice(
           if (!line.length) {
             return
           }
+          const preview = line.length > 48 ? `${line.slice(0, 48)}…` : line
+          apitoast(register, myplayerid, `bookmark run $cyan${preview}$white`)
           vmcli(register, message.player, line)
         })
         break

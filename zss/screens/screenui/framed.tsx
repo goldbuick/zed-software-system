@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
 import {
+  registerbookmarkscroll,
   registerterminalopen,
   registerterminalquickopen,
   synthupdate,
+  vmbookmarkscroll,
   vmclirepeatlast,
   vmfindany,
   vminput,
@@ -96,12 +98,20 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
               registerterminalquickopen(SOFTWARE, player, '')
               break
             case '@':
-            case '2':
               registerterminalopen(SOFTWARE, player, '@')
               break
+            case '2':
+              if (!mods.ctrl) {
+                registerterminalopen(SOFTWARE, player, '@')
+              }
+              break
             case '#':
-            case '3':
               registerterminalopen(SOFTWARE, player, '#')
+              break
+            case '3':
+              if (!mods.ctrl) {
+                registerterminalopen(SOFTWARE, player, '#')
+              }
               break
             case 'p':
               if (mods.ctrl) {
@@ -111,6 +121,11 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
             case 'f':
               if (mods.ctrl && inspector) {
                 vmfindany(SOFTWARE, player)
+              }
+              break
+            case 'b':
+              if (mods.ctrl) {
+                registerbookmarkscroll(SOFTWARE, player)
               }
               break
           }
