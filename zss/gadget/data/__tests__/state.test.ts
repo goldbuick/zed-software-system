@@ -82,6 +82,7 @@ describe('state', () => {
       expect(state.terminal.open).toBe(true)
       expect(state.terminal.logs).toEqual([])
       expect(state.terminal.pinlines).toEqual([])
+      expect(state.terminal.pinids).toEqual([])
       expect(state.editor.open).toBe(false)
       expect(state.editor.book).toBe('')
       expect(state.editor.path).toEqual([])
@@ -106,7 +107,12 @@ describe('state', () => {
         inspector: true,
         quickterminal: true,
         toast: 'Test',
-        terminal: { open: false, logs: ['log1'], pinlines: [] },
+        terminal: {
+          open: false,
+          logs: ['log1'],
+          pinlines: [],
+          pinids: [],
+        },
         editor: {
           open: true,
           book: 'book1',
@@ -126,6 +132,7 @@ describe('state', () => {
       expect(state.terminal.open).toBe(true)
       expect(state.terminal.logs).toEqual([])
       expect(state.terminal.pinlines).toEqual([])
+      expect(state.terminal.pinids).toEqual([])
       expect(state.editor.open).toBe(false)
       expect(state.editor.book).toBe('')
       expect(state.editor.path).toEqual([])

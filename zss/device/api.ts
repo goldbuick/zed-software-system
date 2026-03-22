@@ -555,10 +555,7 @@ export function registerstore(
   device.emit(player, 'register:store', [name, value])
 }
 
-export function registerbookmarkscrollopen(
-  device: DEVICELIKE,
-  player: string,
-) {
+export function registerbookmarkscrollopen(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmarkscrollopen', true)
 }
 
@@ -572,6 +569,14 @@ export function registerbookmarkdelete(
   id: string,
 ) {
   device.emit(player, 'register:bookmark:delete', id)
+}
+
+export function registerbookmarkrun(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+) {
+  device.emit(player, 'register:runbookmark', id)
 }
 
 export function registerbookmarklist(device: DEVICELIKE, player: string) {

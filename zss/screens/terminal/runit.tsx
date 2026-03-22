@@ -22,11 +22,8 @@ export function TerminalRunIt({
   const context = useWriteText()
 
   const invoke = useCallback(() => {
-    registerterminalopen(
-      SOFTWARE,
-      registerreadplayer(),
-      extractcontentfromargs(words),
-    )
+    const content = extractcontentfromargs(words)
+    registerterminalopen(SOFTWARE, registerreadplayer(), content)
   }, [words])
 
   const tcolor = inputcolor(!!active)

@@ -93,6 +93,8 @@ export const useTape = create<{
     logs: string[]
     /** Terminal bookmarks from IDB; prepended when rendering logs. */
     pinlines: string[]
+    /** Same order / length as `pinlines`; used to remove pins from the tape. */
+    pinids: string[]
   }
   editor: {
     open: boolean
@@ -112,6 +114,7 @@ export const useTape = create<{
     open: true,
     logs: [],
     pinlines: [],
+    pinids: [],
   },
   editor: {
     open: false,
@@ -130,6 +133,7 @@ export const useTape = create<{
         open: true,
         logs: [],
         pinlines: [],
+        pinids: [],
       },
       editor: {
         open: false,

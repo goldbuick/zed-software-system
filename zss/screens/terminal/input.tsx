@@ -3,6 +3,7 @@ import {
   apierror,
   apitoast,
   registerappendterminalbookmark,
+  registerbookmarkdelete,
   registerterminalclose,
   registerterminalinclayout,
   vmcli,
@@ -39,6 +40,7 @@ import {
   buildzsswordcolors,
 } from 'zss/screens/tape/colors'
 import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
+import { measurerow } from 'zss/screens/tape/measure'
 import {
   applycolortoindexes,
   applystrtoindex,
@@ -50,6 +52,7 @@ import {
 import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { findterminalrowindexforcursor } from './logrowhit'
 import { tokenizeline } from './terminalinputhelpers'
 
 type TerminalInputProps = {
@@ -74,9 +77,17 @@ export function TerminalInput({
       xselect: state.xselect,
       yselect: state.yselect,
       ycursor: state.ycursor,
+      scroll: state.scroll,
     })),
   )
-  const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
+  const { editoropen, pinlines, pinids, sessionlogs } = useTape(
+    useShallow((state) => ({
+      editoropen: state.editor.open,
+      pinlines: state.terminal.pinlines,
+      pinids: state.terminal.pinids,
+      sessionlogs: state.terminal.logs,
+    })),
+  )
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const zsswords = useGadgetClient((state) => state.zsswords)
 
@@ -147,6 +158,38 @@ export function TerminalInput({
       })
     },
     [tapeterminal.buffer, tapeterminal.bufferindex],
+  )
+
+  const terminallogs = useMemo(
+    () => [...pinlines, ...sessionlogs],
+    [pinlines, sessionlogs],
+  )
+  const logsrowmaxwidth = context.width - 1
+  const logsrowheights = useMemo(
+    () =>
+      terminallogs.map((item) =>
+        measurerow(item, logsrowmaxwidth, edge.height),
+      ),
+    [terminallogs, logsrowmaxwidth, edge.height],
+  )
+  const activerowindex = useMemo(
+    () =>
+      findterminalrowindexforcursor({
+        tapeycursor,
+        scroll: tapeterminal.scroll,
+        terminallogs,
+        logsrowheights,
+        edge,
+        editoropen,
+      }),
+    [
+      tapeycursor,
+      tapeterminal.scroll,
+      terminallogs,
+      logsrowheights,
+      edge,
+      editoropen,
+    ],
   )
 
   const visiblerows = edge.bottom - edge.top - (editoropen ? 0 : 2)
@@ -657,6 +700,19 @@ export function TerminalInput({
                     vmclirepeatlast(SOFTWARE, player)
                     break
                   case 'b': {
+                    const rowi = activerowindex
+                    const pincount = pinlines.length
+                    if (
+                      !inputstateactive &&
+                      rowi !== undefined &&
+                      rowi < pincount
+                    ) {
+                      const id = pinids[rowi]
+                      if (id) {
+                        registerbookmarkdelete(SOFTWARE, player, id)
+                      }
+                      break
+                    }
                     const line =
                       tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
                     registerappendterminalbookmark(SOFTWARE, player, line)

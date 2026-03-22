@@ -1,10 +1,14 @@
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { createpid } from 'zss/mapping/guid'
 import { deepcopy, isstring } from 'zss/mapping/types'
+import { metakey } from 'zss/words/system'
 
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'
 
 export const BOOKMARK_SCROLL_SCROLLNAME = 'bookmarks'
+
+/** Hub route for terminal pin rows (`!!hk …`); register inner target `runbookmark`. */
+export const RUN_BOOKMARK_MSG = 'register:runbookmark'
 
 /** Panel / modem chip for URL bookmark scroll name field (client-side Yjs). */
 export const BOOKMARK_SCROLL_CHIP = 'bookmarkscroll'
@@ -12,6 +16,9 @@ export const BOOKMARK_SCROLL_CHIP = 'bookmarkscroll'
 export const BOOKMARK_NAME_TARGET = 'name'
 
 export const BOOKMARKS_VERSION = 1
+
+/** Max terminal pins stored and shown (newest kept when over cap). */
+export const TERMINAL_PIN_MAX = 6
 
 export type ZssUrlBookmark = {
   kind: 'url'
@@ -51,6 +58,15 @@ export type ZssBookmarksBlob = {
   editor: ZssEditorBookmark[]
 }
 
+export function capterminalbookmarklist(
+  list: ZssTerminalBookmark[],
+): ZssTerminalBookmark[] {
+  if (list.length <= TERMINAL_PIN_MAX) {
+    return list
+  }
+  return list.slice(-TERMINAL_PIN_MAX)
+}
+
 export function normalizebookmarks(raw: unknown): ZssBookmarksBlob {
   if (!raw || typeof raw !== 'object') {
     return { version: BOOKMARKS_VERSION, url: [], terminal: [], editor: [] }
@@ -59,10 +75,11 @@ export function normalizebookmarks(raw: unknown): ZssBookmarksBlob {
   const url = Array.isArray(o.url) ? o.url : []
   const terminal = Array.isArray(o.terminal) ? o.terminal : []
   const editor = Array.isArray(o.editor) ? o.editor : []
+  const terminalfiltered = terminal.filter(isterminalbookmark)
   return {
     version: BOOKMARKS_VERSION,
     url: url.filter(isurlbookmark),
-    terminal: terminal.filter(isterminalbookmark),
+    terminal: capterminalbookmarklist(terminalfiltered),
     editor: editor.filter(iseditorbookmark),
   }
 }
@@ -162,7 +179,7 @@ export async function appendterminalbookmark(
   }
   await mergebookmarksintostorage((prev) => ({
     ...prev,
-    terminal: [...prev.terminal, entry],
+    terminal: capterminalbookmarklist([...prev.terminal, entry]),
   }))
   return entry
 }
@@ -226,17 +243,17 @@ export function terminalbookmarkpindisplaylabel(text: string): string {
   return oneline.length > 52 ? `${oneline.slice(0, 49)}...` : oneline || '*'
 }
 
-/**
- * Terminal pin row: `!!runit …` matches `writecopyit` / `renderrow` so `TerminalItem` splits on `!`
- * correctly. Payload is JSON-stringified so `;`, spaces, and `!` in the command survive tokenizing.
- */
-export function terminalbookmarkpinline(b: ZssTerminalBookmark): string {
+export function terminalbookmarkpinline(
+  b: ZssTerminalBookmark,
+  pinindex: number,
+): string {
   const label = terminalbookmarkpindisplaylabel(b.text)
-  return `!!runit ${JSON.stringify(b.text)};★ ${label}`
+  const n = pinindex + 1
+  return `$ONCYAN$BLACK ${metakey}+${n} $ONDKBLUE$WHITE ${label}`
 }
 
 export function readterminalbookmarkdisplaylines(
   blob: ZssBookmarksBlob,
 ): string[] {
-  return blob.terminal.map((b) => terminalbookmarkpinline(b))
+  return blob.terminal.map((b, i) => terminalbookmarkpinline(b, i))
 }

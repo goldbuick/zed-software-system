@@ -1,5 +1,17 @@
 import { createdevice } from 'zss/device'
 import { modemreadtextsync } from 'zss/device/modem'
+import {
+  BOOKMARK_NAME_TARGET,
+  BOOKMARK_SCROLL_CHIP,
+  ZSS_BOOKMARKS_KEY,
+  ZssTerminalBookmark,
+  appendeditorbookmark,
+  appendterminalbookmark,
+  appendurlbookmark,
+  readbookmarksfromstorage,
+  readterminalbookmarkdisplaylines,
+  removebookmarkbyid,
+} from 'zss/feature/bookmarks'
 import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { getfingerprint } from 'zss/feature/fingerprint'
@@ -22,17 +34,6 @@ import {
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
-import {
-  appendurlbookmark,
-  appendterminalbookmark,
-  appendeditorbookmark,
-  BOOKMARK_NAME_TARGET,
-  BOOKMARK_SCROLL_CHIP,
-  readbookmarksfromstorage,
-  readterminalbookmarkdisplaylines,
-  removebookmarkbyid,
-  ZSS_BOOKMARKS_KEY,
-} from 'zss/feature/bookmarks'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
@@ -73,8 +74,8 @@ import {
   registerterminalfull,
   vmbookmarkscroll,
   vmbooks,
-  vmcli,
   vmclearscroll,
+  vmcli,
   vmdoot,
   vmloader,
   vmlogin,
@@ -240,10 +241,12 @@ writesession('PLAYER', myplayerid)
 async function syncterminalbookmarkpins() {
   const blob = await readbookmarksfromstorage()
   const pinlines = readterminalbookmarkdisplaylines(blob)
+  const pinids = blob.terminal.map((b: ZssTerminalBookmark) => b.id)
   useTape.setState((state) => ({
     terminal: {
       ...state.terminal,
       pinlines,
+      pinids,
     },
   }))
 }
@@ -324,6 +327,7 @@ export const register = createdevice(
       case 'loginready':
         doasync(register, message.player, async () => {
           const storage = await storagereadvars()
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } =
             storage
           const config = await storagereadconfigall()
@@ -400,7 +404,7 @@ export const register = createdevice(
             apitoast(register, myplayerid, 'bookmark snapshot failed')
             return
           }
-          const pathstrs = path.filter(isstring) as string[]
+          const pathstrs = path.filter(isstring)
           await appendeditorbookmark({
             book,
             path: pathstrs,
@@ -496,6 +500,36 @@ export const register = createdevice(
           await appendterminalbookmark(line)
           await syncterminalbookmarkpins()
           apitoast(register, myplayerid, 'terminal line bookmarked')
+        })
+        break
+      case 'runbookmark':
+        doasync(register, message.player, async () => {
+          let pinid: MAYBE<string>
+          if (isarray(message.data)) {
+            const arr = message.data as unknown[]
+            const last = arr[arr.length - 1]
+            if (isstring(last)) {
+              pinid = last
+            }
+          } else if (isstring(message.data)) {
+            pinid = message.data
+          }
+          if (!pinid) {
+            return
+          }
+          const blob = await readbookmarksfromstorage()
+          const entry = blob.terminal.find(
+            (b: ZssTerminalBookmark) => b.id === pinid,
+          )
+          if (!entry) {
+            apitoast(register, myplayerid, 'pin not found')
+            return
+          }
+          const line = entry.text.trim()
+          if (!line.length) {
+            return
+          }
+          vmcli(register, message.player, line)
         })
         break
       case 'input':

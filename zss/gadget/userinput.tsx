@@ -14,6 +14,7 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   apilog,
+  registerbookmarkrun,
   vmcli,
   vmdoot,
   vminput,
@@ -28,6 +29,7 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
+import { useTape } from 'zss/gadget/data/state'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
@@ -374,6 +376,21 @@ function handlekeydown(event: KeyboardEvent) {
     case 'h':
       if (mods.ctrl) {
         vmrefscroll(SOFTWARE, player)
+      }
+      break
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+      if (mods.ctrl) {
+        const pinids = useTape.getState().terminal.pinids
+        const index = parseInt(key, 10) - 1
+        const id = pinids[index]
+        if (ispresent(id)) {
+          registerbookmarkrun(SOFTWARE, player, id)
+        }
       }
       break
   }
