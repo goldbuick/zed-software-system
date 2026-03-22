@@ -3,7 +3,8 @@ import { writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
 import { textformatreadedges } from 'zss/words/textformat'
 
-import { BKG_PTRN, BKG_PTRN_ALT, FG, bgcolor } from './common'
+import { FG, bgcolor } from './colors'
+import { BKG_PTRN, BKG_PTRN_ALT } from './common'
 
 type TapeBackPlateProps = {
   bump?: boolean

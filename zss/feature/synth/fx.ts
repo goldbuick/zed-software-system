@@ -120,5 +120,3 @@ export function createfx() {
     destroy,
   }
 }
-
-export { createfxchannels } from './fxchannels'

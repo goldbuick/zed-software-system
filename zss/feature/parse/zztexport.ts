@@ -3,12 +3,6 @@
  * Mirrors decode logic in zzt.ts (Shikadi Modding Wiki ZZT format).
  */
 
-export {
-  zztencodeboardblob,
-  zztencodeworld,
-  zztencodeworldheader,
-} from './zztencode'
-
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memoryreadelement } from 'zss/memory/boardoperations'

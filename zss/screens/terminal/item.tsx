@@ -2,11 +2,10 @@ import { useTape } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { BG_ACTIVE, bgcolor } from 'zss/screens/tape/colors'
 import {
-  BG_ACTIVE,
   TapeTerminalItemInputProps,
   TapeTerminalItemProps as TapeTerminalItemProps,
-  bgcolor,
   setuplogitem,
 } from 'zss/screens/tape/common'
 import {

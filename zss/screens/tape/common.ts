@@ -2,21 +2,12 @@ import { IToken } from 'chevrotain'
 import { createContext } from 'react'
 import { LANG_ERROR } from 'zss/lang/lexer'
 import { CodeNode } from 'zss/lang/visitor'
-import {
-  BG_ACTIVE,
-  BG_SELECTED,
-  FG,
-  FG_SELECTED,
-  bgcolor,
-} from 'zss/screens/tape/colors'
+import { BG_ACTIVE, FG_SELECTED } from 'zss/screens/tape/colors'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 
 // deco
 export const BKG_PTRN = 250
 export const BKG_PTRN_ALT = 249
-
-// colors (re-export from tape/colors)
-export { BG_ACTIVE, BG_SELECTED, FG, FG_SELECTED, bgcolor }
 
 export function editorsplit(width: number) {
   return Math.round(width * 0.5)

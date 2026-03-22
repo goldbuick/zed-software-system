@@ -2,11 +2,7 @@ import { DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
 import type { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 
-import {
-  UNICODE_ATLAS_COLS,
-  getunicodeatlas,
-  invalidateatlas,
-} from './unicodeatlas'
+import { UNICODE_ATLAS_COLS, getunicodeatlas } from './unicodeatlas'
 
 const QUAD_POSITIONS = new Float32Array([
   0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
@@ -69,5 +65,3 @@ export function getunicodeoverlayquadgeometry() {
     uv: QUAD_UVS,
   }
 }
-
-export { invalidateatlas }

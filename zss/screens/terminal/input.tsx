@@ -37,9 +37,10 @@ import {
 } from 'zss/screens/tape/autocomplete'
 import {
   applycodetokencolors,
+  bgcolor,
   buildzsswordcolors,
 } from 'zss/screens/tape/colors'
-import { bgcolor, setuplogitem } from 'zss/screens/tape/common'
+import { setuplogitem } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
 import {
   applycolortoindexes,

@@ -51,14 +51,6 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
-export {
-  LIGHTING_OBJECT_OCCLUDER_CELL_FRAC,
-  LIGHTING_RAY_TILE_YSCALE,
-  type LightingOccluderKind,
-  lightingmixmaxrange,
-  memorylightingaddrangetoblocked,
-} from './lightinggeometry'
-
 // Display & Formatting Functions
 
 export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {

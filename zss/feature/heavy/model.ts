@@ -5,8 +5,8 @@ import {
   ProgressInfo,
   TextStreamer,
 } from '@huggingface/transformers'
-import { parseresult as llmparseresult } from 'zss/feature/heavy/llm'
-import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
+import { parseresult as llmparseresult } from 'zss/feature/heavy/llm/parse'
+import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm/types'
 
 const MAX_NEW_TOKENS = 768
 const MODEL_DEVICE = 'webgpu'
@@ -48,7 +48,7 @@ function throttle(
   }
 }
 
-export type { MODEL_RESULT } from 'zss/feature/heavy/llm'
+export type { MODEL_RESULT } from 'zss/feature/heavy/llm/types'
 
 type SHARED_MODEL = {
   tokenizer: Awaited<ReturnType<typeof AutoTokenizer.from_pretrained>>

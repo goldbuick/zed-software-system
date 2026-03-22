@@ -15,7 +15,6 @@ import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
 import { handlecodepagesnapshot } from './codepagesnapshot'
 import { handlecoderelease, handlecodewatch } from './codewatch'
-import { handledefault } from './default'
 import { handledoot } from './doot'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
@@ -87,5 +86,3 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   findany: handlefindany,
   loader: handleloader,
 }
-
-export { handledefault as vmdefaulthandler }

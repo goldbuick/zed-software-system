@@ -8,7 +8,7 @@ import {
   createwritetextcontext,
 } from 'zss/words/textformat'
 
-import { FG, bgcolor } from './common'
+import { FG, bgcolor } from './colors'
 
 type TapeLayoutTilesProps = {
   label: string

@@ -2,7 +2,8 @@ import { createdevice } from 'zss/device'
 import { memoryreadsession } from 'zss/memory/session'
 
 import { platformready } from './api'
-import { vmdefaulthandler, vmhandlers } from './vm/handlers/registry'
+import { handledefault as vmdefaulthandler } from './vm/handlers/default'
+import { vmhandlers } from './vm/handlers/registry'
 
 const vm = createdevice(
   'vm',
