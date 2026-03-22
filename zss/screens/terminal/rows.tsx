@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTape, useTerminal } from 'zss/gadget/data/state'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -11,7 +11,12 @@ import { TapeTerminalActiveItem, TerminalItem } from './item'
 export function TerminalRows() {
   const screensize = useScreenSize()
   const editoropen = useTape((state) => state.editor.open)
-  const terminallogs = useTape((state) => state.terminal.logs)
+  const pinlines = useTape((state) => state.terminal.pinlines)
+  const sessionlogs = useTape((state) => state.terminal.logs)
+  const terminallogs = useMemo(
+    () => [...pinlines, ...sessionlogs],
+    [pinlines, sessionlogs],
+  )
 
   const context = useWriteText()
   const scroll = useTerminal((state) => state.scroll)

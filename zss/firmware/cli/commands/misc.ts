@@ -1,4 +1,9 @@
-import { registerscreenshot, vmpublish } from 'zss/device/api'
+import {
+  registerbookmarkdelete,
+  registerbookmarklist,
+  registerscreenshot,
+  vmpublish,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import { writeopenit, writetext } from 'zss/feature/writeui'
@@ -13,6 +18,25 @@ let bbsemail = ''
 
 export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
+    .command('bookmarks', ['list bookmarks'], () => {
+      registerbookmarklist(SOFTWARE, READ_CONTEXT.elementfocus)
+      return 0
+    })
+    .command(
+      'bookmarkdelete',
+      [ARG_TYPE.NAME, 'bookmark id'],
+      (_, words) => {
+        const [id] = readargs(words, 0, [ARG_TYPE.NAME])
+        if (id) {
+          registerbookmarkdelete(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `${id}`,
+          )
+        }
+        return 0
+      },
+    )
     .command('screenshot', ['screenshot for capture'], () => {
       registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0

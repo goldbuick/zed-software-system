@@ -203,8 +203,9 @@ Functions for network operations, streaming, and external service integration.
 - `bridgestreamstop(device, player)` - Stop broadcast stream
 
 ### Chat Integration
-- `bridgechatstart(device, player, channel)` - Start Twitch chat connection
-- `bridgechatstop(device, player)` - Stop Twitch chat connection
+- `bridgechatstart(device, player, payload)` - Start or replace a chat connector. `payload` may be a string (legacy Twitch channel; `routekey` = channel) or an object `{ kind, routekey, … }` with `kind` `twitch` | `irc` | `xmpp` and kind-specific fields (`websocketurl`, `channel`, `nick`, `password` for IRC; `service`, `domain`, `username`, `password`, `muc`, optional `mucnick` for XMPP).
+- `bridgechatstop(device, player, kind)` - Stop the connector for that `kind` (`twitch`, `irc`, `xmpp`).
+- `bridgestatus(device, player)` - Request a read-only snapshot of chat slots and IVS broadcast state (handled in `bridge.ts`, emitted as `apilog` lines; no secrets).
 
 ### Peer Connection
 - `bridgestart(device, player, hidden)` - Start peer server

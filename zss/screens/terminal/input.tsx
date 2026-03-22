@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react'
 import {
   apierror,
   apitoast,
+  registerappendterminalbookmark,
   registerterminalclose,
   registerterminalinclayout,
   vmcli,
@@ -655,6 +656,12 @@ export function TerminalInput({
                   case 'p':
                     vmclirepeatlast(SOFTWARE, player)
                     break
+                  case 'b': {
+                    const line =
+                      tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
+                    registerappendterminalbookmark(SOFTWARE, player, line)
+                    break
+                  }
                   case 'f':
                     if (!inputstate.startsWith('#search')) {
                       inputstatereplace(`#search ${inputstate}`)

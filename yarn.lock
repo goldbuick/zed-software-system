@@ -3779,6 +3779,240 @@
   dependencies:
     lodash "^4"
 
+"@xmpp/base64@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/base64/-/base64-0.14.0.tgz#ca049f65cfd56eb7fab8959210aa10e676343a13"
+  integrity sha512-tz2LuzLMtjGSVVeuXDnDw19H+uOrqhrRFcQKJ3THV0HVjerDewT8WKXdrtBVSQ7n4Ue0k+awYcIE7qDD9rwMMQ==
+
+"@xmpp/client-core@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/client-core/-/client-core-0.14.0.tgz#dd55237b31526ef0565988f79afe09fb35cb9589"
+  integrity sha512-fW0C6vn4y8Jp1g8uBmCETuOmEDXpjFc/mfY8P0J88nhK2AdPOB5m0ntz0yyAXcPd16smnHVckiOsk9qBjF9dDA==
+  dependencies:
+    "@xmpp/connection" "^0.14.0"
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/jid" "^0.14.0"
+    "@xmpp/sasl" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+    saslmechanisms "^0.1.1"
+
+"@xmpp/client@0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/client/-/client-0.14.0.tgz#2e255e65d5ccd9ee260dca44ec6ea55dc35b73f8"
+  integrity sha512-Y6k77iifYOGuWncOLRr6dVmbsQvcsIFjYI9pXhkSzQDDNnd3hVJGgo/Xx+W/0/o1+kg/tPm/NwX5Yq77NTd9xA==
+  dependencies:
+    "@xmpp/client-core" "^0.14.0"
+    "@xmpp/iq" "^0.14.0"
+    "@xmpp/middleware" "^0.14.0"
+    "@xmpp/reconnect" "^0.14.0"
+    "@xmpp/resolve" "^0.14.0"
+    "@xmpp/resource-binding" "^0.14.0"
+    "@xmpp/sasl" "^0.14.0"
+    "@xmpp/sasl-anonymous" "^0.14.0"
+    "@xmpp/sasl-ht-sha-256-none" "^0.14.0"
+    "@xmpp/sasl-plain" "^0.14.0"
+    "@xmpp/sasl-scram-sha-1" "^0.14.0"
+    "@xmpp/sasl2" "^0.14.0"
+    "@xmpp/starttls" "^0.14.0"
+    "@xmpp/stream-features" "^0.14.0"
+    "@xmpp/stream-management" "^0.14.0"
+    "@xmpp/tcp" "^0.14.0"
+    "@xmpp/tls" "^0.14.0"
+    "@xmpp/websocket" "^0.14.0"
+    saslmechanisms "^0.1.1"
+
+"@xmpp/connection-tcp@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/connection-tcp/-/connection-tcp-0.14.0.tgz#e5496d7ef0ec772df63cc698981597184e26cde1"
+  integrity sha512-gvYyUghuCHW0qalEYaZvbHeTnEoXc+hCCWP/qvoVGjjSQNwkYRUsy1/8RP/sA6RlQ2sR0nhpkJkJE6K/4rsFIQ==
+  dependencies:
+    "@xmpp/connection" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/connection@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/connection/-/connection-0.14.0.tgz#5a8e44af97b2df322f1af30905257402a16f510e"
+  integrity sha512-VRnukXwiXWCsRVQVISUiAxHHgRWH37nxdUaz50o0+cUAYyqtlHIJ2zy+ZHMlxkEWtl+XciNLxwkJKbypJFQheQ==
+  dependencies:
+    "@xmpp/error" "^0.14.0"
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/jid" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/error@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/error/-/error-0.14.0.tgz#030b881b731c962c4993f1a8dca6818c66696de9"
+  integrity sha512-b4W/MwAZl8basfmYhcemK3De92xBOiSrIz0VY2cnN2ss1VMsa4d32GuaJGBIpa4ulN/2DFb3vPCeTn5jXvHAJw==
+
+"@xmpp/events@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/events/-/events-0.14.0.tgz#b08441572ca4e0fdce12b5f1c45a4c7b4462c9ee"
+  integrity sha512-6mKRIEi69sYr8H9SrkJKaXobOgCq/sU6/pKTQS5cuQZCy0qLuyx9uttkOyAYmtUbVD+HSrXYS72KhMpdQQh88Q==
+  dependencies:
+    events "^3.3.0"
+
+"@xmpp/id@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/id/-/id-0.14.0.tgz#bd05ae409ce1891b53b9023ac1fe0841ad1b8cc6"
+  integrity sha512-0n8OFYPWkBYDi5fHGiJT6SLg9ncOflTmINzjHzt5A3NxEMVrYmqxbRB44u3NLMk1gBNqGtEkc2wl0WHjS0tHWg==
+
+"@xmpp/iq@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/iq/-/iq-0.14.0.tgz#e6866d37569d249c521b4c0a64d00a0167fef08a"
+  integrity sha512-0r3QVKR4XAvkZ4shQwPBkSM21sSfj26Cg8+AYBkd0BKJTde7mRQCISBNidt1xiXA5VPH1+6Qx7fmtPzk3uel+Q==
+  dependencies:
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/id" "^0.14.0"
+    "@xmpp/middleware" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/jid@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/jid/-/jid-0.14.0.tgz#6f5166fe9428ee51578110f63ff4ce111ff06d08"
+  integrity sha512-ggiNgjblkeHPbHJ7JLOMIqxc1qQQt0gV+LhXI16afib2wLr120YgvRChY04gjkvQ+IF2sGz7mzPvcAukTmNGHA==
+
+"@xmpp/middleware@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/middleware/-/middleware-0.14.0.tgz#34104c4bd3f33d3637b29a9ff66e780bfe8add94"
+  integrity sha512-UGm7ed5NEMapE/z0jqY5daGSBqto/iciDjtyncoXHZdOnR4iFYFF9gSO/65Z1HsL2pbHQpcK0WS+Kn+FGOxPTw==
+  dependencies:
+    "@xmpp/error" "^0.14.0"
+    "@xmpp/jid" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+    koa-compose "^4.1.0"
+
+"@xmpp/reconnect@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/reconnect/-/reconnect-0.14.0.tgz#50d1165952b3f8ce4dd6cac0e8b6e5f820a19066"
+  integrity sha512-XaaT3KrFLf1ZfYZCIx11zauT8bIVXRz9FMaGj4mofq1tC8SiKvIIqJXSgrouhkibb9vPeM9XSiGkH47B/1hc6g==
+  dependencies:
+    "@xmpp/events" "^0.14.0"
+
+"@xmpp/resolve@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/resolve/-/resolve-0.14.0.tgz#dbae43128b29e2eb7c773cb91833e87b1ee03e4c"
+  integrity sha512-S4Rhupb2zS4EtT4EFUJLPl2pPSFPfrjp/1bxPil+zBt9sNcbrvIwSNaYeQAAfLD/yYb8/DhaxC/blvdHyM1Xzw==
+  dependencies:
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/resource-binding@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/resource-binding/-/resource-binding-0.14.0.tgz#e6dae691a3a4a22e368a10e50666baaede88c3c9"
+  integrity sha512-b8EyHUOpkAS25b6cpOQ8fv7cCLfOpJq4dkgs6Td0MdODMmcfWEh38siZKaP0OoNmYWZCxBSANdsBmeidozJxqA==
+  dependencies:
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/sasl-anonymous@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/sasl-anonymous/-/sasl-anonymous-0.14.0.tgz#cabf401c419f6e396edfd07117135249ef2f2591"
+  integrity sha512-lZ8jaYuKBpfQ2T5Bv+7yxII9OduV1a+mlNkKtG94WchrVzR8fU6VpbTrez88KajA42ngcVCtiO3i6tPepYyK8Q==
+  dependencies:
+    sasl-anonymous "^0.1.0"
+
+"@xmpp/sasl-ht-sha-256-none@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/sasl-ht-sha-256-none/-/sasl-ht-sha-256-none-0.14.0.tgz#2c0f27ee94b2de65751ce1a11ea82b30e8a1fdf5"
+  integrity sha512-LmMSzX35bI/V2lV26k/hYPm8Pn7InsBEX72b86+ugIBQpzD8/jmB1F/Mfm5vrbWkMLl2KWe61gE+L/p0mvLZdA==
+
+"@xmpp/sasl-plain@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/sasl-plain/-/sasl-plain-0.14.0.tgz#0d6c4838576d575ce18829caecfeb04a569d50ed"
+  integrity sha512-TGQX6gsCi6LP2lPNkkd+HoZ1ynCesRMQrtJrWbDAa6oMyCwie9xuBcG/5lDJ5fn03G7xxRh1YSQp+x8yFK+q4w==
+  dependencies:
+    sasl-plain "^0.1.0"
+
+"@xmpp/sasl-scram-sha-1@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/sasl-scram-sha-1/-/sasl-scram-sha-1-0.14.0.tgz#ceeb18825f064a452c2def1b80b77fd20d9294f2"
+  integrity sha512-0ZrsMDx9Haou2yTCzDCwvMsYPvHCxF2bkpyBuiPoYAOWRsIQH1TssZK3d88N7wSvvojter905DNwLPizdaF3og==
+  dependencies:
+    sasl-scram-sha-1 "^1.3.0"
+
+"@xmpp/sasl2@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/sasl2/-/sasl2-0.14.0.tgz#951a5aa71664e8b488b4e067a803682a9f7aad21"
+  integrity sha512-OcDIDr9xwiOO58yqr6hj0eh9CfKOvwBbNDNhC0wByA07cwOsoojLb1dv3WR7pKk1cETv6wHWQ1o/leRoDB/Yzg==
+  dependencies:
+    "@xmpp/base64" "^0.14.0"
+    "@xmpp/error" "^0.14.0"
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/jid" "^0.14.0"
+    "@xmpp/sasl" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/sasl@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/sasl/-/sasl-0.14.0.tgz#6b6cb34c7d4fa691a1a1b612999f873c95b078e0"
+  integrity sha512-C6mWvtRhJCCjv0Q6uuc3FUuDdgUhnX7lCF9afmNT5umy1XB0l1iRmBJYTriSHNBwgErM3i3mydafeRjpuQfP5Q==
+  dependencies:
+    "@xmpp/base64" "^0.14.0"
+    "@xmpp/error" "^0.14.0"
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/starttls@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/starttls/-/starttls-0.14.0.tgz#95ff39547ee80f58b2aecf89f3caf72434a5f443"
+  integrity sha512-n21Oy5pyD6Cipo96SAVI1ASx/5qo/z3W7J1TWZSG3/gGgrTaCB+VSV0xI+FqRexVJysg3lw3cBidYQL+Lp/pHw==
+  dependencies:
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/tls" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/stream-features@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/stream-features/-/stream-features-0.14.0.tgz#f53dd8e4accad3ae3049b07ed78fb3a5a3399e1b"
+  integrity sha512-XoogP53qv1lzq/TNnzydT0KmmDKsJ7vpbV1c33fcuBDY0LCmPWA2U5th+Atn3JjEMlyznpVDFco9BF1NgFTHzg==
+
+"@xmpp/stream-management@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/stream-management/-/stream-management-0.14.0.tgz#1933cd4f38c53b878d16c45bde6fcbd8ecac31a1"
+  integrity sha512-i7qLB8KXzLtm2TZXgtVlBprI4Vm8lykJ7Gth2TFavBTky+PQFNr2BH4lGxxvZ7/WkYbhx2jsmDT9JjI7sUCRdw==
+  dependencies:
+    "@xmpp/error" "^0.14.0"
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/time" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/tcp@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/tcp/-/tcp-0.14.0.tgz#571a1ffac51b3dc15356e1969b9e2a7b369eb825"
+  integrity sha512-vJb5Y60ub+YClK01l+653+qpIe6vedw/82szuB4IU50eTDTL8voer6eGK7AMJOJzoZzRofbLh8Ow5txAyZ8vXw==
+  dependencies:
+    "@xmpp/connection-tcp" "^0.14.0"
+
+"@xmpp/time@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/time/-/time-0.14.0.tgz#2e0c96afdc7b0b48ecdbd1a332f7e5195ae21c5b"
+  integrity sha512-KlOLwZXXYrRiIZ+Lg0Rg+iDxIBLfCgVQOkIaYG2nieLVtbrHItI5gv2eI2I6m0cPsX8LajGkCpvQTqUCNZclag==
+
+"@xmpp/tls@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/tls/-/tls-0.14.0.tgz#e24a623447736df08c4c3e214f782044ef36f9d0"
+  integrity sha512-nY/nHlHYgs3i2+xwt/5Ff3J4aCdZADdTOH+NwdfgqBIK9kWDJPW43nnIrbrZgmUL3YOjW5sb1lUI20bFUJACww==
+  dependencies:
+    "@xmpp/connection" "^0.14.0"
+    "@xmpp/connection-tcp" "^0.14.0"
+    "@xmpp/events" "^0.14.0"
+
+"@xmpp/websocket@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/websocket/-/websocket-0.14.0.tgz#be7685add365f3ee23414079b82a1234f3978118"
+  integrity sha512-mRjpRHtOujrPIT7I/X2xvn8w6X/7J8gGPfGIKNGLJHBQu1OlT5noUd++mslCAcGdCOf5TGwtJvE7a8CPtSnTFg==
+  dependencies:
+    "@xmpp/connection" "^0.14.0"
+    "@xmpp/events" "^0.14.0"
+    "@xmpp/xml" "^0.14.0"
+
+"@xmpp/xml@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/@xmpp/xml/-/xml-0.14.0.tgz#49e09590a09482688bfba256e2bfdd08ea913a8f"
+  integrity sha512-1rrj3SaIM51wtJUn1l2n4FK2e1QLfEmma9bsD1utaaosA8elpCyWi12QDPfaYoTyWSXNvQ7mGzvFevUJUs1mcQ==
+  dependencies:
+    "@xmpp/events" "^0.14.0"
+    ltx "^3.1.2"
+
 "@yarnpkg/lockfile@^1.1.0":
   version "1.1.0"
   resolved "https://registry.npmjs.org/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"
@@ -4690,6 +4924,11 @@ convert-to-spaces@^2.0.1:
   resolved "https://registry.npmjs.org/convert-to-spaces/-/convert-to-spaces-2.0.1.tgz"
   integrity sha512-rcQ1bsQO9799wq24uE5AM2tAILy4gXGIK/njFWcVQkGNZ96edlpY+A7bjwvzjYvLDyzmG1MmMLZhpcsb+klNMQ==
 
+core-js@^3.38.1:
+  version "3.49.0"
+  resolved "https://registry.npmjs.org/core-js/-/core-js-3.49.0.tgz#8b4d520ac034311fa21aa616f017ada0e0dbbddd"
+  integrity sha512-es1U2+YTtzpwkxVLwAFdSpaIMyQaq0PBgm3YD1W3Qpsn1NAmO3KSgZfu+oGSWVu6NvLHoHCV/aYcsE5wiB7ALg==
+
 core-util-is@~1.0.0:
   version "1.0.3"
   resolved "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.3.tgz"
@@ -5533,7 +5772,12 @@ eventemitter3@^4.0.7:
   resolved "https://registry.npmjs.org/eventemitter3/-/eventemitter3-4.0.7.tgz"
   integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
 
-events@^3.0.0:
+eventemitter3@^5.0.1:
+  version "5.0.4"
+  resolved "https://registry.npmjs.org/eventemitter3/-/eventemitter3-5.0.4.tgz#a86d66170433712dde814707ac52b5271ceb1feb"
+  integrity sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==
+
+events@^3.0.0, events@^3.3.0:
   version "3.3.0"
   resolved "https://registry.npmjs.org/events/-/events-3.3.0.tgz"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
@@ -5608,6 +5852,11 @@ fast-levenshtein@^3.0.0:
   integrity sha512-hKKNajm46uNmTlhHSyZkmToAc56uZJwYq7yrciZjqOxnlfQwERDQJmHPUp7m1m9wx8vgOe8IaCKZ5Kv2k1DdCQ==
   dependencies:
     fastest-levenshtein "^1.0.7"
+
+fast-text-encoding@^1.0.0:
+  version "1.0.6"
+  resolved "https://registry.npmjs.org/fast-text-encoding/-/fast-text-encoding-1.0.6.tgz#0aa25f7f638222e3396d72bf936afcf1d42d6867"
+  integrity sha512-VhXlQgj9ioXCqGstD37E/HBeqEGV/qOD/kmbVG8h5xKBYvM1L3lR1Zn4555cQ8GkYbJa8aJSipLPndE1k6zK2w==
 
 fast-xml-builder@^1.1.4:
   version "1.1.4"
@@ -5996,6 +6245,11 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.9:
   resolved "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
 
+grapheme-splitter@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.npmjs.org/grapheme-splitter/-/grapheme-splitter-1.0.4.tgz#9cf3a665c6247479896834af35cf1dbb4400767e"
+  integrity sha512-bzh50DW9kTPM00T8y4o8vQg89Di9oLJVLW/KaOGIXJWP/iqCN6WKYkbNOF04vFLJhwcpYUh9ydh/+5vpOqV4YQ==
+
 graphemer@^1.4.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/graphemer/-/graphemer-1.4.0.tgz"
@@ -6208,7 +6462,7 @@ human-signals@^2.1.0:
   resolved "https://registry.npmjs.org/human-signals/-/human-signals-2.1.0.tgz"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
 
-iconv-lite@0.6.3:
+iconv-lite@0.6.3, iconv-lite@^0.6.3:
   version "0.6.3"
   resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.3.tgz"
   integrity sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==
@@ -6343,6 +6597,29 @@ internal-slot@^1.1.0:
     es-errors "^1.3.0"
     hasown "^2.0.2"
     side-channel "^1.1.0"
+
+ip-address@^10.0.1:
+  version "10.1.0"
+  resolved "https://registry.npmjs.org/ip-address/-/ip-address-10.1.0.tgz#d8dcffb34d0e02eb241427444a6e23f5b0595aa4"
+  integrity sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q==
+
+irc-framework@4.14.0:
+  version "4.14.0"
+  resolved "https://registry.npmjs.org/irc-framework/-/irc-framework-4.14.0.tgz#1854229c61e71bc3ca44c504afa4f31ace2c10de"
+  integrity sha512-lNujDAxy9kcu89WbU5H7IDWly64aD1B9nN9AV5M6btfx88qyQuyH16j1tjS40nmkQH6ld6vvaihKRn9cjk1JrA==
+  dependencies:
+    buffer "^6.0.3"
+    core-js "^3.38.1"
+    eventemitter3 "^5.0.1"
+    grapheme-splitter "^1.0.4"
+    iconv-lite "^0.6.3"
+    isomorphic-textencoder "^1.0.1"
+    lodash "^4.17.21"
+    middleware-handler "^0.2.0"
+    regenerator-runtime "^0.14.1"
+    socks "^2.8.3"
+    stream-browserify "^3.0.0"
+    util "^0.12.5"
 
 ircv3@^0.33.0:
   version "0.33.0"
@@ -6644,6 +6921,13 @@ isexe@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
+
+isomorphic-textencoder@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/isomorphic-textencoder/-/isomorphic-textencoder-1.0.1.tgz#38dcd3b4416d29cd33e274f64b99ae567cd15e83"
+  integrity sha512-676hESgHullDdHDsj469hr+7t3i/neBKU9J7q1T4RHaWwLAsaQnywC0D1dIUId0YZ+JtVrShzuBk1soo0+GVcQ==
+  dependencies:
+    fast-text-encoding "^1.0.0"
 
 isomorphic-timers-promises@^1.0.1:
   version "1.0.1"
@@ -7309,6 +7593,11 @@ klona@^2.0.4, klona@^2.0.5:
   resolved "https://registry.npmjs.org/klona/-/klona-2.0.6.tgz"
   integrity sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==
 
+koa-compose@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.npmjs.org/koa-compose/-/koa-compose-4.1.0.tgz#507306b9371901db41121c812e923d0d67d3e877"
+  integrity sha512-8ODW8TrDuMYvXRwra/Kh7/rJo9BtOfPc6qO8eAfC80CnCvSjSl0bkRM24X6/XBBEyj0v1nRUQ1LyOy3dbqOWXw==
+
 leven@^3.1.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/leven/-/leven-3.1.0.tgz"
@@ -7416,6 +7705,11 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
+ltx@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.npmjs.org/ltx/-/ltx-3.1.2.tgz#cdbb693aab421f2524ddf0e7abf42a8b21b2ca47"
+  integrity sha512-tFSKojN92FqNK6eRTmKK/ROUTUYVWKAxgohz523TPhF1G3nR3DXQS/I7/705rEPrDSloKDgMdRlh0qgMFQoVYw==
+
 maath@^0.10.8:
   version "0.10.8"
   resolved "https://registry.npmjs.org/maath/-/maath-0.10.8.tgz"
@@ -7500,6 +7794,11 @@ micromatch@^4.0.2, micromatch@^4.0.4:
   dependencies:
     braces "^3.0.3"
     picomatch "^2.3.1"
+
+middleware-handler@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.npmjs.org/middleware-handler/-/middleware-handler-0.2.0.tgz#bf02af7e6b577c0230609b2ae58df0e446f3fd02"
+  integrity sha512-Qz4B0yWndSokapr3Kl7fpMRysS0DaBlOuATrExFuZbr+oXZ3rsAPufdLe8mUJXiG5A4aJGW6GfKS4PDfQwu7Mg==
 
 midi-file@^1.2.2:
   version "1.2.4"
@@ -8492,6 +8791,11 @@ reflect.getprototypeof@^1.0.6, reflect.getprototypeof@^1.0.9:
     get-proto "^1.0.1"
     which-builtin-type "^1.2.1"
 
+regenerator-runtime@^0.14.1:
+  version "0.14.1"
+  resolved "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.14.1.tgz#356ade10263f685dda125100cd862c1db895327f"
+  integrity sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==
+
 regexp.prototype.flags@^1.5.3, regexp.prototype.flags@^1.5.4:
   version "1.5.4"
   resolved "https://registry.npmjs.org/regexp.prototype.flags/-/regexp.prototype.flags-1.5.4.tgz"
@@ -8716,6 +9020,26 @@ safe-regex-test@^1.1.0:
   version "2.1.2"
   resolved "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
+
+sasl-anonymous@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/sasl-anonymous/-/sasl-anonymous-0.1.0.tgz#f544c7e824df2a40d9ad4733829572cc8d9ed5a5"
+  integrity sha512-x+0sdsV0Gie2EexxAUsx6ZoB+X6OCthlNBvAQncQxreEWQJByAPntj0EAgTlJc2kZicoc+yFzeR6cl8VfsQGfA==
+
+sasl-plain@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/sasl-plain/-/sasl-plain-0.1.0.tgz#cf145e7c02222b64d60c0806d9cd2ae5380426cc"
+  integrity sha512-X8mCSfR8y0NryTu0tuVyr4IS2jBunBgyG+3a0gEEkd0nlHGiyqJhlc4EIkzmSwaa7F8S4yo+LS6Cu5qxRkJrmg==
+
+sasl-scram-sha-1@^1.3.0:
+  version "1.4.0"
+  resolved "https://registry.npmjs.org/sasl-scram-sha-1/-/sasl-scram-sha-1-1.4.0.tgz#1f95499128fa9724afaa9ffabaf165e5a9672770"
+  integrity sha512-kdP8uAFkak8flnmKTldWnQ98IuC15ASdKxNHWwbqexRj7szHs7y+JEtigLkPoq9gnp/SAxxU4O2huL8OLqSr9w==
+
+saslmechanisms@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.npmjs.org/saslmechanisms/-/saslmechanisms-0.1.1.tgz#478be1429500fcfaa780be88b3343ced7d2a9182"
+  integrity sha512-pVlvK5ysevz8MzybRnDIa2YMxn0OJ7b9lDiWhMoaKPoJ7YkAg/7YtNjUgaYzElkwHxsw8dBMhaEn7UP6zxEwPg==
 
 saxes@^6.0.0:
   version "6.0.0"
@@ -8949,6 +9273,11 @@ sloc@^0.3.0:
     commander "^11.0.0"
     readdirp "^3.3.0"
 
+smart-buffer@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.npmjs.org/smart-buffer/-/smart-buffer-4.2.0.tgz#6e1d71fa4f18c05f7d0ff216dd16a481d0e8d9ae"
+  integrity sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==
+
 snake-case@^3.0.4:
   version "3.0.4"
   resolved "https://registry.npmjs.org/snake-case/-/snake-case-3.0.4.tgz"
@@ -8956,6 +9285,14 @@ snake-case@^3.0.4:
   dependencies:
     dot-case "^3.0.4"
     tslib "^2.0.3"
+
+socks@^2.8.3:
+  version "2.8.7"
+  resolved "https://registry.npmjs.org/socks/-/socks-2.8.7.tgz#e2fb1d9a603add75050a2067db8c381a0b5669ea"
+  integrity sha512-HLpt+uLy/pxB+bum/9DzAgiKS8CX1EvbWxI4zlmgGCExImLdiad2iCwXT5Z4c9c3Eq8rP2318mPW2c+QbtjK8A==
+  dependencies:
+    ip-address "^10.0.1"
+    smart-buffer "^4.2.0"
 
 sort-object-keys@^1.1.3:
   version "1.1.3"

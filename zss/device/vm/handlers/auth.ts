@@ -43,6 +43,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     permissionoverrideremovebyrole,
     config,
     token,
+    zss_bookmarks: _zssbookmarks,
     ...flags
   } = message.data ?? {}
   console.info('VM => storage', flags)

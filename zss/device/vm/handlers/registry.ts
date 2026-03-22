@@ -9,7 +9,9 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
+import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
+import { handlecodepagesnapshot } from './codepagesnapshot'
 import { handlecli, handleclirepeatlast } from './cli'
 import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledefault } from './default'
@@ -74,6 +76,8 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   zztrandom: handlezztrandom,
   publish: handlepublish,
   flush: handleflush,
+  bookmarkscroll: handlebookmarkscroll,
+  codepagesnapshot: handlecodepagesnapshot,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,

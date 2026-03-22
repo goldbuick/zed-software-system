@@ -110,14 +110,16 @@ export function heavyrunagentprompt(heavydev: DEVICE, message: MESSAGE): void {
   }
   const pl = isstring(promptlogging) ? promptlogging : 'off'
   if (ispresent(agents[agentid])) {
-    heavymodelprompt(
-      heavydev,
-      message.player,
-      agentid,
-      readagentdisplayname(agentid),
+    const defaulttime = new Date('2000-01-01').getTime()
+    heavymodelprompt(heavydev, message.player, {
       prompt,
-      pl,
-    )
+      agentid,
+      agentname: readagentdisplayname(agentid),
+      lastinputtime: defaulttime,
+      nearestrefid: '',
+      nearestrefname: '',
+      promptlogging: pl,
+    })
   } else {
     apierror(heavydev, message.player, 'heavy', `agent ${agentid} not found`)
   }

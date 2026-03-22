@@ -261,6 +261,7 @@ function handlekeydown(event: KeyboardEvent) {
     case 'p':
     case 'h':
     case 'k':
+    case 'b':
     case 'n': // prevent default behavior
     case '[':
     case ']':
@@ -374,6 +375,7 @@ function handlekeydown(event: KeyboardEvent) {
       if (mods.ctrl) {
         vmrefscroll(SOFTWARE, player)
       }
+      break
   }
   user.root.emit('keydown', event)
 }

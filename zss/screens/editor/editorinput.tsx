@@ -6,6 +6,7 @@ import {
   registerterminalclose,
   registerterminalinclayout,
   vmcli,
+  vmcodepagesnapshot,
 } from 'zss/device/api'
 import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
@@ -418,6 +419,20 @@ export function EditorInput({
                       )
                     }
                     break
+                  case 'b': {
+                    const ed = useTape.getState().editor
+                    if (ed.open && ed.book && ed.path.length) {
+                      vmcodepagesnapshot(
+                        SOFTWARE,
+                        player,
+                        ed.book,
+                        ed.path as string[],
+                        ed.type,
+                        ed.title,
+                      )
+                    }
+                    break
+                  }
                   case `'`:
                     if (hasselection) {
                       togglecomments(strvalueselected, ii1, iic, strvaluesplice)

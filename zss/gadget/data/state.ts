@@ -91,6 +91,8 @@ export const useTape = create<{
   terminal: {
     open: boolean
     logs: string[]
+    /** Terminal bookmarks from IDB; prepended when rendering logs. */
+    pinlines: string[]
   }
   editor: {
     open: boolean
@@ -108,8 +110,8 @@ export const useTape = create<{
   toast: '',
   terminal: {
     open: true,
-    info: [],
     logs: [],
+    pinlines: [],
   },
   editor: {
     open: false,
@@ -127,6 +129,7 @@ export const useTape = create<{
       terminal: {
         open: true,
         logs: [],
+        pinlines: [],
       },
       editor: {
         open: false,

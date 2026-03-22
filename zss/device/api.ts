@@ -2,6 +2,7 @@
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
+import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
@@ -77,13 +78,21 @@ export function bridgestreamstop(device: DEVICELIKE, player: string) {
 export function bridgechatstart(
   device: DEVICELIKE,
   player: string,
-  channel: string,
+  payload: string | BRIDGE_CHAT_START_OBJECT,
 ) {
-  device.emit(player, 'bridge:chatstart', channel)
+  device.emit(player, 'bridge:chatstart', payload)
 }
 
-export function bridgechatstop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:chatstop')
+export function bridgechatstop(
+  device: DEVICELIKE,
+  player: string,
+  kind: string,
+) {
+  device.emit(player, 'bridge:chatstop', kind)
+}
+
+export function bridgestatus(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:status', undefined)
 }
 
 export function bridgefetch(
@@ -212,12 +221,12 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
-export function vmlastinputtime(
+export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,
   targetplayer: string,
 ) {
-  device.emit(player, 'vm:lastinputtime', targetplayer)
+  device.emit(player, 'vm:lastinputtouch', targetplayer)
 }
 
 export function vmpilotclear(
@@ -544,6 +553,56 @@ export function registerstore(
   value: any,
 ) {
   device.emit(player, 'register:store', [name, value])
+}
+
+export function registerbookmarkscrollopen(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'register:bookmarkscrollopen', true)
+}
+
+export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:bookmark:urlsave', true)
+}
+
+export function registerbookmarkdelete(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+) {
+  device.emit(player, 'register:bookmark:delete', id)
+}
+
+export function registerbookmarklist(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:bookmark:list', true)
+}
+
+export function registerappendterminalbookmark(
+  device: DEVICELIKE,
+  player: string,
+  line: string,
+) {
+  device.emit(player, 'register:bookmark:appendterminal', line)
+}
+
+export function vmbookmarkscroll(
+  device: DEVICELIKE,
+  player: string,
+  urllist: unknown[],
+) {
+  device.emit(player, 'vm:bookmarkscroll', urllist)
+}
+
+export function vmcodepagesnapshot(
+  device: DEVICELIKE,
+  player: string,
+  book: string,
+  path: string[],
+  edtype: string,
+  edtitle: string,
+) {
+  device.emit(player, 'vm:codepagesnapshot', [book, path, edtype, edtitle])
 }
 
 export function registerinspector(

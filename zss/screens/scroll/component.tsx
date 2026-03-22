@@ -2,8 +2,14 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
+import { modemwriteinitstring } from 'zss/device/modem'
+import {
+  BOOKMARK_NAME_TARGET,
+  BOOKMARK_SCROLL_CHIP,
+  BOOKMARK_SCROLL_SCROLLNAME,
+} from 'zss/feature/bookmarks'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { PANEL_ITEM } from 'zss/gadget/data/types'
+import { PANEL_ITEM, paneladdress } from 'zss/gadget/data/types'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { useTiles } from 'zss/gadget/tiles'
 import { UserFocus, UserInput, UserInputHandler } from 'zss/gadget/userinput'
@@ -105,6 +111,15 @@ export function ScrollComponent({
     },
     [setCursor, totalrows],
   )
+
+  useEffect(() => {
+    if (scrollname === BOOKMARK_SCROLL_SCROLLNAME) {
+      modemwriteinitstring(
+        paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET),
+        '',
+      )
+    }
+  }, [scrollname])
 
   // start position
   useEffect(() => {

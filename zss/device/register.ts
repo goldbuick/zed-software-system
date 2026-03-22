@@ -1,4 +1,5 @@
 import { createdevice } from 'zss/device'
+import { modemreadtextsync } from 'zss/device/modem'
 import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { getfingerprint } from 'zss/feature/fingerprint'
@@ -21,6 +22,17 @@ import {
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
+import {
+  appendurlbookmark,
+  appendterminalbookmark,
+  appendeditorbookmark,
+  BOOKMARK_NAME_TARGET,
+  BOOKMARK_SCROLL_CHIP,
+  readbookmarksfromstorage,
+  readterminalbookmarkdisplaylines,
+  removebookmarkbyid,
+  ZSS_BOOKMARKS_KEY,
+} from 'zss/feature/bookmarks'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
@@ -33,7 +45,7 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/state'
-import { GADGET_ZSS_WORDS, INPUT } from 'zss/gadget/data/types'
+import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
@@ -59,8 +71,10 @@ import {
   heavyrestoreagents,
   registerterminalclose,
   registerterminalfull,
+  vmbookmarkscroll,
   vmbooks,
   vmcli,
+  vmclearscroll,
   vmdoot,
   vmloader,
   vmlogin,
@@ -223,6 +237,17 @@ const DOOT_RATE = 10
 let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
 
+async function syncterminalbookmarkpins() {
+  const blob = await readbookmarksfromstorage()
+  const pinlines = readterminalbookmarkdisplaylines(blob)
+  useTape.setState((state) => ({
+    terminal: {
+      ...state.terminal,
+      pinlines,
+    },
+  }))
+}
+
 export function registersetmyplayerid(id: string) {
   myplayerid = id
 }
@@ -274,6 +299,7 @@ export const register = createdevice(
               }),
             })
           }
+          await syncterminalbookmarkpins()
           // signal init
           await waitfor(256)
           apilog(register, myplayerid, `myplayerid ${myplayerid}`)
@@ -298,10 +324,12 @@ export const register = createdevice(
       case 'loginready':
         doasync(register, message.player, async () => {
           const storage = await storagereadvars()
+          const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } =
+            storage
           const config = await storagereadconfigall()
           const token = await getfingerprint()
           vmlogin(register, myplayerid, {
-            ...storage,
+            ...storageforlogin,
             config,
             token,
           })
@@ -352,6 +380,124 @@ export const register = createdevice(
         }
         break
       }
+      case 'ackcodepagesnapshot': {
+        doasync(register, message.player, async () => {
+          const d = message.data as Record<string, unknown> | null | undefined
+          if (!d || typeof d !== 'object') {
+            return
+          }
+          const book = d.book
+          const path = d.path
+          const type = d.type
+          const title = d.title
+          const codepage = d.codepage
+          if (
+            !isstring(book) ||
+            !isarray(path) ||
+            !isstring(type) ||
+            !isstring(title)
+          ) {
+            apitoast(register, myplayerid, 'bookmark snapshot failed')
+            return
+          }
+          const pathstrs = path.filter(isstring) as string[]
+          await appendeditorbookmark({
+            book,
+            path: pathstrs,
+            type,
+            title,
+            codepage,
+          })
+          apitoast(register, myplayerid, `bookmarked editor $green${title}`)
+        })
+        break
+      }
+      case 'bookmarkscrollopen':
+        doasync(register, message.player, async () => {
+          const blob = await readbookmarksfromstorage()
+          vmbookmarkscroll(register, myplayerid, blob.url)
+        })
+        break
+      case 'bookmark:urlsave':
+        doasync(register, message.player, async () => {
+          const addr = paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET)
+          const rawname = modemreadtextsync(addr).trim()
+          if (!rawname.length) {
+            apitoast(register, myplayerid, 'enter a bookmark name first')
+            return
+          }
+          await appendurlbookmark(rawname, location.href)
+          vmclearscroll(register, myplayerid)
+          apitoast(register, myplayerid, `saved bookmark $green${rawname}`)
+        })
+        break
+      case 'bookmark:delete':
+        doasync(register, message.player, async () => {
+          const id = message.data
+          if (!isstring(id)) {
+            return
+          }
+          const ok = await removebookmarkbyid(id)
+          if (ok) {
+            apitoast(register, myplayerid, 'bookmark removed')
+            await syncterminalbookmarkpins()
+          }
+        })
+        break
+      case 'bookmark:list':
+        doasync(register, message.player, async () => {
+          const blob = await readbookmarksfromstorage()
+          writeheader(register, myplayerid, 'bookmarks')
+          let n = 1
+          for (let i = 0; i < blob.url.length; ++i) {
+            const b = blob.url[i]
+            writeoption(
+              register,
+              myplayerid,
+              `${n}`,
+              `url $cyan${b.name}$white ${b.id}`,
+            )
+            ++n
+          }
+          for (let i = 0; i < blob.terminal.length; ++i) {
+            const b = blob.terminal[i]
+            writeoption(
+              register,
+              myplayerid,
+              `${n}`,
+              `terminal $cyan${b.text.slice(0, 48)}$white ${b.id}`,
+            )
+            ++n
+          }
+          for (let i = 0; i < blob.editor.length; ++i) {
+            const b = blob.editor[i]
+            writeoption(
+              register,
+              myplayerid,
+              `${n}`,
+              `editor $cyan${b.title}$white ${b.id}`,
+            )
+            ++n
+          }
+          writetext(
+            register,
+            myplayerid,
+            `$ltgrey#bookmarkdelete <id>$white to remove`,
+          )
+        })
+        break
+      case 'bookmark:appendterminal':
+        doasync(register, message.player, async () => {
+          const line = message.data
+          if (!isstring(line) || !line.trim()) {
+            apitoast(register, myplayerid, 'nothing to bookmark')
+            return
+          }
+          await appendterminalbookmark(line)
+          await syncterminalbookmarkpins()
+          apitoast(register, myplayerid, 'terminal line bookmarked')
+        })
+        break
       case 'input':
         if (isarray(message.data)) {
           const [input, shift] = message.data as [INPUT, boolean]

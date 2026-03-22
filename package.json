@@ -94,8 +94,8 @@
     "nanoid": "^5.0.3",
     "nanoid-dictionary": "^4.3.0",
     "oclif": "^4.22.93",
-    "patch-package": "^8.0.1",
     "onnxruntime-web": "^1.23.2",
+    "patch-package": "^8.0.1",
     "path-browserify": "^1.0.0",
     "peerjs": "^1.5.5",
     "phonemizer": "^1.2.1",
@@ -131,9 +131,11 @@
   "dependencies": {
     "@oclif/core": "^4.8.3",
     "@tonejs/midi": "^2.0.28",
+    "@xmpp/client": "0.14.0",
     "fuse.js": "^7.1.0",
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
+    "irc-framework": "4.14.0",
     "playwright": "^1.49.0",
     "vosk-browser": "^0.0.8"
   },
