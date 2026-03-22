@@ -10,7 +10,6 @@ import {
   gadgetstate,
 } from 'zss/gadget/data/api'
 
-/** Build gadget scroll: name row (client modem), save row, copy links, delete links. */
 export function memorybookmarkscroll(
   player: string,
   urllist: ZssUrlBookmark[],
