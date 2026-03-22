@@ -1,4 +1,5 @@
 import {
+  apilog,
   registerbookmarkdelete,
   registerbookmarklist,
   registerscreenshot,
@@ -6,8 +7,10 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
+import { formatboardfortext } from 'zss/feature/heavy/formatstate'
 import { writeopenit, writetext } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
+import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
 import { isemail } from 'zss/firmware/cli/utils'
 import { doasync } from 'zss/mapping/func'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
@@ -18,6 +21,22 @@ let bbsemail = ''
 
 export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
+    .command(
+      'query',
+      ['show board snapshot (objects, terrain counts, exits, kinds)'],
+      () => {
+        const data = memoryreadboardstatequery(READ_CONTEXT.elementfocus)
+        const text = formatboardfortext(data)
+        const lines = text.split('\n')
+        for (let i = 0; i < lines.length; ++i) {
+          const line = lines[i]
+          if (line.trim() !== '') {
+            apilog(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          }
+        }
+        return 0
+      },
+    )
     .command('bookmarks', ['list bookmarks'], () => {
       registerbookmarklist(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0

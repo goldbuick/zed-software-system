@@ -303,7 +303,7 @@ const heavy = createdevice('heavy', [], (message) => {
       break
     case 'pilotnotify':
       break
-    case 'memoryresult':
+    case 'queryresult':
       memoryqueryresolvemessage(message)
       break
     case 'agentstart':

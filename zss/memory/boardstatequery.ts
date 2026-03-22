@@ -1,6 +1,4 @@
-import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import {
   memoryreadboardbyaddress,
@@ -10,10 +8,10 @@ import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryruncli } from 'zss/memory/runtime'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
-export type BOARDSTATE_RESULT = {
+/** Board snapshot for query / formatboardfortext (single source of truth). */
+export type BOARDSTATE_DATA = {
   board: {
     id: string
     name: string
@@ -39,10 +37,6 @@ export type BOARDSTATE_RESULT = {
   terrainkinds: string[]
 }
 
-export type PATHFIND_RESULT = { nextpoint: { x: number; y: number } } | null
-
-export type CODEPAGE_RESULT = { codepage: { id: string; code: string } } | null
-
 function elementlabel(element: {
   kind?: string
   [k: string]: unknown
@@ -52,9 +46,9 @@ function elementlabel(element: {
   return display.name || kind
 }
 
-function readboardstate(
+export function memoryreadboardstatequery(
   agentid: string,
-): BOARDSTATE_RESULT | { error: string } {
+): BOARDSTATE_DATA | { error: string } {
   const board = memoryreadplayerboard(agentid)
   if (!ispresent(board)) {
     return { error: 'no_board' }
@@ -65,7 +59,7 @@ function readboardstate(
       ? { x: self.x, y: self.y }
       : null
 
-  const objects: BOARDSTATE_RESULT['board']['objects'] = {}
+  const objects: BOARDSTATE_DATA['board']['objects'] = {}
   const ids = Object.keys(board.objects)
   for (let i = 0; i < ids.length; ++i) {
     const id = ids[i]
@@ -145,56 +139,5 @@ function readboardstate(
     terrainlabels,
     objectkinds,
     terrainkinds,
-  }
-}
-
-export function handlememoryquery(vm: DEVICE, message: MESSAGE): void {
-  const payload = message.data
-  if (!ispresent(payload) || !isstring(payload.id) || !isstring(payload.type)) {
-    return
-  }
-  const agentid = message.player
-  const { id, type } = payload as { id: string; type: string }
-  try {
-    let result: unknown
-    switch (type) {
-      case 'boardstate': {
-        const out = readboardstate(agentid)
-        if ('error' in out) {
-          vm.emit(agentid, 'heavy:memoryresult', {
-            id,
-            error: out.error,
-          })
-          return
-        }
-        result = out
-        break
-      }
-      case 'runcli': {
-        const command = payload.command
-        if (!isstring(command)) {
-          vm.emit(agentid, 'heavy:memoryresult', {
-            id,
-            error: 'missing_command',
-          })
-          return
-        }
-        memoryruncli(agentid, command, false)
-        result = { ok: true }
-        break
-      }
-      default:
-        vm.emit(agentid, 'heavy:memoryresult', {
-          id,
-          error: 'unknown_type',
-        })
-        return
-    }
-    vm.emit(agentid, 'heavy:memoryresult', { id, result })
-  } catch (err) {
-    vm.emit(agentid, 'heavy:memoryresult', {
-      id,
-      error: err instanceof Error ? err.message : 'unknown_error',
-    })
   }
 }

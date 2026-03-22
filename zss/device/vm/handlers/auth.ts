@@ -43,6 +43,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     permissionoverrideremovebyrole,
     config,
     token,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     zss_bookmarks: _zssbookmarks,
     ...flags
   } = message.data ?? {}

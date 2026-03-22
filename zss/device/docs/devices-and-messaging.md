@@ -247,7 +247,7 @@ flowchart TB
   end
   clock -->|second| agenth
   vm -->|heavy_colon| heavy
-  vm -->|heavy_memoryresult_etc| heavy
+  vm -->|heavy_queryresult_etc| heavy
   heavy -->|vm_pilotclear_vm_lastinputtouch| vm
 ```
 
@@ -282,7 +282,7 @@ Notes:
 | `register` | `register` | Main thread | `vm` (replies), `userinput`, `api` | Sim → main / main |
 | `gadgetserver` | `gadgetserver` | Sim worker | `gadgetclient`, `register`, `api` | Main → sim |
 | `gadgetclient` | `gadgetclient` | Main thread | `gadgetserver`, `api` | Sim → main / main |
-| `heavy` | `heavy` | Heavy worker | `vm`, `api`, [`memoryquery`](../vm/handlers/memoryquery.ts), [`pilot`](../vm/handlers/pilot.ts), **`heavy:modelclassify`** / **`heavy:modelprompt`** (queued), **`heavy:agent*`** / `heavy:restoreagents` | Sim / main → heavy |
+| `heavy` | `heavy` | Heavy worker | `vm`, `api`, [`query`](../vm/handlers/query.ts), [`pilot`](../vm/handlers/pilot.ts), **`heavy:modelclassify`** / **`heavy:modelprompt`** (queued), **`heavy:agent*`** / `heavy:restoreagents`, **`heavy:queryresult`** (sim → heavy, VM query replies) | Sim / main → heavy |
 | `synth` | `synth` | Main thread | `api` / firmware | Sim → main / main |
 | `bridge` | `bridge` | Main thread | `api` | Main |
 | `log` | `register` (topic) | Main thread | `api` `apilog`, firmware | any hub → often main |

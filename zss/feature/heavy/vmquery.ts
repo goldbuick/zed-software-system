@@ -1,6 +1,6 @@
 /**
  * Request memory data from simspace (vm) via message. Used by the heavy worker
- * only; simspace handles vm:memoryquery and replies with heavy:memoryresult.
+ * only; simspace handles vm:query and replies with heavy:queryresult.
  */
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -21,7 +21,7 @@ export function query(
   console.info('[vmquery]', agentid, payload)
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
-    device.emit(agentid, 'vm:memoryquery', { id, ...payload })
+    device.emit(agentid, 'vm:query', { id, ...payload })
   })
 }
 
@@ -29,7 +29,7 @@ export function resolvemessage(message: {
   target?: string
   data?: { id?: string; result?: unknown; error?: string }
 }): void {
-  if (message.target !== 'memoryresult' || !message.data) {
+  if (message.target !== 'queryresult' || !message.data) {
     return
   }
   const { id, result, error } = message.data

@@ -1,7 +1,7 @@
 /**
  * Serialize acklook data to plain text for LLM consumption.
  * Strips color codes and formats board, scroll, sidebar, and tickers.
- * Formatters accept data blobs from memory queries (no zss/memory imports).
+ * Formatters accept data blobs from boardstate query; `BOARDSTATE_DATA` is defined in `zss/memory/boardstatequery`.
  */
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import {
@@ -11,34 +11,10 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import type { BOARDSTATE_DATA } from 'zss/memory/boardstatequery'
 import { DIR } from 'zss/words/types'
 
-/** Data shape returned by boardstate memory query (heavy:memoryresult). */
-export type BOARDSTATE_DATA = {
-  board: {
-    id: string
-    name: string
-    objects: Record<
-      string,
-      {
-        x?: number
-        y?: number
-        label: string
-        player?: string
-        removed?: boolean
-      }
-    >
-    exitnorth?: string
-    exitsouth?: string
-    exitwest?: string
-    exiteast?: string
-  }
-  self: { x: number; y: number } | null
-  exits: { dir: string; label: string }[]
-  terrainlabels: Record<string, number>
-  objectkinds: string[]
-  terrainkinds: string[]
-}
+export type { BOARDSTATE_DATA }
 
 /** Data shape returned by codepage memory query. */
 export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
@@ -59,6 +35,7 @@ export const AGENT_ZSS_COMMANDS = `
 - \`#change <color?> <from> <color?> <to>\`: change elements, e.g. \`#change gem red gem\`
 - \`#set user <name>\`: change your display name
 - \`#continue\`: request another turn to observe results before acting again
+- \`#query\`: print a text snapshot of the current board (objects, terrain counts, exits, kinds)
 `.trim()
 
 export type LOOK_STATE = {
