@@ -1,8 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
-import { romparse, romread, romscroll } from 'zss/feature/rom'
-import { gadgetcheckqueue, gadgetstate } from 'zss/gadget/data/api'
+import { romread } from 'zss/feature/rom'
 import { gadgetapplyscrolllines } from 'zss/gadget/data/applyscrolllines'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
@@ -25,11 +24,15 @@ export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handlerefscroll(_vm: DEVICE, message: MESSAGE): void {
-  romparse(romread('refscroll:menu'), (line) => romscroll(message.player, line))
-  const shared = gadgetstate(message.player)
-  shared.scrollname = '#help or $meta+h'
-  shared.scroll = gadgetcheckqueue(message.player)
+export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
+  handlegadgetscroll(vm, {
+    ...message,
+    data: {
+      scrollname: '#help or $meta+h',
+      content: romread('refscroll:menu') ?? '',
+      chip: 'refscroll',
+    },
+  })
 }
 
 export function handlegadgetscroll(vm: DEVICE, message: MESSAGE): void {
