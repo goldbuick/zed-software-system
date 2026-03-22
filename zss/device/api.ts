@@ -750,10 +750,6 @@ export function vminput(
   device.emit(player, 'vm:input', [input, mods])
 }
 
-export function vmlook(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:look')
-}
-
 export function vmpilotstart(
   device: DEVICELIKE,
   player: string,

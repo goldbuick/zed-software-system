@@ -23,7 +23,6 @@ import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
-import { handlelook } from './look'
 import { handlequery } from './query'
 import { handleoperator } from './operator'
 import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
@@ -57,7 +56,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   doot: handledoot,
   input: handleinput,
   lastinputtouch: handlelastinputtouch,
-  look: handlelook,
   query: handlequery,
   pilotclear: handlepilotclear,
   pilotstart: handlepilotstart,
