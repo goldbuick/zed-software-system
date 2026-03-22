@@ -3,7 +3,6 @@ import type { MESSAGE } from 'zss/device/api'
 import {
   apierror,
   apitoast,
-  heavymodelprompt,
   heavymodelstop,
   registerstore,
   vmpilotclear,
@@ -97,32 +96,6 @@ function stopagentbyid(
 
 export function heavyrunagentlist(heavydev: DEVICE, message: MESSAGE): void {
   writeagentlistto(heavydev, message.player)
-}
-
-export function heavyrunagentprompt(heavydev: DEVICE, message: MESSAGE): void {
-  if (!isarray(message.data)) {
-    return
-  }
-  const data = message.data as [string, string, string?]
-  const [agentid, prompt, promptlogging] = data
-  if (!isstring(agentid) || !isstring(prompt)) {
-    return
-  }
-  const pl = isstring(promptlogging) ? promptlogging : 'off'
-  if (ispresent(agents[agentid])) {
-    const defaulttime = new Date('2000-01-01').getTime()
-    heavymodelprompt(heavydev, message.player, {
-      prompt,
-      agentid,
-      agentname: readagentdisplayname(agentid),
-      lastinputtime: defaulttime,
-      nearestrefid: '',
-      nearestrefname: '',
-      promptlogging: pl,
-    })
-  } else {
-    apierror(heavydev, message.player, 'heavy', `agent ${agentid} not found`)
-  }
 }
 
 export function heavyrunagentname(heavydev: DEVICE, message: MESSAGE): void {

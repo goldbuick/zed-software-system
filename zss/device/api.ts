@@ -276,22 +276,6 @@ export function heavyagentlist(device: DEVICELIKE, player: string) {
   device.emit(player, 'heavy:agentlist')
 }
 
-export function heavyagentprompt(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  prompt: string,
-  promptlogging?: string,
-) {
-  device.emit(
-    player,
-    'heavy:agentprompt',
-    promptlogging !== undefined
-      ? [agentid, prompt, promptlogging]
-      : [agentid, prompt],
-  )
-}
-
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,

@@ -3,7 +3,6 @@ import { createdevice } from 'zss/device'
 import {
   heavyrunagentlist,
   heavyrunagentname,
-  heavyrunagentprompt,
   heavyrunagentstart,
   heavyrunagentstop,
   heavyrunrestoreagents,
@@ -19,10 +18,7 @@ import {
   modelclassify,
   modelgenerate,
 } from 'zss/feature/heavy/model'
-import {
-  enqueueheavymodelclassifyjob,
-  enqueueheavymodelpromptjob,
-} from 'zss/feature/heavy/modeljobqueue'
+import { enqueueheavymodeljob } from 'zss/feature/heavy/modeljobqueue'
 import { buildsystemprompt } from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
@@ -82,6 +78,48 @@ function splitresponse(text: string): string[] {
 function createonworking(player: string) {
   return (msg: string) => {
     apitoast(heavy, player, msg)
+  }
+}
+
+async function classifythenmaybeagentprompt(
+  player: string,
+  messagetext: string,
+  agentid: string,
+  agentname: string,
+  nearestrefid: string,
+  nearestrefname: string,
+  promptlogging: string,
+) {
+  const onworking = createonworking(player)
+  const nearestcontext = nearestrefid
+    ? `Proximity reference: the agent closest to the message sender on this board is "${nearestrefname}" (id: ${nearestrefid}). Use this when the message is vague (e.g. addressing "agent" or "you") to infer who is likely meant, but still answer "none" if the message clearly targets a different agent.\n\n`
+    : 'No nearest-agent proximity reference is available.\n\n'
+
+  const classifymessages: Message[] = [
+    {
+      role: 'system',
+      content:
+        'You are a message classifier. Answer with exactly one word: movement, action, question, chat, or none.',
+    },
+    {
+      role: 'user',
+      content: `${nearestcontext}Is the following message directed at or relevant to the ai agent named "${agentname}" (id: ${agentid})? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).\nMessage: "${messagetext}"\nAnswer:`,
+    },
+  ]
+
+  const answer = await modelclassify(classifymessages, onworking)
+  const intent = answer.split(/\s+/)[0] ?? ''
+
+  if (intent !== 'none') {
+    await runagentprompt(
+      player,
+      agentid,
+      agentname,
+      messagetext,
+      onworking,
+      promptlogging,
+      intent,
+    )
   }
 }
 
@@ -223,74 +261,30 @@ const heavy = createdevice('heavy', [], (message) => {
       })
       break
     case 'modelprompt':
-      enqueueheavymodelpromptjob(heavy, message.player, async () => {
-        if (!isarray(message.data) || message.data.length < 3) {
+      enqueueheavymodeljob(heavy, message.player, async () => {
+        if (!isarray(message.data) || message.data.length < 7) {
           return
         }
-        const data = message.data as [string, string, string, string?]
-        const [agentid, agentname, prompt] = data
-        const promptlogging = data.length >= 4 ? (data[3] ?? '') : ''
+        const d = message.data
+        const prompt = d[0]
+        const agentid = d[1]
+        const agentname = d[2]
+        const nearestrefid = isstring(d[4]) ? d[4] : ''
+        const nearestrefname = isstring(d[5]) ? d[5] : ''
+        const promptlogging = isstring(d[6]) ? d[6] : ''
+        if (!isstring(prompt) || !isstring(agentid) || !isstring(agentname)) {
+          return
+        }
         apitoast(heavy, message.player, `${agentname} is thinking...`)
-        const onworking = createonworking(message.player)
-        await runagentprompt(
+        await classifythenmaybeagentprompt(
           message.player,
+          prompt,
           agentid,
           agentname,
-          prompt,
-          onworking,
+          nearestrefid,
+          nearestrefname,
           promptlogging,
         )
-      })
-      break
-    case 'modelclassify':
-      enqueueheavymodelclassifyjob(heavy, message.player, async () => {
-        if (!isarray(message.data) || message.data.length < 3) {
-          return
-        }
-        const data = message.data as [
-          string,
-          string,
-          string,
-          string?,
-          string?,
-          string?,
-        ]
-        const [agentid, agentname, messagetext] = data
-        const promptlogging = isstring(data[3]) ? data[3] : ''
-        const nearestrefid = isstring(data[4]) ? data[4] : ''
-        const nearestrefname = isstring(data[5]) ? data[5] : ''
-        const onworking = createonworking(message.player)
-
-        const nearestcontext = nearestrefid
-          ? `Proximity reference: the agent closest to the message sender on this board is "${nearestrefname}" (id: ${nearestrefid}). Use this when the message is vague (e.g. addressing "agent" or "you") to infer who is likely meant, but still answer "none" if the message clearly targets a different agent.\n\n`
-          : 'No nearest-agent proximity reference is available.\n\n'
-
-        const classifymessages: Message[] = [
-          {
-            role: 'system',
-            content:
-              'You are a message classifier. Answer with exactly one word: movement, action, question, chat, or none.',
-          },
-          {
-            role: 'user',
-            content: `${nearestcontext}Is the following message directed at or relevant to the ai agent named "${agentname}" (id: ${agentid})? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).\nMessage: "${messagetext}"\nAnswer:`,
-          },
-        ]
-
-        const answer = await modelclassify(classifymessages, onworking)
-        const intent = answer.split(/\s+/)[0] ?? ''
-
-        if (intent !== 'none') {
-          await runagentprompt(
-            message.player,
-            agentid,
-            agentname,
-            messagetext,
-            onworking,
-            promptlogging,
-            intent,
-          )
-        }
       })
       break
     case 'modelstop':
@@ -314,9 +308,6 @@ const heavy = createdevice('heavy', [], (message) => {
       break
     case 'agentlist':
       heavyrunagentlist(heavy, message)
-      break
-    case 'agentprompt':
-      heavyrunagentprompt(heavy, message)
       break
     case 'agentname':
       heavyrunagentname(heavy, message)

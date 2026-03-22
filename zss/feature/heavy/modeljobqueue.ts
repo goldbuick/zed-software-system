@@ -1,36 +1,17 @@
 /**
- * Serial FIFOs for heavy model handlers. Classifier path (SmolLM) vs direct prompt path (Llama)
- * are queued separately; merge to one chain here if WebGPU contention requires single-flight.
+ * Single serial FIFO for heavy model work: each job may run classification
+ * and then await the full agent prompt; the next job starts only after both finish.
  */
 import { type DEVICELIKE, apierror } from 'zss/device/api'
 
-let classifyhandlerchain: Promise<unknown> = Promise.resolve()
-let promprthandlerchain: Promise<unknown> = Promise.resolve()
+let modelhandlerchain: Promise<unknown> = Promise.resolve()
 
-export function enqueueheavymodelclassifyjob(
+export function enqueueheavymodeljob(
   device: DEVICELIKE,
   player: string,
   job: () => Promise<void>,
 ) {
-  classifyhandlerchain = classifyhandlerchain
-    .then(() => job())
-    .catch((error: unknown) => {
-      console.error(error)
-      apierror(
-        device,
-        player,
-        'crash',
-        error instanceof Error ? error.message : String(error),
-      )
-    })
-}
-
-export function enqueueheavymodelpromptjob(
-  device: DEVICELIKE,
-  player: string,
-  job: () => Promise<void>,
-) {
-  promprthandlerchain = promprthandlerchain
+  modelhandlerchain = modelhandlerchain
     .then(() => job())
     .catch((error: unknown) => {
       console.error(error)
