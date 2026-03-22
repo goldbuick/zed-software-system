@@ -31,6 +31,7 @@ import { handlepublish } from './publish'
 import { handlerestart } from './restart'
 import {
   handleclearscroll,
+  handlegadgetscroll,
   handlemakeitscroll,
   handlerefscroll,
 } from './scroll'
@@ -69,6 +70,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,
+  gadgetscroll: handlegadgetscroll,
   readzipfilelist: handlereadzipfilelist,
   fork: handlefork,
   zztsearch: handlezztsearch,

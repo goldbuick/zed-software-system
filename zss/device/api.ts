@@ -575,6 +575,12 @@ export function registerappendterminalbookmark(
   device.emit(player, 'register:bookmark:appendterminal', line)
 }
 
+export type GADGET_SCROLL_LINES = {
+  scrollname: string
+  content: string
+  chip?: string
+}
+
 export function vmbookmarkscroll(
   device: DEVICELIKE,
   player: string,
@@ -788,6 +794,14 @@ export function vmmakeitscroll(
 
 export function vmrefscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
+}
+
+export function vmgadgetscroll(
+  device: DEVICELIKE,
+  player: string,
+  payload: GADGET_SCROLL_LINES,
+) {
+  device.emit(player, 'vm:gadgetscroll', payload)
 }
 
 export function vmreadzipfilelist(device: DEVICELIKE, player: string) {
