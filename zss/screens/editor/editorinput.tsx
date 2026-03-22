@@ -2,11 +2,11 @@ import { useRef } from 'react'
 import {
   apierror,
   apilog,
+  registereditorbookmarkscroll,
   registereditorclose,
   registerterminalclose,
   registerterminalinclayout,
   vmcli,
-  vmcodepagesnapshot,
 } from 'zss/device/api'
 import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
@@ -421,15 +421,8 @@ export function EditorInput({
                     break
                   case 'b': {
                     const ed = useTape.getState().editor
-                    if (ed.open && ed.book && ed.path.length) {
-                      vmcodepagesnapshot(
-                        SOFTWARE,
-                        player,
-                        ed.book,
-                        ed.path as string[],
-                        ed.type,
-                        ed.title,
-                      )
+                    if (ed.open) {
+                      registereditorbookmarkscroll(SOFTWARE, player)
                     }
                     break
                   }

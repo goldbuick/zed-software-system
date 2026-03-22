@@ -73,6 +73,7 @@ import {
   registerterminalclose,
   registerterminalfull,
   vmbookmarkscroll,
+  vmeditorbookmarkscroll,
   vmbooks,
   vmclearscroll,
   vmcli,
@@ -420,6 +421,12 @@ export const register = createdevice(
         doasync(register, message.player, async () => {
           const blob = await readbookmarksfromstorage()
           vmbookmarkscroll(register, myplayerid, blob.url)
+        })
+        break
+      case 'editorbookmarkscroll':
+        doasync(register, message.player, async () => {
+          const blob = await readbookmarksfromstorage()
+          vmeditorbookmarkscroll(register, myplayerid, blob.editor)
         })
         break
       case 'bookmark:urlsave':

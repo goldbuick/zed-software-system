@@ -38,6 +38,7 @@ import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { NAME } from 'zss/words/types'
 
+import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handlezztbridge } from './zzt'
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
@@ -207,6 +208,9 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       doasync(vm, message.player, async () => {
         await parsezipfilelist(message.player)
       })
+      break
+    case 'editorbookmarkscroll':
+      handleeditorbookmarkscrollpanel(vm, message, path)
       break
     default: {
       const invoke = parsetarget(path)

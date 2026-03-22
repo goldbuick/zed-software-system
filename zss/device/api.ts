@@ -583,6 +583,21 @@ export function vmbookmarkscroll(
   device.emit(player, 'vm:bookmarkscroll', urllist)
 }
 
+export function registereditorbookmarkscroll(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'register:editorbookmarkscroll', true)
+}
+
+export function vmeditorbookmarkscroll(
+  device: DEVICELIKE,
+  player: string,
+  editorlist: unknown[],
+) {
+  device.emit(player, 'vm:editorbookmarkscroll', editorlist)
+}
+
 export function vmcodepagesnapshot(
   device: DEVICELIKE,
   player: string,

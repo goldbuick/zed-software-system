@@ -15,6 +15,14 @@ export const BOOKMARK_SCROLL_CHIP = 'bookmarkscroll'
 
 export const BOOKMARK_NAME_TARGET = 'name'
 
+/** Panel chip for editor bookmark scroll (list + snapshot + copy to game). */
+export const EDITOR_BOOKMARK_SCROLL_CHIP = 'editorbookmarkscroll'
+
+export const EDITOR_BOOKMARK_SCROLL_SCROLLNAME = 'editorbookmarks'
+
+/** Destination book name for “copy bookmarked codepage to game” action. */
+export const GAME_BOOKMARK_TARGET_BOOK = 'game'
+
 export const BOOKMARKS_VERSION = 1
 
 /** Max terminal pins stored and shown (newest kept when over cap). */

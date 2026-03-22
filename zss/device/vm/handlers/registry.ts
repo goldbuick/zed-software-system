@@ -10,6 +10,7 @@ import {
   handlesearch,
 } from './auth'
 import { handlebookmarkscroll } from './bookmarkscroll'
+import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
 import { handlecodepagesnapshot } from './codepagesnapshot'
@@ -75,6 +76,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   publish: handlepublish,
   flush: handleflush,
   bookmarkscroll: handlebookmarkscroll,
+  editorbookmarkscroll: handleeditorbookmarkscroll,
   codepagesnapshot: handlecodepagesnapshot,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,

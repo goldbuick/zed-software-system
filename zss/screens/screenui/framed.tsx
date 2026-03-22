@@ -4,7 +4,6 @@ import {
   registerterminalopen,
   registerterminalquickopen,
   synthupdate,
-  vmbookmarkscroll,
   vmclirepeatlast,
   vmfindany,
   vminput,
