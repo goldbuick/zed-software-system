@@ -34,7 +34,7 @@ export const AGENT_ZSS_COMMANDS = `
 - \`#put <dir> <color?> <kind>\`: place element in direction, e.g. \`#put n purple solid\`
 - \`#change <color?> <from> <color?> <to>\`: change elements, e.g. \`#change gem red gem\`
 - \`#set user <name>\`: change your display name
-- \`#agent model\`: show active heavy LLM preset; \`#agent model list\`: list presets; \`#agent model llama|phi|qwen\`: switch ONNX preset (persisted in register storage)
+- \`#agent model\`: menu of \`!runit\` rows to switch preset (current row highlighted); \`#agent model llama|phi|tiny\`: switch ONNX preset (persisted in register storage)
 - \`#continue\`: request another turn to observe results before acting again
 - \`#query\`: print a text snapshot of the current board (objects, terrain counts, exits, kinds)
 - \`#look\`: print scroll, sidebar, and board tickers (player UI text snapshot)

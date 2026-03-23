@@ -9,9 +9,8 @@ Shared types and **output cleanup** for heavy ONNX instruct models. The active g
 
 ## Configuration
 
-- **Presets**: `llama` \| `phi` \| `qwen` → Hugging Face ONNX repos and `q4f16` in [`heavyllmpreset.ts`](../heavyllmpreset.ts).
-- **Env**: optional `ZSS_HEAVY_LLM` in `cafe/.env` (Vite `envPrefix: ZSS_`).
-- **Persistence**: register storage key `heavy_llm_preset`; `#agent model <preset>` updates storage and the worker.
+- **Presets**: `llama` \| `phi` \| `tiny` → Hugging Face ONNX repos in [`heavyllmpreset.ts`](../heavyllmpreset.ts) (all use `q4f16` here). Legacy id **`qwen`** normalizes to **`tiny`**.
+- **Persistence**: register storage key `heavy_llm_preset`; `#agent model <preset>` updates storage and the worker. Default when unset: `HEAVY_LLM_DEFAULT_PRESET` in `heavyllmpreset.ts`.
 
 ## Adapters folder
 

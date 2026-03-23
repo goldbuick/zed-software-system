@@ -4,11 +4,11 @@
 
 ## Heavy LLM presets
 
-Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`llama`** (Llama 3.2 3B, default), **`phi`** (Phi-3.5-mini), **`qwen`** (Qwen2.5-1.5B Instruct; smallest preset, ~1B-class—there is no official 1.0B Qwen2.5 instruct).
+Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`llama`** (Llama 3.2 3B, default), **`phi`** (Phi-3.5-mini), **`tiny`** (Llama 3.2 1B Instruct ONNX, `q4f16`). Stored or typed **`qwen`** is treated as **`tiny`** (legacy alias).
 
-**Effective preset** (worker): value restored from register IndexedDB key **`heavy_llm_preset`** (if valid), else optional build env **`ZSS_HEAVY_LLM`** (`llama` \| `phi` \| `qwen`), else **`llama`**.
+**Effective preset** (worker): value restored from register IndexedDB key **`heavy_llm_preset`** (if valid), else built-in default **`llama`** (`HEAVY_LLM_DEFAULT_PRESET` in code).
 
-**CLI**: `#agent model` shows the effective preset; `#agent model list` (or `presets`) lists ids and Hugging Face repo ids; `#agent model <preset>` writes storage and notifies the worker (serialized on the heavy model job queue).
+**CLI**: `#agent model` prints the effective preset plus a `!runit` hyperlink per preset (highlighted current row); `#agent model <preset>` writes storage and notifies the worker (serialized on the heavy model job queue).
 
 ## Modules
 
@@ -21,7 +21,7 @@ Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`lla
 | `model.ts` | `AutoModelForCausalLM` main generator + SmolLM2 classifier; `modelgenerate`, `modelclassify`, `applyheavylmpreset` |
 | `llm/` | Output cleanup (`parseresult`); adapter notes in `llm/README.md` |
 | `agent.ts` | Agent device; `createagent`, `AGENT` |
-| `modelcache.ts` | ModelCache — fetch/cache for model files |
+| `modelcache.ts` | Piper fetch helper — Cache Storage API (`zss-heavy-models`) + per-URL singleflight |
 | `utils.ts` | `RawAudio`, `TextSplitterStream`, `normalizePeak`, `trimSilence`, `detectWebGPU` |
 | `textcleaner.ts` | `cleanTextForTTS`, `chunkText` |
 | `formatstate.ts` | Board text for agents; `AGENT_ZSS_COMMANDS` |

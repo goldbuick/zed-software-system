@@ -9,6 +9,13 @@ function tosafeint(x: unknown): number {
   return Number.isFinite(n) ? n | 0 : 0
 }
 
+/** Standalone ArrayBuffer for ORT WASM (avoids detached / non-transferable views from cached Response bodies). */
+function copytoarraybuffer(data: Uint8Array): ArrayBuffer {
+  const out = new Uint8Array(data.byteLength)
+  out.set(data)
+  return out.buffer
+}
+
 // Piper TTS class for local model
 export class PiperTTS {
   voiceConfig: any
@@ -35,7 +42,8 @@ export class PiperTTS {
       // Load model and config
       const modelResponse = await cachedfetch(modelPath)
       const configResponse = await cachedfetch(configPath)
-      const modelBuffer = await modelResponse.bytes()
+      const modelbytes = await modelResponse.bytes()
+      const modelBuffer = copytoarraybuffer(modelbytes)
       const voiceConfig = await configResponse.json()
 
       // Create ONNX session with WASM execution provider

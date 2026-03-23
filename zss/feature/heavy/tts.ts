@@ -6,9 +6,72 @@ import { PiperTTS } from './pipertts'
 import { SupertonicTTS } from './supertonictts'
 import { RawAudio, TextSplitterStream } from './utils'
 
-// yap instances
 let pipertts: MAYBE<PiperTTS>
+let loadedpiperkey: string | undefined
+const piperinflight = new Map<string, Promise<PiperTTS>>()
+
 let supertonictts: MAYBE<SupertonicTTS>
+let supertonicloadpromise: Promise<SupertonicTTS> | undefined
+
+function piperkey(baseurl: string, jsonurl: string) {
+  return `${baseurl}\0${jsonurl}`
+}
+
+async function ensurepiper(
+  device: DEVICELIKE,
+  player: string,
+  baseurl: string,
+  jsonurl: string,
+): Promise<PiperTTS> {
+  const key = piperkey(baseurl, jsonurl)
+  if (ispresent(pipertts) && loadedpiperkey === key) {
+    return pipertts
+  }
+  if (ispresent(pipertts) && loadedpiperkey !== key) {
+    await pipertts.close()
+    pipertts = undefined
+    loadedpiperkey = undefined
+  }
+  if (!piperinflight.has(key)) {
+    piperinflight.set(
+      key,
+      (async () => {
+        try {
+          apitoast(device, player, 'piper loading...')
+          const p = await PiperTTS.from_pretrained(baseurl, jsonurl)
+          pipertts = p
+          loadedpiperkey = key
+          return p
+        } finally {
+          piperinflight.delete(key)
+        }
+      })(),
+    )
+  }
+  return piperinflight.get(key) as Promise<PiperTTS>
+}
+
+async function ensuresupertonic(
+  device: DEVICELIKE,
+  player: string,
+): Promise<SupertonicTTS> {
+  if (ispresent(supertonictts)) {
+    return supertonictts
+  }
+  if (!supertonicloadpromise) {
+    supertonicloadpromise = (async () => {
+      try {
+        apitoast(device, player, 'supertonic loading...')
+        const t = await SupertonicTTS.from_pretrained()
+        supertonictts = t
+        return t
+      } finally {
+        supertonicloadpromise = undefined
+      }
+    })()
+  }
+  return supertonicloadpromise
+}
 
 function convertarraybytes(rawaudio: RawAudio) {
   return rawaudio.encodeWAV(rawaudio.audio, rawaudio.sampling_rate)
@@ -27,15 +90,10 @@ export async function requestinfo(
           return SupertonicTTS.voices.map((v) => v.id)
         }
         return []
-      case 'piper':
-        if (!ispresent(pipertts)) {
-          apitoast(device, player, `${engine} loading...`)
-          const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
-          pipertts = await PiperTTS.from_pretrained(
-            baseurl,
-            `${baseurl}.json`,
-          )
-        }
+      case 'piper': {
+        const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
+        const jsonurl = `${baseurl}.json`
+        await ensurepiper(device, player, baseurl, jsonurl)
         if (ispresent(pipertts)) {
           switch (info) {
             case 'voices':
@@ -43,6 +101,7 @@ export async function requestinfo(
           }
         }
         return []
+      }
       default:
         return []
     }
@@ -65,10 +124,7 @@ export async function requestaudiobytes(
   try {
     switch (engine) {
       case 'supertonic': {
-        if (!ispresent(supertonictts)) {
-          apitoast(device, player, 'supertonic loading...')
-          supertonictts = await SupertonicTTS.from_pretrained()
-        }
+        await ensuresupertonic(device, player)
         if (!ispresent(supertonictts) || !supertonictts.pipeline) {
           return undefined
         }
@@ -116,22 +172,14 @@ export async function requestaudiobytes(
         return await Promise.race([synth(), timeoutp])
       }
       case 'piper': {
-        if (!ispresent(pipertts)) {
-          apitoast(device, player, `${engine} loading...`)
-          if (config) {
-            const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${config}`
-            pipertts = await PiperTTS.from_pretrained(
-              baseurl,
-              `${baseurl}.json`,
-            )
-          } else {
-            const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
-            pipertts = await PiperTTS.from_pretrained(
-              baseurl,
-              `${baseurl}.json`,
-            )
-          }
+        let baseurl: string
+        if (config) {
+          baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${config}`
+        } else {
+          baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
         }
+        const jsonurl = `${baseurl}.json`
+        await ensurepiper(device, player, baseurl, jsonurl)
         if (!ispresent(pipertts)) {
           return undefined
         }

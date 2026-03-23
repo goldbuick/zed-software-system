@@ -15,7 +15,7 @@ import {
   resolveheavylmpresetfromsources,
 } from 'zss/feature/heavy/heavyllmpreset'
 import { pullstoragevarfrommain } from 'zss/feature/storagepull'
-import { write, writeheader } from 'zss/feature/writeui'
+import { write, writeheader, writerunit } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -27,7 +27,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
     'agent',
     [
       ARG_TYPE.MAYBE_NAME,
-      'start/stop/list/model AI agents (#agent model list = presets)',
+      'start/stop/list/model AI agents (#agent model = !runit menu)',
     ],
     (_, words) => {
       const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
@@ -36,24 +36,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           const [maybepreset] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
           const raw = NAME(maybepreset)
           const player = READ_CONTEXT.elementfocus
-          if (raw === 'list' || raw === 'presets') {
-            writeheader(SOFTWARE, player, 'heavy llm presets')
-            const ids = heavylmpresetids()
-            for (let i = 0; i < ids.length; ++i) {
-              const id = ids[i]
-              const row = HEAVY_LLM_PRESETS[id]
-              write(
-                SOFTWARE,
-                player,
-                `  $cyan${id}$white — ${row.modelid} (${row.dtype}, ctx ${row.contexttokens})`,
-              )
-            }
-            write(
-              SOFTWARE,
-              player,
-              `$gray#agent model$white shows active preset; $gray#agent model <id>$white switches`,
-            )
-          } else if (raw === '') {
+          if (raw === '') {
             doasync(SOFTWARE, player, async () => {
               const stored = await pullstoragevarfrommain(
                 SOFTWARE,
@@ -62,7 +45,23 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
                 'vm',
               )
               const effective = resolveheavylmpresetfromsources(stored)
-              write(SOFTWARE, player, `heavy llm preset: ${effective}`)
+              writeheader(SOFTWARE, player, 'heavy llm preset')
+              write(
+                SOFTWARE,
+                player,
+                `$grayCurrent$white $cyan${effective}$white · $grayEnter on a row to switch$white`,
+              )
+              const ids = heavylmpresetids()
+              for (let i = 0; i < ids.length; ++i) {
+                const id = ids[i]
+                const row = HEAVY_LLM_PRESETS[id]
+                const cmd = `#agent model ${id}`
+                const iscurrent = id === effective
+                const label = iscurrent
+                  ? `$green ${id}$white ${row.modelid} $gray(active)`
+                  : `$white ${id} ${row.modelid}`
+                writerunit(SOFTWARE, player, cmd, label)
+              }
             })
           } else {
             const p = normalizeheavylmpreset(raw)
@@ -71,13 +70,11 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
                 SOFTWARE,
                 player,
                 'agent',
-                '#agent model list | llama | phi | qwen',
+                '#agent model | llama | phi | tiny',
               )
             } else {
-              doasync(SOFTWARE, player, async () => {
-                registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
-                heavyllmpreset(SOFTWARE, player, p)
-              })
+              registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
+              heavyllmpreset(SOFTWARE, player, p)
             }
           }
           break
@@ -105,8 +102,6 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           }
           break
         }
-        case '':
-        case 'list':
         default:
           heavyagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
           break

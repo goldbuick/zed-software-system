@@ -10,7 +10,6 @@ import {
   type HEAVY_LLM_PRESET,
   HEAVY_LLM_PRESETS,
   type HEAVY_LLM_ROW,
-  parseenvheavylmpreset,
 } from 'zss/feature/heavy/heavyllmpreset'
 import { parseresult as llmparseresult } from 'zss/feature/heavy/llm/parse'
 import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm/types'
@@ -18,7 +17,7 @@ import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm/types'
 const MAX_NEW_TOKENS = 768
 const MODEL_DEVICE = 'webgpu'
 
-/** Set from register restore / `#agent model` (worker); when unset, env then default apply. */
+/** Set from register restore / `#agent model` (worker); when unset, `HEAVY_LLM_DEFAULT_PRESET`. */
 let heavylmregisterpreset: HEAVY_LLM_PRESET | undefined
 
 let loadedmaintag: string | undefined
@@ -30,7 +29,7 @@ function resolveheavyllmpresetkey(): HEAVY_LLM_PRESET {
   if (heavylmregisterpreset !== undefined) {
     return heavylmregisterpreset
   }
-  return parseenvheavylmpreset() ?? HEAVY_LLM_DEFAULT_PRESET
+  return HEAVY_LLM_DEFAULT_PRESET
 }
 
 function heavyllmresolvedrow(): HEAVY_LLM_ROW {
