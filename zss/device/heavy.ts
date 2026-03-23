@@ -23,14 +23,13 @@ import {
   modelclassify,
   modelgenerate,
 } from 'zss/feature/heavy/model'
-import { enqueueheavymodeljob } from 'zss/feature/heavy/modeljobqueue'
+import { enqueueheavyjob } from 'zss/feature/heavy/heavyjobqueue'
 import { buildsystemprompt } from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/vmquery'
-import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { apierror, apilog, apitoast, vmlastinputtouch } from './api'
@@ -229,7 +228,7 @@ const heavy = createdevice('heavy', [], (message) => {
   }
   switch (message.target) {
     case 'ttsinfo':
-      doasync(heavy, message.player, async () => {
+      enqueueheavyjob(heavy, message.player, async () => {
         if (isarray(message.data)) {
           const [engine, info] = message.data as [
             engine: 'piper' | 'supertonic',
@@ -241,7 +240,7 @@ const heavy = createdevice('heavy', [], (message) => {
       })
       break
     case 'ttsrequest':
-      doasync(heavy, message.player, async () => {
+      enqueueheavyjob(heavy, message.player, async () => {
         if (isarray(message.data)) {
           const [engine, config, voice, phrase] = message.data as [
             engine: 'piper' | 'supertonic',
@@ -266,7 +265,7 @@ const heavy = createdevice('heavy', [], (message) => {
       })
       break
     case 'modelprompt':
-      enqueueheavymodeljob(heavy, message.player, async () => {
+      enqueueheavyjob(heavy, message.player, async () => {
         if (!isarray(message.data) || message.data.length < 7) {
           return
         }
@@ -319,12 +318,11 @@ const heavy = createdevice('heavy', [], (message) => {
       }
       const applied = preset
       const toast = showtoast
-      enqueueheavymodeljob(heavy, message.player, () => {
+      enqueueheavyjob(heavy, message.player, async () => {
         applyheavylmpreset(applied)
         if (toast) {
           apitoast(heavy, message.player, `heavy llm: ${applied}`)
         }
-        return Promise.resolve()
       })
       break
     }

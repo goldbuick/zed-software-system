@@ -1,17 +1,17 @@
 /**
- * Single serial FIFO for heavy model work: each job may run classification
- * and then await the full agent prompt; the next job starts only after both finish.
+ * Single serial FIFO for all heavy worker jobs (LLM, TTS, preset apply, etc.):
+ * the next job starts only after the previous job's promise settles.
  */
 import { type DEVICELIKE, apierror } from 'zss/device/api'
 
-let modelhandlerchain: Promise<unknown> = Promise.resolve()
+let heavyjobchain: Promise<unknown> = Promise.resolve()
 
-export function enqueueheavymodeljob(
+export function enqueueheavyjob(
   device: DEVICELIKE,
   player: string,
   job: () => Promise<void>,
 ) {
-  modelhandlerchain = modelhandlerchain
+  heavyjobchain = heavyjobchain
     .then(() => job())
     .catch((error: unknown) => {
       console.error(error)

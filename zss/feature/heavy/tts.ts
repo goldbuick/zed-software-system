@@ -1,6 +1,5 @@
 import { apitoast } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/api'
-import { doasync } from 'zss/mapping/func'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { PiperTTS } from './pipertts'
@@ -15,56 +14,47 @@ function convertarraybytes(rawaudio: RawAudio) {
   return rawaudio.encodeWAV(rawaudio.audio, rawaudio.sampling_rate)
 }
 
-export function requestinfo(
+export async function requestinfo(
   device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
   info: string,
 ): Promise<any> {
-  return new Promise((resolve) => {
-    doasync(device, player, async () => {
-      try {
-        switch (engine) {
-          case 'supertonic':
-            if (info === 'voices') {
-              resolve(SupertonicTTS.voices.map((v) => v.id))
-            } else {
-              resolve([])
-            }
-            return
-          case 'piper':
-            if (!ispresent(pipertts)) {
-              apitoast(device, player, `${engine} loading...`)
-              const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
-              pipertts = await PiperTTS.from_pretrained(
-                baseurl,
-                `${baseurl}.json`,
-              )
-            }
-            if (ispresent(pipertts)) {
-              switch (info) {
-                case 'voices':
-                  resolve([
-                    `numbers 0-${pipertts.voiceConfig.num_speakers - 1}`,
-                  ])
-                  return
-              }
-            }
-            resolve([])
-            return
-          default:
-            resolve([])
-            return
+  try {
+    switch (engine) {
+      case 'supertonic':
+        if (info === 'voices') {
+          return SupertonicTTS.voices.map((v) => v.id)
         }
-      } catch (err) {
-        console.error('TTS requestinfo error:', err)
-        resolve([])
-      }
-    })
-  })
+        return []
+      case 'piper':
+        if (!ispresent(pipertts)) {
+          apitoast(device, player, `${engine} loading...`)
+          const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
+          pipertts = await PiperTTS.from_pretrained(
+            baseurl,
+            `${baseurl}.json`,
+          )
+        }
+        if (ispresent(pipertts)) {
+          switch (info) {
+            case 'voices':
+              return [`numbers 0-${pipertts.voiceConfig.num_speakers - 1}`]
+          }
+        }
+        return []
+      default:
+        return []
+    }
+  } catch (err) {
+    console.error('TTS requestinfo error:', err)
+    return []
+  }
 }
 
-export function requestaudiobytes(
+const TTS_TIMEOUT_MS = 10000
+
+export async function requestaudiobytes(
   device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
@@ -72,39 +62,32 @@ export function requestaudiobytes(
   voice: string,
   input: string,
 ): Promise<MAYBE<ArrayBuffer>> {
-  return new Promise((resolve) => {
-    let timer: ReturnType<typeof setTimeout> | null = null
-    const cleartimer = () => {
-      if (timer != null) {
-        clearTimeout(timer)
-        timer = null
-      }
-    }
-    doasync(device, player, async () => {
-      try {
-        switch (engine) {
-          case 'supertonic': {
-            if (!ispresent(supertonictts)) {
-              apitoast(device, player, 'supertonic loading...')
-              supertonictts = await SupertonicTTS.from_pretrained()
-            }
-            if (!ispresent(supertonictts) || !supertonictts.pipeline) {
-              resolve(undefined)
-              return
-            }
-            apitoast(device, player, 'supertonic working...')
-            timer = setTimeout(() => {
-              cleartimer()
-              supertonictts?.clearAudio()
-              resolve(undefined)
-            }, 10000)
-            // map numeric voice (0–3) to Supertonic names M1,M2,F1,F2
-            const supertonicvoice =
-              { '0': 'M1', '1': 'M2', '2': 'F1', '3': 'F2' }[voice] ?? voice
+  try {
+    switch (engine) {
+      case 'supertonic': {
+        if (!ispresent(supertonictts)) {
+          apitoast(device, player, 'supertonic loading...')
+          supertonictts = await SupertonicTTS.from_pretrained()
+        }
+        if (!ispresent(supertonictts) || !supertonictts.pipeline) {
+          return undefined
+        }
+        apitoast(device, player, 'supertonic working...')
+        let timeoutid: ReturnType<typeof setTimeout> | null = null
+        const cleartimeout = () => {
+          if (timeoutid != null) {
+            clearTimeout(timeoutid)
+            timeoutid = null
+          }
+        }
+        const supertonicvoice =
+          { '0': 'M1', '1': 'M2', '2': 'F1', '3': 'F2' }[voice] ?? voice
+        const synth = async (): Promise<MAYBE<ArrayBuffer>> => {
+          try {
             const streamer = new TextSplitterStream()
             streamer.push(input)
             streamer.close()
-            const stream = supertonictts.stream(
+            const stream = supertonictts!.stream(
               streamer as AsyncIterable<string>,
               { voice: supertonicvoice },
             )
@@ -113,47 +96,59 @@ export function requestaudiobytes(
               apitoast(device, player, 'supertonic reading...')
             }
             const rawaudio = supertonictts?.merge_audio()
-            cleartimer()
             supertonictts?.clearAudio()
             if (ispresent(rawaudio)) {
               apitoast(device, player, 'supertonic done...')
-              resolve(convertarraybytes(rawaudio))
-            } else {
-              resolve(undefined)
+              return convertarraybytes(rawaudio)
             }
-            return
+            return undefined
+          } finally {
+            cleartimeout()
           }
-          case 'piper': {
-            if (!ispresent(pipertts)) {
-              apitoast(device, player, `${engine} loading...`)
-              if (config) {
-                const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${config}`
-                pipertts = await PiperTTS.from_pretrained(
-                  baseurl,
-                  `${baseurl}.json`,
-                )
-              } else {
-                const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
-                pipertts = await PiperTTS.from_pretrained(
-                  baseurl,
-                  `${baseurl}.json`,
-                )
-              }
-            }
-            if (!ispresent(pipertts)) {
-              resolve(undefined)
-              return
-            }
-            apitoast(device, player, `${engine} working...`)
-            timer = setTimeout(() => {
-              cleartimer()
-              pipertts?.clearAudio()
-              resolve(undefined)
-            }, 10000)
+        }
+        const timeoutp = new Promise<undefined>((resolve) => {
+          timeoutid = setTimeout(() => {
+            cleartimeout()
+            supertonictts?.clearAudio()
+            resolve(undefined)
+          }, TTS_TIMEOUT_MS)
+        })
+        return await Promise.race([synth(), timeoutp])
+      }
+      case 'piper': {
+        if (!ispresent(pipertts)) {
+          apitoast(device, player, `${engine} loading...`)
+          if (config) {
+            const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${config}`
+            pipertts = await PiperTTS.from_pretrained(
+              baseurl,
+              `${baseurl}.json`,
+            )
+          } else {
+            const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
+            pipertts = await PiperTTS.from_pretrained(
+              baseurl,
+              `${baseurl}.json`,
+            )
+          }
+        }
+        if (!ispresent(pipertts)) {
+          return undefined
+        }
+        apitoast(device, player, `${engine} working...`)
+        let timeoutid: ReturnType<typeof setTimeout> | null = null
+        const cleartimeout = () => {
+          if (timeoutid != null) {
+            clearTimeout(timeoutid)
+            timeoutid = null
+          }
+        }
+        const synth = async (): Promise<MAYBE<ArrayBuffer>> => {
+          try {
             const streamer = new TextSplitterStream()
             streamer.push(input)
             streamer.close()
-            const stream = pipertts.stream(streamer, {
+            const stream = pipertts!.stream(streamer, {
               speakerId: parseFloat(voice),
             })
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -161,23 +156,27 @@ export function requestaudiobytes(
               apitoast(device, player, `${engine} reading...`)
             }
             const rawaudio = pipertts?.merge_audio()
-            cleartimer()
             pipertts?.clearAudio()
             apitoast(device, player, `${engine} done...`)
-            resolve(
-              ispresent(rawaudio) ? convertarraybytes(rawaudio) : undefined,
-            )
-            return
+            return ispresent(rawaudio) ? convertarraybytes(rawaudio) : undefined
+          } finally {
+            cleartimeout()
           }
-          default:
-            resolve(undefined)
-            return
         }
-      } catch (err) {
-        cleartimer()
-        console.error('TTS requestaudiobytes error:', err)
-        resolve(undefined)
+        const timeoutp = new Promise<undefined>((resolve) => {
+          timeoutid = setTimeout(() => {
+            cleartimeout()
+            pipertts?.clearAudio()
+            resolve(undefined)
+          }, TTS_TIMEOUT_MS)
+        })
+        return await Promise.race([synth(), timeoutp])
       }
-    })
-  })
+      default:
+        return undefined
+    }
+  } catch (err) {
+    console.error('TTS requestaudiobytes error:', err)
+    return undefined
+  }
 }
