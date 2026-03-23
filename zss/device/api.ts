@@ -568,6 +568,22 @@ export function registerstore(
   device.emit(player, 'register:store', [name, value])
 }
 
+export function vmpullvarresult(
+  device: DEVICELIKE,
+  player: string,
+  data: { id: string; value?: unknown; error?: string },
+) {
+  device.emit(player, 'vm:pullvarresult', data)
+}
+
+export function heavypullvarresult(
+  device: DEVICELIKE,
+  player: string,
+  data: { id: string; value?: unknown; error?: string },
+) {
+  device.emit(player, 'heavy:pullvarresult', data)
+}
+
 export function registerbookmarkscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmarkscroll', true)
 }

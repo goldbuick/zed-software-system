@@ -4,6 +4,7 @@ import {
   heavyagentstart,
   heavyagentstop,
   heavyllmpreset,
+  registerstore,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -11,7 +12,7 @@ import {
   normalizeheavylmpreset,
   resolveheavylmpresetfromsources,
 } from 'zss/feature/heavy/heavyllmpreset'
-import { storagereadvars, storagewritevar } from 'zss/feature/storage'
+import { pullstoragevarfrommain } from 'zss/feature/storagepull'
 import { write } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
@@ -32,10 +33,13 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           const player = READ_CONTEXT.elementfocus
           if (raw === '') {
             doasync(SOFTWARE, player, async () => {
-              const vars = await storagereadvars()
-              const effective = resolveheavylmpresetfromsources(
-                vars[HEAVY_LLM_STORAGE_KEY],
+              const stored = await pullstoragevarfrommain(
+                SOFTWARE,
+                player,
+                HEAVY_LLM_STORAGE_KEY,
+                'vm',
               )
+              const effective = resolveheavylmpresetfromsources(stored)
               write(SOFTWARE, player, `heavy llm preset: ${effective}`)
             })
           } else {
@@ -44,7 +48,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
               apierror(SOFTWARE, player, 'agent', '#agent model llama|phi|qwen')
             } else {
               doasync(SOFTWARE, player, async () => {
-                await storagewritevar(HEAVY_LLM_STORAGE_KEY, p)
+                registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
                 heavyllmpreset(SOFTWARE, player, p)
               })
             }

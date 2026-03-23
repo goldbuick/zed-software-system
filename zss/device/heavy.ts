@@ -30,6 +30,7 @@ import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/vmquery'
+import { resolvestoragepullmessage } from 'zss/feature/storagepull'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { apierror, apilog, apitoast, vmlastinputtouch } from './api'
@@ -330,6 +331,9 @@ const heavy = createdevice('heavy', [], (message) => {
       break
     case 'queryresult':
       memoryqueryresolvemessage(message)
+      break
+    case 'pullvarresult':
+      resolvestoragepullmessage(message.data)
       break
     case 'agentstart':
       heavyrunagentstart(heavy, message)

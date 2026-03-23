@@ -74,6 +74,7 @@ import {
   apitoast,
   bridgejoin,
   gadgetserverdesync,
+  heavypullvarresult,
   heavyllmpreset,
   heavyrestoreagents,
   registerterminalclose,
@@ -88,6 +89,7 @@ import {
   vmlogin,
   vmoperator,
   vmplayertoken,
+  vmpullvarresult,
   vmzsswords,
 } from './api'
 
@@ -586,6 +588,53 @@ export const register = createdevice(
               await storagewriteconfig(name.slice(7), value)
             } else {
               await storagewritevar(name, value)
+            }
+          }
+        })
+        break
+      case 'pullvar':
+        doasync(register, message.player, async () => {
+          const payload = message.data as {
+            id?: string
+            key?: string
+            channel?: string
+          }
+          const player = message.player
+          if (
+            !payload ||
+            !isstring(payload.id) ||
+            !isstring(payload.key) ||
+            (payload.channel !== 'vm' && payload.channel !== 'heavy')
+          ) {
+            return
+          }
+          try {
+            const vars = await storagereadvars()
+            const value = vars[payload.key]
+            if (payload.channel === 'vm') {
+              vmpullvarresult(register, player, {
+                id: payload.id,
+                value,
+              })
+            } else {
+              heavypullvarresult(register, player, {
+                id: payload.id,
+                value,
+              })
+            }
+          } catch (err) {
+            const msg =
+              err instanceof Error ? err.message : 'storagereadvars_failed'
+            if (payload.channel === 'vm') {
+              vmpullvarresult(register, player, {
+                id: payload.id,
+                error: msg,
+              })
+            } else {
+              heavypullvarresult(register, player, {
+                id: payload.id,
+                error: msg,
+              })
             }
           }
         })

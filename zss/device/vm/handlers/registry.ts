@@ -26,6 +26,7 @@ import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
 import { handlepublish } from './publish'
+import { handlepullvarresult } from './pullvarresult'
 import { handlequery } from './query'
 import { handlerestart } from './restart'
 import {
@@ -58,6 +59,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   input: handleinput,
   lastinputtouch: handlelastinputtouch,
   query: handlequery,
+  pullvarresult: handlepullvarresult,
   pilotclear: handlepilotclear,
   pilotstart: handlepilotstart,
   pilotstop: handlepilotstop,
