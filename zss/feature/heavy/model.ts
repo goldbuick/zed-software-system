@@ -12,12 +12,12 @@ const MAX_NEW_TOKENS = 768
 const MODEL_DEVICE = 'webgpu'
 const MODEL_CONTEXT_TOKENS = 16384
 
-// We like the Llama-3 model (Llama-3.2-1B-Instruct-ONNX).
-const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
+// Main generator: Llama-3.2-3B-Instruct-ONNX (q4f16 on WebGPU).
+const MODEL_ID = 'onnx-community/Llama-3.2-3B-Instruct-ONNX'
 const MODEL_DTYPE = 'q4f16'
 
-/** Model used for attention classification and intent detection. Can be a smaller/faster model. */
-const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
+/** Attention / intent classifier: small instruct model (q4 on WebGPU). */
+const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA'
 const CLASSIFIER_DTYPE = 'q4'
 
 const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}

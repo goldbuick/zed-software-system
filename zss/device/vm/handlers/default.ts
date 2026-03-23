@@ -9,7 +9,7 @@ import {
   applyzedscroll,
   parsemarkdownforscroll,
 } from 'zss/feature/parse/markdownscroll'
-import { romread } from 'zss/feature/rom'
+import { romread } from 'zss/rom'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'

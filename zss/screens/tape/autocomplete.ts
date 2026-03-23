@@ -1,4 +1,4 @@
-import { romhintfrommarkdown, romread } from 'zss/feature/rom'
+import { romhintfrommarkdown, romread } from 'zss/rom'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
