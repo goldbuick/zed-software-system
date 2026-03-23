@@ -1,13 +1,13 @@
 import {
-  apilog,
   registerbookmarkdelete,
   registerbookmarklist,
   registerscreenshot,
   vmpublish,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import { formatboardfortext } from 'zss/feature/heavy/formatstate'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import { writeopenit, writetext } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
 import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
@@ -27,13 +27,11 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       () => {
         const data = memoryreadboardstatequery(READ_CONTEXT.elementfocus)
         const text = formatboardfortext(data)
-        const lines = text.split('\n')
-        for (let i = 0; i < lines.length; ++i) {
-          const line = lines[i]
-          if (line.trim() !== '') {
-            apilog(SOFTWARE, READ_CONTEXT.elementfocus, line)
-          }
-        }
+        terminalwritelines(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          text,
+        )
         return 0
       },
     )

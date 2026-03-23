@@ -5,38 +5,35 @@ import {
   readzipfilelist,
   readzipfilelistitem,
 } from 'zss/feature/parse/file'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
-import { NAME, WORD } from 'zss/words/types'
+import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { NAME } from 'zss/words/types'
+
+registerhyperlinksharedbridge(
+  'zipfilelist',
+  'select',
+  (name) => (readzipfilelistitem(name) ? 1 : 0),
+  (name, value) => markzipfilelistitem(name, !!value),
+)
 
 export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
   const list = readzipfilelist()
-  gadgettext(message.player, `$CENTER Select Files`)
-  gadgethyperlink(message.player, 'zipfilelist', 'import selected', [
-    'importfiles',
-  ])
+  const lines: string[] = []
+  lines.push('$CENTER Select Files')
+  lines.push('[import selected](importfiles)')
   for (let i = 0; i < list.length; ++i) {
     const [type, filename] = list[i]
     if (!type) {
       continue
     }
-    gadgettext(message.player, filename)
-    gadgethyperlink(
-      message.player,
-      'zipfilelist',
-      `[${type}]`,
-      [NAME(filename), 'select', 'NO', '0', 'YES', '1'],
-      (name: string) => (readzipfilelistitem(name) ? 1 : 0),
-      (name: string, value: WORD) => {
-        markzipfilelistitem(name, !!value)
-      },
-    )
+    lines.push(filename)
+    const fname = NAME(filename)
+    lines.push(`[\\[${type}\\]](<${fname} select NO 0 YES 1>)`)
   }
-  const shared = gadgetstate(message.player)
-  shared.scrollname = 'zipfilelist'
-  shared.scroll = gadgetcheckqueue(message.player)
+  parsemarkdownforscroll(
+    message.player,
+    lines.join('\n\n'),
+    'zipfilelist',
+    'zipfilelist',
+  )
 }

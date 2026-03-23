@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
+import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
 import { romread } from 'zss/feature/rom'
 import { gadgetapplyscrolllines } from 'zss/gadget/data/applyscrolllines'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -25,14 +26,18 @@ export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
-  handlegadgetscroll(vm, {
-    ...message,
-    data: {
-      scrollname: '#help or $meta+h',
-      content: romread('refscroll:menu') ?? '',
-      chip: 'refscroll',
-    },
-  })
+  const content = romread('refscroll:menu') ?? ''
+  if (!content.trim()) {
+    apitoast(vm, message.player, 'gadget scroll: need content')
+    return
+  }
+  // refscroll/*.md is CommonMark; parse markdown links into !cmd;label rows (same as vm refscroll paths).
+  parsemarkdownforscroll(
+    message.player,
+    content.trim(),
+    '#help or $meta+h',
+    'refscroll',
+  )
 }
 
 export function handlegadgetscroll(vm: DEVICE, message: MESSAGE): void {

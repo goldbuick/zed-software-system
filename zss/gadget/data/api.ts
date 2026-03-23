@@ -19,6 +19,27 @@ import { GADGET_STATE, PANEL_ITEM, PANEL_SHARED, paneladdress } from './types'
 const panelqueue: Record<string, PANEL_ITEM[]> = {}
 const panelshared: Record<string, PANEL_SHARED> = {}
 
+type HYPERLINK_SHARED_BRIDGE = {
+  get: (target: string) => WORD
+  set: (name: string, value: WORD) => void
+}
+
+const hyperlinksharedbridges: Record<string, Record<string, HYPERLINK_SHARED_BRIDGE>> =
+  {}
+
+/** Register get/set for `HYPERLINK_WITH_SHARED` links so call sites can omit closures (e.g. zip file list). */
+export function registerhyperlinksharedbridge(
+  chip: string,
+  type: string,
+  get: (target: string) => WORD,
+  set: (name: string, value: WORD) => void,
+): void {
+  const c = NAME(chip)
+  const t = NAME(type)
+  hyperlinksharedbridges[c] = hyperlinksharedbridges[c] ?? {}
+  hyperlinksharedbridges[c][t] = { get, set }
+}
+
 export function initstate(): GADGET_STATE {
   return {
     id: createsid(),
@@ -196,16 +217,20 @@ export function gadgethyperlink(
     `${hyperlink[3] as string}`,
   ) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
 
+  const bridge = hyperlinksharedbridges[NAME(chip)]?.[type]
+  const getforchip = bridge?.get ?? get
+  const setforchip = bridge?.set ?? set
+
   // cache READ_CONTEXT
   const cache = { ...READ_CONTEXT }
 
   // set value handler
   function setvalue<T extends number | string>(target: string, value: T) {
-    if (ispresent(value) && value !== get(target)) {
+    if (ispresent(value) && value !== getforchip(target)) {
       READ_CONTEXT.board = cache.board
       READ_CONTEXT.element = cache.element
       READ_CONTEXT.elementfocus = cache.elementfocus
-      set(target, value)
+      setforchip(target, value)
     }
   }
 
@@ -218,7 +243,7 @@ export function gadgethyperlink(
     panelshared[chip] = panelshared[chip] ?? {}
 
     // get current value
-    const current = get(target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[type]
+    const current = getforchip(target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[type]
 
     // setup tracking if needed
     if (panelshared[chip][target] === undefined) {

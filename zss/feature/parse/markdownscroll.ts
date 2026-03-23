@@ -26,8 +26,9 @@ export function parsemarkdownforscroll(
   player: string,
   content: string,
   scrollname: string,
+  chip = 'refscroll',
 ) {
   const lines: string[] = []
   parsemarkdownwithzetextsink(createscrollsink(lines), content)
-  gadgetapplyscrolllines(player, scrollname, lines.join('\n'))
+  gadgetapplyscrolllines(player, scrollname, lines.join('\n'), chip)
 }

@@ -72,4 +72,19 @@ describe('parsemarkdownforscroll', () => {
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[1]).toContain(';')
   })
+
+  it('refscroll menu.md style: paragraph-per-link becomes hyperlink rows', () => {
+    const md = `[controls](<helpmenu hk 1 1 next>)
+
+[list objects](<objectlistscroll hk 2 2 next>)`
+    parsemarkdownforscroll('p1', md, 'menu')
+    const s = gadgetstate('p1')
+    expect(s.scroll).toHaveLength(2)
+    const r0 = s.scroll![0] as unknown[]
+    expect(r0[0]).toBe('refscroll')
+    expect(r0[2]).toBe('helpmenu')
+    expect(r0[3]).toBe('hk')
+    const r1 = s.scroll![1] as unknown[]
+    expect(r1[2]).toBe('objectlistscroll')
+  })
 })

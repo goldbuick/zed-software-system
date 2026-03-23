@@ -20,7 +20,7 @@ Each file has two lines: `desc;...` and `args;...`. The **args** row should matc
 
 - `editor/` — Command help, stats, hyperlinks
 - `help/` — Help screens
-- `refscroll/` — Reference scrolls (algoscroll, synthscroll, etc.). Full list and how they reach the gadget panel: [`zss/gadget/docs/gadget-scrolls.md`](../../gadget/docs/gadget-scrolls.md)
+- `refscroll/` — Reference scrolls as **`.md`** (bundled via `import.meta.glob('./refscroll/**/*.md')`; address `refscroll:<name>` without extension). Legacy line-oriented `.txt` can be converted with [`refscrollromtomarkdown`](../parse/refscrollromtomarkdown.ts). Full list and gadget routing: [`zss/gadget/docs/gadget-scrolls.md`](../../gadget/docs/gadget-scrolls.md)
 
 ## Dynamic Context
 

@@ -34,6 +34,7 @@ import {
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
@@ -772,18 +773,14 @@ export const register = createdevice(
           const enabled = ispresent(message.data)
             ? !!message.data
             : !state.inspector
-          apilog(
+          const line1 = `gadget inspector ${enabled ? '$greenon' : '$redoff'}`
+          terminalwritelines(
             register,
             message.player,
-            `gadget inspector ${enabled ? '$greenon' : '$redoff'}`,
+            enabled
+              ? `${line1}\nmouse click or tap elements to inspect`
+              : line1,
           )
-          if (enabled) {
-            apilog(
-              register,
-              message.player,
-              `mouse click or tap elements to inspect`,
-            )
-          }
           return {
             inspector: enabled,
           }

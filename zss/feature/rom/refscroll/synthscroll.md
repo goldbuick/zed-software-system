@@ -1,0 +1,20 @@
+switching voices  
+#synth <sine, square, triangle, sawtooth>   
+#synth <pwm, pulse, bells, doot>  
+#synth <retro, buzz, clang, metallic>  
+#synth <retro, buzz, clang, metallic>  
+#synth <algo0, algo1, ... ,algo7>   
+voice settings  
+#synth restart - resets voice to default  
+#synth vol <db> - control volume  
+#synth port <seconds>  
+#synth env <attack> <delay> <sustain> <release>  
+voice specific 
+
+[sine, square, triangle, sawtooth](<oscscroll hk o O next>)
+
+[pwm](<pwmscroll hk m M next>)
+
+[pulse](<pulsescroll hk p P next>)
+
+[algo0 -> algo7](<algoscroll hk a A next>)

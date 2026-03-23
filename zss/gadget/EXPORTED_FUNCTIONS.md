@@ -505,6 +505,7 @@ API for managing gadget state, panels, and hyperlinks.
 
 ### Hyperlink Management
 - `gadgethyperlink(player, chip, label, words, get, set)` - Creates a hyperlink panel item with shared state tracking for certain types (range, select, number, text, etc.)
+- `registerhyperlinksharedbridge(chip, type, get, set)` - Optional default `get`/`set` for a chip + shared hyperlink `type` (e.g. `zipfilelist` + `select`) so call sites can omit closures
 
 ### Value Tracking
 - `gadgetcheckset(chip, name, value)` - Checks if a set operation matches any tracked shared state and updates it

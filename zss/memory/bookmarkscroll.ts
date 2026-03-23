@@ -4,11 +4,10 @@ import {
   type ZssUrlBookmark,
 } from 'zss/feature/bookmarks'
 import {
-  gadgetbbar,
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-} from 'zss/gadget/data/api'
+  gadgetapplyscrolllines,
+  scrolllinkescapefrag,
+} from 'zss/gadget/data/applyscrolllines'
+import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 
 export function memorybookmarkscroll(
   player: string,
@@ -19,27 +18,24 @@ export function memorybookmarkscroll(
     BOOKMARK_SCROLL_CHIP,
     'bookmark name',
     [`newname`, 'text'],
-    // get,
-    // set,
   )
   gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, 'SAVE IT', [`bookmarksave`])
   gadgetbbar(player, 10)
+  const rows: string[] = []
   for (let i = 0; i < urllist.length; ++i) {
     const idx = i + 1
     const b = urllist[i]
-    gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, `$CYANLOAD ${b.name}`, [
-      'bookmarkurl',
-      'hk',
-      `${idx}`,
-      ` ${idx} `,
-      b.href,
-    ])
-    gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, `$REDDELETE ${idx}`, [
-      'bookmarkdel',
-      b.id,
-    ])
+    rows.push(
+      `!bookmarkurl hk ${idx}  ${idx}  ${scrolllinkescapefrag(b.href)};${scrolllinkescapefrag(`$CYANLOAD ${b.name}`)}`,
+    )
+    rows.push(
+      `!bookmarkdel ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(`$REDDELETE ${idx}`)}`,
+    )
   }
-  const shared = gadgetstate(player)
-  shared.scrollname = BOOKMARK_SCROLL_SCROLLNAME
-  shared.scroll = gadgetcheckqueue(player)
+  gadgetapplyscrolllines(
+    player,
+    BOOKMARK_SCROLL_SCROLLNAME,
+    rows.join('\n'),
+    BOOKMARK_SCROLL_CHIP,
+  )
 }

@@ -18,12 +18,24 @@ import {
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-const romfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })
+const romtxtfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })
+const rommdfiles = import.meta.glob('./refscroll/**/*.md', {
+  eager: true,
+  query: 'raw',
+})
 const romcontent: Record<string, string> = {}
-objectKeys(romfiles).forEach((name) => {
+objectKeys(romtxtfiles).forEach((name) => {
+  if (name.includes('/refscroll/')) {
+    return
+  }
   const path = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
   // @ts-expect-error yes
-  romcontent[path] = romfiles[name].default
+  romcontent[path] = romtxtfiles[name].default
+})
+objectKeys(rommdfiles).forEach((name) => {
+  const path = name.replace('.md', '').replace('./', '').replaceAll('/', ':')
+  // @ts-expect-error yes
+  romcontent[path] = rommdfiles[name].default
 })
 
 export function romread(address: string): MAYBE<string> {
