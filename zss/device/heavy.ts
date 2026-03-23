@@ -12,6 +12,7 @@ import {
   formatagentinfofortext,
   formatboardfortext,
 } from 'zss/feature/heavy/formatstate'
+import { enqueueheavyjob } from 'zss/feature/heavy/heavyjobqueue'
 import {
   type HEAVY_LLM_PRESET,
   normalizeheavylmpreset,
@@ -23,7 +24,6 @@ import {
   modelclassify,
   modelgenerate,
 } from 'zss/feature/heavy/model'
-import { enqueueheavyjob } from 'zss/feature/heavy/heavyjobqueue'
 import { buildsystemprompt } from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {

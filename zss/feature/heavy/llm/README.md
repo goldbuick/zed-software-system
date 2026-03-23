@@ -9,7 +9,7 @@ Shared types and **output cleanup** for heavy ONNX instruct models. The active g
 
 ## Configuration
 
-- **Presets**: `llama` \| `phi` \| `tiny` → Hugging Face ONNX repos in [`heavyllmpreset.ts`](../heavyllmpreset.ts) (all use `q4f16` here). Legacy id **`qwen`** normalizes to **`tiny`**.
+- **Presets**: `llama` \| `phi` \| `smol` \| `tiny` → Hugging Face ONNX repos in [`heavyllmpreset.ts`](../heavyllmpreset.ts) (all use `q4f16` here). **`smol`** is SmolLM2-360M-Instruct (main generator); intent classification still uses SmolLM2-135M separately in `model.ts`. Legacy id **`qwen`** normalizes to **`tiny`**.
 - **Persistence**: register storage key `heavy_llm_preset`; `#agent model <preset>` updates storage and the worker. Default when unset: `HEAVY_LLM_DEFAULT_PRESET` in `heavyllmpreset.ts`.
 
 ## Adapters folder

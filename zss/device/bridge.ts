@@ -1,6 +1,7 @@
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
+import { createblueskyfeedconnector } from 'zss/device/bridge/blueskyfeedconnector'
 import type { CHAT_CONNECTOR } from 'zss/device/bridge/chatconnector'
 import {
   ALL_CHAT_KINDS,
@@ -9,6 +10,8 @@ import {
   parsechatstartpayload,
 } from 'zss/device/bridge/chattypes'
 import { createircchatconnector } from 'zss/device/bridge/ircchatconnector'
+import { createmastodonfeedconnector } from 'zss/device/bridge/mastodonfeedconnector'
+import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
 import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
 import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
 import { createxmppchatconnector } from 'zss/device/bridge/xmppchatconnector'
@@ -145,6 +148,12 @@ function makechathandlers(player: string): TWITCH_CHAT_HANDLERS {
       pushchatline(player, routekey, mode, user, text),
     onerror: (msg) => apierror(bridge, player, 'bridge', msg),
   }
+}
+
+function feedpollintervalms(sec: number | undefined) {
+  const s =
+    typeof sec === 'number' && Number.isFinite(sec) && sec > 0 ? sec : 120
+  return Math.max(30_000, Math.min(3_600_000, Math.floor(s * 1000)))
 }
 
 const bridge = createdevice('bridge', [], (message) => {
@@ -315,38 +324,152 @@ const bridge = createdevice('bridge', [], (message) => {
         )
         break
       }
-      const service = parsed.service?.trim() ?? ''
-      const domain = parsed.domain?.trim() ?? ''
-      const username = parsed.username?.trim() ?? ''
-      const password = parsed.password ?? ''
-      const muc = parsed.muc?.trim() ?? ''
-      if (!service || !domain || !username || !password || !muc) {
-        apierror(
+      if (parsed.kind === CHAT_KIND.RSS) {
+        const feedurl = parsed.feedurl?.trim() ?? ''
+        if (!feedurl) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'rss needs feedurl (browser fetch; URL must allow CORS or be same-origin)',
+          )
+          break
+        }
+        let feedok = false
+        try {
+          new URL(feedurl)
+          feedok = true
+        } catch {
+          feedok = false
+        }
+        if (!feedok) {
+          apierror(bridge, message.player, 'bridge', 'rss feedurl is invalid')
+          break
+        }
+        const pollms = feedpollintervalms(parsed.pollintervalsec)
+        apilog(
           bridge,
           message.player,
-          'bridge',
-          'xmpp chat needs service, domain, username, password, and muc',
+          `rss feed starting routekey=${parsed.routekey} pollMs=${pollms}`,
+        )
+        chatslots.set(
+          CHAT_KIND.RSS,
+          createrssfeedconnector({
+            routekey: parsed.routekey,
+            feedurl,
+            pollintervalms: pollms,
+            handlers: makechathandlers(message.player),
+          }),
         )
         break
       }
-      apilog(
-        bridge,
-        message.player,
-        `xmpp chat starting routekey=${parsed.routekey} muc=${muc}`,
-      )
-      chatslots.set(
-        CHAT_KIND.XMPP,
-        createxmppchatconnector({
-          routekey: parsed.routekey,
-          service,
-          domain,
-          username,
-          password,
-          muc,
-          mucnick: parsed.mucnick,
-          handlers: makechathandlers(message.player),
-        }),
-      )
+      if (parsed.kind === CHAT_KIND.MASTODON) {
+        const instance = parsed.mastodoninstance?.trim() ?? ''
+        const account = parsed.mastodonaccount?.trim() ?? ''
+        const hashtag = parsed.mastodonhashtag?.trim() ?? ''
+        if (!instance || (!account && !hashtag)) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'mastodon needs mastodoninstance and mastodonaccount or mastodonhashtag',
+          )
+          break
+        }
+        const pollms = feedpollintervalms(parsed.pollintervalsec)
+        apilog(
+          bridge,
+          message.player,
+          `mastodon feed starting routekey=${parsed.routekey} pollMs=${pollms}`,
+        )
+        chatslots.set(
+          CHAT_KIND.MASTODON,
+          createmastodonfeedconnector({
+            routekey: parsed.routekey,
+            instanceorigin: instance,
+            hashtag,
+            account,
+            accesstoken: parsed.mastodontoken,
+            pollintervalms: pollms,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
+      }
+      if (parsed.kind === CHAT_KIND.BLUESKY) {
+        const handle = parsed.blueskyhandle?.trim() ?? ''
+        if (!handle) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'bluesky needs blueskyhandle',
+          )
+          break
+        }
+        const feeduri = parsed.blueskyfeeduri?.trim() ?? ''
+        if (feeduri && !feeduri.startsWith('at://')) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'blueskyfeeduri must be an at:// URI',
+          )
+          break
+        }
+        const pollms = feedpollintervalms(parsed.pollintervalsec)
+        apilog(
+          bridge,
+          message.player,
+          `bluesky feed starting routekey=${parsed.routekey} pollMs=${pollms}`,
+        )
+        chatslots.set(
+          CHAT_KIND.BLUESKY,
+          createblueskyfeedconnector({
+            routekey: parsed.routekey,
+            handle,
+            feeduri: feeduri !== '' ? feeduri : undefined,
+            pollintervalms: pollms,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
+      }
+      if (parsed.kind === CHAT_KIND.XMPP) {
+        const service = parsed.service?.trim() ?? ''
+        const domain = parsed.domain?.trim() ?? ''
+        const username = parsed.username?.trim() ?? ''
+        const password = parsed.password ?? ''
+        const muc = parsed.muc?.trim() ?? ''
+        if (!service || !domain || !username || !password || !muc) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'xmpp chat needs service, domain, username, password, and muc',
+          )
+          break
+        }
+        apilog(
+          bridge,
+          message.player,
+          `xmpp chat starting routekey=${parsed.routekey} muc=${muc}`,
+        )
+        chatslots.set(
+          CHAT_KIND.XMPP,
+          createxmppchatconnector({
+            routekey: parsed.routekey,
+            service,
+            domain,
+            username,
+            password,
+            muc,
+            mucnick: parsed.mucnick,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
+      }
       break
     }
     case 'chatstop': {
@@ -356,7 +479,7 @@ const bridge = createdevice('bridge', [], (message) => {
           bridge,
           message.player,
           'bridge',
-          'bridge chat stop requires kind: twitch, irc, or xmpp',
+          'bridge chat stop requires kind: twitch, irc, xmpp, rss, mastodon, bluesky',
         )
         break
       }

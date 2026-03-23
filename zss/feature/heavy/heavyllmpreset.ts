@@ -1,6 +1,6 @@
 /** Heavy causal LM preset ids (register IndexedDB + worker; default from `HEAVY_LLM_DEFAULT_PRESET`). */
 
-export type HEAVY_LLM_PRESET = 'llama' | 'phi' | 'tiny'
+export type HEAVY_LLM_PRESET = 'llama' | 'phi' | 'smol' | 'tiny'
 
 export const HEAVY_LLM_STORAGE_KEY = 'heavy_llm_preset'
 
@@ -23,6 +23,11 @@ export const HEAVY_LLM_PRESETS: Record<HEAVY_LLM_PRESET, HEAVY_LLM_ROW> = {
     dtype: 'q4f16',
     contexttokens: 8192,
   },
+  smol: {
+    modelid: 'onnx-community/SmolLM2-360M-Instruct-ONNX',
+    dtype: 'q4f16',
+    contexttokens: 8192,
+  },
   tiny: {
     // Smallest Llama 3.2 instruct ONNX slot (1B); q4f16 + split onnx_data like Phi — better WebGPU fit than Qwen here.
     modelid: 'onnx-community/Llama-3.2-1B-Instruct-ONNX',
@@ -37,7 +42,7 @@ export function heavylmpresetids(): HEAVY_LLM_PRESET[] {
 }
 
 export function isvalidheavylmpreset(s: string): s is HEAVY_LLM_PRESET {
-  return s === 'llama' || s === 'phi' || s === 'tiny'
+  return s === 'llama' || s === 'phi' || s === 'smol' || s === 'tiny'
 }
 
 export function normalizeheavylmpreset(

@@ -105,11 +105,7 @@ describe('applyzedscroll', () => {
   })
 
   it('refscroll menu: quoted arg keeps spaces', () => {
-    applyzedscroll(
-      'p1',
-      '!synthscroll hk s " S " next;synth',
-      'menu',
-    )
+    applyzedscroll('p1', '!synthscroll hk s " S " next;synth', 'menu')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[2]).toBe('synthscroll')
     expect(row[5]).toBe(' S ')

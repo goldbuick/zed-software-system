@@ -9,7 +9,6 @@ import {
   applyzedscroll,
   parsemarkdownforscroll,
 } from 'zss/feature/parse/markdownscroll'
-import { romread } from 'zss/rom'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
@@ -36,6 +35,7 @@ import {
 } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
+import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
 
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'

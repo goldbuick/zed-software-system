@@ -88,11 +88,7 @@ describe('scrollwritelines', () => {
   })
 
   it('quoted token preserves spaces in bang command args', () => {
-    scrollwritelines(
-      'p1',
-      'T5b',
-      '!synthscroll hk s " S " next;synth',
-    )
+    scrollwritelines('p1', 'T5b', '!synthscroll hk s " S " next;synth')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[2]).toBe('synthscroll')
     expect(row[3]).toBe('hk')

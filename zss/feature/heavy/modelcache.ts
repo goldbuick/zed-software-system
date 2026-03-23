@@ -57,5 +57,5 @@ export async function cachedfetch(url: string): Promise<Response> {
   if (!inflight.has(key)) {
     inflight.set(key, loadfromcacheornetwork(key))
   }
-  return inflight.get(key) as Promise<Response>
+  return inflight.get(key)!
 }

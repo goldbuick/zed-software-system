@@ -48,7 +48,7 @@ async function ensurepiper(
       })(),
     )
   }
-  return piperinflight.get(key) as Promise<PiperTTS>
+  return piperinflight.get(key)!
 }
 
 async function ensuresupertonic(

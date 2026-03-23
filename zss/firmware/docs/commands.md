@@ -42,7 +42,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `admin` | Admin scroll (active players, gadget/dev links for operator, multiplayer); config toggles crt, lowrez, scanlines, voice2text, loaderlogging, promptlogging |
 | `joincode` | Multiplayer session (operator only) |
 | `jointab` | New tab with the join url (operator only) |
-| `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start twitch …` / `#chat start irc …` / `#chat start xmpp …`; `#chat stop <kind>` |
+| `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast (operator only) |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
@@ -176,6 +176,7 @@ All firmware commands and their descriptions. Commands are available depending o
 - **XMPP MUC (browser only):** CLI: `#chat start xmpp <routekey> <service> <domain> <username> <password> <muc> [mucnick]` where `service` is the XMPP WebSocket URL (for example `wss://…/xmpp-websocket`) and `muc` is the room JID. Many browsers use SASL mechanisms bundled with `@xmpp/client` (SCRAM may be stubbed in some builds; prefer servers that accept PLAIN over TLS). Treat password and stream keys as secrets; do not log or commit them.
 - **Headless / non-browser:** IRC and XMPP return a clear `bridge` error when WebSockets are not available (same detection as other bridge headless paths). Twitch keeps prior behavior.
 - **Status:** `#bridge` or `#bridge status` prints chat slot state and IVS broadcast summary **without** secrets.
+- **Saved profiles (IndexedDB):** `#chat profile` (same as `#chat profile list`) prints profile names; `#chat profile show <name>` prints one profile (secrets redacted); `#chat profile save …` / `#chat profile delete <name>` manage them. Use `#chat start <kind> @profilename` to apply a profile.
 
 ---
 

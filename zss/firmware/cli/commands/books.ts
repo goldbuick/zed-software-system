@@ -8,7 +8,6 @@ import {
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
-import { romread } from 'zss/rom'
 import {
   write,
   writebbar,
@@ -56,6 +55,7 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from 'zss/memory/types'
+import { romread } from 'zss/rom'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
