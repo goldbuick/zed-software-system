@@ -15,6 +15,7 @@ import {
   gadgetsection,
   gadgettext,
 } from 'zss/gadget/data/api'
+import { scrolllinksplittokens } from 'zss/gadget/data/scrollwritelines'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -105,7 +106,7 @@ export function romscroll(player: string, line: string[]) {
       break
     default:
       if (op.trimStart().startsWith('!')) {
-        const parts = op.trimStart().slice(1).split(' ')
+        const parts = scrolllinksplittokens(op.trimStart().slice(1))
         const second = NAME(parts[1] ?? '')
         switch (second) {
           case 'hk':

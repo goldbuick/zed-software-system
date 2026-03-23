@@ -4,6 +4,8 @@ import {
   apierror,
   apitoast,
   heavymodelstop,
+  registeragentdootoff,
+  registeragentdooton,
   registerstore,
   vmpilotclear,
 } from 'zss/device/api'
@@ -58,6 +60,7 @@ export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
   const id = agent.id()
   agents[id] = agent
   agentnames[id] = agentname
+  registeragentdooton(heavydev, requestplayer, id)
   persistrostertostorage(heavydev, requestplayer)
   apitoast(heavydev, requestplayer, `agent ${agentname} (${id}) started`)
   writeagentlistto(heavydev, requestplayer)
@@ -83,6 +86,7 @@ function stopagentbyid(
   if (!ispresent(agent)) {
     return false
   }
+  registeragentdootoff(heavydev, requestplayer, agentid)
   vmpilotclear(heavydev, requestplayer, agentid)
   heavymodelstop(heavydev, requestplayer, agentid)
   agent.stop()
@@ -153,6 +157,7 @@ export function heavyrunrestoreagents(
     const agent = createagent(name, id)
     agents[id] = agent
     agentnames[id] = name
+    registeragentdooton(heavydev, requestplayer, id)
     count += 1
   }
   if (count > 0) {

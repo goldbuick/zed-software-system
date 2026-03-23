@@ -236,6 +236,9 @@ let keepalive = 0
 // send keepalive message every 10 seconds
 const DOOT_RATE = 10
 
+/** Agent player ids: main-thread vm:doot from `second` (on/off via heavy worker messages). */
+const agentdootids = new Set<string>()
+
 // stable unique id (CLI mode injects via registerSetPlayerId)
 let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
@@ -266,7 +269,7 @@ export function registerreadplayer() {
 
 export const register = createdevice(
   'register',
-  ['ready', 'second', 'log', 'chat', 'toast'],
+  ['ready', 'second', 'sessionreset', 'log', 'chat', 'toast'],
   function (message) {
     if (!register.session(message)) {
       return
@@ -278,6 +281,7 @@ export const register = createdevice(
       case 'chat':
       case 'toast':
       case 'second':
+      case 'sessionreset':
         // console.info(message)
         break
       default:
@@ -312,6 +316,9 @@ export const register = createdevice(
         })
         break
       }
+      case 'sessionreset':
+        agentdootids.clear()
+        break
       case 'ackoperator':
         // reset display
         gadgetserverdesync(register, myplayerid)
@@ -655,6 +662,7 @@ export const register = createdevice(
         capturecurrentboardtopng()
         break
       case 'nuke':
+        agentdootids.clear()
         doasync(register, message.player, async function () {
           writeheader(register, message.player, 'nuke in')
           writeoption(register, message.player, '3', '...')
@@ -761,11 +769,24 @@ export const register = createdevice(
           }
         })
         break
+      case 'agentdooton':
+        if (isstring(message.data)) {
+          agentdootids.add(message.data)
+        }
+        break
+      case 'agentdootoff':
+        if (isstring(message.data)) {
+          agentdootids.delete(message.data)
+        }
+        break
       case 'second':
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
           vmdoot(register, myplayerid)
+          agentdootids.forEach((agentid) => {
+            vmdoot(register, agentid)
+          })
         }
         break
       case 'inspector':

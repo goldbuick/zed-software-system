@@ -1,6 +1,6 @@
-!helpcontrols hk c C next;read help on controls
+!helpcontrols hk c " C " next;read help on controls
 
-!helptext hk t T next;read help on text and inputs
+!helptext hk t " T " next;read help on text and inputs
 
 keyboard input
 

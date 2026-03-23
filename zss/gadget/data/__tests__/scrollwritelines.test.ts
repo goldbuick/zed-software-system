@@ -79,12 +79,26 @@ describe('scrollwritelines', () => {
   })
 
   it('hk line splits command into words for gadgethyperlink', () => {
-    scrollwritelines('p1', 'T5', '!menu hk 1 1 next;$greenGo')
+    scrollwritelines('p1', 'T5', '!menu hk 1 " 1 " next;$greenGo')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[0]).toBe('refscroll')
     expect(row[1]).toBe('$greenGo')
     expect(row[2]).toBe('menu')
     expect(row[3]).toBe('hk')
+  })
+
+  it('quoted token preserves spaces in bang command args', () => {
+    scrollwritelines(
+      'p1',
+      'T5b',
+      '!synthscroll hk s " S " next;synth',
+    )
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[2]).toBe('synthscroll')
+    expect(row[3]).toBe('hk')
+    expect(row[4]).toBe('s')
+    expect(row[5]).toBe(' S ')
+    expect(row[6]).toBe('next')
   })
 
   it('copyit with multi-word payload joins for extractcontentfromargs', () => {

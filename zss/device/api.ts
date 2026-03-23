@@ -284,6 +284,23 @@ export function heavyrestoreagents(
   device.emit(player, 'heavy:restoreagents', roster)
 }
 
+/** Main-thread register: start/stop per-agent vm:doot from client `second` ticks (heavy worker → client). */
+export function registeragentdooton(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'register:agentdooton', agentid)
+}
+
+export function registeragentdootoff(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'register:agentdootoff', agentid)
+}
+
 export function platformready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }

@@ -91,8 +91,8 @@ describe('applyzedscroll', () => {
   })
 
   it('refscroll menu: !command;label lines become hyperlink rows', () => {
-    const body = `!helpmenu hk 1 1 next;controls and $greenstart here
-!objectlistscroll hk 2 2 next;list objects`
+    const body = `!helpmenu hk 1 " 1 " next;controls and $greenstart here
+!objectlistscroll hk 2 " 2 " next;list objects`
     applyzedscroll('p1', body, 'menu')
     const s = gadgetstate('p1')
     expect(s.scroll).toHaveLength(2)
@@ -102,5 +102,16 @@ describe('applyzedscroll', () => {
     expect(r0[3]).toBe('hk')
     const r1 = s.scroll![1] as unknown[]
     expect(r1[2]).toBe('objectlistscroll')
+  })
+
+  it('refscroll menu: quoted arg keeps spaces', () => {
+    applyzedscroll(
+      'p1',
+      '!synthscroll hk s " S " next;synth',
+      'menu',
+    )
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[2]).toBe('synthscroll')
+    expect(row[5]).toBe(' S ')
   })
 })
