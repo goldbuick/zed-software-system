@@ -20,7 +20,7 @@ Each file has two lines: `desc;...` and `args;...`. The **args** row should matc
 
 - `editor/` — Command help, stats, hyperlinks
 - `help/` — Help screens
-- `refscroll/` — Reference scrolls (algoscroll, synthscroll, etc.)
+- `refscroll/` — Reference scrolls (algoscroll, synthscroll, etc.). Full list and how they reach the gadget panel: [`zss/gadget/docs/gadget-scrolls.md`](../../gadget/docs/gadget-scrolls.md)
 
 ## Dynamic Context
 

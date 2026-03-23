@@ -14,6 +14,7 @@ This document categorizes and summarizes all exported functions from the `gadget
 9. [Bitmap & Media Management](#bitmap--media-management)
 10. [Gadget State API](#gadget-state-api)
 11. [Tape & Terminal State](#tape--terminal-state)
+12. [Gadget scroll catalog](#gadget-scroll-catalog)
 
 ---
 
@@ -515,6 +516,14 @@ Gadget state serialization utilities.
 ### Functions
 - `exportgadgetstate(gadget)` - Exports gadget state to a format object
 - `importgadgetstate(gadget)` - Imports gadget state from a format object
+
+---
+
+## Gadget scroll catalog
+
+**Doc:** [`docs/gadget-scrolls.md`](docs/gadget-scrolls.md)
+
+Catalog of VM handlers, `refscroll:` routes, ROM keys, inspection flows, and behavior notes (clear vs unlock, scroll lock, hyperlink chips) for the right-hand scroll panel.
 
 ---
 
