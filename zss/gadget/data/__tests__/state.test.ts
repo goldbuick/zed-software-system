@@ -19,6 +19,7 @@ describe('state', () => {
       expect(state.desync).toBe(false)
       expect(state.gadget.id).toBe('')
       expect(state.gadget.board).toBe('')
+      expect(state.gadget.boardname).toBe('')
       expect(state.gadget.layers).toEqual([])
       expect(state.zsswords.flags).toEqual([])
       expect(state.layercache).toEqual({})
@@ -37,6 +38,7 @@ describe('state', () => {
       const newGadget = {
         id: 'test-id',
         board: 'test-board',
+        boardname: 'Start',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -52,12 +54,14 @@ describe('state', () => {
       const state = useGadgetClient.getState()
       expect(state.gadget.id).toBe('test-id')
       expect(state.gadget.board).toBe('test-board')
+      expect(state.gadget.boardname).toBe('Start')
 
       // Reset
       useGadgetClient.setState({
         gadget: {
           id: '',
           board: '',
+          boardname: '',
           exiteast: '',
           exitwest: '',
           exitnorth: '',

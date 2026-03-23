@@ -55,6 +55,7 @@ export const useGadgetClient = create<{
   gadget: {
     id: '',
     board: '',
+    boardname: '',
     exiteast: '',
     exitwest: '',
     exitnorth: '',

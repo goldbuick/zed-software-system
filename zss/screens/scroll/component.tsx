@@ -8,7 +8,7 @@ import {
   BOOKMARK_SCROLL_CHIP,
   BOOKMARK_SCROLL_SCROLLNAME,
 } from 'zss/feature/bookmarks'
-import { useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import { PANEL_ITEM, paneladdress } from 'zss/gadget/data/types'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { useTiles } from 'zss/gadget/tiles'
@@ -18,7 +18,6 @@ import { WriteTextContext } from 'zss/gadget/writetext'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
-import { useShallow } from 'zustand/react/shallow'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import {
@@ -31,6 +30,21 @@ import { ScrollBackPlate } from './backplate'
 import { ScrollControls } from './controls'
 import { ScrollCursor } from './cursor'
 import { ScrollMarquee } from './marquee'
+
+/** Compact label like `Mon 3:45p` for bookmark default. */
+function bookmarktimelabel(now: Date): string {
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()]
+  let hour = now.getHours()
+  const minute = now.getMinutes()
+  const isam = hour < 12
+  let hr12 = hour % 12
+  if (hr12 === 0) {
+    hr12 = 12
+  }
+  const mm = minute < 10 ? `0${minute}` : `${minute}`
+  const suffix = isam ? 'a' : 'p'
+  return `${weekday} ${hr12}:${mm}${suffix}`
+}
 
 type ScrollComponentProps = {
   width: number
@@ -59,13 +73,7 @@ export function ScrollComponent({
 
   // get name
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
-  const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
-  const { editoropen, editorbook } = useTape(
-    useShallow((state) => ({
-      editoropen: state.editor.open,
-      editorbook: state.editor.book,
-    })),
-  )
+  const boardname = useGadgetClient((state) => state.gadget.boardname ?? '')
 
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
@@ -124,19 +132,15 @@ export function ScrollComponent({
     if (scrollname !== BOOKMARK_SCROLL_SCROLLNAME) {
       return
     }
-    const parts: string[] = []
-    if (editoropen && editorbook.trim()) {
-      parts.push(editorbook.trim())
-    }
-    if (gadgetboard.trim()) {
-      parts.push(gadgetboard.trim())
-    }
-    const defaultname = parts.join(' / ')
+    const board = boardname.trim()
+    const defaultname = board
+      ? `${board} - ${bookmarktimelabel(new Date())}`
+      : ''
     modemwriteinitstring(
       paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET),
       defaultname,
     )
-  }, [scrollname, editoropen, editorbook, gadgetboard])
+  }, [scrollname, boardname])
 
   // start position
   useEffect(() => {

@@ -96,6 +96,7 @@ describe('api', () => {
       const customState: GADGET_STATE = {
         id: 'custom-id',
         board: 'custom-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',

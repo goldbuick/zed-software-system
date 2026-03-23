@@ -98,9 +98,11 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
             gadget.under = gadgetlayers.under
             gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
             gadget.tickers = gadgetlayers.tickers
+            gadget.boardname = playerboard?.name?.trim() ?? ''
           } else {
             gadget.id = ''
             gadget.board = ''
+            gadget.boardname = ''
             gadget.exiteast = ''
             gadget.exitwest = ''
             gadget.exitnorth = ''

@@ -10,6 +10,14 @@ import { isarray, isstring } from 'zss/mapping/types'
 import { memorybookmarkscroll } from 'zss/memory/bookmarkscroll'
 import { NAME } from 'zss/words/types'
 
+function openbookmarkhref(href: string) {
+  if (typeof globalThis === 'undefined' || !('location' in globalThis)) {
+    return
+  }
+  const browserlocation = (globalThis as { location: Location }).location
+  browserlocation.href = href
+}
+
 export function handlebookmarkscroll(_vm: DEVICE, message: MESSAGE): void {
   let urllist: ZssUrlBookmark[] = []
   if (isarray(message.data)) {
@@ -62,9 +70,7 @@ export function handlebookmarkscrollpanel(
       if (!href?.trim()) {
         return
       }
-      if (typeof globalThis !== 'undefined' && 'location' in globalThis) {
-        ;(globalThis as { location: Location }).location.assign(href)
-      }
+      openbookmarkhref(href)
       break
     }
     default:

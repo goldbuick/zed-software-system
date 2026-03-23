@@ -154,6 +154,7 @@ export function initstate(): GADGET_STATE {
   return {
     id: createsid(),
     board: '',
+    boardname: '',
     layers: [],
     scroll: [],
     sidebar: [],

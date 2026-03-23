@@ -263,6 +263,7 @@ export type SYNTH_STATE = {
 export type GADGET_STATE = {
   id: string
   board: string
+  boardname: string
   exiteast: string
   exitwest: string
   exitnorth: string

@@ -15,6 +15,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -30,6 +31,7 @@ describe('compress', () => {
       expect(imported).toBeDefined()
       expect(imported?.id).toBe(state.id)
       expect(imported?.board).toBe(state.board)
+      expect(imported?.boardname).toBe('')
       expect(imported?.layers).toEqual([])
     })
 
@@ -38,6 +40,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -69,6 +72,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -97,6 +101,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -123,6 +128,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -155,6 +161,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -187,6 +194,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -218,6 +226,7 @@ describe('compress', () => {
       const state = {
         id: 'test-id',
         board: 'test-board',
+        boardname: 'Board B',
         exiteast: 'east',
         exitwest: 'west',
         exitnorth: 'north',
@@ -234,6 +243,7 @@ describe('compress', () => {
       const exported = exportgadgetstate(state)
       const imported = importgadgetstate(exported)
 
+      expect(imported?.boardname).toBe('Board B')
       expect(imported?.exiteast).toBe('east')
       expect(imported?.exitwest).toBe('west')
       expect(imported?.exitnorth).toBe('north')

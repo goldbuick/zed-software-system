@@ -117,4 +117,34 @@ describe('scrollwritelines', () => {
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[3]).toBe('$590')
   })
+
+  it('bookmark url hk line leaves href in trailing args after empty maybenoclose', () => {
+    scrollwritelines(
+      'p1',
+      'bookmarks',
+      '!bookmarkurl hk 1 " 1 " "" https://ex.test;$CYANLOAD hi',
+      'bookmarkscroll',
+    )
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[0]).toBe('bookmarkscroll')
+    expect(row[2]).toBe('bookmarkurl')
+    expect(row[3]).toBe('hk')
+    expect(row[4]).toBe('1')
+    expect(row[5]).toBe(' 1 ')
+    expect(row[6]).toBe('')
+    expect(row[7]).toBe('https://ex.test')
+  })
+
+  it('bookmark delete uses hyperlink type so id is not parsed as control type', () => {
+    scrollwritelines(
+      'p1',
+      'bookmarks',
+      '!bookmarkdel hyperlink abc-id;$REDDELETE 1',
+      'bookmarkscroll',
+    )
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[2]).toBe('bookmarkdel')
+    expect(row[3]).toBe('hyperlink')
+    expect(row[4]).toBe('abc-id')
+  })
 })
