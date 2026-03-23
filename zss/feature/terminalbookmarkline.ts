@@ -74,10 +74,7 @@ export function terminalbookmarkpindisplaylabel(text: string): string {
     const left = t.slice(0, semi).trimEnd()
     const rightraw = t.slice(semi + 1).trim()
     let right = scrolllinkunescapefrag(rightraw)
-    if (
-      right === BOOKMARK_TERMINAL_RUNIT_LABEL &&
-      left.startsWith('!runit ')
-    ) {
+    if (right === BOOKMARK_TERMINAL_RUNIT_LABEL && left.startsWith('!runit ')) {
       const unquoted = bookmarkruniteunquotedpayload(left)
       if (unquoted !== undefined) {
         right = unquoted

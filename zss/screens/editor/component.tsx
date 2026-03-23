@@ -20,7 +20,7 @@ import { textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ScrollMarquee } from '../scroll/marquee'
+import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 
 import { EditorFrame } from './editorframe'
 import { EditorInput } from './editorinput'

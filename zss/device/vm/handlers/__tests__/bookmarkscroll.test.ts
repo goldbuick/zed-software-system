@@ -1,5 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { gadgetserverclearscroll, registerbookmarkdelete } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+
+import { handlebookmarkscrollpanel } from 'zss/device/vm/handlers/bookmarkscroll'
 
 const mockregisterbookmarkurlnavigate = jest.fn()
 
@@ -18,14 +22,6 @@ jest.mock('zss/memory/bookmarkscroll', () => ({
 jest.mock('zss/feature/bookmarks', () => ({
   normalizebookmarks: jest.fn((raw: unknown) => raw),
 }))
-
-import {
-  gadgetserverclearscroll,
-  registerbookmarkdelete,
-} from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
-
-import { handlebookmarkscrollpanel } from '../bookmarkscroll'
 
 describe('handlebookmarkscrollpanel', () => {
   const vm = {} as DEVICE
