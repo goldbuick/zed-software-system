@@ -472,7 +472,7 @@ export const register = createdevice(
         if (isstring(message.data)) {
           setTimeout(() => {
             window.location.href = message.data.trim()
-          }, 333)
+          }, 1000)
         }
         break
       case 'bookmark:delete':
