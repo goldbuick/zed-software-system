@@ -30,7 +30,10 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
       if (isarray(message.data)) {
         books = message.data
       } else if (isstring(message.data)) {
-        books = await memorydecompressbooks(message.data)
+        const decompressed = await memorydecompressbooks(message.data)
+        if (isarray(decompressed)) {
+          books = decompressed
+        }
       }
       const booknames = books.map((item) => item.name)
       apilog(vm, message.player, `loading ${booknames.join(', ')}`)
