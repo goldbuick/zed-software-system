@@ -11,6 +11,7 @@ import {
   readbookmarksfromstorage,
   readterminalbookmarkdisplaylines,
   removebookmarkbyid,
+  terminalbookmarkresolvecli,
 } from 'zss/feature/bookmarks'
 import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
@@ -565,11 +566,13 @@ export const register = createdevice(
             apitoast(register, myplayerid, 'pin not found')
             return
           }
-          const line = entry.text.trim()
-          if (!line.length) {
+          const rawline = entry.text.trim()
+          if (!rawline.length) {
             return
           }
-          const preview = line.length > 48 ? `${line.slice(0, 48)}…` : line
+          const line = terminalbookmarkresolvecli(rawline)
+          const preview =
+            rawline.length > 48 ? `${rawline.slice(0, 48)}…` : rawline
           apitoast(register, myplayerid, `bookmark run $cyan${preview}$white`)
           vmcli(register, message.player, line)
         })
