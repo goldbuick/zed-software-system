@@ -4,7 +4,7 @@ export type HEAVY_LLM_PRESET = 'llama' | 'phi' | 'qwen'
 
 export const HEAVY_LLM_STORAGE_KEY = 'heavy_llm_preset'
 
-export const HEAVY_LLM_DEFAULT_PRESET: HEAVY_LLM_PRESET = 'qwen'
+export const HEAVY_LLM_DEFAULT_PRESET: HEAVY_LLM_PRESET = 'llama'
 
 export type HEAVY_LLM_ROW = {
   modelid: string
@@ -24,7 +24,8 @@ export const HEAVY_LLM_PRESETS: Record<HEAVY_LLM_PRESET, HEAVY_LLM_ROW> = {
     contexttokens: 8192,
   },
   qwen: {
-    modelid: 'onnx-community/Qwen2.5-0.5B-Instruct',
+    // Qwen2.5 has no 1.0B instruct checkpoint; 1.5B is the next size above 0.5B.
+    modelid: 'onnx-community/Qwen2.5-1.5B-Instruct',
     dtype: 'q4f16',
     contexttokens: 8192,
   },

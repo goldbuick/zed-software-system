@@ -4,9 +4,9 @@
 
 ## Heavy LLM presets
 
-Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`llama`** (Llama 3.2 3B), **`phi`** (Phi-3.5-mini), **`qwen`** (Qwen2.5-0.5B Instruct, smallest default).
+Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`llama`** (Llama 3.2 3B, default), **`phi`** (Phi-3.5-mini), **`qwen`** (Qwen2.5-1.5B Instruct; smallest preset, ~1B-class—there is no official 1.0B Qwen2.5 instruct).
 
-**Effective preset** (worker): value restored from register IndexedDB key **`heavy_llm_preset`** (if valid), else optional build env **`ZSS_HEAVY_LLM`** (`llama` \| `phi` \| `qwen`), else **`qwen`**.
+**Effective preset** (worker): value restored from register IndexedDB key **`heavy_llm_preset`** (if valid), else optional build env **`ZSS_HEAVY_LLM`** (`llama` \| `phi` \| `qwen`), else **`llama`**.
 
 **CLI**: `#agent model` shows the effective preset; `#agent model <preset>` writes storage and notifies the worker (serialized on the heavy model job queue).
 
