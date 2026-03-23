@@ -1,16 +1,17 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { gadgetserverclearscroll, registerbookmarkdelete } from 'zss/device/api'
+import {
+  gadgetserverclearscroll,
+  registerbookmarkdelete,
+  registerbookmarkurlnavigate,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-
 import { handlebookmarkscrollpanel } from 'zss/device/vm/handlers/bookmarkscroll'
-
-const mockregisterbookmarkurlnavigate = jest.fn()
 
 jest.mock('zss/device/api', () => ({
   registerbookmarkdelete: jest.fn(),
   gadgetserverclearscroll: jest.fn(),
-  registerbookmarkurlnavigate: mockregisterbookmarkurlnavigate,
+  registerbookmarkurlnavigate: jest.fn(),
   registerbookmarkurlsave: jest.fn(),
 }))
 jest.mock('zss/device/session', () => ({
@@ -27,7 +28,7 @@ describe('handlebookmarkscrollpanel', () => {
   const vm = {} as DEVICE
 
   beforeEach(() => {
-    mockregisterbookmarkurlnavigate.mockClear()
+    jest.mocked(registerbookmarkurlnavigate).mockClear()
     jest.mocked(registerbookmarkdelete).mockClear()
     jest.mocked(gadgetserverclearscroll).mockClear()
   })
@@ -42,7 +43,7 @@ describe('handlebookmarkscrollpanel', () => {
       data: ['https://example.com/path'],
     }
     handlebookmarkscrollpanel(vm, message, 'bookmarkurl')
-    expect(mockregisterbookmarkurlnavigate).toHaveBeenCalledWith(
+    expect(registerbookmarkurlnavigate).toHaveBeenCalledWith(
       vm,
       'p1',
       'https://example.com/path',
@@ -59,7 +60,7 @@ describe('handlebookmarkscrollpanel', () => {
       data: 'https://a.test',
     }
     handlebookmarkscrollpanel(vm, message, 'bookmarkurl')
-    expect(mockregisterbookmarkurlnavigate).toHaveBeenCalledWith(
+    expect(registerbookmarkurlnavigate).toHaveBeenCalledWith(
       vm,
       'p1',
       'https://a.test',
@@ -76,7 +77,7 @@ describe('handlebookmarkscrollpanel', () => {
       data: [],
     }
     handlebookmarkscrollpanel(vm, message, 'bookmarkurl')
-    expect(mockregisterbookmarkurlnavigate).not.toHaveBeenCalled()
+    expect(registerbookmarkurlnavigate).not.toHaveBeenCalled()
   })
 
   it('bookmarkdel calls registerbookmarkdelete and gadgetserverclearscroll from message.data[0]', () => {
