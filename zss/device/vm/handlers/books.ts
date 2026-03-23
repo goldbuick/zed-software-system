@@ -3,7 +3,6 @@ import type { MESSAGE } from 'zss/device/api'
 import { apilog, registerloginready } from 'zss/device/api'
 import { tracking } from 'zss/device/vm/state'
 import { doasync } from 'zss/mapping/func'
-import { waitfor } from 'zss/mapping/tick'
 import { isarray, isstring } from 'zss/mapping/types'
 import {
   memoryreadoperator,
