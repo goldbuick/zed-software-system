@@ -5,8 +5,9 @@ import {
   readzipfilelist,
   readzipfilelistitem,
 } from 'zss/feature/parse/file'
-import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
 import { NAME } from 'zss/words/types'
 
 registerhyperlinksharedbridge(
@@ -20,7 +21,7 @@ export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
   const list = readzipfilelist()
   const lines: string[] = []
   lines.push('$CENTER Select Files')
-  lines.push('[import selected](importfiles)')
+  lines.push(`!importfiles;${scrolllinkescapefrag('import selected')}`)
   for (let i = 0; i < list.length; ++i) {
     const [type, filename] = list[i]
     if (!type) {
@@ -28,11 +29,13 @@ export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
     }
     lines.push(filename)
     const fname = NAME(filename)
-    lines.push(`[\\[${type}\\]](<${fname} select NO 0 YES 1>)`)
+    const cmd = `${fname} select NO 0 YES 1`
+    const label = `$cyan[${type}]$white`
+    lines.push(`!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(label)}`)
   }
-  parsemarkdownforscroll(
+  applyzedscroll(
     message.player,
-    lines.join('\n\n'),
+    lines.join('\n'),
     'zipfilelist',
     'zipfilelist',
   )

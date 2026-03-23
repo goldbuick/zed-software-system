@@ -1,4 +1,7 @@
-import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
+import {
+  applyzedscroll,
+  parsemarkdownforscroll,
+} from 'zss/feature/parse/markdownscroll'
 import {
   gadgetstate,
   gadgetstateprovider,
@@ -73,11 +76,25 @@ describe('parsemarkdownforscroll', () => {
     expect(row[1]).toContain(';')
   })
 
-  it('refscroll menu.md style: paragraph-per-link becomes hyperlink rows', () => {
-    const md = `[controls](<helpmenu hk 1 1 next>)
+})
 
-[list objects](<objectlistscroll hk 2 2 next>)`
-    parsemarkdownforscroll('p1', md, 'menu')
+describe('applyzedscroll', () => {
+  const playerstates: Record<string, GADGET_STATE> = {}
+
+  beforeEach(() => {
+    playerstates.p1 = initstate()
+    gadgetstateprovider((player: string) => {
+      if (!playerstates[player]) {
+        playerstates[player] = initstate()
+      }
+      return playerstates[player]
+    })
+  })
+
+  it('refscroll menu: !command;label lines become hyperlink rows', () => {
+    const body = `!helpmenu hk 1 1 next;controls and $greenstart here
+!objectlistscroll hk 2 2 next;list objects`
+    applyzedscroll('p1', body, 'menu')
     const s = gadgetstate('p1')
     expect(s.scroll).toHaveLength(2)
     const r0 = s.scroll![0] as unknown[]

@@ -5,9 +5,9 @@ import {
 } from 'zss/feature/bookmarks'
 import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 import {
-  gadgetapplyscrolllines,
+  scrollwritelines,
   scrolllinkescapefrag,
-} from 'zss/gadget/data/applyscrolllines'
+} from 'zss/gadget/data/scrollwritelines'
 
 export function memorybookmarkscroll(
   player: string,
@@ -30,7 +30,7 @@ export function memorybookmarkscroll(
       `!bookmarkdel ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(`$REDDELETE ${idx}`)}`,
     )
   }
-  gadgetapplyscrolllines(
+  scrollwritelines(
     player,
     BOOKMARK_SCROLL_SCROLLNAME,
     rows.join('\n'),

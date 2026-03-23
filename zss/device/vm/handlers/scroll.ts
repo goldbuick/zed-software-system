@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
-import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
 import { romread } from 'zss/feature/rom'
-import { gadgetapplyscrolllines } from 'zss/gadget/data/applyscrolllines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
@@ -31,8 +31,8 @@ export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
     apitoast(vm, message.player, 'gadget scroll: need content')
     return
   }
-  // refscroll/*.md is CommonMark; parse markdown links into !cmd;label rows (same as vm refscroll paths).
-  parsemarkdownforscroll(
+  // refscroll:menu is Zed !command;label lines (readable next to other built-in scroll strings).
+  applyzedscroll(
     message.player,
     content.trim(),
     '#help or $meta+h',
@@ -62,7 +62,7 @@ export function handlegadgetscroll(vm: DEVICE, message: MESSAGE): void {
   }
   const chip = isstring(d.chip) && d.chip.trim() ? d.chip.trim() : 'refscroll'
   try {
-    gadgetapplyscrolllines(
+    scrollwritelines(
       message.player,
       d.scrollname.trim(),
       d.content.trim(),

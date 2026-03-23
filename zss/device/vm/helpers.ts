@@ -1,9 +1,9 @@
 import { DEVICELIKE, registerforkmem, registersavemem } from 'zss/device/api'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
 import {
-  gadgetapplyscrolllines,
   scrolllinkescapefrag,
-} from 'zss/gadget/data/applyscrolllines'
+  scrollwritelines,
+} from 'zss/gadget/data/scrollwritelines'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -45,7 +45,7 @@ export async function compressedbookstate(): Promise<string> {
 }
 
 export function writezztcontentwait(player: string) {
-  gadgetapplyscrolllines(
+  scrollwritelines(
     player,
     ZZT_BRIDGE,
     `Searching ${'$6'.repeat(randominteger(1, 6))}`,
@@ -74,5 +74,5 @@ export function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
     )
     rows.push(' ')
   }
-  gadgetapplyscrolllines(player, ZZT_BRIDGE, rows.join('\n'), 'zztbridge')
+  scrollwritelines(player, ZZT_BRIDGE, rows.join('\n'), 'zztbridge')
 }

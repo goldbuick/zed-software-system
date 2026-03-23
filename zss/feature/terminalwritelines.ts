@@ -1,12 +1,13 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { write, writehyperlink } from 'zss/feature/writeui'
-import { scrolllinkunescapefrag } from 'zss/gadget/data/applyscrolllines'
+import { scrolllinkunescapefrag } from 'zss/gadget/data/scrollwritelines'
 
 /**
- * Terminal/write analogue of gadgetapplyscrolllines: same newline handling,
- * empty-line skip, scrolllinkunescapefrag, and !payload;label vs plain zetext.
+ * Terminal/write analogue of scrollwritelines: same newline handling,
+ * blank lines (empty / whitespace-only physical lines) as empty log rows,
+ * scrolllinkunescapefrag, and !payload;label vs plain zetext.
  *
- * @param chip Reserved for API parity with gadgetapplyscrolllines; currently unused.
+ * @param chip Reserved for API parity with scrollwritelines; currently unused.
  */
 export function terminalwritelines(
   device: DEVICELIKE,
@@ -19,6 +20,7 @@ export function terminalwritelines(
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
     if (!line.length) {
+      write(device, player, '')
       continue
     }
     if (line.startsWith('!') && line.includes(';')) {

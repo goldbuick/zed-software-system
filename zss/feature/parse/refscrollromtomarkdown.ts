@@ -1,6 +1,6 @@
 import { NAME } from 'zss/words/types'
 
-/** Undo `$59` → `;` for ROM option/link fragments (matches applyscrolllines). */
+/** Undo `$59` → `;` for ROM option/link fragments (matches scrollwritelines). */
 function scrolllinkunescapefrag(s: string): string {
   return s.replace(/\$59(?!\d)/g, ';')
 }

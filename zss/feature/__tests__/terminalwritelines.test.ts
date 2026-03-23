@@ -43,10 +43,14 @@ function createdevicelogrecorder() {
 }
 
 describe('terminalwritelines', () => {
-  it('applies plain lines and skips empty', () => {
+  it('applies plain lines and emits blank lines', () => {
     const { device, logemissions } = createdevicelogrecorder()
     terminalwritelines(device, 'p1', '$RED hi\n  \nworld')
-    expect(logemissions.map((e) => e.payload)).toEqual([['$RED hi'], ['world']])
+    expect(logemissions.map((e) => e.payload)).toEqual([
+      ['$RED hi'],
+      [''],
+      ['world'],
+    ])
     expect(logemissions.every((e) => e.player === 'p1')).toBe(true)
   })
 

@@ -5,9 +5,9 @@ import {
 } from 'zss/feature/bookmarks'
 import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 import {
-  gadgetapplyscrolllines,
+  scrollwritelines,
   scrolllinkescapefrag,
-} from 'zss/gadget/data/applyscrolllines'
+} from 'zss/gadget/data/scrollwritelines'
 
 export function memoryeditorbookmarkscroll(
   player: string,
@@ -30,7 +30,7 @@ export function memoryeditorbookmarkscroll(
       `!copytogame hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(label)}`,
     )
   }
-  gadgetapplyscrolllines(
+  scrollwritelines(
     player,
     EDITOR_BOOKMARK_SCROLL_SCROLLNAME,
     rows.join('\n'),

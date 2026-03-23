@@ -3,7 +3,7 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
-import { gadgetapplyscrolllines } from 'zss/gadget/data/applyscrolllines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 
 jest.mock('zss/device/modem', () => ({
@@ -35,7 +35,7 @@ jest.mock('zss/mapping/value', () => ({
   maptostring: jest.fn((value: unknown) => String(value)),
 }))
 
-describe('applyscrolllines', () => {
+describe('scrollwritelines', () => {
   const playerstates: Record<string, GADGET_STATE> = {}
 
   beforeEach(() => {
@@ -49,14 +49,14 @@ describe('applyscrolllines', () => {
   })
 
   it('applies plain lines and scrollname', () => {
-    gadgetapplyscrolllines('p1', 'T1', '$RED hi\n  \nworld')
+    scrollwritelines('p1', 'T1', '$RED hi\n  \nworld')
     const s = gadgetstate('p1')
     expect(s.scrollname).toBe('T1')
-    expect(s.scroll).toEqual(['$RED hi', 'world'])
+    expect(s.scroll).toEqual(['$RED hi', '', 'world'])
   })
 
   it('applies hyperlink with default refscroll chip', () => {
-    gadgetapplyscrolllines('p1', 'T2', '!mypath arg;$greenTap')
+    scrollwritelines('p1', 'T2', '!mypath arg;$greenTap')
     const s = gadgetstate('p1')
     expect(s.scrollname).toBe('T2')
     expect(s.scroll).toHaveLength(1)
@@ -68,18 +68,18 @@ describe('applyscrolllines', () => {
   })
 
   it('uses custom chip for hyperlinks', () => {
-    gadgetapplyscrolllines('p1', 'T3', '!x y;$lbl', 'mychip')
+    scrollwritelines('p1', 'T3', '!x y;$lbl', 'mychip')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[0]).toBe('mychip')
   })
 
   it('treats ! without semicolon as plain text', () => {
-    gadgetapplyscrolllines('p1', 'T4', '!nosemi')
+    scrollwritelines('p1', 'T4', '!nosemi')
     expect(gadgetstate('p1').scroll).toEqual(['!nosemi'])
   })
 
-  it('hk line uses six-word layout', () => {
-    gadgetapplyscrolllines('p1', 'T5', '!menu hk 1 1 next;$greenGo')
+  it('hk line splits command into words for gadgethyperlink', () => {
+    scrollwritelines('p1', 'T5', '!menu hk 1 1 next;$greenGo')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[0]).toBe('refscroll')
     expect(row[1]).toBe('$greenGo')
@@ -88,7 +88,7 @@ describe('applyscrolllines', () => {
   })
 
   it('copyit with multi-word payload joins for extractcontentfromargs', () => {
-    gadgetapplyscrolllines('p1', 'T6', '!copyit one two;$greenLbl')
+    scrollwritelines('p1', 'T6', '!copyit one two;$greenLbl')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[2]).toBe('istargetless')
     expect(row[3]).toBe('copyit')
@@ -97,13 +97,13 @@ describe('applyscrolllines', () => {
   })
 
   it('decodes $59 to semicolon inside copyit payload token', () => {
-    gadgetapplyscrolllines('p1', 'T7', '!copyit foo$59bar;$greenLbl')
+    scrollwritelines('p1', 'T7', '!copyit foo$59bar;$greenLbl')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[4]).toBe('foo;bar')
   })
 
   it('does not treat $590 as semicolon escape', () => {
-    gadgetapplyscrolllines('p1', 'T8', '!x $590;$y')
+    scrollwritelines('p1', 'T8', '!x $590;$y')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[3]).toBe('$590')
   })

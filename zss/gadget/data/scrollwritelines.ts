@@ -4,7 +4,6 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { NAME } from 'zss/words/types'
 
 /** Zed `NumberLiteral` for ASCII `;` (59); use inside `!left;right` when payload or label contains a semicolon. */
 const SCROLL_SEMI_ZED = '$59'
@@ -26,25 +25,11 @@ function pushscrollhyperlink(
   label: string,
 ) {
   const parts = leftwithbang.trimStart().slice(1).split(' ')
-  const second = NAME(parts[1] ?? '')
-  switch (second) {
-    case 'hk':
-    case 'hotkey':
-      gadgethyperlink(player, chip, label, [
-        parts[0] ?? '',
-        parts[1] ?? '',
-        parts[2] ?? '',
-        ` ${parts[3] ?? ''} `,
-        parts[4] ?? '',
-      ])
-      break
-    default:
-      gadgethyperlink(player, chip, label, parts)
-      break
-  }
+  gadgethyperlink(player, chip, label, parts)
 }
 
-export function gadgetapplyscrolllines(
+/** Whitespace-only physical lines become blank scroll rows (`gadgettext` empty string). */
+export function scrollwritelines(
   player: string,
   scrollname: string,
   content: string,
@@ -55,9 +40,6 @@ export function gadgetapplyscrolllines(
   const lines = content.split('\n')
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
-    if (!line.length) {
-      continue
-    }
     if (line.startsWith('!') && line.includes(';')) {
       const semi = line.indexOf(';')
       const left = scrolllinkunescapefrag(line.slice(0, semi).trimEnd())

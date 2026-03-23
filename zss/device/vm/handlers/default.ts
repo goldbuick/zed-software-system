@@ -5,10 +5,13 @@ import { registercopy, vmcli, vmloader } from 'zss/device/api'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsezipfilelist } from 'zss/feature/parse/file'
-import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
+import {
+  applyzedscroll,
+  parsemarkdownforscroll,
+} from 'zss/feature/parse/markdownscroll'
 import { romread } from 'zss/feature/rom'
 import { gadgetstate } from 'zss/gadget/data/api'
-import { scrolllinkescapefrag } from 'zss/gadget/data/applyscrolllines'
+import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
@@ -75,71 +78,61 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           break
         case 'objectlistscroll': {
           const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
-          const mdlines: string[] = []
+          const rows: string[] = []
           for (let i = 0; i < pages.length; ++i) {
             const codepage = pages[i]
             const name = memoryreadcodepagename(codepage)
             const codelines = codepage.code.split('\n').slice(0, 2)
             const label = `@${name}$ltgrey ${codelines[1] ?? ''}`
-              .replaceAll('\\', '\\\\')
-              .replaceAll(']', '\\]')
             const escname = scrolllinkescapefrag(name)
-            mdlines.push(`[${label}](<istargetless copyit ${escname}>)`)
+            rows.push(
+              `!istargetless copyit ${escname};${scrolllinkescapefrag(label)}`,
+            )
           }
-          parsemarkdownforscroll(
-            message.player,
-            mdlines.join('\n\n'),
-            'object list',
-            'list',
-          )
+          applyzedscroll(message.player, rows.join('\n'), 'object list', 'list')
           break
         }
         case 'terrainlistscroll': {
           const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.TERRAIN)
-          const mdlines: string[] = []
+          const rows: string[] = []
           for (let i = 0; i < pages.length; ++i) {
             const codepage = pages[i]
             const name = memoryreadcodepagename(codepage)
             const codelines = codepage.code.split('\n').slice(0, 2)
             const label = `@${name}$ltgrey ${codelines[1] ?? ''}`
-              .replaceAll('\\', '\\\\')
-              .replaceAll(']', '\\]')
             const escname = scrolllinkescapefrag(name)
-            mdlines.push(`[${label}](<istargetless copyit ${escname}>)`)
+            rows.push(
+              `!istargetless copyit ${escname};${scrolllinkescapefrag(label)}`,
+            )
           }
-          parsemarkdownforscroll(
+          applyzedscroll(
             message.player,
-            mdlines.join('\n\n'),
+            rows.join('\n'),
             'terrain list',
             'list',
           )
           break
         }
         case 'charscroll': {
-          parsemarkdownforscroll(
+          applyzedscroll(
             message.player,
-            '[char](<char charedit>)',
+            '!char charedit;char',
             'chars',
             'refscroll',
           )
           break
         }
         case 'colorscroll': {
-          parsemarkdownforscroll(
+          applyzedscroll(
             message.player,
-            '[color](<color coloredit>)',
+            '!color coloredit;color',
             'colors',
             'refscroll',
           )
           break
         }
         case 'bgscroll': {
-          parsemarkdownforscroll(
-            message.player,
-            '[bg](<bg bgedit>)',
-            'bgs',
-            'refscroll',
-          )
+          applyzedscroll(message.player, '!bg bgedit;bg', 'bgs', 'refscroll')
           break
         }
         default: {
