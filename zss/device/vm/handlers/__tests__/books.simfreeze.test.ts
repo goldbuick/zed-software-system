@@ -1,11 +1,10 @@
 import { DEVICE } from 'zss/device'
 import { MESSAGE, apilog, registerloginready } from 'zss/device/api'
+import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
 import * as session from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { memorydecompressbooks } from 'zss/memory/utilities'
-
-import { handlebooks } from '../books'
 
 jest.mock('zss/memory/utilities', () => ({
   memorydecompressbooks: jest.fn(),
@@ -35,6 +34,7 @@ describe('handlebooks sim freeze', () => {
   const flushmicrotasks = () => Promise.resolve()
 
   beforeEach(() => {
+    jest.useFakeTimers()
     session.memorywriteoperator(player)
     session.memorywritesimfreeze(false)
     tracking[player] = 99
@@ -49,13 +49,14 @@ describe('handlebooks sim freeze', () => {
   })
 
   afterEach(() => {
+    jest.useRealTimers()
     jest.restoreAllMocks()
     jest.mocked(memorydecompressbooks).mockReset()
     session.memorywritesimfreeze(false)
     delete tracking[player]
   })
 
-  it('sets simfreeze and resets tracking before await, clears freeze in finally after load', async () => {
+  it('sets simfreeze immediately, resets tracking after waitfor(1000), clears freeze in finally after load', async () => {
     const message: MESSAGE = {
       session: '',
       player,
@@ -67,10 +68,14 @@ describe('handlebooks sim freeze', () => {
 
     handlebooks(vm, message)
 
-    await Promise.resolve()
+    await flushmicrotasks()
     expect(session.memoryreadsimfreeze()).toBe(true)
-    expect(tracking[player]).toBe(0)
+    expect(tracking[player]).toBe(99)
 
+    await jest.advanceTimersByTimeAsync(1000)
+    await flushmicrotasks()
+
+    expect(tracking[player]).toBe(0)
     expect(resolver).toBeDefined()
     resolver!([minimalbook])
 
@@ -103,6 +108,10 @@ describe('handlebooks sim freeze', () => {
 
       handlebooks(vm, message)
 
+      await flushmicrotasks()
+      expect(session.memoryreadsimfreeze()).toBe(true)
+
+      await jest.advanceTimersByTimeAsync(1000)
       await flushmicrotasks()
       await flushmicrotasks()
 

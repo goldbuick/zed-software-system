@@ -1,4 +1,4 @@
-import { romhintfrommarkdown } from '../romhint'
+import { romhintfrommarkdown } from 'zss/rom/romhint'
 
 describe('romhintfrommarkdown', () => {
   it('reads JSON-quoted hint from front matter', () => {

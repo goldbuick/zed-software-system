@@ -1,4 +1,8 @@
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
+import {
+  terminalbookmarkpindisplaylabel,
+  terminalbookmarkresolvecli,
+} from 'zss/feature/terminalbookmarkline'
 import { createpid } from 'zss/mapping/guid'
 import { deepcopy, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
@@ -27,6 +31,13 @@ export const BOOKMARKS_VERSION = 1
 
 /** Max terminal pins stored and shown (newest kept when over cap). */
 export const TERMINAL_PIN_MAX = 6
+
+export {
+  BOOKMARK_TERMINAL_RUNIT_LABEL,
+  bookmarkquotedrunitpayload,
+  terminalbookmarkpindisplaylabel,
+  terminalbookmarkresolvecli,
+} from './terminalbookmarkline'
 
 export type ZssUrlBookmark = {
   kind: 'url'
@@ -178,11 +189,11 @@ export async function appendurlbookmark(
 export async function appendterminalbookmark(
   text: string,
 ): Promise<ZssTerminalBookmark> {
-  const trimmed = text.trim()
+  const resolved = terminalbookmarkresolvecli(text)
   const entry: ZssTerminalBookmark = {
     kind: 'terminal',
     id: createpid(),
-    text: trimmed,
+    text: resolved,
     createdat: Date.now(),
   }
   await mergebookmarksintostorage((prev) => ({
@@ -243,12 +254,6 @@ export async function removebookmarkbyid(id: string): Promise<boolean> {
     return { ...prev, url, terminal, editor }
   })
   return found
-}
-
-/** One-line label for the pin row (no `;` / newlines — they break terminal hyperlink parse). */
-export function terminalbookmarkpindisplaylabel(text: string): string {
-  const oneline = text.replace(/[\r\n;]/g, ' ').trim()
-  return oneline.length > 52 ? `${oneline.slice(0, 49)}...` : oneline || '*'
 }
 
 export function terminalbookmarkpinline(

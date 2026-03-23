@@ -35,7 +35,7 @@ function showheavylmpresetmenu(player: string) {
     write(
       SOFTWARE,
       player,
-      `$grayCurrent$white $cyan${effective}$white · $grayEnter on a row to switch$white`,
+      `$grayCurrent$white $cyan${effective}$white $7 $grayEnter on a row to switch$white`,
     )
     const ids = heavylmpresetids()
     for (let i = 0; i < ids.length; ++i) {
