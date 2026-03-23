@@ -467,6 +467,11 @@ export const register = createdevice(
           apitoast(register, myplayerid, `saved bookmark $green${rawname}`)
         })
         break
+      case 'bookmark:urlnavigate':
+        if (isstring(message.data) && message.data.trim()) {
+          location.href = message.data.trim()
+        }
+        break
       case 'bookmark:delete':
         doasync(register, message.player, async () => {
           const id = message.data

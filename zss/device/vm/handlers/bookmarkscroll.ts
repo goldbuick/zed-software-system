@@ -3,20 +3,13 @@ import type { MESSAGE } from 'zss/device/api'
 import {
   registerbookmarkdelete,
   registerbookmarkscroll,
+  registerbookmarkurlnavigate,
   registerbookmarkurlsave,
 } from 'zss/device/api'
 import { type ZssUrlBookmark, normalizebookmarks } from 'zss/feature/bookmarks'
 import { isarray, isstring } from 'zss/mapping/types'
 import { memorybookmarkscroll } from 'zss/memory/bookmarkscroll'
 import { NAME } from 'zss/words/types'
-
-function openbookmarkhref(href: string) {
-  if (typeof globalThis === 'undefined' || !('location' in globalThis)) {
-    return
-  }
-  const rootwithlocation = globalThis as { location: Location }
-  rootwithlocation.location.href = href
-}
 
 export function handlebookmarkscroll(_vm: DEVICE, message: MESSAGE): void {
   let urllist: ZssUrlBookmark[] = []
@@ -70,7 +63,7 @@ export function handlebookmarkscrollpanel(
       if (!href?.trim()) {
         return
       }
-      openbookmarkhref(href)
+      registerbookmarkurlnavigate(vm, message.player, href)
       break
     }
     default:

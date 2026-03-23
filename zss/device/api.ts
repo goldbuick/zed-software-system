@@ -592,6 +592,15 @@ export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmark:urlsave', true)
 }
 
+/** Main-thread navigation; VM runs in sim worker where `location` is not the browser tab. */
+export function registerbookmarkurlnavigate(
+  device: DEVICELIKE,
+  player: string,
+  href: string,
+) {
+  device.emit(player, 'register:bookmark:urlnavigate', href)
+}
+
 export function registerbookmarkdelete(
   device: DEVICELIKE,
   player: string,
