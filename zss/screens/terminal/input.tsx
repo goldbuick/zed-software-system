@@ -720,11 +720,7 @@ export function TerminalInput({
                       rowi < terminallogs.length
                     ) {
                       const logline = terminallogs[rowi] ?? ''
-                      registerappendterminalbookmark(
-                        SOFTWARE,
-                        player,
-                        logline,
-                      )
+                      registerappendterminalbookmark(SOFTWARE, player, logline)
                       break
                     }
                     const line =

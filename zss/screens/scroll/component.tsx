@@ -33,8 +33,10 @@ import { ScrollMarquee } from './marquee'
 
 /** Compact label like `Mon 3:45p` for bookmark default. */
 function bookmarktimelabel(now: Date): string {
-  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()]
-  let hour = now.getHours()
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
+    now.getDay()
+  ]
+  const hour = now.getHours()
   const minute = now.getMinutes()
   const isam = hour < 12
   let hr12 = hour % 12

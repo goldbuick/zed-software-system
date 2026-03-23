@@ -1,5 +1,11 @@
-import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import { DEVICE } from 'zss/device'
+import { MESSAGE, apilog, registerloginready } from 'zss/device/api'
+import { tracking } from 'zss/device/vm/state'
+import * as session from 'zss/memory/session'
+import type { BOOK } from 'zss/memory/types'
+import { memorydecompressbooks } from 'zss/memory/utilities'
+
+import { handlebooks } from '../books'
 
 jest.mock('zss/memory/utilities', () => ({
   memorydecompressbooks: jest.fn(),
@@ -10,14 +16,6 @@ jest.mock('zss/device/api', () => ({
   registerloginready: jest.fn(),
   apierror: jest.fn(),
 }))
-
-import { apilog, registerloginready } from 'zss/device/api'
-import { tracking } from 'zss/device/vm/state'
-import type { BOOK } from 'zss/memory/types'
-import { memorydecompressbooks } from 'zss/memory/utilities'
-import * as session from 'zss/memory/session'
-
-import { handlebooks } from '../books'
 
 const minimalbook: BOOK = {
   id: 'bid_simfreeze',
@@ -86,7 +84,9 @@ describe('handlebooks sim freeze', () => {
   })
 
   it('clears simfreeze in finally when decompress rejects', async () => {
-    const consoleerror = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleerror = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
     try {
       jest
         .mocked(memorydecompressbooks)
