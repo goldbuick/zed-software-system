@@ -56,7 +56,7 @@ describe('handlebooks sim freeze', () => {
     delete tracking[player]
   })
 
-  it('sets simfreeze immediately, resets tracking after waitfor(1000), clears freeze in finally after load', async () => {
+  it('sets simfreeze immediately, resets tracking before decompress, clears freeze in finally after load', async () => {
     const message: MESSAGE = {
       session: '',
       player,
@@ -70,12 +70,8 @@ describe('handlebooks sim freeze', () => {
 
     await flushmicrotasks()
     expect(session.memoryreadsimfreeze()).toBe(true)
-    expect(tracking[player]).toBe(99)
-
-    await jest.advanceTimersByTimeAsync(1000)
-    await flushmicrotasks()
-
     expect(tracking[player]).toBe(0)
+
     expect(resolver).toBeDefined()
     resolver!([minimalbook])
 
@@ -108,10 +104,6 @@ describe('handlebooks sim freeze', () => {
 
       handlebooks(vm, message)
 
-      await flushmicrotasks()
-      expect(session.memoryreadsimfreeze()).toBe(true)
-
-      await jest.advanceTimersByTimeAsync(1000)
       await flushmicrotasks()
       await flushmicrotasks()
 
