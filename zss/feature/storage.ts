@@ -288,8 +288,9 @@ export async function storagesharecontent(player: string) {
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function storagenukecontent(_player: string) {
   if (isclimode()) {
-    if (typeof (window as any).__nodeStorageNukeContent === 'function') {
-      ;(window as any).__nodeStorageNukeContent()
+    const nodewindow = window as { __nodeStorageNukeContent?: () => void }
+    if (typeof nodewindow.__nodeStorageNukeContent === 'function') {
+      nodewindow.__nodeStorageNukeContent()
     }
     return
   }

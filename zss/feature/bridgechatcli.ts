@@ -65,10 +65,11 @@ export function mergetostartobject(
   kv: Record<string, string>,
 ): BRIDGE_CHAT_START_OBJECT {
   const o = { ...base }
+  const ostartrecord = o as Record<string, unknown>
   const assign = (field: keyof BRIDGE_CHAT_START_OBJECT, ...keys: string[]) => {
     const v = kvget(kv, ...keys)
     if (v !== '') {
-      ;(o as Record<string, unknown>)[field] = v
+      ostartrecord[field] = v
     }
   }
   assign('routekey', 'routekey', 'rk', 'key')

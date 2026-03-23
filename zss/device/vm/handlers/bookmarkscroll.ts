@@ -14,8 +14,8 @@ function openbookmarkhref(href: string) {
   if (typeof globalThis === 'undefined' || !('location' in globalThis)) {
     return
   }
-  const browserlocation = (globalThis as { location: Location }).location
-  browserlocation.href = href
+  const rootwithlocation = globalThis as { location: Location }
+  rootwithlocation.location.href = href
 }
 
 export function handlebookmarkscroll(_vm: DEVICE, message: MESSAGE): void {

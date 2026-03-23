@@ -25,13 +25,16 @@ jest.mock('zss/memory/session', () => ({
   memoryreadoperator: jest.fn(() => 'operator'),
 }))
 
+const mockmemoryreadoperator = memoryreadoperator as jest.Mock
+const mockapierror = apierror as jest.Mock
+
 function resettocreativedefaults() {
   memorysetcommandpermissions([], {}, 'creative', {}, {}, undefined, undefined)
 }
 
 describe('permissions', () => {
   beforeEach(() => {
-    ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+    mockmemoryreadoperator.mockReturnValue('operator')
     resettocreativedefaults()
   })
 
@@ -66,19 +69,19 @@ describe('permissions', () => {
 
   describe('memorycanruncommand', () => {
     it('allows operator to run any command', () => {
-      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      mockmemoryreadoperator.mockReturnValue('operator')
       expect(memorycanruncommand('operator', 'nuke')).toBe(true)
       expect(memorycanruncommand('operator', 'allow')).toBe(true)
     })
 
     it('denies non-operator with no token', () => {
-      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      mockmemoryreadoperator.mockReturnValue('operator')
       expect(memorycanruncommand('player1', 'toast')).toBe(false)
     })
 
     it('apierror includes family and command when no token', () => {
-      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
-      ;(apierror as jest.Mock).mockClear()
+      mockmemoryreadoperator.mockReturnValue('operator')
+      mockapierror.mockClear()
       expect(memorycanruncommand('player1', 'toast')).toBe(false)
       expect(apierror).toHaveBeenCalledWith(
         expect.anything(),
@@ -90,7 +93,7 @@ describe('permissions', () => {
     })
 
     it('allows non-operator when token has role with command on allowlist', () => {
-      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      mockmemoryreadoperator.mockReturnValue('operator')
       resettocreativedefaults()
       memorysetplayertotoken('player1', 'token-a')
       memorysetrolefortoken('token-a', 'player')
@@ -98,17 +101,17 @@ describe('permissions', () => {
     })
 
     it('denies non-operator when command not on role allowlist', () => {
-      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      mockmemoryreadoperator.mockReturnValue('operator')
       memorysetplayertotoken('player1', 'token-a')
       memorysetrolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'allow')).toBe(false)
     })
 
     it('apierror includes family and command on allowlist deny', () => {
-      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      mockmemoryreadoperator.mockReturnValue('operator')
       memorysetplayertotoken('player1', 'token-a')
       memorysetrolefortoken('token-a', 'player')
-      ;(apierror as jest.Mock).mockClear()
+      mockapierror.mockClear()
       expect(memorycanruncommand('player1', 'allow')).toBe(false)
       expect(apierror).toHaveBeenCalledWith(
         expect.anything(),
@@ -120,7 +123,7 @@ describe('permissions', () => {
     })
 
     it('allows admin roles family; denies risk by default', () => {
-      ;(memoryreadoperator as jest.Mock).mockReturnValue('operator')
+      mockmemoryreadoperator.mockReturnValue('operator')
       memorysetplayertotoken('player1', 'token-admin')
       memorysetrolefortoken('token-admin', 'admin')
       expect(memorycanruncommand('player1', 'nuke')).toBe(false)
