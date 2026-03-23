@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { inputcolor } from 'zss/screens/panel/common'
@@ -18,6 +19,7 @@ export function TerminalSelect({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
+  usehyperlinksharedsync(prefix, 'select')
   const { valuelabels, values } = useMemo(() => {
     const pairs = words.slice(2)
     const valuelabels: WORD[] = []

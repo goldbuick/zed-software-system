@@ -31,6 +31,12 @@ In [`RUNTIME_FIRMWARE.aftertick`](../../firmware/runtime.ts), when a **non-playe
 
 Hyperlink rows are `[chip, label, ...args]` (see [`gadgethyperlink`](../data/api.ts)). The **chip** string is the VM/default-handler branch used when the link is activated (e.g. `refscroll`, `bookmarkscroll`, `zipfilelist`, `list`, `adminop`). Bundled refscroll help content is often markdown on disk; `registerhyperlinksharedbridge` in [`api.ts`](../data/api.ts) can supply `get`/`set` for `HYPERLINK_WITH_SHARED` types (e.g. `zipfilelist` + `select`) so generated links need no per-row closures.
 
+### Terminal tape vs scroll (shared hyperlinks)
+
+The bottom **tape** parses lines as `!{prefix}!{command…;$label}` (see [`TerminalItem`](../../screens/terminal/item.tsx)): a **second** `!` separates the modem key from the tokenized command. For `HYPERLINK_WITH_SHARED` widgets (`select`, `range`, `text`, edits, etc.), **`prefix` must equal `paneladdress(chip, target)`** — i.e. `chip:target` with **only the first `:`** as the separator (**`target` must not contain `:`**). [`usehyperlinksharedsync`](../data/usehyperlinksharedsync.ts) registers the same modem observe/init + bridge `get`/`set` path as `gadgethyperlink` when that prefix parses. [`registerterminalhyperlinksharedbridge`](../data/api.ts) adds tape-only defaults; merged lookup **prefers** `registerhyperlinksharedbridge` and uses the terminal registry only when the scroll bridge is missing for that `(chip, type)`.
+
+Full wiring diagram and Q&A: [scroll-vs-terminal-hyperlinks.md](./scroll-vs-terminal-hyperlinks.md).
+
 ### Wiki fallback for `refscroll:<path>`
 
 If `romread('refscroll:' + path)` is missing, the UI briefly shows title `$7$7$7 please wait` and loading text, then [`fetchwiki`](../../feature/fetchwiki.ts) + [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) fill the panel. The title becomes the **`path`** string (wiki slug).
@@ -75,7 +81,7 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 
 ## ROM keys (`refscroll/`)
 
-Bundled under [`zss/feature/rom/refscroll/`](../../feature/rom/refscroll/) as **`.md`** files. Address = `refscroll:<name>` where `<name>` is the filename without `.md`. Legacy `.txt` → markdown conversion lives in [`refscrollromtomarkdown.ts`](../../feature/parse/refscrollromtomarkdown.ts) for tooling or one-off migrations.
+Bundled under [`zss/feature/rom/refscroll/`](../../feature/rom/refscroll/) as **`.md`** files. Address = `refscroll:<name>` where `<name>` is the filename without `.md`.
 
 `algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
 

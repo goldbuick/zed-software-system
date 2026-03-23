@@ -5,7 +5,10 @@ import {
   vmpublish,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { formatboardfortext } from 'zss/feature/heavy/formatstate'
+import {
+  formatboardfortext,
+  formatlookfortext,
+} from 'zss/feature/heavy/formatstate'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import { writeopenit, writetext } from 'zss/feature/writeui'
@@ -13,6 +16,7 @@ import { FIRMWARE } from 'zss/firmware'
 import { isemail } from 'zss/firmware/cli/utils'
 import { doasync } from 'zss/mapping/func'
 import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
+import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
@@ -27,6 +31,18 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       () => {
         const data = memoryreadboardstatequery(READ_CONTEXT.elementfocus)
         const text = formatboardfortext(data)
+        terminalwritelines(SOFTWARE, READ_CONTEXT.elementfocus, text)
+        return 0
+      },
+    )
+    .command(
+      'look',
+      [
+        'show scroll, sidebar, and board tickers (text snapshot of player UI state)',
+      ],
+      () => {
+        const look = memoryreadlookstatequery(READ_CONTEXT.elementfocus)
+        const text = formatlookfortext(look)
         terminalwritelines(SOFTWARE, READ_CONTEXT.elementfocus, text)
         return 0
       },
@@ -134,7 +150,11 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                     metadata.url,
                     metadata.filename,
                   )
-                  writetext(SOFTWARE, READ_CONTEXT.elementfocus, metadata.tags)
+                  terminalwritelines(
+                    SOFTWARE,
+                    READ_CONTEXT.elementfocus,
+                    metadata.tags,
+                  )
                 }
               }
             })

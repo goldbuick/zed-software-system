@@ -131,7 +131,7 @@ Functions for manipulating board elements, terrain, and objects.
 
 ## File Parsing
 
-**Files:** `parse/file.ts`, `parse/ansi.ts`, `parse/chr.ts`, `parse/zzt.ts`, `parse/zzm.ts`, `parse/zztobj.ts`, `parse/ansilove/index.ts`, `parse/markdownscroll.ts`, `parse/refscrollromtomarkdown.ts`, `parse/markdownwriteui.ts`
+**Files:** `parse/file.ts`, `parse/ansi.ts`, `parse/chr.ts`, `parse/zzt.ts`, `parse/zzm.ts`, `parse/zztobj.ts`, `parse/ansilove/index.ts`, `parse/markdownscroll.ts`, `parse/markdownwriteui.ts`
 
 Functions for parsing various file formats and converting them to internal representations.
 
@@ -166,7 +166,6 @@ Functions for parsing various file formats and converting them to internal repre
 
 ### Markdown Parsing
 - `parsemarkdownforscroll(player, content, scrollname, chip?)` - Parse markdown for scroll display; optional `chip` (default `refscroll`) passed to `scrollwritelines`
-- `refscrollromtomarkdown(source)` - Convert legacy refscroll `.txt` line format to markdown (tooling / migration)
 - `parsemarkdownforwriteui(player, content)` - Parse markdown for writeui display
 
 ---

@@ -36,6 +36,7 @@ export const AGENT_ZSS_COMMANDS = `
 - \`#set user <name>\`: change your display name
 - \`#continue\`: request another turn to observe results before acting again
 - \`#query\`: print a text snapshot of the current board (objects, terrain counts, exits, kinds)
+- \`#look\`: print scroll, sidebar, and board tickers (player UI text snapshot)
 `.trim()
 
 export type LOOK_STATE = {

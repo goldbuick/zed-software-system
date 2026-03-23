@@ -17,6 +17,10 @@ registerhyperlinksharedbridge(
   (name, value) => markzipfilelistitem(name, !!value),
 )
 
+// Terminal tape lines that bind the same modem keys as this scroll should use
+// `!zipfilelist:<filename>!select;…` (second `!` separates `paneladdress` prefix
+// from the command). Targets must not contain `:`.
+
 export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
   const list = readzipfilelist()
   const lines: string[] = []
@@ -33,10 +37,5 @@ export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
     const label = `$cyan[${type}]$white`
     lines.push(`!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(label)}`)
   }
-  applyzedscroll(
-    message.player,
-    lines.join('\n'),
-    'zipfilelist',
-    'zipfilelist',
-  )
+  applyzedscroll(message.player, lines.join('\n'), 'zipfilelist', 'zipfilelist')
 }

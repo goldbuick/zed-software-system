@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
+import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { withclipboard } from 'zss/feature/keyboard'
 import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -25,6 +26,7 @@ export function TerminalText({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
+  usehyperlinksharedsync(prefix, 'text')
 
   const address = prefix
   const value = useWaitForValueString(address)

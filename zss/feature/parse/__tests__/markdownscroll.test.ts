@@ -75,7 +75,6 @@ describe('parsemarkdownforscroll', () => {
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[1]).toContain(';')
   })
-
 })
 
 describe('applyzedscroll', () => {

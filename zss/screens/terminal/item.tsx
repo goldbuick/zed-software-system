@@ -18,6 +18,8 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
+import { TerminalCharEdit } from './charedit'
+import { TerminalColorEdit } from './coloredit'
 import { TerminalCopyIt } from './copyit'
 import { TerminalHotkey } from './hotkey'
 import { TerminalHyperlink } from './hyperlink'
@@ -28,6 +30,7 @@ import { TerminalRunIt } from './runit'
 import { TerminalSelect } from './select'
 import { TerminalText } from './text'
 import { TerminalViewIt } from './viewit'
+import { TerminalZSSEdit } from './zssedit'
 
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
@@ -121,11 +124,13 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
       case 'text':
         return <TerminalText {...props} words={words} />
       case 'zssedit':
-        return null
+        return <TerminalZSSEdit {...props} words={words} />
       case 'charedit':
-        return null
+        return <TerminalCharEdit {...props} words={words} />
       case 'coloredit':
-        return null
+        return <TerminalColorEdit {...props} words={words} />
+      case 'bgedit':
+        return <TerminalColorEdit {...props} words={words} isbg />
     }
   }
 

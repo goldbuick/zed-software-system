@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { maptonumber } from 'zss/mapping/value'
@@ -20,6 +21,7 @@ export function TerminalNumber({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
+  usehyperlinksharedsync(prefix, 'number')
 
   const maybemin = maptonumber(words[2], maybedefault)
   const maybemax = maptonumber(words[3], maybedefault)

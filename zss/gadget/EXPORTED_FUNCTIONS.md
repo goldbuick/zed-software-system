@@ -506,6 +506,9 @@ API for managing gadget state, panels, and hyperlinks.
 ### Hyperlink Management
 - `gadgethyperlink(player, chip, label, words, get, set)` - Creates a hyperlink panel item with shared state tracking for certain types (range, select, number, text, etc.)
 - `registerhyperlinksharedbridge(chip, type, get, set)` - Optional default `get`/`set` for a chip + shared hyperlink `type` (e.g. `zipfilelist` + `select`) so call sites can omit closures
+- `registerterminalhyperlinksharedbridge(chip, type, get, set)` - Same shape for the terminal tape; merged with scroll bridges (scroll wins when both define the same key)
+- `parseterminalmodemprefix(prefix)` - Validates `chip:target` tape prefixes (first `:` only; no `:` in `target`)
+- `resolvehyperlinksharedbridge(chip, type)` - Resolved `get`/`set` after merge (scroll then terminal gap-fill)
 
 ### Value Tracking
 - `gadgetcheckset(chip, name, value)` - Checks if a set operation matches any tracked shared state and updates it

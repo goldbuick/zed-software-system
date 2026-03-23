@@ -5,8 +5,8 @@ import {
 } from 'zss/feature/bookmarks'
 import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 import {
-  scrollwritelines,
   scrolllinkescapefrag,
+  scrollwritelines,
 } from 'zss/gadget/data/scrollwritelines'
 
 export function memoryeditorbookmarkscroll(

@@ -29,6 +29,11 @@ const hyperlinksharedbridges: Record<
   Record<string, HYPERLINK_SHARED_BRIDGE>
 > = {}
 
+const terminalhyperlinksharedbridges: Record<
+  string,
+  Record<string, HYPERLINK_SHARED_BRIDGE>
+> = {}
+
 /** Register get/set for `HYPERLINK_WITH_SHARED` links so call sites can omit closures (e.g. zip file list). */
 export function registerhyperlinksharedbridge(
   chip: string,
@@ -40,6 +45,107 @@ export function registerhyperlinksharedbridge(
   const t = NAME(type)
   hyperlinksharedbridges[c] = hyperlinksharedbridges[c] ?? {}
   hyperlinksharedbridges[c][t] = { get, set }
+}
+
+/**
+ * Terminal tape bridge: same shape as `registerhyperlinksharedbridge`. Lookup merges
+ * with scroll bridges — **scroll wins** when both define the same `(chip, type)`;
+ * terminal registration only fills gaps.
+ */
+export function registerterminalhyperlinksharedbridge(
+  chip: string,
+  type: string,
+  get: (target: string) => WORD,
+  set: (name: string, value: WORD) => void,
+): void {
+  const c = NAME(chip)
+  const t = NAME(type)
+  terminalhyperlinksharedbridges[c] = terminalhyperlinksharedbridges[c] ?? {}
+  terminalhyperlinksharedbridges[c][t] = { get, set }
+}
+
+export function resolvehyperlinksharedbridge(
+  chip: string,
+  type: string,
+): HYPERLINK_SHARED_BRIDGE | undefined {
+  const c = NAME(chip)
+  const t = NAME(type)
+  return hyperlinksharedbridges[c]?.[t] ?? terminalhyperlinksharedbridges[c]?.[t]
+}
+
+/**
+ * Tape hyperlinks that bind shared modem state should use a prefix of the form
+ * `chip:target` where `target` does not contain `:`. Matches `paneladdress(chip, target)`.
+ */
+export function parseterminalmodemprefix(
+  prefix: string,
+): { chip: string; target: string } | undefined {
+  const idx = prefix.indexOf(':')
+  if (idx <= 0) {
+    return undefined
+  }
+  if (prefix.indexOf(':', idx + 1) >= 0) {
+    return undefined
+  }
+  const chip = prefix.slice(0, idx).trim()
+  const target = prefix.slice(idx + 1).trim()
+  if (!chip.length || !target.length) {
+    return undefined
+  }
+  return { chip: NAME(chip), target }
+}
+
+type READ_CONTEXT_SNAPSHOT = {
+  board: typeof READ_CONTEXT.board
+  element: typeof READ_CONTEXT.element
+  elementfocus: typeof READ_CONTEXT.elementfocus
+}
+
+export function applyhyperlinksharedmodemsync(
+  chip: string,
+  type: string,
+  target: string,
+  getforchip: (name: string) => WORD,
+  setforchip: (name: string, value: WORD) => void,
+  readcontextcache: READ_CONTEXT_SNAPSHOT,
+): void {
+  const typ = NAME(type) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
+  if (!HYPERLINK_WITH_SHARED.has(typ)) {
+    return
+  }
+
+  function setvalue<T extends number | string>(targ: string, value: T) {
+    if (ispresent(value) && value !== getforchip(targ)) {
+      READ_CONTEXT.board = readcontextcache.board
+      READ_CONTEXT.element = readcontextcache.element
+      READ_CONTEXT.elementfocus = readcontextcache.elementfocus
+      setforchip(targ, value)
+    }
+  }
+
+  panelshared[chip] = panelshared[chip] ?? {}
+  const current = getforchip(target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[typ]
+
+  if (panelshared[chip][target] !== undefined) {
+    return
+  }
+
+  const address = paneladdress(chip, target)
+  if (HYPERLINK_WITH_SHARED_TEXT.has(typ)) {
+    if (isstring(current)) {
+      modemwriteinitstring(address, current)
+    }
+    panelshared[chip][target] = modemobservevaluestring(address, (value) => {
+      setvalue<string>(target, value)
+    })
+  } else {
+    if (isnumber(current)) {
+      modemwriteinitnumber(address, current)
+    }
+    panelshared[chip][target] = modemobservevaluenumber(address, (value) => {
+      setvalue<number>(target, value)
+    })
+  }
 }
 
 export function initstate(): GADGET_STATE {
@@ -85,6 +191,7 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   zssedit: '',
   charedit: '',
   coloredit: '',
+  bgedit: 0,
 }
 
 type GADGET_STATE_PROVIDER = (player: string) => GADGET_STATE
@@ -219,62 +326,26 @@ export function gadgethyperlink(
     `${hyperlink[3] as string}`,
   ) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
 
-  const bridge = hyperlinksharedbridges[NAME(chip)]?.[type]
+  const bridge = resolvehyperlinksharedbridge(chip, type)
   const getforchip = bridge?.get ?? get
   const setforchip = bridge?.set ?? set
 
-  // cache READ_CONTEXT
-  const cache = { ...READ_CONTEXT }
-
-  // set value handler
-  function setvalue<T extends number | string>(target: string, value: T) {
-    if (ispresent(value) && value !== getforchip(target)) {
-      READ_CONTEXT.board = cache.board
-      READ_CONTEXT.element = cache.element
-      READ_CONTEXT.elementfocus = cache.elementfocus
-      setforchip(target, value)
-    }
+  const cache: READ_CONTEXT_SNAPSHOT = {
+    board: READ_CONTEXT.board,
+    element: READ_CONTEXT.element,
+    elementfocus: READ_CONTEXT.elementfocus,
   }
 
-  // do we care?
   if (HYPERLINK_WITH_SHARED.has(type)) {
-    // what flag or message to change / send
     const target = `${hyperlink[2] as string}`
-
-    // track changes to value by chip
-    panelshared[chip] = panelshared[chip] ?? {}
-
-    // get current value
-    const current = getforchip(target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[type]
-
-    // setup tracking if needed
-    if (panelshared[chip][target] === undefined) {
-      const address = paneladdress(chip, target)
-      // observe by hyperlink type
-      if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
-        // this will init the value only if not already setup
-        if (isstring(current)) {
-          modemwriteinitstring(address, current)
-        }
-        panelshared[chip][target] = modemobservevaluestring(
-          address,
-          (value) => {
-            setvalue<string>(target, value)
-          },
-        )
-      } else {
-        // this will init the value only if not already setup
-        if (isnumber(current)) {
-          modemwriteinitnumber(address, current)
-        }
-        panelshared[chip][target] = modemobservevaluenumber(
-          address,
-          (value) => {
-            setvalue<number>(target, value)
-          },
-        )
-      }
-    }
+    applyhyperlinksharedmodemsync(
+      chip,
+      type,
+      target,
+      getforchip,
+      setforchip,
+      cache,
+    )
   }
 
   // add content
