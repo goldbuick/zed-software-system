@@ -1,11 +1,10 @@
 import { DEVICE } from 'zss/device'
 import { MESSAGE, apilog, registerloginready } from 'zss/device/api'
+import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
 import * as session from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { memorydecompressbooks } from 'zss/memory/utilities'
-
-import { handlebooks } from 'zss/device/vm/handlers/books'
 
 jest.mock('zss/memory/utilities', () => ({
   memorydecompressbooks: jest.fn(),

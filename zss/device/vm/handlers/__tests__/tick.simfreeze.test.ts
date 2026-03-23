@@ -1,16 +1,15 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { memorytickmain } from 'zss/memory/runtime'
-import * as session from 'zss/memory/session'
-
 import { pilottick } from 'zss/device/vm/handlers/pilot'
 import { handletick } from 'zss/device/vm/handlers/tick'
+import { memorytickmain } from 'zss/memory/runtime'
+import * as session from 'zss/memory/session'
 
 jest.mock('zss/memory/runtime', () => ({
   memorytickmain: jest.fn(),
 }))
 
-jest.mock('../pilot', () => ({
+jest.mock('zss/device/vm/handlers/pilot', () => ({
   pilottick: jest.fn(),
 }))
 
