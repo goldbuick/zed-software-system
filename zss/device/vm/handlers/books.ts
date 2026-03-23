@@ -20,7 +20,6 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
   }
   doasync(vm, message.player, async () => {
     memorywritesimfreeze(true)
-    await waitfor(1000)
     const trackingkeys = Object.keys(tracking)
     for (let i = 0; i < trackingkeys.length; ++i) {
       tracking[trackingkeys[i]] = 0
