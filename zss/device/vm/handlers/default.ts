@@ -38,6 +38,7 @@ import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
 
+import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handlezztbridge } from './zzt'
 
@@ -204,6 +205,9 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'editorbookmarkscroll':
       handleeditorbookmarkscrollpanel(vm, message, path)
+      break
+    case 'bookmarkscroll':
+      handlebookmarkscrollpanel(vm, message, path)
       break
     default: {
       const invoke = parsetarget(path)

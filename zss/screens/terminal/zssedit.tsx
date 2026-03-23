@@ -1,6 +1,6 @@
 import { useCallback, useContext, useMemo } from 'react'
 import { parseterminalmodemprefix } from 'zss/gadget/data/api'
-import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
+import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { ispresent } from 'zss/mapping/types'
@@ -21,7 +21,7 @@ export function TerminalZSSEdit({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
-  usehyperlinksharedsync(prefix, 'zssedit')
+  useHyperlinkSharedSync(prefix, 'zssedit')
 
   const parsed = useMemo(() => parseterminalmodemprefix(prefix), [prefix])
   const tcolor = inputcolor(!!active)

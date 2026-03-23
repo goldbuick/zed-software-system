@@ -4,7 +4,7 @@ import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { readcharfrombytes } from 'zss/feature/bytes'
-import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
+import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { useMedia } from 'zss/gadget/media'
 import { UserInput } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -24,7 +24,7 @@ export function TerminalCharEdit({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
-  usehyperlinksharedsync(prefix, 'charedit')
+  useHyperlinkSharedSync(prefix, 'charedit')
 
   const address = prefix
   const value = useWaitForValueNumber(address)

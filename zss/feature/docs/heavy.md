@@ -4,7 +4,7 @@
 
 ## Heavy LLM presets
 
-Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`llama`** (Llama 3.2 3B, default), **`phi`** (Phi-3.5-mini), **`smol`** (SmolLM2-360M-Instruct ONNX), **`tiny`** (Llama 3.2 1B Instruct ONNX, `q4f16`). Stored or typed **`qwen`** is treated as **`tiny`** (legacy alias).
+Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`llama`** (Llama 3.2 3B, default) and **`tiny`** (Llama 3.2 1B Instruct, `q4f16`). Stored **`qwen`** is treated as **`tiny`** (legacy alias); older stored values such as **`phi`** / **`smol`** fall back to **`llama`**.
 
 **Effective preset** (worker): value restored from register IndexedDB key **`heavy_llm_preset`** (if valid), else built-in default **`llama`** (`HEAVY_LLM_DEFAULT_PRESET` in code).
 

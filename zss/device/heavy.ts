@@ -319,11 +319,12 @@ const heavy = createdevice('heavy', [], (message) => {
       }
       const applied = preset
       const toast = showtoast
-      enqueueheavyjob(heavy, message.player, async () => {
+      enqueueheavyjob(heavy, message.player, () => {
         applyheavylmpreset(applied)
         if (toast) {
           apitoast(heavy, message.player, `heavy llm: ${applied}`)
         }
+        return Promise.resolve()
       })
       break
     }

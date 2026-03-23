@@ -3,7 +3,7 @@ import { registercopy } from 'zss/device/api'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
+import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { useMedia } from 'zss/gadget/media'
 import { UserInput } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -28,7 +28,7 @@ export function TerminalColorEdit({
   isbg = false,
 }: TapeTerminalItemInputProps & { isbg?: boolean }) {
   const context = useWriteText()
-  usehyperlinksharedsync(prefix, isbg ? 'bgedit' : 'coloredit')
+  useHyperlinkSharedSync(prefix, isbg ? 'bgedit' : 'coloredit')
 
   const withlist = useMemo(() => (isbg ? bgmap : colormap), [isbg])
   const address = prefix

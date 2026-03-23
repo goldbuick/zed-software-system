@@ -8,7 +8,7 @@ import {
   BOOKMARK_SCROLL_CHIP,
   BOOKMARK_SCROLL_SCROLLNAME,
 } from 'zss/feature/bookmarks'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape } from 'zss/gadget/data/state'
 import { PANEL_ITEM, paneladdress } from 'zss/gadget/data/types'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { useTiles } from 'zss/gadget/tiles'
@@ -18,6 +18,7 @@ import { WriteTextContext } from 'zss/gadget/writetext'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
+import { useShallow } from 'zustand/react/shallow'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import {
@@ -58,6 +59,13 @@ export function ScrollComponent({
 
   // get name
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
+  const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
+  const { editoropen, editorbook } = useTape(
+    useShallow((state) => ({
+      editoropen: state.editor.open,
+      editorbook: state.editor.book,
+    })),
+  )
 
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
@@ -113,13 +121,22 @@ export function ScrollComponent({
   )
 
   useEffect(() => {
-    if (scrollname === BOOKMARK_SCROLL_SCROLLNAME) {
-      modemwriteinitstring(
-        paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET),
-        '',
-      )
+    if (scrollname !== BOOKMARK_SCROLL_SCROLLNAME) {
+      return
     }
-  }, [scrollname])
+    const parts: string[] = []
+    if (editoropen && editorbook.trim()) {
+      parts.push(editorbook.trim())
+    }
+    if (gadgetboard.trim()) {
+      parts.push(gadgetboard.trim())
+    }
+    const defaultname = parts.join(' / ')
+    modemwriteinitstring(
+      paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET),
+      defaultname,
+    )
+  }, [scrollname, editoropen, editorbook, gadgetboard])
 
   // start position
   useEffect(() => {

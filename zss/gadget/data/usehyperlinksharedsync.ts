@@ -14,7 +14,7 @@ import {
  * contain `:`), registers the same modem observe/init + bridge get/set path as
  * scroll `gadgethyperlink` for shared hyperlink types. No-op if prefix is invalid.
  */
-export function usehyperlinksharedsync(prefix: string, type: string): void {
+export function useHyperlinkSharedSync(prefix: string, type: string): void {
   const parsed = useMemo(() => parseterminalmodemprefix(prefix), [prefix])
   const typ = NAME(type)
 

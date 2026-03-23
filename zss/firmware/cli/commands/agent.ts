@@ -66,12 +66,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           } else {
             const p = normalizeheavylmpreset(raw)
             if (!p) {
-              apierror(
-                SOFTWARE,
-                player,
-                'agent',
-                '#agent model | llama | phi | tiny',
-              )
+              apierror(SOFTWARE, player, 'agent', '#agent model | llama | tiny')
             } else {
               registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
               heavyllmpreset(SOFTWARE, player, p)

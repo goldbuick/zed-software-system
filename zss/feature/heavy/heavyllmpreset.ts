@@ -1,6 +1,6 @@
 /** Heavy causal LM preset ids (register IndexedDB + worker; default from `HEAVY_LLM_DEFAULT_PRESET`). */
 
-export type HEAVY_LLM_PRESET = 'llama' | 'phi' | 'smol' | 'tiny'
+export type HEAVY_LLM_PRESET = 'llama' | 'tiny'
 
 export const HEAVY_LLM_STORAGE_KEY = 'heavy_llm_preset'
 
@@ -18,16 +18,6 @@ export const HEAVY_LLM_PRESETS: Record<HEAVY_LLM_PRESET, HEAVY_LLM_ROW> = {
     dtype: 'q4f16',
     contexttokens: 16384,
   },
-  phi: {
-    modelid: 'onnx-community/Phi-3.5-mini-instruct-onnx-web',
-    dtype: 'q4f16',
-    contexttokens: 8192,
-  },
-  smol: {
-    modelid: 'onnx-community/SmolLM2-360M-Instruct-ONNX',
-    dtype: 'q4f16',
-    contexttokens: 8192,
-  },
   tiny: {
     // Smallest Llama 3.2 instruct ONNX slot (1B); q4f16 + split onnx_data like Phi — better WebGPU fit than Qwen here.
     modelid: 'onnx-community/Llama-3.2-1B-Instruct-ONNX',
@@ -42,7 +32,7 @@ export function heavylmpresetids(): HEAVY_LLM_PRESET[] {
 }
 
 export function isvalidheavylmpreset(s: string): s is HEAVY_LLM_PRESET {
-  return s === 'llama' || s === 'phi' || s === 'smol' || s === 'tiny'
+  return s === 'llama' || s === 'tiny'
 }
 
 export function normalizeheavylmpreset(
@@ -58,6 +48,7 @@ export function normalizeheavylmpreset(
 /**
  * Resolve preset for display / CLI: stored register var if valid, else
  * `HEAVY_LLM_DEFAULT_PRESET`. `stored` is the raw value from pull/storage.
+ * Removed ids (`phi`, `smol`, …) fall through to the default.
  */
 export function resolveheavylmpresetfromsources(
   stored: unknown,

@@ -1,6 +1,11 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apitoast, vmclearscroll, vmcodepagesnapshot } from 'zss/device/api'
+import {
+  apitoast,
+  registereditoropen,
+  vmclearscroll,
+  vmcodepagesnapshot,
+} from 'zss/device/api'
 import {
   GAME_BOOKMARK_TARGET_BOOK,
   type ZssEditorBookmark,
@@ -102,6 +107,59 @@ export function handleeditorbookmarkscrollpanel(
         return
       }
       apitoast(vm, message.player, `copied $green${entry.title}$white to game`)
+      vmclearscroll(vm, message.player)
+      break
+    }
+    case 'openineditor': {
+      let pinid: string | undefined
+      if (isarray(message.data)) {
+        const first = (message.data as unknown[])[0]
+        if (isstring(first)) {
+          pinid = first
+        }
+      } else if (isstring(message.data)) {
+        pinid = message.data
+      }
+      if (!pinid) {
+        apitoast(vm, message.player, 'bookmark not found')
+        return
+      }
+      const list = editorbookmarkscrollcache[message.player] ?? []
+      const entry = list.find((b) => b.id === pinid)
+      if (!entry) {
+        apitoast(vm, message.player, 'bookmark not found')
+        return
+      }
+      const raw = deepcopy(entry.codepage) as CODE_PAGE
+      if (
+        !ispresent(raw) ||
+        typeof raw !== 'object' ||
+        !isstring(raw.id) ||
+        !isstring(raw.code)
+      ) {
+        apitoast(vm, message.player, 'invalid bookmark payload')
+        return
+      }
+      raw.id = createsid()
+      if (!isstring(entry.book) || !entry.book.trim()) {
+        apitoast(vm, message.player, 'invalid bookmark book')
+        return
+      }
+      const targetbook = memoryensurebookbyname(entry.book)
+      if (!memorywritecodepage(targetbook, raw)) {
+        apitoast(vm, message.player, 'open in editor failed')
+        return
+      }
+      registereditoropen(
+        vm,
+        message.player,
+        entry.book,
+        [raw.id],
+        isstring(entry.type) ? entry.type : '',
+        isstring(entry.title) ? entry.title : '',
+        0,
+      )
+      apitoast(vm, message.player, `opened $green${entry.title}$white in editor`)
       vmclearscroll(vm, message.player)
       break
     }

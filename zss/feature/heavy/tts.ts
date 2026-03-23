@@ -58,18 +58,16 @@ async function ensuresupertonic(
   if (ispresent(supertonictts)) {
     return supertonictts
   }
-  if (!supertonicloadpromise) {
-    supertonicloadpromise = (async () => {
-      try {
-        apitoast(device, player, 'supertonic loading...')
-        const t = await SupertonicTTS.from_pretrained()
-        supertonictts = t
-        return t
-      } finally {
-        supertonicloadpromise = undefined
-      }
-    })()
-  }
+  supertonicloadpromise ??= (async () => {
+    try {
+      apitoast(device, player, 'supertonic loading...')
+      const t = await SupertonicTTS.from_pretrained()
+      supertonictts = t
+      return t
+    } finally {
+      supertonicloadpromise = undefined
+    }
+  })()
   return supertonicloadpromise
 }
 

@@ -714,6 +714,19 @@ export function TerminalInput({
                       }
                       break
                     }
+                    if (
+                      rowi !== undefined &&
+                      rowi >= pincount &&
+                      rowi < terminallogs.length
+                    ) {
+                      const logline = terminallogs[rowi] ?? ''
+                      registerappendterminalbookmark(
+                        SOFTWARE,
+                        player,
+                        logline,
+                      )
+                      break
+                    }
                     const line =
                       tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
                     registerappendterminalbookmark(SOFTWARE, player, line)

@@ -27,6 +27,9 @@ export function memoryeditorbookmarkscroll(
       b.title.length > 40 ? `${b.title.slice(0, 37)}...` : b.title
     const label = `$CYAN${shorttitle}$WHITE  $ltgrey(${b.book})`
     rows.push(
+      `!openineditor hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(`$GREENOPEN$WHITE ${shorttitle}  $ltgrey(${b.book})`)}`,
+    )
+    rows.push(
       `!copytogame hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(label)}`,
     )
   }
