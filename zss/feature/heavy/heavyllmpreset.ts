@@ -31,6 +31,11 @@ export const HEAVY_LLM_PRESETS: Record<HEAVY_LLM_PRESET, HEAVY_LLM_ROW> = {
   },
 }
 
+/** Stable order for CLI / help (subset keys of `HEAVY_LLM_PRESETS`). */
+export function heavylmpresetids(): HEAVY_LLM_PRESET[] {
+  return (Object.keys(HEAVY_LLM_PRESETS) as HEAVY_LLM_PRESET[]).sort()
+}
+
 export function isvalidheavylmpreset(s: string): s is HEAVY_LLM_PRESET {
   return s === 'llama' || s === 'phi' || s === 'qwen'
 }

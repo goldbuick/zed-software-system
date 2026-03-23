@@ -8,7 +8,7 @@ Presets are defined in [`heavyllmpreset.ts`](../heavy/heavyllmpreset.ts): **`lla
 
 **Effective preset** (worker): value restored from register IndexedDB key **`heavy_llm_preset`** (if valid), else optional build env **`ZSS_HEAVY_LLM`** (`llama` \| `phi` \| `qwen`), else **`llama`**.
 
-**CLI**: `#agent model` shows the effective preset; `#agent model <preset>` writes storage and notifies the worker (serialized on the heavy model job queue).
+**CLI**: `#agent model` shows the effective preset; `#agent model list` (or `presets`) lists ids and Hugging Face repo ids; `#agent model <preset>` writes storage and notifies the worker (serialized on the heavy model job queue).
 
 ## Modules
 

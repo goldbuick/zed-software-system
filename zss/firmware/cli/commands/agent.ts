@@ -8,12 +8,14 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
+  HEAVY_LLM_PRESETS,
   HEAVY_LLM_STORAGE_KEY,
+  heavylmpresetids,
   normalizeheavylmpreset,
   resolveheavylmpresetfromsources,
 } from 'zss/feature/heavy/heavyllmpreset'
 import { pullstoragevarfrommain } from 'zss/feature/storagepull'
-import { write } from 'zss/feature/writeui'
+import { write, writeheader } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -23,7 +25,10 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'agent',
-    [ARG_TYPE.MAYBE_NAME, 'start/stop/list/model AI agents'],
+    [
+      ARG_TYPE.MAYBE_NAME,
+      'start/stop/list/model AI agents (#agent model list = presets)',
+    ],
     (_, words) => {
       const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       switch (NAME(action)) {
@@ -31,7 +36,24 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           const [maybepreset] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
           const raw = NAME(maybepreset)
           const player = READ_CONTEXT.elementfocus
-          if (raw === '') {
+          if (raw === 'list' || raw === 'presets') {
+            writeheader(SOFTWARE, player, 'heavy llm presets')
+            const ids = heavylmpresetids()
+            for (let i = 0; i < ids.length; ++i) {
+              const id = ids[i]
+              const row = HEAVY_LLM_PRESETS[id]
+              write(
+                SOFTWARE,
+                player,
+                `  $cyan${id}$white — ${row.modelid} (${row.dtype}, ctx ${row.contexttokens})`,
+              )
+            }
+            write(
+              SOFTWARE,
+              player,
+              `$gray#agent model$white shows active preset; $gray#agent model <id>$white switches`,
+            )
+          } else if (raw === '') {
             doasync(SOFTWARE, player, async () => {
               const stored = await pullstoragevarfrommain(
                 SOFTWARE,
@@ -45,7 +67,12 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           } else {
             const p = normalizeheavylmpreset(raw)
             if (!p) {
-              apierror(SOFTWARE, player, 'agent', '#agent model llama|phi|qwen')
+              apierror(
+                SOFTWARE,
+                player,
+                'agent',
+                '#agent model list | llama | phi | qwen',
+              )
             } else {
               doasync(SOFTWARE, player, async () => {
                 registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
