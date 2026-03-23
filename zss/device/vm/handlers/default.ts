@@ -147,7 +147,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
               shared.scrollname = '$7$7$7 please wait'
               shared.scroll = ['loading $7$7$7']
               const markdowntext = await fetchwiki(path)
-              parsemarkdownforscroll(message.player, markdowntext)
+              parsemarkdownforscroll(message.player, markdowntext, path)
             } else {
               romparse(romread(`refscroll:${path}`), (line) =>
                 romscroll(message.player, line),
@@ -155,7 +155,9 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
             }
             const shared = gadgetstate(message.player)
             shared.scrollname = path
-            shared.scroll = gadgetcheckqueue(message.player)
+            if (ispresent(content)) {
+              shared.scroll = gadgetcheckqueue(message.player)
+            }
           })
           break
         }

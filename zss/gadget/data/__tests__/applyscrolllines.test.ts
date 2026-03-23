@@ -86,4 +86,25 @@ describe('applyscrolllines', () => {
     expect(row[2]).toBe('menu')
     expect(row[3]).toBe('hk')
   })
+
+  it('copyit with multi-word payload joins for extractcontentfromargs', () => {
+    gadgetapplyscrolllines('p1', 'T6', '!copyit one two;$greenLbl')
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[2]).toBe('istargetless')
+    expect(row[3]).toBe('copyit')
+    expect(row[4]).toBe('one')
+    expect(row[5]).toBe('two')
+  })
+
+  it('decodes $59 to semicolon inside copyit payload token', () => {
+    gadgetapplyscrolllines('p1', 'T7', '!copyit foo$59bar;$greenLbl')
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[4]).toBe('foo;bar')
+  })
+
+  it('does not treat $590 as semicolon escape', () => {
+    gadgetapplyscrolllines('p1', 'T8', '!x $590;$y')
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[3]).toBe('$590')
+  })
 })
