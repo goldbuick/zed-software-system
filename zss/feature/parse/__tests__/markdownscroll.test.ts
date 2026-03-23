@@ -1,10 +1,10 @@
+import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
 import {
   gadgetstate,
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
 import { GADGET_STATE } from 'zss/gadget/data/types'
-import { parsemarkdownforscroll } from 'zss/feature/parse/markdownscroll'
 
 jest.mock('zss/device/modem', () => ({
   modemobservevaluenumber: jest.fn(),

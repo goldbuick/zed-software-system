@@ -1,8 +1,8 @@
 import { ChatClient, ChatMessage } from '@twurple/chat'
 import { ispresent } from 'zss/mapping/types'
 
-import { CHAT_KIND } from './chattypes'
 import type { CHAT_CONNECTOR, CHAT_CONNECTOR_STATUS } from './chatconnector'
+import { CHAT_KIND } from './chattypes'
 
 function removeurls(text: string) {
   const urlregex = /(?:https?|ftp):\/\/[\n\S]+/g

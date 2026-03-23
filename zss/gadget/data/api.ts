@@ -24,8 +24,10 @@ type HYPERLINK_SHARED_BRIDGE = {
   set: (name: string, value: WORD) => void
 }
 
-const hyperlinksharedbridges: Record<string, Record<string, HYPERLINK_SHARED_BRIDGE>> =
-  {}
+const hyperlinksharedbridges: Record<
+  string,
+  Record<string, HYPERLINK_SHARED_BRIDGE>
+> = {}
 
 /** Register get/set for `HYPERLINK_WITH_SHARED` links so call sites can omit closures (e.g. zip file list). */
 export function registerhyperlinksharedbridge(

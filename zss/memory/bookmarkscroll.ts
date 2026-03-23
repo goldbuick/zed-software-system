@@ -3,22 +3,20 @@ import {
   BOOKMARK_SCROLL_SCROLLNAME,
   type ZssUrlBookmark,
 } from 'zss/feature/bookmarks'
+import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 import {
   gadgetapplyscrolllines,
   scrolllinkescapefrag,
 } from 'zss/gadget/data/applyscrolllines'
-import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 
 export function memorybookmarkscroll(
   player: string,
   urllist: ZssUrlBookmark[],
 ): void {
-  gadgethyperlink(
-    player,
-    BOOKMARK_SCROLL_CHIP,
-    'bookmark name',
-    [`newname`, 'text'],
-  )
+  gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, 'bookmark name', [
+    `newname`,
+    'text',
+  ])
   gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, 'SAVE IT', [`bookmarksave`])
   gadgetbbar(player, 10)
   const rows: string[] = []

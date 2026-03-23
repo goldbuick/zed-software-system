@@ -1,14 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import {
-  apitoast,
-  vmclearscroll,
-  vmcodepagesnapshot,
-} from 'zss/device/api'
+import { apitoast, vmclearscroll, vmcodepagesnapshot } from 'zss/device/api'
 import {
   GAME_BOOKMARK_TARGET_BOOK,
-  normalizebookmarks,
   type ZssEditorBookmark,
+  normalizebookmarks,
 } from 'zss/feature/bookmarks'
 import { useTape } from 'zss/gadget/data/state'
 import { createsid } from 'zss/mapping/guid'
@@ -20,7 +16,10 @@ import type { CODE_PAGE } from 'zss/memory/types'
 
 const editorbookmarkscrollcache: Record<string, ZssEditorBookmark[]> = {}
 
-export function handleeditorbookmarkscroll(_vm: DEVICE, message: MESSAGE): void {
+export function handleeditorbookmarkscroll(
+  _vm: DEVICE,
+  message: MESSAGE,
+): void {
   let editorlist: ZssEditorBookmark[] = []
   if (isarray(message.data)) {
     const blob = normalizebookmarks({
@@ -51,7 +50,7 @@ export function handleeditorbookmarkscrollpanel(
         apitoast(vm, message.player, 'no codepage open to bookmark')
         return
       }
-      const pathstrs = ed.path.filter(isstring) as string[]
+      const pathstrs = ed.path.filter(isstring)
       if (!pathstrs.length) {
         apitoast(vm, message.player, 'no codepage open to bookmark')
         return
@@ -102,11 +101,7 @@ export function handleeditorbookmarkscrollpanel(
         apitoast(vm, message.player, 'copy to game failed')
         return
       }
-      apitoast(
-        vm,
-        message.player,
-        `copied $green${entry.title}$white to game`,
-      )
+      apitoast(vm, message.player, `copied $green${entry.title}$white to game`)
       vmclearscroll(vm, message.player)
       break
     }

@@ -1,8 +1,8 @@
-import { client as xmppcreate, xml } from '@xmpp/client'
+import { xml, client as xmppcreate } from '@xmpp/client'
 import { ispresent } from 'zss/mapping/types'
 
-import { CHAT_KIND } from './chattypes'
 import type { CHAT_CONNECTOR, CHAT_CONNECTOR_STATUS } from './chatconnector'
+import { CHAT_KIND } from './chattypes'
 import type { TWITCH_CHAT_HANDLERS } from './twitchchatconnector'
 
 export type XMPP_CONNECT_OPTIONS = {
@@ -16,9 +16,19 @@ export type XMPP_CONNECT_OPTIONS = {
   handlers: TWITCH_CHAT_HANDLERS
 }
 
-export function createxmppchatconnector(opts: XMPP_CONNECT_OPTIONS): CHAT_CONNECTOR {
-  const { routekey, service, domain, username, password, muc, mucnick, handlers } =
-    opts
+export function createxmppchatconnector(
+  opts: XMPP_CONNECT_OPTIONS,
+): CHAT_CONNECTOR {
+  const {
+    routekey,
+    service,
+    domain,
+    username,
+    password,
+    muc,
+    mucnick,
+    handlers,
+  } = opts
   const resource = `zss${Math.floor(Math.random() * 1e9)}`
   const xmpp = xmppcreate({
     service,

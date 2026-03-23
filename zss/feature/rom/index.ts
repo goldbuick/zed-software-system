@@ -18,7 +18,10 @@ import {
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-const romtxtfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })
+const romtxtfiles = import.meta.glob('./**/*.txt', {
+  eager: true,
+  query: 'raw',
+})
 const rommdfiles = import.meta.glob('./refscroll/**/*.md', {
   eager: true,
   query: 'raw',

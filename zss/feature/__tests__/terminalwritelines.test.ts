@@ -1,4 +1,5 @@
 import type { DEVICELIKE } from 'zss/device/api'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 
 jest.mock('zss/device/modem', () => ({
   modemobservevaluenumber: jest.fn(),
@@ -28,8 +29,6 @@ jest.mock('zss/words/reader', () => ({
 jest.mock('zss/mapping/value', () => ({
   maptostring: jest.fn((value: unknown) => String(value)),
 }))
-
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
 
 function createdevicelogrecorder() {
   const logemissions: { player: string; payload: unknown[] }[] = []

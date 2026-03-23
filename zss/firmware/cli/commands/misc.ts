@@ -10,9 +10,9 @@ import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import { writeopenit, writetext } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
-import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
 import { isemail } from 'zss/firmware/cli/utils'
 import { doasync } from 'zss/mapping/func'
+import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
@@ -27,11 +27,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       () => {
         const data = memoryreadboardstatequery(READ_CONTEXT.elementfocus)
         const text = formatboardfortext(data)
-        terminalwritelines(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          text,
-        )
+        terminalwritelines(SOFTWARE, READ_CONTEXT.elementfocus, text)
         return 0
       },
     )
@@ -39,21 +35,13 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       registerbookmarklist(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0
     })
-    .command(
-      'bookmarkdelete',
-      [ARG_TYPE.NAME, 'bookmark id'],
-      (_, words) => {
-        const [id] = readargs(words, 0, [ARG_TYPE.NAME])
-        if (id) {
-          registerbookmarkdelete(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `${id}`,
-          )
-        }
-        return 0
-      },
-    )
+    .command('bookmarkdelete', [ARG_TYPE.NAME, 'bookmark id'], (_, words) => {
+      const [id] = readargs(words, 0, [ARG_TYPE.NAME])
+      if (id) {
+        registerbookmarkdelete(SOFTWARE, READ_CONTEXT.elementfocus, `${id}`)
+      }
+      return 0
+    })
     .command('screenshot', ['screenshot for capture'], () => {
       registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0

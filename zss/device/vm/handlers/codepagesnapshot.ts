@@ -32,7 +32,7 @@ export function handlecodepagesnapshot(vm: DEVICE, message: MESSAGE): void {
   }
   vm.replynext(message, 'ackcodepagesnapshot', {
     book,
-    path: path.filter(isstring) as string[],
+    path: path.filter(isstring),
     type: isstring(edtype) ? edtype : '',
     title: isstring(edtitle) ? edtitle : '',
     codepage: deepcopy(cp),

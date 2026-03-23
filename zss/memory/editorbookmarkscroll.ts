@@ -3,11 +3,11 @@ import {
   EDITOR_BOOKMARK_SCROLL_SCROLLNAME,
   type ZssEditorBookmark,
 } from 'zss/feature/bookmarks'
+import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 import {
   gadgetapplyscrolllines,
   scrolllinkescapefrag,
 } from 'zss/gadget/data/applyscrolllines'
-import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
 
 export function memoryeditorbookmarkscroll(
   player: string,

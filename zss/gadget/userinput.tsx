@@ -23,13 +23,13 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { useTape } from 'zss/gadget/data/state'
 import {
   INPUT,
   INPUT_ALT,
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
-import { useTape } from 'zss/gadget/data/state'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'

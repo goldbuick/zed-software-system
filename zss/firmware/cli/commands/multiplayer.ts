@@ -133,7 +133,14 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           const password = w[i++]?.trim()
           const muc = w[i++]?.trim()
           const mucnick = w[i]?.trim()
-          if (!routekey || !service || !domain || !username || !password || !muc) {
+          if (
+            !routekey ||
+            !service ||
+            !domain ||
+            !username ||
+            !password ||
+            !muc
+          ) {
             apierror(
               SOFTWARE,
               READ_CONTEXT.elementfocus,

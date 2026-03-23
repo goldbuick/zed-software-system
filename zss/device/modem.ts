@@ -338,7 +338,7 @@ export function modemwritevaluestring(key: string, value: string) {
 export function modemreadtextsync(key: string): string {
   const existing = ROOT.get(key)
   if (existing instanceof Y.Text) {
-    return existing.toString()
+    return existing.toJSON()
   }
   return ''
 }

@@ -252,7 +252,7 @@ const bridge = createdevice('bridge', [], (message) => {
         chatslots.delete(parsed.kind)
       }
       if (parsed.kind === CHAT_KIND.TWITCH) {
-        const channel = parsed.channel?.trim() || parsed.routekey
+        const channel = parsed.channel?.trim() ?? parsed.routekey
         apilog(
           bridge,
           message.player,
@@ -289,7 +289,12 @@ const bridge = createdevice('bridge', [], (message) => {
           ircurlvalid = false
         }
         if (!ircurlvalid) {
-          apierror(bridge, message.player, 'bridge', 'irc websocketurl is invalid')
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'irc websocketurl is invalid',
+          )
           break
         }
         apilog(

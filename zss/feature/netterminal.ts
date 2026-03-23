@@ -306,12 +306,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       if (networkpeer.open) {
         return
       }
-      apierror(
-        SOFTWARE,
-        player,
-        `netterminal`,
-        `signaling handshake timed out`,
-      )
+      apierror(SOFTWARE, player, `netterminal`, `signaling handshake timed out`)
       requestfullsignalingrestart('handshake timeout')
     }, SIGNAL_HANDSHAKE_TIMEOUT_MS)
 
@@ -347,7 +342,12 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       }
       netterminalclearreconnecttimers()
       netterminalclearhandshaketimer()
-      apierror(SOFTWARE, player, `netterminal`, `lost connection to netterminal`)
+      apierror(
+        SOFTWARE,
+        player,
+        `netterminal`,
+        `lost connection to netterminal`,
+      )
       signalreconnecttimer = setTimeout(() => {
         signalreconnecttimer = undefined
         if (!sessionstillactive() || !ispresent(networkpeer)) {

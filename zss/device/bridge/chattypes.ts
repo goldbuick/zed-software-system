@@ -42,7 +42,9 @@ export function normalizechatkind(value: string): MAYBE<CHAT_KIND> {
   return undefined
 }
 
-export function parsechatstartpayload(data: unknown): MAYBE<BRIDGE_CHAT_START_OBJECT> {
+export function parsechatstartpayload(
+  data: unknown,
+): MAYBE<BRIDGE_CHAT_START_OBJECT> {
   if (typeof data === 'string') {
     const channel = data.trim()
     if (!channel) {
@@ -54,7 +56,14 @@ export function parsechatstartpayload(data: unknown): MAYBE<BRIDGE_CHAT_START_OB
     return undefined
   }
   const o = data as Record<string, unknown>
-  const kind = normalizechatkind(String(o.kind ?? ''))
+  const rawkind = o.kind
+  const kindtext =
+    typeof rawkind === 'string'
+      ? rawkind
+      : typeof rawkind === 'number' && Number.isFinite(rawkind)
+        ? String(rawkind)
+        : ''
+  const kind = normalizechatkind(kindtext)
   const routekey = typeof o.routekey === 'string' ? o.routekey.trim() : ''
   if (!kind || !routekey) {
     return undefined

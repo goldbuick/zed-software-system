@@ -16,8 +16,8 @@ import { parsechr } from './chr'
 import { parsemidi } from './midi'
 import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
-import { isszztworldbytes, iszztworldbytes } from './zztmagic'
 import { parsebrd, parseszt, parsezzt } from './zzt'
+import { isszztworldbytes, iszztworldbytes } from './zztmagic'
 import { parsezztobj } from './zztobj'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
