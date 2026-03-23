@@ -70,7 +70,9 @@ export function resolvehyperlinksharedbridge(
 ): HYPERLINK_SHARED_BRIDGE | undefined {
   const c = NAME(chip)
   const t = NAME(type)
-  return hyperlinksharedbridges[c]?.[t] ?? terminalhyperlinksharedbridges[c]?.[t]
+  return (
+    hyperlinksharedbridges[c]?.[t] ?? terminalhyperlinksharedbridges[c]?.[t]
+  )
 }
 
 /**
@@ -84,7 +86,7 @@ export function parseterminalmodemprefix(
   if (idx <= 0) {
     return undefined
   }
-  if (prefix.indexOf(':', idx + 1) >= 0) {
+  if (prefix.includes(':', idx + 1)) {
     return undefined
   }
   const chip = prefix.slice(0, idx).trim()

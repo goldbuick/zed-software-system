@@ -30,4 +30,4 @@
 
 helpful resource on scales
 
-[https://www.pianoscales.org/](<openit https://www.pianoscales.org/>)
+!openit https://www.pianoscales.org/;https://www.pianoscales.org/

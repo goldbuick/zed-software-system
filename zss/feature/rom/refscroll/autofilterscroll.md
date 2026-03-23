@@ -13,4 +13,4 @@ $white Sets the intensity of the effect.
 #autofilter type <lowpass, highpass, ...>  
 $white Sets the behavior of the filter.
 
-[filter types](<openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type>)
+!openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type;filter types

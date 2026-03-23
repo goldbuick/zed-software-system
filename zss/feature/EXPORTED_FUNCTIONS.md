@@ -279,6 +279,7 @@ Read-only memory system for help text and documentation.
 
 ### ROM Access
 - `romread(address)` - Read ROM content by address (returns help text or undefined)
+- `romhintfrommarkdown(content)` - Extract `hint:` from editor ROM markdown (or legacy `desc;` line)
 - `romparse(content, handler)` - Parse ROM content line by line with handler
 - `romprint(player, line)` - Print ROM line to terminal using writeui functions
 - `romscroll(player, line)` - Print ROM line to scroll using gadget functions

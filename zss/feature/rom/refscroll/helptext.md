@@ -24,7 +24,7 @@ send the given #message when the
 send the given #message when the <shortcut>  
 is pressed. is-hotkey listens for <shortcut>
 
-[$whiteis-hotkey on https://github.com/](<openit https://github.com/ianstormtaylor/is-hotkey>)
+!openit https://github.com/ianstormtaylor/is-hotkey;$whiteis-hotkey on https://github.com/
 
 - !flagorstat range [minword] [maxword]; Label
 

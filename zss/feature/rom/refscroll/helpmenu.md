@@ -1,6 +1,6 @@
-[read help on controls](<helpcontrols hk c C next>)
+!helpcontrols hk c C next;read help on controls
 
-[read help on text and inputs](<helptext hk t T next>)
+!helptext hk t T next;read help on text and inputs
 
 keyboard input
 

@@ -1,1 +1,0 @@
-desc;True if collision is bullet

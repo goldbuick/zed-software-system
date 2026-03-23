@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
-import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { withclipboard } from 'zss/feature/keyboard'
+import { usehyperlinksharedsync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'

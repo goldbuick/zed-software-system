@@ -1,1 +1,0 @@
-desc;Color palette used by this board

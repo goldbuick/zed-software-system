@@ -11,10 +11,10 @@ voice settings
 #synth env <attack> <delay> <sustain> <release>  
 voice specific 
 
-[sine, square, triangle, sawtooth](<oscscroll hk o O next>)
+!oscscroll hk o O next;sine, square, triangle, sawtooth
 
-[pwm](<pwmscroll hk m M next>)
+!pwmscroll hk m M next;pwm
 
-[pulse](<pulsescroll hk p P next>)
+!pulsescroll hk p P next;pulse
 
-[algo0 -> algo7](<algoscroll hk a A next>)
+!algoscroll hk a A next;algo0 -> algo7

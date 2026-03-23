@@ -1,13 +1,13 @@
-[#fcrush on](<fcrushscroll hk c C next>)
+!fcrushscroll hk c C next;#fcrush on
 
-[#echo on](<echoscroll hk e E next>)
+!echoscroll hk e E next;#echo on
 
-[#reverb on](<reverbscroll hk r R next>)
+!reverbscroll hk r R next;#reverb on
 
-[#autofilter on](<autofilterscroll hk f F next>)
+!autofilterscroll hk f F next;#autofilter on
 
-[#distort on](<distortscroll hk d D next>)
+!distortscroll hk d D next;#distort on
 
-[#vibrato on](<vibratoscroll hk v V next>)
+!vibratoscroll hk v V next;#vibrato on
 
-[#autowah on](<autowahscroll hk w W next>)
+!autowahscroll hk w W next;#autowah on

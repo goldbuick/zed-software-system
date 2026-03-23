@@ -7,7 +7,8 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { romparse, romprint, romread } from 'zss/feature/rom'
+import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
+import { romread } from 'zss/feature/rom'
 import {
   write,
   writebbar,
@@ -279,8 +280,9 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         })
       } else {
         write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        romparse(romread(`help:nopages`), (line) =>
-          romprint(READ_CONTEXT.elementfocus, line),
+        parsemarkdownforwriteui(
+          READ_CONTEXT.elementfocus,
+          romread(`help:nopages`) ?? '',
         )
       }
       const booklist = memoryreadbooklist()
