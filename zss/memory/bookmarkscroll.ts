@@ -1,4 +1,5 @@
 import {
+  BOOKMARK_NAME_TARGET,
   BOOKMARK_SCROLL_CHIP,
   BOOKMARK_SCROLL_SCROLLNAME,
   type ZssUrlBookmark,
@@ -14,7 +15,7 @@ export function memorybookmarkscroll(
   urllist: ZssUrlBookmark[],
 ): void {
   gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, 'bookmark name', [
-    `newname`,
+    BOOKMARK_NAME_TARGET,
     'text',
   ])
   gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, 'SAVE IT', [`bookmarksave`])
