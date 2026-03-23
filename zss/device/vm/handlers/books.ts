@@ -3,6 +3,7 @@ import type { MESSAGE } from 'zss/device/api'
 import { apilog, registerloginready } from 'zss/device/api'
 import { tracking } from 'zss/device/vm/state'
 import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { isarray, isstring } from 'zss/mapping/types'
 import {
   memoryreadoperator,
@@ -19,6 +20,7 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
   }
   doasync(vm, message.player, async () => {
     memorywritesimfreeze(true)
+    await waitfor(1000)
     const trackingkeys = Object.keys(tracking)
     for (let i = 0; i < trackingkeys.length; ++i) {
       tracking[trackingkeys[i]] = 0

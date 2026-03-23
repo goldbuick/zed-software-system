@@ -472,9 +472,7 @@ export const register = createdevice(
       case 'bookmark:urlnavigate':
         if (isstring(message.data)) {
           apitoast(register, myplayerid, `navigating to $green${message.data}`)
-          setTimeout(() => {
-            window.location.href = message.data.trim()
-          }, 2000)
+          window.location.href = message.data.trim()
         }
         break
       case 'bookmark:delete':
