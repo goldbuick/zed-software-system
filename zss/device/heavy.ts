@@ -12,8 +12,13 @@ import {
   formatagentinfofortext,
   formatboardfortext,
 } from 'zss/feature/heavy/formatstate'
+import {
+  type HEAVY_LLM_PRESET,
+  normalizeheavylmpreset,
+} from 'zss/feature/heavy/heavyllmpreset'
 import type { MODEL_RESULT } from 'zss/feature/heavy/model'
 import {
+  applyheavylmpreset,
   destroysharedmodel,
   modelclassify,
   modelgenerate,
@@ -295,6 +300,34 @@ const heavy = createdevice('heavy', [], (message) => {
         }
       }
       break
+    case 'llmpreset': {
+      let preset: HEAVY_LLM_PRESET | undefined
+      let showtoast = true
+      if (isstring(message.data)) {
+        preset = normalizeheavylmpreset(message.data)
+      } else if (isarray(message.data) && message.data.length >= 1) {
+        const raw = message.data[0]
+        if (isstring(raw)) {
+          preset = normalizeheavylmpreset(raw)
+        }
+        if (message.data[1] === false) {
+          showtoast = false
+        }
+      }
+      if (!preset) {
+        break
+      }
+      const applied = preset
+      const toast = showtoast
+      enqueueheavymodeljob(heavy, message.player, () => {
+        applyheavylmpreset(applied)
+        if (toast) {
+          apitoast(heavy, message.player, `heavy llm: ${applied}`)
+        }
+        return Promise.resolve()
+      })
+      break
+    }
     case 'pilotnotify':
       break
     case 'queryresult':

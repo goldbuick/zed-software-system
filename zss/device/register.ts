@@ -19,6 +19,10 @@ import {
   AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
+import {
+  HEAVY_LLM_STORAGE_KEY,
+  normalizeheavylmpreset,
+} from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
@@ -70,6 +74,7 @@ import {
   apitoast,
   bridgejoin,
   gadgetserverdesync,
+  heavyllmpreset,
   heavyrestoreagents,
   registerterminalclose,
   registerterminalfull,
@@ -364,6 +369,16 @@ export const register = createdevice(
             const raw = vars[AGENTS_ROSTER_STORAGE_KEY]
             if (isvalidagentsroster(raw)) {
               heavyrestoreagents(register, myplayerid, raw)
+            }
+            const llmraw = vars[HEAVY_LLM_STORAGE_KEY]
+            const llmpresetstored =
+              typeof llmraw === 'string'
+                ? normalizeheavylmpreset(llmraw)
+                : undefined
+            if (llmpresetstored) {
+              heavyllmpreset(register, myplayerid, llmpresetstored, {
+                toast: false,
+              })
             }
           })
         } else {

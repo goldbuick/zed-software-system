@@ -4,6 +4,7 @@ without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
+import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -282,6 +283,17 @@ export function heavyrestoreagents(
   roster: AGENTS_ROSTER,
 ) {
   device.emit(player, 'heavy:restoreagents', roster)
+}
+
+/** Worker applies preset (dispose main generator). Use `{ toast: false }` after login restore. */
+export function heavyllmpreset(
+  device: DEVICELIKE,
+  player: string,
+  preset: HEAVY_LLM_PRESET,
+  options?: { toast?: boolean },
+) {
+  const wantstoast = options?.toast !== false
+  device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
 }
 
 /** Main-thread register: start/stop per-agent vm:doot from client `second` ticks (heavy worker → client). */
