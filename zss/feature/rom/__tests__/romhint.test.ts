@@ -5,8 +5,6 @@ describe('romhintfrommarkdown', () => {
     const md = `---
 hint: "$DKGRAYread text"
 ---
-
-$DKGRAYread text
 `
     expect(romhintfrommarkdown(md)).toBe('$DKGRAYread text')
   })
@@ -15,8 +13,6 @@ $DKGRAYread text
     const md = `---
 hint: simple line
 ---
-
-simple line
 `
     expect(romhintfrommarkdown(md)).toBe('simple line')
   })
@@ -25,8 +21,6 @@ simple line
     const md = `---
 hint: 'with '' quote'
 ---
-
-x
 `
     expect(romhintfrommarkdown(md)).toBe("with ' quote")
   })
