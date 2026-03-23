@@ -1,0 +1,10 @@
+## legend
+
+s1, s2, s3, s4 = sound sources/operators  
+m = modulator  
+c = carrier  
+--> = signal flow
+
+## algo0
+
+S1 --> M --> S2 --> M --> S3 --> M --> S4 --> C  

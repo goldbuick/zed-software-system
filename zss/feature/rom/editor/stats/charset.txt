@@ -1,1 +1,0 @@
-desc;Character set used by this board

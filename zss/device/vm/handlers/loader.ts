@@ -1,52 +1,84 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, TEXT_READER } from 'zss/device/api'
-import { apilog, heavymodelclassify, heavymodelprompt } from 'zss/device/api'
-import {
-  readagentnamefromshadow,
-  readagentshadow,
-} from 'zss/device/vm/agentshadow'
-import { ATTENTION_WINDOW_MS, agentlastresponse } from 'zss/device/vm/state'
+import { apilog, heavymodelprompt } from 'zss/device/api'
+import { lastinputtime } from 'zss/device/vm/state'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
+import { memoryreadflags } from 'zss/memory/flags'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware, memorywritebook } from 'zss/memory/session'
-import { memorypickboardnearestpt } from 'zss/memory/spatialqueries'
-import { MEMORY_LABEL } from 'zss/memory/types'
+import {
+  memorylistboardnamedelements,
+  memorypickboardnearestpt,
+} from 'zss/memory/spatialqueries'
+import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
 
-const GENERIC_AGENT_PHRASES = [
-  /\bhey\s+agent\b/i,
-  /\bhi\s+agent\b/i,
-  /\bhello\s+agent\b/i,
-  /\byo\s+agent\b/i,
-  /\bagent\s+what\b/i,
-  /\bagent\s+what'?s\b/i,
-  /\bagent\s*,\s*what\b/i,
-]
-
-function genericphrasematches(messagetext: string): boolean {
-  const normalized = messagetext.trim().toLowerCase()
-  for (let i = 0; i < GENERIC_AGENT_PHRASES.length; ++i) {
-    if (GENERIC_AGENT_PHRASES[i].test(normalized)) {
-      return true
-    }
-  }
-  return false
+function playerisagent(playerid: string): boolean {
+  return memoryreadflags(playerid).agent === 1
 }
 
-function namematches(agentname: string, message: string): boolean {
-  const words = agentname.split(/[-\s]+/)
-  for (let i = 0; i < words.length; ++i) {
-    const pattern = new RegExp('\\b' + words[i] + '\\b', 'i')
-    if (pattern.test(message)) {
-      return true
+function playerdisplayname(playerid: string): string {
+  const s = maptostring(memoryreadflags(playerid).user)
+  return s || playerid
+}
+
+function boardagentelements(board: BOARD, boardid: string): BOARD_ELEMENT[] {
+  const players = memorylistboardnamedelements(board, 'player')
+  const out: BOARD_ELEMENT[] = []
+  for (let i = 0; i < players.length; ++i) {
+    const el = players[i]
+    const pid = el.id
+    if (!isstring(pid) || !playerisagent(pid)) {
+      continue
     }
+    const agentboard = memoryreadplayerboard(pid)
+    if (!ispresent(agentboard) || agentboard.id !== boardid) {
+      continue
+    }
+    out.push(el)
   }
-  return false
+  return out
+}
+
+function boardnearestagentref(
+  board: BOARD,
+  boardid: string,
+  messageplayer: string,
+  sendername: string,
+): { id: string; name: string } | undefined {
+  const senderelement = memoryreadobject(board, messageplayer)
+  if (!ispresent(senderelement)) {
+    return undefined
+  }
+  const senderpt = { x: senderelement.x ?? 0, y: senderelement.y ?? 0 }
+  const candidates = boardagentelements(board, boardid)
+  const agentelements: BOARD_ELEMENT[] = []
+  for (let i = 0; i < candidates.length; ++i) {
+    const el = candidates[i]
+    const agentid = el.id
+    if (!isstring(agentid)) {
+      continue
+    }
+    if (
+      agentid === messageplayer ||
+      playerdisplayname(agentid) === sendername
+    ) {
+      continue
+    }
+    agentelements.push(el)
+  }
+  const nearest = memorypickboardnearestpt(senderpt, agentelements)
+  const nearestid = nearest?.id
+  if (!ispresent(nearest) || !isstring(nearestid)) {
+    return undefined
+  }
+  return { id: nearestid, name: playerdisplayname(nearestid) }
 }
 
 function routechattoagents(
@@ -71,94 +103,48 @@ function routechattoagents(
   }
 
   const sendername = chatline.slice(0, colonidx)
-  const messagetext = chatline.slice(colonidx + 1)
-  const now = Date.now()
+  const prompt = chatline.slice(colonidx + 1)
 
-  if (genericphrasematches(messagetext)) {
-    const board = memoryreadboardbyaddress(boardid)
-    if (!ispresent(board)) {
-      return
-    }
-    const senderelement = memoryreadobject(board, message.player)
-    if (!ispresent(senderelement)) {
-      return
-    }
-    const senderpt = { x: senderelement.x ?? 0, y: senderelement.y ?? 0 }
-    const shadow = readagentshadow()
-    const agentelements: (typeof senderelement)[] = []
-    for (let i = 0; i < shadow.ids.length; ++i) {
-      const agentid = shadow.ids[i]
-      if (
-        agentid === message.player ||
-        readagentnamefromshadow(agentid) === sendername
-      ) {
-        continue
-      }
-      const agentboard = memoryreadplayerboard(agentid)
-      if (!ispresent(agentboard) || agentboard.id !== boardid) {
-        continue
-      }
-      const el = memoryreadobject(board, agentid)
-      if (ispresent(el)) {
-        agentelements.push(el)
-      }
-    }
-    const nearest = memorypickboardnearestpt(senderpt, agentelements)
-    const nearestid = nearest?.id
-    if (ispresent(nearest) && isstring(nearestid)) {
-      if (shadow.ids.includes(nearestid)) {
-        heavymodelprompt(
-          vm,
-          message.player,
-          nearestid,
-          readagentnamefromshadow(nearestid),
-          messagetext,
-          memoryreadconfig('promptlogging'),
-        )
-      }
-    }
+  const board = memoryreadboardbyaddress(boardid)
+  if (!ispresent(board)) {
     return
   }
 
-  const shadow = readagentshadow()
-  for (let i = 0; i < shadow.ids.length; ++i) {
-    const agentid = shadow.ids[i]
+  const nearestref = boardnearestagentref(
+    board,
+    boardid,
+    message.player,
+    sendername,
+  )
+  const nearestrefid = nearestref?.id ?? ''
+  const nearestrefname = nearestref?.name ?? ''
 
-    if (
-      agentid === message.player ||
-      sendername === readagentnamefromshadow(agentid)
-    ) {
+  const defaulttime = new Date('2000-01-01').getTime()
+  const allagents = boardagentelements(board, boardid)
+  for (let i = 0; i < allagents.length; ++i) {
+    const agent = allagents[i]
+    const agentid = agent.id
+    if (!isstring(agentid)) {
       continue
     }
 
-    const agentboard = memoryreadplayerboard(agentid)
-    if (!ispresent(agentboard) || agentboard.id !== boardid) {
+    const agentname = playerdisplayname(agentid)
+    if (agentid === message.player || sendername === agentname) {
       continue
     }
 
-    const lastresponse = agentlastresponse[agentid] ?? 0
-    const hasattention = now - lastresponse < ATTENTION_WINDOW_MS
+    const withlastinputtime = lastinputtime[agentid] ?? defaulttime
+    const withpromptlogging = memoryreadconfig('promptlogging')
 
-    const name = readagentnamefromshadow(agentid)
-    if (hasattention || namematches(name, messagetext)) {
-      heavymodelprompt(
-        vm,
-        message.player,
-        agentid,
-        name,
-        messagetext,
-        memoryreadconfig('promptlogging'),
-      )
-    } else {
-      heavymodelclassify(
-        vm,
-        message.player,
-        agentid,
-        name,
-        messagetext,
-        memoryreadconfig('promptlogging'),
-      )
-    }
+    heavymodelprompt(vm, message.player, {
+      prompt,
+      agentid,
+      agentname,
+      nearestrefid,
+      nearestrefname,
+      lastinputtime: withlastinputtime,
+      promptlogging: withpromptlogging,
+    })
   }
 }
 

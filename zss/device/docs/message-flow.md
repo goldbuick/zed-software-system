@@ -173,7 +173,7 @@ flowchart TB
 | vm        | register   | `register:acklogin`  | Login success/failure           |
 | vm        | heavy      | `heavy:ttsinfo`      | TTS info request               |
 | vm        | heavy      | `heavy:ttsrequest`   | TTS audio request               |
-| vm        | heavy      | `heavy:modelprompt`  | LLM agent prompt                |
+| vm        | heavy      | `heavy:modelprompt`  | Serialized classify then optional full agent LLM |
 | register  | gadgetserver | `gadgetserver:desync`| Request full paint (on ackoperator) |
 | register  | gadgetclient | (via api)           | Paint/patch from gadgetserver  |
 | gadgetserver | gadgetclient | `gadgetclient:paint` | Full state (desync)            |

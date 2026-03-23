@@ -334,6 +334,15 @@ export function modemwritevaluestring(key: string, value: string) {
   }
 }
 
+/** Read Y.Text string on the current JS realm (main thread); worker doc is separate. */
+export function modemreadtextsync(key: string): string {
+  const existing = ROOT.get(key)
+  if (existing instanceof Y.Text) {
+    return existing.toJSON()
+  }
+  return ''
+}
+
 function modemobservevalue(
   key: string,
   callback: (value: unknown) => void,

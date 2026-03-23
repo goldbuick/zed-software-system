@@ -3,20 +3,86 @@ import {
   heavyagentlist,
   heavyagentstart,
   heavyagentstop,
+  heavyllmpreset,
+  registerstore,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  HEAVY_LLM_PRESETS,
+  HEAVY_LLM_STORAGE_KEY,
+  heavylmpresetids,
+  normalizeheavylmpreset,
+  resolveheavylmpresetfromsources,
+} from 'zss/feature/heavy/heavyllmpreset'
+import { pullstoragevarfrommain } from 'zss/feature/storagepull'
+import { write, writeheader, writerunit } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
+import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
+function showheavylmpresetmenu(player: string) {
+  doasync(SOFTWARE, player, async () => {
+    const stored = await pullstoragevarfrommain(
+      SOFTWARE,
+      player,
+      HEAVY_LLM_STORAGE_KEY,
+      'vm',
+    )
+    const effective = resolveheavylmpresetfromsources(stored)
+    writeheader(SOFTWARE, player, 'heavy llm preset')
+    write(
+      SOFTWARE,
+      player,
+      `$grayCurrent$white $cyan${effective}$white · $grayEnter on a row to switch$white`,
+    )
+    const ids = heavylmpresetids()
+    for (let i = 0; i < ids.length; ++i) {
+      const id = ids[i]
+      const row = HEAVY_LLM_PRESETS[id]
+      const cmd = `#agent model ${id}`
+      const iscurrent = id === effective
+      const label = iscurrent
+        ? `$green ${id}$white ${row.modelid} $gray(active)`
+        : `$white ${id} ${row.modelid}`
+      writerunit(SOFTWARE, player, cmd, label)
+    }
+  })
+}
+
 export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'agent',
-    [ARG_TYPE.MAYBE_NAME, 'start/stop/list AI agents'],
+    [
+      ARG_TYPE.MAYBE_NAME,
+      'bare: agents + model picker; start/stop/model AI agents (#agent model = !runit menu)',
+    ],
     (_, words) => {
       const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      const player = READ_CONTEXT.elementfocus
+      if (!ispresent(action)) {
+        heavyagentlist(SOFTWARE, player)
+        showheavylmpresetmenu(player)
+        return 0
+      }
       switch (NAME(action)) {
+        case 'model': {
+          const [maybepreset] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
+          const raw = NAME(maybepreset)
+          if (raw === '') {
+            showheavylmpresetmenu(player)
+          } else {
+            const p = normalizeheavylmpreset(raw)
+            if (!p) {
+              apierror(SOFTWARE, player, 'agent', '#agent model | llama | tiny')
+            } else {
+              registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
+              heavyllmpreset(SOFTWARE, player, p)
+            }
+          }
+          break
+        }
         case 'start': {
           const [agentname] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
           heavyagentstart(
@@ -40,8 +106,6 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           }
           break
         }
-        case '':
-        case 'list':
         default:
           heavyagentlist(SOFTWARE, READ_CONTEXT.elementfocus)
           break

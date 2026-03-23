@@ -5,19 +5,61 @@ import {
   ProgressInfo,
   TextStreamer,
 } from '@huggingface/transformers'
-import { parseresult as llmparseresult } from 'zss/feature/heavy/llm'
-import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm'
+import {
+  HEAVY_LLM_DEFAULT_PRESET,
+  type HEAVY_LLM_PRESET,
+  HEAVY_LLM_PRESETS,
+  type HEAVY_LLM_ROW,
+} from 'zss/feature/heavy/heavyllmpreset'
+import { parseresult as llmparseresult } from 'zss/feature/heavy/llm/parse'
+import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm/types'
 
 const MAX_NEW_TOKENS = 768
 const MODEL_DEVICE = 'webgpu'
-const MODEL_CONTEXT_TOKENS = 16384
 
-// We like the Llama-3 model (Llama-3.2-1B-Instruct-ONNX).
-const MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct-ONNX'
-const MODEL_DTYPE = 'q4f16'
+/** Set from register restore / `#agent model` (worker); when unset, `HEAVY_LLM_DEFAULT_PRESET`. */
+let heavylmregisterpreset: HEAVY_LLM_PRESET | undefined
 
-/** Model used for attention classification and intent detection. Can be a smaller/faster model. */
-const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-360M-ONNX'
+let loadedmaintag: string | undefined
+
+/** Bumped on preset change so in-flight loads discard stale results. */
+let heavyllmloadepoch = 0
+
+function resolveheavyllmpresetkey(): HEAVY_LLM_PRESET {
+  if (heavylmregisterpreset !== undefined) {
+    return heavylmregisterpreset
+  }
+  return HEAVY_LLM_DEFAULT_PRESET
+}
+
+function heavyllmresolvedrow(): HEAVY_LLM_ROW {
+  return HEAVY_LLM_PRESETS[resolveheavyllmpresetkey()]
+}
+
+/** Apply preset from persisted register or CLI; disposes main generator for reload. */
+export function applyheavylmpreset(preset: HEAVY_LLM_PRESET) {
+  heavylmregisterpreset = preset
+  loadedmaintag = undefined
+  heavyllmloadepoch++
+  destroymainheavylm()
+}
+
+/** Dispose main generator only (keep SmolLM2 classifier). */
+export function destroymainheavylm() {
+  if (sharedmodel) {
+    void sharedmodel.model.dispose()
+    sharedmodel = undefined
+  }
+  sharedmodelpromise = undefined
+  loadedmaintag = undefined
+}
+
+export function getheavylmeffectivepreset(): HEAVY_LLM_PRESET {
+  return resolveheavyllmpresetkey()
+}
+
+/** Attention / intent classifier: small instruct model (q4 on WebGPU). */
+const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA'
 const CLASSIFIER_DTYPE = 'q4'
 
 const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}
@@ -48,7 +90,7 @@ function throttle(
   }
 }
 
-export type { MODEL_RESULT } from 'zss/feature/heavy/llm'
+export type { MODEL_RESULT } from 'zss/feature/heavy/llm/types'
 
 type SHARED_MODEL = {
   tokenizer: Awaited<ReturnType<typeof AutoTokenizer.from_pretrained>>
@@ -117,28 +159,54 @@ async function loadclassifiermodel(
   return classifiermodelpromise
 }
 
+function mainmodeltag(cfg: HEAVY_LLM_ROW): string {
+  return `${cfg.modelid}\0${cfg.dtype}`
+}
+
 async function loadsharedmodel(
   onworking: (message: string) => void,
 ): Promise<SHARED_MODEL> {
-  if (sharedmodel) {
+  const cfg = heavyllmresolvedrow()
+  const tag = mainmodeltag(cfg)
+
+  if (sharedmodel && loadedmaintag === tag) {
     return sharedmodel
   }
+
   if (sharedmodelpromise) {
-    return sharedmodelpromise
+    const prev = sharedmodelpromise
+    try {
+      await prev
+    } catch {
+      // stale load aborted
+    } finally {
+      if (sharedmodelpromise === prev) {
+        sharedmodelpromise = undefined
+      }
+    }
+    if (sharedmodel && loadedmaintag === tag) {
+      return sharedmodel
+    }
   }
+
+  destroymainheavylm()
+
+  const modelid = cfg.modelid
+  const modeldtype = cfg.dtype
+  const epoch = heavyllmloadepoch
 
   sharedmodelpromise = (async () => {
     const lastprogress: Record<string, number> = {}
 
-    onworking(`${MODEL_ID} loading ...`)
+    onworking(`${modelid} loading ...`)
     const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`[${MODEL_ID}] ${info.file} loading ...`)
+          onworking(`[${modelid}] ${info.file} loading ...`)
           break
         case 'download':
-          onworking(`[${MODEL_ID}] ${info.file} downloading ...`)
+          onworking(`[${modelid}] ${info.file} downloading ...`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
@@ -152,17 +220,34 @@ async function loadsharedmodel(
       }
     }
 
-    const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID, {
+    const tokenizer = await AutoTokenizer.from_pretrained(modelid, {
       progress_callback,
     })
 
-    const model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, {
-      dtype: MODEL_DTYPE,
+    if (epoch !== heavyllmloadepoch) {
+      throw new Error('heavy llm preset changed during load')
+    }
+
+    const model = await AutoModelForCausalLM.from_pretrained(modelid, {
+      dtype: modeldtype as 'q4f16',
       device: MODEL_DEVICE,
       progress_callback,
     })
 
+    if (epoch !== heavyllmloadepoch) {
+      void model.dispose()
+      throw new Error('heavy llm preset changed during load')
+    }
+
+    const freshcfg = heavyllmresolvedrow()
+    const freshtag = mainmodeltag(freshcfg)
+    if (freshtag !== tag) {
+      void model.dispose()
+      throw new Error('heavy llm preset changed during load')
+    }
+
     sharedmodel = { tokenizer, model }
+    loadedmaintag = freshtag
     sharedmodelpromise = undefined
     return sharedmodel
   })()
@@ -182,9 +267,10 @@ function trimhistory(
   tokenizer: SHARED_MODEL['tokenizer'],
   systemprompt: string,
   messages: Message[],
+  contexttokens: number,
 ): Message[] {
   const systemtokens = counttokens(tokenizer, systemprompt)
-  const budget = MODEL_CONTEXT_TOKENS - MAX_NEW_TOKENS - systemtokens
+  const budget = contexttokens - MAX_NEW_TOKENS - systemtokens
   if (budget <= 0) {
     return []
   }
@@ -239,9 +325,15 @@ export async function modelgenerate(
   onworking: (message: string) => void,
   promptlogging = false,
 ): Promise<MODEL_RESULT> {
+  const cfg = heavyllmresolvedrow()
   const { tokenizer, model } = await loadsharedmodel(onworking)
 
-  const trimmed = trimhistory(tokenizer, systemprompt, messages)
+  const trimmed = trimhistory(
+    tokenizer,
+    systemprompt,
+    messages,
+    cfg.contexttokens,
+  )
   const convo: Message[] = [
     { role: 'system', content: systemprompt },
     ...trimmed,
@@ -315,12 +407,10 @@ export async function modelclassify(
 }
 
 export function destroysharedmodel() {
-  if (sharedmodel) {
-    void sharedmodel.model.dispose()
-    sharedmodel = undefined
-  }
+  destroymainheavylm()
   if (classifiermodel) {
     void classifiermodel.model.dispose()
     classifiermodel = undefined
   }
+  classifiermodelpromise = undefined
 }

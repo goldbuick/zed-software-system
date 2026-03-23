@@ -1,0 +1,16 @@
+## #autofilter on
+
+#autofilter <number>  
+$white 0-100, 0 is off, 100 is full volume  
+#autofilter depth <number>  
+$white Controls the intensity of the filter.  
+#autofilter frequency <number>  
+$white The rate of oscilation of the effect.  
+#autofilter octaves <number>  
+$white Controls the range of the effect.  
+#autofilter q <number>  
+$white Sets the intensity of the effect.  
+#autofilter type <lowpass, highpass, ...>  
+$white Sets the behavior of the filter.
+
+!openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type;filter types

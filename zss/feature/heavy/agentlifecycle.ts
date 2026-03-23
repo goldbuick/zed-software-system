@@ -3,11 +3,11 @@ import type { MESSAGE } from 'zss/device/api'
 import {
   apierror,
   apitoast,
-  heavymodelprompt,
   heavymodelstop,
+  registeragentdootoff,
+  registeragentdooton,
   registerstore,
-  vmagentsync,
-  vmpilotagentclear,
+  vmpilotclear,
 } from 'zss/device/api'
 import { createagent } from 'zss/feature/heavy/agent'
 import {
@@ -29,18 +29,9 @@ function buildroster(): AGENTS_ROSTER {
   return { ids, names: { ...agentnames } }
 }
 
-function pushrostertosim(
-  heavydev: DEVICE,
-  requestplayer: string,
-  roster: AGENTS_ROSTER,
-) {
-  vmagentsync(heavydev, requestplayer, roster)
-}
-
 function persistrostertostorage(heavydev: DEVICE, requestplayer: string) {
   const roster = buildroster()
   registerstore(heavydev, requestplayer, AGENTS_ROSTER_STORAGE_KEY, roster)
-  pushrostertosim(heavydev, requestplayer, roster)
 }
 
 function writeagentlistto(heavydev: DEVICE, requestplayer: string) {
@@ -69,6 +60,7 @@ export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
   const id = agent.id()
   agents[id] = agent
   agentnames[id] = agentname
+  registeragentdooton(heavydev, requestplayer, id)
   persistrostertostorage(heavydev, requestplayer)
   apitoast(heavydev, requestplayer, `agent ${agentname} (${id}) started`)
   writeagentlistto(heavydev, requestplayer)
@@ -94,7 +86,8 @@ function stopagentbyid(
   if (!ispresent(agent)) {
     return false
   }
-  vmpilotagentclear(heavydev, requestplayer, agentid)
+  registeragentdootoff(heavydev, requestplayer, agentid)
+  vmpilotclear(heavydev, requestplayer, agentid)
   heavymodelstop(heavydev, requestplayer, agentid)
   agent.stop()
   delete agents[agentid]
@@ -107,30 +100,6 @@ function stopagentbyid(
 
 export function heavyrunagentlist(heavydev: DEVICE, message: MESSAGE): void {
   writeagentlistto(heavydev, message.player)
-}
-
-export function heavyrunagentprompt(heavydev: DEVICE, message: MESSAGE): void {
-  if (!isarray(message.data)) {
-    return
-  }
-  const data = message.data as [string, string, string?]
-  const [agentid, prompt, promptlogging] = data
-  if (!isstring(agentid) || !isstring(prompt)) {
-    return
-  }
-  const pl = isstring(promptlogging) ? promptlogging : 'off'
-  if (ispresent(agents[agentid])) {
-    heavymodelprompt(
-      heavydev,
-      message.player,
-      agentid,
-      readagentdisplayname(agentid),
-      prompt,
-      pl,
-    )
-  } else {
-    apierror(heavydev, message.player, 'heavy', `agent ${agentid} not found`)
-  }
 }
 
 export function heavyrunagentname(heavydev: DEVICE, message: MESSAGE): void {
@@ -188,11 +157,11 @@ export function heavyrunrestoreagents(
     const agent = createagent(name, id)
     agents[id] = agent
     agentnames[id] = name
+    registeragentdooton(heavydev, requestplayer, id)
     count += 1
   }
   if (count > 0) {
     apitoast(heavydev, requestplayer, `Restored ${count} agent(s)`)
   }
-  pushrostertosim(heavydev, requestplayer, buildroster())
   writeagentlistto(heavydev, requestplayer)
 }

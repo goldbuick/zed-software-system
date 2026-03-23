@@ -1,0 +1,3 @@
+---
+hint: "Restart board when element is zapped"
+---

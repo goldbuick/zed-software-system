@@ -11,18 +11,21 @@ import {
 } from 'zss/device/vm/state'
 import { doasync } from 'zss/mapping/func'
 import { memoryscanplayers } from 'zss/memory/playermanagement'
+import { memoryreadsimfreeze } from 'zss/memory/session'
 
 export function handlesecond(vm: DEVICE, message: MESSAGE): void {
   memoryscanplayers(tracking)
 
-  const players = Object.keys(tracking)
-  for (let i = 0; i < players.length; ++i) {
-    ++tracking[players[i]]
-  }
-  for (let i = 0; i < players.length; ++i) {
-    const player = players[i]
-    if (tracking[player] >= SECOND_TIMEOUT) {
-      vmlogout(vm, player, false)
+  if (!memoryreadsimfreeze()) {
+    const players = Object.keys(tracking)
+    for (let i = 0; i < players.length; ++i) {
+      ++tracking[players[i]]
+    }
+    for (let i = 0; i < players.length; ++i) {
+      const player = players[i]
+      if (tracking[player] >= SECOND_TIMEOUT) {
+        vmlogout(vm, player, false)
+      }
     }
   }
 

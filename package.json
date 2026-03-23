@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.91.108",
+  "version": "0.91.142",
   "type": "module",
   "files": [
     "bin",
@@ -30,6 +30,7 @@
     "analyize": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn build",
     "docker:build": "yarn build:cli:linux && docker build --no-cache -t zss:local .",
     "docker:shell": "yarn docker:build && docker run --rm -it --init zss:local ./start.sh",
+    "docker:run": "sh scripts/docker-run.sh",
     "postinstall": "patch-package"
   },
   "devDependencies": {
@@ -93,8 +94,8 @@
     "nanoid": "^5.0.3",
     "nanoid-dictionary": "^4.3.0",
     "oclif": "^4.22.93",
-    "patch-package": "^8.0.1",
     "onnxruntime-web": "^1.23.2",
+    "patch-package": "^8.0.1",
     "path-browserify": "^1.0.0",
     "peerjs": "^1.5.5",
     "phonemizer": "^1.2.1",
@@ -130,9 +131,11 @@
   "dependencies": {
     "@oclif/core": "^4.8.3",
     "@tonejs/midi": "^2.0.28",
+    "@xmpp/client": "0.14.0",
     "fuse.js": "^7.1.0",
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
+    "irc-framework": "4.14.0",
     "playwright": "^1.49.0",
     "vosk-browser": "^0.0.8"
   },

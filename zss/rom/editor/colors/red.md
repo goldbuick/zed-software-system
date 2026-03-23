@@ -1,0 +1,3 @@
+---
+hint: "Foreground color red"
+---

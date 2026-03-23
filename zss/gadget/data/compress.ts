@@ -59,6 +59,7 @@ function importlayer(layer: MAYBE<FORMAT_OBJECT>): MAYBE<LAYER> {
 enum GADGET_STATE_KEYS {
   id,
   board,
+  boardname,
   over,
   under,
   layers,

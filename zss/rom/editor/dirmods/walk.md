@@ -1,0 +1,3 @@
+---
+hint: "Walk collision type"
+---

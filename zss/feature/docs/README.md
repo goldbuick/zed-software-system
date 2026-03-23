@@ -46,4 +46,4 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **synth** — Web-based synthesizer with Tone.js; see [synth/docs/README.md](../synth/docs/README.md)
 - **heavy** — Piper/Kitten TTS, transformers models, agent with tool calls
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`
-- **rom** — Static `.txt` content for editor commands, help, ref scrolls
+- **rom** — Static `.md` ROM (YAML `hint:` for editor help, Markdown for help screens, refscroll mix)

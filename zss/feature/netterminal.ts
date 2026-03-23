@@ -33,6 +33,70 @@ export function readsubscribetopic() {
 
 let networkpeer: MAYBE<Peer>
 
+const SIGNAL_HANDSHAKE_TIMEOUT_MS = 20_000
+const SIGNAL_RETRY_BASE_MS = 1_000
+const SIGNAL_RETRY_MAX_MS = 60_000
+const DISCONNECTED_RECONNECT_DELAY_MS = 5_000
+const RECONNECT_VERIFY_TIMEOUT_MS = 15_000
+
+let netterminalsessionserial = 0
+let signalhandshaketimer: ReturnType<typeof setTimeout> | undefined
+let signalreconnecttimer: ReturnType<typeof setTimeout> | undefined
+let signalreconnectverifytimer: ReturnType<typeof setTimeout> | undefined
+let signalretrytimer: ReturnType<typeof setTimeout> | undefined
+let netterminalunloadregistered = false
+
+function netterminalclearhandshaketimer() {
+  if (signalhandshaketimer !== undefined) {
+    clearTimeout(signalhandshaketimer)
+    signalhandshaketimer = undefined
+  }
+}
+
+function netterminalclearreconnecttimers() {
+  if (signalreconnecttimer !== undefined) {
+    clearTimeout(signalreconnecttimer)
+    signalreconnecttimer = undefined
+  }
+  if (signalreconnectverifytimer !== undefined) {
+    clearTimeout(signalreconnectverifytimer)
+    signalreconnectverifytimer = undefined
+  }
+}
+
+function netterminalclearsignalretrytimer() {
+  if (signalretrytimer !== undefined) {
+    clearTimeout(signalretrytimer)
+    signalretrytimer = undefined
+  }
+}
+
+function netterminalclearallschedule() {
+  netterminalclearhandshaketimer()
+  netterminalclearreconnecttimers()
+  netterminalclearsignalretrytimer()
+}
+
+function registernetterminalunload() {
+  if (netterminalunloadregistered) {
+    return
+  }
+  netterminalunloadregistered = true
+  window.addEventListener('unload', () => {
+    networkpeer?.disconnect()
+    networkpeer = undefined
+  })
+}
+
+function issignalrecoverableerrortype(type: string) {
+  return (
+    type === 'network' ||
+    type === 'server-error' ||
+    type === 'socket-error' ||
+    type === 'socket-closed'
+  )
+}
+
 function ishost() {
   return networkpeer?.id === subscribetopic
 }
@@ -154,77 +218,206 @@ function handledataconnection(dataconnection: DataConnection) {
 }
 
 function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
-  // setup topic
-  subscribetopic = topicpeerid
-  vmtopic(SOFTWARE, registerreadplayer(), subscribetopic)
-
-  // create peer
+  const sessionserial = ++netterminalsessionserial
   const player = registerreadplayer()
   const peerid = selfpeerid ?? topicpeerid
-  networkpeer = new Peer(peerid, {
-    debug: 2,
-    host: 'terminal.zed.cafe',
-    secure: true,
-    port: 443,
-  })
+  let signalretryattempt = 0
+  let restartscheduled = false
+  let joinoutsignalconnectdone = false
 
-  // attempt disconnect on page close
-  window.addEventListener('unload', () => {
-    networkpeer?.disconnect()
-    networkpeer = undefined
-  })
+  subscribetopic = topicpeerid
+  vmtopic(SOFTWARE, player, subscribetopic)
 
-  apilog(SOFTWARE, player, `netterminal for ${peerid}`)
-
-  networkpeer.on('open', () => {
-    apilog(SOFTWARE, player, `connected to netterminal`)
-    if (topicpeerid !== peerid) {
-      apilog(SOFTWARE, player, `joining topic ${subscribetopic}`)
-      const maybedataconnection = networkpeer?.connect(topicpeerid, {
-        reliable: true,
-      })
-      if (ispresent(maybedataconnection)) {
-        handledataconnection(maybedataconnection)
-      }
-    } else {
-      apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)
+  function peerserveroptions() {
+    return {
+      debug: 2,
+      host: 'terminal.zed.cafe',
+      secure: true,
+      port: 443,
     }
-  })
+  }
 
-  networkpeer.on('connection', handledataconnection)
+  function sessionstillactive() {
+    return sessionserial === netterminalsessionserial
+  }
 
-  networkpeer.on('disconnected', () => {
-    apierror(SOFTWARE, player, `netterminal`, `lost connection to netterminal`)
-    setTimeout(() => {
+  function destroyactivenetworkpeer() {
+    if (!ispresent(networkpeer)) {
+      return
+    }
+    networkpeer.destroy()
+    networkpeer = undefined
+  }
+
+  function requestfullsignalingrestart(reason: string) {
+    if (!sessionstillactive()) {
+      return
+    }
+    if (restartscheduled) {
+      return
+    }
+    restartscheduled = true
+    netterminalclearhandshaketimer()
+    netterminalclearreconnecttimers()
+    netterminalclearsignalretrytimer()
+    destroyactivenetworkpeer()
+    const delay = Math.min(
+      SIGNAL_RETRY_MAX_MS,
+      SIGNAL_RETRY_BASE_MS * 2 ** signalretryattempt,
+    )
+    signalretryattempt += 1
+    apilog(
+      SOFTWARE,
+      player,
+      `netterminal signaling restart in ${delay}ms (${reason})`,
+    )
+    signalretrytimer = setTimeout(() => {
+      signalretrytimer = undefined
+      restartscheduled = false
+      if (!sessionstillactive()) {
+        return
+      }
+      startsignalingpeer()
+    }, delay)
+  }
+
+  function startsignalingpeer() {
+    if (!sessionstillactive()) {
+      return
+    }
+    restartscheduled = false
+    joinoutsignalconnectdone = false
+    netterminalclearhandshaketimer()
+    netterminalclearreconnecttimers()
+    if (ispresent(networkpeer)) {
+      networkpeer.destroy()
+      networkpeer = undefined
+    }
+    networkpeer = new Peer(peerid, peerserveroptions())
+    registernetterminalunload()
+
+    apilog(SOFTWARE, player, `netterminal for ${peerid}`)
+
+    signalhandshaketimer = setTimeout(() => {
+      signalhandshaketimer = undefined
+      if (!sessionstillactive() || !ispresent(networkpeer)) {
+        return
+      }
+      if (networkpeer.open) {
+        return
+      }
+      apierror(SOFTWARE, player, `netterminal`, `signaling handshake timed out`)
+      requestfullsignalingrestart('handshake timeout')
+    }, SIGNAL_HANDSHAKE_TIMEOUT_MS)
+
+    networkpeer.on('open', () => {
+      if (!sessionstillactive()) {
+        return
+      }
+      netterminalclearhandshaketimer()
+      netterminalclearreconnecttimers()
+      signalretryattempt = 0
+      apilog(SOFTWARE, player, `connected to netterminal`)
+      if (topicpeerid !== peerid) {
+        if (!joinoutsignalconnectdone) {
+          joinoutsignalconnectdone = true
+          apilog(SOFTWARE, player, `joining topic ${subscribetopic}`)
+          const maybedataconnection = networkpeer?.connect(topicpeerid, {
+            reliable: true,
+          })
+          if (ispresent(maybedataconnection)) {
+            handledataconnection(maybedataconnection)
+          }
+        }
+      } else {
+        apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)
+      }
+    })
+
+    networkpeer.on('connection', handledataconnection)
+
+    networkpeer.on('disconnected', () => {
+      if (!sessionstillactive()) {
+        return
+      }
+      netterminalclearreconnecttimers()
+      netterminalclearhandshaketimer()
       apierror(
         SOFTWARE,
         player,
         `netterminal`,
-        `retrying the connection to netterminal`,
+        `lost connection to netterminal`,
       )
-      networkpeer?.reconnect()
-    }, 5000)
-  })
+      signalreconnecttimer = setTimeout(() => {
+        signalreconnecttimer = undefined
+        if (!sessionstillactive() || !ispresent(networkpeer)) {
+          return
+        }
+        apierror(
+          SOFTWARE,
+          player,
+          `netterminal`,
+          `retrying the connection to netterminal`,
+        )
+        networkpeer.reconnect()
+        signalreconnectverifytimer = setTimeout(() => {
+          signalreconnectverifytimer = undefined
+          if (!sessionstillactive() || !ispresent(networkpeer)) {
+            return
+          }
+          if (networkpeer.open) {
+            return
+          }
+          apierror(
+            SOFTWARE,
+            player,
+            `netterminal`,
+            `signaling reconnect failed; recreating peer`,
+          )
+          requestfullsignalingrestart('reconnect verify failed')
+        }, RECONNECT_VERIFY_TIMEOUT_MS)
+      }, DISCONNECTED_RECONNECT_DELAY_MS)
+    })
 
-  networkpeer.on('error', (err) => {
-    switch (err.type) {
-      case 'disconnected':
-      case 'peer-unavailable':
+    networkpeer.on('error', (err) => {
+      if (!sessionstillactive()) {
         return
-      case 'invalid-id':
-      case 'unavailable-id':
-        doasync(SOFTWARE, player, async () => {
-          await writepeerid(() => '')
-        })
+      }
+      switch (err.type) {
+        case 'disconnected':
+        case 'peer-unavailable':
+          return
+        case 'invalid-id':
+        case 'unavailable-id':
+          netterminalclearallschedule()
+          destroyactivenetworkpeer()
+          doasync(SOFTWARE, player, async () => {
+            await writepeerid(() => '')
+          })
+          return
+        default:
+          break
+      }
+      if (issignalrecoverableerrortype(err.type)) {
+        apierror(
+          SOFTWARE,
+          player,
+          `netterminal`,
+          `${networkpeer?.id} - ${JSON.stringify(err)}`,
+        )
+        requestfullsignalingrestart(err.type)
         return
-    }
-    apierror(
-      SOFTWARE,
-      player,
-      `netterminal`,
-      `${networkpeer?.id} - ${JSON.stringify(err)}`,
-    )
-  })
+      }
+      apierror(
+        SOFTWARE,
+        player,
+        `netterminal`,
+        `${networkpeer?.id} - ${JSON.stringify(err)}`,
+      )
+    })
+  }
+
+  startsignalingpeer()
 }
 
 export async function netterminalhost() {
@@ -261,13 +454,13 @@ export function netterminaljoin(topicpeerid: string) {
 }
 
 export function netterminalhalt() {
-  if (!ispresent(networkpeer)) {
+  if (!ispresent(networkpeer) && subscribetopic === '') {
     return
   }
-  // clear topic info
+  netterminalsessionserial += 1
+  netterminalclearallschedule()
   subscribetopic = ''
   vmtopic(SOFTWARE, registerreadplayer(), subscribetopic)
-  // clear coms
-  networkpeer.destroy()
+  networkpeer?.destroy()
   networkpeer = undefined
 }

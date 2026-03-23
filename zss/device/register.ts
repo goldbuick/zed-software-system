@@ -1,4 +1,17 @@
 import { createdevice } from 'zss/device'
+import { modemreadtextsync } from 'zss/device/modem'
+import {
+  BOOKMARK_NAME_TARGET,
+  BOOKMARK_SCROLL_CHIP,
+  ZSS_BOOKMARKS_KEY,
+  ZssTerminalBookmark,
+  appendeditorbookmark,
+  appendterminalbookmark,
+  appendurlbookmark,
+  readbookmarksfromstorage,
+  readterminalbookmarkdisplaylines,
+  removebookmarkbyid,
+} from 'zss/feature/bookmarks'
 import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { getfingerprint } from 'zss/feature/fingerprint'
@@ -6,6 +19,10 @@ import {
   AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
+import {
+  HEAVY_LLM_STORAGE_KEY,
+  normalizeheavylmpreset,
+} from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
@@ -21,6 +38,7 @@ import {
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
 import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
@@ -33,7 +51,7 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/state'
-import { GADGET_ZSS_WORDS, INPUT } from 'zss/gadget/data/types'
+import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
@@ -47,6 +65,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
+import { memorywriteconfig } from 'zss/memory/utilities'
 import { tokenizeandstriptextformat } from 'zss/words/textformat'
 
 import {
@@ -56,16 +75,22 @@ import {
   apitoast,
   bridgejoin,
   gadgetserverdesync,
+  heavyllmpreset,
+  heavypullvarresult,
   heavyrestoreagents,
   registerterminalclose,
   registerterminalfull,
+  vmbookmarkscroll,
   vmbooks,
+  vmclearscroll,
   vmcli,
   vmdoot,
+  vmeditorbookmarkscroll,
   vmloader,
   vmlogin,
   vmoperator,
   vmplayertoken,
+  vmpullvarresult,
   vmzsswords,
 } from './api'
 
@@ -219,9 +244,25 @@ let keepalive = 0
 // send keepalive message every 10 seconds
 const DOOT_RATE = 10
 
+/** Agent player ids: main-thread vm:doot from `second` (on/off via heavy worker messages). */
+const agentdootids = new Set<string>()
+
 // stable unique id (CLI mode injects via registerSetPlayerId)
 let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
+
+async function syncterminalbookmarkpins() {
+  const blob = await readbookmarksfromstorage()
+  const pinlines = readterminalbookmarkdisplaylines(blob)
+  const pinids = blob.terminal.map((b: ZssTerminalBookmark) => b.id)
+  useTape.setState((state) => ({
+    terminal: {
+      ...state.terminal,
+      pinlines,
+      pinids,
+    },
+  }))
+}
 
 export function registersetmyplayerid(id: string) {
   myplayerid = id
@@ -236,7 +277,7 @@ export function registerreadplayer() {
 
 export const register = createdevice(
   'register',
-  ['ready', 'second', 'log', 'chat', 'toast'],
+  ['ready', 'second', 'sessionreset', 'log', 'chat', 'toast'],
   function (message) {
     if (!register.session(message)) {
       return
@@ -248,6 +289,7 @@ export const register = createdevice(
       case 'chat':
       case 'toast':
       case 'second':
+      case 'sessionreset':
         // console.info(message)
         break
       default:
@@ -274,6 +316,7 @@ export const register = createdevice(
               }),
             })
           }
+          await syncterminalbookmarkpins()
           // signal init
           await waitfor(256)
           apilog(register, myplayerid, `myplayerid ${myplayerid}`)
@@ -281,6 +324,9 @@ export const register = createdevice(
         })
         break
       }
+      case 'sessionreset':
+        agentdootids.clear()
+        break
       case 'ackoperator':
         // reset display
         gadgetserverdesync(register, myplayerid)
@@ -298,10 +344,13 @@ export const register = createdevice(
       case 'loginready':
         doasync(register, message.player, async () => {
           const storage = await storagereadvars()
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } =
+            storage
           const config = await storagereadconfigall()
           const token = await getfingerprint()
           vmlogin(register, myplayerid, {
-            ...storage,
+            ...storageforlogin,
             config,
             token,
           })
@@ -323,6 +372,16 @@ export const register = createdevice(
             const raw = vars[AGENTS_ROSTER_STORAGE_KEY]
             if (isvalidagentsroster(raw)) {
               heavyrestoreagents(register, myplayerid, raw)
+            }
+            const llmraw = vars[HEAVY_LLM_STORAGE_KEY]
+            const llmpresetstored =
+              typeof llmraw === 'string'
+                ? normalizeheavylmpreset(llmraw)
+                : undefined
+            if (llmpresetstored) {
+              heavyllmpreset(register, myplayerid, llmpresetstored, {
+                toast: false,
+              })
             }
           })
         } else {
@@ -352,6 +411,169 @@ export const register = createdevice(
         }
         break
       }
+      case 'ackcodepagesnapshot': {
+        doasync(register, message.player, async () => {
+          const d = message.data as Record<string, unknown> | null | undefined
+          if (!d || typeof d !== 'object') {
+            return
+          }
+          const book = d.book
+          const path = d.path
+          const type = d.type
+          const title = d.title
+          const codepage = d.codepage
+          if (
+            !isstring(book) ||
+            !isarray(path) ||
+            !isstring(type) ||
+            !isstring(title)
+          ) {
+            apitoast(register, myplayerid, 'bookmark snapshot failed')
+            return
+          }
+          const pathstrs = path.filter(isstring)
+          await appendeditorbookmark({
+            book,
+            path: pathstrs,
+            type,
+            title,
+            codepage,
+          })
+          apitoast(register, myplayerid, `bookmarked editor $green${title}`)
+        })
+        break
+      }
+      case 'bookmarkscroll':
+        doasync(register, message.player, async () => {
+          const blob = await readbookmarksfromstorage()
+          vmbookmarkscroll(register, myplayerid, blob.url)
+        })
+        break
+      case 'editorbookmarkscroll':
+        doasync(register, message.player, async () => {
+          const blob = await readbookmarksfromstorage()
+          vmeditorbookmarkscroll(register, myplayerid, blob.editor)
+        })
+        break
+      case 'bookmark:urlsave':
+        doasync(register, message.player, async () => {
+          const addr = paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET)
+          const rawname = modemreadtextsync(addr).trim()
+          if (!rawname.length) {
+            apitoast(register, myplayerid, 'enter a bookmark name first')
+            return
+          }
+          await appendurlbookmark(rawname, location.href)
+          vmclearscroll(register, myplayerid)
+          apitoast(register, myplayerid, `saved bookmark $green${rawname}`)
+        })
+        break
+      case 'bookmark:urlnavigate':
+        if (isstring(message.data)) {
+          setTimeout(() => {
+            window.location.href = message.data.trim()
+          }, 1000)
+        }
+        break
+      case 'bookmark:delete':
+        doasync(register, message.player, async () => {
+          const id = message.data
+          if (!isstring(id)) {
+            return
+          }
+          const ok = await removebookmarkbyid(id)
+          if (ok) {
+            apitoast(register, myplayerid, 'bookmark removed')
+            await syncterminalbookmarkpins()
+          }
+        })
+        break
+      case 'bookmark:list':
+        doasync(register, message.player, async () => {
+          const blob = await readbookmarksfromstorage()
+          writeheader(register, myplayerid, 'bookmarks')
+          let n = 1
+          for (let i = 0; i < blob.url.length; ++i) {
+            const b = blob.url[i]
+            writeoption(
+              register,
+              myplayerid,
+              `${n}`,
+              `url $cyan${b.name}$white ${b.id}`,
+            )
+            ++n
+          }
+          for (let i = 0; i < blob.terminal.length; ++i) {
+            const b = blob.terminal[i]
+            writeoption(
+              register,
+              myplayerid,
+              `${n}`,
+              `terminal $cyan${b.text.slice(0, 48)}$white ${b.id}`,
+            )
+            ++n
+          }
+          for (let i = 0; i < blob.editor.length; ++i) {
+            const b = blob.editor[i]
+            writeoption(
+              register,
+              myplayerid,
+              `${n}`,
+              `editor $cyan${b.title}$white ${b.id}`,
+            )
+            ++n
+          }
+          writetext(
+            register,
+            myplayerid,
+            `$ltgrey#bookmarkdelete <id>$white to remove`,
+          )
+        })
+        break
+      case 'bookmark:appendterminal':
+        doasync(register, message.player, async () => {
+          const line = message.data
+          if (!isstring(line) || !line.trim()) {
+            apitoast(register, myplayerid, 'nothing to bookmark')
+            return
+          }
+          await appendterminalbookmark(line)
+          await syncterminalbookmarkpins()
+          apitoast(register, myplayerid, 'terminal line bookmarked')
+        })
+        break
+      case 'runbookmark':
+        doasync(register, message.player, async () => {
+          let pinid: MAYBE<string>
+          if (isarray(message.data)) {
+            const arr = message.data as unknown[]
+            const last = arr[arr.length - 1]
+            if (isstring(last)) {
+              pinid = last
+            }
+          } else if (isstring(message.data)) {
+            pinid = message.data
+          }
+          if (!pinid) {
+            return
+          }
+          const blob = await readbookmarksfromstorage()
+          const entry = blob.terminal.find(
+            (b: ZssTerminalBookmark) => b.id === pinid,
+          )
+          if (!entry) {
+            apitoast(register, myplayerid, 'pin not found')
+            return
+          }
+          const line = entry.text.trim()
+          if (!line.length) {
+            return
+          }
+          const preview = line.length > 48 ? `${line.slice(0, 48)}…` : line
+          apitoast(register, myplayerid, `bookmark run $cyan${preview}$white`)
+          vmcli(register, message.player, line)
+        })
+        break
       case 'input':
         if (isarray(message.data)) {
           const [input, shift] = message.data as [INPUT, boolean]
@@ -374,6 +596,53 @@ export const register = createdevice(
               await storagewriteconfig(name.slice(7), value)
             } else {
               await storagewritevar(name, value)
+            }
+          }
+        })
+        break
+      case 'pullvar':
+        doasync(register, message.player, async () => {
+          const payload = message.data as {
+            id?: string
+            key?: string
+            channel?: string
+          }
+          const player = message.player
+          if (
+            !payload ||
+            !isstring(payload.id) ||
+            !isstring(payload.key) ||
+            (payload.channel !== 'vm' && payload.channel !== 'heavy')
+          ) {
+            return
+          }
+          try {
+            const vars = await storagereadvars()
+            const value = vars[payload.key]
+            if (payload.channel === 'vm') {
+              vmpullvarresult(register, player, {
+                id: payload.id,
+                value,
+              })
+            } else {
+              heavypullvarresult(register, player, {
+                id: payload.id,
+                value,
+              })
+            }
+          } catch (err) {
+            const msg =
+              err instanceof Error ? err.message : 'storagereadvars_failed'
+            if (payload.channel === 'vm') {
+              vmpullvarresult(register, player, {
+                id: payload.id,
+                error: msg,
+              })
+            } else {
+              heavypullvarresult(register, player, {
+                id: payload.id,
+                error: msg,
+              })
             }
           }
         })
@@ -465,6 +734,7 @@ export const register = createdevice(
         capturecurrentboardtopng()
         break
       case 'nuke':
+        agentdootids.clear()
         doasync(register, message.player, async function () {
           writeheader(register, message.player, 'nuke in')
           writeoption(register, message.player, '3', '...')
@@ -571,35 +841,47 @@ export const register = createdevice(
           }
         })
         break
+      case 'agentdooton':
+        if (isstring(message.data)) {
+          agentdootids.add(message.data)
+        }
+        break
+      case 'agentdootoff':
+        if (isstring(message.data)) {
+          agentdootids.delete(message.data)
+        }
+        break
       case 'second':
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
           vmdoot(register, myplayerid)
+          agentdootids.forEach((agentid) => {
+            vmdoot(register, agentid)
+          })
         }
         break
-      case 'inspector':
-        useTape.setState((state) => {
-          const enabled = ispresent(message.data)
-            ? !!message.data
-            : !state.inspector
-          apilog(
-            register,
-            message.player,
-            `gadget inspector ${enabled ? '$greenon' : '$redoff'}`,
-          )
-          if (enabled) {
-            apilog(
-              register,
-              message.player,
-              `mouse click or tap elements to inspect`,
-            )
-          }
-          return {
-            inspector: enabled,
-          }
-        })
+      case 'inspector': {
+        const previnspector = useTape.getState().inspector
+        const enabled = ispresent(message.data)
+          ? !!message.data
+          : !previnspector
+        const line1 = `gadget inspector ${enabled ? '$greenon' : '$redoff'}`
+        terminalwritelines(
+          register,
+          message.player,
+          enabled ? `${line1}\nmouse click or tap elements to inspect` : line1,
+        )
+        useTape.setState({ inspector: enabled })
+        if (!ispresent(message.data)) {
+          const gadgetval = enabled ? 'on' : 'off'
+          doasync(register, message.player, async () => {
+            await storagewriteconfig('gadget', gadgetval)
+            memorywriteconfig('gadget', gadgetval)
+          })
+        }
         break
+      }
       case 'findany':
         if (isarray(message.data)) {
           useInspector.setState({ pts: message.data })

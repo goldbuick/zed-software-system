@@ -1,0 +1,3 @@
+---
+hint: "Ghost collision type"
+---

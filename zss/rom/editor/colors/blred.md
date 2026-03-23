@@ -1,0 +1,3 @@
+---
+hint: "Blinking foreground red"
+---

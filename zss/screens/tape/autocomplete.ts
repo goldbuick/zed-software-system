@@ -1,8 +1,8 @@
-import { romread } from 'zss/feature/rom'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { romhintfrommarkdown, romread } from 'zss/rom'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -124,8 +124,7 @@ function hintfromrom(category: string, word = ''): string {
   const rompath = word ? `editor:${category}:${word}` : `editor:${category}`
   const rom = romread(rompath)
   if (ispresent(rom)) {
-    const [, desc] = rom.split('\n')[0].split(';')
-    return desc ?? ''
+    return romhintfrommarkdown(rom) ?? ''
   }
   switch (category) {
     case 'flags':

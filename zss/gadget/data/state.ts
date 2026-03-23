@@ -55,6 +55,7 @@ export const useGadgetClient = create<{
   gadget: {
     id: '',
     board: '',
+    boardname: '',
     exiteast: '',
     exitwest: '',
     exitnorth: '',
@@ -91,6 +92,10 @@ export const useTape = create<{
   terminal: {
     open: boolean
     logs: string[]
+    /** Terminal bookmarks from IDB; prepended when rendering logs. */
+    pinlines: string[]
+    /** Same order / length as `pinlines`; used to remove pins from the tape. */
+    pinids: string[]
   }
   editor: {
     open: boolean
@@ -108,8 +113,9 @@ export const useTape = create<{
   toast: '',
   terminal: {
     open: true,
-    info: [],
     logs: [],
+    pinlines: [],
+    pinids: [],
   },
   editor: {
     open: false,
@@ -127,6 +133,8 @@ export const useTape = create<{
       terminal: {
         open: true,
         logs: [],
+        pinlines: [],
+        pinids: [],
       },
       editor: {
         open: false,

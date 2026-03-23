@@ -1,7 +1,8 @@
 import { useTape } from 'zss/gadget/data/state'
 import { writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
-import { bgcolor, setupeditoritem } from 'zss/screens/tape/common'
+import { bgcolor } from 'zss/screens/tape/colors'
+import { setupeditoritem } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,

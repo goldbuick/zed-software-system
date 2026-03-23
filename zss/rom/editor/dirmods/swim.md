@@ -1,0 +1,3 @@
+---
+hint: "Swim collision type"
+---

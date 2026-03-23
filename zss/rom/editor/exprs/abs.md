@@ -1,0 +1,3 @@
+---
+hint: "Absolute value"
+---

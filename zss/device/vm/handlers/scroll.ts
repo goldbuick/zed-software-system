@@ -1,11 +1,13 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { romparse, romread, romscroll } from 'zss/feature/rom'
-import { gadgetcheckqueue, gadgetstate } from 'zss/gadget/data/api'
-import { ispresent } from 'zss/mapping/types'
+import { apitoast } from 'zss/device/api'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryunlockscroll } from 'zss/memory/runtime'
+import { romread } from 'zss/rom'
 
 export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
   const maybeboard = memoryreadplayerboard(message.player)
@@ -23,9 +25,50 @@ export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handlerefscroll(_vm: DEVICE, message: MESSAGE): void {
-  romparse(romread('refscroll:menu'), (line) => romscroll(message.player, line))
-  const shared = gadgetstate(message.player)
-  shared.scrollname = '#help or $meta+h'
-  shared.scroll = gadgetcheckqueue(message.player)
+export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
+  const content = romread('refscroll:menu') ?? ''
+  if (!content.trim()) {
+    apitoast(vm, message.player, 'gadget scroll: need content')
+    return
+  }
+  // refscroll:menu is Zed !command;label lines (readable next to other built-in scroll strings).
+  applyzedscroll(
+    message.player,
+    content.trim(),
+    '#help or $meta+h',
+    'refscroll',
+  )
+}
+
+export function handlegadgetscroll(vm: DEVICE, message: MESSAGE): void {
+  const d = message.data as
+    | { scrollname?: unknown; content?: unknown; chip?: unknown }
+    | undefined
+  if (!d || typeof d !== 'object') {
+    apitoast(vm, message.player, 'gadget scroll: invalid payload')
+    return
+  }
+  if (!isstring(d.scrollname) || !d.scrollname.trim()) {
+    apitoast(vm, message.player, 'gadget scroll: need title')
+    return
+  }
+  if (!isstring(d.content) || !d.content.trim()) {
+    apitoast(vm, message.player, 'gadget scroll: need content')
+    return
+  }
+  if (d.chip !== undefined && !isstring(d.chip)) {
+    apitoast(vm, message.player, 'gadget scroll: invalid chip')
+    return
+  }
+  const chip = isstring(d.chip) && d.chip.trim() ? d.chip.trim() : 'refscroll'
+  try {
+    scrollwritelines(
+      message.player,
+      d.scrollname.trim(),
+      d.content.trim(),
+      chip,
+    )
+  } catch {
+    apitoast(vm, message.player, 'gadget scroll failed')
+  }
 }

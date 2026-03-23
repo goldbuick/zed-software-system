@@ -1,6 +1,6 @@
 import { compress, decompress, init } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { registerstore } from 'zss/device/api'
+import { registerinspector, registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
 import {
@@ -36,9 +36,9 @@ import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryisoperator,
   memoryreadbookbysoftware,
-  memoryreadhalt,
   memoryreadoperator,
   memoryreadtopic,
+  memorywritehalt,
 } from './session'
 import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
 
@@ -50,6 +50,8 @@ export const CONFIG_KEYS = [
   'voice2text',
   'loaderlogging',
   'promptlogging',
+  'dev',
+  'gadget',
 ] as const
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',
@@ -58,6 +60,8 @@ const CONFIG_DEFAULTS: Record<string, string> = {
   voice2text: 'off',
   loaderlogging: 'off',
   promptlogging: 'off',
+  dev: 'off',
+  gadget: 'off',
 }
 
 const CONFIG_STATE: Record<string, string> = {}
@@ -165,22 +169,6 @@ export function memoryadminmenu(
     }
   }
 
-  // build util list
-  gadgettext(player, ``)
-  gadgettext(player, `util list`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'adminop', 'toggle #gadget inspector', ['gadget'])
-  const halt = memoryreadhalt()
-  gadgettext(player, `#dev mode is ${halt ? 'on' : 'off'}`)
-  if (isop) {
-    gadgethyperlink(
-      player,
-      'adminop',
-      `turn ${halt ? 'off' : 'on'} #dev mode`,
-      ['dev'],
-    )
-  }
-
   // build config list (from in-memory config; register owns storage read/write)
   const configlist = memoryreadconfigall()
   const configstate: Record<string, string> = {}
@@ -203,6 +191,12 @@ export function memoryadminmenu(
         configstate[name] = newval
         memorywriteconfig(name, newval)
         registerstore(SOFTWARE, player, `config_${name}`, newval)
+        if (name === 'dev') {
+          memorywritehalt(newval === 'on')
+          registerinspector(SOFTWARE, player, newval === 'on')
+        } else if (name === 'gadget') {
+          registerinspector(SOFTWARE, player, newval === 'on')
+        }
       },
     )
   }

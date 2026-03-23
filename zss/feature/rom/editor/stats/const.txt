@@ -1,2 +1,0 @@
-desc;$DKGRAYsets stat to given value
-

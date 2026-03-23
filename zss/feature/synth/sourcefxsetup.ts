@@ -1,7 +1,8 @@
 import { Volume } from 'tone'
 import { ispresent } from 'zss/mapping/types'
 
-import { createfx, createfxchannels } from './fx'
+import { createfx } from './fx'
+import { createfxchannels } from './fxchannels'
 import { SOURCE_TYPE, createsource } from './source'
 
 export type SOURCE_FX_SETUP = ReturnType<typeof createsourcefxsetup>

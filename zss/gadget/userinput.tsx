@@ -14,6 +14,7 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   apilog,
+  registerbookmarkrun,
   vmcli,
   vmdoot,
   vminput,
@@ -22,6 +23,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { useTape } from 'zss/gadget/data/state'
 import {
   INPUT,
   INPUT_ALT,
@@ -261,6 +263,7 @@ function handlekeydown(event: KeyboardEvent) {
     case 'p':
     case 'h':
     case 'k':
+    case 'b':
     case 'n': // prevent default behavior
     case '[':
     case ']':
@@ -374,6 +377,22 @@ function handlekeydown(event: KeyboardEvent) {
       if (mods.ctrl) {
         vmrefscroll(SOFTWARE, player)
       }
+      break
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+      if (mods.ctrl) {
+        const pinids = useTape.getState().terminal.pinids
+        const index = parseInt(key, 10) - 1
+        const id = pinids[index]
+        if (ispresent(id)) {
+          registerbookmarkrun(SOFTWARE, player, id)
+        }
+      }
+      break
   }
   user.root.emit('keydown', event)
 }

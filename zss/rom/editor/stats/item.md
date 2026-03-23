@@ -1,0 +1,3 @@
+---
+hint: "Item interaction type"
+---

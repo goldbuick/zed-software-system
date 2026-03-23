@@ -6,7 +6,7 @@
 
 - `zss/device/api` — API layer (vm*, bridge*, register*, etc.)
 - `zss/device/modem` — modemwriteinitstring
-- `zss/feature/rom` — romparse, romprint, romread
+- `zss/rom` — romparse, romprint, romread
 - `zss/feature/url` — bbslogin, bbslist, bbsdelete, etc.
 - `zss/feature/writeui` — write, writebbar, writeheader, etc.
 - `zss/memory/*` — book/page/board/codepage operations

@@ -1,0 +1,3 @@
+---
+hint: "Rotate direction clockwise"
+---

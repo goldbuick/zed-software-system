@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
 import { withclipboard } from 'zss/feature/keyboard'
+import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
@@ -10,10 +11,11 @@ import {
   TapeTerminalItemInputProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
+import { drawblockcursor } from 'zss/screens/inputcommon'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
-  applystrtoindex,
+  textformatreadedges,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
@@ -25,6 +27,7 @@ export function TerminalText({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
+  useHyperlinkSharedSync(prefix, 'text')
 
   const address = prefix
   const value = useWaitForValueString(address)
@@ -63,7 +66,8 @@ export function TerminalText({
     applycolortoindexes(tx + left + tyw, tx + right + tyw, 15, 8, context)
   }
   if (focus) {
-    applystrtoindex(tx + cursor + tyw, '$BLWHITE$219$WHITE', context)
+    const edge = textformatreadedges(context)
+    drawblockcursor(cursor, 0, { ...edge, left: tx, top: ty }, context)
   }
 
   function deleteselection() {

@@ -10,6 +10,8 @@ import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
   halt: false,
+  /** True while `vm:books` is async-loading; ticks should not advance sim state. */
+  simfreeze: false,
   session: createsid(),
   operator: '',
   software: { main: '', temp: '' },
@@ -56,6 +58,14 @@ export function memorywritehalt(halt: boolean) {
 
 export function memoryreadhalt() {
   return MEMORY.halt
+}
+
+export function memorywritesimfreeze(frozen: boolean) {
+  MEMORY.simfreeze = frozen
+}
+
+export function memoryreadsimfreeze() {
+  return MEMORY.simfreeze
 }
 
 export function memoryreadbooklist(): BOOK[] {

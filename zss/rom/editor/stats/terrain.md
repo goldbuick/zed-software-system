@@ -1,0 +1,3 @@
+---
+hint: "$DKGRAYterrain for solid, walkable, swimable board elements"
+---

@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import {
   apierror,
   apilog,
+  registereditorbookmarkscroll,
   registereditorclose,
   registerterminalclose,
   registerterminalinclayout,
@@ -418,6 +419,13 @@ export function EditorInput({
                       )
                     }
                     break
+                  case 'b': {
+                    const ed = useTape.getState().editor
+                    if (ed.open) {
+                      registereditorbookmarkscroll(SOFTWARE, player)
+                    }
+                    break
+                  }
                   case `'`:
                     if (hasselection) {
                       togglecomments(strvalueselected, ii1, iic, strvaluesplice)

@@ -1,1 +1,0 @@
-desc;True if tile is swimable

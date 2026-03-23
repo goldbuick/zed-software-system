@@ -2,7 +2,6 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 
 import { handleadmin } from './admin'
-import { handleagentsync } from './agentsync'
 import {
   handlelocal,
   handlelogin,
@@ -10,29 +9,29 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
+import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
+import { handlecodepagesnapshot } from './codepagesnapshot'
 import { handlecoderelease, handlecodewatch } from './codewatch'
-import { handledefault } from './default'
 import { handledoot } from './doot'
+import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
+import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
-import { handlelook } from './look'
-import { handlememoryquery } from './memoryquery'
 import { handleoperator } from './operator'
-import {
-  handlepilotagentclear,
-  handlepilotstart,
-  handlepilotstop,
-} from './pilot'
+import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
 import { handlepublish } from './publish'
+import { handlepullvarresult } from './pullvarresult'
+import { handlequery } from './query'
 import { handlerestart } from './restart'
 import {
   handleclearscroll,
+  handlegadgetscroll,
   handlemakeitscroll,
   handlerefscroll,
 } from './scroll'
@@ -58,10 +57,10 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   local: handlelocal,
   doot: handledoot,
   input: handleinput,
-  look: handlelook,
-  memoryquery: handlememoryquery,
-  agentsync: handleagentsync,
-  pilotagentclear: handlepilotagentclear,
+  lastinputtouch: handlelastinputtouch,
+  query: handlequery,
+  pullvarresult: handlepullvarresult,
+  pilotclear: handlepilotclear,
   pilotstart: handlepilotstart,
   pilotstop: handlepilotstop,
   codewatch: handlecodewatch,
@@ -72,12 +71,16 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,
+  gadgetscroll: handlegadgetscroll,
   readzipfilelist: handlereadzipfilelist,
   fork: handlefork,
   zztsearch: handlezztsearch,
   zztrandom: handlezztrandom,
   publish: handlepublish,
   flush: handleflush,
+  bookmarkscroll: handlebookmarkscroll,
+  editorbookmarkscroll: handleeditorbookmarkscroll,
+  codepagesnapshot: handlecodepagesnapshot,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,
@@ -85,5 +88,3 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   findany: handlefindany,
   loader: handleloader,
 }
-
-export { handledefault as vmdefaulthandler }

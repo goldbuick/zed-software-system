@@ -1,0 +1,3 @@
+---
+hint: "Player x position"
+---

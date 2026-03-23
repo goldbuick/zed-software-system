@@ -20,7 +20,12 @@ import { TerminalRows } from './rows'
 export function TerminalComponent() {
   const player = registerreadplayer()
   const editoropen = useTape((state) => state.editor.open)
-  const terminallogs = useTape((state) => state.terminal.logs)
+  const pinlines = useTape((state) => state.terminal.pinlines)
+  const sessionlogs = useTape((state) => state.terminal.logs)
+  const terminallogs = useMemo(
+    () => [...pinlines, ...sessionlogs],
+    [pinlines, sessionlogs],
+  )
   const quickterminal = useTape((state) => state.quickterminal)
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)

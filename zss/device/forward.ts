@@ -74,6 +74,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'acklogin':
         case 'ackoperator':
         case 'ackzsswords':
+        case 'ackcodepagesnapshot':
         case 'gadgetclient':
           return true
       }

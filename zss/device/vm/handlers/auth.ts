@@ -1,6 +1,11 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apilog, registerloginready, vmclearscroll } from 'zss/device/api'
+import {
+  apilog,
+  registerinspector,
+  registerloginready,
+  vmclearscroll,
+} from 'zss/device/api'
 import { lastinputtime, tracking } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 import {
@@ -13,9 +18,16 @@ import {
   memorylogoutplayer,
   memoryreadplayeractive,
 } from 'zss/memory/playermanagement'
-import { memoryisoperator, memoryreadoperator } from 'zss/memory/session'
+import {
+  memoryisoperator,
+  memoryreadoperator,
+  memorywritehalt,
+} from 'zss/memory/session'
 import type { BOOK_FLAGS } from 'zss/memory/types'
-import { memorysetconfig } from 'zss/memory/utilities'
+import {
+  memoryreadconfig,
+  memorysetconfig,
+} from 'zss/memory/utilities'
 
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
   if (!memoryreadplayeractive(message.player)) {
@@ -43,6 +55,8 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     permissionoverrideremovebyrole,
     config,
     token,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    zss_bookmarks: _zssbookmarks,
     ...flags
   } = message.data ?? {}
   console.info('VM => storage', flags)
@@ -59,6 +73,12 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     )
     if (Array.isArray(config)) {
       memorysetconfig(config)
+      memorywritehalt(memoryreadconfig('dev') === 'on')
+      registerinspector(
+        vm,
+        message.player,
+        memoryreadconfig('gadget') === 'on',
+      )
     }
   }
 

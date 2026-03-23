@@ -292,6 +292,8 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     'config_voice2text',
     'config_loaderlogging',
     'config_promptlogging',
+    'config_dev',
+    'config_gadget',
   ]
   await page.exposeFunction('__nodeStorageReadConfigAll', async () => {
     const config = readJsonFile<Record<string, string>>(configPath, {})
@@ -374,9 +376,10 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
         }
         page
           .evaluate((l: string) => {
-            ;(
-              window as unknown as { __onCliInput?: (s: string) => void }
-            ).__onCliInput?.(l)
+            const clihookwindow = window as unknown as {
+              __onCliInput?: (s: string) => void
+            }
+            clihookwindow.__onCliInput?.(l)
           }, line)
           .catch((err) => addLog(String(err)))
       }}

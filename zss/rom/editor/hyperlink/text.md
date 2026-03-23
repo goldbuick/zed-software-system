@@ -1,0 +1,3 @@
+---
+hint: "$DKGRAYread text input into given stat/flag"
+---

@@ -2,7 +2,9 @@
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
+import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
+import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -77,13 +79,21 @@ export function bridgestreamstop(device: DEVICELIKE, player: string) {
 export function bridgechatstart(
   device: DEVICELIKE,
   player: string,
-  channel: string,
+  payload: string | BRIDGE_CHAT_START_OBJECT,
 ) {
-  device.emit(player, 'bridge:chatstart', channel)
+  device.emit(player, 'bridge:chatstart', payload)
 }
 
-export function bridgechatstop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:chatstop')
+export function bridgechatstop(
+  device: DEVICELIKE,
+  player: string,
+  kind: string,
+) {
+  device.emit(player, 'bridge:chatstop', kind)
+}
+
+export function bridgestatus(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:status', undefined)
 }
 
 export function bridgefetch(
@@ -170,34 +180,36 @@ export function heavyttsrequest(
   device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
 }
 
+type MODEL_PROMPT_ARGS = {
+  prompt: string
+  agentid: string
+  agentname: string
+  lastinputtime: number
+  nearestrefid: string
+  nearestrefname: string
+  promptlogging: string
+}
+
 export function heavymodelprompt(
   device: DEVICELIKE,
   player: string,
-  agentid: string,
-  agentname: string,
-  prompt: string,
-  promptlogging = '',
+  {
+    prompt,
+    agentid,
+    agentname,
+    lastinputtime,
+    nearestrefid,
+    nearestrefname,
+    promptlogging,
+  }: MODEL_PROMPT_ARGS,
 ) {
   device.emit(player, 'heavy:modelprompt', [
+    prompt,
     agentid,
     agentname,
-    prompt,
-    promptlogging,
-  ])
-}
-
-export function heavymodelclassify(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  agentname: string,
-  prompt: string,
-  promptlogging = '',
-) {
-  device.emit(player, 'heavy:modelclassify', [
-    agentid,
-    agentname,
-    prompt,
+    lastinputtime,
+    nearestrefid,
+    nearestrefname,
     promptlogging,
   ])
 }
@@ -210,21 +222,20 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
-/** Sim-side shadow roster (from heavy); forwarded sim ← main ← heavy. */
-export function vmagentsync(
+export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,
-  roster: AGENTS_ROSTER,
+  targetplayer: string,
 ) {
-  device.emit(player, 'vm:agentsync', roster)
+  device.emit(player, 'vm:lastinputtouch', targetplayer)
 }
 
-export function vmpilotagentclear(
+export function vmpilotclear(
   device: DEVICELIKE,
   player: string,
-  agentid: string,
+  playerid: string,
 ) {
-  device.emit(player, 'vm:pilotagentclear', agentid)
+  device.emit(player, 'vm:pilotclear', playerid)
 }
 
 export function heavyagentstart(
@@ -266,28 +277,40 @@ export function heavyagentlist(device: DEVICELIKE, player: string) {
   device.emit(player, 'heavy:agentlist')
 }
 
-export function heavyagentprompt(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  prompt: string,
-  promptlogging?: string,
-) {
-  device.emit(
-    player,
-    'heavy:agentprompt',
-    promptlogging !== undefined
-      ? [agentid, prompt, promptlogging]
-      : [agentid, prompt],
-  )
-}
-
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,
   roster: AGENTS_ROSTER,
 ) {
   device.emit(player, 'heavy:restoreagents', roster)
+}
+
+/** Worker applies preset (dispose main generator). Use `{ toast: false }` after login restore. */
+export function heavyllmpreset(
+  device: DEVICELIKE,
+  player: string,
+  preset: HEAVY_LLM_PRESET,
+  options?: { toast?: boolean },
+) {
+  const wantstoast = options?.toast !== false
+  device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
+}
+
+/** Main-thread register: start/stop per-agent vm:doot from client `second` ticks (heavy worker → client). */
+export function registeragentdooton(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'register:agentdooton', agentid)
+}
+
+export function registeragentdootoff(
+  device: DEVICELIKE,
+  player: string,
+  agentid: string,
+) {
+  device.emit(player, 'register:agentdootoff', agentid)
 }
 
 export function platformready(device: DEVICELIKE) {
@@ -545,6 +568,107 @@ export function registerstore(
   device.emit(player, 'register:store', [name, value])
 }
 
+export function vmpullvarresult(
+  device: DEVICELIKE,
+  player: string,
+  data: { id: string; value?: unknown; error?: string },
+) {
+  device.emit(player, 'vm:pullvarresult', data)
+}
+
+export function heavypullvarresult(
+  device: DEVICELIKE,
+  player: string,
+  data: { id: string; value?: unknown; error?: string },
+) {
+  device.emit(player, 'heavy:pullvarresult', data)
+}
+
+export function registerbookmarkscroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:bookmarkscroll', true)
+}
+
+export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:bookmark:urlsave', true)
+}
+
+/** Main-thread navigation; VM runs in sim worker where `location` is not the browser tab. */
+export function registerbookmarkurlnavigate(
+  device: DEVICELIKE,
+  player: string,
+  href: string,
+) {
+  device.emit(player, 'register:bookmark:urlnavigate', href)
+}
+
+export function registerbookmarkdelete(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+) {
+  device.emit(player, 'register:bookmark:delete', id)
+}
+
+export function registerbookmarkrun(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+) {
+  device.emit(player, 'register:runbookmark', id)
+}
+
+export function registerbookmarklist(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:bookmark:list', true)
+}
+
+export function registerappendterminalbookmark(
+  device: DEVICELIKE,
+  player: string,
+  line: string,
+) {
+  device.emit(player, 'register:bookmark:appendterminal', line)
+}
+
+export type GADGET_SCROLL_LINES = {
+  scrollname: string
+  content: string
+  chip?: string
+}
+
+export function vmbookmarkscroll(
+  device: DEVICELIKE,
+  player: string,
+  urllist: unknown[],
+) {
+  device.emit(player, 'vm:bookmarkscroll', urllist)
+}
+
+export function registereditorbookmarkscroll(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'register:editorbookmarkscroll', true)
+}
+
+export function vmeditorbookmarkscroll(
+  device: DEVICELIKE,
+  player: string,
+  editorlist: unknown[],
+) {
+  device.emit(player, 'vm:editorbookmarkscroll', editorlist)
+}
+
+export function vmcodepagesnapshot(
+  device: DEVICELIKE,
+  player: string,
+  book: string,
+  path: string[],
+  edtype: string,
+  edtitle: string,
+) {
+  device.emit(player, 'vm:codepagesnapshot', [book, path, edtype, edtitle])
+}
+
 export function registerinspector(
   device: DEVICELIKE,
   player: string,
@@ -701,10 +825,6 @@ export function vminput(
   device.emit(player, 'vm:input', [input, mods])
 }
 
-export function vmlook(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:look')
-}
-
 export function vmpilotstart(
   device: DEVICELIKE,
   player: string,
@@ -728,6 +848,14 @@ export function vmmakeitscroll(
 
 export function vmrefscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
+}
+
+export function vmgadgetscroll(
+  device: DEVICELIKE,
+  player: string,
+  payload: GADGET_SCROLL_LINES,
+) {
+  device.emit(player, 'vm:gadgetscroll', payload)
 }
 
 export function vmreadzipfilelist(device: DEVICELIKE, player: string) {

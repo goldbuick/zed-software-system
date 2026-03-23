@@ -1,11 +1,9 @@
 import { DEVICELIKE, registerforkmem, registersavemem } from 'zss/device/api'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
 import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+  scrolllinkescapefrag,
+  scrollwritelines,
+} from 'zss/gadget/data/scrollwritelines'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -47,34 +45,34 @@ export async function compressedbookstate(): Promise<string> {
 }
 
 export function writezztcontentwait(player: string) {
-  gadgettext(player, `Searching ${'$6'.repeat(randominteger(1, 6))}`)
-  const shared = gadgetstate(player)
-  shared.scrollname = ZZT_BRIDGE
-  shared.scroll = gadgetcheckqueue(player)
+  scrollwritelines(
+    player,
+    ZZT_BRIDGE,
+    `Searching ${'$6'.repeat(randominteger(1, 6))}`,
+    'zztbridge',
+  )
 }
 
 export function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
+  const rows: string[] = []
   for (let i = 0; i < list.length; ++i) {
     const entry = list[i]
     const pubtag = `pub: ${new Date(entry.publish_date).toLocaleDateString()}`
-    gadgettext(player, `$white${entry.title}`)
-    gadgettext(player, `$yellow  ${entry.author.join(', ')}`)
-    gadgettext(player, `$dkgreen  ${entry.genres.join(', ')}`)
-    gadgettext(player, `$purple  ${pubtag}`)
+    rows.push(`$white${entry.title}`)
+    rows.push(`$yellow  ${entry.author.join(', ')}`)
+    rows.push(`$dkgreen  ${entry.genres.join(', ')}`)
+    rows.push(`$purple  ${pubtag}`)
     if (entry.screenshot) {
-      gadgethyperlink(player, 'zztbridge', entry.screenshot, [
-        'viewit',
-        museumofzztscreenshoturl(entry.screenshot),
-      ])
+      const url = museumofzztscreenshoturl(entry.screenshot)
+      rows.push(
+        `!istargetless viewit ${scrolllinkescapefrag(url)};${scrolllinkescapefrag(entry.screenshot)}`,
+      )
     }
-    gadgethyperlink(player, 'zztbridge', entry.filename, [
-      'zztimport',
-      '',
-      `${entry.letter}/${entry.filename}`,
-    ])
-    gadgettext(player, ' ')
+    const path = `${entry.letter}/${entry.filename}`
+    rows.push(
+      `!zztimport  ${scrolllinkescapefrag(path)};${scrolllinkescapefrag(entry.filename)}`,
+    )
+    rows.push(' ')
   }
-  const shared = gadgetstate(player)
-  shared.scrollname = ZZT_BRIDGE
-  shared.scroll = gadgetcheckqueue(player)
+  scrollwritelines(player, ZZT_BRIDGE, rows.join('\n'), 'zztbridge')
 }

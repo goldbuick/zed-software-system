@@ -78,6 +78,8 @@ export async function storagereadconfigall() {
     'config_voice2text',
     'config_loaderlogging',
     'config_promptlogging',
+    'config_dev',
+    'config_gadget',
   ]
   const configs = await idbgetmany<string>(lookup)
   return configs.map((value, index) => {
@@ -256,6 +258,7 @@ export function storagewatchcontent(player: string) {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
       if (currenturlhash !== urlhash) {
+        console.info('hashchange', urlhash)
         currenturlhash = urlhash
         const urlcontent = await storagereadcontent(player)
         // init vm with content
@@ -288,8 +291,9 @@ export async function storagesharecontent(player: string) {
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function storagenukecontent(_player: string) {
   if (isclimode()) {
-    if (typeof (window as any).__nodeStorageNukeContent === 'function') {
-      ;(window as any).__nodeStorageNukeContent()
+    const nodewindow = window as { __nodeStorageNukeContent?: () => void }
+    if (typeof nodewindow.__nodeStorageNukeContent === 'function') {
+      nodewindow.__nodeStorageNukeContent()
     }
     return
   }

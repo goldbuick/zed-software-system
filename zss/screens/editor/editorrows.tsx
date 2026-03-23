@@ -4,19 +4,16 @@ import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
+  BG_ACTIVE,
+  BG_SELECTED,
+  FG_SELECTED,
   ZSS_TYPE_ERROR,
   ZSS_TYPE_ERROR_LINE,
   ZSS_TYPE_LINE,
   applycodetokencolors,
-} from 'zss/screens/tape/colors'
-import {
-  BG_ACTIVE,
-  BG_SELECTED,
-  EDITOR_CODE_ROW,
-  FG_SELECTED,
   bgcolor,
-  setupeditoritem,
-} from 'zss/screens/tape/common'
+} from 'zss/screens/tape/colors'
+import { EDITOR_CODE_ROW, setupeditoritem } from 'zss/screens/tape/common'
 import {
   clippedapplybgtoindexes,
   clippedapplycolortoindexes,

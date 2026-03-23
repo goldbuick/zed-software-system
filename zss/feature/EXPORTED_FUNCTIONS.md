@@ -165,7 +165,7 @@ Functions for parsing various file formats and converting them to internal repre
 - `sauceBytes(bytes)` - Extract SAUCE metadata from bytes
 
 ### Markdown Parsing
-- `parsemarkdownforscroll(player, content)` - Parse markdown for scroll display
+- `parsemarkdownforscroll(player, content, scrollname, chip?)` - Parse markdown for scroll display; optional `chip` (default `refscroll`) passed to `scrollwritelines`
 - `parsemarkdownforwriteui(player, content)` - Parse markdown for writeui display
 
 ---
@@ -279,6 +279,7 @@ Read-only memory system for help text and documentation.
 
 ### ROM Access
 - `romread(address)` - Read ROM content by address (returns help text or undefined)
+- `romhintfrommarkdown(content)` - Extract `hint:` from editor ROM markdown (or legacy `desc;` line)
 - `romparse(content, handler)` - Parse ROM content line by line with handler
 - `romprint(player, line)` - Print ROM line to terminal using writeui functions
 - `romscroll(player, line)` - Print ROM line to scroll using gadget functions

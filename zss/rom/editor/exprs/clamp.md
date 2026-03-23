@@ -1,0 +1,3 @@
+---
+hint: "Clamp value between min and max"
+---

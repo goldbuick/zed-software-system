@@ -41,9 +41,6 @@ import { PT } from 'zss/words/types'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import { zztoop } from './zztoop'
 
-export { isszztworldbytes, iszztworldbytes } from './zztmagic'
-export type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
-
 // --- ZZT element ids (ModdingWiki / ZZT internal) ---------------------------------
 
 const ZZT_TILE_EMPTY = 0

@@ -20,16 +20,20 @@ export function TerminalHotkey({
   const context = useWriteText()
   const cc = useContext(TapeTerminalContext)
 
-  const [, , shortcut, maybetext, maybenoclose, ...data] = words.map((v) =>
-    maptovalue(v, ''),
-  )
+  const rawwords = words.map((v) => maptovalue(v, ''))
+  const routetarget =
+    prefix.trim().length > 0 ? prefix : (rawwords[1] ?? '').trim()
+  const [, , shortcut, maybetext, ...data] = rawwords
 
   const text = maybetext || ` ${(shortcut ?? '').toUpperCase()} `
   const tcolor = inputcolor(!!active)
 
   const invoke = useCallback(() => {
-    cc.sendmessage(prefix, [shortcut, maybetext, maybenoclose, ...data])
-  }, [cc, prefix, shortcut, maybetext, maybenoclose, data])
+    if (!routetarget) {
+      return
+    }
+    cc.sendmessage(routetarget, [shortcut, maybetext, ...data])
+  }, [cc, routetarget, shortcut, maybetext, data])
 
   setuplogitem(!!active, 0, y, context)
   const content = `${

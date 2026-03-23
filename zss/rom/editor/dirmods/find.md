@@ -1,0 +1,3 @@
+---
+hint: "Pathfind toward target"
+---

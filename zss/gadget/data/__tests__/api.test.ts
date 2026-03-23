@@ -9,8 +9,13 @@ import {
   gadgetstateprovider,
   gadgettext,
   initstate,
+  parseterminalmodemprefix,
+  registerhyperlinksharedbridge,
+  registerterminalhyperlinksharedbridge,
+  resolvehyperlinksharedbridge,
 } from 'zss/gadget/data/api'
 import { GADGET_STATE } from 'zss/gadget/data/types'
+import { noop } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
 // Mock dependencies
@@ -91,6 +96,7 @@ describe('api', () => {
       const customState: GADGET_STATE = {
         id: 'custom-id',
         board: 'custom-board',
+        boardname: '',
         exiteast: '',
         exitwest: '',
         exitnorth: '',
@@ -199,5 +205,42 @@ describe('api', () => {
     // Note: gadgethyperlink is complex and requires proper setup
     // We'll test it through integration with other functions
     // or with mocked modem functions
+  })
+
+  describe('parseterminalmodemprefix', () => {
+    it('parses chip and target on first colon only', () => {
+      expect(parseterminalmodemprefix('zipfilelist:myfile')).toEqual({
+        chip: 'zipfilelist',
+        target: 'myfile',
+      })
+    })
+
+    it('returns undefined without colon', () => {
+      expect(parseterminalmodemprefix('nocolon')).toBeUndefined()
+    })
+
+    it('returns undefined when target would contain a second colon', () => {
+      expect(parseterminalmodemprefix('chip:tar:extra')).toBeUndefined()
+    })
+
+    it('returns undefined for empty chip or target', () => {
+      expect(parseterminalmodemprefix(':b')).toBeUndefined()
+      expect(parseterminalmodemprefix('a:')).toBeUndefined()
+    })
+  })
+
+  describe('resolvehyperlinksharedbridge', () => {
+    it('prefers scroll registration when both exist', () => {
+      const chip = `merge_a_${Math.random()}`
+      registerterminalhyperlinksharedbridge(chip, 'select', () => 1, noop)
+      registerhyperlinksharedbridge(chip, 'select', () => 2, noop)
+      expect(resolvehyperlinksharedbridge(chip, 'select')?.get?.('x')).toBe(2)
+    })
+
+    it('falls back to terminal registration', () => {
+      const chip = `merge_b_${Math.random()}`
+      registerterminalhyperlinksharedbridge(chip, 'select', () => 3, noop)
+      expect(resolvehyperlinksharedbridge(chip, 'select')?.get?.('x')).toBe(3)
+    })
   })
 })

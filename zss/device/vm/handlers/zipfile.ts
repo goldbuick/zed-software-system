@@ -5,38 +5,37 @@ import {
   readzipfilelist,
   readzipfilelistitem,
 } from 'zss/feature/parse/file'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
-import { NAME, WORD } from 'zss/words/types'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
+import { NAME } from 'zss/words/types'
+
+registerhyperlinksharedbridge(
+  'zipfilelist',
+  'select',
+  (name) => (readzipfilelistitem(name) ? 1 : 0),
+  (name, value) => markzipfilelistitem(name, !!value),
+)
+
+// Terminal tape lines that bind the same modem keys as this scroll should use
+// `!zipfilelist:<filename>!select;…` (second `!` separates `paneladdress` prefix
+// from the command). Targets must not contain `:`.
 
 export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
   const list = readzipfilelist()
-  gadgettext(message.player, `$CENTER Select Files`)
-  gadgethyperlink(message.player, 'zipfilelist', 'import selected', [
-    'importfiles',
-  ])
+  const lines: string[] = []
+  lines.push('$CENTER Select Files')
+  lines.push(`!importfiles;${scrolllinkescapefrag('import selected')}`)
   for (let i = 0; i < list.length; ++i) {
     const [type, filename] = list[i]
     if (!type) {
       continue
     }
-    gadgettext(message.player, filename)
-    gadgethyperlink(
-      message.player,
-      'zipfilelist',
-      `[${type}]`,
-      [NAME(filename), 'select', 'NO', '0', 'YES', '1'],
-      (name: string) => (readzipfilelistitem(name) ? 1 : 0),
-      (name: string, value: WORD) => {
-        markzipfilelistitem(name, !!value)
-      },
-    )
+    lines.push(filename)
+    const fname = NAME(filename)
+    const cmd = `${fname} select NO 0 YES 1`
+    const label = `$cyan[${type}]$white`
+    lines.push(`!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(label)}`)
   }
-  const shared = gadgetstate(message.player)
-  shared.scrollname = 'zipfilelist'
-  shared.scroll = gadgetcheckqueue(message.player)
+  applyzedscroll(message.player, lines.join('\n'), 'zipfilelist', 'zipfilelist')
 }

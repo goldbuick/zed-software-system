@@ -1,1 +1,0 @@
-desc;Light radius of this element

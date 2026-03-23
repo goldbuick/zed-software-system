@@ -14,6 +14,7 @@ This document categorizes and summarizes all exported functions from the `gadget
 9. [Bitmap & Media Management](#bitmap--media-management)
 10. [Gadget State API](#gadget-state-api)
 11. [Tape & Terminal State](#tape--terminal-state)
+12. [Gadget scroll catalog](#gadget-scroll-catalog)
 
 ---
 
@@ -504,6 +505,10 @@ API for managing gadget state, panels, and hyperlinks.
 
 ### Hyperlink Management
 - `gadgethyperlink(player, chip, label, words, get, set)` - Creates a hyperlink panel item with shared state tracking for certain types (range, select, number, text, etc.)
+- `registerhyperlinksharedbridge(chip, type, get, set)` - Optional default `get`/`set` for a chip + shared hyperlink `type` (e.g. `zipfilelist` + `select`) so call sites can omit closures
+- `registerterminalhyperlinksharedbridge(chip, type, get, set)` - Same shape for the terminal tape; merged with scroll bridges (scroll wins when both define the same key)
+- `parseterminalmodemprefix(prefix)` - Validates `chip:target` tape prefixes (first `:` only; no `:` in `target`)
+- `resolvehyperlinksharedbridge(chip, type)` - Resolved `get`/`set` after merge (scroll then terminal gap-fill)
 
 ### Value Tracking
 - `gadgetcheckset(chip, name, value)` - Checks if a set operation matches any tracked shared state and updates it
@@ -515,6 +520,14 @@ Gadget state serialization utilities.
 ### Functions
 - `exportgadgetstate(gadget)` - Exports gadget state to a format object
 - `importgadgetstate(gadget)` - Imports gadget state from a format object
+
+---
+
+## Gadget scroll catalog
+
+**Doc:** [`docs/gadget-scrolls.md`](docs/gadget-scrolls.md)
+
+Catalog of VM handlers, `refscroll:` routes, ROM keys, inspection flows, and behavior notes (clear vs unlock, scroll lock, hyperlink chips) for the right-hand scroll panel.
 
 ---
 

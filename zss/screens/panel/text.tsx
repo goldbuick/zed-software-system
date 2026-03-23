@@ -6,10 +6,11 @@ import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
+import { drawblockcursor } from 'zss/screens/inputcommon'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
-  applystrtoindex,
+  textformatreadedges,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
@@ -69,7 +70,8 @@ export function PanelText({
     applycolortoindexes(tx + left + tyw, tx + right + tyw, 15, 8, context)
   }
   if (focus) {
-    applystrtoindex(tx + cursor + tyw, '$BLWHITE$219$WHITE', context)
+    const edge = textformatreadedges(context)
+    drawblockcursor(cursor, 0, { ...edge, left: tx, top: ty }, context)
   }
 
   function deleteselection() {

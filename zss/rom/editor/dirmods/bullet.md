@@ -1,0 +1,3 @@
+---
+hint: "Bullet collision type"
+---

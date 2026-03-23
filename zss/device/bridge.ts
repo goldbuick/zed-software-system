@@ -1,7 +1,20 @@
-import { ChatClient, ChatMessage } from '@twurple/chat'
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
+import { createblueskyfeedconnector } from 'zss/device/bridge/blueskyfeedconnector'
+import type { CHAT_CONNECTOR } from 'zss/device/bridge/chatconnector'
+import {
+  ALL_CHAT_KINDS,
+  CHAT_KIND,
+  normalizechatkind,
+  parsechatstartpayload,
+} from 'zss/device/bridge/chattypes'
+import { createircchatconnector } from 'zss/device/bridge/ircchatconnector'
+import { createmastodonfeedconnector } from 'zss/device/bridge/mastodonfeedconnector'
+import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
+import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
+import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
+import { createxmppchatconnector } from 'zss/device/bridge/xmppchatconnector'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
   netterminalhost,
@@ -25,8 +38,10 @@ import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
 import { synthbroadcastdestination } from './synth'
 
-let twitchchatclient: MAYBE<ChatClient>
+const chatslots = new Map<CHAT_KIND, CHAT_CONNECTOR>()
 let broadcastclient: MAYBE<IVSBroadcastClient.AmazonIVSBroadcastClient>
+let broadcastivsconnection = 'idle'
+let broadcastlive = false
 
 async function runnetworkfetch(
   player: string,
@@ -88,10 +103,15 @@ async function runnetworkfetch(
   }
 }
 
-function joinurlread() {
-  const isHeadless =
+function isbridgeheadless() {
+  return (
     typeof (window as any).__nodeStorageReadContent === 'function' ||
     typeof (window as any).__nodeStorageReadPlayer === 'function'
+  )
+}
+
+function joinurlread() {
+  const isHeadless = isbridgeheadless()
   const base = isHeadless ? 'https://zed.cafe' : location.origin
   const joinurl = `${base}/join/#${readsubscribetopic()}`
   // also copy joinurl
@@ -102,27 +122,38 @@ function joinurlread() {
   return joinurl
 }
 
-function removeurls(text: string) {
-  // Regular expression to match URLs
-  // This regex matches URLs starting with http, https, or ftp,
-  // and captures the rest of the URL until a space or end of string.
-  const urlregex = /(?:https?|ftp):\/\/[\n\S]+/g
-
-  // Replace all matched URLs with an empty string
-  return text.replace(urlregex, '')
+function pushchatline(
+  player: string,
+  routekey: string,
+  mode: 'message' | 'action',
+  user: string,
+  text: string,
+) {
+  const prefix = mode === 'action' ? 'chat:action' : 'chat:message'
+  vmloader(
+    bridge,
+    player,
+    undefined,
+    'text',
+    `${prefix}:${routekey}`,
+    `${user}:${text}`,
+  )
 }
 
-function striptext(msg: ChatMessage) {
-  let plaintext = msg.text
-  const ranges = [...msg.emoteOffsets.values()]
-  for (let r = 0; r < ranges.length; ++r) {
-    const indexes = ranges[r].reverse()
-    for (let i = 0; i < indexes.length; ++i) {
-      const [start, end] = indexes[i].split('-').map(parseFloat)
-      plaintext = plaintext.substring(0, start) + plaintext.substring(end + 1)
-    }
+function makechathandlers(player: string): TWITCH_CHAT_HANDLERS {
+  return {
+    onconnect: () => apilog(bridge, player, 'chat connected'),
+    ondisconnect: () => apilog(bridge, player, 'chat disconnected'),
+    onmessage: (routekey, mode, user, text) =>
+      pushchatline(player, routekey, mode, user, text),
+    onerror: (msg) => apierror(bridge, player, 'bridge', msg),
   }
-  return removeurls(plaintext)
+}
+
+function feedpollintervalms(sec: number | undefined) {
+  const s =
+    typeof sec === 'number' && Number.isFinite(sec) && sec > 0 ? sec : 120
+  return Math.max(30_000, Math.min(3_600_000, Math.floor(s * 1000)))
 }
 
 const bridge = createdevice('bridge', [], (message) => {
@@ -196,57 +227,307 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     }
-    case 'chatstart':
-      if (ispresent(twitchchatclient)) {
-        apierror(bridge, message.player, 'bridge', 'chat is already started')
-      } else if (isstring(message.data)) {
-        apilog(bridge, message.player, `connecting to ${message.data}`)
-        twitchchatclient = new ChatClient({ channels: [message.data] })
-        twitchchatclient.connect()
-        twitchchatclient.onConnect(() => {
-          apilog(bridge, message.player, 'connected')
-        })
-        twitchchatclient.onDisconnect(() => {
-          apilog(bridge, message.player, 'disconnected')
-        })
-        twitchchatclient.onMessage((_, user, __, msg) => {
-          const simpletext = striptext(msg)
-          vmloader(
+    case 'chatstart': {
+      const parsed = parsechatstartpayload(message.data)
+      if (!parsed) {
+        apierror(
+          bridge,
+          message.player,
+          'bridge',
+          'invalid bridge chat start (need twitch channel string or { kind, routekey, … })',
+        )
+        break
+      }
+      if (
+        (parsed.kind === CHAT_KIND.IRC || parsed.kind === CHAT_KIND.XMPP) &&
+        isbridgeheadless()
+      ) {
+        apierror(
+          bridge,
+          message.player,
+          'bridge',
+          `${parsed.kind} chat needs a browser tab with WebSocket support (not available in this environment)`,
+        )
+        break
+      }
+      const prev = chatslots.get(parsed.kind)
+      if (ispresent(prev)) {
+        apilog(
+          bridge,
+          message.player,
+          `replacing ${parsed.kind} chat connector`,
+        )
+        prev.disconnect()
+        chatslots.delete(parsed.kind)
+      }
+      if (parsed.kind === CHAT_KIND.TWITCH) {
+        const channel = parsed.channel?.trim() ?? parsed.routekey
+        apilog(
+          bridge,
+          message.player,
+          `twitch chat starting routekey=${parsed.routekey} channel=${channel}`,
+        )
+        chatslots.set(
+          CHAT_KIND.TWITCH,
+          createtwitchchatconnector(
+            parsed.routekey,
+            channel,
+            makechathandlers(message.player),
+          ),
+        )
+        break
+      }
+      if (parsed.kind === CHAT_KIND.IRC) {
+        const ws = parsed.websocketurl?.trim() ?? ''
+        const ch = parsed.channel?.trim() ?? ''
+        const nick = parsed.nick?.trim() ?? ''
+        if (!ws || !ch || !nick) {
+          apierror(
             bridge,
             message.player,
-            undefined,
-            'text',
-            `chat:message:${message.data}`,
-            `${user}:${simpletext}`,
+            'bridge',
+            'irc chat needs websocketurl, channel, and nick',
           )
-        })
-        twitchchatclient.onAction((_, user, __, msg) => {
-          const simpletext = striptext(msg)
-          vmloader(
+          break
+        }
+        let ircurlvalid = false
+        try {
+          new URL(ws)
+          ircurlvalid = true
+        } catch {
+          ircurlvalid = false
+        }
+        if (!ircurlvalid) {
+          apierror(
             bridge,
             message.player,
-            undefined,
-            'text',
-            `chat:action:${message.data}`,
-            `${user}:${simpletext}`,
+            'bridge',
+            'irc websocketurl is invalid',
           )
-        })
+          break
+        }
+        apilog(
+          bridge,
+          message.player,
+          `irc chat starting routekey=${parsed.routekey} channel=${ch}`,
+        )
+        chatslots.set(
+          CHAT_KIND.IRC,
+          createircchatconnector({
+            routekey: parsed.routekey,
+            websocketurl: ws,
+            channel: ch,
+            nick,
+            password: parsed.password,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
+      }
+      if (parsed.kind === CHAT_KIND.RSS) {
+        const feedurl = parsed.feedurl?.trim() ?? ''
+        if (!feedurl) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'rss needs feedurl (browser fetch; URL must allow CORS or be same-origin)',
+          )
+          break
+        }
+        let feedok = false
+        try {
+          new URL(feedurl)
+          feedok = true
+        } catch {
+          feedok = false
+        }
+        if (!feedok) {
+          apierror(bridge, message.player, 'bridge', 'rss feedurl is invalid')
+          break
+        }
+        const pollms = feedpollintervalms(parsed.pollintervalsec)
+        apilog(
+          bridge,
+          message.player,
+          `rss feed starting routekey=${parsed.routekey} pollMs=${pollms}`,
+        )
+        chatslots.set(
+          CHAT_KIND.RSS,
+          createrssfeedconnector({
+            routekey: parsed.routekey,
+            feedurl,
+            pollintervalms: pollms,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
+      }
+      if (parsed.kind === CHAT_KIND.MASTODON) {
+        const instance = parsed.mastodoninstance?.trim() ?? ''
+        const account = parsed.mastodonaccount?.trim() ?? ''
+        const hashtag = parsed.mastodonhashtag?.trim() ?? ''
+        if (!instance || (!account && !hashtag)) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'mastodon needs mastodoninstance and mastodonaccount or mastodonhashtag',
+          )
+          break
+        }
+        const pollms = feedpollintervalms(parsed.pollintervalsec)
+        apilog(
+          bridge,
+          message.player,
+          `mastodon feed starting routekey=${parsed.routekey} pollMs=${pollms}`,
+        )
+        chatslots.set(
+          CHAT_KIND.MASTODON,
+          createmastodonfeedconnector({
+            routekey: parsed.routekey,
+            instanceorigin: instance,
+            hashtag,
+            account,
+            accesstoken: parsed.mastodontoken,
+            pollintervalms: pollms,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
+      }
+      if (parsed.kind === CHAT_KIND.BLUESKY) {
+        const handle = parsed.blueskyhandle?.trim() ?? ''
+        if (!handle) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'bluesky needs blueskyhandle',
+          )
+          break
+        }
+        const feeduri = parsed.blueskyfeeduri?.trim() ?? ''
+        if (feeduri && !feeduri.startsWith('at://')) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'blueskyfeeduri must be an at:// URI',
+          )
+          break
+        }
+        const pollms = feedpollintervalms(parsed.pollintervalsec)
+        apilog(
+          bridge,
+          message.player,
+          `bluesky feed starting routekey=${parsed.routekey} pollMs=${pollms}`,
+        )
+        chatslots.set(
+          CHAT_KIND.BLUESKY,
+          createblueskyfeedconnector({
+            routekey: parsed.routekey,
+            handle,
+            feeduri: feeduri !== '' ? feeduri : undefined,
+            pollintervalms: pollms,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
+      }
+      if (parsed.kind === CHAT_KIND.XMPP) {
+        const service = parsed.service?.trim() ?? ''
+        const domain = parsed.domain?.trim() ?? ''
+        const username = parsed.username?.trim() ?? ''
+        const password = parsed.password ?? ''
+        const muc = parsed.muc?.trim() ?? ''
+        if (!service || !domain || !username || !password || !muc) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'xmpp chat needs service, domain, username, password, and muc',
+          )
+          break
+        }
+        apilog(
+          bridge,
+          message.player,
+          `xmpp chat starting routekey=${parsed.routekey} muc=${muc}`,
+        )
+        chatslots.set(
+          CHAT_KIND.XMPP,
+          createxmppchatconnector({
+            routekey: parsed.routekey,
+            service,
+            domain,
+            username,
+            password,
+            muc,
+            mucnick: parsed.mucnick,
+            handlers: makechathandlers(message.player),
+          }),
+        )
+        break
       }
       break
-    case 'chatstop':
-      if (ispresent(twitchchatclient)) {
-        twitchchatclient.quit()
-        twitchchatclient = undefined
-        apilog(bridge, message.player, 'chat stopped')
-      } else {
-        apierror(bridge, message.player, 'bridge', 'chat is already stoped')
+    }
+    case 'chatstop': {
+      const kind = normalizechatkind(String(message.data ?? ''))
+      if (!kind) {
+        apierror(
+          bridge,
+          message.player,
+          'bridge',
+          'bridge chat stop requires kind: twitch, irc, xmpp, rss, mastodon, bluesky',
+        )
+        break
       }
+      const conn = chatslots.get(kind)
+      if (!ispresent(conn)) {
+        apierror(
+          bridge,
+          message.player,
+          'bridge',
+          `chat is already stopped for ${kind}`,
+        )
+        break
+      }
+      conn.disconnect()
+      chatslots.delete(kind)
+      apilog(bridge, message.player, `${kind} chat stopped`)
+      break
+    }
+    case 'status':
+      for (let i = 0; i < ALL_CHAT_KINDS.length; ++i) {
+        const k = ALL_CHAT_KINDS[i]
+        const slot = chatslots.get(k)
+        if (ispresent(slot)) {
+          const s = slot.describestatus()
+          apilog(
+            bridge,
+            message.player,
+            `${s.kind}: connected=${s.connected} routekey=${s.routekey}` +
+              (s.phase ? ` phase=${s.phase}` : '') +
+              (s.detail ? ` detail=${s.detail}` : ''),
+          )
+        } else {
+          apilog(bridge, message.player, `${k}: idle`)
+        }
+      }
+      apilog(
+        bridge,
+        message.player,
+        `broadcast: client=${ispresent(broadcastclient) ? 'present' : 'absent'} ivs=${broadcastivsconnection} live=${broadcastlive}`,
+      )
       break
     case 'streamstart':
       doasync(bridge, message.player, async () => {
         if (ispresent(broadcastclient)) {
           apierror(bridge, message.player, 'bridge', 'stream is already open')
         } else {
+          broadcastivsconnection = 'starting'
+          broadcastlive = false
           const isportrait = window.innerHeight > window.innerWidth
           const streamconfig = isportrait
             ? IVSBroadcastClient.STANDARD_PORTRAIT
@@ -263,6 +544,7 @@ const bridge = createdevice('bridge', [], (message) => {
             IVSBroadcastClient.BroadcastClientEvents.ACTIVE_STATE_CHANGE,
             // @ts-expect-error wow?
             function (activestate: boolean) {
+              broadcastlive = activestate
               console.info({ activestate })
             },
           )
@@ -270,6 +552,7 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.CONNECTION_STATE_CHANGE,
             function (state: string) {
+              broadcastivsconnection = state
               apilog(bridge, message.player, state)
             } as Callback,
           )
@@ -277,6 +560,8 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.ERROR,
             function (error: string) {
+              broadcastivsconnection = 'error'
+              broadcastlive = false
               apierror(bridge, message.player, 'bridge', error)
               broadcastclient = undefined
             } as Callback,
@@ -294,6 +579,8 @@ const bridge = createdevice('bridge', [], (message) => {
               'unabled to find canvas element',
             )
             broadcastclient = undefined
+            broadcastivsconnection = 'idle'
+            broadcastlive = false
             return
           }
 
@@ -309,6 +596,8 @@ const bridge = createdevice('bridge', [], (message) => {
               'unable create media audio node destination',
             )
             broadcastclient = undefined
+            broadcastivsconnection = 'idle'
+            broadcastlive = false
             return
           }
 
@@ -336,6 +625,8 @@ const bridge = createdevice('bridge', [], (message) => {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()
         broadcastclient = undefined
+        broadcastivsconnection = 'idle'
+        broadcastlive = false
         apilog(bridge, message.player, `stream stopped`)
       } else {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')
