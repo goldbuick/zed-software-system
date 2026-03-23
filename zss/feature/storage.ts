@@ -78,6 +78,8 @@ export async function storagereadconfigall() {
     'config_voice2text',
     'config_loaderlogging',
     'config_promptlogging',
+    'config_dev',
+    'config_gadget',
   ]
   const configs = await idbgetmany<string>(lookup)
   return configs.map((value, index) => {

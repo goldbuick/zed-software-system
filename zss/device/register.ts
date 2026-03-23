@@ -65,6 +65,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
+import { memorywriteconfig } from 'zss/memory/utilities'
 import { tokenizeandstriptextformat } from 'zss/words/textformat'
 
 import {
@@ -469,7 +470,7 @@ export const register = createdevice(
         break
       case 'bookmark:urlnavigate':
         if (isstring(message.data) && message.data.trim()) {
-          location.href = message.data.trim()
+          window.location.href = message.data.trim()
         }
         break
       case 'bookmark:delete':
@@ -858,24 +859,27 @@ export const register = createdevice(
           })
         }
         break
-      case 'inspector':
-        useTape.setState((state) => {
-          const enabled = ispresent(message.data)
-            ? !!message.data
-            : !state.inspector
-          const line1 = `gadget inspector ${enabled ? '$greenon' : '$redoff'}`
-          terminalwritelines(
-            register,
-            message.player,
-            enabled
-              ? `${line1}\nmouse click or tap elements to inspect`
-              : line1,
-          )
-          return {
-            inspector: enabled,
-          }
-        })
+      case 'inspector': {
+        const previnspector = useTape.getState().inspector
+        const enabled = ispresent(message.data)
+          ? !!message.data
+          : !previnspector
+        const line1 = `gadget inspector ${enabled ? '$greenon' : '$redoff'}`
+        terminalwritelines(
+          register,
+          message.player,
+          enabled ? `${line1}\nmouse click or tap elements to inspect` : line1,
+        )
+        useTape.setState({ inspector: enabled })
+        if (!ispresent(message.data)) {
+          const gadgetval = enabled ? 'on' : 'off'
+          doasync(register, message.player, async () => {
+            await storagewriteconfig('gadget', gadgetval)
+            memorywriteconfig('gadget', gadgetval)
+          })
+        }
         break
+      }
       case 'findany':
         if (isarray(message.data)) {
           useInspector.setState({ pts: message.data })
