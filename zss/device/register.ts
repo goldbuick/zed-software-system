@@ -469,8 +469,10 @@ export const register = createdevice(
         })
         break
       case 'bookmark:urlnavigate':
-        if (isstring(message.data) && message.data.trim()) {
-          window.location.href = message.data.trim()
+        if (isstring(message.data)) {
+          setTimeout(() => {
+            window.location.href = message.data.trim()
+          }, 333)
         }
         break
       case 'bookmark:delete':
