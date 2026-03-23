@@ -1,5 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { memorytickmain } from 'zss/memory/runtime'
+import * as session from 'zss/memory/session'
+
+import { pilottick } from '../pilot'
+import { handletick } from '../tick'
 
 jest.mock('zss/memory/runtime', () => ({
   memorytickmain: jest.fn(),
@@ -8,12 +13,6 @@ jest.mock('zss/memory/runtime', () => ({
 jest.mock('../pilot', () => ({
   pilottick: jest.fn(),
 }))
-
-import { memorytickmain } from 'zss/memory/runtime'
-import * as session from 'zss/memory/session'
-
-import { pilottick } from '../pilot'
-import { handletick } from '../tick'
 
 describe('handletick sim freeze', () => {
   const vm = {} as DEVICE

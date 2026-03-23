@@ -6,12 +6,12 @@ import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { drawblockcursor } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
 import {
   TapeTerminalItemInputProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
-import { drawblockcursor } from 'zss/screens/inputcommon'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,

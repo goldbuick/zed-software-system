@@ -159,7 +159,11 @@ export function handleeditorbookmarkscrollpanel(
         isstring(entry.title) ? entry.title : '',
         0,
       )
-      apitoast(vm, message.player, `opened $green${entry.title}$white in editor`)
+      apitoast(
+        vm,
+        message.player,
+        `opened $green${entry.title}$white in editor`,
+      )
       vmclearscroll(vm, message.player)
       break
     }

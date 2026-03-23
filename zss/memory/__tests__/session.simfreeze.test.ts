@@ -1,7 +1,4 @@
-import {
-  memoryreadsimfreeze,
-  memorywritesimfreeze,
-} from 'zss/memory/session'
+import { memoryreadsimfreeze, memorywritesimfreeze } from 'zss/memory/session'
 
 describe('session simfreeze', () => {
   afterEach(() => {
