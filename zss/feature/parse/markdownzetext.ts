@@ -79,8 +79,9 @@ function buildlinkcommand(token: Tokens.Link): string {
 }
 
 function linklabeltext(token: Tokens.Link): string {
-  const plain = token.text.split('|')[0]?.trim() ?? ''
-  return inlinetostring(token.tokens) || plain || token.text
+  const parts = token.text.split('|').map((item: string) => item.trim())
+  const label = parts[0]?.trim() ?? ''
+  return label
 }
 
 function paragraphemit(sink: MarkdownZedSink, token: Tokens.Paragraph) {
