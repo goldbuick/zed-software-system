@@ -14,4 +14,4 @@ mods                 4 = high snare
 + = increase octave  9 = bass drum
 - = decrease octave
 helpful resource on scales
-!openit https://www.pianoscales.org/;https://www.pianoscales.org/
+!openit https://www.pianoscales.org/;pianoscales

@@ -289,7 +289,9 @@ export function parsetokenzetext(sink: MarkdownZedSink, token: Token) {
     }
     case 'image': {
       const im = token as Tokens.Image
-      sink.hyperlink(`openit ${im.href}`, `show ${im.title ?? im.href}`)
+      const showlabel =
+        im.title ?? (im.text?.trim() ? im.text.trim() : im.href)
+      sink.hyperlink(`openit ${im.href}`, `show ${showlabel}`)
       break
     }
     case 'blockquote':

@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYsends the given message when hotkey is pressed"
+hint: "sends the given message when hotkey is pressed"
 ---

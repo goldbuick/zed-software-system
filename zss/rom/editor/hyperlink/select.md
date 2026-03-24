@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYlist with label value pairs to pick from"
+hint: "list with label value pairs to pick from"
 ---
