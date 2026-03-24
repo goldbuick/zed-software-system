@@ -16,7 +16,4 @@ mods                 4 = high snare
 - = decrease octave
 ```
 
-helpful resource on scales
-
-!openit https://www.pianoscales.org/;pianoscales
-
+!openit https://www.pianoscales.org/;helpful resource on scales

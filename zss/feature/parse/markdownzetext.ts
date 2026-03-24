@@ -243,14 +243,14 @@ function emitcodeblock(sink: MarkdownZedSink, token: Tokens.Code) {
   const lines = token.text.split('\n')
   for (let i = 0; i < lines.length; ++i) {
     const raw = lines[i]
-    sink.line(`$purple$onblue ${escapezedollar(raw)}${RESET}`)
+    sink.line(`$green$186$white ${escapezedollar(raw)}${RESET}`)
   }
   sink.line(' ')
 }
 
 function emitblockquote(sink: MarkdownZedSink, token: Tokens.Blockquote) {
   token.text.split('\n').forEach((ln: string) => {
-    sink.line(`$dkpurple$221$white  ${ln}`)
+    sink.line(`$purple$221$white ${ln}`)
   })
   sink.line(' ')
 }
