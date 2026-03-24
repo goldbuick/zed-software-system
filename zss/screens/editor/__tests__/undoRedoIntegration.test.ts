@@ -90,6 +90,21 @@ describe('undo/redo integration', () => {
     expect(getstringcontent()).toBe('x')
   })
 
+  it('splice replace: single undo restores prior string; single redo restores after', async () => {
+    registerCursorRestore(CODEKEY, () => {})
+    await localinsert('hello')
+    const handle = gettext()
+    expect(handle).toBeDefined()
+    markNextPatchAsLocal()
+    setCursorBeforeEdit(CODEKEY, 1)
+    handle!.splice(1, 2, 'XX')
+    expect(getstringcontent()).toBe('hXXlo')
+    getUm()!.undo()
+    expect(getstringcontent()).toBe('hello')
+    getUm()!.redo()
+    expect(getstringcontent()).toBe('hXXlo')
+  })
+
   it('two inserts, undo, undo, new insert, undo: only new insert is reverted', async () => {
     registerCursorRestore(CODEKEY, () => {})
     await localinsert('a')

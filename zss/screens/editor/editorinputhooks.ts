@@ -195,11 +195,8 @@ export function useEditorSplice(
         setCursorBeforeEdit(codepage.nodeId.key, index)
       }
       markNextPatchAsLocal()
-      if (count > 0) {
-        codepage?.delete(index, count)
-      }
-      if (ispresent(insert)) {
-        codepage?.insert(index, insert)
+      if (codepage && (count > 0 || ispresent(insert))) {
+        codepage.splice(index, count, insert)
       }
       const cursor = index + (insert ?? '').length
       updatescrolling(cursor)
@@ -214,11 +211,8 @@ export function useEditorSplice(
         setCursorBeforeEdit(codepage.nodeId.key, index)
       }
       markNextPatchAsLocal()
-      if (count > 0) {
-        codepage?.delete(index, count)
-      }
-      if (ispresent(insert)) {
-        codepage?.insert(index, insert)
+      if (codepage && (count > 0 || ispresent(insert))) {
+        codepage.splice(index, count, insert)
       }
       const cursor = index + (insert ?? '').length
       updatescrolling(cursor)

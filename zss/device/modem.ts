@@ -38,6 +38,8 @@ export type SharedTextHandle = {
   toJSON(): string
   insert(index: number, text: string): void
   delete(index: number, length: number): void
+  /** Delete then optional insert in one transaction (one undo step). */
+  splice(index: number, deletecount: number, insert?: string): void
   get length(): number
   /** For undo: which text this handle refers to */
   readonly nodeId: NodeId
@@ -141,6 +143,16 @@ function createSharedTextHandle(key: string, text: Y.Text): SharedTextHandle {
     delete(index: number, length: number) {
       SYNC_DOC.transact(() => {
         text.delete(index, length)
+      }, LOCAL_ORIGIN)
+    },
+    splice(index: number, deletecount: number, insert?: string) {
+      SYNC_DOC.transact(() => {
+        if (deletecount > 0) {
+          text.delete(index, deletecount)
+        }
+        if (ispresent(insert)) {
+          text.insert(index, insert)
+        }
       }, LOCAL_ORIGIN)
     },
     get length() {
@@ -341,6 +353,15 @@ export function modemreadtextsync(key: string): string {
     return existing.toJSON()
   }
   return ''
+}
+
+/** If key is bound to Y.Text, return its string (may be empty); else undefined for caller fallback. */
+export function modemreadcodepagetextifpresent(key: string): string | undefined {
+  const existing = ROOT.get(key)
+  if (existing instanceof Y.Text) {
+    return existing.toJSON()
+  }
+  return undefined
 }
 
 function modemobservevalue(
