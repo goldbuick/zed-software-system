@@ -69,8 +69,11 @@ export function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
       )
     }
     const path = `${entry.letter}/${entry.filename}`
+    // Panel rows are [chip, label, target, maybetype, ...args]. Without an explicit
+    // maybetype, the path is misread as the widget type and never reaches message.data
+    // (fetch becomes /zgames/undefined).
     rows.push(
-      `!zztimport  ${scrolllinkescapefrag(path)};${scrolllinkescapefrag(entry.filename)}`,
+      `!zztimport hyperlink ${scrolllinkescapefrag(path)};${scrolllinkescapefrag(entry.filename)}`,
     )
     rows.push(' ')
   }

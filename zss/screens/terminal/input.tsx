@@ -4,6 +4,7 @@ import {
   apitoast,
   registerappendterminalbookmark,
   registerbookmarkdelete,
+  registerbookmarkscroll,
   registerterminalclose,
   registerterminalinclayout,
   vmcli,
@@ -91,6 +92,7 @@ export function TerminalInput({
   )
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const zsswords = useGadgetClient((state) => state.zsswords)
+  const gadgetboard = useGadgetClient((state) => state.gadget.board)
 
   const player = registerreadplayer()
   const usetouchtextsync = useDeviceData((state) => state.usetouchtextsync)
@@ -712,6 +714,13 @@ export function TerminalInput({
                       if (id) {
                         registerbookmarkdelete(SOFTWARE, player, id)
                       }
+                      break
+                    }
+                    if (
+                      inputstateactive &&
+                      !(gadgetboard ?? '').trim().length
+                    ) {
+                      registerbookmarkscroll(SOFTWARE, player)
                       break
                     }
                     if (

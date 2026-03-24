@@ -15,19 +15,17 @@ use onclear $WHITE$$onclear$yellow to change
 - !message; Label
 
 send the given #message when the  
-<hyperlink> is pressed
+`<hyperlink>` is pressed
 
-- !message hotkey <shortcut>; Label
+- !message hotkey `<shortcut>`; Label
+- !message hk `<shortcut>`; Label
 
-- !message hk <shortcut>; Label
-
-send the given #message when the <shortcut>  
-is pressed. is-hotkey listens for <shortcut>
+send the given #message when the `<shortcut>`  
+is pressed. is-hotkey listens for `<shortcut>`
 
 !openit https://github.com/ianstormtaylor/is-hotkey;$whiteis-hotkey on https://github.com/
 
 - !flagorstat range [minword] [maxword]; Label
-
 - !flagorstat rn [minword] [maxword]; Label
 
 uses the standard 1 to 9 values input range  
@@ -36,22 +34,19 @@ uses the standard 1 to 9 values input range
 write user range input into a flagorstat
 
 - !flagorstat select <choices>; Label
-
 - !flagorstat sl <choices>; Label
 
-<choices> is a list of <word> <value> pairs  
+`<choices>` is a list of `<word>` `<value>` pairs  
 select gives a user a way to cycle through  
 preset choices  
 write user select input into a flagorstat
 
 - !flagorstat number; Label
-
 - !flagorstat nm; Label
 
 write user number input into a flagorstat
 
 - !flagorstat text; Label
-
 - !flagorstat tx; Label
 
 write user text input into a flagorstat

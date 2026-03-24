@@ -94,6 +94,7 @@ import {
   vmpullvarresult,
   vmzsswords,
 } from './api'
+import { runbookmarkurlnavigate } from './runbookmarkurlnavigate'
 
 // read / write from session
 
@@ -470,10 +471,11 @@ export const register = createdevice(
         })
         break
       case 'bookmark:urlnavigate':
-        if (isstring(message.data)) {
-          apitoast(register, myplayerid, `navigating to $green${message.data}`)
-          window.location.href = message.data.trim()
-        }
+        doasync(register, message.player, async () => {
+          if (isstring(message.data)) {
+            await runbookmarkurlnavigate(register, myplayerid, message.data)
+          }
+        })
         break
       case 'bookmark:delete':
         doasync(register, message.player, async () => {
