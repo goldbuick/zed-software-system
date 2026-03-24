@@ -8,6 +8,7 @@ import {
   initstate,
 } from 'zss/gadget/data/api'
 import { GADGET_STATE } from 'zss/gadget/data/types'
+import { WORD } from 'zss/words/types'
 
 jest.mock('zss/device/modem', () => ({
   modemobservevaluenumber: jest.fn(),
@@ -103,9 +104,9 @@ describe('parsemarkdownforscroll', () => {
     const sc = gadgetstate('p1').scroll ?? []
     const hyperlinkrows = sc.filter((r) => Array.isArray(r)) as unknown[][]
     expect(hyperlinkrows).toHaveLength(0)
-    expect(
-      sc.some((r) => typeof r === 'string' && r.includes('!openit')),
-    ).toBe(true)
+    expect(sc.some((r) => typeof r === 'string' && r.includes('!openit'))).toBe(
+      true,
+    )
   })
 
   it('keeps later standalone !tape rows after a standalone !openit line (single parse)', () => {
@@ -119,7 +120,7 @@ describe('parsemarkdownforscroll', () => {
 `
     parsemarkdownforscroll('p1', md, 'doc')
     const sc = gadgetstate('p1').scroll ?? []
-    const rows = sc.filter((r): r is unknown[] => Array.isArray(r))
+    const rows = sc.filter((r): r is WORD[] => Array.isArray(r))
     const openit = rows.find((r) => r[3] === 'openit')
     expect(openit).toBeDefined()
     expect(openit![4]).toBe('https://example.com/doc')

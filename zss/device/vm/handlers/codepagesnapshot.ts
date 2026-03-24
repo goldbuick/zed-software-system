@@ -9,7 +9,7 @@ import {
   memoryreadcodepagetype,
 } from 'zss/memory/codepageoperations'
 import { memoryreadbookbyaddress } from 'zss/memory/session'
-import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 export function handlecodepagesnapshot(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
@@ -38,7 +38,7 @@ export function handlecodepagesnapshot(vm: DEVICE, message: MESSAGE): void {
     return
   }
   const pathstrs = path.filter(isstring)
-  const snap = deepcopy(cp) as CODE_PAGE
+  const snap = deepcopy(cp)
   const livecode = modemreadcodepagetextifpresent(vmcodeaddress(book, pathstrs))
   if (livecode !== undefined) {
     if (

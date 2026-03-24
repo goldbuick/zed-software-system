@@ -7,6 +7,7 @@ import {
   Vibrato,
 } from 'tone'
 import { deepcopy } from 'zss/mapping/types'
+
 import { FrequencyCrusher } from './fcrushworkletnode'
 
 // 0 to 100

@@ -1,5 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
+import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { romread } from 'zss/rom'
 
 jest.mock('zss/config', () => ({
   RUNTIME: {
@@ -47,11 +51,6 @@ jest.mock('zss/memory/playermanagement', () => ({
 jest.mock('zss/memory/runtime', () => ({
   memoryunlockscroll: jest.fn(),
 }))
-
-import { apitoast } from 'zss/device/api'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
-import { romread } from 'zss/rom'
-import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
 
 describe('handlerefscroll', () => {
   const vm = {} as DEVICE

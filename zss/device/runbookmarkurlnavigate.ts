@@ -1,4 +1,4 @@
-import { apitoast, type DEVICELIKE } from 'zss/device/api'
+import { type DEVICELIKE, apitoast } from 'zss/device/api'
 import { waitfor } from 'zss/mapping/tick'
 
 /** Main-thread URL bookmark open: toast, delay, then assign `location` (register `bookmark:urlnavigate`). */

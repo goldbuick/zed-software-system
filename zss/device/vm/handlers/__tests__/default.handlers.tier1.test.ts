@@ -1,5 +1,12 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { handledefault } from 'zss/device/vm/handlers/default'
+import { parsezipfilelist } from 'zss/feature/parse/file'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
+import { memorylistcodepagewithtype } from 'zss/memory/codepages'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { memoryadminmenu } from 'zss/memory/utilities'
 
 jest.mock('zss/config', () => ({
   RUNTIME: {
@@ -117,14 +124,6 @@ jest.mock('zss/device/vm/state', () => ({
   lastinputtime: 0,
 }))
 
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
-import { parsezipfilelist } from 'zss/feature/parse/file'
-import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
-import { memorylistcodepagewithtype } from 'zss/memory/codepages'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { memoryadminmenu } from 'zss/memory/utilities'
-import { handledefault } from 'zss/device/vm/handlers/default'
-
 describe('handledefault zipfilelist', () => {
   const vm = {} as DEVICE
 
@@ -160,38 +159,20 @@ describe('handledefault refscroll', () => {
   })
 
   it.each([
-    [
-      'refscroll:charscroll',
-      '!char charedit;char',
-      'chars',
-      'refscroll',
-    ],
-    [
-      'refscroll:colorscroll',
-      '!color coloredit;color',
-      'colors',
-      'refscroll',
-    ],
-    [
-      'refscroll:bgscroll',
-      '!bg bgedit;bg',
-      'bgs',
-      'refscroll',
-    ],
-  ] as const)(
-    '%s applies zed scroll',
-    (target, body, title, chip) => {
-      handledefault(vm, {
-        session: '',
-        player: 'p1',
-        id: 'id',
-        sender: '',
-        target,
-        data: undefined,
-      })
-      expect(applyzedscroll).toHaveBeenCalledWith('p1', body, title, chip)
-    },
-  )
+    ['refscroll:charscroll', '!char charedit;char', 'chars', 'refscroll'],
+    ['refscroll:colorscroll', '!color coloredit;color', 'colors', 'refscroll'],
+    ['refscroll:bgscroll', '!bg bgedit;bg', 'bgs', 'refscroll'],
+  ] as const)('%s applies zed scroll', (target, body, title, chip) => {
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target,
+      data: undefined,
+    })
+    expect(applyzedscroll).toHaveBeenCalledWith('p1', body, title, chip)
+  })
 
   it('refscroll:adminscroll opens admin menu', () => {
     handledefault(vm, {
@@ -214,7 +195,9 @@ describe('handledefault refscroll', () => {
       target: 'refscroll:objectlistscroll',
       data: undefined,
     })
-    expect(memorylistcodepagewithtype).toHaveBeenCalledWith(CODE_PAGE_TYPE.OBJECT)
+    expect(memorylistcodepagewithtype).toHaveBeenCalledWith(
+      CODE_PAGE_TYPE.OBJECT,
+    )
     expect(applyzedscroll).toHaveBeenCalledWith('p1', '', 'object list', 'list')
   })
 
@@ -227,14 +210,21 @@ describe('handledefault refscroll', () => {
       target: 'refscroll:terrainlistscroll',
       data: undefined,
     })
-    expect(memorylistcodepagewithtype).toHaveBeenCalledWith(CODE_PAGE_TYPE.TERRAIN)
-    expect(applyzedscroll).toHaveBeenCalledWith('p1', '', 'terrain list', 'list')
+    expect(memorylistcodepagewithtype).toHaveBeenCalledWith(
+      CODE_PAGE_TYPE.TERRAIN,
+    )
+    expect(applyzedscroll).toHaveBeenCalledWith(
+      'p1',
+      '',
+      'terrain list',
+      'list',
+    )
   })
 
   it('refscroll:objectlistscroll builds copyit row from code pages', () => {
-    jest.mocked(memorylistcodepagewithtype).mockReturnValue([
-      { code: 'a\nhint line' } as any,
-    ])
+    jest
+      .mocked(memorylistcodepagewithtype)
+      .mockReturnValue([{ code: 'a\nhint line' } as any])
     jest.mocked(memoryreadcodepagename).mockReturnValue('obj1')
     handledefault(vm, {
       session: '',

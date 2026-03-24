@@ -1,5 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { handlereadzipfilelist } from 'zss/device/vm/handlers/zipfile'
+import { readzipfilelist } from 'zss/feature/parse/file'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
 
 jest.mock('zss/gadget/data/api', () => ({
   registerhyperlinksharedbridge: jest.fn(),
@@ -14,10 +17,6 @@ jest.mock('zss/feature/parse/file', () => ({
 jest.mock('zss/feature/parse/markdownscroll', () => ({
   applyzedscroll: jest.fn(),
 }))
-
-import { readzipfilelist } from 'zss/feature/parse/file'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
-import { handlereadzipfilelist } from 'zss/device/vm/handlers/zipfile'
 
 describe('handlereadzipfilelist', () => {
   const vm = {} as DEVICE
@@ -38,7 +37,7 @@ describe('handlereadzipfilelist', () => {
   it('calls applyzedscroll with import row and quoted select for filenames with spaces', () => {
     jest.mocked(readzipfilelist).mockReturnValue([['txt', 'My Doc.txt']])
     handlereadzipfilelist(vm, message)
-    const content = jest.mocked(applyzedscroll).mock.calls[0][1] as string
+    const content = jest.mocked(applyzedscroll).mock.calls[0][1]
     expect(content).toContain('!"my doc.txt" select NO 0 YES 1')
     expect(content).toContain('!importfiles;')
     expect(content).toContain('My Doc.txt')
@@ -53,7 +52,7 @@ describe('handlereadzipfilelist', () => {
   it('quotes simple ascii filenames', () => {
     jest.mocked(readzipfilelist).mockReturnValue([['json', 'a.json']])
     handlereadzipfilelist(vm, message)
-    const content = jest.mocked(applyzedscroll).mock.calls[0][1] as string
+    const content = jest.mocked(applyzedscroll).mock.calls[0][1]
     expect(content).toContain('!"a.json" select NO 0 YES 1')
   })
 
@@ -63,7 +62,7 @@ describe('handlereadzipfilelist', () => {
       ['txt', 'keep.txt'],
     ])
     handlereadzipfilelist(vm, message)
-    const content = jest.mocked(applyzedscroll).mock.calls[0][1] as string
+    const content = jest.mocked(applyzedscroll).mock.calls[0][1]
     expect(content).not.toContain('skip.txt')
     expect(content).toContain('keep.txt')
     expect(content).toContain('!"keep.txt" select NO 0 YES 1')
