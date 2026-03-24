@@ -1,3 +1,4 @@
+```
 duration             cdefgab = notes 
 y = 64th note        x = rest
 t = 32nd note        
@@ -13,5 +14,9 @@ mods                 4 = high snare
 ! = flat             8 = low woodblock
 + = increase octave  9 = bass drum
 - = decrease octave
+```
+
 helpful resource on scales
+
 !openit https://www.pianoscales.org/;pianoscales
+

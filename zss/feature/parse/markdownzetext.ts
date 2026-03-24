@@ -5,6 +5,7 @@ import { ispresent } from 'zss/mapping/types'
 export const MARKDOWN_HR_TBAR_WIDTH = 10
 
 const EDGE = '$dkpurple'
+
 /** Top / thematic bar (`$196`), matches gadget `SCROLL_CHR_TM`. */
 const CHR_TM = '$196'
 const BAR = '$205'
@@ -46,16 +47,16 @@ export function inlinetostring(tokens: Token[] | undefined): string {
         out += `$cyan${inlinetostring(t.tokens)}${RESET}`
         break
       case 'codespan':
-        out += `$onblue$7 ${escapezedollar(t.text)} ${RESET}`
+        out += `$purple ${escapezedollar(t.text)} ${RESET}`
         break
       case 'del':
         out += `$dkgray${inlinetostring(t.tokens)}${RESET}`
         break
       case 'br':
-        out += ' '
+        out += '\n'
         break
       case 'link':
-        out += `$cyan${inlinetostring(t.tokens) || t.text}${RESET}`
+        // out += `$cyan${inlinetostring(t.tokens) || t.text}${RESET}`
         break
       default:
         if ('text' in t && typeof (t as { text?: string }).text === 'string') {
@@ -84,26 +85,97 @@ function linklabeltext(token: Tokens.Link): string {
   return label
 }
 
+/**
+ * Zed scroll tape line: `!command;label` — not markdown images `![`.
+ * Used only outside fenced code blocks in `preparemarkdownforscroll`.
+ */
+function ispassthroughscrollline(line: string): boolean {
+  const t = line.trimStart()
+  if (!t.startsWith('!') || t.startsWith('![')) {
+    return false
+  }
+  return t.includes(';')
+}
+
+function ismarkdownfenceline(line: string): boolean {
+  return line.trimStart().startsWith('```')
+}
+
+/** Reserved hook: per-line transforms for tape lines (avoid mutating fenced literals). */
+function preparepassthroughscrolllineoutsidfence(line: string): string {
+  return line
+}
+
+/** Fence-aware: walk physical lines so passthrough hooks run only outside fenced code blocks. */
+function preparemarkdownforscroll(content: string): string {
+  const lines = content.split('\n')
+  let infence = false
+  for (let i = 0; i < lines.length; ++i) {
+    const line = lines[i]
+    if (infence) {
+      if (ismarkdownfenceline(line)) {
+        infence = false
+      }
+      continue
+    }
+    if (ismarkdownfenceline(line)) {
+      infence = true
+      continue
+    }
+    if (ispassthroughscrollline(line)) {
+      lines[i] = preparepassthroughscrolllineoutsidfence(line)
+    }
+  }
+  return lines.join('\n')
+}
+
+function shouldflushline(buf: string, prefix: string): boolean {
+  if (prefix.length === 0) {
+    return buf.length > 0
+  }
+  return buf.length > prefix.length
+}
+
+function flushline(sink: MarkdownZedSink, buf: string, prefix: string): string {
+  if (!shouldflushline(buf, prefix)) {
+    return prefix.length === 0 ? buf : prefix
+  }
+  sink.line(buf)
+  return prefix
+}
+
+/** Walk top-level paragraph inline tokens: `br` starts a new scroll row. */
+function walkparagraphinlines(
+  sink: MarkdownZedSink,
+  toks: Token[],
+  buf: string,
+  prefix: string,
+): string {
+  let b = buf
+  for (let i = 0; i < toks.length; ++i) {
+    const t = toks[i]
+    if (t.type === 'br') {
+      b = flushline(sink, b, prefix)
+      continue
+    }
+    if (t.type === 'link') {
+      b = flushline(sink, b, prefix)
+      const lt = t as Tokens.Link
+      sink.hyperlink(buildlinkcommand(lt), linklabeltext(lt))
+      continue
+    }
+    b += inlinetostring([t])
+  }
+  return b
+}
+
 function paragraphemit(sink: MarkdownZedSink, token: Tokens.Paragraph) {
   const toks = token.tokens
   if (!toks?.length) {
     sink.line('')
     return
   }
-  let buf = ''
-  for (let i = 0; i < toks.length; ++i) {
-    const t = toks[i]
-    if (t.type === 'link') {
-      if (buf.length) {
-        sink.line(buf)
-        buf = ''
-      }
-      const lt = t as Tokens.Link
-      sink.hyperlink(buildlinkcommand(lt), linklabeltext(lt))
-    } else {
-      buf += inlinetostring([t])
-    }
-  }
+  const buf = walkparagraphinlines(sink, toks, '', '')
   if (buf.length) {
     sink.line(buf)
   }
@@ -168,14 +240,10 @@ function emitheading(sink: MarkdownZedSink, token: Tokens.Heading) {
 }
 
 function emitcodeblock(sink: MarkdownZedSink, token: Tokens.Code) {
-  if (ispresent(token.lang) && token.lang.length > 0) {
-    sink.line(`$dkpurple$grey ${token.lang}${RESET}`)
-    sink.line(' ')
-  }
   const lines = token.text.split('\n')
   for (let i = 0; i < lines.length; ++i) {
     const raw = lines[i]
-    sink.line(`$onblue$7 ${escapezedollar(raw)}${RESET}`)
+    sink.line(`$purple$onblue ${escapezedollar(raw)}${RESET}`)
   }
   sink.line(' ')
 }
@@ -216,6 +284,13 @@ function emitlistitembody(sink: MarkdownZedSink, item: Tokens.ListItem) {
   }
   for (let i = 0; i < toks.length; ++i) {
     const t = toks[i]
+    if (t.type === 'br') {
+      if (buf.length > prefix.length) {
+        sink.line(buf)
+        buf = prefix
+      }
+      continue
+    }
     if (t.type === 'list') {
       if (buf.length > prefix.length) {
         sink.line(buf)
@@ -233,16 +308,7 @@ function emitlistitembody(sink: MarkdownZedSink, item: Tokens.ListItem) {
         buf += pt.text ?? ''
         continue
       }
-      for (let j = 0; j < inner.length; ++j) {
-        const it = inner[j]
-        if (it.type === 'link') {
-          flushifcontent()
-          const lt = it as Tokens.Link
-          sink.hyperlink(buildlinkcommand(lt), linklabeltext(lt))
-        } else {
-          buf += inlinetostring([it])
-        }
-      }
+      buf = walkparagraphinlines(sink, inner, buf, prefix)
       continue
     }
     if (t.type === 'link') {
@@ -289,8 +355,7 @@ export function parsetokenzetext(sink: MarkdownZedSink, token: Token) {
     }
     case 'image': {
       const im = token as Tokens.Image
-      const showlabel =
-        im.title ?? (im.text?.trim() ? im.text.trim() : im.href)
+      const showlabel = im.title ?? (im.text?.trim() ? im.text.trim() : im.href)
       sink.hyperlink(`openit ${im.href}`, `show ${showlabel}`)
       break
     }
@@ -344,6 +409,9 @@ function createrenderer(sink: MarkdownZedSink) {
       parsetokenzetext(sink, t)
       return ''
     },
+    html() {
+      return ''
+    },
   }
 }
 
@@ -358,6 +426,18 @@ export function parsemarkdownwithzetextsink(
   })
   md.use({
     renderer: createrenderer(sink),
+    tokenizer: {
+      html() {
+        return undefined
+      },
+      /** GFM bare-URL autolinks break `!command https://…;label` tape lines (see scrollwritelines). */
+      autolink() {
+        return undefined
+      },
+      url() {
+        return undefined
+      },
+    },
   })
-  md.parse(content, { async: false })
+  md.parse(preparemarkdownforscroll(content), { async: false })
 }

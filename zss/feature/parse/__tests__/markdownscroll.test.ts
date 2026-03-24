@@ -75,6 +75,59 @@ describe('parsemarkdownforscroll', () => {
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[1]).toContain(';')
   })
+
+  it('emits separate scroll rows for CommonMark hard line breaks', () => {
+    parsemarkdownforscroll('p1', 'line one  \n$white line two', 'doc')
+    const sc = gadgetstate('p1').scroll ?? []
+    const textrows = sc.filter((r): r is string => typeof r === 'string')
+    expect(textrows).toContain('line one')
+    expect(textrows).toContain('$white line two')
+  })
+
+  it('passes through !openit URL lines so markdown does not autolink the URL', () => {
+    const md =
+      '!openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type;filter types'
+    parsemarkdownforscroll('p1', md, 'doc')
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[0]).toBe('refscroll')
+    expect(row[1]).toBe('filter types')
+    expect(row[2]).toBe('istargetless')
+    expect(row[3]).toBe('openit')
+    expect(row[4]).toBe(
+      'https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type',
+    )
+  })
+
+  it('does not passthrough !cmd;label lines inside fenced code blocks', () => {
+    parsemarkdownforscroll('p1', '```\n!openit https://x;y\n```', 'doc')
+    const sc = gadgetstate('p1').scroll ?? []
+    const hyperlinkrows = sc.filter((r) => Array.isArray(r)) as unknown[][]
+    expect(hyperlinkrows).toHaveLength(0)
+    expect(
+      sc.some((r) => typeof r === 'string' && r.includes('!openit')),
+    ).toBe(true)
+  })
+
+  it('keeps later standalone !tape rows after a standalone !openit line (single parse)', () => {
+    const md = `## Hyperlinks
+
+- before item
+
+!openit https://example.com/doc;open example
+
+!flagorstat range; Label
+`
+    parsemarkdownforscroll('p1', md, 'doc')
+    const sc = gadgetstate('p1').scroll ?? []
+    const rows = sc.filter((r): r is unknown[] => Array.isArray(r))
+    const openit = rows.find((r) => r[3] === 'openit')
+    expect(openit).toBeDefined()
+    expect(openit![4]).toBe('https://example.com/doc')
+    const flag = rows.find((r) => r[2] === 'flagorstat')
+    expect(flag).toBeDefined()
+    expect(flag![1]).toBe('Label')
+    expect(flag![3]).toBe('range')
+  })
 })
 
 describe('applyzedscroll', () => {
