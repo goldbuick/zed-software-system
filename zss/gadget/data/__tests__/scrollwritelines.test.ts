@@ -135,6 +135,19 @@ describe('scrollwritelines', () => {
     expect(row[7]).toBe('https://ex.test')
   })
 
+  it('zipfilelist quoted select target is one PanelSelect token (spaces in name)', () => {
+    scrollwritelines(
+      'p1',
+      'zip',
+      '!"my doc.txt" select NO 0 YES 1;$cyan[txt]$white',
+      'zipfilelist',
+    )
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[0]).toBe('zipfilelist')
+    expect(row[2]).toBe('my doc.txt')
+    expect(row[3]).toBe('select')
+  })
+
   it('bookmark delete uses hyperlink type so id is not parsed as control type', () => {
     scrollwritelines(
       'p1',

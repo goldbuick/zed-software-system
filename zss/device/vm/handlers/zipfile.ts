@@ -20,6 +20,22 @@ registerhyperlinksharedbridge(
 // Terminal tape lines that bind the same modem keys as this scroll should use
 // `!zipfilelist:<filename>!select;…` (second `!` separates `paneladdress` prefix
 // from the command). Targets must not contain `:`.
+//
+// Select rows quote the filename so `scrolllinksplittokens` keeps one target token
+// (spaces, multiple words) for `PanelSelect` and for `readzipfilelistitem` keys.
+
+function quotezipscrollselecttarget(name: string): string {
+  let buf = ''
+  for (let i = 0; i < name.length; ++i) {
+    const c = name.charAt(i)
+    if (c === '\\' || c === '"') {
+      buf += `\\${c}`
+    } else {
+      buf += c
+    }
+  }
+  return `"${buf}"`
+}
 
 export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
   const list = readzipfilelist()
@@ -33,7 +49,7 @@ export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
     }
     lines.push(filename)
     const fname = NAME(filename)
-    const cmd = `${fname} select NO 0 YES 1`
+    const cmd = `${quotezipscrollselecttarget(fname)} select NO 0 YES 1`
     const label = `$cyan[${type}]$white`
     lines.push(`!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(label)}`)
   }

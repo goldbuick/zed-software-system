@@ -1,0 +1,99 @@
+import type { DEVICE } from 'zss/device'
+import type { MESSAGE } from 'zss/device/api'
+
+jest.mock('zss/config', () => ({
+  RUNTIME: {
+    YIELD_AT_COUNT: 512,
+    DRAW_CHAR_SCALE: 2,
+    DRAW_CHAR_WIDTH: () => 8,
+    DRAW_CHAR_HEIGHT: () => 16,
+  },
+  LANG_DEV: false,
+  LANG_TYPES: false,
+  STATS_DEV: false,
+  SHOW_CODE: false,
+  TRACE_CODE: '',
+  LOG_DEBUG: false,
+  FORCE_CRT_OFF: false,
+  FORCE_LOW_REZ: false,
+  FORCE_TOUCH_UI: false,
+}))
+
+jest.mock('zss/rom', () => ({
+  romread: jest.fn(),
+}))
+
+jest.mock('zss/feature/parse/markdownscroll', () => ({
+  applyzedscroll: jest.fn(),
+}))
+
+jest.mock('zss/device/api', () => ({
+  apitoast: jest.fn(),
+}))
+
+jest.mock('zss/gadget/data/scrollwritelines', () => ({
+  scrollwritelines: jest.fn(),
+  scrolllinkescapefrag: (s: string) => s.replaceAll(';', '$59'),
+}))
+
+jest.mock('zss/memory/inspectionmakeit', () => ({
+  memorymakeitscroll: jest.fn(),
+}))
+
+jest.mock('zss/memory/playermanagement', () => ({
+  memoryreadplayerboard: jest.fn(),
+}))
+
+jest.mock('zss/memory/runtime', () => ({
+  memoryunlockscroll: jest.fn(),
+}))
+
+import { apitoast } from 'zss/device/api'
+import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { romread } from 'zss/rom'
+import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
+
+describe('handlerefscroll', () => {
+  const vm = {} as DEVICE
+  const message: MESSAGE = {
+    session: '',
+    player: 'p1',
+    id: 'id',
+    sender: '',
+    target: 'refscroll',
+    data: undefined,
+  }
+
+  beforeEach(() => {
+    jest.mocked(romread).mockReset()
+    jest.mocked(applyzedscroll).mockClear()
+    jest.mocked(apitoast).mockClear()
+  })
+
+  it('applies ROM refscroll:menu via applyzedscroll', () => {
+    jest
+      .mocked(romread)
+      .mockImplementation((key: string) =>
+        key === 'refscroll:menu' ? '!x y;$lbl\n' : undefined,
+      )
+    handlerefscroll(vm, message)
+    expect(applyzedscroll).toHaveBeenCalledWith(
+      'p1',
+      '!x y;$lbl',
+      '#help or $meta+h',
+      'refscroll',
+    )
+    expect(apitoast).not.toHaveBeenCalled()
+  })
+
+  it('toasts when refscroll:menu is missing or blank', () => {
+    jest.mocked(romread).mockReturnValue(undefined)
+    handlerefscroll(vm, message)
+    expect(applyzedscroll).not.toHaveBeenCalled()
+    expect(apitoast).toHaveBeenCalledWith(
+      vm,
+      'p1',
+      'gadget scroll: need content',
+    )
+  })
+})
