@@ -1,5 +1,3 @@
-import { ispresent } from 'zss/mapping/types'
-
 /** First `copyit` payload token when row copies `transposenotesstring` from shared text (see `PanelCopyIt`). */
 export const COPYIT_NOTE_TRANSPOSE_SENTINEL = '__notetranspose__'
 
@@ -74,6 +72,12 @@ export function notetokenpitchclass(token: string): number | undefined {
   return ((pc % 12) + 12) % 12
 }
 
+/** Play-notation octave shift tokens (space-separated note lists; see notesscroll). */
+export function isoctavedirectivetoken(token: string): boolean {
+  const t = token.trim()
+  return t === '+' || t === '-'
+}
+
 export function parsenotespacepitchclasses(
   input: string,
 ): number[] | undefined {
@@ -83,32 +87,45 @@ export function parsenotespacepitchclasses(
   }
   const out: number[] = []
   for (let i = 0; i < parts.length; ++i) {
+    if (isoctavedirectivetoken(parts[i])) {
+      continue
+    }
     const pc = notetokenpitchclass(parts[i])
     if (pc === undefined) {
       return undefined
     }
     out.push(pc)
   }
-  return out
+  return out.length ? out : undefined
 }
 
 /**
  * Transpose space-separated pitch tokens by semitone delta.
+ * `+` / `-` octave directives are copied through unchanged (play notation).
  * +delta -> sharp-preferred spelling; -delta -> flat-preferred spelling.
  */
 export function transposenotesstring(
   input: string,
   deltast: number,
 ): string | undefined {
-  const pcs = parsenotespacepitchclasses(input)
-  if (!ispresent(pcs)) {
+  const parts = input.trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) {
     return undefined
   }
   const prefersharp = deltast > 0
   const tokens: string[] = []
-  for (let i = 0; i < pcs.length; ++i) {
-    const pc = (((pcs[i] + deltast) % 12) + 12) % 12
-    tokens.push(spellpitchclass(pc, prefersharp))
+  for (let i = 0; i < parts.length; ++i) {
+    const part = parts[i]
+    if (isoctavedirectivetoken(part)) {
+      tokens.push(part.trim())
+      continue
+    }
+    const pc = notetokenpitchclass(part)
+    if (pc === undefined) {
+      return undefined
+    }
+    const newpc = (((pc + deltast) % 12) + 12) % 12
+    tokens.push(spellpitchclass(newpc, prefersharp))
   }
   return tokens.join(' ')
 }

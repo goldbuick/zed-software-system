@@ -280,7 +280,7 @@ describe('handledefault refscroll', () => {
   it('refscroll:notescales_major uses parsemarkdownforscroll when ROM exists', async () => {
     jest.mocked(romread).mockImplementation((addr: string) => {
       if (addr === 'refscroll:notescales_major') {
-        return '!notescalesscroll;$ltgreyBack\n!istargetless copyit c d e f g a b c;$greenC major'
+        return '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit c d e f g a b + c;$greenC major'
       }
       return undefined
     })

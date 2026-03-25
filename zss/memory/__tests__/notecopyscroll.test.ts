@@ -49,6 +49,17 @@ describe('notecopyscroll', () => {
     expect(transposenotesstring('c e g', 2)).toBe('d f# a')
   })
 
+  it('transposenotesstring passes through + and - octave directives', () => {
+    expect(transposenotesstring('c d + e', 1)).toBe('c# d# + f')
+    expect(transposenotesstring('c d e f g a b + c', 0)).toBe(
+      'c d e f g a b + c',
+    )
+  })
+
+  it('parsenotespacepitchclasses skips octave directives', () => {
+    expect(parsenotespacepitchclasses('c d + e')).toEqual([0, 2, 4])
+  })
+
   it('jazz C-parent modes share the same seven pitch classes as C Ionian', () => {
     const ionian = pitchclassset7('c d e f g a b c')
     const modes = [
