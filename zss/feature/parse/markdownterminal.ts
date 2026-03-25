@@ -1,15 +1,17 @@
+import { SOFTWARE } from 'zss/device/session'
 import {
   MarkdownZedSink,
   parsemarkdownwithzetextsink,
 } from 'zss/feature/parse/markdownzetext'
-import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { scrolllinkescapefrag } from 'zss/mapping/string'
+
+import { terminalwritelines } from '../terminalwritelines'
 
 function banglinkrow(command: string, label: string): string {
   return `!${scrolllinkescapefrag(command)};${scrolllinkescapefrag(label)}`
 }
 
-function createscrollsink(lines: string[]): MarkdownZedSink {
+function createterminalsink(lines: string[]): MarkdownZedSink {
   return {
     line: (s: string) => {
       lines.push(s)
@@ -20,13 +22,8 @@ function createscrollsink(lines: string[]): MarkdownZedSink {
   }
 }
 
-export function scrollwritemarkdownlines(
-  player: string,
-  content: string,
-  scrollname: string,
-  chip = 'refscroll',
-) {
+export function terminalwritemarkdownlines(player: string, content: string) {
   const lines: string[] = []
-  parsemarkdownwithzetextsink(createscrollsink(lines), content)
-  scrollwritelines(player, scrollname, lines.join('\n'), chip)
+  parsemarkdownwithzetextsink(createterminalsink(lines), content)
+  terminalwritelines(SOFTWARE, player, lines.join('\n'))
 }

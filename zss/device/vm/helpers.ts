@@ -1,9 +1,7 @@
 import { DEVICELIKE, registerforkmem, registersavemem } from 'zss/device/api'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
-import {
-  scrolllinkescapefrag,
-  scrollwritelines,
-} from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import {

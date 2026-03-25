@@ -4,10 +4,8 @@ import {
   type ZssEditorBookmark,
 } from 'zss/feature/bookmarks'
 import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
-import {
-  scrolllinkescapefrag,
-  scrollwritelines,
-} from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 
 export function memoryeditorbookmarkscroll(
   player: string,

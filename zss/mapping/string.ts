@@ -1,5 +1,18 @@
 import Fuse from 'fuse.js'
 
+/** Zed `NumberLiteral` for ASCII `;` (59); use inside `!left;right` when payload or label contains a semicolon. */
+const ZED_SCROLL_SEMI_LITERAL = '$59'
+
+/** Escape `;` for storage in the command or label segment of a bang scroll / tape line. */
+export function scrolllinkescapefrag(s: string): string {
+  return s.replaceAll(';', ZED_SCROLL_SEMI_LITERAL)
+}
+
+/** Undo `scrolllinkescapefrag` after splitting on the first raw `;`. `$590` etc. stay unchanged. */
+export function scrolllinkunescapefrag(s: string): string {
+  return s.replace(/\$59(?!\d)/g, ';')
+}
+
 const SEARCHINTEXT_KEY = 't'
 
 /**

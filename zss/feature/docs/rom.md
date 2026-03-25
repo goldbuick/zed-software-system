@@ -27,7 +27,7 @@ Help snippets rendered through the terminal use **Markdown** and [`parsemarkdown
 
 ## Reference scrolls (`refscroll/*.md`)
 
-Bundled with the same glob. May be CommonMark (parsed with `parsemarkdownforscroll` in the gadget path) or raw zetext lines (e.g. `menu.md` via `applyzedscroll`). See [`zss/gadget/docs/gadget-scrolls.md`](../../gadget/docs/gadget-scrolls.md).
+Bundled with the same glob. May be CommonMark (parsed with `scrollwritemarkdownlines` in the gadget path) or raw zetext lines (e.g. `menu.md` via `scrollwritelines`). See [`zss/gadget/docs/gadget-scrolls.md`](../../gadget/docs/gadget-scrolls.md).
 
 ## Command helper format (historical note)
 

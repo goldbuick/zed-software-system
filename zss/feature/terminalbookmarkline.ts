@@ -1,7 +1,4 @@
-/** Match [`scrolllinkunescapefrag`](zss/gadget/data/scrollwritelines.ts) without importing gadget. */
-function scrolllinkunescapefrag(s: string): string {
-  return s.replace(/\$59(?!\d)/g, ';')
-}
+import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
 /** Label segment for `!runit` fallback when bookmarking non-bang lines. */
 export const BOOKMARK_TERMINAL_RUNIT_LABEL = 'Bookmark'

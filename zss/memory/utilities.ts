@@ -225,14 +225,6 @@ export function memoryadminmenu(
     gadgettext(player, ``)
   }
 
-  gadgethyperlink(player, 'refscroll', '$ltgreyBack to main menu', [
-    'menu',
-    'hk',
-    'b',
-    ' B ',
-    'next',
-  ])
-
   const shared = gadgetstate(player)
   shared.scrollname = 'cpu #admin'
   shared.scroll = gadgetcheckqueue(player)

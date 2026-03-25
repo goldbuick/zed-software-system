@@ -1,12 +1,10 @@
-import {
-  applyzedscroll,
-  parsemarkdownforscroll,
-} from 'zss/feature/parse/markdownscroll'
+import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import {
   gadgetstate,
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 import { WORD } from 'zss/words/types'
 
@@ -53,7 +51,7 @@ describe('parsemarkdownforscroll', () => {
   })
 
   it('emits bang rows so multi-word href becomes multiple hyperlink words', () => {
-    parsemarkdownforscroll('p1', '[go](<topic sub>)', 'doc')
+    scrollwritemarkdownlines('p1', '[go](<topic sub>)', 'doc')
     const s = gadgetstate('p1')
     expect(s.scrollname).toBe('doc')
     expect(s.scroll).toHaveLength(1)
@@ -64,7 +62,7 @@ describe('parsemarkdownforscroll', () => {
   })
 
   it('uses !copyit line shape for copyit links', () => {
-    parsemarkdownforscroll('p1', '[copy me](<copyit page-id>)', 'doc')
+    scrollwritemarkdownlines('p1', '[copy me](<copyit page-id>)', 'doc')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[2]).toBe('istargetless')
     expect(row[3]).toBe('copyit')
@@ -72,13 +70,13 @@ describe('parsemarkdownforscroll', () => {
   })
 
   it('encodes semicolon in label as $59 in the line', () => {
-    parsemarkdownforscroll('p1', '[a;b](foo)', 'doc')
+    scrollwritemarkdownlines('p1', '[a;b](foo)', 'doc')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[1]).toContain(';')
   })
 
   it('emits separate scroll rows for CommonMark hard line breaks', () => {
-    parsemarkdownforscroll('p1', 'line one  \n$white line two', 'doc')
+    scrollwritemarkdownlines('p1', 'line one  \n$white line two', 'doc')
     const sc = gadgetstate('p1').scroll ?? []
     const textrows = sc.filter((r): r is string => typeof r === 'string')
     expect(textrows).toContain('line one')
@@ -88,7 +86,7 @@ describe('parsemarkdownforscroll', () => {
   it('passes through !openit URL lines so markdown does not autolink the URL', () => {
     const md =
       '!openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type;filter types'
-    parsemarkdownforscroll('p1', md, 'doc')
+    scrollwritemarkdownlines('p1', md, 'doc')
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[0]).toBe('refscroll')
     expect(row[1]).toBe('filter types')
@@ -100,7 +98,7 @@ describe('parsemarkdownforscroll', () => {
   })
 
   it('does not passthrough !cmd;label lines inside fenced code blocks', () => {
-    parsemarkdownforscroll('p1', '```\n!openit https://x;y\n```', 'doc')
+    scrollwritemarkdownlines('p1', '```\n!openit https://x;y\n```', 'doc')
     const sc = gadgetstate('p1').scroll ?? []
     const hyperlinkrows = sc.filter((r) => Array.isArray(r)) as unknown[][]
     expect(hyperlinkrows).toHaveLength(0)
@@ -110,11 +108,11 @@ describe('parsemarkdownforscroll', () => {
   })
 
   it('does not emit a blank row before a heading at the start of the document', () => {
-    parsemarkdownforscroll('p1', '# Hello', 'doc')
+    scrollwritemarkdownlines('p1', '# Hello', 'doc')
     const sc = gadgetstate('p1').scroll ?? []
     expect(sc.length).toBeGreaterThan(0)
     expect(sc[0]).not.toBe('')
-    parsemarkdownforscroll('p1', '### Shallow', 'doc2')
+    scrollwritemarkdownlines('p1', '### Shallow', 'doc2')
     const sc2 = gadgetstate('p1').scroll ?? []
     expect(sc2.length).toBeGreaterThan(0)
     expect(sc2[0]).not.toBe('')
@@ -129,7 +127,7 @@ describe('parsemarkdownforscroll', () => {
 
 !flagorstat range; Label
 `
-    parsemarkdownforscroll('p1', md, 'doc')
+    scrollwritemarkdownlines('p1', md, 'doc')
     const sc = gadgetstate('p1').scroll ?? []
     const rows = sc.filter((r): r is WORD[] => Array.isArray(r))
     const openit = rows.find((r) => r[3] === 'openit')
@@ -142,7 +140,7 @@ describe('parsemarkdownforscroll', () => {
   })
 })
 
-describe('applyzedscroll', () => {
+describe('scrollwritelines zed body', () => {
   const playerstates: Record<string, GADGET_STATE> = {}
 
   beforeEach(() => {
@@ -158,7 +156,7 @@ describe('applyzedscroll', () => {
   it('refscroll menu: !command;label lines become hyperlink rows', () => {
     const body = `!helpmenu hk 1 " 1 " next;controls and $greenstart here
 !objectlistscroll hk 2 " 2 " next;list objects`
-    applyzedscroll('p1', body, 'menu')
+    scrollwritelines('p1', 'menu', body, 'refscroll')
     const s = gadgetstate('p1')
     expect(s.scroll).toHaveLength(2)
     const r0 = s.scroll![0] as unknown[]
@@ -170,7 +168,12 @@ describe('applyzedscroll', () => {
   })
 
   it('refscroll menu: quoted arg keeps spaces', () => {
-    applyzedscroll('p1', '!synthscroll hk s " S " next;synth', 'menu')
+    scrollwritelines(
+      'p1',
+      'menu',
+      '!synthscroll hk s " S " next;synth',
+      'refscroll',
+    )
     const row = gadgetstate('p1').scroll![0] as unknown[]
     expect(row[2]).toBe('synthscroll')
     expect(row[5]).toBe(' S ')

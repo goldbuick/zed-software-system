@@ -7,7 +7,7 @@ The right-hand **scroll** panel shows a titled list (`scrollname` + `scroll` row
 **Ways content is built:**
 
 1. **Markdown** via [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) (marked → ZeText sink → [`scrollwritelines`](../data/scrollwritelines.ts)). Optional `chip` argument (default `refscroll`) is forwarded to `scrollwritelines`. Used for bundled `refscroll:*` `.md` help prose, wiki fallback, and other CommonMark bodies in [`handledefault`](../../device/vm/handlers/default.ts).
-2. **Zed line blocks** via [`applyzedscroll`](../../feature/parse/markdownscroll.ts) (thin wrapper around [`scrollwritelines`](../data/scrollwritelines.ts)): plain lines become strings; lines with `!` and a first raw `;` become hyperlinks (`!command args;$label`). Used for built-in menus (e.g. `refscroll:menu`, zip picker, object/terrain lists).
+2. **Zed line blocks** via [`scrollwritelines`](../data/scrollwritelines.ts): plain lines become strings; lines with `!` and a first raw `;` become hyperlinks (`!command args;$label`). Used for built-in menus (e.g. `refscroll:menu`, zip picker, object/terrain lists).
 3. Call [`scrollwritelines`](../data/scrollwritelines.ts) directly when you already have a string of tape lines (same `!` / zetext rules); default link chip is `refscroll` unless overridden.
 4. Queue lines with [`gadgettext` / `gadgethyperlink`](../data/api.ts), then assign `shared.scroll = gadgetcheckqueue(player)` (and usually set `scrollname`). Still used where panels mix imperative steps, **shared** hyperlink state (`get`/`set`), or firmware-driven queues (see inspection / admin / element scroll lock).
 
@@ -19,7 +19,7 @@ This subsection catalogs how the scroll panel is filled: **Category C** (central
 
 ### Category C — Centralized on `scrollwritelines`
 
-Call sites use [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts), [`applyzedscroll`](../../feature/parse/markdownscroll.ts), or [`scrollwritelines`](../data/scrollwritelines.ts) directly—not loops of `gadgettext`/`gadgethyperlink`. Examples include [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts), [`writezztcontentwait` / `writezztcontentlinks`](../../device/vm/helpers.ts). See **VM handler entry points** and **`refscroll:<path>` in `handledefault`** below.
+Call sites use [`scrollwritemarkdownlines`](../../feature/parse/markdownscroll.ts) (markdown → Zed lines → `scrollwritelines`) or [`scrollwritelines`](../data/scrollwritelines.ts) directly for raw Zed tape—not loops of `gadgettext`/`gadgethyperlink`. Examples include [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts), [`writezztcontentwait` / `writezztcontentlinks`](../../device/vm/helpers.ts). See **VM handler entry points** and **`refscroll:<path>` in `handledefault`** below.
 
 ### Category B — Hybrid (imperative prefix, then `scrollwritelines`)
 
@@ -89,13 +89,13 @@ Registered in [`zss/device/vm/handlers/registry.ts`](../../device/vm/handlers/re
 
 | Registry key | Handler | Role |
 |--------------|---------|------|
-| `refscroll` | [`handlerefscroll`](../../device/vm/handlers/scroll.ts) | Loads `refscroll:menu` with title `#help or $meta+h` via [`applyzedscroll`](../../feature/parse/markdownscroll.ts) → `scrollwritelines`. |
+| `refscroll` | [`handlerefscroll`](../../device/vm/handlers/scroll.ts) | Loads `refscroll:menu` with title `#help or $meta+h` via [`scrollwritelines`](../data/scrollwritelines.ts). |
 | `gadgetscroll` | [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts) | Payload `{ scrollname, content, chip? }` → `scrollwritelines`. API: [`vmgadgetscroll`](../../device/api.ts). |
 | `makeitscroll` | [`handlemakeitscroll`](../../device/vm/handlers/scroll.ts) | [`memorymakeitscroll`](../../memory/inspectionmakeit.ts) → title `makeit`. |
 | `clearscroll` | [`handleclearscroll`](../../device/vm/handlers/scroll.ts) | Unlocks scroll on all objects on the player’s board; does not clear gadget state by itself (pair with `gadgetclearscroll` / gadget server flow). |
 | `bookmarkscroll` | [`handlebookmarkscroll`](../../device/vm/handlers/bookmarkscroll.ts) | [`memorybookmarkscroll`](../../memory/bookmarkscroll.ts): header links + `gadgetbbar`, then [`scrollwritelines`](../../gadget/data/scrollwritelines.ts) for list rows. |
 | `editorbookmarkscroll` | [`handleeditorbookmarkscroll`](../../device/vm/handlers/editorbookmarkscroll.ts) | [`memoryeditorbookmarkscroll`](../../memory/editorbookmarkscroll.ts): snapshot link + `gadgetbbar`, then `scrollwritelines` for entries. |
-| `readzipfilelist` | [`handlereadzipfilelist`](../../device/vm/handlers/zipfile.ts) | Title `zipfilelist`; Zed `!` lines + `applyzedscroll` / `scrollwritelines`, chip `zipfilelist`. |
+| `readzipfilelist` | [`handlereadzipfilelist`](../../device/vm/handlers/zipfile.ts) | Title `zipfilelist`; Zed `!` lines via `scrollwritelines`, chip `zipfilelist`. |
 
 Panel-only actions for editor bookmarks go through [`handledefault`](../../device/vm/handlers/default.ts) as `editorbookmarkscroll:<path>` (e.g. `snapshotcurrent`, `copytogame`; successful copy may call `vmclearscroll`).
 
@@ -108,9 +108,9 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | Path | Title | Notes |
 |------|-------|--------|
 | `adminscroll` | `cpu #admin` | [`memoryadminmenu`](../../memory/utilities.ts). |
-| `objectlistscroll` | `object list` | `!istargetless copyit …` lines + `applyzedscroll`; chip `list`. |
+| `objectlistscroll` | `object list` | `!istargetless copyit …` lines + `scrollwritelines`; chip `list`. |
 | `terrainlistscroll` | `terrain list` | Same; chip `list`. |
-| `charscroll` | `chars` | Zed `!` line + `applyzedscroll`; chip `refscroll`. |
+| `charscroll` | `chars` | Zed `!` line + `scrollwritelines`; chip `refscroll`. |
 | `colorscroll` | `colors` | Same. |
 | `bgscroll` | `bgs` | Same. |
 | `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |

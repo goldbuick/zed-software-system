@@ -5,9 +5,9 @@ import {
   readzipfilelist,
   readzipfilelistitem,
 } from 'zss/feature/parse/file'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
-import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { NAME } from 'zss/words/types'
 
 registerhyperlinksharedbridge(
@@ -53,5 +53,10 @@ export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
     const label = `$cyan[${type}]$white`
     lines.push(`!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(label)}`)
   }
-  applyzedscroll(message.player, lines.join('\n'), 'zipfilelist', 'zipfilelist')
+  scrollwritelines(
+    message.player,
+    'zipfilelist',
+    lines.join('\n').trim(),
+    'zipfilelist',
+  )
 }

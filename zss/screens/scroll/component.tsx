@@ -31,6 +31,16 @@ import { ScrollControls } from './controls'
 import { ScrollCursor } from './cursor'
 import { ScrollMarquee } from './marquee'
 
+const SCROLL_START_HYPERLINK_MAX_INDEX = 8
+
+function scrollpickstarthyperlinkrow(text: PANEL_ITEM[]): number {
+  const startat = text.findIndex((item) => isarray(item))
+  if (startat >= 0 && startat <= SCROLL_START_HYPERLINK_MAX_INDEX) {
+    return startat
+  }
+  return 0
+}
+
 /** Compact label like `Mon 3:45p` for bookmark default. */
 function bookmarktimelabel(now: Date): string {
   const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
@@ -82,12 +92,19 @@ export function ScrollComponent({
     ...tilesstore.getState(),
   }
 
-  // input cursor
-  const [cursor, setCursor] = useState(() => {
-    // calc default
-    const startat = text.findIndex((item) => isarray(item))
-    return startat >= 0 && startat <= 8 ? startat : 0
-  })
+  const [cursor, setCursor] = useState(() =>
+    scrollpickstarthyperlinkrow(text),
+  )
+
+  useEffect(() => {
+    setCursor(
+      clamp(
+        scrollpickstarthyperlinkrow(text),
+        0,
+        Math.max(0, text.length - 1),
+      ),
+    )
+  }, [text])
 
   // display offset
   let offset = cursor - Math.floor(panelheight * 0.5)
