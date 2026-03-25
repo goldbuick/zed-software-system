@@ -44,9 +44,7 @@ import {
 function pitchclassset7(input: string): string {
   const p = parsenotespacepitchclasses(input)
   expect(p).toBeDefined()
-  return [...new Set(p!)]
-    .sort((a, b) => a - b)
-    .join(',')
+  return [...new Set(p)].sort((a, b) => a - b).join(',')
 }
 
 describe('notestransposescroll pitch helpers', () => {
@@ -89,9 +87,7 @@ describe('notestransposescroll pitch helpers', () => {
     expect(transposenotesstring('c d e f g a b + c', 0)).toBe(
       'c d e f g a b + c',
     )
-    expect(transposenotesstring('c d e f g a b +c', 0)).toBe(
-      'c d e f g a b +c',
-    )
+    expect(transposenotesstring('c d e f g a b +c', 0)).toBe('c d e f g a b +c')
   })
 
   it('parsenotespacepitchclasses skips octave directives', () => {

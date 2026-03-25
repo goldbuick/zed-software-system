@@ -74,12 +74,7 @@ describe('scrollwritelines', () => {
   })
 
   it('!@chip prefix overrides default chip for one line', () => {
-    scrollwritelines(
-      'p1',
-      'T3b',
-      '!x y;$a\n!@otherchip z w;$b',
-      'mychip',
-    )
+    scrollwritelines('p1', 'T3b', '!x y;$a\n!@otherchip z w;$b', 'mychip')
     const s = gadgetstate('p1').scroll!
     expect((s[0] as unknown[])[0]).toBe('mychip')
     expect((s[1] as unknown[])[0]).toBe('otherchip')

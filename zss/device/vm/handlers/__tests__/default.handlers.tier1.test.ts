@@ -9,11 +9,11 @@ import {
 } from 'zss/feature/parse/markdownscroll'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistcodepagewithtype } from 'zss/memory/codepages'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import {
   memorynotestransposescroll,
   memorynotetransposesynctext,
 } from 'zss/memory/notestransposescroll'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 
@@ -184,7 +184,12 @@ describe('handledefault refscroll', () => {
 
   const mainback = '\n!menu hk b " B " next;$ltgreyBack to main menu'
   it.each([
-    ['refscroll:charscroll', `!char charedit;char${mainback}`, 'chars', 'refscroll'],
+    [
+      'refscroll:charscroll',
+      `!char charedit;char${mainback}`,
+      'chars',
+      'refscroll',
+    ],
     [
       'refscroll:colorscroll',
       `!color coloredit;color${mainback}`,

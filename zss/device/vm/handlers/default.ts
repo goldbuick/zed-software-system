@@ -28,6 +28,10 @@ import type { FINDANY_CONFIG } from 'zss/memory/inspectionfind'
 import { memorymakeitcommand } from 'zss/memory/inspectionmakeit'
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import {
+  memorynotestransposescroll,
+  memorynotetransposecommand,
+} from 'zss/memory/notestransposescroll'
+import {
   memorymoveplayertoboard,
   memoryreadbookplayerboards,
   memoryreadplayerboard,
@@ -38,10 +42,6 @@ import {
   memoryreadoperator,
 } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
-import {
-  memorynotestransposescroll,
-  memorynotetransposecommand,
-} from 'zss/memory/notestransposescroll'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
