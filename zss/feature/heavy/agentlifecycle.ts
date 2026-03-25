@@ -15,9 +15,11 @@ import {
   AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
-import { write, writeheader } from 'zss/feature/writeui'
+import { writeheader } from 'zss/feature/writeui'
 import { createshortnameid } from 'zss/mapping/guid'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
+
+import { terminalwritelines } from '../terminalwritelines'
 
 import type { AGENT } from './agent'
 
@@ -35,17 +37,19 @@ function persistrostertostorage(heavydev: DEVICE, requestplayer: string) {
 }
 
 function writeagentlistto(heavydev: DEVICE, requestplayer: string) {
+  writeheader(heavydev, requestplayer, 'agents')
+  const lines: string[] = []
   const ids = Object.keys(agents)
   if (ids.length === 0) {
-    write(heavydev, requestplayer, 'no agents running')
-    return
+    lines.push('no agents running')
+  } else {
+    for (let i = 0; i < ids.length; ++i) {
+      const id = ids[i]
+      const name = readagentdisplayname(id)
+      lines.push(`!copyit ${id};${name} (${id})`)
+    }
   }
-  writeheader(heavydev, requestplayer, 'agents')
-  for (let i = 0; i < ids.length; ++i) {
-    const id = ids[i]
-    const name = readagentdisplayname(id)
-    write(heavydev, requestplayer, `!copyit ${id};${name} (${id})`)
-  }
+  terminalwritelines(heavydev, requestplayer, lines.join('\n'))
 }
 
 function readagentdisplayname(agentid: string): string {
