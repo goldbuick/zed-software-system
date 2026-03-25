@@ -1,6 +1,5 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apitoast, registercopy } from 'zss/device/api'
 import { handledefault } from 'zss/device/vm/handlers/default'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import {
@@ -9,10 +8,6 @@ import {
 } from 'zss/feature/parse/markdownscroll'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistcodepagewithtype } from 'zss/memory/codepages'
-import {
-  memorynotestransposescroll,
-  memorynotetransposesynctext,
-} from 'zss/memory/notestransposescroll'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
@@ -117,13 +112,6 @@ jest.mock('zss/memory/inspectionremix', () => ({
   memoryinspectremixcommand: jest.fn(() => Promise.resolve()),
 }))
 
-jest.mock('zss/memory/notestransposescroll', () => ({
-  ...jest.requireActual<typeof import('zss/memory/notestransposescroll')>(
-    'zss/memory/notestransposescroll',
-  ),
-  memorynotestransposescroll: jest.fn(),
-}))
-
 jest.mock('zss/rom', () => ({
   romread: jest.fn(() => undefined),
 }))
@@ -176,7 +164,6 @@ describe('handledefault refscroll', () => {
     jest.mocked(romread).mockReset()
     jest.mocked(romread).mockReturnValue(undefined)
     jest.mocked(memoryadminmenu).mockClear()
-    jest.mocked(memorynotestransposescroll).mockClear()
     jest.mocked(memorylistcodepagewithtype).mockReset()
     jest.mocked(memorylistcodepagewithtype).mockReturnValue([])
     jest.mocked(memoryreadcodepagename).mockReset()
@@ -321,54 +308,5 @@ describe('handledefault refscroll', () => {
       expect.stringContaining('!istargetless copyit'),
       'notescales_major',
     )
-  })
-
-  it('refscroll:transposescroll opens transpose scroll', () => {
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target: 'refscroll:transposescroll',
-      data: undefined,
-    })
-    expect(memorynotestransposescroll).toHaveBeenCalledWith('p1')
-  })
-})
-
-describe('handledefault notetranspose', () => {
-  const vm = {} as DEVICE
-
-  beforeEach(() => {
-    jest.mocked(registercopy).mockClear()
-    jest.mocked(apitoast).mockClear()
-    memorynotetransposesynctext('')
-  })
-
-  it('apitoasts when notes buffer is empty', () => {
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target: 'notetranspose:+1',
-      data: undefined,
-    })
-    expect(apitoast).toHaveBeenCalled()
-    expect(registercopy).not.toHaveBeenCalled()
-  })
-
-  it('registercopy with transposed notes when buffer has input', () => {
-    memorynotetransposesynctext('c d e')
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target: 'notetranspose:+1',
-      data: undefined,
-    })
-    expect(registercopy).toHaveBeenCalledWith(vm, 'p1', 'c# d# f')
-    expect(apitoast).not.toHaveBeenCalled()
   })
 })

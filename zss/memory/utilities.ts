@@ -193,7 +193,6 @@ export function memoryadminmenu(
         registerstore(SOFTWARE, player, `config_${name}`, newval)
         if (name === 'dev') {
           memorywritehalt(newval === 'on')
-          registerinspector(SOFTWARE, player, newval === 'on')
         } else if (name === 'gadget') {
           registerinspector(SOFTWARE, player, newval === 'on')
         }

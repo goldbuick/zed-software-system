@@ -28,10 +28,6 @@ import type { FINDANY_CONFIG } from 'zss/memory/inspectionfind'
 import { memorymakeitcommand } from 'zss/memory/inspectionmakeit'
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import {
-  memorynotestransposescroll,
-  memorynotetransposecommand,
-} from 'zss/memory/notestransposescroll'
-import {
   memorymoveplayertoboard,
   memoryreadbookplayerboards,
   memoryreadplayerboard,
@@ -163,10 +159,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           )
           break
         }
-        case 'transposescroll': {
-          memorynotestransposescroll(message.player)
-          break
-        }
         default: {
           doasync(vm, message.player, async () => {
             const content = romread(`refscroll:${path}`)
@@ -195,9 +187,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       doasync(vm, message.player, async () => {
         await memoryinspectremixcommand(path, message.player)
       })
-      break
-    case 'notetranspose':
-      memorynotetransposecommand(vm, message.player, path)
       break
     case 'empty': {
       const empty = parsetarget(path)

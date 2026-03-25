@@ -19,7 +19,7 @@ This subsection catalogs how the scroll panel is filled: **Category C** (central
 
 ### Category C — Centralized on `scrollwritelines`
 
-Call sites use [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts), [`applyzedscroll`](../../feature/parse/markdownscroll.ts), or [`scrollwritelines`](../data/scrollwritelines.ts) directly—not loops of `gadgettext`/`gadgethyperlink`. Examples include [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts), [`memorynotestransposescroll`](../../memory/notestransposescroll.ts), [`writezztcontentwait` / `writezztcontentlinks`](../../device/vm/helpers.ts). See **VM handler entry points** and **`refscroll:<path>` in `handledefault`** below.
+Call sites use [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts), [`applyzedscroll`](../../feature/parse/markdownscroll.ts), or [`scrollwritelines`](../data/scrollwritelines.ts) directly—not loops of `gadgettext`/`gadgethyperlink`. Examples include [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts), [`writezztcontentwait` / `writezztcontentlinks`](../../device/vm/helpers.ts). See **VM handler entry points** and **`refscroll:<path>` in `handledefault`** below.
 
 ### Category B — Hybrid (imperative prefix, then `scrollwritelines`)
 
@@ -114,7 +114,6 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `colorscroll` | `colors` | Same. |
 | `bgscroll` | `bgs` | Same. |
 | `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
-| `transposescroll` | `transpose copy` | [`memorynotestransposescroll`](../../memory/notestransposescroll.ts): chip `notetranspose`; shared text slot + `hk` rows → `vm:notetranspose:<delta>` → [`memorynotetransposecommand`](../../memory/notestransposescroll.ts) (`transposenotesstring` and pitch helpers in same file; `registercopy`). |
 | *(any other)* | `path` | Bundled `.md` or wiki; see below. |
 
 **Default branch:** `romread('refscroll:' + path)`. If content exists: `parsemarkdownforscroll` on the markdown string. If not: wiki fetch + `parsemarkdownforscroll`. Final `scrollname` is `path` once content is ready.
@@ -124,8 +123,6 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 ## ROM keys (`refscroll/`)
 
 Bundled under [`zss/rom/refscroll/`](../../rom/refscroll/) as **`.md`** files. Address = `refscroll:<name>` where `<name>` is the filename without `.md`.
-
-Handler-only refscroll paths (no `.md`): `transposescroll` (see table above).
 
 `algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notescalesscroll`, `notescales_aeolian`, `notescales_blues`, `notescales_dorian`, `notescales_exotic`, `notescales_harmonicminor_modal`, `notescales_ionian`, `notescales_jazzmodal`, `notescales_locrian`, `notescales_lydian`, `notescales_major`, `notescales_majorpent`, `notescales_melodicminor_modal`, `notescales_minorpent`, `notescales_mixolydian`, `notescales_modal`, `notescales_naturalminor`, `notescales_pentatonic`, `notescales_phrygian`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
 
