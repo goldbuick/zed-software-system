@@ -62,6 +62,9 @@ export function scrolllinksplittokens(s: string): string[] {
   return out
 }
 
+/** `!@mychip cmd args;label` uses `mychip` for that row; default `chip` from `scrollwritelines` otherwise. */
+const SCROLL_LINE_ATCHIP_RE = /^!@([a-zA-Z][a-zA-Z0-9_]*)\s+(.+)$/
+
 function pushscrollhyperlink(
   player: string,
   chip: string,
@@ -86,9 +89,15 @@ export function scrollwritelines(
     const line = lines[i].trim()
     if (line.startsWith('!') && line.includes(';')) {
       const semi = line.indexOf(';')
-      const left = scrolllinkunescapefrag(line.slice(0, semi).trimEnd())
+      let left = scrolllinkunescapefrag(line.slice(0, semi).trimEnd())
       const label = scrolllinkunescapefrag(line.slice(semi + 1).trim())
-      pushscrollhyperlink(player, chip, left, label)
+      let linechip = chip
+      const atchip = SCROLL_LINE_ATCHIP_RE.exec(left)
+      if (atchip) {
+        linechip = atchip[1]
+        left = `!${atchip[2].trimStart()}`
+      }
+      pushscrollhyperlink(player, linechip, left, label)
     } else {
       gadgettext(player, line)
     }

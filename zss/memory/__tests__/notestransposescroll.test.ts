@@ -21,6 +21,7 @@ jest.mock('zss/gadget/data/api', () => ({
   gadgethyperlink: jest.fn(),
   gadgetcheckqueue: jest.fn(() => []),
   gadgettext: jest.fn(),
+  registerhyperlinksharedbridge: jest.fn(),
 }))
 
 jest.mock('zss/device/api', () => ({

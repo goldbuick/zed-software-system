@@ -52,6 +52,7 @@ jest.mock('zss/gadget/data/api', () => ({
   gadgetstate: jest.fn(() => ({ scrollname: '', scroll: [] })),
   gadgethyperlink: jest.fn(),
   gadgetcheckqueue: jest.fn(() => []),
+  registerhyperlinksharedbridge: jest.fn(),
 }))
 
 jest.mock('zss/device/api', () => ({

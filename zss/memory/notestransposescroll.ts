@@ -1,12 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import { apitoast, registercopy } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { isnumber, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
@@ -211,6 +207,8 @@ function set(name: string, value: WORD) {
   }
 }
 
+registerhyperlinksharedbridge('notetranspose', 'text', get, set)
+
 /** Sync shared notes text (same as gadget `set`; for tests and tooling). */
 export function memorynotetransposesynctext(value: string) {
   set(NOTETRANSPOSE_TARGET, value)
@@ -244,49 +242,16 @@ export function memorynotetransposecommand(
 }
 
 export function memorynotestransposescroll(player: string) {
-  gadgettext(player, '$ltgrey type pitch names - space-separated a-g # !')
-  gadgettext(player, '$ltgrey then pick half or whole step copy')
-  gadgethyperlink(
-    player,
-    'notetranspose',
-    '$whitenotes to transpose',
-    [NOTETRANSPOSE_TARGET, 'text'],
-    get,
-    set,
-  )
-  gadgettext(player, '')
-  gadgethyperlink(player, 'notetranspose', '$greencopy -2 (whole step down)', [
-    '-2',
-    'hk',
-    '2',
-    ' 2 ',
-  ])
-  gadgethyperlink(player, 'notetranspose', '$greencopy -1 (half step down)', [
-    '-1',
-    'hk',
-    '1',
-    ' 1 ',
-  ])
-  gadgethyperlink(player, 'notetranspose', '$greencopy +1 (half step up)', [
-    '+1',
-    'hk',
-    '3',
-    ' 3 ',
-  ])
-  gadgethyperlink(player, 'notetranspose', '$greencopy +2 (whole step up)', [
-    '+2',
-    'hk',
-    '4',
-    ' 4 ',
-  ])
-  gadgethyperlink(player, 'refscroll', '$ltgreyBack to main menu', [
-    'menu',
-    'hk',
-    'b',
-    ' B ',
-    'next',
-  ])
-  const shared = gadgetstate(player)
-  shared.scrollname = 'transpose copy'
-  shared.scroll = gadgetcheckqueue(player)
+  const rows = [
+    '$ltgrey type pitch names - space-separated a-g # !',
+    '$ltgrey then pick half or whole step copy',
+    `!notetranspose text;$whitenotes to transpose`,
+    '',
+    `!-2 hk 2 " 2 ";$greencopy -2 (whole step down)`,
+    `!-1 hk 1 " 1 ";$greencopy -1 (half step down)`,
+    `!+1 hk 3 " 3 ";$greencopy +1 (half step up)`,
+    `!+2 hk 4 " 4 ";$greencopy +2 (whole step up)`,
+    `!@refscroll menu hk b " B " next;$ltgreyBack to main menu`,
+  ]
+  scrollwritelines(player, 'transpose copy', rows.join('\n'), 'notetranspose')
 }

@@ -73,6 +73,19 @@ describe('scrollwritelines', () => {
     expect(row[0]).toBe('mychip')
   })
 
+  it('!@chip prefix overrides default chip for one line', () => {
+    scrollwritelines(
+      'p1',
+      'T3b',
+      '!x y;$a\n!@otherchip z w;$b',
+      'mychip',
+    )
+    const s = gadgetstate('p1').scroll!
+    expect((s[0] as unknown[])[0]).toBe('mychip')
+    expect((s[1] as unknown[])[0]).toBe('otherchip')
+    expect((s[1] as unknown[])[2]).toBe('z')
+  })
+
   it('treats ! without semicolon as plain text', () => {
     scrollwritelines('p1', 'T4', '!nosemi')
     expect(gadgetstate('p1').scroll).toEqual(['!nosemi'])
