@@ -26,3 +26,4 @@
 ## Constants
 
 - `DIVIDER` — `$yellow$205$205$205$196` (horizontal rule)
+

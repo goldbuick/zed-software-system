@@ -13,6 +13,46 @@ The right-hand **scroll** panel shows a titled list (`scrollname` + `scroll` row
 
 ---
 
+## Scroll builder inventory (scroll panel scope)
+
+This subsection catalogs how the scroll panel is filled: **Category C** (centralized on [`scrollwritelines`](../data/scrollwritelines.ts)), **Category B** (hybrid), and **Category A** (fully imperative). Scope: code that sets `shared.scroll` / `shared.scrollname` on the player gadget. Related but out of this list: ROM gadget line DSL ([`zss/rom/index.ts`](../../rom/index.ts)) and firmware element scroll-lock ([`RUNTIME_FIRMWARE.aftertick`](../../firmware/runtime.ts)).
+
+### Category C — Centralized on `scrollwritelines`
+
+Call sites use [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts), [`applyzedscroll`](../../feature/parse/markdownscroll.ts), or [`scrollwritelines`](../data/scrollwritelines.ts) directly—not loops of `gadgettext`/`gadgethyperlink`. Examples include [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts), [`memorynotestransposescroll`](../../memory/notestransposescroll.ts), [`writezztcontentwait` / `writezztcontentlinks`](../../device/vm/helpers.ts). See **VM handler entry points** and **`refscroll:<path>` in `handledefault`** below.
+
+### Category B — Hybrid (imperative prefix, then `scrollwritelines`)
+
+| Flow | Source | Pattern |
+|------|--------|---------|
+| Bookmarks panel | [`zss/memory/bookmarkscroll.ts`](../../memory/bookmarkscroll.ts) | `gadgethyperlink` (name + SAVE) + `gadgetbbar`, then `scrollwritelines` for URL rows. |
+| Editor bookmarks | [`zss/memory/editorbookmarkscroll.ts`](../../memory/editorbookmarkscroll.ts) | `gadgethyperlink` (snapshot) + `gadgetbbar`, then `scrollwritelines` for OPEN/COPY rows. |
+| List refscrolls + “back” | [`zss/device/vm/handlers/default.ts`](../../device/vm/handlers/default.ts) | `appendmainmenushortcutafterlistscroll`: one `gadgethyperlink` for main menu, then **append** `gadgetcheckqueue` tail to **existing** `shared.scroll`. |
+
+### Category A — Fully imperative (no `scrollwritelines`)
+
+These modules call `gadgettext` / `gadgethyperlink` in sequence and assign `shared.scroll = gadgetcheckqueue(player)` (usually with `shared.scrollname`).
+
+| Scroll title(s) | Source | Notes |
+|-----------------|--------|-------|
+| `cpu #admin` | [`zss/memory/utilities.ts`](../../memory/utilities.ts) (`memoryadminmenu`) | Sections + links; `refscroll:adminscroll`. |
+| `inspect`, `bulk set bg`, `char`, `bulk set char`, dynamic name, `bulk set color`, `empty` | [`zss/memory/inspection.ts`](../../memory/inspection.ts) | Many `gadgethyperlink(..., get, set)` for shared widgets. |
+| `copy`, `cut`, `paste` | [`zss/memory/inspectionbatch.ts`](../../memory/inspectionbatch.ts) | Batch ops + selection headers. |
+| `remix` | [`zss/memory/inspectionremix.ts`](../../memory/inspectionremix.ts) | Shared links (`get`/`set`). |
+| `makeit` | [`zss/memory/inspectionmakeit.ts`](../../memory/inspectionmakeit.ts) | VM `makeitscroll`; mixed text and links. |
+| `style` | [`zss/memory/inspectionstyle.ts`](../../memory/inspectionstyle.ts) | |
+| `findany` | [`zss/memory/inspectionfind.ts`](../../memory/inspectionfind.ts) | Shared text / find config. |
+
+### Refactor roadmap (priority tiers)
+
+- **Tier 1** — [`memoryadminmenu`](../../memory/utilities.ts) (`cpu #admin`): mostly plain lines and simple `gadgethyperlink` without custom `get`/`set`; reasonable place to prototype a tape string + one `scrollwritelines`, or `scrollwritelines` for a static body after any imperative header (same idea as bookmarks).
+- **Tier 2** — [`bookmarkscroll.ts`](../../memory/bookmarkscroll.ts), [`editorbookmarkscroll.ts`](../../memory/editorbookmarkscroll.ts), [`appendmainmenushortcutafterlistscroll`](../../device/vm/handlers/default.ts): already structured, or they need **append** to existing scroll / **`gadgetbbar`**—not covered by a single plain `scrollwritelines(content)` call.
+- **Tier 3** — [`inspection.ts`](../../memory/inspection.ts), [`inspectionbatch.ts`](../../memory/inspectionbatch.ts), [`inspectionremix.ts`](../../memory/inspectionremix.ts), [`inspectionmakeit.ts`](../../memory/inspectionmakeit.ts), [`inspectionstyle.ts`](../../memory/inspectionstyle.ts), [`inspectionfind.ts`](../../memory/inspectionfind.ts): widespread **`gadgethyperlink(..., get, set)`**; [`scrollwritelines`](../data/scrollwritelines.ts) does not forward shared state. Consolidation would need tape or API changes, not a mechanical replace.
+
+**Blockers for a single `scrollwritelines`:** per-link `get`/`set`, multiple `gadgetcheckqueue` flush points, **`gadgetbbar`**, appending to an existing scroll, ROM-style layout helpers.
+
+---
+
 ## Behavior notes
 
 ### Clearing the panel vs unlocking scroll
@@ -93,16 +133,7 @@ Handler-only refscroll paths (no `.md`): `transposescroll` (see table above).
 
 ## Inspection and memory flows (`scrollname` values)
 
-These mostly set `scrollname` while building the gadget queue; several use **shared** hyperlink `get`/`set` (config toggles, find-any text slots) and stay on the queue API until bridged like zip `select` (see source for exact entry points):
-
-| Title | Source (representative) |
-|-------|-------------------------|
-| `inspect`, `bulk set bg`, `char`, `bulk set char`, *(dynamic `name`)*, `bulk set color`, `empty` | [`zss/memory/inspection.ts`](../../memory/inspection.ts) |
-| `copy`, `cut`, `paste` | [`zss/memory/inspectionbatch.ts`](../../memory/inspectionbatch.ts) |
-| `remix` | [`zss/memory/inspectionremix.ts`](../../memory/inspectionremix.ts) |
-| `findany` | [`zss/memory/inspectionfind.ts`](../../memory/inspectionfind.ts) |
-| `makeit` | [`memorymakeitscroll`](../../memory/inspectionmakeit.ts) (also via `makeitscroll` VM message) |
-| `style` | [`zss/memory/inspectionstyle.ts`](../../memory/inspectionstyle.ts) |
+These flows are **Category A** in [Scroll builder inventory](#scroll-builder-inventory-scroll-panel-scope): they set `scrollname` while building the gadget queue; several use **shared** hyperlink `get`/`set` (config toggles, find-any text slots) and stay on the queue API until bridged like zip `select` (see source for exact entry points).
 
 ---
 
