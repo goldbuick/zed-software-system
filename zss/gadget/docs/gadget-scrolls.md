@@ -73,6 +73,8 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `charscroll` | `chars` | Zed `!` line + `applyzedscroll`; chip `refscroll`. |
 | `colorscroll` | `colors` | Same. |
 | `bgscroll` | `bgs` | Same. |
+| `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
+| `transposescroll` | `transpose copy` | [`memorynotestransposescroll`](../../memory/notestransposescroll.ts): text slot + `copyit` rows with [`COPYIT_NOTE_TRANSPOSE_SENTINEL`](../../memory/notecopyscroll.ts) payload; chip `list`. |
 | *(any other)* | `path` | Bundled `.md` or wiki; see below. |
 
 **Default branch:** `romread('refscroll:' + path)`. If content exists: `parsemarkdownforscroll` on the markdown string. If not: wiki fetch + `parsemarkdownforscroll`. Final `scrollname` is `path` once content is ready.
@@ -83,7 +85,9 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 
 Bundled under [`zss/rom/refscroll/`](../../rom/refscroll/) as **`.md`** files. Address = `refscroll:<name>` where `<name>` is the filename without `.md`.
 
-`algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
+Handler-only refscroll paths (no `.md`): `transposescroll` (see table above).
+
+`algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notescalesscroll`, `notescales_aeolian`, `notescales_dorian`, `notescales_harmonicminor_modal`, `notescales_ionian`, `notescales_jazzmodal`, `notescales_locrian`, `notescales_lydian`, `notescales_major`, `notescales_majorpent`, `notescales_melodicminor_modal`, `notescales_minorpent`, `notescales_mixolydian`, `notescales_modal`, `notescales_naturalminor`, `notescales_phrygian`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
 
 ---
 

@@ -2,11 +2,16 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { handledefault } from 'zss/device/vm/handlers/default'
 import { parsezipfilelist } from 'zss/feature/parse/file'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import {
+  applyzedscroll,
+  parsemarkdownforscroll,
+} from 'zss/feature/parse/markdownscroll'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistcodepagewithtype } from 'zss/memory/codepages'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { memorynotestransposescroll } from 'zss/memory/notestransposescroll'
 import { memoryadminmenu } from 'zss/memory/utilities'
+import { romread } from 'zss/rom'
 
 jest.mock('zss/config', () => ({
   RUNTIME: {
@@ -104,6 +109,10 @@ jest.mock('zss/memory/inspectionremix', () => ({
   memoryinspectremixcommand: jest.fn(() => Promise.resolve()),
 }))
 
+jest.mock('zss/memory/notestransposescroll', () => ({
+  memorynotestransposescroll: jest.fn(),
+}))
+
 jest.mock('zss/rom', () => ({
   romread: jest.fn(() => undefined),
 }))
@@ -152,7 +161,11 @@ describe('handledefault refscroll', () => {
 
   beforeEach(() => {
     jest.mocked(applyzedscroll).mockClear()
+    jest.mocked(parsemarkdownforscroll).mockClear()
+    jest.mocked(romread).mockReset()
+    jest.mocked(romread).mockReturnValue(undefined)
     jest.mocked(memoryadminmenu).mockClear()
+    jest.mocked(memorynotestransposescroll).mockClear()
     jest.mocked(memorylistcodepagewithtype).mockReset()
     jest.mocked(memorylistcodepagewithtype).mockReturnValue([])
     jest.mocked(memoryreadcodepagename).mockReset()
@@ -237,5 +250,66 @@ describe('handledefault refscroll', () => {
     const [, content] = jest.mocked(applyzedscroll).mock.calls[0]
     expect(content).toContain('!istargetless copyit obj1;')
     expect(content).toContain('@obj1$ltgrey hint line')
+  })
+
+  it('refscroll:notescalesscroll uses parsemarkdownforscroll when ROM exists', async () => {
+    jest.mocked(romread).mockImplementation((addr: string) => {
+      if (addr === 'refscroll:notescalesscroll') {
+        return '$ltgrey intro\n\n[Major](<notescales_major>)\n'
+      }
+      return undefined
+    })
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: 'refscroll:notescalesscroll',
+      data: undefined,
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(applyzedscroll).not.toHaveBeenCalled()
+    expect(parsemarkdownforscroll).toHaveBeenCalledWith(
+      'p1',
+      expect.stringContaining('notescales_major'),
+      'notescalesscroll',
+    )
+  })
+
+  it('refscroll:notescales_major uses parsemarkdownforscroll when ROM exists', async () => {
+    jest.mocked(romread).mockImplementation((addr: string) => {
+      if (addr === 'refscroll:notescales_major') {
+        return '!notescalesscroll;$ltgreyBack\n!istargetless copyit c d e f g a b c;$greenC major'
+      }
+      return undefined
+    })
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: 'refscroll:notescales_major',
+      data: undefined,
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(parsemarkdownforscroll).toHaveBeenCalledWith(
+      'p1',
+      expect.stringContaining('!istargetless copyit'),
+      'notescales_major',
+    )
+  })
+
+  it('refscroll:transposescroll opens transpose scroll', () => {
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: 'refscroll:transposescroll',
+      data: undefined,
+    })
+    expect(memorynotestransposescroll).toHaveBeenCalledWith('p1')
   })
 })

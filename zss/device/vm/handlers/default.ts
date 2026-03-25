@@ -34,6 +34,7 @@ import {
   memoryreadoperator,
 } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { memorynotestransposescroll } from 'zss/memory/notestransposescroll'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
@@ -134,6 +135,10 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
         }
         case 'bgscroll': {
           applyzedscroll(message.player, '!bg bgedit;bg', 'bgs', 'refscroll')
+          break
+        }
+        case 'transposescroll': {
+          memorynotestransposescroll(message.player)
           break
         }
         default: {

@@ -295,7 +295,11 @@ const tilemapMaterial = new ShaderMaterial({
       int colori = int(tiledata.z);
       int bgi = int(tiledata.w);
       if (colori == 255) {
-        gl_FragColor.rgb = palette[bgi];
+        if (bgi >= ${COLOR.ONCLEAR}) {
+          discard;
+        }
+        int pi = clamp(bgi, 0, 15);
+        gl_FragColor.rgb = palette[pi];
         gl_FragColor.a = 1.0;
         return;
       }

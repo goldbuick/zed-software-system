@@ -33,6 +33,7 @@ export function UnicodeOverlay({
   height,
   char,
   color,
+  bg,
   scale = 1,
 }: UnicodeOverlayProps) {
   const mediapalette = useMedia((state) => state.palettedata)
@@ -55,6 +56,8 @@ export function UnicodeOverlay({
   const [colorattr, setcolorattr] = useState<InstancedBufferAttribute | null>(
     null,
   )
+  const [bgindexattr, setbgindexattr] =
+    useState<InstancedBufferAttribute | null>(null)
   const materialref = useRef<ReturnType<
     typeof createunicodeoverlaymaterial
   > | null>(null)
@@ -64,9 +67,15 @@ export function UnicodeOverlay({
   const offsetarray = useMemo(() => new Float32Array(maxcells * 2), [maxcells])
   const uvarray = useMemo(() => new Float32Array(maxcells * 2), [maxcells])
   const colorarray = useMemo(() => new Float32Array(maxcells), [maxcells])
+  const bgindexarray = useMemo(() => new Float32Array(maxcells), [maxcells])
 
   const cells = useMemo(() => {
-    const list: { index: number; codepoint: number; colori: number }[] = []
+    const list: {
+      index: number
+      codepoint: number
+      colori: number
+      bgi: number
+    }[] = []
     for (let i = 0; i < char.length; i++) {
       const codepoint = celltorendervalue(char[i] ?? 0)
       if (codepoint > 255) {
@@ -74,11 +83,12 @@ export function UnicodeOverlay({
           index: i,
           codepoint,
           colori: (color[i] ?? 0) % 16,
+          bgi: bg[i] ?? 16,
         })
       }
     }
     return list
-  }, [char, color])
+  }, [char, color, bg])
 
   const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])
 
@@ -97,7 +107,8 @@ export function UnicodeOverlay({
       !meshref ||
       !offsetattr ||
       !uvattr ||
-      !colorattr
+      !colorattr ||
+      !bgindexattr
     ) {
       return
     }
@@ -124,12 +135,14 @@ export function UnicodeOverlay({
         uvarray[n * 2] = slot.slotx
         uvarray[n * 2 + 1] = slot.sloty
         colorarray[n] = cell.colori
+        bgindexarray[n] = cell.bgi
         n++
       }
       meshref.count = n
       offsetattr.needsUpdate = true
       uvattr.needsUpdate = true
       colorattr.needsUpdate = true
+      bgindexattr.needsUpdate = true
     }
     void Promise.all(cells.map((c) => lookupglyphasync(c.codepoint))).then(
       apply,
@@ -147,9 +160,11 @@ export function UnicodeOverlay({
     offsetattr,
     uvattr,
     colorattr,
+    bgindexattr,
     offsetarray,
     uvarray,
     colorarray,
+    bgindexarray,
   ])
 
   if (cells.length === 0) {
@@ -177,6 +192,12 @@ export function UnicodeOverlay({
           ref={setcolorattr}
           attach="attributes-colorIndex"
           args={[colorarray, 1]}
+          usage={DynamicDrawUsage}
+        />
+        <instancedBufferAttribute
+          ref={setbgindexattr}
+          attach="attributes-bgIndex"
+          args={[bgindexarray, 1]}
           usage={DynamicDrawUsage}
         />
       </bufferGeometry>
