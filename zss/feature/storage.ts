@@ -42,9 +42,9 @@ export function storagereadconfigdefault(name: string) {
 export async function storagereadconfig(name: string) {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageReadConfig === 'function'
+    typeof (globalThis as any).__nodeStorageReadConfig === 'function'
   ) {
-    const value = await (window as any).__nodeStorageReadConfig(name)
+    const value = await (globalThis as any).__nodeStorageReadConfig(name)
     return value && value !== 'off' ? 'on' : 'off'
   }
   const value = await readidb<string>(`config_${name}`)
@@ -57,9 +57,9 @@ export async function storagereadconfig(name: string) {
 export async function storagewriteconfig(name: string, value: string) {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageWriteConfig === 'function'
+    typeof (globalThis as any).__nodeStorageWriteConfig === 'function'
   ) {
-    return (window as any).__nodeStorageWriteConfig(name, value)
+    return (globalThis as any).__nodeStorageWriteConfig(name, value)
   }
   return writeidb(`config_${name}`, () => value)
 }
@@ -67,9 +67,9 @@ export async function storagewriteconfig(name: string, value: string) {
 export async function storagereadconfigall() {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageReadConfigAll === 'function'
+    typeof (globalThis as any).__nodeStorageReadConfigAll === 'function'
   ) {
-    return (window as any).__nodeStorageReadConfigAll()
+    return (globalThis as any).__nodeStorageReadConfigAll()
   }
   const lookup = [
     'config_crt',
@@ -95,9 +95,9 @@ export async function storagereadconfigall() {
 export async function storagereadhistorybuffer() {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageReadHistoryBuffer === 'function'
+    typeof (globalThis as any).__nodeStorageReadHistoryBuffer === 'function'
   ) {
-    return (window as any).__nodeStorageReadHistoryBuffer()
+    return (globalThis as any).__nodeStorageReadHistoryBuffer()
   }
   return readidb<string[]>('HISTORYBUFFER')
 }
@@ -105,9 +105,9 @@ export async function storagereadhistorybuffer() {
 export async function storagewritehistorybuffer(historybuffer: string[]) {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageWriteHistoryBuffer === 'function'
+    typeof (globalThis as any).__nodeStorageWriteHistoryBuffer === 'function'
   ) {
-    return (window as any).__nodeStorageWriteHistoryBuffer(historybuffer)
+    return (globalThis as any).__nodeStorageWriteHistoryBuffer(historybuffer)
   }
   return writeidb('HISTORYBUFFER', () => historybuffer)
 }
@@ -157,9 +157,9 @@ export async function storagereadcontent(
 ): Promise<string | BOOK[]> {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageReadContent === 'function'
+    typeof (globalThis as any).__nodeStorageReadContent === 'function'
   ) {
-    const content = await (window as any).__nodeStorageReadContent(player)
+    const content = await (globalThis as any).__nodeStorageReadContent(player)
     return content ?? ''
   }
   const urlcontent = readurlhash(player)
@@ -186,9 +186,9 @@ export async function storagewritecontent(
 ) {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageWriteContent === 'function'
+    typeof (globalThis as any).__nodeStorageWriteContent === 'function'
   ) {
-    await (window as any).__nodeStorageWriteContent(
+    await (globalThis as any).__nodeStorageWriteContent(
       player,
       label,
       longcontent,
@@ -221,9 +221,9 @@ export async function storagewritecontent(
 export async function storagereadvars(): Promise<Record<string, any>> {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageReadVars === 'function'
+    typeof (globalThis as any).__nodeStorageReadVars === 'function'
   ) {
-    return (window as any).__nodeStorageReadVars()
+    return (globalThis as any).__nodeStorageReadVars()
   }
   const storage = await readidb<Record<string, any>>('storage')
   return storage ?? {}
@@ -232,9 +232,9 @@ export async function storagereadvars(): Promise<Record<string, any>> {
 export async function storagewritevar(name: string, value: any) {
   if (
     isclimode() &&
-    typeof (window as any).__nodeStorageWriteVar === 'function'
+    typeof (globalThis as any).__nodeStorageWriteVar === 'function'
   ) {
-    return (window as any).__nodeStorageWriteVar(name, value)
+    return (globalThis as any).__nodeStorageWriteVar(name, value)
   }
   const storage = await storagereadvars()
   storage[name] = value
@@ -254,7 +254,7 @@ export function storagewatchcontent(player: string) {
   if (isclimode()) {
     return
   }
-  window.addEventListener('hashchange', () => {
+  globalThis.addEventListener('hashchange', () => {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
       if (currenturlhash !== urlhash) {
@@ -291,9 +291,9 @@ export async function storagesharecontent(player: string) {
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function storagenukecontent(_player: string) {
   if (isclimode()) {
-    const nodewindow = window as { __nodeStorageNukeContent?: () => void }
-    if (typeof nodewindow.__nodeStorageNukeContent === 'function') {
-      nodewindow.__nodeStorageNukeContent()
+    const g = globalThis as { __nodeStorageNukeContent?: () => void }
+    if (typeof g.__nodeStorageNukeContent === 'function') {
+      g.__nodeStorageNukeContent()
     }
     return
   }

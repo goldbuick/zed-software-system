@@ -1,13 +1,7 @@
-$ltgrey Modal scales (jazz):
-$ltgrey modes of the major
-$ltgrey scale. Same notes as
-$ltgrey the parent major;
-$ltgrey different tonic.
-$ltgrey Ionian through
-$ltgrey Locrian in the usual
-$ltgrey order (see
-$ltgrey pianoscales.org jazz
-$ltgrey scales).
+$ltgrey Jazz modal: same major
+$ltgrey pitches, new tonic each.
+$ltgrey Ionian to Locrian; see
+$ltgrey pianoscales.org jazz scales.
 
 !notescales_ionian hk 1 " 1 " next;$greenIonian (12 keys)
 !notescales_dorian hk 2 " 2 " next;$greenDorian (12 keys)

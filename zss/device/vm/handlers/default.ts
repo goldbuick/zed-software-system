@@ -9,7 +9,11 @@ import {
   applyzedscroll,
   parsemarkdownforscroll,
 } from 'zss/feature/parse/markdownscroll'
-import { gadgetstate } from 'zss/gadget/data/api'
+import {
+  gadgetcheckqueue,
+  gadgethyperlink,
+  gadgetstate,
+} from 'zss/gadget/data/api'
 import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
@@ -34,7 +38,10 @@ import {
   memoryreadoperator,
 } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
-import { memorynotestransposescroll } from 'zss/memory/notestransposescroll'
+import {
+  memorynotestransposescroll,
+  memorynotetransposecommand,
+} from 'zss/memory/notestransposescroll'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
@@ -42,6 +49,18 @@ import { NAME } from 'zss/words/types'
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handlezztbridge } from './zzt'
+
+const MAIN_MENU_BACK_LABEL = '$ltgreyBack to main menu'
+const MAIN_MENU_BACK_WORDS = ['menu', 'hk', 'b', ' B ', 'next'] as const
+
+function appendmainmenushortcutafterlistscroll(player: string) {
+  gadgethyperlink(player, 'refscroll', MAIN_MENU_BACK_LABEL, [
+    ...MAIN_MENU_BACK_WORDS,
+  ])
+  const shared = gadgetstate(player)
+  const tail = gadgetcheckqueue(player)
+  shared.scroll = [...(shared.scroll ?? []), ...tail]
+}
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
   const { target, path } = parsetarget(message.target)
@@ -92,6 +111,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
             )
           }
           applyzedscroll(message.player, rows.join('\n'), 'object list', 'list')
+          appendmainmenushortcutafterlistscroll(message.player)
           break
         }
         case 'terrainlistscroll': {
@@ -113,12 +133,13 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
             'terrain list',
             'list',
           )
+          appendmainmenushortcutafterlistscroll(message.player)
           break
         }
         case 'charscroll': {
           applyzedscroll(
             message.player,
-            '!char charedit;char',
+            `!char charedit;char\n!menu hk b " B " next;${MAIN_MENU_BACK_LABEL}`,
             'chars',
             'refscroll',
           )
@@ -127,14 +148,19 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
         case 'colorscroll': {
           applyzedscroll(
             message.player,
-            '!color coloredit;color',
+            `!color coloredit;color\n!menu hk b " B " next;${MAIN_MENU_BACK_LABEL}`,
             'colors',
             'refscroll',
           )
           break
         }
         case 'bgscroll': {
-          applyzedscroll(message.player, '!bg bgedit;bg', 'bgs', 'refscroll')
+          applyzedscroll(
+            message.player,
+            `!bg bgedit;bg\n!menu hk b " B " next;${MAIN_MENU_BACK_LABEL}`,
+            'bgs',
+            'refscroll',
+          )
           break
         }
         case 'transposescroll': {
@@ -169,6 +195,9 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       doasync(vm, message.player, async () => {
         await memoryinspectremixcommand(path, message.player)
       })
+      break
+    case 'notetranspose':
+      memorynotetransposecommand(vm, message.player, path)
       break
     case 'empty': {
       const empty = parsetarget(path)

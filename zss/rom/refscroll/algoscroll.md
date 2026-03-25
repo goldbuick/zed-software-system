@@ -8,3 +8,5 @@ c = carrier
 ## algo0
 
 S1 --> M --> S2 --> M --> S3 --> M --> S4 --> C  
+
+!synthscroll hk b " B " next;$ltgreyBack to synth

@@ -18,3 +18,5 @@ voice specific
 !pulsescroll hk p " P " next;pulse
 
 !algoscroll hk a " A " next;algo0 -> algo7
+
+!menu hk b " B " next;$ltgreyBack to main menu

@@ -109,6 +109,17 @@ describe('parsemarkdownforscroll', () => {
     )
   })
 
+  it('does not emit a blank row before a heading at the start of the document', () => {
+    parsemarkdownforscroll('p1', '# Hello', 'doc')
+    const sc = gadgetstate('p1').scroll ?? []
+    expect(sc.length).toBeGreaterThan(0)
+    expect(sc[0]).not.toBe('')
+    parsemarkdownforscroll('p1', '### Shallow', 'doc2')
+    const sc2 = gadgetstate('p1').scroll ?? []
+    expect(sc2.length).toBeGreaterThan(0)
+    expect(sc2[0]).not.toBe('')
+  })
+
   it('keeps later standalone !tape rows after a standalone !openit line (single parse)', () => {
     const md = `## Hyperlinks
 

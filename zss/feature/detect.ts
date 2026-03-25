@@ -1,13 +1,15 @@
-// CLI/headless mode: Playwright exposes __nodeStorageReadContent (or __nodeStorageReadPlayer)
-export function isclimode(): boolean {
-  return (
-    typeof (window as any).__nodeStorageReadContent === 'function' ||
-    typeof (window as any).__nodeStorageReadPlayer === 'function'
-  )
-}
-
 // CLI mode flag for workers (no window). Set via platform init message.
 let climode = false
+
+// CLI/headless mode: Playwright exposes __nodeStorage* on globalThis; workers use setclimode.
+export function isclimode(): boolean {
+  const g = globalThis as any
+  return (
+    climode ||
+    typeof g.__nodeStorageReadContent === 'function' ||
+    typeof g.__nodeStorageReadPlayer === 'function'
+  )
+}
 
 export function setclimode(value: boolean) {
   climode = value

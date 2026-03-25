@@ -7,3 +7,5 @@ $white duration between echos.
 #echo feedback <number>  
 $white A number that is between [0, 1]  
 $white 1 is forever feedback and 0 is none.
+
+!effectsscroll hk b " B " next;$ltgreyBack to effects

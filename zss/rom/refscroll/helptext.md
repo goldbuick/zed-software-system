@@ -63,3 +63,5 @@ opens the given url in a new browser tab
 
 opens the cli, with the input filled out with   
 the given content
+
+!helpmenu hk b " B " next;$ltgreyBack to help

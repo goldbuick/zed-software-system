@@ -492,44 +492,46 @@ if (typeof document !== 'undefined') {
   }
 }
 
-window.addEventListener(
-  'wheel',
-  (event) => {
-    event.preventDefault()
-  },
-  { passive: false },
-)
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault()
+    },
+    { passive: false },
+  )
 
-window.addEventListener(
-  'keydown',
-  (event) => {
-    // when focus is on the hidden touchtext input (editor/terminal), only
-    // the touchtext listener should handle keys so we don't get duplicate chars
-    const target = event.target as HTMLElement | null
-    if (target?.id === TOUCHTEXT_ID) {
-      return
-    }
-    handlekeydown(event)
-  },
-  { capture: true },
-)
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      // when focus is on the hidden touchtext input (editor/terminal), only
+      // the touchtext listener should handle keys so we don't get duplicate chars
+      const target = event.target as HTMLElement | null
+      if (target?.id === TOUCHTEXT_ID) {
+        return
+      }
+      handlekeydown(event)
+    },
+    { capture: true },
+  )
 
-window.addEventListener('keyup', (event) => handlekeyup(event), {
-  capture: true,
-})
+  window.addEventListener('keyup', (event) => handlekeyup(event), {
+    capture: true,
+  })
 
-window.addEventListener('blur', () => {
-  inputup(0, INPUT.ALT)
-  inputup(0, INPUT.CTRL)
-  inputup(0, INPUT.SHIFT)
-  inputup(0, INPUT.MOVE_UP)
-  inputup(0, INPUT.MOVE_DOWN)
-  inputup(0, INPUT.MOVE_LEFT)
-  inputup(0, INPUT.MOVE_RIGHT)
-  inputup(0, INPUT.OK_BUTTON)
-  inputup(0, INPUT.CANCEL_BUTTON)
-  inputup(0, INPUT.MENU_BUTTON)
-})
+  window.addEventListener('blur', () => {
+    inputup(0, INPUT.ALT)
+    inputup(0, INPUT.CTRL)
+    inputup(0, INPUT.SHIFT)
+    inputup(0, INPUT.MOVE_UP)
+    inputup(0, INPUT.MOVE_DOWN)
+    inputup(0, INPUT.MOVE_LEFT)
+    inputup(0, INPUT.MOVE_RIGHT)
+    inputup(0, INPUT.OK_BUTTON)
+    inputup(0, INPUT.CANCEL_BUTTON)
+    inputup(0, INPUT.MENU_BUTTON)
+  })
+}
 
 createdevice('userinput', [], (message) => {
   switch (message.target) {

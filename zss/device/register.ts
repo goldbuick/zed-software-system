@@ -659,18 +659,25 @@ export const register = createdevice(
       case 'copy':
         if (isstring(message.data)) {
           const clipboard = withclipboard()
-          if (ispresent(clipboard)) {
-            clipboard
-              .writeText(message.data)
-              .then(() =>
-                apitoast(
-                  register,
-                  message.player,
-                  `copied! ${message.data.slice(0, 200)}`,
-                ),
-              )
-              .catch((err) => console.error(err))
+          if (!ispresent(clipboard)) {
+            apitoast(register, message.player, '$redclipboard not available')
+            break
           }
+          clipboard
+            .writeText(message.data)
+            .then(() =>
+              apitoast(
+                register,
+                message.player,
+                `copied! ${message.data.slice(0, 200)}`,
+              ),
+            )
+            .catch((err) => {
+              console.error(err)
+              const msg =
+                err instanceof Error ? err.message : 'clipboard write failed'
+              apitoast(register, message.player, `$red${msg}`)
+            })
         }
         break
       case 'downloadjsonfile':

@@ -31,18 +31,18 @@ import { createplatform } from 'zss/platform'
 import { App } from './app'
 
 async function bootheadless(): Promise<void> {
-  const readplayer = (window as any).__nodeStorageReadPlayer
+  const g = globalThis as any
+  const readplayer = g.__nodeStorageReadPlayer
   if (typeof readplayer === 'function') {
     const playerId = await readplayer()
     registersetmyplayerid(playerId)
   }
-  const globby = window as any
-  globby.__onCliInput = (line: string) => {
+  g.__onCliInput = (line: string) => {
     vmcli(register, registerreadplayer(), line)
   }
   await import('zss/userspace')
   createplatform(isjoin(), true)
-  globby.__nodeReady?.()
+  g.__nodeReady?.()
 }
 
 // Headless path: no WebGL, no Canvas, no UI — just platform + CLI

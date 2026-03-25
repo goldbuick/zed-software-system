@@ -20,3 +20,5 @@
 - x $254 - $greenshoot left
 - y $30 - $greenshoot up
 - menu - $greenmenu / change layout
+
+!helpmenu hk b " B " next;$ltgreyBack to help

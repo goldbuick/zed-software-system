@@ -74,7 +74,7 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `colorscroll` | `colors` | Same. |
 | `bgscroll` | `bgs` | Same. |
 | `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
-| `transposescroll` | `transpose copy` | [`memorynotestransposescroll`](../../memory/notestransposescroll.ts): text slot + `copyit` rows with [`COPYIT_NOTE_TRANSPOSE_SENTINEL`](../../memory/notecopyscroll.ts) payload; chip `list`. |
+| `transposescroll` | `transpose copy` | [`memorynotestransposescroll`](../../memory/notestransposescroll.ts): chip `notetranspose`; shared text slot + `hk` rows → `vm:notetranspose:<delta>` → [`memorynotetransposecommand`](../../memory/notestransposescroll.ts) (`transposenotesstring` and pitch helpers in same file; `registercopy`). |
 | *(any other)* | `path` | Bundled `.md` or wiki; see below. |
 
 **Default branch:** `romread('refscroll:' + path)`. If content exists: `parsemarkdownforscroll` on the markdown string. If not: wiki fetch + `parsemarkdownforscroll`. Final `scrollname` is `path` once content is ready.

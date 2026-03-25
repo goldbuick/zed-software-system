@@ -186,22 +186,20 @@ function shallowheadinglines(
   titlezed: string,
   plaintitle: string,
 ): string[] {
-  const spacer = ' '
   const n = Math.max(graphemelength(plaintitle), 1)
   const barlen = clamp(n + 2, 8, 48)
   switch (depth) {
     case 3:
       return [
-        spacer,
         `${EDGE}$yellow${titlezed}${RESET}`,
         `${EDGE}${BAR.repeat(barlen)}`,
       ]
     case 4:
-      return [spacer, `${EDGE}$cyan${titlezed}${RESET}`]
+      return [`${EDGE}$cyan${titlezed}${RESET}`]
     case 5:
-      return [spacer, `$gray${titlezed}${RESET}`]
+      return [`$gray${titlezed}${RESET}`]
     case 6:
-      return [spacer, `$dkgray${titlezed}${RESET}`]
+      return [`$dkgray${titlezed}${RESET}`]
   }
 }
 
@@ -211,7 +209,6 @@ function emitheading(sink: MarkdownZedSink, token: Tokens.Heading) {
   const plaintitle = token.text
   if (depth === 1) {
     const w = titlezed.length + 2
-    sink.line(`${EDGE} ${' '.repeat(titlezed.length)} `)
     sink.line(`${EDGE}${CHR_TM.repeat(w)}`)
     sink.line(`${EDGE} $white${titlezed} `)
     sink.line(`${EDGE}${BAR.repeat(w)}`)
@@ -220,7 +217,6 @@ function emitheading(sink: MarkdownZedSink, token: Tokens.Heading) {
   }
   if (depth === 2) {
     const w = titlezed.length + 2
-    sink.line(`${EDGE} ${' '.repeat(titlezed.length)} `)
     sink.line(`${EDGE} $gray${titlezed} `)
     sink.line(`${EDGE}${BAR.repeat(w)}`)
     sink.line(' ')

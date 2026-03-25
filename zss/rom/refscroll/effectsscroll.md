@@ -5,3 +5,5 @@
 !distortscroll hk d " D " next;#distort on
 !vibratoscroll hk v " V " next;#vibrato on
 !autowahscroll hk w " W " next;#autowah on
+
+!menu hk b " B " next;$ltgreyBack to main menu

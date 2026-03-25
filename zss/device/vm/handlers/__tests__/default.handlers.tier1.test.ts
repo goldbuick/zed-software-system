@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { apitoast, registercopy } from 'zss/device/api'
 import { handledefault } from 'zss/device/vm/handlers/default'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import {
@@ -9,7 +10,10 @@ import {
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistcodepagewithtype } from 'zss/memory/codepages'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { memorynotestransposescroll } from 'zss/memory/notestransposescroll'
+import {
+  memorynotestransposescroll,
+  memorynotetransposesynctext,
+} from 'zss/memory/notestransposescroll'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 
@@ -46,10 +50,13 @@ jest.mock('zss/feature/fetchwiki', () => ({
 
 jest.mock('zss/gadget/data/api', () => ({
   gadgetstate: jest.fn(() => ({ scrollname: '', scroll: [] })),
+  gadgethyperlink: jest.fn(),
+  gadgetcheckqueue: jest.fn(() => []),
 }))
 
 jest.mock('zss/device/api', () => ({
   registercopy: jest.fn(),
+  apitoast: jest.fn(),
   vmcli: jest.fn(),
   vmloader: jest.fn(),
 }))
@@ -110,6 +117,9 @@ jest.mock('zss/memory/inspectionremix', () => ({
 }))
 
 jest.mock('zss/memory/notestransposescroll', () => ({
+  ...jest.requireActual<typeof import('zss/memory/notestransposescroll')>(
+    'zss/memory/notestransposescroll',
+  ),
   memorynotestransposescroll: jest.fn(),
 }))
 
@@ -171,10 +181,16 @@ describe('handledefault refscroll', () => {
     jest.mocked(memoryreadcodepagename).mockReset()
   })
 
+  const mainback = '\n!menu hk b " B " next;$ltgreyBack to main menu'
   it.each([
-    ['refscroll:charscroll', '!char charedit;char', 'chars', 'refscroll'],
-    ['refscroll:colorscroll', '!color coloredit;color', 'colors', 'refscroll'],
-    ['refscroll:bgscroll', '!bg bgedit;bg', 'bgs', 'refscroll'],
+    ['refscroll:charscroll', `!char charedit;char${mainback}`, 'chars', 'refscroll'],
+    [
+      'refscroll:colorscroll',
+      `!color coloredit;color${mainback}`,
+      'colors',
+      'refscroll',
+    ],
+    ['refscroll:bgscroll', `!bg bgedit;bg${mainback}`, 'bgs', 'refscroll'],
   ] as const)('%s applies zed scroll', (target, body, title, chip) => {
     handledefault(vm, {
       session: '',
@@ -280,7 +296,7 @@ describe('handledefault refscroll', () => {
   it('refscroll:notescales_major uses parsemarkdownforscroll when ROM exists', async () => {
     jest.mocked(romread).mockImplementation((addr: string) => {
       if (addr === 'refscroll:notescales_major') {
-        return '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit c d e f g a b + c;$greenC major'
+        return '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit #play cdefgab+c;$greenC major'
       }
       return undefined
     })
@@ -311,5 +327,42 @@ describe('handledefault refscroll', () => {
       data: undefined,
     })
     expect(memorynotestransposescroll).toHaveBeenCalledWith('p1')
+  })
+})
+
+describe('handledefault notetranspose', () => {
+  const vm = {} as DEVICE
+
+  beforeEach(() => {
+    jest.mocked(registercopy).mockClear()
+    jest.mocked(apitoast).mockClear()
+    memorynotetransposesynctext('')
+  })
+
+  it('apitoasts when notes buffer is empty', () => {
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: 'notetranspose:+1',
+      data: undefined,
+    })
+    expect(apitoast).toHaveBeenCalled()
+    expect(registercopy).not.toHaveBeenCalled()
+  })
+
+  it('registercopy with transposed notes when buffer has input', () => {
+    memorynotetransposesynctext('c d e')
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: 'notetranspose:+1',
+      data: undefined,
+    })
+    expect(registercopy).toHaveBeenCalledWith(vm, 'p1', 'c# d# f')
+    expect(apitoast).not.toHaveBeenCalled()
   })
 })

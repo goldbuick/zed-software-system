@@ -1,7 +1,5 @@
-$ltgrey Exotic scales
-$ltgrey - modal and parent-
-$ltgrey scale mode sets
-$ltgrey (single parent key).
+$ltgrey Exotic — modal & parent
+$ltgrey modes, one tonic each.
 
 !notescales_modal hk 1 " 1 " next;$greenModes of C major (diatonic)
 !notescales_melodicminor_modal hk 2 " 2 " next;$greenModes of C melodic minor (jazz)

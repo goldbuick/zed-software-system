@@ -4,3 +4,5 @@
 - #trash - list books and pages from open book you can delete
 - #save - flush state to register
 - #share - creates a click to copy share url and QR code
+
+!helpmenu hk b " B " next;$ltgreyBack to help

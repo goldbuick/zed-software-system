@@ -199,3 +199,5 @@ $whitecreate hyperlink
 $whiteopen reference scroll  
 #endgame  
 $whiteset health to 0  
+
+!menu hk b " B " next;$ltgreyBack to main menu

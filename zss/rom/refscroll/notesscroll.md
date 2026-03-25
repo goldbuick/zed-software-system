@@ -12,6 +12,8 @@ mods                 4 = high snare
 . = time and a half  6 = low snare
 # = sharp            7 = low tom
 ! = flat             8 = low woodblock
-+ = increase octave  9 = bass drum
-- = decrease octave
++ = octave up        9 = bass drum
+- = octave down      (before pitch, e.g. +c)
 ```
+
+!menu hk b " B " next;$ltgreyBack to main menu

@@ -7,8 +7,9 @@
 !notescales_pentatonic hk 5 " 5 " next;$greenPentatonic Scales
 !notescales_exotic hk 6 " 6 " next;$greenExotic scales
 
-$ltgrey for other keys use
-$ltgrey transpose from the
-$ltgrey notes menu
+$ltgrey For other keys, transpose
+$ltgrey from the notes menu.
 
 !openit https://www.pianoscales.org/;piano scales reference
+
+!menu hk b " B " next;$ltgreyBack to main menu

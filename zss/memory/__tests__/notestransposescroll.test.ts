@@ -1,9 +1,43 @@
+jest.mock('zss/config', () => ({
+  RUNTIME: {
+    YIELD_AT_COUNT: 512,
+    DRAW_CHAR_SCALE: 2,
+    DRAW_CHAR_WIDTH: () => 8,
+    DRAW_CHAR_HEIGHT: () => 16,
+  },
+  LANG_DEV: false,
+  LANG_TYPES: false,
+  STATS_DEV: false,
+  SHOW_CODE: false,
+  TRACE_CODE: '',
+  LOG_DEBUG: false,
+  FORCE_CRT_OFF: false,
+  FORCE_LOW_REZ: false,
+  FORCE_TOUCH_UI: false,
+}))
+
+jest.mock('zss/gadget/data/api', () => ({
+  gadgetstate: jest.fn(() => ({ scrollname: '', scroll: [] })),
+  gadgethyperlink: jest.fn(),
+  gadgetcheckqueue: jest.fn(() => []),
+  gadgettext: jest.fn(),
+}))
+
+jest.mock('zss/device/api', () => ({
+  apitoast: jest.fn(),
+  registercopy: jest.fn(),
+}))
+
+jest.mock('zss/device/session', () => ({
+  SOFTWARE: {},
+}))
+
 import {
   notetokenpitchclass,
   parsenotespacepitchclasses,
   spellpitchclass,
   transposenotesstring,
-} from 'zss/memory/notecopyscroll'
+} from 'zss/memory/notestransposescroll'
 
 /** Unique pitch classes (modes of C major share these seven PCs). */
 function pitchclassset7(input: string): string {
@@ -14,7 +48,7 @@ function pitchclassset7(input: string): string {
     .join(',')
 }
 
-describe('notecopyscroll', () => {
+describe('notestransposescroll pitch helpers', () => {
   it('spellpitchclass uses sharps when prefersharp', () => {
     expect(spellpitchclass(1, true)).toBe('c#')
     expect(spellpitchclass(6, true)).toBe('f#')
@@ -54,10 +88,14 @@ describe('notecopyscroll', () => {
     expect(transposenotesstring('c d e f g a b + c', 0)).toBe(
       'c d e f g a b + c',
     )
+    expect(transposenotesstring('c d e f g a b +c', 0)).toBe(
+      'c d e f g a b +c',
+    )
   })
 
   it('parsenotespacepitchclasses skips octave directives', () => {
     expect(parsenotespacepitchclasses('c d + e')).toEqual([0, 2, 4])
+    expect(parsenotespacepitchclasses('c d +e')).toEqual([0, 2, 4])
   })
 
   it('jazz C-parent modes share the same seven pitch classes as C Ionian', () => {
@@ -74,5 +112,21 @@ describe('notecopyscroll', () => {
     for (let i = 0; i < modes.length; ++i) {
       expect(pitchclassset7(modes[i])).toBe(ionian)
     }
+  })
+
+  it('transposenotesstring passes through non-note words', () => {
+    expect(transposenotesstring('cx dx c e', 1)).toBe('cx dx c# f')
+  })
+
+  it('transposenotesstring preserves semicolons and spacing', () => {
+    expect(transposenotesstring('c e g; d f a', 1)).toBe('c# f g#; d# f# a#')
+  })
+
+  it('transposenotesstring +c compact word transposes note after +', () => {
+    expect(transposenotesstring('+c d', 1)).toBe('+c# d#')
+  })
+
+  it('transposenotesstring returns string for mixed valid and invalid tokens', () => {
+    expect(transposenotesstring('c x z', 1)).toBe('c# x z')
   })
 })
