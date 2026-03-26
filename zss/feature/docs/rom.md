@@ -23,7 +23,7 @@ Addresses mirror paths: `editor/stats/player.md` → `editor:stats:player`.
 
 ## Help ROM (`help/*.md`)
 
-Help snippets rendered through the terminal use **Markdown** and [`parsemarkdownforwriteui`](../parse/markdownwriteui.ts) (e.g. empty book page list → `help:nopages`).
+Help snippets rendered through the terminal use **Markdown** and [`terminalwritemarkdownlines`](../parse/markdownterminal.ts) (e.g. empty book page list → `help:nopages`).
 
 ## Reference scrolls (`refscroll/*.md`)
 

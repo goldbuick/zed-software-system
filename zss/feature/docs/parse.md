@@ -32,11 +32,11 @@
 
 | File | Purpose |
 |------|---------|
-| `markdownscroll.ts` | `parsemarkdownforscroll` — for scroll gadget |
-| `markdownwriteui.ts` | `parsemarkdownforwriteui` — for writeui display |
+| `markdownscroll.ts` | `scrollwritemarkdownlines` — for scroll gadget |
+| `markdownterminal.ts` | `terminalwritemarkdownlines` — for terminal log (via `terminalwritelines`) |
 
 ## Consumed By
 
 - `zss/device/vm.ts` — parsewebfile, parsemarkdownforscroll
 - `zss/firmware/*` — loader commands
-- `zss/screens/panel/*` — parsemarkdownforwriteui
+- `zss/device/register.ts`, `zss/firmware/cli/commands/books.ts`, `zss/screens/panel/openit.tsx`, `zss/screens/terminal/openit.tsx` — `terminalwritemarkdownlines`
