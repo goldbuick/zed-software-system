@@ -7,7 +7,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
+import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   write,
@@ -287,7 +287,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         )
       } else {
         write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        parsemarkdownforwriteui(
+        terminalwritemarkdownlines(
           READ_CONTEXT.elementfocus,
           romread(`help:nopages`) ?? '',
         )

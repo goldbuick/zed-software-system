@@ -11,12 +11,11 @@ import {
 } from 'zss/feature/format'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+  scrolllinkescapefrag,
+  scrollwritelines,
+} from 'zss/gadget/data/scrollwritelines'
 import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
@@ -91,6 +90,60 @@ export function memorywriteconfig(name: string, value: string) {
   }
 }
 
+function parseadminselecttarget(target: string):
+  | { player: string; key: string }
+  | undefined {
+  const idx = target.indexOf(':')
+  if (idx <= 0 || idx >= target.length - 1) {
+    return undefined
+  }
+  const playertok = target.slice(0, idx)
+  const keytok = target.slice(idx + 1)
+  if (!CONFIG_KEYS.includes(keytok as (typeof CONFIG_KEYS)[number])) {
+    return undefined
+  }
+  return { player: playertok, key: keytok }
+}
+
+function quotescrollarg(s: string): string {
+  let buf = ''
+  for (let i = 0; i < s.length; ++i) {
+    const c = s.charAt(i)
+    if (c === '\\' || c === '"') {
+      buf += `\\${c}`
+    } else {
+      buf += c
+    }
+  }
+  return `"${buf}"`
+}
+
+registerhyperlinksharedbridge(
+  'admin',
+  'select',
+  (target) => {
+    const p = parseadminselecttarget(target)
+    if (!p) {
+      return 0
+    }
+    return memoryreadconfig(p.key) === 'on' ? 1 : 0
+  },
+  (target, val) => {
+    const p = parseadminselecttarget(target)
+    if (!p) {
+      return
+    }
+    const newval = val ? 'on' : 'off'
+    memorywriteconfig(p.key, newval)
+    registerstore(SOFTWARE, p.player, `config_${p.key}`, newval)
+    if (p.key === 'dev') {
+      memorywritehalt(newval === 'on')
+    } else if (p.key === 'gadget') {
+      registerinspector(SOFTWARE, p.player, newval === 'on')
+    }
+  },
+)
+
 let zstdenabled = false
 async function getzstdlib(): Promise<void> {
   if (!zstdenabled) {
@@ -133,16 +186,15 @@ export function memoryadminmenu(
   player: string,
   idletimes?: Record<string, number>,
 ) {
-  // get list of active players
   const isop = memoryisoperator(player)
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
   activelistvalues.add(memoryreadoperator())
   const activelist = [...activelistvalues]
 
-  // build userlist
-  gadgettext(player, `active player list`)
-  gadgettext(player, DIVIDER)
+  const rows: string[] = []
+  rows.push('active player list')
+  rows.push(DIVIDER)
   for (let i = 0; i < activelist.length; ++i) {
     const pid = activelist[i]
     const { user } = memoryreadflags(pid)
@@ -155,79 +207,53 @@ export function memoryadminmenu(
     const idletxt = idletimes ? formatidleseconds(idletimes[pid]) : ''
     const idletext = idletxt ? ` $GREY(idle ${idletxt})` : ''
     if (isop && ispresent(playerboard)) {
-      gadgethyperlink(
-        player,
-        'admingoto',
-        `${icontext} ${withuser} ${location}${idletext}`,
-        [pid],
+      rows.push(
+        `!@admingoto ${pid};${scrolllinkescapefrag(`${icontext} ${withuser} ${location}${idletext}`)}`,
       )
     } else {
-      gadgettext(
-        player,
-        `${icontext} ${withuser} ${isop ? location : ''}${idletext}`,
-      )
+      rows.push(`${icontext} ${withuser} ${isop ? location : ''}${idletext}`)
     }
   }
 
-  // build config list (from in-memory config; register owns storage read/write)
   const configlist = memoryreadconfigall()
-  const configstate: Record<string, string> = {}
-  gadgettext(player, ``)
-  gadgettext(player, `config list`)
-  gadgettext(player, DIVIDER)
+  rows.push('')
+  rows.push('config list')
+  rows.push(DIVIDER)
   for (let i = 0; i < configlist.length; ++i) {
-    const [key, value] = configlist[i]
-    gadgethyperlink(
-      player,
-      'admin',
-      key,
-      [key, 'select', 'off', '0', 'on', '1'],
-      (name) => {
-        const newval = configstate[name] ?? value
-        return newval === 'on' ? 1 : 0
-      },
-      (name, val) => {
-        const newval = val ? 'on' : 'off'
-        configstate[name] = newval
-        memorywriteconfig(name, newval)
-        registerstore(SOFTWARE, player, `config_${name}`, newval)
-        if (name === 'dev') {
-          memorywritehalt(newval === 'on')
-        } else if (name === 'gadget') {
-          registerinspector(SOFTWARE, player, newval === 'on')
-        }
-      },
+    const [key] = configlist[i]
+    const target = quotescrollarg(`${player}:${key}`)
+    rows.push(
+      `!@admin ${target} select off 0 on 1;${scrolllinkescapefrag(key)}`,
     )
   }
 
-  // build qr code
-  gadgettext(player, ``)
-  gadgettext(player, `multiplayer`)
-  gadgettext(player, DIVIDER)
+  rows.push('')
+  rows.push('multiplayer')
+  rows.push(DIVIDER)
   const topic = memoryreadtopic()
   if (topic) {
     const base =
       getclimode() && !isjoin() ? 'https://zed.cafe' : location.origin
     const joinurl = isjoin() ? location.href : `${base}/join/#${topic}`
-    gadgethyperlink(player, 'adminop', topic, ['copyit', joinurl])
-    gadgettext(player, ``)
+    rows.push(
+      `!@adminop copyit ${quotescrollarg(scrolllinkescapefrag(joinurl))};${scrolllinkescapefrag(topic)}`,
+    )
+    rows.push('')
     const ascii = qrlines(joinurl)
-    for (let i = 0; i < ascii.length; i++) {
-      gadgettext(player, ascii[i])
+    for (let j = 0; j < ascii.length; ++j) {
+      rows.push(ascii[j])
     }
   } else {
-    gadgettext(player, `session not active`)
+    rows.push('session not active')
     if (!isjoin()) {
-      gadgethyperlink(player, 'adminop', 'open multiplayer session', [
-        'joincode',
-      ])
+      rows.push(
+        `!@adminop joincode;${scrolllinkescapefrag('open multiplayer session')}`,
+      )
     }
-    gadgettext(player, ``)
+    rows.push('')
   }
 
-  const shared = gadgetstate(player)
-  shared.scrollname = 'cpu #admin'
-  shared.scroll = gadgetcheckqueue(player)
+  scrollwritelines(player, 'cpu #admin', rows.join('\n'), 'refscroll')
 }
 
 export function memoryexportbooksasjson(books: BOOK[]): string {

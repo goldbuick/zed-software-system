@@ -26,7 +26,7 @@ import {
 } from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
-import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
+import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import {
   storagenukecontent,
   storagereadconfigall,
@@ -126,7 +126,7 @@ function writesession(key: string, value: MAYBE<string>) {
 
 async function writewikilink() {
   const markdowntext = await fetchwiki('cli')
-  parsemarkdownforwriteui(myplayerid, markdowntext)
+  terminalwritemarkdownlines(myplayerid, markdowntext)
 }
 
 async function writehelphint() {
