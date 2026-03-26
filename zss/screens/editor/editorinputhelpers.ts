@@ -19,7 +19,6 @@ import { EDITOR_CODE_ROW, findcursorinrows } from 'zss/screens/tape/common'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
-  applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
 import { PT } from 'zss/words/types'
@@ -106,15 +105,10 @@ export function drawremotecursors(
       x > edge.left &&
       x < edge.right
     ) {
-      const atchar = x + y * context.width
-      applystrtoindex(atchar, String.fromCharCode(219), context)
-      applycolortoindexes(
-        atchar,
-        atchar,
-        ZSS_REMOTE_CURSOR_FG,
-        ZSS_REMOTE_CURSOR_BG,
-        context,
-      )
+      drawblockcursor(remoteXblink, remoteYblink, edge as TextEdge, context, {
+        fg: ZSS_REMOTE_CURSOR_FG,
+        bg: ZSS_REMOTE_CURSOR_BG,
+      })
 
       if (ispresent(presence.select) && presence.select !== presence.cursor) {
         drawRemoteSelection(presence, rows, xoffset, yoffset, edge, context)
