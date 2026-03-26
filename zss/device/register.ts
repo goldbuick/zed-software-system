@@ -26,7 +26,7 @@ import {
 } from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
-import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
+import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import {
   storagenukecontent,
   storagereadconfigall,
@@ -126,7 +126,7 @@ function writesession(key: string, value: MAYBE<string>) {
 
 async function writewikilink() {
   const markdowntext = await fetchwiki('cli')
-  parsemarkdownforwriteui(myplayerid, markdowntext)
+  terminalwritemarkdownlines(myplayerid, markdowntext)
 }
 
 async function writehelphint() {
@@ -659,18 +659,25 @@ export const register = createdevice(
       case 'copy':
         if (isstring(message.data)) {
           const clipboard = withclipboard()
-          if (ispresent(clipboard)) {
-            clipboard
-              .writeText(message.data)
-              .then(() =>
-                apitoast(
-                  register,
-                  message.player,
-                  `copied! ${message.data.slice(0, 200)}`,
-                ),
-              )
-              .catch((err) => console.error(err))
+          if (!ispresent(clipboard)) {
+            apitoast(register, message.player, '$redclipboard not available')
+            break
           }
+          clipboard
+            .writeText(message.data)
+            .then(() =>
+              apitoast(
+                register,
+                message.player,
+                `copied! ${message.data.slice(0, 200)}`,
+              ),
+            )
+            .catch((err) => {
+              console.error(err)
+              const msg =
+                err instanceof Error ? err.message : 'clipboard write failed'
+              apitoast(register, message.player, `$red${msg}`)
+            })
         }
         break
       case 'downloadjsonfile':

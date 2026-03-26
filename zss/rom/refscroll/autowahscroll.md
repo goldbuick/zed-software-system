@@ -16,3 +16,5 @@ $white Normal range of -40 to 0.
 $white Controls the loudness of the effect.  
 #autowah follower <seconds>  
 $white Sets the smoothing time for the effect.
+
+!effectsscroll hk b " B " next;$ltgreyBack to effects

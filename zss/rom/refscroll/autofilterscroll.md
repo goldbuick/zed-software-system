@@ -14,3 +14,5 @@ $white Sets the intensity of the effect.
 $white Sets the behavior of the filter.
 
 !openit https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type;filter types
+
+!effectsscroll hk b " B " next;$ltgreyBack to effects

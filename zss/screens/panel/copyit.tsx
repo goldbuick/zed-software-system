@@ -28,8 +28,6 @@ export function PanelCopyIt({
   }, [args, scroll])
 
   const tcolor = inputcolor(!!active)
-
-  // render output
   setuppanelitem(sidebar, row, context)
   tokenizeandwritetextformat(
     `  $purple$16 $yellowCOPYIT ${tcolor}${label}`,

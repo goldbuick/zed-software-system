@@ -7,3 +7,5 @@ $white The amount of time before the reverb
 $white is fully ramped in.  
 #reverb decay <seconds>  
 $white The duration of the reverb.  
+
+!effectsscroll hk b " B " next;$ltgreyBack to effects

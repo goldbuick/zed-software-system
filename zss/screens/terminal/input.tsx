@@ -43,9 +43,9 @@ import {
 } from 'zss/screens/tape/colors'
 import { setuplogitem } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
+import { drawblockcursor } from 'zss/screens/inputcommon'
 import {
   applycolortoindexes,
-  applystrtoindex,
   textformatreadedges,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
@@ -405,25 +405,10 @@ export function TerminalInput({
   }
 
   // draw cursor
-  const cx = edge.left + tapeterminal.xcursor
-  const cy = edge.top + tapeycursor
-  // visibility clip
-  if (
-    cy >= edge.top &&
-    cy <= edge.bottom &&
-    cx >= edge.left &&
-    cx <= edge.right
-  ) {
-    const atchar = cx + cy * context.width
-    applystrtoindex(atchar, String.fromCharCode(219), context)
-    applycolortoindexes(
-      atchar,
-      atchar,
-      COLOR.BLWHITE,
-      context.reset.bg,
-      context,
-    )
-  }
+  drawblockcursor(tapeterminal.xcursor, tapeycursor, edge, context, {
+    fg: COLOR.BLWHITE,
+    bg: context.reset.bg,
+  })
 
   // draw autocomplete (above input line when active)
   const autocompleteactive =

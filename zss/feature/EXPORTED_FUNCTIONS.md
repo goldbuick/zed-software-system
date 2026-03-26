@@ -131,7 +131,7 @@ Functions for manipulating board elements, terrain, and objects.
 
 ## File Parsing
 
-**Files:** `parse/file.ts`, `parse/ansi.ts`, `parse/chr.ts`, `parse/zzt.ts`, `parse/zzm.ts`, `parse/zztobj.ts`, `parse/ansilove/index.ts`, `parse/markdownscroll.ts`, `parse/markdownwriteui.ts`
+**Files:** `parse/file.ts`, `parse/ansi.ts`, `parse/chr.ts`, `parse/zzt.ts`, `parse/zzm.ts`, `parse/zztobj.ts`, `parse/ansilove/index.ts`, `parse/markdownscroll.ts`, `parse/markdownterminal.ts`
 
 Functions for parsing various file formats and converting them to internal representations.
 
@@ -165,8 +165,8 @@ Functions for parsing various file formats and converting them to internal repre
 - `sauceBytes(bytes)` - Extract SAUCE metadata from bytes
 
 ### Markdown Parsing
-- `parsemarkdownforscroll(player, content, scrollname, chip?)` - Parse markdown for scroll display; optional `chip` (default `refscroll`) passed to `scrollwritelines`
-- `parsemarkdownforwriteui(player, content)` - Parse markdown for writeui display
+- `scrollwritemarkdownlines(player, content, scrollname, chip?)` - Parse markdown for scroll display; optional `chip` (default `refscroll`) passed to `scrollwritelines`
+- `terminalwritemarkdownlines(player, content)` - Parse markdown for terminal log; batches through `terminalwritelines` on `SOFTWARE`
 
 ---
 

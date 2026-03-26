@@ -4,3 +4,5 @@
 $white 0-100, 0 is off, 100 is full volume  
 #fcrush rate <number>  
 $white 1 or higher, more rate, more crush
+
+!effectsscroll hk b " B " next;$ltgreyBack to effects

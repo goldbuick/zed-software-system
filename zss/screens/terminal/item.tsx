@@ -9,10 +9,8 @@ import {
   setuplogitem,
 } from 'zss/screens/tape/common'
 import {
-  HyperLinkText,
   hascenter,
   textformatreadedges,
-  tokenize,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
@@ -25,6 +23,7 @@ import { TerminalHotkey } from './hotkey'
 import { TerminalHyperlink } from './hyperlink'
 import { TerminalNumber } from './number'
 import { TerminalOpenIt } from './openit'
+import { parseloghyperlink } from './parseloghyperlink'
 import { TerminalRange } from './range'
 import { TerminalRunIt } from './runit'
 import { TerminalSelect } from './select'
@@ -69,21 +68,7 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
     const [prefix, ...content] = text.slice(1).split('!')
     const hyperlink = `${content.join('!')}`
 
-    let label = 'PRESS ME'
-    const words: string[] = []
-
-    const result = tokenize(hyperlink, true)
-    for (let i = 0; i < result.tokens.length; i++) {
-      const token = result.tokens[i]
-      switch (token.tokenType) {
-        case HyperLinkText:
-          label = token.image.slice(1)
-          break
-        default:
-          words.push(token.image)
-          break
-      }
-    }
+    const { label, words } = parseloghyperlink(hyperlink)
 
     // setup input props
     const [input, ...args] = words

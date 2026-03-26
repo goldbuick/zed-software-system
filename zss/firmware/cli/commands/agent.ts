@@ -15,7 +15,8 @@ import {
   resolveheavylmpresetfromsources,
 } from 'zss/feature/heavy/heavyllmpreset'
 import { pullstoragevarfrommain } from 'zss/feature/storagepull'
-import { write, writeheader, writerunit } from 'zss/feature/writeui'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import { writeheader } from 'zss/feature/writeui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -31,13 +32,11 @@ function showheavylmpresetmenu(player: string) {
       'vm',
     )
     const effective = resolveheavylmpresetfromsources(stored)
-    writeheader(SOFTWARE, player, 'heavy llm preset')
-    write(
-      SOFTWARE,
-      player,
-      `$grayCurrent$white $cyan${effective}$white $7 $grayEnter on a row to switch$white`,
-    )
+    writeheader(SOFTWARE, player, 'model selection')
     const ids = heavylmpresetids()
+    const menulines: string[] = [
+      `$grayCurrent$white $cyan${effective}$white $7 $grayEnter on a row to switch$white`,
+    ]
     for (let i = 0; i < ids.length; ++i) {
       const id = ids[i]
       const row = HEAVY_LLM_PRESETS[id]
@@ -46,8 +45,9 @@ function showheavylmpresetmenu(player: string) {
       const label = iscurrent
         ? `$green ${id}$white ${row.modelid} $gray(active)`
         : `$white ${id} ${row.modelid}`
-      writerunit(SOFTWARE, player, cmd, label)
+      menulines.push(`!runit ${cmd};${label}`)
     }
+    terminalwritelines(SOFTWARE, player, menulines.join('\n'))
   })
 }
 

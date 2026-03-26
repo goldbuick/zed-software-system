@@ -7,7 +7,8 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
+import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   write,
   writebbar,
@@ -268,19 +269,25 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       )
       if (mainbook.pages.length) {
         const sorted = memorylistcodepagessorted(mainbook)
-        sorted.forEach((page: CODE_PAGE) => {
+        // Batch `!pageopen …;…` rows only; framing stays imperative above.
+        const pagerows: string[] = []
+        for (let pi = 0; pi < sorted.length; ++pi) {
+          const page = sorted[pi]
           const name = memoryreadcodepagename(page)
           const type = memoryreadcodepagetypeasstring(page)
           const prefix = memorycodepagetoprefix(page)
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
+          pagerows.push(
             `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}${codepagepicksuffix(page)}`,
           )
-        })
+        }
+        terminalwritelines(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          pagerows.join('\n'),
+        )
       } else {
         write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        parsemarkdownforwriteui(
+        terminalwritemarkdownlines(
           READ_CONTEXT.elementfocus,
           romread(`help:nopages`) ?? '',
         )
@@ -296,16 +303,22 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             `${book.name} $GREEN${book.id}`,
           )
           const sorted = memorylistcodepagessorted(book)
-          sorted.forEach((page: CODE_PAGE) => {
+          // Batch `!pageopen …;…` rows only.
+          const pagerows: string[] = []
+          for (let pi = 0; pi < sorted.length; ++pi) {
+            const page = sorted[pi]
             const name = memoryreadcodepagename(page)
             const type = memoryreadcodepagetypeasstring(page)
             const prefix = memorycodepagetoprefix(page)
-            write(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
+            pagerows.push(
               `!pageopen ${page.id};$blue[${type}] ${prefix}$white${name}${codepagepicksuffix(page)}`,
             )
-          })
+          }
+          terminalwritelines(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            pagerows.join('\n'),
+          )
         }
       }
       return 0
@@ -319,9 +332,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         writesection(SOFTWARE, READ_CONTEXT.elementfocus, `search: ${q}`)
         const booklist = memoryreadbooklist()
         let count = 0
+        // Batch only `!payload;label` tape rows via terminalwritelines; keep writesection / writetext imperative.
         for (let i = 0; i < booklist.length; ++i) {
           const book = booklist[i]
           const sorted = memorylistcodepagessorted(book)
+          const matchrows: string[] = []
           for (let p = 0; p < sorted.length; ++p) {
             const page = sorted[p]
             const code = page.code ?? ''
@@ -339,14 +354,17 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
                   `${name}:${lineNum}$GREEN`,
                   `${snippet}${snippet.length >= line.trim().length ? '' : '...'}`,
                 ].join(' ')
-                write(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  `!pageopen ${page.id} ${ln};${label}`,
-                )
+                matchrows.push(`!pageopen ${page.id} ${ln};${label}`)
                 count++
               }
             }
+          }
+          if (matchrows.length) {
+            terminalwritelines(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              matchrows.join('\n'),
+            )
           }
         }
         for (let i = 0; i < booklist.length; ++i) {
@@ -400,10 +418,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
                 READ_CONTEXT.elementfocus,
                 `!boardopen ${boardpage.id};$blue[#goto]$white ${boardname}`,
               )
-            }
-            for (let o = 0; o < objectmatches.length; ++o) {
-              const label = objectmatches[o]
-              write(SOFTWARE, READ_CONTEXT.elementfocus, label)
+              terminalwritelines(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                objectmatches.join('\n'),
+              )
             }
           }
         }
@@ -428,19 +447,24 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           `${mainbook.name} $GREEN${mainbook.id}`,
         )
         const sorted = memorylistcodepagessorted(mainbook)
-        sorted
-          .filter(
-            (page: CODE_PAGE) =>
-              memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
-          )
-          .forEach((page: CODE_PAGE) => {
+        // Batch `!boardopen …;…` rows only.
+        const mainboardrows: string[] = []
+        for (let bi = 0; bi < sorted.length; ++bi) {
+          const page = sorted[bi]
+          if (memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD) {
             const name = memoryreadcodepagename(page)
-            write(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
+            mainboardrows.push(
               `!boardopen ${page.id};$blue[#goto]$white ${name}`,
             )
-          })
+          }
+        }
+        if (mainboardrows.length) {
+          terminalwritelines(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            mainboardrows.join('\n'),
+          )
+        }
         if (sorted.length === 0) {
           write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
           writetext(
@@ -466,19 +490,24 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             `${book.name} $GREEN${book.id}`,
           )
           const sorted = memorylistcodepagessorted(book)
-          sorted
-            .filter(
-              (page: CODE_PAGE) =>
-                memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
-            )
-            .forEach((page: CODE_PAGE) => {
+          // Batch `!boardopen …;…` rows only.
+          const boardrows: string[] = []
+          for (let bi = 0; bi < sorted.length; ++bi) {
+            const page = sorted[bi]
+            if (memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD) {
               const name = memoryreadcodepagename(page)
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
+              boardrows.push(
                 `!boardopen ${page.id};$blue[#goto]$white ${name}`,
               )
-            })
+            }
+          }
+          if (boardrows.length) {
+            terminalwritelines(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              boardrows.join('\n'),
+            )
+          }
         }
       }
       return 0

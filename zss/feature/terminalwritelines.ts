@@ -1,11 +1,11 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { write, writehyperlink } from 'zss/feature/writeui'
-import { scrolllinkunescapefrag } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
 /**
  * Terminal/write analogue of scrollwritelines: same newline handling,
  * blank lines (empty / whitespace-only physical lines) as empty log rows,
- * scrolllinkunescapefrag, and !payload;label vs plain zetext.
+ * `scrolllinkunescapefrag` from `zss/mapping/string`, and !payload;label vs plain zetext.
  *
  * @param chip Reserved for API parity with scrollwritelines; currently unused.
  */

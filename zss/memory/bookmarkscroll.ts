@@ -5,10 +5,8 @@ import {
   type ZssUrlBookmark,
 } from 'zss/feature/bookmarks'
 import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
-import {
-  scrolllinkescapefrag,
-  scrollwritelines,
-} from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 
 export function memorybookmarkscroll(
   player: string,
@@ -24,7 +22,7 @@ export function memorybookmarkscroll(
   for (let i = 0; i < urllist.length; ++i) {
     const idx = i + 1
     const b = urllist[i]
-    // PanelHotkey args (after chip/label/target/hk): shortcut, badge text, maybenoclose, ...data — use "" so href stays in data and scroll closes.
+    // PanelHotkey args (after chip/label/target/hk): shortcut, badge text, maybenoclose, ...data - use "" so href stays in data and scroll closes.
     rows.push(
       `!bookmarkurl hk ${idx} " ${idx} " "" ${scrolllinkescapefrag(b.href)};${scrolllinkescapefrag(`$CYANLOAD ${b.name}`)}`,
     )

@@ -5,12 +5,10 @@ import { registercopy, vmcli, vmloader } from 'zss/device/api'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsezipfilelist } from 'zss/feature/parse/file'
-import {
-  applyzedscroll,
-  parsemarkdownforscroll,
-} from 'zss/feature/parse/markdownscroll'
+import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { gadgetstate } from 'zss/gadget/data/api'
-import { scrolllinkescapefrag } from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
@@ -41,6 +39,9 @@ import { NAME } from 'zss/words/types'
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handlezztbridge } from './zzt'
+
+const MAIN_MENU_BACK_HYPERLINK =
+  '!menu hk b " B " next;$ltgreyBack to main menu'
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
   const { target, path } = parsetarget(message.target)
@@ -90,7 +91,13 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
               `!istargetless copyit ${escname};${scrolllinkescapefrag(label)}`,
             )
           }
-          applyzedscroll(message.player, rows.join('\n'), 'object list', 'list')
+          rows.push(MAIN_MENU_BACK_HYPERLINK)
+          scrollwritelines(
+            message.player,
+            'object list',
+            rows.join('\n').trim(),
+            'list',
+          )
           break
         }
         case 'terrainlistscroll': {
@@ -106,47 +113,56 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
               `!istargetless copyit ${escname};${scrolllinkescapefrag(label)}`,
             )
           }
-          applyzedscroll(
+          rows.push(MAIN_MENU_BACK_HYPERLINK)
+          scrollwritelines(
             message.player,
-            rows.join('\n'),
             'terrain list',
+            rows.join('\n').trim(),
             'list',
           )
           break
         }
         case 'charscroll': {
-          applyzedscroll(
+          scrollwritelines(
             message.player,
-            '!char charedit;char',
             'chars',
+            '!char charedit;char',
             'refscroll',
           )
           break
         }
         case 'colorscroll': {
-          applyzedscroll(
+          scrollwritelines(
             message.player,
-            '!color coloredit;color',
             'colors',
+            '!color coloredit;color',
             'refscroll',
           )
           break
         }
         case 'bgscroll': {
-          applyzedscroll(message.player, '!bg bgedit;bg', 'bgs', 'refscroll')
+          scrollwritelines(
+            message.player,
+            'bgs',
+            '!bg bgedit;bg',
+            'refscroll',
+          )
           break
         }
         default: {
           doasync(vm, message.player, async () => {
             const content = romread(`refscroll:${path}`)
             if (!ispresent(content)) {
-              const shared = gadgetstate(message.player)
-              shared.scrollname = '$7$7$7 please wait'
-              shared.scroll = ['loading $7$7$7']
+              scrollwritelines(
+                message.player,
+                '$7$7$7 please wait',
+                'loading $7$7$7',
+                'refscroll',
+              )
               const markdowntext = await fetchwiki(path)
-              parsemarkdownforscroll(message.player, markdowntext, path)
+              scrollwritemarkdownlines(message.player, markdowntext, path)
             } else {
-              parsemarkdownforscroll(message.player, content, path)
+              scrollwritemarkdownlines(message.player, content, path)
             }
             const shared = gadgetstate(message.player)
             shared.scrollname = path

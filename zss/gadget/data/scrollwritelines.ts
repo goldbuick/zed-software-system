@@ -4,19 +4,12 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
+import {
+  scrolllinkescapefrag,
+  scrolllinkunescapefrag,
+} from 'zss/mapping/string'
 
-/** Zed `NumberLiteral` for ASCII `;` (59); use inside `!left;right` when payload or label contains a semicolon. */
-const SCROLL_SEMI_ZED = '$59'
-
-/** Escape `;` for storage in the command or label segment of a bang scroll line. */
-export function scrolllinkescapefrag(s: string): string {
-  return s.replaceAll(';', SCROLL_SEMI_ZED)
-}
-
-/** Undo `scrolllinkescapefrag` after splitting on the first raw `;`. `$590` etc. stay unchanged. */
-export function scrolllinkunescapefrag(s: string): string {
-  return s.replace(/\$59(?!\d)/g, ';')
-}
+export { scrolllinkescapefrag, scrolllinkunescapefrag }
 
 /** Whitespace-separated tokens; `"..."` keeps inner spaces. Inside quotes, `\"` and `\\` are escapes. */
 export function scrolllinksplittokens(s: string): string[] {
@@ -62,6 +55,9 @@ export function scrolllinksplittokens(s: string): string[] {
   return out
 }
 
+/** `!@mychip cmd args;label` uses `mychip` for that row; default `chip` from `scrollwritelines` otherwise. */
+const SCROLL_LINE_ATCHIP_RE = /^!@([a-zA-Z][a-zA-Z0-9_]*)\s+(.+)$/
+
 function pushscrollhyperlink(
   player: string,
   chip: string,
@@ -70,6 +66,28 @@ function pushscrollhyperlink(
 ) {
   const parts = scrolllinksplittokens(leftwithbang.trimStart().slice(1))
   gadgethyperlink(player, chip, label, parts)
+}
+
+/** One Zed scroll line `!cmd args;label` (optional `!@chip …`) → `gadgethyperlink`. No-op if not a bang hyperlink line. */
+export function gadgethyperlinkfromzedline(
+  player: string,
+  line: string,
+  chip = 'refscroll',
+): void {
+  const trimmed = line.trim()
+  if (!trimmed.startsWith('!') || !trimmed.includes(';')) {
+    return
+  }
+  const semi = trimmed.indexOf(';')
+  let left = scrolllinkunescapefrag(trimmed.slice(0, semi).trimEnd())
+  const label = scrolllinkunescapefrag(trimmed.slice(semi + 1).trim())
+  let linechip = chip
+  const atchip = SCROLL_LINE_ATCHIP_RE.exec(left)
+  if (atchip) {
+    linechip = atchip[1]
+    left = `!${atchip[2].trimStart()}`
+  }
+  pushscrollhyperlink(player, linechip, left, label)
 }
 
 /** Whitespace-only physical lines become blank scroll rows (`gadgettext` empty string). */
@@ -85,10 +103,7 @@ export function scrollwritelines(
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
     if (line.startsWith('!') && line.includes(';')) {
-      const semi = line.indexOf(';')
-      const left = scrolllinkunescapefrag(line.slice(0, semi).trimEnd())
-      const label = scrolllinkunescapefrag(line.slice(semi + 1).trim())
-      pushscrollhyperlink(player, chip, left, label)
+      gadgethyperlinkfromzedline(player, line, chip)
     } else {
       gadgettext(player, line)
     }

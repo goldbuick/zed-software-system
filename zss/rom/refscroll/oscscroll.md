@@ -44,3 +44,5 @@ $white spread along the given range.
 #synth spread <cents>  
 $white This signals the number of cents between  
 $white oscillators.
+
+!synthscroll hk b " B " next;$ltgreyBack to synth

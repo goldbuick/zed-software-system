@@ -2,7 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
 import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { romread } from 'zss/rom'
 
 jest.mock('zss/config', () => ({
@@ -25,10 +25,6 @@ jest.mock('zss/config', () => ({
 
 jest.mock('zss/rom', () => ({
   romread: jest.fn(),
-}))
-
-jest.mock('zss/feature/parse/markdownscroll', () => ({
-  applyzedscroll: jest.fn(),
 }))
 
 jest.mock('zss/device/api', () => ({
@@ -65,21 +61,21 @@ describe('handlerefscroll', () => {
 
   beforeEach(() => {
     jest.mocked(romread).mockReset()
-    jest.mocked(applyzedscroll).mockClear()
+    jest.mocked(scrollwritelines).mockClear()
     jest.mocked(apitoast).mockClear()
   })
 
-  it('applies ROM refscroll:menu via applyzedscroll', () => {
+  it('applies ROM refscroll:menu via scrollwritelines', () => {
     jest
       .mocked(romread)
       .mockImplementation((key: string) =>
         key === 'refscroll:menu' ? '!x y;$lbl\n' : undefined,
       )
     handlerefscroll(vm, message)
-    expect(applyzedscroll).toHaveBeenCalledWith(
+    expect(scrollwritelines).toHaveBeenCalledWith(
       'p1',
-      '!x y;$lbl',
       '#help or $meta+h',
+      '!x y;$lbl',
       'refscroll',
     )
     expect(apitoast).not.toHaveBeenCalled()
@@ -88,7 +84,7 @@ describe('handlerefscroll', () => {
   it('toasts when refscroll:menu is missing or blank', () => {
     jest.mocked(romread).mockReturnValue(undefined)
     handlerefscroll(vm, message)
-    expect(applyzedscroll).not.toHaveBeenCalled()
+    expect(scrollwritelines).not.toHaveBeenCalled()
     expect(apitoast).toHaveBeenCalledWith(
       vm,
       'p1',

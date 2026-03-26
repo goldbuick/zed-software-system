@@ -1,5 +1,7 @@
 import {
   parsetarget,
+  scrolllinkescapefrag,
+  scrolllinkunescapefrag,
   searchintext,
   stringsplice,
   totarget,
@@ -113,6 +115,17 @@ describe('string', () => {
     it('returns target and path matching totarget', () => {
       expect(parsetarget('a:b:c')).toEqual({ target: 'a', path: 'b:c' })
       expect(parsetarget('self')).toEqual({ target: 'self', path: 'self' })
+    })
+  })
+
+  describe('scrolllinkescapefrag / scrolllinkunescapefrag', () => {
+    it('roundtrips semicolons in fragments', () => {
+      const raw = 'a;b'
+      expect(scrolllinkunescapefrag(scrolllinkescapefrag(raw))).toBe(raw)
+    })
+
+    it('does not treat $590 as escaped semicolon', () => {
+      expect(scrolllinkunescapefrag('$590')).toBe('$590')
     })
   })
 })

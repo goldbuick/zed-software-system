@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
@@ -32,10 +31,10 @@ export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
     return
   }
   // refscroll:menu is Zed !command;label lines (readable next to other built-in scroll strings).
-  applyzedscroll(
+  scrollwritelines(
     message.player,
-    content.trim(),
     '#help or $meta+h',
+    content.trim(),
     'refscroll',
   )
 }

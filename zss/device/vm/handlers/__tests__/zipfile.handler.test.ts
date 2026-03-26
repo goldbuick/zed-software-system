@@ -2,7 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { handlereadzipfilelist } from 'zss/device/vm/handlers/zipfile'
 import { readzipfilelist } from 'zss/feature/parse/file'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 
 jest.mock('zss/gadget/data/api', () => ({
   registerhyperlinksharedbridge: jest.fn(),
@@ -14,8 +14,9 @@ jest.mock('zss/feature/parse/file', () => ({
   markzipfilelistitem: jest.fn(),
 }))
 
-jest.mock('zss/feature/parse/markdownscroll', () => ({
-  applyzedscroll: jest.fn(),
+jest.mock('zss/gadget/data/scrollwritelines', () => ({
+  scrollwritelines: jest.fn(),
+  scrolllinkescapefrag: (s: string) => s.replaceAll(';', '$59'),
 }))
 
 describe('handlereadzipfilelist', () => {
@@ -30,21 +31,21 @@ describe('handlereadzipfilelist', () => {
   }
 
   beforeEach(() => {
-    jest.mocked(applyzedscroll).mockClear()
+    jest.mocked(scrollwritelines).mockClear()
     jest.mocked(readzipfilelist).mockReset()
   })
 
-  it('calls applyzedscroll with import row and quoted select for filenames with spaces', () => {
+  it('calls scrollwritelines with import row and quoted select for filenames with spaces', () => {
     jest.mocked(readzipfilelist).mockReturnValue([['txt', 'My Doc.txt']])
     handlereadzipfilelist(vm, message)
-    const content = jest.mocked(applyzedscroll).mock.calls[0][1]
+    const content = jest.mocked(scrollwritelines).mock.calls[0][2]
     expect(content).toContain('!"my doc.txt" select NO 0 YES 1')
     expect(content).toContain('!importfiles;')
     expect(content).toContain('My Doc.txt')
-    expect(jest.mocked(applyzedscroll)).toHaveBeenCalledWith(
+    expect(jest.mocked(scrollwritelines)).toHaveBeenCalledWith(
       'p1',
-      content,
       'zipfilelist',
+      content,
       'zipfilelist',
     )
   })
@@ -52,7 +53,7 @@ describe('handlereadzipfilelist', () => {
   it('quotes simple ascii filenames', () => {
     jest.mocked(readzipfilelist).mockReturnValue([['json', 'a.json']])
     handlereadzipfilelist(vm, message)
-    const content = jest.mocked(applyzedscroll).mock.calls[0][1]
+    const content = jest.mocked(scrollwritelines).mock.calls[0][2]
     expect(content).toContain('!"a.json" select NO 0 YES 1')
   })
 
@@ -62,7 +63,7 @@ describe('handlereadzipfilelist', () => {
       ['txt', 'keep.txt'],
     ])
     handlereadzipfilelist(vm, message)
-    const content = jest.mocked(applyzedscroll).mock.calls[0][1]
+    const content = jest.mocked(scrollwritelines).mock.calls[0][2]
     expect(content).not.toContain('skip.txt')
     expect(content).toContain('keep.txt')
     expect(content).toContain('!"keep.txt" select NO 0 YES 1')

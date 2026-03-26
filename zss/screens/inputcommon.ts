@@ -82,6 +82,10 @@ export type TextEdge = {
   height?: number
 }
 
+/** CP437 full block — single glyph used for text cursors. */
+const CURSOR_BLOCK_CHAR_CODE = 219
+const CURSOR_BLOCK_CHAR = String.fromCharCode(CURSOR_BLOCK_CHAR_CODE)
+
 /**
  * Draw a single block cursor character at (x, y) in screen coordinates relative to edge.
  * Caller provides edge and context; optional fg/bg (defaults: white, DKBLUE or context.reset.bg).
@@ -101,7 +105,7 @@ export function drawblockcursor(
   const atchar = px + py * context.width
   const fg = options?.fg ?? COLOR.WHITE
   const bg = options?.bg ?? context.reset.bg
-  applystrtoindex(atchar, String.fromCharCode(219), context)
+  applystrtoindex(atchar, CURSOR_BLOCK_CHAR, context)
   applycolortoindexes(atchar, atchar, fg, bg, context)
 }
 

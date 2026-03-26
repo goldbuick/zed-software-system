@@ -10,4 +10,5 @@
 !notesscroll hk n " N " next;notes
 !synthscroll hk s " S " next;synth
 !effectsscroll hk e " E " next;effects
+!notescalesscroll hk l " L " next;scales
 !voicescroll hk v " V " next;tts voices

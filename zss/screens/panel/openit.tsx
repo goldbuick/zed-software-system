@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { fetchwiki } from 'zss/feature/fetchwiki'
-import { parsemarkdownforwriteui } from 'zss/feature/parse/markdownwriteui'
+import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { UserInput } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
@@ -27,7 +27,7 @@ export function PanelOpenIt({
         case 'wiki':
           doasync(SOFTWARE, player, async () => {
             const markdowntext = await fetchwiki(content)
-            parsemarkdownforwriteui(player, markdowntext)
+            terminalwritemarkdownlines(player, markdowntext)
           })
           break
         case 'inline':

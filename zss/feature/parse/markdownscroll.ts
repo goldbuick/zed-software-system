@@ -2,10 +2,8 @@ import {
   MarkdownZedSink,
   parsemarkdownwithzetextsink,
 } from 'zss/feature/parse/markdownzetext'
-import {
-  scrolllinkescapefrag,
-  scrollwritelines,
-} from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 
 function banglinkrow(command: string, label: string): string {
   return `!${scrolllinkescapefrag(command)};${scrolllinkescapefrag(label)}`
@@ -22,7 +20,7 @@ function createscrollsink(lines: string[]): MarkdownZedSink {
   }
 }
 
-export function parsemarkdownforscroll(
+export function scrollwritemarkdownlines(
   player: string,
   content: string,
   scrollname: string,
@@ -31,18 +29,4 @@ export function parsemarkdownforscroll(
   const lines: string[] = []
   parsemarkdownwithzetextsink(createscrollsink(lines), content)
   scrollwritelines(player, scrollname, lines.join('\n'), chip)
-}
-
-/**
- * Scroll body is already Zed tape lines: plain zetext and `!command;label` hyperlinks
- * (same rules as scrollwritelines). Use for built-in VM scroll strings;
- * use parsemarkdownforscroll for CommonMark (refscroll help prose, wiki fetch, etc.).
- */
-export function applyzedscroll(
-  player: string,
-  content: string,
-  scrollname: string,
-  chip = 'refscroll',
-): void {
-  scrollwritelines(player, scrollname, content.trim(), chip)
 }

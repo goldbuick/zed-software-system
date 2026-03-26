@@ -18,3 +18,5 @@ $white sets your display name when talking to others
 $white starts a multi-player session showing a  
 $white QR code. It also provides are sharable link  
 $white you can give to other to join the game.
+
+!menu hk b " B " next;$ltgreyBack to main menu

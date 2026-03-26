@@ -2,11 +2,13 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { handledefault } from 'zss/device/vm/handlers/default'
 import { parsezipfilelist } from 'zss/feature/parse/file'
-import { applyzedscroll } from 'zss/feature/parse/markdownscroll'
+import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistcodepagewithtype } from 'zss/memory/codepages'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
+import { romread } from 'zss/rom'
 
 jest.mock('zss/config', () => ({
   RUNTIME: {
@@ -31,8 +33,12 @@ jest.mock('zss/feature/parse/file', () => ({
 }))
 
 jest.mock('zss/feature/parse/markdownscroll', () => ({
-  applyzedscroll: jest.fn(),
-  parsemarkdownforscroll: jest.fn(),
+  scrollwritemarkdownlines: jest.fn(),
+}))
+
+jest.mock('zss/gadget/data/scrollwritelines', () => ({
+  scrollwritelines: jest.fn(),
+  scrolllinkescapefrag: (s: string) => s.replaceAll(';', '$59'),
 }))
 
 jest.mock('zss/feature/fetchwiki', () => ({
@@ -41,10 +47,14 @@ jest.mock('zss/feature/fetchwiki', () => ({
 
 jest.mock('zss/gadget/data/api', () => ({
   gadgetstate: jest.fn(() => ({ scrollname: '', scroll: [] })),
+  gadgethyperlink: jest.fn(),
+  gadgetcheckqueue: jest.fn(() => []),
+  registerhyperlinksharedbridge: jest.fn(),
 }))
 
 jest.mock('zss/device/api', () => ({
   registercopy: jest.fn(),
+  apitoast: jest.fn(),
   vmcli: jest.fn(),
   vmloader: jest.fn(),
 }))
@@ -151,7 +161,10 @@ describe('handledefault refscroll', () => {
   const vm = {} as DEVICE
 
   beforeEach(() => {
-    jest.mocked(applyzedscroll).mockClear()
+    jest.mocked(scrollwritelines).mockClear()
+    jest.mocked(scrollwritemarkdownlines).mockClear()
+    jest.mocked(romread).mockReset()
+    jest.mocked(romread).mockReturnValue(undefined)
     jest.mocked(memoryadminmenu).mockClear()
     jest.mocked(memorylistcodepagewithtype).mockReset()
     jest.mocked(memorylistcodepagewithtype).mockReturnValue([])
@@ -159,9 +172,9 @@ describe('handledefault refscroll', () => {
   })
 
   it.each([
-    ['refscroll:charscroll', '!char charedit;char', 'chars', 'refscroll'],
-    ['refscroll:colorscroll', '!color coloredit;color', 'colors', 'refscroll'],
-    ['refscroll:bgscroll', '!bg bgedit;bg', 'bgs', 'refscroll'],
+    ['refscroll:charscroll', `!char charedit;char`, 'chars', 'refscroll'],
+    ['refscroll:colorscroll', `!color coloredit;color`, 'colors', 'refscroll'],
+    ['refscroll:bgscroll', `!bg bgedit;bg`, 'bgs', 'refscroll'],
   ] as const)('%s applies zed scroll', (target, body, title, chip) => {
     handledefault(vm, {
       session: '',
@@ -171,7 +184,7 @@ describe('handledefault refscroll', () => {
       target,
       data: undefined,
     })
-    expect(applyzedscroll).toHaveBeenCalledWith('p1', body, title, chip)
+    expect(scrollwritelines).toHaveBeenCalledWith('p1', title, body, chip)
   })
 
   it('refscroll:adminscroll opens admin menu', () => {
@@ -198,7 +211,12 @@ describe('handledefault refscroll', () => {
     expect(memorylistcodepagewithtype).toHaveBeenCalledWith(
       CODE_PAGE_TYPE.OBJECT,
     )
-    expect(applyzedscroll).toHaveBeenCalledWith('p1', '', 'object list', 'list')
+    expect(scrollwritelines).toHaveBeenCalledWith(
+      'p1',
+      'object list',
+      '!menu hk b " B " next;$ltgreyBack to main menu',
+      'list',
+    )
   })
 
   it('refscroll:terrainlistscroll with empty pages', () => {
@@ -213,10 +231,10 @@ describe('handledefault refscroll', () => {
     expect(memorylistcodepagewithtype).toHaveBeenCalledWith(
       CODE_PAGE_TYPE.TERRAIN,
     )
-    expect(applyzedscroll).toHaveBeenCalledWith(
+    expect(scrollwritelines).toHaveBeenCalledWith(
       'p1',
-      '',
       'terrain list',
+      '!menu hk b " B " next;$ltgreyBack to main menu',
       'list',
     )
   })
@@ -234,8 +252,57 @@ describe('handledefault refscroll', () => {
       target: 'refscroll:objectlistscroll',
       data: undefined,
     })
-    const [, content] = jest.mocked(applyzedscroll).mock.calls[0]
+    const [, , content] = jest.mocked(scrollwritelines).mock.calls[0]
     expect(content).toContain('!istargetless copyit obj1;')
     expect(content).toContain('@obj1$ltgrey hint line')
+  })
+
+  it('refscroll:notescalesscroll uses parsemarkdownforscroll when ROM exists', async () => {
+    jest.mocked(romread).mockImplementation((addr: string) => {
+      if (addr === 'refscroll:notescalesscroll') {
+        return '$ltgrey intro\n\n[Major](<notescales_major>)\n'
+      }
+      return undefined
+    })
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: 'refscroll:notescalesscroll',
+      data: undefined,
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(scrollwritelines).not.toHaveBeenCalled()
+    expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
+      'p1',
+      expect.stringContaining('notescales_major'),
+      'notescalesscroll',
+    )
+  })
+
+  it('refscroll:notescales_major uses parsemarkdownforscroll when ROM exists', async () => {
+    jest.mocked(romread).mockImplementation((addr: string) => {
+      if (addr === 'refscroll:notescales_major') {
+        return '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit #play cdefgab+c;$greenC major'
+      }
+      return undefined
+    })
+    handledefault(vm, {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: 'refscroll:notescales_major',
+      data: undefined,
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
+      'p1',
+      expect.stringContaining('!istargetless copyit'),
+      'notescales_major',
+    )
   })
 })
