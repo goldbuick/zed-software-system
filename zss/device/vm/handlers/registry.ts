@@ -68,6 +68,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   clearscroll: handleclearscroll,
   halt: handlehalt,
   tick: handletick,
+  ticktock: handletick,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,

@@ -19,3 +19,4 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 - **Performance** tab: main-thread and GPU work; complements User Timing entries from `perfmeasure`.
 - **React DevTools → Profiler**: component-level commits without app changes.
+- **Chrome traces**: for numbers closer to production, record a Performance profile **without** starting **CPU sampling** (avoids `CpuProfiler::StartProfiling` / large `v8::Debugger::AsyncTaskRun` slices in the trace).

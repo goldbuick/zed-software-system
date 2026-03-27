@@ -3,6 +3,8 @@ import { TICK_RATE } from 'zss/mapping/tick'
 
 const clockdevice = createdevice('clock')
 
+const MIN_TIMER_MS = 1
+
 // tracking
 let timestamp = 0
 
@@ -17,21 +19,24 @@ function wake() {
   const delta = now - previous
 
   acc += delta
-  if (acc >= TICK_RATE) {
-    acc %= TICK_RATE
-    clockdevice.emit('', 'tick', timestamp)
-    clockdevice.emit('', 'tock', timestamp)
+  while (acc >= TICK_RATE) {
+    acc -= TICK_RATE
+    clockdevice.emit('', 'ticktock', timestamp)
     ++timestamp
   }
 
   second += delta
-  if (second >= 1000) {
+  while (second >= 1000) {
     second -= 1000
     clockdevice.emit('', 'second', timestamp)
   }
 
   previous = now
-  setTimeout(wake, 2)
+
+  const totick = TICK_RATE - acc
+  const tosecond = 1000 - second
+  const delay = Math.max(MIN_TIMER_MS, Math.min(totick, tosecond))
+  setTimeout(wake, delay)
 }
 
 // start clock
