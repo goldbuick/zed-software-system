@@ -2,7 +2,7 @@ import type { DEVICE } from 'zss/device'
 import { type MESSAGE, vmcodeaddress } from 'zss/device/api'
 import { modemreadcodepagetextifpresent } from 'zss/device/modem'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardoperations'
+import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import {
   memoryreadcodepagedata,

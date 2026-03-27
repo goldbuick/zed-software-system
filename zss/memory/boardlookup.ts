@@ -1,7 +1,7 @@
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, NAME } from 'zss/words/types'
 
-import { memoryboardelementindex } from './boardoperations'
+import { memoryboardelementindex } from './boardaccess'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
 import {

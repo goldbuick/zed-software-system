@@ -15,13 +15,12 @@ import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
+import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import {
   memorycreateboardobject,
-  memoryreadelement,
-  memoryreadterrain,
   memorysafedeleteelement,
   memorywriteterrain,
-} from './boardoperations'
+} from './boardlifecycle'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import {

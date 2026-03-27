@@ -6,11 +6,8 @@ import { ispresent } from 'zss/mapping/types'
 import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, DIR } from 'zss/words/types'
 
-import {
-  memoryboardelementindex,
-  memoryevaldir,
-  memoryreadobject,
-} from './boardoperations'
+import { memoryboardelementindex, memoryreadobject } from './boardaccess'
+import { memoryevaldir } from './boarddirection'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import {
   LIGHTING_RAY_TILE_YSCALE,

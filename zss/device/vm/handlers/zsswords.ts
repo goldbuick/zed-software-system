@@ -22,7 +22,7 @@ import { memoryreadflags } from 'zss/memory/flags'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
-import { colorconsts } from 'zss/words/color'
+import { colorconsts } from 'zss/words/colorconsts'
 import { DIR_CONSTS } from 'zss/words/dir'
 import { ARG_TYPE } from 'zss/words/types'
 

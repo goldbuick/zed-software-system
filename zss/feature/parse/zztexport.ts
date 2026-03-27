@@ -4,8 +4,8 @@
  */
 
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
-import { memoryreadelement } from 'zss/memory/boardoperations'
 import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
 import {
   memoryreadcodepagedata,

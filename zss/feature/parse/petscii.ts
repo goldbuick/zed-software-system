@@ -6,7 +6,7 @@
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
-import { memorywriteterrain } from 'zss/memory/boardoperations'
+import { memorywriteterrain } from 'zss/memory/boardlifecycle'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,

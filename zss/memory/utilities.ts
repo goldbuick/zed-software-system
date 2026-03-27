@@ -20,7 +20,7 @@ import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { memoryreadobject } from './boardoperations'
+import { memoryreadobject } from './boardaccess'
 import {
   memoryexportbook,
   memoryimportbook,
@@ -90,9 +90,9 @@ export function memorywriteconfig(name: string, value: string) {
   }
 }
 
-function parseadminselecttarget(target: string):
-  | { player: string; key: string }
-  | undefined {
+function parseadminselecttarget(
+  target: string,
+): { player: string; key: string } | undefined {
   const idx = target.indexOf(':')
   if (idx <= 0 || idx >= target.length - 1) {
     return undefined

@@ -2,13 +2,12 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
+import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
-  memoryreadelement,
-  memoryreadterrain,
   memorysafedeleteelement,
   memorywriteterrain,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardlifecycle'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

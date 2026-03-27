@@ -28,14 +28,13 @@ import {
 } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
-import { memoryboardelementisobject } from './boardelement'
 import {
   memoryboardelementindex,
   memoryreadelement,
   memoryreadelementbyidorindex,
-  memorysafedeleteelement,
-  memorywriteterrain,
-} from './boardoperations'
+} from './boardaccess'
+import { memoryboardelementisobject } from './boardelement'
+import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memoryreadelementcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'

@@ -4,16 +4,18 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { dirfrompts, ptapplydir } from 'zss/words/dir'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { memoryboardelementisobject } from './boardelement'
 import {
   memoryboardelementindex,
-  memorydeleteboardobject,
-  memoryplayerblockedbyedge,
-  memoryplayerwaszapped,
   memoryreadobject,
   memoryreadterrain,
-} from './boardoperations'
+} from './boardaccess'
+import { memoryboardelementisobject } from './boardelement'
+import { memorydeleteboardobject } from './boardlifecycle'
 import { memorycheckelementpushable, memoryreadelementstat } from './boards'
+import {
+  memoryplayerblockedbyedge,
+  memoryplayerwaszapped,
+} from './boardtransitions'
 import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
@@ -340,6 +342,8 @@ type BOOK_RUN_CODE = {
   id: string
   code: string
   type: CODE_PAGE_TYPE
+  pass?: 'tick' | 'draw'
+  label?: string
 }
 
 export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE

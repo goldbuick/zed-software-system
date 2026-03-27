@@ -9,13 +9,13 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 import { NAME, PT } from 'zss/words/types'
 
-import { memoryboardelementisobject } from './boardelement'
 import {
   memoryreadelement,
   memoryreadelementbyidorindex,
   memoryreadobject,
-  memorysafedeleteelement,
-} from './boardoperations'
+} from './boardaccess'
+import { memoryboardelementisobject } from './boardelement'
+import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
 import { memoryreadbookplayerboards } from './playermanagement'
 import { memoryelementtologprefix } from './rendering'

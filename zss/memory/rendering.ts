@@ -22,11 +22,11 @@ import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
+import { memoryreadobject } from './boardaccess'
 import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from './boardlighting'
-import { memoryreadobject, memoryupdateboardvisuals } from './boardoperations'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,
@@ -34,6 +34,7 @@ import {
   memoryreadoverboard,
   memoryreadunderboard,
 } from './boards'
+import { memoryupdateboardvisuals } from './boardvisuals'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   memoryreadcodepagedata,

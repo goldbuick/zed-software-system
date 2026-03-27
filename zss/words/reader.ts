@@ -1,5 +1,5 @@
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryevaldir } from 'zss/memory/boardoperations'
+import { memoryevaldir } from 'zss/memory/boarddirection'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
 import {
@@ -25,6 +25,8 @@ export const READ_CONTEXT = {
   elementid: '',
   elementisplayer: false,
   elementfocus: '',
+  // draw pass: #color/#char/#bg alias to display* stats
+  usedisplaystats: false,
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,

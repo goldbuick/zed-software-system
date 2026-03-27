@@ -45,7 +45,7 @@ import {
   memorycreateboard,
   memoryexportboard,
   memoryimportboard,
-} from './boardoperations'
+} from './boardlifecycle'
 import {
   BITMAP_KEYS,
   BOARD_ELEMENT,
@@ -334,6 +334,7 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
         codepage.terrain = memorycreateboardelement()
       }
       codepage.terrain.id = codepage.id
+      codepage.terrain.code = codepage.code
       codepage.terrain.name = memoryreadcodepagename(codepage)
       codepage.terrain.category = CATEGORY.ISTERRAIN
       memoryapplyelementstats(

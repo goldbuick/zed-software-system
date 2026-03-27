@@ -24,14 +24,14 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
-import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
-import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
-import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memoryreadelement,
   memoryreadelementbyidorindex,
-  memorysafedeleteelement,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardaccess'
+import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
+import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
+import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
+import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memoryreadboardbyevaldir,
   memoryreadelementstat,
@@ -50,13 +50,14 @@ import { BOARD_ELEMENT } from 'zss/memory/types'
 import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import {
-  colorconsts,
   isstrcolor,
   mapcolortostrcolor,
   mapstrcolortoattributes,
 } from 'zss/words/color'
+import { colorconsts } from 'zss/words/colorconsts'
 import { DIR_CONSTS, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
+import { mapdisplaystatname } from 'zss/words/displaystatname'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { ARG_TYPE, COLOR, NAME, PT, WORD } from 'zss/words/types'
@@ -414,10 +415,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
       default: {
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
-          // check standard stat names
+          const statname = mapdisplaystatname(
+            READ_CONTEXT.usedisplaystats,
+            name,
+          ) as keyof BOARD_ELEMENT
           const maybevalue = memoryreadelementstat(
             READ_CONTEXT.element,
-            name as keyof BOARD_ELEMENT,
+            statname,
           )
           return [true, maybevalue ?? 0] // fallback to zero as default value from a stat
         }
@@ -637,7 +641,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // we have to check the object's stats first
         if (STANDARD_STAT_NAMES.has(name)) {
           if (ispresent(READ_CONTEXT.element)) {
-            switch (name) {
+            const statname = mapdisplaystatname(
+              READ_CONTEXT.usedisplaystats,
+              name,
+            )
+            switch (statname) {
               case 'color':
                 if (isstrcolor(value)) {
                   const { color, bg } = mapstrcolortoattributes(value)
@@ -690,7 +698,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
                 break
               }
               default:
-                READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
+                READ_CONTEXT.element[statname as keyof BOARD_ELEMENT] = value
                 break
             }
           }

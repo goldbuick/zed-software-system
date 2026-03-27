@@ -12,12 +12,9 @@ import {
 } from 'zss/words/kind'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
-import {
-  memoryptwithinboard,
-  memoryreadelement,
-  memoryreadterrain,
-} from './boardoperations'
+import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import { memoryreadelementstat } from './boards'
+import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   BOARD,

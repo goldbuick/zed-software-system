@@ -7,7 +7,12 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptonumber } from 'zss/mapping/value'
 import { COLLISION, PT } from 'zss/words/types'
 
+import { memoryreadobject } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
+import {
+  memorycreateboardobjectfromkind,
+  memorydeleteboardobject,
+} from './boardlifecycle'
 import {
   memorydeleteboardobjectnamedlookup,
   memorywriteboardnamed,
@@ -15,16 +20,11 @@ import {
 } from './boardlookup'
 import { memorycheckblockedboardobject } from './boardmovement'
 import {
-  memorycreateboardobjectfromkind,
-  memorydeleteboardobject,
-  memoryreadobject,
-  memoryupdateboardvisuals,
-} from './boardoperations'
-import {
   memoryinitboard,
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from './boards'
+import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryclearbookflags,
   memoryreadbookflag,
