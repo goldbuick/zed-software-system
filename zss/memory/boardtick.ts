@@ -12,7 +12,7 @@ const DRAWHASCACHE: Record<string, boolean> = {}
 
 export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
   const args: BOOK_RUN_ARGS[] = []
-  const DRAW_LABEL = 'draw'
+  const DRAW_LABEL = 'drawdisplay'
   const drawlabel = NAME(DRAW_LABEL)
 
   function memorycodehaslabel(code: string, label: string) {
@@ -39,6 +39,7 @@ export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
     if (pass === 'draw' && !memorycodehaslabel(code, drawlabel)) {
       return
     }
+
     const readid =
       element.id ?? `${memoryreadidorindex(element) ?? createsid()}`
     args.push({
@@ -80,6 +81,7 @@ export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
     }
   }
 
+  // scan terrain
   for (let i = 0; i < board.terrain.length; ++i) {
     const terrain = board.terrain[i]
     if (!ispresent(terrain)) {
@@ -88,6 +90,7 @@ export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
     addelementrun(terrain, CODE_PAGE_TYPE.TERRAIN, 'draw')
   }
 
+  // scan objects
   const allobjects = Object.values(board.objects)
   for (let i = 0; i < allobjects.length; ++i) {
     const object = allobjects[i]

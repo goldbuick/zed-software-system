@@ -25,6 +25,8 @@ export const READ_CONTEXT = {
   elementid: '',
   elementisplayer: false,
   elementfocus: '',
+  // draw pass: #color/#char/#bg alias to display* stats
+  usedisplaystats: false,
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,

@@ -147,13 +147,17 @@ export function memorytickmain(playeronly = false) {
   const boards = memoryreadbookplayerboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
+
     // init kinds
     memoryinitboard(board)
     if (timestamp % APPLY_SYNTH_RATE === 0) {
       memoryapplyboardsynthstats(board)
     }
+
     // iterate code needed to update given board
     const run = memorytickboard(board, timestamp)
+
+    // draw pass
     for (let i = 0; i < run.length; ++i) {
       const { type, code, object, terrain, pass, label, id } = run[i]
       if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
@@ -167,6 +171,8 @@ export function memorytickmain(playeronly = false) {
         )
       }
     }
+
+    // update pass
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object, pass } = run[i]
       if (pass === 'draw') {
@@ -181,6 +187,7 @@ export function memorytickmain(playeronly = false) {
         memorytickobject(mainbook, board, object, code)
       }
     }
+
     // process synth play queue
     const queue = memoryreadsynthplay(board.id)
     if (queue.length > 0) {
@@ -280,6 +287,8 @@ export function memorytickonce(
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
     ? READ_CONTEXT.elementid
     : playerfromelement
+
+  READ_CONTEXT.usedisplaystats = true
 
   const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
