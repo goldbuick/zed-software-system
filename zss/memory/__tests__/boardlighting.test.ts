@@ -1,9 +1,9 @@
 import { SPRITE } from 'zss/gadget/data/types'
+import { memoryboardelementindex } from 'zss/memory/boardaccess'
 import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from 'zss/memory/boardlighting'
-import { memoryboardelementindex } from 'zss/memory/boardaccess'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 

@@ -15,14 +15,14 @@ import { COLLISION, DIR, PT } from 'zss/words/types'
 
 import { memoryapplyboardelementcolor } from './boardelement'
 import {
+  memorycreateboardobjectfromkind,
+  memorywriteterrainfromkind,
+} from './boardlifecycle'
+import {
   memoryresetboardlookups,
   memorywriteboardnamed,
   memorywriteboardobjectlookup,
 } from './boardlookup'
-import {
-  memorycreateboardobjectfromkind,
-  memorywriteterrainfromkind,
-} from './boardlifecycle'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagestat,

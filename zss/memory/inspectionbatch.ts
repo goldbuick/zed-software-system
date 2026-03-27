@@ -15,10 +15,7 @@ import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
-import {
-  memoryreadelement,
-  memoryreadterrain,
-} from './boardaccess'
+import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import {
   memorycreateboardobject,
   memorysafedeleteelement,

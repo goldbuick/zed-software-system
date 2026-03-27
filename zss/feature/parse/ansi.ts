@@ -6,10 +6,8 @@ import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import {
-  memoryptwithinboard,
-} from 'zss/memory/boardtransitions'
 import { memorywriteterrain } from 'zss/memory/boardlifecycle'
+import { memoryptwithinboard } from 'zss/memory/boardtransitions'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,

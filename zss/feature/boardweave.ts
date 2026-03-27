@@ -1,23 +1,20 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
+import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
-import { memorymoveobject } from 'zss/memory/boardmovement'
-import {
-  memoryreadelement,
-  memoryreadterrain,
-} from 'zss/memory/boardaccess'
 import {
   memorycreateboard,
   memoryreadgroup,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
-import { memoryptwithinboard } from 'zss/memory/boardtransitions'
+import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memorycheckelementpushable,
   memoryinitboard,
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from 'zss/memory/boards'
+import { memoryptwithinboard } from 'zss/memory/boardtransitions'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'

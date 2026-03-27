@@ -6,22 +6,22 @@ import { createsid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
-  memoryapplyboardelementcolor,
-  memoryboardelementisobject,
-} from 'zss/memory/boardelement'
-import {
-  memorycheckblockedboardobject,
-  memorymoveobject,
-} from 'zss/memory/boardmovement'
-import {
   memoryreadelement,
   memoryreadobject,
   memoryreadobjects,
 } from 'zss/memory/boardaccess'
 import {
+  memoryapplyboardelementcolor,
+  memoryboardelementisobject,
+} from 'zss/memory/boardelement'
+import {
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
+import {
+  memorycheckblockedboardobject,
+  memorymoveobject,
+} from 'zss/memory/boardmovement'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

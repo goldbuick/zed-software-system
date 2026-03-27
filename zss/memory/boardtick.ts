@@ -39,7 +39,8 @@ export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
     if (pass === 'draw' && !memorycodehaslabel(code, drawlabel)) {
       return
     }
-    const readid = element.id ?? `${memoryreadidorindex(element) ?? createsid()}`
+    const readid =
+      element.id ?? `${memoryreadidorindex(element) ?? createsid()}`
     args.push({
       id: pass === 'draw' ? `draw_${type}_${readid}` : readid,
       type,

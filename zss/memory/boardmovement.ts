@@ -4,18 +4,18 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { dirfrompts, ptapplydir } from 'zss/words/dir'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { memoryboardelementisobject } from './boardelement'
 import {
   memoryboardelementindex,
   memoryreadobject,
   memoryreadterrain,
 } from './boardaccess'
+import { memoryboardelementisobject } from './boardelement'
 import { memorydeleteboardobject } from './boardlifecycle'
+import { memorycheckelementpushable, memoryreadelementstat } from './boards'
 import {
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
 } from './boardtransitions'
-import { memorycheckelementpushable, memoryreadelementstat } from './boards'
 import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {

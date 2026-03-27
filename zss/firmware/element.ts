@@ -24,14 +24,14 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
-import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
-import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
-import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memoryreadelement,
   memoryreadelementbyidorindex,
 } from 'zss/memory/boardaccess'
+import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
+import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
+import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memoryreadboardbyevaldir,
   memoryreadelementstat,

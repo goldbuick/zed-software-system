@@ -22,13 +22,13 @@ import {
   memoryreadterrain,
 } from './boardaccess'
 import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
+import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadflags } from './flags'
 import {
   memorylistboardelementsbykind,
   memorypickboardnearestpt,
   memoryreadboardpath,
 } from './spatialqueries'
-import { memoryptwithinboard } from './boardtransitions'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 function memoryevaldiraway(
@@ -484,7 +484,8 @@ export function memoryevaldir(
           }
         }
         modeval.targets = modeval.targets.filter(
-          (element) => ispt(element) && dirfrompts(startpt, element) === scandir,
+          (element) =>
+            ispt(element) && dirfrompts(startpt, element) === scandir,
         )
         return modeval
       }
