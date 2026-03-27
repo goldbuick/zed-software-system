@@ -3,7 +3,7 @@ import { CHAR_HEIGHT, CHAR_WIDTH } from './gadget/data/types'
 // cli config
 const LANG_DEV = !!JSON.parse(import.meta.env.ZSS_LANG_DEV)
 const LANG_TYPES = !!JSON.parse(import.meta.env.ZSS_LANG_TYPES)
-const STATS_DEV = !!JSON.parse(import.meta.env.ZSS_STATS_DEV)
+const PERF_UI = !!JSON.parse(import.meta.env.ZSS_PERF_UI)
 const SHOW_CODE = !!JSON.parse(import.meta.env.ZSS_SHOW_CODE)
 const TRACE_CODE = `${import.meta.env.ZSS_TRACE_CODE}`
 const LOG_DEBUG = !!JSON.parse(import.meta.env.ZSS_LOG_DEBUG)
@@ -28,7 +28,7 @@ export const RUNTIME = {
 export {
   LANG_DEV,
   LANG_TYPES,
-  STATS_DEV,
+  PERF_UI,
   SHOW_CODE,
   TRACE_CODE,
   LOG_DEBUG,

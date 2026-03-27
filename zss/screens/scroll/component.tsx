@@ -18,6 +18,7 @@ import { WriteTextContext } from 'zss/gadget/writetext'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import {
@@ -105,7 +106,9 @@ export function ScrollComponent({
   offset = Math.min(text.length - panelheight, offset)
   offset = Math.max(0, offset)
 
-  const visibletext = text.slice(offset, offset + panelheight)
+  const visibletext = perfmeasure('scroll:visibletext', () =>
+    text.slice(offset, offset + panelheight),
+  )
 
   // update dither
   const row = cursor - offset
