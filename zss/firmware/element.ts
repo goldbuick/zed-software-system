@@ -50,11 +50,11 @@ import { BOARD_ELEMENT } from 'zss/memory/types'
 import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import {
-  colorconsts,
   isstrcolor,
   mapcolortostrcolor,
   mapstrcolortoattributes,
 } from 'zss/words/color'
+import { colorconsts } from 'zss/words/colorconsts'
 import { DIR_CONSTS, isstrdir } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
