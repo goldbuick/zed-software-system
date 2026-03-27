@@ -340,6 +340,8 @@ type BOOK_RUN_CODE = {
   id: string
   code: string
   type: CODE_PAGE_TYPE
+  pass?: 'tick' | 'draw'
+  label?: string
 }
 
 export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE

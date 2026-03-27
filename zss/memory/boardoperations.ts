@@ -4,6 +4,7 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
+import { compile } from 'zss/lang/generator'
 import {
   indextopt,
   linepoints,
@@ -32,7 +33,7 @@ import {
   ptapplydir,
 } from 'zss/words/dir'
 import { isstrkind } from 'zss/words/kind'
-import { COLLISION, DIR, PT } from 'zss/words/types'
+import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
 
 import {
   memoryboardelementisobject,
@@ -77,6 +78,8 @@ import {
 } from './types'
 
 // From board.ts
+
+const DRAWHASCACHE: Record<string, boolean> = {}
 
 function createempty() {
   return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
@@ -1042,9 +1045,56 @@ export function memorywriteterrainfromkind(
 
 export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
   const args: BOOK_RUN_ARGS[] = []
+  const DRAW_LABEL = 'draw'
+  const drawlabel = NAME(DRAW_LABEL)
+
+  function memorycodehaslabel(code: string, label: string) {
+    const key = `${label}:${code}`
+    if (ispresent(DRAWHASCACHE[key])) {
+      return DRAWHASCACHE[key]
+    }
+    const labels = compile('drawpass', code).labels ?? {}
+    const result = ispresent(labels[label])
+    DRAWHASCACHE[key] = result
+    return result
+  }
+
+  function addelementrun(
+    element: BOARD_ELEMENT,
+    type: CODE_PAGE_TYPE,
+    pass: 'tick' | 'draw',
+  ) {
+    const kind = memoryreadelementkind(element)
+    const code = `${kind?.code ?? ''}\n${element.code ?? ''}`
+    if (!code) {
+      return
+    }
+    if (pass === 'draw' && !memorycodehaslabel(code, drawlabel)) {
+      return
+    }
+    const readid = element.id ?? `${readidorindex(element) ?? createsid()}`
+    args.push({
+      id: pass === 'draw' ? `draw_${type}_${readid}` : readid,
+      type,
+      code,
+      object: type === CODE_PAGE_TYPE.OBJECT ? element : undefined,
+      terrain: type === CODE_PAGE_TYPE.TERRAIN ? element : undefined,
+      pass,
+      label: pass === 'draw' ? DRAW_LABEL : '',
+    })
+  }
 
   if (!ispresent(board)) {
     return args
+  }
+
+  function isactiveobject(object: BOARD_ELEMENT) {
+    if (!object.removed) {
+      return true
+    }
+    const delta = timestamp - object.removed
+    const cycle = memoryreadelementstat(object, 'cycle')
+    return delta <= cycle
   }
 
   function processlist(list: BOARD_ELEMENT[]) {
@@ -1056,46 +1106,42 @@ export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
         continue
       }
 
-      // track last position
-      object.lx = object.x
-      object.ly = object.y
-
-      // lookup kind
-      const kind = memoryreadelementkind(object)
-
-      // object code is composed of kind code + object code
-      const code = `${kind?.code ?? ''}\n${object.code ?? ''}`
-
-      // check that we have code to execute
-      if (!code) {
-        continue
-      }
-
       // only run if not removed
       // edge case is removed with a pending thud
       // essentially this affords objects that were forcibly removed
       // a single tick before execution ends
-      if (object.removed) {
-        const delta = timestamp - object.removed
-        const cycle = memoryreadelementstat(object, 'cycle')
-        if (delta > cycle) {
-          continue
-        }
+      if (!isactiveobject(object)) {
+        continue
       }
 
-      // signal id & code
-      args.push({
-        id: object.id,
-        type: CODE_PAGE_TYPE.OBJECT,
-        code,
-        object,
-        terrain: undefined,
-      })
+      // track last position
+      object.lx = object.x
+      object.ly = object.y
+
+      addelementrun(object, CODE_PAGE_TYPE.OBJECT, 'tick')
     }
   }
 
+  // draw pass runs before tick pass
+  for (let i = 0; i < board.terrain.length; ++i) {
+    const terrain = board.terrain[i]
+    if (!ispresent(terrain)) {
+      continue
+    }
+    addelementrun(terrain, CODE_PAGE_TYPE.TERRAIN, 'draw')
+  }
+
+  const allobjects = Object.values(board.objects)
+  for (let i = 0; i < allobjects.length; ++i) {
+    const object = allobjects[i]
+    if (!ispresent(object.id) || !isactiveobject(object)) {
+      continue
+    }
+    addelementrun(object, CODE_PAGE_TYPE.OBJECT, 'draw')
+  }
+
   // iterate through objects
-  const objects = Object.values(board.objects)
+  const objects = allobjects
 
   // execution lists
   const otherlist: BOARD_ELEMENT[] = []
@@ -1145,6 +1191,8 @@ export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
       code: '',
       object: undefined,
       terrain: undefined,
+      pass: 'tick',
+      label: '',
     })
   }
 

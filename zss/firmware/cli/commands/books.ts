@@ -496,9 +496,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             const page = sorted[bi]
             if (memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD) {
               const name = memoryreadcodepagename(page)
-              boardrows.push(
-                `!boardopen ${page.id};$blue[#goto]$white ${name}`,
-              )
+              boardrows.push(`!boardopen ${page.id};$blue[#goto]$white ${name}`)
             }
           }
           if (boardrows.length) {

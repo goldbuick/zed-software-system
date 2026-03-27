@@ -30,6 +30,7 @@ import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { drawblockcursor } from 'zss/screens/inputcommon'
 import {
   EMPTY_AUTOCOMPLETE,
   drawautocomplete,
@@ -43,7 +44,6 @@ import {
 } from 'zss/screens/tape/colors'
 import { setuplogitem } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
-import { drawblockcursor } from 'zss/screens/inputcommon'
 import {
   applycolortoindexes,
   textformatreadedges,

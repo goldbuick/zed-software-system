@@ -90,9 +90,9 @@ export function memorywriteconfig(name: string, value: string) {
   }
 }
 
-function parseadminselecttarget(target: string):
-  | { player: string; key: string }
-  | undefined {
+function parseadminselecttarget(
+  target: string,
+): { player: string; key: string } | undefined {
   const idx = target.indexOf(':')
   if (idx <= 0 || idx >= target.length - 1) {
     return undefined

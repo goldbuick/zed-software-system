@@ -8,8 +8,8 @@ import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { doasync } from 'zss/mapping/func'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardoperations'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
@@ -141,12 +141,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           break
         }
         case 'bgscroll': {
-          scrollwritelines(
-            message.player,
-            'bgs',
-            '!bg bgedit;bg',
-            'refscroll',
-          )
+          scrollwritelines(message.player, 'bgs', '!bg bgedit;bg', 'refscroll')
           break
         }
         default: {

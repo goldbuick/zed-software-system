@@ -92,17 +92,11 @@ export function ScrollComponent({
     ...tilesstore.getState(),
   }
 
-  const [cursor, setCursor] = useState(() =>
-    scrollpickstarthyperlinkrow(text),
-  )
+  const [cursor, setCursor] = useState(() => scrollpickstarthyperlinkrow(text))
 
   useEffect(() => {
     setCursor(
-      clamp(
-        scrollpickstarthyperlinkrow(text),
-        0,
-        Math.max(0, text.length - 1),
-      ),
+      clamp(scrollpickstarthyperlinkrow(text), 0, Math.max(0, text.length - 1)),
     )
   }, [text])
 
