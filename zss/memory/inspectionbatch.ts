@@ -16,12 +16,14 @@ import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
 import {
-  memorycreateboardobject,
   memoryreadelement,
   memoryreadterrain,
+} from './boardaccess'
+import {
+  memorycreateboardobject,
   memorysafedeleteelement,
   memorywriteterrain,
-} from './boardoperations'
+} from './boardlifecycle'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import {

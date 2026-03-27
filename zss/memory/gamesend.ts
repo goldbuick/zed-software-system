@@ -14,8 +14,8 @@ import {
   memoryreadelement,
   memoryreadelementbyidorindex,
   memoryreadobject,
-  memorysafedeleteelement,
-} from './boardoperations'
+} from './boardaccess'
+import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
 import { memoryreadbookplayerboards } from './playermanagement'
 import { memoryelementtologprefix } from './rendering'

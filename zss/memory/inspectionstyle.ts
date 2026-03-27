@@ -11,7 +11,7 @@ import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
-import { memoryreadelement, memoryreadterrain } from './boardoperations'
+import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryreadsecretheap } from './inspectionbatch'
 import { memoryreadplayerboard } from './playermanagement'

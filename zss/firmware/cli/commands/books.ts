@@ -20,7 +20,7 @@ import { FIRMWARE } from 'zss/firmware'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardoperations'
+import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryclearbookcodepage,

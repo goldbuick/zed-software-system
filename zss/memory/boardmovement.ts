@@ -7,12 +7,14 @@ import { COLLISION, PT } from 'zss/words/types'
 import { memoryboardelementisobject } from './boardelement'
 import {
   memoryboardelementindex,
-  memorydeleteboardobject,
-  memoryplayerblockedbyedge,
-  memoryplayerwaszapped,
   memoryreadobject,
   memoryreadterrain,
-} from './boardoperations'
+} from './boardaccess'
+import { memorydeleteboardobject } from './boardlifecycle'
+import {
+  memoryplayerblockedbyedge,
+  memoryplayerwaszapped,
+} from './boardtransitions'
 import { memorycheckelementpushable, memoryreadelementstat } from './boards'
 import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'

@@ -13,10 +13,10 @@ import {
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
 import {
-  memoryptwithinboard,
   memoryreadelement,
   memoryreadterrain,
-} from './boardoperations'
+} from './boardaccess'
+import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadelementstat } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
 import {

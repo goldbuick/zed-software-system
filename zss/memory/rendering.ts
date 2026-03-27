@@ -26,7 +26,8 @@ import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from './boardlighting'
-import { memoryreadobject, memoryupdateboardvisuals } from './boardoperations'
+import { memoryreadobject } from './boardaccess'
+import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

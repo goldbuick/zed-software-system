@@ -8,8 +8,8 @@ import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   memoryptwithinboard,
-  memorywriteterrain,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardtransitions'
+import { memorywriteterrain } from 'zss/memory/boardlifecycle'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,

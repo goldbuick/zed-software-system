@@ -11,7 +11,7 @@ import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import {
   memoryreadelement,
   memoryreadterrain,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardaccess'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryruncodepage } from 'zss/memory/runtime'

@@ -1,5 +1,5 @@
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardoperations'
+import { memoryreadobject } from 'zss/memory/boardaccess'
 import {
   memoryreadboardbyaddress,
   memoryreadelementkind,

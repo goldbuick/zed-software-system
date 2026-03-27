@@ -6,9 +6,11 @@ import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
   memoryreadelement,
   memoryreadterrain,
+} from 'zss/memory/boardaccess'
+import {
   memorysafedeleteelement,
   memorywriteterrain,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardlifecycle'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

@@ -22,7 +22,7 @@ import {
 import {
   memorycreateboardobjectfromkind,
   memorywriteterrainfromkind,
-} from './boardoperations'
+} from './boardlifecycle'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagestat,

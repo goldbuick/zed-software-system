@@ -33,9 +33,8 @@ import {
   memoryboardelementindex,
   memoryreadelement,
   memoryreadelementbyidorindex,
-  memorysafedeleteelement,
-  memorywriteterrain,
-} from './boardoperations'
+} from './boardaccess'
+import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memoryreadelementcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'

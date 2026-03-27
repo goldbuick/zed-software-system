@@ -3,13 +3,15 @@ import { ispresent } from 'zss/mapping/types'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
-  memorycreateboard,
-  memoryptwithinboard,
   memoryreadelement,
-  memoryreadgroup,
   memoryreadterrain,
+} from 'zss/memory/boardaccess'
+import {
+  memorycreateboard,
+  memoryreadgroup,
   memorywriteterrain,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardlifecycle'
+import { memoryptwithinboard } from 'zss/memory/boardtransitions'
 import {
   memorycheckelementpushable,
   memoryinitboard,
@@ -134,48 +136,48 @@ export function boardweavegroup(
 
   // order based on delta
   if (delta.x < 0) {
-    terrainelements.sort((a, b) => {
+    terrainelements.sort((a: any, b: any) => {
       const ax = a.x ?? 0
       const bx = b.x ?? 0
       return ax - bx
     })
-    objectelements.sort((a, b) => {
+    objectelements.sort((a: any, b: any) => {
       const ax = a.x ?? 0
       const bx = b.x ?? 0
       return ax - bx
     })
   }
   if (delta.x > 0) {
-    terrainelements.sort((a, b) => {
+    terrainelements.sort((a: any, b: any) => {
       const ax = a.x ?? 0
       const bx = b.x ?? 0
       return bx - ax
     })
-    objectelements.sort((a, b) => {
+    objectelements.sort((a: any, b: any) => {
       const ax = a.x ?? 0
       const bx = b.x ?? 0
       return bx - ax
     })
   }
   if (delta.y < 0) {
-    terrainelements.sort((a, b) => {
+    terrainelements.sort((a: any, b: any) => {
       const ay = a.y ?? 0
       const by = b.y ?? 0
       return ay - by
     })
-    objectelements.sort((a, b) => {
+    objectelements.sort((a: any, b: any) => {
       const ay = a.y ?? 0
       const by = b.y ?? 0
       return ay - by
     })
   }
   if (delta.y > 0) {
-    terrainelements.sort((a, b) => {
+    terrainelements.sort((a: any, b: any) => {
       const ay = a.y ?? 0
       const by = b.y ?? 0
       return by - ay
     })
-    objectelements.sort((a, b) => {
+    objectelements.sort((a: any, b: any) => {
       const ay = a.y ?? 0
       const by = b.y ?? 0
       return by - ay
@@ -183,8 +185,8 @@ export function boardweavegroup(
   }
 
   // define included ids and indexes
-  const groupids = objectelements.map((el) => el.id ?? '')
-  const groupindexes = terrainelements.map((el) =>
+  const groupids = objectelements.map((el: any) => el.id ?? '')
+  const groupindexes = terrainelements.map((el: any) =>
     pttoindex({ x: el.x ?? 0, y: el.y ?? 0 }, BOARD_WIDTH),
   )
 

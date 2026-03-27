@@ -1,5 +1,5 @@
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryevaldir } from 'zss/memory/boardoperations'
+import { memoryevaldir } from 'zss/memory/boarddirection'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
 import {

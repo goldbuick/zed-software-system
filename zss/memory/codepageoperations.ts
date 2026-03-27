@@ -45,7 +45,7 @@ import {
   memorycreateboard,
   memoryexportboard,
   memoryimportboard,
-} from './boardoperations'
+} from './boardlifecycle'
 import {
   BITMAP_KEYS,
   BOARD_ELEMENT,

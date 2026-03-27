@@ -3,11 +3,13 @@ import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
   memoryreadelement,
-  memoryreadgroup,
   memoryreadterrain,
+} from 'zss/memory/boardaccess'
+import {
+  memoryreadgroup,
   memorysafedeleteelement,
   memorywriteterrain,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardlifecycle'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

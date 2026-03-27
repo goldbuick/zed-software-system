@@ -8,9 +8,9 @@ import { COLLISION, DIR } from 'zss/words/types'
 
 import {
   memoryboardelementindex,
-  memoryevaldir,
   memoryreadobject,
-} from './boardoperations'
+} from './boardaccess'
+import { memoryevaldir } from './boarddirection'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import {
   LIGHTING_RAY_TILE_YSCALE,

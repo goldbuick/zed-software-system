@@ -20,7 +20,7 @@ import { qrlines } from 'zss/mapping/qr'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { memoryreadobject } from './boardoperations'
+import { memoryreadobject } from './boardaccess'
 import {
   memoryexportbook,
   memoryimportbook,

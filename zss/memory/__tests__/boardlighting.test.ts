@@ -3,7 +3,7 @@ import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from 'zss/memory/boardlighting'
-import { memoryboardelementindex } from 'zss/memory/boardoperations'
+import { memoryboardelementindex } from 'zss/memory/boardaccess'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 

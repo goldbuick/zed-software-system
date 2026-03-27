@@ -17,9 +17,11 @@ import {
   memoryreadelement,
   memoryreadobject,
   memoryreadobjects,
+} from 'zss/memory/boardaccess'
+import {
   memorysafedeleteelement,
   memorywriteterrain,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardlifecycle'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

@@ -30,8 +30,8 @@ import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memoryreadelement,
   memoryreadelementbyidorindex,
-  memorysafedeleteelement,
-} from 'zss/memory/boardoperations'
+} from 'zss/memory/boardaccess'
+import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
 import {
   memoryreadboardbyevaldir,
   memoryreadelementstat,

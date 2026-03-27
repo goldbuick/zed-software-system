@@ -17,9 +17,9 @@ import { memorycheckblockedboardobject } from './boardmovement'
 import {
   memorycreateboardobjectfromkind,
   memorydeleteboardobject,
-  memoryreadobject,
-  memoryupdateboardvisuals,
-} from './boardoperations'
+} from './boardlifecycle'
+import { memoryreadobject } from './boardaccess'
+import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

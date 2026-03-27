@@ -1,4 +1,4 @@
-import { memorytickboard } from 'zss/memory/boardoperations'
+import { memorytickboard } from 'zss/memory/boardtick'
 import {
   BOARD,
   BOARD_ELEMENT,
