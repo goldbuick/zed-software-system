@@ -77,52 +77,36 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command(
     'shortsend',
-    [ARG_TYPE.ANY, ARG_TYPE.ANY, 'label and message (no TO keyword)'],
+    ['message (short form, no target keyword needed)'],
     (chip, words) => {
       const send = parsesend(words)
       memorysendtoelements(chip, READ_CONTEXT.element, send)
       return 0
     },
   )
-  .command(
-    'send',
-    [ARG_TYPE.NAME, ARG_TYPE.ANY, 'target label and message'],
-    (chip, words) => {
-      const send = parsesend(words, true)
-      memorysendtoelements(chip, READ_CONTEXT.element, send)
-      return 0
-    },
-  )
-  .command(
-    'stat',
-    [ARG_TYPE.NUMBER_OR_NAME, ARG_TYPE.ANY, 'optional line or name, then scroll text'],
-    () => {
-      // no-op
-      return 0
-    },
-  )
-  .command(
-    'text',
-    [ARG_TYPE.NUMBER_OR_NAME, ARG_TYPE.ANY, 'optional line or name, then ticker text'],
-    (_, words) => {
-      const text = words.map(maptostring).join(' ')
-      apichat(SOFTWARE, '', '$GREEN', text)
-      return 0
-    },
-  )
-  .command(
-    'hyperlink',
-    [ARG_TYPE.ANY, ARG_TYPE.ANY, 'label text and link target words'],
-    (chip, args) => {
-      const [label, ...words] = args
-      const labelstr = chip.template(maptostring(label).split(' '))
-      apichat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
-      return 0
-    },
-  )
-  .command('readline', [ARG_TYPE.ANY, 'text payload'], loadertext)
-  .command('readjson', [ARG_TYPE.ANY, 'JSON payload'], loaderjson)
-  .command('readbin', [ARG_TYPE.ANY, 'binary payload'], loaderbinary)
+  .command('send', ['message to target elements'], (chip, words) => {
+    const send = parsesend(words, true)
+    memorysendtoelements(chip, READ_CONTEXT.element, send)
+    return 0
+  })
+  .command('stat', ['text in a scroll window'], () => {
+    // no-op
+    return 0
+  })
+  .command('text', ['text on element or in sidebar'], (_, words) => {
+    const text = words.map(maptostring).join(' ')
+    apichat(SOFTWARE, '', '$GREEN', text)
+    return 0
+  })
+  .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
+    const [label, ...words] = args
+    const labelstr = chip.template(maptostring(label).split(' '))
+    apichat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
+    return 0
+  })
+  .command('readline', ['text data'], loadertext)
+  .command('readjson', ['JSON data'], loaderjson)
+  .command('readbin', ['binary data'], loaderbinary)
   .command(
     'withboard',
     [ARG_TYPE.NAME, 'to target board by id, name, or stat'],

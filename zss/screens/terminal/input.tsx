@@ -42,7 +42,6 @@ import {
   drawcommandarghint,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
-import { commandromhint } from 'zss/screens/tape/commandarghints'
 import {
   applycodetokencolors,
   bgcolor,
@@ -411,7 +410,10 @@ export function TerminalInput({
   }
 
   // draw cursor
-  drawblockcursor(tapeterminal.xcursor, tapeycursor, edge, context)
+  drawblockcursor(tapeterminal.xcursor, tapeycursor, edge, context, {
+    fg: COLOR.BLWHITE,
+    bg: context.reset.bg,
+  })
 
   // draw autocomplete (above input line when active)
   const autocompleteactive =
@@ -433,25 +435,12 @@ export function TerminalInput({
     )
   }
   if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
-    let hintx = startx + inputstate.length + 1
-    if (autocompleteactive) {
-      const maxitemlen = autocomplete.suggestions.reduce(
-        (m, s) => Math.max(m, s.word.length),
-        0,
-      )
-      const popupright = startx + autocomplete.wordcol - 1 + maxitemlen + 2
-      hintx = Math.max(hintx, popupright + 1)
-    }
     drawcommandarghint(
       autocomplete.endoflineargs,
-      hintx,
+      startx + inputstate.length + 1,
       starty,
       edge,
       context,
-      {
-        nexthint: autocomplete.nexthint,
-        romhint: commandromhint(autocomplete.hintcommandname),
-      },
     )
   }
 
