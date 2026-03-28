@@ -19,7 +19,7 @@ How **devices** talk to each other in ZSS: **three JavaScript realms** (main thr
 ## Rules of the road
 
 1. **`hub.invoke(message)`** delivers every message to **every** connected device; each device ignores or handles based on [routing rules](message-flow.md#routing-rules-devicehandle) (`device.ts` `createdevice`).
-2. **Topics** — e.g. `tick`, `tock`, `second`, `ready`, `log` — match broadcast-style targets so multiple devices can observe the same clock or log line.
+2. **Topics** — e.g. `ticktock`, `tock`, `second`, `ready`, `log` — match broadcast-style targets so multiple devices can observe the same clock or log line.
 3. **Directed** targets use `deviceName:path` (e.g. `vm:cli` → the `vm` device sees `target === 'cli'`).
 4. **Multiple hubs** — The browser runs **main-thread** code plus **Web Workers** (see [what creates each realm](#what-creates-each-thread-or-worker)). Each realm has its **own** `hub` singleton; `postMessage` + **`forward`** sync selected traffic ([`forward.ts`](../forward.ts), [`platform.ts`](../../platform.ts)).
 5. **`SOFTWARE`** ([`session.ts`](../session.ts)) — A minimal `createdevice('SOFTWARE')` used as a **convenient `emit` sender** (session id from first `ready`). UI and chip code often call `SOFTWARE.emit(...)` so messages enter the **caller’s** hub with the right session.
@@ -91,10 +91,10 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../cafe/index.tsx)) skips Canvas b
 | Device | Hub / realm | Subscribes (topics) | Role |
 |--------|----------------|---------------------|------|
 | `forward` | main + worker (each `createforward` instance) | `all` | Copies messages across `postMessage`; dedupes by `message.id` |
-| `clock` | sim worker only | — | Emits `tick`, `tock`, `second` |
-| `vm` | sim worker (real sim) | `tick`, `second` | Game VM, handlers under `vm/handlers/` |
+| `clock` | sim worker only | — | Emits `ticktock`, `second` |
+| `vm` | sim worker (real sim) | `ticktock`, `second` | Game VM, handlers under `vm/handlers/` |
 | `stub` (`name` **`vm`**) | stub worker only | — | Minimal stand-in for `vm` when using stubspace ([`stub.ts`](../stub.ts)) |
-| `gadgetserver` | sim worker | `tock` | Builds gadget diff → `gadgetclient:paint` / `patch` |
+| `gadgetserver` | sim worker | `tock`, `ticktock` | Builds gadget diff → `gadgetclient:paint` / `patch` |
 | `modem` | **both** hubs (imported in sim + userspace) | `second` | Sync / presence (per-realm instance) |
 | `register` | main | `ready`, `second`, `log`, `chat`, `toast` | UI edge: storage, tape, VM calls via `api` |
 | `gadgetclient` | main | — | Applies paint/patch to zustand |
@@ -127,8 +127,9 @@ flowchart TB
     VM[vm]
     GS[gadgetserver]
     MdW[modem]
-    Cl -->|tick_second| VM
-    Cl -->|tock| GS
+    Cl -->|ticktock| VM
+    Cl -->|second| VM
+    Cl -->|ticktock| GS
   end
   subgraph Main_thread [Main_thread]
     direction TB

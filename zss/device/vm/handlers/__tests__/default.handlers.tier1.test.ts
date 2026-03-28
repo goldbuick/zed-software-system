@@ -19,7 +19,7 @@ jest.mock('zss/config', () => ({
   },
   LANG_DEV: false,
   LANG_TYPES: false,
-  STATS_DEV: false,
+  PERF_UI: false,
   SHOW_CODE: false,
   TRACE_CODE: '',
   LOG_DEBUG: false,

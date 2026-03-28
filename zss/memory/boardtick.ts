@@ -10,7 +10,11 @@ import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from './types'
 
 const DRAWHASCACHE: Record<string, boolean> = {}
 
-export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
+export function memorytickboard(
+  board: MAYBE<BOARD>,
+  timestamp: number,
+  includedraw = true,
+) {
   const args: BOOK_RUN_ARGS[] = []
   const DRAW_LABEL = 'drawdisplay'
   const drawlabel = NAME(DRAW_LABEL)
@@ -31,6 +35,9 @@ export function memorytickboard(board: MAYBE<BOARD>, timestamp: number) {
     type: CODE_PAGE_TYPE,
     pass: 'tick' | 'draw',
   ) {
+    if (pass === 'draw' && !includedraw) {
+      return
+    }
     const kind = memoryreadelementkind(element)
     const code = `${kind?.code ?? ''}\n${element.code ?? ''}`
     if (!code) {

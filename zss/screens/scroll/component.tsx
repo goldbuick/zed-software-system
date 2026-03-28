@@ -1,5 +1,12 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -18,6 +25,7 @@ import { WriteTextContext } from 'zss/gadget/writetext'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import {
@@ -87,10 +95,13 @@ export function ScrollComponent({
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
   const boardname = useGadgetClient((state) => state.gadget.boardname ?? '')
 
-  const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
-    ...tilesstore.getState(),
-  }
+  const context: WRITE_TEXT_CONTEXT = useMemo(
+    () => ({
+      ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
+      ...tilesstore.getState(),
+    }),
+    [bg, color, height, tilesstore, width],
+  )
 
   const [cursor, setCursor] = useState(() => scrollpickstarthyperlinkrow(text))
 
@@ -105,7 +116,9 @@ export function ScrollComponent({
   offset = Math.min(text.length - panelheight, offset)
   offset = Math.max(0, offset)
 
-  const visibletext = text.slice(offset, offset + panelheight)
+  const visibletext = perfmeasure('scroll:visibletext', () =>
+    text.slice(offset, offset + panelheight),
+  )
 
   // update dither
   const row = cursor - offset

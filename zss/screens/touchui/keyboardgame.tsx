@@ -9,6 +9,7 @@ import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { metakey } from 'zss/words/system'
+import { useShallow } from 'zustand/react/shallow'
 
 import { ToggleKey } from './togglekey'
 
@@ -18,7 +19,13 @@ type KeyboardGameProps = {
 }
 
 export function KeyboardGame({ width, height }: KeyboardGameProps) {
-  const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData()
+  const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData(
+    useShallow((state) => ({
+      keyboardalt: state.keyboardalt,
+      keyboardctrl: state.keyboardctrl,
+      keyboardshift: state.keyboardshift,
+    })),
+  )
   const left = width - 18
   const mid = width - 12
   const right = width - 6

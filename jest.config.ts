@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
+    '^zss/perf/ui$': '<rootDir>/zss/__mocks__/perfui.ts',
     '^zss/(.*)$': '<rootDir>/zss/$1',
     '^uint8-util$': '<rootDir>/zss/__mocks__/uint8-util.ts',
     '^@chevrotain/utils$':
@@ -35,7 +36,7 @@ const config: Config = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked)/)',
+    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|tone|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked)/)',
   ],
   testMatch: [
     '**/__tests__/**/*.ts',

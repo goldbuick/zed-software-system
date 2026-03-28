@@ -6,6 +6,28 @@ import { create } from 'zustand'
 
 import { GADGET_STATE, GADGET_ZSS_WORDS, LAYER } from './types'
 
+/** Max board ids kept for exit previews; oldest insertion evicted first. */
+export const LAYERCACHE_MAX_ENTRIES = 64
+
+export function applylayercacheupdate(
+  map: Map<string, LAYER[]>,
+  board: string,
+  layers: LAYER[],
+): Map<string, LAYER[]> {
+  if (!board) {
+    return map
+  }
+  if (map.has(board)) {
+    map.delete(board)
+  }
+  map.set(board, layers)
+  while (map.size > LAYERCACHE_MAX_ENTRIES) {
+    const oldest = map.keys().next().value!
+    map.delete(oldest)
+  }
+  return map
+}
+
 export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
   const prev = useRef<U>(null as U)
   return (state) => {
@@ -23,7 +45,9 @@ export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
 export const useGadgetClient = create<{
   desync: boolean
   gadget: GADGET_STATE
-  layercache: Record<string, LAYER[]>
+  layercachemap: Map<string, LAYER[]>
+  /** Bumps when `layercachemap` mutates so selectors can subscribe. */
+  layercachegen: number
   slim: FORMAT_OBJECT
   zsswords: GADGET_ZSS_WORDS
 }>(() => ({
@@ -66,7 +90,8 @@ export const useGadgetClient = create<{
     scroll: [],
     sidebar: [],
   },
-  layercache: {},
+  layercachemap: new Map(),
+  layercachegen: 0,
   slim: [],
 }))
 

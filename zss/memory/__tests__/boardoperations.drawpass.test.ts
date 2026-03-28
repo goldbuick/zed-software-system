@@ -10,7 +10,7 @@ import { COLLISION } from 'zss/words/types'
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
   LANG_TYPES: false,
-  STATS_DEV: false,
+  PERF_UI: false,
   SHOW_CODE: false,
   TRACE_CODE: '',
   LOG_DEBUG: false,
@@ -31,7 +31,10 @@ jest.mock('tone', () => ({
 
 jest.mock('zss/lang/generator', () => ({
   compile: (_name: string, code: string) => ({
-    labels: code.includes(':draw') ? { draw: [1] } : {},
+    labels:
+      code.includes(':drawdisplay') || code.includes(':draw')
+        ? { drawdisplay: [1] }
+        : {},
   }),
 }))
 
@@ -95,7 +98,7 @@ describe('memorytickboard draw pass', () => {
     expect(draw).toHaveLength(2)
     expect(draw[0].type).toBe(CODE_PAGE_TYPE.TERRAIN)
     expect(draw[1].object?.id).toBe('sid_draw')
-    expect(draw.every((item) => item.label === 'draw')).toBe(true)
+    expect(draw.every((item) => item.label === 'drawdisplay')).toBe(true)
     expect(tick.map((item) => item.object?.id)).toEqual([
       'sid_draw',
       'sid_tick',
@@ -128,6 +131,33 @@ describe('memorytickboard draw pass', () => {
       'pid_0000_testplayer',
       'sid_other',
       'sid_ghost',
+    ])
+  })
+
+  it('omits draw pass entries when includedraw is false', () => {
+    const terrain = new Array<BOARD_ELEMENT>(BOARD_SIZE)
+    terrain[0] = maketerrain(0, 0, ':draw\n#end')
+
+    const objectdraw = makeobject('sid_draw', ':draw\n#end')
+    const objecttick = makeobject('sid_tick', ':tick\n#end')
+    const board = makeboard(
+      {
+        [objectdraw.id ?? '']: objectdraw,
+        [objecttick.id ?? '']: objecttick,
+      },
+      terrain,
+    )
+
+    const run = memorytickboard(board, 1, false)
+    const draw = run.filter((item) => item.pass === 'draw')
+    const tick = run.filter(
+      (item) => item.pass !== 'draw' && item.type === CODE_PAGE_TYPE.OBJECT,
+    )
+
+    expect(draw).toHaveLength(0)
+    expect(tick.map((item) => item.object?.id)).toEqual([
+      'sid_draw',
+      'sid_tick',
     ])
   })
 })

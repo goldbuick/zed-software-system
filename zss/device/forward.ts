@@ -9,8 +9,8 @@ export function createforward(handler: (message: MESSAGE) => void) {
   function forward(message: any) {
     if (
       ismessage(message) &&
-      message.target !== 'tick' &&
       message.target !== 'tock' &&
+      message.target !== 'ticktock' &&
       syncids.has(message.id) === false
     ) {
       syncids.add(message.id)
@@ -35,8 +35,8 @@ export function createforward(handler: (message: MESSAGE) => void) {
 // outbound message
 export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tick':
     case 'tock':
+    case 'ticktock':
     case 'ready':
       return true
   }
@@ -48,8 +48,8 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'log':
     case 'chat':
-    case 'tick':
     case 'tock':
+    case 'ticktock':
     case 'ready':
     case 'toast':
     case 'second':
@@ -87,8 +87,8 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
 // outbound message
 export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tick':
     case 'tock':
+    case 'ticktock':
     case 'second':
       return true
   }
@@ -118,8 +118,8 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
 // create client -> heavy forward
 export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tick':
     case 'tock':
+    case 'ticktock':
       return false
     case 'second':
     case 'ready':

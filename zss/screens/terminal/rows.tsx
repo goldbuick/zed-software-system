@@ -1,27 +1,28 @@
 import { useEffect, useMemo } from 'react'
-import { useTape, useTerminal } from 'zss/gadget/data/state'
+import { useEqual, useTape, useTerminal } from 'zss/gadget/data/state'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
-import { measurerow } from 'zss/screens/tape/measure'
+import { measurerowcached } from 'zss/screens/terminal/measurerowcache'
 import { textformatreadedges } from 'zss/words/textformat'
 
 import { TapeTerminalActiveItem, TerminalItem } from './item'
 
 export function TerminalRows() {
   const screensize = useScreenSize()
-  const editoropen = useTape((state) => state.editor.open)
-  const pinlines = useTape((state) => state.terminal.pinlines)
-  const sessionlogs = useTape((state) => state.terminal.logs)
+  const editoropen = useTape(useEqual((state) => state.editor.open))
+  const pinlines = useTape(useEqual((state) => state.terminal.pinlines))
+  const sessionlogs = useTape(useEqual((state) => state.terminal.logs))
   const terminallogs = useMemo(
     () => [...pinlines, ...sessionlogs],
     [pinlines, sessionlogs],
   )
 
   const context = useWriteText()
-  const scroll = useTerminal((state) => state.scroll)
-  const xcursor = useTerminal((state) => state.xcursor)
-  const ycursor = useTerminal((state) => state.ycursor)
+  const scroll = useTerminal(useEqual((state) => state.scroll))
+  const xcursor = useTerminal(useEqual((state) => state.xcursor))
+  const ycursor = useTerminal(useEqual((state) => state.ycursor))
+
   const edge = textformatreadedges(context)
 
   // control panning
@@ -46,7 +47,7 @@ export function TerminalRows() {
   // measure rows
   const logsrowmaxwidth = context.width - 1
   const logsrowheights: number[] = terminallogs.map((item) => {
-    return measurerow(item, logsrowmaxwidth, edge.height)
+    return measurerowcached(item, logsrowmaxwidth, edge.height)
   })
 
   // baseline

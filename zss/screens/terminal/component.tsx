@@ -8,9 +8,10 @@ import { useWriteText } from 'zss/gadget/writetext'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
-import { measurerow } from 'zss/screens/tape/measure'
+import { measurerowcached } from 'zss/screens/terminal/measurerowcache'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -49,10 +50,12 @@ export function TerminalComponent() {
 
   // measure rows
   const logsrowmaxwidth = context.width - 1
-  const logs = terminallogs ?? []
-  const logsrowheights: number[] = logs.map((item) => {
-    return measurerow(item, logsrowmaxwidth, edge.height)
-  })
+  const logsrowheights: number[] = useMemo(() => {
+    const logs = terminallogs ?? []
+    return perfmeasure('terminal:measurerows', () =>
+      logs.map((item) => measurerowcached(item, logsrowmaxwidth, edge.height)),
+    )
+  }, [edge.height, logsrowmaxwidth, terminallogs])
 
   // ycoords for rows
   let logsrowtotalheight = 0

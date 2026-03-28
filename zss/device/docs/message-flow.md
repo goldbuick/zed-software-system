@@ -13,17 +13,17 @@ flowchart TB
     end
 
     subgraph Broadcast["Broadcast sources"]
-        Clock["clock: tick, tock, second"]
+        Clock["clock: ticktock, second"]
         VM["vm: ready"]
     end
 
     subgraph Core["Core devices"]
-        VM2["VM (tick, second)"]
+        VM2["VM (ticktock, second)"]
         Register["register (ready, second, log, chat, toast)"]
     end
 
     subgraph Display["Display pipeline"]
-        GadgetServer["gadgetserver (tock)"]
+        GadgetServer["gadgetserver (tock, ticktock)"]
         GadgetClient["gadgetclient"]
     end
 
@@ -32,8 +32,7 @@ flowchart TB
         Agent["agent_* (second)"]
     end
 
-    Clock -->|tick| invoke
-    Clock -->|tock| invoke
+    Clock -->|ticktock| invoke
     Clock -->|second| invoke
     VM -->|ready| invoke
 
@@ -50,7 +49,7 @@ flowchart TB
     GadgetServer -->|gadgetclient:paint/patch| GadgetClient
     GadgetClient -->|gadgetserver:desync| GadgetServer
 
-    Clock -->|tock| GadgetServer
+    Clock -->|ticktock| GadgetServer
 ```
 
 ```
@@ -64,20 +63,19 @@ flowchart TB
            ▼                                  ▼                                  ▼
     ┌──────────────┐                  ┌──────────────┐                  ┌──────────────┐
     │    CLOCK     │                  │     VM       │                  │   REGISTER   │
-    │  (no topics) │                  │ tick, second │                  │ ready,second │
-    │              │                  │              │                  │ log,chat,    │
-    │ emit: tick   │─────────────────►│              │                  │ toast        │
-    │ emit: tock   │  (broadcast)     │              │                  │              │
+    │  (no topics) │                  │ ticktock     │                  │ ready,second │
+    │              │                  │ second       │                  │ log,chat,    │
+    │emit:ticktock │─────────────────►│              │                  │ toast        │
     │ emit: second │─────────────────►│              │◄─────────────────│              │
     └──────────────┘                  │              │  vm:operator     │ vmoperator() │
            │                          │              │  vm:login, etc   │ vmcli()      │
-           │ tock                      │ replynext    │                  │ vmlogin()   │
+           │ticktock                   │ replynext    │                  │ vmlogin()   │
            ▼                          │ ackoperator  │─────────────────►│ etc         │
     ┌──────────────┐                  │ acklogin     │  register:       │              │
     │ GADGETSERVER │                  │ ackzsswords  │  loginready       │              │
-    │    tock      │                  │ acklook      │  input,savemem    │              │
+    │tock,ticktock │                  │ acklook      │  input,savemem    │              │
     │              │                  │              │  terminal:*,     │              │
-    │ on tock:     │                  │              │  editor:*, etc    │              │
+    │ on ticktock: │                  │              │  editor:*, etc    │              │
     │ build gadget │                  └──────┬───────┘                  └──────┬───────┘
     │ state       │                           │                                │
     │ diff→patch  │                           │ vm:loader                      │ loadmem
@@ -160,8 +158,8 @@ flowchart TB
 | From      | To         | Target               | Purpose                         |
 |-----------|------------|----------------------|---------------------------------|
 | vm/stub   | all        | `ready`              | Boot signal, session capture    |
-| clock     | vm         | `tick`               | Game loop tick                  |
-| clock     | gadgetserver | `tock`             | Render/sync tick                |
+| clock     | vm         | `ticktock`           | Game loop tick                  |
+| clock     | gadgetserver | `ticktock`       | Render/sync tick                |
 | clock     | all        | `second`             | Keepalive, agent doot            |
 | register  | vm         | `vm:operator`        | Set operator player             |
 | register  | vm         | `vm:login`           | Player login                    |
@@ -185,10 +183,10 @@ flowchart TB
 
 | Device       | Topics               | Receives (directed)      | Role                          |
 |--------------|----------------------|--------------------------|-------------------------------|
-| clock        | (none)               | —                        | Emits tick, tock, second      |
-| vm           | tick, second         | vm:*                     | Game logic, login, CLI, loader|
+| clock        | (none)               | —                        | Emits ticktock, second        |
+| vm           | ticktock, second     | vm:*                     | Game logic, login, CLI, loader|
 | register     | ready, second, log, chat, toast | register:* | UI state, storage, bootstrap |
-| gadgetserver | tock                 | gadgetserver:*            | Gadget state → paint/patch    |
+| gadgetserver | tock, ticktock       | gadgetserver:*            | Gadget state → paint/patch    |
 | gadgetclient | (none)               | gadgetclient:*            | Receives paint/patch from api |
 | heavy        | (none)               | heavy:*                  | TTS, LLM (lazy-loaded)        |
 | bridge       | (none)               | bridge:*                  | Multiplayer / BBS             |

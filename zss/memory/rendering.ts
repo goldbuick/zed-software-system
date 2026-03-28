@@ -52,6 +52,61 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
+const MAX_MEDIABITS_CACHE = 48
+const MEDIABITS_CACHE = new Map<string, number[]>()
+const MEDIABITS_CACHE_ORDER: string[] = []
+
+function fingerprintbits(bits: ArrayLike<number>): string {
+  const len = bits.length
+  if (len === 0) {
+    return '0'
+  }
+  let h = len | 0
+  h = (h * 31 + bits[0]) | 0
+  h = (h * 31 + bits[len - 1]) | 0
+  h = (h * 31 + bits[(len / 2) | 0]) | 0
+  return `${len}:${h}`
+}
+
+function mediabitscachetouch(key: string) {
+  const at = MEDIABITS_CACHE_ORDER.indexOf(key)
+  if (at >= 0) {
+    MEDIABITS_CACHE_ORDER.splice(at, 1)
+  }
+  MEDIABITS_CACHE_ORDER.push(key)
+  while (MEDIABITS_CACHE_ORDER.length > MAX_MEDIABITS_CACHE) {
+    const ev = MEDIABITS_CACHE_ORDER.shift()
+    if (ispresent(ev)) {
+      MEDIABITS_CACHE.delete(ev)
+    }
+  }
+}
+
+function cachedmediabits(
+  pageselect: string,
+  bits: ArrayLike<number>,
+): number[] {
+  const key = `${pageselect}:${fingerprintbits(bits)}`
+  const got = MEDIABITS_CACHE.get(key)
+  if (ispresent(got) && got.length === bits.length) {
+    let ok = true
+    for (let i = 0; i < bits.length; i++) {
+      if (got[i] !== bits[i]) {
+        ok = false
+        break
+      }
+    }
+    if (ok) {
+      mediabitscachetouch(key)
+      return got
+    }
+  }
+  const copy = Array.from(bits)
+  MEDIABITS_CACHE.set(key, copy)
+  mediabitscachetouch(key)
+  return copy
+}
+
 // Display & Formatting Functions
 
 export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
@@ -149,10 +204,11 @@ export function memoryconverttogadgetlayers(
 
   let iiii = index
   const boardid = board.id
+  const cacheowner = `${player}:${boardid}`
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const tiles = createcachedtiles(
-    boardid,
+    cacheowner,
     iiii++,
     boardwidth,
     boardheight,
@@ -161,13 +217,13 @@ export function memoryconverttogadgetlayers(
   layers.push(tiles)
 
   const objectindex = iiii++
-  const objects = memorycreatecachedsprites(boardid, objectindex)
+  const objects = memorycreatecachedsprites(cacheowner, objectindex)
   objects.sprites = []
   layers.push(objects)
 
   const isdark = board.isdark ? 1 : 0
   const lighting = createcacheddither(
-    boardid,
+    cacheowner,
     iiii++,
     boardwidth,
     boardheight,
@@ -230,7 +286,7 @@ export function memoryconverttogadgetlayers(
     }
 
     const display = memoryreadelementdisplay(object)
-    const sprite = memorycreatecachedsprite(boardid, objectindex, id, i)
+    const sprite = memorycreatecachedsprite(cacheowner, objectindex, id, i)
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -268,7 +324,7 @@ export function memoryconverttogadgetlayers(
 
     const id = object.id ?? ''
     const display = memoryreadelementdisplay(object)
-    const sprite = memorycreatecachedsprite(boardid, objectindex, id, i)
+    const sprite = memorycreatecachedsprite(cacheowner, objectindex, id, i)
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -298,7 +354,7 @@ export function memoryconverttogadgetlayers(
     // set mood
     layers.push(
       createcachedmedia(
-        boardid,
+        cacheowner,
         iiii++,
         'text/mood',
         isdark ? 'dark' : 'bright',
@@ -315,10 +371,10 @@ export function memoryconverttogadgetlayers(
       if (ispresent(palette?.bits)) {
         layers.push(
           createcachedmedia(
-            boardid,
+            cacheowner,
             iiii++,
             'image/palette',
-            Array.from(palette.bits),
+            cachedmediabits(board.palettepage, palette.bits),
           ),
         )
       }
@@ -333,10 +389,10 @@ export function memoryconverttogadgetlayers(
       if (ispresent(charset?.bits)) {
         layers.push(
           createcachedmedia(
-            boardid,
+            cacheowner,
             iiii++,
             'image/charset',
-            Array.from(charset.bits),
+            cachedmediabits(board.charsetpage, charset.bits),
           ),
         )
       }
@@ -344,7 +400,7 @@ export function memoryconverttogadgetlayers(
     // add media layer to list peer ids
     const pids = Object.keys(board.objects).filter(ispid)
     layers.push(
-      createcachedmedia(boardid, iiii++, 'text/players', pids.join(',')),
+      createcachedmedia(cacheowner, iiii++, 'text/players', pids.join(',')),
     )
   }
 
@@ -375,6 +431,7 @@ export function memorycreatecachedsprite(
   const cid = `sprite:${player}:${index}:${spriteindex}`
   if (!ispresent(SPRITE_CACHE[cid])) {
     SPRITE_CACHE[cid] = createsprite(player, index, id)
+    registernewspritecacheid(cid)
   }
   SPRITE_CACHE[cid].id = uid
   return SPRITE_CACHE[cid]
@@ -387,6 +444,7 @@ function memorycreatecachedsprites(
   const id = `sprites:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createsprites(player, index)
+    registernewlayercacheid(id)
   }
   return LAYER_CACHE[id] as LAYER_SPRITES
 }
@@ -401,6 +459,7 @@ function createcacheddither(
   const id = `dither:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createdither(player, index, width, height, fill)
+    registernewlayercacheid(id)
   }
   return LAYER_CACHE[id] as LAYER_DITHER
 }
@@ -414,6 +473,7 @@ function createcachedmedia(
   const id = `media:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createmedia(player, index, mime, media)
+    registernewlayercacheid(id)
   }
   const layermedia = LAYER_CACHE[id] as LAYER_MEDIA
   // handle copydata
@@ -426,6 +486,7 @@ function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
   const id = `control:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createcontrol(player, index)
+    registernewlayercacheid(id)
   }
   return LAYER_CACHE[id] as LAYER_CONTROL
 }
@@ -488,8 +549,8 @@ export function memoryreadgadgetlayers(
     }
   }
 
-  // composite id
-  const id4all: string[] = [`${board.id}`]
+  // composite id (include player so per-player graphics produce distinct gadget ids)
+  const id4all: string[] = [player, `${board.id}`]
 
   // read over / under
   const overboard = memoryreadoverboard(board)
@@ -556,8 +617,34 @@ export function memoryreadgadgetlayers(
 
 // Rendering & Gadget Conversion Functions
 
+const MAX_LAYER_AND_SPRITE_CACHE = 512
 const LAYER_CACHE: Record<string, LAYER> = {}
 const SPRITE_CACHE: Record<string, SPRITE> = {}
+const CACHE_EVICTION_ORDER: string[] = []
+
+function evictrendercacheifneeded() {
+  while (CACHE_EVICTION_ORDER.length > MAX_LAYER_AND_SPRITE_CACHE) {
+    const tag = CACHE_EVICTION_ORDER.shift()
+    if (!ispresent(tag)) {
+      break
+    }
+    if (tag.startsWith('L')) {
+      delete LAYER_CACHE[tag.slice(2)]
+    } else {
+      delete SPRITE_CACHE[tag.slice(2)]
+    }
+  }
+}
+
+function registernewlayercacheid(id: string) {
+  CACHE_EVICTION_ORDER.push(`L:${id}`)
+  evictrendercacheifneeded()
+}
+
+function registernewspritecacheid(id: string) {
+  CACHE_EVICTION_ORDER.push(`S:${id}`)
+  evictrendercacheifneeded()
+}
 
 function createcachedtiles(
   player: string,
@@ -569,6 +656,7 @@ function createcachedtiles(
   const id = `tiles:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
+    registernewlayercacheid(id)
   }
   return LAYER_CACHE[id] as LAYER_TILES
 }

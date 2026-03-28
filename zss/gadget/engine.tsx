@@ -1,11 +1,10 @@
 import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
-import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { VignetteTechnique } from 'postprocessing'
 import { useEffect, useLayoutEffect, useState } from 'react'
-import Stats from 'stats.js'
-import { RUNTIME, STATS_DEV } from 'zss/config'
+import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
@@ -39,24 +38,6 @@ export function Engine() {
       haltplatform()
     }
   }, [])
-
-  // handle showing render stats
-  const [stats] = useState(() => new Stats())
-  useEffect(() => {
-    if (!STATS_DEV) {
-      return
-    }
-    document.body.appendChild(stats.dom)
-    stats.showPanel(0)
-    stats.dom.style.cssText = 'position:fixed;bottom:0;left:0;z-index:2;'
-    const begin = addEffect(() => stats.begin())
-    const end = addAfterEffect(() => stats.end())
-    return () => {
-      document.body.removeChild(stats.dom)
-      begin()
-      end()
-    }
-  }, [stats])
 
   // detect gpu info
   const gputier = useDetectGPU({ benchmarksURL: '/benchmarks-min' })

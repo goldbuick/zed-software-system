@@ -3,13 +3,7 @@
 import { GamepadListener } from 'gamepad.js'
 import isHotKey from 'is-hotkey'
 import mitt from 'mitt'
-import {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
@@ -30,7 +24,10 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
+import { UserInputContext, user } from 'zss/gadget/userinputcontext'
+import type { UserInputMods } from 'zss/gadget/userinputtypes'
 import { isnumber, ispresent } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
 import { DIR, NAME } from 'zss/words/types'
@@ -39,11 +36,13 @@ import { DIR, NAME } from 'zss/words/types'
 
 type INPUT_STATE = Record<INPUT, boolean>
 
-export type UserInputMods = {
-  alt: boolean
-  ctrl: boolean
-  shift: boolean
-}
+export type {
+  UserInputMods,
+  UserInputProps,
+  UserInputHandler,
+  KeyboardInputHandler,
+} from 'zss/gadget/userinputtypes'
+export { UserInput } from 'zss/gadget/userinput.bridge'
 
 const inputstates: Record<number, INPUT_STATE> = {}
 function playerlocal(index: number) {
@@ -156,14 +155,9 @@ export function inputup(index: number, input: INPUT) {
 
 // focus
 
-const user = {
-  root: mitt(),
-  ignorehotkeys: false,
-}
-export const UserInputContext = createContext(user.root)
+export { UserInputContext }
 
 // keyboard input
-export type KeyboardInputHandler = (event: KeyboardEvent) => void
 
 export function modsfromevent(event: KeyboardEvent): UserInputMods {
   return {
@@ -174,24 +168,26 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
 }
 
 function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
-  if (index === 0) {
-    // primary input
-    user.root.emit(INPUT[input], mods)
-  } else {
-    // local multiplayer input
-    let bits = 0
-    const player = playerlocal(index)
-    if (mods.alt) {
-      bits |= INPUT_ALT
+  perfmeasure('input:userinputinvoke', () => {
+    if (index === 0) {
+      // primary input
+      user.root.emit(INPUT[input], mods)
+    } else {
+      // local multiplayer input
+      let bits = 0
+      const player = playerlocal(index)
+      if (mods.alt) {
+        bits |= INPUT_ALT
+      }
+      if (mods.ctrl) {
+        bits |= INPUT_CTRL
+      }
+      if (mods.shift) {
+        bits |= INPUT_SHIFT
+      }
+      vminput(SOFTWARE, player, input, bits)
     }
-    if (mods.ctrl) {
-      bits |= INPUT_CTRL
-    }
-    if (mods.shift) {
-      bits |= INPUT_SHIFT
-    }
-    vminput(SOFTWARE, player, input, bits)
-  }
+  })
 }
 
 const TOUCHTEXT_ID = 'touchtext'
@@ -681,13 +677,18 @@ gamepads.on('gamepad:button', (event: any) => {
         inputup(index, INPUT.SHIFT)
       }
       break
-    default:
+    default: {
+      const mapped = buttonlookup[event.detail.button]
+      if (mapped === undefined) {
+        break
+      }
       if (event.detail.value) {
-        inputdown(index, buttonlookup[event.detail.button])
+        inputdown(index, mapped)
       } else {
-        inputup(index, buttonlookup[event.detail.button])
+        inputup(index, mapped)
       }
       break
+    }
   }
 })
 gamepads.start()
@@ -721,36 +722,6 @@ export function UserHotkey({ hotkey, althotkey, children }: UserHotkeyProps) {
     document.addEventListener(HOTKEY_EVENT, hotkeycheck, false)
     return () => document.removeEventListener(HOTKEY_EVENT, hotkeycheck, false)
   }, [hotkey, althotkey, children])
-
-  return null
-}
-
-export type UserInputHandler = (mods: UserInputMods) => void
-
-type UserInputProps = {
-  MOVE_LEFT?: UserInputHandler
-  MOVE_RIGHT?: UserInputHandler
-  MOVE_UP?: UserInputHandler
-  MOVE_DOWN?: UserInputHandler
-  OK_BUTTON?: UserInputHandler
-  CANCEL_BUTTON?: UserInputHandler
-  MENU_BUTTON?: UserInputHandler
-  keydown?: KeyboardInputHandler
-}
-
-export function UserInput(events: UserInputProps) {
-  const context = useContext(UserInputContext)
-
-  useEffect(() => {
-    const list = Object.entries(events)
-
-    // @ts-expect-error ugh
-    list.forEach(([key, value]) => context.on(key, value))
-    return () => {
-      // @ts-expect-error ugh
-      list.forEach(([key, value]) => context.off(key, value))
-    }
-  }, [context, events])
 
   return null
 }

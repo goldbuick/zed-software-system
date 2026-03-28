@@ -22,7 +22,8 @@ describe('state', () => {
       expect(state.gadget.boardname).toBe('')
       expect(state.gadget.layers).toEqual([])
       expect(state.zsswords.flags).toEqual([])
-      expect(state.layercache).toEqual({})
+      expect(state.layercachemap.size).toBe(0)
+      expect(state.layercachegen).toBe(0)
       expect(state.slim).toEqual([])
     })
 

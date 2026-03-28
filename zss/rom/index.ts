@@ -1,4 +1,3 @@
-import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -19,16 +18,7 @@ import { scrolllinksplittokens } from 'zss/gadget/data/scrollwritelines'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-const rommdfiles = import.meta.glob('./**/*.md', {
-  eager: true,
-  query: 'raw',
-})
-const romcontent: Record<string, string> = {}
-objectKeys(rommdfiles).forEach((name) => {
-  const path = name.replace('.md', '').replace('./', '').replaceAll('/', ':')
-  // @ts-expect-error yes
-  romcontent[path] = rommdfiles[name].default
-})
+import { romcontent } from './contentmap'
 
 export function romread(address: string): MAYBE<string> {
   const withaddress = NAME(

@@ -4,7 +4,12 @@ import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/state'
+import {
+  useEditor,
+  useEqual,
+  useGadgetClient,
+  useTape,
+} from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
@@ -28,7 +33,7 @@ import { EditorRows, EditorRowsProps } from './editorrows'
 export function EditorComponent() {
   const context = useWriteText()
   const player = registerreadplayer()
-  const zsswords = useGadgetClient((state) => state.zsswords)
+  const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const [editor] = useTape(useShallow((state) => [state.editor]))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
 

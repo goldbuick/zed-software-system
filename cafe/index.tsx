@@ -15,6 +15,7 @@ import {
   PlaneGeometry,
   Points,
 } from 'three'
+import 'zss/rom/vitepopulate'
 import { RUNTIME } from 'zss/config'
 import { vmcli } from 'zss/device/api'
 import {

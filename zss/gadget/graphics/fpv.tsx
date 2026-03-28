@@ -241,12 +241,12 @@ export const FPVGraphics = memo(function FPVGraphics({
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
 
-  const { gadget, layercache } = useGadgetClient.getState()
+  const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const exiteast = layercache[gadget.exiteast] ?? []
-  const exitwest = layercache[gadget.exitwest] ?? []
-  const exitnorth = layercache[gadget.exitnorth] ?? []
-  const exitsouth = layercache[gadget.exitsouth] ?? []
+  const exiteast = layercachemap.get(gadget.exiteast) ?? []
+  const exitwest = layercachemap.get(gadget.exitwest) ?? []
+  const exitnorth = layercachemap.get(gadget.exitnorth) ?? []
+  const exitsouth = layercachemap.get(gadget.exitsouth) ?? []
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2

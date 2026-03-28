@@ -106,7 +106,7 @@ CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips
 
 - **`emit(player, target, data)`** → goes through hub with session + sender id.
 - **Routing:** `parsetarget` splits `target` on `:` (e.g. `vm:operator` → device `vm`, path `operator`).
-- Devices match if: subscribed **topic** equals the message target (e.g. `tick`, `tock`, `second`), **or** message is addressed to device id / name / `all`.
+- Devices match if: subscribed **topic** equals the message target (e.g. `ticktock`, `tock`, `second`), **or** message is addressed to device id / name / `all`.
 - **`reply` / `replynext`:** convenience for responses along `sender:subtarget`.
 
 Authoritative diagrams: [`zss/device/docs/message-flow.md`](device/docs/message-flow.md) (mermaid + ASCII) and [`zss/device/docs/devices-and-messaging.md`](device/docs/devices-and-messaging.md) (all devices, three realms, forwarding).
@@ -115,7 +115,7 @@ Authoritative diagrams: [`zss/device/docs/message-flow.md`](device/docs/message-
 
 ## VM and handlers (game / OS logic)
 
-[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `tick`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `tick`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts).
+[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `ticktock`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `ticktock`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts).
 
 The **`register`** device ([`zss/device/register.ts`](device/register.ts)) is the **UI-facing edge**: storage, session, tape/terminal/editor zustand stores, and it **emits** `vm:*` calls (via [`zss/device/api.ts`](device/api.ts)) so user actions become VM work.
 
