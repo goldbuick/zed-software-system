@@ -162,8 +162,8 @@
 
 ## inspection.ts
 
-- **memorygadgetinspectboard(player, board)** - Shows board information in gadget
-- **memorygadgetinspectloaders(player, p1, p2)** - Shows gadget action loaders
+- **memoryinspectboardlines(board)** - Zed tape lines for board inspect footer (`string[]`)
+- **memoryinspectloaderlines(p1, p2)** - Zed tape lines for gadget action loaders (`string[]`, empty if none)
 - **memoryinspect(player, p1, p2)** - Main inspection function for elements or areas (async)
 - **memoryinspectarea(player, p1, p2, hassecretheap)** - Inspects a rectangular area
 - **memoryinspectbgarea(player, p1, p2, name)** - Batch edits backgrounds in an area

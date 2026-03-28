@@ -18,6 +18,7 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
+import { memoryupdatedrawdirty } from './boarddrawdirty'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
@@ -93,7 +94,6 @@ export function memoryrepeatclilast(player: string) {
 }
 
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
-const DRAW_DISPLAY_EVERY_N_TICKS = 3
 
 export function memorytickmain(playeronly = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -158,9 +158,12 @@ export function memorytickmain(playeronly = false) {
         memoryapplyboardsynthstats(board)
       }
 
-      const rundraw = timestamp % DRAW_DISPLAY_EVERY_N_TICKS === 0
-      // iterate code needed to update given board
-      const run = memorytickboard(board, timestamp, rundraw)
+      const drawallowforqueue = board.drawneedfull
+        ? undefined
+        : board.drawallowids
+      const rundraw =
+        drawallowforqueue === undefined || drawallowforqueue.size > 0
+      const run = memorytickboard(board, timestamp, rundraw, drawallowforqueue)
 
       // draw pass
       if (rundraw) {
@@ -211,9 +214,13 @@ export function memorytickmain(playeronly = false) {
           queue.shift()
         }
       }
+
+      memoryupdatedrawdirty(board, timestamp)
     }
   })
 }
+
+export { memoryinvalidatedraw } from './boarddrawdirty'
 
 export function memorytickobject(
   book: MAYBE<BOOK>,

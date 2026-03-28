@@ -1,34 +1,22 @@
-import { compile } from 'zss/lang/generator'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { COLLISION, NAME } from 'zss/words/types'
+import { COLLISION } from 'zss/words/types'
 
 import { memoryreadidorindex } from './boardaccess'
+import { memorycodehasdrawdisplay } from './boarddrawdirty'
 import { BOOK_RUN_ARGS, memorycleanupboard } from './boardmovement'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from './types'
 
-const DRAWHASCACHE: Record<string, boolean> = {}
+const DRAW_LABEL = 'drawdisplay'
 
 export function memorytickboard(
   board: MAYBE<BOARD>,
   timestamp: number,
   includedraw = true,
+  drawallowids?: Set<string>,
 ) {
   const args: BOOK_RUN_ARGS[] = []
-  const DRAW_LABEL = 'drawdisplay'
-  const drawlabel = NAME(DRAW_LABEL)
-
-  function memorycodehaslabel(code: string, label: string) {
-    const key = `${label}:${code}`
-    if (ispresent(DRAWHASCACHE[key])) {
-      return DRAWHASCACHE[key]
-    }
-    const labels = compile('drawpass', code).labels ?? {}
-    const result = ispresent(labels[label])
-    DRAWHASCACHE[key] = result
-    return result
-  }
 
   function addelementrun(
     element: BOARD_ELEMENT,
@@ -43,12 +31,19 @@ export function memorytickboard(
     if (!code) {
       return
     }
-    if (pass === 'draw' && !memorycodehaslabel(code, drawlabel)) {
+    if (pass === 'draw' && !memorycodehasdrawdisplay(code)) {
       return
     }
 
     const readid =
       element.id ?? `${memoryreadidorindex(element) ?? createsid()}`
+    if (
+      pass === 'draw' &&
+      ispresent(drawallowids) &&
+      !drawallowids.has(readid)
+    ) {
+      return
+    }
     args.push({
       id: pass === 'draw' ? `draw_${type}_${readid}` : readid,
       type,
