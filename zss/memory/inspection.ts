@@ -247,10 +247,9 @@ export function memoryinspectarea(
     `!@batch chars:${area} hk a " A " next;set chars:`,
     `!@batch colors:${area} hk c " C " next;set colors:`,
     `!@batch bgs:${area} hk b " B " next;set bgs:`,
-    groupline,
-    DIVIDER,
     `!@batch empty:${area} hk 0 " 0 " next;make empty`,
     DIVIDER,
+    groupline,
     ...memoryinspectloaderlines(p1, p2),
     `codepages:`,
   )
@@ -727,6 +726,9 @@ export function memoryinspectelement(
     get,
     set,
   )
+  gadgethyperlink(player, chip, `make empty`, ['empty', 'hk', '0'], get, set)
+
+  gadgettext(player, DIVIDER)
   gadgethyperlink(
     player,
     chip,
@@ -744,10 +746,6 @@ export function memoryinspectelement(
     set,
   )
 
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, `make empty`, ['empty', 'hk', '0'], get, set)
-
-  gadgettext(player, DIVIDER)
   inspectapplyzedlines(
     player,
     [
