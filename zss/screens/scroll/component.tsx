@@ -9,14 +9,8 @@ import {
 } from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
-import { modemwriteinitstring } from 'zss/device/modem'
-import {
-  BOOKMARK_NAME_TARGET,
-  BOOKMARK_SCROLL_CHIP,
-  BOOKMARK_SCROLL_SCROLLNAME,
-} from 'zss/feature/bookmarks'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { PANEL_ITEM, paneladdress } from 'zss/gadget/data/types'
+import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { useTiles } from 'zss/gadget/tiles'
 import { UserFocus, UserInput, UserInputHandler } from 'zss/gadget/userinput'
@@ -24,7 +18,7 @@ import { TilesData } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
-import { isarray, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
@@ -35,36 +29,12 @@ import {
 import { COLOR } from 'zss/words/types'
 
 import { ScrollBackPlate } from './backplate'
+import { useBookmarkDefaultNameSync } from './bookmarkdefaultname'
 import { ScrollControls } from './controls'
 import { ScrollCursor } from './cursor'
 import { ScrollMarquee } from './marquee'
-
-const SCROLL_START_HYPERLINK_MAX_INDEX = 8
-
-function scrollpickstarthyperlinkrow(text: PANEL_ITEM[]): number {
-  const startat = text.findIndex((item) => isarray(item))
-  if (startat >= 0 && startat <= SCROLL_START_HYPERLINK_MAX_INDEX) {
-    return startat
-  }
-  return 0
-}
-
-/** Compact label like `Mon 3:45p` for bookmark default. */
-function bookmarktimelabel(now: Date): string {
-  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
-    now.getDay()
-  ]
-  const hour = now.getHours()
-  const minute = now.getMinutes()
-  const isam = hour < 12
-  let hr12 = hour % 12
-  if (hr12 === 0) {
-    hr12 = 12
-  }
-  const mm = minute < 10 ? `0${minute}` : `${minute}`
-  const suffix = isam ? 'a' : 'p'
-  return `${weekday} ${hr12}:${mm}${suffix}`
-}
+import { SCROLL_KEY_HINTS_LINE } from './scrollkeyhints'
+import { scrollpickstarthyperlinkrow } from './scrollpick'
 
 type ScrollComponentProps = {
   width: number
@@ -91,7 +61,6 @@ export function ScrollComponent({
   const scroll = useContext(ScrollContext)
   const totalrows = text.length - 1
 
-  // get name
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
   const boardname = useGadgetClient((state) => state.gadget.boardname ?? '')
 
@@ -111,7 +80,6 @@ export function ScrollComponent({
     )
   }, [text])
 
-  // display offset
   let offset = cursor - Math.floor(panelheight * 0.5)
   offset = Math.min(text.length - panelheight, offset)
   offset = Math.max(0, offset)
@@ -120,7 +88,6 @@ export function ScrollComponent({
     text.slice(offset, offset + panelheight),
   )
 
-  // update dither
   const row = cursor - offset
 
   const groupref = useRef<Group>(null)
@@ -154,21 +121,8 @@ export function ScrollComponent({
     [setCursor, totalrows],
   )
 
-  useEffect(() => {
-    if (scrollname !== BOOKMARK_SCROLL_SCROLLNAME) {
-      return
-    }
-    const board = boardname.trim()
-    const defaultname = board
-      ? `${board} - ${bookmarktimelabel(new Date())}`
-      : ''
-    modemwriteinitstring(
-      paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET),
-      defaultname,
-    )
-  }, [scrollname, boardname])
+  useBookmarkDefaultNameSync(scrollname, boardname)
 
-  // start position
   useEffect(() => {
     if (groupref.current && !shouldclose) {
       const start = viewport.height
@@ -179,7 +133,6 @@ export function ScrollComponent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldclose])
 
-  // slick move
   useFrame(
     useCallback(
       (_, delta) => {
@@ -188,7 +141,6 @@ export function ScrollComponent({
             ? height * 2 * -RUNTIME.DRAW_CHAR_HEIGHT()
             : 0
           if (animpositiontotarget(groupref.current, 'y', target, delta)) {
-            // signal completion
             didstop()
           }
         }
@@ -199,6 +151,7 @@ export function ScrollComponent({
 
   return (
     <group ref={groupref} position-y={1000000}>
+      {/* Wheel hit target outside UserFocus so trackpad scroll works without nesting focus. */}
       <Scrollable
         blocking
         x={0}
@@ -229,13 +182,7 @@ export function ScrollComponent({
                 y={0}
                 leftedge={0}
                 rightedge={width}
-                line={`
-keys: $whiteup/down$green.SCROLL UP/DOWN 
-$whiteesc/cancel$green.CLOSE SCROLL 
-$whiteenter$green.ACTION ON SELECTED LINE 
-$whitealt+up/down$green.JUMP 10 LINES 
-$white$meta+up/down$green.JUMP TOP/BOTTOM $blue
-`}
+                line={SCROLL_KEY_HINTS_LINE}
               />
               <ScrollCursor row={row} />
               <PanelComponent
