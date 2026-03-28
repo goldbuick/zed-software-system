@@ -61,7 +61,7 @@ function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
   return `inspect:${id}`
 }
 
-export function memorygadgetinspectboard(player: string, board: string) {
+function memorygadgetinspectboard(player: string, board: string) {
   const boardcodepage = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.BOARD,
     board,
@@ -71,7 +71,7 @@ export function memorygadgetinspectboard(player: string, board: string) {
   gadgethyperlink(player, 'batch', `edit board codepage`, [`pageopen:${board}`])
 }
 
-export function memorygadgetinspectloaders(player: string, p1: PT, p2: PT) {
+function memorygadgetinspectloaders(player: string, p1: PT, p2: PT) {
   // add matching loaders
   const loaders = memoryloadermatches('text', 'gadget:action')
   if (loaders.length) {
