@@ -4,7 +4,9 @@
     "zss",
     "cafe",
     "src",
+    "e2e",
     "vite.config.ts",
     "jest.config.ts",
+    "playwright.config.ts",
   ]
 }

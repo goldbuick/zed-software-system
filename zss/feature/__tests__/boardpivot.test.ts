@@ -66,6 +66,29 @@ describe('boardpivotmath', () => {
       pivotcell(2, 3, w, h, theta),
     )
   })
+
+  it('keeps a bijection after many −45° steps (no lost / doubled cells)', () => {
+    const w = 12
+    const h = 8
+    const theta = (-45 * Math.PI) / 180
+    const { xedge, yedge } = pivotbuildintegeredges(w, h, theta)
+    const forward = (src: number) => {
+      const ix = src % w
+      const iy = Math.floor(src / w)
+      const p = pivotcellinteger(ix, iy, w, h, xedge, yedge)
+      return p.x + p.y * w
+    }
+    let step = (i: number) => i
+    for (let s = 0; s < 16; ++s) {
+      const prev = step
+      step = (i: number) => forward(prev(i))
+    }
+    const seen = new Set<number>()
+    for (let i = 0; i < w * h; ++i) {
+      seen.add(step(i))
+    }
+    expect(seen.size).toBe(w * h)
+  })
 })
 
 describe('boardpivot rectangular', () => {

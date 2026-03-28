@@ -32,4 +32,8 @@ oclif.manifest.json
 # vosk speech recognition models (large binaries)
 cafe/public/models/
 
+# Playwright
+test-results/
+playwright-report/
+
 

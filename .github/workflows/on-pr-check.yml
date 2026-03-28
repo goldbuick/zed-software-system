@@ -27,3 +27,26 @@ jobs:
 
       - name: run tests
         run: yarn test
+
+  e2e:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          set-safe-directory: true
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: run e2e tests
+        run: yarn test:e2e

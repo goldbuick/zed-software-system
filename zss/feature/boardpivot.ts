@@ -1,6 +1,7 @@
 import {
   pivotbuildintegeredges,
   pivotcellinteger,
+  pivotposmodi,
 } from 'zss/feature/boardpivotmath'
 import { pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
@@ -59,7 +60,7 @@ function boardpivotfullboardapply(
         const skew = edge[y]
         const row = y * BOARD_WIDTH
         for (let x = 0; x < BOARD_WIDTH; x++) {
-          const xskew = (x + skew + BOARD_WIDTH) % BOARD_WIDTH
+          const xskew = pivotposmodi(x + skew, BOARD_WIDTH)
           if (pivotterrain) {
             tmpboard.terrain[xskew + row] = targetboard.terrain[x + row]
           }
@@ -72,7 +73,7 @@ function boardpivotfullboardapply(
           const { x, y } = targetboard.objects[id]
           if (ispresent(x) && ispresent(y)) {
             const skew = edge[y]
-            targetboard.objects[id].x = (x + skew + BOARD_WIDTH) % BOARD_WIDTH
+            targetboard.objects[id].x = pivotposmodi(x + skew, BOARD_WIDTH)
             targetboard.objects[id].lx = targetboard.objects[id].x
           }
         }
@@ -82,7 +83,7 @@ function boardpivotfullboardapply(
       for (let x = 0; x < BOARD_WIDTH; ++x) {
         const skew = edge[x]
         for (let y = 0; y < BOARD_HEIGHT; ++y) {
-          const yskew = (y + skew + BOARD_HEIGHT) % BOARD_HEIGHT
+          const yskew = pivotposmodi(y + skew, BOARD_HEIGHT)
           if (pivotterrain) {
             tmpboard.terrain[x + yskew * BOARD_WIDTH] =
               targetboard.terrain[x + y * BOARD_WIDTH]
@@ -96,7 +97,7 @@ function boardpivotfullboardapply(
           const { x, y } = targetboard.objects[id]
           if (ispresent(x) && ispresent(y)) {
             const skew = edge[x]
-            targetboard.objects[id].y = (y + skew + BOARD_HEIGHT) % BOARD_HEIGHT
+            targetboard.objects[id].y = pivotposmodi(y + skew, BOARD_HEIGHT)
             targetboard.objects[id].ly = targetboard.objects[id].y
           }
         }

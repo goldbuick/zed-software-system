@@ -18,6 +18,10 @@ export function pivotshearcoeffs(theta: number): {
  * Per-row / per-column integer skews from continuous linear shear (float coeffs, round per line).
  * Composing three modular shears with these edges is a bijection on the torus, unlike
  * float compose + single floor to grid (which collides on full boards).
+ *
+ * Note: each pivot is a permutation (no duplicate / missing cells), but shear is not rigid
+ * motion on the grid — repeated −45° pivots scramble multi-cell shapes (e.g. text) because
+ * neighbor relationships are not preserved. To move a label as a unit, pivot by **group**.
  */
 export function pivotbuildintegeredges(
   w: number,
