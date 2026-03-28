@@ -1,10 +1,7 @@
 import { applyPatch as applypatch } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
 import { importgadgetstate } from 'zss/gadget/data/compress'
-import {
-  applylayercacheupdate,
-  useGadgetClient,
-} from 'zss/gadget/data/state'
+import { applylayercacheupdate, useGadgetClient } from 'zss/gadget/data/state'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 
 import { registerreadplayer } from './register'

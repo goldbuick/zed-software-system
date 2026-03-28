@@ -82,7 +82,10 @@ function mediabitscachetouch(key: string) {
   }
 }
 
-function cachedmediabits(pageselect: string, bits: ArrayLike<number>): number[] {
+function cachedmediabits(
+  pageselect: string,
+  bits: ArrayLike<number>,
+): number[] {
   const key = `${pageselect}:${fingerprintbits(bits)}`
   const got = MEDIABITS_CACHE.get(key)
   if (ispresent(got) && got.length === bits.length) {
@@ -625,7 +628,7 @@ function evictrendercacheifneeded() {
     if (!ispresent(tag)) {
       break
     }
-    if (tag[0] === 'L') {
+    if (tag.startsWith('L')) {
       delete LAYER_CACHE[tag.slice(2)]
     } else {
       delete SPRITE_CACHE[tag.slice(2)]

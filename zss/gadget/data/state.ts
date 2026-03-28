@@ -22,7 +22,7 @@ export function applylayercacheupdate(
   }
   map.set(board, layers)
   while (map.size > LAYERCACHE_MAX_ENTRIES) {
-    const oldest = map.keys().next().value as string
+    const oldest = map.keys().next().value!
     map.delete(oldest)
   }
   return map
