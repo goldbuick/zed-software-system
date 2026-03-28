@@ -51,6 +51,8 @@ import {
   applycodetokencolors,
   bgcolor,
   buildzsswordcolors,
+  ZSS_CURSOR_BG,
+  ZSS_CURSOR_FG,
 } from 'zss/screens/tape/colors'
 import { setuplogitem } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
@@ -416,8 +418,8 @@ export function TerminalInput({
 
   // draw cursor
   drawblockcursor(tapeterminal.xcursor, tapeycursor, edge, context, {
-    fg: COLOR.BLWHITE,
-    bg: context.reset.bg,
+    fg: ZSS_CURSOR_FG,
+    bg: ZSS_CURSOR_BG,
   })
 
   // draw autocomplete (above input line when active)
