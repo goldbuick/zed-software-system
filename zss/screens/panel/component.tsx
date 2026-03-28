@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
@@ -35,21 +36,24 @@ export function PanelComponent({
 }: PanelProps) {
   const store = useTiles(width, height, 0, color, bg)
   const state = store.getState()
-  const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(
-      width,
-      height,
-      color,
-      bg,
-      ymargin,
-      xmargin,
-      width - xmargin - 1,
-      height - ymargin,
-    ),
-    ...store.getState(),
-    x: xmargin,
-    y: ymargin,
-  }
+  const context: WRITE_TEXT_CONTEXT = useMemo(
+    () => ({
+      ...createwritetextcontext(
+        width,
+        height,
+        color,
+        bg,
+        ymargin,
+        xmargin,
+        width - xmargin - 1,
+        height - ymargin,
+      ),
+      ...store.getState(),
+      x: xmargin,
+      y: ymargin,
+    }),
+    [bg, color, height, store, width, xmargin, ymargin],
+  )
 
   resettiles(state, 0, color, bg)
 

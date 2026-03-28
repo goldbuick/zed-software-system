@@ -1,5 +1,12 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -88,10 +95,13 @@ export function ScrollComponent({
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
   const boardname = useGadgetClient((state) => state.gadget.boardname ?? '')
 
-  const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
-    ...tilesstore.getState(),
-  }
+  const context: WRITE_TEXT_CONTEXT = useMemo(
+    () => ({
+      ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
+      ...tilesstore.getState(),
+    }),
+    [bg, color, height, tilesstore, width],
+  )
 
   const [cursor, setCursor] = useState(() => scrollpickstarthyperlinkrow(text))
 

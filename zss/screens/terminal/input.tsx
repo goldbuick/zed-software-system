@@ -16,7 +16,12 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
-import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
+import {
+  useEqual,
+  useGadgetClient,
+  useTape,
+  useTerminal,
+} from 'zss/gadget/data/state'
 import { useDeviceData } from 'zss/gadget/device'
 import { Scrollable } from 'zss/gadget/scrollable'
 import {
@@ -91,7 +96,7 @@ export function TerminalInput({
     })),
   )
   const autocompleteindex = useTape((state) => state.autocompleteindex)
-  const zsswords = useGadgetClient((state) => state.zsswords)
+  const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const gadgetboard = useGadgetClient((state) => state.gadget.board)
 
   const player = registerreadplayer()

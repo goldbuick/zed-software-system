@@ -10,6 +10,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useDeviceData } from 'zss/gadget/device'
 import { TouchUI } from 'zss/screens/touchui/component'
+import { useShallow } from 'zustand/react/shallow'
 
 // screensize in chars
 const Screensize = createContext({
@@ -28,7 +29,13 @@ type UserScreenProps = PropsWithChildren<any>
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
-  const { saferows, islandscape, showtouchcontrols } = useDeviceData()
+  const { saferows, islandscape, showtouchcontrols } = useDeviceData(
+    useShallow((state) => ({
+      saferows: state.saferows,
+      islandscape: state.islandscape,
+      showtouchcontrols: state.showtouchcontrols,
+    })),
+  )
 
   // cols
   const rcols = viewwidth / RUNTIME.DRAW_CHAR_WIDTH()

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { gadgetserverclearscroll } from 'zss/device/api'
@@ -14,6 +14,7 @@ import { clamp } from 'zss/mapping/number'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import { ScrollComponent } from 'zss/screens/scroll/component'
+import { useShallow } from 'zustand/react/shallow'
 
 import { ScreenUIFramed } from './framed'
 
@@ -74,7 +75,13 @@ const SIDEBAR_SIZE = 20
 
 export function ScreenUIComponent() {
   const screensize = useScreenSize()
-  const { islandscape, sidebaropen, showtouchcontrols } = useDeviceData()
+  const { islandscape, sidebaropen, showtouchcontrols } = useDeviceData(
+    useShallow((state) => ({
+      islandscape: state.islandscape,
+      sidebaropen: state.sidebaropen,
+      showtouchcontrols: state.showtouchcontrols,
+    })),
+  )
 
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0
@@ -82,6 +89,13 @@ export function ScreenUIComponent() {
   const sidebar = useGadgetClient(
     useEqual((state) => state.gadget.sidebar ?? []),
   )
+
+  useEffect(() => {
+    if (!isscrollempty) {
+      sethasscroll(true)
+    }
+  }, [isscrollempty])
+
   const player = registerreadplayer()
   const scrollcontextvalue = useMemo(
     () => ({
@@ -172,10 +186,6 @@ export function ScreenUIComponent() {
   }
   scrollrect.x = frame.x + Math.floor((frame.width - scrollrect.width) * 0.5)
   scrollrect.y = frame.y + Math.floor((frame.height - scrollrect.height) * 0.5)
-
-  if (!isscrollempty && !hasscroll) {
-    sethasscroll(true)
-  }
 
   // add the frame to display the game
   rects.unshift(frame)
