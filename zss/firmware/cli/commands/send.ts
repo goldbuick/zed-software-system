@@ -14,7 +14,7 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command(
       'shortsend',
-      ['message (short form, no target keyword needed)'],
+      [ARG_TYPE.ANY, ARG_TYPE.ANY, 'label and message (no TO keyword)'],
       (chip, words) => {
         const send = parsesend(words)
         if (send.targetname === 'self') {
@@ -32,48 +32,64 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
         return 0
       },
     )
-    .command('send', ['message to target elements'], (chip, words) => {
-      const send = parsesend(words, true)
-      memorysendtoelements(chip, READ_CONTEXT.element, send)
-      return 0
-    })
-    .command('stat', ['text in a scroll window'], (_, words) => {
-      const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-      vmmakeitscroll(SOFTWARE, READ_CONTEXT.elementfocus, textwords.join(' '))
-      return 0
-    })
-    .command('text', ['text on element or in sidebar'], (_, words) => {
-      const [tickerwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-      const ticker = tickerwords.join(' ')
-      if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
-        READ_CONTEXT.element.tickertext = ticker
-        READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-        memorysendtolog('', READ_CONTEXT.element, ticker)
+    .command(
+      'send',
+      [ARG_TYPE.NAME, ARG_TYPE.ANY, 'target label and message'],
+      (chip, words) => {
+        const send = parsesend(words, true)
+        memorysendtoelements(chip, READ_CONTEXT.element, send)
+        return 0
+      },
+    )
+    .command(
+      'stat',
+      [ARG_TYPE.NUMBER_OR_NAME, ARG_TYPE.ANY, 'optional line or name, then scroll text'],
+      (_, words) => {
+        const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
+        vmmakeitscroll(SOFTWARE, READ_CONTEXT.elementfocus, textwords.join(' '))
+        return 0
+      },
+    )
+    .command(
+      'text',
+      [ARG_TYPE.NUMBER_OR_NAME, ARG_TYPE.ANY, 'optional line or name, then ticker text'],
+      (_, words) => {
+        const [tickerwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
+        const ticker = tickerwords.join(' ')
+        if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
+          READ_CONTEXT.element.tickertext = ticker
+          READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+          memorysendtolog('', READ_CONTEXT.element, ticker)
+          const { user } = memoryreadflags(READ_CONTEXT.elementid)
+          const withuser = isstring(user) ? user : 'player'
+          vmloader(
+            SOFTWARE,
+            READ_CONTEXT.elementid,
+            undefined,
+            'text',
+            `chat:message:${READ_CONTEXT.board?.id ?? ''}`,
+            `${withuser}:${ticker}`,
+          )
+        }
+        return 0
+      },
+    )
+    .command(
+      'hyperlink',
+      [ARG_TYPE.ANY, ARG_TYPE.ANY, 'label text and link target words'],
+      (chip, args) => {
+        const [label, ...words] = args
         const { user } = memoryreadflags(READ_CONTEXT.elementid)
         const withuser = isstring(user) ? user : 'player'
-        vmloader(
+        const icon = memoryreadelementdisplay(READ_CONTEXT.element)
+        const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
+        const labelstr = chip.template(maptostring(label).split(' '))
+        apilog(
           SOFTWARE,
           READ_CONTEXT.elementid,
-          undefined,
-          'text',
-          `chat:message:${READ_CONTEXT.board?.id ?? ''}`,
-          `${withuser}:${ticker}`,
+          `!${chip.template(words)};${player}${labelstr}`,
         )
-      }
-      return 0
-    })
-    .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
-      const [label, ...words] = args
-      const { user } = memoryreadflags(READ_CONTEXT.elementid)
-      const withuser = isstring(user) ? user : 'player'
-      const icon = memoryreadelementdisplay(READ_CONTEXT.element)
-      const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
-      const labelstr = chip.template(maptostring(label).split(' '))
-      apilog(
-        SOFTWARE,
-        READ_CONTEXT.elementid,
-        `!${chip.template(words)};${player}${labelstr}`,
-      )
-      return 0
-    })
+        return 0
+      },
+    )
 }

@@ -27,6 +27,7 @@ import {
   drawautocomplete,
   drawcommandarghint,
 } from 'zss/screens/tape/autocomplete'
+import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -155,6 +156,11 @@ export function EditorInput({
       starty - 1,
       edge,
       context,
+      {
+        wrap: true,
+        nexthint: autocomplete.nexthint,
+        romhint: commandromhint(autocomplete.hintcommandname),
+      },
     )
   }
 

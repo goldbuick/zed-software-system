@@ -66,43 +66,59 @@ export const RUNTIME_FIRMWARE = createfirmware({
   })
   .command(
     'shortsend',
-    ['message (short form, no target keyword needed)'],
+    [ARG_TYPE.ANY, ARG_TYPE.ANY, 'label and message (no TO keyword)'],
     (chip, words) => {
       const send = parsesend(words)
       memorysendtoelements(chip, READ_CONTEXT.element, send)
       return 0
     },
   )
-  .command('send', ['message to target elements'], (chip, words) => {
-    const send = parsesend(words, true)
-    memorysendtoelements(chip, READ_CONTEXT.element, send)
-    return 0
-  })
-  .command('stat', ['text in a scroll window'], () => {
-    //  no-op
-    return 0
-  })
-  .command('text', ['text on element or in sidebar'], (_, words) => {
-    const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-    const text = textwords.join(' ')
-    gadgettext(READ_CONTEXT.elementid, text)
-    return 0
-  })
-  .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
-    const [label, ...words] = args
-    const labelstr = chip.template(maptostring(label).split(' '))
-    const wordsstr = chip.template(words)
-    // need to detect maybe flags in words
-    gadgethyperlink(
-      READ_CONTEXT.elementid,
-      chip.id(),
-      labelstr,
-      wordsstr.split(' '),
-      chip.get,
-      chip.set,
-    )
-    return 0
-  })
+  .command(
+    'send',
+    [ARG_TYPE.NAME, ARG_TYPE.ANY, 'target label and message'],
+    (chip, words) => {
+      const send = parsesend(words, true)
+      memorysendtoelements(chip, READ_CONTEXT.element, send)
+      return 0
+    },
+  )
+  .command(
+    'stat',
+    [ARG_TYPE.NUMBER_OR_NAME, ARG_TYPE.ANY, 'optional line or name, then scroll text'],
+    () => {
+      //  no-op
+      return 0
+    },
+  )
+  .command(
+    'text',
+    [ARG_TYPE.NUMBER_OR_NAME, ARG_TYPE.ANY, 'optional line or name, then ticker text'],
+    (_, words) => {
+      const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
+      const text = textwords.join(' ')
+      gadgettext(READ_CONTEXT.elementid, text)
+      return 0
+    },
+  )
+  .command(
+    'hyperlink',
+    [ARG_TYPE.ANY, ARG_TYPE.ANY, 'label text and link target words'],
+    (chip, args) => {
+      const [label, ...words] = args
+      const labelstr = chip.template(maptostring(label).split(' '))
+      const wordsstr = chip.template(words)
+      // need to detect maybe flags in words
+      gadgethyperlink(
+        READ_CONTEXT.elementid,
+        chip.id(),
+        labelstr,
+        wordsstr.split(' '),
+        chip.get,
+        chip.set,
+      )
+      return 0
+    },
+  )
   .command('help', ['help scroll'], () => {
     vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0

@@ -1,7 +1,7 @@
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { romhintfrommarkdown, romread } from 'zss/rom'
 import {
   WRITE_TEXT_CONTEXT,
@@ -9,8 +9,15 @@ import {
   applystrtoindex,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
+import {
+  buildcommandhintbody,
+  commandromhint,
+  computecommandnexthint,
+  getcommandargsignature,
+  splitcommandsignature,
+} from './commandarghints'
 import { zsswordcolor } from './colors'
 import type { ZSS_WORD_LIST_KEY } from './colors'
 import { EDITOR_CODE_ROW } from './common'
@@ -70,6 +77,10 @@ export type AUTO_COMPLETE = {
   wordstart: number
   endoflinehint: boolean
   endoflineargs: COMMAND_ARGS_SIGNATURE
+  /** e.g. "next: <dir>" when the command has structured ARG_TYPE slots */
+  nexthint: string
+  /** Lowercase command name after `#` for `editor:commands:` ROM lookup */
+  hintcommandname: string
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
@@ -79,6 +90,8 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   wordstart: 0,
   endoflinehint: false,
   endoflineargs: [''],
+  nexthint: '',
+  hintcommandname: '',
 }
 
 const MAX_SUGGESTIONS = 8
@@ -129,6 +142,8 @@ function hintfromrom(category: string, word = ''): string {
   switch (category) {
     case 'flags':
       return `flag ${word}`
+    case 'commands':
+      return ''
     default:
       return ''
   }
@@ -182,16 +197,30 @@ function getautocompletefromtokens(
     }
 
     let endoflinehint = cmdidx >= 0
-    const maybecommand = tokens[cmdidx + 1].image ?? ''
-    const maybesig =
-      words.langcommands[maybecommand] ??
-      words.clicommands[maybecommand] ??
-      words.loadercommands[maybecommand] ??
-      words.runtimecommands[maybecommand]
+    const cmdnameidx = cmdidx + 1
+    const commandlookup =
+      cmdidx >= 0 && cmdnameidx < tokens.length
+        ? (tokens[cmdnameidx].image ?? '').toLowerCase()
+        : ''
+    const maybesig = commandlookup
+      ? getcommandargsignature(words, commandlookup)
+      : undefined
 
     let endoflineargs = ispresent(maybesig)
       ? maybesig
-      : ([`send the message ${maybecommand}`] as COMMAND_ARGS_SIGNATURE)
+      : ([`send the message ${commandlookup}`] as COMMAND_ARGS_SIGNATURE)
+
+    let nexthint = ''
+    if (cmdidx >= 0 && ispresent(maybesig)) {
+      const { argtypes } = splitcommandsignature(maybesig)
+      nexthint = computecommandnexthint(
+        tokens,
+        cmdidx,
+        activetokenidx,
+        cursor,
+        argtypes,
+      )
+    }
 
     let prefix = ''
     let activecategory = ''
@@ -257,6 +286,8 @@ function getautocompletefromtokens(
           wordstart,
           endoflinehint,
           endoflineargs,
+          nexthint,
+          hintcommandname: commandlookup,
         }
       }
       case 'stat':
@@ -273,6 +304,8 @@ function getautocompletefromtokens(
           wordstart,
           endoflinehint,
           endoflineargs,
+          nexthint: '',
+          hintcommandname: '',
         }
       }
       default: {
@@ -303,6 +336,8 @@ function getautocompletefromtokens(
           wordstart,
           endoflinehint,
           endoflineargs,
+          nexthint,
+          hintcommandname: commandlookup,
         }
       }
     }
@@ -378,60 +413,71 @@ function drawhinttext(
   )
 }
 
-function argsliststring(args: ARG_TYPE[]) {
-  const list = []
-  for (const arg of args) {
-    switch (arg) {
-      case ARG_TYPE.COLOR:
-        list.push('<color>')
-        break
-      case ARG_TYPE.KIND:
-        list.push('<kind>')
-        break
-      case ARG_TYPE.DIR:
-        list.push('<dir>')
-        break
-      case ARG_TYPE.NAME:
-        list.push('<name>')
-        break
-      case ARG_TYPE.NUMBER:
-        list.push('<number>')
-        break
-      case ARG_TYPE.STRING:
-        list.push('<string>')
-        break
-      case ARG_TYPE.NUMBER_OR_STRING:
-        list.push('<num|str>')
-        break
-      case ARG_TYPE.COLOR_OR_KIND:
-        list.push('<color|kind>')
-        break
-      case ARG_TYPE.MAYBE_KIND:
-        list.push('[kind]')
-        break
-      case ARG_TYPE.MAYBE_NAME:
-        list.push('[name]')
-        break
-      case ARG_TYPE.MAYBE_NUMBER:
-        list.push('[number]')
-        break
-      case ARG_TYPE.MAYBE_STRING:
-        list.push('[string]')
-        break
-      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
-        list.push('[num|str]')
-        break
-      case ARG_TYPE.ANY:
-        list.push('<any>')
-        break
-    }
+/** Below this width, EOL-anchored first line is unreadable — use full-width rows. */
+const MIN_HINT_FIRST_COL = 22
+
+/**
+ * Take up to maxw chars, preferring a break at the last space so words stay intact.
+ */
+function wraphinttakeline(remaining: string, maxw: number): [string, string] {
+  if (remaining.length <= maxw) {
+    return [remaining, '']
   }
-  return list.join(' ')
+  const slice = remaining.substring(0, maxw)
+  const lastsp = slice.lastIndexOf(' ')
+  if (lastsp > maxw * 0.35 && lastsp >= 4) {
+    const line = remaining.substring(0, lastsp).trimEnd()
+    return [line, remaining.substring(lastsp + 1).trimStart()]
+  }
+  return [slice, remaining.substring(maxw).trimStart()]
+}
+
+function wraphintlines(
+  text: string,
+  firstpx: number,
+  edge: AutocompleteEdge,
+): string[] {
+  const lines: string[] = []
+  let remaining = text.trim()
+  if (!remaining.length) {
+    return []
+  }
+
+  const firstmax = Math.max(0, edge.right - firstpx + 1)
+  const narrowfirst = firstmax < MIN_HINT_FIRST_COL
+  let first = true
+
+  while (remaining.length > 0) {
+    const usefullrow = first && narrowfirst
+    const px = usefullrow ? edge.left : first ? firstpx : edge.left
+    const maxw = Math.max(0, edge.right - px + 1)
+    if (maxw < 1) {
+      break
+    }
+    const [line, rest] = wraphinttakeline(remaining, maxw)
+    if (!line.length && rest.length) {
+      lines.push(remaining.substring(0, 1))
+      remaining = remaining.substring(1).trimStart()
+      first = false
+      continue
+    }
+    lines.push(line)
+    remaining = rest
+    first = false
+  }
+  return lines
+}
+
+export type DrawCommandArgHintOptions = {
+  nexthint?: string
+  /** First line at px; continuation lines start at edge.left, rows above py */
+  wrap?: boolean
+  romhint?: string
 }
 
 /**
  * Draws the argument hint for a command (e.g. above the terminal input).
- * Uses the trailing hint string from the command's single signature.
+ * Uses ARG_TYPE placeholders plus trailing prose (firmware or ROM).
  */
 export function drawcommandarghint(
   sig: COMMAND_ARGS_SIGNATURE,
@@ -439,19 +485,40 @@ export function drawcommandarghint(
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
+  options?: DrawCommandArgHintOptions,
 ) {
-  const withsig = [...sig]
-  const hint = withsig.pop()
-  if (!isstring(hint)) {
+  const body = buildcommandhintbody(sig, options?.romhint)
+  const next = options?.nexthint?.trim() ?? ''
+  const firststripw =
+    options?.wrap === true
+      ? Math.max(0, edge.right - px + 1)
+      : Number.POSITIVE_INFINITY
+  const narrowfirst =
+    options?.wrap === true && firststripw < MIN_HINT_FIRST_COL
+  const full =
+    next && narrowfirst
+      ? `${next}  ${body}`
+      : next
+        ? `${body}  ${next}`
+        : body
+  if (!full) {
     return
   }
-  let cursor = px
-  const argsStr = argsliststring(withsig as ARG_TYPE[])
-  if (argsStr) {
-    drawhinttext(argsStr, cursor, py, edge.right, context)
-    cursor += argsStr.length + 1
+  if (options?.wrap) {
+    const lines = wraphintlines(full, px, edge)
+    let y = py
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const usepx = i === 0 ? px : edge.left
+      drawhinttext(line, usepx, y, edge.right, context)
+      y -= 1
+      if (y < edge.top) {
+        break
+      }
+    }
+  } else {
+    drawhinttext(full, px, py, edge.right, context)
   }
-  drawhinttext(hint, cursor, py, edge.right, context)
 }
 
 export function drawautocomplete(
@@ -547,14 +614,12 @@ export function drawautocomplete(
           hint = 'loader codepage'
           break
         case 'commands': {
-          const sig =
-            words.clicommands[suggestion.word] ??
-            words.loadercommands[suggestion.word] ??
-            words.runtimecommands[suggestion.word]
+          const sig = getcommandargsignature(words, suggestion.word)
           if (isarray(sig)) {
-            const args = [...sig] as ARG_TYPE[]
-            const cmd = args.pop()
-            hint = `${argsliststring(args)} ${cmd}`
+            hint = buildcommandhintbody(
+              sig,
+              commandromhint(suggestion.word.toLowerCase()),
+            )
           }
           break
         }
