@@ -43,6 +43,11 @@ import {
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import {
+  applyautocompletesuggestion,
+  computeterminalarghintx,
+} from 'zss/screens/tape/autocompleteui'
+import { commandromhint } from 'zss/screens/tape/commandarghints'
+import {
   applycodetokencolors,
   bgcolor,
   buildzsswordcolors,
@@ -180,6 +185,11 @@ export function TerminalInput({
       ),
     [terminallogs, logsrowmaxwidth, edge.height],
   )
+  const zsswordcolormap = useMemo(
+    () => buildzsswordcolors(zsswords),
+    [zsswords],
+  )
+
   const activerowindex = useMemo(
     () =>
       findterminalrowindexforcursor({
@@ -311,7 +321,6 @@ export function TerminalInput({
 
   // autocomplete (ZSS words; only when focus on input line)
   const autocomplete = useMemo(() => {
-    buildzsswordcolors(zsswords)
     if (!inputstateactive) {
       return EMPTY_AUTOCOMPLETE
     }
@@ -335,20 +344,16 @@ export function TerminalInput({
   ])
 
   function acceptsuggestion() {
-    if (autocomplete.suggestions.length === 0) {
-      return
-    }
-    const idx = Math.min(autocompleteindex, autocomplete.suggestions.length - 1)
-    const suggestion = autocomplete.suggestions[idx]
-    if (!suggestion) {
-      return
-    }
-    inputstatesetsplice(
-      autocomplete.wordstart,
-      autocomplete.prefix.length,
-      suggestion.word,
+    const applied = applyautocompletesuggestion(
+      autocomplete,
+      autocompleteindex,
+      (wordstart, prefixlen, word) => {
+        inputstatesetsplice(wordstart, prefixlen, word)
+      },
     )
-    useTape.setState({ autocompleteindex: -1 })
+    if (applied) {
+      useTape.setState({ autocompleteindex: -1 })
+    }
   }
 
   // reset color & bg
@@ -422,25 +427,37 @@ export function TerminalInput({
     autocomplete.suggestions.length > 0
   const startx = edge.left
   const starty = edge.top + edge.height - 1
+  const popupleftx = startx + autocomplete.wordcol - 1
   if (autocompleteactive) {
     drawautocomplete(
       autocomplete,
       autocompleteindex,
-      startx + autocomplete.wordcol - 1,
+      popupleftx,
       starty,
       edge,
       context,
       zsswords,
+      zsswordcolormap,
       true,
     )
   }
   if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
+    const hintx = computeterminalarghintx({
+      startx,
+      inputlen: inputstate.length,
+      autocomplete,
+      autocompleteactive,
+      popupleftx,
+    })
     drawcommandarghint(
       autocomplete.endoflineargs,
-      startx + inputstate.length + 1,
+      hintx,
       starty,
       edge,
       context,
+      {
+        romhint: commandromhint(autocomplete.hintcommandname),
+      },
     )
   }
 

@@ -192,11 +192,11 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 ### `editor/editorinput.tsx`
 
 - **`EditorInputProps`** (type)
-  - Props for editor input component
+  - Props: cursor/scroll offsets, rows, codepage, `autocomplete`, `autocompleteactive`, `zsswordcolormap` (word-list colors for the suggestion popup)
 
 - **`EditorInput(props: EditorInputProps)`**
   - Editor input/command line component
-  - Handles code input and editing
+  - Handles code input, editing, autocomplete drawing, and ROM-backed command hints
 
 ### `editor/editorframe.tsx`
 
@@ -243,9 +243,15 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 - **`zsswordcolorconfig(word: string, color: COLOR)`**
   - Configures custom color for a specific word
 
-- **`zsswordcolor(word: string): COLOR | COLOR[]`**
+- **`zsswordcolor(word: string, listcolors?: Map<string, COLOR>): COLOR | COLOR[]`**
   - Gets color(s) for a word, including special handling for 'play' and 'bgplay' commands
-  - Returns array of colors for play commands
+  - Returns array of colors for play commands; optional `listcolors` overrides the global word-list map
+
+- **`createzsswordcolormap(words)`**
+  - Returns a new word-list `Map<string, COLOR>` without mutating globals (use with autocomplete)
+
+- **`buildzsswordcolors(words)`**
+  - Fills the global word-list map used by `zsswordcolor()` / `applycodetokencolors` and returns that map (call when `zsswords` changes)
 
 #### Music Color Constants
 
@@ -341,6 +347,24 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 
 - **`findcursorinrows(cursor: number, rows: EDITOR_CODE_ROW[]): number`**
   - Finds row index containing cursor position
+
+### `tape/autocomplete.ts`
+
+- **`AUTO_COMPLETE`**, **`AUTO_COMPLETE_SUGGESTION`**, **`EMPTY_AUTOCOMPLETE`**, **`AutocompleteEdge`**
+- **`getautocomplete(row, cursor, words)`** — suggestions, end-of-line arg hint payload, `maxsuggestionwordlen`, `hintcommandname` for ROM lookup
+- **`drawautocomplete(..., words, wordlistcolors, drawabove?)`** — suggestion popup (per-word colors from `wordlistcolors`)
+- **`drawcommandarghint(sig, px, py, edge, context, options?)`** — firmware signature line; optional `options.romhint` (e.g. from `commandromhint`)
+- **`DrawCommandArgHintOptions`** (type)
+
+### `tape/commandarghints.ts`
+
+- **`commandromhint(commandlookup)`** — `romread('editor:commands:' + key)` + `romhintfrommarkdown`, module-cached
+- **`clearcommandromhintcache()`** — invalidate cache if ROM reloads
+
+### `tape/autocompleteui.ts`
+
+- **`applyautocompletesuggestion(autocomplete, index, replaceat)`** — shared Tab/accept behavior
+- **`computeterminalarghintx({ startx, inputlen, autocomplete, autocompleteactive, popupleftx })`** — avoid overlap with suggestion popup
 
 ---
 
@@ -483,6 +507,8 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 | | `editor/*.tsx` | Editor UI components (rows, input, frame) |
 | **Tape** | `tape/layout.tsx` | `TapeLayout()` - Layout component |
 | | `tape/colors.ts` | 20+ color constants, syntax highlighting functions |
+| | `tape/autocomplete.ts` | `getautocomplete`, `drawautocomplete`, `drawcommandarghint` |
+| | `tape/commandarghints.ts`, `tape/autocompleteui.ts` | ROM command hints, shared accept/hint placement |
 | | `tape/common.ts` | Constants, types, utility functions for tape/editor |
 | | `tape/*.tsx` | Backplate, blinker components |
 | **Scroll** | `scroll/component.tsx` | `Scroll()` - Scrollable panel |

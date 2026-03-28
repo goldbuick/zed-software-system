@@ -788,9 +788,9 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch emptyall:${area} hk 1 " 1 " next;clear terrain & objects`,
-    `!@batch emptyobjects:${area} hk 2 " 2 " next;clear objects`,
-    `!@batch emptyterrain:${area} hk 3 " 3 " next;clear terrain`,
+    `!@batch emptyall:${area} hk 1 " 1 ";clear terrain & objects`,
+    `!@batch emptyobjects:${area} hk 2 " 2 ";clear objects`,
+    `!@batch emptyterrain:${area} hk 3 " 3 ";clear terrain`,
   ]
   scrollwritelines(player, 'empty', lines.join('\n'), 'batch')
 }
