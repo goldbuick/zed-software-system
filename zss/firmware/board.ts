@@ -620,11 +620,12 @@ export const BOARD_FIRMWARE = createfirmware()
       }
       // shove target at dir, in the direction of the given dir
       const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-      const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
+      const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+      const maybetarget = memoryreadelement(dirboard, dir.destpt)
       if (memoryboardelementisobject(maybetarget)) {
         const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
         const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
-        memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
+        memorymoveobject(READ_CONTEXT.book, dirboard, maybetarget, {
           x: shovex,
           y: shovey,
         })
@@ -642,14 +643,15 @@ export const BOARD_FIRMWARE = createfirmware()
       // shove target at dir, in the direction of the given dir
       // but only if target is pushable
       const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-      const maybetarget = memoryreadelement(READ_CONTEXT.board, dir.destpt)
+      const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+      const maybetarget = memoryreadelement(dirboard, dir.destpt)
       if (
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
         const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
         const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
-        memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
+        memorymoveobject(READ_CONTEXT.book, dirboard, maybetarget, {
           x: shovex,
           y: shovey,
         })
