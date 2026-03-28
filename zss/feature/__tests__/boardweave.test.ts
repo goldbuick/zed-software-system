@@ -135,10 +135,59 @@ describe('boardweavegroup', () => {
 
     const ok = boardweavegroup('bw_grp3', { x: 1, y: 0 }, '', 'weaveg')
     expect(ok).toBe(true)
-    expect(terrainat(b, { x: 5, y })?.kind).toBeUndefined()
+    expect(terrainat(b, { x: 5, y })?.kind).toBe('floor')
     expect(terrainat(b, { x: 6, y })?.kind).toBe('t5')
     expect(terrainat(b, { x: 7, y })?.kind).toBe('t6')
     expect(terrainat(b, { x: 8, y })?.kind).toBe('t7')
+  })
+
+  it('relocates terrain from multiple incoming-only cells into vacated group cells (L-shaped group)', () => {
+    const board = memorycreateboard()
+    const y = 10
+    board.terrain[0 + y * BOARD_WIDTH] = {
+      kind: 'g00',
+      x: 0,
+      y,
+      collision: COLLISION.ISWALK,
+      group: 'Lg',
+    }
+    board.terrain[1 + y * BOARD_WIDTH] = {
+      kind: 'g10',
+      x: 1,
+      y,
+      collision: COLLISION.ISWALK,
+      group: 'Lg',
+    }
+    board.terrain[0 + (y + 1) * BOARD_WIDTH] = {
+      kind: 'g01',
+      x: 0,
+      y: y + 1,
+      collision: COLLISION.ISWALK,
+      group: 'Lg',
+    }
+    board.terrain[2 + y * BOARD_WIDTH] = {
+      kind: 'displace_x2',
+      x: 2,
+      y,
+      collision: COLLISION.ISWALK,
+    }
+    board.terrain[1 + (y + 1) * BOARD_WIDTH] = {
+      kind: 'displace_x1y1',
+      x: 1,
+      y: y + 1,
+      collision: COLLISION.ISWALK,
+    }
+    installbookwithboard('bw_L', board)
+    const b = memoryreadboardbyaddress('bw_L')!
+    memoryinitboard(b)
+
+    const ok = boardweavegroup('bw_L', { x: 1, y: 0 }, '', 'Lg')
+    expect(ok).toBe(true)
+    expect(terrainat(b, { x: 0, y })?.kind).toBe('displace_x2')
+    expect(terrainat(b, { x: 0, y: y + 1 })?.kind).toBe('displace_x1y1')
+    expect(terrainat(b, { x: 1, y })?.kind).toBe('g00')
+    expect(terrainat(b, { x: 2, y })?.kind).toBe('g10')
+    expect(terrainat(b, { x: 1, y: y + 1 })?.kind).toBe('g01')
   })
 
   it('applies diagonal delta for two separated group terrain cells', () => {

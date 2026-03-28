@@ -9,7 +9,7 @@ The right-hand **scroll** panel shows a titled list (`scrollname` + `scroll` row
 1. **Markdown** via [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) (marked → ZeText sink → [`scrollwritelines`](../data/scrollwritelines.ts)). Optional `chip` argument (default `refscroll`) is forwarded to `scrollwritelines`. Used for bundled `refscroll:*` `.md` help prose, wiki fallback, and other CommonMark bodies in [`handledefault`](../../device/vm/handlers/default.ts).
 2. **Zed line blocks** via [`scrollwritelines`](../data/scrollwritelines.ts): plain lines become strings; lines with `!` and a first raw `;` become hyperlinks (`!command args;$label`). Used for built-in menus (e.g. `refscroll:menu`, zip picker, object/terrain lists).
 3. Call [`scrollwritelines`](../data/scrollwritelines.ts) directly when you already have a string of tape lines (same `!` / zetext rules); default link chip is `refscroll` unless overridden.
-4. Queue lines with [`gadgettext` / `gadgethyperlink`](../data/api.ts), then assign `shared.scroll = gadgetcheckqueue(player)` (and usually set `scrollname`). Still used where panels mix imperative steps, **shared** hyperlink state (`get`/`set`), or firmware-driven queues (see inspection / admin / element scroll lock).
+4. Queue lines with [`gadgettext` / `gadgethyperlink`](../data/api.ts), then assign `shared.scroll = gadgetcheckqueue(player)` (and usually set `scrollname`). Still used where panels mix imperative steps, **shared** hyperlink state (`get`/`set`), or firmware-driven queues (see admin / element scroll lock). Inspect menus use [`scrollwritelines`](../data/scrollwritelines.ts) plus [`registerhyperlinksharedbridge`](../data/api.ts) where shared widgets need `get`/`set`.
 
 ---
 
@@ -19,7 +19,7 @@ This subsection catalogs how the scroll panel is filled: **Category C** (central
 
 ### Category C — Centralized on `scrollwritelines`
 
-Call sites use [`scrollwritemarkdownlines`](../../feature/parse/markdownscroll.ts) (markdown → Zed lines → `scrollwritelines`) or [`scrollwritelines`](../data/scrollwritelines.ts) directly for raw Zed tape—not loops of `gadgettext`/`gadgethyperlink`. Examples include [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts), [`writezztcontentwait` / `writezztcontentlinks`](../../device/vm/helpers.ts). See **VM handler entry points** and **`refscroll:<path>` in `handledefault`** below.
+Call sites use [`scrollwritemarkdownlines`](../../feature/parse/markdownscroll.ts) (markdown → Zed lines → `scrollwritelines`) or [`scrollwritelines`](../data/scrollwritelines.ts) directly for raw Zed tape—not loops of `gadgettext`/`gadgethyperlink`. Examples include [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts), [`writezztcontentwait` / `writezztcontentlinks`](../../device/vm/helpers.ts), and the **inspect** family ([`inspection.ts`](../../memory/inspection.ts), [`inspectionbatch.ts`](../../memory/inspectionbatch.ts), [`inspectionremix.ts`](../../memory/inspectionremix.ts), [`inspectionmakeit.ts`](../../memory/inspectionmakeit.ts), [`inspectionstyle.ts`](../../memory/inspectionstyle.ts), [`inspectionfind.ts`](../../memory/inspectionfind.ts)) with `registerhyperlinksharedbridge` for shared hyperlink types. See **VM handler entry points** and **`refscroll:<path>` in `handledefault`** below.
 
 ### Category B — Hybrid (imperative prefix, then `scrollwritelines`)
 
@@ -36,20 +36,14 @@ These modules call `gadgettext` / `gadgethyperlink` in sequence and assign `shar
 | Scroll title(s) | Source | Notes |
 |-----------------|--------|-------|
 | `cpu #admin` | [`zss/memory/utilities.ts`](../../memory/utilities.ts) (`memoryadminmenu`) | Sections + links; `refscroll:adminscroll`. |
-| `inspect`, `bulk set bg`, `char`, `bulk set char`, dynamic name, `bulk set color`, `empty` | [`zss/memory/inspection.ts`](../../memory/inspection.ts) | Many `gadgethyperlink(..., get, set)` for shared widgets. |
-| `copy`, `cut`, `paste` | [`zss/memory/inspectionbatch.ts`](../../memory/inspectionbatch.ts) | Batch ops + selection headers. |
-| `remix` | [`zss/memory/inspectionremix.ts`](../../memory/inspectionremix.ts) | Shared links (`get`/`set`). |
-| `makeit` | [`zss/memory/inspectionmakeit.ts`](../../memory/inspectionmakeit.ts) | VM `makeitscroll`; mixed text and links. |
-| `style` | [`zss/memory/inspectionstyle.ts`](../../memory/inspectionstyle.ts) | |
-| `findany` | [`zss/memory/inspectionfind.ts`](../../memory/inspectionfind.ts) | Shared text / find config. |
 
 ### Refactor roadmap (priority tiers)
 
 - **Tier 1** — [`memoryadminmenu`](../../memory/utilities.ts) (`cpu #admin`): mostly plain lines and simple `gadgethyperlink` without custom `get`/`set`; reasonable place to prototype a tape string + one `scrollwritelines`, or `scrollwritelines` for a static body after any imperative header (same idea as bookmarks).
 - **Tier 2** — [`bookmarkscroll.ts`](../../memory/bookmarkscroll.ts), [`editorbookmarkscroll.ts`](../../memory/editorbookmarkscroll.ts), [`appendmainmenushortcutafterlistscroll`](../../device/vm/handlers/default.ts): already structured, or they need **append** to existing scroll / **`gadgetbbar`**—not covered by a single plain `scrollwritelines(content)` call.
-- **Tier 3** — [`inspection.ts`](../../memory/inspection.ts), [`inspectionbatch.ts`](../../memory/inspectionbatch.ts), [`inspectionremix.ts`](../../memory/inspectionremix.ts), [`inspectionmakeit.ts`](../../memory/inspectionmakeit.ts), [`inspectionstyle.ts`](../../memory/inspectionstyle.ts), [`inspectionfind.ts`](../../memory/inspectionfind.ts): widespread **`gadgethyperlink(..., get, set)`**; [`scrollwritelines`](../data/scrollwritelines.ts) does not forward shared state. Consolidation would need tape or API changes, not a mechanical replace.
+- **Tier 3** — ~~Inspect modules~~ **done:** inspect scrolls use `scrollwritelines` + `registerhyperlinksharedbridge` for shared types (`select`, `text`, `number`, edits, etc.).
 
-**Blockers for a single `scrollwritelines`:** per-link `get`/`set`, multiple `gadgetcheckqueue` flush points, **`gadgetbbar`**, appending to an existing scroll, ROM-style layout helpers.
+**Blockers for a single `scrollwritelines`:** per-link `get`/`set` without bridges, multiple `gadgetcheckqueue` flush points, **`gadgetbbar`**, appending to an existing scroll, ROM-style layout helpers.
 
 ---
 

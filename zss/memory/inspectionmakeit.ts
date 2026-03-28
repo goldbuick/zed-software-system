@@ -1,12 +1,8 @@
 import { vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -30,54 +26,59 @@ import {
   MEMORY_LABEL,
 } from './types'
 
-function makecodepagedesc(type: CODE_PAGE_TYPE, player: string) {
+function makeitlinktoken(s: string): string {
+  if (/\s/.test(s) || s.length === 0) {
+    return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+  }
+  return s
+}
+
+function makecodepagedesc(type: CODE_PAGE_TYPE, out: string[]) {
   switch (type) {
     case CODE_PAGE_TYPE.OBJECT:
-      gadgettext(player, '$greenobject - moving board elements')
+      out.push('$greenobject - moving board elements')
       break
     case CODE_PAGE_TYPE.TERRAIN:
-      gadgettext(player, '$greenterrain - walkable, walls, or water')
+      out.push('$greenterrain - walkable, walls, or water')
       break
     case CODE_PAGE_TYPE.BOARD:
-      gadgettext(player, '$greenboard - 60 x 25 area of terrain & object')
+      out.push('$greenboard - 60 x 25 area of terrain & object')
       break
     case CODE_PAGE_TYPE.LOADER:
-      gadgettext(player, '$greenloader - run code on @event(s)')
+      out.push('$greenloader - run code on @event(s)')
       break
     case CODE_PAGE_TYPE.PALETTE:
-      gadgettext(player, '$greenpalette - custom 16 colors')
+      out.push('$greenpalette - custom 16 colors')
       break
     case CODE_PAGE_TYPE.CHARSET:
-      gadgettext(player, '$greencharset - custom ascii font')
+      out.push('$greencharset - custom ascii font')
       break
   }
 }
 
-function previewcodepage(codepage: CODE_PAGE, player: string) {
+function previewcodepage(codepage: CODE_PAGE, out: string[]) {
   const type = memoryreadcodepagetype(codepage)
-  makecodepagedesc(type, player)
-  gadgethyperlink(
-    player,
-    'makeit',
-    `edit$CYAN @${memoryreadcodepagetypeasstring(codepage)} ${memoryreadcodepagename(codepage)}`,
-    ['edit', '', codepage.id],
+  makecodepagedesc(type, out)
+  const typelabel = memoryreadcodepagetypeasstring(codepage)
+  const cpname = memoryreadcodepagename(codepage)
+  out.push(
+    `!edit "" ${codepage.id};${scrolllinkescapefrag(`edit$CYAN @${typelabel} ${cpname}`)}`,
   )
-  // We should show the first 5 lines of the codepage here
-  const lines = codepage.code.split('\n').slice(1, 6)
-  lines.forEach((line) => gadgettext(player, `$WHITE  ${line}`))
+  const codelines = codepage.code.split('\n').slice(1, 6)
+  for (let i = 0; i < codelines.length; ++i) {
+    out.push(`$WHITE  ${codelines[i]}`)
+  }
 }
 
-function checkforcodepage(name: string, player: string) {
-  // first check for existing codepage with matching name or id
+function checkforcodepage(name: string, out: string[]) {
   const books = memoryreadbooklist()
 
   let nomatch = true
   for (let i = 0; i < books.length; ++i) {
-    // scan for id / name / stat matches
     const codepages = memorylistcodepagebystat(books[i], name)
     for (let c = 0; c < codepages.length; ++c) {
       nomatch = false
-      previewcodepage(codepages[c], player)
+      previewcodepage(codepages[c], out)
     }
   }
 
@@ -208,101 +209,67 @@ export function memorymakeitscroll(makeit: string, player: string) {
   const statname = statformat(maybelabel, words, true)
   const statvalue = statformat(maybelabel, words, false)
 
-  function createmakecodepage(type: STAT_TYPE, name: string) {
+  function createmakecodepage(type: STAT_TYPE, name: string, out: string[]) {
     const typename = stattypestring(type)
     switch (type) {
       case STAT_TYPE.OBJECT:
-        makecodepagedesc(CODE_PAGE_TYPE.OBJECT, player)
+        makecodepagedesc(CODE_PAGE_TYPE.OBJECT, out)
         break
       case STAT_TYPE.TERRAIN:
-        makecodepagedesc(CODE_PAGE_TYPE.TERRAIN, player)
+        makecodepagedesc(CODE_PAGE_TYPE.TERRAIN, out)
         break
       case STAT_TYPE.BOARD:
-        makecodepagedesc(CODE_PAGE_TYPE.BOARD, player)
+        makecodepagedesc(CODE_PAGE_TYPE.BOARD, out)
         break
       case STAT_TYPE.LOADER:
-        makecodepagedesc(CODE_PAGE_TYPE.LOADER, player)
+        makecodepagedesc(CODE_PAGE_TYPE.LOADER, out)
         break
       case STAT_TYPE.PALETTE:
-        makecodepagedesc(CODE_PAGE_TYPE.PALETTE, player)
+        makecodepagedesc(CODE_PAGE_TYPE.PALETTE, out)
         break
       case STAT_TYPE.CHARSET:
-        makecodepagedesc(CODE_PAGE_TYPE.CHARSET, player)
+        makecodepagedesc(CODE_PAGE_TYPE.CHARSET, out)
         break
     }
+    const tn = makeitlinktoken(typename)
+    const nm = makeitlinktoken(name)
     switch (type) {
       case STAT_TYPE.OBJECT:
-        gadgethyperlink(player, 'makeit', `create object$CYAN @${name}`, [
-          'create',
-          'hk',
-          'o',
-          '',
-          '',
-          typename,
-          name,
-        ])
+        out.push(
+          `!create hk o "" "" ${tn} ${nm};${scrolllinkescapefrag(`create object$CYAN @${name}`)}`,
+        )
         break
       case STAT_TYPE.TERRAIN:
-        gadgethyperlink(player, 'makeit', `create$CYAN @terrain ${name}`, [
-          'create',
-          'hk',
-          't',
-          '',
-          '',
-          typename,
-          name,
-        ])
+        out.push(
+          `!create hk t "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @terrain ${name}`)}`,
+        )
         break
       case STAT_TYPE.BOARD:
-        gadgethyperlink(player, 'makeit', `create$CYAN @board ${name}`, [
-          'create',
-          'hk',
-          'b',
-          '',
-          '',
-          typename,
-          name,
-        ])
+        out.push(
+          `!create hk b "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @board ${name}`)}`,
+        )
         break
       case STAT_TYPE.LOADER:
-        gadgethyperlink(player, 'makeit', `create$CYAN @loader ${name}`, [
-          'create',
-          'hk',
-          'l',
-          '',
-          '',
-          typename,
-          name,
-        ])
+        out.push(
+          `!create hk l "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @loader ${name}`)}`,
+        )
         break
       case STAT_TYPE.PALETTE:
-        gadgethyperlink(player, 'makeit', `create$CYAN @palette ${name}`, [
-          'create',
-          'hk',
-          'p',
-          '',
-          '',
-          typename,
-          name,
-        ])
+        out.push(
+          `!create hk p "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @palette ${name}`)}`,
+        )
         break
       case STAT_TYPE.CHARSET:
-        gadgethyperlink(player, 'makeit', `create$CYAN @charset ${name}`, [
-          'create',
-          'hk',
-          'c',
-          '',
-          '',
-          typename,
-          name,
-        ])
+        out.push(
+          `!create hk c "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @charset ${name}`)}`,
+        )
         break
     }
-    gadgettext(player, '')
+    out.push('')
   }
 
-  // first check for existing codepage with matching name or id
-  const nomatch = checkforcodepage(maybestat, player)
+  const scrolllines: string[] = []
+  const nomatch = checkforcodepage(maybestat, scrolllines)
   if (nomatch) {
     switch (statname.type) {
       case STAT_TYPE.LOADER:
@@ -311,36 +278,34 @@ export function memorymakeitscroll(makeit: string, player: string) {
       case STAT_TYPE.CHARSET:
       case STAT_TYPE.PALETTE: {
         const value = statname.values.join(' ')
-        createmakecodepage(statname.type, value)
+        createmakecodepage(statname.type, value, scrolllines)
         break
       }
       case STAT_TYPE.OBJECT:
         if (statvalue.values[0].toLowerCase() === 'object') {
           const values = statvalue.values.slice(1)
           const value = values.join(' ')
-          createmakecodepage(statname.type, value)
+          createmakecodepage(statname.type, value, scrolllines)
         } else {
           const value = statvalue.values.join(' ')
           switch (statvalue.type) {
             case STAT_TYPE.CONST:
-              createmakecodepage(STAT_TYPE.OBJECT, value)
+              createmakecodepage(STAT_TYPE.OBJECT, value, scrolllines)
               if (statvalue.values.length === 1) {
-                createmakecodepage(STAT_TYPE.TERRAIN, value)
-                createmakecodepage(STAT_TYPE.BOARD, value)
-                createmakecodepage(STAT_TYPE.LOADER, value)
-                createmakecodepage(STAT_TYPE.PALETTE, value)
-                createmakecodepage(STAT_TYPE.CHARSET, value)
+                createmakecodepage(STAT_TYPE.TERRAIN, value, scrolllines)
+                createmakecodepage(STAT_TYPE.BOARD, value, scrolllines)
+                createmakecodepage(STAT_TYPE.LOADER, value, scrolllines)
+                createmakecodepage(STAT_TYPE.PALETTE, value, scrolllines)
+                createmakecodepage(STAT_TYPE.CHARSET, value, scrolllines)
               }
-              gadgettext(player, '$purple  if you typed in @char 12 or similar')
-              gadgettext(
-                player,
+              scrolllines.push('$purple  if you typed in @char 12 or similar')
+              scrolllines.push(
                 '$purple  try using #set <stat> <value> instead',
               )
-              gadgettext(
-                player,
+              scrolllines.push(
                 '$purple  or you can edit the @player codepage',
               )
-              gadgettext(player, '$purple  to make changes to player stats')
+              scrolllines.push('$purple  to make changes to player stats')
               break
             case STAT_TYPE.RANGE:
             case STAT_TYPE.SELECT:
@@ -360,8 +325,5 @@ export function memorymakeitscroll(makeit: string, player: string) {
     }
   }
 
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'makeit'
-  shared.scroll = gadgetcheckqueue(player)
+  scrollwritelines(player, 'makeit', scrolllines.join('\n'), 'makeit')
 }

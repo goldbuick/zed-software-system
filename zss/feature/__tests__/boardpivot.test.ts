@@ -1,9 +1,11 @@
+import { readtransformfilter } from 'zss/firmware/transforms'
 import { boardpivot, boardpivotgroup } from 'zss/feature/boardpivot'
 import {
   pivotbuildintegeredges,
   pivotcell,
   pivotcellinteger,
 } from 'zss/feature/boardpivotmath'
+import { indextopt } from 'zss/mapping/2d'
 import { memoryreadterrain } from 'zss/memory/boardaccess'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
 import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
@@ -49,6 +51,55 @@ function terrainat(
   pt: PT,
 ) {
   return memoryreadterrain(board, pt.x, pt.y)
+}
+
+/** Theta + layout where three horizontal group cells have matching vacated/incoming sets. */
+function pivotgroupdisplacementfixture():
+  | {
+      theta: number
+      y: number
+      x0: number
+      vacated: number[]
+      incoming: number[]
+    }
+  | undefined {
+  const y = 10
+  const x0 = 20
+  for (let step = 1; step < 360 * 8; ++step) {
+    const deg = step * 0.125
+    const theta = (deg * Math.PI) / 180
+    const { xedge, yedge } = pivotbuildintegeredges(
+      BOARD_WIDTH,
+      BOARD_HEIGHT,
+      theta,
+    )
+    const idx = (x: number) => x + y * BOARD_WIDTH
+    const gset = new Set([idx(x0), idx(x0 + 1), idx(x0 + 2)])
+    const dest = new Set<number>()
+    for (let k = 0; k < 3; ++k) {
+      const p = pivotcellinteger(
+        x0 + k,
+        y,
+        BOARD_WIDTH,
+        BOARD_HEIGHT,
+        xedge,
+        yedge,
+      )
+      dest.add(p.x + p.y * BOARD_WIDTH)
+    }
+    const vacated = [...gset].filter((i) => !dest.has(i))
+    const incoming = [...dest].filter((i) => !gset.has(i))
+    if (
+      vacated.length > 0 &&
+      incoming.length > 0 &&
+      vacated.length === incoming.length
+    ) {
+      vacated.sort((a, b) => a - b)
+      incoming.sort((a, b) => a - b)
+      return { theta, y, x0, vacated, incoming }
+    }
+  }
+  return undefined
 }
 
 describe('boardpivotmath', () => {
@@ -205,6 +256,41 @@ describe('boardpivotgroup', () => {
     expect(terrainat(b, { x: 7, y })?.kind).toBe('t7')
     expect(terrainat(b, { x: 8, y })?.kind).toBe('floor')
   })
+
+  it('relocates non-group terrain from incoming-only cells into vacated group sources', () => {
+    const fix = pivotgroupdisplacementfixture()
+    expect(fix).toBeDefined()
+    const { theta, y, x0, vacated, incoming } = fix!
+
+    const board = memorycreateboard()
+    for (let k = 0; k < 3; ++k) {
+      const x = x0 + k
+      board.terrain[x + y * BOARD_WIDTH] = {
+        kind: `tg${k}`,
+        x,
+        y,
+        collision: COLLISION.ISWALK,
+        group: 'pivotdisplace',
+      }
+    }
+    const inc0 = incoming[0]
+    const incpt = indextopt(inc0, BOARD_WIDTH)
+    board.terrain[inc0] = {
+      kind: 'floor',
+      x: incpt.x,
+      y: incpt.y,
+      collision: COLLISION.ISWALK,
+    }
+    installbookwithboard('bp_pgd', board)
+    const b = memoryreadboardbyaddress('bp_pgd')!
+    memoryinitboard(b)
+
+    const ok = boardpivotgroup('bp_pgd', theta, '', 'pivotdisplace')
+    expect(ok).toBe(true)
+    const vac0 = vacated[0]
+    const vacpt = indextopt(vac0, BOARD_WIDTH)
+    expect(terrainat(b, vacpt)?.kind).toBe('floor')
+  })
 })
 
 describe('boardpivot dispatch', () => {
@@ -237,5 +323,27 @@ describe('boardpivot dispatch', () => {
     )
     expect(ok).toBe(true)
     expect(terrainat(b, { x: 1, y })?.kind).toBe('g0')
+  })
+
+  it('readtransformfilter: comma rect then group name still routes to group pivot', () => {
+    const words = ['90', '0,0,59,24', 'mygrp']
+    const { targetset, pt1, pt2 } = readtransformfilter(words, 1)
+    expect(targetset).toBe('mygrp')
+    expect(pt1).toEqual({ x: 0, y: 0 })
+    expect(pt2).toEqual({ x: 59, y: 24 })
+    const board = memorycreateboard()
+    board.terrain[1 + 2 * BOARD_WIDTH] = {
+      kind: 'g0',
+      x: 1,
+      y: 2,
+      collision: COLLISION.ISWALK,
+      group: 'mygrp',
+    }
+    installbookwithboard('bp_rf', board)
+    const b = memoryreadboardbyaddress('bp_rf')!
+    memoryinitboard(b)
+    const ok = boardpivot('bp_rf', 0, pt1, pt2, '', targetset)
+    expect(ok).toBe(true)
+    expect(terrainat(b, { x: 1, y: 2 })?.kind).toBe('g0')
   })
 })

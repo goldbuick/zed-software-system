@@ -1,4 +1,4 @@
-import { pttoindex } from 'zss/mapping/2d'
+import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
@@ -22,35 +22,64 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
 /** Sweep order for collision / apply: primary axis = larger |delta|; tie-break uses x then y. */
+function compareptsforsweep(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  delta: PT,
+) {
+  const adx = Math.abs(delta.x)
+  const ady = Math.abs(delta.y)
+  if (adx > ady) {
+    return delta.x < 0 ? ax - bx : bx - ax
+  }
+  if (ady > adx) {
+    return delta.y < 0 ? ay - by : by - ay
+  }
+  if (delta.x !== 0) {
+    const xcmp = delta.x < 0 ? ax - bx : bx - ax
+    if (xcmp !== 0) {
+      return xcmp
+    }
+  }
+  if (delta.y !== 0) {
+    return delta.y < 0 ? ay - by : by - ay
+  }
+  return 0
+}
+
+function sortindicesbyweavedelta(indices: number[], delta: PT) {
+  indices.sort((ia, ib) => {
+    const apt = indextopt(ia, BOARD_WIDTH)
+    const bpt = indextopt(ib, BOARD_WIDTH)
+    const c = compareptsforsweep(
+      apt.x,
+      apt.y,
+      bpt.x,
+      bpt.y,
+      delta,
+    )
+    if (c !== 0) {
+      return c
+    }
+    return ia - ib
+  })
+}
+
 function sortgroupelementsbydelta(
   terrainelements: BOARD_ELEMENT[],
   objectelements: BOARD_ELEMENT[],
   delta: PT,
 ) {
-  const compare = (a: BOARD_ELEMENT, b: BOARD_ELEMENT) => {
-    const ax = a.x ?? 0
-    const ay = a.y ?? 0
-    const bx = b.x ?? 0
-    const by = b.y ?? 0
-    const adx = Math.abs(delta.x)
-    const ady = Math.abs(delta.y)
-    if (adx > ady) {
-      return delta.x < 0 ? ax - bx : bx - ax
-    }
-    if (ady > adx) {
-      return delta.y < 0 ? ay - by : by - ay
-    }
-    if (delta.x !== 0) {
-      const xcmp = delta.x < 0 ? ax - bx : bx - ax
-      if (xcmp !== 0) {
-        return xcmp
-      }
-    }
-    if (delta.y !== 0) {
-      return delta.y < 0 ? ay - by : by - ay
-    }
-    return 0
-  }
+  const compare = (a: BOARD_ELEMENT, b: BOARD_ELEMENT) =>
+    compareptsforsweep(
+      a.x ?? 0,
+      a.y ?? 0,
+      b.x ?? 0,
+      b.y ?? 0,
+      delta,
+    )
   terrainelements.sort(compare)
   objectelements.sort(compare)
 }
@@ -400,11 +429,41 @@ export function boardweavegroup(
     })
     newterrain[destidx] = moved
   }
+
+  const vacated: number[] = []
+  const incoming: number[] = []
   for (const idx of gset) {
     if (!destindices.has(idx)) {
-      newterrain[idx] = undefined
+      vacated.push(idx)
     }
   }
+  for (const idx of destindices) {
+    if (!gset.has(idx)) {
+      incoming.push(idx)
+    }
+  }
+  sortindicesbyweavedelta(vacated, delta)
+  sortindicesbyweavedelta(incoming, delta)
+  for (let i = 0; i < vacated.length; ++i) {
+    const vacidx = vacated[i]
+    if (i < incoming.length) {
+      const incidx = incoming[i]
+      const vacpt = indextopt(vacidx, BOARD_WIDTH)
+      const srcterrain = oldterrain[incidx]
+      if (ispresent(srcterrain)) {
+        newterrain[vacidx] = deepcopy({
+          ...srcterrain,
+          x: vacpt.x,
+          y: vacpt.y,
+        })
+      } else {
+        newterrain[vacidx] = undefined
+      }
+    } else {
+      newterrain[vacidx] = undefined
+    }
+  }
+
   targetboard.terrain = newterrain
   delete targetboard.distmaps
 

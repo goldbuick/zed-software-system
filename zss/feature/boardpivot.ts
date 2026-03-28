@@ -3,7 +3,7 @@ import {
   pivotcellinteger,
   pivotposmodi,
 } from 'zss/feature/boardpivotmath'
-import { pttoindex } from 'zss/mapping/2d'
+import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
@@ -29,6 +29,10 @@ import {
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
+
+function sortindicespivotpair(indices: number[]) {
+  indices.sort((ia, ib) => ia - ib)
+}
 
 function isfullboardrect(p1: PT, p2: PT): boolean {
   return (
@@ -375,11 +379,41 @@ export function boardpivotgroup(
     })
     newterrain[destidx] = moved
   }
+
+  const vacated: number[] = []
+  const incoming: number[] = []
   for (const idx of gset) {
     if (!destindices.has(idx)) {
-      newterrain[idx] = undefined
+      vacated.push(idx)
     }
   }
+  for (const idx of destindices) {
+    if (!gset.has(idx)) {
+      incoming.push(idx)
+    }
+  }
+  sortindicespivotpair(vacated)
+  sortindicespivotpair(incoming)
+  for (let i = 0; i < vacated.length; ++i) {
+    const vacidx = vacated[i]
+    if (i < incoming.length) {
+      const incidx = incoming[i]
+      const vacpt = indextopt(vacidx, BOARD_WIDTH)
+      const srcterrain = oldterrain[incidx]
+      if (ispresent(srcterrain)) {
+        newterrain[vacidx] = deepcopy({
+          ...srcterrain,
+          x: vacpt.x,
+          y: vacpt.y,
+        })
+      } else {
+        newterrain[vacidx] = undefined
+      }
+    } else {
+      newterrain[vacidx] = undefined
+    }
+  }
+
   targetboard.terrain = newterrain
   delete targetboard.distmaps
   memoryinitboard(targetboard)

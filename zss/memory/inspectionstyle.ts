@@ -1,14 +1,10 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { DIVIDER } from 'zss/feature/writeui'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, pttoindex } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { PT, WORD } from 'zss/words/types'
+import { PT } from 'zss/words/types'
 
 import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
@@ -97,64 +93,40 @@ export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
 
   const area = ptstoarea(p1, p2)
 
-  function get(name: string) {
-    return styleconfig[name as keyof STYLE_CONFIG]
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value) || isstring(value)) {
-      // @ts-expect-error bah
-      styleconfig[name as keyof STYLE_CONFIG] = value
-    }
-  }
+  registerhyperlinksharedbridge(
+    'batch',
+    'select',
+    (target) => {
+      const key = target as keyof STYLE_CONFIG
+      if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
+        return styleconfig[key]
+      }
+      return 0
+    },
+    (name, value) => {
+      if (isnumber(value) || isstring(value)) {
+        const key = name as keyof STYLE_CONFIG
+        if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
+          // @ts-expect-error bah
+          styleconfig[key] = value
+        }
+      }
+    },
+  )
 
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, `apply visuals from the terrain`)
-  gadgettext(player, `stored in the paste buffer`)
-  gadgethyperlink(
-    player,
-    'batch',
-    'style chars?',
-    [`stylechars`, 'select', 'no', '0', 'yes', '1'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    'batch',
-    'style colors?',
-    [`stylecolors`, 'select', 'no', '0', 'yes', '1'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    'batch',
-    'style bgs?',
-    [`stylebgs`, 'select', 'no', '0', 'yes', '1'],
-    get,
-    set,
-  )
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'style terrain & objects', [
-    `styleall:${area}`,
-    'hk',
-    '1',
-  ])
-  gadgethyperlink(player, 'batch', 'style objects', [
-    `styleobjects:${area}`,
-    'hk',
-    '2',
-  ])
-  gadgethyperlink(player, 'batch', 'style terrain', [
-    `styleterrain:${area}`,
-    'hk',
-    '3',
-  ])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'style'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    `apply visuals from the terrain`,
+    `stored in the paste buffer`,
+    `!stylechars select no 0 yes 1;style chars?`,
+    `!stylecolors select no 0 yes 1;style colors?`,
+    `!stylebgs select no 0 yes 1;style bgs?`,
+    DIVIDER,
+    `!styleall:${area} hk 1 " 1 " next;style terrain & objects`,
+    `!styleobjects:${area} hk 2 " 2 " next;style objects`,
+    `!styleterrain:${area} hk 3 " 3 " next;style terrain`,
+  ]
+  scrollwritelines(player, 'style', lines.join('\n'), 'batch')
 }
 
 export async function memoryreadstyleconfig(): Promise<
