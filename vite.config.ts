@@ -36,6 +36,36 @@ export default defineConfig(({ mode }) => {
   const devHost = process.env.ZSS_DEV_HOST?.trim()
   const mkcertHosts = ['localhost', ...(devHost ? [devHost] : [])]
 
+  const zssprocessenvkeys = [
+    'ZSS_LANG_DEV',
+    'ZSS_LANG_TYPES',
+    'ZSS_PERF_UI',
+    'ZSS_SHOW_CODE',
+    'ZSS_TRACE_CODE',
+    'ZSS_LOG_DEBUG',
+    'ZSS_FORCE_CRT_OFF',
+    'ZSS_FORCE_LOW_REZ',
+    'ZSS_FORCE_TOUCH_UI',
+    'ZSS_BRANCH_NAME',
+    'ZSS_BRANCH_VERSION',
+    'ZSS_COMMIT_MESSAGE',
+  ] as const
+  const zssdefine = Object.fromEntries(
+    zssprocessenvkeys.map((key) => {
+      const fallback =
+        key === 'ZSS_TRACE_CODE' ||
+        key === 'ZSS_BRANCH_NAME' ||
+        key === 'ZSS_BRANCH_VERSION' ||
+        key === 'ZSS_COMMIT_MESSAGE'
+          ? ''
+          : 'false'
+      return [
+        `process.env.${key}`,
+        JSON.stringify(process.env[key] ?? fallback),
+      ] as const
+    }),
+  )
+
   return {
     root,
     envPrefix: envprefix,
@@ -51,6 +81,7 @@ export default defineConfig(({ mode }) => {
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
     ],
+    define: zssdefine,
     resolve: {
       alias: {
         zss: path.resolve(__dirname, './zss'),

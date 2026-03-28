@@ -1,15 +1,20 @@
 import { CHAR_HEIGHT, CHAR_WIDTH } from './gadget/data/types'
 
-// cli config
-const LANG_DEV = !!JSON.parse(import.meta.env.ZSS_LANG_DEV)
-const LANG_TYPES = !!JSON.parse(import.meta.env.ZSS_LANG_TYPES)
-const PERF_UI = !!JSON.parse(import.meta.env.ZSS_PERF_UI)
-const SHOW_CODE = !!JSON.parse(import.meta.env.ZSS_SHOW_CODE)
-const TRACE_CODE = `${import.meta.env.ZSS_TRACE_CODE}`
-const LOG_DEBUG = !!JSON.parse(import.meta.env.ZSS_LOG_DEBUG)
-const FORCE_CRT_OFF = !!JSON.parse(import.meta.env.ZSS_FORCE_CRT_OFF)
-const FORCE_LOW_REZ = !!JSON.parse(import.meta.env.ZSS_FORCE_LOW_REZ)
-const FORCE_TOUCH_UI = !!JSON.parse(import.meta.env.ZSS_FORCE_TOUCH_UI)
+function zssjsonbool(key: string): boolean {
+  const raw = process.env[key] ?? 'false'
+  return !!JSON.parse(raw)
+}
+
+// cli config (Jest uses `process.env`; Vite inlines via `define` in vite.config.ts)
+const LANG_DEV = zssjsonbool('ZSS_LANG_DEV')
+const LANG_TYPES = zssjsonbool('ZSS_LANG_TYPES')
+const PERF_UI = zssjsonbool('ZSS_PERF_UI')
+const SHOW_CODE = zssjsonbool('ZSS_SHOW_CODE')
+const TRACE_CODE = `${process.env.ZSS_TRACE_CODE ?? ''}`
+const LOG_DEBUG = zssjsonbool('ZSS_LOG_DEBUG')
+const FORCE_CRT_OFF = zssjsonbool('ZSS_FORCE_CRT_OFF')
+const FORCE_LOW_REZ = zssjsonbool('ZSS_FORCE_LOW_REZ')
+const FORCE_TOUCH_UI = zssjsonbool('ZSS_FORCE_TOUCH_UI')
 
 // runtime config
 export const RUNTIME = {

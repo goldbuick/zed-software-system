@@ -45,12 +45,7 @@ function devicemessagedelivers(device: DEVICE, message: MESSAGE): boolean {
 function isgameticktarget(message: MESSAGE): boolean {
   const { target, path } = parsetarget(message.target)
   const leaf = path.length > 0 ? path : target
-  return (
-    leaf === 'tick' ||
-    leaf === 'tock' ||
-    leaf === 'ticktock' ||
-    leaf === 'second'
-  )
+  return leaf === 'tock' || leaf === 'ticktock' || leaf === 'second'
 }
 
 export const hub: HUB = {
