@@ -1,5 +1,6 @@
 import { DEVICE, createmessage, parsetarget } from './device'
 import { MESSAGE } from './device/api'
+import { runtickbatched } from './gadget/runtickbatched'
 import { NAME } from './words/types'
 
 export type HUB_MESSAGE = {
@@ -40,20 +41,39 @@ function devicemessagedelivers(device: DEVICE, message: MESSAGE): boolean {
   return topicmatch || direct
 }
 
+/** Tick / clock messages: batch React updates from Zustand subscribers. */
+function isgameticktarget(message: MESSAGE): boolean {
+  const { target, path } = parsetarget(message.target)
+  const leaf = path.length > 0 ? path : target
+  return (
+    leaf === 'tick' ||
+    leaf === 'tock' ||
+    leaf === 'ticktock' ||
+    leaf === 'second'
+  )
+}
+
 export const hub: HUB = {
   emit(session, player, sender, target, data) {
     hub.invoke(createmessage(session, player, sender, target, data))
   },
   invoke(message) {
-    if (hubshouldbroadcastsession(message)) {
-      devices.forEach((device) => device.handle(message))
-      return
-    }
-    devices.forEach((device) => {
-      if (devicemessagedelivers(device, message)) {
-        device.handle(message)
+    const deliver = () => {
+      if (hubshouldbroadcastsession(message)) {
+        devices.forEach((device) => device.handle(message))
+        return
       }
-    })
+      devices.forEach((device) => {
+        if (devicemessagedelivers(device, message)) {
+          device.handle(message)
+        }
+      })
+    }
+    if (isgameticktarget(message)) {
+      runtickbatched(deliver)
+    } else {
+      deliver()
+    }
   },
   connect(device) {
     devices.add(device)

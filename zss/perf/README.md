@@ -20,3 +20,15 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 - **Performance** tab: main-thread and GPU work; complements User Timing entries from `perfmeasure`.
 - **React DevTools → Profiler**: component-level commits without app changes.
 - **Chrome traces**: for numbers closer to production, record a Performance profile **without** starting **CPU sampling** (avoids `CpuProfiler::StartProfiling` / large `v8::Debugger::AsyncTaskRun` slices in the trace).
+
+## Baseline capture checklist (before/after comparisons)
+
+1. Set `ZSS_PERF_UI=true`, restart Vite, reproduce the scenario you care about.
+2. Open Chrome **Performance**, start recording **without** enabling **CPU sampling** / JS profiler if you want traces comparable to production-style overhead.
+3. Use a **clean profile or incognito** so extensions do not add `FunctionCall` noise.
+4. Optional: run a **production** build (`yarn build` + `yarn preview`) for a second baseline.
+5. After changes, repeat the same steps and compare the **User Timing** `zss:*` rows and frame slices.
+
+## Jest
+
+`jest.config.ts` maps `zss/perf/ui` to [`zss/__mocks__/perfui.ts`](__mocks__/perfui.ts) so Node tests do not load `zss/config` (`import.meta.env` from Vite).

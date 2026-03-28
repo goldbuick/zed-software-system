@@ -13,6 +13,7 @@ import {
 } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { createos } from 'zss/os'
+import { perfmeasure } from 'zss/perf/ui'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
@@ -92,6 +93,7 @@ export function memoryrepeatclilast(player: string) {
 }
 
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
+const DRAW_DISPLAY_EVERY_N_TICKS = 3
 
 export function memorytickmain(playeronly = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -102,40 +104,41 @@ export function memorytickmain(playeronly = false) {
   // inc timestamp
   const timestamp = mainbook.timestamp + 1
 
-  // update loaders
-  const loaders = memoryreadloaders()
-  loaders.forEach((code, id) => {
-    // cache context
-    const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+  perfmeasure('memorytick:loaders', () => {
+    const loaders = memoryreadloaders()
+    loaders.forEach((code, id) => {
+      // cache context
+      const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
-    // write context, all blank except for book and timestamp
-    READ_CONTEXT.timestamp = mainbook.timestamp
-    READ_CONTEXT.book = mainbook
-    READ_CONTEXT.board = undefined
-    READ_CONTEXT.element = undefined
-    READ_CONTEXT.elementid = ''
-    READ_CONTEXT.elementisplayer = false
-    READ_CONTEXT.elementfocus = memoryreadoperator()
+      // write context, all blank except for book and timestamp
+      READ_CONTEXT.timestamp = mainbook.timestamp
+      READ_CONTEXT.book = mainbook
+      READ_CONTEXT.board = undefined
+      READ_CONTEXT.element = undefined
+      READ_CONTEXT.elementid = ''
+      READ_CONTEXT.elementisplayer = false
+      READ_CONTEXT.elementfocus = memoryreadoperator()
 
-    // set chip
-    const maybearg = memoryloaderarg(id)
-    if (ispresent(maybearg)) {
-      os.arg(id, maybearg)
-    }
+      // set chip
+      const maybearg = memoryloaderarg(id)
+      if (ispresent(maybearg)) {
+        os.arg(id, maybearg)
+      }
 
-    // run code
-    os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
+      // run code
+      os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
 
-    // teardown on ended
-    if (os.isended(id)) {
-      os.halt(id)
-      loaders.delete(id)
-    }
+      // teardown on ended
+      if (os.isended(id)) {
+        os.halt(id)
+        loaders.delete(id)
+      }
 
-    // restore context
-    objectKeys(OLD_CONTEXT).forEach((key) => {
-      // @ts-expect-error dont bother me
-      READ_CONTEXT[key] = OLD_CONTEXT[key]
+      // restore context
+      objectKeys(OLD_CONTEXT).forEach((key) => {
+        // @ts-expect-error dont bother me
+        READ_CONTEXT[key] = OLD_CONTEXT[key]
+      })
     })
   })
 
@@ -143,68 +146,73 @@ export function memorytickmain(playeronly = false) {
   mainbook.timestamp = timestamp
   READ_CONTEXT.timestamp = timestamp
 
-  // update boards / build code / run chips
-  const boards = memoryreadbookplayerboards(mainbook)
-  for (let b = 0; b < boards.length; ++b) {
-    const board = boards[b]
+  perfmeasure('memorytick:boards', () => {
+    // update boards / build code / run chips
+    const boards = memoryreadbookplayerboards(mainbook)
+    for (let b = 0; b < boards.length; ++b) {
+      const board = boards[b]
 
-    // init kinds
-    memoryinitboard(board)
-    if (timestamp % APPLY_SYNTH_RATE === 0) {
-      memoryapplyboardsynthstats(board)
-    }
+      // init kinds
+      memoryinitboard(board)
+      if (timestamp % APPLY_SYNTH_RATE === 0) {
+        memoryapplyboardsynthstats(board)
+      }
 
-    // iterate code needed to update given board
-    const run = memorytickboard(board, timestamp)
+      const rundraw = timestamp % DRAW_DISPLAY_EVERY_N_TICKS === 0
+      // iterate code needed to update given board
+      const run = memorytickboard(board, timestamp, rundraw)
 
-    // draw pass
-    for (let i = 0; i < run.length; ++i) {
-      const { type, code, object, terrain, pass, label, id } = run[i]
-      if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
-        memorytickonce(
-          mainbook,
-          board,
-          object ?? terrain,
-          code,
-          id,
-          label ?? '',
-        )
+      // draw pass
+      if (rundraw) {
+        for (let i = 0; i < run.length; ++i) {
+          const { type, code, object, terrain, pass, label, id } = run[i]
+          if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
+            memorytickonce(
+              mainbook,
+              board,
+              object ?? terrain,
+              code,
+              id,
+              label ?? '',
+            )
+          }
+        }
+      }
+
+      // update pass
+      for (let i = 0; i < run.length; ++i) {
+        const { id, type, code, object, pass } = run[i]
+        if (pass === 'draw') {
+          continue
+        }
+        if (type === CODE_PAGE_TYPE.ERROR) {
+          // handle dead code
+          os.halt(id)
+          // in dev, we only run player objects
+        } else if (!playeronly || ispid(object?.id ?? '')) {
+          // handle active code
+          memorytickobject(mainbook, board, object, code)
+        }
+      }
+
+      // process synth play queue
+      const queue = memoryreadsynthplay(board.id)
+      if (queue.length > 0) {
+        const [play, endtime] = queue[0]
+        const dec = endtime - 1
+        if (play) {
+          // dispatch play
+          synthplay(SOFTWARE, '', board.id, play)
+          console.info('play queue', board.id, play)
+        }
+        if (dec > 0) {
+          queue[0] = ['', dec]
+        } else {
+          queue.shift()
+        }
       }
     }
-
-    // update pass
-    for (let i = 0; i < run.length; ++i) {
-      const { id, type, code, object, pass } = run[i]
-      if (pass === 'draw') {
-        continue
-      }
-      if (type === CODE_PAGE_TYPE.ERROR) {
-        // handle dead code
-        os.halt(id)
-        // in dev, we only run player objects
-      } else if (!playeronly || ispid(object?.id ?? '')) {
-        // handle active code
-        memorytickobject(mainbook, board, object, code)
-      }
-    }
-
-    // process synth play queue
-    const queue = memoryreadsynthplay(board.id)
-    if (queue.length > 0) {
-      const [play, endtime] = queue[0]
-      const dec = endtime - 1
-      if (play) {
-        // dispatch play
-        synthplay(SOFTWARE, '', board.id, play)
-        console.info('play queue', board.id, play)
-      }
-      if (dec > 0) {
-        queue[0] = ['', dec]
-      } else {
-        queue.shift()
-      }
-    }
-  }
+  })
 }
 
 export function memorytickobject(

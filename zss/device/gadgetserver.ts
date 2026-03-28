@@ -9,7 +9,7 @@ import {
 } from 'zss/gadget/data/api'
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
@@ -71,15 +71,16 @@ const gadgetserver = createdevice(
             const player = activelist[i]
             const playerboard = memoryreadplayerboard(player)
             const boardid = playerboard?.id ?? ''
+            const layercachekey = `${boardid}|${player}`
 
-            // check layer cache
+            // per-player view: same board, different players may use different graphics
             let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS> =
-              layercache.get(boardid)
+              layercache.get(layercachekey)
 
             // create layers if needed (memoryreadgadgetlayers builds fresh objects)
             if (ispresent(playerboard) && !ispresent(gadgetlayers)) {
               gadgetlayers = memoryreadgadgetlayers(player, playerboard)
-              layercache.set(playerboard.id, gadgetlayers)
+              layercache.set(layercachekey, gadgetlayers)
             }
 
             // get current state
@@ -133,8 +134,9 @@ const gadgetserver = createdevice(
             // this should be the compressed json
             const patch = compare(previous, slim)
 
-            // reset sync
-            gadgetsync.set(player, slim)
+            // Deep snapshot: export embeds refs into LAYER_CACHE tile buffers; without a
+            // copy, `previous` would alias live arrays and compare would see no diff.
+            gadgetsync.set(player, deepcopy(slim))
 
             // only send when we have changes
             if (patch.length) {
@@ -151,8 +153,7 @@ const gadgetserver = createdevice(
         if (!ispresent(slim)) {
           break
         }
-        // reset sync
-        gadgetsync.set(message.player, slim)
+        gadgetsync.set(message.player, deepcopy(slim))
         // this should be the compressed json
         gadgetclientpaint(gadgetserver, message.player, slim)
         break

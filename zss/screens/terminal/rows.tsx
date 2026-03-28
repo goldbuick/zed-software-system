@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react'
-import { useTape, useTerminal } from 'zss/gadget/data/state'
+import { useEffect, useMemo, useRef } from 'react'
+import { useEqual, useTape, useTerminal } from 'zss/gadget/data/state'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
@@ -8,20 +8,43 @@ import { textformatreadedges } from 'zss/words/textformat'
 
 import { TapeTerminalActiveItem, TerminalItem } from './item'
 
+const ROW_HEIGHT_CACHE_MAX = 512
+
 export function TerminalRows() {
   const screensize = useScreenSize()
-  const editoropen = useTape((state) => state.editor.open)
-  const pinlines = useTape((state) => state.terminal.pinlines)
-  const sessionlogs = useTape((state) => state.terminal.logs)
+  const editoropen = useTape(useEqual((state) => state.editor.open))
+  const pinlines = useTape(useEqual((state) => state.terminal.pinlines))
+  const sessionlogs = useTape(useEqual((state) => state.terminal.logs))
   const terminallogs = useMemo(
     () => [...pinlines, ...sessionlogs],
     [pinlines, sessionlogs],
   )
 
   const context = useWriteText()
-  const scroll = useTerminal((state) => state.scroll)
-  const xcursor = useTerminal((state) => state.xcursor)
-  const ycursor = useTerminal((state) => state.ycursor)
+  const scroll = useTerminal(useEqual((state) => state.scroll))
+  const xcursor = useTerminal(useEqual((state) => state.xcursor))
+  const ycursor = useTerminal(useEqual((state) => state.ycursor))
+
+  const rowheightcache = useRef(new Map<string, number>())
+  const measurerowcached = useMemo(() => {
+    const cache = rowheightcache.current
+    return (item: string, maxwidth: number, rowh: number) => {
+      const key = `${maxwidth}\0${rowh}\0${item}`
+      const hit = cache.get(key)
+      if (hit !== undefined) {
+        return hit
+      }
+      const h = measurerow(item, maxwidth, rowh)
+      if (cache.size >= ROW_HEIGHT_CACHE_MAX) {
+        const first = cache.keys().next().value
+        if (first !== undefined) {
+          cache.delete(first)
+        }
+      }
+      cache.set(key, h)
+      return h
+    }
+  }, [])
   const edge = textformatreadedges(context)
 
   // control panning
@@ -46,7 +69,7 @@ export function TerminalRows() {
   // measure rows
   const logsrowmaxwidth = context.width - 1
   const logsrowheights: number[] = terminallogs.map((item) => {
-    return measurerow(item, logsrowmaxwidth, edge.height)
+    return measurerowcached(item, logsrowmaxwidth, edge.height)
   })
 
   // baseline

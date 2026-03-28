@@ -31,6 +31,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { isnumber, ispresent } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
 import { DIR, NAME } from 'zss/words/types'
@@ -174,24 +175,26 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
 }
 
 function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
-  if (index === 0) {
-    // primary input
-    user.root.emit(INPUT[input], mods)
-  } else {
-    // local multiplayer input
-    let bits = 0
-    const player = playerlocal(index)
-    if (mods.alt) {
-      bits |= INPUT_ALT
+  perfmeasure('input:userinputinvoke', () => {
+    if (index === 0) {
+      // primary input
+      user.root.emit(INPUT[input], mods)
+    } else {
+      // local multiplayer input
+      let bits = 0
+      const player = playerlocal(index)
+      if (mods.alt) {
+        bits |= INPUT_ALT
+      }
+      if (mods.ctrl) {
+        bits |= INPUT_CTRL
+      }
+      if (mods.shift) {
+        bits |= INPUT_SHIFT
+      }
+      vminput(SOFTWARE, player, input, bits)
     }
-    if (mods.ctrl) {
-      bits |= INPUT_CTRL
-    }
-    if (mods.shift) {
-      bits |= INPUT_SHIFT
-    }
-    vminput(SOFTWARE, player, input, bits)
-  }
+  })
 }
 
 const TOUCHTEXT_ID = 'touchtext'
@@ -681,13 +684,18 @@ gamepads.on('gamepad:button', (event: any) => {
         inputup(index, INPUT.SHIFT)
       }
       break
-    default:
+    default: {
+      const mapped = buttonlookup[event.detail.button]
+      if (mapped === undefined) {
+        break
+      }
       if (event.detail.value) {
-        inputdown(index, buttonlookup[event.detail.button])
+        inputdown(index, mapped)
       } else {
-        inputup(index, buttonlookup[event.detail.button])
+        inputup(index, mapped)
       }
       break
+    }
   }
 })
 gamepads.start()

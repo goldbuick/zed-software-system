@@ -1,7 +1,10 @@
 import { applyPatch as applypatch } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
 import { importgadgetstate } from 'zss/gadget/data/compress'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import {
+  applylayercacheupdate,
+  useGadgetClient,
+} from 'zss/gadget/data/state'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 
 import { registerreadplayer } from './register'
@@ -21,10 +24,19 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
     case 'paint': {
       const gadget = importgadgetstate(message.data)
       // expect compressed json
-      useGadgetClient.setState({
-        desync: false,
-        gadget,
-        slim: message.data,
+      useGadgetClient.setState((state) => {
+        const layercachemap = applylayercacheupdate(
+          state.layercachemap,
+          gadget?.board ?? '',
+          gadget?.layers ?? [],
+        )
+        return {
+          desync: false,
+          gadget,
+          slim: message.data,
+          layercachemap,
+          layercachegen: state.layercachegen + 1,
+        }
       })
       break
     }
@@ -43,14 +55,16 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
 
             // unpack into gadget state
             const gadget = importgadgetstate(applied.newDocument)
+            const layercachemap = applylayercacheupdate(
+              state.layercachemap,
+              gadget?.board ?? '',
+              gadget?.layers ?? [],
+            )
             return {
               ...state,
               gadget,
-              // write to layer cache
-              layercache: {
-                ...state.layercache,
-                [gadget?.board ?? '']: gadget?.layers ?? [],
-              },
+              layercachemap,
+              layercachegen: state.layercachegen + 1,
               slim: applied.newDocument,
             }
           } catch (err) {
