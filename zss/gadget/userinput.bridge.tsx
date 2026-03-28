@@ -22,25 +22,27 @@ export function UserInput(events: UserInputProps) {
     const bridges: Partial<
       Record<keyof UserInputProps, (...args: any[]) => void>
     > = {}
+    const bus = context as {
+      on(type: string, handler: (...args: unknown[]) => void): void
+      off(type: string, handler: (...args: unknown[]) => void): void
+    }
     for (let i = 0; i < USERINPUT_BRIDGE_KEYS.length; ++i) {
       const key = USERINPUT_BRIDGE_KEYS[i]
-      const bridge = (...args: any[]) => {
+      const bridge = (...args: unknown[]) => {
         const fn = propsref.current[key]
         if (typeof fn === 'function') {
-          fn(...args)
+          ;(fn as (...args: unknown[]) => void)(...args)
         }
       }
-      bridges[key] = bridge
-      // @ts-expect-error mitt event names match INPUT reverse enum / keydown
-      context.on(key, bridge)
+      bridges[key] = bridge as (...args: any[]) => void
+      bus.on(key, bridge)
     }
     return () => {
       for (let i = 0; i < USERINPUT_BRIDGE_KEYS.length; ++i) {
         const key = USERINPUT_BRIDGE_KEYS[i]
         const bridge = bridges[key]
         if (bridge) {
-          // @ts-expect-error mitt event names match INPUT reverse enum / keydown
-          context.off(key, bridge)
+          bus.off(key, bridge as (...args: unknown[]) => void)
         }
       }
     }
