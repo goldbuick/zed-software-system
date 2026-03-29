@@ -117,8 +117,11 @@ export function boardweave(
   memoryinitboard(targetboard)
 
   const destindiceswritten = new Set<number>()
+  const objectweavesbyid = new Map<string, PT>()
 
-  // apply weave
+  // apply weave (terrain from snapshot; object destinations collected then applied once
+  // so objects are not chain-moved when dest lies inside the woven rectangle).
+  // nolookup finds objects by x/y (including ghosts, which are omitted from lookup).
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       let weaveobject = false
@@ -140,16 +143,15 @@ export function boardweave(
       const destidx = tx + ty * BOARD_WIDTH
       const srcidx = x + y * BOARD_WIDTH
       if (weaveobject) {
-        const maybeobject = memoryreadelement(targetboard, { x, y })
+        const maybeobject = memoryreadelement(targetboard, { x, y }, true)
         if (
           memoryboardelementisobject(maybeobject) &&
+          ispresent(maybeobject?.id) &&
           ispresent(maybeobject?.x) &&
-          ispresent(maybeobject?.y)
+          ispresent(maybeobject?.y) &&
+          !objectweavesbyid.has(maybeobject.id)
         ) {
-          maybeobject.x = tx
-          maybeobject.lx = tx
-          maybeobject.y = ty
-          maybeobject.ly = ty
+          objectweavesbyid.set(maybeobject.id, { x: tx, y: ty })
         }
       }
       if (weaveterrain) {
@@ -170,6 +172,16 @@ export function boardweave(
       }
     }
     targetboard.terrain = tmpboard.terrain
+  }
+
+  for (const [id, dest] of objectweavesbyid) {
+    const obj = targetboard.objects[id]
+    if (ispresent(obj)) {
+      obj.x = dest.x
+      obj.lx = dest.x
+      obj.y = dest.y
+      obj.ly = dest.y
+    }
   }
 
   // reset all lookups
@@ -466,23 +478,6 @@ export function boardweavegroup(
 
   targetboard.terrain = newterrain
   delete targetboard.distmaps
-
-  memoryinitboard(targetboard)
-
-  for (let i = 0; i < terrainelements.length; ++i) {
-    const fromelement = terrainelements[i]
-    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const maybefromobject = memoryreadelement(targetboard, from, true)
-    if (
-      memoryboardelementisobject(maybefromobject) &&
-      ispresent(maybefromobject)
-    ) {
-      maybefromobject.x = (maybefromobject.x ?? 0) + delta.x
-      maybefromobject.y = (maybefromobject.y ?? 0) + delta.y
-      maybefromobject.lx = (maybefromobject.lx ?? 0) + delta.x
-      maybefromobject.ly = (maybefromobject.ly ?? 0) + delta.y
-    }
-  }
 
   memoryinitboard(targetboard)
 

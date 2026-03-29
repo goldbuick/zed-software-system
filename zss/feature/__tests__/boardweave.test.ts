@@ -103,6 +103,34 @@ describe('boardweave rectangular', () => {
     expect(terrainat(b, { x: 2, y: 0 })?.kind).toBe('a')
     expect(terrainat(b, { x: 3, y: 0 })?.kind).toBe('b')
   })
+
+  it('moves each object in the rectangle by exactly one delta (no chain along sweep)', () => {
+    const board = memorycreateboard()
+    const y = 5
+    const x0 = 5
+    board.objects.chainobj = {
+      id: 'chainobj',
+      kind: 'crate',
+      x: x0,
+      y,
+      collision: COLLISION.ISGHOST,
+    }
+    installbookwithboard('bw_chain', board)
+    const b = memoryreadboardbyaddress('bw_chain')!
+    memoryinitboard(b)
+
+    const ok = boardweave(
+      'bw_chain',
+      { x: 1, y: 0 },
+      { x: x0, y },
+      { x: x0 + 2, y },
+      '',
+      'object',
+    )
+    expect(ok).toBe(true)
+    expect(b.objects.chainobj?.x).toBe(x0 + 1)
+    expect(b.objects.chainobj?.y).toBe(y)
+  })
 })
 
 describe('boardweavegroup', () => {
@@ -215,6 +243,34 @@ describe('boardweavegroup', () => {
     expect(ok).toBe(true)
     expect(terrainat(b, { x: 5, y: y + 1 })?.kind).toBe('d0')
     expect(terrainat(b, { x: 6, y: y + 2 })?.kind).toBe('d1')
+  })
+
+  it('moves an object on grouped terrain by exactly one delta (not carry + object)', () => {
+    const board = memorycreateboard()
+    const y = 8
+    const x = 6
+    board.terrain[x + y * BOARD_WIDTH] = {
+      kind: 'gfloor',
+      x,
+      y,
+      collision: COLLISION.ISWALK,
+      group: 'carrytest',
+    }
+    board.objects.onfloor = {
+      id: 'onfloor',
+      kind: 'ball',
+      x,
+      y,
+      collision: COLLISION.ISWALK,
+    }
+    installbookwithboard('bw_carry', board)
+    const b = memoryreadboardbyaddress('bw_carry')!
+    memoryinitboard(b)
+
+    const ok = boardweavegroup('bw_carry', { x: 1, y: 0 }, '', 'carrytest')
+    expect(ok).toBe(true)
+    expect(b.objects.onfloor?.x).toBe(x + 1)
+    expect(b.objects.onfloor?.y).toBe(y)
   })
 
   it('restores board when an apply-phase object move fails', async () => {

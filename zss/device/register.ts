@@ -11,7 +11,7 @@ import {
   readbookmarksfromstorage,
   readterminalbookmarkdisplaylines,
   removebookmarkbyid,
-  terminalbookmarkresolvecli,
+  runterminalbookmarkclibyid,
 } from 'zss/feature/bookmarks'
 import { isclimode } from 'zss/feature/detect'
 import { fetchwiki } from 'zss/feature/fetchwiki'
@@ -559,23 +559,7 @@ export const register = createdevice(
           if (!pinid) {
             return
           }
-          const blob = await readbookmarksfromstorage()
-          const entry = blob.terminal.find(
-            (b: ZssTerminalBookmark) => b.id === pinid,
-          )
-          if (!entry) {
-            apitoast(register, myplayerid, 'pin not found')
-            return
-          }
-          const rawline = entry.text.trim()
-          if (!rawline.length) {
-            return
-          }
-          const line = terminalbookmarkresolvecli(rawline)
-          const preview =
-            rawline.length > 48 ? `${rawline.slice(0, 48)}…` : rawline
-          apitoast(register, myplayerid, `bookmark run $cyan${preview}$white`)
-          vmcli(register, message.player, line)
+          await runterminalbookmarkclibyid(register, myplayerid, pinid)
         })
         break
       case 'input':

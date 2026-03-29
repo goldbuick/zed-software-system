@@ -41,28 +41,6 @@ function bookmarkruniteunquotedpayload(left: string): string | undefined {
   return undefined
 }
 
-/**
- * Turn a tape log line into a single CLI line for `vmcli`: `!!…;…` from `renderrow`
- * becomes `!…;…`; any `!payload;label` is returned as-is; otherwise `!runit "…";Bookmark`.
- */
-export function terminalbookmarkresolvecli(text: string): string {
-  const trimmed = text.trim()
-  if (!trimmed.length) {
-    return trimmed
-  }
-  let line = trimmed
-  if (line.startsWith('!!') && line.includes(';')) {
-    line = line.slice(1)
-  }
-  if (line.startsWith('!') && line.includes(';')) {
-    const semi = line.indexOf(';')
-    if (semi > 0) {
-      return line
-    }
-  }
-  return `!runit ${bookmarkquotedrunitpayload(trimmed)};${BOOKMARK_TERMINAL_RUNIT_LABEL}`
-}
-
 /** One-line label for the pin row (pin rows are plain `$…` lines, not `!` links). */
 export function terminalbookmarkpindisplaylabel(text: string): string {
   const t = text.trim()
