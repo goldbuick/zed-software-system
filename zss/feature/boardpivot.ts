@@ -1,4 +1,8 @@
-import { pivotcellmishin } from 'zss/feature/boardpivotmath'
+import {
+  pivotbuildintegeredges,
+  pivotcellmishin,
+  pivotposmodi,
+} from 'zss/feature/boardpivotmath'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
@@ -39,13 +43,6 @@ function isfullboardrect(p1: PT, p2: PT): boolean {
   )
 }
 
-function boardcenters(): { cx: number; cy: number } {
-  return {
-    cx: BOARD_WIDTH <= 1 ? 0 : (BOARD_WIDTH - 1) * 0.5,
-    cy: BOARD_HEIGHT <= 1 ? 0 : (BOARD_HEIGHT - 1) * 0.5,
-  }
-}
-
 function boundingcenterfromrect(p1: PT, p2: PT): { cx: number; cy: number } {
   return {
     cx: (p1.x + p2.x) / 2,
@@ -64,34 +61,18 @@ function boundingcenterfromgroupelements(
   for (let i = 0; i < terrainelements.length; ++i) {
     const x = terrainelements[i].x ?? 0
     const y = terrainelements[i].y ?? 0
-    if (x < minx) {
-      minx = x
-    }
-    if (x > maxx) {
-      maxx = x
-    }
-    if (y < miny) {
-      miny = y
-    }
-    if (y > maxy) {
-      maxy = y
-    }
+    if (x < minx) minx = x
+    if (x > maxx) maxx = x
+    if (y < miny) miny = y
+    if (y > maxy) maxy = y
   }
   for (let i = 0; i < objectelements.length; ++i) {
     const x = objectelements[i].x ?? 0
     const y = objectelements[i].y ?? 0
-    if (x < minx) {
-      minx = x
-    }
-    if (x > maxx) {
-      maxx = x
-    }
-    if (y < miny) {
-      miny = y
-    }
-    if (y > maxy) {
-      maxy = y
-    }
+    if (x < minx) minx = x
+    if (x > maxx) maxx = x
+    if (y < miny) miny = y
+    if (y > maxy) maxy = y
   }
   return {
     cx: (minx + maxx) / 2,
@@ -99,6 +80,10 @@ function boundingcenterfromgroupelements(
   }
 }
 
+/**
+ * Sub-rectangle pivot: Mishin triple-shear on the torus around `(cx, cy)` (bbox center).
+ * Full-board pivot uses `boardpivotfullboardapply` (Paeth taper / integer edges) instead.
+ */
 function boardpivotapplyregion(
   targetboard: BOARD,
   theta: number,
@@ -168,17 +153,70 @@ function boardpivotfullboardapply(
   pivotobject: boolean,
   pivotterrain: boolean,
 ) {
-  const { cx, cy } = boardcenters()
-  boardpivotapplyregion(
-    targetboard,
+  const tmpboard = memorycreateboard()
+  memoryinitboard(tmpboard)
+  const { xedge, yedge } = pivotbuildintegeredges(
+    BOARD_WIDTH,
+    BOARD_HEIGHT,
     theta,
-    { x: 0, y: 0 },
-    { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 },
-    cx,
-    cy,
-    pivotobject,
-    pivotterrain,
   )
+  const transformset = [xedge, yedge, xedge]
+  for (let i = 0; i < transformset.length; ++i) {
+    const edge = transformset[i]
+    if (i !== 1) {
+      for (let y = 0; y < BOARD_HEIGHT; ++y) {
+        const skew = edge[y]
+        const row = y * BOARD_WIDTH
+        for (let x = 0; x < BOARD_WIDTH; x++) {
+          const xskew = pivotposmodi(x + skew, BOARD_WIDTH)
+          if (pivotterrain) {
+            tmpboard.terrain[xskew + row] = targetboard.terrain[x + row]
+          }
+        }
+      }
+      if (pivotobject) {
+        const ids = Object.keys(targetboard.objects)
+        for (let o = 0; o < ids.length; ++o) {
+          const id = ids[o]
+          const { x, y } = targetboard.objects[id]
+          if (ispresent(x) && ispresent(y)) {
+            const skew = edge[y]
+            targetboard.objects[id].x = pivotposmodi(x + skew, BOARD_WIDTH)
+            targetboard.objects[id].lx = targetboard.objects[id].x
+          }
+        }
+      }
+    }
+    if (i === 1) {
+      for (let x = 0; x < BOARD_WIDTH; ++x) {
+        const skew = edge[x]
+        for (let y = 0; y < BOARD_HEIGHT; ++y) {
+          const yskew = pivotposmodi(y + skew, BOARD_HEIGHT)
+          if (pivotterrain) {
+            tmpboard.terrain[x + yskew * BOARD_WIDTH] =
+              targetboard.terrain[x + y * BOARD_WIDTH]
+          }
+        }
+      }
+      if (pivotobject) {
+        const ids = Object.keys(targetboard.objects)
+        for (let o = 0; o < ids.length; ++o) {
+          const id = ids[o]
+          const { x, y } = targetboard.objects[id]
+          if (ispresent(x) && ispresent(y)) {
+            const skew = edge[x]
+            targetboard.objects[id].y = pivotposmodi(y + skew, BOARD_HEIGHT)
+            targetboard.objects[id].ly = targetboard.objects[id].y
+          }
+        }
+      }
+    }
+    if (pivotterrain) {
+      targetboard.terrain = [...tmpboard.terrain]
+    }
+    memoryinitboard(tmpboard)
+    memoryinitboard(targetboard)
+  }
 }
 
 function boardpivotrectangle(
