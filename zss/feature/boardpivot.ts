@@ -1,8 +1,4 @@
-import {
-  pivotbuildintegeredges,
-  pivotcellinteger,
-  pivotposmodi,
-} from 'zss/feature/boardpivotmath'
+import { pivotcellmishin } from 'zss/feature/boardpivotmath'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
@@ -43,93 +39,64 @@ function isfullboardrect(p1: PT, p2: PT): boolean {
   )
 }
 
-function boardpivotfullboardapply(
-  targetboard: BOARD,
-  theta: number,
-  pivotobject: boolean,
-  pivotterrain: boolean,
-) {
-  const tmpboard = memorycreateboard()
-  memoryinitboard(tmpboard)
-  const { xedge, yedge } = pivotbuildintegeredges(
-    BOARD_WIDTH,
-    BOARD_HEIGHT,
-    theta,
-  )
-  const transformset = [xedge, yedge, xedge]
-  for (let i = 0; i < transformset.length; ++i) {
-    const edge = transformset[i]
-    if (i !== 1) {
-      for (let y = 0; y < BOARD_HEIGHT; ++y) {
-        const skew = edge[y]
-        const row = y * BOARD_WIDTH
-        for (let x = 0; x < BOARD_WIDTH; x++) {
-          const xskew = pivotposmodi(x + skew, BOARD_WIDTH)
-          if (pivotterrain) {
-            tmpboard.terrain[xskew + row] = targetboard.terrain[x + row]
-          }
-        }
-      }
-      if (pivotobject) {
-        const ids = Object.keys(targetboard.objects)
-        for (let o = 0; o < ids.length; ++o) {
-          const id = ids[o]
-          const { x, y } = targetboard.objects[id]
-          if (ispresent(x) && ispresent(y)) {
-            const skew = edge[y]
-            targetboard.objects[id].x = pivotposmodi(x + skew, BOARD_WIDTH)
-            targetboard.objects[id].lx = targetboard.objects[id].x
-          }
-        }
-      }
-    }
-    if (i === 1) {
-      for (let x = 0; x < BOARD_WIDTH; ++x) {
-        const skew = edge[x]
-        for (let y = 0; y < BOARD_HEIGHT; ++y) {
-          const yskew = pivotposmodi(y + skew, BOARD_HEIGHT)
-          if (pivotterrain) {
-            tmpboard.terrain[x + yskew * BOARD_WIDTH] =
-              targetboard.terrain[x + y * BOARD_WIDTH]
-          }
-        }
-      }
-      if (pivotobject) {
-        const ids = Object.keys(targetboard.objects)
-        for (let o = 0; o < ids.length; ++o) {
-          const id = ids[o]
-          const { x, y } = targetboard.objects[id]
-          if (ispresent(x) && ispresent(y)) {
-            const skew = edge[x]
-            targetboard.objects[id].y = pivotposmodi(y + skew, BOARD_HEIGHT)
-            targetboard.objects[id].ly = targetboard.objects[id].y
-          }
-        }
-      }
-    }
-    if (pivotterrain) {
-      targetboard.terrain = [...tmpboard.terrain]
-    }
-    memoryinitboard(tmpboard)
-    memoryinitboard(targetboard)
+function boardcenters(): { cx: number; cy: number } {
+  return {
+    cx: BOARD_WIDTH <= 1 ? 0 : (BOARD_WIDTH - 1) * 0.5,
+    cy: BOARD_HEIGHT <= 1 ? 0 : (BOARD_HEIGHT - 1) * 0.5,
   }
 }
 
-function boardpivotrectangle(
+function boundingcenterfromrect(p1: PT, p2: PT): { cx: number; cy: number } {
+  return {
+    cx: (p1.x + p2.x) / 2,
+    cy: (p1.y + p2.y) / 2,
+  }
+}
+
+function boundingcenterfromgroupelements(
+  terrainelements: BOARD_ELEMENT[],
+  objectelements: BOARD_ELEMENT[],
+): { cx: number; cy: number } {
+  let minx = Infinity
+  let maxx = -Infinity
+  let miny = Infinity
+  let maxy = -Infinity
+  for (let i = 0; i < terrainelements.length; ++i) {
+    const x = terrainelements[i].x ?? 0
+    const y = terrainelements[i].y ?? 0
+    if (x < minx) minx = x
+    if (x > maxx) maxx = x
+    if (y < miny) miny = y
+    if (y > maxy) maxy = y
+  }
+  for (let i = 0; i < objectelements.length; ++i) {
+    const x = objectelements[i].x ?? 0
+    const y = objectelements[i].y ?? 0
+    if (x < minx) minx = x
+    if (x > maxx) maxx = x
+    if (y < miny) miny = y
+    if (y > maxy) maxy = y
+  }
+  return {
+    cx: (minx + maxx) / 2,
+    cy: (miny + maxy) / 2,
+  }
+}
+
+function boardpivotapplyregion(
   targetboard: BOARD,
   theta: number,
   p1: PT,
   p2: PT,
+  cx: number,
+  cy: number,
   pivotobject: boolean,
   pivotterrain: boolean,
 ) {
+  const w = BOARD_WIDTH
+  const h = BOARD_HEIGHT
   const tmpboard = memorycreateboard()
   memoryinitboard(tmpboard)
-  const { xedge, yedge } = pivotbuildintegeredges(
-    BOARD_WIDTH,
-    BOARD_HEIGHT,
-    theta,
-  )
   const origterrain = targetboard.terrain
   tmpboard.terrain = [...origterrain]
   const destindiceswritten = new Set<number>()
@@ -137,23 +104,16 @@ function boardpivotrectangle(
   if (pivotterrain) {
     for (let y = p1.y; y <= p2.y; ++y) {
       for (let x = p1.x; x <= p2.x; ++x) {
-        const dest = pivotcellinteger(
-          x,
-          y,
-          BOARD_WIDTH,
-          BOARD_HEIGHT,
-          xedge,
-          yedge,
-        )
-        const destidx = dest.x + dest.y * BOARD_WIDTH
-        const srcidx = x + y * BOARD_WIDTH
+        const dest = pivotcellmishin(x, y, w, h, theta, cx, cy)
+        const destidx = dest.x + dest.y * w
+        const srcidx = x + y * w
         tmpboard.terrain[destidx] = origterrain[srcidx]
         destindiceswritten.add(destidx)
       }
     }
     for (let y = p1.y; y <= p2.y; ++y) {
       for (let x = p1.x; x <= p2.x; ++x) {
-        const srcidx = x + y * BOARD_WIDTH
+        const srcidx = x + y * w
         if (!destindiceswritten.has(srcidx)) {
           tmpboard.terrain[srcidx] = undefined
         }
@@ -175,14 +135,7 @@ function boardpivotrectangle(
       if (x < p1.x || x > p2.x || y < p1.y || y > p2.y) {
         continue
       }
-      const dest = pivotcellinteger(
-        x,
-        y,
-        BOARD_WIDTH,
-        BOARD_HEIGHT,
-        xedge,
-        yedge,
-      )
+      const dest = pivotcellmishin(x, y, w, h, theta, cx, cy)
       el.x = dest.x
       el.y = dest.y
       el.lx = dest.x
@@ -191,6 +144,46 @@ function boardpivotrectangle(
   }
 
   memoryinitboard(targetboard)
+}
+
+function boardpivotfullboardapply(
+  targetboard: BOARD,
+  theta: number,
+  pivotobject: boolean,
+  pivotterrain: boolean,
+) {
+  const { cx, cy } = boardcenters()
+  boardpivotapplyregion(
+    targetboard,
+    theta,
+    { x: 0, y: 0 },
+    { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 },
+    cx,
+    cy,
+    pivotobject,
+    pivotterrain,
+  )
+}
+
+function boardpivotrectangle(
+  targetboard: BOARD,
+  theta: number,
+  p1: PT,
+  p2: PT,
+  pivotobject: boolean,
+  pivotterrain: boolean,
+) {
+  const { cx, cy } = boundingcenterfromrect(p1, p2)
+  boardpivotapplyregion(
+    targetboard,
+    theta,
+    p1,
+    p2,
+    cx,
+    cy,
+    pivotobject,
+    pivotterrain,
+  )
 }
 
 export function boardpivotgroup(
@@ -217,11 +210,12 @@ export function boardpivotgroup(
     return false
   }
 
-  const { xedge, yedge } = pivotbuildintegeredges(
-    BOARD_WIDTH,
-    BOARD_HEIGHT,
-    theta,
+  const { cx, cy } = boundingcenterfromgroupelements(
+    terrainelements,
+    objectelements,
   )
+  const w = BOARD_WIDTH
+  const h = BOARD_HEIGHT
 
   const groupids = objectelements.map((el: BOARD_ELEMENT) => el.id ?? '')
   const groupindexes = terrainelements.map((el: BOARD_ELEMENT) =>
@@ -252,14 +246,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const t = terrainelements[i]
     const from: PT = { x: t.x ?? -1, y: t.y ?? -1 }
-    const dest = pivotcellinteger(
-      from.x,
-      from.y,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
 
     if (memoryptwithinboard(dest)) {
       const destelement = memoryreadelement(targetboard, dest)
@@ -302,14 +289,7 @@ export function boardpivotgroup(
       'collision',
     )
     const from: PT = { x: fromelement.x ?? 0, y: fromelement.y ?? 0 }
-    const dest = pivotcellinteger(
-      from.x,
-      from.y,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
     if (memoryptwithinboard(dest)) {
       const destelement = memoryreadelement(targetboard, dest)
       const destid = destelement?.id ?? ''
@@ -348,14 +328,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellinteger(
-      from.x,
-      from.y,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
     destindices.add(pttoindex(dest, BOARD_WIDTH))
   }
 
@@ -363,14 +336,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellinteger(
-      from.x,
-      from.y,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
     const destidx = pttoindex(dest, BOARD_WIDTH)
     const moved = deepcopy({
       ...fromelement,
@@ -421,14 +387,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellinteger(
-      from.x,
-      from.y,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
     const ddx = dest.x - from.x
     const ddy = dest.y - from.y
     const maybefromobject = memoryreadelement(targetboard, from, true)
@@ -446,36 +405,15 @@ export function boardpivotgroup(
   memoryinitboard(targetboard)
 
   objectelements.sort((a, b) => {
-    const da = pivotcellinteger(
-      a.x ?? 0,
-      a.y ?? 0,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
-    const db = pivotcellinteger(
-      b.x ?? 0,
-      b.y ?? 0,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
+    const da = pivotcellmishin(a.x ?? 0, a.y ?? 0, w, h, theta, cx, cy)
+    const db = pivotcellmishin(b.x ?? 0, b.y ?? 0, w, h, theta, cx, cy)
     return pttoindex(db, BOARD_WIDTH) - pttoindex(da, BOARD_WIDTH)
   })
 
   for (let i = 0; i < objectelements.length; ++i) {
     const fromelement = objectelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellinteger(
-      from.x,
-      from.y,
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      xedge,
-      yedge,
-    )
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
     if (!boardmovement.memorymoveobject(book, targetboard, fromelement, dest)) {
       const restored = memoryimportboard(rollback)
       if (ispresent(restored)) {

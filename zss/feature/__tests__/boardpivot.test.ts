@@ -72,22 +72,20 @@ function pivotgroupdisplacementfixture():
   for (let step = 1; step < 360 * 8; ++step) {
     const deg = step * 0.125
     const theta = (deg * Math.PI) / 180
-    const { xedge, yedge } = pivotbuildintegeredges(
-      BOARD_WIDTH,
-      BOARD_HEIGHT,
-      theta,
-    )
+    const cx = x0 + 1
+    const cy = y
     const idx = (x: number) => x + y * BOARD_WIDTH
     const gset = new Set([idx(x0), idx(x0 + 1), idx(x0 + 2)])
     const dest = new Set<number>()
     for (let k = 0; k < 3; ++k) {
-      const p = pivotcellinteger(
+      const p = pivotcellmishin(
         x0 + k,
         y,
         BOARD_WIDTH,
         BOARD_HEIGHT,
-        xedge,
-        yedge,
+        theta,
+        cx,
+        cy,
       )
       dest.add(p.x + p.y * BOARD_WIDTH)
     }
@@ -263,6 +261,21 @@ describe('boardpivot rectangular', () => {
     expect(ok).toBe(true)
     expect(terrainat(b, { x: 0, y: 0 })?.kind).toBe('a')
     expect(terrainat(b, { x: 1, y: 0 })?.kind).toBe('b')
+  })
+
+  it('sub-rect pivot uses bbox center so Mishin dest differs from board-center pivot', () => {
+    const theta = Math.PI / 4
+    const x = 21
+    const y = 10
+    const p1 = { x: 20, y: 10 }
+    const p2 = { x: 22, y: 10 }
+    const cx = (p1.x + p2.x) / 2
+    const cy = (p1.y + p2.y) / 2
+    const bx = BOARD_WIDTH <= 1 ? 0 : (BOARD_WIDTH - 1) * 0.5
+    const by = BOARD_HEIGHT <= 1 ? 0 : (BOARD_HEIGHT - 1) * 0.5
+    const p = pivotcellmishin(x, y, BOARD_WIDTH, BOARD_HEIGHT, theta, cx, cy)
+    const q = pivotcellmishin(x, y, BOARD_WIDTH, BOARD_HEIGHT, theta, bx, by)
+    expect(p.x !== q.x || p.y !== q.y).toBe(true)
   })
 })
 

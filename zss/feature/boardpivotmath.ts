@@ -88,9 +88,8 @@ export function pivotcell(
 
 /**
  * Mishin-style discrete Paeth rotation: each shear uses `Math.round(trig * offset)` with
- * offsets relative to board center (no `BOARD_HEIGHT/2` scale, no taper table). Same H→V→H
- * order and torus wrap as `pivotcellinteger`. For cardinal “rotate my box” semantics on a
- * non-square board, a separate orthogonal path may still be needed.
+ * offsets relative to `(cx, cy)` (defaults: board center `(w-1)/2`, `(h-1)/2`). Same H→V→H
+ * order and torus wrap. Board pivot uses bbox center of the targeted region when provided.
  */
 export function pivotcellmishin(
   ix: number,
@@ -98,20 +97,22 @@ export function pivotcellmishin(
   w: number,
   h: number,
   theta: number,
+  cx?: number,
+  cy?: number,
 ): PT {
   if (w <= 0 || h <= 0 || pivotthetanearsingular(theta)) {
     return { x: ix, y: iy }
   }
-  const cx = w <= 1 ? 0 : (w - 1) * 0.5
-  const cy = h <= 1 ? 0 : (h - 1) * 0.5
+  const centerx = cx ?? (w <= 1 ? 0 : (w - 1) * 0.5)
+  const centery = cy ?? (h <= 1 ? 0 : (h - 1) * 0.5)
   const half = theta * 0.5
   const alpha = -Math.tan(half)
   const beta = Math.sin(theta)
   let x = ix
   let y = iy
-  x = pivotposmodi(x + Math.round(alpha * (y - cy)), w)
-  y = pivotposmodi(y + Math.round(beta * (x - cx)), h)
-  x = pivotposmodi(x + Math.round(alpha * (y - cy)), w)
+  x = pivotposmodi(x + Math.round(alpha * (y - centery)), w)
+  y = pivotposmodi(y + Math.round(beta * (x - centerx)), h)
+  x = pivotposmodi(x + Math.round(alpha * (y - centery)), w)
   return { x, y }
 }
 
