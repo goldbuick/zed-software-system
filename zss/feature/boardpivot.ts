@@ -61,18 +61,34 @@ function boundingcenterfromgroupelements(
   for (let i = 0; i < terrainelements.length; ++i) {
     const x = terrainelements[i].x ?? 0
     const y = terrainelements[i].y ?? 0
-    if (x < minx) minx = x
-    if (x > maxx) maxx = x
-    if (y < miny) miny = y
-    if (y > maxy) maxy = y
+    if (x < minx) {
+      minx = x
+    }
+    if (x > maxx) {
+      maxx = x
+    }
+    if (y < miny) {
+      miny = y
+    }
+    if (y > maxy) {
+      maxy = y
+    }
   }
   for (let i = 0; i < objectelements.length; ++i) {
     const x = objectelements[i].x ?? 0
     const y = objectelements[i].y ?? 0
-    if (x < minx) minx = x
-    if (x > maxx) maxx = x
-    if (y < miny) miny = y
-    if (y > maxy) maxy = y
+    if (x < minx) {
+      minx = x
+    }
+    if (x > maxx) {
+      maxx = x
+    }
+    if (y < miny) {
+      miny = y
+    }
+    if (y > maxy) {
+      maxy = y
+    }
   }
   return {
     cx: (minx + maxx) / 2,
