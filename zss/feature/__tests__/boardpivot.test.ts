@@ -1,10 +1,14 @@
-import { readtransformfilter } from 'zss/firmware/transforms'
 import { boardpivot, boardpivotgroup } from 'zss/feature/boardpivot'
 import {
   pivotbuildintegeredges,
   pivotcell,
   pivotcellinteger,
+  pivotcellmishin,
+  pivotcellmishinvslegacydiffcount,
+  pivotmishinmapindex,
+  pivotthetanearsingular,
 } from 'zss/feature/boardpivotmath'
+import { readtransformfilter } from 'zss/firmware/transforms'
 import { indextopt } from 'zss/mapping/2d'
 import { memoryreadterrain } from 'zss/memory/boardaccess'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
@@ -139,6 +143,62 @@ describe('boardpivotmath', () => {
       seen.add(step(i))
     }
     expect(seen.size).toBe(w * h)
+  })
+})
+
+function assertmishinbijection(w: number, h: number, theta: number) {
+  const seen = new Set<number>()
+  for (let i = 0; i < w * h; ++i) {
+    seen.add(pivotmishinmapindex(i, w, h, theta))
+  }
+  expect(seen.size).toBe(w * h)
+}
+
+describe('boardpivotmath mishin', () => {
+  it('is identity at theta 0', () => {
+    expect(pivotcellmishin(3, 4, BOARD_WIDTH, BOARD_HEIGHT, 0)).toEqual({
+      x: 3,
+      y: 4,
+    })
+  })
+
+  it('reports singular theta near half-turn', () => {
+    expect(pivotthetanearsingular(Math.PI)).toBe(true)
+    expect(pivotthetanearsingular(0)).toBe(false)
+  })
+
+  it('legacy pivot is identity when shear is singular (180°)', () => {
+    const p = pivotcell(5, 5, 12, 8, Math.PI)
+    expect(p).toEqual({ x: 5, y: 5 })
+  })
+
+  const mishinanglesdeg = [0, -45, 45, -90, 90]
+  for (const deg of mishinanglesdeg) {
+    if (deg === 0) {
+      continue
+    }
+    const label = `${deg}°`
+    it(`mishin bijection on 12x8 at ${label}`, () => {
+      const theta = (deg * Math.PI) / 180
+      assertmishinbijection(12, 8, theta)
+    })
+    it(`mishin bijection on full board at ${label}`, () => {
+      const theta = (deg * Math.PI) / 180
+      assertmishinbijection(BOARD_WIDTH, BOARD_HEIGHT, theta)
+    })
+  }
+
+  it('mishin differs from taper pivot for many cells at 90°', () => {
+    const theta = (90 * Math.PI) / 180
+    const n = pivotcellmishinvslegacydiffcount(12, 8, theta)
+    expect(n).toBeGreaterThan(12 * 8 * 0.1)
+  })
+
+  it('records comparison count for full board at 90° (sanity)', () => {
+    const theta = (90 * Math.PI) / 180
+    const n = pivotcellmishinvslegacydiffcount(BOARD_WIDTH, BOARD_HEIGHT, theta)
+    expect(n).toBeGreaterThan(0)
+    expect(n).toBeLessThanOrEqual(BOARD_SIZE)
   })
 })
 

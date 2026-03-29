@@ -1,14 +1,31 @@
 import { PT } from 'zss/words/types'
 
+/**
+ * Board pivot maps: Paeth triple-shear on a torus (`pivotcell` + taper table) vs Mishin-style
+ * `Math.round(trig * offset)` (`pivotcellmishin`). Neither is orthogonal “rotate this rectangle”
+ * on a non-square board; a future cardinal orthogonal path would be separate from shear tuning.
+ */
+
+/** When |cos(θ/2)| ≈ 0, tan(θ/2) is singular (e.g. θ = π mod 2π). */
+const PIVOT_COS_HALF_SINGULAR_EPS = 1e-12
+
 /** Integer torus index wrap. */
 export function pivotposmodi(n: number, m: number): number {
   return ((n % m) + m) % m
+}
+
+/** True when Paeth shear coefficients are undefined (tan(θ/2) blows up). */
+export function pivotthetanearsingular(theta: number): boolean {
+  return Math.abs(Math.cos(theta * 0.5)) < PIVOT_COS_HALF_SINGULAR_EPS
 }
 
 export function pivotshearcoeffs(theta: number): {
   xshear: number
   yshear: number
 } {
+  if (pivotthetanearsingular(theta)) {
+    return { xshear: 0, yshear: 0 }
+  }
   const alpha = -Math.tan(theta * 0.5)
   const beta = Math.sin(theta)
   return { xshear: 12.5 * alpha, yshear: 12.5 * beta }
@@ -67,4 +84,65 @@ export function pivotcell(
 ): PT {
   const { xedge, yedge } = pivotbuildintegeredges(w, h, theta)
   return pivotcellinteger(ix, iy, w, h, xedge, yedge)
+}
+
+/**
+ * Mishin-style discrete Paeth rotation: each shear uses `Math.round(trig * offset)` with
+ * offsets relative to board center (no `BOARD_HEIGHT/2` scale, no taper table). Same H→V→H
+ * order and torus wrap as `pivotcellinteger`. For cardinal “rotate my box” semantics on a
+ * non-square board, a separate orthogonal path may still be needed.
+ */
+export function pivotcellmishin(
+  ix: number,
+  iy: number,
+  w: number,
+  h: number,
+  theta: number,
+): PT {
+  if (w <= 0 || h <= 0 || pivotthetanearsingular(theta)) {
+    return { x: ix, y: iy }
+  }
+  const cx = w <= 1 ? 0 : (w - 1) * 0.5
+  const cy = h <= 1 ? 0 : (h - 1) * 0.5
+  const half = theta * 0.5
+  const alpha = -Math.tan(half)
+  const beta = Math.sin(theta)
+  let x = ix
+  let y = iy
+  x = pivotposmodi(x + Math.round(alpha * (y - cy)), w)
+  y = pivotposmodi(y + Math.round(beta * (x - cx)), h)
+  x = pivotposmodi(x + Math.round(alpha * (y - cy)), w)
+  return { x, y }
+}
+
+/** Linear index map for property tests — `src` in row-major [0, w*h). */
+export function pivotmishinmapindex(
+  src: number,
+  w: number,
+  h: number,
+  theta: number,
+): number {
+  const ix = src % w
+  const iy = Math.floor(src / w)
+  const p = pivotcellmishin(ix, iy, w, h, theta)
+  return p.x + p.y * w
+}
+
+/** Count cells where Mishin and taper+edge pivot disagree (for comparisons). */
+export function pivotcellmishinvslegacydiffcount(
+  w: number,
+  h: number,
+  theta: number,
+): number {
+  let n = 0
+  for (let iy = 0; iy < h; ++iy) {
+    for (let ix = 0; ix < w; ++ix) {
+      const a = pivotcell(ix, iy, w, h, theta)
+      const b = pivotcellmishin(ix, iy, w, h, theta)
+      if (a.x !== b.x || a.y !== b.y) {
+        ++n
+      }
+    }
+  }
+  return n
 }

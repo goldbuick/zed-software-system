@@ -119,6 +119,14 @@ function joinurlread() {
   if (ispresent(clipboard)) {
     clipboard.writeText(joinurl).catch((err) => console.error(err))
   }
+  if (isHeadless) {
+    const writenode = (window as unknown as {
+      __nodeWriteJoinUrl?: (u: string) => Promise<void>
+    }).__nodeWriteJoinUrl
+    if (typeof writenode === 'function') {
+      void writenode(joinurl).catch((err) => console.error(err))
+    }
+  }
   return joinurl
 }
 
