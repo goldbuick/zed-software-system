@@ -199,12 +199,9 @@ function getautocompletefromtokens(
     }
 
     let endoflinehint = cmdidx >= 0
-    const maybecommand =
-      cmdidx >= 0 ? (tokens[cmdidx + 1]?.image ?? '') : ''
+    const maybecommand = cmdidx >= 0 ? (tokens[cmdidx + 1]?.image ?? '') : ''
     const hintcommandname =
-      cmdidx >= 0 && maybecommand !== ''
-        ? NAME(maybecommand).toLowerCase()
-        : ''
+      cmdidx >= 0 && maybecommand !== '' ? NAME(maybecommand).toLowerCase() : ''
     const cmdlookup = maybecommand.toLowerCase()
     const maybesig =
       words.langcommands[cmdlookup] ??

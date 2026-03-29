@@ -46,14 +46,14 @@ import {
   applyautocompletesuggestion,
   computeterminalarghintx,
 } from 'zss/screens/tape/autocompleteui'
-import { commandromhint } from 'zss/screens/tape/commandarghints'
 import {
+  ZSS_CURSOR_BG,
+  ZSS_CURSOR_FG,
   applycodetokencolors,
   bgcolor,
   buildzsswordcolors,
-  ZSS_CURSOR_BG,
-  ZSS_CURSOR_FG,
 } from 'zss/screens/tape/colors'
+import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { setuplogitem } from 'zss/screens/tape/common'
 import { measurerow } from 'zss/screens/tape/measure'
 import {

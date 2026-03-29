@@ -20,7 +20,7 @@ function parsefilterrectoneword(word: WORD): { pt1: PT; pt2: PT } | undefined {
   if (!isstring(word)) {
     return undefined
   }
-  const m = word.match(FILTER_RECT_ONEWORD)
+  const m = FILTER_RECT_ONEWORD.exec(word)
   if (!m) {
     return undefined
   }

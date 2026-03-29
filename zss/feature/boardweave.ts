@@ -53,13 +53,7 @@ function sortindicesbyweavedelta(indices: number[], delta: PT) {
   indices.sort((ia, ib) => {
     const apt = indextopt(ia, BOARD_WIDTH)
     const bpt = indextopt(ib, BOARD_WIDTH)
-    const c = compareptsforsweep(
-      apt.x,
-      apt.y,
-      bpt.x,
-      bpt.y,
-      delta,
-    )
+    const c = compareptsforsweep(apt.x, apt.y, bpt.x, bpt.y, delta)
     if (c !== 0) {
       return c
     }
@@ -73,13 +67,7 @@ function sortgroupelementsbydelta(
   delta: PT,
 ) {
   const compare = (a: BOARD_ELEMENT, b: BOARD_ELEMENT) =>
-    compareptsforsweep(
-      a.x ?? 0,
-      a.y ?? 0,
-      b.x ?? 0,
-      b.y ?? 0,
-      delta,
-    )
+    compareptsforsweep(a.x ?? 0, a.y ?? 0, b.x ?? 0, b.y ?? 0, delta)
   terrainelements.sort(compare)
   objectelements.sort(compare)
 }

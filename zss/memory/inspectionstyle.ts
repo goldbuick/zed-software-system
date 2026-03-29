@@ -106,7 +106,11 @@ export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
     (name, value) => {
       if (isnumber(value) || isstring(value)) {
         const key = name as keyof STYLE_CONFIG
-        if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
+        if (
+          key === 'stylechars' ||
+          key === 'stylecolors' ||
+          key === 'stylebgs'
+        ) {
           // @ts-expect-error bah
           styleconfig[key] = value
         }

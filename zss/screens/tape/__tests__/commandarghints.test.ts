@@ -1,9 +1,6 @@
 import { romread } from 'zss/rom'
 
-import {
-  clearcommandromhintcache,
-  commandromhint,
-} from '../commandarghints'
+import { clearcommandromhintcache, commandromhint } from '../commandarghints'
 
 jest.mock('zss/rom', () => {
   const actual = jest.requireActual<typeof import('zss/rom')>('zss/rom')

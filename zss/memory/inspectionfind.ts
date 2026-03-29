@@ -61,7 +61,12 @@ export async function memoryfindanymenu(player: string) {
     'text',
     (target) => {
       const key = target as keyof FINDANY_CONFIG
-      if (key === 'expr1' || key === 'expr2' || key === 'expr3' || key === 'expr4') {
+      if (
+        key === 'expr1' ||
+        key === 'expr2' ||
+        key === 'expr3' ||
+        key === 'expr4'
+      ) {
         return findanyconfig[key]
       }
       return ''
@@ -69,7 +74,12 @@ export async function memoryfindanymenu(player: string) {
     (name, value) => {
       if (isstring(value) || isnumber(value)) {
         const key = name as keyof FINDANY_CONFIG
-        if (key === 'expr1' || key === 'expr2' || key === 'expr3' || key === 'expr4') {
+        if (
+          key === 'expr1' ||
+          key === 'expr2' ||
+          key === 'expr3' ||
+          key === 'expr4'
+        ) {
           // @ts-expect-error bah
           findanyconfig[key] = value
         }

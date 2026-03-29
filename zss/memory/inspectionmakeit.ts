@@ -2,8 +2,8 @@ import { vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { doasync } from 'zss/mapping/func'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
@@ -299,12 +299,8 @@ export function memorymakeitscroll(makeit: string, player: string) {
                 createmakecodepage(STAT_TYPE.CHARSET, value, scrolllines)
               }
               scrolllines.push('$purple  if you typed in @char 12 or similar')
-              scrolllines.push(
-                '$purple  try using #set <stat> <value> instead',
-              )
-              scrolllines.push(
-                '$purple  or you can edit the @player codepage',
-              )
+              scrolllines.push('$purple  try using #set <stat> <value> instead')
+              scrolllines.push('$purple  or you can edit the @player codepage')
               scrolllines.push('$purple  to make changes to player stats')
               break
             case STAT_TYPE.RANGE:
