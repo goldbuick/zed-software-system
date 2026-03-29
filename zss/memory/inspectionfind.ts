@@ -2,14 +2,10 @@ import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER } from 'zss/feature/writeui'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { WORD } from 'zss/words/types'
 
 import { memoryreadplayerboard } from './playermanagement'
 
@@ -60,39 +56,52 @@ export async function memoryfindanymenu(player: string) {
     return
   }
 
-  gadgettext(player, `find any element(s)`)
-  gadgettext(player, DIVIDER)
+  registerhyperlinksharedbridge(
+    'findany',
+    'text',
+    (target) => {
+      const key = target as keyof FINDANY_CONFIG
+      if (
+        key === 'expr1' ||
+        key === 'expr2' ||
+        key === 'expr3' ||
+        key === 'expr4'
+      ) {
+        return findanyconfig[key]
+      }
+      return ''
+    },
+    (name, value) => {
+      if (isstring(value) || isnumber(value)) {
+        const key = name as keyof FINDANY_CONFIG
+        if (
+          key === 'expr1' ||
+          key === 'expr2' ||
+          key === 'expr3' ||
+          key === 'expr4'
+        ) {
+          // @ts-expect-error bah
+          findanyconfig[key] = value
+        }
+      }
+    },
+  )
 
-  function get(name: string) {
-    return findanyconfig[name as keyof FINDANY_CONFIG]
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value) || isstring(value)) {
-      // @ts-expect-error bah
-      findanyconfig[name as keyof FINDANY_CONFIG] = value
-    }
-  }
-
-  gadgethyperlink(player, 'findany', 'slot 1: any', ['expr1', 'text'], get, set)
-  gadgethyperlink(player, 'findany', 'slot 2: any', ['expr2', 'text'], get, set)
-  gadgethyperlink(player, 'findany', 'slot 3: any', ['expr3', 'text'], get, set)
-  gadgethyperlink(player, 'findany', 'slot 4: any', ['expr4', 'text'], get, set)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'findany', 'clear find(s)', [
-    'clear',
-    'hk',
-    'c',
-    ` C `,
-  ])
-  gadgethyperlink(player, 'findany', 'find 1', ['expr1', 'hk', '1', ` 1 `])
-  gadgethyperlink(player, 'findany', 'find 2', ['expr2', 'hk', '2', ` 2 `])
-  gadgethyperlink(player, 'findany', 'find 3', ['expr3', 'hk', '3', ` 3 `])
-  gadgethyperlink(player, 'findany', 'find 4', ['expr4', 'hk', '4', ` 4 `])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'findany'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `find any element(s)`,
+    DIVIDER,
+    `!expr1 text;${scrolllinkescapefrag('slot 1: any')}`,
+    `!expr2 text;${scrolllinkescapefrag('slot 2: any')}`,
+    `!expr3 text;${scrolllinkescapefrag('slot 3: any')}`,
+    `!expr4 text;${scrolllinkescapefrag('slot 4: any')}`,
+    DIVIDER,
+    `!clear hk c " C ";clear find(s)`,
+    `!expr1 hk 1 " 1 ";find 1`,
+    `!expr2 hk 2 " 2 ";find 2`,
+    `!expr3 hk 3 " 3 ";find 3`,
+    `!expr4 hk 4 " 4 ";find 4`,
+  ]
+  scrollwritelines(player, 'findany', lines.join('\n'), 'findany')
 }
 
 export async function memoryreadfindanyconfig(): Promise<

@@ -87,8 +87,9 @@ const CURSOR_BLOCK_CHAR_CODE = 219
 const CURSOR_BLOCK_CHAR = String.fromCharCode(CURSOR_BLOCK_CHAR_CODE)
 
 /**
- * Draw a single block cursor character at (x, y) in screen coordinates relative to edge.
- * Caller provides edge and context; optional fg/bg (defaults: white, DKBLUE or context.reset.bg).
+ * Draw cursor at (x, y) in screen coordinates relative to edge.
+ * Non-space cells: blinking white fg only (glyph preserved). Space cells: CP437 full block + colors.
+ * Optional fg/bg override (defaults: BLWHITE, DKGRAY).
  */
 export function drawblockcursor(
   x: number,
@@ -103,9 +104,12 @@ export function drawblockcursor(
     return
   }
   const atchar = px + py * context.width
-  const fg = options?.fg ?? COLOR.WHITE
-  const bg = options?.bg ?? context.reset.bg
-  applystrtoindex(atchar, CURSOR_BLOCK_CHAR, context)
+  const fg = options?.fg ?? COLOR.BLWHITE
+  const bg = options?.bg ?? COLOR.DKGRAY
+  const ch = context.char[atchar]
+  if (ch === ' ') {
+    applystrtoindex(atchar, CURSOR_BLOCK_CHAR, context)
+  }
   applycolortoindexes(atchar, atchar, fg, bg, context)
 }
 

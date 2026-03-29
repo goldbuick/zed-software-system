@@ -2,6 +2,10 @@
 
 **Purpose**: Defines `CLI_FIRMWARE` — command-line interface commands for system management, book/page operations, export, multiplayer, BBS, and editing tools. Most commands are operator-only.
 
+## Command help in the editor / terminal
+
+Firmware command signatures stay short. Longer inline help for autocomplete hints can be added as Markdown under [`zss/rom/editor/commands/<command>.md`](../../rom/editor/commands/) (bundled via Vite `import.meta.glob` into [`zss/rom/contentmap.ts`](../../rom/contentmap.ts)). The UI reads these through [`commandromhint`](../../screens/tape/commandarghints.ts) (`editor:commands:<lowercase name>`).
+
 ## Dependencies
 
 - `zss/device/api` — API layer (vm*, bridge*, register*, etc.)

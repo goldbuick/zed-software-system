@@ -12,11 +12,45 @@ import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, PT, WORD } from 'zss/words/types'
 
+/** Same shape as `ptstoarea` / batch paths: one token `x1,y1,x2,y2` (optional whitespace). */
+const FILTER_RECT_ONEWORD =
+  /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/
+
+function parsefilterrectoneword(word: WORD): { pt1: PT; pt2: PT } | undefined {
+  if (!isstring(word)) {
+    return undefined
+  }
+  const m = FILTER_RECT_ONEWORD.exec(word)
+  if (!m) {
+    return undefined
+  }
+  const x1 = Math.round(Number(m[1]))
+  const y1 = Math.round(Number(m[2]))
+  const x2 = Math.round(Number(m[3]))
+  const y2 = Math.round(Number(m[4]))
+  if (![x1, y1, x2, y2].every((n) => Number.isFinite(n))) {
+    return undefined
+  }
+  return {
+    pt1: { x: Math.min(x1, x2), y: Math.min(y1, y2) },
+    pt2: { x: Math.max(x1, x2), y: Math.max(y1, y2) },
+  }
+}
+
 function readfilter(words: WORD[], index: number) {
   let targetset = 'all'
   const pt1: PT = { x: 0, y: 0 }
   const pt2: PT = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
   for (let i = index; i < words.length; ) {
+    const onewordrect = parsefilterrectoneword(words[i])
+    if (ispresent(onewordrect)) {
+      pt1.x = onewordrect.pt1.x
+      pt1.y = onewordrect.pt1.y
+      pt2.x = onewordrect.pt2.x
+      pt2.y = onewordrect.pt2.y
+      i += 1
+      continue
+    }
     const [checkarg, ii] = readargs(words, i, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
     if (isstring(checkarg)) {
       targetset = NAME(checkarg)
@@ -39,6 +73,11 @@ function readfilter(words: WORD[], index: number) {
     }
   }
   return { targetset, pt1, pt2 }
+}
+
+/** Parses optional targetset and region after command-specific args (exported for tests). */
+export function readtransformfilter(words: WORD[], index: number) {
+  return readfilter(words, index)
 }
 
 export const TRANSFORM_FIRMWARE = createfirmware()
@@ -186,6 +225,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
           degToRad(degrees),
           filter.pt1,
           filter.pt2,
+          READ_CONTEXT.elementid,
           filter.targetset,
         )
           ? 0

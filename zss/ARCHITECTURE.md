@@ -160,6 +160,8 @@ Rough pipeline:
 2. **`gadgetclient`** (main): updates **zustand** state in [`zss/gadget/data/state.ts`](gadget/data/state.ts) (`useGadgetClient`, tape/editor/inspector stores).
 3. **`Engine`** / [`zss/screens/`](screens/) / [`zss/gadget/display/`](gadget/display/): R3F orthographic scene, tiles/sprites, CRT-style effects, tape UI.
 
+**Tape editor / terminal input:** [`zss/screens/tape/autocomplete.ts`](screens/tape/autocomplete.ts) computes `#` command and word-list suggestions from lexer tokens and firmware word tables; [`zss/screens/tape/commandarghints.ts`](screens/tape/commandarghints.ts) loads optional long-form help from ROM keys `editor:commands:<name>` (Markdown with YAML `hint:` or legacy `desc;…` lines), cached per command. [`zss/screens/tape/autocompleteui.ts`](screens/tape/autocompleteui.ts) shares suggestion-apply and terminal hint placement. See [`zss/screens/tape/README.md`](screens/tape/README.md).
+
 So: **memory is authoritative**; gadget state is a **projection** for rendering and UI.
 
 ---

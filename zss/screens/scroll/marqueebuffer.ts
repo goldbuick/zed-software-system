@@ -2,6 +2,7 @@ import type { WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
+  writetextreset,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -33,6 +34,7 @@ export function fillmarqueebuffer(
   context.active.leftedge = 0
   context.active.rightedge = rightedge
   context.disablewrap = false
+  writetextreset(context)
 }
 
 export function measuremarqueeline(line: string, color: COLOR) {

@@ -16,7 +16,11 @@ import { CRTShape } from 'zss/gadget/fx/crt'
 import { EffectComposerMain } from 'zss/gadget/graphics/effectcomposer'
 import { doasync } from 'zss/mapping/func'
 import { createplatform, haltplatform } from 'zss/platform'
-import { ScreenUIComponent } from 'zss/screens/screenui/component'
+import {
+  ScreenUILayout,
+  ScreenUIScrollLayer,
+  ScreenUIScrollProvider,
+} from 'zss/screens/screenui/component'
 import { TapeComponent } from 'zss/screens/tape/component'
 import { isfirefox } from 'zss/words/system'
 
@@ -110,10 +114,13 @@ export function Engine() {
       />
       <UserFocus>
         <UserScreen>
-          <ScreenUIComponent />
-          <TapeComponent />
-          <TapeToastConnected />
-          <TapeViewImage />
+          <ScreenUIScrollProvider>
+            <ScreenUILayout />
+            <TapeComponent />
+            <TapeToastConnected />
+            <TapeViewImage />
+            <ScreenUIScrollLayer />
+          </ScreenUIScrollProvider>
           {showunmute && (
             <>
               <Rect

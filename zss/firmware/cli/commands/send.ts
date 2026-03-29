@@ -8,7 +8,12 @@ import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { ARG_TYPE, COLOR } from 'zss/words/types'
+import { ARG_TYPE, COLOR, type WORD } from 'zss/words/types'
+
+function readscrolltextfromwords(words: WORD[]) {
+  const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
+  return textwords.join(' ')
+}
 
 export function registersendcommands(fw: FIRMWARE): FIRMWARE {
   return fw
@@ -38,13 +43,15 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('stat', ['text in a scroll window'], (_, words) => {
-      const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-      vmmakeitscroll(SOFTWARE, READ_CONTEXT.elementfocus, textwords.join(' '))
+      vmmakeitscroll(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        readscrolltextfromwords(words),
+      )
       return 0
     })
     .command('text', ['text on element or in sidebar'], (_, words) => {
-      const [tickerwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-      const ticker = tickerwords.join(' ')
+      const ticker = readscrolltextfromwords(words)
       if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
         READ_CONTEXT.element.tickertext = ticker
         READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp

@@ -1,3 +1,4 @@
+import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import { memorytickboard } from 'zss/memory/boardtick'
 import {
   BOARD,
@@ -159,5 +160,50 @@ describe('memorytickboard draw pass', () => {
       'sid_draw',
       'sid_tick',
     ])
+  })
+
+  it('filters draw pass to ids in drawallowids when provided', () => {
+    const terrain = new Array<BOARD_ELEMENT>(BOARD_SIZE)
+    terrain[0] = maketerrain(0, 0, ':draw\n#end')
+
+    const objectdraw = makeobject('sid_draw', ':draw\n#end')
+    const objecttick = makeobject('sid_tick', ':tick\n#end')
+    const board = makeboard(
+      {
+        [objectdraw.id ?? '']: objectdraw,
+        [objecttick.id ?? '']: objecttick,
+      },
+      terrain,
+    )
+
+    const run = memorytickboard(board, 1, true, new Set(['sid_draw']))
+    const draw = run.filter((item) => item.pass === 'draw')
+
+    expect(draw).toHaveLength(1)
+    expect(draw[0].object?.id).toBe('sid_draw')
+  })
+
+  it('memoryupdatedrawdirty vacated cell and neighbors after object moves', () => {
+    const terrain = new Array<BOARD_ELEMENT>(BOARD_SIZE)
+    const tidx = 5 + 5 * 60
+    terrain[tidx] = maketerrain(5, 5, ':draw\n#end')
+
+    const mover = makeobject('sid_move', ':draw\n#end')
+    mover.x = 5
+    mover.y = 5
+    const board = makeboard({ [mover.id ?? '']: mover }, terrain)
+
+    memoryupdatedrawdirty(board, 1)
+    expect((board.drawallowids?.size ?? 0) > 0).toBe(true)
+
+    memoryupdatedrawdirty(board, 2)
+    expect(board.drawallowids?.size ?? 0).toBe(0)
+
+    mover.x = 6
+    mover.y = 6
+    memoryupdatedrawdirty(board, 3)
+
+    expect(board.drawallowids?.has(`${tidx}`)).toBe(true)
+    expect(board.drawallowids?.has('sid_move')).toBe(true)
   })
 })

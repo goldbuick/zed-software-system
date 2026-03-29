@@ -3,12 +3,7 @@ import { parsetarget } from 'zss/device'
 import { apitoast, registercopy, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER } from 'zss/feature/writeui'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, pttoindex, ptwithin } from 'zss/mapping/2d'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
@@ -247,34 +242,15 @@ export async function memoryinspectcopy(
 
 export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-
-  gadgethyperlink(player, 'batch', 'copy terrain & objects', [
-    `copyall:${area}`,
-    'hk',
-    '1',
-  ])
-  gadgethyperlink(player, 'batch', 'copy objects', [
-    `copyobjects:${area}`,
-    'hk',
-    '2',
-  ])
-  gadgethyperlink(player, 'batch', 'copy terrain', [
-    `copyterrain:${area}`,
-    'hk',
-    '3',
-  ])
-  gadgethyperlink(player, 'batch', 'copy as text', [
-    `copyastext:${area}`,
-    'hk',
-    '4',
-  ])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'copy'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!@batch copyall:${area} hk 1 " 1 " next;copy terrain & objects`,
+    `!@batch copyobjects:${area} hk 2 " 2 " next;copy objects`,
+    `!@batch copyterrain:${area} hk 3 " 3 " next;copy terrain`,
+    `!@batch copyastext:${area} hk 4 " 4 " next;copy as text`,
+  ]
+  scrollwritelines(player, 'copy', lines.join('\n'), 'batch')
 }
 
 export async function memoryinspectcut(
@@ -342,29 +318,14 @@ export async function memoryinspectcut(
 
 export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-
-  gadgethyperlink(player, 'batch', 'cut terrain & objects', [
-    `cutall:${area}`,
-    'hk',
-    '1',
-  ])
-  gadgethyperlink(player, 'batch', 'cut objects', [
-    `cutobjects:${area}`,
-    'hk',
-    '2',
-  ])
-  gadgethyperlink(player, 'batch', 'cut terrain', [
-    `cutterrain:${area}`,
-    'hk',
-    '3',
-  ])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'cut'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!@batch cutall:${area} hk 1 " 1 " next;cut terrain & objects`,
+    `!@batch cutobjects:${area} hk 2 " 2 " next;cut objects`,
+    `!@batch cutterrain:${area} hk 3 " 3 " next;cut terrain`,
+  ]
+  scrollwritelines(player, 'cut', lines.join('\n'), 'batch')
 }
 
 export async function memoryinspectpaste(
@@ -466,33 +427,15 @@ export async function memoryinspectpaste(
 
 export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'paste terrain & objects', [
-    `pasteall:${area}`,
-    'hk',
-    '1',
-  ])
-  gadgethyperlink(player, 'batch', 'paste objects', [
-    `pasteobjects:${area}`,
-    'hk',
-    '2',
-  ])
-  gadgethyperlink(player, 'batch', 'paste terrain', [
-    `pasteterrain:${area}`,
-    'hk',
-    '3',
-  ])
-  gadgethyperlink(player, 'batch', 'paste terrain tiled', [
-    `pasteterraintiled:${area}`,
-    'hk',
-    '4',
-  ])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'paste'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!@batch pasteall:${area} hk 1 " 1 " next;paste terrain & objects`,
+    `!@batch pasteobjects:${area} hk 2 " 2 " next;paste objects`,
+    `!@batch pasteterrain:${area} hk 3 " 3 " next;paste terrain`,
+    `!@batch pasteterraintiled:${area} hk 4 " 4 " next;paste terrain tiled`,
+  ]
+  scrollwritelines(player, 'paste', lines.join('\n'), 'batch')
 }
 
 export async function memoryreadsecretheap(): Promise<

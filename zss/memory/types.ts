@@ -187,6 +187,14 @@ export type BOARD = {
   underboard?: string
   charsetpage?: string
   palettepage?: string
+  /** post-tick draw fingerprints; keys match `memoryelementdrawreadid` */
+  drawlastfp?: Record<string, string>
+  /** last known cells for objects (ids); used when objects are removed */
+  drawlastxy?: Record<string, { x: number; y: number }>
+  /** ids allowed for `:drawdisplay` next tick; undefined means full draw pass */
+  drawallowids?: Set<string>
+  /** force full draw next tick (e.g. palette swap); cleared after dirty update */
+  drawneedfull?: boolean
 }
 
 export type BOARD_ELEMENT = {

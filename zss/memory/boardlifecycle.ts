@@ -58,6 +58,10 @@ export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
     underboard: FORMAT_SKIP,
     charsetpage: FORMAT_SKIP,
     palettepage: FORMAT_SKIP,
+    drawlastfp: FORMAT_SKIP,
+    drawlastxy: FORMAT_SKIP,
+    drawallowids: FORMAT_SKIP,
+    drawneedfull: FORMAT_SKIP,
   })
 }
 

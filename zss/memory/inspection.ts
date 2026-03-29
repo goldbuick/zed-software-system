@@ -9,15 +9,12 @@ import {
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER } from 'zss/feature/writeui'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
@@ -26,7 +23,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import {
   memoryboardelementindex,
@@ -61,34 +58,50 @@ function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
   return `inspect:${id}`
 }
 
-export function memorygadgetinspectboard(player: string, board: string) {
+function memoryinspectjoinlinkwords(words: WORD[]): string {
+  return words
+    .map((w) => {
+      if (isarray(w)) {
+        return memoryinspectjoinlinkwords(w as unknown as WORD[])
+      }
+      const s = `${w ?? ''}`
+      if (/\s/.test(s) || s.length === 0) {
+        return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+      }
+      return s
+    })
+    .join(' ')
+}
+
+export function memoryinspectboardlines(board: string): string[] {
   const boardcodepage = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.BOARD,
     board,
   )
-  gadgettext(player, `board ${memoryreadcodepagename(boardcodepage)}:`)
-  gadgethyperlink(player, 'batch', `board id ${board}`, ['copyit', board])
-  gadgethyperlink(player, 'batch', `edit board codepage`, [`pageopen:${board}`])
+  const boardname = memoryreadcodepagename(boardcodepage)
+  const copylabel = scrolllinkescapefrag(`board id ${board}`)
+  return [
+    `board ${boardname}:`,
+    `!@batch istargetless copyit ${board};${copylabel}`,
+    `!@batch pageopen:${board};edit board codepage`,
+  ]
 }
 
-export function memorygadgetinspectloaders(player: string, p1: PT, p2: PT) {
-  // add matching loaders
+export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
   const loaders = memoryloadermatches('text', 'gadget:action')
-  if (loaders.length) {
-    gadgettext(player, 'gadget actions:')
+  if (!loaders.length) {
+    return []
   }
-
   const area = ptstoarea(p1, p2)
+  const lines = ['gadget actions:']
   for (let i = 0; i < loaders.length; ++i) {
     const codepage = loaders[i]
     const name = memoryreadcodepagename(codepage)
-    gadgethyperlink(player, 'gadget', `run ${name}`, [
-      'action',
-      '',
-      codepage.id,
-      area,
-    ])
+    lines.push(
+      `!@gadget action "" ${codepage.id} ${area};${scrolllinkescapefrag(`run ${name}`)}`,
+    )
   }
+  return lines
 }
 
 export async function memoryinspect(player: string, p1: PT, p2: PT) {
@@ -120,32 +133,23 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
         p1,
         memoryboardelementisobject(element),
       )
+      return
     }
-    // most likely empty
     if (!element?.kind) {
-      gadgettext(player, `empty: ${p1.x}, ${p1.y}`)
-      gadgettext(player, DIVIDER)
-      gadgethyperlink(player, 'empty', 'copy coords', [
-        `copycoords:${p1.x},${p1.y}`,
-        'hk',
-        '5',
-        ` 5 `,
-      ])
-
-      // add gadget scripts
-      memorygadgetinspectloaders(player, p1, p2)
-
-      // board info
-      memorygadgetinspectboard(player, board.id)
+      const emptylines = [
+        `empty: ${p1.x}, ${p1.y}`,
+        DIVIDER,
+        `!@empty copycoords:${p1.x},${p1.y} hk 5 " 5 ";copy coords`,
+        ...memoryinspectloaderlines(p1, p2),
+        ...memoryinspectboardlines(board.id),
+      ]
+      scrollwritelines(player, 'inspect', emptylines.join('\n'), 'refscroll')
+      return
     }
   } else {
     memoryinspectarea(player, p1, p2, showpaste)
+    return
   }
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'inspect'
-  shared.scroll = gadgetcheckqueue(player)
 }
 
 export function memoryinspectarea(
@@ -165,15 +169,20 @@ export function memoryinspectarea(
   }
 
   let group = 0
-  function get(name: string): WORD {
-    if (name === 'group') {
-      return group
-    }
-    return 0
-  }
-  function set(name: string, value: WORD) {
-    if (name === 'group') {
-      if (isnumber(value)) {
+  const area = ptstoarea(p1, p2)
+  const groupchip = `groups:${area}`
+
+  registerhyperlinksharedbridge(
+    groupchip,
+    'select',
+    (target) => {
+      if (target === 'group') {
+        return group
+      }
+      return 0
+    },
+    (name, value) => {
+      if (name === 'group' && isnumber(value)) {
         group = value
         rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
           const el = memoryreadelement(board, pt)
@@ -182,114 +191,46 @@ export function memoryinspectarea(
           }
         })
       }
-    }
-  }
-
-  const area = ptstoarea(p1, p2)
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'copy elements', [
-    `copy:${area}`,
-    'hk',
-    '1',
-    ` 1 `,
-    'next',
-  ])
-  gadgethyperlink(player, 'batch', 'cut elements', [
-    `cut:${area}`,
-    'hk',
-    '2',
-    ` 2 `,
-    'next',
-  ])
-  if (memoryhassecretheap) {
-    gadgethyperlink(player, 'batch', 'paste elements', [
-      `paste:${area}`,
-      'hk',
-      '3',
-      ` 3 `,
-      'next',
-    ])
-  }
-  gadgethyperlink(player, 'batch', 'copy coords', [
-    `copycoords:${area}`,
-    'hk',
-    '5',
-    ` 5 `,
-  ])
-  if (memoryhassecretheap) {
-    gadgethyperlink(player, 'batch', 'style transfer', [
-      `style:${area}`,
-      'hk',
-      's',
-      ` S `,
-      'next',
-    ])
-  }
-  gadgethyperlink(player, 'remix', 'remix coords', [
-    `remix:${area}`,
-    'hk',
-    'r',
-    ` R `,
-    'next',
-  ])
-
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', `set chars:`, [
-    `chars:${area}`,
-    'hk',
-    'a',
-    ' A ',
-    'next',
-  ])
-  gadgethyperlink(player, 'batch', `set colors:`, [
-    `colors:${area}`,
-    'hk',
-    'c',
-    ' C ',
-    'next',
-  ])
-  gadgethyperlink(player, 'batch', `set bgs:`, [
-    `bgs:${area}`,
-    'hk',
-    'b',
-    ' B ',
-    'next',
-  ])
-  gadgethyperlink(
-    player,
-    `groups:${area}`,
-    'group',
-    [
-      'group',
-      'select',
-      'none',
-      '0',
-      ...range(1, 127)
-        .map((i) => [`group${i}`, `${i}`])
-        .flat(),
-    ],
-    get,
-    set,
+    },
   )
 
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'make empty', [
-    `empty:${area}`,
-    'hk',
+  const grouptokens = [
+    'group',
+    'select',
+    'none',
     '0',
-    ` 0 `,
-    'next',
-  ])
+    ...range(1, 127)
+      .map((i) => [`group${i}`, `${i}`])
+      .flat(),
+  ]
+  const groupline = `!${grouptokens.join(' ')};group`
 
-  // add gadget scripts
-  gadgettext(player, DIVIDER)
-  memorygadgetinspectloaders(player, p1, p2)
+  const lines: string[] = [
+    `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!@batch copy:${area} hk 1 " 1 " next;copy elements`,
+    `!@batch cut:${area} hk 2 " 2 " next;cut elements`,
+  ]
+  if (memoryhassecretheap) {
+    lines.push(`!@batch paste:${area} hk 3 " 3 " next;paste elements`)
+  }
+  lines.push(`!@batch copycoords:${area} hk 5 " 5 ";copy coords`)
+  if (memoryhassecretheap) {
+    lines.push(`!@batch style:${area} hk s " S " next;style transfer`)
+  }
+  lines.push(
+    `!@remix remix:${area} hk r " R " next;remix coords`,
+    DIVIDER,
+    `!@batch chars:${area} hk a " A " next;set chars:`,
+    `!@batch colors:${area} hk c " C " next;set colors:`,
+    `!@batch bgs:${area} hk b " B " next;set bgs:`,
+    `!@batch empty:${area} hk 0 " 0 " next;make empty`,
+    DIVIDER,
+    groupline,
+    ...memoryinspectloaderlines(p1, p2),
+    `codepages:`,
+  )
 
-  // codepage links
-  gadgettext(player, `codepages:`)
-
-  // scan board for codepages
   const x1 = Math.min(p1.x, p2.x)
   const y1 = Math.min(p1.y, p2.y)
   const x2 = Math.max(p1.x, p2.x)
@@ -301,18 +242,17 @@ export function memoryinspectarea(
       const codepage = memoryreadelementcodepage(mainbook, element)
       if (ispresent(codepage) && !ids.has(codepage.id)) {
         ids.add(codepage.id)
-        gadgethyperlink(
-          player,
-          'batch',
+        const cplabel = scrolllinkescapefrag(
           `edit @${memoryreadcodepagename(codepage)}`,
-          [`pageopen:${codepage.id}`],
         )
+        lines.push(`!@batch pageopen:${codepage.id};${cplabel}`)
       }
     }
   }
 
-  // board info
-  memorygadgetinspectboard(player, board.id)
+  lines.push(...memoryinspectboardlines(board.id))
+
+  scrollwritelines(player, 'inspect', lines.join('\n'), groupchip)
 }
 
 export function memoryinspectbgarea(
@@ -327,36 +267,30 @@ export function memoryinspectbgarea(
   }
 
   let all = 0
-  function get() {
-    return all
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value)) {
-      all = value
-      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryreadelement(board, pt)
-        if (ispresent(el)) {
-          el[name as keyof BOARD_ELEMENT] = value
-        }
-      })
-    }
-  }
-
-  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(
-    player,
-    `batch:${ptstoarea(p1, p2)}`,
-    'bg',
-    [name, 'bgedit'],
-    get,
-    set,
+  const batchchip = `batch:${ptstoarea(p1, p2)}`
+  registerhyperlinksharedbridge(
+    batchchip,
+    'bgedit',
+    () => all,
+    (field, value) => {
+      if (isnumber(value)) {
+        all = value
+        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+          const el = memoryreadelement(board, pt)
+          if (ispresent(el)) {
+            el[field as keyof BOARD_ELEMENT] = value
+          }
+        })
+      }
+    },
   )
 
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'bulk set bg'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!${name} bgedit;bg`,
+  ]
+  scrollwritelines(player, 'bulk set bg', lines.join('\n'), batchchip)
 }
 
 export function memoryinspectchar(
@@ -374,16 +308,16 @@ export function memoryinspectchar(
     return
   }
 
-  function get(name: string): WORD {
+  function get(target: string): WORD {
     const value =
-      element?.[name as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
+      element?.[target as keyof BOARD_ELEMENT] ??
+      element?.kinddata?.[target as keyof BOARD_ELEMENT] ??
       0
     return value
   }
-  function set(name: string, value: WORD) {
+  function set(field: string, value: WORD) {
     if (ispresent(element)) {
-      element[name as keyof BOARD_ELEMENT] = value
+      element[field as keyof BOARD_ELEMENT] = value
     }
   }
 
@@ -393,14 +327,14 @@ export function memoryinspectchar(
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
   const chip = chipfromelement(board, element)
 
-  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'char', [name, 'charedit'], get, set)
+  registerhyperlinksharedbridge(chip, 'charedit', get, set)
 
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'char'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `${strcategory}: ${strname} ${strpos}`,
+    DIVIDER,
+    `!${name} charedit;char`,
+  ]
+  scrollwritelines(player, 'char', lines.join('\n'), chip)
 }
 
 export function memoryinspectchararea(
@@ -415,36 +349,30 @@ export function memoryinspectchararea(
   }
 
   let all = 0
-  function get() {
-    return all
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value)) {
-      all = value
-      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = memoryreadelement(board, pt)
-        if (ispresent(el)) {
-          el[name as keyof BOARD_ELEMENT] = value
-        }
-      })
-    }
-  }
-
-  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(
-    player,
-    `batch:${ptstoarea(p1, p2)}`,
-    'char',
-    [name, 'charedit'],
-    get,
-    set,
+  const batchchip = `batch:${ptstoarea(p1, p2)}`
+  registerhyperlinksharedbridge(
+    batchchip,
+    'charedit',
+    () => all,
+    (field, value) => {
+      if (isnumber(value)) {
+        all = value
+        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+          const el = memoryreadelement(board, pt)
+          if (ispresent(el)) {
+            el[field as keyof BOARD_ELEMENT] = value
+          }
+        })
+      }
+    },
   )
 
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'bulk set char'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!${name} charedit;char`,
+  ]
+  scrollwritelines(player, 'bulk set char', lines.join('\n'), batchchip)
 }
 
 export function memoryinspectcolor(
@@ -462,16 +390,16 @@ export function memoryinspectcolor(
     return
   }
 
-  function get(name: string): WORD {
+  function get(target: string): WORD {
     const value =
-      element?.[name as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
+      element?.[target as keyof BOARD_ELEMENT] ??
+      element?.kinddata?.[target as keyof BOARD_ELEMENT] ??
       0
     return value
   }
-  function set(name: string, value: WORD) {
+  function set(field: string, value: WORD) {
     if (ispresent(element)) {
-      element[name as keyof BOARD_ELEMENT] = value
+      element[field as keyof BOARD_ELEMENT] = value
     }
   }
 
@@ -480,15 +408,16 @@ export function memoryinspectcolor(
   const strname = element.name ?? element.kind ?? 'ERR'
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
   const chip = chipfromelement(board, element)
+  const edittype = name === 'bg' ? 'bgedit' : 'coloredit'
 
-  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'color', [name, `${name}edit`], get, set)
+  registerhyperlinksharedbridge(chip, edittype, get, set)
 
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = name
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `${strcategory}: ${strname} ${strpos}`,
+    DIVIDER,
+    `!${name} ${edittype};color`,
+  ]
+  scrollwritelines(player, name, lines.join('\n'), chip)
 }
 
 export function memoryinspectcolorarea(
@@ -503,38 +432,32 @@ export function memoryinspectcolorarea(
   }
 
   let all = 0
-  function get() {
-    return all
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value)) {
-      all = value
-      for (let y = p1.y; y <= p2.y; ++y) {
-        for (let x = p1.x; x <= p2.x; ++x) {
-          const el = memoryreadelement(board, { x, y })
-          if (ispresent(el)) {
-            el[name as keyof BOARD_ELEMENT] = value
+  const batchchip = `batch:${ptstoarea(p1, p2)}`
+  registerhyperlinksharedbridge(
+    batchchip,
+    'coloredit',
+    () => all,
+    (field, value) => {
+      if (isnumber(value)) {
+        all = value
+        for (let y = p1.y; y <= p2.y; ++y) {
+          for (let x = p1.x; x <= p2.x; ++x) {
+            const el = memoryreadelement(board, { x, y })
+            if (ispresent(el)) {
+              el[field as keyof BOARD_ELEMENT] = value
+            }
           }
         }
       }
-    }
-  }
-
-  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(
-    player,
-    `batch:${ptstoarea(p1, p2)}`,
-    'color',
-    [name, 'coloredit'],
-    get,
-    set,
+    },
   )
 
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'bulk set color'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!${name} coloredit;color`,
+  ]
+  scrollwritelines(player, 'bulk set color', lines.join('\n'), batchchip)
 }
 
 export function memoryinspectcommand(path: string, player: string) {
@@ -613,7 +536,6 @@ export function memoryinspectelement(
     return
   }
 
-  // element stat accessors
   function get(name: string): WORD {
     const value =
       element?.[name as keyof BOARD_ELEMENT] ??
@@ -623,7 +545,6 @@ export function memoryinspectelement(
       return parseFloat(element.group?.replace('group', '') ?? '0')
     }
 
-    // ensure proper defaults
     if (!ispresent(value)) {
       switch (name) {
         case 'color':
@@ -655,56 +576,15 @@ export function memoryinspectelement(
     }
   }
 
-  if (isobject) {
-    gadgettext(
-      player,
-      `object: ${element.name ?? element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`,
-    )
-  } else {
-    gadgettext(player, `terrain: ${element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`)
-  }
-
   const chip = chipfromelement(board, element)
-  if (isobject) {
-    gadgettext(player, `cycle: ${memoryreadelementstat(element, 'cycle')}`)
-  }
-
-  const collision = memoryreadelementstat(element, 'collision')
-  switch (collision as COLLISION) {
-    case COLLISION.ISWALK:
-      gadgettext(player, `collision: iswalk`)
-      break
-    case COLLISION.ISSWIM:
-      gadgettext(player, `collision: isswim`)
-      break
-    case COLLISION.ISSOLID:
-      gadgettext(player, `collision: issolid`)
-      break
-    case COLLISION.ISBULLET:
-      gadgettext(player, `collision: isbullet`)
-      break
-    case COLLISION.ISGHOST:
-      gadgettext(player, `collision: isghost`)
-      break
-  }
-
-  if (isobject) {
-    gadgettext(
-      player,
-      `ispushable: ${memoryreadelementstat(element, 'pushable') ? `yes` : `no`}`,
-    )
-  }
-  gadgettext(
-    player,
-    `isbreakable: ${
-      memoryreadelementstat(element, 'breakable') ? `yes` : `no`
-    }`,
-  )
-
-  gadgettext(player, DIVIDER)
-
   const stats = memoryreadcodepagestatdefaults(codepage)
   const targets = objectKeys(stats)
+  const stattypes = new Set<string>([
+    'select',
+    'charedit',
+    'coloredit',
+    'bgedit',
+  ])
   for (let i = 0; i < targets.length; ++i) {
     const target = targets[i]
     switch (target) {
@@ -716,19 +596,88 @@ export function memoryinspectelement(
       case 'collision':
       case 'pushable':
       case 'breakable':
-        // skip in favor of built-in hyperlinks
+        break
+      default:
+        if (isarray(stats[target])) {
+          const [typ] = stats[target]
+          if (isstring(typ)) {
+            const lowered = NAME(typ)
+            if (lowered && lowered !== 'hk' && lowered !== 'hotkey') {
+              stattypes.add(lowered)
+            }
+          }
+        }
+        break
+    }
+  }
+  for (const typ of stattypes) {
+    registerhyperlinksharedbridge(chip, typ, get, set)
+  }
+
+  const lines: string[] = []
+  if (isobject) {
+    lines.push(
+      `object: ${element.name ?? element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`,
+    )
+  } else {
+    lines.push(`terrain: ${element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`)
+  }
+  if (isobject) {
+    lines.push(`cycle: ${memoryreadelementstat(element, 'cycle')}`)
+  }
+
+  const collision = memoryreadelementstat(element, 'collision')
+  switch (collision as COLLISION) {
+    case COLLISION.ISWALK:
+      lines.push(`collision: iswalk`)
+      break
+    case COLLISION.ISSWIM:
+      lines.push(`collision: isswim`)
+      break
+    case COLLISION.ISSOLID:
+      lines.push(`collision: issolid`)
+      break
+    case COLLISION.ISBULLET:
+      lines.push(`collision: isbullet`)
+      break
+    case COLLISION.ISGHOST:
+      lines.push(`collision: isghost`)
+      break
+  }
+
+  if (isobject) {
+    lines.push(
+      `ispushable: ${memoryreadelementstat(element, 'pushable') ? `yes` : `no`}`,
+    )
+  }
+  lines.push(
+    `isbreakable: ${
+      memoryreadelementstat(element, 'breakable') ? `yes` : `no`
+    }`,
+  )
+
+  lines.push(DIVIDER)
+
+  for (let i = 0; i < targets.length; ++i) {
+    const target = targets[i]
+    switch (target) {
+      case 'char':
+      case 'cycle':
+      case 'color':
+      case 'bg':
+      case 'group':
+      case 'collision':
+      case 'pushable':
+      case 'breakable':
         break
       default:
         if (isarray(stats[target])) {
           const [type, label, ...args] = stats[target]
           if (isstring(label)) {
-            gadgethyperlink(
-              player,
-              chip,
-              label || target,
-              [target, type, ...args],
-              get,
-              set,
+            const linklabel = label || target
+            const words: WORD[] = [target, type, ...args]
+            lines.push(
+              `!${memoryinspectjoinlinkwords(words)};${scrolllinkescapefrag(linklabel)}`,
             )
           }
         }
@@ -736,68 +685,41 @@ export function memoryinspectelement(
     }
   }
 
-  gadgethyperlink(player, chip, 'copy coords', [`copycoords`, 'hk', '5', ` 5 `])
+  lines.push(
+    `!${memoryinspectjoinlinkwords(['copycoords', 'hk', '5', ' 5 '])};copy coords`,
+  )
+  lines.push(DIVIDER)
+  lines.push(
+    `!${memoryinspectjoinlinkwords(['char', 'hk', 'a', ' A ', 'next'])};${scrolllinkescapefrag(`char: ${element.char ?? element.kinddata?.char ?? 1}`)}`,
+  )
+  lines.push(
+    `!${memoryinspectjoinlinkwords(['color', 'hk', 'c', ' C ', 'next'])};${scrolllinkescapefrag(`color: ${element.color ?? element.kinddata?.color ?? 15}`)}`,
+  )
+  lines.push(
+    `!${memoryinspectjoinlinkwords(['bg', 'hk', 'b', ' B ', 'next'])};${scrolllinkescapefrag(`bg: ${element.bg ?? element.kinddata?.bg ?? 0}`)}`,
+  )
+  lines.push(`!${memoryinspectjoinlinkwords(['empty', 'hk', '0'])};make empty`)
+  lines.push(DIVIDER)
 
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(
-    player,
-    chip,
-    `char: ${element.char ?? element.kinddata?.char ?? 1}`,
-    ['char', 'hk', 'a', ' A ', 'next'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    chip,
-    `color: ${element.color ?? element.kinddata?.color ?? 15}`,
-    ['color', 'hk', 'c', ' C ', 'next'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    chip,
-    `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
-    ['bg', 'hk', 'b', ' B ', 'next'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    chip,
+  const grouptokens = [
     'group',
-    [
-      'group',
-      'select',
-      'none',
-      '0',
-      ...range(1, 127)
-        .map((i) => [`group${i}`, `${i}`])
-        .flat(),
-    ],
-    get,
-    set,
+    'select',
+    'none',
+    '0',
+    ...range(1, 127)
+      .map((i) => [`group${i}`, `${i}`])
+      .flat(),
+  ]
+  lines.push(`!${grouptokens.join(' ')};group`)
+
+  lines.push(...memoryinspectloaderlines(p1, p1))
+  lines.push(`codepages:`)
+  lines.push(
+    `!@batch pageopen:${codepage.id};${scrolllinkescapefrag(`edit @${memoryreadcodepagename(codepage)}`)}`,
   )
+  lines.push(...memoryinspectboardlines(board.id))
 
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, `make empty`, ['empty', 'hk', '0'], get, set)
-
-  // add gadget scripts
-  gadgettext(player, DIVIDER)
-  memorygadgetinspectloaders(player, p1, p1)
-
-  // codepage links
-  gadgettext(player, `codepages:`)
-  gadgethyperlink(
-    player,
-    'batch',
-    `edit @${memoryreadcodepagename(codepage)}`,
-    [`pageopen:${codepage.id}`],
-  )
-
-  // board info
-  memorygadgetinspectboard(player, board.id)
+  scrollwritelines(player, 'inspect', lines.join('\n'), chip)
 }
 
 export function memoryinspectempty(
@@ -863,26 +785,12 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
   }
 
   const area = ptstoarea(p1, p2)
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'batch', 'clear terrain & objects', [
-    `emptyall:${area}`,
-    'hk',
-    '1',
-  ])
-  gadgethyperlink(player, 'batch', 'clear objects', [
-    `emptyobjects:${area}`,
-    'hk',
-    '2',
-  ])
-  gadgethyperlink(player, 'batch', 'clear terrain', [
-    `emptyterrain:${area}`,
-    'hk',
-    '3',
-  ])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'empty'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!@batch emptyall:${area} hk 1 " 1 ";clear terrain & objects`,
+    `!@batch emptyobjects:${area} hk 2 " 2 ";clear objects`,
+    `!@batch emptyterrain:${area} hk 3 " 3 ";clear terrain`,
+  ]
+  scrollwritelines(player, 'empty', lines.join('\n'), 'batch')
 }

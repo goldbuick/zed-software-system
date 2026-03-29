@@ -176,8 +176,12 @@ export function EditorComponent() {
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
 
+  const zsswordcolormap = useMemo(
+    () => buildzsswordcolors(zsswords),
+    [zsswords],
+  )
+
   const autocomplete = useMemo(() => {
-    buildzsswordcolors(zsswords)
     const coderow = rows[ycursor]
     return getautocomplete(coderow, tapeeditor.cursor, zsswords)
   }, [rows, ycursor, tapeeditor.cursor, zsswords])
@@ -230,6 +234,7 @@ $white$meta+h$green.OPEN HELPSCROLL $blue
         {...props}
         autocomplete={autocomplete}
         autocompleteactive={autocompleteactive}
+        zsswordcolormap={zsswordcolormap}
       />
     </>
   )

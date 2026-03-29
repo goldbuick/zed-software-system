@@ -1,8 +1,8 @@
+import type { DEVICELIKE } from 'zss/device/api'
+import { apitoast, vmcli } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
-import {
-  terminalbookmarkpindisplaylabel,
-  terminalbookmarkresolvecli,
-} from 'zss/feature/terminalbookmarkline'
+import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { createpid } from 'zss/mapping/guid'
 import { deepcopy, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
@@ -36,7 +36,6 @@ export {
   BOOKMARK_TERMINAL_RUNIT_LABEL,
   bookmarkquotedrunitpayload,
   terminalbookmarkpindisplaylabel,
-  terminalbookmarkresolvecli,
 } from './terminalbookmarkline'
 
 export type ZssUrlBookmark = {
@@ -189,12 +188,11 @@ export async function appendurlbookmark(
 export async function appendterminalbookmark(
   text: string,
 ): Promise<ZssTerminalBookmark> {
-  const resolved = terminalbookmarkresolvecli(text)
   const entry: ZssTerminalBookmark = {
     kind: 'terminal',
     id: createpid(),
-    text: resolved,
     createdat: Date.now(),
+    text,
   }
   await mergebookmarksintostorage((prev) => ({
     ...prev,
@@ -269,4 +267,25 @@ export function readterminalbookmarkdisplaylines(
   blob: ZssBookmarksBlob,
 ): string[] {
   return blob.terminal.map((b, i) => terminalbookmarkpinline(b, i))
+}
+
+/** Load terminal pin by id, toast preview, run resolved line via `vmcli(SOFTWARE, …)`. */
+export async function runterminalbookmarkclibyid(
+  toastdevice: DEVICELIKE,
+  player: string,
+  pinid: string,
+): Promise<void> {
+  const blob = await readbookmarksfromstorage()
+  const entry = blob.terminal.find((b) => b.id === pinid)
+  if (!entry) {
+    apitoast(toastdevice, player, 'pin not found')
+    return
+  }
+  const rawline = entry.text.trim()
+  if (!rawline.length) {
+    return
+  }
+  const preview = rawline.length > 48 ? `${rawline.slice(0, 48)}…` : rawline
+  apitoast(toastdevice, player, `bookmark run $cyan${preview}$white`)
+  vmcli(SOFTWARE, player, rawline)
 }

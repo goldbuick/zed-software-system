@@ -1,3 +1,4 @@
+import 'zss/rom/vitepopulate'
 import { setclimode } from 'zss/feature/detect'
 
 import { createforward, shouldforwardservertoclient } from './device/forward'

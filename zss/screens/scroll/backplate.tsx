@@ -3,6 +3,7 @@ import { useWriteText } from 'zss/gadget/writetext'
 import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
+  writetextreset,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -51,15 +52,16 @@ export function ScrollBackPlate({ name, width, height }: ScrollBackPlateProps) {
     color: 15,
   })
 
+  writetextreset(context)
   // measure title
   const title = ` ${name} `
   const measure = tokenizeandmeasuretextformat(title, width, height)
 
-  // center title
+  // row 1 below marquee (shared write context; avoid y++ after ScrollCursor)
   const titlewidth = measure?.x ?? title.length
   context.x = Math.round(width * 0.5)
   context.x -= Math.round(titlewidth * 0.5)
-  context.y++
+  context.y = 1
   tokenizeandwritetextformat(title, context, true)
 
   return null

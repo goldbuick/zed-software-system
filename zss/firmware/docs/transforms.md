@@ -21,7 +21,7 @@
 | `copy` | `stat` [filter…] | Copy region from board at stat to current board |
 | `remix` | `stat` `pattersize` `mirror` [filter…] | Remix board with pattern and mirror |
 | `weave` | `dir` [filter…] | Weave board in direction (delta from element position) |
-| `pivot` | `degrees` [filter…] | Rotate board region by degrees (converted to radians) |
+| `pivot` | `degrees` [filter…] | Rotate board region by degrees (converted to radians); filter targetset can be `all` / `terrain` / `object` or a **group name** (group pivot, same as weave) |
 
 ## Filter Grammar
 
@@ -29,6 +29,7 @@
 
 - **targetset** — `'all'` or string name (default: `'all'`)
 - **region** — `x1 y1 [x2 y2]` — pt1 and pt2 corners; single number = square
+- **region (one token)** — `x1,y1,x2,y2` — same layout as `ptstoarea` / batch selection paths; required so values like `0,0,5,5` are not misread as `parseFloat` → `0` with missing follow-up numbers
 
 Filter controls which elements are affected (e.g., `all`, `terrain`, `objects`).
 

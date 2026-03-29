@@ -4,16 +4,12 @@ import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
 import { DIVIDER } from 'zss/feature/writeui'
-import {
-  gadgetcheckqueue,
-  gadgethyperlink,
-  gadgetstate,
-  gadgettext,
-} from 'zss/gadget/data/api'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea } from 'zss/mapping/2d'
 import { waitfor } from 'zss/mapping/tick'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { PT, WORD } from 'zss/words/types'
+import { PT } from 'zss/words/types'
 
 import { memoryreadboardbyaddress } from './boards'
 import { memoryreadplayerboard } from './playermanagement'
@@ -79,49 +75,55 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
   }
 
   const area = ptstoarea(p1, p2)
-  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
-  gadgettext(player, DIVIDER)
 
-  function get(name: string) {
-    return remixconfig[name as keyof REMIX_CONFIG]
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value) || isstring(value)) {
-      // @ts-expect-error bah
-      remixconfig[name as keyof REMIX_CONFIG] = value
-    }
-  }
-
-  gadgethyperlink(player, 'remix', 'source board', [`stat`, 'text'], get, set)
-  gadgethyperlink(
-    player,
+  registerhyperlinksharedbridge(
     'remix',
-    'patternsize',
-    [`patternsize`, 'number', '1', '5'],
-    get,
-    set,
+    'text',
+    (target) => {
+      if (target === 'stat') {
+        return remixconfig.stat
+      }
+      return ''
+    },
+    (name, value) => {
+      if (isstring(value) && name === 'stat') {
+        remixconfig.stat = value
+      }
+    },
   )
-  gadgethyperlink(
-    player,
+  registerhyperlinksharedbridge(
     'remix',
-    'mirror',
-    [`mirror`, 'number', '1', '8'],
-    get,
-    set,
+    'number',
+    (target) => {
+      if (target === 'patternsize') {
+        return remixconfig.patternsize
+      }
+      if (target === 'mirror') {
+        return remixconfig.mirror
+      }
+      return 0
+    },
+    (name, value) => {
+      if (isnumber(value)) {
+        if (name === 'patternsize') {
+          remixconfig.patternsize = value
+        } else if (name === 'mirror') {
+          remixconfig.mirror = value
+        }
+      }
+    },
   )
 
-  gadgettext(player, DIVIDER)
-  gadgethyperlink(player, 'remix', 'run', [
-    `remixrun:${area}`,
-    'hk',
-    'r',
-    ` R `,
-  ])
-
-  // send to player as a scroll
-  const shared = gadgetstate(player)
-  shared.scrollname = 'remix'
-  shared.scroll = gadgetcheckqueue(player)
+  const lines = [
+    `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
+    DIVIDER,
+    `!stat text;source board`,
+    `!patternsize number 1 5;patternsize`,
+    `!mirror number 1 8;mirror`,
+    DIVIDER,
+    `!remixrun:${area} hk r " R ";run`,
+  ]
+  scrollwritelines(player, 'remix', lines.join('\n'), 'remix')
 }
 
 export async function memoryreadremixconfig(): Promise<

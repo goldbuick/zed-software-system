@@ -32,7 +32,7 @@ export const ZSS_TYPE_DIR_MOD = COLOR.LTGRAY
 // Editor UI (cursor, remote presence)
 // ---------------------------------------------------------------------------
 export const ZSS_CURSOR_FG = COLOR.BLWHITE
-export const ZSS_CURSOR_BG = COLOR.DKBLUE
+export const ZSS_CURSOR_BG = COLOR.DKGRAY
 export const ZSS_REMOTE_CURSOR_FG = COLOR.BLWHITE
 export const ZSS_REMOTE_CURSOR_BG = COLOR.CYAN
 export const ZSS_REMOTE_SELECTION_FG = COLOR.BLACK
@@ -305,24 +305,34 @@ export const ZSS_WORD_LIST_COLOR_MAP: Record<ZSS_WORD_LIST_KEY, number> = {
 let ZSS_WORD_MAP = new Map<string, COLOR>()
 
 /**
- * Builds a lookup map from word (lowercase) to ZSS_TYPE_ color using the word-list
- * categories. Pass the string[] fields from GADGET_ZSS_WORDS; each word is assigned
- * its category's color. Later categories overwrite if a word appears in multiple.
+ * Pure: new map from word (lowercase) to highlight color. Use with autocomplete
+ * without touching the global used by `zsswordcolor()`.
  */
-export function buildzsswordcolors(
+export function createzsswordcolormap(
   words: Pick<GADGET_ZSS_WORDS, ZSS_WORD_LIST_KEY>,
 ): Map<string, COLOR> {
-  ZSS_WORD_MAP = new Map<string, COLOR>()
+  const map = new Map<string, COLOR>()
   const keys = Object.keys(ZSS_WORD_LIST_COLOR_MAP) as ZSS_WORD_LIST_KEY[]
   for (const key of keys) {
     const list = words[key]
     const color = ZSS_WORD_LIST_COLOR_MAP[key]
     if (isarray(list)) {
       for (const w of list) {
-        ZSS_WORD_MAP.set(w.toLowerCase(), color)
+        map.set(w.toLowerCase(), color)
       }
     }
   }
+  return map
+}
+
+/**
+ * Builds word-list colors and assigns the global map for syntax highlighting
+ * (`applycodetokencolors`, `zsswordcolor` without a second arg).
+ */
+export function buildzsswordcolors(
+  words: Pick<GADGET_ZSS_WORDS, ZSS_WORD_LIST_KEY>,
+): Map<string, COLOR> {
+  ZSS_WORD_MAP = createzsswordcolormap(words)
   return ZSS_WORD_MAP
 }
 
@@ -373,7 +383,10 @@ function zssplaywordcolor(word: string) {
 const PLAY_COMMAND_RE =
   /^(play|bgplay|bgplayon64n|bgplayon32n|bgplayon16n|bgplayon8n|bgplayon4n|bgplayon2n|bgplayon1n) /i
 
-export function zsswordcolor(word: string) {
+export function zsswordcolor(
+  word: string,
+  listcolors?: Map<string, COLOR>,
+): COLOR | COLOR[] {
   const match = PLAY_COMMAND_RE.exec(word)
   if (match) {
     const cmdlen = match[1].length
@@ -381,7 +394,8 @@ export function zsswordcolor(word: string) {
     colors.push(...zssplaywordcolor(word.slice(cmdlen)))
     return colors
   }
-  return ZSS_WORD_MAP.get(word) ?? COLOR.GREEN
+  const map = listcolors ?? ZSS_WORD_MAP
+  return map.get(word) ?? COLOR.GREEN
 }
 
 // have to parse command_play string for these

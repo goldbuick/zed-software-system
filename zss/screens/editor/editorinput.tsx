@@ -27,10 +27,12 @@ import {
   drawautocomplete,
   drawcommandarghint,
 } from 'zss/screens/tape/autocomplete'
+import { applyautocompletesuggestion } from 'zss/screens/tape/autocompleteui'
+import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
-import { NAME, PT } from 'zss/words/types'
+import { COLOR, NAME, PT } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -56,6 +58,7 @@ export type EditorInputProps = {
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
   autocompleteactive: boolean
+  zsswordcolormap: Map<string, COLOR>
 }
 
 export function EditorInput({
@@ -67,6 +70,7 @@ export function EditorInput({
   codepage,
   autocomplete,
   autocompleteactive,
+  zsswordcolormap,
 }: EditorInputProps) {
   const context = useWriteText()
   const tapeeditor = useEditor(
@@ -144,6 +148,7 @@ export function EditorInput({
       edge,
       context,
       zsswords,
+      zsswordcolormap,
       drawabove,
     )
   }
@@ -155,6 +160,9 @@ export function EditorInput({
       starty - 1,
       edge,
       context,
+      {
+        romhint: commandromhint(autocomplete.hintcommandname),
+      },
     )
   }
 
@@ -192,20 +200,16 @@ export function EditorInput({
   }
 
   function acceptsuggestion() {
-    if (autocomplete.suggestions.length === 0) {
-      return
-    }
-    const idx = Math.min(autocompleteindex, autocomplete.suggestions.length - 1)
-    const suggestion = autocomplete.suggestions[idx]
-    if (!suggestion) {
-      return
-    }
-    strvaluesplice(
-      autocomplete.wordstart,
-      autocomplete.prefix.length,
-      suggestion.word,
+    const applied = applyautocompletesuggestion(
+      autocomplete,
+      autocompleteindex,
+      (wordstart, prefixlen, word) => {
+        strvaluesplice(wordstart, prefixlen, word)
+      },
     )
-    useTape.setState({ autocompleteindex: -1 })
+    if (applied) {
+      useTape.setState({ autocompleteindex: -1 })
+    }
   }
 
   // --- render ---

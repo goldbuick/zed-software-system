@@ -11,8 +11,7 @@ import {
 } from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
-import { zsswordcolor } from './colors'
-import type { ZSS_WORD_LIST_KEY } from './colors'
+import { type ZSS_WORD_LIST_KEY, zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 
 const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
@@ -70,6 +69,10 @@ export type AUTO_COMPLETE = {
   wordstart: number
   endoflinehint: boolean
   endoflineargs: COMMAND_ARGS_SIGNATURE
+  /** Max `word.length` among suggestions; 0 when none. */
+  maxsuggestionwordlen: number
+  /** Lowercase command name after `#` for `editor:commands:` ROM lookup. */
+  hintcommandname: string
 }
 
 export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
@@ -79,9 +82,23 @@ export const EMPTY_AUTOCOMPLETE: AUTO_COMPLETE = {
   wordstart: 0,
   endoflinehint: false,
   endoflineargs: [''],
+  maxsuggestionwordlen: 0,
+  hintcommandname: '',
 }
 
 const MAX_SUGGESTIONS = 8
+
+function maxsuggestionwordlength(
+  suggestions: AUTO_COMPLETE_SUGGESTION[],
+): number {
+  let m = 0
+  for (const s of suggestions) {
+    if (s.word.length > m) {
+      m = s.word.length
+    }
+  }
+  return m
+}
 
 function filtersuggestions(
   prefix: string,
@@ -182,12 +199,15 @@ function getautocompletefromtokens(
     }
 
     let endoflinehint = cmdidx >= 0
-    const maybecommand = tokens[cmdidx + 1].image ?? ''
+    const maybecommand = cmdidx >= 0 ? (tokens[cmdidx + 1]?.image ?? '') : ''
+    const hintcommandname =
+      cmdidx >= 0 && maybecommand !== '' ? NAME(maybecommand).toLowerCase() : ''
+    const cmdlookup = maybecommand.toLowerCase()
     const maybesig =
-      words.langcommands[maybecommand] ??
-      words.clicommands[maybecommand] ??
-      words.loadercommands[maybecommand] ??
-      words.runtimecommands[maybecommand]
+      words.langcommands[cmdlookup] ??
+      words.clicommands[cmdlookup] ??
+      words.loadercommands[cmdlookup] ??
+      words.runtimecommands[cmdlookup]
 
     let endoflineargs = ispresent(maybesig)
       ? maybesig
@@ -257,6 +277,8 @@ function getautocompletefromtokens(
           wordstart,
           endoflinehint,
           endoflineargs,
+          maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+          hintcommandname,
         }
       }
       case 'stat':
@@ -273,6 +295,8 @@ function getautocompletefromtokens(
           wordstart,
           endoflinehint,
           endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
         }
       }
       default: {
@@ -303,6 +327,8 @@ function getautocompletefromtokens(
           wordstart,
           endoflinehint,
           endoflineargs,
+          maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+          hintcommandname,
         }
       }
     }
@@ -340,10 +366,11 @@ function applysuggestioncolors(
   fg: number,
   bg: number,
   context: WRITE_TEXT_CONTEXT,
+  wordlistcolors: Map<string, COLOR>,
 ) {
   applystrtoindex(bufindex, text, context)
   for (let c = 0; c < text.length; c++) {
-    const wordcolor = zsswordcolor(word.toLowerCase())
+    const wordcolor = zsswordcolor(word.toLowerCase(), wordlistcolors)
     if (!isarray(wordcolor)) {
       const charoffset = textoffset + c
       const ispadding = charoffset === 0 || charoffset > word.length
@@ -429,6 +456,11 @@ function argsliststring(args: ARG_TYPE[]) {
   return list.join(' ')
 }
 
+export type DrawCommandArgHintOptions = {
+  /** Extra prose from `editor:commands:<name>` ROM when present. */
+  romhint?: string
+}
+
 /**
  * Draws the argument hint for a command (e.g. above the terminal input).
  * Uses the trailing hint string from the command's single signature.
@@ -439,6 +471,7 @@ export function drawcommandarghint(
   py: number,
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
+  options?: DrawCommandArgHintOptions,
 ) {
   const withsig = [...sig]
   const hint = withsig.pop()
@@ -452,6 +485,12 @@ export function drawcommandarghint(
     cursor += argsStr.length + 1
   }
   drawhinttext(hint, cursor, py, edge.right, context)
+  const hintlen = Math.min(hint.length, Math.max(0, edge.right - cursor + 1))
+  cursor += hintlen > 0 ? hintlen + 1 : 0
+  const rom = options?.romhint?.trim()
+  if (rom && cursor <= edge.right) {
+    drawhinttext(` ${rom}`, cursor, py, edge.right, context)
+  }
 }
 
 export function drawautocomplete(
@@ -462,6 +501,7 @@ export function drawautocomplete(
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
   words: GADGET_ZSS_WORDS,
+  wordlistcolors: Map<string, COLOR>,
   drawabove?: boolean,
 ) {
   if (autocomplete.suggestions.length === 0) {
@@ -470,10 +510,13 @@ export function drawautocomplete(
 
   const effectiveindex = Math.max(0, autocompleteindex)
   const numrows = autocomplete.suggestions.length
-  const maxitemlen = autocomplete.suggestions.reduce(
-    (max, s) => Math.max(max, s.word.length),
-    0,
-  )
+  const maxitemlen =
+    autocomplete.maxsuggestionwordlen > 0
+      ? autocomplete.maxsuggestionwordlen
+      : autocomplete.suggestions.reduce(
+          (max, s) => Math.max(max, s.word.length),
+          0,
+        )
   const itemwidth = maxitemlen + 2
 
   let starty: number
@@ -522,6 +565,7 @@ export function drawautocomplete(
       selected ? AC_SEL_FG : AC_FG,
       bg,
       context,
+      wordlistcolors,
     )
 
     if (selected) {
@@ -547,10 +591,12 @@ export function drawautocomplete(
           hint = 'loader codepage'
           break
         case 'commands': {
+          const wk = suggestion.word.toLowerCase()
           const sig =
-            words.clicommands[suggestion.word] ??
-            words.loadercommands[suggestion.word] ??
-            words.runtimecommands[suggestion.word]
+            words.langcommands[wk] ??
+            words.clicommands[wk] ??
+            words.loadercommands[wk] ??
+            words.runtimecommands[wk]
           if (isarray(sig)) {
             const args = [...sig] as ARG_TYPE[]
             const cmd = args.pop()

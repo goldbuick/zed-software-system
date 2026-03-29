@@ -237,6 +237,13 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     clipboardBuffer = text
   })
 
+  await page.exposeFunction('__nodeWriteJoinUrl', async (url: string) => {
+    ensureDataDir(dataDir)
+    const joinpath = path.join(dataDir, 'join-url.txt')
+    fs.writeFileSync(joinpath, `${url}\n`, 'utf8')
+    addLog(`Join URL written to ${joinpath}`)
+  })
+
   await page.exposeFunction('__nodeStorageReadPlayer', async () => {
     const playerPath = path.join(dataDir, 'player.json')
     const existing = readJsonFile<{ playerId?: string }>(playerPath, {})
