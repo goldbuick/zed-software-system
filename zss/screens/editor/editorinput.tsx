@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import {
   apierror,
-  apilog,
+  apitoast,
   registereditorbookmarkscroll,
   registereditorclose,
   registerterminalclose,
@@ -414,14 +414,14 @@ export function EditorInput({
                   case 'p':
                     if (hasselection) {
                       vmcli(SOFTWARE, player, strvalueselected)
-                      apilog(
+                      apitoast(
                         SOFTWARE,
                         player,
                         `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
                       )
                     } else {
                       vmcli(SOFTWARE, player, coderow.code)
-                      apilog(
+                      apitoast(
                         SOFTWARE,
                         player,
                         `running $WHITE${coderow.code.substring(0, 16)}...$BLUE`,

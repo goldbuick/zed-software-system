@@ -1,6 +1,7 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apitoast, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { useTape } from 'zss/gadget/data/state'
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { createpid } from 'zss/mapping/guid'
@@ -269,7 +270,7 @@ export function readterminalbookmarkdisplaylines(
   return blob.terminal.map((b, i) => terminalbookmarkpinline(b, i))
 }
 
-/** Load terminal pin by id, toast preview, run resolved line via `vmcli(SOFTWARE, …)`. */
+/** Load terminal pin by id; toast preview when tape is visible (same rule as `TapeComponent`), then run via `vmcli(SOFTWARE, …)`. */
 export async function runterminalbookmarkclibyid(
   toastdevice: DEVICELIKE,
   player: string,
@@ -286,6 +287,13 @@ export async function runterminalbookmarkclibyid(
     return
   }
   const preview = rawline.length > 48 ? `${rawline.slice(0, 48)}…` : rawline
-  apitoast(toastdevice, player, `bookmark run $cyan${preview}$white`)
+  const tape = useTape.getState()
+  if (
+    tape.quickterminal ||
+    tape.terminal.open ||
+    tape.editor.open
+  ) {
+    apitoast(toastdevice, player, `bookmark run $cyan${preview}$white`)
+  }
   vmcli(SOFTWARE, player, rawline)
 }
