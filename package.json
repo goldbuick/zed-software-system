@@ -13,6 +13,7 @@
     "sloc": "npx sloc -e .js zss",
     "test": "yarn jest --verbose",
     "test:e2e": "playwright test",
+    "test:e2e:gadget-scroll": "PLAYWRIGHT_INCLUDE_GADGET_E2E=1 playwright test e2e/gadget-inspect-scroll.spec.ts",
     "test:e2e:all-browsers": "PLAYWRIGHT_ALL_BROWSERS=1 playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install chromium firefox webkit",
