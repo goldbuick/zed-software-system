@@ -8,6 +8,7 @@ import {
   appendeditorbookmark,
   appendterminalbookmark,
   appendurlbookmark,
+  parseeditorbookmarkscrollopener,
   readbookmarksfromstorage,
   readterminalbookmarkdisplaylines,
   removebookmarkbyid,
@@ -455,7 +456,8 @@ export const register = createdevice(
       case 'editorbookmarkscroll':
         doasync(register, message.player, async () => {
           const blob = await readbookmarksfromstorage()
-          vmeditorbookmarkscroll(register, myplayerid, blob.editor)
+          const opener = parseeditorbookmarkscrollopener(message.data)
+          vmeditorbookmarkscroll(register, myplayerid, blob.editor, opener)
         })
         break
       case 'bookmark:urlsave':

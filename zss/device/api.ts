@@ -7,6 +7,7 @@ import { tapeeditorset } from 'zss/device/vm/tapeeditormirror'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
+import type { Editorbookmarkscrollopener } from 'zss/feature/bookmarks'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
@@ -662,17 +663,21 @@ export function vmbookmarkscroll(
 export function registereditorbookmarkscroll(
   device: DEVICELIKE,
   player: string,
+  opener: Editorbookmarkscrollopener,
 ) {
-  device.emit(player, 'register:editorbookmarkscroll', true)
+  device.emit(player, 'register:editorbookmarkscroll', opener)
 }
 
 export function vmeditorbookmarkscroll(
   device: DEVICELIKE,
   player: string,
   editorlist: unknown[],
+  opener: Editorbookmarkscrollopener,
 ) {
-  device.emit(player, 'vm:editorbookmarkscroll', editorlist)
+  device.emit(player, 'vm:editorbookmarkscroll', { editor: editorlist, opener })
 }
+
+export type { Editorbookmarkscrollopener } from 'zss/feature/bookmarks'
 
 export function vmcodepagesnapshot(
   device: DEVICELIKE,

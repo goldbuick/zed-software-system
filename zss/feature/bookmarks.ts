@@ -5,7 +5,7 @@ import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { createpid } from 'zss/mapping/guid'
-import { deepcopy, isstring } from 'zss/mapping/types'
+import { deepcopy, isarray, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
 
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'
@@ -27,6 +27,35 @@ export const EDITOR_BOOKMARK_SCROLL_SCROLLNAME = 'editorbookmarks'
 
 /** Destination book name for “copy bookmarked codepage to game” action. */
 export const GAME_BOOKMARK_TARGET_BOOK = 'game'
+
+/** Current editor identity for `vm:editorbookmarkscroll` (codepage id is `path[0]` when non-empty). */
+export type Editorbookmarkscrollopener = {
+  book: string
+  path: string[]
+  type: string
+  title: string
+}
+
+export const EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY: Editorbookmarkscrollopener = {
+  book: '',
+  path: [],
+  type: '',
+  title: '',
+}
+
+export function parseeditorbookmarkscrollopener(
+  raw: unknown,
+): Editorbookmarkscrollopener {
+  if (!raw || typeof raw !== 'object' || isarray(raw)) {
+    return { ...EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY }
+  }
+  const o = raw as Record<string, unknown>
+  const book = isstring(o.book) ? o.book : ''
+  const path = isarray(o.path) ? o.path.filter(isstring) : []
+  const type = isstring(o.type) ? o.type : ''
+  const title = isstring(o.title) ? o.title : ''
+  return { book, path, type, title }
+}
 
 export const BOOKMARKS_VERSION = 1
 

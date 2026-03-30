@@ -29,6 +29,13 @@ export function PanelHotkey({
     maptovalue(v, ''),
   )
 
+  const altshortcut =
+    typeof shortcut === 'string' &&
+    shortcut.length === 1 &&
+    /[a-z]/i.test(shortcut)
+      ? `shift+${shortcut.toLowerCase()}`
+      : undefined
+
   const text = maybetext || ` ${shortcut.toUpperCase()} `
   const tcolor = inputcolor(active)
 
@@ -65,7 +72,11 @@ export function PanelHotkey({
         onClick={invoke}
       />
       {active && <UserInput OK_BUTTON={invoke} />}
-      {shortcut && <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>}
+      {shortcut && (
+        <UserHotkey hotkey={shortcut} althotkey={altshortcut}>
+          {invoke}
+        </UserHotkey>
+      )}
     </group>
   )
 }

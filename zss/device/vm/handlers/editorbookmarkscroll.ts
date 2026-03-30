@@ -8,9 +8,12 @@ import {
 } from 'zss/device/api'
 import { tapeeditorget } from 'zss/device/vm/tapeeditormirror'
 import {
+  EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY,
+  type Editorbookmarkscrollopener,
   GAME_BOOKMARK_TARGET_BOOK,
   type ZssEditorBookmark,
   normalizebookmarks,
+  parseeditorbookmarkscrollopener,
 } from 'zss/feature/bookmarks'
 import { createsid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -21,21 +24,80 @@ import type { CODE_PAGE } from 'zss/memory/types'
 
 const editorbookmarkscrollcache: Record<string, ZssEditorBookmark[]> = {}
 
+type Bookmarksnapshotpayload = {
+  book: string
+  pathstrs: string[]
+  edtype: string
+  edtitle: string
+}
+
+function unpackeditorbookmarkscrollvm(message: MESSAGE): {
+  editorlist: ZssEditorBookmark[]
+  opener: Editorbookmarkscrollopener
+} {
+  const d = message.data
+  if (!d || typeof d !== 'object' || isarray(d)) {
+    return {
+      editorlist: [],
+      opener: EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY,
+    }
+  }
+  const env = d as Record<string, unknown>
+  let editorlist: ZssEditorBookmark[] = []
+  if (isarray(env.editor)) {
+    const blob = normalizebookmarks({
+      url: [],
+      terminal: [],
+      editor: env.editor,
+    })
+    editorlist = blob.editor
+  }
+  const opener = parseeditorbookmarkscrollopener(env.opener)
+  return { editorlist, opener }
+}
+
+function tryparsebookmarksnapshotpayload(
+  message: MESSAGE,
+): Bookmarksnapshotpayload | undefined {
+  if (!isarray(message.data) || message.data.length < 4) {
+    return undefined
+  }
+  const raw = message.data as unknown[]
+  const book = raw[0]
+  const pathjson = raw[1]
+  const edtype = raw[2]
+  const edtitle = raw[3]
+  if (
+    !isstring(book) ||
+    !isstring(pathjson) ||
+    !isstring(edtype) ||
+    !isstring(edtitle)
+  ) {
+    return undefined
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(pathjson)
+  } catch {
+    return undefined
+  }
+  if (!isarray(parsed)) {
+    return undefined
+  }
+  const pathstrs = parsed.filter(isstring)
+  if (!pathstrs.length) {
+    return undefined
+  }
+  return { book, pathstrs, edtype, edtitle }
+}
+
 export function handleeditorbookmarkscroll(
   _vm: DEVICE,
   message: MESSAGE,
 ): void {
-  let editorlist: ZssEditorBookmark[] = []
-  if (isarray(message.data)) {
-    const blob = normalizebookmarks({
-      url: [],
-      terminal: [],
-      editor: message.data,
-    })
-    editorlist = blob.editor
-  }
+  const { editorlist, opener } = unpackeditorbookmarkscrollvm(message)
   editorbookmarkscrollcache[message.player] = editorlist
-  memoryeditorbookmarkscroll(message.player, editorlist)
+  memoryeditorbookmarkscroll(message.player, editorlist, opener)
 }
 
 export function handleeditorbookmarkscrollpanel(
@@ -45,6 +107,18 @@ export function handleeditorbookmarkscrollpanel(
 ): void {
   switch (path) {
     case 'snapshotcurrent': {
+      const frompanel = tryparsebookmarksnapshotpayload(message)
+      if (frompanel) {
+        vmcodepagesnapshot(
+          vm,
+          message.player,
+          frompanel.book,
+          frompanel.pathstrs,
+          frompanel.edtype,
+          frompanel.edtitle,
+        )
+        break
+      }
       const ed = tapeeditorget(message.player)
       if (
         !ed.open ||

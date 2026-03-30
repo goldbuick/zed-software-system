@@ -2,13 +2,49 @@ import { execSync } from 'node:child_process'
 import path from 'path'
 
 import react from '@vitejs/plugin-react-swc'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { analyzer } from 'vite-bundle-analyzer'
 import fullreload from 'vite-plugin-full-reload'
 import mkcert from 'vite-plugin-mkcert'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import pkg from './package.json'
+
+/**
+ * Firefox refuses module scripts when Content-Type is missing (""). Some dev
+ * responses for `/@fs/.../.vite/deps/*.js` can end up without a MIME; set it
+ * before the response is sent.
+ */
+function devjavascriptmimetypedev(): Plugin {
+  return {
+    name: 'dev-javascript-mime',
+    apply: 'serve',
+    configureServer(server) {
+      return () => {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url ?? ''
+          const needstype =
+            req.method === 'GET' &&
+            (url.includes('/node_modules/.vite/deps') || url.includes('/@fs/')) &&
+            /\.js(\?|#|$)/.test(url)
+          if (!needstype) {
+            return next()
+          }
+          const origend = res.end.bind(res)
+          res.end = function (
+            ...args: Parameters<typeof res.end>
+          ): ReturnType<typeof res.end> {
+            if (!res.headersSent && !res.getHeader('content-type')) {
+              res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+            }
+            return origend(...args)
+          }
+          next()
+        })
+      }
+    },
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -70,6 +106,7 @@ export default defineConfig(({ mode }) => {
     root,
     envPrefix: envprefix,
     plugins: [
+      devjavascriptmimetypedev(),
       react(),
       nodePolyfills({
         include: ['buffer'],
