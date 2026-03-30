@@ -176,4 +176,50 @@ module.exports = {
       },
     ],
   },
+  overrides: [
+    {
+      files: ['zss/simspace.ts', 'zss/heavyspace.ts'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'react',
+                message:
+                  'Do not import react in worker entry files; keep simspace/heavyspace worker-safe.',
+              },
+              {
+                name: 'react-dom',
+                message:
+                  'Do not import react-dom in worker entry files; keep simspace/heavyspace worker-safe.',
+              },
+              {
+                name: 'react-dom/client',
+                message:
+                  'Do not import react-dom/client in worker entry files; keep simspace/heavyspace worker-safe.',
+              },
+              {
+                name: 'react/jsx-runtime',
+                message:
+                  'Do not import react/jsx-runtime in worker entry files; keep simspace/heavyspace worker-safe.',
+              },
+              {
+                name: 'three',
+                message:
+                  'Do not import three in worker entry files; keep simspace/heavyspace worker-safe.',
+              },
+            ],
+            patterns: [
+              {
+                group: ['@react-three/*'],
+                message:
+                  'Do not import @react-three/* in worker entry files; keep simspace/heavyspace worker-safe.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
 }

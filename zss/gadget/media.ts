@@ -4,6 +4,7 @@ import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { BITMAP, createspritebitmapfrombitmap } from 'zss/gadget/data/bitmap'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { createbitmaptexture } from 'zss/gadget/display/textures'
 import { MAYBE, isequal, ispresent } from 'zss/mapping/types'
@@ -45,7 +46,7 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
       mood: '',
       viewimage: '',
       screen: {},
-      palettedata: convertpalettetocolors(palette),
+      palettedata: palettetothreecolors(convertpalettetocolors(palette)),
       charset,
       charsetdata: createbitmaptexture(charset),
       spritecharset,
@@ -73,7 +74,11 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
       if (isequal(state.palette, palette)) {
         return state
       }
-      return { ...state, palette, palettedata: convertpalettetocolors(palette) }
+      return {
+        ...state,
+        palette,
+        palettedata: palettetothreecolors(convertpalettetocolors(palette)),
+      }
     })
   },
   setcharset(charset) {

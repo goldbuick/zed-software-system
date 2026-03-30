@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
-import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { modemwritevaluenumber } from 'zss/device/modem'
+import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { paneladdress } from 'zss/gadget/data/types'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { maptonumber, maptovalue } from 'zss/mapping/value'
@@ -50,8 +51,9 @@ export function PanelNumber({
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
+  const prefix = context.iseven ? '$dkgreen$onblack' : '$green$ondkgrey'
   tokenizeandwritetextformat(
-    `$red $29 ${tcolor}${tlabel} $green${clamped}`,
+    `${prefix} $29 $ondkblue ${tcolor}${tlabel} $green${clamped}`,
     context,
     false,
   )

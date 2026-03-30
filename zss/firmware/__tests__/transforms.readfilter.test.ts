@@ -1,4 +1,7 @@
-import { readtransformfilter } from 'zss/firmware/transforms'
+import {
+  readpivotsheardiscandfilterstart,
+  readtransformfilter,
+} from 'zss/firmware/transforms'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 describe('readtransformfilter', () => {
@@ -27,6 +30,38 @@ describe('readtransformfilter', () => {
   it('still accepts four separate numeric args x1 y1 x2 y2', () => {
     const words = [0, 1, 4, 5]
     const { pt1, pt2 } = readtransformfilter(words, 0)
+    expect(pt1).toEqual({ x: 0, y: 1 })
+    expect(pt2).toEqual({ x: 4, y: 5 })
+  })
+})
+
+describe('readpivotsheardiscandfilterstart', () => {
+  it('consumes a known shear keyword and advances filter index', () => {
+    const words = ['90', 'taper_floor', '0,0,3,2', 'terrain']
+    const { disc, filterstart } = readpivotsheardiscandfilterstart(words, 1)
+    expect(disc).toEqual({ edgeround: 'floor' })
+    expect(filterstart).toBe(2)
+    const { targetset, pt1, pt2 } = readtransformfilter(words, filterstart)
+    expect(targetset).toBe('terrain')
+    expect(pt1).toEqual({ x: 0, y: 0 })
+    expect(pt2).toEqual({ x: 3, y: 2 })
+  })
+
+  it('does not consume a string that is not a shear keyword (e.g. group name)', () => {
+    const words = ['90', 'mygrp']
+    const { disc, filterstart } = readpivotsheardiscandfilterstart(words, 1)
+    expect(disc).toBeUndefined()
+    expect(filterstart).toBe(1)
+    const { targetset } = readtransformfilter(words, filterstart)
+    expect(targetset).toBe('mygrp')
+  })
+
+  it('does not consume a numeric rect arg', () => {
+    const words = ['45', 0, 1, 4, 5]
+    const { disc, filterstart } = readpivotsheardiscandfilterstart(words, 1)
+    expect(disc).toBeUndefined()
+    expect(filterstart).toBe(1)
+    const { pt1, pt2 } = readtransformfilter(words, filterstart)
     expect(pt1).toEqual({ x: 0, y: 1 })
     expect(pt2).toEqual({ x: 4, y: 5 })
   })

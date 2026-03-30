@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
-import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { modemwritevaluenumber } from 'zss/device/modem'
+import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { paneladdress } from 'zss/gadget/data/types'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { maptovalue } from 'zss/mapping/value'
@@ -48,7 +49,12 @@ export function PanelRange({
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
-  tokenizeandwritetextformat(`$red $29 ${tcolor}${tlabel} `, context, false)
+  const prefix = context.iseven ? '$dkgreen$onblack' : '$green$ondkgrey'
+  tokenizeandwritetextformat(
+    `${prefix} $29 $ondkblue ${tcolor}${tlabel} `,
+    context,
+    false,
+  )
 
   // write range viewer
   const knob = active ? '$BLWHITE$26$WHITE' : '$4'

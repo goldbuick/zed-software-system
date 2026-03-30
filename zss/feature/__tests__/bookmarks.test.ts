@@ -6,14 +6,14 @@ import {
 } from 'zss/feature/bookmarks'
 import { storagereadvars } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
-import { useTape } from 'zss/gadget/data/state'
+import { useTape } from 'zss/gadget/data/zustandstores'
 
 jest.mock('zss/device/api', () => ({
   apitoast: jest.fn(),
   vmcli: jest.fn(),
 }))
 
-jest.mock('zss/gadget/data/state', () => ({
+jest.mock('zss/gadget/data/zustandstores', () => ({
   useTape: {
     getState: jest.fn(),
   },

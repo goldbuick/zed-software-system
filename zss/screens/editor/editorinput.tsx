@@ -11,6 +11,7 @@ import {
 import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY } from 'zss/feature/bookmarks'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
   useEditor,
@@ -21,7 +22,7 @@ import {
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent, touchtextfocus } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import {
   AUTO_COMPLETE,
   drawautocomplete,
@@ -429,10 +430,8 @@ export function EditorInput({
                     }
                     break
                   case 'b': {
-                    const ed = useTape.getState().editor
-                    if (ed.open) {
-                      registereditorbookmarkscroll(SOFTWARE, player)
-                    }
+                    const { title, path } = useTape.getState().editor
+                    registereditorbookmarkscroll(SOFTWARE, player, title, path)
                     break
                   }
                   case `'`:

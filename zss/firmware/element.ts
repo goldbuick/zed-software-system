@@ -1,4 +1,3 @@
-import { MathUtils } from 'three'
 import { CHIP } from 'zss/chip'
 import {
   apitoast,
@@ -457,7 +456,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'facing':
         // constrain facing to 360 degrees
-        value = MathUtils.euclideanModulo(value, 360)
+        value = ((value % 360) + 360) % 360
         break
       // writable
       case 'isdark':

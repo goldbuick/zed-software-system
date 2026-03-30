@@ -1,4 +1,3 @@
-import { Color } from 'three'
 import { objectKeys } from 'ts-extras'
 import {
   loadcharsetfrombytes,
@@ -55,6 +54,34 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
+
+/** Parses `#rgb` / `#rrggbb` / `rgb(r,g,b)` into linear 0–1 components (worker-safe). */
+function parsecsscolortonormalizedrgb(
+  value: string,
+): { r: number; g: number; b: number } | undefined {
+  const v = value.trim()
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(v)
+  if (hex) {
+    let h = hex[1]
+    if (h.length === 3) {
+      h = `${h[0]}${h[0]}${h[1]}${h[1]}${h[2]}${h[2]}`
+    }
+    return {
+      r: parseInt(h.slice(0, 2), 16) / 255,
+      g: parseInt(h.slice(2, 4), 16) / 255,
+      b: parseInt(h.slice(4, 6), 16) / 255,
+    }
+  }
+  const rgb = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(v)
+  if (rgb) {
+    return {
+      r: Number(rgb[1]) / 255,
+      g: Number(rgb[2]) / 255,
+      b: Number(rgb[3]) / 255,
+    }
+  }
+  return undefined
+}
 
 export function memoryapplyelementstats(
   stats: CODE_PAGE_STATS,
@@ -358,11 +385,14 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
           if (statname.startsWith('color') && isstring(statvalue)) {
             const idx = parseFloat(statname.replace('color', ''))
             if (idx >= 0 && idx <= 15) {
-              colorparse.set(statvalue)
+              const parsed = parsecsscolortonormalizedrgb(statvalue)
+              if (!ispresent(parsed)) {
+                continue
+              }
               const row = idx * FILE_BYTES_PER_COLOR
-              const cpr = colorparse.r * 63
-              const cpg = colorparse.g * 63
-              const cpb = colorparse.b * 63
+              const cpr = parsed.r * 63
+              const cpg = parsed.g * 63
+              const cpb = parsed.b * 63
               codepage.palette.bits[row + 0] = clamp(cpr, 0, 63)
               codepage.palette.bits[row + 1] = clamp(cpg, 0, 63)
               codepage.palette.bits[row + 2] = clamp(cpb, 0, 63)
@@ -424,8 +454,6 @@ export function memoryreadcodepagestat(
   const stats = memoryreadcodepagestats(codepage)
   return stats[stat]
 }
-
-const colorparse = new Color()
 
 function mapstrtoconsts(value: any): MAYBE<COLOR | DIR> {
   if (!isstring(value)) {

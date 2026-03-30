@@ -9,6 +9,7 @@ import {
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER } from 'zss/feature/writeui'
+import { codepagepicksuffix } from 'zss/firmware/cli/utils'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, rectpoints } from 'zss/mapping/2d'
@@ -38,12 +39,16 @@ import { memoryensuresoftwarebook } from './books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagestatdefaults,
+  memoryreadcodepagetypeasstring,
 } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhassecretheap } from './inspectionbatch'
 import { memoryloadermatches } from './loader'
 import { memoryreadplayerboard } from './playermanagement'
-import { memoryelementtodisplayprefix } from './rendering'
+import {
+  memorycodepagetoprefix,
+  memoryelementtodisplayprefix,
+} from './rendering'
 import { memoryreadbookbysoftware, memoryreadoperator } from './session'
 import {
   BOARD,
@@ -81,9 +86,8 @@ export function memoryinspectboardlines(board: string): string[] {
   const boardname = memoryreadcodepagename(boardcodepage)
   const copylabel = scrolllinkescapefrag(`board id ${board}`)
   return [
-    `board ${boardname}:`,
+    `!@batch pageopen:${board};edit $blue[board] $white${boardname}`,
     `!@batch istargetless copyit ${board};${copylabel}`,
-    `!@batch pageopen:${board};edit board codepage`,
   ]
 }
 
@@ -93,7 +97,7 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
     return []
   }
   const area = ptstoarea(p1, p2)
-  const lines = ['gadget actions:']
+  const lines = []
   for (let i = 0; i < loaders.length; ++i) {
     const codepage = loaders[i]
     const name = memoryreadcodepagename(codepage)
@@ -228,7 +232,6 @@ export function memoryinspectarea(
     DIVIDER,
     groupline,
     ...memoryinspectloaderlines(p1, p2),
-    `codepages:`,
   )
 
   const x1 = Math.min(p1.x, p2.x)
@@ -242,10 +245,12 @@ export function memoryinspectarea(
       const codepage = memoryreadelementcodepage(mainbook, element)
       if (ispresent(codepage) && !ids.has(codepage.id)) {
         ids.add(codepage.id)
-        const cplabel = scrolllinkescapefrag(
-          `edit @${memoryreadcodepagename(codepage)}`,
+        const name = memoryreadcodepagename(codepage)
+        const type = memoryreadcodepagetypeasstring(codepage)
+        const prefix = memorycodepagetoprefix(codepage)
+        lines.push(
+          `!@batch pageopen:${codepage.id};edit $blue[${type}] ${prefix}$white${name}${codepagepicksuffix(codepage)}`,
         )
-        lines.push(`!@batch pageopen:${codepage.id};${cplabel}`)
       }
     }
   }
@@ -711,12 +716,15 @@ export function memoryinspectelement(
       .flat(),
   ]
   lines.push(`!${grouptokens.join(' ')};group`)
-
   lines.push(...memoryinspectloaderlines(p1, p1))
-  lines.push(`codepages:`)
-  lines.push(
-    `!@batch pageopen:${codepage.id};${scrolllinkescapefrag(`edit @${memoryreadcodepagename(codepage)}`)}`,
-  )
+  if (ispresent(codepage)) {
+    const name = memoryreadcodepagename(codepage)
+    const type = memoryreadcodepagetypeasstring(codepage)
+    const prefix = memorycodepagetoprefix(codepage)
+    lines.push(
+      `!@batch pageopen:${codepage.id};edit $blue[${type}] ${prefix}$white${name}${codepagepicksuffix(codepage)}`,
+    )
+  }
   lines.push(...memoryinspectboardlines(board.id))
 
   scrollwritelines(player, 'inspect', lines.join('\n'), chip)

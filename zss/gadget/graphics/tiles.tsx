@@ -4,6 +4,7 @@ import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { createbitmaptexture } from 'zss/gadget/display/textures'
 import {
@@ -16,7 +17,9 @@ import { useMedia } from 'zss/gadget/media'
 
 import { UnicodeOverlay } from './unicodeoverlay'
 
-const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
+const defaultpalette = palettetothreecolors(
+  convertpalettetocolors(loadpalettefrombytes(PALETTE)),
+)
 const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
 type TilesProps = {

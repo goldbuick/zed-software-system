@@ -245,10 +245,10 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch copyall:${area} hk 1 " 1 " next;copy terrain & objects`,
-    `!@batch copyobjects:${area} hk 2 " 2 " next;copy objects`,
-    `!@batch copyterrain:${area} hk 3 " 3 " next;copy terrain`,
-    `!@batch copyastext:${area} hk 4 " 4 " next;copy as text`,
+    `!@batch copyall:${area} hk 1 " 1 ";copy terrain & objects`,
+    `!@batch copyobjects:${area} hk 2 " 2 ";copy objects`,
+    `!@batch copyterrain:${area} hk 3 " 3 ";copy terrain`,
+    `!@batch copyastext:${area} hk 4 " 4 ";copy as text`,
   ]
   scrollwritelines(player, 'copy', lines.join('\n'), 'batch')
 }
@@ -321,9 +321,9 @@ export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch cutall:${area} hk 1 " 1 " next;cut terrain & objects`,
-    `!@batch cutobjects:${area} hk 2 " 2 " next;cut objects`,
-    `!@batch cutterrain:${area} hk 3 " 3 " next;cut terrain`,
+    `!@batch cutall:${area} hk 1 " 1 ";cut terrain & objects`,
+    `!@batch cutobjects:${area} hk 2 " 2 ";cut objects`,
+    `!@batch cutterrain:${area} hk 3 " 3 ";cut terrain`,
   ]
   scrollwritelines(player, 'cut', lines.join('\n'), 'batch')
 }
@@ -430,10 +430,10 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch pasteall:${area} hk 1 " 1 " next;paste terrain & objects`,
-    `!@batch pasteobjects:${area} hk 2 " 2 " next;paste objects`,
-    `!@batch pasteterrain:${area} hk 3 " 3 " next;paste terrain`,
-    `!@batch pasteterraintiled:${area} hk 4 " 4 " next;paste terrain tiled`,
+    `!@batch pasteall:${area} hk 1 " 1 ";paste terrain & objects`,
+    `!@batch pasteobjects:${area} hk 2 " 2 ";paste objects`,
+    `!@batch pasteterrain:${area} hk 3 " 3 ";paste terrain`,
+    `!@batch pasteterraintiled:${area} hk 4 " 4 ";paste terrain tiled`,
   ]
   scrollwritelines(player, 'paste', lines.join('\n'), 'batch')
 }

@@ -89,9 +89,12 @@ Registered in [`zss/device/vm/handlers/registry.ts`](../../device/vm/handlers/re
 | `clearscroll` | [`handleclearscroll`](../../device/vm/handlers/scroll.ts) | Unlocks scroll on all objects on the player’s board; does not clear gadget state by itself (pair with `gadgetclearscroll` / gadget server flow). |
 | `bookmarkscroll` | [`handlebookmarkscroll`](../../device/vm/handlers/bookmarkscroll.ts) | [`memorybookmarkscroll`](../../memory/bookmarkscroll.ts): header links + `gadgetbbar`, then [`scrollwritelines`](../../gadget/data/scrollwritelines.ts) for list rows. |
 | `editorbookmarkscroll` | [`handleeditorbookmarkscroll`](../../device/vm/handlers/editorbookmarkscroll.ts) | [`memoryeditorbookmarkscroll`](../../memory/editorbookmarkscroll.ts): snapshot link + `gadgetbbar`, then `scrollwritelines` for entries. |
+| `tapeeditorclose` | [`handletapeeditorclose`](../../device/vm/handlers/tapeeditorclose.ts) | Clears sim-worker [`tapeeditormirror`](../../device/vm/tapeeditormirror.ts) for `message.player` when the main thread closes the tape editor (`register:editor:close` → [`vmtapeeditorclose`](../../device/api.ts)). |
 | `readzipfilelist` | [`handlereadzipfilelist`](../../device/vm/handlers/zipfile.ts) | Title `zipfilelist`; Zed `!` lines via `scrollwritelines`, chip `zipfilelist`. |
 
 Panel-only actions for editor bookmarks go through [`handledefault`](../../device/vm/handlers/default.ts) as `editorbookmarkscroll:<path>` (e.g. `snapshotcurrent`, `copytogame`; successful copy may call `vmclearscroll`).
+
+**`snapshotcurrent` and `useTape`:** The sim worker does not share the main-thread Zustand [`useTape`](../../gadget/data/state.ts) store. `editorbookmarkscroll:snapshotcurrent` reads per-player metadata from [`tapeeditormirror`](../../device/vm/tapeeditormirror.ts), updated in [`registereditoropen`](../../device/api.ts) before `register:editor:open` is emitted, and cleared via `vm:tapeeditorclose` when the UI closes the editor ([`register.ts`](../../device/register.ts) `editor:close`).
 
 ---
 

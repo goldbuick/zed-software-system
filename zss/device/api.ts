@@ -3,6 +3,7 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
+import { tapeeditorset } from 'zss/device/vm/tapeeditormirror'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
@@ -53,6 +54,21 @@ export function apierror(
 export function apilog(device: DEVICELIKE, player: string, ...message: any[]) {
   device.emit(player, 'log', message)
   return true
+}
+
+/** Worker → client hook for Playwright E2E: loader lifecycle (forwarded as `register:e2eloaderevent`). */
+export type E2E_LOADER_NOTIFY = {
+  phase: 'start' | 'done'
+  eventname: string
+  format: string
+}
+
+export function apie2eloadernotify(
+  device: DEVICELIKE,
+  player: string,
+  detail: E2E_LOADER_NOTIFY,
+) {
+  device.emit(player, 'register:e2eloaderevent', detail)
 }
 
 export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
@@ -646,16 +662,27 @@ export function vmbookmarkscroll(
 export function registereditorbookmarkscroll(
   device: DEVICELIKE,
   player: string,
+  codepagename: string,
+  codepagepath: string[],
 ) {
-  device.emit(player, 'register:editorbookmarkscroll', true)
+  device.emit(player, 'register:editorbookmarkscroll', [
+    codepagename,
+    codepagepath,
+  ])
 }
 
 export function vmeditorbookmarkscroll(
   device: DEVICELIKE,
   player: string,
   editorlist: unknown[],
+  codepagename: string,
+  codepagepath: string[],
 ) {
-  device.emit(player, 'vm:editorbookmarkscroll', editorlist)
+  device.emit(player, 'vm:editorbookmarkscroll', [
+    editorlist,
+    codepagename,
+    codepagepath,
+  ])
 }
 
 export function vmcodepagesnapshot(
@@ -726,6 +753,13 @@ export function registereditoropen(
   title: string,
   scrollto?: number,
 ) {
+  tapeeditorset(player, {
+    open: true,
+    book,
+    path,
+    type,
+    title,
+  })
   device.emit(player, 'register:editor:open', [
     book,
     path,
@@ -737,6 +771,10 @@ export function registereditoropen(
 
 export function registereditorclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:editor:close')
+}
+
+export function vmtapeeditorclose(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:tapeeditorclose')
 }
 
 export function vmoperator(device: DEVICELIKE, player: string) {

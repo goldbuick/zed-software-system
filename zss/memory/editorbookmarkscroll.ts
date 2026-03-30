@@ -3,38 +3,38 @@ import {
   EDITOR_BOOKMARK_SCROLL_SCROLLNAME,
   type ZssEditorBookmark,
 } from 'zss/feature/bookmarks'
-import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
+import { DIVIDER } from 'zss/feature/writeui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { scrolllinkescapefrag } from 'zss/mapping/string'
+import { isstring } from 'zss/mapping/types'
 
 export function memoryeditorbookmarkscroll(
   player: string,
   editorlist: ZssEditorBookmark[],
+  codepagename: string,
+  codepagepath: string[],
 ): void {
-  gadgethyperlink(
-    player,
-    EDITOR_BOOKMARK_SCROLL_CHIP,
-    '$GREENBOOKMARK CURRENT PAGE',
-    ['snapshotcurrent', 'hk', 's', ` S `, '1'],
-  )
-  gadgetbbar(player, 10)
+  const lines: string[] = [
+    `!snapshotcurrent hk s " S " 1 ${codepagepath.filter(isstring).join(' ')};save ${codepagename}`,
+    DIVIDER,
+  ]
+
   const rows: string[] = []
   for (let i = 0; i < editorlist.length; ++i) {
-    const b = editorlist[i]
+    const bookmark = editorlist[i]
     const shorttitle =
-      b.title.length > 40 ? `${b.title.slice(0, 37)}...` : b.title
-    const label = `$CYAN${shorttitle}$WHITE  $ltgrey(${b.book})`
+      bookmark.title.length > 40
+        ? `${bookmark.title.slice(0, 37)}...`
+        : bookmark.title
     rows.push(
-      `!openineditor hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(`$GREENOPEN$WHITE ${shorttitle}  $ltgrey(${b.book})`)}`,
-    )
-    rows.push(
-      `!copytogame hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(label)}`,
+      `!copytogame hyperlink ${scrolllinkescapefrag(bookmark.id)};${scrolllinkescapefrag(shorttitle)}`,
     )
   }
+
   scrollwritelines(
     player,
     EDITOR_BOOKMARK_SCROLL_SCROLLNAME,
-    rows.join('\n'),
+    lines.join('\n'),
     EDITOR_BOOKMARK_SCROLL_CHIP,
   )
 }

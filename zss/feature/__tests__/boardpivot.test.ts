@@ -1,17 +1,23 @@
 import { boardpivot, boardpivotgroup } from 'zss/feature/boardpivot'
 import {
+  PIVOT_SHEAR_SCALE_DEFAULT,
   pivotbuildintegeredges,
   pivotcell,
   pivotcellinteger,
   pivotcellmishin,
   pivotcellmishinvslegacydiffcount,
+  pivotlegacytapermapindex,
   pivotmishinmapindex,
+  pivotresolvedisc,
   pivotthetanearsingular,
 } from 'zss/feature/boardpivotmath'
 import { readtransformfilter } from 'zss/firmware/transforms'
 import { indextopt } from 'zss/mapping/2d'
 import { memoryreadterrain } from 'zss/memory/boardaccess'
-import { memorycreateboard } from 'zss/memory/boardlifecycle'
+import {
+  memorycreateboard,
+  memorycreateboardobject,
+} from 'zss/memory/boardlifecycle'
 import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryresetbooks } from 'zss/memory/session'
 import {
@@ -141,6 +147,56 @@ describe('boardpivotmath', () => {
       seen.add(step(i))
     }
     expect(seen.size).toBe(w * h)
+  })
+
+  it('pivotlegacytapermapindex matches pivotcellinteger with built edges (default disc)', () => {
+    const w = 12
+    const h = 8
+    const theta = (-45 * Math.PI) / 180
+    const { xedge, yedge } = pivotbuildintegeredges(w, h, theta)
+    for (let i = 0; i < w * h; ++i) {
+      const ix = i % w
+      const iy = Math.floor(i / w)
+      const p = pivotcellinteger(ix, iy, w, h, xedge, yedge)
+      expect(pivotlegacytapermapindex(i, w, h, theta)).toBe(p.x + p.y * w)
+    }
+  })
+
+  it('default pivotresolvedisc matches legacy constants', () => {
+    expect(pivotresolvedisc(undefined)).toEqual({
+      shearscale: PIVOT_SHEAR_SCALE_DEFAULT,
+      edgeround: 'round',
+      mishinround: 'round',
+    })
+  })
+
+  it('taper floor edges differ from round for some angles', () => {
+    let found = false
+    for (const t of [0.15, 0.4, 0.9, 1.2]) {
+      const a = pivotbuildintegeredges(30, 22, t)
+      const b = pivotbuildintegeredges(30, 22, t, { edgeround: 'floor' })
+      if (a.xedge.join(',') !== b.xedge.join(',')) {
+        found = true
+        break
+      }
+    }
+    expect(found).toBe(true)
+  })
+
+  it('mishin floor differs from default round on some cells at -45°', () => {
+    const w = 12
+    const h = 8
+    const theta = (-45 * Math.PI) / 180
+    let diff = 0
+    for (let i = 0; i < w * h; ++i) {
+      if (
+        pivotmishinmapindex(i, w, h, theta) !==
+        pivotmishinmapindex(i, w, h, theta, { mishinround: 'floor' })
+      ) {
+        ++diff
+      }
+    }
+    expect(diff).toBeGreaterThan(0)
   })
 })
 
@@ -363,6 +419,56 @@ describe('boardpivotgroup', () => {
     const vac0 = vacated[0]
     const vacpt = indextopt(vac0, BOARD_WIDTH)
     expect(terrainat(b, vacpt)?.kind).toBe('floor')
+  })
+
+  it('moves object on group terrain by one Mishin pivot and shifts lx/ly once', () => {
+    const board = memorycreateboard()
+    const y = 4
+    const xleft = 11
+    for (let x = xleft; x <= xleft + 2; ++x) {
+      board.terrain[x + y * BOARD_WIDTH] = {
+        kind: `tg${x}`,
+        x,
+        y,
+        collision: COLLISION.ISWALK,
+        group: 'ridegrp',
+      }
+    }
+    const ox = xleft
+    const oy = y
+    const cx = xleft + 1
+    const cy = y
+    const theta = Math.PI / 4
+    const expectpt = pivotcellmishin(
+      ox,
+      oy,
+      BOARD_WIDTH,
+      BOARD_HEIGHT,
+      theta,
+      cx,
+      cy,
+    )
+    memorycreateboardobject(board, {
+      id: 'rider_a',
+      kind: 'rider',
+      x: ox,
+      y: oy,
+      lx: 0.25,
+      ly: -0.5,
+      collision: COLLISION.ISWALK,
+    })
+    installbookwithboard('bp_rider', board)
+    const b = memoryreadboardbyaddress('bp_rider')!
+    memoryinitboard(b)
+
+    const ok = boardpivotgroup('bp_rider', theta, '', 'ridegrp')
+    expect(ok).toBe(true)
+    const rider = b.objects.rider_a
+    expect(rider).toBeDefined()
+    expect(rider.x).toBe(expectpt.x)
+    expect(rider.y).toBe(expectpt.y)
+    expect(rider.lx).toBeCloseTo(0.25 + (expectpt.x - ox))
+    expect(rider.ly).toBeCloseTo(-0.5 + (expectpt.y - oy))
   })
 })
 

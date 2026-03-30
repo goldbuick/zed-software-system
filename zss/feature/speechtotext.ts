@@ -1,4 +1,4 @@
-import { type KaldiRecognizer, type Model, createModel } from 'vosk-browser'
+import type { KaldiRecognizer, Model } from 'vosk-browser'
 import type {
   ServerMessagePartialResult,
   ServerMessageResult,
@@ -21,7 +21,10 @@ async function loadmodel(onworking: (message: string) => void): Promise<Model> {
 
   onworking('speech model loading ...')
 
-  sharedmodelpromise = createModel(MODEL_URL).then((model) => {
+  sharedmodelpromise = (async () => {
+    const { createModel } = await import('vosk-browser')
+    return createModel(MODEL_URL)
+  })().then((model) => {
     sharedmodel = model
     sharedmodelpromise = undefined
     onworking('speech model ready')

@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
 import { arr2hex, hex2arr } from 'uint8-util'
 import * as awarenessProtocol from 'y-protocols/awareness'
 import * as Y from 'yjs'
 import { createdevice } from 'zss/device'
 import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
-import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent } from 'zss/mapping/types'
 
 /** Presence information for remote users editing codepages */
 export type PresenceState = {
@@ -166,11 +165,6 @@ export enum MODEM_SHARED_TYPE {
   STRING,
 }
 
-type SHARED_TYPE_MAP = {
-  [MODEM_SHARED_TYPE.NUMBER]: number
-  [MODEM_SHARED_TYPE.STRING]: SharedTextHandle
-}
-
 let joined = false
 
 /** Set before local edit (insert/delete); used so only local edits are tracked for undo. */
@@ -244,64 +238,24 @@ function getValueForKey(key: string): unknown {
   return undefined
 }
 
-function useWaitForValue<T extends MODEM_SHARED_TYPE>(
-  key: string,
-  type: T,
-): MAYBE<SHARED_TYPE_MAP[T]> {
-  const [, settoggle] = useState(0)
-  useEffect(() => {
-    const handler = () => settoggle((s) => 1 - s)
-    SYNC_DOC.on('update', handler)
-    return () => SYNC_DOC.off('update', handler)
-  }, [])
-
-  try {
-    if (!ROOT.has(key)) {
-      return undefined
-    }
-    const val = getValueForKey(key)
-    if (val === undefined) {
-      return undefined
-    }
-
-    if (type === MODEM_SHARED_TYPE.NUMBER) {
-      return (typeof val === 'number' ? val : undefined) as MAYBE<
-        SHARED_TYPE_MAP[T]
-      >
-    }
-    if (type === MODEM_SHARED_TYPE.STRING) {
-      return (
-        val && typeof (val as SharedTextHandle).toJSON === 'function'
-          ? val
-          : undefined
-      ) as MAYBE<SHARED_TYPE_MAP[T]>
-    }
-  } catch {
-    // mid-mutation
-  }
-  return undefined
+/** UI hooks: subscribe to Y.Doc updates (e.g. `modemhooks`). */
+export function modemsubscribesyncupdate(handler: () => void): () => void {
+  SYNC_DOC.on('update', handler)
+  return () => SYNC_DOC.off('update', handler)
 }
 
-export function useWaitForValueNumber(key: string) {
-  const value = useWaitForValue<MODEM_SHARED_TYPE.NUMBER>(
-    key,
-    MODEM_SHARED_TYPE.NUMBER,
-  )
-  if (!isnumber(value)) {
-    return undefined
-  }
-  return value
+/** UI hooks: subscribe to awareness changes (e.g. `modemhooks`). */
+export function modemsubscribeawarenesschange(handler: () => void): () => void {
+  AWARENESS.on('change', handler)
+  return () => AWARENESS.off('change', handler)
 }
 
-export function useWaitForValueString(key: string) {
-  const value = useWaitForValue<MODEM_SHARED_TYPE.STRING>(
-    key,
-    MODEM_SHARED_TYPE.STRING,
-  )
-  if (!ispresent(value) || typeof value?.toJSON !== 'function') {
-    return undefined
-  }
-  return value
+export function modemroothaskey(key: string): boolean {
+  return ROOT.has(key)
+}
+
+export function modempeekvalueforkey(key: string): unknown {
+  return getValueForKey(key)
 }
 
 export function modemwriteinitnumber(key: string, value: number) {
@@ -458,24 +412,6 @@ export function modembroadcastpresence(
   AWARENESS.setLocalStateField('select', select ?? null)
   AWARENESS.setLocalStateField('name', name ?? `User ${clientId.slice(0, 6)}`)
   AWARENESS.setLocalStateField('color', color ?? '#3b82f6')
-}
-
-/** Hook to observe presence for a codepage */
-export function usePresence(codepageKey: string | undefined): PresenceState[] {
-  const [presence, setPresence] = useState<PresenceState[]>([])
-
-  useEffect(() => {
-    if (!codepageKey) {
-      setPresence([])
-      return
-    }
-    const update = () => setPresence(getpresenceforcodepage(codepageKey))
-    update()
-    AWARENESS.on('change', update)
-    return () => AWARENESS.off('change', update)
-  }, [codepageKey])
-
-  return presence
 }
 
 // ---------------------------------------------------------------------------
