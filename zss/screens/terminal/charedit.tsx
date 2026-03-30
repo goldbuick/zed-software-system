@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { registercopy } from 'zss/device/api'
-import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { modemwritevaluenumber } from 'zss/device/modem'
+import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { readcharfrombytes } from 'zss/feature/bytes'

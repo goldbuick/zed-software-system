@@ -12,6 +12,7 @@ import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { CHARS_PER_ROW } from 'zss/gadget/data/types'
 import { noiseutilshader } from 'zss/gadget/fx/util'
 import { MAYBE } from 'zss/mapping/types'
@@ -230,7 +231,9 @@ export function createBillboardBufferGeometryAttributes() {
   }
 }
 
-const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
+const palette = palettetothreecolors(
+  convertpalettetocolors(loadpalettefrombytes(PALETTE)),
+)
 const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
 const tilemapMaterial = new ShaderMaterial({

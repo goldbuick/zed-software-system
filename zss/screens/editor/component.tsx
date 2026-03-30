@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
 import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
-import { useWaitForValueString } from 'zss/device/modem'
+import { useWaitForValueString } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import {

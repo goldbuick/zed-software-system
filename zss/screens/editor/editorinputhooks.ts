@@ -6,8 +6,8 @@ import {
   modembroadcastpresence,
   registerCursorRestore,
   setCursorBeforeEdit,
-  usePresence,
 } from 'zss/device/modem'
+import { usePresence } from 'zss/device/modemhooks'
 import { useEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'

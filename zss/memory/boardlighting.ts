@@ -1,5 +1,4 @@
 import { radToDeg } from 'maath/misc'
-import { Vector2 } from 'three'
 import { SPRITE } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
@@ -21,7 +20,7 @@ const LIGHTING_OBJECT_OCCLUSION = 0.27
 const LIGHTING_TERRAIN_SOLID_OCCLUSION = 0.11
 
 /** Cell center to cell center in width-normalized space (Y × `LIGHTING_RAY_TILE_YSCALE`). */
-const lightingraypt = new Vector2()
+const lightingraypt = { x: 0, y: 0 }
 
 /** Map to signed degrees consistent with `lightingrayshade` / wedge ranges (≈ (−180, 180]). */
 function lightingcanonheadingdeg(deg: number): number {
@@ -104,7 +103,7 @@ function lightingappendringocclusions(
 
   lightingraypt.x = x - sprite.x
   lightingraypt.y = (y - sprite.y) * LIGHTING_RAY_TILE_YSCALE
-  if (lightingraypt.length() > radius) {
+  if (Math.hypot(lightingraypt.x, lightingraypt.y) > radius) {
     return
   }
 
@@ -156,12 +155,14 @@ function lightingrayshade(
 
   lightingraypt.x = x - sprite.x
   lightingraypt.y = (y - sprite.y) * LIGHTING_RAY_TILE_YSCALE
-  const raydist = lightingraypt.length()
+  const raydist = Math.hypot(lightingraypt.x, lightingraypt.y)
   if (raydist > radius) {
     return
   }
 
-  const angle = Math.round(radToDeg(lightingraypt.angle()))
+  const angle = Math.round(
+    radToDeg(Math.atan2(lightingraypt.y, lightingraypt.x)),
+  )
 
   let current = 0
   for (let b = 0; b < blocked.length; ++b) {

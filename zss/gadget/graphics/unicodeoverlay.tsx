@@ -8,6 +8,7 @@ import { RUNTIME } from 'zss/config'
 import { loadpalettefrombytes } from 'zss/feature/bytes'
 import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
+import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { lookupglyphasync } from 'zss/gadget/display/unicodeatlas'
 import {
@@ -16,7 +17,9 @@ import {
 } from 'zss/gadget/display/unicodeoverlay'
 import { useMedia } from 'zss/gadget/media'
 
-const defaultpalette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
+const defaultpalette = palettetothreecolors(
+  convertpalettetocolors(loadpalettefrombytes(PALETTE)),
+)
 
 type UnicodeOverlayProps = {
   width: number

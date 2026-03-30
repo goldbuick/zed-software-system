@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useWaitForValueString } from 'zss/device/modem'
+import { useWaitForValueString } from 'zss/device/modemhooks'
 import { withclipboard } from 'zss/feature/keyboard'
 import { paneladdress } from 'zss/gadget/data/types'
 import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'

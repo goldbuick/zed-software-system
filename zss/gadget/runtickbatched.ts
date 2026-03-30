@@ -1,6 +1,4 @@
-import { unstable_batchedUpdates } from 'react-dom'
-
-/** Runs synchronous hub work so Zustand-driven React updates (`useSyncExternalStore`) coalesce where possible. */
+/** Runs hub tick delivery. No react-dom batching: workers must not import React. */
 export function runtickbatched(run: () => void): void {
-  unstable_batchedUpdates(run)
+  run()
 }

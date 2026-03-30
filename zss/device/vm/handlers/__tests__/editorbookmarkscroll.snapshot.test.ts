@@ -9,7 +9,7 @@ import {
 } from 'zss/device/vm/tapeeditormirror'
 
 jest.mock('zss/device/api', () => {
-  const actual = jest.requireActual('zss/device/api') as object
+  const actual = jest.requireActual('zss/device/api')
   return {
     ...actual,
     apitoast: jest.fn(),

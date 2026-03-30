@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useWaitForValueString } from 'zss/device/modem'
+import { useWaitForValueString } from 'zss/device/modemhooks'
 import { withclipboard } from 'zss/feature/keyboard'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'

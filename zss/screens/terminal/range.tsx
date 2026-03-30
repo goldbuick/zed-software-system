@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
-import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { modemwritevaluenumber } from 'zss/device/modem'
+import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
