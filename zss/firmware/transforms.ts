@@ -1,6 +1,10 @@
 import { degToRad } from 'maath/misc'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { boardpivot } from 'zss/feature/boardpivot'
+import {
+  type PIVOTDISCRETIZATION,
+  pivotdiscfromkeyword,
+} from 'zss/feature/boardpivotmath'
 import { boardremix } from 'zss/feature/boardremix'
 import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
@@ -78,6 +82,21 @@ function readfilter(words: WORD[], index: number) {
 /** Parses optional targetset and region after command-specific args (exported for tests). */
 export function readtransformfilter(words: WORD[], index: number) {
   return readfilter(words, index)
+}
+
+/** After the degrees arg: optional shear keyword (`pivotdiscfromkeyword`); exported for tests. */
+export function readpivotsheardiscandfilterstart(
+  words: WORD[],
+  indexafterdegrees: number,
+): { disc: PIVOTDISCRETIZATION | undefined; filterstart: number } {
+  const next = words[indexafterdegrees]
+  if (ispresent(next) && isstring(next)) {
+    const parsed = pivotdiscfromkeyword(NAME(next))
+    if (ispresent(parsed)) {
+      return { disc: parsed, filterstart: indexafterdegrees + 1 }
+    }
+  }
+  return { disc: undefined, filterstart: indexafterdegrees }
 }
 
 export const TRANSFORM_FIRMWARE = createfirmware()
@@ -210,14 +229,18 @@ export const TRANSFORM_FIRMWARE = createfirmware()
   )
   .command(
     'pivot',
-    [ARG_TYPE.NUMBER, 'board elements by degrees'],
+    [
+      ARG_TYPE.NUMBER,
+      'board elements by degrees; optional shear keyword (taper_floor, taper_ceil, taper_trunc, mishin_floor, mishin_ceil, shear_soft, shear_hard) then region / targetset',
+    ],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
         return 0
       }
       const [degrees, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])
-      const filter = readfilter(words, ii)
+      const { disc, filterstart } = readpivotsheardiscandfilterstart(words, ii)
+      const filter = readfilter(words, filterstart)
       chip.set(
         'didfail',
         boardpivot(
@@ -227,6 +250,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
           filter.pt2,
           READ_CONTEXT.elementid,
           filter.targetset,
+          disc,
         )
           ? 0
           : 1,

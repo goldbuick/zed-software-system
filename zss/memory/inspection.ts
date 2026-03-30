@@ -713,7 +713,7 @@ export function memoryinspectelement(
   lines.push(`!${grouptokens.join(' ')};group`)
 
   lines.push(...memoryinspectloaderlines(p1, p1))
-  lines.push(`codepages:`)
+  // lines.push(`codepages:`)
   lines.push(
     `!@batch pageopen:${codepage.id};${scrolllinkescapefrag(`edit @${memoryreadcodepagename(codepage)}`)}`,
   )

@@ -2,12 +2,87 @@ import { PT } from 'zss/words/types'
 
 /**
  * Board pivot maps: Paeth triple-shear on a torus (`pivotcell` + taper table) vs Mishin-style
- * `Math.round(trig * offset)` (`pivotcellmishin`). Neither is orthogonal “rotate this rectangle”
+ * quantized trig shears (`pivotcellmishin`). Neither is orthogonal “rotate this rectangle”
  * on a non-square board; a future cardinal orthogonal path would be separate from shear tuning.
  */
 
 /** When |cos(θ/2)| ≈ 0, tan(θ/2) is singular (e.g. θ = π mod 2π). */
 const PIVOT_COS_HALF_SINGULAR_EPS = 1e-12
+
+/** Default multiplier on Paeth shear coefficients (taper + Mishin trig steps). */
+export const PIVOT_SHEAR_SCALE_DEFAULT = 12.5
+
+export type PIVOT_EDGE_ROUND_MODE = 'round' | 'floor' | 'ceil' | 'trunc'
+
+export type PIVOT_MISHIN_ROUND_MODE = 'round' | 'floor' | 'ceil'
+
+/** Optional shear discretization; omitted fields use defaults matching legacy behavior. */
+export type PIVOTDISCRETIZATION = {
+  /** Scales taper shear coeffs (`pivotbuildintegeredges` / full-board pivot); default `PIVOT_SHEAR_SCALE_DEFAULT`. Mishin uses raw trig. */
+  shearscale?: number
+  /** How taper edges (`pivotbuildintegeredges`) quantize each line skew. Default `round`. */
+  edgeround?: PIVOT_EDGE_ROUND_MODE
+  /** How Mishin shears quantize each step. Default `round`. */
+  mishinround?: PIVOT_MISHIN_ROUND_MODE
+}
+
+export function pivotresolvedisc(disc?: PIVOTDISCRETIZATION): {
+  shearscale: number
+  edgeround: PIVOT_EDGE_ROUND_MODE
+  mishinround: PIVOT_MISHIN_ROUND_MODE
+} {
+  return {
+    shearscale: disc?.shearscale ?? PIVOT_SHEAR_SCALE_DEFAULT,
+    edgeround: disc?.edgeround ?? 'round',
+    mishinround: disc?.mishinround ?? 'round',
+  }
+}
+
+/** Map firmware keyword (after `NAME()`) to discretization; unknown → undefined. */
+export function pivotdiscfromkeyword(name: string): PIVOTDISCRETIZATION | undefined {
+  switch (name) {
+    case 'taper_floor':
+      return { edgeround: 'floor' }
+    case 'taper_ceil':
+      return { edgeround: 'ceil' }
+    case 'taper_trunc':
+      return { edgeround: 'trunc' }
+    case 'mishin_floor':
+      return { mishinround: 'floor' }
+    case 'mishin_ceil':
+      return { mishinround: 'ceil' }
+    case 'shear_soft':
+      return { shearscale: 10 }
+    case 'shear_hard':
+      return { shearscale: 15 }
+    default:
+      return undefined
+  }
+}
+
+function pivotquantizeedge(n: number, mode: PIVOT_EDGE_ROUND_MODE): number {
+  switch (mode) {
+    case 'round':
+      return Math.round(n)
+    case 'floor':
+      return Math.floor(n)
+    case 'ceil':
+      return Math.ceil(n)
+    case 'trunc':
+      return Math.trunc(n)
+  }
+}
+
+function pivotquantizemishin(n: number, mode: PIVOT_MISHIN_ROUND_MODE): number {
+  switch (mode) {
+    case 'round':
+      return Math.round(n)
+    case 'floor':
+      return Math.floor(n)
+    case 'ceil':
+      return Math.ceil(n)
+  }
+}
 
 /** Integer torus index wrap. */
 export function pivotposmodi(n: number, m: number): number {
@@ -19,7 +94,10 @@ export function pivotthetanearsingular(theta: number): boolean {
   return Math.abs(Math.cos(theta * 0.5)) < PIVOT_COS_HALF_SINGULAR_EPS
 }
 
-export function pivotshearcoeffs(theta: number): {
+export function pivotshearcoeffs(
+  theta: number,
+  shearscale: number = PIVOT_SHEAR_SCALE_DEFAULT,
+): {
   xshear: number
   yshear: number
 } {
@@ -28,7 +106,7 @@ export function pivotshearcoeffs(theta: number): {
   }
   const alpha = -Math.tan(theta * 0.5)
   const beta = Math.sin(theta)
-  return { xshear: 12.5 * alpha, yshear: 12.5 * beta }
+  return { xshear: shearscale * alpha, yshear: shearscale * beta }
 }
 
 /**
@@ -39,20 +117,25 @@ export function pivotshearcoeffs(theta: number): {
  * Note: each pivot is a permutation (no duplicate / missing cells), but shear is not rigid
  * motion on the grid — repeated −45° pivots scramble multi-cell shapes (e.g. text) because
  * neighbor relationships are not preserved. To move a label as a unit, pivot by **group**.
+ * Non-default `edgeround` may break bijection; callers should verify for their θ and size.
  */
 export function pivotbuildintegeredges(
   w: number,
   h: number,
   theta: number,
+  disc?: PIVOTDISCRETIZATION,
 ): { xedge: number[]; yedge: number[] } {
-  const { xshear, yshear } = pivotshearcoeffs(theta)
+  const { shearscale, edgeround } = pivotresolvedisc(disc)
+  const { xshear, yshear } = pivotshearcoeffs(theta, shearscale)
   const xedge: number[] = new Array(h)
   for (let y = 0; y < h; ++y) {
-    xedge[y] = Math.round(h <= 1 ? xshear : xshear * (1 - (2 * y) / (h - 1)))
+    const raw = h <= 1 ? xshear : xshear * (1 - (2 * y) / (h - 1))
+    xedge[y] = pivotquantizeedge(raw, edgeround)
   }
   const yedge: number[] = new Array(w)
   for (let x = 0; x < w; ++x) {
-    yedge[x] = Math.round(w <= 1 ? yshear : yshear * (1 - (2 * x) / (w - 1)))
+    const raw = w <= 1 ? yshear : yshear * (1 - (2 * x) / (w - 1))
+    yedge[x] = pivotquantizeedge(raw, edgeround)
   }
   return { xedge, yedge }
 }
@@ -81,13 +164,14 @@ export function pivotcell(
   w: number,
   h: number,
   theta: number,
+  disc?: PIVOTDISCRETIZATION,
 ): PT {
-  const { xedge, yedge } = pivotbuildintegeredges(w, h, theta)
+  const { xedge, yedge } = pivotbuildintegeredges(w, h, theta, disc)
   return pivotcellinteger(ix, iy, w, h, xedge, yedge)
 }
 
 /**
- * Mishin-style discrete Paeth rotation: each shear uses `Math.round(trig * offset)` with
+ * Mishin-style discrete Paeth rotation: each shear quantizes `trig * offset` with
  * offsets relative to `(cx, cy)` (defaults: board center `(w-1)/2`, `(h-1)/2`). Same H→V→H
  * order and torus wrap. Board pivot uses bbox center of the targeted region when provided.
  */
@@ -99,10 +183,12 @@ export function pivotcellmishin(
   theta: number,
   cx?: number,
   cy?: number,
+  disc?: PIVOTDISCRETIZATION,
 ): PT {
   if (w <= 0 || h <= 0 || pivotthetanearsingular(theta)) {
     return { x: ix, y: iy }
   }
+  const { mishinround } = pivotresolvedisc(disc)
   const centerx = cx ?? (w <= 1 ? 0 : (w - 1) * 0.5)
   const centery = cy ?? (h <= 1 ? 0 : (h - 1) * 0.5)
   const half = theta * 0.5
@@ -110,9 +196,18 @@ export function pivotcellmishin(
   const beta = Math.sin(theta)
   let x = ix
   let y = iy
-  x = pivotposmodi(x + Math.round(alpha * (y - centery)), w)
-  y = pivotposmodi(y + Math.round(beta * (x - centerx)), h)
-  x = pivotposmodi(x + Math.round(alpha * (y - centery)), w)
+  x = pivotposmodi(
+    x + pivotquantizemishin(alpha * (y - centery), mishinround),
+    w,
+  )
+  y = pivotposmodi(
+    y + pivotquantizemishin(beta * (x - centerx), mishinround),
+    h,
+  )
+  x = pivotposmodi(
+    x + pivotquantizemishin(alpha * (y - centery), mishinround),
+    w,
+  )
   return { x, y }
 }
 
@@ -122,10 +217,25 @@ export function pivotmishinmapindex(
   w: number,
   h: number,
   theta: number,
+  disc?: PIVOTDISCRETIZATION,
 ): number {
   const ix = src % w
   const iy = Math.floor(src / w)
-  const p = pivotcellmishin(ix, iy, w, h, theta)
+  const p = pivotcellmishin(ix, iy, w, h, theta, undefined, undefined, disc)
+  return p.x + p.y * w
+}
+
+/** Taper / legacy pivot linear index map for bijection tests. */
+export function pivotlegacytapermapindex(
+  src: number,
+  w: number,
+  h: number,
+  theta: number,
+  disc?: PIVOTDISCRETIZATION,
+): number {
+  const ix = src % w
+  const iy = Math.floor(src / w)
+  const p = pivotcell(ix, iy, w, h, theta, disc)
   return p.x + p.y * w
 }
 

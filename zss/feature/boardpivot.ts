@@ -3,6 +3,9 @@ import {
   pivotcellmishin,
   pivotposmodi,
 } from 'zss/feature/boardpivotmath'
+import type { PIVOTDISCRETIZATION } from 'zss/feature/boardpivotmath'
+
+export type { PIVOTDISCRETIZATION } from 'zss/feature/boardpivotmath'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
@@ -110,6 +113,7 @@ function boardpivotapplyregion(
   cy: number,
   pivotobject: boolean,
   pivotterrain: boolean,
+  disc?: PIVOTDISCRETIZATION,
 ) {
   const w = BOARD_WIDTH
   const h = BOARD_HEIGHT
@@ -122,7 +126,7 @@ function boardpivotapplyregion(
   if (pivotterrain) {
     for (let y = p1.y; y <= p2.y; ++y) {
       for (let x = p1.x; x <= p2.x; ++x) {
-        const dest = pivotcellmishin(x, y, w, h, theta, cx, cy)
+        const dest = pivotcellmishin(x, y, w, h, theta, cx, cy, disc)
         const destidx = dest.x + dest.y * w
         const srcidx = x + y * w
         tmpboard.terrain[destidx] = origterrain[srcidx]
@@ -153,7 +157,7 @@ function boardpivotapplyregion(
       if (x < p1.x || x > p2.x || y < p1.y || y > p2.y) {
         continue
       }
-      const dest = pivotcellmishin(x, y, w, h, theta, cx, cy)
+      const dest = pivotcellmishin(x, y, w, h, theta, cx, cy, disc)
       el.x = dest.x
       el.y = dest.y
       el.lx = dest.x
@@ -169,6 +173,7 @@ function boardpivotfullboardapply(
   theta: number,
   pivotobject: boolean,
   pivotterrain: boolean,
+  disc?: PIVOTDISCRETIZATION,
 ) {
   const tmpboard = memorycreateboard()
   memoryinitboard(tmpboard)
@@ -176,6 +181,7 @@ function boardpivotfullboardapply(
     BOARD_WIDTH,
     BOARD_HEIGHT,
     theta,
+    disc,
   )
   const transformset = [xedge, yedge, xedge]
   for (let i = 0; i < transformset.length; ++i) {
@@ -243,6 +249,7 @@ function boardpivotrectangle(
   p2: PT,
   pivotobject: boolean,
   pivotterrain: boolean,
+  disc?: PIVOTDISCRETIZATION,
 ) {
   const { cx, cy } = boundingcenterfromrect(p1, p2)
   boardpivotapplyregion(
@@ -254,6 +261,7 @@ function boardpivotrectangle(
     cy,
     pivotobject,
     pivotterrain,
+    disc,
   )
 }
 
@@ -262,6 +270,7 @@ export function boardpivotgroup(
   theta: number,
   self: string,
   targetgroup: string,
+  disc?: PIVOTDISCRETIZATION,
 ) {
   if (!ispresent(READ_CONTEXT.book)) {
     return false
@@ -317,7 +326,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const t = terrainelements[i]
     const from: PT = { x: t.x ?? -1, y: t.y ?? -1 }
-    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy, disc)
 
     if (memoryptwithinboard(dest)) {
       const destelement = memoryreadelement(targetboard, dest)
@@ -360,7 +369,7 @@ export function boardpivotgroup(
       'collision',
     )
     const from: PT = { x: fromelement.x ?? 0, y: fromelement.y ?? 0 }
-    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy, disc)
     if (memoryptwithinboard(dest)) {
       const destelement = memoryreadelement(targetboard, dest)
       const destid = destelement?.id ?? ''
@@ -416,7 +425,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy, disc)
     destindices.add(pttoindex(dest, BOARD_WIDTH))
   }
 
@@ -424,7 +433,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
+    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy, disc)
     const destidx = pttoindex(dest, BOARD_WIDTH)
     const moved = deepcopy({
       ...fromelement,
@@ -473,8 +482,8 @@ export function boardpivotgroup(
   memoryinitboard(targetboard)
 
   objectelements.sort((a, b) => {
-    const da = pivotcellmishin(a.x ?? 0, a.y ?? 0, w, h, theta, cx, cy)
-    const db = pivotcellmishin(b.x ?? 0, b.y ?? 0, w, h, theta, cx, cy)
+    const da = pivotcellmishin(a.x ?? 0, a.y ?? 0, w, h, theta, cx, cy, disc)
+    const db = pivotcellmishin(b.x ?? 0, b.y ?? 0, w, h, theta, cx, cy, disc)
     return pttoindex(db, BOARD_WIDTH) - pttoindex(da, BOARD_WIDTH)
   })
 
@@ -486,7 +495,7 @@ export function boardpivotgroup(
     const oy = snap?.y ?? fromelement.y ?? 0
     const olx = snap?.lx ?? fromelement.lx ?? 0
     const oly = snap?.ly ?? fromelement.ly ?? 0
-    const dest = pivotcellmishin(ox, oy, w, h, theta, cx, cy)
+    const dest = pivotcellmishin(ox, oy, w, h, theta, cx, cy, disc)
     if (!boardmovement.memorymoveobject(book, targetboard, fromelement, dest)) {
       const restored = memoryimportboard(rollback)
       if (ispresent(restored)) {
@@ -511,6 +520,7 @@ export function boardpivot(
   p2: PT,
   self: string,
   targetset: string,
+  disc?: PIVOTDISCRETIZATION,
 ) {
   if (!ispresent(READ_CONTEXT.book)) {
     return false
@@ -526,7 +536,7 @@ export function boardpivot(
     case 'terrain':
       break
     default:
-      return boardpivotgroup(target, theta, self, targetset)
+      return boardpivotgroup(target, theta, self, targetset, disc)
   }
 
   const pivotobject = targetset === 'all' || targetset === 'object'
@@ -534,9 +544,23 @@ export function boardpivot(
   memoryinitboard(targetboard)
 
   if (isfullboardrect(p1, p2)) {
-    boardpivotfullboardapply(targetboard, theta, pivotobject, pivotterrain)
+    boardpivotfullboardapply(
+      targetboard,
+      theta,
+      pivotobject,
+      pivotterrain,
+      disc,
+    )
   } else {
-    boardpivotrectangle(targetboard, theta, p1, p2, pivotobject, pivotterrain)
+    boardpivotrectangle(
+      targetboard,
+      theta,
+      p1,
+      p2,
+      pivotobject,
+      pivotterrain,
+      disc,
+    )
   }
 
   return true

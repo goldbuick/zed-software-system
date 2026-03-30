@@ -1,11 +1,14 @@
 import { boardpivot, boardpivotgroup } from 'zss/feature/boardpivot'
 import {
+  PIVOT_SHEAR_SCALE_DEFAULT,
   pivotbuildintegeredges,
   pivotcell,
   pivotcellinteger,
   pivotcellmishin,
   pivotcellmishinvslegacydiffcount,
+  pivotlegacytapermapindex,
   pivotmishinmapindex,
+  pivotresolvedisc,
   pivotthetanearsingular,
 } from 'zss/feature/boardpivotmath'
 import { readtransformfilter } from 'zss/firmware/transforms'
@@ -145,6 +148,57 @@ describe('boardpivotmath', () => {
     }
     expect(seen.size).toBe(w * h)
   })
+
+  it('pivotlegacytapermapindex matches pivotcellinteger with built edges (default disc)', () => {
+    const w = 12
+    const h = 8
+    const theta = (-45 * Math.PI) / 180
+    const { xedge, yedge } = pivotbuildintegeredges(w, h, theta)
+    for (let i = 0; i < w * h; ++i) {
+      const ix = i % w
+      const iy = Math.floor(i / w)
+      const p = pivotcellinteger(ix, iy, w, h, xedge, yedge)
+      expect(pivotlegacytapermapindex(i, w, h, theta)).toBe(p.x + p.y * w)
+    }
+  })
+
+  it('default pivotresolvedisc matches legacy constants', () => {
+    expect(pivotresolvedisc(undefined)).toEqual({
+      shearscale: PIVOT_SHEAR_SCALE_DEFAULT,
+      edgeround: 'round',
+      mishinround: 'round',
+    })
+  })
+
+  it('taper floor edges differ from round for some angles', () => {
+    let found = false
+    for (const t of [0.15, 0.4, 0.9, 1.2]) {
+      const a = pivotbuildintegeredges(30, 22, t)
+      const b = pivotbuildintegeredges(30, 22, t, { edgeround: 'floor' })
+      if (a.xedge.join(',') !== b.xedge.join(',')) {
+        found = true
+        break
+      }
+    }
+    expect(found).toBe(true)
+  })
+
+  it('mishin floor differs from default round on some cells at -45°', () => {
+    const w = 12
+    const h = 8
+    const theta = (-45 * Math.PI) / 180
+    let diff = 0
+    for (let i = 0; i < w * h; ++i) {
+      if (
+        pivotmishinmapindex(i, w, h, theta) !==
+        pivotmishinmapindex(i, w, h, theta, { mishinround: 'floor' })
+      ) {
+        ++diff
+      }
+    }
+    expect(diff).toBeGreaterThan(0)
+  })
+
 })
 
 function assertmishinbijection(w: number, h: number, theta: number) {
