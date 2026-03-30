@@ -40,9 +40,7 @@ function shoulde2ebridge(): boolean {
   if (q === '1' || q === 'true') {
     return true
   }
-  return (
-    import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
-  )
+  return import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
 }
 
 async function bootheadless(): Promise<void> {
