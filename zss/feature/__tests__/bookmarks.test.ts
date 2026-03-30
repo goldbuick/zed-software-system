@@ -1,8 +1,8 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apitoast, vmcli } from 'zss/device/api'
 import {
-  runterminalbookmarkclibyid,
   ZSS_BOOKMARKS_KEY,
+  runterminalbookmarkclibyid,
 } from 'zss/feature/bookmarks'
 import { storagereadvars } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'

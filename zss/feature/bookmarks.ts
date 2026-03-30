@@ -1,9 +1,9 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apitoast, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { useTape } from 'zss/gadget/data/state'
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
+import { useTape } from 'zss/gadget/data/state'
 import { createpid } from 'zss/mapping/guid'
 import { deepcopy, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
@@ -288,11 +288,7 @@ export async function runterminalbookmarkclibyid(
   }
   const preview = rawline.length > 48 ? `${rawline.slice(0, 48)}…` : rawline
   const tape = useTape.getState()
-  if (
-    tape.quickterminal ||
-    tape.terminal.open ||
-    tape.editor.open
-  ) {
+  if (tape.quickterminal || tape.terminal.open || tape.editor.open) {
     apitoast(toastdevice, player, `bookmark run $cyan${preview}$white`)
   }
   vmcli(SOFTWARE, player, rawline)
