@@ -198,7 +198,6 @@ describe('boardpivotmath', () => {
     }
     expect(diff).toBeGreaterThan(0)
   })
-
 })
 
 function assertmishinbijection(w: number, h: number, theta: number) {
@@ -464,12 +463,12 @@ describe('boardpivotgroup', () => {
 
     const ok = boardpivotgroup('bp_rider', theta, '', 'ridegrp')
     expect(ok).toBe(true)
-    const rider = b.objects['rider_a']
+    const rider = b.objects.rider_a
     expect(rider).toBeDefined()
-    expect(rider!.x).toBe(expectpt.x)
-    expect(rider!.y).toBe(expectpt.y)
-    expect(rider!.lx).toBeCloseTo(0.25 + (expectpt.x - ox))
-    expect(rider!.ly).toBeCloseTo(-0.5 + (expectpt.y - oy))
+    expect(rider.x).toBe(expectpt.x)
+    expect(rider.y).toBe(expectpt.y)
+    expect(rider.lx).toBeCloseTo(0.25 + (expectpt.x - ox))
+    expect(rider.ly).toBeCloseTo(-0.5 + (expectpt.y - oy))
   })
 })
 

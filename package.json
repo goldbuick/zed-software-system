@@ -13,6 +13,7 @@
     "sloc": "npx sloc -e .js zss",
     "test": "yarn jest --verbose",
     "test:e2e": "playwright test",
+    "test:e2e:all-browsers": "PLAYWRIGHT_ALL_BROWSERS=1 playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install chromium firefox webkit",
     "lint": "eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",

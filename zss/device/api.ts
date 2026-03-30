@@ -55,6 +55,21 @@ export function apilog(device: DEVICELIKE, player: string, ...message: any[]) {
   return true
 }
 
+/** Worker → client hook for Playwright E2E: loader lifecycle (forwarded as `register:e2eloaderevent`). */
+export type E2E_LOADER_NOTIFY = {
+  phase: 'start' | 'done'
+  eventname: string
+  format: string
+}
+
+export function apie2eloadernotify(
+  device: DEVICELIKE,
+  player: string,
+  detail: E2E_LOADER_NOTIFY,
+) {
+  device.emit(player, 'register:e2eloaderevent', detail)
+}
+
 export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
   device.emit(board, 'chat', message)
   return true

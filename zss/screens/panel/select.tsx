@@ -44,7 +44,7 @@ export function PanelSelect({
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
-  tokenizeandwritetextformat(`$dkred ? ${tcolor}${tlabel} `, context, false)
+  tokenizeandwritetextformat(`$dkred ?  ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
   const knob = active ? '$BLWHITE$26$WHITE' : '/'

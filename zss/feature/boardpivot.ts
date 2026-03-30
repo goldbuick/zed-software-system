@@ -1,11 +1,9 @@
 import {
+  type PIVOTDISCRETIZATION,
   pivotbuildintegeredges,
   pivotcellmishin,
   pivotposmodi,
 } from 'zss/feature/boardpivotmath'
-import type { PIVOTDISCRETIZATION } from 'zss/feature/boardpivotmath'
-
-export type { PIVOTDISCRETIZATION } from 'zss/feature/boardpivotmath'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
@@ -565,3 +563,5 @@ export function boardpivot(
 
   return true
 }
+
+export type { PIVOTDISCRETIZATION } from 'zss/feature/boardpivotmath'

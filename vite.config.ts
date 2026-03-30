@@ -81,7 +81,10 @@ export default defineConfig(({ mode }) => {
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
     ],
-    define: zssdefine,
+    define: {
+      ...zssdefine,
+      'import.meta.env.ZSS_E2E': JSON.stringify(process.env.ZSS_E2E ?? ''),
+    },
     resolve: {
       alias: {
         zss: path.resolve(__dirname, './zss'),

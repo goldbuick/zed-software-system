@@ -321,9 +321,9 @@ export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch cutall:${area} hk 1 " 1 " next;cut terrain & objects`,
-    `!@batch cutobjects:${area} hk 2 " 2 " next;cut objects`,
-    `!@batch cutterrain:${area} hk 3 " 3 " next;cut terrain`,
+    `!@batch cutall:${area} hk 1 " 1 ";cut terrain & objects`,
+    `!@batch cutobjects:${area} hk 2 " 2 ";cut objects`,
+    `!@batch cutterrain:${area} hk 3 " 3 ";cut terrain`,
   ]
   scrollwritelines(player, 'cut', lines.join('\n'), 'batch')
 }

@@ -39,7 +39,9 @@ export function pivotresolvedisc(disc?: PIVOTDISCRETIZATION): {
 }
 
 /** Map firmware keyword (after `NAME()`) to discretization; unknown → undefined. */
-export function pivotdiscfromkeyword(name: string): PIVOTDISCRETIZATION | undefined {
+export function pivotdiscfromkeyword(
+  name: string,
+): PIVOTDISCRETIZATION | undefined {
   switch (name) {
     case 'taper_floor':
       return { edgeround: 'floor' }

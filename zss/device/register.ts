@@ -882,6 +882,17 @@ export const register = createdevice(
           useInspector.setState({ pts: message.data })
         }
         break
+      case 'e2eloaderevent':
+        if (
+          typeof window !== 'undefined' &&
+          message.data &&
+          typeof message.data === 'object'
+        ) {
+          window.dispatchEvent(
+            new CustomEvent('zss:e2e-loader', { detail: message.data }),
+          )
+        }
+        break
       case 'log':
         terminaladdlog(message)
         break

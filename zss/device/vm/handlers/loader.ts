@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, TEXT_READER } from 'zss/device/api'
-import { apilog, heavymodelprompt } from 'zss/device/api'
+import { apie2eloadernotify, apilog, heavymodelprompt } from 'zss/device/api'
 import { lastinputtime } from 'zss/device/vm/state'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -148,11 +148,35 @@ function routechattoagents(
   }
 }
 
+function e2eloaderstrings(
+  eventname: unknown,
+  format: unknown,
+): { eventname: string; format: string } {
+  return {
+    eventname: isstring(eventname)
+      ? eventname
+      : typeof eventname === 'number' || typeof eventname === 'boolean'
+        ? String(eventname)
+        : '',
+    format: isstring(format)
+      ? format
+      : typeof format === 'number' || typeof format === 'boolean'
+        ? String(format)
+        : '',
+  }
+}
+
 export function handleloader(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }
   const [arg, format, eventname, content] = message.data
+  const ef = e2eloaderstrings(eventname, format)
+  apie2eloadernotify(vm, message.player, {
+    phase: 'start',
+    eventname: ef.eventname,
+    format: ef.format,
+  })
   if (memoryreadconfig('loaderlogging') === 'on') {
     console.info('loader event', eventname, format, arg, content)
     apilog(vm, message.player, `loader event ${eventname} ${format}`)
@@ -189,6 +213,12 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
       memoryloader(arg, format, eventname, content, message.player)
       break
   }
+
+  apie2eloadernotify(vm, message.player, {
+    phase: 'done',
+    eventname: ef.eventname,
+    format: ef.format,
+  })
 
   if (
     isstring(eventname) &&

@@ -28,8 +28,22 @@ import { isjoin } from 'zss/feature/url'
 import { useDeviceData } from 'zss/gadget/device'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
+import { installe2ebridge } from 'zss/testsupport/e2escrollbridge'
 
 import { App } from './app'
+
+function shoulde2ebridge(): boolean {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  const q = new URLSearchParams(window.location.search).get('ZSS_E2E')
+  if (q === '1' || q === 'true') {
+    return true
+  }
+  return (
+    import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
+  )
+}
 
 async function bootheadless(): Promise<void> {
   const g = globalThis as any
@@ -54,6 +68,10 @@ async function main() {
   }
 
   await import('zss/userspace')
+
+  if (shoulde2ebridge()) {
+    installe2ebridge()
+  }
 
   extend({
     Mesh,
