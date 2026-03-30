@@ -4,9 +4,10 @@
  * References: https://moddingwiki.shikadi.net/wiki/ZZT_Format
  * - ZZT world: WorldType int16 LE === -1 (0xFFFF); board list starts at offset 512 (0x200).
  * - Super ZZT world: WorldType === -2 (0xFFFE); boards at offset 1024 (0x400); boards are 96×80 tiles.
- * - RLE tiles: count (0 in this codebase means “fill remainder” for ZZT-sized boards = 1500 tiles),
+ * - RLE tiles: count 0 means fill the remaining cells on the board (same as classic ZZT encoders’ last run),
  *   element id, color — repeated until board full.
  * - Stat count: stored value + 1 is the number of status elements (“thanks TIM”).
+ * - BoardSize may under-report the payload (copy protection / corruption); import uses max(declared end, parsed end).
  *
  * Super ZZT boards are cropped to the engine BOARD_WIDTH × BOARD_HEIGHT (60×25) on import.
  */
@@ -107,9 +108,6 @@ const ZZT_BOARD_SIZE = ZZT_BOARD_WIDTH * ZZT_BOARD_HEIGHT
 const SZZT_BOARD_WIDTH = 96
 const SZZT_BOARD_HEIGHT = 80
 const SZZT_BOARD_SIZE = SZZT_BOARD_WIDTH * SZZT_BOARD_HEIGHT
-
-/** RLE count 0: ZZT decoder convention used here — fills remaining cells on a 60×25 board. */
-const ZZT_RLE_ZERO_AS_TILES = ZZT_BOARD_SIZE
 
 const ZZT_MAX_BOARDS = 128
 const ZZT_MAX_STATS_PER_BOARD = 2048
@@ -270,20 +268,17 @@ function readboardbytes(
     stats: [],
   }
 
-  const rlezerofill =
-    layout.kind === 'zzt' ? ZZT_RLE_ZERO_AS_TILES : SZZT_BOARD_SIZE
-
   while (board.elements.length < layout.tilesize) {
     if (reader.haserror()) {
       return null
     }
     let count = reader.readuint8()
+    const room = layout.tilesize - board.elements.length
     if (count === 0) {
-      count = rlezerofill
+      count = room
     }
     const element = reader.readuint8()
     const color = reader.readuint8()
-    const room = layout.tilesize - board.elements.length
     if (count > room) {
       reader.seterror('invalid RLE run (overflow)')
       return null
@@ -355,12 +350,14 @@ function readboardbytes(
     board.stats.push(stat)
   }
 
-  const endpos = start + boardsize + 2
-  if (endpos > reader.bytelimit || endpos < reader.index()) {
+  const actual = reader.index()
+  const declared = start + boardsize + 2
+  const nextpos = Math.max(actual, declared)
+  if (nextpos > reader.bytelimit) {
     reader.seterror('invalid board size field')
     return null
   }
-  reader.seek(endpos)
+  reader.seek(nextpos)
   return board
 }
 
