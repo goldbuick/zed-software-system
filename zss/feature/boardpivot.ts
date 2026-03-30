@@ -50,6 +50,7 @@ function boundingcenterfromrect(p1: PT, p2: PT): { cx: number; cy: number } {
   }
 }
 
+/** Axis-aligned bbox in flat coordinates; if the group wraps the torus, center is not torus-aware. */
 function boundingcenterfromgroupelements(
   terrainelements: BOARD_ELEMENT[],
   objectelements: BOARD_ELEMENT[],
@@ -391,6 +392,23 @@ export function boardpivotgroup(
     return false
   }
 
+  const objectpivotorig = new Map<
+    string,
+    { x: number; y: number; lx: number; ly: number }
+  >()
+  for (let i = 0; i < objectelements.length; ++i) {
+    const el = objectelements[i]
+    const id = el.id ?? ''
+    if (id !== '' && objectpivotorig.has(id) !== true) {
+      objectpivotorig.set(id, {
+        x: el.x ?? 0,
+        y: el.y ?? 0,
+        lx: el.lx ?? 0,
+        ly: el.ly ?? 0,
+      })
+    }
+  }
+
   const rollback = memoryexportboard(targetboard)
   const gset = new Set(groupindexes)
   const oldterrain = targetboard.terrain
@@ -454,26 +472,6 @@ export function boardpivotgroup(
   delete targetboard.distmaps
   memoryinitboard(targetboard)
 
-  for (let i = 0; i < terrainelements.length; ++i) {
-    const fromelement = terrainelements[i]
-    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
-    const ddx = dest.x - from.x
-    const ddy = dest.y - from.y
-    const maybefromobject = memoryreadelement(targetboard, from, true)
-    if (
-      memoryboardelementisobject(maybefromobject) &&
-      ispresent(maybefromobject)
-    ) {
-      maybefromobject.x = (maybefromobject.x ?? 0) + ddx
-      maybefromobject.y = (maybefromobject.y ?? 0) + ddy
-      maybefromobject.lx = (maybefromobject.lx ?? 0) + ddx
-      maybefromobject.ly = (maybefromobject.ly ?? 0) + ddy
-    }
-  }
-
-  memoryinitboard(targetboard)
-
   objectelements.sort((a, b) => {
     const da = pivotcellmishin(a.x ?? 0, a.y ?? 0, w, h, theta, cx, cy)
     const db = pivotcellmishin(b.x ?? 0, b.y ?? 0, w, h, theta, cx, cy)
@@ -482,8 +480,13 @@ export function boardpivotgroup(
 
   for (let i = 0; i < objectelements.length; ++i) {
     const fromelement = objectelements[i]
-    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy)
+    const id = fromelement.id ?? ''
+    const snap = objectpivotorig.get(id)
+    const ox = snap?.x ?? fromelement.x ?? 0
+    const oy = snap?.y ?? fromelement.y ?? 0
+    const olx = snap?.lx ?? fromelement.lx ?? 0
+    const oly = snap?.ly ?? fromelement.ly ?? 0
+    const dest = pivotcellmishin(ox, oy, w, h, theta, cx, cy)
     if (!boardmovement.memorymoveobject(book, targetboard, fromelement, dest)) {
       const restored = memoryimportboard(rollback)
       if (ispresent(restored)) {
@@ -493,6 +496,8 @@ export function boardpivotgroup(
       }
       return false
     }
+    fromelement.lx = olx + (dest.x - ox)
+    fromelement.ly = oly + (dest.y - oy)
   }
 
   memoryinitboard(targetboard)

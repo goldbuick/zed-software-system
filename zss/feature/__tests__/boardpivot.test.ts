@@ -11,7 +11,10 @@ import {
 import { readtransformfilter } from 'zss/firmware/transforms'
 import { indextopt } from 'zss/mapping/2d'
 import { memoryreadterrain } from 'zss/memory/boardaccess'
-import { memorycreateboard } from 'zss/memory/boardlifecycle'
+import {
+  memorycreateboard,
+  memorycreateboardobject,
+} from 'zss/memory/boardlifecycle'
 import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryresetbooks } from 'zss/memory/session'
 import {
@@ -363,6 +366,56 @@ describe('boardpivotgroup', () => {
     const vac0 = vacated[0]
     const vacpt = indextopt(vac0, BOARD_WIDTH)
     expect(terrainat(b, vacpt)?.kind).toBe('floor')
+  })
+
+  it('moves object on group terrain by one Mishin pivot and shifts lx/ly once', () => {
+    const board = memorycreateboard()
+    const y = 4
+    const xleft = 11
+    for (let x = xleft; x <= xleft + 2; ++x) {
+      board.terrain[x + y * BOARD_WIDTH] = {
+        kind: `tg${x}`,
+        x,
+        y,
+        collision: COLLISION.ISWALK,
+        group: 'ridegrp',
+      }
+    }
+    const ox = xleft
+    const oy = y
+    const cx = xleft + 1
+    const cy = y
+    const theta = Math.PI / 4
+    const expectpt = pivotcellmishin(
+      ox,
+      oy,
+      BOARD_WIDTH,
+      BOARD_HEIGHT,
+      theta,
+      cx,
+      cy,
+    )
+    memorycreateboardobject(board, {
+      id: 'rider_a',
+      kind: 'rider',
+      x: ox,
+      y: oy,
+      lx: 0.25,
+      ly: -0.5,
+      collision: COLLISION.ISWALK,
+    })
+    installbookwithboard('bp_rider', board)
+    const b = memoryreadboardbyaddress('bp_rider')!
+    memoryinitboard(b)
+
+    const ok = boardpivotgroup('bp_rider', theta, '', 'ridegrp')
+    expect(ok).toBe(true)
+    const rider = b.objects['rider_a']
+    expect(rider).toBeDefined()
+    expect(rider!.x).toBe(expectpt.x)
+    expect(rider!.y).toBe(expectpt.y)
+    expect(rider!.lx).toBeCloseTo(0.25 + (expectpt.x - ox))
+    expect(rider!.ly).toBeCloseTo(-0.5 + (expectpt.y - oy))
   })
 })
 
