@@ -717,6 +717,14 @@ export function memoryinspectelement(
   ]
   lines.push(`!${grouptokens.join(' ')};group`)
   lines.push(...memoryinspectloaderlines(p1, p1))
+  if (ispresent(codepage)) {
+    const name = memoryreadcodepagename(codepage)
+    const type = memoryreadcodepagetypeasstring(codepage)
+    const prefix = memorycodepagetoprefix(codepage)
+    lines.push(
+      `!@batch pageopen:${codepage.id};edit $blue[${type}] ${prefix}$white${name}${codepagepicksuffix(codepage)}`,
+    )
+  }
   lines.push(...memoryinspectboardlines(board.id))
 
   scrollwritelines(player, 'inspect', lines.join('\n'), chip)
