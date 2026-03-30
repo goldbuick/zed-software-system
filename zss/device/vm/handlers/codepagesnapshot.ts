@@ -1,17 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import { type MESSAGE, vmcodeaddress } from 'zss/device/api'
-import { modemreadcodepagetextifpresent } from 'zss/device/modem'
-import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardaccess'
-import { memoryreadcodepage } from 'zss/memory/bookoperations'
-import {
-  memoryreadcodepagedata,
-  memoryreadcodepagetype,
-} from 'zss/memory/codepageoperations'
-import { memoryreadbookbyaddress } from 'zss/memory/session'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import type { MESSAGE } from 'zss/device/api'
 
-export function handlecodepagesnapshot(vm: DEVICE, message: MESSAGE): void {
+export function handlecodepagesnapshot(_vm: DEVICE, message: MESSAGE): void {
   console.info('handlecodepagesnapshot', message.data)
   // if (!isarray(message.data)) {
   //   vm.replynext(message, 'ackcodepagesnapshot', null)

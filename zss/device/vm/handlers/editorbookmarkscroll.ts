@@ -1,19 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import {
-  apitoast,
-  registereditoropen,
-  vmclearscroll,
-  vmcodepagesnapshot,
-} from 'zss/device/api'
-import { GAME_BOOKMARK_TARGET_BOOK } from 'zss/feature/bookmarks'
-import { createsid } from 'zss/mapping/guid'
-import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memorywritecodepage } from 'zss/memory/bookoperations'
-import { memoryensurebookbyname } from 'zss/memory/books'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
-import type { CODE_PAGE } from 'zss/memory/types'
 
 export function handleeditorbookmarkscroll(
   _vm: DEVICE,
@@ -37,7 +26,7 @@ export function handleeditorbookmarkscroll(
 }
 
 export function handleeditorbookmarkscrollpanel(
-  vm: DEVICE,
+  _vm: DEVICE,
   message: MESSAGE,
   path: string,
 ): void {

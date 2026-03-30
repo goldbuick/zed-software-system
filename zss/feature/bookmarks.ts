@@ -5,7 +5,7 @@ import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { createpid } from 'zss/mapping/guid'
-import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
 
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'

@@ -5,7 +5,6 @@ import {
   BOOKMARK_SCROLL_CHIP,
   ZSS_BOOKMARKS_KEY,
   ZssTerminalBookmark,
-  appendeditorbookmark,
   appendterminalbookmark,
   appendurlbookmark,
   readbookmarksfromstorage,
@@ -415,7 +414,7 @@ export const register = createdevice(
         break
       }
       case 'ackcodepagesnapshot': {
-        doasync(register, message.player, async () => {
+        doasync(register, message.player, () => {
           console.info('ackcodepagesnapshot', message.data)
           // const d = message.data as Record<string, unknown> | null | undefined
           // if (!d || typeof d !== 'object') {
@@ -441,6 +440,7 @@ export const register = createdevice(
           //   codepage,
           // })
           // apitoast(register, myplayerid, `bookmarked editor $green${title}`)
+          return Promise.resolve()
         })
         break
       }
