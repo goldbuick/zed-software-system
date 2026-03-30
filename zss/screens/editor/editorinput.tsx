@@ -430,16 +430,8 @@ export function EditorInput({
                     }
                     break
                   case 'b': {
-                    const ed = useTape.getState().editor
-                    const opener = ed.open
-                      ? {
-                          book: ed.book,
-                          path: ed.path.filter(isstring),
-                          type: ed.type,
-                          title: ed.title,
-                        }
-                      : EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY
-                    registereditorbookmarkscroll(SOFTWARE, player, opener)
+                    const { title, path } = useTape.getState().editor
+                    registereditorbookmarkscroll(SOFTWARE, player, title, path)
                     break
                   }
                   case `'`:

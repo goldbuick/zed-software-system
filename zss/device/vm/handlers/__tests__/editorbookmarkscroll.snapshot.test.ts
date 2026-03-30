@@ -10,7 +10,7 @@ import {
   tapeeditormirrorreset,
   tapeeditorset,
 } from 'zss/device/vm/tapeeditormirror'
-import { EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY } from 'zss/feature/bookmarks'
+import { EDITOR_BOOKMARK_SCROLL_OPENER_NAMEPATH_EMPTY } from 'zss/feature/bookmarks'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 
 jest.mock('zss/device/api', () => {
@@ -141,10 +141,8 @@ describe('handleeditorbookmarkscroll envelope', () => {
       },
     })
     expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(player, [], {
-      book: 'main',
+      name: 'main',
       path: ['page1'],
-      type: 'board',
-      title: 'T',
     })
   })
 
@@ -153,7 +151,7 @@ describe('handleeditorbookmarkscroll envelope', () => {
     expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(
       player,
       [],
-      EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY,
+      EDITOR_BOOKMARK_SCROLL_OPENER_NAMEPATH_EMPTY,
     )
   })
 })

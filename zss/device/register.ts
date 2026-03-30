@@ -8,7 +8,6 @@ import {
   appendeditorbookmark,
   appendterminalbookmark,
   appendurlbookmark,
-  parseeditorbookmarkscrollopener,
   readbookmarksfromstorage,
   readterminalbookmarkdisplaylines,
   removebookmarkbyid,
@@ -417,33 +416,31 @@ export const register = createdevice(
       }
       case 'ackcodepagesnapshot': {
         doasync(register, message.player, async () => {
-          const d = message.data as Record<string, unknown> | null | undefined
-          if (!d || typeof d !== 'object') {
-            return
-          }
-          const book = d.book
-          const path = d.path
-          const type = d.type
-          const title = d.title
-          const codepage = d.codepage
-          if (
-            !isstring(book) ||
-            !isarray(path) ||
-            !isstring(type) ||
-            !isstring(title)
-          ) {
-            apitoast(register, myplayerid, 'bookmark snapshot failed')
-            return
-          }
-          const pathstrs = path.filter(isstring)
-          await appendeditorbookmark({
-            book,
-            path: pathstrs,
-            type,
-            title,
-            codepage,
-          })
-          apitoast(register, myplayerid, `bookmarked editor $green${title}`)
+          console.info('ackcodepagesnapshot', message.data)
+          // const d = message.data as Record<string, unknown> | null | undefined
+          // if (!d || typeof d !== 'object') {
+          //   return
+          // }
+          // const book = d.book
+          // const path = d.path
+          // const type = d.type
+          // const title = d.title
+          // const codepage = d.codepage
+          // if (
+          //   !isstring(book) ||
+          //   !isarray(path) ||
+          //   !isstring(type) ||
+          //   !isstring(title)
+          // ) {
+          //   apitoast(register, myplayerid, 'bookmark snapshot failed')
+          //   return
+          // }
+          // await appendeditorbookmark({
+          //   type,
+          //   title,
+          //   codepage,
+          // })
+          // apitoast(register, myplayerid, `bookmarked editor $green${title}`)
         })
         break
       }
@@ -455,9 +452,19 @@ export const register = createdevice(
         break
       case 'editorbookmarkscroll':
         doasync(register, message.player, async () => {
-          const blob = await readbookmarksfromstorage()
-          const opener = parseeditorbookmarkscrollopener(message.data)
-          vmeditorbookmarkscroll(register, myplayerid, blob.editor, opener)
+          if (isarray(message.data)) {
+            const [codepagename, codepagepath] = message.data
+            if (isstring(codepagename) && isarray(codepagepath)) {
+              const blob = await readbookmarksfromstorage()
+              vmeditorbookmarkscroll(
+                register,
+                myplayerid,
+                blob.editor,
+                codepagename,
+                codepagepath,
+              )
+            }
+          }
         })
         break
       case 'bookmark:urlsave':

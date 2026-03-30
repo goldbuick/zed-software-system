@@ -5,7 +5,7 @@ import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { createpid } from 'zss/mapping/guid'
-import { deepcopy, isarray, isstring } from 'zss/mapping/types'
+import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
 
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'
@@ -36,26 +36,17 @@ export type Editorbookmarkscrollopener = {
   title: string
 }
 
-export const EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY: Editorbookmarkscrollopener = {
-  book: '',
-  path: [],
-  type: '',
-  title: '',
+/** Book name + path only; used by `memoryeditorbookmarkscroll` for the scroll chip. */
+export type Editorbookmarkscrollopenernamepath = {
+  name: string
+  path: string[]
 }
 
-export function parseeditorbookmarkscrollopener(
-  raw: unknown,
-): Editorbookmarkscrollopener {
-  if (!raw || typeof raw !== 'object' || isarray(raw)) {
-    return { ...EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY }
+export const EDITOR_BOOKMARK_SCROLL_OPENER_NAMEPATH_EMPTY: Editorbookmarkscrollopenernamepath =
+  {
+    name: '',
+    path: [],
   }
-  const o = raw as Record<string, unknown>
-  const book = isstring(o.book) ? o.book : ''
-  const path = isarray(o.path) ? o.path.filter(isstring) : []
-  const type = isstring(o.type) ? o.type : ''
-  const title = isstring(o.title) ? o.title : ''
-  return { book, path, type, title }
-}
 
 export const BOOKMARKS_VERSION = 1
 
@@ -86,8 +77,6 @@ export type ZssTerminalBookmark = {
 export type ZssEditorBookmark = {
   kind: 'editor'
   id: string
-  book: string
-  path: string[]
   type: string
   title: string
   codepage: unknown
@@ -167,11 +156,9 @@ function iseditorbookmark(x: unknown): x is ZssEditorBookmark {
   return (
     b.kind === 'editor' &&
     isstring(b.id) &&
-    isstring(b.book) &&
-    Array.isArray(b.path) &&
-    b.path.every(isstring) &&
     isstring(b.type) &&
     isstring(b.title) &&
+    ispresent(b.codepage) &&
     typeof b.createdat === 'number'
   )
 }
@@ -232,8 +219,6 @@ export async function appendterminalbookmark(
 }
 
 export async function appendeditorbookmark(args: {
-  book: string
-  path: string[]
   type: string
   title: string
   codepage: unknown
@@ -241,8 +226,6 @@ export async function appendeditorbookmark(args: {
   const entry: ZssEditorBookmark = {
     kind: 'editor',
     id: createpid(),
-    book: args.book,
-    path: [...args.path],
     type: args.type,
     title: args.title,
     codepage: deepcopy(args.codepage),
