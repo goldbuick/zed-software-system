@@ -50,8 +50,9 @@ export function PanelNumber({
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
+  const prefix = context.iseven ? '$dkgreen$onblack' : '$green$ondkgrey'
   tokenizeandwritetextformat(
-    `$red $29 ${tcolor}${tlabel} $green${clamped}`,
+    `${prefix} $29 $ondkblue ${tcolor}${tlabel} $green${clamped}`,
     context,
     false,
   )

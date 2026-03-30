@@ -44,8 +44,9 @@ export function PanelText({
   const tcolor = inputcolor(active)
 
   // prefix
+  const prefix = context.iseven ? '$dkgreen$onblack' : '$green$ondkgrey'
   tokenizeandwritetextformat(
-    `$green $20 ${tcolor}${tlabel} $green`,
+    `${prefix} $20 $ondkblue ${tcolor}${tlabel} $green`,
     context,
     false,
   )

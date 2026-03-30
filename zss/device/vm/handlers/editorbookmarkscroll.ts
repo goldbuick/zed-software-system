@@ -6,12 +6,12 @@ import {
   vmclearscroll,
   vmcodepagesnapshot,
 } from 'zss/device/api'
+import { tapeeditorget } from 'zss/device/vm/tapeeditormirror'
 import {
   GAME_BOOKMARK_TARGET_BOOK,
   type ZssEditorBookmark,
   normalizebookmarks,
 } from 'zss/feature/bookmarks'
-import { useTape } from 'zss/gadget/data/state'
 import { createsid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
@@ -45,7 +45,7 @@ export function handleeditorbookmarkscrollpanel(
 ): void {
   switch (path) {
     case 'snapshotcurrent': {
-      const ed = useTape.getState().editor
+      const ed = tapeeditorget(message.player)
       if (
         !ed.open ||
         !isstring(ed.book) ||

@@ -92,6 +92,7 @@ import {
   vmoperator,
   vmplayertoken,
   vmpullvarresult,
+  vmtapeeditorclose,
   vmzsswords,
 } from './api'
 import { runbookmarkurlnavigate } from './runbookmarkurlnavigate'
@@ -1002,6 +1003,7 @@ export const register = createdevice(
             open: false,
           },
         }))
+        vmtapeeditorclose(register, message.player)
         break
     }
   },

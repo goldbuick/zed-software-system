@@ -3,6 +3,7 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
+import { tapeeditorset } from 'zss/device/vm/tapeeditormirror'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
@@ -741,6 +742,13 @@ export function registereditoropen(
   title: string,
   scrollto?: number,
 ) {
+  tapeeditorset(player, {
+    open: true,
+    book,
+    path,
+    type,
+    title,
+  })
   device.emit(player, 'register:editor:open', [
     book,
     path,
@@ -752,6 +760,10 @@ export function registereditoropen(
 
 export function registereditorclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:editor:close')
+}
+
+export function vmtapeeditorclose(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:tapeeditorclose')
 }
 
 export function vmoperator(device: DEVICELIKE, player: string) {

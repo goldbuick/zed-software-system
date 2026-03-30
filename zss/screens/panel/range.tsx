@@ -48,7 +48,12 @@ export function PanelRange({
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
-  tokenizeandwritetextformat(`$red $29 ${tcolor}${tlabel} `, context, false)
+  const prefix = context.iseven ? '$dkgreen$onblack' : '$green$ondkgrey'
+  tokenizeandwritetextformat(
+    `${prefix} $29 $ondkblue ${tcolor}${tlabel} `,
+    context,
+    false,
+  )
 
   // write range viewer
   const knob = active ? '$BLWHITE$26$WHITE' : '$4'
