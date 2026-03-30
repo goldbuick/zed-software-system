@@ -81,9 +81,8 @@ export function memoryinspectboardlines(board: string): string[] {
   const boardname = memoryreadcodepagename(boardcodepage)
   const copylabel = scrolllinkescapefrag(`board id ${board}`)
   return [
-    `board ${boardname}:`,
     `!@batch istargetless copyit ${board};${copylabel}`,
-    `!@batch pageopen:${board};edit board codepage`,
+    `!@batch pageopen:${board};edit @board ${boardname}`,
   ]
 }
 
@@ -93,7 +92,7 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
     return []
   }
   const area = ptstoarea(p1, p2)
-  const lines = ['gadget actions:']
+  const lines = []
   for (let i = 0; i < loaders.length; ++i) {
     const codepage = loaders[i]
     const name = memoryreadcodepagename(codepage)
@@ -711,9 +710,7 @@ export function memoryinspectelement(
       .flat(),
   ]
   lines.push(`!${grouptokens.join(' ')};group`)
-
   lines.push(...memoryinspectloaderlines(p1, p1))
-  // lines.push(`codepages:`)
   lines.push(
     `!@batch pageopen:${codepage.id};${scrolllinkescapefrag(`edit @${memoryreadcodepagename(codepage)}`)}`,
   )

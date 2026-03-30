@@ -25,6 +25,6 @@ export default defineConfig({
     command: 'ZSS_E2E=true ZSS_NO_HTTPS=1 yarn dev:vite',
     url: 'http://127.0.0.1:7777',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 180_000,
   },
 })

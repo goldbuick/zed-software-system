@@ -34,6 +34,10 @@ export function installe2ebridge(): void {
   if (typeof window === 'undefined') {
     return
   }
+  const w0 = window as Window & { __zss_e2e?: ZssE2eBridge }
+  if (w0.__zss_e2e) {
+    return
+  }
   const loaderevents: E2E_LOADER_NOTIFY[] = []
   function onloader(ev: Event) {
     const ce = ev as CustomEvent<E2E_LOADER_NOTIFY>
@@ -43,8 +47,7 @@ export function installe2ebridge(): void {
   }
   window.addEventListener('zss:e2e-loader', onloader)
 
-  const w = window as Window & { __zss_e2e: ZssE2eBridge }
-  w.__zss_e2e = {
+  w0.__zss_e2e = {
     getscrollsnapshot() {
       const g = useGadgetClient.getState().gadget
       return {
