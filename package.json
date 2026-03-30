@@ -36,6 +36,13 @@
     "docker:build": "yarn build:cli:linux && docker build --no-cache -t zss:local .",
     "docker:shell": "yarn docker:build && docker run --rm -it --init zss:local ./start.sh",
     "docker:run": "sh scripts/docker-run.sh",
+    "gcp:enable-apis": "sh scripts/gcp-enable-apis.sh",
+    "gcp:artifact-repo": "sh scripts/gcp-artifact-repo.sh",
+    "gcp:push": "sh scripts/gcp-push.sh",
+    "gcp:deploy:run": "sh scripts/gcp-deploy-cloudrun.sh",
+    "gcp:vm:firewall": "sh scripts/gcp-vm-firewall.sh",
+    "gcp:vm:create": "sh scripts/gcp-vm-create.sh",
+    "gcp:vm:docker-run": "sh scripts/gcp-vm-docker-run.sh",
     "postinstall": "patch-package"
   },
   "devDependencies": {
