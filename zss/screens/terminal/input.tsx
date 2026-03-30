@@ -273,6 +273,7 @@ export function TerminalInput({
   function inputstateswitch(switchto: number) {
     const ir = tapeterminal.buffer.length - 1
     const index = clamp(switchto, 0, ir)
+    useTape.setState({ autocompleteindex: -1 })
     useTerminal.setState({
       bufferindex: index,
       scroll: 0,
@@ -596,7 +597,7 @@ export function TerminalInput({
           }
         }}
         MOVE_UP={(mods) => {
-          if (autocompleteactive) {
+          if (autocompleteactive && !mods.ctrl) {
             useTape.setState({
               autocompleteindex: Math.min(
                 autocomplete.suggestions.length - 1,
@@ -613,7 +614,7 @@ export function TerminalInput({
           }
         }}
         MOVE_DOWN={(mods) => {
-          if (autocompleteactive) {
+          if (autocompleteactive && !mods.ctrl) {
             useTape.setState({
               autocompleteindex: Math.max(0, autocompleteindex - 1),
             })
