@@ -5,13 +5,13 @@ import {
   handleeditorbookmarkscroll,
   handleeditorbookmarkscrollpanel,
 } from 'zss/device/vm/handlers/editorbookmarkscroll'
-import { EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY } from 'zss/feature/bookmarks'
-import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 import { handletapeeditorclose } from 'zss/device/vm/handlers/tapeeditorclose'
 import {
   tapeeditormirrorreset,
   tapeeditorset,
 } from 'zss/device/vm/tapeeditormirror'
+import { EDITOR_BOOKMARK_SCROLL_OPENER_EMPTY } from 'zss/feature/bookmarks'
+import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 
 jest.mock('zss/device/api', () => {
   const actual = jest.requireActual('zss/device/api')

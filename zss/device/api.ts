@@ -4,10 +4,10 @@ without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import { tapeeditorset } from 'zss/device/vm/tapeeditormirror'
+import type { Editorbookmarkscrollopener } from 'zss/feature/bookmarks'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
-import type { Editorbookmarkscrollopener } from 'zss/feature/bookmarks'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'

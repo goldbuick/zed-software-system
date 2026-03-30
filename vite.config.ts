@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process'
 import path from 'path'
 
 import react from '@vitejs/plugin-react-swc'
-import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { type Plugin, defineConfig, loadEnv } from 'vite'
 import { analyzer } from 'vite-bundle-analyzer'
 import fullreload from 'vite-plugin-full-reload'
 import mkcert from 'vite-plugin-mkcert'
@@ -25,7 +25,8 @@ function devjavascriptmimetypedev(): Plugin {
           const url = req.url ?? ''
           const needstype =
             req.method === 'GET' &&
-            (url.includes('/node_modules/.vite/deps') || url.includes('/@fs/')) &&
+            (url.includes('/node_modules/.vite/deps') ||
+              url.includes('/@fs/')) &&
             /\.js(\?|#|$)/.test(url)
           if (!needstype) {
             return next()
@@ -35,7 +36,10 @@ function devjavascriptmimetypedev(): Plugin {
             ...args: Parameters<typeof res.end>
           ): ReturnType<typeof res.end> {
             if (!res.headersSent && !res.getHeader('content-type')) {
-              res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+              res.setHeader(
+                'Content-Type',
+                'application/javascript; charset=utf-8',
+              )
             }
             return origend(...args)
           }
