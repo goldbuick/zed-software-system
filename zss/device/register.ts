@@ -527,6 +527,7 @@ export const register = createdevice(
           if (ok) {
             apitoast(register, myplayerid, 'bookmark removed')
             await syncterminalbookmarkpins()
+            vmclearscroll(register, myplayerid)
           }
         })
         break

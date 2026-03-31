@@ -53,9 +53,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
     })
     .command('bookmarkdelete', [ARG_TYPE.NAME, 'bookmark id'], (_, words) => {
       const [id] = readargs(words, 0, [ARG_TYPE.NAME])
-      if (id) {
-        registerbookmarkdelete(SOFTWARE, READ_CONTEXT.elementfocus, `${id}`)
-      }
+      registerbookmarkdelete(SOFTWARE, READ_CONTEXT.elementfocus, id)
       return 0
     })
     .command('screenshot', ['screenshot for capture'], () => {

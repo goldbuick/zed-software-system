@@ -1,5 +1,9 @@
 import type { DEVICE } from 'zss/device'
-import { type MESSAGE, registerbookmarkcodepagesave } from 'zss/device/api'
+import {
+  type MESSAGE,
+  registerbookmarkcodepagesave,
+  registerbookmarkdelete,
+} from 'zss/device/api'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadcodepagename,
@@ -7,6 +11,7 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
+import { NAME } from 'zss/words/types'
 
 export function handleeditorbookmarkscroll(
   _vm: DEVICE,
@@ -34,7 +39,7 @@ export function handleeditorbookmarkscrollpanel(
   message: MESSAGE,
   path: string,
 ): void {
-  switch (path) {
+  switch (NAME(path)) {
     case 'snapshotcurrent':
       if (isarray(message.data)) {
         const [maybeid, maybeelement] = message.data
@@ -55,46 +60,16 @@ export function handleeditorbookmarkscrollpanel(
       }
       break
     case 'copytogame': {
-      console.info('handleeditorbookmarkscrollpanel copytogame', message.data)
-      // let pinid: string | undefined
-      // if (isarray(message.data)) {
-      //   const first = (message.data as unknown[])[0]
-      //   if (isstring(first)) {
-      //     pinid = first
-      //   }
-      // } else if (isstring(message.data)) {
-      //   pinid = message.data
-      // }
-      // if (!pinid) {
-      //   apitoast(vm, message.player, 'bookmark not found')
-      //   return
-      // }
-      // const list = editorbookmarkscrollcache[message.player] ?? []
-      // const entry = list.find((b) => b.id === pinid)
-      // if (!entry) {
-      //   apitoast(vm, message.player, 'bookmark not found')
-      //   return
-      // }
-      // const raw = deepcopy(entry.codepage) as CODE_PAGE
-      // if (
-      //   !ispresent(raw) ||
-      //   typeof raw !== 'object' ||
-      //   !isstring(raw.id) ||
-      //   !isstring(raw.code)
-      // ) {
-      //   apitoast(vm, message.player, 'invalid bookmark payload')
-      //   return
-      // }
-      // raw.id = createsid()
-      // const gamebook = memoryensurebookbyname(GAME_BOOKMARK_TARGET_BOOK)
-      // if (!memorywritecodepage(gamebook, raw)) {
-      //   apitoast(vm, message.player, 'copy to game failed')
-      //   return
-      // }
-      // apitoast(vm, message.player, `copied $green${entry.title}$white to game`)
-      // vmclearscroll(vm, message.player)
       break
     }
+    case 'editorbookmarkdel':
+      if (isarray(message.data)) {
+        const [id] = message.data
+        if (isstring(id)) {
+          registerbookmarkdelete(vm, message.player, id)
+        }
+      }
+      break
     default:
       break
   }
