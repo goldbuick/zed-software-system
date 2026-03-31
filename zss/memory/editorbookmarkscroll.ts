@@ -30,12 +30,11 @@ export function memoryeditorbookmarkscroll(
   for (let i = 0; i < editorlist.length; ++i) {
     const bookmark = editorlist[i]
     const shorttitle = memoryeditorbookmarkshorttitle(bookmark)
-    const idx = i + 1
     lines.push(
-      `!copytogame hyperlink ${scrolllinkescapefrag(bookmark.id)};${idx} @${bookmark.type} ${scrolllinkescapefrag(shorttitle)}`,
+      `!copytogame hyperlink ${scrolllinkescapefrag(bookmark.id)};@${bookmark.type} ${scrolllinkescapefrag(shorttitle)}`,
     )
     lines.push(
-      `!editorbookmarkdel hyperlink ${scrolllinkescapefrag(bookmark.id)};${scrolllinkescapefrag(`$REDDELETE ${idx}`)}`,
+      `!editorbookmarkdel hyperlink ${scrolllinkescapefrag(bookmark.id)};$RED$192$196 DELETE`,
     )
   }
 

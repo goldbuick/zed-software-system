@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import {
   type MESSAGE,
+  registerbookmarkcodepagecopytogame,
   registerbookmarkcodepagesave,
   registerbookmarkdelete,
 } from 'zss/device/api'
@@ -60,6 +61,12 @@ export function handleeditorbookmarkscrollpanel(
       }
       break
     case 'copytogame': {
+      if (isarray(message.data)) {
+        const [id] = message.data
+        if (isstring(id)) {
+          registerbookmarkcodepagecopytogame(vm, message.player, id)
+        }
+      }
       break
     }
     case 'editorbookmarkdel':
@@ -71,6 +78,7 @@ export function handleeditorbookmarkscrollpanel(
       }
       break
     default:
+      console.info('handleeditorbookmarkscrollpanel', path)
       break
   }
 }

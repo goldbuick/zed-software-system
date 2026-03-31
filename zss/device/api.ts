@@ -611,6 +611,26 @@ export function registerbookmarkclisave(
   device.emit(player, 'register:bookmark:clisave', line)
 }
 
+export function registerbookmarkclirun(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+) {
+  device.emit(player, 'register:bookmark:clirun', id)
+}
+
+export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:bookmark:urlsave', true)
+}
+
+export function registerbookmarkurlnavigate(
+  device: DEVICELIKE,
+  player: string,
+  href: string,
+) {
+  device.emit(player, 'register:bookmark:urlnavigate', href)
+}
+
 export function registerbookmarkcodepagesave(
   device: DEVICELIKE,
   player: string,
@@ -621,17 +641,12 @@ export function registerbookmarkcodepagesave(
   device.emit(player, 'register:bookmark:codepagesave', [type, title, codepage])
 }
 
-export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:bookmark:urlsave', true)
-}
-
-/** Main-thread navigation; VM runs in sim worker where `location` is not the browser tab. */
-export function registerbookmarkurlnavigate(
+export function registerbookmarkcodepagecopytogame(
   device: DEVICELIKE,
   player: string,
-  href: string,
+  id: string,
 ) {
-  device.emit(player, 'register:bookmark:urlnavigate', href)
+  device.emit(player, 'register:bookmark:codepagecopytogame', id)
 }
 
 export function registerbookmarkdelete(
@@ -640,14 +655,6 @@ export function registerbookmarkdelete(
   id: string,
 ) {
   device.emit(player, 'register:bookmark:delete', id)
-}
-
-export function registerbookmarkrun(
-  device: DEVICELIKE,
-  player: string,
-  id: string,
-) {
-  device.emit(player, 'register:runbookmark', id)
 }
 
 export function registerbookmarklist(device: DEVICELIKE, player: string) {
@@ -818,6 +825,10 @@ export function vmbooks(
   books: string | BOOK[],
 ) {
   device.emit(player, 'vm:books', books)
+}
+
+export function vmpage(device: DEVICELIKE, player: string, codepage: any) {
+  device.emit(player, 'vm:page', codepage)
 }
 
 export function vmsearch(device: DEVICELIKE, player: string) {

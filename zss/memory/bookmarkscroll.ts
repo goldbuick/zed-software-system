@@ -27,7 +27,7 @@ export function memorybookmarkscroll(
       `!bookmarkurl hk ${idx} " ${idx} " "" ${scrolllinkescapefrag(b.href)};${scrolllinkescapefrag(`$CYANLOAD ${b.name}`)}`,
     )
     rows.push(
-      `!bookmarkdel hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(`$REDDELETE ${idx}`)}`,
+      `!bookmarkdel hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(`$RED$192$196 DELETE`)}`,
     )
   }
   scrollwritelines(

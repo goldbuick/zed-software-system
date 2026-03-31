@@ -1,19 +1,19 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
-  registereditorbookmarkdelete,
   registerbookmarkcodepagesave,
+  registereditorbookmarkdelete,
 } from 'zss/device/api'
 import {
   handleeditorbookmarkscroll,
   handleeditorbookmarkscrollpanel,
 } from 'zss/device/vm/handlers/editorbookmarkscroll'
 import type { ZssEditorBookmark } from 'zss/feature/bookmarks'
+import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import {
   memoryeditorbookmarkdelpromptscroll,
   memoryeditorbookmarkscroll,
 } from 'zss/memory/editorbookmarkscroll'
-import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 
 jest.mock('zss/device/api', () => {
   const actual = jest.requireActual('zss/device/api')
@@ -107,7 +107,11 @@ describe('handleeditorbookmarkscrollpanel delete flow', () => {
   })
 
   it('editorbookmarkdel shows prompt with resolved short title', () => {
-    handleeditorbookmarkscrollpanel(vm, { ...base, data: ['bid1'] }, 'editorbookmarkdel')
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['bid1'] },
+      'editorbookmarkdel',
+    )
     expect(memoryeditorbookmarkdelpromptscroll).toHaveBeenCalledWith(
       player,
       'bid1',
@@ -121,11 +125,19 @@ describe('handleeditorbookmarkscrollpanel delete flow', () => {
       { ...base, data: ['bid1'] },
       'editorbookmarkdelconfirm',
     )
-    expect(registereditorbookmarkdelete).toHaveBeenCalledWith(vm, player, 'bid1')
+    expect(registereditorbookmarkdelete).toHaveBeenCalledWith(
+      vm,
+      player,
+      'bid1',
+    )
   })
 
   it('editorbookmarkdelcancel restores list from cache', () => {
-    handleeditorbookmarkscrollpanel(vm, { ...base, data: ['-'] }, 'editorbookmarkdelcancel')
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['-'] },
+      'editorbookmarkdelcancel',
+    )
     expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(
       player,
       expect.arrayContaining([expect.objectContaining({ id: 'bid1' })]),
@@ -156,13 +168,21 @@ describe('handleeditorbookmarkscrollpanel snapshotcurrent', () => {
 
   it('registerbookmarkcodepagesave when first data arg is a codepage id', () => {
     jest.mocked(memoryreadcodepagebyid).mockReturnValue(fakecodepage as any)
-    handleeditorbookmarkscrollpanel(vm, { ...base, data: ['cp1'] }, 'snapshotcurrent')
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['cp1'] },
+      'snapshotcurrent',
+    )
     expect(registerbookmarkcodepagesave).toHaveBeenCalled()
   })
 
   it('no registerbookmarkcodepagesave when codepage missing', () => {
     jest.mocked(memoryreadcodepagebyid).mockReturnValue(undefined)
-    handleeditorbookmarkscrollpanel(vm, { ...base, data: ['missing'] }, 'snapshotcurrent')
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['missing'] },
+      'snapshotcurrent',
+    )
     expect(registerbookmarkcodepagesave).not.toHaveBeenCalled()
   })
 })

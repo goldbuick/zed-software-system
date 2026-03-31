@@ -24,6 +24,7 @@ import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
 import { handleoperator } from './operator'
+import { handlepage } from './page'
 import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
@@ -50,6 +51,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   admin: handleadmin,
   zsswords: handlezsswords,
   books: handlebooks,
+  page: handlepage,
   search: handlesearch,
   logout: handlelogout,
   login: handlelogin,

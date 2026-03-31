@@ -95,7 +95,7 @@ import {
   vmtapeeditorclose,
   vmzsswords,
 } from './api'
-import { runbookmarkurlnavigate } from './runbookmarkurlnavigate'
+import { runbookmarkcopytogame, runbookmarkurlnavigate } from './runbookmark'
 
 // read / write from session
 
@@ -481,6 +481,24 @@ export const register = createdevice(
           vmclearscroll(register, myplayerid)
         })
         break
+      case 'bookmark:clirun':
+        doasync(register, message.player, async () => {
+          let pinid: MAYBE<string>
+          if (isarray(message.data)) {
+            const arr = message.data as unknown[]
+            const last = arr[arr.length - 1]
+            if (isstring(last)) {
+              pinid = last
+            }
+          } else if (isstring(message.data)) {
+            pinid = message.data
+          }
+          if (!pinid) {
+            return
+          }
+          await runterminalbookmarkclibyid(register, myplayerid, pinid)
+        })
+        break
       case 'bookmark:codepagesave':
         doasync(register, message.player, async () => {
           if (isarray(message.data)) {
@@ -494,6 +512,13 @@ export const register = createdevice(
               apitoast(register, myplayerid, `bookmarked $green${title}`)
               vmclearscroll(register, myplayerid)
             }
+          }
+        })
+        break
+      case 'bookmark:codepagecopytogame':
+        doasync(register, message.player, async () => {
+          if (isstring(message.data)) {
+            await runbookmarkcopytogame(register, myplayerid, message.data)
           }
         })
         break
@@ -571,24 +596,6 @@ export const register = createdevice(
             myplayerid,
             `$ltgrey#bookmarkdelete <id>$white to remove`,
           )
-        })
-        break
-      case 'runbookmark':
-        doasync(register, message.player, async () => {
-          let pinid: MAYBE<string>
-          if (isarray(message.data)) {
-            const arr = message.data as unknown[]
-            const last = arr[arr.length - 1]
-            if (isstring(last)) {
-              pinid = last
-            }
-          } else if (isstring(message.data)) {
-            pinid = message.data
-          }
-          if (!pinid) {
-            return
-          }
-          await runterminalbookmarkclibyid(register, myplayerid, pinid)
         })
         break
       case 'input':
