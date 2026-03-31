@@ -599,8 +599,12 @@ export function heavypullvarresult(
   device.emit(player, 'heavy:pullvarresult', data)
 }
 
-export function registerbookmarkscroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:bookmarkscroll', true)
+export function registerbookmarkscroll(
+  device: DEVICELIKE,
+  player: string,
+  includecodepages: boolean,
+) {
+  device.emit(player, 'register:bookmarkscroll', includecodepages)
 }
 
 export function registerbookmarkclisave(
@@ -666,9 +670,10 @@ export type GADGET_SCROLL_LINES = {
 export function vmbookmarkscroll(
   device: DEVICELIKE,
   player: string,
-  urllist: unknown[],
+  urllist: any[],
+  codepagelist: any[],
 ) {
-  device.emit(player, 'vm:bookmarkscroll', urllist)
+  device.emit(player, 'vm:bookmarkscroll', [urllist, codepagelist])
 }
 
 export function registereditorbookmarkscroll(

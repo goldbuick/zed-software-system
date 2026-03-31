@@ -414,41 +414,15 @@ export const register = createdevice(
         }
         break
       }
-      case 'ackcodepagesnapshot': {
-        doasync(register, message.player, () => {
-          console.info('ackcodepagesnapshot', message.data)
-          // const d = message.data as Record<string, unknown> | null | undefined
-          // if (!d || typeof d !== 'object') {
-          //   return
-          // }
-          // const book = d.book
-          // const path = d.path
-          // const type = d.type
-          // const title = d.title
-          // const codepage = d.codepage
-          // if (
-          //   !isstring(book) ||
-          //   !isarray(path) ||
-          //   !isstring(type) ||
-          //   !isstring(title)
-          // ) {
-          //   apitoast(register, myplayerid, 'bookmark snapshot failed')
-          //   return
-          // }
-          // await appendeditorbookmark({
-          //   type,
-          //   title,
-          //   codepage,
-          // })
-          // apitoast(register, myplayerid, `bookmarked editor $green${title}`)
-          return Promise.resolve()
-        })
-        break
-      }
       case 'bookmarkscroll':
         doasync(register, message.player, async () => {
           const blob = await readbookmarksfromstorage()
-          vmbookmarkscroll(register, myplayerid, blob.url)
+          vmbookmarkscroll(
+            register,
+            myplayerid,
+            blob.url,
+            message.data ? blob.editor : [],
+          )
         })
         break
       case 'editorbookmarkscroll':

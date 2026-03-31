@@ -104,7 +104,6 @@ export function TerminalInput({
   )
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
-  const gadgetboard = useGadgetClient((state) => state.gadget.board)
 
   const player = registerreadplayer()
   const usetouchtextsync = useDeviceData((state) => state.usetouchtextsync)
@@ -726,13 +725,12 @@ export function TerminalInput({
                       }
                       break
                     }
-                    if (
-                      inputstateactive &&
-                      !(gadgetboard ?? '').trim().length
-                    ) {
-                      registerbookmarkscroll(SOFTWARE, player)
+                    // blank cli shortcut to bookmarks scroll
+                    if (inputstateactive && !inputstate.trim().length) {
+                      registerbookmarkscroll(SOFTWARE, player, true)
                       break
                     }
+                    // save to bookmarks
                     if (
                       rowi !== undefined &&
                       rowi >= pincount &&
@@ -742,9 +740,7 @@ export function TerminalInput({
                       registerbookmarkclisave(SOFTWARE, player, logline)
                       break
                     }
-                    const line =
-                      tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-                    registerbookmarkclisave(SOFTWARE, player, line)
+                    registerbookmarkclisave(SOFTWARE, player, inputstate ?? '')
                     break
                   }
                   case 'f':

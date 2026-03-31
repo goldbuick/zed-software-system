@@ -7,22 +7,21 @@ import {
   registerbookmarkurlsave,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { type ZssUrlBookmark, normalizebookmarks } from 'zss/feature/bookmarks'
+import { normalizebookmarks } from 'zss/feature/bookmarks'
 import { isarray, isstring } from 'zss/mapping/types'
 import { memorybookmarkscroll } from 'zss/memory/bookmarkscroll'
 import { NAME } from 'zss/words/types'
 
 export function handlebookmarkscroll(_vm: DEVICE, message: MESSAGE): void {
-  let urllist: ZssUrlBookmark[] = []
   if (isarray(message.data)) {
+    const [urllist, codepagelist] = message.data as [any[], any[]]
     const blob = normalizebookmarks({
-      url: message.data,
+      url: urllist,
+      editor: codepagelist,
       terminal: [],
-      editor: [],
     })
-    urllist = blob.url
+    memorybookmarkscroll(message.player, blob.url, blob.editor)
   }
-  memorybookmarkscroll(message.player, urllist)
 }
 
 export function handlebookmarkscrollpanel(

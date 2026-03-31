@@ -12,7 +12,6 @@ import {
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
-import { handlecodepagesnapshot } from './codepagesnapshot'
 import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
@@ -82,7 +81,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   flush: handleflush,
   bookmarkscroll: handlebookmarkscroll,
   editorbookmarkscroll: handleeditorbookmarkscroll,
-  codepagesnapshot: handlecodepagesnapshot,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,
