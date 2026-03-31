@@ -95,7 +95,7 @@ import {
   vmtapeeditorclose,
   vmzsswords,
 } from './api'
-import { runbookmarkurlnavigate } from './runbookmarkurlnavigate'
+import { runbookmarkcopytogame, runbookmarkurlnavigate } from './runbookmark'
 
 // read / write from session
 
@@ -414,40 +414,15 @@ export const register = createdevice(
         }
         break
       }
-      case 'ackcodepagesnapshot': {
-        doasync(register, message.player, async () => {
-          console.info('ackcodepagesnapshot', message.data)
-          // const d = message.data as Record<string, unknown> | null | undefined
-          // if (!d || typeof d !== 'object') {
-          //   return
-          // }
-          // const book = d.book
-          // const path = d.path
-          // const type = d.type
-          // const title = d.title
-          // const codepage = d.codepage
-          // if (
-          //   !isstring(book) ||
-          //   !isarray(path) ||
-          //   !isstring(type) ||
-          //   !isstring(title)
-          // ) {
-          //   apitoast(register, myplayerid, 'bookmark snapshot failed')
-          //   return
-          // }
-          // await appendeditorbookmark({
-          //   type,
-          //   title,
-          //   codepage,
-          // })
-          // apitoast(register, myplayerid, `bookmarked editor $green${title}`)
-        })
-        break
-      }
       case 'bookmarkscroll':
         doasync(register, message.player, async () => {
           const blob = await readbookmarksfromstorage()
-          vmbookmarkscroll(register, myplayerid, blob.url)
+          vmbookmarkscroll(
+            register,
+            myplayerid,
+            blob.url,
+            message.data ? blob.editor : [],
+          )
         })
         break
       case 'editorbookmarkscroll':
@@ -467,82 +442,7 @@ export const register = createdevice(
           }
         })
         break
-      case 'bookmark:urlsave':
-        doasync(register, message.player, async () => {
-          const addr = paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET)
-          const rawname = modemreadtextsync(addr).trim()
-          if (!rawname.length) {
-            apitoast(register, myplayerid, 'enter a bookmark name first')
-            return
-          }
-          await appendurlbookmark(rawname, location.href)
-          vmclearscroll(register, myplayerid)
-          apitoast(register, myplayerid, `saved bookmark $green${rawname}`)
-        })
-        break
-      case 'bookmark:urlnavigate':
-        doasync(register, message.player, async () => {
-          if (isstring(message.data)) {
-            await runbookmarkurlnavigate(register, myplayerid, message.data)
-          }
-        })
-        break
-      case 'bookmark:delete':
-        doasync(register, message.player, async () => {
-          const id = message.data
-          if (!isstring(id)) {
-            return
-          }
-          const ok = await removebookmarkbyid(id)
-          if (ok) {
-            apitoast(register, myplayerid, 'bookmark removed')
-            await syncterminalbookmarkpins()
-          }
-        })
-        break
-      case 'bookmark:list':
-        doasync(register, message.player, async () => {
-          const blob = await readbookmarksfromstorage()
-          writeheader(register, myplayerid, 'bookmarks')
-          let n = 1
-          for (let i = 0; i < blob.url.length; ++i) {
-            const b = blob.url[i]
-            writeoption(
-              register,
-              myplayerid,
-              `${n}`,
-              `url $cyan${b.name}$white ${b.id}`,
-            )
-            ++n
-          }
-          for (let i = 0; i < blob.terminal.length; ++i) {
-            const b = blob.terminal[i]
-            writeoption(
-              register,
-              myplayerid,
-              `${n}`,
-              `terminal $cyan${b.text.slice(0, 48)}$white ${b.id}`,
-            )
-            ++n
-          }
-          for (let i = 0; i < blob.editor.length; ++i) {
-            const b = blob.editor[i]
-            writeoption(
-              register,
-              myplayerid,
-              `${n}`,
-              `editor $cyan${b.title}$white ${b.id}`,
-            )
-            ++n
-          }
-          writetext(
-            register,
-            myplayerid,
-            `$ltgrey#bookmarkdelete <id>$white to remove`,
-          )
-        })
-        break
-      case 'bookmark:appendterminal':
+      case 'bookmark:clisave':
         doasync(register, message.player, async () => {
           const line = message.data
           if (!isstring(line) || !line.trim()) {
@@ -551,10 +451,11 @@ export const register = createdevice(
           }
           await appendterminalbookmark(line)
           await syncterminalbookmarkpins()
-          apitoast(register, myplayerid, 'terminal line bookmarked')
+          apitoast(register, myplayerid, `bookmarked $green${line}`)
+          vmclearscroll(register, myplayerid)
         })
         break
-      case 'runbookmark':
+      case 'bookmark:clirun':
         doasync(register, message.player, async () => {
           let pinid: MAYBE<string>
           if (isarray(message.data)) {
@@ -570,6 +471,65 @@ export const register = createdevice(
             return
           }
           await runterminalbookmarkclibyid(register, myplayerid, pinid)
+        })
+        break
+      case 'bookmark:codepagesave':
+        doasync(register, message.player, async () => {
+          if (isarray(message.data)) {
+            const [type, title, codepage] = message.data
+            if (isstring(type) && isstring(title) && ispresent(codepage)) {
+              await appendeditorbookmark({
+                type,
+                title,
+                codepage,
+              })
+              apitoast(register, myplayerid, `bookmarked $green${title}`)
+              vmclearscroll(register, myplayerid)
+            }
+          }
+        })
+        break
+      case 'bookmark:codepagecopytogame':
+        doasync(register, message.player, async () => {
+          if (isstring(message.data)) {
+            await runbookmarkcopytogame(register, myplayerid, message.data)
+            vmclearscroll(register, myplayerid)
+          }
+        })
+        break
+      case 'bookmark:urlsave':
+        doasync(register, message.player, async () => {
+          const addr = paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET)
+          const rawname = modemreadtextsync(addr).trim()
+          if (!rawname.length) {
+            apitoast(register, myplayerid, 'enter a bookmark name first')
+            return
+          }
+          await appendurlbookmark(rawname, location.href)
+          apitoast(register, myplayerid, `bookmarked $green${rawname}`)
+          vmclearscroll(register, myplayerid)
+        })
+        break
+      case 'bookmark:urlnavigate':
+        doasync(register, message.player, async () => {
+          if (isstring(message.data)) {
+            await runbookmarkurlnavigate(register, myplayerid, message.data)
+            vmclearscroll(register, myplayerid)
+          }
+        })
+        break
+      case 'bookmark:delete':
+        doasync(register, message.player, async () => {
+          const id = message.data
+          if (!isstring(id)) {
+            return
+          }
+          const ok = await removebookmarkbyid(id)
+          if (ok) {
+            apitoast(register, myplayerid, 'bookmark removed')
+            await syncterminalbookmarkpins()
+            vmclearscroll(register, myplayerid)
+          }
         })
         break
       case 'input':

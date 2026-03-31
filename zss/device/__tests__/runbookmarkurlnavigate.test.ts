@@ -1,5 +1,5 @@
 import * as apimod from 'zss/device/api'
-import { runbookmarkurlnavigate } from 'zss/device/runbookmarkurlnavigate'
+import { runbookmarkurlnavigate } from 'zss/device/runbookmark'
 
 describe('runbookmarkurlnavigate', () => {
   const device = {} as apimod.DEVICELIKE

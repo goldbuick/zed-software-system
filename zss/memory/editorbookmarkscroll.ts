@@ -8,6 +8,14 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { isstring } from 'zss/mapping/types'
 
+export function memoryeditorbookmarkshorttitle(
+  bookmark: ZssEditorBookmark,
+): string {
+  return bookmark.title.length > 40
+    ? `${bookmark.title.slice(0, 37)}...`
+    : bookmark.title
+}
+
 export function memoryeditorbookmarkscroll(
   player: string,
   editorlist: ZssEditorBookmark[],
@@ -19,16 +27,16 @@ export function memoryeditorbookmarkscroll(
     DIVIDER,
   ]
 
-  const rows: string[] = []
   for (let i = 0; i < editorlist.length; ++i) {
     const bookmark = editorlist[i]
-    const shorttitle =
-      bookmark.title.length > 40
-        ? `${bookmark.title.slice(0, 37)}...`
-        : bookmark.title
-    rows.push(
-      `!copytogame hyperlink ${scrolllinkescapefrag(bookmark.id)};${scrolllinkescapefrag(shorttitle)}`,
+    const shorttitle = memoryeditorbookmarkshorttitle(bookmark)
+    lines.push(
+      `!copytogame hyperlink ${scrolllinkescapefrag(bookmark.id)};load @${bookmark.type} ${scrolllinkescapefrag(shorttitle)}`,
     )
+    lines.push(
+      `!editorbookmarkdel hyperlink ${scrolllinkescapefrag(bookmark.id)};$RED$192$196 DELETE`,
+    )
+    lines.push('$32')
   }
 
   scrollwritelines(

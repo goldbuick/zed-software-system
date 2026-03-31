@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react'
 import {
   apierror,
   apitoast,
-  registerappendterminalbookmark,
+  registerbookmarkclisave,
   registerbookmarkdelete,
   registerbookmarkscroll,
   registerterminalclose,
@@ -104,7 +104,6 @@ export function TerminalInput({
   )
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
-  const gadgetboard = useGadgetClient((state) => state.gadget.board)
 
   const player = registerreadplayer()
   const usetouchtextsync = useDeviceData((state) => state.usetouchtextsync)
@@ -726,25 +725,22 @@ export function TerminalInput({
                       }
                       break
                     }
-                    if (
-                      inputstateactive &&
-                      !(gadgetboard ?? '').trim().length
-                    ) {
-                      registerbookmarkscroll(SOFTWARE, player)
+                    // blank cli shortcut to bookmarks scroll
+                    if (inputstateactive && !inputstate.trim().length) {
+                      registerbookmarkscroll(SOFTWARE, player, true)
                       break
                     }
+                    // save to bookmarks
                     if (
                       rowi !== undefined &&
                       rowi >= pincount &&
                       rowi < terminallogs.length
                     ) {
                       const logline = terminallogs[rowi] ?? ''
-                      registerappendterminalbookmark(SOFTWARE, player, logline)
+                      registerbookmarkclisave(SOFTWARE, player, logline)
                       break
                     }
-                    const line =
-                      tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-                    registerappendterminalbookmark(SOFTWARE, player, line)
+                    registerbookmarkclisave(SOFTWARE, player, inputstate ?? '')
                     break
                   }
                   case 'f':

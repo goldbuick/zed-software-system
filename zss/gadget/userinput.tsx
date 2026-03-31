@@ -8,7 +8,7 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   apilog,
-  registerbookmarkrun,
+  registerbookmarkclirun,
   vmcli,
   vmdoot,
   vminput,
@@ -385,7 +385,7 @@ function handlekeydown(event: KeyboardEvent) {
         const index = parseInt(key, 10) - 1
         const id = pinids[index]
         if (ispresent(id)) {
-          registerbookmarkrun(SOFTWARE, player, id)
+          registerbookmarkclirun(SOFTWARE, player, id)
         }
       }
       break

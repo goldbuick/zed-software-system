@@ -124,7 +124,7 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
               break
             case 'b':
               if (mods.ctrl) {
-                registerbookmarkscroll(SOFTWARE, player)
+                registerbookmarkscroll(SOFTWARE, player, false)
               }
               break
           }

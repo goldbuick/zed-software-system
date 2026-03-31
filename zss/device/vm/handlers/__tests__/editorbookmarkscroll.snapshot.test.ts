@@ -1,117 +1,48 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apitoast, vmcodepagesnapshot } from 'zss/device/api'
+import {
+  registerbookmarkcodepagesave,
+  registerbookmarkdelete,
+} from 'zss/device/api'
 import {
   handleeditorbookmarkscroll,
   handleeditorbookmarkscrollpanel,
 } from 'zss/device/vm/handlers/editorbookmarkscroll'
-import { handletapeeditorclose } from 'zss/device/vm/handlers/tapeeditorclose'
-import {
-  tapeeditormirrorreset,
-  tapeeditorset,
-} from 'zss/device/vm/tapeeditormirror'
-import { EDITOR_BOOKMARK_SCROLL_OPENER_NAMEPATH_EMPTY } from 'zss/feature/bookmarks'
+import type { ZssEditorBookmark } from 'zss/feature/bookmarks'
+import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 
 jest.mock('zss/device/api', () => {
   const actual = jest.requireActual('zss/device/api')
   return {
     ...actual,
-    apitoast: jest.fn(),
-    vmcodepagesnapshot: jest.fn(),
+    registerbookmarkcodepagesave: jest.fn(),
+    registerbookmarkdelete: jest.fn(),
   }
 })
 
-jest.mock('zss/memory/editorbookmarkscroll', () => ({
-  memoryeditorbookmarkscroll: jest.fn(),
+jest.mock('zss/memory/editorbookmarkscroll', () => {
+  const actual = jest.requireActual('zss/memory/editorbookmarkscroll')
+  return {
+    ...actual,
+    memoryeditorbookmarkscroll: jest.fn(),
+  }
+})
+
+jest.mock('zss/memory/codepages', () => ({
+  memoryreadcodepagebyid: jest.fn(),
 }))
 
-describe('handleeditorbookmarkscrollpanel snapshotcurrent', () => {
-  const vm = {} as DEVICE
-  const player = 'p1'
-  const base: MESSAGE = {
-    session: 's',
-    player,
-    id: 'id',
-    sender: 'vm',
-    target: 'default',
-    data: undefined,
-  }
+const editbookmark: ZssEditorBookmark = {
+  kind: 'editor',
+  id: 'bid1',
+  type: 'board',
+  title: 'My saved page',
+  codepage: { id: 'cp1', code: '' },
+  createdat: 1,
+}
 
-  beforeEach(() => {
-    tapeeditormirrorreset()
-    jest.mocked(apitoast).mockClear()
-    jest.mocked(vmcodepagesnapshot).mockClear()
-    jest.mocked(memoryeditorbookmarkscroll).mockClear()
-  })
-
-  it('calls vmcodepagesnapshot from panel payload when message.data has book/pathjson/type/title', () => {
-    const msg: MESSAGE = {
-      ...base,
-      data: ['main', JSON.stringify(['page-a', 'obj1']), 'board', 'Test title'],
-    }
-    handleeditorbookmarkscrollpanel(vm, msg, 'snapshotcurrent')
-    expect(vmcodepagesnapshot).toHaveBeenCalledWith(
-      vm,
-      player,
-      'main',
-      ['page-a', 'obj1'],
-      'board',
-      'Test title',
-    )
-    expect(apitoast).not.toHaveBeenCalled()
-  })
-
-  it('calls vmcodepagesnapshot when tape mirror has an open editor', () => {
-    tapeeditorset(player, {
-      open: true,
-      book: 'main',
-      path: ['page-a', 'obj1'],
-      type: 'board',
-      title: 'Test title',
-    })
-    handleeditorbookmarkscrollpanel(vm, base, 'snapshotcurrent')
-    expect(vmcodepagesnapshot).toHaveBeenCalledWith(
-      vm,
-      player,
-      'main',
-      ['page-a', 'obj1'],
-      'board',
-      'Test title',
-    )
-    expect(apitoast).not.toHaveBeenCalled()
-  })
-
-  it('toasts when mirror has no open codepage', () => {
-    handleeditorbookmarkscrollpanel(vm, base, 'snapshotcurrent')
-    expect(vmcodepagesnapshot).not.toHaveBeenCalled()
-    expect(apitoast).toHaveBeenCalledWith(
-      vm,
-      player,
-      'no codepage open to bookmark',
-    )
-  })
-
-  it('toasts after handletapeeditorclose clears the mirror', () => {
-    tapeeditorset(player, {
-      open: true,
-      book: 'main',
-      path: ['id1'],
-      type: '',
-      title: 't',
-    })
-    handletapeeditorclose(vm, base)
-    handleeditorbookmarkscrollpanel(vm, base, 'snapshotcurrent')
-    expect(vmcodepagesnapshot).not.toHaveBeenCalled()
-    expect(apitoast).toHaveBeenCalledWith(
-      vm,
-      player,
-      'no codepage open to bookmark',
-    )
-  })
-})
-
-describe('handleeditorbookmarkscroll envelope', () => {
+describe('handleeditorbookmarkscroll', () => {
   const vm = {} as DEVICE
   const player = 'p1'
   const base: MESSAGE = {
@@ -127,31 +58,114 @@ describe('handleeditorbookmarkscroll envelope', () => {
     jest.mocked(memoryeditorbookmarkscroll).mockClear()
   })
 
-  it('passes editor list and opener from envelope to memory', () => {
+  it('passes normalized editor list and path to memory and caches', () => {
     handleeditorbookmarkscroll(vm, {
       ...base,
-      data: {
-        editor: [],
-        opener: {
-          book: 'main',
-          path: ['page1'],
-          type: 'board',
-          title: 'T',
-        },
-      },
+      data: [[editbookmark], 'page-name', ['a', 'b']],
     })
-    expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(player, [], {
-      name: 'main',
-      path: ['page1'],
+    expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(
+      player,
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'bid1', kind: 'editor' }),
+      ]),
+      'page-name',
+      ['a', 'b'],
+    )
+  })
+
+  it('no-ops when data is not a valid tuple', () => {
+    handleeditorbookmarkscroll(vm, { ...base, data: [] })
+    expect(memoryeditorbookmarkscroll).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleeditorbookmarkscrollpanel delete flow', () => {
+  const vm = {} as DEVICE
+  const player = 'p1'
+  const base: MESSAGE = {
+    session: 's',
+    player,
+    id: 'id',
+    sender: 'vm',
+    target: 'default',
+    data: undefined,
+  }
+
+  beforeEach(() => {
+    jest.mocked(memoryeditorbookmarkscroll).mockClear()
+    jest.mocked(registerbookmarkdelete).mockClear()
+    handleeditorbookmarkscroll(vm, {
+      ...base,
+      target: 'editorbookmarkscroll',
+      data: [[editbookmark], 'page-name', ['x']],
     })
   })
 
-  it('uses empty editor and default opener when data is not an object envelope', () => {
-    handleeditorbookmarkscroll(vm, { ...base, data: [] })
-    expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(
-      player,
-      [],
-      EDITOR_BOOKMARK_SCROLL_OPENER_NAMEPATH_EMPTY,
+  it('editorbookmarkdel calls registerbookmarkdelete', () => {
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['bid1'] },
+      'editorbookmarkdel',
     )
+    expect(registerbookmarkdelete).toHaveBeenCalledWith(vm, player, 'bid1')
+  })
+
+  it('editorbookmarkdelconfirm does not call registerbookmarkdelete', () => {
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['bid1'] },
+      'editorbookmarkdelconfirm',
+    )
+    expect(registerbookmarkdelete).not.toHaveBeenCalled()
+  })
+
+  it('editorbookmarkdelcancel does not call memoryeditorbookmarkscroll', () => {
+    jest.mocked(memoryeditorbookmarkscroll).mockClear()
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['-'] },
+      'editorbookmarkdelcancel',
+    )
+    expect(memoryeditorbookmarkscroll).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleeditorbookmarkscrollpanel snapshotcurrent', () => {
+  const vm = {} as DEVICE
+  const player = 'p1'
+  const base: MESSAGE = {
+    session: 's',
+    player,
+    id: 'id',
+    sender: 'vm',
+    target: 'default',
+    data: undefined,
+  }
+
+  const fakecodepage = { id: 'cp1', code: 'say hi' }
+
+  beforeEach(() => {
+    jest.mocked(registerbookmarkcodepagesave).mockClear()
+    jest.mocked(memoryreadcodepagebyid).mockReset()
+  })
+
+  it('registerbookmarkcodepagesave when first data arg is a codepage id', () => {
+    jest.mocked(memoryreadcodepagebyid).mockReturnValue(fakecodepage as any)
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['cp1'] },
+      'snapshotcurrent',
+    )
+    expect(registerbookmarkcodepagesave).toHaveBeenCalled()
+  })
+
+  it('no registerbookmarkcodepagesave when codepage missing', () => {
+    jest.mocked(memoryreadcodepagebyid).mockReturnValue(undefined)
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['missing'] },
+      'snapshotcurrent',
+    )
+    expect(registerbookmarkcodepagesave).not.toHaveBeenCalled()
   })
 })

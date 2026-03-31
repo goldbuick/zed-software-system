@@ -92,7 +92,7 @@ Registered in [`zss/device/vm/handlers/registry.ts`](../../device/vm/handlers/re
 | `tapeeditorclose` | [`handletapeeditorclose`](../../device/vm/handlers/tapeeditorclose.ts) | Clears sim-worker [`tapeeditormirror`](../../device/vm/tapeeditormirror.ts) for `message.player` when the main thread closes the tape editor (`register:editor:close` → [`vmtapeeditorclose`](../../device/api.ts)). |
 | `readzipfilelist` | [`handlereadzipfilelist`](../../device/vm/handlers/zipfile.ts) | Title `zipfilelist`; Zed `!` lines via `scrollwritelines`, chip `zipfilelist`. |
 
-Panel-only actions for editor bookmarks go through [`handledefault`](../../device/vm/handlers/default.ts) as `editorbookmarkscroll:<path>` (e.g. `snapshotcurrent`, `copytogame`; successful copy may call `vmclearscroll`).
+Panel-only actions for editor bookmarks go through [`handledefault`](../../device/vm/handlers/default.ts) as `editorbookmarkscroll:<path>` (e.g. `snapshotcurrent`, `copytogame`, `editorbookmarkdel` → prompt scroll, `editorbookmarkdelconfirm` → `register:editorbookmark:delete` and refreshed list, `editorbookmarkdelcancel` → restore list from cache).
 
 **`snapshotcurrent` and `useTape`:** The sim worker does not share the main-thread Zustand [`useTape`](../../gadget/data/state.ts) store. `editorbookmarkscroll:snapshotcurrent` reads per-player metadata from [`tapeeditormirror`](../../device/vm/tapeeditormirror.ts), updated in [`registereditoropen`](../../device/api.ts) before `register:editor:open` is emitted, and cleared via `vm:tapeeditorclose` when the UI closes the editor ([`register.ts`](../../device/register.ts) `editor:close`).
 

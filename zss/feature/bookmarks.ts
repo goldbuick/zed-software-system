@@ -5,15 +5,12 @@ import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { createpid } from 'zss/mapping/guid'
-import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
 
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'
 
 export const BOOKMARK_SCROLL_SCROLLNAME = 'bookmarks'
-
-/** Hub route for terminal pin rows (`!!hk …`); register inner target `runbookmark`. */
-export const RUN_BOOKMARK_MSG = 'register:runbookmark'
 
 /** Panel / modem chip for URL bookmark scroll name field (client-side Yjs). */
 export const BOOKMARK_SCROLL_CHIP = 'bookmarkscroll'
@@ -24,29 +21,6 @@ export const BOOKMARK_NAME_TARGET = 'name'
 export const EDITOR_BOOKMARK_SCROLL_CHIP = 'editorbookmarkscroll'
 
 export const EDITOR_BOOKMARK_SCROLL_SCROLLNAME = 'editorbookmarks'
-
-/** Destination book name for “copy bookmarked codepage to game” action. */
-export const GAME_BOOKMARK_TARGET_BOOK = 'game'
-
-/** Current editor identity for `vm:editorbookmarkscroll` (codepage id is `path[0]` when non-empty). */
-export type Editorbookmarkscrollopener = {
-  book: string
-  path: string[]
-  type: string
-  title: string
-}
-
-/** Book name + path only; used by `memoryeditorbookmarkscroll` for the scroll chip. */
-export type Editorbookmarkscrollopenernamepath = {
-  name: string
-  path: string[]
-}
-
-export const EDITOR_BOOKMARK_SCROLL_OPENER_NAMEPATH_EMPTY: Editorbookmarkscrollopenernamepath =
-  {
-    name: '',
-    path: [],
-  }
 
 export const BOOKMARKS_VERSION = 1
 
@@ -79,7 +53,7 @@ export type ZssEditorBookmark = {
   id: string
   type: string
   title: string
-  codepage: unknown
+  codepage: any
   createdat: number
 }
 
@@ -221,7 +195,7 @@ export async function appendterminalbookmark(
 export async function appendeditorbookmark(args: {
   type: string
   title: string
-  codepage: unknown
+  codepage: any
 }): Promise<ZssEditorBookmark> {
   const entry: ZssEditorBookmark = {
     kind: 'editor',
@@ -282,7 +256,6 @@ export function readterminalbookmarkdisplaylines(
   return blob.terminal.map((b, i) => terminalbookmarkpinline(b, i))
 }
 
-/** Load terminal pin by id; toast preview when tape is visible (same rule as `TapeComponent`), then run via `vmcli(SOFTWARE, …)`. */
 export async function runterminalbookmarkclibyid(
   toastdevice: DEVICELIKE,
   player: string,

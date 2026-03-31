@@ -12,7 +12,6 @@ import {
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
-import { handlecodepagesnapshot } from './codepagesnapshot'
 import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
@@ -24,6 +23,7 @@ import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
 import { handleoperator } from './operator'
+import { handlepage } from './page'
 import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
@@ -36,7 +36,6 @@ import {
   handlerefscroll,
 } from './scroll'
 import { handlesecond } from './second'
-import { handletapeeditorclose } from './tapeeditorclose'
 import { handletick } from './tick'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
@@ -51,6 +50,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   admin: handleadmin,
   zsswords: handlezsswords,
   books: handlebooks,
+  page: handlepage,
   search: handlesearch,
   logout: handlelogout,
   login: handlelogin,
@@ -81,8 +81,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   flush: handleflush,
   bookmarkscroll: handlebookmarkscroll,
   editorbookmarkscroll: handleeditorbookmarkscroll,
-  codepagesnapshot: handlecodepagesnapshot,
-  tapeeditorclose: handletapeeditorclose,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,
