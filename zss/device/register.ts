@@ -519,6 +519,7 @@ export const register = createdevice(
         doasync(register, message.player, async () => {
           if (isstring(message.data)) {
             await runbookmarkcopytogame(register, myplayerid, message.data)
+            vmclearscroll(register, myplayerid)
           }
         })
         break
@@ -539,6 +540,7 @@ export const register = createdevice(
         doasync(register, message.player, async () => {
           if (isstring(message.data)) {
             await runbookmarkurlnavigate(register, myplayerid, message.data)
+            vmclearscroll(register, myplayerid)
           }
         })
         break
@@ -554,48 +556,6 @@ export const register = createdevice(
             await syncterminalbookmarkpins()
             vmclearscroll(register, myplayerid)
           }
-        })
-        break
-      case 'bookmark:list':
-        doasync(register, message.player, async () => {
-          const blob = await readbookmarksfromstorage()
-          writeheader(register, myplayerid, 'bookmarks')
-          let n = 1
-          for (let i = 0; i < blob.url.length; ++i) {
-            const b = blob.url[i]
-            writeoption(
-              register,
-              myplayerid,
-              `${n}`,
-              `url $cyan${b.name}$white ${b.id}`,
-            )
-            ++n
-          }
-          for (let i = 0; i < blob.terminal.length; ++i) {
-            const b = blob.terminal[i]
-            writeoption(
-              register,
-              myplayerid,
-              `${n}`,
-              `terminal $cyan${b.text.slice(0, 48)}$white ${b.id}`,
-            )
-            ++n
-          }
-          for (let i = 0; i < blob.editor.length; ++i) {
-            const b = blob.editor[i]
-            writeoption(
-              register,
-              myplayerid,
-              `${n}`,
-              `editor $cyan${b.title}$white ${b.id}`,
-            )
-            ++n
-          }
-          writetext(
-            register,
-            myplayerid,
-            `$ltgrey#bookmarkdelete <id>$white to remove`,
-          )
         })
         break
       case 'input':

@@ -4,7 +4,7 @@ import {
   BOOKMARK_SCROLL_SCROLLNAME,
   type ZssUrlBookmark,
 } from 'zss/feature/bookmarks'
-import { gadgetbbar, gadgethyperlink } from 'zss/gadget/data/api'
+import { DIVIDER } from 'zss/feature/writeui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { scrolllinkescapefrag } from 'zss/mapping/string'
 
@@ -12,28 +12,27 @@ export function memorybookmarkscroll(
   player: string,
   urllist: ZssUrlBookmark[],
 ): void {
-  gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, 'bookmark name', [
-    BOOKMARK_NAME_TARGET,
-    'text',
-  ])
-  gadgethyperlink(player, BOOKMARK_SCROLL_CHIP, 'SAVE IT', [`bookmarksave`])
-  gadgetbbar(player, 10)
-  const rows: string[] = []
+  const lines: string[] = [
+    `!${BOOKMARK_NAME_TARGET} text;name`,
+    `!bookmarksave hyperlink bookmarksave;$192$196 save it`,
+    DIVIDER,
+  ]
+
   for (let i = 0; i < urllist.length; ++i) {
-    const idx = i + 1
     const b = urllist[i]
-    // PanelHotkey args (after chip/label/target/hk): shortcut, badge text, maybenoclose, ...data - use "" so href stays in data and scroll closes.
-    rows.push(
-      `!bookmarkurl hk ${idx} " ${idx} " "" ${scrolllinkescapefrag(b.href)};${scrolllinkescapefrag(`$CYANLOAD ${b.name}`)}`,
+    lines.push(
+      `!bookmarkurl hyperlink ${scrolllinkescapefrag(b.href)};${scrolllinkescapefrag(`$CYANload ${b.name}`)}`,
     )
-    rows.push(
-      `!bookmarkdel hyperlink ${scrolllinkescapefrag(b.id)};${scrolllinkescapefrag(`$RED$192$196 DELETE`)}`,
+    lines.push(
+      `!bookmarkdel hyperlink ${scrolllinkescapefrag(b.id)};$RED$192$196 DELETE`,
     )
+    lines.push('$32')
   }
+
   scrollwritelines(
     player,
     BOOKMARK_SCROLL_SCROLLNAME,
-    rows.join('\n'),
+    lines.join('\n'),
     BOOKMARK_SCROLL_CHIP,
   )
 }

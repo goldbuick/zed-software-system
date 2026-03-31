@@ -657,10 +657,6 @@ export function registerbookmarkdelete(
   device.emit(player, 'register:bookmark:delete', id)
 }
 
-export function registerbookmarklist(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:bookmark:list', true)
-}
-
 export type GADGET_SCROLL_LINES = {
   scrollname: string
   content: string
