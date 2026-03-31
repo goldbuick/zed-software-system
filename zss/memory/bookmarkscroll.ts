@@ -5,7 +5,6 @@ import {
   ZssEditorBookmark,
   type ZssUrlBookmark,
 } from 'zss/feature/bookmarks'
-import { DIVIDER } from 'zss/feature/writeui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { scrolllinkescapefrag } from 'zss/mapping/string'
 

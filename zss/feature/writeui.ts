@@ -13,6 +13,8 @@ const CHR_TM = '$196'
 const CHR_BM = '$205'
 
 export const DIVIDER = '$yellow$205$205$205$196'
+export const DOWN_SPOUT = '$196$191'
+export const UP_SPOUT = '$192$196'
 
 export function write(device: DEVICELIKE, player: string, text: string) {
   apilog(device, player, text)
