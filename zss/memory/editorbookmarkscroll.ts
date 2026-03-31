@@ -19,15 +19,14 @@ export function memoryeditorbookmarkscroll(
     DIVIDER,
   ]
 
-  const rows: string[] = []
   for (let i = 0; i < editorlist.length; ++i) {
     const bookmark = editorlist[i]
     const shorttitle =
       bookmark.title.length > 40
         ? `${bookmark.title.slice(0, 37)}...`
         : bookmark.title
-    rows.push(
-      `!copytogame hyperlink ${scrolllinkescapefrag(bookmark.id)};${scrolllinkescapefrag(shorttitle)}`,
+    lines.push(
+      `!copytogame hyperlink ${scrolllinkescapefrag(bookmark.id)};@${bookmark.type} ${scrolllinkescapefrag(shorttitle)}`,
     )
   }
 

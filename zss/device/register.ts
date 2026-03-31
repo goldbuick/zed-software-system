@@ -5,6 +5,7 @@ import {
   BOOKMARK_SCROLL_CHIP,
   ZSS_BOOKMARKS_KEY,
   ZssTerminalBookmark,
+  appendeditorbookmark,
   appendterminalbookmark,
   appendurlbookmark,
   readbookmarksfromstorage,
@@ -467,6 +468,35 @@ export const register = createdevice(
           }
         })
         break
+      case 'bookmark:clisave':
+        doasync(register, message.player, async () => {
+          const line = message.data
+          if (!isstring(line) || !line.trim()) {
+            apitoast(register, myplayerid, 'nothing to bookmark')
+            return
+          }
+          await appendterminalbookmark(line)
+          await syncterminalbookmarkpins()
+          apitoast(register, myplayerid, `bookmarked $green${line}`)
+          vmclearscroll(register, myplayerid)
+        })
+        break
+      case 'bookmark:codepagesave':
+        doasync(register, message.player, async () => {
+          if (isarray(message.data)) {
+            const [type, title, codepage] = message.data
+            if (isstring(type) && isstring(title) && ispresent(codepage)) {
+              await appendeditorbookmark({
+                type,
+                title,
+                codepage,
+              })
+              apitoast(register, myplayerid, `bookmarked $green${title}`)
+              vmclearscroll(register, myplayerid)
+            }
+          }
+        })
+        break
       case 'bookmark:urlsave':
         doasync(register, message.player, async () => {
           const addr = paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET)
@@ -476,8 +506,8 @@ export const register = createdevice(
             return
           }
           await appendurlbookmark(rawname, location.href)
+          apitoast(register, myplayerid, `bookmarked $green${rawname}`)
           vmclearscroll(register, myplayerid)
-          apitoast(register, myplayerid, `saved bookmark $green${rawname}`)
         })
         break
       case 'bookmark:urlnavigate':
@@ -540,18 +570,6 @@ export const register = createdevice(
             myplayerid,
             `$ltgrey#bookmarkdelete <id>$white to remove`,
           )
-        })
-        break
-      case 'bookmark:appendterminal':
-        doasync(register, message.player, async () => {
-          const line = message.data
-          if (!isstring(line) || !line.trim()) {
-            apitoast(register, myplayerid, 'nothing to bookmark')
-            return
-          }
-          await appendterminalbookmark(line)
-          await syncterminalbookmarkpins()
-          apitoast(register, myplayerid, 'terminal line bookmarked')
         })
         break
       case 'runbookmark':

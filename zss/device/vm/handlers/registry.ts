@@ -36,7 +36,6 @@ import {
   handlerefscroll,
 } from './scroll'
 import { handlesecond } from './second'
-import { handletapeeditorclose } from './tapeeditorclose'
 import { handletick } from './tick'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
@@ -82,7 +81,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   bookmarkscroll: handlebookmarkscroll,
   editorbookmarkscroll: handleeditorbookmarkscroll,
   codepagesnapshot: handlecodepagesnapshot,
-  tapeeditorclose: handletapeeditorclose,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,

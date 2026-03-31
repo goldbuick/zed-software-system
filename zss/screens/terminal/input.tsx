@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react'
 import {
   apierror,
   apitoast,
-  registerappendterminalbookmark,
+  registerbookmarkclisave,
   registerbookmarkdelete,
   registerbookmarkscroll,
   registerterminalclose,
@@ -739,12 +739,12 @@ export function TerminalInput({
                       rowi < terminallogs.length
                     ) {
                       const logline = terminallogs[rowi] ?? ''
-                      registerappendterminalbookmark(SOFTWARE, player, logline)
+                      registerbookmarkclisave(SOFTWARE, player, logline)
                       break
                     }
                     const line =
                       tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-                    registerappendterminalbookmark(SOFTWARE, player, line)
+                    registerbookmarkclisave(SOFTWARE, player, line)
                     break
                   }
                   case 'f':

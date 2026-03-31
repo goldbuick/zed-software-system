@@ -79,7 +79,7 @@ export type ZssEditorBookmark = {
   id: string
   type: string
   title: string
-  codepage: unknown
+  codepage: any
   createdat: number
 }
 
@@ -221,7 +221,7 @@ export async function appendterminalbookmark(
 export async function appendeditorbookmark(args: {
   type: string
   title: string
-  codepage: unknown
+  codepage: any
 }): Promise<ZssEditorBookmark> {
   const entry: ZssEditorBookmark = {
     kind: 'editor',
@@ -282,7 +282,6 @@ export function readterminalbookmarkdisplaylines(
   return blob.terminal.map((b, i) => terminalbookmarkpinline(b, i))
 }
 
-/** Load terminal pin by id; toast preview when tape is visible (same rule as `TapeComponent`), then run via `vmcli(SOFTWARE, …)`. */
 export async function runterminalbookmarkclibyid(
   toastdevice: DEVICELIKE,
   player: string,

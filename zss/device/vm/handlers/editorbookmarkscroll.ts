@@ -1,6 +1,10 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import { type MESSAGE, registerbookmarkcodepagesave } from 'zss/device/api'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import {
+  memoryreadcodepagename,
+  memoryreadcodepagetypeasstring,
+} from 'zss/memory/codepageoperations'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 
@@ -26,7 +30,7 @@ export function handleeditorbookmarkscroll(
 }
 
 export function handleeditorbookmarkscrollpanel(
-  _vm: DEVICE,
+  vm: DEVICE,
   message: MESSAGE,
   path: string,
 ): void {
@@ -39,8 +43,11 @@ export function handleeditorbookmarkscrollpanel(
         } else if (isstring(maybeid)) {
           const maybecodepage = memoryreadcodepagebyid(maybeid)
           if (ispresent(maybecodepage)) {
-            console.info(
-              'handleeditorbookmarkscrollpanel snapshotcurrent',
+            registerbookmarkcodepagesave(
+              vm,
+              message.player,
+              memoryreadcodepagetypeasstring(maybecodepage),
+              memoryreadcodepagename(maybecodepage),
               maybecodepage,
             )
           }

@@ -3,7 +3,6 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
-import { tapeeditorset } from 'zss/device/vm/tapeeditormirror'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
@@ -604,6 +603,24 @@ export function registerbookmarkscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmarkscroll', true)
 }
 
+export function registerbookmarkclisave(
+  device: DEVICELIKE,
+  player: string,
+  line: string,
+) {
+  device.emit(player, 'register:bookmark:clisave', line)
+}
+
+export function registerbookmarkcodepagesave(
+  device: DEVICELIKE,
+  player: string,
+  type: string,
+  title: string,
+  codepage: any,
+) {
+  device.emit(player, 'register:bookmark:codepagesave', [type, title, codepage])
+}
+
 export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmark:urlsave', true)
 }
@@ -637,14 +654,6 @@ export function registerbookmarklist(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmark:list', true)
 }
 
-export function registerappendterminalbookmark(
-  device: DEVICELIKE,
-  player: string,
-  line: string,
-) {
-  device.emit(player, 'register:bookmark:appendterminal', line)
-}
-
 export type GADGET_SCROLL_LINES = {
   scrollname: string
   content: string
@@ -674,7 +683,7 @@ export function registereditorbookmarkscroll(
 export function vmeditorbookmarkscroll(
   device: DEVICELIKE,
   player: string,
-  editorlist: unknown[],
+  editorlist: any[],
   codepagename: string,
   codepagepath: string[],
 ) {
@@ -753,13 +762,6 @@ export function registereditoropen(
   title: string,
   scrollto?: number,
 ) {
-  tapeeditorset(player, {
-    open: true,
-    book,
-    path,
-    type,
-    title,
-  })
   device.emit(player, 'register:editor:open', [
     book,
     path,
