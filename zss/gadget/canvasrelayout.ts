@@ -1,18 +1,28 @@
-/** Registered by cafe boot — reapplies window size to the R3F root (mirrors resize). */
-let canvassyncfn: (() => void) | undefined
+import type { RootState } from '@react-three/fiber'
+import type { StoreApi } from 'zustand'
 
 /** Bumped after a forced GL resize so EffectComposer resets throttled `setSize`. */
 export let canvassyncgeneration = 0
 
-export function registercanvassync(fn: () => void) {
-  canvassyncfn = fn
-}
-
-export function bumpcanvassyncgeneration() {
+function bumpcanvassyncgeneration() {
   canvassyncgeneration += 1
 }
 
-/** Forces `configure` from current `innerWidth` / `innerHeight` (not debounced). */
-export function requestcanvassync() {
-  canvassyncfn?.()
+/**
+ * R3F skips `setSize` when `configure` size equals current state, so `gl.setSize`
+ * never runs (see pmndrs/react-three-fiber store subscription). Nudge dimensions
+ * so the subscriber refreshes canvas + camera after graphics-mode swaps.
+ */
+export function forcer3fglresize(store: StoreApi<RootState> | undefined) {
+  if (!store) {
+    return
+  }
+  const s = store.getState()
+  const { width, height, top, left } = s.size
+  if (width < 2 || height < 1) {
+    return
+  }
+  s.setSize(width - 1, height, top, left)
+  s.setSize(width, height, top, left)
+  bumpcanvassyncgeneration()
 }

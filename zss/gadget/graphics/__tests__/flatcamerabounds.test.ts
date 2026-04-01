@@ -142,6 +142,77 @@ describe('flatcamerabounds', () => {
     })
   })
 
+  describe('flatcameratargetfocus — optional edge padding', () => {
+    it('padbottom lowers max tfocusy vs unpadded', () => {
+      const drawwidth = 8
+      const drawheight = 10
+      const viewheight = 100
+      const viewscale = 1
+      const halfh = viewheight * 0.5
+      const padbottom = 10
+      const unpadded = flatcameratargetfocus({
+        viewwidth: 200,
+        viewheight,
+        drawwidth,
+        drawheight,
+        viewscale,
+        boardwidth: BOARD_W,
+        boardheight: BOARD_H,
+        controlfocusx: 30,
+        controlfocusy: 99,
+      })
+      const padded = flatcameratargetfocus({
+        viewwidth: 200,
+        viewheight,
+        drawwidth,
+        drawheight,
+        viewscale,
+        boardwidth: BOARD_W,
+        boardheight: BOARD_H,
+        controlfocusx: 30,
+        controlfocusy: 99,
+        padbottom,
+      })
+      const expectedbottom = BOARD_H - (halfh + padbottom) / (drawheight * viewscale)
+      expect(padded.tfocusy).toBe(expectedbottom)
+      expect(padded.tfocusy).toBeLessThan(unpadded.tfocusy)
+    })
+
+    it('padleft raises min tfocusx vs unpadded', () => {
+      const drawwidth = 8
+      const viewwidth = 80
+      const viewscale = 1
+      const padleft = 8
+      const unpadded = flatcameratargetfocus({
+        viewwidth,
+        viewheight: 400,
+        drawwidth,
+        drawheight: 16,
+        viewscale,
+        boardwidth: BOARD_W,
+        boardheight: BOARD_H,
+        controlfocusx: 0,
+        controlfocusy: 12,
+      })
+      const padded = flatcameratargetfocus({
+        viewwidth,
+        viewheight: 400,
+        drawwidth,
+        drawheight: 16,
+        viewscale,
+        boardwidth: BOARD_W,
+        boardheight: BOARD_H,
+        controlfocusx: 0,
+        controlfocusy: 12,
+        padleft,
+      })
+      const leftedgepadded =
+        (viewwidth * 0.5 + padleft) / (drawwidth * viewscale)
+      expect(padded.tfocusx).toBe(leftedgepadded - 1)
+      expect(padded.tfocusx).toBeGreaterThan(unpadded.tfocusx)
+    })
+  })
+
   describe('flatcameraworldboardextentsfromcorner — settled pan matches frustum at clamp extremes', () => {
     it('at min tfocusx with centerx=0, board left edge sits near -vw/2', () => {
       const drawwidth = 8

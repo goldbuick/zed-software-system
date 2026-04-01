@@ -15,6 +15,7 @@ import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
+import { isomode7focuspad } from 'zss/gadget/graphics/isomode7focuspad'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
 import {
@@ -135,6 +136,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       boardheight: BOARD_HEIGHT,
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
+      ...isomode7focuspad(drawwidth, drawheight),
     })
     ud.tfocusx = tfocusx
     ud.tfocusy = tfocusy
@@ -204,7 +206,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   })
 
   // re-render when board or layer counts change (board change must trigger re-render)
-  useGadgetClient((state) => state.gadget.board)
+  // useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)

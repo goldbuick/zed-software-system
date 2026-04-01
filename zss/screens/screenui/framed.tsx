@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react'
+import { useEffect } from 'react'
 import {
   registerbookmarkscroll,
   registerterminalopen,
@@ -23,7 +23,6 @@ import { FPVGraphics } from 'zss/gadget/graphics/fpv'
 import { IsoGraphics } from 'zss/gadget/graphics/iso'
 import { MediaLayers } from 'zss/gadget/graphics/medialayer'
 import { Mode7Graphics } from 'zss/gadget/graphics/mode7'
-import { requestcanvassync } from 'zss/gadget/canvasrelayout'
 import { UserInput, UserInputMods, modsfromevent } from 'zss/gadget/userinput'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
@@ -71,10 +70,6 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
     const control = layersreadcontrol(state.gadget.layers ?? [])
     return control.graphics
   })
-
-  useLayoutEffect(() => {
-    requestcanvassync()
-  }, [graphics])
 
   const { board, synthstate } = useGadgetClient.getState().gadget
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
+import { useStore, useThree } from '@react-three/fiber'
 import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { VignetteTechnique } from 'postprocessing'
@@ -11,7 +11,6 @@ import { enableaudio } from 'zss/device/synth'
 import { isclimode } from 'zss/feature/detect'
 import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
-import { requestcanvassync } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { EffectComposerMain } from 'zss/gadget/graphics/effectcomposer'
@@ -33,6 +32,7 @@ import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
 
 export function Engine() {
+  const store = useStore()
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
 
@@ -88,10 +88,6 @@ export function Engine() {
     gputier &&
     (gputier.tier > 2 || gputier.gpu?.includes('apple gpu')) &&
     !gputier.isMobile
-
-  useLayoutEffect(() => {
-    requestcanvassync()
-  }, [shouldcrt, islowrez])
 
   // update device config
   useEffect(() => {

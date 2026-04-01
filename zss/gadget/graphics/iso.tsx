@@ -16,6 +16,7 @@ import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
+import { isomode7focuspad } from 'zss/gadget/graphics/isomode7focuspad'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
@@ -108,6 +109,7 @@ export const IsoGraphics = memo(function IsoGraphics({
       boardheight: BOARD_HEIGHT,
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
+      ...isomode7focuspad(drawwidth, drawheight),
     })
 
     const ud = cameraref.current.userData ?? {}
@@ -178,7 +180,7 @@ export const IsoGraphics = memo(function IsoGraphics({
   })
 
   // re-render when board or layer counts change (board change must trigger re-render)
-  useGadgetClient((state) => state.gadget.board)
+  // useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)

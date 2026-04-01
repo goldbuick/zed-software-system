@@ -81,7 +81,8 @@ export const RenderLayer = memo(function RenderLayer({
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const { viewport } = useThree()
-  const fbo = useFBO(viewwidth * viewport.dpr, viewheight * viewport.dpr, {
+  const dpr = viewport.dpr
+  const fbo = useFBO(viewwidth * dpr, viewheight * dpr, {
     samples: 0,
     stencilBuffer: false,
     depthBuffer: true,

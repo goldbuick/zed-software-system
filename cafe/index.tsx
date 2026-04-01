@@ -31,10 +31,7 @@ import {
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
-import {
-  bumpcanvassyncgeneration,
-  registercanvassync,
-} from 'zss/gadget/canvasrelayout'
+import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
@@ -131,25 +128,6 @@ async function main() {
   const root = createRoot(document.getElementById('frame')!)
   const r3fcontext: { store?: StoreApi<RootState> } = {}
 
-  /**
-   * R3F skips `setSize` when `configure` size equals current state, so `gl.setSize`
-   * never runs (see pmndrs/react-three-fiber store subscription). Nudge dimensions
-   * so the subscriber refreshes canvas + camera after graphics-mode swaps.
-   */
-  function forcer3fglresize(store: StoreApi<RootState> | undefined) {
-    if (!store) {
-      return
-    }
-    const s = store.getState()
-    const { width, height, top, left } = s.size
-    if (width < 2 || height < 1) {
-      return
-    }
-    s.setSize(width - 1, height, top, left)
-    s.setSize(width, height, top, left)
-    bumpcanvassyncgeneration()
-  }
-
   function applyconfig() {
     const innerwidth = window.innerWidth
     const innerheight = window.innerHeight
@@ -180,7 +158,6 @@ async function main() {
       })
       .catch(console.error)
   }
-  registercanvassync(applyconfig)
   const handleresize = debounce(applyconfig, 256)
 
   function detectWebGL(): boolean {
