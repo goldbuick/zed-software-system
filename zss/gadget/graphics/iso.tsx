@@ -25,6 +25,8 @@ import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { graphicsfocuspad } from './graphicsfocuspad'
+
 type GraphicsProps = {
   width: number
   height: number
@@ -101,12 +103,20 @@ export const IsoGraphics = memo(function IsoGraphics({
     damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
     const viewscale = zoomref.current.scale.x
+    const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
+      'iso',
+      control.viewscale,
+    )
     const { tfocusx, tfocusy } = flatcameratargetfocus({
       viewwidth,
       viewheight,
       drawwidth,
       drawheight,
       viewscale,
+      padleft,
+      padright,
+      padtop,
+      padbottom,
       boardwidth: BOARD_WIDTH,
       boardheight: BOARD_HEIGHT,
       controlfocusx: control.focusx,
