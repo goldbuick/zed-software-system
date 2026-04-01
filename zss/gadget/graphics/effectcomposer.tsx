@@ -19,6 +19,7 @@ import {
 } from 'react'
 import type { Camera, Group } from 'three'
 import { HalfFloatType } from 'three'
+import { canvassyncgeneration } from 'zss/gadget/canvasrelayout'
 
 const isConvolution = (effect: Effect): boolean =>
   (effect.getAttributes() & EffectAttribute.CONVOLUTION) ===
@@ -40,7 +41,9 @@ type EffectComposerInternalProps = EffectComposerProps & {
 const EffectComposerInternal = memo(
   forwardRef<EffectComposerImpl, EffectComposerInternalProps>(
     ({ children, camera, width, height, clearBeforeRender }, ref) => {
-      const { gl, scene } = useThree()
+      const { gl, scene, viewport } = useThree()
+      const lastsize = useRef({ w: NaN, h: NaN, dpr: NaN })
+      const lastcanvassyncgen = useRef(canvassyncgeneration)
 
       const [composer] = useMemo(() => {
         const effectComposer = new EffectComposerImpl(gl, {
@@ -58,14 +61,25 @@ const EffectComposerInternal = memo(
 
       useFrame(
         (_, delta) => {
+          const dpr = viewport.dpr
+          if (lastcanvassyncgen.current !== canvassyncgeneration) {
+            lastcanvassyncgen.current = canvassyncgeneration
+            lastsize.current = { w: NaN, h: NaN, dpr: NaN }
+          }
+          if (
+            lastsize.current.w !== width ||
+            lastsize.current.h !== height ||
+            lastsize.current.dpr !== dpr
+          ) {
+            lastsize.current = { w: width, h: height, dpr }
+            composer.setSize(width, height)
+          }
           if (clearBeforeRender) {
             const currentAutoClear = gl.autoClear
             gl.autoClear = true
-            composer.setSize(width, height)
             composer.render(delta)
             gl.autoClear = currentAutoClear
           } else {
-            composer.setSize(width, height)
             composer.render(delta)
           }
         },

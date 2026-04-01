@@ -1,12 +1,13 @@
 import { MembraneSynth, Volume } from 'tone'
 
 export function createbass(drumvolume: Volume, drumaction: Volume) {
-  const drumbass = new MembraneSynth().connect(drumvolume)
+  const drumbass = new MembraneSynth()
   drumbass.set({
     octaves: 8,
     volume: 8.0,
     pitchDecay: 0.125,
   })
+  drumbass.connect(drumvolume)
   drumbass.connect(drumaction)
 
   return {

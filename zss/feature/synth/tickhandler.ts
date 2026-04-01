@@ -66,10 +66,26 @@ export function createtickhandler(
       const sduration = SOURCE[chan].source.synth.toSeconds(duration)
       const reset = '128n'
       const rampreset = SOURCE[chan].source.synth.toSeconds(reset)
-      FXCHAIN.vibrato.depth.rampTo(1, '2n', time)
-      FXCHAIN.vibrato.depth.rampTo(0, reset, time + sduration - rampreset)
-      FXCHAIN.vibrato.frequency.rampTo(5, '4n', time)
-      FXCHAIN.vibrato.frequency.rampTo(1, reset, time + sduration - rampreset)
+      const vib = FXCHAIN.vibrato
+      const t0 = time
+      const tend = t0 + sduration
+      const trelease = Math.max(t0 + rampreset, tend - rampreset)
+      const attackportion = Math.min(sduration * 0.35, 0.35, sduration * 0.48)
+      const tpeak = Math.min(t0 + attackportion, trelease)
+      const peakdepth = Math.min(1, sduration / 1.2)
+      const freqhigh = 1 + peakdepth * 4
+
+      vib.depth.cancelScheduledValues(t0)
+      vib.depth.setValueAtTime(0, t0)
+      vib.depth.linearRampToValueAtTime(peakdepth, tpeak)
+      vib.depth.linearRampToValueAtTime(peakdepth, trelease)
+      vib.depth.linearRampToValueAtTime(0, tend)
+
+      vib.frequency.cancelScheduledValues(t0)
+      vib.frequency.setValueAtTime(1, t0)
+      vib.frequency.linearRampToValueAtTime(freqhigh, tpeak)
+      vib.frequency.linearRampToValueAtTime(freqhigh, trelease)
+      vib.frequency.linearRampToValueAtTime(1, tend)
     }
     if (isnumber(note)) {
       switch (note) {

@@ -60,11 +60,12 @@ export const command = createSimpleToken({
   start_chars_hint: ['#'],
 })
 
-let matchTextEnabled = false
+/** >0 while inside `tokenize` (supports nested tokenize on same thread). */
+let textmatchdepth = 0
 const probablynottext = `@#/?':!`
 const matchcomplexdir = /^(by|at|away|toward|find|flee|to|cw|ccw|opp|rndp)/i
 function matchBasicText(text: string, startOffset: number) {
-  if (!matchTextEnabled) {
+  if (textmatchdepth <= 0) {
     return null
   }
 
@@ -763,27 +764,30 @@ const scriptLexer = new Lexer(
 )
 
 export function tokenize(text: string) {
-  matchTextEnabled = true
-  const lexResult = scriptLexer.tokenize(text || ' \n')
+  textmatchdepth += 1
+  try {
+    const lexResult = scriptLexer.tokenize(text || ' \n')
 
-  // add final new line ?
-  const [lastToken] = (isarray(lexResult.tokens) ? lexResult.tokens : []).slice(
-    -1,
-  )
-  if (lastToken && lastToken.tokenType.name !== 'Newline') {
-    lexResult.tokens.push(
-      createTokenInstance(
-        newline,
-        '\n',
-        lastToken.startOffset,
-        lastToken.endOffset ?? NaN,
-        lastToken.startLine ?? NaN,
-        lastToken.endLine ?? NaN,
-        lastToken.startColumn ?? NaN,
-        lastToken.endColumn ?? NaN,
-      ),
-    )
+    // add final new line if lexer did not end on newline (token name is token_newline, not Newline)
+    const tokens = isarray(lexResult.tokens) ? lexResult.tokens : []
+    const lastToken = tokens[tokens.length - 1]
+    if (lastToken && lastToken.tokenType !== newline) {
+      lexResult.tokens.push(
+        createTokenInstance(
+          newline,
+          '\n',
+          lastToken.startOffset,
+          lastToken.endOffset ?? NaN,
+          lastToken.startLine ?? NaN,
+          lastToken.endLine ?? NaN,
+          lastToken.startColumn ?? NaN,
+          lastToken.endColumn ?? NaN,
+        ),
+      )
+    }
+
+    return lexResult
+  } finally {
+    textmatchdepth -= 1
   }
-
-  return lexResult
 }

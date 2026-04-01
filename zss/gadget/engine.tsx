@@ -11,6 +11,7 @@ import { enableaudio } from 'zss/device/synth'
 import { isclimode } from 'zss/feature/detect'
 import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
+import { requestcanvassync } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { EffectComposerMain } from 'zss/gadget/graphics/effectcomposer'
@@ -88,6 +89,10 @@ export function Engine() {
     (gputier.tier > 2 || gputier.gpu?.includes('apple gpu')) &&
     !gputier.isMobile
 
+  useLayoutEffect(() => {
+    requestcanvassync()
+  }, [shouldcrt, islowrez])
+
   // update device config
   useEffect(() => {
     useDeviceData.setState((state) => {
@@ -140,21 +145,19 @@ export function Engine() {
           )}
         </UserScreen>
       </UserFocus>
-      <EffectComposerMain width={viewwidth} height={viewheight}>
-        <>
-          {shouldcrt && (
-            <>
-              {scanlines && <Scanlines />}
-              <Vignette
-                technique={VignetteTechnique.ESKIL}
-                offset={0.89}
-                darkness={0.911}
-              />
-              <CRTShape viewheight={viewheight} />
-            </>
-          )}
-        </>
-      </EffectComposerMain>
+      {shouldcrt && (
+        <EffectComposerMain width={viewwidth} height={viewheight}>
+          <>
+            {scanlines && <Scanlines />}
+            <Vignette
+              technique={VignetteTechnique.ESKIL}
+              offset={0.89}
+              darkness={0.911}
+            />
+            <CRTShape viewheight={viewheight} />
+          </>
+        </EffectComposerMain>
+      )}
     </>
   )
 }

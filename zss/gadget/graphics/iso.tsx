@@ -2,8 +2,12 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { memo, useLayoutEffect, useRef, useState } from 'react'
-import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
+import { memo, useCallback, useRef, useState } from 'react'
+import {
+  Group,
+  OrthographicCamera as OrthographicCameraImpl,
+  Vector3,
+} from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
@@ -12,7 +16,7 @@ import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
-import { maptolayerz } from 'zss/gadget/graphics/layerz'
+import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
@@ -52,11 +56,16 @@ export const IsoGraphics = memo(function IsoGraphics({
   const underref = useRef<Group>(null)
   const cornerref = useRef<Group>(null)
   const cameraref = useRef<OrthographicCameraImpl>(null)
+  const [boardcamera, setboardcamera] = useState<OrthographicCameraImpl | null>(
+    null,
+  )
   const depthoffield = useRef<DepthOfFieldEffect>(null)
+  const dofplayerworld = useRef(new Vector3())
+  const dofcamworld = useRef(new Vector3())
 
-  const [, setcameraready] = useState(false)
-  useLayoutEffect(() => {
-    setcameraready(true)
+  const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
+    cameraref.current = c
+    setboardcamera((prev) => (prev === c ? prev : c))
   }, [])
 
   useFrame((_, delta) => {
@@ -124,25 +133,35 @@ export const IsoGraphics = memo(function IsoGraphics({
       damp(userData, 'focusy', tfocusy, animrate)
     }
 
-    // update dof
+    // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
       case VIEWSCALE.NEAR:
         depthoffield.current.bokehScale = 5
         depthoffield.current.cocMaterial.worldFocusRange = 1000
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
         break
       default:
       case VIEWSCALE.MID:
         depthoffield.current.bokehScale = 5
         depthoffield.current.cocMaterial.worldFocusRange = 1000
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 5
         depthoffield.current.cocMaterial.worldFocusRange = 1500
-        depthoffield.current.cocMaterial.worldFocusDistance = 1000
         break
     }
+
+    const gadgetlayers = useGadgetClient.getState().gadget.layers ?? []
+    const playerspritez = maxspriteslayerz(gadgetlayers, 'iso')
+    cornerref.current.updateMatrixWorld(true)
+    dofplayerworld.current.set(
+      (control.focusx + 0.5) * drawwidth,
+      (control.focusy + 0.5) * drawheight,
+      playerspritez,
+    )
+    cornerref.current.localToWorld(dofplayerworld.current)
+    cameraref.current.getWorldPosition(dofcamworld.current)
+    depthoffield.current.cocMaterial.focusDistance =
+      dofcamworld.current.distanceTo(dofplayerworld.current)
 
     // camera changes
     cameraref.current.updateProjectionMatrix()
@@ -178,7 +197,7 @@ export const IsoGraphics = memo(function IsoGraphics({
     <>
       <group position-z={layersindex}>
         <orthographicCamera
-          ref={cameraref}
+          ref={bindboardcamera}
           left={viewwidth * -0.5}
           right={viewwidth * 0.5}
           top={viewheight * -0.5}
@@ -187,9 +206,9 @@ export const IsoGraphics = memo(function IsoGraphics({
           far={2000}
           position={[0, 0, 1000]}
         />
-        {cameraref.current && (
+        {boardcamera && (
           <RenderLayer
-            camera={cameraref.current}
+            camera={boardcamera}
             viewwidth={viewwidth}
             viewheight={viewheight}
             effects={

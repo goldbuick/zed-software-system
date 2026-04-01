@@ -467,7 +467,7 @@ export function memoryapplyboardsynthstats(board: MAYBE<BOARD>) {
         if (statname.startsWith(fxname)) {
           const digit = statname.replace(fxname, '')
           if (!digit) {
-            memoryapplysynthvoicefx(boardid, 2, fxname, statvalues)
+            memoryapplysynthvoicefx(boardid, 1, fxname, statvalues)
           } else {
             const idx = Number(digit)
             memoryapplysynthvoicefx(boardid, idx, fxname, statvalues)

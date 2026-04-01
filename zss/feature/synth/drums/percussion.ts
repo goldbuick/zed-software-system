@@ -7,7 +7,7 @@ export function createpercussion(drumvolume: Volume, drumaction: Volume) {
 
   const drumcowbell = new PolySynth().connect(drumcowbellgain)
   drumcowbell.volume.value = 16.0
-  drumcowbell.maxPolyphony = 8
+  drumcowbell.maxPolyphony = 4
   drumcowbell.set({
     envelope: {
       attack: 0.001,

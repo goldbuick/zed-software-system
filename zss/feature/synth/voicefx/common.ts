@@ -3,6 +3,8 @@ import { SOFTWARE } from 'zss/device/session'
 import { AUDIO_SYNTH } from 'zss/feature/synth'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { canonicalvoicefxgroupindex } from '../voicefxgroup'
+
 export type VoiceFxConfigHandler = (
   fx: any,
   config: number | string,
@@ -25,7 +27,8 @@ export function createvoicefxconfighandler(
     config: number | string,
     value: number | string,
   ) => {
-    if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
+    const groupidx = canonicalvoicefxgroupindex(index)
+    if (!ispresent(synth) || groupidx < 0 || groupidx >= synth.FX.length) {
       apierror(SOFTWARE, player, 'synth', `index ${index} out of bounds`)
       return
     }

@@ -3,6 +3,8 @@ import { SOFTWARE } from 'zss/device/session'
 import { AUDIO_SYNTH } from 'zss/feature/synth'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
+import { canonicalvoicefxgroupindex } from '../voicefxgroup'
+
 export function synthvoicefxvibratoconfig(
   player: string,
   synth: MAYBE<AUDIO_SYNTH>,
@@ -13,7 +15,8 @@ export function synthvoicefxvibratoconfig(
   if (!ispresent(synth)) {
     return
   }
-  if (index < 0 || index >= synth.FX.length) {
+  const groupidx = canonicalvoicefxgroupindex(index)
+  if (groupidx < 0 || groupidx >= synth.FX.length) {
     apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }

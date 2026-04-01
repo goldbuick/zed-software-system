@@ -360,16 +360,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       'echo effect to all 4 channels of #play',
     ],
     (_, words) => {
-      // multi-voice changes only apply to #play
-      for (let i = 0; i < 2; ++i) {
-        handlesynthvoicefx(
-          READ_CONTEXT.elementfocus,
-          READ_CONTEXT.board?.id ?? '',
-          i,
-          'echo',
-          words,
-        )
-      }
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        0,
+        'echo',
+        words,
+      )
       return 0
     },
   )
@@ -381,16 +378,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       'frequency crush to all 4 channels of #play',
     ],
     (_, words) => {
-      // multi-voice changes only apply to #play
-      for (let i = 0; i < 2; ++i) {
-        handlesynthvoicefx(
-          READ_CONTEXT.elementfocus,
-          READ_CONTEXT.board?.id ?? '',
-          i,
-          'fc',
-          words,
-        )
-      }
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        0,
+        'fc',
+        words,
+      )
       return 0
     },
   )
@@ -402,16 +396,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       'autofilter to all 4 channels of #play',
     ],
     (_, words) => {
-      // multi-voice changes only apply to #play
-      for (let i = 0; i < 2; ++i) {
-        handlesynthvoicefx(
-          READ_CONTEXT.elementfocus,
-          READ_CONTEXT.board?.id ?? '',
-          i,
-          'autofilter',
-          words,
-        )
-      }
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        0,
+        'autofilter',
+        words,
+      )
       return 0
     },
   )
@@ -423,16 +414,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       'reverb to all 4 channels of #play',
     ],
     (_, words) => {
-      // multi-voice changes only apply to #play
-      for (let i = 0; i < 2; ++i) {
-        handlesynthvoicefx(
-          READ_CONTEXT.elementfocus,
-          READ_CONTEXT.board?.id ?? '',
-          i,
-          'reverb',
-          words,
-        )
-      }
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        0,
+        'reverb',
+        words,
+      )
       return 0
     },
   )
@@ -444,16 +432,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       'distortion to all 4 channels of #play',
     ],
     (_, words) => {
-      // multi-voice changes only apply to #play
-      for (let i = 0; i < 2; ++i) {
-        handlesynthvoicefx(
-          READ_CONTEXT.elementfocus,
-          READ_CONTEXT.board?.id ?? '',
-          i,
-          'distort',
-          words,
-        )
-      }
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        0,
+        'distort',
+        words,
+      )
       return 0
     },
   )
@@ -465,16 +450,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       'vibrato to all 4 channels of #play',
     ],
     (_, words) => {
-      // multi-voice changes only apply to #play
-      for (let i = 0; i < 2; ++i) {
-        handlesynthvoicefx(
-          READ_CONTEXT.elementfocus,
-          READ_CONTEXT.board?.id ?? '',
-          i,
-          'vibrato',
-          words,
-        )
-      }
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        0,
+        'vibrato',
+        words,
+      )
       return 0
     },
   )
@@ -486,16 +468,13 @@ export const AUDIO_FIRMWARE = createfirmware()
       'autowah to all 4 channels of #play',
     ],
     (_, words) => {
-      // multi-voice changes only apply to #play
-      for (let i = 0; i < 2; ++i) {
-        handlesynthvoicefx(
-          READ_CONTEXT.elementfocus,
-          READ_CONTEXT.board?.id ?? '',
-          i,
-          'autowah',
-          words,
-        )
-      }
+      handlesynthvoicefx(
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board?.id ?? '',
+        0,
+        'autowah',
+        words,
+      )
       return 0
     },
   )
@@ -526,6 +505,7 @@ AUDIO_FIRMWARE.command('synth5', [AUDIO_CMD_DESC.synth5], (_, words) => {
 // handle synth fx configurations
 for (let i = 0; i < 4; ++i) {
   const idx = i + 1
+  const group = i < 2 ? 0 : 1
   AUDIO_FIRMWARE.command(
     `echo${idx}`,
     [
@@ -535,7 +515,7 @@ for (let i = 0; i < 4; ++i) {
     ],
     (_, words) => {
       const bid = READ_CONTEXT.board?.id ?? ''
-      handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'echo', words)
+      handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, group, 'echo', words)
       return 0
     },
   )
@@ -548,7 +528,13 @@ for (let i = 0; i < 4; ++i) {
       ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
-        handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'fcrush', words)
+        handlesynthvoicefx(
+          READ_CONTEXT.elementfocus,
+          bid,
+          group,
+          'fcrush',
+          words,
+        )
         return 0
       },
     )
@@ -564,7 +550,7 @@ for (let i = 0; i < 4; ++i) {
         handlesynthvoicefx(
           READ_CONTEXT.elementfocus,
           bid,
-          i,
+          group,
           'autofilter',
           words,
         )
@@ -580,7 +566,13 @@ for (let i = 0; i < 4; ++i) {
       ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
-        handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'reverb', words)
+        handlesynthvoicefx(
+          READ_CONTEXT.elementfocus,
+          bid,
+          group,
+          'reverb',
+          words,
+        )
         return 0
       },
     )
@@ -593,7 +585,13 @@ for (let i = 0; i < 4; ++i) {
       ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
-        handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'distort', words)
+        handlesynthvoicefx(
+          READ_CONTEXT.elementfocus,
+          bid,
+          group,
+          'distort',
+          words,
+        )
         return 0
       },
     )
@@ -606,7 +604,13 @@ for (let i = 0; i < 4; ++i) {
       ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
-        handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'vibrato', words)
+        handlesynthvoicefx(
+          READ_CONTEXT.elementfocus,
+          bid,
+          group,
+          'vibrato',
+          words,
+        )
         return 0
       },
     )
@@ -619,7 +623,13 @@ for (let i = 0; i < 4; ++i) {
       ],
       (_, words) => {
         const bid = READ_CONTEXT.board?.id ?? ''
-        handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, i, 'autowah', words)
+        handlesynthvoicefx(
+          READ_CONTEXT.elementfocus,
+          bid,
+          group,
+          'autowah',
+          words,
+        )
         return 0
       },
     )

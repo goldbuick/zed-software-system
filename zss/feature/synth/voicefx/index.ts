@@ -5,6 +5,8 @@ import { AUDIO_SYNTH } from 'zss/feature/synth'
 import { volumetodb } from 'zss/feature/synth/fx'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
+import { canonicalvoicefxgroupindex } from '../voicefxgroup'
+
 import { synthvoicefxautofilterconfig } from './autofilter'
 import { synthvoicefxautowahconfig } from './autowah'
 import { synthvoicefxdistortionconfig } from './distort'
@@ -28,11 +30,12 @@ export function synthvoicefxconfig(
   if (!ispresent(synth)) {
     return
   }
-  if (index < 0 || index >= synth.FX.length) {
+  const groupidx = canonicalvoicefxgroupindex(index)
+  if (groupidx < 0 || groupidx >= synth.FX.length) {
     apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const fx = synth.FX[index][fxname] as Channel
+  const fx = synth.FX[groupidx][fxname] as Channel
   if (ispresent(fx)) {
     switch (config) {
       case 'on':
@@ -56,26 +59,38 @@ export function synthvoicefxconfig(
           switch (fxname) {
             case 'fc':
             case 'fcrush':
-              synthvoicefxfcrushconfig(player, synth, index, config, value)
+              synthvoicefxfcrushconfig(player, synth, groupidx, config, value)
               break
             case 'echo':
-              synthvoicefxechoconfig(player, synth, index, config, value)
+              synthvoicefxechoconfig(player, synth, groupidx, config, value)
               break
             case 'autofilter':
-              synthvoicefxautofilterconfig(player, synth, index, config, value)
+              synthvoicefxautofilterconfig(
+                player,
+                synth,
+                groupidx,
+                config,
+                value,
+              )
               break
             case 'reverb':
-              synthvoicefxreverbconfig(player, synth, index, config, value)
+              synthvoicefxreverbconfig(player, synth, groupidx, config, value)
               break
             case 'distort':
             case 'distortion':
-              synthvoicefxdistortionconfig(player, synth, index, config, value)
+              synthvoicefxdistortionconfig(
+                player,
+                synth,
+                groupidx,
+                config,
+                value,
+              )
               break
             case 'vibrato':
-              synthvoicefxvibratoconfig(player, synth, index, config, value)
+              synthvoicefxvibratoconfig(player, synth, groupidx, config, value)
               break
             case 'autowah':
-              synthvoicefxautowahconfig(player, synth, index, config, value)
+              synthvoicefxautowahconfig(player, synth, groupidx, config, value)
               break
           }
         }

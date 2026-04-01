@@ -1,7 +1,8 @@
-import { Frequency, NoiseSynth, Synth, Time, Volume } from 'tone'
+import { Frequency, Gain, NoiseSynth, Synth, Time, Volume } from 'tone'
 
 export function createtom(drumvolume: Volume) {
-  const drumlowtomosc = new Synth().connect(drumvolume)
+  const tombus = new Gain(1).connect(drumvolume)
+  const drumlowtomosc = new Synth().connect(tombus)
   drumlowtomosc.set({
     envelope: {
       attack: 0.01,
@@ -12,7 +13,7 @@ export function createtom(drumvolume: Volume) {
     oscillator: { type: 'sawtooth' },
   })
 
-  const drumlowtomosc2 = new Synth().connect(drumvolume)
+  const drumlowtomosc2 = new Synth().connect(tombus)
   drumlowtomosc2.set({
     envelope: {
       attack: 0.01,
@@ -23,13 +24,13 @@ export function createtom(drumvolume: Volume) {
     oscillator: { type: 'triangle' },
   })
 
-  const drumlowtomnoise = new NoiseSynth().connect(drumvolume)
+  const drumlowtomnoise = new NoiseSynth().connect(tombus)
   drumlowtomnoise.set({
     envelope: {
       attack: 0.01,
-      decay: 0.1,
+      decay: 0.08,
       sustain: 0.001,
-      release: 0.1,
+      release: 0.08,
     },
   })
 
@@ -50,7 +51,7 @@ export function createtom(drumvolume: Volume) {
         time + ramp,
       )
 
-      const ramp2 = Time('4n').toSeconds()
+      const ramp2 = Time('8n').toSeconds()
       drumlowtomnoise.triggerAttackRelease('8n', time)
       drumlowtomnoise.volume.setValueAtTime(1, time)
       drumlowtomnoise.volume.exponentialRampToValueAtTime(0, time + ramp2)

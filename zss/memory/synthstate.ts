@@ -5,6 +5,7 @@ import {
   invokeplay,
   parseplay,
 } from 'zss/feature/synth/playnotation'
+import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { DEFAULT_BPM, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
@@ -20,6 +21,42 @@ const SYNTH_STATE_DEFAULT: SYNTH_STATE = {
   voicefx: {},
 }
 
+function mergevoicefxlayer(
+  a: MAYBE<Record<string, Record<string, MAYBE<number | string>>>>,
+  b: MAYBE<Record<string, Record<string, MAYBE<number | string>>>>,
+): Record<string, Record<string, MAYBE<number | string>>> {
+  const out = deepcopy(a ?? {})
+  if (!ispresent(b)) {
+    return out
+  }
+  const bkeys = Object.keys(b)
+  for (let i = 0; i < bkeys.length; ++i) {
+    const fk = bkeys[i]
+    out[fk] = { ...(out[fk] ?? {}), ...b[fk] }
+  }
+  return out
+}
+
+function memorymigratelegacyvoicefx(cache: SYNTH_STATE) {
+  const vf = cache.voicefx
+  if (!ispresent(vf) || typeof vf !== 'object') {
+    return
+  }
+  if (!ispresent(vf['2']) && !ispresent(vf['3'])) {
+    return
+  }
+  const merged0 = mergevoicefxlayer(vf['0'], vf['1'])
+  const merged1 = mergevoicefxlayer(vf['2'], vf['3'])
+  const next: SYNTH_STATE['voicefx'] = {}
+  if (Object.keys(merged0).length) {
+    next['0'] = merged0
+  }
+  if (Object.keys(merged1).length) {
+    next['1'] = merged1
+  }
+  cache.voicefx = next
+}
+
 function readsynthcacheinternal(board: string): SYNTH_STATE {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const cache = memoryreadbookflag(
@@ -29,6 +66,7 @@ function readsynthcacheinternal(board: string): SYNTH_STATE {
   ) as MAYBE<SYNTH_STATE>
   // use the cached synth state
   if (ispresent(cache)) {
+    memorymigratelegacyvoicefx(cache)
     return cache
   }
   // create a new synth state
@@ -67,24 +105,25 @@ export function memorymergesynthvoicefx(
   value: MAYBE<number | string>,
 ) {
   const cache = readsynthcacheinternal(board)
-  if (!ispresent(cache.voicefx[idx])) {
-    cache.voicefx[idx] = {}
+  const groupidx = String(canonicalvoicefxgroupindex(idx))
+  if (!ispresent(cache.voicefx[groupidx])) {
+    cache.voicefx[groupidx] = {}
   }
-  if (!ispresent(cache.voicefx[idx][fx])) {
-    cache.voicefx[idx][fx] = {}
+  if (!ispresent(cache.voicefx[groupidx][fx])) {
+    cache.voicefx[groupidx][fx] = {}
   }
   switch (config) {
     case 'on':
-      cache.voicefx[idx][fx].on = 'on'
+      cache.voicefx[groupidx][fx].on = 'on'
       break
     case 'off':
-      cache.voicefx[idx][fx].on = 'off'
+      cache.voicefx[groupidx][fx].on = 'off'
       break
     default:
       if (isnumber(config)) {
-        cache.voicefx[idx][fx].on = value
+        cache.voicefx[groupidx][fx].on = value
       } else if (config) {
-        cache.voicefx[idx][fx][config] = value
+        cache.voicefx[groupidx][fx][config] = value
       }
       break
   }

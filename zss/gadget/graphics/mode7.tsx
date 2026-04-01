@@ -2,23 +2,27 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { memo, useLayoutEffect, useRef, useState } from 'react'
-import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
+import { memo, useCallback, useRef, useState } from 'react'
+import {
+  Group,
+  PerspectiveCamera as PerspectiveCameraImpl,
+  Vector3,
+} from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
+import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
+import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
+import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
 import {
   MODE7_Z_FAR,
   MODE7_Z_MID,
   MODE7_Z_NEAR,
   mode7viewscalefromcameraz,
 } from 'zss/gadget/graphics/mode7viewscale'
-import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
-import { maptolayerz } from 'zss/gadget/graphics/layerz'
-import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
@@ -70,11 +74,16 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const underref = useRef<Group>(null)
   const cornerref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
+  const [boardcamera, setboardcamera] = useState<PerspectiveCameraImpl | null>(
+    null,
+  )
   const depthoffield = useRef<DepthOfFieldEffect>(null)
+  const dofplayerworld = useRef(new Vector3())
+  const dofcamworld = useRef(new Vector3())
 
-  const [, setcameraready] = useState(false)
-  useLayoutEffect(() => {
-    setcameraready(true)
+  const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
+    cameraref.current = c
+    setboardcamera((prev) => (prev === c ? prev : c))
   }, [])
 
   useFrame((_, delta) => {
@@ -149,25 +158,35 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       damp(userData, 'focusy', tfocusy, animrate)
     }
 
-    // update dof
+    // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
       case VIEWSCALE.NEAR:
         depthoffield.current.bokehScale = 10
         depthoffield.current.cocMaterial.worldFocusRange = 1200
-        depthoffield.current.cocMaterial.worldFocusDistance = 350
         break
       default:
       case VIEWSCALE.MID:
         depthoffield.current.bokehScale = 10
         depthoffield.current.cocMaterial.worldFocusRange = 1700
-        depthoffield.current.cocMaterial.worldFocusDistance = 800
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 10
         depthoffield.current.cocMaterial.worldFocusRange = 1700
-        depthoffield.current.cocMaterial.worldFocusDistance = 1100
         break
     }
+
+    const gadgetlayers = useGadgetClient.getState().gadget.layers ?? []
+    const playerspritez = maxspriteslayerz(gadgetlayers, 'mode7')
+    cornerref.current.updateMatrixWorld(true)
+    dofplayerworld.current.set(
+      (control.focusx + 0.5) * drawwidth,
+      (control.focusy + 0.5) * drawheight,
+      playerspritez,
+    )
+    cornerref.current.localToWorld(dofplayerworld.current)
+    cameraref.current.getWorldPosition(dofcamworld.current)
+    depthoffield.current.cocMaterial.focusDistance =
+      dofcamworld.current.distanceTo(dofplayerworld.current)
 
     // center camera
     cameraref.current.rotation.z = Math.PI
@@ -203,15 +222,15 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   return (
     <>
       <perspectiveCamera
-        ref={cameraref}
+        ref={bindboardcamera}
         near={0.1}
         far={2000}
         aspect={-viewwidth / viewheight}
       />
       <group position-z={layersindex}>
-        {cameraref.current && (
+        {boardcamera && (
           <RenderLayer
-            camera={cameraref.current}
+            camera={boardcamera}
             viewwidth={viewwidth}
             viewheight={viewheight}
             effects={

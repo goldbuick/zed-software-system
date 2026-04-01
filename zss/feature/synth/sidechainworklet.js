@@ -46,7 +46,7 @@ class SidechainCompressorProcessor extends AudioWorkletProcessor {
 
     this.firstTime = true
     this.useLogging = true
-    this.sampleRate = 48000
+    this.sampleRate = sampleRate
     this.useSidechain = true
 
     this.ratio = 12.0

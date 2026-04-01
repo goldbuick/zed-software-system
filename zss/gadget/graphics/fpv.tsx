@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
-import { memo, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useCallback, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -71,10 +71,13 @@ export const FPVGraphics = memo(function FPVGraphics({
   const tiltref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
+  const [boardcamera, setboardcamera] = useState<PerspectiveCameraImpl | null>(
+    null,
+  )
 
-  const [, setcameraready] = useState(false)
-  useLayoutEffect(() => {
-    setcameraready(true)
+  const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
+    cameraref.current = c
+    setboardcamera((prev) => (prev === c ? prev : c))
   }, [])
 
   useFrame((_, delta) => {
@@ -257,7 +260,7 @@ export const FPVGraphics = memo(function FPVGraphics({
       <group ref={positionref}>
         <group ref={tiltref}>
           <perspectiveCamera
-            ref={cameraref}
+            ref={bindboardcamera}
             near={0.1}
             far={3000}
             aspect={-viewwidth / viewheight}
@@ -271,9 +274,9 @@ export const FPVGraphics = memo(function FPVGraphics({
         ))}
       </group>
       <group position-z={layersindex}>
-        {cameraref.current && (
+        {boardcamera && (
           <RenderLayer
-            camera={cameraref.current}
+            camera={boardcamera}
             viewwidth={viewwidth}
             viewheight={viewheight}
             effects={

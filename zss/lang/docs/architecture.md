@@ -137,7 +137,7 @@ flowchart TB
   branchTok["token_expr branch first in OR"]
   layerTerm["term star slash pct floordiv"]
   layerFactor["factor unary plus minus"]
-  layerPower["power caret right associative"]
+  layerPower["power double star right associative"]
   layerAtom["token base"]
   layerExpr --> layerAnd --> layerNot --> layerCmp --> layerArith
   layerArith --> branchTok
@@ -149,7 +149,7 @@ flowchart TB
 
 | Level | Grammar | Operators / notes |
 | ----- | ------- | ----------------- |
-| Primary | `power` | `^` — RHS is `factor`, so `a^b^c` groups as `a^(b^c)` |
+| Primary | `power` | `**` — RHS is `factor`, so `a**b**c` groups as `a**(b**c)` |
 | Unary | `factor` | Prefix `+` / `-` |
 | Multiplicative | `term` | `*`, `/`, `%`, `//` — left-associative chains |
 | Additive | `arith_expr` | `+`, `-` on `term` chain — **or** whole-clause `token_expr` (first `OR` branch) |

@@ -21,7 +21,7 @@ export function createsnare(drumvolume: Volume) {
       attack: 0.01,
       decay: 0.1,
       sustain: 0,
-      release: 0.1,
+      release: 0.055,
     },
   })
   drumhisnarenoise.connect(drumhisnarefilter)
@@ -46,7 +46,7 @@ export function createsnare(drumvolume: Volume) {
       attack: 0.01,
       decay: 0.1,
       sustain: 0.001,
-      release: 0.1,
+      release: 0.055,
     },
   })
   drumlowsnarenoise.connect(drumlowsnarefilter)

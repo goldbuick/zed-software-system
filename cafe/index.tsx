@@ -1,4 +1,10 @@
-import { Canvas, createRoot, events, extend } from '@react-three/fiber'
+import {
+  Canvas,
+  type RootState,
+  createRoot,
+  events,
+  extend,
+} from '@react-three/fiber'
 import debounce from 'debounce'
 import {
   BoxGeometry,
@@ -25,10 +31,15 @@ import {
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
+import {
+  bumpcanvassyncgeneration,
+  registercanvassync,
+} from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
 import { installe2ebridge } from 'zss/testsupport/e2escrollbridge'
+import type { StoreApi } from 'zustand/vanilla'
 
 import { App } from './app'
 
@@ -41,6 +52,11 @@ function shoulde2ebridge(): boolean {
     return true
   }
   return import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
+}
+
+/** Off unless dev/E2E — `preserveDrawingBuffer` costs bandwidth on some GPUs. */
+function shouldpreservedrawingbuffer(): boolean {
+  return import.meta.env.DEV || shoulde2ebridge()
 }
 
 async function bootheadless(): Promise<void> {
@@ -113,6 +129,26 @@ async function main() {
   })
 
   const root = createRoot(document.getElementById('frame')!)
+  const r3fcontext: { store?: StoreApi<RootState> } = {}
+
+  /**
+   * R3F skips `setSize` when `configure` size equals current state, so `gl.setSize`
+   * never runs (see pmndrs/react-three-fiber store subscription). Nudge dimensions
+   * so the subscriber refreshes canvas + camera after graphics-mode swaps.
+   */
+  function forcer3fglresize(store: StoreApi<RootState> | undefined) {
+    if (!store) {
+      return
+    }
+    const s = store.getState()
+    const { width, height, top, left } = s.size
+    if (width < 2 || height < 1) {
+      return
+    }
+    s.setSize(width - 1, height, top, left)
+    s.setSize(width, height, top, left)
+    bumpcanvassyncgeneration()
+  }
 
   function applyconfig() {
     const innerwidth = window.innerWidth
@@ -136,11 +172,15 @@ async function main() {
           alpha: true,
           stencil: false,
           antialias: false,
-          preserveDrawingBuffer: true,
+          preserveDrawingBuffer: shouldpreservedrawingbuffer(),
         },
+      })
+      .then(() => {
+        forcer3fglresize(r3fcontext.store)
       })
       .catch(console.error)
   }
+  registercanvassync(applyconfig)
   const handleresize = debounce(applyconfig, 256)
 
   function detectWebGL(): boolean {
@@ -181,7 +221,7 @@ async function main() {
       alpha: true,
       stencil: false,
       antialias: false,
-      preserveDrawingBuffer: true,
+      preserveDrawingBuffer: shouldpreservedrawingbuffer(),
     },
   })
 
@@ -190,8 +230,13 @@ async function main() {
     window.visualViewport.addEventListener('resize', handleresize)
     window.visualViewport.addEventListener('scroll', handleresize)
   }
-  handleresize()
-  root.render(<App />)
+  r3fcontext.store = root.render(<App />)
+  // Debounced `handleresize` does not run on first call until `wait` elapses, so the
+  // canvas would stay on the sizeless initial `configure` until resize or ~256ms.
+  applyconfig()
+  requestAnimationFrame(() => {
+    applyconfig()
+  })
 }
 
 main().catch(console.error)

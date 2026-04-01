@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
-import { memo, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -13,6 +13,7 @@ import { useScreenSize } from 'zss/gadget/userscreen'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
+import { useShallow } from 'zustand/react/shallow'
 
 import { FlatLayer } from './flatlayer'
 import { RenderLayer } from './renderlayer'
@@ -35,6 +36,9 @@ export const FlatGraphics = memo(function FlatGraphics({
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
   const cameraref = useRef<OrthographicCameraImpl>(null)
+  const [boardcamera, setboardcamera] = useState<OrthographicCameraImpl | null>(
+    null,
+  )
   const cornerref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
   const inspectref = useRef<Group>(null)
@@ -42,8 +46,10 @@ export const FlatGraphics = memo(function FlatGraphics({
   const centeroffsetref = useRef({ x: 0, y: 0 })
   const devassertframeref = useRef(0)
 
-  const [, setcameraready] = useState(false)
-  useLayoutEffect(() => setcameraready(true), [])
+  const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
+    cameraref.current = c
+    setboardcamera((prev) => (prev === c ? prev : c))
+  }, [])
 
   useFrame((_, delta) => {
     if (
@@ -56,13 +62,10 @@ export const FlatGraphics = memo(function FlatGraphics({
       return
     }
 
-    // camera focus logic
-    const control = layersreadcontrol(
-      useGadgetClient.getState().gadget.layers ?? [],
-    )
-
+    const gadget = useGadgetClient.getState().gadget
+    const control = layersreadcontrol(gadget.layers ?? [])
     const animrate = 0.05
-    const currentboard = useGadgetClient.getState().gadget.board
+    const currentboard = gadget.board
 
     // setup tracking state
     if (!ispresent(cameraref.current.userData.focusx)) {
@@ -150,10 +153,14 @@ export const FlatGraphics = memo(function FlatGraphics({
   })
 
   // re-render when board or layer counts change (board change must trigger re-render)
-  useGadgetClient((state) => state.gadget.board)
-  useGadgetClient((state) => state.gadget.over?.length ?? 0)
-  useGadgetClient((state) => state.gadget.under?.length ?? 0)
-  useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+  useGadgetClient(
+    useShallow((state) => ({
+      board: state.gadget.board,
+      overlen: state.gadget.over?.length ?? 0,
+      underlen: state.gadget.under?.length ?? 0,
+      layerslen: state.gadget.layers?.length ?? 0,
+    })),
+  )
 
   const {
     over = [],
@@ -176,7 +183,7 @@ export const FlatGraphics = memo(function FlatGraphics({
         </group>
       </group>
       <orthographicCamera
-        ref={cameraref}
+        ref={bindboardcamera}
         left={viewwidth * -0.5}
         right={viewwidth * 0.5}
         top={viewheight * -0.5}
@@ -186,9 +193,9 @@ export const FlatGraphics = memo(function FlatGraphics({
         position={[0, 0, 1000]}
         onUpdate={(c) => c.updateProjectionMatrix()}
       />
-      {cameraref.current && (
+      {boardcamera && (
         <RenderLayer
-          camera={cameraref.current}
+          camera={boardcamera}
           viewwidth={viewwidth}
           viewheight={viewheight}
           effects={<></>}
