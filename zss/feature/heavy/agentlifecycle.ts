@@ -167,5 +167,4 @@ export function heavyrunrestoreagents(
   if (count > 0) {
     apitoast(heavydev, requestplayer, `Restored ${count} agent(s)`)
   }
-  writeagentlistto(heavydev, requestplayer)
 }
