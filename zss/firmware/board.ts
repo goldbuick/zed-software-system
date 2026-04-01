@@ -1,3 +1,4 @@
+import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
@@ -619,15 +620,28 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
       // shove target at dir, in the direction of the given dir
-      const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-      const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-      const maybetarget = memoryreadelement(dirboard, dir.destpt)
+      const [targetdir, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+      const targetboard = memoryreadboardbyevaldir(
+        targetdir,
+        READ_CONTEXT.board,
+      )
+      const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (memoryboardelementisobject(maybetarget)) {
-        const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
-        const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
-        memorymoveobject(READ_CONTEXT.book, dirboard, maybetarget, {
-          x: shovex,
-          y: shovey,
+        // temp override context
+        const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+        READ_CONTEXT.element = maybetarget
+        READ_CONTEXT.elementid = maybetarget?.id ?? ''
+        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+        // eval shovedir
+        const [shovedir] = readargs(words, ii, [ARG_TYPE.DIR])
+        memorymoveobject(READ_CONTEXT.book, targetboard, maybetarget, {
+          x: shovedir.destpt.x,
+          y: shovedir.destpt.y,
+        })
+        // restore context
+        objectKeys(OLD_CONTEXT).forEach((key) => {
+          // @ts-expect-error dont bother me
+          READ_CONTEXT[key] = OLD_CONTEXT[key]
         })
       }
       return 0
@@ -641,19 +655,31 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
       // shove target at dir, in the direction of the given dir
-      // but only if target is pushable
-      const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-      const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-      const maybetarget = memoryreadelement(dirboard, dir.destpt)
+      const [targetdir, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+      const targetboard = memoryreadboardbyevaldir(
+        targetdir,
+        READ_CONTEXT.board,
+      )
+      const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
-        const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
-        const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
-        memorymoveobject(READ_CONTEXT.book, dirboard, maybetarget, {
-          x: shovex,
-          y: shovey,
+        // temp override context
+        const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+        READ_CONTEXT.element = maybetarget
+        READ_CONTEXT.elementid = maybetarget?.id ?? ''
+        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+        // eval shovedir
+        const [shovedir] = readargs(words, ii, [ARG_TYPE.DIR])
+        memorymoveobject(READ_CONTEXT.book, targetboard, maybetarget, {
+          x: shovedir.destpt.x,
+          y: shovedir.destpt.y,
+        })
+        // restore context
+        objectKeys(OLD_CONTEXT).forEach((key) => {
+          // @ts-expect-error dont bother me
+          READ_CONTEXT[key] = OLD_CONTEXT[key]
         })
       }
       return 0

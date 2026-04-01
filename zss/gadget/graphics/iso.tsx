@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp3 } from 'maath/easing'
+import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
@@ -8,7 +8,8 @@ import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
-import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
@@ -85,20 +86,33 @@ export const IsoGraphics = memo(function IsoGraphics({
       zoomref.current.scale.setScalar(control.viewscale)
     }
 
+    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
+
+    const viewscale = zoomref.current.scale.x
+    const { tfocusx, tfocusy } = flatcameratargetfocus({
+      viewwidth,
+      viewheight,
+      drawwidth,
+      drawheight,
+      viewscale,
+      boardwidth: BOARD_WIDTH,
+      boardheight: BOARD_HEIGHT,
+      controlfocusx: control.focusx,
+      controlfocusy: control.focusy,
+    })
+
     const ud = cameraref.current.userData ?? {}
+    ud.tfocusx = tfocusx
+    ud.tfocusy = tfocusy
+
     const fx = (ud.focusx! + 0.5) * drawwidth
     const fy = (ud.focusy! + 0.5) * drawheight
 
-    // zoom
-    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
-
-    // pan
     damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
-    // smoothed change in focus
     if (currentboard !== ud.currentboard) {
-      ud.focusx = control.focusx
-      ud.focusy = control.focusy
+      ud.focusx = tfocusx
+      ud.focusy = tfocusy
       ud.currentboard = currentboard
       cornerref.current.position.set(
         -((ud.focusx + 0.5) * drawwidth),
@@ -106,7 +120,8 @@ export const IsoGraphics = memo(function IsoGraphics({
         0,
       )
     } else {
-      dampfocus(userData, control, animrate)
+      damp(userData, 'focusx', tfocusx, animrate)
+      damp(userData, 'focusy', tfocusy, animrate)
     }
 
     // update dof

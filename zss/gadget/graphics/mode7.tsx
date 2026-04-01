@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp3, dampE } from 'maath/easing'
+import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
@@ -8,7 +8,14 @@ import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
-import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
+import {
+  MODE7_Z_FAR,
+  MODE7_Z_MID,
+  MODE7_Z_NEAR,
+  mode7viewscalefromcameraz,
+} from 'zss/gadget/graphics/mode7viewscale'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
 import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
@@ -25,12 +32,12 @@ type GraphicsProps = {
 function mapviewtoz(viewscale: number) {
   switch (viewscale as VIEWSCALE) {
     case VIEWSCALE.NEAR:
-      return -128
+      return MODE7_Z_NEAR
     default:
     case VIEWSCALE.MID:
-      return 128
+      return MODE7_Z_MID
     case VIEWSCALE.FAR:
-      return 512
+      return MODE7_Z_FAR
   }
 }
 
@@ -93,10 +100,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     initfocusifneeded(userData, control, currentboard)
 
     const ud = cameraref.current.userData ?? {}
-    const fx = (ud.focusx! + 0.5) * drawwidth
-    const fy = (ud.focusy! + 0.5) * drawheight
 
-    // zoom
     damp3(
       cameraref.current.position,
       [0, 0, mapviewtoz(control.viewscale)],
@@ -104,7 +108,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       delta,
     )
 
-    // tilt
     dampE(
       tiltref.current.rotation,
       [mapviewtotilt(control.viewscale), 0, 0],
@@ -112,13 +115,29 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       delta,
     )
 
-    // focus
+    const viewscale = mode7viewscalefromcameraz(cameraref.current.position.z)
+    const { tfocusx, tfocusy } = flatcameratargetfocus({
+      viewwidth,
+      viewheight,
+      drawwidth,
+      drawheight,
+      viewscale,
+      boardwidth: BOARD_WIDTH,
+      boardheight: BOARD_HEIGHT,
+      controlfocusx: control.focusx,
+      controlfocusy: control.focusy,
+    })
+    ud.tfocusx = tfocusx
+    ud.tfocusy = tfocusy
+
+    const fx = (ud.focusx! + 0.5) * drawwidth
+    const fy = (ud.focusy! + 0.5) * drawheight
+
     damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
-    // smoothed change in focus
     if (currentboard !== ud.currentboard) {
-      ud.focusx = control.focusx
-      ud.focusy = control.focusy
+      ud.focusx = tfocusx
+      ud.focusy = tfocusy
       ud.currentboard = currentboard
       cornerref.current.position.set(
         -((ud.focusx + 0.5) * drawwidth),
@@ -126,7 +145,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
         0,
       )
     } else {
-      dampfocus(userData, control, animrate)
+      damp(userData, 'focusx', tfocusx, animrate)
+      damp(userData, 'focusy', tfocusy, animrate)
     }
 
     // update dof

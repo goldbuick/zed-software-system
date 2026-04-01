@@ -10,6 +10,8 @@ export type LayerControl = {
 export type FocusUserData = {
   focusx?: number
   focusy?: number
+  tfocusx?: number
+  tfocusy?: number
   currentboard?: unknown
   facing?: number
   [key: string]: unknown
@@ -26,6 +28,8 @@ export function initfocusifneeded(
   if (!ispresent(userData.focusx)) {
     userData.focusx = control.focusx
     userData.focusy = control.focusy
+    userData.tfocusx = control.focusx
+    userData.tfocusy = control.focusy
     userData.currentboard = currentboard
     if (options?.withfacing && control.facing !== undefined) {
       userData.facing = control.facing

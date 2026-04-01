@@ -14,6 +14,7 @@ import { isstrkind } from 'zss/words/kind'
 import { DIR, PT } from 'zss/words/types'
 
 import {
+  memoryboardelementindex,
   memoryfindboardplayer,
   memoryreadelement,
   memoryreadelementbyidorindex,
@@ -546,9 +547,9 @@ export function memoryevaldir(
             case 'inorder': {
               if (!ispresent(tracking[kindflag])) {
                 tracking[kindflag] = inorder(elements, (a, b) => {
-                  const aa = `${memoryreadidorindex(a)}`
-                  const bb = `${memoryreadidorindex(b)}`
-                  return aa.localeCompare(bb)
+                  const aindex = memoryboardelementindex(board, a)
+                  const bindex = memoryboardelementindex(board, b)
+                  return aindex - bindex
                 }).map(memoryreadidorindex)
               }
               break
