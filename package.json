@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "1.0.9",
+  "version": "1.0.10",
   "type": "module",
   "files": [
     "bin",
@@ -43,6 +43,9 @@
     "gcp:vm:firewall": "sh scripts/gcp-vm-firewall.sh",
     "gcp:vm:create": "sh scripts/gcp-vm-create.sh",
     "gcp:vm:docker-run": "sh scripts/gcp-vm-docker-run.sh",
+    "vm:docker-run": "sh scripts/vm-zss-docker-run.sh",
+    "aws:ec2:docker-run": "sh scripts/aws-ec2-docker-run.sh",
+    "do:droplet:docker-run": "sh scripts/digitalocean-docker-run.sh",
     "postinstall": "patch-package"
   },
   "devDependencies": {

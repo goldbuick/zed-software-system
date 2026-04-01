@@ -68,6 +68,15 @@ Open **`http://DROPLET_IP:4175`** in a browser.
 
 If a container named `zss` already exists: `docker rm -f zss` before `docker run`.
 
+### Script helper
+
+From the repo, after Docker is on the Droplet:
+
+- **On the Droplet:** `DO_RUN_LOCAL=1 yarn do:droplet:docker-run`
+- **From your laptop:** `DO_DROPLET_HOST=DROPLET_IP DO_DROPLET_SSH_KEY=/path/to/key yarn do:droplet:docker-run`
+
+The shared implementation is [`scripts/vm-zss-docker-run.sh`](../scripts/vm-zss-docker-run.sh) (also `yarn vm:docker-run`).
+
 **Why `--network host`:** On Linux, the app binds directly to the host port; you do not need `-p 4175:4175`. The cloud firewall must still allow **4175**.
 
 ## 5. HTTPS (production)
