@@ -1,4 +1,9 @@
-import { LAYER, createtiles } from 'zss/gadget/data/types'
+import {
+  LAYER,
+  LAYER_DITHER,
+  createtiles,
+  createdither,
+} from 'zss/gadget/data/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 /** Cardinal + diagonal directions for exit preview placeholders. */
@@ -28,4 +33,20 @@ export function buildundiscoveredexitlayers(dir: EXIT_DIRECTION): LAYER[] {
     tiles.stats[i] = 0
   }
   return [tiles]
+}
+
+const CACHED_EXIT_PREVIEW_DITHER_ALPHA = 0.15
+
+/** Dither drawn on top of cached neighbor snapshots (visited); not used for placeholders. */
+export function buildcachedexitpreviewoverlaydither(
+  dir: EXIT_DIRECTION,
+): LAYER_DITHER {
+  const idx = DIR_INDEX[dir]
+  return createdither(
+    'exitpreviewcache',
+    idx,
+    BOARD_WIDTH,
+    BOARD_HEIGHT,
+    CACHED_EXIT_PREVIEW_DITHER_ALPHA,
+  )
 }

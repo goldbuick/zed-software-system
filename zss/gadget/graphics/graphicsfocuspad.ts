@@ -4,6 +4,8 @@ import { VIEWSCALE } from 'zss/gadget/data/types'
 export type GraphicsFocusMode = 'flat' | 'iso' | 'mode7'
 
 export function graphicsfocuspad(mode: GraphicsFocusMode, zoom: number) {
+  const drawcharwidth = RUNTIME.DRAW_CHAR_WIDTH()
+  const drawcharheight = RUNTIME.DRAW_CHAR_HEIGHT()
   switch (mode) {
     default:
     case 'flat':
@@ -42,24 +44,24 @@ export function graphicsfocuspad(mode: GraphicsFocusMode, zoom: number) {
       switch (zoom as VIEWSCALE) {
         case VIEWSCALE.FAR:
           return {
-            padleft: -1.0,
-            padright: -1.0,
-            padtop: 0,
-            padbottom: -3.0,
+            padleft: 0 * drawcharwidth,
+            padright: 0 * drawcharwidth,
+            padtop: 0 * drawcharheight,
+            padbottom: 0 * drawcharheight,
           }
         case VIEWSCALE.MID:
           return {
-            padleft: -0.5,
-            padright: -0.5,
-            padtop: 0,
-            padbottom: -1.5,
+            padleft: 0 * drawcharwidth,
+            padright: 0 * drawcharwidth,
+            padtop: 4 * drawcharheight,
+            padbottom: 4 * drawcharheight,
           }
         case VIEWSCALE.NEAR:
           return {
-            padleft: -42,
-            padright: -42,
-            padtop: 0,
-            padbottom: 5 * RUNTIME.DRAW_CHAR_HEIGHT(),
+            padleft: -20 * drawcharwidth,
+            padright: -20 * drawcharwidth,
+            padtop: 10 * drawcharheight,
+            padbottom: -5 * drawcharheight,
           }
       }
       break

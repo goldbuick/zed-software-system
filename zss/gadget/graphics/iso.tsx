@@ -13,7 +13,6 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
-import { ExitPreviewCachedTint } from 'zss/gadget/graphics/exitpreviewcachedtint'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
@@ -269,66 +268,50 @@ export const IsoGraphics = memo(function IsoGraphics({
                     ))}
                     {east.layers.length > 0 && (
                       <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                        <ExitPreviewCachedTint
-                          showcachedtint={east.showcachedtint}
-                        >
-                          {east.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={east.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {east.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={east.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                     {west.layers.length > 0 && (
                       <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                        <ExitPreviewCachedTint
-                          showcachedtint={west.showcachedtint}
-                        >
-                          {west.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={west.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {west.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={west.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                     {north.layers.length > 0 && (
                       <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                        <ExitPreviewCachedTint
-                          showcachedtint={north.showcachedtint}
-                        >
-                          {north.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={north.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {north.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={north.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                     {south.layers.length > 0 && (
                       <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                        <ExitPreviewCachedTint
-                          showcachedtint={south.showcachedtint}
-                        >
-                          {south.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={south.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {south.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={south.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                     {ne.layers.length > 0 && (
@@ -339,18 +322,14 @@ export const IsoGraphics = memo(function IsoGraphics({
                           0,
                         ]}
                       >
-                        <ExitPreviewCachedTint
-                          showcachedtint={ne.showcachedtint}
-                        >
-                          {ne.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={ne.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {ne.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={ne.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                     {nw.layers.length > 0 && (
@@ -361,18 +340,14 @@ export const IsoGraphics = memo(function IsoGraphics({
                           0,
                         ]}
                       >
-                        <ExitPreviewCachedTint
-                          showcachedtint={nw.showcachedtint}
-                        >
-                          {nw.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={nw.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {nw.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={nw.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                     {se.layers.length > 0 && (
@@ -383,18 +358,14 @@ export const IsoGraphics = memo(function IsoGraphics({
                           0,
                         ]}
                       >
-                        <ExitPreviewCachedTint
-                          showcachedtint={se.showcachedtint}
-                        >
-                          {se.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={se.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {se.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={se.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                     {sw.layers.length > 0 && (
@@ -405,18 +376,14 @@ export const IsoGraphics = memo(function IsoGraphics({
                           0,
                         ]}
                       >
-                        <ExitPreviewCachedTint
-                          showcachedtint={sw.showcachedtint}
-                        >
-                          {sw.layers.map((layer) => (
-                            <IsoLayer
-                              key={layer.id}
-                              id={layer.id}
-                              layers={sw.layers}
-                              z={maptolayerz(layer, 'iso')}
-                            />
-                          ))}
-                        </ExitPreviewCachedTint>
+                        {sw.layers.map((layer) => (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={sw.layers}
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ))}
                       </group>
                     )}
                   </group>

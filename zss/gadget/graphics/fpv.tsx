@@ -9,7 +9,6 @@ import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { dampfocus } from 'zss/gadget/graphics/camerafocus'
-import { ExitPreviewCachedTint } from 'zss/gadget/graphics/exitpreviewcachedtint'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
@@ -331,7 +330,7 @@ export const FPVGraphics = memo(function FPVGraphics({
               ))}
               <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
                 {east.layers.length > 0 ? (
-                  <ExitPreviewCachedTint showcachedtint={east.showcachedtint}>
+                  <>
                     {east.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -341,7 +340,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -355,7 +354,7 @@ export const FPVGraphics = memo(function FPVGraphics({
               </group>
               <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
                 {west.layers.length > 0 ? (
-                  <ExitPreviewCachedTint showcachedtint={west.showcachedtint}>
+                  <>
                     {west.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -365,7 +364,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -379,7 +378,7 @@ export const FPVGraphics = memo(function FPVGraphics({
               </group>
               <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
                 {north.layers.length > 0 ? (
-                  <ExitPreviewCachedTint showcachedtint={north.showcachedtint}>
+                  <>
                     {north.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -389,7 +388,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -403,7 +402,7 @@ export const FPVGraphics = memo(function FPVGraphics({
               </group>
               <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
                 {south.layers.length > 0 ? (
-                  <ExitPreviewCachedTint showcachedtint={south.showcachedtint}>
+                  <>
                     {south.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -413,7 +412,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -433,7 +432,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                     0,
                   ]}
                 >
-                  <ExitPreviewCachedTint showcachedtint={ne.showcachedtint}>
+                  <>
                     {ne.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -443,7 +442,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 </group>
               )}
               {nw.layers.length > 0 && (
@@ -454,7 +453,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                     0,
                   ]}
                 >
-                  <ExitPreviewCachedTint showcachedtint={nw.showcachedtint}>
+                  <>
                     {nw.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -464,7 +463,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 </group>
               )}
               {se.layers.length > 0 && (
@@ -475,7 +474,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                     0,
                   ]}
                 >
-                  <ExitPreviewCachedTint showcachedtint={se.showcachedtint}>
+                  <>
                     {se.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -485,7 +484,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 </group>
               )}
               {sw.layers.length > 0 && (
@@ -496,7 +495,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                     0,
                   ]}
                 >
-                  <ExitPreviewCachedTint showcachedtint={sw.showcachedtint}>
+                  <>
                     {sw.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
@@ -506,7 +505,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                         multi={multi}
                       />
                     ))}
-                  </ExitPreviewCachedTint>
+                  </>
                 </group>
               )}
             </group>

@@ -13,7 +13,6 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
-import { ExitPreviewCachedTint } from 'zss/gadget/graphics/exitpreviewcachedtint'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { graphicsfocuspad } from 'zss/gadget/graphics/graphicsfocuspad'
@@ -293,66 +292,50 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                   ))}
                   {east.layers.length > 0 && (
                     <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                      <ExitPreviewCachedTint
-                        showcachedtint={east.showcachedtint}
-                      >
-                        {east.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={east.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {east.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={east.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                   {west.layers.length > 0 && (
                     <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                      <ExitPreviewCachedTint
-                        showcachedtint={west.showcachedtint}
-                      >
-                        {west.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={west.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {west.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={west.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                   {north.layers.length > 0 && (
                     <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                      <ExitPreviewCachedTint
-                        showcachedtint={north.showcachedtint}
-                      >
-                        {north.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={north.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {north.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={north.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                   {south.layers.length > 0 && (
                     <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                      <ExitPreviewCachedTint
-                        showcachedtint={south.showcachedtint}
-                      >
-                        {south.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={south.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {south.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={south.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                   {ne.layers.length > 0 && (
@@ -363,16 +346,14 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                         0,
                       ]}
                     >
-                      <ExitPreviewCachedTint showcachedtint={ne.showcachedtint}>
-                        {ne.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={ne.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {ne.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={ne.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                   {nw.layers.length > 0 && (
@@ -383,16 +364,14 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                         0,
                       ]}
                     >
-                      <ExitPreviewCachedTint showcachedtint={nw.showcachedtint}>
-                        {nw.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={nw.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {nw.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={nw.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                   {se.layers.length > 0 && (
@@ -403,16 +382,14 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                         0,
                       ]}
                     >
-                      <ExitPreviewCachedTint showcachedtint={se.showcachedtint}>
-                        {se.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={se.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {se.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={se.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                   {sw.layers.length > 0 && (
@@ -423,16 +400,14 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                         0,
                       ]}
                     >
-                      <ExitPreviewCachedTint showcachedtint={sw.showcachedtint}>
-                        {sw.layers.map((layer) => (
-                          <Mode7Layer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={sw.layers}
-                            z={maptolayerz(layer, 'mode7')}
-                          />
-                        ))}
-                      </ExitPreviewCachedTint>
+                      {sw.layers.map((layer) => (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={sw.layers}
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ))}
                     </group>
                   )}
                 </group>

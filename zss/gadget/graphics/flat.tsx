@@ -5,7 +5,6 @@ import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
-import { ExitPreviewCachedTint } from 'zss/gadget/graphics/exitpreviewcachedtint'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
 import {
   flatcameradevassertboardinortho,
@@ -256,62 +255,50 @@ export const FlatGraphics = memo(function FlatGraphics({
                 ))}
                 {east.layers.length > 0 && (
                   <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                    <ExitPreviewCachedTint showcachedtint={east.showcachedtint}>
-                      {east.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={east.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {east.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={east.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
                 {west.layers.length > 0 && (
                   <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                    <ExitPreviewCachedTint showcachedtint={west.showcachedtint}>
-                      {west.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={west.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {west.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={west.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
                 {north.layers.length > 0 && (
                   <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                    <ExitPreviewCachedTint
-                      showcachedtint={north.showcachedtint}
-                    >
-                      {north.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={north.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {north.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={north.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
                 {south.layers.length > 0 && (
                   <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                    <ExitPreviewCachedTint
-                      showcachedtint={south.showcachedtint}
-                    >
-                      {south.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={south.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {south.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={south.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
                 {ne.layers.length > 0 && (
@@ -322,16 +309,14 @@ export const FlatGraphics = memo(function FlatGraphics({
                       0,
                     ]}
                   >
-                    <ExitPreviewCachedTint showcachedtint={ne.showcachedtint}>
-                      {ne.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={ne.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {ne.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={ne.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
                 {nw.layers.length > 0 && (
@@ -342,16 +327,14 @@ export const FlatGraphics = memo(function FlatGraphics({
                       0,
                     ]}
                   >
-                    <ExitPreviewCachedTint showcachedtint={nw.showcachedtint}>
-                      {nw.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={nw.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {nw.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={nw.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
                 {se.layers.length > 0 && (
@@ -362,16 +345,14 @@ export const FlatGraphics = memo(function FlatGraphics({
                       0,
                     ]}
                   >
-                    <ExitPreviewCachedTint showcachedtint={se.showcachedtint}>
-                      {se.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={se.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {se.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={se.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
                 {sw.layers.length > 0 && (
@@ -382,16 +363,14 @@ export const FlatGraphics = memo(function FlatGraphics({
                       0,
                     ]}
                   >
-                    <ExitPreviewCachedTint showcachedtint={sw.showcachedtint}>
-                      {sw.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={sw.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </ExitPreviewCachedTint>
+                    {sw.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={sw.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
                   </group>
                 )}
               </group>
