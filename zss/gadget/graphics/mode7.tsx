@@ -10,6 +10,12 @@ import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
+import {
+  MODE7_Z_FAR,
+  MODE7_Z_MID,
+  MODE7_Z_NEAR,
+  mode7viewscalefromcameraz,
+} from 'zss/gadget/graphics/mode7viewscale'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
 import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
@@ -26,12 +32,12 @@ type GraphicsProps = {
 function mapviewtoz(viewscale: number) {
   switch (viewscale as VIEWSCALE) {
     case VIEWSCALE.NEAR:
-      return -128
+      return MODE7_Z_NEAR
     default:
     case VIEWSCALE.MID:
-      return 128
+      return MODE7_Z_MID
     case VIEWSCALE.FAR:
-      return 512
+      return MODE7_Z_FAR
   }
 }
 
@@ -93,25 +99,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     const userData = cameraref.current.userData as FocusUserData
     initfocusifneeded(userData, control, currentboard)
 
-    const viewscale = Number(control.viewscale)
-    const { tfocusx, tfocusy } = flatcameratargetfocus({
-      viewwidth,
-      viewheight,
-      drawwidth,
-      drawheight,
-      viewscale,
-      boardwidth: BOARD_WIDTH,
-      boardheight: BOARD_HEIGHT,
-      controlfocusx: control.focusx,
-      controlfocusy: control.focusy,
-    })
-
     const ud = cameraref.current.userData ?? {}
-    ud.tfocusx = tfocusx
-    ud.tfocusy = tfocusy
-
-    const fx = (ud.focusx! + 0.5) * drawwidth
-    const fy = (ud.focusy! + 0.5) * drawheight
 
     damp3(
       cameraref.current.position,
@@ -126,6 +114,24 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       animrate,
       delta,
     )
+
+    const viewscale = mode7viewscalefromcameraz(cameraref.current.position.z)
+    const { tfocusx, tfocusy } = flatcameratargetfocus({
+      viewwidth,
+      viewheight,
+      drawwidth,
+      drawheight,
+      viewscale,
+      boardwidth: BOARD_WIDTH,
+      boardheight: BOARD_HEIGHT,
+      controlfocusx: control.focusx,
+      controlfocusy: control.focusy,
+    })
+    ud.tfocusx = tfocusx
+    ud.tfocusy = tfocusy
+
+    const fx = (ud.focusx! + 0.5) * drawwidth
+    const fy = (ud.focusy! + 0.5) * drawheight
 
     damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
