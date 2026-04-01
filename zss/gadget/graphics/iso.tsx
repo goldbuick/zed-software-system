@@ -105,6 +105,8 @@ export const IsoGraphics = memo(function IsoGraphics({
     const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
       'iso',
       control.viewscale,
+      viewwidth,
+      viewheight,
     )
     const { tfocusx, tfocusy } = flatcameratargetfocus({
       viewwidth,

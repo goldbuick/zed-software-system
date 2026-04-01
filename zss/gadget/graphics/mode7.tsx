@@ -137,6 +137,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
       'mode7',
       control.viewscale,
+      viewwidth,
+      viewheight,
     )
     const { tfocusx, tfocusy } = mode7projectedtargetfocus({
       camera: cameraref.current,
