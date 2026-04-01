@@ -5,8 +5,11 @@ import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
+import {
+  flatcameradevassertboardinortho,
+  flatcameratargetfocus,
+} from 'zss/gadget/graphics/flatcamerabounds'
 import { useScreenSize } from 'zss/gadget/userscreen'
-import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
@@ -36,6 +39,8 @@ export const FlatGraphics = memo(function FlatGraphics({
   const zoomref = useRef<Group>(null)
   const inspectref = useRef<Group>(null)
   const inspectzoomref = useRef<Group>(null)
+  const centeroffsetref = useRef({ x: 0, y: 0 })
+  const devassertframeref = useRef(0)
 
   const [, setcameraready] = useState(false)
   useLayoutEffect(() => setcameraready(true), [])
@@ -81,25 +86,44 @@ export const FlatGraphics = memo(function FlatGraphics({
     // pan
     damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
-    // edge clamping
     const viewscale = zoomref.current.scale.x
-    const boarddrawwidth = BOARD_WIDTH * drawwidth
-    const boarddrawheight = BOARD_HEIGHT * drawheight
+    const { tfocusx, tfocusy } = flatcameratargetfocus({
+      viewwidth,
+      viewheight,
+      drawwidth,
+      drawheight,
+      viewscale,
+      boardwidth: BOARD_WIDTH,
+      boardheight: BOARD_HEIGHT,
+      controlfocusx: control.focusx,
+      controlfocusy: control.focusy,
+    })
+    userData.tfocusx = tfocusx
+    userData.tfocusy = tfocusy
 
-    if (viewwidth > boarddrawwidth * viewscale) {
-      userData.tfocusx = BOARD_WIDTH * 0.5
-    } else {
-      const leftedge = (viewwidth * 0.5) / (drawwidth * viewscale)
-      const rightedge = BOARD_WIDTH - leftedge
-      userData.tfocusx = clamp(control.focusx, leftedge - 1, rightedge + 0.25)
-    }
-
-    if (viewheight > boarddrawheight * viewscale) {
-      userData.tfocusy = BOARD_HEIGHT * 0.5
-    } else {
-      const topedge = (viewheight * 0.5) / (drawheight * viewscale)
-      const bottomedge = BOARD_HEIGHT - topedge
-      userData.tfocusy = clamp(control.focusy, topedge - 1, bottomedge)
+    if (import.meta.env.DEV) {
+      devassertframeref.current += 1
+      if (devassertframeref.current % 60 === 0) {
+        const c = centeroffsetref.current
+        const boardwscaled = BOARD_WIDTH * drawwidth * viewscale
+        const boardhscaled = BOARD_HEIGHT * drawheight * viewscale
+        flatcameradevassertboardinortho({
+          centerx: c.x,
+          centery: c.y,
+          viewscale,
+          cornerx: cornerref.current.position.x,
+          cornery: cornerref.current.position.y,
+          drawwidth,
+          drawheight,
+          boardwidth: BOARD_WIDTH,
+          boardheight: BOARD_HEIGHT,
+          viewwidth,
+          viewheight,
+          cellepsilon: Math.max(drawwidth, drawheight) * viewscale,
+          checkhoriz: viewwidth <= boardwscaled,
+          checkvert: viewheight <= boardhscaled,
+        })
+      }
     }
 
     // smoothed change in focus
@@ -139,6 +163,9 @@ export const FlatGraphics = memo(function FlatGraphics({
 
   const centerx = viewport.width * -0.5 + screensize.marginx
   const centery = viewport.height * 0.5 - screensize.marginy
+  useLayoutEffect(() => {
+    centeroffsetref.current = { x: centerx, y: centery }
+  }, [centerx, centery])
   return (
     <>
       <group position={[viewwidth * 0.5, viewheight * 0.5, 1]}>
