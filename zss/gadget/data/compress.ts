@@ -68,6 +68,14 @@ enum GADGET_STATE_KEYS {
   scroll,
   sidebar,
   synthstate,
+  exiteast,
+  exitwest,
+  exitnorth,
+  exitsouth,
+  exitne,
+  exitnw,
+  exitse,
+  exitsw,
 }
 
 export function exportgadgetstate(

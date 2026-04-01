@@ -9,6 +9,8 @@ import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { dampfocus } from 'zss/gadget/graphics/camerafocus'
+import { ExitPreviewCachedTint } from 'zss/gadget/graphics/exitpreviewcachedtint'
+import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
@@ -19,6 +21,7 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
+import { useShallow } from 'zustand/react/shallow'
 
 type GraphicsProps = {
   width: number
@@ -243,13 +246,30 @@ export const FPVGraphics = memo(function FPVGraphics({
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+  useGadgetClient(
+    useShallow((state) => ({
+      layercachegen: state.layercachegen,
+      exiteast: state.gadget.exiteast,
+      exitwest: state.gadget.exitwest,
+      exitnorth: state.gadget.exitnorth,
+      exitsouth: state.gadget.exitsouth,
+      exitne: state.gadget.exitne,
+      exitnw: state.gadget.exitnw,
+      exitse: state.gadget.exitse,
+      exitsw: state.gadget.exitsw,
+    })),
+  )
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const exiteast = layercachemap.get(gadget.exiteast) ?? []
-  const exitwest = layercachemap.get(gadget.exitwest) ?? []
-  const exitnorth = layercachemap.get(gadget.exitnorth) ?? []
-  const exitsouth = layercachemap.get(gadget.exitsouth) ?? []
+  const east = resolveexitpreview(gadget.exiteast, layercachemap, 'e')
+  const west = resolveexitpreview(gadget.exitwest, layercachemap, 'w')
+  const north = resolveexitpreview(gadget.exitnorth, layercachemap, 'n')
+  const south = resolveexitpreview(gadget.exitsouth, layercachemap, 's')
+  const ne = resolveexitpreview(gadget.exitne, layercachemap, 'ne')
+  const nw = resolveexitpreview(gadget.exitnw, layercachemap, 'nw')
+  const se = resolveexitpreview(gadget.exitse, layercachemap, 'se')
+  const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw')
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
@@ -310,18 +330,18 @@ export const FPVGraphics = memo(function FPVGraphics({
                 />
               ))}
               <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                {exiteast.length ? (
-                  <>
-                    {exiteast.map((layer) => (
+                {east.layers.length > 0 ? (
+                  <ExitPreviewCachedTint showcachedtint={east.showcachedtint}>
+                    {east.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
                         id={layer.id}
-                        layers={exiteast}
+                        layers={east.layers}
                         z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
-                  </>
+                  </ExitPreviewCachedTint>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -334,18 +354,18 @@ export const FPVGraphics = memo(function FPVGraphics({
                 )}
               </group>
               <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                {exitwest.length ? (
-                  <>
-                    {exitwest.map((layer) => (
+                {west.layers.length > 0 ? (
+                  <ExitPreviewCachedTint showcachedtint={west.showcachedtint}>
+                    {west.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
                         id={layer.id}
-                        layers={exitwest}
+                        layers={west.layers}
                         z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
-                  </>
+                  </ExitPreviewCachedTint>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -358,18 +378,18 @@ export const FPVGraphics = memo(function FPVGraphics({
                 )}
               </group>
               <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                {exitnorth.length ? (
-                  <>
-                    {exitnorth.map((layer) => (
+                {north.layers.length > 0 ? (
+                  <ExitPreviewCachedTint showcachedtint={north.showcachedtint}>
+                    {north.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
                         id={layer.id}
-                        layers={exitnorth}
+                        layers={north.layers}
                         z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
-                  </>
+                  </ExitPreviewCachedTint>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -382,18 +402,18 @@ export const FPVGraphics = memo(function FPVGraphics({
                 )}
               </group>
               <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                {exitsouth.length ? (
-                  <>
-                    {exitsouth.map((layer) => (
+                {south.layers.length > 0 ? (
+                  <ExitPreviewCachedTint showcachedtint={south.showcachedtint}>
+                    {south.layers.map((layer) => (
                       <FPVLayer
                         key={layer.id}
                         id={layer.id}
-                        layers={exitsouth}
+                        layers={south.layers}
                         z={maptolayerz(layer, 'fpv')}
                         multi={multi}
                       />
                     ))}
-                  </>
+                  </ExitPreviewCachedTint>
                 ) : (
                   <group scale-z={2}>
                     <PillarwMeshes
@@ -405,6 +425,90 @@ export const FPVGraphics = memo(function FPVGraphics({
                   </group>
                 )}
               </group>
+              {ne.layers.length > 0 && (
+                <group
+                  position={[
+                    BOARD_WIDTH * drawwidth,
+                    BOARD_HEIGHT * -drawheight,
+                    0,
+                  ]}
+                >
+                  <ExitPreviewCachedTint showcachedtint={ne.showcachedtint}>
+                    {ne.layers.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={ne.layers}
+                        z={maptolayerz(layer, 'fpv')}
+                        multi={multi}
+                      />
+                    ))}
+                  </ExitPreviewCachedTint>
+                </group>
+              )}
+              {nw.layers.length > 0 && (
+                <group
+                  position={[
+                    BOARD_WIDTH * -drawwidth,
+                    BOARD_HEIGHT * -drawheight,
+                    0,
+                  ]}
+                >
+                  <ExitPreviewCachedTint showcachedtint={nw.showcachedtint}>
+                    {nw.layers.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={nw.layers}
+                        z={maptolayerz(layer, 'fpv')}
+                        multi={multi}
+                      />
+                    ))}
+                  </ExitPreviewCachedTint>
+                </group>
+              )}
+              {se.layers.length > 0 && (
+                <group
+                  position={[
+                    BOARD_WIDTH * drawwidth,
+                    BOARD_HEIGHT * drawheight,
+                    0,
+                  ]}
+                >
+                  <ExitPreviewCachedTint showcachedtint={se.showcachedtint}>
+                    {se.layers.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={se.layers}
+                        z={maptolayerz(layer, 'fpv')}
+                        multi={multi}
+                      />
+                    ))}
+                  </ExitPreviewCachedTint>
+                </group>
+              )}
+              {sw.layers.length > 0 && (
+                <group
+                  position={[
+                    BOARD_WIDTH * -drawwidth,
+                    BOARD_HEIGHT * drawheight,
+                    0,
+                  ]}
+                >
+                  <ExitPreviewCachedTint showcachedtint={sw.showcachedtint}>
+                    {sw.layers.map((layer) => (
+                      <FPVLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={sw.layers}
+                        z={maptolayerz(layer, 'fpv')}
+                        multi={multi}
+                      />
+                    ))}
+                  </ExitPreviewCachedTint>
+                </group>
+              )}
             </group>
           </RenderLayer>
         )}

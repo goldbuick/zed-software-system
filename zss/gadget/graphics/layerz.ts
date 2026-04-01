@@ -2,7 +2,7 @@ import { RUNTIME } from 'zss/config'
 import type { LAYER } from 'zss/gadget/data/types'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 
-export type LayerZVariant = 'iso' | 'mode7' | 'fpv'
+export type LayerZVariant = 'flat' | 'iso' | 'mode7' | 'fpv'
 
 export function maptolayerz(layer: LAYER, variant: LayerZVariant): number {
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -20,7 +20,7 @@ export function maptolayerz(layer: LAYER, variant: LayerZVariant): number {
 /** Max sprite layer Z for stacked SPRITES layers; fallback matches `maptolayerz` default for sprites. */
 export function maxspriteslayerz(
   layers: LAYER[],
-  variant: 'iso' | 'mode7',
+  variant: 'flat' | 'iso' | 'mode7',
 ): number {
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   let maxz = -Infinity
