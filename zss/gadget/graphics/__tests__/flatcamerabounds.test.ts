@@ -173,7 +173,8 @@ describe('flatcamerabounds', () => {
         controlfocusy: 99,
         padbottom,
       })
-      const expectedbottom = BOARD_H - (halfh + padbottom) / (drawheight * viewscale)
+      const expectedbottom =
+        BOARD_H - (halfh + padbottom) / (drawheight * viewscale)
       expect(padded.tfocusy).toBe(expectedbottom)
       expect(padded.tfocusy).toBeLessThan(unpadded.tfocusy)
     })

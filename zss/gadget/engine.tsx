@@ -1,5 +1,5 @@
 import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
-import { useStore, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { VignetteTechnique } from 'postprocessing'
@@ -32,7 +32,6 @@ import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
 
 export function Engine() {
-  const store = useStore()
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
 

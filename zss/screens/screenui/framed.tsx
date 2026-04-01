@@ -57,13 +57,13 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const inspector = useTape((state) => state.inspector)
 
   // re-render only when layer count, board render id, or graphics changes
-  useGadgetClient(
-    useShallow((state) => [
-      state.gadget.id,
-      state.gadget.board,
-      state.gadget.layers?.length ?? 0,
-    ]),
-  )
+  // useGadgetClient(
+  //   useShallow((state) => [
+  //     state.gadget.id,
+  //     state.gadget.board,
+  //     state.gadget.layers?.length ?? 0,
+  //   ]),
+  // )
 
   // handle graphics modes
   const graphics = useGadgetClient((state) => {

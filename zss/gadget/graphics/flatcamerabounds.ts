@@ -62,7 +62,8 @@ export function flatcameratargetfocus(input: FlatCameraTargetFocusInput): {
     tfocusy = boardheight * 0.5
   } else {
     const topedge = (halfh + padtop) / (drawheight * viewscale)
-    const bottomedge = boardheight - (halfh + padbottom) / (drawheight * viewscale)
+    const bottomedge =
+      boardheight - (halfh + padbottom) / (drawheight * viewscale)
     tfocusy = clamp(controlfocusy, topedge - 1, bottomedge)
   }
 

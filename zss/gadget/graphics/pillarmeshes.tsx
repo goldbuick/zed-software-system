@@ -105,17 +105,12 @@ export function PillarwMeshes({
     const by = maxrows * drawheight
     pillarbbmin.set(0, 0, -0.5)
     pillarbbmax.set(bx, by, 0.5)
-    if (!meshes.boundingBox) {
-      meshes.boundingBox = new Box3()
-    }
+    meshes.boundingBox ??= new Box3()
     meshes.boundingBox.set(pillarbbmin, pillarbbmax)
     pillarspherecenter.set(bx * 0.5, by * 0.5, 0)
-    if (!meshes.boundingSphere) {
-      meshes.boundingSphere = new Sphere()
-    }
+    meshes.boundingSphere ??= new Sphere()
     meshes.boundingSphere.center.copy(pillarspherecenter)
-    meshes.boundingSphere.radius =
-      Math.hypot(bx * 0.5, by * 0.5, 0.5) + 0.001
+    meshes.boundingSphere.radius = Math.hypot(bx * 0.5, by * 0.5, 0.5) + 0.001
     meshes.visible = !!meshes.count
   }, [meshes, char, color, bg, width, limit])
 

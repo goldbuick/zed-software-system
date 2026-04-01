@@ -23,7 +23,7 @@ jest.mock('zss/words/textformat', () => ({
 
 import { compileast } from 'zss/lang/ast'
 import { transformast } from 'zss/lang/transformer'
-import { NODE, type CodeNode } from 'zss/lang/visitor'
+import { type CodeNode, NODE } from 'zss/lang/visitor'
 
 function assertcompile(source: string) {
   const r = compileast(source)
@@ -36,7 +36,7 @@ function emit(source: string) {
   const ast = assertcompile(source)
   const out = transformast(ast)
   expect(out.code).toBeDefined()
-  return out.code!
+  return out.code
 }
 
 function findnodetype(root: CodeNode, type: NODE): CodeNode | undefined {
@@ -45,7 +45,7 @@ function findnodetype(root: CodeNode, type: NODE): CodeNode | undefined {
   }
   const keys = Object.keys(root).filter((k) => k !== 'parent' && k !== 'range')
   for (const k of keys) {
-    const v = (root as Record<string, unknown>)[k]
+    const v = (root as unknown as Record<string, unknown>)[k]
     if (Array.isArray(v)) {
       for (const item of v) {
         if (item && typeof item === 'object' && 'type' in (item as object)) {
@@ -55,7 +55,7 @@ function findnodetype(root: CodeNode, type: NODE): CodeNode | undefined {
           }
         }
       }
-    } else if (v && typeof v === 'object' && 'type' in (v as object)) {
+    } else if (v && typeof v === 'object' && 'type' in v) {
       const found = findnodetype(v as CodeNode, type)
       if (found) {
         return found
