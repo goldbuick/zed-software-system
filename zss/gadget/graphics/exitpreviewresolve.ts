@@ -3,7 +3,6 @@ import { CORNER_EXIT_DISPUTED } from 'zss/memory/boardcornerexits'
 
 import {
   type EXIT_DIRECTION,
-  buildcachedexitpreviewoverlaydither,
   buildundiscoveredexitlayers,
 } from './undiscoveredexitlayers'
 
@@ -24,7 +23,7 @@ export function resolveexitpreview(
   const cached = layercachemap.get(exitboardid) ?? []
   if (cached.length > 0) {
     return {
-      layers: [...cached, buildcachedexitpreviewoverlaydither(direction)],
+      layers: cached,
     }
   }
   return {
