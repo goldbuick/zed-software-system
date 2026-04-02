@@ -146,10 +146,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
       viewscale,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
     })
     ud.tfocusx = tfocusx
     ud.tfocusy = tfocusy

@@ -19,7 +19,7 @@ export type NdcAxisAlignedRect = {
   maxy: number
 }
 
-/** Inner safe rectangle in NDC from padstondc + edgeslack (containment target). */
+/** Inner safe rectangle in NDC from edgeslack inset (containment target). */
 export type SafeNdcRect = {
   left: number
   right: number
@@ -106,39 +106,15 @@ function restoreorthographicprojection(
   c.updateProjectionMatrix()
 }
 
-function padstondc(
-  viewwidth: number,
-  viewheight: number,
-  padleft: number,
-  padright: number,
-  padtop: number,
-  padbottom: number,
-) {
-  const halfw = viewwidth * 0.5
-  const halfh = viewheight * 0.5
-  return {
-    mxl: padleft / halfw,
-    mxr: padright / halfw,
-    myt: padtop / halfh,
-    myb: padbottom / halfh,
-  }
-}
-
 /**
- * Padded inner NDC rectangle: board AABB must lie fully inside this (containment clamp).
+ * Inner NDC rectangle with symmetric edge inset: board AABB must lie fully inside (containment clamp).
  */
-export function safendcrectfrompads(
-  mxl: number,
-  mxr: number,
-  myt: number,
-  myb: number,
-  edgeslack: number,
-): SafeNdcRect {
+export function safendcrect(edgeslack: number): SafeNdcRect {
   return {
-    left: -1 + mxl + edgeslack,
-    right: 1 - mxr - edgeslack,
-    bottom: -1 + myb + edgeslack,
-    top: 1 - myt - edgeslack,
+    left: -1 + edgeslack,
+    right: 1 - edgeslack,
+    bottom: -1 + edgeslack,
+    top: 1 - edgeslack,
   }
 }
 
@@ -347,10 +323,6 @@ export type Mode7ProjectedTargetFocusInput = {
   controlfocusx: number
   controlfocusy: number
   viewscale: number
-  padleft: number
-  padright: number
-  padtop: number
-  padbottom: number
   edgeslack?: number
   letterboxmargin?: number
 }
@@ -367,10 +339,6 @@ export type IsoProjectedTargetFocusInput = {
   controlfocusx: number
   controlfocusy: number
   viewscale: number
-  padleft: number
-  padright: number
-  padtop: number
-  padbottom: number
 }
 
 type ProjectedTargetFocusFromCornersInput = {
@@ -385,16 +353,12 @@ type ProjectedTargetFocusFromCornersInput = {
   controlfocusx: number
   controlfocusy: number
   viewscale: number
-  padleft: number
-  padright: number
-  padtop: number
-  padbottom: number
   edgeslack?: number
   letterboxmargin?: number
 }
 
 /**
- * Target focus: board quad in NDC must lie inside the padded safe rectangle (containment).
+ * Target focus: board quad in NDC must lie inside the safe rectangle (containment).
  * Gauss–Seidel passes handle x/y coupling. Falls back to flatcameratargetfocus when infeasible.
  */
 function projectedtargetfocusfromcorners(
@@ -412,26 +376,14 @@ function projectedtargetfocusfromcorners(
     controlfocusx,
     controlfocusy,
     viewscale,
-    padleft,
-    padright,
-    padtop,
-    padbottom,
     edgeslack = NDC_EDGE_SLACK,
     letterboxmargin = LETTERBOX_SPAN_MARGIN,
   } = input
 
   const boarddrawwidth = boardwidth * drawwidth
   const boarddrawheight = boardheight * drawheight
-  const { mxl, mxr, myt, myb } = padstondc(
-    viewwidth,
-    viewheight,
-    padleft,
-    padright,
-    padtop,
-    padbottom,
-  )
-  const availx = 2 - mxl - mxr
-  const availy = 2 - myt - myb
+  const availx = 2
+  const availy = 2
 
   const savedx = corner.position.x
   const savedy = corner.position.y
@@ -460,14 +412,10 @@ function projectedtargetfocusfromcorners(
       boardheight,
       controlfocusx,
       controlfocusy,
-      padleft,
-      padright,
-      padtop,
-      padbottom,
     })
   }
 
-  const safe = safendcrectfrompads(mxl, mxr, myt, myb, edgeslack)
+  const safe = safendcrect(edgeslack)
   if (safe.left >= safe.right - EPS || safe.bottom >= safe.top - EPS) {
     corner.position.set(savedx, savedy, savedz)
     restoreorthographicprojection(camera, savedortho)

@@ -13,7 +13,7 @@ import {
   boardrectcontainssafe,
   isoprojectedtargetfocus,
   mode7projectedtargetfocus,
-  safendcrectfrompads,
+  safendcrect,
 } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { MODE7_Z_MID } from 'zss/gadget/graphics/mode7viewscale'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -86,8 +86,8 @@ describe('mode7targetfocusprojection', () => {
     expect(full.minx).toBeCloseTo(best, 5)
   })
 
-  it('containment safe rect is ordered for zero pads', () => {
-    const safe = safendcrectfrompads(0, 0, 0, 0, 0.05)
+  it('containment safe rect is ordered for edge slack', () => {
+    const safe = safendcrect(0.05)
     expect(safe.left).toBeLessThan(safe.right)
     expect(safe.bottom).toBeLessThan(safe.top)
     expect(
@@ -119,10 +119,6 @@ describe('mode7targetfocusprojection', () => {
       controlfocusx: 12,
       controlfocusy: 8,
       viewscale: 1,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
     })
     expect(camera.left).toBeCloseTo(wrong.left, 10)
     expect(camera.right).toBeCloseTo(wrong.right, 10)
@@ -147,10 +143,6 @@ describe('mode7targetfocusprojection', () => {
       controlfocusx: 12,
       controlfocusy: 8,
       viewscale: 1,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
     })
     expect(camera.aspect).toBeCloseTo(wrongaspect, 10)
   })
@@ -169,10 +161,6 @@ describe('mode7targetfocusprojection', () => {
       controlfocusx: 12,
       controlfocusy: 8,
       viewscale: 1,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
     })
     expect(Number.isFinite(tfocusx)).toBe(true)
     expect(Number.isFinite(tfocusy)).toBe(true)

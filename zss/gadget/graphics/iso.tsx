@@ -149,10 +149,6 @@ export const IsoGraphics = memo(function IsoGraphics({
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
       viewscale,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
     })
 
     const ud = cameraref.current.userData ?? {}

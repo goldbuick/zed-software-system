@@ -67,10 +67,6 @@ describe('isoprojectedtargetfocus', () => {
       controlfocusx: 12,
       controlfocusy: 10,
       viewscale: 1,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
     })
 
     expect(Number.isFinite(tfocusx)).toBe(true)
@@ -115,10 +111,6 @@ describe('isoprojectedtargetfocus', () => {
       drawwidth,
       drawheight,
       viewscale: 1,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
       boardwidth: BOARD_WIDTH,
       boardheight: BOARD_HEIGHT,
       controlfocusx: 3,
