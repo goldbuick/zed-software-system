@@ -57,6 +57,26 @@ function mapviewtotilt(viewscale: number) {
   }
 }
 
+function clampfocus(
+  focusx: number,
+  focusy: number,
+  viewscale: VIEWSCALE,
+  viewwidth: number,
+  viewheight: number,
+  drawwidth: number,
+  drawheight: number,
+) {
+  const charwidth = drawwidth * viewscale
+  const charheight = drawheight * viewscale
+  const margin = 0.7
+  const cols = Math.floor((viewwidth * 0.5) / charwidth) * margin
+  const rows = Math.floor((viewheight * 0.5) / charheight) * margin
+  return [
+    clamp(focusx, cols, BOARD_WIDTH - cols - 1),
+    clamp(focusy, rows, BOARD_HEIGHT - rows - 1),
+  ]
+}
+
 export const Mode7Graphics = memo(function Mode7Graphics({
   width,
   height,
@@ -128,11 +148,18 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     cameraref.current.rotation.z = Math.PI
     cameraref.current.updateProjectionMatrix()
     cameraref.current.updateMatrixWorld(true)
-
     cornerref.current.updateWorldMatrix(true, false)
 
-    const tfocusx = control.focusx
-    const tfocusy = control.focusy
+    const [tfocusx, tfocusy] = clampfocus(
+      control.focusx,
+      control.focusy,
+      control.viewscale,
+      viewwidth,
+      viewheight,
+      drawwidth,
+      drawheight,
+    )
+
     ud.tfocusx = tfocusx
     ud.tfocusy = tfocusy
 
