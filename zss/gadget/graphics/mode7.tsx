@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -26,7 +26,7 @@ import {
   mode7viewscalefromcameraz,
 } from 'zss/gadget/graphics/mode7viewscale'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { framedcenterxoffset, useScreenSize } from 'zss/gadget/userscreen'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
@@ -64,7 +64,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   width,
   height,
 }: GraphicsProps) {
-  const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -250,10 +249,9 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const centerx =
-    viewport.width * -0.5 + screensize.marginx +
-    framedcenterxoffset(screensize.cols, viewwidth, drawwidth)
-  const centery = viewport.height * 0.5 - screensize.marginy
+  const fullgridwpx = screensize.cols * drawwidth
+  const centerx = fullgridwpx * -0.5
+  const centery = viewheight * 0.5
   return (
     <>
       <perspectiveCamera

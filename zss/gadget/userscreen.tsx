@@ -24,19 +24,6 @@ export function useScreenSize() {
   return useContext(Screensize)
 }
 
-/**
- * Add this to `viewport.width * -0.5 + marginx` (do not replace that term). When the
- * framed rect is narrower than the full grid (e.g. right sidebar), shifts the board
- * so camera `viewwidth` from props lines up with the framed strip.
- */
-export function framedcenterxoffset(
-  cols: number,
-  framedwidthpx: number,
-  draww: number,
-) {
-  return (cols * draww - framedwidthpx) * 0.5
-}
-
 type UserScreenProps = PropsWithChildren<any>
 
 export function UserScreen({ children }: UserScreenProps) {

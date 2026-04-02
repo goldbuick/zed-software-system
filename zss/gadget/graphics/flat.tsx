@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
@@ -12,7 +12,7 @@ import {
 } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
-import { framedcenterxoffset, useScreenSize } from 'zss/gadget/userscreen'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
@@ -28,9 +28,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   width,
   height,
 }: GraphicsProps) {
-  const { viewport } = useThree()
   const screensize = useScreenSize()
-
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
@@ -187,10 +185,9 @@ export const FlatGraphics = memo(function FlatGraphics({
   const maintopz = topoverz ?? toplayersz ?? topunderz ?? 1
   const exitzbase = maintopz + 2
 
-  const centerx =
-    viewport.width * -0.5 + screensize.marginx +
-    framedcenterxoffset(screensize.cols, viewwidth, drawwidth)
-  const centery = viewport.height * 0.5 - screensize.marginy
+  const fullgridwpx = screensize.cols * drawwidth
+  const centerx = fullgridwpx * -0.5
+  const centery = viewheight * 0.5
   useLayoutEffect(() => {
     centeroffsetref.current = { x: centerx, y: centery }
   }, [centerx, centery])

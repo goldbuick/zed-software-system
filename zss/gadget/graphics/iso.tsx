@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -19,7 +19,7 @@ import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { isoprojectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { framedcenterxoffset, useScreenSize } from 'zss/gadget/userscreen'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
@@ -54,7 +54,6 @@ export const IsoGraphics = memo(function IsoGraphics({
   width,
   height,
 }: GraphicsProps) {
-  const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -233,10 +232,11 @@ export const IsoGraphics = memo(function IsoGraphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const centerx =
-    viewport.width * -0.5 + screensize.marginx +
-    framedcenterxoffset(screensize.cols, viewwidth, drawwidth)
-  const centery = viewport.height * 0.5 - screensize.marginy
+  // Portal scene: board layers use full-grid pixel space; camera frustum is framed
+  // viewwidth. Center using full grid width (cols*draww), not framed viewwidth/2.
+  const fullgridwpx = screensize.cols * drawwidth
+  const centerx = fullgridwpx * -0.5
+  const centery = viewheight * 0.5
   return (
     <>
       <group position-z={layersindex}>
