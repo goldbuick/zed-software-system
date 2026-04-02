@@ -1,5 +1,6 @@
 import { LAYER, createtiles } from 'zss/gadget/data/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { COLOR } from 'zss/words/types'
 
 /** Cardinal + diagonal directions for exit preview placeholders. */
 export type EXIT_DIRECTION = 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se'
@@ -22,13 +23,15 @@ const PLACEHOLDER_TILES = createtiles(
   BOARD_HEIGHT,
   0,
 )
+const bank = 5
 const size = BOARD_WIDTH * BOARD_HEIGHT
 for (let i = 0; i < size; ++i) {
   const x = i % BOARD_WIDTH
   const y = Math.floor(i / BOARD_WIDTH)
-  PLACEHOLDER_TILES.char[i] = (x + y) % 3 === 0 ? 176 : 177
-  PLACEHOLDER_TILES.color[i] = 8
-  PLACEHOLDER_TILES.bg[i] = 0
+  const diagonal = (x + y) % bank === 0 || (x - y) % bank === 0
+  PLACEHOLDER_TILES.char[i] = diagonal ? 176 : 177
+  PLACEHOLDER_TILES.color[i] = diagonal ? COLOR.DKGRAY : COLOR.BLACK
+  PLACEHOLDER_TILES.bg[i] = COLOR.DKGRAY
   PLACEHOLDER_TILES.stats[i] = 0
 }
 
