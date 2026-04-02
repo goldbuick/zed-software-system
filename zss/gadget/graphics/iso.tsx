@@ -19,7 +19,7 @@ import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { isoprojectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
+import { framedcenterxoffset, useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
@@ -233,7 +233,9 @@ export const IsoGraphics = memo(function IsoGraphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const centerx = viewport.width * -0.5 + screensize.marginx
+  const centerx =
+    viewport.width * -0.5 + screensize.marginx +
+    framedcenterxoffset(screensize.cols, viewwidth, drawwidth)
   const centery = viewport.height * 0.5 - screensize.marginy
   return (
     <>

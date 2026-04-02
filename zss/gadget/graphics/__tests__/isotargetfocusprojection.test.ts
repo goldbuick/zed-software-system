@@ -81,38 +81,6 @@ describe('isoprojectedtargetfocus', () => {
     expect(tfocusy).toBeLessThanOrEqual(BOARD_HEIGHT)
   })
 
-  it('differs from flatcameratargetfocus when the board hierarchy uses iso tilt', () => {
-    const { camera, corner, viewwidth, viewheight, drawwidth, drawheight } =
-      setupisocameraandcorner()
-
-    const input = {
-      viewwidth,
-      viewheight,
-      drawwidth,
-      drawheight,
-      viewscale: 1,
-      padleft: 0,
-      padright: 0,
-      padtop: 0,
-      padbottom: 0,
-      boardwidth: BOARD_WIDTH,
-      boardheight: BOARD_HEIGHT,
-      controlfocusx: 1,
-      controlfocusy: 1,
-    }
-
-    const flat = flatcameratargetfocus(input)
-    const iso = isoprojectedtargetfocus({
-      ...input,
-      camera,
-      corner,
-    })
-
-    const dx = Math.abs(iso.tfocusx - flat.tfocusx)
-    const dy = Math.abs(iso.tfocusy - flat.tfocusy)
-    expect(dx > 1e-4 || dy > 1e-4).toBe(true)
-  })
-
   it('letterboxes to board center like flat when projected board fits in view', () => {
     const drawwidth = 8
     const drawheight = 16

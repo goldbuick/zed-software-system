@@ -12,7 +12,7 @@ import {
 } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
-import { useScreenSize } from 'zss/gadget/userscreen'
+import { framedcenterxoffset, useScreenSize } from 'zss/gadget/userscreen'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
@@ -187,7 +187,9 @@ export const FlatGraphics = memo(function FlatGraphics({
   const maintopz = topoverz ?? toplayersz ?? topunderz ?? 1
   const exitzbase = maintopz + 2
 
-  const centerx = viewport.width * -0.5 + screensize.marginx
+  const centerx =
+    viewport.width * -0.5 + screensize.marginx +
+    framedcenterxoffset(screensize.cols, viewwidth, drawwidth)
   const centery = viewport.height * 0.5 - screensize.marginy
   useLayoutEffect(() => {
     centeroffsetref.current = { x: centerx, y: centery }

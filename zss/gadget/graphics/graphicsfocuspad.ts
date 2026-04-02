@@ -4,10 +4,14 @@ import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 export type GraphicsFocusMode = 'flat' | 'iso' | 'mode7'
 
 /**
- * Reference grid (cols × rows): NDC factors are per board half-width / half-height,
- * scaled by view half-extents (same pattern as iso). Mode7 uses independent
- * horizontal left/right factors—perspective + X tilt skews the board quad in NDC
- * (mirrors iso’s asymmetric ISO_*_PAD_LEFT / RIGHT).
+ * Reference grid (cols × rows): ISO/MODE7 constants are **per-axis** NDC contributions
+ * (after `padstondc`: `padleft / (viewwidth/2)` etc.). Horizontal pads scale with
+ * `viewwidth`, vertical with `viewheight`, so **aspect ratio** is reflected in **pixel**
+ * pads; `isoprojectedtargetfocus` / `mode7projectedtargetfocus` also snap the camera
+ * frustum to `viewwidth`×`viewheight` so `project()` matches those NDC margins.
+ *
+ * Mode7 uses independent horizontal left/right factors—perspective + X tilt skews the
+ * board quad in NDC (mirrors iso’s asymmetric ISO_*_PAD_LEFT / RIGHT).
  */
 
 const BOARD_HWIDTH = BOARD_WIDTH * 0.5
@@ -18,10 +22,10 @@ const MODE7_FAR_PAD_RIGHT_NDC = 0 / BOARD_HWIDTH
 const MODE7_FAR_PAD_TOP_NDC = 0 / BOARD_HHEIGHT
 const MODE7_FAR_PAD_BOTTOM_NDC = 0 / BOARD_HHEIGHT
 
-const MODE7_MID_PAD_LEFT_NDC = 0 / BOARD_HWIDTH
-const MODE7_MID_PAD_RIGHT_NDC = 0 / BOARD_HWIDTH
-const MODE7_MID_PAD_TOP_NDC = 0 / BOARD_HHEIGHT
-const MODE7_MID_PAD_BOTTOM_NDC = 0 / BOARD_HHEIGHT
+const MODE7_MID_PAD_LEFT_NDC = -8 / BOARD_HWIDTH
+const MODE7_MID_PAD_RIGHT_NDC = 6 / BOARD_HWIDTH
+const MODE7_MID_PAD_TOP_NDC = -5 / BOARD_HHEIGHT
+const MODE7_MID_PAD_BOTTOM_NDC = -1 / BOARD_HHEIGHT
 
 const MODE7_NEAR_PAD_LEFT_NDC = 1 / BOARD_HWIDTH
 const MODE7_NEAR_PAD_RIGHT_NDC = 1 / BOARD_HWIDTH

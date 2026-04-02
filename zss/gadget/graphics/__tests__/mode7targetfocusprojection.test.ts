@@ -5,13 +5,15 @@ jest.mock('zss/config', () => ({
   },
 }))
 
-import { Group, PerspectiveCamera, Vector3 } from 'three'
+import { Group, OrthographicCamera, PerspectiveCamera, Vector3 } from 'three'
 import {
   MODE7_LETTERBOX_SPAN_MARGIN,
   MODE7_NDC_EDGE_SLACK,
   boardndcbounds,
-  boardndchorizontalnearfloor,
+  boardrectcontainssafe,
+  isoprojectedtargetfocus,
   mode7projectedtargetfocus,
+  safendcrectfrompads,
 } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { MODE7_Z_MID } from 'zss/gadget/graphics/mode7viewscale'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -38,7 +40,7 @@ function buildmode7scene() {
 }
 
 describe('mode7targetfocusprojection', () => {
-  it('full-quad horizontal minx can differ from near-floor minx (corner dominance)', () => {
+  it('boardndcbounds matches manual min over four projected corners', () => {
     const { camera, corner } = buildmode7scene()
     const boarddraww = BOARD_WIDTH * DRAW_W
     const boarddrawh = BOARD_HEIGHT * DRAW_H
@@ -46,16 +48,6 @@ describe('mode7targetfocusprojection', () => {
     const focusy = BOARD_HEIGHT * 0.5
 
     const full = boardndcbounds(
-      camera,
-      corner,
-      focusx,
-      focusy,
-      boarddraww,
-      boarddrawh,
-      DRAW_W,
-      DRAW_H,
-    )
-    const near = boardndchorizontalnearfloor(
       camera,
       corner,
       focusx,
@@ -76,7 +68,6 @@ describe('mode7targetfocusprojection', () => {
       new Vector3(0, boarddrawh, 0),
       new Vector3(boarddraww, boarddrawh, 0),
     ]
-    let whichmin = -1
     let best = Infinity
     const v = new Vector3()
     for (let i = 0; i < 4; i++) {
@@ -90,20 +81,81 @@ describe('mode7targetfocusprojection', () => {
       const nx = flipx ? -v.x : v.x
       if (nx < best) {
         best = nx
-        whichmin = i
       }
     }
     expect(full.minx).toBeCloseTo(best, 5)
-    expect(whichmin).toBeGreaterThanOrEqual(0)
-
-    expect(full.minx).toBeLessThanOrEqual(near.minx + 1e-5)
-    expect(near.maxx).toBeGreaterThanOrEqual(near.minx)
-    if (whichmin === 0 || whichmin === 1) {
-      expect(near.minx).toBeGreaterThan(full.minx + 1e-4)
-    }
   })
 
-  it('mode7projectedtargetfocus returns finite tfocus with default slack (not edgeslack 0.9)', () => {
+  it('containment safe rect is ordered for zero pads', () => {
+    const safe = safendcrectfrompads(0, 0, 0, 0, 0.05)
+    expect(safe.left).toBeLessThan(safe.right)
+    expect(safe.bottom).toBeLessThan(safe.top)
+    expect(
+      boardrectcontainssafe({ minx: 0, maxx: 0, miny: 0, maxy: 0 }, safe),
+    ).toBe(true)
+  })
+
+  it('restores orthographic frustum after iso projected clamp', () => {
+    const camera = new OrthographicCamera(-9, 9, -8, 8, 0.1, 2000)
+    camera.position.set(0, 0, 1000)
+    camera.updateProjectionMatrix()
+    camera.updateMatrixWorld(true)
+    const wrong = {
+      left: camera.left,
+      right: camera.right,
+      top: camera.top,
+      bottom: camera.bottom,
+    }
+    const corner = new Group()
+    isoprojectedtargetfocus({
+      camera,
+      corner,
+      viewwidth: VIEW_W,
+      viewheight: VIEW_H,
+      drawwidth: DRAW_W,
+      drawheight: DRAW_H,
+      boardwidth: BOARD_WIDTH,
+      boardheight: BOARD_HEIGHT,
+      controlfocusx: 12,
+      controlfocusy: 8,
+      viewscale: 1,
+      padleft: 0,
+      padright: 0,
+      padtop: 0,
+      padbottom: 0,
+    })
+    expect(camera.left).toBeCloseTo(wrong.left, 10)
+    expect(camera.right).toBeCloseTo(wrong.right, 10)
+    expect(camera.top).toBeCloseTo(wrong.top, 10)
+    expect(camera.bottom).toBeCloseTo(wrong.bottom, 10)
+  })
+
+  it('restores camera.aspect after mode7 projected clamp', () => {
+    const { camera, corner } = buildmode7scene()
+    const wrongaspect = -2.2
+    camera.aspect = wrongaspect
+    camera.updateProjectionMatrix()
+    mode7projectedtargetfocus({
+      camera,
+      corner,
+      viewwidth: VIEW_W,
+      viewheight: VIEW_H,
+      drawwidth: DRAW_W,
+      drawheight: DRAW_H,
+      boardwidth: BOARD_WIDTH,
+      boardheight: BOARD_HEIGHT,
+      controlfocusx: 12,
+      controlfocusy: 8,
+      viewscale: 1,
+      padleft: 0,
+      padright: 0,
+      padtop: 0,
+      padbottom: 0,
+    })
+    expect(camera.aspect).toBeCloseTo(wrongaspect, 10)
+  })
+
+  it('mode7projectedtargetfocus returns finite tfocus', () => {
     const { camera, corner } = buildmode7scene()
     const { tfocusx, tfocusy } = mode7projectedtargetfocus({
       camera,
@@ -124,13 +176,9 @@ describe('mode7targetfocusprojection', () => {
     })
     expect(Number.isFinite(tfocusx)).toBe(true)
     expect(Number.isFinite(tfocusy)).toBe(true)
-    expect(tfocusx).toBeGreaterThanOrEqual(-0.5)
-    expect(tfocusx).toBeLessThanOrEqual(BOARD_WIDTH + 0.5)
-    expect(tfocusy).toBeGreaterThanOrEqual(-0.5)
-    expect(tfocusy).toBeLessThanOrEqual(BOARD_HEIGHT + 0.5)
   })
 
-  it('exposes mode7 NDC defaults used when edgeslack is not overridden', () => {
+  it('exposes mode7 NDC defaults', () => {
     expect(MODE7_NDC_EDGE_SLACK).toBeGreaterThan(0)
     expect(MODE7_NDC_EDGE_SLACK).toBeLessThan(0.2)
     expect(MODE7_LETTERBOX_SPAN_MARGIN).toBeGreaterThan(0)

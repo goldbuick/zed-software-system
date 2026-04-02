@@ -1,23 +1,31 @@
-import type {
-  Camera,
-  Group,
-  OrthographicCamera,
-  PerspectiveCamera,
-} from 'three'
-import { Vector3 } from 'three'
+import type { Camera, Group } from 'three'
+import { OrthographicCamera, PerspectiveCamera, Vector3 } from 'three'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { clamp } from 'zss/mapping/number'
 
 const EPS = 1e-5
 const BINARY_ITERS = 24
-/** Slightly relax edge constraints vs exact ±1 NDC (float + tilt + NEAR zoom); widens valid pan range. */
 const NDC_EDGE_SLACK = 0.045
-/** Only treat board as “fits vertically” when projected span is clearly under full view (avoids false letterbox). */
 const LETTERBOX_SPAN_MARGIN = 0.12
 
-/** Mode7 perspective + X tilt: match clamp to visible frustum vs iso ortho defaults above. */
 export const MODE7_NDC_EDGE_SLACK = 0.055
 export const MODE7_LETTERBOX_SPAN_MARGIN = 0.14
+
+/** Axis-aligned bounds in NDC (Vector3.project). */
+export type NdcAxisAlignedRect = {
+  minx: number
+  maxx: number
+  miny: number
+  maxy: number
+}
+
+/** Inner safe rectangle in NDC from padstondc + edgeslack (containment target). */
+export type SafeNdcRect = {
+  left: number
+  right: number
+  bottom: number
+  top: number
+}
 
 const _local = new Vector3()
 const _corners = [new Vector3(), new Vector3(), new Vector3(), new Vector3()]
@@ -30,8 +38,128 @@ function cameranegativeaspect(camera: Camera) {
   )
 }
 
-/** Full quad in NDC (axis-aligned bounds of four board corners). Exported for tests. */
-export function boardndcbounds(
+function snapprojectionaspectfromview(
+  camera: Camera,
+  viewwidth: number,
+  viewheight: number,
+): number | undefined {
+  if (!(camera instanceof PerspectiveCamera) || viewheight <= 0) {
+    return undefined
+  }
+  const saved = camera.aspect
+  const ratio = viewwidth / viewheight
+  camera.aspect = saved < 0 ? -ratio : ratio
+  camera.updateProjectionMatrix()
+  return saved
+}
+
+function restoreprojectionaspect(camera: Camera, saved: number | undefined) {
+  if (saved === undefined) {
+    return
+  }
+  const c = camera as PerspectiveCamera
+  c.aspect = saved
+  c.updateProjectionMatrix()
+}
+
+type Savedorthographicfrustum = {
+  left: number
+  right: number
+  top: number
+  bottom: number
+}
+
+function snaporthographicprojectionfromview(
+  camera: Camera,
+  viewwidth: number,
+  viewheight: number,
+): Savedorthographicfrustum | undefined {
+  if (!(camera instanceof OrthographicCamera)) {
+    return undefined
+  }
+  const saved: Savedorthographicfrustum = {
+    left: camera.left,
+    right: camera.right,
+    top: camera.top,
+    bottom: camera.bottom,
+  }
+  camera.left = viewwidth * -0.5
+  camera.right = viewwidth * 0.5
+  camera.top = viewheight * -0.5
+  camera.bottom = viewheight * 0.5
+  camera.updateProjectionMatrix()
+  return saved
+}
+
+function restoreorthographicprojection(
+  camera: Camera,
+  saved: Savedorthographicfrustum | undefined,
+) {
+  if (saved === undefined) {
+    return
+  }
+  const c = camera as OrthographicCamera
+  c.left = saved.left
+  c.right = saved.right
+  c.top = saved.top
+  c.bottom = saved.bottom
+  c.updateProjectionMatrix()
+}
+
+function padstondc(
+  viewwidth: number,
+  viewheight: number,
+  padleft: number,
+  padright: number,
+  padtop: number,
+  padbottom: number,
+) {
+  const halfw = viewwidth * 0.5
+  const halfh = viewheight * 0.5
+  return {
+    mxl: padleft / halfw,
+    mxr: padright / halfw,
+    myt: padtop / halfh,
+    myb: padbottom / halfh,
+  }
+}
+
+/**
+ * Padded inner NDC rectangle: board AABB must lie fully inside this (containment clamp).
+ */
+export function safendcrectfrompads(
+  mxl: number,
+  mxr: number,
+  myt: number,
+  myb: number,
+  edgeslack: number,
+): SafeNdcRect {
+  return {
+    left: -1 + mxl + edgeslack,
+    right: 1 - mxr - edgeslack,
+    bottom: -1 + myb + edgeslack,
+    top: 1 - myt - edgeslack,
+  }
+}
+
+/** True if `board` is fully inside `safe` (axis-aligned NDC). */
+export function boardrectcontainssafe(
+  board: NdcAxisAlignedRect,
+  safe: SafeNdcRect,
+): boolean {
+  return (
+    board.minx >= safe.left - EPS &&
+    board.maxx <= safe.right + EPS &&
+    board.miny >= safe.bottom - EPS &&
+    board.maxy <= safe.top + EPS
+  )
+}
+
+/**
+ * Project four board corners (full quad) to NDC and return axis-aligned bounds.
+ * Sets corner pan from focus cell center, then restores are caller’s responsibility.
+ */
+export function projectboardtondcrect(
   camera: Camera,
   corner: Group,
   focusx: number,
@@ -40,7 +168,7 @@ export function boardndcbounds(
   boarddrawh: number,
   draww: number,
   drawh: number,
-): { minx: number; maxx: number; miny: number; maxy: number } {
+): NdcAxisAlignedRect {
   const fx = (focusx + 0.5) * draww
   const fy = (focusy + 0.5) * drawh
   corner.position.set(-fx, -fy, 0)
@@ -76,190 +204,82 @@ export function boardndcbounds(
   return { minx, maxx, miny, maxy }
 }
 
+export const boardndcbounds = projectboardtondcrect
+
+/** Smallest v in [lo, hi] where pred(v), assuming pred(lo) false and pred(hi) true. */
+function binarysearchlowermosttrue(
+  lo: number,
+  hi: number,
+  pred: (v: number) => boolean,
+): number | null {
+  if (pred(lo)) {
+    return lo
+  }
+  if (!pred(hi)) {
+    return null
+  }
+  let a = lo
+  let b = hi
+  for (let i = 0; i < BINARY_ITERS; i++) {
+    const mid = (a + b) * 0.5
+    if (pred(mid)) {
+      b = mid
+    } else {
+      a = mid
+    }
+  }
+  return b
+}
+
+/** Largest v in [lo, hi] where pred(v), assuming pred(lo) true and pred(hi) false. */
+function binarysearchuppermosttrue(
+  lo: number,
+  hi: number,
+  pred: (v: number) => boolean,
+): number | null {
+  if (pred(hi)) {
+    return hi
+  }
+  if (!pred(lo)) {
+    return null
+  }
+  let a = lo
+  let b = hi
+  for (let i = 0; i < BINARY_ITERS; i++) {
+    const mid = (a + b) * 0.5
+    if (pred(mid)) {
+      a = mid
+    } else {
+      b = mid
+    }
+  }
+  return a
+}
+
 /**
- * Near floor edge only (local y = boarddrawh): horizontal NDC span at player depth.
- * Mode7 left/right clamp uses this so the horizon does not dominate minx/maxx.
+ * Connected interval of focus values in [minfocus, maxfocus] where pred holds
+ * (assumes pred is true on a contiguous subinterval when feasible).
  */
-export function boardndchorizontalnearfloor(
-  camera: Camera,
-  corner: Group,
-  focusx: number,
-  focusy: number,
-  boarddraww: number,
-  boarddrawh: number,
-  draww: number,
-  drawh: number,
-): { minx: number; maxx: number } {
-  const fx = (focusx + 0.5) * draww
-  const fy = (focusy + 0.5) * drawh
-  corner.position.set(-fx, -fy, 0)
-  corner.updateWorldMatrix(true, true)
-
-  _corners[0].set(0, boarddrawh, 0)
-  _corners[1].set(boarddraww, boarddrawh, 0)
-
-  let minx = Infinity
-  let maxx = -Infinity
-  const flipx = cameranegativeaspect(camera)
-  for (let i = 0; i < 2; i++) {
-    _local.copy(_corners[i]).applyMatrix4(corner.matrixWorld).project(camera)
-    const nx = flipx ? -_local.x : _local.x
-    if (nx < minx) {
-      minx = nx
-    }
-    if (nx > maxx) {
-      maxx = nx
-    }
+function findfeasiblefocusinterval(
+  minfocus: number,
+  maxfocus: number,
+  pred: (focus: number) => boolean,
+): { lo: number; hi: number } | null {
+  if (pred(minfocus) && pred(maxfocus)) {
+    return { lo: minfocus, hi: maxfocus }
   }
-  return { minx, maxx }
-}
-
-function padstondc(
-  viewwidth: number,
-  viewheight: number,
-  padleft: number,
-  padright: number,
-  padtop: number,
-  padbottom: number,
-) {
-  const halfw = viewwidth * 0.5
-  const halfh = viewheight * 0.5
-  return {
-    mxl: padleft / halfw,
-    mxr: padright / halfw,
-    myt: padtop / halfh,
-    myb: padbottom / halfh,
+  const lo = binarysearchlowermosttrue(minfocus, maxfocus, pred)
+  if (lo === null) {
+    return null
   }
+  const hi = binarysearchuppermosttrue(lo, maxfocus, pred)
+  if (hi === null || lo > hi + 1e-4) {
+    return null
+  }
+  return { lo, hi }
 }
 
-function leftok(
-  camera: Camera,
-  corner: Group,
-  fx: number,
-  fy: number,
-  boarddraww: number,
-  boarddrawh: number,
-  draww: number,
-  drawh: number,
-  mxl: number,
-  edgeslack: number,
-  horizontaluseflooredge: boolean,
-) {
-  const minx = horizontaluseflooredge
-    ? boardndchorizontalnearfloor(
-        camera,
-        corner,
-        fx,
-        fy,
-        boarddraww,
-        boarddrawh,
-        draww,
-        drawh,
-      ).minx
-    : boardndcbounds(
-        camera,
-        corner,
-        fx,
-        fy,
-        boarddraww,
-        boarddrawh,
-        draww,
-        drawh,
-      ).minx
-  return minx <= -1 + mxl + edgeslack + EPS
-}
-
-function rightok(
-  camera: Camera,
-  corner: Group,
-  fx: number,
-  fy: number,
-  boarddraww: number,
-  boarddrawh: number,
-  draww: number,
-  drawh: number,
-  mxr: number,
-  edgeslack: number,
-  horizontaluseflooredge: boolean,
-) {
-  const maxx = horizontaluseflooredge
-    ? boardndchorizontalnearfloor(
-        camera,
-        corner,
-        fx,
-        fy,
-        boarddraww,
-        boarddrawh,
-        draww,
-        drawh,
-      ).maxx
-    : boardndcbounds(
-        camera,
-        corner,
-        fx,
-        fy,
-        boarddraww,
-        boarddrawh,
-        draww,
-        drawh,
-      ).maxx
-  return maxx >= 1 - mxr - edgeslack - EPS
-}
-
-/** NDC y up: no void above board (sky) — top of quad reaches top margin. */
-function topok(
-  camera: Camera,
-  corner: Group,
-  fx: number,
-  fy: number,
-  boarddraww: number,
-  boarddrawh: number,
-  draww: number,
-  drawh: number,
-  myt: number,
-  edgeslack: number,
-) {
-  const b = boardndcbounds(
-    camera,
-    corner,
-    fx,
-    fy,
-    boarddraww,
-    boarddrawh,
-    draww,
-    drawh,
-  )
-  return b.maxy >= 1 - myt - edgeslack - EPS
-}
-
-/** NDC y up: no void below board — bottom of quad reaches bottom margin. */
-function bottomok(
-  camera: Camera,
-  corner: Group,
-  fx: number,
-  fy: number,
-  boarddraww: number,
-  boarddrawh: number,
-  draww: number,
-  drawh: number,
-  myb: number,
-  edgeslack: number,
-) {
-  const b = boardndcbounds(
-    camera,
-    corner,
-    fx,
-    fy,
-    boarddraww,
-    boarddrawh,
-    draww,
-    drawh,
-  )
-  return b.miny <= -1 + myb + edgeslack + EPS
-}
-
-/** Smallest focusx where left edge constraint holds (minx <= -1+mxl). */
-function smallestfxwhereleftok(
+function findfeasiblefxinterval(
   camera: Camera,
   corner: Group,
   fy: number,
@@ -268,148 +288,26 @@ function smallestfxwhereleftok(
   boarddrawh: number,
   draww: number,
   drawh: number,
-  mxl: number,
-  edgeslack: number,
-  horizontaluseflooredge: boolean,
-): number {
-  if (
-    leftok(
-      camera,
-      corner,
-      0,
-      fy,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      mxl,
-      edgeslack,
-      horizontaluseflooredge,
-    )
-  ) {
-    return 0
-  }
-  if (
-    !leftok(
-      camera,
-      corner,
-      boardw,
-      fy,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      mxl,
-      edgeslack,
-      horizontaluseflooredge,
-    )
-  ) {
-    return NaN
-  }
-  let lo = 0
-  let hi = boardw
-  for (let i = 0; i < BINARY_ITERS; i++) {
-    const mid = (lo + hi) * 0.5
-    if (
-      leftok(
+  safe: SafeNdcRect,
+): { lo: number; hi: number } | null {
+  return findfeasiblefocusinterval(0, boardw, (fx) =>
+    boardrectcontainssafe(
+      projectboardtondcrect(
         camera,
         corner,
-        mid,
+        fx,
         fy,
         boarddraww,
         boarddrawh,
         draww,
         drawh,
-        mxl,
-        edgeslack,
-        horizontaluseflooredge,
-      )
-    ) {
-      hi = mid
-    } else {
-      lo = mid
-    }
-  }
-  return hi
+      ),
+      safe,
+    ),
+  )
 }
 
-/** Largest focusx where right edge constraint holds (maxx >= 1-mxr). */
-function largestfxwhererightok(
-  camera: Camera,
-  corner: Group,
-  fy: number,
-  boardw: number,
-  boarddraww: number,
-  boarddrawh: number,
-  draww: number,
-  drawh: number,
-  mxr: number,
-  edgeslack: number,
-  horizontaluseflooredge: boolean,
-): number {
-  if (
-    !rightok(
-      camera,
-      corner,
-      0,
-      fy,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      mxr,
-      edgeslack,
-      horizontaluseflooredge,
-    )
-  ) {
-    return NaN
-  }
-  if (
-    rightok(
-      camera,
-      corner,
-      boardw,
-      fy,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      mxr,
-      edgeslack,
-      horizontaluseflooredge,
-    )
-  ) {
-    return boardw
-  }
-  let lo = 0
-  let hi = boardw
-  for (let i = 0; i < BINARY_ITERS; i++) {
-    const mid = (lo + hi) * 0.5
-    if (
-      rightok(
-        camera,
-        corner,
-        mid,
-        fy,
-        boarddraww,
-        boarddrawh,
-        draww,
-        drawh,
-        mxr,
-        edgeslack,
-        horizontaluseflooredge,
-      )
-    ) {
-      lo = mid
-    } else {
-      hi = mid
-    }
-  }
-  return lo
-}
-
-/** Smallest focusy where top constraint holds (maxy >= 1-myt). */
-function smallestfywheretopok(
+function findfeasiblefyinterval(
   camera: Camera,
   corner: Group,
   fx: number,
@@ -418,136 +316,23 @@ function smallestfywheretopok(
   boarddrawh: number,
   draww: number,
   drawh: number,
-  myt: number,
-  edgeslack: number,
-): number {
-  if (
-    topok(
-      camera,
-      corner,
-      fx,
-      0,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      myt,
-      edgeslack,
-    )
-  ) {
-    return 0
-  }
-  if (
-    !topok(
-      camera,
-      corner,
-      fx,
-      boardh,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      myt,
-      edgeslack,
-    )
-  ) {
-    return NaN
-  }
-  let lo = 0
-  let hi = boardh
-  for (let i = 0; i < BINARY_ITERS; i++) {
-    const mid = (lo + hi) * 0.5
-    if (
-      topok(
+  safe: SafeNdcRect,
+): { lo: number; hi: number } | null {
+  return findfeasiblefocusinterval(0, boardh, (fy) =>
+    boardrectcontainssafe(
+      projectboardtondcrect(
         camera,
         corner,
         fx,
-        mid,
+        fy,
         boarddraww,
         boarddrawh,
         draww,
         drawh,
-        myt,
-        edgeslack,
-      )
-    ) {
-      hi = mid
-    } else {
-      lo = mid
-    }
-  }
-  return hi
-}
-
-/** Largest focusy where bottom constraint holds (miny <= -1+myb). */
-function largestfywherebottomok(
-  camera: Camera,
-  corner: Group,
-  fx: number,
-  boardh: number,
-  boarddraww: number,
-  boarddrawh: number,
-  draww: number,
-  drawh: number,
-  myb: number,
-  edgeslack: number,
-): number {
-  if (
-    !bottomok(
-      camera,
-      corner,
-      fx,
-      0,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      myb,
-      edgeslack,
-    )
-  ) {
-    return NaN
-  }
-  if (
-    bottomok(
-      camera,
-      corner,
-      fx,
-      boardh,
-      boarddraww,
-      boarddrawh,
-      draww,
-      drawh,
-      myb,
-      edgeslack,
-    )
-  ) {
-    return boardh
-  }
-  let lo = 0
-  let hi = boardh
-  for (let i = 0; i < BINARY_ITERS; i++) {
-    const mid = (lo + hi) * 0.5
-    if (
-      bottomok(
-        camera,
-        corner,
-        fx,
-        mid,
-        boarddraww,
-        boarddrawh,
-        draww,
-        drawh,
-        myb,
-        edgeslack,
-      )
-    ) {
-      lo = mid
-    } else {
-      hi = mid
-    }
-  }
-  return lo
+      ),
+      safe,
+    ),
+  )
 }
 
 export type Mode7ProjectedTargetFocusInput = {
@@ -566,15 +351,8 @@ export type Mode7ProjectedTargetFocusInput = {
   padright: number
   padtop: number
   padbottom: number
-  /** Override default mode7 edge slack (NDC). */
   edgeslack?: number
-  /** Override default mode7 letterbox threshold. */
   letterboxmargin?: number
-  /**
-   * When true (default for mode7), left/right clamp uses NDC minx/maxx from the near floor
-   * edge only; when false, uses full quad (iso ortho path).
-   */
-  horizontaluseflooredge?: boolean
 }
 
 export type IsoProjectedTargetFocusInput = {
@@ -613,15 +391,11 @@ type ProjectedTargetFocusFromCornersInput = {
   padbottom: number
   edgeslack?: number
   letterboxmargin?: number
-  horizontaluseflooredge?: boolean
 }
 
 /**
- * Target focus from board corners projected through the camera (mode7 perspective or iso orthographic).
- * Raw NDC from Vector3.project. X flipped only when perspective `aspect` is negative.
- * Gauss–Seidel passes resolve X/Y coupling.
- * Falls back to flatcameratargetfocus when projection bounds are degenerate.
- * Restores corner.position to its value at entry.
+ * Target focus: board quad in NDC must lie inside the padded safe rectangle (containment).
+ * Gauss–Seidel passes handle x/y coupling. Falls back to flatcameratargetfocus when infeasible.
  */
 function projectedtargetfocusfromcorners(
   input: ProjectedTargetFocusFromCornersInput,
@@ -644,7 +418,6 @@ function projectedtargetfocusfromcorners(
     padbottom,
     edgeslack = NDC_EDGE_SLACK,
     letterboxmargin = LETTERBOX_SPAN_MARGIN,
-    horizontaluseflooredge = false,
   } = input
 
   const boarddrawwidth = boardwidth * drawwidth
@@ -663,6 +436,17 @@ function projectedtargetfocusfromcorners(
   const savedx = corner.position.x
   const savedy = corner.position.y
   const savedz = corner.position.z
+
+  const savedaspect = snapprojectionaspectfromview(
+    camera,
+    viewwidth,
+    viewheight,
+  )
+  const savedortho = snaporthographicprojectionfromview(
+    camera,
+    viewwidth,
+    viewheight,
+  )
 
   const fallback = () => {
     corner.position.set(savedx, savedy, savedz)
@@ -683,130 +467,104 @@ function projectedtargetfocusfromcorners(
     })
   }
 
-  let tfocusx = boardwidth * 0.5
-  let tfocusy = boardheight * 0.5
-  let fyforx = controlfocusy
-
-  for (let pass = 0; pass < 3; pass++) {
-    const bx = boardndcbounds(
-      camera,
-      corner,
-      controlfocusx,
-      fyforx,
-      boarddrawwidth,
-      boarddrawheight,
-      drawwidth,
-      drawheight,
-    )
-    const spanx = bx.maxx - bx.minx
-    if (spanx <= availx - letterboxmargin) {
-      tfocusx = boardwidth * 0.5
-    } else {
-      const flo = smallestfxwhereleftok(
-        camera,
-        corner,
-        fyforx,
-        boardwidth,
-        boarddrawwidth,
-        boarddrawheight,
-        drawwidth,
-        drawheight,
-        mxl,
-        edgeslack,
-        horizontaluseflooredge,
-      )
-      const fhi = largestfxwhererightok(
-        camera,
-        corner,
-        fyforx,
-        boardwidth,
-        boarddrawwidth,
-        boarddrawheight,
-        drawwidth,
-        drawheight,
-        mxr,
-        edgeslack,
-        horizontaluseflooredge,
-      )
-      if (!Number.isFinite(flo) || !Number.isFinite(fhi) || flo > fhi + 1e-4) {
-        return fallback()
-      }
-      tfocusx = clamp(controlfocusx, flo, fhi)
-    }
-
-    const fx = tfocusx
-    const by = boardndcbounds(
-      camera,
-      corner,
-      fx,
-      controlfocusy,
-      boarddrawwidth,
-      boarddrawheight,
-      drawwidth,
-      drawheight,
-    )
-    const spany = by.maxy - by.miny
-    if (spany <= availy - letterboxmargin) {
-      tfocusy = boardheight * 0.5
-    } else {
-      const glo = smallestfywheretopok(
-        camera,
-        corner,
-        fx,
-        boardheight,
-        boarddrawwidth,
-        boarddrawheight,
-        drawwidth,
-        drawheight,
-        myt,
-        edgeslack,
-      )
-      const ghi = largestfywherebottomok(
-        camera,
-        corner,
-        fx,
-        boardheight,
-        boarddrawwidth,
-        boarddrawheight,
-        drawwidth,
-        drawheight,
-        myb,
-        edgeslack,
-      )
-      if (!Number.isFinite(glo) || !Number.isFinite(ghi) || glo > ghi + 1e-4) {
-        return fallback()
-      }
-      tfocusy = clamp(controlfocusy, glo, ghi)
-    }
-
-    fyforx = tfocusy
+  const safe = safendcrectfrompads(mxl, mxr, myt, myb, edgeslack)
+  if (safe.left >= safe.right - EPS || safe.bottom >= safe.top - EPS) {
+    corner.position.set(savedx, savedy, savedz)
+    restoreorthographicprojection(camera, savedortho)
+    restoreprojectionaspect(camera, savedaspect)
+    return fallback()
   }
 
-  corner.position.set(savedx, savedy, savedz)
-  return { tfocusx, tfocusy }
+  try {
+    let tfocusx = boardwidth * 0.5
+    let tfocusy = boardheight * 0.5
+    let fyforx = controlfocusy
+
+    for (let pass = 0; pass < 3; pass++) {
+      const bx = projectboardtondcrect(
+        camera,
+        corner,
+        controlfocusx,
+        fyforx,
+        boarddrawwidth,
+        boarddrawheight,
+        drawwidth,
+        drawheight,
+      )
+      const spanx = bx.maxx - bx.minx
+      if (spanx <= availx - letterboxmargin) {
+        tfocusx = boardwidth * 0.5
+      } else {
+        const ix = findfeasiblefxinterval(
+          camera,
+          corner,
+          fyforx,
+          boardwidth,
+          boarddrawwidth,
+          boarddrawheight,
+          drawwidth,
+          drawheight,
+          safe,
+        )
+        if (ix === null) {
+          return fallback()
+        }
+        tfocusx = clamp(controlfocusx, ix.lo, ix.hi)
+      }
+
+      const fx = tfocusx
+      const by = projectboardtondcrect(
+        camera,
+        corner,
+        fx,
+        controlfocusy,
+        boarddrawwidth,
+        boarddrawheight,
+        drawwidth,
+        drawheight,
+      )
+      const spany = by.maxy - by.miny
+      if (spany <= availy - letterboxmargin) {
+        tfocusy = boardheight * 0.5
+      } else {
+        const iy = findfeasiblefyinterval(
+          camera,
+          corner,
+          fx,
+          boardheight,
+          boarddrawwidth,
+          boarddrawheight,
+          drawwidth,
+          drawheight,
+          safe,
+        )
+        if (iy === null) {
+          return fallback()
+        }
+        tfocusy = clamp(controlfocusy, iy.lo, iy.hi)
+      }
+
+      fyforx = tfocusy
+    }
+
+    return { tfocusx, tfocusy }
+  } finally {
+    restoreorthographicprojection(camera, savedortho)
+    restoreprojectionaspect(camera, savedaspect)
+    corner.position.set(savedx, savedy, savedz)
+  }
 }
 
-/**
- * Target focus from board corners projected through the real perspective camera (mode7).
- * Gauss–Seidel passes resolve X/Y coupling (each pass uses updated tfocusy when solving X).
- * Falls back to flatcameratargetfocus when projection bounds are degenerate.
- * Restores corner.position to its value at entry.
- */
 export function mode7projectedtargetfocus(
   input: Mode7ProjectedTargetFocusInput,
 ): { tfocusx: number; tfocusy: number } {
   return projectedtargetfocusfromcorners({
     ...input,
-    horizontaluseflooredge: input.horizontaluseflooredge ?? true,
     edgeslack: input.edgeslack ?? MODE7_NDC_EDGE_SLACK,
     letterboxmargin: input.letterboxmargin ?? MODE7_LETTERBOX_SPAN_MARGIN,
   })
 }
 
-/**
- * Target focus from board corners projected through the iso orthographic camera (tilted scene).
- * Same NDC/frustum logic as mode7; falls back to flatcameratargetfocus when degenerate.
- */
 export function isoprojectedtargetfocus(input: IsoProjectedTargetFocusInput): {
   tfocusx: number
   tfocusy: number

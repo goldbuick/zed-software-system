@@ -26,7 +26,7 @@ import {
   mode7viewscalefromcameraz,
 } from 'zss/gadget/graphics/mode7viewscale'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
+import { framedcenterxoffset, useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
@@ -250,7 +250,9 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const centerx = viewport.width * -0.5 + screensize.marginx
+  const centerx =
+    viewport.width * -0.5 + screensize.marginx +
+    framedcenterxoffset(screensize.cols, viewwidth, drawwidth)
   const centery = viewport.height * 0.5 - screensize.marginy
   return (
     <>

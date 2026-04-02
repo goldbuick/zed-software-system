@@ -21,7 +21,7 @@ import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { PillarwMeshes } from 'zss/gadget/graphics/pillarmeshes'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
+import { framedcenterxoffset, useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -323,7 +323,9 @@ export const FPVGraphics = memo(function FPVGraphics({
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
-  const centerx = viewport.width * -0.5 + screensize.marginx
+  const centerx =
+    viewport.width * -0.5 + screensize.marginx +
+    framedcenterxoffset(screensize.cols, viewwidth, drawwidth)
   const centery = viewport.height * 0.5 - screensize.marginy
   const fpvdprscale = islowrez ? 0.5 : 1
 
