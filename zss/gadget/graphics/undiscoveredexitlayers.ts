@@ -28,9 +28,10 @@ const size = BOARD_WIDTH * BOARD_HEIGHT
 for (let i = 0; i < size; ++i) {
   const x = i % BOARD_WIDTH
   const y = Math.floor(i / BOARD_WIDTH)
-  const diagonal = (x + y) % bank === 0 || (x - y) % bank === 0
-  PLACEHOLDER_TILES.char[i] = diagonal ? 176 : 178
-  PLACEHOLDER_TILES.color[i] = diagonal ? COLOR.DKGRAY : COLOR.BLACK
+  const xdiagonal = (x + y) % bank === 0
+  const ydiagonal = (x - y) % bank === 0
+  PLACEHOLDER_TILES.char[i] = xdiagonal ? 177 : ydiagonal ? 176 : 178
+  PLACEHOLDER_TILES.color[i] = COLOR.BLACK
   PLACEHOLDER_TILES.bg[i] = COLOR.DKGRAY
   PLACEHOLDER_TILES.stats[i] = 0
 }

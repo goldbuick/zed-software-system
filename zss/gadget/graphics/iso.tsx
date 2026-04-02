@@ -13,7 +13,7 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
-import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
+import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
@@ -225,14 +225,12 @@ export const IsoGraphics = memo(function IsoGraphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const east = resolveexitpreview(gadget.exiteast, layercachemap, 'e')
-  const west = resolveexitpreview(gadget.exitwest, layercachemap, 'w')
-  const north = resolveexitpreview(gadget.exitnorth, layercachemap, 'n')
-  const south = resolveexitpreview(gadget.exitsouth, layercachemap, 's')
-  const ne = resolveexitpreview(gadget.exitne, layercachemap, 'ne')
-  const nw = resolveexitpreview(gadget.exitnw, layercachemap, 'nw')
-  const se = resolveexitpreview(gadget.exitse, layercachemap, 'se')
-  const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw')
+  const exitpreviewgroups = buildexitpreviewgroups(
+    gadget,
+    layercachemap,
+    drawwidth,
+    drawheight,
+  )
 
   const layersindex = under.length * 2 + 2
   const centerx = viewport.width * -0.5 + screensize.marginx
@@ -281,125 +279,19 @@ export const IsoGraphics = memo(function IsoGraphics({
                         z={maptolayerz(layer, 'iso') + drawheight + 1}
                       />
                     ))}
-                    {east.layers.length > 0 && (
-                      <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                        {east.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={east.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
-                    )}
-                    {west.layers.length > 0 && (
-                      <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                        {west.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={west.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
-                    )}
-                    {north.layers.length > 0 && (
-                      <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                        {north.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={north.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
-                    )}
-                    {south.layers.length > 0 && (
-                      <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                        {south.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={south.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
-                    )}
-                    {ne.layers.length > 0 && (
-                      <group
-                        position={[
-                          BOARD_WIDTH * drawwidth,
-                          BOARD_HEIGHT * -drawheight,
-                          0,
-                        ]}
-                      >
-                        {ne.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={ne.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
-                    )}
-                    {nw.layers.length > 0 && (
-                      <group
-                        position={[
-                          BOARD_WIDTH * -drawwidth,
-                          BOARD_HEIGHT * -drawheight,
-                          0,
-                        ]}
-                      >
-                        {nw.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={nw.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
-                    )}
-                    {se.layers.length > 0 && (
-                      <group
-                        position={[
-                          BOARD_WIDTH * drawwidth,
-                          BOARD_HEIGHT * drawheight,
-                          0,
-                        ]}
-                      >
-                        {se.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={se.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
-                    )}
-                    {sw.layers.length > 0 && (
-                      <group
-                        position={[
-                          BOARD_WIDTH * -drawwidth,
-                          BOARD_HEIGHT * drawheight,
-                          0,
-                        ]}
-                      >
-                        {sw.layers.map((layer) => (
-                          <IsoLayer
-                            key={layer.id}
-                            id={layer.id}
-                            layers={sw.layers}
-                            z={maptolayerz(layer, 'iso')}
-                          />
-                        ))}
-                      </group>
+                    {exitpreviewgroups.map(({ key, preview, position }) =>
+                      preview.layers.length > 0 ? (
+                        <group key={key} position={position}>
+                          {preview.layers.map((layer) => (
+                            <IsoLayer
+                              key={layer.id}
+                              id={layer.id}
+                              layers={preview.layers}
+                              z={maptolayerz(layer, 'iso')}
+                            />
+                          ))}
+                        </group>
+                      ) : null,
                     )}
                   </group>
                 </group>

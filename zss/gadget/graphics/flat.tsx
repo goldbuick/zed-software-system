@@ -5,7 +5,7 @@ import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
-import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
+import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import {
   flatcameradevassertboardinortho,
   flatcameratargetfocus,
@@ -169,14 +169,12 @@ export const FlatGraphics = memo(function FlatGraphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const east = resolveexitpreview(gadget.exiteast, layercachemap, 'e')
-  const west = resolveexitpreview(gadget.exitwest, layercachemap, 'w')
-  const north = resolveexitpreview(gadget.exitnorth, layercachemap, 'n')
-  const south = resolveexitpreview(gadget.exitsouth, layercachemap, 's')
-  const ne = resolveexitpreview(gadget.exitne, layercachemap, 'ne')
-  const nw = resolveexitpreview(gadget.exitnw, layercachemap, 'nw')
-  const se = resolveexitpreview(gadget.exitse, layercachemap, 'se')
-  const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw')
+  const exitpreviewgroups = buildexitpreviewgroups(
+    gadget,
+    layercachemap,
+    drawwidth,
+    drawheight,
+  )
 
   // z of the topmost board layer (must stay in sync with FlatLayer z props below)
   const topoverz =
@@ -249,125 +247,19 @@ export const FlatGraphics = memo(function FlatGraphics({
                     z={1 + under.length + layers.length + i * 2}
                   />
                 ))}
-                {east.layers.length > 0 && (
-                  <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                    {east.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={east.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
-                )}
-                {west.layers.length > 0 && (
-                  <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                    {west.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={west.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
-                )}
-                {north.layers.length > 0 && (
-                  <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                    {north.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={north.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
-                )}
-                {south.layers.length > 0 && (
-                  <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                    {south.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={south.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
-                )}
-                {ne.layers.length > 0 && (
-                  <group
-                    position={[
-                      BOARD_WIDTH * drawwidth,
-                      BOARD_HEIGHT * -drawheight,
-                      0,
-                    ]}
-                  >
-                    {ne.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={ne.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
-                )}
-                {nw.layers.length > 0 && (
-                  <group
-                    position={[
-                      BOARD_WIDTH * -drawwidth,
-                      BOARD_HEIGHT * -drawheight,
-                      0,
-                    ]}
-                  >
-                    {nw.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={nw.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
-                )}
-                {se.layers.length > 0 && (
-                  <group
-                    position={[
-                      BOARD_WIDTH * drawwidth,
-                      BOARD_HEIGHT * drawheight,
-                      0,
-                    ]}
-                  >
-                    {se.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={se.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
-                )}
-                {sw.layers.length > 0 && (
-                  <group
-                    position={[
-                      BOARD_WIDTH * -drawwidth,
-                      BOARD_HEIGHT * drawheight,
-                      0,
-                    ]}
-                  >
-                    {sw.layers.map((layer) => (
-                      <FlatLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={sw.layers}
-                        z={exitzbase + maptolayerz(layer, 'flat')}
-                      />
-                    ))}
-                  </group>
+                {exitpreviewgroups.map(({ key, preview, position }) =>
+                  preview.layers.length > 0 ? (
+                    <group key={key} position={position}>
+                      {preview.layers.map((layer) => (
+                        <FlatLayer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={preview.layers}
+                          z={exitzbase + maptolayerz(layer, 'flat')}
+                        />
+                      ))}
+                    </group>
+                  ) : null,
                 )}
               </group>
             </group>
