@@ -1,6 +1,6 @@
 import { memorycornerexitboardids } from 'zss/memory/boardcornerexits'
 import * as boards from 'zss/memory/boards'
-import { CORNER_EXIT_DISPUTED, type BOARD } from 'zss/memory/types'
+import { type BOARD, CORNER_EXIT_DISPUTED } from 'zss/memory/types'
 
 describe('memorycornerexitboardids', () => {
   let spy: jest.SpyInstance
