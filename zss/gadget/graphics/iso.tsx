@@ -4,6 +4,7 @@ import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { memo, useCallback, useRef, useState } from 'react'
 import {
+  DoubleSide,
   Group,
   OrthographicCamera as OrthographicCameraImpl,
   Vector3,
@@ -23,8 +24,6 @@ import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
-
-import { graphicsfocuspad } from './graphicsfocuspad'
 
 /** Scene tilt for isometric view (π/4 on X, −π/4 on Z); must match projection focus math. */
 const ISO_SCENE_ROTATION: [number, number, number] = [
@@ -48,6 +47,31 @@ function maptoscale(viewscale: VIEWSCALE): number {
     case VIEWSCALE.FAR:
       return 1
   }
+}
+
+/** Semi-transparent AABB for `BOARD_WIDTH`×`BOARD_HEIGHT` cell space (dev overlay). */
+function IsoBoardBoundsMesh({
+  boarddrawwidth,
+  boarddrawheight,
+  depthz,
+}: {
+  boarddrawwidth: number
+  boarddrawheight: number
+  depthz: number
+}) {
+  return (
+    <mesh
+      position={[boarddrawwidth * 0.5, boarddrawheight * 0.5, depthz * 0.5]}
+    >
+      <boxGeometry args={[boarddrawwidth, boarddrawheight, depthz]} />
+      <meshBasicMaterial
+        color="#2a6cbc"
+        opacity={0.22}
+        side={DoubleSide}
+        transparent
+      />
+    </mesh>
+  )
 }
 
 export const IsoGraphics = memo(function IsoGraphics({
@@ -108,12 +132,6 @@ export const IsoGraphics = memo(function IsoGraphics({
     damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
     const viewscale = zoomref.current.scale.x
-    const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
-      'iso',
-      control.viewscale,
-      viewwidth,
-      viewheight,
-    )
 
     cornerref.current.updateWorldMatrix(true, false)
     cameraref.current.updateProjectionMatrix()
@@ -131,10 +149,10 @@ export const IsoGraphics = memo(function IsoGraphics({
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
       viewscale,
-      padleft,
-      padright,
-      padtop,
-      padbottom,
+      padleft: 0,
+      padright: 0,
+      padtop: 0,
+      padbottom: 0,
     })
 
     const ud = cameraref.current.userData ?? {}
@@ -265,6 +283,13 @@ export const IsoGraphics = memo(function IsoGraphics({
               <group rotation={ISO_SCENE_ROTATION}>
                 <group ref={zoomref}>
                   <group ref={cornerref}>
+                    {import.meta.env.DEV && (
+                      <IsoBoardBoundsMesh
+                        boarddrawwidth={boarddrawwidth}
+                        boarddrawheight={boarddrawheight}
+                        depthz={drawheight * 8}
+                      />
+                    )}
                     {layers.map((layer) => (
                       <IsoLayer
                         key={layer.id}

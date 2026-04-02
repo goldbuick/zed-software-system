@@ -126,6 +126,7 @@ export const FlatGraphics = memo(function FlatGraphics({
 
     const fx = (userData.focusx + 0.5) * drawwidth
     const fy = (userData.focusy + 0.5) * drawheight
+
     // Focus cell center at portal origin: center + scale * (corner + local) = 0
     const targetcornerx = -c.x / viewscale - fx
     const targetcornery = -c.y / viewscale - fy

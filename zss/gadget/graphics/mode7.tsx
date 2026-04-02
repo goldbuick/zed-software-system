@@ -15,7 +15,6 @@ import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
-import { graphicsfocuspad } from 'zss/gadget/graphics/graphicsfocuspad'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
 import { mode7projectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
@@ -135,12 +134,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     cornerref.current.updateWorldMatrix(true, false)
 
     const viewscale = mode7viewscalefromcameraz(cameraref.current.position.z)
-    const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
-      'mode7',
-      control.viewscale,
-      viewwidth,
-      viewheight,
-    )
     const { tfocusx, tfocusy } = mode7projectedtargetfocus({
       camera: cameraref.current,
       corner: cornerref.current,
@@ -153,10 +146,10 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
       viewscale,
-      padleft,
-      padright,
-      padtop,
-      padbottom,
+      padleft: 0,
+      padright: 0,
+      padtop: 0,
+      padbottom: 0,
     })
     ud.tfocusx = tfocusx
     ud.tfocusy = tfocusy
