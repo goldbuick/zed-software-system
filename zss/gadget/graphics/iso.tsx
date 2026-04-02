@@ -4,7 +4,6 @@ import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { memo, useCallback, useRef, useState } from 'react'
 import {
-  DoubleSide,
   Group,
   OrthographicCamera as OrthographicCameraImpl,
   Vector3,
@@ -17,8 +16,8 @@ import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
+import { isoprojectedtargetfocus } from 'zss/gadget/graphics/isoprojectedtargetfocus'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
-import { isoprojectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
@@ -47,31 +46,6 @@ function maptoscale(viewscale: VIEWSCALE): number {
     case VIEWSCALE.FAR:
       return 1
   }
-}
-
-/** Semi-transparent AABB for `BOARD_WIDTH`×`BOARD_HEIGHT` cell space (dev overlay). */
-function IsoBoardBoundsMesh({
-  boarddrawwidth,
-  boarddrawheight,
-  depthz,
-}: {
-  boarddrawwidth: number
-  boarddrawheight: number
-  depthz: number
-}) {
-  return (
-    <mesh
-      position={[boarddrawwidth * 0.5, boarddrawheight * 0.5, depthz * 0.5]}
-    >
-      <boxGeometry args={[boarddrawwidth, boarddrawheight, depthz]} />
-      <meshBasicMaterial
-        color="#2a6cbc"
-        opacity={0.22}
-        side={DoubleSide}
-        transparent
-      />
-    </mesh>
-  )
 }
 
 export const IsoGraphics = memo(function IsoGraphics({
@@ -279,13 +253,6 @@ export const IsoGraphics = memo(function IsoGraphics({
               <group rotation={ISO_SCENE_ROTATION}>
                 <group ref={zoomref}>
                   <group ref={cornerref}>
-                    {import.meta.env.DEV && (
-                      <IsoBoardBoundsMesh
-                        boarddrawwidth={boarddrawwidth}
-                        boarddrawheight={boarddrawheight}
-                        depthz={drawheight * 8}
-                      />
-                    )}
                     {layers.map((layer) => (
                       <IsoLayer
                         key={layer.id}

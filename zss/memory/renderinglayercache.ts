@@ -15,7 +15,10 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
-import { acquireboardsizearray, releaseboardsizearray } from 'zss/memory/boardarraypool'
+import {
+  acquireboardsizearray,
+  releaseboardsizearray,
+} from 'zss/memory/boardarraypool'
 import { BOARD_SIZE } from 'zss/memory/types'
 
 /**

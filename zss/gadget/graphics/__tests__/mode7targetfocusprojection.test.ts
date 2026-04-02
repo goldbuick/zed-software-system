@@ -6,16 +6,18 @@ jest.mock('zss/config', () => ({
 }))
 
 import { Group, OrthographicCamera, PerspectiveCamera, Vector3 } from 'three'
+import { isoprojectedtargetfocus } from 'zss/gadget/graphics/isoprojectedtargetfocus'
 import {
   MODE7_LETTERBOX_SPAN_MARGIN,
   MODE7_NDC_EDGE_SLACK,
-  boardndcbounds,
-  boardrectcontainssafe,
-  isoprojectedtargetfocus,
   mode7projectedtargetfocus,
-  safendcrect,
 } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { MODE7_Z_MID } from 'zss/gadget/graphics/mode7viewscale'
+import {
+  boardndcbounds,
+  boardrectcontainssafe,
+  safendcrect,
+} from 'zss/gadget/graphics/projectedtargetfocusfromcorners'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 const DRAW_W = 8
