@@ -16,7 +16,6 @@ import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
-import { isoprojectedtargetfocus } from 'zss/gadget/graphics/isoprojectedtargetfocus'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
@@ -24,7 +23,7 @@ import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
-/** Scene tilt for isometric view (π/4 on X, −π/4 on Z); must match projection focus math. */
+/** Scene tilt for isometric view (π/4 on X, −π/4 on Z). */
 const ISO_SCENE_ROTATION: [number, number, number] = [
   Math.PI * 0.25,
   0,
@@ -105,25 +104,12 @@ export const IsoGraphics = memo(function IsoGraphics({
 
     damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
-    const viewscale = zoomref.current.scale.x
-
     cornerref.current.updateWorldMatrix(true, false)
     cameraref.current.updateProjectionMatrix()
     cameraref.current.updateWorldMatrix(true, false)
 
-    const { tfocusx, tfocusy } = isoprojectedtargetfocus({
-      camera: cameraref.current,
-      corner: cornerref.current,
-      viewwidth,
-      viewheight,
-      drawwidth,
-      drawheight,
-      boardwidth: BOARD_WIDTH,
-      boardheight: BOARD_HEIGHT,
-      controlfocusx: control.focusx,
-      controlfocusy: control.focusy,
-      viewscale,
-    })
+    const tfocusx = control.focusx
+    const tfocusy = control.focusy
 
     const ud = cameraref.current.userData ?? {}
     ud.tfocusx = tfocusx

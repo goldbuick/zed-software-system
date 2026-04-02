@@ -17,12 +17,10 @@ import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
-import { mode7projectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import {
   MODE7_Z_FAR,
   MODE7_Z_MID,
   MODE7_Z_NEAR,
-  mode7viewscalefromcameraz,
 } from 'zss/gadget/graphics/mode7viewscale'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
@@ -133,20 +131,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
     cornerref.current.updateWorldMatrix(true, false)
 
-    const viewscale = mode7viewscalefromcameraz(cameraref.current.position.z)
-    const { tfocusx, tfocusy } = mode7projectedtargetfocus({
-      camera: cameraref.current,
-      corner: cornerref.current,
-      viewwidth,
-      viewheight,
-      drawwidth,
-      drawheight,
-      boardwidth: BOARD_WIDTH,
-      boardheight: BOARD_HEIGHT,
-      controlfocusx: control.focusx,
-      controlfocusy: control.focusy,
-      viewscale,
-    })
+    const tfocusx = control.focusx
+    const tfocusy = control.focusy
     ud.tfocusx = tfocusx
     ud.tfocusy = tfocusy
 
