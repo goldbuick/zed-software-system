@@ -70,6 +70,8 @@ type RenderLayerProps = {
   viewheight: number
   effects: ReactNode
   children?: ReactNode
+  /** Multiplier for viewport DPR when allocating the FBO (e.g. 0.5 on lowrez). */
+  dprscale?: number
 }
 
 export const RenderLayer = memo(function RenderLayer({
@@ -78,10 +80,11 @@ export const RenderLayer = memo(function RenderLayer({
   viewheight,
   effects,
   children,
+  dprscale = 1,
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const { viewport } = useThree()
-  const dpr = viewport.dpr
+  const dpr = viewport.dpr * dprscale
   const fbo = useFBO(viewwidth * dpr, viewheight * dpr, {
     samples: 0,
     stencilBuffer: false,

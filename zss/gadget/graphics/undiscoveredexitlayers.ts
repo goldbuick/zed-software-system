@@ -1,8 +1,8 @@
 import {
   LAYER,
   LAYER_DITHER,
-  createtiles,
   createdither,
+  createtiles,
 } from 'zss/gadget/data/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 

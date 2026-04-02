@@ -183,16 +183,16 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     switch (control.viewscale) {
       case VIEWSCALE.NEAR:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1200
+        depthoffield.current.cocMaterial.worldFocusRange = 1800
         break
       default:
       case VIEWSCALE.MID:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1700
+        depthoffield.current.cocMaterial.worldFocusRange = 2550
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1700
+        depthoffield.current.cocMaterial.worldFocusRange = 2550
         break
     }
 

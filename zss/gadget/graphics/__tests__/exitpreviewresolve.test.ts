@@ -1,4 +1,4 @@
-import { createtiles, LAYER_TYPE } from 'zss/gadget/data/types'
+import { LAYER_TYPE, createtiles } from 'zss/gadget/data/types'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
 import { CORNER_EXIT_DISPUTED } from 'zss/memory/boardcornerexits'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'

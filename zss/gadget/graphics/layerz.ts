@@ -20,7 +20,7 @@ export function maptolayerz(layer: LAYER, variant: LayerZVariant): number {
 /** Max sprite layer Z for stacked SPRITES layers; fallback matches `maptolayerz` default for sprites. */
 export function maxspriteslayerz(
   layers: LAYER[],
-  variant: 'flat' | 'iso' | 'mode7',
+  variant: 'flat' | 'iso' | 'mode7' | 'fpv',
 ): number {
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   let maxz = -Infinity

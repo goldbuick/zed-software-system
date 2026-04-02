@@ -1,4 +1,9 @@
-import type { Camera, Group, OrthographicCamera, PerspectiveCamera } from 'three'
+import type {
+  Camera,
+  Group,
+  OrthographicCamera,
+  PerspectiveCamera,
+} from 'three'
 import { Vector3 } from 'three'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { clamp } from 'zss/mapping/number'
@@ -619,8 +624,9 @@ export function mode7projectedtargetfocus(
  * Target focus from board corners projected through the iso orthographic camera (tilted scene).
  * Same NDC/frustum logic as mode7; falls back to flatcameratargetfocus when degenerate.
  */
-export function isoprojectedtargetfocus(
-  input: IsoProjectedTargetFocusInput,
-): { tfocusx: number; tfocusy: number } {
+export function isoprojectedtargetfocus(input: IsoProjectedTargetFocusInput): {
+  tfocusx: number
+  tfocusy: number
+} {
   return projectedtargetfocusfromcorners(input)
 }

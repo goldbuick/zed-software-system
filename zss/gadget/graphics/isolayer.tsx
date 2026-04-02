@@ -3,7 +3,7 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
-import { COLLISION } from 'zss/words/types'
+import { COLLISION, COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -102,11 +102,13 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
             )}
             <PillarwMeshes
               width={BOARD_WIDTH}
-              char={walls.char.map((c) => (c !== 0 ? 219 : 0))}
-              color={walls.color}
+              char={walls.char.map((c) => (c !== 0 ? 220 : 0))}
+              color={walls.color.map((c) =>
+                c !== 0 ? COLOR.BLACK : COLOR.ONCLEAR,
+              )}
               bg={walls.bg}
             />
-            <group position-z={drawheight + 1}>
+            <group position-z={drawheight}>
               <Tiles
                 width={layer.width}
                 height={layer.height}

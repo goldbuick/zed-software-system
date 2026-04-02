@@ -8,14 +8,7 @@ import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { BillboardMeshes } from './billboardmeshes'
-import {
-  filterlayer2floor,
-  filterlayer2flooredge,
-  filterlayer2sky,
-  filterlayer2skyedge,
-  filterlayer2walls,
-  filterlayer2water,
-} from './blocks'
+import { splitlayer2fpvtiles } from './blocks'
 import { DarknessMeshes } from './darknessmeshes'
 import { PillarwMeshes } from './pillarmeshes'
 import { ShadowMeshes } from './shadowmeshes'
@@ -63,43 +56,8 @@ export function FPVLayer({
     case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
-      const floor = filterlayer2floor(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const walls = filterlayer2walls(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const water = filterlayer2water(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const sky = filterlayer2sky(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const flooredge = filterlayer2flooredge(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const skyedge = filterlayer2skyedge(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      // filter tiles
+      const { floor, walls, water, sky, flooredge, skyedge } =
+        splitlayer2fpvtiles(layer.char, layer.color, layer.bg, layer.stats)
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
@@ -170,30 +128,28 @@ export function FPVLayer({
     }
     case LAYER_TYPE.SPRITES: {
       const rr = 8 / 14
-      const othersprites = layer.sprites.filter((sprite) => {
-        switch (sprite.stat as COLLISION) {
-          case COLLISION.ISSWIM:
-          case COLLISION.ISBULLET:
-            return false
-          default:
-            return sprite.pid !== player
+      const othersprites: typeof layer.sprites = []
+      const bulletsprites: typeof layer.sprites = []
+      const watersprites: typeof layer.sprites = []
+      const shadowsprites: typeof layer.sprites = []
+      for (let i = 0; i < layer.sprites.length; ++i) {
+        const sprite = layer.sprites[i]
+        const stat = sprite.stat as COLLISION
+        if (stat === COLLISION.ISBULLET) {
+          bulletsprites.push(sprite)
+        } else if (stat === COLLISION.ISSWIM) {
+          watersprites.push(sprite)
+        } else if (sprite.pid !== player) {
+          othersprites.push(sprite)
         }
-      })
-      const bulletsprites = layer.sprites.filter(
-        (sprite) => (sprite.stat as COLLISION) === COLLISION.ISBULLET,
-      )
-      const watersprites = layer.sprites.filter(
-        (sprite) => (sprite.stat as COLLISION) === COLLISION.ISSWIM,
-      )
-      const shadowsprites = layer.sprites.filter((sprite) => {
-        switch (sprite.stat as COLLISION) {
-          case COLLISION.ISSWIM:
-          case COLLISION.ISGHOST:
-            return false
-          default:
-            return sprite.pid !== player
+        if (
+          stat !== COLLISION.ISSWIM &&
+          stat !== COLLISION.ISGHOST &&
+          sprite.pid !== player
+        ) {
+          shadowsprites.push(sprite)
         }
-      })
+      }
       return (
         <group key={layer.id} position={[0, 0, z]}>
           <BillboardMeshes sprites={othersprites} facing={control.facing}>

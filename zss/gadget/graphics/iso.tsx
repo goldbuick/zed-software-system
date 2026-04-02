@@ -165,16 +165,16 @@ export const IsoGraphics = memo(function IsoGraphics({
     switch (control.viewscale) {
       case VIEWSCALE.NEAR:
         depthoffield.current.bokehScale = 5
-        depthoffield.current.cocMaterial.worldFocusRange = 1000
+        depthoffield.current.cocMaterial.worldFocusRange = 1500
         break
       default:
       case VIEWSCALE.MID:
         depthoffield.current.bokehScale = 5
-        depthoffield.current.cocMaterial.worldFocusRange = 1000
+        depthoffield.current.cocMaterial.worldFocusRange = 1500
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 5
-        depthoffield.current.cocMaterial.worldFocusRange = 1500
+        depthoffield.current.cocMaterial.worldFocusRange = 2250
         break
     }
 

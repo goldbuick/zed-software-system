@@ -52,14 +52,8 @@ function setupisocameraandcorner() {
 
 describe('isoprojectedtargetfocus', () => {
   it('returns finite tfocus within board for typical iso ortho setup', () => {
-    const {
-      camera,
-      corner,
-      viewwidth,
-      viewheight,
-      drawwidth,
-      drawheight,
-    } = setupisocameraandcorner()
+    const { camera, corner, viewwidth, viewheight, drawwidth, drawheight } =
+      setupisocameraandcorner()
 
     const { tfocusx, tfocusy } = isoprojectedtargetfocus({
       camera,
@@ -88,14 +82,8 @@ describe('isoprojectedtargetfocus', () => {
   })
 
   it('differs from flatcameratargetfocus when the board hierarchy uses iso tilt', () => {
-    const {
-      camera,
-      corner,
-      viewwidth,
-      viewheight,
-      drawwidth,
-      drawheight,
-    } = setupisocameraandcorner()
+    const { camera, corner, viewwidth, viewheight, drawwidth, drawheight } =
+      setupisocameraandcorner()
 
     const input = {
       viewwidth,

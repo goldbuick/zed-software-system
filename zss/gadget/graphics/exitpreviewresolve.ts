@@ -27,10 +27,7 @@ export function resolveexitpreview(
   const cached = layercachemap.get(exitboardid) ?? []
   if (cached.length > 0) {
     return {
-      layers: [
-        ...cached,
-        buildcachedexitpreviewoverlaydither(direction),
-      ],
+      layers: [...cached, buildcachedexitpreviewoverlaydither(direction)],
     }
   }
   return {
