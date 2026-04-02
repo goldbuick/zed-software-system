@@ -151,14 +151,16 @@ function testsprite(x: number, y: number): SPRITE {
 
 describe('boardlighting', () => {
   describe('memoryboardlightingmarkplayer', () => {
-    it('sets the player cell alpha to 0', () => {
+    it('brightens a 3x3 neighborhood around the player (center 0, cardinals 0.7, corners 0.9)', () => {
       const board = makeboard()
       const sprite = testsprite(12, 7)
       const alphas = new Array<number>(BOARD_SIZE).fill(1)
       memoryboardlightingmarkplayer(board, alphas, sprite)
       const idx = memoryboardelementindex(board, sprite)
       expect(alphas[idx]).toBe(0)
-      expect(alphas[idx + 1]).toBe(1)
+      expect(alphas[idx + 1]).toBe(0.7)
+      const northeast = memoryboardelementindex(board, { x: 13, y: 6 })
+      expect(alphas[northeast]).toBe(0.9)
     })
   })
 
