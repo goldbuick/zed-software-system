@@ -1,7 +1,10 @@
 import { createtiles } from 'zss/gadget/data/types'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
-import { CORNER_EXIT_DISPUTED } from 'zss/memory/boardcornerexits'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CORNER_EXIT_DISPUTED,
+} from 'zss/memory/types'
 
 describe('resolveexitpreview', () => {
   it('uses undiscovered placeholder when exit id is empty', () => {

@@ -1,5 +1,5 @@
 import type { LAYER } from 'zss/gadget/data/types'
-import { CORNER_EXIT_DISPUTED } from 'zss/memory/boardcornerexits'
+import { CORNER_EXIT_DISPUTED } from 'zss/memory/types'
 
 import {
   type EXIT_DIRECTION,

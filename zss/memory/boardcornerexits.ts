@@ -1,10 +1,7 @@
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { memoryreadboardbyaddress } from './boards'
-import type { BOARD } from './types'
-
-/** Gadget-only sentinel: cardinal paths to a corner disagree; show undiscovered placeholder, never cache tint. */
-export const CORNER_EXIT_DISPUTED = '__corner_exit_disputed__'
+import { type BOARD, CORNER_EXIT_DISPUTED } from './types'
 
 type CardinalExit = 'exitnorth' | 'exitsouth' | 'exitwest' | 'exiteast'
 

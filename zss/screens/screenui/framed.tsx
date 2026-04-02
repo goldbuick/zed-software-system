@@ -61,12 +61,16 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
     return control.graphics
   })
 
-  const { board, synthstate } = useGadgetClient.getState().gadget
+  // handle synth state switch between boards
+  const board = useGadgetClient((state) => state.gadget.board)
   useEffect(() => {
+    const { synthstate } = useGadgetClient.getState().gadget
     if (ispresent(synthstate)) {
       synthupdate(SOFTWARE, player, board, synthstate)
     }
-  }, [player, board, synthstate])
+  }, [player, board])
+
+  console.info('did render framed graphics', inspector, graphics)
 
   return (
     <>

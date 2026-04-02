@@ -155,23 +155,19 @@ export const FlatGraphics = memo(function FlatGraphics({
   })
 
   // re-render when board or layer counts change (board change must trigger re-render)
-  useGadgetClient(
-    useShallow((state) => ({
-      board: state.gadget.board,
-      overlen: state.gadget.over?.length ?? 0,
-      underlen: state.gadget.under?.length ?? 0,
-      layerslen: state.gadget.layers?.length ?? 0,
-      layercachegen: state.layercachegen,
-      exiteast: state.gadget.exiteast,
-      exitwest: state.gadget.exitwest,
-      exitnorth: state.gadget.exitnorth,
-      exitsouth: state.gadget.exitsouth,
-      exitne: state.gadget.exitne,
-      exitnw: state.gadget.exitnw,
-      exitse: state.gadget.exitse,
-      exitsw: state.gadget.exitsw,
-    })),
-  )
+  useGadgetClient((state) => state.gadget.board)
+  useGadgetClient((state) => state.gadget.over?.length ?? 0)
+  useGadgetClient((state) => state.gadget.under?.length ?? 0)
+  useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+  // useGadgetClient((state) => state.layercachegen)
+  useGadgetClient((state) => state.gadget.exiteast)
+  useGadgetClient((state) => state.gadget.exitwest)
+  useGadgetClient((state) => state.gadget.exitnorth)
+  useGadgetClient((state) => state.gadget.exitsouth)
+  useGadgetClient((state) => state.gadget.exitne)
+  useGadgetClient((state) => state.gadget.exitnw)
+  useGadgetClient((state) => state.gadget.exitse)
+  useGadgetClient((state) => state.gadget.exitsw)
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
@@ -183,6 +179,8 @@ export const FlatGraphics = memo(function FlatGraphics({
   const nw = resolveexitpreview(gadget.exitnw, layercachemap, 'nw')
   const se = resolveexitpreview(gadget.exitse, layercachemap, 'se')
   const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw')
+
+  console.info('did render flat graphics')
 
   const maintopz =
     over.length > 0
@@ -199,6 +197,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   useLayoutEffect(() => {
     centeroffsetref.current = { x: centerx, y: centery }
   }, [centerx, centery])
+
   return (
     <>
       <group position={[viewwidth * 0.5, viewheight * 0.5, 1]}>
@@ -253,7 +252,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                     z={1 + under.length + layers.length + i * 2}
                   />
                 ))}
-                {east.layers.length > 0 && (
+                {/* {east.layers.length > 0 && (
                   <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
                     {east.layers.map((layer) => (
                       <FlatLayer
@@ -372,7 +371,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                       />
                     ))}
                   </group>
-                )}
+                )} */}
               </group>
             </group>
           </group>
