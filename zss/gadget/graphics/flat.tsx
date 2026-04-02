@@ -16,7 +16,6 @@ import { useScreenSize } from 'zss/gadget/userscreen'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
-import { useShallow } from 'zustand/react/shallow'
 
 import { RenderLayer } from './renderlayer'
 
@@ -159,7 +158,6 @@ export const FlatGraphics = memo(function FlatGraphics({
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
-  // useGadgetClient((state) => state.layercachegen)
   useGadgetClient((state) => state.gadget.exiteast)
   useGadgetClient((state) => state.gadget.exitwest)
   useGadgetClient((state) => state.gadget.exitnorth)
@@ -180,16 +178,15 @@ export const FlatGraphics = memo(function FlatGraphics({
   const se = resolveexitpreview(gadget.exitse, layercachemap, 'se')
   const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw')
 
-  console.info('did render flat graphics')
-
-  const maintopz =
+  // z of the topmost board layer (must stay in sync with FlatLayer z props below)
+  const topoverz =
     over.length > 0
       ? 1 + under.length + layers.length + (over.length - 1) * 2
-      : layers.length > 0
-        ? 1 + under.length + (layers.length - 1) * 2
-        : under.length > 0
-          ? 1 + (under.length - 1) * 2
-          : 1
+      : undefined
+  const toplayersz =
+    layers.length > 0 ? 1 + under.length + (layers.length - 1) * 2 : undefined
+  const topunderz = under.length > 0 ? 1 + (under.length - 1) * 2 : undefined
+  const maintopz = topoverz ?? toplayersz ?? topunderz ?? 1
   const exitzbase = maintopz + 2
 
   const centerx = viewport.width * -0.5 + screensize.marginx
@@ -252,7 +249,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                     z={1 + under.length + layers.length + i * 2}
                   />
                 ))}
-                {/* {east.layers.length > 0 && (
+                {east.layers.length > 0 && (
                   <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
                     {east.layers.map((layer) => (
                       <FlatLayer
@@ -371,7 +368,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                       />
                     ))}
                   </group>
-                )} */}
+                )}
               </group>
             </group>
           </group>

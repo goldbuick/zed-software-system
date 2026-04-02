@@ -299,7 +299,6 @@ export const FPVGraphics = memo(function FPVGraphics({
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
   useGadgetClient(
     useShallow((state) => ({
-      layercachegen: state.layercachegen,
       exiteast: state.gadget.exiteast,
       exitwest: state.gadget.exitwest,
       exitnorth: state.gadget.exitnorth,

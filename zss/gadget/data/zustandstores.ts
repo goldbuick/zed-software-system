@@ -31,8 +31,6 @@ export const useGadgetClient = create<{
   desync: boolean
   gadget: GADGET_STATE
   layercachemap: Map<string, LAYER[]>
-  /** Bumps when `layercachemap` mutates so selectors can subscribe. */
-  layercachegen: number
   slim: FORMAT_OBJECT
   zsswords: GADGET_ZSS_WORDS
 }>(() => ({
@@ -80,7 +78,6 @@ export const useGadgetClient = create<{
     sidebar: [],
   },
   layercachemap: new Map(),
-  layercachegen: 0,
   slim: [],
 }))
 

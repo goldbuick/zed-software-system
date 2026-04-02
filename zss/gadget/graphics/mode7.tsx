@@ -227,7 +227,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
   useGadgetClient(
     useShallow((state) => ({
-      layercachegen: state.layercachegen,
       exiteast: state.gadget.exiteast,
       exitwest: state.gadget.exitwest,
       exitnorth: state.gadget.exitnorth,

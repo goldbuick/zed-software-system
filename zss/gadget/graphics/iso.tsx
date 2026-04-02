@@ -212,7 +212,6 @@ export const IsoGraphics = memo(function IsoGraphics({
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
   useGadgetClient(
     useShallow((state) => ({
-      layercachegen: state.layercachegen,
       exiteast: state.gadget.exiteast,
       exitwest: state.gadget.exitwest,
       exitnorth: state.gadget.exitnorth,

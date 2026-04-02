@@ -70,8 +70,6 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
     }
   }, [player, board])
 
-  console.info('did render framed graphics', inspector, graphics)
-
   return (
     <>
       <UserInput
