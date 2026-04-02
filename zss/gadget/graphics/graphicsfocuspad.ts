@@ -4,24 +4,27 @@ import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 export type GraphicsFocusMode = 'flat' | 'iso' | 'mode7'
 
 /**
- * Reference grid (cols × rows) used to calibrate pads against the previous
- * char-width / pixel literals: mode7 NDC factors match -10/-20 cw and 5/10 ch
- * margins at this size; iso uses the same NDC × halfw/halfh pattern for aspect
- * stability (derived from prior iso scalew/scaleh coefficients vs board halves).
+ * Reference grid (cols × rows): NDC factors are per board half-width / half-height,
+ * scaled by view half-extents (same pattern as iso). Mode7 uses independent
+ * horizontal left/right factors—perspective + X tilt skews the board quad in NDC
+ * (mirrors iso’s asymmetric ISO_*_PAD_LEFT / RIGHT).
  */
 
 const BOARD_HWIDTH = BOARD_WIDTH * 0.5
 const BOARD_HHEIGHT = BOARD_HEIGHT * 0.5
 
-const MODE7_FAR_PAD_LEFT_NDC = -0.25 / BOARD_HWIDTH
-const MODE7_FAR_PAD_TOP_NDC = -1.5 / BOARD_HHEIGHT
-const MODE7_FAR_PAD_BOTTOM_NDC = -0.75 / BOARD_HHEIGHT
+const MODE7_FAR_PAD_LEFT_NDC = 0 / BOARD_HWIDTH
+const MODE7_FAR_PAD_RIGHT_NDC = 0 / BOARD_HWIDTH
+const MODE7_FAR_PAD_TOP_NDC = 0 / BOARD_HHEIGHT
+const MODE7_FAR_PAD_BOTTOM_NDC = 0 / BOARD_HHEIGHT
 
-const MODE7_MID_PAD_LEFT_NDC = -8 / BOARD_HWIDTH
-const MODE7_MID_PAD_TOP_NDC = -5 / BOARD_HHEIGHT
-const MODE7_MID_PAD_BOTTOM_NDC = -1 / BOARD_HHEIGHT
+const MODE7_MID_PAD_LEFT_NDC = 0 / BOARD_HWIDTH
+const MODE7_MID_PAD_RIGHT_NDC = 0 / BOARD_HWIDTH
+const MODE7_MID_PAD_TOP_NDC = 0 / BOARD_HHEIGHT
+const MODE7_MID_PAD_BOTTOM_NDC = 0 / BOARD_HHEIGHT
 
-const MODE7_NEAR_PAD_LEFT_NDC = -4 / BOARD_HWIDTH
+const MODE7_NEAR_PAD_LEFT_NDC = 1 / BOARD_HWIDTH
+const MODE7_NEAR_PAD_RIGHT_NDC = 1 / BOARD_HWIDTH
 const MODE7_NEAR_PAD_TOP_NDC = 1 / BOARD_HHEIGHT
 const MODE7_NEAR_PAD_BOTTOM_NDC = 1 / BOARD_HHEIGHT
 
@@ -58,8 +61,7 @@ export function graphicsfocuspad(
         padbottom: 0,
       }
     case 'iso': {
-      const z = zoom as VIEWSCALE
-      switch (z) {
+      switch (zoom as VIEWSCALE) {
         case VIEWSCALE.NEAR:
           return {
             padleft: ISO_NEAR_PAD_LEFT_NDC * halfw,
@@ -85,12 +87,11 @@ export function graphicsfocuspad(
       }
     }
     case 'mode7': {
-      const z = zoom as VIEWSCALE
-      switch (z) {
+      switch (zoom as VIEWSCALE) {
         case VIEWSCALE.NEAR:
           return {
             padleft: MODE7_NEAR_PAD_LEFT_NDC * halfw,
-            padright: MODE7_NEAR_PAD_LEFT_NDC * halfw,
+            padright: MODE7_NEAR_PAD_RIGHT_NDC * halfw,
             padtop: MODE7_NEAR_PAD_TOP_NDC * halfh,
             padbottom: MODE7_NEAR_PAD_BOTTOM_NDC * halfh,
           }
@@ -98,14 +99,14 @@ export function graphicsfocuspad(
         case VIEWSCALE.MID:
           return {
             padleft: MODE7_MID_PAD_LEFT_NDC * halfw,
-            padright: MODE7_MID_PAD_LEFT_NDC * halfw,
+            padright: MODE7_MID_PAD_RIGHT_NDC * halfw,
             padtop: MODE7_MID_PAD_TOP_NDC * halfh,
             padbottom: MODE7_MID_PAD_BOTTOM_NDC * halfh,
           }
         case VIEWSCALE.FAR:
           return {
             padleft: MODE7_FAR_PAD_LEFT_NDC * halfw,
-            padright: MODE7_FAR_PAD_LEFT_NDC * halfw,
+            padright: MODE7_FAR_PAD_RIGHT_NDC * halfw,
             padtop: MODE7_FAR_PAD_TOP_NDC * halfh,
             padbottom: MODE7_FAR_PAD_BOTTOM_NDC * halfh,
           }

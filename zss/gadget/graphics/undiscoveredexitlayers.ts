@@ -1,4 +1,5 @@
 import { LAYER, createtiles } from 'zss/gadget/data/types'
+import { randominteger } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
 
@@ -30,9 +31,13 @@ for (let i = 0; i < size; ++i) {
   const y = Math.floor(i / BOARD_WIDTH)
   const xdiagonal = (x + y) % bank === 0
   const ydiagonal = (x - y) % bank === 0
-  PLACEHOLDER_TILES.char[i] = xdiagonal ? 177 : ydiagonal ? 176 : 178
-  PLACEHOLDER_TILES.color[i] = COLOR.BLACK
-  PLACEHOLDER_TILES.bg[i] = COLOR.DKGRAY
+  PLACEHOLDER_TILES.char[i] = xdiagonal ? 249 : ydiagonal ? 7 : 250
+  PLACEHOLDER_TILES.color[i] = xdiagonal
+    ? COLOR.LTGRAY
+    : randominteger(0, 1)
+      ? COLOR.DKGRAY
+      : COLOR.LTGRAY
+  PLACEHOLDER_TILES.bg[i] = COLOR.BLACK
   PLACEHOLDER_TILES.stats[i] = 0
 }
 

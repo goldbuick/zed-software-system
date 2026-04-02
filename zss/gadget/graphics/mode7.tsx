@@ -133,6 +133,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     cameraref.current.updateProjectionMatrix()
     cameraref.current.updateMatrixWorld(true)
 
+    cornerref.current.updateWorldMatrix(true, false)
+
     const viewscale = mode7viewscalefromcameraz(cameraref.current.position.z)
     const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
       'mode7',

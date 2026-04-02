@@ -129,17 +129,5 @@ export function flatcameradevassertboardinortho(
   const okhoriz = !input.checkhoriz || (noleftvoid && norightvoid)
   const okvert = !input.checkvert || (notopvoid && nobottomvoid)
   const ok = okhoriz && okvert
-  if (!ok) {
-    console.error('[flat camera bounds] void past board edge in ortho view', {
-      minworldx,
-      maxworldx,
-      minworldy,
-      maxworldy,
-      frustumx: [-halfw, halfw],
-      frustumy: [-halfh, halfh],
-      eps,
-      flags: { noleftvoid, norightvoid, notopvoid, nobottomvoid },
-    })
-  }
   return ok
 }

@@ -1,20 +1,8 @@
 import { degToRad } from 'maath/misc'
 import {
   LAYER,
-  LAYER_CONTROL,
-  LAYER_DITHER,
-  LAYER_MEDIA,
-  LAYER_SPRITES,
-  LAYER_TILES,
   LAYER_TYPE,
-  SPRITE,
   VIEWSCALE,
-  createcontrol,
-  createdither,
-  createmedia,
-  createsprite,
-  createsprites,
-  createtiles,
   layersreadmedia,
 } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
@@ -45,6 +33,14 @@ import {
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import {
+  createcachedcontrol,
+  createcacheddither,
+  createcachedmedia,
+  createcachedtiles,
+  memorycreatecachedsprite,
+  memorycreatecachedsprites,
+} from './renderinglayercache'
+import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
@@ -53,6 +49,13 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
+/**
+ * Gadget rendering: board → layer stacks, display prefixes, and a small LRU
+ * for palette/charset bit fingerprints (`cachedmediabits`). Layer identity and
+ * backing buffers live in `renderinglayercache` + `boardarraypool`.
+ */
+
+/** Dedupes identical palette/charset bit payloads; small LRU by key. */
 const MAX_MEDIABITS_CACHE = 48
 const MEDIABITS_CACHE = new Map<string, number[]>()
 const MEDIABITS_CACHE_ORDER: string[] = []
@@ -426,76 +429,6 @@ export type MEMORY_GADGET_LAYERS = {
   tickers: string[]
 }
 
-export function memorycreatecachedsprite(
-  player: string,
-  index: number,
-  id: string,
-  spriteindex: number,
-): SPRITE {
-  const uid = `sprites:${player}:${index}:${id}`
-  const cid = `sprite:${player}:${index}:${spriteindex}`
-  if (!ispresent(SPRITE_CACHE[cid])) {
-    SPRITE_CACHE[cid] = createsprite(player, index, id)
-    registernewspritecacheid(cid)
-  }
-  SPRITE_CACHE[cid].id = uid
-  return SPRITE_CACHE[cid]
-}
-
-function memorycreatecachedsprites(
-  player: string,
-  index: number,
-): LAYER_SPRITES {
-  const id = `sprites:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createsprites(player, index)
-    registernewlayercacheid(id)
-  }
-  return LAYER_CACHE[id] as LAYER_SPRITES
-}
-
-function createcacheddither(
-  player: string,
-  index: number,
-  width: number,
-  height: number,
-  fill = 0,
-): LAYER_DITHER {
-  const id = `dither:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createdither(player, index, width, height, fill)
-    registernewlayercacheid(id)
-  }
-  return LAYER_CACHE[id] as LAYER_DITHER
-}
-
-function createcachedmedia(
-  player: string,
-  index: number,
-  mime: string,
-  media: string | number[],
-): LAYER_MEDIA {
-  const id = `media:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createmedia(player, index, mime, media)
-    registernewlayercacheid(id)
-  }
-  const layermedia = LAYER_CACHE[id] as LAYER_MEDIA
-  // handle copydata
-  layermedia.mime = mime
-  layermedia.media = media
-  return layermedia
-}
-
-function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
-  const id = `control:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createcontrol(player, index)
-    registernewlayercacheid(id)
-  }
-  return LAYER_CACHE[id] as LAYER_CONTROL
-}
-
 function readgraphics(player: string, board: BOARD) {
   // player flags, then board flags
   const { graphics, camera, facing } = memoryreadflags(player)
@@ -629,48 +562,4 @@ export function memoryreadgadgetlayers(
   }
 }
 
-// Rendering & Gadget Conversion Functions
-
-const MAX_LAYER_AND_SPRITE_CACHE = 512
-const LAYER_CACHE: Record<string, LAYER> = {}
-const SPRITE_CACHE: Record<string, SPRITE> = {}
-const CACHE_EVICTION_ORDER: string[] = []
-
-function evictrendercacheifneeded() {
-  while (CACHE_EVICTION_ORDER.length > MAX_LAYER_AND_SPRITE_CACHE) {
-    const tag = CACHE_EVICTION_ORDER.shift()
-    if (!ispresent(tag)) {
-      break
-    }
-    if (tag.startsWith('L')) {
-      delete LAYER_CACHE[tag.slice(2)]
-    } else {
-      delete SPRITE_CACHE[tag.slice(2)]
-    }
-  }
-}
-
-function registernewlayercacheid(id: string) {
-  CACHE_EVICTION_ORDER.push(`L:${id}`)
-  evictrendercacheifneeded()
-}
-
-function registernewspritecacheid(id: string) {
-  CACHE_EVICTION_ORDER.push(`S:${id}`)
-  evictrendercacheifneeded()
-}
-
-function createcachedtiles(
-  player: string,
-  index: number,
-  width: number,
-  height: number,
-  bg = 0,
-): LAYER_TILES {
-  const id = `tiles:${player}:${index}`
-  if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
-    registernewlayercacheid(id)
-  }
-  return LAYER_CACHE[id] as LAYER_TILES
-}
+export { memorycreatecachedsprite } from './renderinglayercache'

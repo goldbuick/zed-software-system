@@ -15,6 +15,10 @@ const NDC_EDGE_SLACK = 0.045
 /** Only treat board as “fits vertically” when projected span is clearly under full view (avoids false letterbox). */
 const LETTERBOX_SPAN_MARGIN = 0.12
 
+/** Mode7 perspective + X tilt: match clamp to visible frustum vs iso ortho defaults above. */
+export const MODE7_NDC_EDGE_SLACK = 0.055
+export const MODE7_LETTERBOX_SPAN_MARGIN = 0.14
+
 const _local = new Vector3()
 const _corners = [new Vector3(), new Vector3(), new Vector3(), new Vector3()]
 
@@ -26,7 +30,8 @@ function cameranegativeaspect(camera: Camera) {
   )
 }
 
-function boardndcbounds(
+/** Full quad in NDC (axis-aligned bounds of four board corners). Exported for tests. */
+export function boardndcbounds(
   camera: Camera,
   corner: Group,
   focusx: number,
@@ -71,6 +76,44 @@ function boardndcbounds(
   return { minx, maxx, miny, maxy }
 }
 
+/**
+ * Near floor edge only (local y = boarddrawh): horizontal NDC span at player depth.
+ * Mode7 left/right clamp uses this so the horizon does not dominate minx/maxx.
+ */
+export function boardndchorizontalnearfloor(
+  camera: Camera,
+  corner: Group,
+  focusx: number,
+  focusy: number,
+  boarddraww: number,
+  boarddrawh: number,
+  draww: number,
+  drawh: number,
+): { minx: number; maxx: number } {
+  const fx = (focusx + 0.5) * draww
+  const fy = (focusy + 0.5) * drawh
+  corner.position.set(-fx, -fy, 0)
+  corner.updateWorldMatrix(true, true)
+
+  _corners[0].set(0, boarddrawh, 0)
+  _corners[1].set(boarddraww, boarddrawh, 0)
+
+  let minx = Infinity
+  let maxx = -Infinity
+  const flipx = cameranegativeaspect(camera)
+  for (let i = 0; i < 2; i++) {
+    _local.copy(_corners[i]).applyMatrix4(corner.matrixWorld).project(camera)
+    const nx = flipx ? -_local.x : _local.x
+    if (nx < minx) {
+      minx = nx
+    }
+    if (nx > maxx) {
+      maxx = nx
+    }
+  }
+  return { minx, maxx }
+}
+
 function padstondc(
   viewwidth: number,
   viewheight: number,
@@ -99,18 +142,31 @@ function leftok(
   draww: number,
   drawh: number,
   mxl: number,
+  edgeslack: number,
+  horizontaluseflooredge: boolean,
 ) {
-  const b = boardndcbounds(
-    camera,
-    corner,
-    fx,
-    fy,
-    boarddraww,
-    boarddrawh,
-    draww,
-    drawh,
-  )
-  return b.minx <= -1 + mxl + NDC_EDGE_SLACK + EPS
+  const minx = horizontaluseflooredge
+    ? boardndchorizontalnearfloor(
+        camera,
+        corner,
+        fx,
+        fy,
+        boarddraww,
+        boarddrawh,
+        draww,
+        drawh,
+      ).minx
+    : boardndcbounds(
+        camera,
+        corner,
+        fx,
+        fy,
+        boarddraww,
+        boarddrawh,
+        draww,
+        drawh,
+      ).minx
+  return minx <= -1 + mxl + edgeslack + EPS
 }
 
 function rightok(
@@ -123,18 +179,31 @@ function rightok(
   draww: number,
   drawh: number,
   mxr: number,
+  edgeslack: number,
+  horizontaluseflooredge: boolean,
 ) {
-  const b = boardndcbounds(
-    camera,
-    corner,
-    fx,
-    fy,
-    boarddraww,
-    boarddrawh,
-    draww,
-    drawh,
-  )
-  return b.maxx >= 1 - mxr - NDC_EDGE_SLACK - EPS
+  const maxx = horizontaluseflooredge
+    ? boardndchorizontalnearfloor(
+        camera,
+        corner,
+        fx,
+        fy,
+        boarddraww,
+        boarddrawh,
+        draww,
+        drawh,
+      ).maxx
+    : boardndcbounds(
+        camera,
+        corner,
+        fx,
+        fy,
+        boarddraww,
+        boarddrawh,
+        draww,
+        drawh,
+      ).maxx
+  return maxx >= 1 - mxr - edgeslack - EPS
 }
 
 /** NDC y up: no void above board (sky) — top of quad reaches top margin. */
@@ -148,6 +217,7 @@ function topok(
   draww: number,
   drawh: number,
   myt: number,
+  edgeslack: number,
 ) {
   const b = boardndcbounds(
     camera,
@@ -159,7 +229,7 @@ function topok(
     draww,
     drawh,
   )
-  return b.maxy >= 1 - myt - NDC_EDGE_SLACK - EPS
+  return b.maxy >= 1 - myt - edgeslack - EPS
 }
 
 /** NDC y up: no void below board — bottom of quad reaches bottom margin. */
@@ -173,6 +243,7 @@ function bottomok(
   draww: number,
   drawh: number,
   myb: number,
+  edgeslack: number,
 ) {
   const b = boardndcbounds(
     camera,
@@ -184,7 +255,7 @@ function bottomok(
     draww,
     drawh,
   )
-  return b.miny <= -1 + myb + NDC_EDGE_SLACK + EPS
+  return b.miny <= -1 + myb + edgeslack + EPS
 }
 
 /** Smallest focusx where left edge constraint holds (minx <= -1+mxl). */
@@ -198,9 +269,23 @@ function smallestfxwhereleftok(
   draww: number,
   drawh: number,
   mxl: number,
+  edgeslack: number,
+  horizontaluseflooredge: boolean,
 ): number {
   if (
-    leftok(camera, corner, 0, fy, boarddraww, boarddrawh, draww, drawh, mxl)
+    leftok(
+      camera,
+      corner,
+      0,
+      fy,
+      boarddraww,
+      boarddrawh,
+      draww,
+      drawh,
+      mxl,
+      edgeslack,
+      horizontaluseflooredge,
+    )
   ) {
     return 0
   }
@@ -215,6 +300,8 @@ function smallestfxwhereleftok(
       draww,
       drawh,
       mxl,
+      edgeslack,
+      horizontaluseflooredge,
     )
   ) {
     return NaN
@@ -224,7 +311,19 @@ function smallestfxwhereleftok(
   for (let i = 0; i < BINARY_ITERS; i++) {
     const mid = (lo + hi) * 0.5
     if (
-      leftok(camera, corner, mid, fy, boarddraww, boarddrawh, draww, drawh, mxl)
+      leftok(
+        camera,
+        corner,
+        mid,
+        fy,
+        boarddraww,
+        boarddrawh,
+        draww,
+        drawh,
+        mxl,
+        edgeslack,
+        horizontaluseflooredge,
+      )
     ) {
       hi = mid
     } else {
@@ -245,9 +344,23 @@ function largestfxwhererightok(
   draww: number,
   drawh: number,
   mxr: number,
+  edgeslack: number,
+  horizontaluseflooredge: boolean,
 ): number {
   if (
-    !rightok(camera, corner, 0, fy, boarddraww, boarddrawh, draww, drawh, mxr)
+    !rightok(
+      camera,
+      corner,
+      0,
+      fy,
+      boarddraww,
+      boarddrawh,
+      draww,
+      drawh,
+      mxr,
+      edgeslack,
+      horizontaluseflooredge,
+    )
   ) {
     return NaN
   }
@@ -262,6 +375,8 @@ function largestfxwhererightok(
       draww,
       drawh,
       mxr,
+      edgeslack,
+      horizontaluseflooredge,
     )
   ) {
     return boardw
@@ -281,6 +396,8 @@ function largestfxwhererightok(
         draww,
         drawh,
         mxr,
+        edgeslack,
+        horizontaluseflooredge,
       )
     ) {
       lo = mid
@@ -302,8 +419,22 @@ function smallestfywheretopok(
   draww: number,
   drawh: number,
   myt: number,
+  edgeslack: number,
 ): number {
-  if (topok(camera, corner, fx, 0, boarddraww, boarddrawh, draww, drawh, myt)) {
+  if (
+    topok(
+      camera,
+      corner,
+      fx,
+      0,
+      boarddraww,
+      boarddrawh,
+      draww,
+      drawh,
+      myt,
+      edgeslack,
+    )
+  ) {
     return 0
   }
   if (
@@ -317,6 +448,7 @@ function smallestfywheretopok(
       draww,
       drawh,
       myt,
+      edgeslack,
     )
   ) {
     return NaN
@@ -326,7 +458,18 @@ function smallestfywheretopok(
   for (let i = 0; i < BINARY_ITERS; i++) {
     const mid = (lo + hi) * 0.5
     if (
-      topok(camera, corner, fx, mid, boarddraww, boarddrawh, draww, drawh, myt)
+      topok(
+        camera,
+        corner,
+        fx,
+        mid,
+        boarddraww,
+        boarddrawh,
+        draww,
+        drawh,
+        myt,
+        edgeslack,
+      )
     ) {
       hi = mid
     } else {
@@ -347,9 +490,21 @@ function largestfywherebottomok(
   draww: number,
   drawh: number,
   myb: number,
+  edgeslack: number,
 ): number {
   if (
-    !bottomok(camera, corner, fx, 0, boarddraww, boarddrawh, draww, drawh, myb)
+    !bottomok(
+      camera,
+      corner,
+      fx,
+      0,
+      boarddraww,
+      boarddrawh,
+      draww,
+      drawh,
+      myb,
+      edgeslack,
+    )
   ) {
     return NaN
   }
@@ -364,6 +519,7 @@ function largestfywherebottomok(
       draww,
       drawh,
       myb,
+      edgeslack,
     )
   ) {
     return boardh
@@ -383,6 +539,7 @@ function largestfywherebottomok(
         draww,
         drawh,
         myb,
+        edgeslack,
       )
     ) {
       lo = mid
@@ -409,6 +566,15 @@ export type Mode7ProjectedTargetFocusInput = {
   padright: number
   padtop: number
   padbottom: number
+  /** Override default mode7 edge slack (NDC). */
+  edgeslack?: number
+  /** Override default mode7 letterbox threshold. */
+  letterboxmargin?: number
+  /**
+   * When true (default for mode7), left/right clamp uses NDC minx/maxx from the near floor
+   * edge only; when false, uses full quad (iso ortho path).
+   */
+  horizontaluseflooredge?: boolean
 }
 
 export type IsoProjectedTargetFocusInput = {
@@ -445,6 +611,9 @@ type ProjectedTargetFocusFromCornersInput = {
   padright: number
   padtop: number
   padbottom: number
+  edgeslack?: number
+  letterboxmargin?: number
+  horizontaluseflooredge?: boolean
 }
 
 /**
@@ -473,6 +642,9 @@ function projectedtargetfocusfromcorners(
     padright,
     padtop,
     padbottom,
+    edgeslack = NDC_EDGE_SLACK,
+    letterboxmargin = LETTERBOX_SPAN_MARGIN,
+    horizontaluseflooredge = false,
   } = input
 
   const boarddrawwidth = boardwidth * drawwidth
@@ -527,7 +699,7 @@ function projectedtargetfocusfromcorners(
       drawheight,
     )
     const spanx = bx.maxx - bx.minx
-    if (spanx <= availx - LETTERBOX_SPAN_MARGIN) {
+    if (spanx <= availx - letterboxmargin) {
       tfocusx = boardwidth * 0.5
     } else {
       const flo = smallestfxwhereleftok(
@@ -540,6 +712,8 @@ function projectedtargetfocusfromcorners(
         drawwidth,
         drawheight,
         mxl,
+        edgeslack,
+        horizontaluseflooredge,
       )
       const fhi = largestfxwhererightok(
         camera,
@@ -551,6 +725,8 @@ function projectedtargetfocusfromcorners(
         drawwidth,
         drawheight,
         mxr,
+        edgeslack,
+        horizontaluseflooredge,
       )
       if (!Number.isFinite(flo) || !Number.isFinite(fhi) || flo > fhi + 1e-4) {
         return fallback()
@@ -570,7 +746,7 @@ function projectedtargetfocusfromcorners(
       drawheight,
     )
     const spany = by.maxy - by.miny
-    if (spany <= availy - LETTERBOX_SPAN_MARGIN) {
+    if (spany <= availy - letterboxmargin) {
       tfocusy = boardheight * 0.5
     } else {
       const glo = smallestfywheretopok(
@@ -583,6 +759,7 @@ function projectedtargetfocusfromcorners(
         drawwidth,
         drawheight,
         myt,
+        edgeslack,
       )
       const ghi = largestfywherebottomok(
         camera,
@@ -594,6 +771,7 @@ function projectedtargetfocusfromcorners(
         drawwidth,
         drawheight,
         myb,
+        edgeslack,
       )
       if (!Number.isFinite(glo) || !Number.isFinite(ghi) || glo > ghi + 1e-4) {
         return fallback()
@@ -617,7 +795,12 @@ function projectedtargetfocusfromcorners(
 export function mode7projectedtargetfocus(
   input: Mode7ProjectedTargetFocusInput,
 ): { tfocusx: number; tfocusy: number } {
-  return projectedtargetfocusfromcorners(input)
+  return projectedtargetfocusfromcorners({
+    ...input,
+    horizontaluseflooredge: input.horizontaluseflooredge ?? true,
+    edgeslack: input.edgeslack ?? MODE7_NDC_EDGE_SLACK,
+    letterboxmargin: input.letterboxmargin ?? MODE7_LETTERBOX_SPAN_MARGIN,
+  })
 }
 
 /**
