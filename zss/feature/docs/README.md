@@ -9,7 +9,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **Board operations** — Copy, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`)
 - **Format** — Object serialization with msgpack for memory/gadget state
 - **Parse** — File format parsers (ZZT, ANSI, CHR, ZZM, markdown, etc.)
-- **heavy** — ML/TTS workloads (Piper, Kitten TTS; transformers models; agent)
+- **heavy** — ML/TTS workloads (Piper, Supertonic; transformers models; agent)
 - **ROM** — Embedded help/documentation content
 - **Synth** — Audio synthesis (see [synth/docs](../synth/docs/README.md))
 - **WriteUI** — Terminal log formatting (headers, sections, hyperlinks)
@@ -25,7 +25,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [boardweave.md](boardweave.md) | Shift/wrap board region |
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
-| [tts.md](tts.md) | Text-to-speech (Edge, Piper, Kitten) |
+| [tts.md](tts.md) | Text-to-speech (Edge, Piper, Supertonic) |
 | [heavy.md](heavy.md) | Heavy processing (TTS engines, models, agent) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |
 | [rom.md](rom.md) | ROM/help content and scroll display |
@@ -44,6 +44,6 @@ Feature modules are **stateless utilities** and **domain logic** that:
 ## Submodules
 
 - **synth** — Web-based synthesizer with Tone.js; see [synth/docs/README.md](../synth/docs/README.md)
-- **heavy** — Piper/Kitten TTS, transformers models, agent with tool calls
+- **heavy** — Piper/Supertonic TTS, transformers models, agent with tool calls
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`
 - **rom** — Static `.md` ROM (YAML `hint:` for editor help, Markdown for help screens, refscroll mix)

@@ -4,6 +4,7 @@ import {
   createdither,
   createtiles,
 } from 'zss/gadget/data/types'
+import { clamp, randomnumber } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 /** Cardinal + diagonal directions for exit preview placeholders. */
@@ -27,7 +28,7 @@ export function buildundiscoveredexitlayers(dir: EXIT_DIRECTION): LAYER[] {
   tiles.id = `exitundiscovered:${dir}`
   const size = BOARD_WIDTH * BOARD_HEIGHT
   for (let i = 0; i < size; ++i) {
-    tiles.char[i] = 176
+    tiles.char[i] = i % 2 === 0 ? 176 : 177
     tiles.color[i] = 8
     tiles.bg[i] = 0
     tiles.stats[i] = 0
@@ -35,18 +36,23 @@ export function buildundiscoveredexitlayers(dir: EXIT_DIRECTION): LAYER[] {
   return [tiles]
 }
 
-const CACHED_EXIT_PREVIEW_DITHER_ALPHA = 0.15
+const DITHER_ALPHA = 0.3
+const DITHER_SIZE = BOARD_WIDTH * BOARD_HEIGHT
+const DITHER_ALPHA_VALUES = Array.from({ length: DITHER_SIZE }, () =>
+  clamp(DITHER_ALPHA + randomnumber() * DITHER_ALPHA, 0, 1),
+)
 
 /** Dither drawn on top of cached neighbor snapshots (visited); not used for placeholders. */
 export function buildcachedexitpreviewoverlaydither(
   dir: EXIT_DIRECTION,
 ): LAYER_DITHER {
   const idx = DIR_INDEX[dir]
-  return createdither(
+  const dither = createdither(
     'exitpreviewcache',
     idx,
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    CACHED_EXIT_PREVIEW_DITHER_ALPHA,
   )
+  dither.alphas = DITHER_ALPHA_VALUES
+  return dither
 }

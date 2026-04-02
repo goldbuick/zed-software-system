@@ -2,7 +2,7 @@
 
 ## `ZSS_PERF_UI`
 
-Set `ZSS_PERF_UI=true` in `cafe/.env` or `cafe/.env.local` (see [`cafe/.env`](../cafe/.env)). Rebuild or restart Vite so `import.meta.env` picks it up.
+Set `ZSS_PERF_UI=true` in `cafe/.env` or `cafe/.env.local` (see [`cafe/.env`](../../cafe/.env)). Rebuild or restart Vite so `import.meta.env` picks it up.
 
 When enabled:
 
@@ -31,4 +31,4 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 ## Jest
 
-`jest.config.ts` maps `zss/perf/ui` to [`zss/__mocks__/perfui.ts`](__mocks__/perfui.ts) so Node tests do not load `zss/config` (`import.meta.env` from Vite).
+`jest.config.ts` maps `zss/perf/ui` to [`zss/__mocks__/perfui.ts`](../__mocks__/perfui.ts) so Node tests do not load `zss/config` (`import.meta.env` from Vite).

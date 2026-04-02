@@ -46,9 +46,13 @@ export function FlatLayer({ id, z, from, layers }: FlatLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
+      const hideplayer = ispresent(layers)
+      const othersprites = layer.sprites.filter(
+        (sprite) => !hideplayer || !sprite.pid,
+      )
       return (
         <group key={layer.id} position={[0, 0, z]}>
-          <SpriteMeshes sprites={layer.sprites} />
+          <SpriteMeshes sprites={othersprites} />
         </group>
       )
     }

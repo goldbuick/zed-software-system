@@ -25,6 +25,9 @@ jobs:
       - name: run lint
         run: yarn lint
 
+      - name: check markdown relative links
+        run: yarn docs:links
+
       - name: run tests
         run: yarn test
 

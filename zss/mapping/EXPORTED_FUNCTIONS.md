@@ -1,5 +1,7 @@
 # Mapping Module - Exported Functions Summary
 
+<!-- When public exports under `zss/mapping/` change, update this catalog. -->
+
 ## ID Generation & Validation
 
 ### Session & Process IDs

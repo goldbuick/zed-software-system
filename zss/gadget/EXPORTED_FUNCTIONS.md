@@ -1,5 +1,7 @@
 # Gadget Module - Exported Functions
 
+<!-- When public exports under `zss/gadget/` change, update this catalog. -->
+
 This document categorizes and summarizes all exported functions from the `gadget` module.
 
 ## Table of Contents

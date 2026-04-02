@@ -16,9 +16,6 @@ export function resolveexitpreview(
   layercachemap: Map<string, LAYER[]>,
   direction: EXIT_DIRECTION,
 ): ExitPreviewResolve {
-  if (!exitboardid) {
-    return { layers: [] }
-  }
   if (exitboardid === CORNER_EXIT_DISPUTED) {
     return {
       layers: buildundiscoveredexitlayers(direction),
