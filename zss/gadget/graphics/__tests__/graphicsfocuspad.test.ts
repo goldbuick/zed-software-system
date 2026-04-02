@@ -76,15 +76,17 @@ describe('graphicsfocuspad', () => {
     const vh = BOARD_HEIGHT * drawh
     const halfw = vw * 0.5
     const halfh = vh * 0.5
+    const boardhalfw = BOARD_WIDTH * 0.5
+    const boardhalfh = BOARD_HEIGHT * 0.5
     const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
       'iso',
       VIEWSCALE.MID,
       vw,
       vh,
     )
-    expect(padleft).toBeCloseTo((-0.5 / (BOARD_WIDTH * 0.5)) * halfw, 10)
-    expect(padright).toBeCloseTo((-0.5 / (BOARD_WIDTH * 0.5)) * halfw, 10)
-    expect(padtop).toBe(0)
-    expect(padbottom).toBeCloseTo((-1.5 / (BOARD_HEIGHT * 0.5)) * halfh, 10)
+    expect(padleft).toBeCloseTo((5 / boardhalfw) * halfw, 10)
+    expect(padright).toBeCloseTo((-5 / boardhalfw) * halfw, 10)
+    expect(padtop).toBeCloseTo((-6 / boardhalfh) * halfh, 10)
+    expect(padbottom).toBeCloseTo((-3 / boardhalfh) * halfh, 10)
   })
 })
