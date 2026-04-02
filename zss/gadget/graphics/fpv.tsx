@@ -311,14 +311,15 @@ export const FPVGraphics = memo(function FPVGraphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const east = resolveexitpreview(gadget.exiteast, layercachemap, 'e')
-  const west = resolveexitpreview(gadget.exitwest, layercachemap, 'w')
-  const north = resolveexitpreview(gadget.exitnorth, layercachemap, 'n')
-  const south = resolveexitpreview(gadget.exitsouth, layercachemap, 's')
-  const ne = resolveexitpreview(gadget.exitne, layercachemap, 'ne')
-  const nw = resolveexitpreview(gadget.exitnw, layercachemap, 'nw')
-  const se = resolveexitpreview(gadget.exitse, layercachemap, 'se')
-  const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw')
+  const hasunderboard = under.length > 0
+  const east = resolveexitpreview(gadget.exiteast, layercachemap, 'e', hasunderboard)
+  const west = resolveexitpreview(gadget.exitwest, layercachemap, 'w', hasunderboard)
+  const north = resolveexitpreview(gadget.exitnorth, layercachemap, 'n', hasunderboard)
+  const south = resolveexitpreview(gadget.exitsouth, layercachemap, 's', hasunderboard)
+  const ne = resolveexitpreview(gadget.exitne, layercachemap, 'ne', hasunderboard)
+  const nw = resolveexitpreview(gadget.exitnw, layercachemap, 'nw', hasunderboard)
+  const se = resolveexitpreview(gadget.exitse, layercachemap, 'se', hasunderboard)
+  const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw', hasunderboard)
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
