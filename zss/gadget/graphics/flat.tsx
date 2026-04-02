@@ -1,12 +1,18 @@
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
-import { Group, OrthographicCamera as OrthographicCameraImpl } from 'three'
+import {
+  Box3,
+  Group,
+  OrthographicCamera as OrthographicCameraImpl,
+  Vector3,
+} from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import {
+  flatcameraboardworldbox,
   flatcameradevassertboardinortho,
   flatcameratargetfocus,
 } from 'zss/gadget/graphics/flatcamerabounds'
@@ -44,6 +50,9 @@ export const FlatGraphics = memo(function FlatGraphics({
   const inspectzoomref = useRef<Group>(null)
   const centeroffsetref = useRef({ x: 0, y: 0 })
   const devassertframeref = useRef(0)
+  const looktarget = useRef(new Vector3())
+  const worldfocus = useRef(new Vector3())
+  const boundarybox = useRef(new Box3())
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
     cameraref.current = c
@@ -79,14 +88,9 @@ export const FlatGraphics = memo(function FlatGraphics({
     }
 
     const userData = cameraref.current.userData ?? {}
-    const fx = (userData.focusx + 0.5) * drawwidth
-    const fy = (userData.focusy + 0.5) * drawheight
 
     // zoom
     damp3(zoomref.current.scale, control.viewscale, animrate, delta)
-
-    // pan
-    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
     const viewscale = zoomref.current.scale.x
     const { tfocusx, tfocusy } = flatcameratargetfocus({
@@ -103,10 +107,38 @@ export const FlatGraphics = memo(function FlatGraphics({
     userData.tfocusx = tfocusx
     userData.tfocusy = tfocusy
 
+    const c = centeroffsetref.current
+
+    // smoothed change in focus
+    if (currentboard !== userData.currentboard) {
+      userData.focusx = userData.tfocusx
+      userData.focusy = userData.tfocusy
+      userData.currentboard = currentboard
+      cornerref.current.position.set(
+        -c.x / viewscale - (userData.focusx + 0.5) * drawwidth,
+        -c.y / viewscale - (userData.focusy + 0.5) * drawheight,
+        0,
+      )
+    } else {
+      damp(userData, 'focusx', userData.tfocusx, animrate)
+      damp(userData, 'focusy', userData.tfocusy, animrate)
+    }
+
+    const fx = (userData.focusx + 0.5) * drawwidth
+    const fy = (userData.focusy + 0.5) * drawheight
+    // Focus cell center at portal origin: center + scale * (corner + local) = 0
+    const targetcornerx = -c.x / viewscale - fx
+    const targetcornery = -c.y / viewscale - fy
+    damp3(
+      cornerref.current.position,
+      [targetcornerx, targetcornery, 0],
+      animrate,
+      delta,
+    )
+
     if (import.meta.env.DEV) {
       devassertframeref.current += 1
       if (devassertframeref.current % 60 === 0) {
-        const c = centeroffsetref.current
         const boardwscaled = BOARD_WIDTH * drawwidth * viewscale
         const boardhscaled = BOARD_HEIGHT * drawheight * viewscale
         flatcameradevassertboardinortho({
@@ -128,20 +160,32 @@ export const FlatGraphics = memo(function FlatGraphics({
       }
     }
 
-    // smoothed change in focus
-    if (currentboard !== userData.currentboard) {
-      userData.focusx = userData.tfocusx
-      userData.focusy = userData.tfocusy
-      userData.currentboard = currentboard
-      cornerref.current.position.set(
-        -((userData.focusx + 0.5) * drawwidth),
-        -((userData.focusy + 0.5) * drawheight),
-        0,
-      )
-    } else {
-      damp(userData, 'focusx', userData.tfocusx, animrate)
-      damp(userData, 'focusy', userData.tfocusy, animrate)
-    }
+    // camera-controls setBoundary equivalent: clamp world focus point to board Box3
+    const cornerx = cornerref.current.position.x
+    const cornery = cornerref.current.position.y
+    const boundary = boundarybox.current
+    flatcameraboardworldbox(
+      {
+        centerx: c.x,
+        centery: c.y,
+        viewscale,
+        cornerx,
+        cornery,
+        drawwidth,
+        drawheight,
+        boardwidth: BOARD_WIDTH,
+        boardheight: BOARD_HEIGHT,
+      },
+      boundary,
+    )
+    worldfocus.current.set(
+      c.x + viewscale * (cornerx + fx),
+      c.y + viewscale * (cornery + fy),
+      0,
+    )
+    boundary.clampPoint(worldfocus.current, worldfocus.current)
+    cornerref.current.position.x = (worldfocus.current.x - c.x) / viewscale - fx
+    cornerref.current.position.y = (worldfocus.current.y - c.y) / viewscale - fy
 
     // keep inspector in place
     inspectref.current.position.x = cornerref.current.position.x
@@ -149,6 +193,14 @@ export const FlatGraphics = memo(function FlatGraphics({
 
     // keep inspector the same size
     inspectzoomref.current.scale.setScalar(viewscale)
+
+    // camera-controls would fight this; we drive a fixed ortho top-down (+Z) view in portal space.
+    const cam = cameraref.current
+    cam.up.set(0, 1, 0)
+    looktarget.current.set(0, 0, 0)
+    cam.position.set(0, 0, 1000)
+    cam.lookAt(looktarget.current)
+    cam.updateMatrixWorld()
   })
 
   // re-render when board or layer counts change (board change must trigger re-render)
@@ -187,7 +239,8 @@ export const FlatGraphics = memo(function FlatGraphics({
 
   const fullgridwpx = screensize.cols * drawwidth
   const centerx = fullgridwpx * -0.5
-  const centery = viewheight * 0.5
+  // Standard ortho frustum (top > bottom): +Y is screen-up; tiles grow +Y from y=0 so center is -vh/2.
+  const centery = viewheight * -0.5
   useLayoutEffect(() => {
     centeroffsetref.current = { x: centerx, y: centery }
   }, [centerx, centery])
@@ -201,70 +254,68 @@ export const FlatGraphics = memo(function FlatGraphics({
           </group>
         </group>
       </group>
-      <orthographicCamera
-        ref={bindboardcamera}
-        left={viewwidth * -0.5}
-        right={viewwidth * 0.5}
-        top={viewheight * -0.5}
-        bottom={viewheight * 0.5}
-        near={0.1}
-        far={2000}
-        position={[0, 0, 1000]}
-        onUpdate={(c) => c.updateProjectionMatrix()}
-      />
-      {boardcamera && (
-        <RenderLayer
-          camera={boardcamera}
-          viewwidth={viewwidth}
-          viewheight={viewheight}
-          effects={<></>}
-        >
-          <group position={[centerx, centery, 0]}>
-            <group ref={zoomref}>
-              <group ref={cornerref}>
-                {under.map((layer, i) => (
-                  <FlatLayer
-                    key={layer.id}
-                    from="under"
-                    id={layer.id}
-                    z={1 + i * 2}
-                  />
-                ))}
-                {layers.map((layer, i) => (
-                  <FlatLayer
-                    key={layer.id}
-                    from="layers"
-                    id={layer.id}
-                    z={1 + under.length + i * 2}
-                  />
-                ))}
-                {over.map((layer, i) => (
-                  <FlatLayer
-                    key={layer.id}
-                    from="over"
-                    id={layer.id}
-                    z={1 + under.length + layers.length + i * 2}
-                  />
-                ))}
-                {exitpreviewgroups.map(({ key, preview, position }) =>
-                  preview.layers.length > 0 ? (
-                    <group key={key} position={position}>
-                      {preview.layers.map((layer) => (
-                        <FlatLayer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={preview.layers}
-                          z={exitzbase + maptolayerz(layer, 'flat')}
-                        />
-                      ))}
-                    </group>
-                  ) : null,
-                )}
-              </group>
+      <RenderLayer
+        camera={boardcamera}
+        viewwidth={viewwidth}
+        viewheight={viewheight}
+        effects={<></>}
+      >
+        <orthographicCamera
+          ref={bindboardcamera}
+          left={viewwidth * -0.5}
+          right={viewwidth * 0.5}
+          top={viewheight * 0.5}
+          bottom={viewheight * -0.5}
+          near={0.1}
+          far={2000}
+          position={[0, 0, 1000]}
+          onUpdate={(c) => c.updateProjectionMatrix()}
+        />
+        <group position={[centerx, centery, 0]}>
+          <group ref={zoomref}>
+            <group ref={cornerref}>
+              {under.map((layer, i) => (
+                <FlatLayer
+                  key={layer.id}
+                  from="under"
+                  id={layer.id}
+                  z={1 + i * 2}
+                />
+              ))}
+              {layers.map((layer, i) => (
+                <FlatLayer
+                  key={layer.id}
+                  from="layers"
+                  id={layer.id}
+                  z={1 + under.length + i * 2}
+                />
+              ))}
+              {over.map((layer, i) => (
+                <FlatLayer
+                  key={layer.id}
+                  from="over"
+                  id={layer.id}
+                  z={1 + under.length + layers.length + i * 2}
+                />
+              ))}
+              {exitpreviewgroups.map(({ key, preview, position }) =>
+                preview.layers.length > 0 ? (
+                  <group key={key} position={position}>
+                    {preview.layers.map((layer) => (
+                      <FlatLayer
+                        key={layer.id}
+                        id={layer.id}
+                        layers={preview.layers}
+                        z={exitzbase + maptolayerz(layer, 'flat')}
+                      />
+                    ))}
+                  </group>
+                ) : null,
+              )}
             </group>
           </group>
-        </RenderLayer>
-      )}
+        </group>
+      </RenderLayer>
     </>
   )
 })
