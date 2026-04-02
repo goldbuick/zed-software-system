@@ -1,5 +1,7 @@
 # Screens Module - Exported Functions Summary
 
+<!-- When public exports under `zss/screens/` change, update this catalog. -->
+
 This document categorizes and summarizes all exported functions, types, constants, and components from the `screens` module.
 
 ## 1. Main Screen Components

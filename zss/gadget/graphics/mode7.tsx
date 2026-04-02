@@ -2,27 +2,34 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { memo, useLayoutEffect, useRef, useState } from 'react'
-import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
+import { memo, useCallback, useRef, useState } from 'react'
+import {
+  Group,
+  PerspectiveCamera as PerspectiveCameraImpl,
+  Vector3,
+} from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
-import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
+import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
+import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
+import { graphicsfocuspad } from 'zss/gadget/graphics/graphicsfocuspad'
+import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
+import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
+import { mode7projectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import {
   MODE7_Z_FAR,
   MODE7_Z_MID,
   MODE7_Z_NEAR,
   mode7viewscalefromcameraz,
 } from 'zss/gadget/graphics/mode7viewscale'
-import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
-import { maptolayerz } from 'zss/gadget/graphics/layerz'
-import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { useShallow } from 'zustand/react/shallow'
 
 type GraphicsProps = {
   width: number
@@ -70,11 +77,16 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const underref = useRef<Group>(null)
   const cornerref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
+  const [boardcamera, setboardcamera] = useState<PerspectiveCameraImpl | null>(
+    null,
+  )
   const depthoffield = useRef<DepthOfFieldEffect>(null)
+  const dofplayerworld = useRef(new Vector3())
+  const dofcamworld = useRef(new Vector3())
 
-  const [, setcameraready] = useState(false)
-  useLayoutEffect(() => {
-    setcameraready(true)
+  const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
+    cameraref.current = c
+    setboardcamera((prev) => (prev === c ? prev : c))
   }, [])
 
   useFrame((_, delta) => {
@@ -115,17 +127,35 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       delta,
     )
 
+    tiltref.current.updateMatrixWorld(true)
+
+    cameraref.current.rotation.z = Math.PI
+    cameraref.current.updateProjectionMatrix()
+    cameraref.current.updateMatrixWorld(true)
+
     const viewscale = mode7viewscalefromcameraz(cameraref.current.position.z)
-    const { tfocusx, tfocusy } = flatcameratargetfocus({
+    const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
+      'mode7',
+      control.viewscale,
+      viewwidth,
+      viewheight,
+    )
+    const { tfocusx, tfocusy } = mode7projectedtargetfocus({
+      camera: cameraref.current,
+      corner: cornerref.current,
       viewwidth,
       viewheight,
       drawwidth,
       drawheight,
-      viewscale,
       boardwidth: BOARD_WIDTH,
       boardheight: BOARD_HEIGHT,
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
+      viewscale,
+      padleft,
+      padright,
+      padtop,
+      padbottom,
     })
     ud.tfocusx = tfocusx
     ud.tfocusy = tfocusy
@@ -149,29 +179,35 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       damp(userData, 'focusy', tfocusy, animrate)
     }
 
-    // update dof
+    // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
       case VIEWSCALE.NEAR:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1200
-        depthoffield.current.cocMaterial.worldFocusDistance = 350
+        depthoffield.current.cocMaterial.worldFocusRange = 1800
         break
       default:
       case VIEWSCALE.MID:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1700
-        depthoffield.current.cocMaterial.worldFocusDistance = 800
+        depthoffield.current.cocMaterial.worldFocusRange = 2550
         break
       case VIEWSCALE.FAR:
         depthoffield.current.bokehScale = 10
-        depthoffield.current.cocMaterial.worldFocusRange = 1700
-        depthoffield.current.cocMaterial.worldFocusDistance = 1100
+        depthoffield.current.cocMaterial.worldFocusRange = 2550
         break
     }
 
-    // center camera
-    cameraref.current.rotation.z = Math.PI
-    cameraref.current.updateProjectionMatrix()
+    const gadgetlayers = useGadgetClient.getState().gadget.layers ?? []
+    const playerspritez = maxspriteslayerz(gadgetlayers, 'mode7')
+    cornerref.current.updateMatrixWorld(true)
+    dofplayerworld.current.set(
+      (control.focusx + 0.5) * drawwidth,
+      (control.focusy + 0.5) * drawheight,
+      playerspritez,
+    )
+    cornerref.current.localToWorld(dofplayerworld.current)
+    cameraref.current.getWorldPosition(dofcamworld.current)
+    depthoffield.current.cocMaterial.focusDistance =
+      dofcamworld.current.distanceTo(dofplayerworld.current)
 
     // framing
     const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
@@ -189,13 +225,27 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+  useGadgetClient(
+    useShallow((state) => ({
+      exiteast: state.gadget.exiteast,
+      exitwest: state.gadget.exitwest,
+      exitnorth: state.gadget.exitnorth,
+      exitsouth: state.gadget.exitsouth,
+      exitne: state.gadget.exitne,
+      exitnw: state.gadget.exitnw,
+      exitse: state.gadget.exitse,
+      exitsw: state.gadget.exitsw,
+    })),
+  )
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const exiteast = layercachemap.get(gadget.exiteast) ?? []
-  const exitwest = layercachemap.get(gadget.exitwest) ?? []
-  const exitnorth = layercachemap.get(gadget.exitnorth) ?? []
-  const exitsouth = layercachemap.get(gadget.exitsouth) ?? []
+  const exitpreviewgroups = buildexitpreviewgroups(
+    gadget,
+    layercachemap,
+    drawwidth,
+    drawheight,
+  )
 
   const layersindex = under.length * 2 + 2
   const centerx = viewport.width * -0.5 + screensize.marginx
@@ -203,15 +253,15 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   return (
     <>
       <perspectiveCamera
-        ref={cameraref}
+        ref={bindboardcamera}
         near={0.1}
         far={2000}
         aspect={-viewwidth / viewheight}
       />
       <group position-z={layersindex}>
-        {cameraref.current && (
+        {boardcamera && (
           <RenderLayer
-            camera={cameraref.current}
+            camera={boardcamera}
             viewwidth={viewwidth}
             viewheight={viewheight}
             effects={
@@ -239,53 +289,19 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       z={maptolayerz(layer, 'mode7') + drawheight * 1.125}
                     />
                   ))}
-                  {exiteast.length && (
-                    <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                      {exiteast.map((layer) => (
-                        <Mode7Layer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={exiteast}
-                          z={maptolayerz(layer, 'mode7')}
-                        />
-                      ))}
-                    </group>
-                  )}
-                  {exitwest.length && (
-                    <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                      {exitwest.map((layer) => (
-                        <Mode7Layer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={exitwest}
-                          z={maptolayerz(layer, 'mode7')}
-                        />
-                      ))}
-                    </group>
-                  )}
-                  {exitnorth.length && (
-                    <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                      {exitnorth.map((layer) => (
-                        <Mode7Layer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={exitnorth}
-                          z={maptolayerz(layer, 'mode7')}
-                        />
-                      ))}
-                    </group>
-                  )}
-                  {exitsouth.length && (
-                    <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                      {exitsouth.map((layer) => (
-                        <Mode7Layer
-                          key={layer.id}
-                          id={layer.id}
-                          layers={exitsouth}
-                          z={maptolayerz(layer, 'mode7')}
-                        />
-                      ))}
-                    </group>
+                  {exitpreviewgroups.map(({ key, preview, position }) =>
+                    preview.layers.length > 0 ? (
+                      <group key={key} position={position}>
+                        {preview.layers.map((layer) => (
+                          <Mode7Layer
+                            key={layer.id}
+                            id={layer.id}
+                            layers={preview.layers}
+                            z={maptolayerz(layer, 'mode7')}
+                          />
+                        ))}
+                      </group>
+                    ) : null,
                   )}
                 </group>
               </group>

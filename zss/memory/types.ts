@@ -11,6 +11,9 @@ export const BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT
 export const CHAR_RAY_MARGIN = 3
 export const FIXED_DATE = new Date('1980/09/02')
 
+/** Gadget-only sentinel: cardinal paths to a corner disagree; show undiscovered placeholder, never cache tint. */
+export const CORNER_EXIT_DISPUTED = '__corner_exit_disputed__'
+
 // enums
 
 export enum BITMAP_KEYS {

@@ -268,6 +268,10 @@ export type GADGET_STATE = {
   exitwest: string
   exitnorth: string
   exitsouth: string
+  exitne: string
+  exitnw: string
+  exitse: string
+  exitsw: string
   over?: LAYER[]
   under?: LAYER[]
   layers?: LAYER[]

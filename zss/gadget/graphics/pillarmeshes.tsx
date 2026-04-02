@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Color, InstancedMesh, Object3D } from 'three'
+import { Box3, Color, InstancedMesh, Object3D, Sphere, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { createBlocksMaterial } from 'zss/gadget/display/blocks'
@@ -20,6 +20,9 @@ type PillarwMeshesProps = {
 
 const dummy = new Object3D()
 const dummycolor = new Color()
+const pillarbbmin = new Vector3()
+const pillarbbmax = new Vector3()
+const pillarspherecenter = new Vector3()
 
 export function PillarwMeshes({
   width,
@@ -97,10 +100,19 @@ export function PillarwMeshes({
     if (ispresent(meshes.instanceColor)) {
       meshes.instanceColor.needsUpdate = true
     }
-    meshes.computeBoundingBox()
-    meshes.computeBoundingSphere()
+    const maxrows = Math.ceil(limit / width)
+    const bx = width * drawwidth
+    const by = maxrows * drawheight
+    pillarbbmin.set(0, 0, -0.5)
+    pillarbbmax.set(bx, by, 0.5)
+    meshes.boundingBox ??= new Box3()
+    meshes.boundingBox.set(pillarbbmin, pillarbbmax)
+    pillarspherecenter.set(bx * 0.5, by * 0.5, 0)
+    meshes.boundingSphere ??= new Sphere()
+    meshes.boundingSphere.center.copy(pillarspherecenter)
+    meshes.boundingSphere.radius = Math.hypot(bx * 0.5, by * 0.5, 0.5) + 0.001
     meshes.visible = !!meshes.count
-  }, [meshes, char, color, bg, width])
+  }, [meshes, char, color, bg, width, limit])
 
   return (
     <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>

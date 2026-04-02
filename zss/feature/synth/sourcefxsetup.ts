@@ -24,29 +24,27 @@ export function createsourcefxsetup(
   ]
 
   const FXCHAIN = createfx()
-  const FX = [
-    createfxchannels(1),
-    createfxchannels(2),
-    createfxchannels(3),
-    createfxchannels(4),
-  ]
+  const FX = [createfxchannels(1), createfxchannels(2)]
 
-  // wire up fx & input to dest
-  for (let i = 0; i < FX.length; ++i) {
-    const f = FX[i]
-    const dest = i < 2 ? playvolume : i < 3 ? bgplayvolume : ttsvolume
-    f.sendtofx.connect(dest)
-    f.fc.chain(FXCHAIN.fc, dest)
-    f.echo.chain(FXCHAIN.echo, dest)
-    f.reverb.chain(FXCHAIN.reverb, dest)
-    f.autofilter.chain(FXCHAIN.autofilter, dest)
-    f.vibrato.chain(FXCHAIN.vibrato, dest)
-    f.distortion.chain(FXCHAIN.distortion, dest)
-    f.autowah.chain(FXCHAIN.autowah, dest)
+  function connectfxgroupoutputs(f: (typeof FX)[0], ...dests: Volume[]) {
+    for (let d = 0; d < dests.length; ++d) {
+      const dest = dests[d]
+      f.sendtofx.connect(dest)
+      f.fc.chain(FXCHAIN.fc, dest)
+      f.echo.chain(FXCHAIN.echo, dest)
+      f.reverb.chain(FXCHAIN.reverb, dest)
+      f.autofilter.chain(FXCHAIN.autofilter, dest)
+      f.vibrato.chain(FXCHAIN.vibrato, dest)
+      f.distortion.chain(FXCHAIN.distortion, dest)
+      f.autowah.chain(FXCHAIN.autowah, dest)
+    }
   }
 
+  connectfxgroupoutputs(FX[0], playvolume)
+  connectfxgroupoutputs(FX[1], bgplayvolume, ttsvolume)
+
   function mapindextofx(index: number) {
-    return index < 4 ? Math.floor(index / 2) : 2
+    return index < 4 ? 0 : 1
   }
 
   function connectsource(index: number) {

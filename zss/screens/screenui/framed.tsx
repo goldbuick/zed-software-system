@@ -27,7 +27,6 @@ import { UserInput, UserInputMods, modsfromevent } from 'zss/gadget/userinput'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
-import { useShallow } from 'zustand/react/shallow'
 
 import { ScreenUITickerText } from './tickertext'
 
@@ -56,27 +55,20 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const player = registerreadplayer()
   const inspector = useTape((state) => state.inspector)
 
-  // re-render only when layer count, board render id, or graphics changes
-  useGadgetClient(
-    useShallow((state) => [
-      state.gadget.id,
-      state.gadget.board,
-      state.gadget.layers?.length ?? 0,
-    ]),
-  )
-
   // handle graphics modes
   const graphics = useGadgetClient((state) => {
     const control = layersreadcontrol(state.gadget.layers ?? [])
     return control.graphics
   })
 
-  const { board, synthstate } = useGadgetClient.getState().gadget
+  // handle synth state switch between boards
+  const board = useGadgetClient((state) => state.gadget.board)
   useEffect(() => {
+    const { synthstate } = useGadgetClient.getState().gadget
     if (ispresent(synthstate)) {
       synthupdate(SOFTWARE, player, board, synthstate)
     }
-  }, [player, board, synthstate])
+  }, [player, board])
 
   return (
     <>

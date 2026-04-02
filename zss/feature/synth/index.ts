@@ -67,8 +67,11 @@ export function createsynth() {
       SOURCE[index].setreplay(item)
     })
     FXCHAIN.setreplay(fxchain)
-    fx.forEach((item, index) => {
-      FX[index].setreplay(item)
+    const fxreplay = FX.length === 2 && fx.length === 4 ? [fx[0]!, fx[2]!] : fx
+    fxreplay.forEach((item, index) => {
+      if (index < FX.length) {
+        FX[index].setreplay(item)
+      }
     })
   }
 
@@ -139,7 +142,7 @@ export function createsynth() {
   }
 
   function addaudiobuffer(audiobuffer: AudioBuffer | ToneAudioBuffer) {
-    const player = new Player(audiobuffer).connect(FX[3].sendtofx)
+    const player = new Player(audiobuffer).connect(FX[1].sendtofx)
     player.start(0)
   }
 

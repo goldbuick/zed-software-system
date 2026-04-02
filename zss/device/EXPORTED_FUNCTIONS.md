@@ -1,5 +1,7 @@
 # Device Module - Exported Functions
 
+<!-- When public exports under `zss/device/` change, update this catalog. -->
+
 This document categorizes and summarizes all exported functions from the `device` module.
 
 ## Table of Contents

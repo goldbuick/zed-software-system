@@ -1,5 +1,7 @@
 # Lang Module - Exported Functions Summary
 
+<!-- When public exports under `zss/lang/` change, update this catalog. -->
+
 This document categorizes and summarizes all exported functions, types, enums, and constants from the `lang` module.
 
 ## 1. Core Compilation Functions

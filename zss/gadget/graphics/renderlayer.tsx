@@ -5,6 +5,7 @@ import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
 import { Fragment, ReactNode, memo, useEffect, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, Vector2, WebGLRenderTarget } from 'three'
+import { useDeviceData } from 'zss/gadget/device'
 import { EffectComposer } from 'zss/gadget/graphics/effectcomposer'
 import { useMedia } from 'zss/gadget/media'
 
@@ -17,6 +18,8 @@ type RenderToTargetProps = {
 
 function RenderEffects({ fbo, effects }: RenderToTargetProps) {
   const { mood } = useMedia()
+  const islowrez = useDeviceData((s) => s.islowrez)
+  const bloomkernel = islowrez ? KernelSize.MEDIUM : KernelSize.VERY_LARGE
   const [copyPass] = useState(() => new CopyPass(fbo, true))
 
   useEffect(() => {
@@ -51,7 +54,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
             mipmapBlur={false}
             luminanceThreshold={0.5}
             luminanceSmoothing={0.001}
-            kernelSize={KernelSize.VERY_LARGE}
+            kernelSize={bloomkernel}
           />
         </Fragment>
       )}
@@ -67,6 +70,8 @@ type RenderLayerProps = {
   viewheight: number
   effects: ReactNode
   children?: ReactNode
+  /** Multiplier for viewport DPR when allocating the FBO (e.g. 0.5 on lowrez). */
+  dprscale?: number
 }
 
 export const RenderLayer = memo(function RenderLayer({
@@ -75,10 +80,12 @@ export const RenderLayer = memo(function RenderLayer({
   viewheight,
   effects,
   children,
+  dprscale = 1,
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const { viewport } = useThree()
-  const fbo = useFBO(viewwidth * viewport.dpr, viewheight * viewport.dpr, {
+  const dpr = viewport.dpr * dprscale
+  const fbo = useFBO(viewwidth * dpr, viewheight * dpr, {
     samples: 0,
     stencilBuffer: false,
     depthBuffer: true,

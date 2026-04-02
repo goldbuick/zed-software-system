@@ -24,9 +24,9 @@ export function createhihat(drumvolume: Volume) {
   drumhihatopen.set({
     envelope: {
       attack: 0.001,
-      decay: 0.2,
-      sustain: 0.1,
-      release: 0.3,
+      decay: 0.16,
+      sustain: 0.06,
+      release: 0.18,
     },
   })
   drumhihatopen.connect(drumhihatopenfilter)

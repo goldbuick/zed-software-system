@@ -23,6 +23,7 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
+import { memorycornerexitboardids } from './boardcornerexits'
 import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
@@ -415,6 +416,10 @@ export type MEMORY_GADGET_LAYERS = {
   exitwest: string
   exitnorth: string
   exitsouth: string
+  exitne: string
+  exitnw: string
+  exitse: string
+  exitsw: string
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
@@ -542,6 +547,10 @@ export function memoryreadgadgetlayers(
       exitwest: '',
       exitnorth: '',
       exitsouth: '',
+      exitne: '',
+      exitnw: '',
+      exitse: '',
+      exitsw: '',
       over,
       under,
       layers,
@@ -601,6 +610,7 @@ export function memoryreadgadgetlayers(
     }
   }
 
+  const corners = memorycornerexitboardids(board)
   return {
     id: id4all.join('|'),
     board: board.id,
@@ -608,6 +618,10 @@ export function memoryreadgadgetlayers(
     exitwest: memoryreadboardbyaddress(board.exitwest ?? '')?.id ?? '',
     exitnorth: memoryreadboardbyaddress(board.exitnorth ?? '')?.id ?? '',
     exitsouth: memoryreadboardbyaddress(board.exitsouth ?? '')?.id ?? '',
+    exitne: corners.exitne,
+    exitnw: corners.exitnw,
+    exitse: corners.exitse,
+    exitsw: corners.exitsw,
     over,
     under,
     layers,

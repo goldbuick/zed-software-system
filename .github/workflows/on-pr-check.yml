@@ -8,6 +8,10 @@ jobs:
   lint-and-test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [lint, test]
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -22,11 +26,8 @@ jobs:
       - name: install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: run lint
-        run: yarn lint
-
-      - name: run tests
-        run: yarn test
+      - name: run ${{ matrix.script }}
+        run: yarn ${{ matrix.script }}
 
   e2e:
     timeout-minutes: 20

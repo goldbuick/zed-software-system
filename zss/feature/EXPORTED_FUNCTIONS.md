@@ -1,5 +1,7 @@
 # Feature Module - Exported Functions
 
+<!-- When public exports under `zss/feature/` change, update this catalog. -->
+
 This document categorizes and summarizes all exported functions from the `feature` module.
 
 ## Table of Contents

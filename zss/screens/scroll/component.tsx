@@ -84,8 +84,12 @@ export function ScrollComponent({
   offset = Math.min(text.length - panelheight, offset)
   offset = Math.max(0, offset)
 
-  const visibletext = perfmeasure('scroll:visibletext', () =>
-    text.slice(offset, offset + panelheight),
+  const visibletext = useMemo(
+    () =>
+      perfmeasure('scroll:visibletext', () =>
+        text.slice(offset, offset + panelheight),
+      ),
+    [text, offset, panelheight],
   )
 
   const row = cursor - offset

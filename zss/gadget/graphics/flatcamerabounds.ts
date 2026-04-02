@@ -11,12 +11,17 @@ export type FlatCameraTargetFocusInput = {
   boardheight: number
   controlfocusx: number
   controlfocusy: number
+  /** Draw units of safe margin per edge (adds to half-extent used for clamp; 0 = flat default). */
+  padleft?: number
+  padright?: number
+  padtop?: number
+  padbottom?: number
 }
 
 /**
  * Target focus (before damp) after edge clamping: ortho view is ±viewwidth/2 × ±viewheight/2,
  * board spans [0, boardwidth×drawwidth] × [0, boardheight×drawheight] under corner pan
- * (focus cell center at origin, then zoom).
+ * (focus cell center at origin, then zoom). Optional pads tighten the clamp (iso/mode7).
  */
 export function flatcameratargetfocus(input: FlatCameraTargetFocusInput): {
   tfocusx: number
@@ -32,26 +37,33 @@ export function flatcameratargetfocus(input: FlatCameraTargetFocusInput): {
     boardheight,
     controlfocusx,
     controlfocusy,
+    padleft = 0,
+    padright = 0,
+    padtop = 0,
+    padbottom = 0,
   } = input
 
   const boarddrawwidth = boardwidth * drawwidth
   const boarddrawheight = boardheight * drawheight
+  const halfw = viewwidth * 0.5
+  const halfh = viewheight * 0.5
 
   let tfocusx: number
-  if (viewwidth > boarddrawwidth * viewscale) {
+  if (viewwidth - padleft - padright > boarddrawwidth * viewscale) {
     tfocusx = boardwidth * 0.5
   } else {
-    const leftedge = (viewwidth * 0.5) / (drawwidth * viewscale)
-    const rightedge = boardwidth - leftedge
+    const leftedge = (halfw + padleft) / (drawwidth * viewscale)
+    const rightedge = boardwidth - (halfw + padright) / (drawwidth * viewscale)
     tfocusx = clamp(controlfocusx, leftedge - 1, rightedge + 0.25)
   }
 
   let tfocusy: number
-  if (viewheight > boarddrawheight * viewscale) {
+  if (viewheight - padtop - padbottom > boarddrawheight * viewscale) {
     tfocusy = boardheight * 0.5
   } else {
-    const topedge = (viewheight * 0.5) / (drawheight * viewscale)
-    const bottomedge = boardheight - topedge
+    const topedge = (halfh + padtop) / (drawheight * viewscale)
+    const bottomedge =
+      boardheight - (halfh + padbottom) / (drawheight * viewscale)
     tfocusy = clamp(controlfocusy, topedge - 1, bottomedge)
   }
 

@@ -1,5 +1,6 @@
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
+import { ispresent } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Dither } from './dither'
@@ -9,12 +10,21 @@ import { Tiles } from './tiles'
 type FlatLayerProps = {
   id: string
   z: number
-  from: 'under' | 'over' | 'layers'
+  from?: 'under' | 'over' | 'layers'
+  layers?: LAYER[]
 }
 
-export function FlatLayer({ id, z, from }: FlatLayerProps) {
+export function FlatLayer({ id, z, from, layers }: FlatLayerProps) {
   const layer = useGadgetClient(
-    useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
+    useShallow((state) => {
+      if (ispresent(from)) {
+        return state.gadget[from]?.find((item) => item.id === id)
+      }
+      if (ispresent(layers)) {
+        return layers.find((item) => item.id === id)
+      }
+      return undefined
+    }),
   )
 
   switch (layer?.type) {
@@ -36,9 +46,13 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
+      const hideplayer = ispresent(layers)
+      const othersprites = layer.sprites.filter(
+        (sprite) => !hideplayer || !sprite.pid,
+      )
       return (
         <group key={layer.id} position={[0, 0, z]}>
-          <SpriteMeshes sprites={layer.sprites} />
+          <SpriteMeshes sprites={othersprites} />
         </group>
       )
     }

@@ -1,5 +1,7 @@
 # Firmware Exported Functions
 
+<!-- When public exports under `zss/firmware/` change, update this catalog. -->
+
 This document categorizes and summarizes all exported functions from the firmware module.
 
 ## Table of Contents

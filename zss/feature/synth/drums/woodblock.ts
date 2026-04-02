@@ -1,13 +1,13 @@
 import { Filter, Synth, Time, Volume } from 'tone'
 
 export function createwoodblock(drumvolume: Volume) {
-  const drumhiwoodblockfilter = new Filter()
-  drumhiwoodblockfilter.set({
+  const drumwoodblockfilter = new Filter()
+  drumwoodblockfilter.set({
     type: 'bandpass',
     frequency: 256,
     Q: 0.17,
   })
-  drumhiwoodblockfilter.connect(drumvolume)
+  drumwoodblockfilter.connect(drumvolume)
 
   const drumhiwoodblockclack = new Synth()
   drumhiwoodblockclack.set({
@@ -15,11 +15,11 @@ export function createwoodblock(drumvolume: Volume) {
       attack: 0.001,
       decay: 0.001,
       sustain: 0.001,
-      release: 0.1,
+      release: 0.08,
     },
     oscillator: { type: 'sawtooth' },
   })
-  drumhiwoodblockclack.connect(drumhiwoodblockfilter)
+  drumhiwoodblockclack.connect(drumwoodblockfilter)
 
   const drumhiwoodblockdonk = new Synth()
   drumhiwoodblockdonk.set({
@@ -27,19 +27,11 @@ export function createwoodblock(drumvolume: Volume) {
       attack: 0.001,
       decay: 0.1,
       sustain: 0.001,
-      release: 0.1,
+      release: 0.08,
     },
     oscillator: { type: 'sine' },
   })
-  drumhiwoodblockdonk.connect(drumhiwoodblockfilter)
-
-  const drumlowwoodblockfilter = new Filter()
-  drumlowwoodblockfilter.set({
-    type: 'bandpass',
-    frequency: 256,
-    Q: 0.17,
-  })
-  drumlowwoodblockfilter.connect(drumvolume)
+  drumhiwoodblockdonk.connect(drumwoodblockfilter)
 
   const drumlowwoodblockclack = new Synth()
   drumlowwoodblockclack.set({
@@ -47,11 +39,11 @@ export function createwoodblock(drumvolume: Volume) {
       attack: 0.001,
       decay: 0.001,
       sustain: 0.001,
-      release: 0.1,
+      release: 0.08,
     },
     oscillator: { type: 'sawtooth' },
   })
-  drumlowwoodblockclack.connect(drumlowwoodblockfilter)
+  drumlowwoodblockclack.connect(drumwoodblockfilter)
 
   const drumlowwoodblockdonk = new Synth()
   drumlowwoodblockdonk.set({
@@ -59,11 +51,11 @@ export function createwoodblock(drumvolume: Volume) {
       attack: 0.001,
       decay: 0.1,
       sustain: 0.001,
-      release: 0.1,
+      release: 0.08,
     },
     oscillator: { type: 'sine' },
   })
-  drumlowwoodblockdonk.connect(drumlowwoodblockfilter)
+  drumlowwoodblockdonk.connect(drumwoodblockfilter)
 
   return {
     hiwoodblocktrigger(duration: string, time: number) {

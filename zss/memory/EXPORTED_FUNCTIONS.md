@@ -1,5 +1,7 @@
 # Memory Module - Exported Functions Summary
 
+<!-- When public exports under `zss/memory/` change, update this catalog. -->
+
 ## boardelement.ts
 
 - **memoryapplyboardelementcolor(element, strcolor)** - Applies color string to element

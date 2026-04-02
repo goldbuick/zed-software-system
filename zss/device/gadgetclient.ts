@@ -32,7 +32,6 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
           gadget,
           slim: message.data,
           layercachemap,
-          layercachegen: state.layercachegen + 1,
         }
       })
       break
@@ -61,7 +60,6 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
               ...state,
               gadget,
               layercachemap,
-              layercachegen: state.layercachegen + 1,
               slim: applied.newDocument,
             }
           } catch (err) {

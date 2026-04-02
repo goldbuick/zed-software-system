@@ -1,5 +1,7 @@
 # Words Module - Exported Functions Summary
 
+<!-- When public exports under `zss/words/` change, update this catalog. -->
+
 ## Expression Evaluation
 
 ### Core Expression Reading

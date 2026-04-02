@@ -162,6 +162,10 @@ export function initstate(): GADGET_STATE {
     exitwest: '',
     exitnorth: '',
     exitsouth: '',
+    exitne: '',
+    exitnw: '',
+    exitse: '',
+    exitsw: '',
   }
 }
 
