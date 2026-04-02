@@ -14,10 +14,10 @@ import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
-import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
+import { isoprojectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
@@ -25,6 +25,13 @@ import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { graphicsfocuspad } from './graphicsfocuspad'
+
+/** Scene tilt for isometric view (π/4 on X, −π/4 on Z); must match projection focus math. */
+const ISO_SCENE_ROTATION: [number, number, number] = [
+  Math.PI * 0.25,
+  0,
+  Math.PI * -0.25,
+]
 
 type GraphicsProps = {
   width: number
@@ -108,20 +115,27 @@ export const IsoGraphics = memo(function IsoGraphics({
       viewwidth,
       viewheight,
     )
-    const { tfocusx, tfocusy } = flatcameratargetfocus({
+
+    cornerref.current.updateWorldMatrix(true, false)
+    cameraref.current.updateProjectionMatrix()
+    cameraref.current.updateWorldMatrix(true, false)
+
+    const { tfocusx, tfocusy } = isoprojectedtargetfocus({
+      camera: cameraref.current,
+      corner: cornerref.current,
       viewwidth,
       viewheight,
       drawwidth,
       drawheight,
+      boardwidth: BOARD_WIDTH,
+      boardheight: BOARD_HEIGHT,
+      controlfocusx: control.focusx,
+      controlfocusy: control.focusy,
       viewscale,
       padleft,
       padright,
       padtop,
       padbottom,
-      boardwidth: BOARD_WIDTH,
-      boardheight: BOARD_HEIGHT,
-      controlfocusx: control.focusx,
-      controlfocusy: control.focusy,
     })
 
     const ud = cameraref.current.userData ?? {}
@@ -249,7 +263,7 @@ export const IsoGraphics = memo(function IsoGraphics({
             }
           >
             <group position={[centerx, centery, -500]}>
-              <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
+              <group rotation={ISO_SCENE_ROTATION}>
                 <group ref={zoomref}>
                   <group ref={cornerref}>
                     {layers.map((layer) => (

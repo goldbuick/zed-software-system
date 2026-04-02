@@ -1,4 +1,4 @@
-import type { Group, PerspectiveCamera } from 'three'
+import type { Camera, Group, OrthographicCamera, PerspectiveCamera } from 'three'
 import { Vector3 } from 'three'
 import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { clamp } from 'zss/mapping/number'
@@ -13,8 +13,16 @@ const LETTERBOX_SPAN_MARGIN = 0.12
 const _local = new Vector3()
 const _corners = [new Vector3(), new Vector3(), new Vector3(), new Vector3()]
 
+function cameranegativeaspect(camera: Camera) {
+  return (
+    'aspect' in camera &&
+    typeof (camera as { aspect?: number }).aspect === 'number' &&
+    (camera as { aspect: number }).aspect < 0
+  )
+}
+
 function boardndcbounds(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   focusx: number,
   focusy: number,
@@ -37,7 +45,7 @@ function boardndcbounds(
   let maxx = -Infinity
   let miny = Infinity
   let maxy = -Infinity
-  const flipx = camera.aspect < 0
+  const flipx = cameranegativeaspect(camera)
   for (let i = 0; i < 4; i++) {
     _local.copy(_corners[i]).applyMatrix4(corner.matrixWorld).project(camera)
     const nx = flipx ? -_local.x : _local.x
@@ -77,7 +85,7 @@ function padstondc(
 }
 
 function leftok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fx: number,
   fy: number,
@@ -101,7 +109,7 @@ function leftok(
 }
 
 function rightok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fx: number,
   fy: number,
@@ -126,7 +134,7 @@ function rightok(
 
 /** NDC y up: no void above board (sky) — top of quad reaches top margin. */
 function topok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fx: number,
   fy: number,
@@ -151,7 +159,7 @@ function topok(
 
 /** NDC y up: no void below board — bottom of quad reaches bottom margin. */
 function bottomok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fx: number,
   fy: number,
@@ -176,7 +184,7 @@ function bottomok(
 
 /** Smallest focusx where left edge constraint holds (minx <= -1+mxl). */
 function smallestfxwhereleftok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fy: number,
   boardw: number,
@@ -223,7 +231,7 @@ function smallestfxwhereleftok(
 
 /** Largest focusx where right edge constraint holds (maxx >= 1-mxr). */
 function largestfxwhererightok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fy: number,
   boardw: number,
@@ -280,7 +288,7 @@ function largestfxwhererightok(
 
 /** Smallest focusy where top constraint holds (maxy >= 1-myt). */
 function smallestfywheretopok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fx: number,
   boardh: number,
@@ -325,7 +333,7 @@ function smallestfywheretopok(
 
 /** Largest focusy where bottom constraint holds (miny <= -1+myb). */
 function largestfywherebottomok(
-  camera: PerspectiveCamera,
+  camera: Camera,
   corner: Group,
   fx: number,
   boardh: number,
@@ -398,15 +406,51 @@ export type Mode7ProjectedTargetFocusInput = {
   padbottom: number
 }
 
+export type IsoProjectedTargetFocusInput = {
+  camera: OrthographicCamera
+  corner: Group
+  viewwidth: number
+  viewheight: number
+  drawwidth: number
+  drawheight: number
+  boardwidth: number
+  boardheight: number
+  controlfocusx: number
+  controlfocusy: number
+  viewscale: number
+  padleft: number
+  padright: number
+  padtop: number
+  padbottom: number
+}
+
+type ProjectedTargetFocusFromCornersInput = {
+  camera: Camera
+  corner: Group
+  viewwidth: number
+  viewheight: number
+  drawwidth: number
+  drawheight: number
+  boardwidth: number
+  boardheight: number
+  controlfocusx: number
+  controlfocusy: number
+  viewscale: number
+  padleft: number
+  padright: number
+  padtop: number
+  padbottom: number
+}
+
 /**
- * Target focus from board corners projected through the real perspective camera (mode7).
- * Raw NDC from Vector3.project (camera matrix includes roll and aspect). X flipped when aspect is negative.
- * Gauss–Seidel passes resolve X/Y coupling (each pass uses updated tfocusy when solving X).
+ * Target focus from board corners projected through the camera (mode7 perspective or iso orthographic).
+ * Raw NDC from Vector3.project. X flipped only when perspective `aspect` is negative.
+ * Gauss–Seidel passes resolve X/Y coupling.
  * Falls back to flatcameratargetfocus when projection bounds are degenerate.
  * Restores corner.position to its value at entry.
  */
-export function mode7projectedtargetfocus(
-  input: Mode7ProjectedTargetFocusInput,
+function projectedtargetfocusfromcorners(
+  input: ProjectedTargetFocusFromCornersInput,
 ): { tfocusx: number; tfocusy: number } {
   const {
     camera,
@@ -557,4 +601,26 @@ export function mode7projectedtargetfocus(
 
   corner.position.set(savedx, savedy, savedz)
   return { tfocusx, tfocusy }
+}
+
+/**
+ * Target focus from board corners projected through the real perspective camera (mode7).
+ * Gauss–Seidel passes resolve X/Y coupling (each pass uses updated tfocusy when solving X).
+ * Falls back to flatcameratargetfocus when projection bounds are degenerate.
+ * Restores corner.position to its value at entry.
+ */
+export function mode7projectedtargetfocus(
+  input: Mode7ProjectedTargetFocusInput,
+): { tfocusx: number; tfocusy: number } {
+  return projectedtargetfocusfromcorners(input)
+}
+
+/**
+ * Target focus from board corners projected through the iso orthographic camera (tilted scene).
+ * Same NDC/frustum logic as mode7; falls back to flatcameratargetfocus when degenerate.
+ */
+export function isoprojectedtargetfocus(
+  input: IsoProjectedTargetFocusInput,
+): { tfocusx: number; tfocusy: number } {
+  return projectedtargetfocusfromcorners(input)
 }
