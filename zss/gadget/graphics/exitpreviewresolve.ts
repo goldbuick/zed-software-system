@@ -14,8 +14,12 @@ export function resolveexitpreview(
   exitboardid: string,
   layercachemap: Map<string, LAYER[]>,
   direction: EXIT_DIRECTION,
+  hasunderboard?: boolean,
 ): ExitPreviewResolve {
   if (exitboardid === CORNER_EXIT_DISPUTED) {
+    if (hasunderboard) {
+      return { layers: [] }
+    }
     return {
       layers: buildundiscoveredexitlayers(direction),
     }
@@ -25,6 +29,9 @@ export function resolveexitpreview(
     return {
       layers: cached,
     }
+  }
+  if (hasunderboard) {
+    return { layers: [] }
   }
   return {
     layers: buildundiscoveredexitlayers(direction),

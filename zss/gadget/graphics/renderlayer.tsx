@@ -65,7 +65,8 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
 }
 
 type RenderLayerProps = {
-  camera: Camera
+  /** Null until the board camera exists inside the render portal (same scene as FBO content). */
+  camera: Camera | null
   viewwidth: number
   viewheight: number
   effects: ReactNode
@@ -100,14 +101,16 @@ export const RenderLayer = memo(function RenderLayer({
         <meshBasicMaterial transparent>
           <RenderTexture attach="map" fbo={fbo}>
             {children}
-            <EffectComposer
-              key={mood}
-              camera={camera}
-              width={viewwidth}
-              height={viewheight}
-            >
-              <RenderEffects fbo={fbo} effects={effects} />
-            </EffectComposer>
+            {camera && (
+              <EffectComposer
+                key={mood}
+                camera={camera}
+                width={viewwidth}
+                height={viewheight}
+              >
+                <RenderEffects fbo={fbo} effects={effects} />
+              </EffectComposer>
+            )}
           </RenderTexture>
         </meshBasicMaterial>
       </mesh>

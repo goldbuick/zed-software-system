@@ -1,3 +1,4 @@
+import { Box3 } from 'three'
 import { clamp } from 'zss/mapping/number'
 
 /** Inputs for the same target-focus clamp as [flat.tsx](flat.tsx) edge logic. */
@@ -100,6 +101,23 @@ export function flatcameraworldboardextentsfromcorner(
   return { minworldx, maxworldx, minworldy, maxworldy }
 }
 
+/**
+ * World-space axis-aligned box of the board footprint (z = 0 slab). Same extents as
+ * flatcameraworldboardextentsfromcorner — use with Box3.clampPoint like camera-controls
+ * setBoundary on the orbit target / focus point on the board plane.
+ */
+export function flatcameraboardworldbox(
+  input: FlatCameraWorldBoardFromCornerInput,
+  out?: Box3,
+): Box3 {
+  const { minworldx, maxworldx, minworldy, maxworldy } =
+    flatcameraworldboardextentsfromcorner(input)
+  const box = out ?? new Box3()
+  box.min.set(minworldx, minworldy, 0)
+  box.max.set(maxworldx, maxworldy, 0)
+  return box
+}
+
 const FRUSTUM_EPS = 1e-3
 
 /**
@@ -129,17 +147,5 @@ export function flatcameradevassertboardinortho(
   const okhoriz = !input.checkhoriz || (noleftvoid && norightvoid)
   const okvert = !input.checkvert || (notopvoid && nobottomvoid)
   const ok = okhoriz && okvert
-  if (!ok) {
-    console.error('[flat camera bounds] void past board edge in ortho view', {
-      minworldx,
-      maxworldx,
-      minworldy,
-      maxworldy,
-      frustumx: [-halfw, halfw],
-      frustumy: [-halfh, halfh],
-      eps,
-      flags: { noleftvoid, norightvoid, notopvoid, nobottomvoid },
-    })
-  }
   return ok
 }

@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -17,16 +17,13 @@ import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
-import { isoprojectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { graphicsfocuspad } from './graphicsfocuspad'
-
-/** Scene tilt for isometric view (π/4 on X, −π/4 on Z); must match projection focus math. */
+/** Scene tilt for isometric view (π/4 on X, −π/4 on Z). */
 const ISO_SCENE_ROTATION: [number, number, number] = [
   Math.PI * 0.25,
   0,
@@ -50,11 +47,30 @@ function maptoscale(viewscale: VIEWSCALE): number {
   }
 }
 
+function clampfocus(
+  focusx: number,
+  focusy: number,
+  viewscale: VIEWSCALE,
+  viewwidth: number,
+  viewheight: number,
+  drawwidth: number,
+  drawheight: number,
+) {
+  const charwidth = drawwidth * viewscale
+  const charheight = drawheight * viewscale
+  const margin = 0.5
+  const cols = Math.floor((viewwidth * 0.5) / charwidth) * margin
+  const rows = Math.floor((viewheight * 0.5) / charheight) * margin
+  return [
+    clamp(focusx, cols, BOARD_WIDTH - cols - 1),
+    clamp(focusy, rows, BOARD_HEIGHT - rows - 1),
+  ]
+}
+
 export const IsoGraphics = memo(function IsoGraphics({
   width,
   height,
 }: GraphicsProps) {
-  const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -108,35 +124,19 @@ export const IsoGraphics = memo(function IsoGraphics({
 
     damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
-    const viewscale = zoomref.current.scale.x
-    const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
-      'iso',
-      control.viewscale,
-      viewwidth,
-      viewheight,
-    )
-
     cornerref.current.updateWorldMatrix(true, false)
     cameraref.current.updateProjectionMatrix()
     cameraref.current.updateWorldMatrix(true, false)
 
-    const { tfocusx, tfocusy } = isoprojectedtargetfocus({
-      camera: cameraref.current,
-      corner: cornerref.current,
+    const [tfocusx, tfocusy] = clampfocus(
+      control.focusx,
+      control.focusy,
+      control.viewscale,
       viewwidth,
       viewheight,
       drawwidth,
       drawheight,
-      boardwidth: BOARD_WIDTH,
-      boardheight: BOARD_HEIGHT,
-      controlfocusx: control.focusx,
-      controlfocusy: control.focusy,
-      viewscale,
-      padleft,
-      padright,
-      padtop,
-      padbottom,
-    })
+    )
 
     const ud = cameraref.current.userData ?? {}
     ud.tfocusx = tfocusx
@@ -233,8 +233,11 @@ export const IsoGraphics = memo(function IsoGraphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const centerx = viewport.width * -0.5 + screensize.marginx
-  const centery = viewport.height * 0.5 - screensize.marginy
+  // Portal scene: board layers use full-grid pixel space; camera frustum is framed
+  // viewwidth. Center using full grid width (cols*draww), not framed viewwidth/2.
+  const fullgridwpx = screensize.cols * drawwidth
+  const centerx = fullgridwpx * -0.5
+  const centery = viewheight * 0.5
   return (
     <>
       <group position-z={layersindex}>

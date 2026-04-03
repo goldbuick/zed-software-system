@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -79,9 +79,8 @@ export const FPVGraphics = memo(function FPVGraphics({
   width,
   height,
 }: GraphicsProps) {
-  const { viewport } = useThree()
-  const screensize = useScreenSize()
   const islowrez = useDeviceData((s) => s.islowrez)
+  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -312,19 +311,61 @@ export const FPVGraphics = memo(function FPVGraphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const east = resolveexitpreview(gadget.exiteast, layercachemap, 'e')
-  const west = resolveexitpreview(gadget.exitwest, layercachemap, 'w')
-  const north = resolveexitpreview(gadget.exitnorth, layercachemap, 'n')
-  const south = resolveexitpreview(gadget.exitsouth, layercachemap, 's')
-  const ne = resolveexitpreview(gadget.exitne, layercachemap, 'ne')
-  const nw = resolveexitpreview(gadget.exitnw, layercachemap, 'nw')
-  const se = resolveexitpreview(gadget.exitse, layercachemap, 'se')
-  const sw = resolveexitpreview(gadget.exitsw, layercachemap, 'sw')
+  const hasunderboard = under.length > 0
+  const east = resolveexitpreview(
+    gadget.exiteast,
+    layercachemap,
+    'e',
+    hasunderboard,
+  )
+  const west = resolveexitpreview(
+    gadget.exitwest,
+    layercachemap,
+    'w',
+    hasunderboard,
+  )
+  const north = resolveexitpreview(
+    gadget.exitnorth,
+    layercachemap,
+    'n',
+    hasunderboard,
+  )
+  const south = resolveexitpreview(
+    gadget.exitsouth,
+    layercachemap,
+    's',
+    hasunderboard,
+  )
+  const ne = resolveexitpreview(
+    gadget.exitne,
+    layercachemap,
+    'ne',
+    hasunderboard,
+  )
+  const nw = resolveexitpreview(
+    gadget.exitnw,
+    layercachemap,
+    'nw',
+    hasunderboard,
+  )
+  const se = resolveexitpreview(
+    gadget.exitse,
+    layercachemap,
+    'se',
+    hasunderboard,
+  )
+  const sw = resolveexitpreview(
+    gadget.exitsw,
+    layercachemap,
+    'sw',
+    hasunderboard,
+  )
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
-  const centerx = viewport.width * -0.5 + screensize.marginx
-  const centery = viewport.height * 0.5 - screensize.marginy
+  const fullgridwpx = screensize.cols * drawwidth
+  const centerx = fullgridwpx * -0.5
+  const centery = viewheight * 0.5
   const fpvdprscale = islowrez ? 0.5 : 1
 
   return (

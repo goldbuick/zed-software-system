@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -15,15 +15,12 @@ import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
-import { graphicsfocuspad } from 'zss/gadget/graphics/graphicsfocuspad'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
-import { mode7projectedtargetfocus } from 'zss/gadget/graphics/mode7targetfocusprojection'
 import {
   MODE7_Z_FAR,
   MODE7_Z_MID,
   MODE7_Z_NEAR,
-  mode7viewscalefromcameraz,
 } from 'zss/gadget/graphics/mode7viewscale'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { useScreenSize } from 'zss/gadget/userscreen'
@@ -60,11 +57,30 @@ function mapviewtotilt(viewscale: number) {
   }
 }
 
+function clampfocus(
+  focusx: number,
+  focusy: number,
+  viewscale: VIEWSCALE,
+  viewwidth: number,
+  viewheight: number,
+  drawwidth: number,
+  drawheight: number,
+) {
+  const charwidth = drawwidth * viewscale
+  const charheight = drawheight * viewscale
+  const margin = 0.7
+  const cols = Math.floor((viewwidth * 0.5) / charwidth) * margin
+  const rows = Math.floor((viewheight * 0.5) / charheight) * margin
+  return [
+    clamp(focusx, cols, BOARD_WIDTH - cols - 1),
+    clamp(focusy, rows, BOARD_HEIGHT - rows - 1),
+  ]
+}
+
 export const Mode7Graphics = memo(function Mode7Graphics({
   width,
   height,
 }: GraphicsProps) {
-  const { viewport } = useThree()
   const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -132,31 +148,18 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     cameraref.current.rotation.z = Math.PI
     cameraref.current.updateProjectionMatrix()
     cameraref.current.updateMatrixWorld(true)
+    cornerref.current.updateWorldMatrix(true, false)
 
-    const viewscale = mode7viewscalefromcameraz(cameraref.current.position.z)
-    const { padleft, padright, padtop, padbottom } = graphicsfocuspad(
-      'mode7',
+    const [tfocusx, tfocusy] = clampfocus(
+      control.focusx,
+      control.focusy,
       control.viewscale,
-      viewwidth,
-      viewheight,
-    )
-    const { tfocusx, tfocusy } = mode7projectedtargetfocus({
-      camera: cameraref.current,
-      corner: cornerref.current,
       viewwidth,
       viewheight,
       drawwidth,
       drawheight,
-      boardwidth: BOARD_WIDTH,
-      boardheight: BOARD_HEIGHT,
-      controlfocusx: control.focusx,
-      controlfocusy: control.focusy,
-      viewscale,
-      padleft,
-      padright,
-      padtop,
-      padbottom,
-    })
+    )
+
     ud.tfocusx = tfocusx
     ud.tfocusy = tfocusy
 
@@ -248,8 +251,9 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const centerx = viewport.width * -0.5 + screensize.marginx
-  const centery = viewport.height * 0.5 - screensize.marginy
+  const fullgridwpx = screensize.cols * drawwidth
+  const centerx = fullgridwpx * -0.5
+  const centery = viewheight * 0.5
   return (
     <>
       <perspectiveCamera

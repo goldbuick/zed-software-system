@@ -272,6 +272,17 @@ export function memoryboardlightingmarkplayer(
   alphas: number[],
   sprite: SPRITE,
 ) {
-  const index = memoryboardelementindex(board, sprite)
-  alphas[index] = 0
+  const sx = sprite.x
+  const sy = sprite.y
+  for (let y = sy - 1; y <= sy + 1; y++) {
+    for (let x = sx - 1; x <= sx + 1; x++) {
+      const index = memoryboardelementindex(board, { x, y })
+      if (index !== -1) {
+        const iscenter = x === sx && y === sy
+        const isaligned = x === sx || y === sy
+        const lit = iscenter ? 0 : isaligned ? 0.7 : 0.9
+        alphas[index] = Math.min(alphas[index], lit)
+      }
+    }
+  }
 }
