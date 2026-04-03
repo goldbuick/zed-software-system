@@ -13,7 +13,6 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
-import { BoardInspectorGadget } from 'zss/gadget/graphics/boardinspectorgadget'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
@@ -26,6 +25,7 @@ import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { InspectorComponent } from 'zss/screens/inspector/component'
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -599,7 +599,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                   </>
                 </group>
               )}
-              <BoardInspectorGadget z={inspectorz} />
+              <InspectorComponent z={inspectorz} />
             </group>
           </RenderLayer>
         )}

@@ -11,7 +11,6 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
-import { BoardInspectorGadget } from 'zss/gadget/graphics/boardinspectorgadget'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
@@ -22,6 +21,7 @@ import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { InspectorComponent } from 'zss/screens/inspector/component'
 import { useShallow } from 'zustand/react/shallow'
 
 /** Scene tilt for isometric view (π/4 on X, −π/4 on Z). */
@@ -302,8 +302,7 @@ export const IsoGraphics = memo(function IsoGraphics({
                         </group>
                       ) : null,
                     )}
-                    {/* Pick + highlights share ISO_SCENE_ROTATION with tiles; board-local Y is +down */}
-                    <BoardInspectorGadget z={inspectorz} />
+                    <InspectorComponent z={inspectorz} />
                   </group>
                 </group>
               </group>

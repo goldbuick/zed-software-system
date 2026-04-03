@@ -10,7 +10,6 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
-import { BoardInspectorGadget } from 'zss/gadget/graphics/boardinspectorgadget'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import {
@@ -22,6 +21,7 @@ import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { InspectorComponent } from 'zss/screens/inspector/component'
 
 import { RenderLayer } from './renderlayer'
 
@@ -298,7 +298,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                   </group>
                 ) : null,
               )}
-              <BoardInspectorGadget z={inspectorz} />
+              <InspectorComponent z={inspectorz} />
             </group>
           </group>
         </group>

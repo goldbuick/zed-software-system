@@ -3,14 +3,14 @@ import { useTape } from 'zss/gadget/data/state'
 import { InspectorPts } from './pts'
 import { InspectorSelect } from './select'
 
-export function InspectorComponent() {
+export function InspectorComponent({ z }: { z?: number }) {
   const inspector = useTape((state) => state.inspector)
   return (
     inspector && (
-      <>
+      <group position-z={z}>
         <InspectorSelect />
         <InspectorPts />
-      </>
+      </group>
     )
   )
 }

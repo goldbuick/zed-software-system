@@ -11,7 +11,6 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
-import { BoardInspectorGadget } from 'zss/gadget/graphics/boardinspectorgadget'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
@@ -27,6 +26,7 @@ import {
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { InspectorComponent } from 'zss/screens/inspector/component'
 import { useShallow } from 'zustand/react/shallow'
 
 type GraphicsProps = {
@@ -314,8 +314,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       </group>
                     ) : null,
                   )}
-                  {/* Inspector + pick plane live under tiltref with perspective board camera; UV→ray via RenderTexture */}
-                  <BoardInspectorGadget z={inspectorz} />
+                  <InspectorComponent z={inspectorz} />
                 </group>
               </group>
             </group>
