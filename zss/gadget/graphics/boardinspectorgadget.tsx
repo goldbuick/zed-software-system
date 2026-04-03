@@ -1,7 +1,11 @@
 import { InspectorComponent } from 'zss/screens/inspector/component'
 
 type BoardInspectorGadgetProps = {
-  /** World Z in board space; must clear tiles/sprites/overlays in the same parent group. */
+  /**
+   * World Z in board space; must clear tiles/sprites/overlays in the same parent group.
+   * Set from `boardinspectorzfromgadgetstacks` (max layer Z + padding) so the pick sheet
+   * is above the board in iso/mode7/fpv; local pick mesh may offset by -1 in Z.
+   */
   z: number
 }
 

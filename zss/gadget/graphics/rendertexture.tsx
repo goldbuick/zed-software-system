@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-import { ForwardRefComponent } from '@react-three/drei/helpers/ts-utils'
 import {
   type DomEvent,
   type RootState,
@@ -13,6 +12,7 @@ import {
   useImperativeHandle,
   useState,
 } from 'react'
+import type { Camera } from 'three'
 import * as THREE from 'three'
 
 export type RenderTextureProps = Omit<
@@ -22,11 +22,11 @@ export type RenderTextureProps = Omit<
   fbo: THREE.WebGLRenderTarget
   /** Children will be rendered into a portal */
   children: ReactNode
-  /**
-   * Board frustum width in the same logical units as the display plane (RenderLayer `viewwidth`).
-   * Used to scale portal U from UV→NDC so the ray matches the framed sub-rect vs full canvas width.
-   */
   viewwidth: number
+  viewheight: number
+  canvasviewwidth: number
+  canvasviewheight: number
+  boardcamera: Camera | null
 }
 
 type R3fInternalParent = {
@@ -50,12 +50,21 @@ function textureparentobject(texture: THREE.Texture): THREE.Object3D | null {
  * vs the composed texture (especially if the quad is not the only thing on the canvas).
  * Same idea as `@react-three/drei` RenderTexture `uvCompute`.
  */
-export const RenderTexture: ForwardRefComponent<
-  RenderTextureProps,
-  THREE.RenderTarget
-> = /* @__PURE__ */ forwardRef(function RenderTexture(
-  { children, fbo, viewwidth, ...props },
-  forwardRef,
+export const RenderTexture = /* @__PURE__ */ forwardRef<
+  THREE.RenderTarget,
+  RenderTextureProps
+>(function RenderTexture(
+  {
+    children,
+    fbo,
+    viewwidth,
+    viewheight,
+    canvasviewwidth,
+    canvasviewheight,
+    boardcamera,
+    ...props
+  },
+  ref,
 ) {
   const [vScene] = useState(() => new THREE.Scene())
 
@@ -80,25 +89,19 @@ export const RenderTexture: ForwardRefComponent<
         return false
       }
 
-      // Full-canvas width in layout units: read from live root store (not React props) so resize
-      // and DPR never leave a stale denominator; matches pointer NDC basis from `events.compute`.
-      const fullwidth = root.viewport.width || root.size.width
-      // Ortho FBO: linear frustum; scale X so NDC matches framed sub-rect vs full canvas (sidebar).
-      // Perspective (mode7): FBO already includes perspective; extra X scaling skews the ray vs UV.
-      const isortho = state.camera.type === 'OrthographicCamera'
-      const xratio =
-        isortho && fullwidth > 0 ? viewwidth / fullwidth : 1
-      const puvx = (uv.x * 2 - 1) * xratio
+      const puvx = uv.x * 2 - 1
       const puvy = uv.y * 2 - 1
 
-      // Ortho (flat/iso) and perspective (mode7) portal cameras both use the same UV→NDC step;
-      // projection is applied inside setFromCamera for the active board camera.
-      state.raycaster.setFromCamera(state.pointer.set(puvx, puvy), state.camera)
+      // Portal `state.camera` is often the canvas default (Engine ortho), not the board camera that
+      // draws the FBO — use `boardcamera` so unprojection matches the render frustum (mode7 perspective
+      // or board ortho).
+      const raycamera = boardcamera ?? state.camera
+      state.raycaster.setFromCamera(state.pointer.set(puvx, puvy), raycamera)
     },
-    [fbo, viewwidth],
+    [boardcamera, fbo],
   )
 
-  useImperativeHandle(forwardRef, () => fbo, [fbo])
+  useImperativeHandle(ref, () => fbo, [fbo])
   return (
     <>
       {/* Attach texture first so __r3f parent chain exists before portal events run */}

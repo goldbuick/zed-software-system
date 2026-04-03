@@ -1,6 +1,6 @@
 import { ThreeEvent } from '@react-three/fiber'
-import { useEffect, useMemo } from 'react'
-import { Vector3 } from 'three'
+import { useEffect, useMemo, useState } from 'react'
+import { DoubleSide, FrontSide, SphereGeometry, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -47,6 +47,9 @@ function inspectorhit(e: ThreeEvent<PointerEvent>) {
 }
 
 export function InspectorSelect() {
+  const [debughit, setdebughit] = useState<{ x: number; y: number } | null>(
+    null,
+  )
   const inspector = useTape((state) => state.inspector)
   const gadgetlayers = useGadgetClient((s) => s.gadget.layers)
   const control = useMemo(
@@ -87,6 +90,16 @@ export function InspectorSelect() {
 
   const cw = RUNTIME.DRAW_CHAR_WIDTH()
   const ch = RUNTIME.DRAW_CHAR_HEIGHT()
+  const debugdotradius = useMemo(() => Math.min(cw, ch) * 0.25, [cw, ch])
+  const debugdotgeo = useMemo(
+    () => new SphereGeometry(debugdotradius, 12, 12),
+    [debugdotradius],
+  )
+  useEffect(() => {
+    return () => {
+      debugdotgeo.dispose()
+    }
+  }, [debugdotgeo])
   const selouterwpx = selectwidth * cw
   const selouterhpx = selectheight * ch
   const selinnerwpx = Math.max(0.001, selectwidth - 0.5) * cw
@@ -117,12 +130,20 @@ export function InspectorSelect() {
     }))
   }
 
+  function pointerleavedebug() {
+    if (selectionmeshdebug) {
+      setdebughit(null)
+    }
+    completeselection()
+  }
+
   return (
     <>
       {inspector && (
         <mesh
           position={[0, 0, -1]}
           geometry={pickgeo}
+          renderOrder={selectionmeshdebug ? 50 : 0}
           userData={{
             inspectpick: true,
             blocking: false,
@@ -134,36 +155,63 @@ export function InspectorSelect() {
               return
             }
             hit.object.worldToLocal(point.copy(hit.point))
+            if (selectionmeshdebug) {
+              setdebughit({ x: point.x, y: point.y })
+            }
             const pt = coordstileorigin(pickw, pickh)
             useInspector.setState(() => ({
               cursor: pttoindex(pt, pickw),
             }))
           }}
           onPointerMove={(e: ThreeEvent<PointerEvent>) => {
-            if (ispresent(useInspector.getState().cursor)) {
-              const hit = inspectorhit(e)
-              if (!hit) {
-                return
-              }
+            const hit = inspectorhit(e)
+            if (hit) {
               hit.object.worldToLocal(point.copy(hit.point))
-              const pt = coordstileorigin(pickw, pickh)
-              useInspector.setState(() => ({
-                select: pttoindex(pt, pickw),
-              }))
+              if (selectionmeshdebug) {
+                setdebughit({ x: point.x, y: point.y })
+              }
+              if (ispresent(useInspector.getState().cursor)) {
+                const pt = coordstileorigin(pickw, pickh)
+                useInspector.setState(() => ({
+                  select: pttoindex(pt, pickw),
+                }))
+              }
+            } else if (selectionmeshdebug) {
+              setdebughit(null)
             }
           }}
           onPointerUp={completeselection}
-          onPointerOut={completeselection}
-          onPointerCancel={completeselection}
+          onPointerOut={pointerleavedebug}
+          onPointerCancel={pointerleavedebug}
         >
           <meshBasicMaterial
             transparent
-            opacity={selectionmeshdebug ? 0.12 : 0}
+            /* Wireframe-only lines at ~0.12 opacity are nearly invisible; use higher alpha for edges. */
+            opacity={selectionmeshdebug ? 0.55 : 0}
             depthWrite={false}
+            depthTest={!selectionmeshdebug}
+            side={selectionmeshdebug ? DoubleSide : FrontSide}
+            polygonOffset={selectionmeshdebug}
+            polygonOffsetFactor={-2}
+            polygonOffsetUnits={-2}
             visible
             color={selectionmeshdebug ? '#ffcc00' : 'black'}
             wireframe={selectionmeshdebug}
           />
+          {selectionmeshdebug && debughit && (
+            <mesh
+              position={[debughit.x, debughit.y, 0.03]}
+              geometry={debugdotgeo}
+              raycast={noraycastmesh}
+              renderOrder={51}
+            >
+              <meshBasicMaterial
+                color="#ff00ff"
+                depthWrite={false}
+                depthTest={false}
+              />
+            </mesh>
+          )}
         </mesh>
       )}
       {ispresent(cursor) && (

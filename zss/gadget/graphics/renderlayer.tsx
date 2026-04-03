@@ -9,6 +9,8 @@ import { useDeviceData } from 'zss/gadget/device'
 import { EffectComposer } from 'zss/gadget/graphics/effectcomposer'
 import { useMedia } from 'zss/gadget/media'
 
+import { useScreenSize } from '../userscreen'
+
 import { RenderTexture } from './rendertexture'
 
 type RenderToTargetProps = {
@@ -85,6 +87,7 @@ export const RenderLayer = memo(function RenderLayer({
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const { viewport } = useThree()
+  const screensize = useScreenSize()
   const dpr = viewport.dpr * dprscale
   const fbo = useFBO(viewwidth * dpr, viewheight * dpr, {
     samples: 0,
@@ -99,7 +102,15 @@ export const RenderLayer = memo(function RenderLayer({
       <mesh position={[hvw, hvh, 0]}>
         <planeGeometry args={[viewwidth, viewheight]} />
         <meshBasicMaterial transparent>
-          <RenderTexture attach="map" fbo={fbo} viewwidth={viewwidth}>
+          <RenderTexture
+            attach="map"
+            fbo={fbo}
+            viewwidth={viewwidth}
+            viewheight={viewheight}
+            canvasviewwidth={screensize.viewwidth}
+            canvasviewheight={screensize.viewheight}
+            boardcamera={camera}
+          >
             {children}
             {camera && (
               <EffectComposer
