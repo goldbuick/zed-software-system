@@ -597,7 +597,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                   </>
                 </group>
               )}
-              <InspectorComponent z={0} />
+              <InspectorComponent z={-1.9} />
             </group>
           </RenderLayer>
         )}

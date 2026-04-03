@@ -1,11 +1,11 @@
 import { ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  BoxGeometry,
   DoubleSide,
   EdgesGeometry,
   FrontSide,
   LineBasicMaterial,
+  PlaneGeometry,
   SphereGeometry,
   Vector3,
 } from 'three'
@@ -57,7 +57,7 @@ export function InspectorSelect() {
   const [debughit, setdebughit] = useState<{ x: number; y: number } | null>(
     null,
   )
-  /** Tile under cursor (snapped), for debug wireframe box — only when `ZSS_DEBUG_RAYCAST_DOT`. */
+  /** Tile under cursor (snapped), for debug tile rect outline — only when `ZSS_DEBUG_RAYCAST_DOT`. */
   const [hovertile, sethovertile] = useState<{ x: number; y: number } | null>(
     null,
   )
@@ -112,10 +112,9 @@ export function InspectorSelect() {
     }
   }, [debugdotgeo])
   const tileboxedges = useMemo(() => {
-    const depth = Math.min(cw, ch) * 0.35
-    const box = new BoxGeometry(cw, ch, depth)
-    const edges = new EdgesGeometry(box)
-    box.dispose()
+    const plane = new PlaneGeometry(cw, ch)
+    const edges = new EdgesGeometry(plane)
+    plane.dispose()
     return edges
   }, [cw, ch])
   useEffect(() => {
@@ -179,7 +178,7 @@ export function InspectorSelect() {
     <>
       {inspector && (
         <mesh
-          position={[0, 0, -1]}
+          position={[0, 0, 0]}
           geometry={pickgeo}
           renderOrder={selectionmeshdebug ? 50 : 0}
           userData={{
@@ -197,9 +196,7 @@ export function InspectorSelect() {
               setdebughit({ x: point.x, y: point.y })
             }
             const pt = coordstileorigin(pickw, pickh)
-            if (RAYCAST_DEBUG_DOT) {
-              sethovertile({ x: pt.x, y: pt.y })
-            }
+            sethovertile({ x: pt.x, y: pt.y })
             useInspector.setState(() => ({
               cursor: pttoindex(pt, pickw),
             }))
@@ -212,9 +209,7 @@ export function InspectorSelect() {
                 setdebughit({ x: point.x, y: point.y })
               }
               const pt = coordstileorigin(pickw, pickh)
-              if (RAYCAST_DEBUG_DOT) {
-                sethovertile({ x: pt.x, y: pt.y })
-              }
+              sethovertile({ x: pt.x, y: pt.y })
               if (ispresent(useInspector.getState().cursor)) {
                 useInspector.setState(() => ({
                   select: pttoindex(pt, pickw),
@@ -257,13 +252,9 @@ export function InspectorSelect() {
               />
             </mesh>
           )}
-          {RAYCAST_DEBUG_DOT && hovertile && (
+          {hovertile && (
             <lineSegments
-              position={[
-                (hovertile.x + 0.5) * cw,
-                (hovertile.y + 0.5) * ch,
-                0,
-              ]}
+              position={[(hovertile.x + 0.5) * cw, (hovertile.y + 0.5) * ch, 2]}
               geometry={tileboxedges}
               material={tileboxmaterial}
               raycast={noraycastmesh}
