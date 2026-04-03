@@ -14,6 +14,8 @@ import {
   InstancedBufferAttribute,
   InstancedMesh,
   Intersection,
+  LineBasicMaterial,
+  LineSegments,
   Mesh,
   MeshBasicMaterial,
   OrthographicCamera,
@@ -97,6 +99,8 @@ async function main() {
     PerspectiveCamera,
     InstancedMesh,
     InstancedBufferAttribute,
+    LineSegments,
+    LineBasicMaterial,
   })
 
   const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (

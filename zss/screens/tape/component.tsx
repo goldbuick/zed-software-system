@@ -16,7 +16,7 @@ const tapeprofileronrender: ProfilerOnRenderCallback = (
   phase,
   actualDuration,
 ) => {
-  // eslint-disable-next-line no-console -- intentional perf logging when ZSS_PERF_UI is on
+  // eslint-disable-next-line no-console -- intentional perf logging when ZSS_DEBUG_PERF_UI is on
   console.debug(`[zss perf] ${id} ${phase} ${actualDuration.toFixed(2)}ms`)
 }
 

@@ -10,6 +10,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
+import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import {
   flatcameraboardworldbox,
@@ -18,7 +19,6 @@ import {
 } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
-import { useScreenSize } from 'zss/gadget/userscreen'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
@@ -34,7 +34,6 @@ export const FlatGraphics = memo(function FlatGraphics({
   width,
   height,
 }: GraphicsProps) {
-  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
@@ -46,8 +45,6 @@ export const FlatGraphics = memo(function FlatGraphics({
   )
   const cornerref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
-  const inspectref = useRef<Group>(null)
-  const inspectzoomref = useRef<Group>(null)
   const centeroffsetref = useRef({ x: 0, y: 0 })
   const devassertframeref = useRef(0)
   const looktarget = useRef(new Vector3())
@@ -60,13 +57,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   }, [])
 
   useFrame((_, delta) => {
-    if (
-      !cameraref.current ||
-      !inspectref.current ||
-      !zoomref.current ||
-      !cornerref.current ||
-      !inspectzoomref.current
-    ) {
+    if (!cameraref.current || !zoomref.current || !cornerref.current) {
       return
     }
 
@@ -188,13 +179,6 @@ export const FlatGraphics = memo(function FlatGraphics({
     cornerref.current.position.x = (worldfocus.current.x - c.x) / viewscale - fx
     cornerref.current.position.y = (worldfocus.current.y - c.y) / viewscale - fy
 
-    // keep inspector in place
-    inspectref.current.position.x = cornerref.current.position.x
-    inspectref.current.position.y = cornerref.current.position.y
-
-    // keep inspector the same size
-    inspectzoomref.current.scale.setScalar(viewscale)
-
     // camera-controls would fight this; we drive a fixed ortho top-down (+Z) view in portal space.
     const cam = cameraref.current
     cam.up.set(0, 1, 0)
@@ -238,8 +222,16 @@ export const FlatGraphics = memo(function FlatGraphics({
   const maintopz = topoverz ?? toplayersz ?? topunderz ?? 1
   const exitzbase = maintopz + 2
 
-  const fullgridwpx = screensize.cols * drawwidth
-  const centerx = fullgridwpx * -0.5
+  let maxcornerz = maintopz
+  for (const { preview } of exitpreviewgroups) {
+    for (const layer of preview.layers) {
+      maxcornerz = Math.max(maxcornerz, exitzbase + maptolayerz(layer, 'flat'))
+    }
+  }
+  const inspectorz = maxcornerz + BOARD_INSPECTOR_Z_BUFFER
+
+  // Align with framed `width` (shrinks when sidebar is open), not full-screen column count.
+  const centerx = viewwidth * -0.5
   // Standard ortho frustum (top > bottom): +Y is screen-up; tiles grow +Y from y=0 so center is -vh/2.
   const centery = viewheight * -0.5
   useLayoutEffect(() => {
@@ -248,13 +240,6 @@ export const FlatGraphics = memo(function FlatGraphics({
 
   return (
     <>
-      <group position={[viewwidth * 0.5, viewheight * 0.5, 1]}>
-        <group ref={inspectzoomref}>
-          <group ref={inspectref}>
-            <InspectorComponent />
-          </group>
-        </group>
-      </group>
       <RenderLayer
         camera={boardcamera}
         viewwidth={viewwidth}
@@ -313,6 +298,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                   </group>
                 ) : null,
               )}
+              <InspectorComponent z={inspectorz} />
             </group>
           </group>
         </group>

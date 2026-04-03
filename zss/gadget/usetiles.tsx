@@ -20,6 +20,7 @@ type TilesRenderProps = {
   width: number
   height: number
   clippingplanes?: Plane[]
+  skipraycast?: boolean
 }
 
 export function TilesRender({
@@ -27,6 +28,7 @@ export function TilesRender({
   width,
   height,
   clippingplanes,
+  skipraycast,
 }: TilesRenderProps) {
   const store = useContext(TilesContext)
   const [char, color, bg] = useStore(
@@ -49,6 +51,7 @@ export function TilesRender({
         width={width}
         height={height}
         clippingplanes={clippingplanes}
+        skipraycast={skipraycast}
       />
     )
   )

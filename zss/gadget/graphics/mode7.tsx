@@ -23,9 +23,9 @@ import {
   MODE7_Z_NEAR,
 } from 'zss/gadget/graphics/mode7viewscale'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { InspectorComponent } from 'zss/screens/inspector/component'
 import { useShallow } from 'zustand/react/shallow'
 
 type GraphicsProps = {
@@ -81,7 +81,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   width,
   height,
 }: GraphicsProps) {
-  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -251,8 +250,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const fullgridwpx = screensize.cols * drawwidth
-  const centerx = fullgridwpx * -0.5
+  const centerx = viewwidth * -0.5
   const centery = viewheight * 0.5
   return (
     <>
@@ -307,6 +305,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       </group>
                     ) : null,
                   )}
+                  <InspectorComponent z={0} />
                 </group>
               </group>
             </group>

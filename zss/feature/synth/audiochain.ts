@@ -16,6 +16,35 @@ import { createsynthdrums } from './drums'
 import { volumetodb } from './fx'
 import { SidechainCompressor } from './sidechainworkletnode'
 
+const WARM_DRUM_DELTA_SEC = 0.5
+/** Longest decay after warm start (snare osc release etc.); restore runs after this. */
+const WARM_DRUM_TAIL_SEC = 1.0
+const WARM_DRUM_DURATION = '64n'
+
+function warmdrums(
+  drum: ReturnType<typeof createsynthdrums>,
+  drumvolume: Volume,
+  drumaction: Volume,
+) {
+  drumvolume.mute = true
+  drumaction.mute = true
+  const t = getContext().currentTime + WARM_DRUM_DELTA_SEC
+  drum.ticktrigger(t)
+  drum.tweettrigger(t)
+  drum.cowbelltrigger(WARM_DRUM_DURATION, t)
+  drum.claptrigger(WARM_DRUM_DURATION, t)
+  drum.hisnaretrigger(WARM_DRUM_DURATION, t)
+  drum.hiwoodblocktrigger(WARM_DRUM_DURATION, t)
+  drum.lowsnaretrigger(WARM_DRUM_DURATION, t)
+  drum.lowtomtrigger(WARM_DRUM_DURATION, t)
+  drum.lowwoodblocktrigger(WARM_DRUM_DURATION, t)
+  drum.basstrigger(t)
+  getContext().setTimeout(() => {
+    drumvolume.mute = false
+    drumaction.mute = false
+  }, WARM_DRUM_DELTA_SEC + WARM_DRUM_TAIL_SEC)
+}
+
 export type AUDIO_CHAIN = ReturnType<typeof createaudiochain>
 
 export function createaudiochain() {
@@ -106,6 +135,10 @@ export function createaudiochain() {
   drumaction.connect(sidechaincompressor.sidechain)
 
   const drum = createsynthdrums(drumvolume, drumaction)
+
+  if (!getContext().isOffline) {
+    warmdrums(drum, drumvolume, drumaction)
+  }
 
   return {
     mainvolume,

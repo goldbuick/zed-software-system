@@ -21,10 +21,10 @@ import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { PillarwMeshes } from 'zss/gadget/graphics/pillarmeshes'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { InspectorComponent } from 'zss/screens/inspector/component'
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -80,7 +80,6 @@ export const FPVGraphics = memo(function FPVGraphics({
   height,
 }: GraphicsProps) {
   const islowrez = useDeviceData((s) => s.islowrez)
-  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -363,8 +362,7 @@ export const FPVGraphics = memo(function FPVGraphics({
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
-  const fullgridwpx = screensize.cols * drawwidth
-  const centerx = fullgridwpx * -0.5
+  const centerx = viewwidth * -0.5
   const centery = viewheight * 0.5
   const fpvdprscale = islowrez ? 0.5 : 1
 
@@ -599,6 +597,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                   </>
                 </group>
               )}
+              <InspectorComponent z={-1.9} />
             </group>
           </RenderLayer>
         )}

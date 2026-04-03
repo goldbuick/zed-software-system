@@ -14,6 +14,7 @@ import {
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
 import { useMedia } from 'zss/gadget/media'
+import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 
 import { UnicodeOverlay } from './unicodeoverlay'
 
@@ -31,6 +32,8 @@ type TilesProps = {
   bg: number[]
   fliptexture?: boolean
   clippingplanes?: Plane[]
+  /** Omit from raycasting (e.g. inspector pts overlay above the pick plane). */
+  skipraycast?: boolean
 }
 
 export function Tiles({
@@ -42,6 +45,7 @@ export function Tiles({
   bg,
   fliptexture = true,
   clippingplanes,
+  skipraycast = false,
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
@@ -112,7 +116,7 @@ export function Tiles({
 
   return (
     <>
-      <mesh>
+      <mesh raycast={skipraycast ? noraycastmesh : undefined}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[position, 3]} />
           <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
@@ -126,6 +130,7 @@ export function Tiles({
         color={color}
         bg={bg}
         scale={1.15}
+        skipraycast={skipraycast}
       />
     </>
   )

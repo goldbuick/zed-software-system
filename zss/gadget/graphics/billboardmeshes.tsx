@@ -171,8 +171,20 @@ export function BillboardMeshes({
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
     meshes.visible = !!meshes.count
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sprites, spritepool, facing, range, meshes, visible, lastmatrix])
+  }, [
+    sprites,
+    spritepool,
+    facing,
+    range,
+    meshes,
+    visible,
+    lastmatrix,
+    children,
+    display,
+    lastbg,
+    lastcolor,
+    nowposition,
+  ])
 
   return (
     <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>

@@ -16,6 +16,7 @@ import {
   getunicodeoverlayquadgeometry,
 } from 'zss/gadget/display/unicodeoverlay'
 import { useMedia } from 'zss/gadget/media'
+import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 
 const defaultpalette = palettetothreecolors(
   convertpalettetocolors(loadpalettefrombytes(PALETTE)),
@@ -29,6 +30,7 @@ type UnicodeOverlayProps = {
   bg: number[]
   /** Scale factor for glyph size (default 1). Only affects overlay chars, not grid position. */
   scale?: number
+  skipraycast?: boolean
 }
 
 export function UnicodeOverlay({
@@ -38,6 +40,7 @@ export function UnicodeOverlay({
   color,
   bg,
   scale = 1,
+  skipraycast = false,
 }: UnicodeOverlayProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const resolvedpalette = mediapalette ?? defaultpalette
@@ -175,7 +178,11 @@ export function UnicodeOverlay({
   }
 
   return (
-    <instancedMesh ref={setmeshref} args={[undefined, undefined, maxcells]}>
+    <instancedMesh
+      ref={setmeshref}
+      args={[undefined, undefined, maxcells]}
+      raycast={skipraycast ? noraycastmesh : undefined}
+    >
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
