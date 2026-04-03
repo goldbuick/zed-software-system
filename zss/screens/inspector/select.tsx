@@ -1,7 +1,7 @@
 import { ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import { DoubleSide, FrontSide, SphereGeometry, Vector3 } from 'three'
-import { RUNTIME } from 'zss/config'
+import { RAYCAST_DEBUG_DOT, RAYCAST_DEBUG_PICKSHEET, RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -21,9 +21,8 @@ import {
 
 const point = new Vector3()
 
-/** In dev: show pick sheet + selection quads (colors/wireframe) to verify pointer vs highlight grid. */
-const selectionmeshdebug =
-  typeof import.meta !== 'undefined' && import.meta.env?.DEV === true
+/** Wireframe pick sheet + selection quad colors when `ZSS_DEBUG_RAYCAST_PICKSHEET` is on. */
+const selectionmeshdebug = RAYCAST_DEBUG_PICKSHEET
 
 /** Pick → VM tile indices (board local space; +Y down like tile geometry). */
 function coordstileorigin(pickw: number, pickh: number) {
@@ -131,7 +130,7 @@ export function InspectorSelect() {
   }
 
   function pointerleavedebug() {
-    if (selectionmeshdebug) {
+    if (RAYCAST_DEBUG_DOT) {
       setdebughit(null)
     }
     completeselection()
@@ -155,7 +154,7 @@ export function InspectorSelect() {
               return
             }
             hit.object.worldToLocal(point.copy(hit.point))
-            if (selectionmeshdebug) {
+            if (RAYCAST_DEBUG_DOT) {
               setdebughit({ x: point.x, y: point.y })
             }
             const pt = coordstileorigin(pickw, pickh)
@@ -167,7 +166,7 @@ export function InspectorSelect() {
             const hit = inspectorhit(e)
             if (hit) {
               hit.object.worldToLocal(point.copy(hit.point))
-              if (selectionmeshdebug) {
+              if (RAYCAST_DEBUG_DOT) {
                 setdebughit({ x: point.x, y: point.y })
               }
               if (ispresent(useInspector.getState().cursor)) {
@@ -176,7 +175,7 @@ export function InspectorSelect() {
                   select: pttoindex(pt, pickw),
                 }))
               }
-            } else if (selectionmeshdebug) {
+            } else if (RAYCAST_DEBUG_DOT) {
               setdebughit(null)
             }
           }}
@@ -198,7 +197,7 @@ export function InspectorSelect() {
             color={selectionmeshdebug ? '#ffcc00' : 'black'}
             wireframe={selectionmeshdebug}
           />
-          {selectionmeshdebug && debughit && (
+          {RAYCAST_DEBUG_DOT && debughit && (
             <mesh
               position={[debughit.x, debughit.y, 0.03]}
               geometry={debugdotgeo}
@@ -221,7 +220,7 @@ export function InspectorSelect() {
             position={[
               (rectorigin.x + 0.25) * cw,
               (rectorigin.y + 0.25) * ch,
-              100,
+              1,
             ]}
             geometry={selinnergeo}
           >
@@ -234,7 +233,7 @@ export function InspectorSelect() {
           </mesh>
           <mesh
             raycast={noraycastmesh}
-            position={[rectorigin.x * cw, rectorigin.y * ch, 101]}
+            position={[rectorigin.x * cw, rectorigin.y * ch, 2]}
             geometry={seloutergeo}
           >
             <meshBasicMaterial

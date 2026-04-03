@@ -1,8 +1,8 @@
 # UI performance tooling
 
-## `ZSS_PERF_UI`
+## `ZSS_DEBUG_PERF_UI`
 
-Set `ZSS_PERF_UI=true` in `cafe/.env` or `cafe/.env.local` (see [`cafe/.env`](../../cafe/.env)). Rebuild or restart Vite so `import.meta.env` picks it up.
+Set `ZSS_DEBUG_PERF_UI=true` in `cafe/.env` or `cafe/.env.local` (see [`cafe/.env`](../../cafe/.env)). Rebuild or restart Vite so `import.meta.env` picks it up.
 
 When enabled:
 
@@ -23,7 +23,7 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 ## Baseline capture checklist (before/after comparisons)
 
-1. Set `ZSS_PERF_UI=true`, restart Vite, reproduce the scenario you care about.
+1. Set `ZSS_DEBUG_PERF_UI=true`, restart Vite, reproduce the scenario you care about.
 2. Open Chrome **Performance**, start recording **without** enabling **CPU sampling** / JS profiler if you want traces comparable to production-style overhead.
 3. Use a **clean profile or incognito** so extensions do not add `FunctionCall` noise.
 4. Optional: run a **production** build (`yarn build` + `yarn preview`) for a second baseline.

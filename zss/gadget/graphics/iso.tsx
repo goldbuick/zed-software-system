@@ -232,14 +232,6 @@ export const IsoGraphics = memo(function IsoGraphics({
     drawheight,
   )
 
-  const exitpreviewlayerlists = exitpreviewgroups.map((g) => g.preview.layers)
-  const inspectorz = boardinspectorzfromgadgetstacks(
-    'iso',
-    layers,
-    over,
-    exitpreviewlayerlists,
-  )
-
   const layersindex = under.length * 2 + 2
   // Match ortho left/right (framed `viewwidth`), including when sidebar narrows the frame.
   const centerx = viewwidth * -0.5
@@ -302,7 +294,7 @@ export const IsoGraphics = memo(function IsoGraphics({
                         </group>
                       ) : null,
                     )}
-                    <InspectorComponent z={inspectorz} />
+                    <InspectorComponent z={0} />
                   </group>
                 </group>
               </group>

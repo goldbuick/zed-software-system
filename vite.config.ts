@@ -77,15 +77,17 @@ export default defineConfig(({ mode }) => {
   const mkcertHosts = ['localhost', ...(devHost ? [devHost] : [])]
 
   const zssprocessenvkeys = [
-    'ZSS_LANG_DEV',
-    'ZSS_LANG_TYPES',
-    'ZSS_PERF_UI',
-    'ZSS_SHOW_CODE',
-    'ZSS_TRACE_CODE',
-    'ZSS_LOG_DEBUG',
+    'ZSS_DEBUG_LANG_DEV',
+    'ZSS_DEBUG_LANG_TYPES',
+    'ZSS_DEBUG_PERF_UI',
+    'ZSS_DEBUG_SHOW_CODE',
+    'ZSS_DEBUG_TRACE_CODE',
+    'ZSS_DEBUG_LOG',
     'ZSS_FORCE_CRT_OFF',
     'ZSS_FORCE_LOW_REZ',
     'ZSS_FORCE_TOUCH_UI',
+    'ZSS_DEBUG_RAYCAST_DOT',
+    'ZSS_DEBUG_RAYCAST_PICKSHEET',
     'ZSS_BRANCH_NAME',
     'ZSS_BRANCH_VERSION',
     'ZSS_COMMIT_MESSAGE',
@@ -93,7 +95,7 @@ export default defineConfig(({ mode }) => {
   const zssdefine = Object.fromEntries(
     zssprocessenvkeys.map((key) => {
       const fallback =
-        key === 'ZSS_TRACE_CODE' ||
+        key === 'ZSS_DEBUG_TRACE_CODE' ||
         key === 'ZSS_BRANCH_NAME' ||
         key === 'ZSS_BRANCH_VERSION' ||
         key === 'ZSS_COMMIT_MESSAGE'

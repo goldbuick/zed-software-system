@@ -11,7 +11,6 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
-import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
@@ -250,14 +249,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     drawheight,
   )
 
-  const exitpreviewlayerlists = exitpreviewgroups.map((g) => g.preview.layers)
-  const inspectorz = boardinspectorzfromgadgetstacks(
-    'mode7',
-    layers,
-    over,
-    exitpreviewlayerlists,
-  )
-
   const layersindex = under.length * 2 + 2
   const centerx = viewwidth * -0.5
   const centery = viewheight * 0.5
@@ -314,7 +305,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       </group>
                     ) : null,
                   )}
-                  <InspectorComponent z={inspectorz} />
+                  <InspectorComponent z={0} />
                 </group>
               </group>
             </group>

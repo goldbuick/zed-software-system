@@ -26,7 +26,7 @@ export function InspectorPts() {
   }
 
   return (
-    <group position-z={100}>
+    <group position-z={0}>
       <TilesData store={store}>
         <TilesRender
           label="pts"

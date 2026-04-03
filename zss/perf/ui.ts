@@ -2,7 +2,7 @@ import { PERF_UI } from 'zss/config'
 
 let perfseq = 0
 
-/** User Timing measure for synchronous work; no-ops when `ZSS_PERF_UI` is off. */
+/** User Timing measure for synchronous work; no-ops when `ZSS_DEBUG_PERF_UI` is off. */
 export function perfmeasure<T>(name: string, run: () => T): T {
   if (
     !PERF_UI ||
