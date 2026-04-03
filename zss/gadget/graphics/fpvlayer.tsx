@@ -67,6 +67,7 @@ export function FPVLayer({
               char={floor.char}
               color={floor.color}
               bg={floor.bg}
+              fpvinspectpick
             />
             <group position-z={drawheight * -0.25}>
               <Tiles
@@ -75,6 +76,7 @@ export function FPVLayer({
                 char={water.char}
                 color={water.color}
                 bg={water.bg}
+                fpvinspectpick
               />
             </group>
             {!multi && (
@@ -85,6 +87,7 @@ export function FPVLayer({
                   color={flooredge.color}
                   bg={flooredge.bg}
                   partial={0.25}
+                  fpvinspectpick
                 />
               </group>
             )}
@@ -94,6 +97,7 @@ export function FPVLayer({
                 char={walls.char}
                 color={walls.color}
                 bg={walls.bg}
+                fpvinspectpick
               />
             </group>
             <group position-z={drawheight + 0.5}>
@@ -103,6 +107,7 @@ export function FPVLayer({
                 char={sky.char}
                 color={sky.color}
                 bg={sky.bg}
+                fpvinspectpick
               />
             </group>
             {!multi && (
@@ -113,12 +118,14 @@ export function FPVLayer({
                   color={skyedge.color}
                   bg={skyedge.bg}
                   partial={0.5}
+                  fpvinspectpick
                 />
                 <PillarwMeshes
                   width={BOARD_WIDTH}
                   char={walls.char}
                   color={walls.color}
                   bg={walls.bg}
+                  fpvinspectpick
                 />
               </group>
             )}
@@ -152,28 +159,40 @@ export function FPVLayer({
       }
       return (
         <group key={layer.id} position={[0, 0, z]}>
-          <BillboardMeshes sprites={othersprites} facing={control.facing}>
+          <BillboardMeshes
+            sprites={othersprites}
+            facing={control.facing}
+            fpvinspectpick
+          >
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,
               drawheight * -0.5,
             ]}
           </BillboardMeshes>
-          <BillboardMeshes sprites={bulletsprites} facing={control.facing}>
+          <BillboardMeshes
+            sprites={bulletsprites}
+            facing={control.facing}
+            fpvinspectpick
+          >
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,
               drawheight * -0.75,
             ]}
           </BillboardMeshes>
-          <BillboardMeshes sprites={watersprites} facing={control.facing}>
+          <BillboardMeshes
+            sprites={watersprites}
+            facing={control.facing}
+            fpvinspectpick
+          >
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,
               drawheight * -1.25,
             ]}
           </BillboardMeshes>
-          <ShadowMeshes sprites={shadowsprites}>
+          <ShadowMeshes sprites={shadowsprites} skipraycast>
             {(ix, iy) => [
               ix * drawwidth,
               (iy + 0.5 - rr * 0.5) * drawheight,

@@ -1,5 +1,6 @@
 import { ThreeEvent } from '@react-three/fiber'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { Mesh } from 'three'
 import { DoubleSide, FrontSide, SphereGeometry, Vector3 } from 'three'
 import { RAYCAST_DEBUG_DOT, RAYCAST_DEBUG_PICKSHEET, RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
@@ -18,6 +19,11 @@ import {
   createboardpickgeometry,
   createpixelquadgeometry,
 } from './boardpickgeometry'
+import {
+  attachfpvpickraycast,
+  detachfpvpickraycast,
+  syncfpvpickdimensions,
+} from './fpvpickraycast'
 
 const point = new Vector3()
 
@@ -45,6 +51,11 @@ function inspectorhit(e: ThreeEvent<PointerEvent>) {
   return e.intersections.find((i) => i.object.userData?.inspectpick === true)
 }
 
+function readfpvtile(hit: { object: { userData: Record<string, unknown> } }) {
+  const pt = hit.object.userData.fpvtile as { x: number; y: number } | undefined
+  return pt
+}
+
 export function InspectorSelect() {
   const [debughit, setdebughit] = useState<{ x: number; y: number } | null>(
     null,
@@ -55,6 +66,7 @@ export function InspectorSelect() {
     () => layersreadcontrol(gadgetlayers ?? []),
     [gadgetlayers],
   )
+  const isfpv = control.graphics === 'fpv'
   const pickw = control.width > 0 ? control.width : BOARD_WIDTH
   const pickh = control.height > 0 ? control.height : BOARD_HEIGHT
   const pickgeo = useMemo(
@@ -118,6 +130,23 @@ export function InspectorSelect() {
     }
   }, [seloutergeo, selinnergeo])
 
+  const pickmeshref = useRef<Mesh>(null)
+  useLayoutEffect(() => {
+    const mesh = pickmeshref.current
+    if (!inspector || !mesh) {
+      return
+    }
+    if (isfpv) {
+      syncfpvpickdimensions(mesh, pickw, pickh)
+      attachfpvpickraycast(mesh)
+    } else {
+      detachfpvpickraycast(mesh)
+    }
+    return () => {
+      detachfpvpickraycast(mesh)
+    }
+  }, [isfpv, pickw, pickh, inspector])
+
   // track selection state
   function completeselection() {
     if (isnumber(useInspector.getState().cursor)) {
@@ -140,6 +169,7 @@ export function InspectorSelect() {
     <>
       {inspector && (
         <mesh
+          ref={pickmeshref}
           position={[0, 0, -1]}
           geometry={pickgeo}
           renderOrder={selectionmeshdebug ? 50 : 0}
@@ -151,6 +181,20 @@ export function InspectorSelect() {
           onPointerDown={(e: ThreeEvent<PointerEvent>) => {
             const hit = inspectorhit(e)
             if (!hit) {
+              return
+            }
+            if (isfpv) {
+              const pt = readfpvtile(hit)
+              if (!ispresent(pt)) {
+                return
+              }
+              if (RAYCAST_DEBUG_DOT) {
+                hit.object.worldToLocal(point.copy(hit.point))
+                setdebughit({ x: point.x, y: point.y })
+              }
+              useInspector.setState(() => ({
+                cursor: pttoindex(pt, pickw),
+              }))
               return
             }
             hit.object.worldToLocal(point.copy(hit.point))
@@ -165,6 +209,25 @@ export function InspectorSelect() {
           onPointerMove={(e: ThreeEvent<PointerEvent>) => {
             const hit = inspectorhit(e)
             if (hit) {
+              if (isfpv) {
+                const pt = readfpvtile(hit)
+                if (!ispresent(pt)) {
+                  if (RAYCAST_DEBUG_DOT) {
+                    setdebughit(null)
+                  }
+                  return
+                }
+                hit.object.worldToLocal(point.copy(hit.point))
+                if (RAYCAST_DEBUG_DOT) {
+                  setdebughit({ x: point.x, y: point.y })
+                }
+                if (ispresent(useInspector.getState().cursor)) {
+                  useInspector.setState(() => ({
+                    select: pttoindex(pt, pickw),
+                  }))
+                }
+                return
+              }
               hit.object.worldToLocal(point.copy(hit.point))
               if (RAYCAST_DEBUG_DOT) {
                 setdebughit({ x: point.x, y: point.y })

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { Plane } from 'three'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { Mesh, Plane } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
@@ -13,6 +13,7 @@ import {
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
+import { FPV_INSPECT_TILEMAP } from 'zss/gadget/graphics/fpvinspectpick'
 import { useMedia } from 'zss/gadget/media'
 import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 
@@ -34,6 +35,8 @@ type TilesProps = {
   clippingplanes?: Plane[]
   /** Omit from raycasting (e.g. inspector pts overlay above the pick plane). */
   skipraycast?: boolean
+  /** Tag mesh for FPV depth-first inspector picking. */
+  fpvinspectpick?: boolean
 }
 
 export function Tiles({
@@ -46,6 +49,7 @@ export function Tiles({
   fliptexture = true,
   clippingplanes,
   skipraycast = false,
+  fpvinspectpick = false,
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
@@ -114,9 +118,26 @@ export function Tiles({
     [width, height],
   )
 
+  const meshref = useRef<Mesh>(null)
+  useLayoutEffect(() => {
+    const m = meshref.current
+    if (!m) {
+      return
+    }
+    if (fpvinspectpick) {
+      m.userData.inspectpickkind = FPV_INSPECT_TILEMAP
+      m.userData.pickwidth = width
+      m.userData.pickheight = height
+    } else {
+      delete m.userData.inspectpickkind
+      delete m.userData.pickwidth
+      delete m.userData.pickheight
+    }
+  }, [fpvinspectpick, width, height])
+
   return (
     <>
-      <mesh raycast={skipraycast ? noraycastmesh : undefined}>
+      <mesh ref={meshref} raycast={skipraycast ? noraycastmesh : undefined}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[position, 3]} />
           <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
@@ -130,7 +151,7 @@ export function Tiles({
         color={color}
         bg={bg}
         scale={1.15}
-        skipraycast={skipraycast}
+        skipraycast={skipraycast || fpvinspectpick}
       />
     </>
   )
