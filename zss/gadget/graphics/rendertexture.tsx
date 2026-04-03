@@ -22,10 +22,6 @@ export type RenderTextureProps = Omit<
   fbo: THREE.WebGLRenderTarget
   /** Children will be rendered into a portal */
   children: ReactNode
-  viewwidth: number
-  viewheight: number
-  canvasviewwidth: number
-  canvasviewheight: number
   boardcamera: Camera | null
 }
 
@@ -53,19 +49,7 @@ function textureparentobject(texture: THREE.Texture): THREE.Object3D | null {
 export const RenderTexture = /* @__PURE__ */ forwardRef<
   THREE.RenderTarget,
   RenderTextureProps
->(function RenderTexture(
-  {
-    children,
-    fbo,
-    viewwidth,
-    viewheight,
-    canvasviewwidth,
-    canvasviewheight,
-    boardcamera,
-    ...props
-  },
-  ref,
-) {
+>(function RenderTexture({ children, fbo, boardcamera, ...props }, ref) {
   const [vScene] = useState(() => new THREE.Scene())
 
   const uvcompute = useCallback(

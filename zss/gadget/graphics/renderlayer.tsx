@@ -87,7 +87,7 @@ export const RenderLayer = memo(function RenderLayer({
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const { viewport } = useThree()
-  const screensize = useScreenSize()
+  // const screensize = useScreenSize()
   const dpr = viewport.dpr * dprscale
   const fbo = useFBO(viewwidth * dpr, viewheight * dpr, {
     samples: 0,
@@ -102,15 +102,7 @@ export const RenderLayer = memo(function RenderLayer({
       <mesh position={[hvw, hvh, 0]}>
         <planeGeometry args={[viewwidth, viewheight]} />
         <meshBasicMaterial transparent>
-          <RenderTexture
-            attach="map"
-            fbo={fbo}
-            viewwidth={viewwidth}
-            viewheight={viewheight}
-            canvasviewwidth={screensize.viewwidth}
-            canvasviewheight={screensize.viewheight}
-            boardcamera={camera}
-          >
+          <RenderTexture attach="map" fbo={fbo} boardcamera={camera}>
             {children}
             {camera && (
               <EffectComposer
