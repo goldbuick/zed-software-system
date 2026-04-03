@@ -28,12 +28,35 @@ const isConvolution = (effect: Effect): boolean =>
   (effect.getAttributes() & EffectAttribute.CONVOLUTION) ===
   EffectAttribute.CONVOLUTION
 
+function syncdetachedcomposerbuffers(
+  composer: EffectComposerImpl,
+  width: number,
+  height: number,
+  dpr: number,
+) {
+  const bw = Math.round(width * dpr)
+  const bh = Math.round(height * dpr)
+  composer.inputBuffer.setSize(bw, bh)
+  composer.outputBuffer.setSize(bw, bh)
+  for (let i = 0; i < composer.passes.length; i++) {
+    composer.passes[i].setSize(bw, bh)
+  }
+}
+
 export type EffectComposerProps = {
   children: JSX.Element | JSX.Element[]
   camera?: Camera
   width: number
   height: number
   clearBeforeRender?: boolean
+  /**
+   * When true, resize composer RTs to `width × height` in **device pixels** (`logical * dpr *
+   * dprscale`) without calling `renderer.setSize`, so the main canvas size is unchanged. Use
+   * inside board RenderTexture portals so FBO aspect matches the ortho frustum (fixes pick drift).
+   */
+  detachedbuffersize?: boolean
+  /** Multiplier on `viewport.dpr` for buffer allocation (must match RenderLayer `dprscale`). */
+  dprscale?: number
 }
 
 type EffectComposerInternalProps = EffectComposerProps & {
@@ -43,10 +66,27 @@ type EffectComposerInternalProps = EffectComposerProps & {
 
 const EffectComposerInternal = memo(
   forwardRef<EffectComposerImpl, EffectComposerInternalProps>(
-    ({ children, camera, width, height, clearBeforeRender }, ref) => {
+    (
+      {
+        children,
+        camera,
+        width,
+        height,
+        clearBeforeRender,
+        detachedbuffersize = false,
+        dprscale = 1,
+      },
+      ref,
+    ) => {
       const store = useStore()
       const { gl, scene, viewport } = useThree()
-      const lastsize = useRef({ w: NaN, h: NaN, dpr: NaN })
+      const lastsize = useRef({
+        w: NaN,
+        h: NaN,
+        dpr: NaN,
+        dprs: NaN,
+        pc: NaN,
+      })
       const lastcanvassyncgen = useRef(canvassyncgeneration)
 
       useLayoutEffect(() => {
@@ -69,17 +109,53 @@ const EffectComposerInternal = memo(
 
       useFrame(
         (_, delta) => {
-          const dpr = viewport.dpr
+          const dpr = viewport.dpr * dprscale
           if (lastcanvassyncgen.current !== canvassyncgeneration) {
             lastcanvassyncgen.current = canvassyncgeneration
-            lastsize.current = { w: NaN, h: NaN, dpr: NaN }
+            lastsize.current = {
+              w: NaN,
+              h: NaN,
+              dpr: NaN,
+              dprs: NaN,
+              pc: NaN,
+            }
           }
-          if (
+          if (detachedbuffersize) {
+            const bw = Math.round(width * dpr)
+            const bh = Math.round(height * dpr)
+            const passcount = composer.passes.length
+            const bufmismatch =
+              composer.inputBuffer.width !== bw ||
+              composer.inputBuffer.height !== bh
+            if (
+              lastsize.current.w !== width ||
+              lastsize.current.h !== height ||
+              lastsize.current.dpr !== dpr ||
+              lastsize.current.dprs !== dprscale ||
+              lastsize.current.pc !== passcount ||
+              bufmismatch
+            ) {
+              lastsize.current = {
+                w: width,
+                h: height,
+                dpr,
+                dprs: dprscale,
+                pc: passcount,
+              }
+              syncdetachedcomposerbuffers(composer, width, height, dpr)
+            }
+          } else if (
             lastsize.current.w !== width ||
             lastsize.current.h !== height ||
             lastsize.current.dpr !== dpr
           ) {
-            lastsize.current = { w: width, h: height, dpr }
+            lastsize.current = {
+              w: width,
+              h: height,
+              dpr,
+              dprs: dprscale,
+              pc: lastsize.current.pc,
+            }
             composer.setSize(width, height)
           }
           if (clearBeforeRender) {
@@ -135,6 +211,30 @@ const EffectComposerInternal = memo(
         }
       }, [composer, children, camera])
 
+      useLayoutEffect(() => {
+        if (!detachedbuffersize || !composer) {
+          return
+        }
+        const dpr = viewport.dpr * dprscale
+        syncdetachedcomposerbuffers(composer, width, height, dpr)
+        lastsize.current = {
+          w: width,
+          h: height,
+          dpr,
+          dprs: dprscale,
+          pc: composer.passes.length,
+        }
+      }, [
+        detachedbuffersize,
+        composer,
+        children,
+        camera,
+        width,
+        height,
+        viewport.dpr,
+        dprscale,
+      ])
+
       const state = useMemo(
         () => ({
           composer,
@@ -163,6 +263,8 @@ export type EffectComposerWithCameraProps = {
   camera: Camera
   width: number
   height: number
+  detachedbuffersize?: boolean
+  dprscale?: number
 }
 
 export const EffectComposer = /* @__PURE__ */ memo(

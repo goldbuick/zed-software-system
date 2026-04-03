@@ -1,6 +1,7 @@
 import React from 'react'
 import { Color, Mesh, PlaneGeometry } from 'three'
 import { RUNTIME } from 'zss/config'
+import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 
 function noop() {}
 
@@ -33,6 +34,10 @@ type Props = {
   opacity?: number
   visible?: boolean
   color?: Color | string
+  /** When true, this mesh is omitted from raycasting (e.g. visual overlays above a pick plane). */
+  skipraycast?: boolean
+  /** Marks the gadget inspector hit sheet so pointer code can pick the right intersection. */
+  inspectpick?: boolean
 } & React.ComponentProps<typeof PlaneComponent>
 
 export const Rect = React.forwardRef<Mesh, Props>(function Rect(
@@ -47,6 +52,8 @@ export const Rect = React.forwardRef<Mesh, Props>(function Rect(
     opacity = 1,
     visible = true,
     color = 'white',
+    skipraycast = false,
+    inspectpick = false,
     ...props
   }: Props,
   forwardedRef,
@@ -65,7 +72,12 @@ export const Rect = React.forwardRef<Mesh, Props>(function Rect(
         width * RUNTIME.DRAW_CHAR_WIDTH(),
         height * RUNTIME.DRAW_CHAR_HEIGHT(),
       ]}
-      userData={{ blocking, cursor }}
+      raycast={skipraycast ? noraycastmesh : undefined}
+      userData={{
+        blocking,
+        cursor,
+        ...(inspectpick ? { inspectpick: true as const } : {}),
+      }}
       onClick={blocking ? noop : undefined}
       onPointerMove={blocking ? noop : undefined}
       position={position}
@@ -76,6 +88,7 @@ export const Rect = React.forwardRef<Mesh, Props>(function Rect(
         opacity={opacity}
         visible={visible}
         transparent={opacity !== 1}
+        depthWrite={opacity === 1}
       />
     </PlaneComponent>
   )

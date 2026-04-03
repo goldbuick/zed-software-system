@@ -13,6 +13,8 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
+import { BoardInspectorGadget } from 'zss/gadget/graphics/boardinspectorgadget'
+import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
@@ -21,7 +23,6 @@ import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { PillarwMeshes } from 'zss/gadget/graphics/pillarmeshes'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -80,7 +81,6 @@ export const FPVGraphics = memo(function FPVGraphics({
   height,
 }: GraphicsProps) {
   const islowrez = useDeviceData((s) => s.islowrez)
-  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -362,9 +362,9 @@ export const FPVGraphics = memo(function FPVGraphics({
   )
 
   const multi = over.length > 0
+  const inspectorz = boardinspectorzfromgadgetstacks('fpv', layers, over, [])
   const layersindex = under.length * 2 + 2
-  const fullgridwpx = screensize.cols * drawwidth
-  const centerx = fullgridwpx * -0.5
+  const centerx = viewwidth * -0.5
   const centery = viewheight * 0.5
   const fpvdprscale = islowrez ? 0.5 : 1
 
@@ -599,6 +599,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                   </>
                 </group>
               )}
+              <BoardInspectorGadget z={inspectorz} />
             </group>
           </RenderLayer>
         )}

@@ -18,6 +18,8 @@ const Screensize = createContext({
   rows: 1,
   marginx: 1,
   marginy: 1,
+  viewwidth: 1,
+  viewheight: 1,
 })
 
 export function useScreenSize() {
@@ -80,8 +82,8 @@ export function UserScreen({ children }: UserScreenProps) {
   }, [insetcols, insetrows])
 
   const screensize = useMemo(
-    () => ({ cols, rows, marginx, marginy }),
-    [cols, rows, marginx, marginy],
+    () => ({ cols, rows, marginx, marginy, viewwidth, viewheight }),
+    [cols, rows, marginx, marginy, viewwidth, viewheight],
   )
 
   return (

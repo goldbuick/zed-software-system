@@ -11,6 +11,8 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { BoardInspectorGadget } from 'zss/gadget/graphics/boardinspectorgadget'
+import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
@@ -18,7 +20,6 @@ import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
@@ -71,7 +72,6 @@ export const IsoGraphics = memo(function IsoGraphics({
   width,
   height,
 }: GraphicsProps) {
-  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -232,11 +232,17 @@ export const IsoGraphics = memo(function IsoGraphics({
     drawheight,
   )
 
+  const exitpreviewlayerlists = exitpreviewgroups.map((g) => g.preview.layers)
+  const inspectorz = boardinspectorzfromgadgetstacks(
+    'iso',
+    layers,
+    over,
+    exitpreviewlayerlists,
+  )
+
   const layersindex = under.length * 2 + 2
-  // Portal scene: board layers use full-grid pixel space; camera frustum is framed
-  // viewwidth. Center using full grid width (cols*draww), not framed viewwidth/2.
-  const fullgridwpx = screensize.cols * drawwidth
-  const centerx = fullgridwpx * -0.5
+  // Match ortho left/right (framed `viewwidth`), including when sidebar narrows the frame.
+  const centerx = viewwidth * -0.5
   const centery = viewheight * 0.5
   return (
     <>
@@ -296,6 +302,7 @@ export const IsoGraphics = memo(function IsoGraphics({
                         </group>
                       ) : null,
                     )}
+                    <BoardInspectorGadget z={inspectorz} />
                   </group>
                 </group>
               </group>

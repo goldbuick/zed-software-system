@@ -1,36 +1,71 @@
 import { ThreeEvent } from '@react-three/fiber'
+import { useEffect, useMemo } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useInspector, useTape } from 'zss/gadget/data/state'
-import { Rect } from 'zss/gadget/rect'
+import { useGadgetClient, useInspector, useTape } from 'zss/gadget/data/state'
+import { layersreadcontrol } from 'zss/gadget/data/types'
+import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
+import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import {
+  createboardpickgeometry,
+  createpixelquadgeometry,
+} from './boardpickgeometry'
+
 const point = new Vector3()
 
-function coords() {
+/** Pick → VM tile indices (board local space; +Y down like tile geometry). */
+function coordstileorigin(pickw: number, pickh: number) {
   const cw = RUNTIME.DRAW_CHAR_WIDTH()
   const ch = RUNTIME.DRAW_CHAR_HEIGHT()
   const px = Math.floor(point.x / cw)
-  const py = Math.floor((point.y + ch * 0.5) / ch)
+  const py = Math.floor(point.y / ch)
   return {
-    x: px,
-    y: BOARD_HEIGHT * 0.5 + py,
+    x: clamp(px, 0, pickw - 1),
+    y: clamp(py, 0, pickh - 1),
   }
+}
+
+function inspectorhit(e: ThreeEvent<PointerEvent>) {
+  if (e.intersections.length === 0) {
+    return undefined
+  }
+  // Only the pick plane uses board-local coords for tile math; falling back to
+  // `intersections[0]` can pick a tile mesh and corrupt local (x,y) vs the grid.
+  return e.intersections.find((i) => i.object.userData?.inspectpick === true)
 }
 
 export function InspectorSelect() {
   const inspector = useTape((state) => state.inspector)
+  const gadgetlayers = useGadgetClient((s) => s.gadget.layers)
+  const control = useMemo(
+    () => layersreadcontrol(gadgetlayers ?? []),
+    [gadgetlayers],
+  )
+  const pickw = control.width > 0 ? control.width : BOARD_WIDTH
+  const pickh = control.height > 0 ? control.height : BOARD_HEIGHT
+  const pickgeo = useMemo(
+    () => createboardpickgeometry(pickw, pickh),
+    [pickw, pickh],
+  )
+  useEffect(() => {
+    return () => {
+      pickgeo.dispose()
+    }
+  }, [pickgeo])
+
   const [cursor, select] = useInspector(
     useShallow((state) => [state.cursor, state.select]),
   )
-  const cursorpt = indextopt(cursor ?? 0, BOARD_WIDTH)
-  const selectpt = indextopt(select ?? cursor ?? 0, BOARD_WIDTH)
+  const cursorpt = indextopt(cursor ?? 0, pickw)
+  const selectpt = indextopt(select ?? cursor ?? 0, pickw)
 
   const selectstart = {
     x: Math.min(cursorpt.x, selectpt.x),
@@ -42,6 +77,30 @@ export function InspectorSelect() {
   }
   const selectwidth = selectend.x - selectstart.x + 1
   const selectheight = selectend.y - selectstart.y + 1
+
+  // Highlight meshes align to the same tile grid as `coordstileorigin` (row r → y ∈ [r*ch,(r+1)*ch)).
+  const rectorigin = selectstart
+
+  const cw = RUNTIME.DRAW_CHAR_WIDTH()
+  const ch = RUNTIME.DRAW_CHAR_HEIGHT()
+  const selouterwpx = selectwidth * cw
+  const selouterhpx = selectheight * ch
+  const selinnerwpx = Math.max(0.001, selectwidth - 0.5) * cw
+  const selinnerhpx = Math.max(0.001, selectheight - 0.5) * ch
+  const seloutergeo = useMemo(
+    () => createpixelquadgeometry(selouterwpx, selouterhpx),
+    [selouterwpx, selouterhpx],
+  )
+  const selinnergeo = useMemo(
+    () => createpixelquadgeometry(selinnerwpx, selinnerhpx),
+    [selinnerwpx, selinnerhpx],
+  )
+  useEffect(() => {
+    return () => {
+      seloutergeo.dispose()
+      selinnergeo.dispose()
+    }
+  }, [seloutergeo, selinnergeo])
 
   // track selection state
   function completeselection() {
@@ -57,61 +116,83 @@ export function InspectorSelect() {
   return (
     <>
       {inspector && (
-        <Rect
-          visible
-          opacity={0}
-          color="black"
-          x={0}
-          y={0}
-          z={-1}
-          width={BOARD_WIDTH}
-          height={BOARD_HEIGHT}
-          cursor="pointer"
+        <mesh
+          position={[0, 0, -1]}
+          geometry={pickgeo}
+          userData={{
+            inspectpick: true,
+            blocking: false,
+            cursor: 'pointer',
+          }}
           onPointerDown={(e: ThreeEvent<PointerEvent>) => {
-            e.intersections[0].object.worldToLocal(
-              point.copy(e.intersections[0].point),
-            )
-            const pt = coords()
+            const hit = inspectorhit(e)
+            if (!hit) {
+              return
+            }
+            hit.object.worldToLocal(point.copy(hit.point))
+            const pt = coordstileorigin(pickw, pickh)
             useInspector.setState(() => ({
-              cursor: pttoindex(pt, BOARD_WIDTH),
+              cursor: pttoindex(pt, pickw),
             }))
           }}
           onPointerMove={(e: ThreeEvent<PointerEvent>) => {
             if (ispresent(useInspector.getState().cursor)) {
-              e.intersections[0].object.worldToLocal(
-                point.copy(e.intersections[0].point),
-              )
-              const pt = coords()
+              const hit = inspectorhit(e)
+              if (!hit) {
+                return
+              }
+              hit.object.worldToLocal(point.copy(hit.point))
+              const pt = coordstileorigin(pickw, pickh)
               useInspector.setState(() => ({
-                select: pttoindex(pt, BOARD_WIDTH),
+                select: pttoindex(pt, pickw),
               }))
             }
           }}
           onPointerUp={completeselection}
           onPointerOut={completeselection}
           onPointerCancel={completeselection}
-        />
+        >
+          <meshBasicMaterial
+            transparent
+            opacity={0}
+            depthWrite={false}
+            visible
+            color="black"
+            wireframe={false}
+          />
+        </mesh>
       )}
       {ispresent(cursor) && (
         <>
-          <Rect
-            x={selectstart.x + 0.25}
-            y={selectstart.y + 0.25}
-            z={100}
-            width={selectwidth - 0.5}
-            height={selectheight - 0.5}
-            color="black"
-            opacity={0.3}
-          />
-          <Rect
-            x={selectstart.x}
-            y={selectstart.y}
-            z={101}
-            width={selectwidth}
-            height={selectheight}
-            color="white"
-            opacity={0.25}
-          />
+          <mesh
+            raycast={noraycastmesh}
+            position={[
+              (rectorigin.x + 0.25) * cw,
+              (rectorigin.y + 0.25) * ch,
+              100,
+            ]}
+            geometry={selinnergeo}
+          >
+            <meshBasicMaterial
+              color="black"
+              opacity={0.3}
+              transparent
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh
+            raycast={noraycastmesh}
+            position={[rectorigin.x * cw, rectorigin.y * ch, 101]}
+            geometry={seloutergeo}
+          >
+            <meshBasicMaterial
+              color="white"
+              opacity={0.25}
+              transparent
+              depthWrite={false}
+              wireframe={false}
+            />
+          </mesh>
         </>
       )}
     </>

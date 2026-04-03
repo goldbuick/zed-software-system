@@ -11,6 +11,8 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { BoardInspectorGadget } from 'zss/gadget/graphics/boardinspectorgadget'
+import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
@@ -23,7 +25,6 @@ import {
   MODE7_Z_NEAR,
 } from 'zss/gadget/graphics/mode7viewscale'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
-import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
@@ -81,7 +82,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   width,
   height,
 }: GraphicsProps) {
-  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -250,9 +250,16 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     drawheight,
   )
 
+  const exitpreviewlayerlists = exitpreviewgroups.map((g) => g.preview.layers)
+  const inspectorz = boardinspectorzfromgadgetstacks(
+    'mode7',
+    layers,
+    over,
+    exitpreviewlayerlists,
+  )
+
   const layersindex = under.length * 2 + 2
-  const fullgridwpx = screensize.cols * drawwidth
-  const centerx = fullgridwpx * -0.5
+  const centerx = viewwidth * -0.5
   const centery = viewheight * 0.5
   return (
     <>
@@ -307,6 +314,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       </group>
                     ) : null,
                   )}
+                  <BoardInspectorGadget z={inspectorz} />
                 </group>
               </group>
             </group>
