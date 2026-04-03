@@ -9,8 +9,6 @@ import { useDeviceData } from 'zss/gadget/device'
 import { EffectComposer } from 'zss/gadget/graphics/effectcomposer'
 import { useMedia } from 'zss/gadget/media'
 
-import { useScreenSize } from '../userscreen'
-
 import { RenderTexture } from './rendertexture'
 
 type RenderToTargetProps = {
