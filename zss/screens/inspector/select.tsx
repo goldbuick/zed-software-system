@@ -1,7 +1,14 @@
 import { ThreeEvent } from '@react-three/fiber'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { Mesh } from 'three'
-import { DoubleSide, FrontSide, SphereGeometry, Vector3 } from 'three'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  BoxGeometry,
+  DoubleSide,
+  EdgesGeometry,
+  FrontSide,
+  LineBasicMaterial,
+  SphereGeometry,
+  Vector3,
+} from 'three'
 import { RAYCAST_DEBUG_DOT, RAYCAST_DEBUG_PICKSHEET, RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -19,11 +26,6 @@ import {
   createboardpickgeometry,
   createpixelquadgeometry,
 } from './boardpickgeometry'
-import {
-  attachfpvpickraycast,
-  detachfpvpickraycast,
-  syncfpvpickdimensions,
-} from './fpvpickraycast'
 
 const point = new Vector3()
 
@@ -51,13 +53,12 @@ function inspectorhit(e: ThreeEvent<PointerEvent>) {
   return e.intersections.find((i) => i.object.userData?.inspectpick === true)
 }
 
-function readfpvtile(hit: { object: { userData: Record<string, unknown> } }) {
-  const pt = hit.object.userData.fpvtile as { x: number; y: number } | undefined
-  return pt
-}
-
 export function InspectorSelect() {
   const [debughit, setdebughit] = useState<{ x: number; y: number } | null>(
+    null,
+  )
+  /** Tile under cursor (snapped), for debug wireframe box — only when `ZSS_DEBUG_RAYCAST_DOT`. */
+  const [hovertile, sethovertile] = useState<{ x: number; y: number } | null>(
     null,
   )
   const inspector = useTape((state) => state.inspector)
@@ -66,7 +67,6 @@ export function InspectorSelect() {
     () => layersreadcontrol(gadgetlayers ?? []),
     [gadgetlayers],
   )
-  const isfpv = control.graphics === 'fpv'
   const pickw = control.width > 0 ? control.width : BOARD_WIDTH
   const pickh = control.height > 0 ? control.height : BOARD_HEIGHT
   const pickgeo = useMemo(
@@ -111,6 +111,32 @@ export function InspectorSelect() {
       debugdotgeo.dispose()
     }
   }, [debugdotgeo])
+  const tileboxedges = useMemo(() => {
+    const depth = Math.min(cw, ch) * 0.35
+    const box = new BoxGeometry(cw, ch, depth)
+    const edges = new EdgesGeometry(box)
+    box.dispose()
+    return edges
+  }, [cw, ch])
+  useEffect(() => {
+    return () => {
+      tileboxedges.dispose()
+    }
+  }, [tileboxedges])
+  const tileboxmaterial = useMemo(
+    () =>
+      new LineBasicMaterial({
+        color: '#00ffaa',
+        depthWrite: false,
+        depthTest: false,
+      }),
+    [],
+  )
+  useEffect(() => {
+    return () => {
+      tileboxmaterial.dispose()
+    }
+  }, [tileboxmaterial])
   const selouterwpx = selectwidth * cw
   const selouterhpx = selectheight * ch
   const selinnerwpx = Math.max(0.001, selectwidth - 0.5) * cw
@@ -130,23 +156,6 @@ export function InspectorSelect() {
     }
   }, [seloutergeo, selinnergeo])
 
-  const pickmeshref = useRef<Mesh>(null)
-  useLayoutEffect(() => {
-    const mesh = pickmeshref.current
-    if (!inspector || !mesh) {
-      return
-    }
-    if (isfpv) {
-      syncfpvpickdimensions(mesh, pickw, pickh)
-      attachfpvpickraycast(mesh)
-    } else {
-      detachfpvpickraycast(mesh)
-    }
-    return () => {
-      detachfpvpickraycast(mesh)
-    }
-  }, [isfpv, pickw, pickh, inspector])
-
   // track selection state
   function completeselection() {
     if (isnumber(useInspector.getState().cursor)) {
@@ -161,6 +170,7 @@ export function InspectorSelect() {
   function pointerleavedebug() {
     if (RAYCAST_DEBUG_DOT) {
       setdebughit(null)
+      sethovertile(null)
     }
     completeselection()
   }
@@ -169,7 +179,6 @@ export function InspectorSelect() {
     <>
       {inspector && (
         <mesh
-          ref={pickmeshref}
           position={[0, 0, -1]}
           geometry={pickgeo}
           renderOrder={selectionmeshdebug ? 50 : 0}
@@ -183,25 +192,14 @@ export function InspectorSelect() {
             if (!hit) {
               return
             }
-            if (isfpv) {
-              const pt = readfpvtile(hit)
-              if (!ispresent(pt)) {
-                return
-              }
-              if (RAYCAST_DEBUG_DOT) {
-                hit.object.worldToLocal(point.copy(hit.point))
-                setdebughit({ x: point.x, y: point.y })
-              }
-              useInspector.setState(() => ({
-                cursor: pttoindex(pt, pickw),
-              }))
-              return
-            }
             hit.object.worldToLocal(point.copy(hit.point))
             if (RAYCAST_DEBUG_DOT) {
               setdebughit({ x: point.x, y: point.y })
             }
             const pt = coordstileorigin(pickw, pickh)
+            if (RAYCAST_DEBUG_DOT) {
+              sethovertile({ x: pt.x, y: pt.y })
+            }
             useInspector.setState(() => ({
               cursor: pttoindex(pt, pickw),
             }))
@@ -209,37 +207,22 @@ export function InspectorSelect() {
           onPointerMove={(e: ThreeEvent<PointerEvent>) => {
             const hit = inspectorhit(e)
             if (hit) {
-              if (isfpv) {
-                const pt = readfpvtile(hit)
-                if (!ispresent(pt)) {
-                  if (RAYCAST_DEBUG_DOT) {
-                    setdebughit(null)
-                  }
-                  return
-                }
-                hit.object.worldToLocal(point.copy(hit.point))
-                if (RAYCAST_DEBUG_DOT) {
-                  setdebughit({ x: point.x, y: point.y })
-                }
-                if (ispresent(useInspector.getState().cursor)) {
-                  useInspector.setState(() => ({
-                    select: pttoindex(pt, pickw),
-                  }))
-                }
-                return
-              }
               hit.object.worldToLocal(point.copy(hit.point))
               if (RAYCAST_DEBUG_DOT) {
                 setdebughit({ x: point.x, y: point.y })
               }
+              const pt = coordstileorigin(pickw, pickh)
+              if (RAYCAST_DEBUG_DOT) {
+                sethovertile({ x: pt.x, y: pt.y })
+              }
               if (ispresent(useInspector.getState().cursor)) {
-                const pt = coordstileorigin(pickw, pickh)
                 useInspector.setState(() => ({
                   select: pttoindex(pt, pickw),
                 }))
               }
             } else if (RAYCAST_DEBUG_DOT) {
               setdebughit(null)
+              sethovertile(null)
             }
           }}
           onPointerUp={completeselection}
@@ -273,6 +256,19 @@ export function InspectorSelect() {
                 depthTest={false}
               />
             </mesh>
+          )}
+          {RAYCAST_DEBUG_DOT && hovertile && (
+            <lineSegments
+              position={[
+                (hovertile.x + 0.5) * cw,
+                (hovertile.y + 0.5) * ch,
+                0,
+              ]}
+              geometry={tileboxedges}
+              material={tileboxmaterial}
+              raycast={noraycastmesh}
+              renderOrder={52}
+            />
           )}
         </mesh>
       )}

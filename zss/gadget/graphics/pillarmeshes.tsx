@@ -4,7 +4,6 @@ import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { createBlocksMaterial } from 'zss/gadget/display/blocks'
 import { createPillarBufferGeometryAttributes } from 'zss/gadget/display/tiles'
-import { FPV_INSPECT_INSTANCE } from 'zss/gadget/graphics/fpvinspectpick'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
@@ -17,8 +16,6 @@ type PillarwMeshesProps = {
   bg: number[]
   partial?: number
   limit?: number
-  /** Tag instanced mesh for FPV depth-first inspector picking. */
-  fpvinspectpick?: boolean
 }
 
 const dummy = new Object3D()
@@ -34,7 +31,6 @@ export function PillarwMeshes({
   bg,
   partial,
   limit = BOARD_SIZE,
-  fpvinspectpick = false,
 }: PillarwMeshesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
@@ -67,9 +63,6 @@ export function PillarwMeshes({
     return shape
   }, [partial])
 
-  const inspectpicktx = useMemo(() => new Float32Array(limit), [limit])
-  const inspectpickty = useMemo(() => new Float32Array(limit), [limit])
-
   const [meshes, setmeshes] = useState<InstancedMesh>()
   // process tiles
   useEffect(() => {
@@ -89,10 +82,6 @@ export function PillarwMeshes({
         dummy.position.set(x * drawwidth, y * drawheight, 0)
         dummy.updateMatrix()
         meshes.setMatrixAt(c, dummy.matrix)
-        if (fpvinspectpick) {
-          inspectpicktx[c] = x
-          inspectpickty[c] = y
-        }
         // update char drawn
         dummycolor.set(char[i], color[i], bg[i])
         meshes.setColorAt(c, dummycolor)
@@ -123,26 +112,7 @@ export function PillarwMeshes({
     meshes.boundingSphere.center.copy(pillarspherecenter)
     meshes.boundingSphere.radius = Math.hypot(bx * 0.5, by * 0.5, 0.5) + 0.001
     meshes.visible = !!meshes.count
-    if (fpvinspectpick) {
-      meshes.userData.inspectpickkind = FPV_INSPECT_INSTANCE
-      meshes.userData.inspectpicktx = inspectpicktx
-      meshes.userData.inspectpickty = inspectpickty
-    } else {
-      delete meshes.userData.inspectpickkind
-      delete meshes.userData.inspectpicktx
-      delete meshes.userData.inspectpickty
-    }
-  }, [
-    meshes,
-    char,
-    color,
-    bg,
-    width,
-    limit,
-    fpvinspectpick,
-    inspectpicktx,
-    inspectpickty,
-  ])
+  }, [meshes, char, color, bg, width, limit])
 
   return (
     <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>

@@ -16,7 +16,6 @@ import { time } from 'zss/gadget/display/anim'
 import { createBlocksBillboardMaterial } from 'zss/gadget/display/blocks'
 import { useSpritePool } from 'zss/gadget/display/spritepool'
 import { createBillboardBufferGeometryAttributes } from 'zss/gadget/display/tiles'
-import { FPV_INSPECT_INSTANCE } from 'zss/gadget/graphics/fpvinspectpick'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
@@ -26,8 +25,6 @@ type BillboardMeshesProps = {
   facing: number
   limit?: number
   children: (x: number, y: number) => [number, number, number]
-  /** Tag instanced mesh for FPV depth-first inspector picking. */
-  fpvinspectpick?: boolean
 }
 
 const dummy = new Object3D()
@@ -37,7 +34,6 @@ export function BillboardMeshes({
   facing,
   children,
   limit = BOARD_SIZE,
-  fpvinspectpick = false,
 }: BillboardMeshesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
@@ -72,8 +68,6 @@ export function BillboardMeshes({
   const displayarray = useMemo(() => new Float32Array(limit * 4), [limit])
   const lastcolorarray = useMemo(() => new Float32Array(limit * 2), [limit])
   const lastbgarray = useMemo(() => new Float32Array(limit * 2), [limit])
-  const inspectpicktx = useMemo(() => new Float32Array(limit), [limit])
-  const inspectpickty = useMemo(() => new Float32Array(limit), [limit])
 
   const [visible, setvisible] = useState<InstancedBufferAttribute>()
   const [nowposition, setnowposition] = useState<InstancedBufferAttribute>()
@@ -108,10 +102,6 @@ export function BillboardMeshes({
           dummy.position.set(nx, ny, nz)
           dummy.updateMatrix()
           meshes.setMatrixAt(i, dummy.matrix)
-          if (fpvinspectpick) {
-            inspectpicktx[i] = sprite.x
-            inspectpickty[i] = sprite.y
-          }
 
           dummy.position.set(nx, ny, nz + drawheight * -0.8)
           dummy.updateMatrix()
@@ -153,10 +143,6 @@ export function BillboardMeshes({
             nowposition.needsUpdate = true
             meshes.instanceMatrix.needsUpdate = true
           }
-          if (fpvinspectpick) {
-            inspectpicktx[i] = sprite.x
-            inspectpickty[i] = sprite.y
-          }
           const ncharu = sprite.char % CHARS_PER_ROW
           const ncharv = Math.floor(sprite.char / CHARS_PER_ROW)
           if (display.getX(i) !== ncharu || display.getY(i) !== ncharv) {
@@ -182,15 +168,6 @@ export function BillboardMeshes({
       }
     }
     meshes.userData.facing = facing
-    if (fpvinspectpick) {
-      meshes.userData.inspectpickkind = FPV_INSPECT_INSTANCE
-      meshes.userData.inspectpicktx = inspectpicktx
-      meshes.userData.inspectpickty = inspectpickty
-    } else {
-      delete meshes.userData.inspectpickkind
-      delete meshes.userData.inspectpicktx
-      delete meshes.userData.inspectpickty
-    }
     meshes.computeBoundingBox()
     meshes.computeBoundingSphere()
     meshes.visible = !!meshes.count
@@ -202,9 +179,6 @@ export function BillboardMeshes({
     meshes,
     visible,
     lastmatrix,
-    fpvinspectpick,
-    inspectpicktx,
-    inspectpickty,
   ])
 
   return (

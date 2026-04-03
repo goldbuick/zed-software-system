@@ -11,7 +11,6 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
-import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'

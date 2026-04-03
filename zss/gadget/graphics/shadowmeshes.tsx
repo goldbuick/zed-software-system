@@ -10,7 +10,6 @@ import { time } from 'zss/gadget/display/anim'
 import { createBlockDitherMaterial } from 'zss/gadget/display/dither'
 import { useSpritePool } from 'zss/gadget/display/spritepool'
 import { createTilemapBufferGeometryAttributes } from 'zss/gadget/display/tiles'
-import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 
@@ -19,8 +18,6 @@ type ShadowMeshesProps = {
   alpha?: number
   limit?: number
   children: (x: number, y: number) => [number, number, number]
-  /** Omit from raycasting (e.g. FPV inspector picks real sprites first). */
-  skipraycast?: boolean
 }
 
 const dummy = new Object3D()
@@ -30,7 +27,6 @@ export function ShadowMeshes({
   children,
   alpha = 0.5,
   limit = BOARD_SIZE,
-  skipraycast = false,
 }: ShadowMeshesProps) {
   const [meshes, setmeshes] = useState<InstancedMesh>()
   const [visible, setvisible] = useState<InstancedBufferAttribute>()
@@ -110,11 +106,7 @@ export function ShadowMeshes({
   }, [sprites, spritepool, range, meshes, visible, nowposition, lastmatrix])
 
   return (
-    <instancedMesh
-      ref={setmeshes}
-      args={[undefined, undefined, limit]}
-      raycast={skipraycast ? noraycastmesh : undefined}
-    >
+    <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
