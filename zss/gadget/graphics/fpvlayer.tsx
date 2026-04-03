@@ -152,30 +152,21 @@ export function FPVLayer({
       }
       return (
         <group key={layer.id} position={[0, 0, z]}>
-          <BillboardMeshes
-            sprites={othersprites}
-            facing={control.facing}
-          >
+          <BillboardMeshes sprites={othersprites} facing={control.facing}>
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,
               drawheight * -0.5,
             ]}
           </BillboardMeshes>
-          <BillboardMeshes
-            sprites={bulletsprites}
-            facing={control.facing}
-          >
+          <BillboardMeshes sprites={bulletsprites} facing={control.facing}>
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,
               drawheight * -0.75,
             ]}
           </BillboardMeshes>
-          <BillboardMeshes
-            sprites={watersprites}
-            facing={control.facing}
-          >
+          <BillboardMeshes sprites={watersprites} facing={control.facing}>
             {(ix, iy) => [
               (ix + 0.5) * drawwidth,
               (iy + 0.5) * drawheight,

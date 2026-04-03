@@ -179,6 +179,11 @@ export function BillboardMeshes({
     meshes,
     visible,
     lastmatrix,
+    children,
+    display,
+    lastbg,
+    lastcolor,
+    nowposition,
   ])
 
   return (
