@@ -314,6 +314,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       </group>
                     ) : null,
                   )}
+                  {/* Inspector + pick plane live under tiltref with perspective board camera; UV→ray via RenderTexture */}
                   <BoardInspectorGadget z={inspectorz} />
                 </group>
               </group>

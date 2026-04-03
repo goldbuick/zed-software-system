@@ -21,6 +21,10 @@ import {
 
 const point = new Vector3()
 
+/** In dev: show pick sheet + selection quads (colors/wireframe) to verify pointer vs highlight grid. */
+const selectionmeshdebug =
+  typeof import.meta !== 'undefined' && import.meta.env?.DEV === true
+
 /** Pick → VM tile indices (board local space; +Y down like tile geometry). */
 function coordstileorigin(pickw: number, pickh: number) {
   const cw = RUNTIME.DRAW_CHAR_WIDTH()
@@ -154,11 +158,11 @@ export function InspectorSelect() {
         >
           <meshBasicMaterial
             transparent
-            opacity={0}
+            opacity={selectionmeshdebug ? 0.12 : 0}
             depthWrite={false}
             visible
-            color="black"
-            wireframe={false}
+            color={selectionmeshdebug ? '#ffcc00' : 'black'}
+            wireframe={selectionmeshdebug}
           />
         </mesh>
       )}
@@ -174,8 +178,8 @@ export function InspectorSelect() {
             geometry={selinnergeo}
           >
             <meshBasicMaterial
-              color="black"
-              opacity={0.3}
+              color={selectionmeshdebug ? '#ff00aa' : 'black'}
+              opacity={selectionmeshdebug ? 0.5 : 0.3}
               transparent
               depthWrite={false}
             />
@@ -186,11 +190,11 @@ export function InspectorSelect() {
             geometry={seloutergeo}
           >
             <meshBasicMaterial
-              color="white"
-              opacity={0.25}
+              color={selectionmeshdebug ? '#00ffcc' : 'white'}
+              opacity={selectionmeshdebug ? 0.45 : 0.25}
               transparent
               depthWrite={false}
-              wireframe={false}
+              wireframe={selectionmeshdebug}
             />
           </mesh>
         </>

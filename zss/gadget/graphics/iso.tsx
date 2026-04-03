@@ -302,6 +302,7 @@ export const IsoGraphics = memo(function IsoGraphics({
                         </group>
                       ) : null,
                     )}
+                    {/* Pick + highlights share ISO_SCENE_ROTATION with tiles; board-local Y is +down */}
                     <BoardInspectorGadget z={inspectorz} />
                   </group>
                 </group>

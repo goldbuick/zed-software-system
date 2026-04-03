@@ -27,7 +27,6 @@ export type RenderTextureProps = Omit<
    * Used to scale portal U from UV→NDC so the ray matches the framed sub-rect vs full canvas width.
    */
   viewwidth: number
-  viewportwidth: number
 }
 
 type R3fInternalParent = {
@@ -55,7 +54,7 @@ export const RenderTexture: ForwardRefComponent<
   RenderTextureProps,
   THREE.RenderTarget
 > = /* @__PURE__ */ forwardRef(function RenderTexture(
-  { children, fbo, viewwidth, viewportwidth, ...props },
+  { children, fbo, viewwidth, ...props },
   forwardRef,
 ) {
   const [vScene] = useState(() => new THREE.Scene())
@@ -81,13 +80,22 @@ export const RenderTexture: ForwardRefComponent<
         return false
       }
 
-      const xratio = viewportwidth > 0 ? viewwidth / viewportwidth : 1
+      // Full-canvas width in layout units: read from live root store (not React props) so resize
+      // and DPR never leave a stale denominator; matches pointer NDC basis from `events.compute`.
+      const fullwidth = root.viewport.width || root.size.width
+      // Ortho FBO: linear frustum; scale X so NDC matches framed sub-rect vs full canvas (sidebar).
+      // Perspective (mode7): FBO already includes perspective; extra X scaling skews the ray vs UV.
+      const isortho = state.camera.type === 'OrthographicCamera'
+      const xratio =
+        isortho && fullwidth > 0 ? viewwidth / fullwidth : 1
       const puvx = (uv.x * 2 - 1) * xratio
       const puvy = uv.y * 2 - 1
 
+      // Ortho (flat/iso) and perspective (mode7) portal cameras both use the same UV→NDC step;
+      // projection is applied inside setFromCamera for the active board camera.
       state.raycaster.setFromCamera(state.pointer.set(puvx, puvy), state.camera)
     },
-    [fbo, viewwidth, viewportwidth],
+    [fbo, viewwidth],
   )
 
   useImperativeHandle(forwardRef, () => fbo, [fbo])
