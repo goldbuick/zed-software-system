@@ -71,15 +71,20 @@ export function stepfocuswithboardtransition(
 
   // board transition
   if (currentboard !== userdata.currentboard) {
+    userdata.currentboard = currentboard
     const dx = control.focusx - userdata.lfocusx
     const dy = control.focusy - userdata.lfocusy
-    userdata.focusx = (userdata.focusx ?? 0) + Math.sign(dx) * BOARD_WIDTH
-    userdata.focusy = (userdata.focusy ?? 0) + Math.sign(dy) * BOARD_HEIGHT
-    userdata.currentboard = currentboard
-    userdata.focussmooth = FOCUS_GLIDE_RATE
-    userdata.lfocusx = control.focusx
-    userdata.lfocusy = control.focusy
-    return true
+    const shouldsnap =
+      (dx === 0 && Math.abs(dy) === BOARD_HEIGHT - 1) ||
+      (Math.abs(dx) === BOARD_WIDTH - 1 && dy === 0)
+    if (shouldsnap) {
+      userdata.lfocusx = control.focusx
+      userdata.lfocusy = control.focusy
+      userdata.focussmooth = FOCUS_GLIDE_RATE
+      userdata.focusx = (userdata.focusx ?? 0) + Math.sign(dx) * BOARD_WIDTH
+      userdata.focusy = (userdata.focusy ?? 0) + Math.sign(dy) * BOARD_HEIGHT
+      return true
+    }
   }
 
   // the glide
