@@ -49,7 +49,7 @@ export function initfocusifneeded(
 
 /** Board change uses control delta vs last frame; pass `lfocusforboard` when something else (e.g. fpv sway) mutates `lfocus` mid-frame before this runs. Returns whether this frame started a board transition. */
 export function stepfocuswithboardtransition(
-  userData: FocusUserData,
+  userdata: FocusUserData,
   control: LayerControl,
   currentboard: unknown,
   tfocusx: number,
@@ -57,49 +57,49 @@ export function stepfocuswithboardtransition(
   delta: number,
 ): boolean {
   // init values if needed
-  if (!ispresent(userData.lfocusx) || !ispresent(userData.lfocusy)) {
-    userData.lfocusx = control.focusx
-    userData.lfocusy = control.focusy
+  if (!ispresent(userdata.lfocusx) || !ispresent(userdata.lfocusy)) {
+    userdata.lfocusx = control.focusx
+    userdata.lfocusy = control.focusy
   }
-  if (!ispresent(userData.focussmooth)) {
-    userData.focussmooth = FOCUS_ANIM_RATE
+  if (!ispresent(userdata.focussmooth)) {
+    userdata.focussmooth = FOCUS_ANIM_RATE
   }
 
   // track target focus
-  userData.tfocusx = tfocusx
-  userData.tfocusy = tfocusy
+  userdata.tfocusx = tfocusx
+  userdata.tfocusy = tfocusy
 
   // board transition
-  if (currentboard !== userData.currentboard) {
-    const dx = control.focusx - userData.lfocusx
-    const dy = control.focusy - userData.lfocusy
-    userData.focusx = (userData.focusx ?? 0) + Math.sign(dx) * BOARD_WIDTH
-    userData.focusy = (userData.focusy ?? 0) + Math.sign(dy) * BOARD_HEIGHT
-    userData.currentboard = currentboard
-    userData.focussmooth = FOCUS_GLIDE_RATE
-    userData.lfocusx = control.focusx
-    userData.lfocusy = control.focusy
+  if (currentboard !== userdata.currentboard) {
+    const dx = control.focusx - userdata.lfocusx
+    const dy = control.focusy - userdata.lfocusy
+    userdata.focusx = (userdata.focusx ?? 0) + Math.sign(dx) * BOARD_WIDTH
+    userdata.focusy = (userdata.focusy ?? 0) + Math.sign(dy) * BOARD_HEIGHT
+    userdata.currentboard = currentboard
+    userdata.focussmooth = FOCUS_GLIDE_RATE
+    userdata.lfocusx = control.focusx
+    userdata.lfocusy = control.focusy
     return true
   }
 
   // the glide
-  const focussmooth = userData.focussmooth ?? FOCUS_ANIM_RATE
-  damp(userData, 'focusx', tfocusx, focussmooth, delta)
-  damp(userData, 'focusy', tfocusy, focussmooth, delta)
-  damp(userData, 'focussmooth', FOCUS_ANIM_RATE, FOCUS_GLIDE_DECAY, delta)
+  const focussmooth = userdata.focussmooth ?? FOCUS_ANIM_RATE
+  damp(userdata, 'focusx', tfocusx, focussmooth, delta)
+  damp(userdata, 'focusy', tfocusy, focussmooth, delta)
+  damp(userdata, 'focussmooth', FOCUS_ANIM_RATE, FOCUS_GLIDE_DECAY, delta)
 
   // track last focus for board transition
-  userData.lfocusx = control.focusx
-  userData.lfocusy = control.focusy
+  userdata.lfocusx = control.focusx
+  userdata.lfocusy = control.focusy
   return false
 }
 
 export function dampfocus(
-  userData: FocusUserData,
+  userdata: FocusUserData,
   control: LayerControl,
   animrate: number = ANIMRATE,
   delta?: number,
 ): void {
-  damp(userData, 'focusx', control.focusx, animrate, delta ?? 0.01)
-  damp(userData, 'focusy', control.focusy, animrate, delta ?? 0.01)
+  damp(userdata, 'focusx', control.focusx, animrate, delta ?? 0.01)
+  damp(userdata, 'focusy', control.focusy, animrate, delta ?? 0.01)
 }
