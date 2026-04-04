@@ -106,14 +106,27 @@ export function PanelColorEdit({
     }
     const c = withlist[i]
     const ccolor = (COLOR[c] || COLOR[COLOR.BLACK]).toLowerCase()
-    if (c === state) {
-      const bg = c > 32 ? 'onwhite' : 'onblack'
-      colors.push(`$${bg}$bl${ccolor}$219`)
+    if (c > (COLOR.ONCLEAR as number)) {
+      if (c === state) {
+        colors.push(`$onwhite$${ccolor}$219`)
+      } else {
+        colors.push(`$onblack$${ccolor}$219`)
+      }
+    } else if (c === (COLOR.ONCLEAR as number)) {
+      if (c === state) {
+        colors.push(`$onyellow$blwhite$219`)
+      } else {
+        colors.push(`$onyellow$blblack$219`)
+      }
     } else {
-      colors.push(`$onblack$${ccolor}$219`)
+      if (c === state) {
+        colors.push(`$onwhite$bl${ccolor}$219`)
+      } else {
+        colors.push(`$onblack$${ccolor}$219`)
+      }
     }
   }
-  colors.push(`$white`)
+  colors.push(`$ondkblue$white`)
   colors.push(`\n\n`)
   colors.push(`$greenpress C to copy ${tvalue}`)
   colors.push(`\n\n`)
