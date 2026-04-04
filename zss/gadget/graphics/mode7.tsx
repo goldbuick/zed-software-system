@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp, damp3, dampE } from 'maath/easing'
+import { damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { memo, useCallback, useRef, useState } from 'react'
 import {
@@ -11,8 +11,11 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
-import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
-import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import {
+  FOCUS_ANIM_RATE,
+  initfocusifneeded,
+  stepfocuswithboardtransition,
+} from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
@@ -120,25 +123,23 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    const animrate = 0.05
     const currentboard = useGadgetClient.getState().gadget.board
 
-    const userData = cameraref.current.userData as FocusUserData
-    initfocusifneeded(userData, control, currentboard)
-
-    const ud = cameraref.current.userData ?? {}
+    // tracking state
+    const userdata = (cameraref.current.userData ??= {})
+    initfocusifneeded(userdata, control, currentboard, { smoothing: true })
 
     damp3(
       cameraref.current.position,
       [0, 0, mapviewtoz(control.viewscale)],
-      animrate,
+      FOCUS_ANIM_RATE,
       delta,
     )
 
     dampE(
       tiltref.current.rotation,
       [mapviewtotilt(control.viewscale), 0, 0],
-      animrate,
+      FOCUS_ANIM_RATE,
       delta,
     )
 
@@ -159,27 +160,23 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       drawheight,
     )
 
-    ud.tfocusx = tfocusx
-    ud.tfocusy = tfocusy
+    const boardtransition = stepfocuswithboardtransition(
+      userdata,
+      control,
+      currentboard,
+      tfocusx,
+      tfocusy,
+      delta,
+    )
 
-    const fx = (ud.focusx! + 0.5) * drawwidth
-    const fy = (ud.focusy! + 0.5) * drawheight
+    const fx = (userdata.focusx! + 0.5) * drawwidth
+    const fy = (userdata.focusy! + 0.5) * drawheight
 
-    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
-
-    if (currentboard !== ud.currentboard) {
-      ud.focusx = tfocusx
-      ud.focusy = tfocusy
-      ud.currentboard = currentboard
-      cornerref.current.position.set(
-        -((ud.focusx + 0.5) * drawwidth),
-        -((ud.focusy + 0.5) * drawheight),
-        0,
-      )
-    } else {
-      damp(userData, 'focusx', tfocusx, animrate)
-      damp(userData, 'focusy', tfocusy, animrate)
+    if (boardtransition) {
+      cornerref.current.position.set(-fx, -fy, 0)
     }
+
+    damp3(cornerref.current.position, [-fx, -fy, 0], FOCUS_ANIM_RATE, delta)
 
     // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
