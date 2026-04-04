@@ -20,7 +20,7 @@ class ScriptParser extends CstParser {
     super(lexer.allTokens, {
       traceInitPerf: LANG_DEV,
       skipValidations: !LANG_DEV,
-      maxLookahead: 2,
+      maxLookahead: 3,
       recoveryEnabled: true,
       nodeLocationTracking: 'full',
     })

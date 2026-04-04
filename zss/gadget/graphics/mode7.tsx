@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp, damp3, dampE } from 'maath/easing'
+import { damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { memo, useCallback, useRef, useState } from 'react'
 import {
@@ -11,8 +11,11 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
-import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
-import { initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
+import {
+  FOCUS_ANIM_RATE,
+  initfocusifneeded,
+  stepfocuswithboardtransition,
+} from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
@@ -23,6 +26,7 @@ import {
   MODE7_Z_NEAR,
 } from 'zss/gadget/graphics/mode7viewscale'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
@@ -81,12 +85,16 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   width,
   height,
 }: GraphicsProps) {
+  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
   const viewheight = height * drawheight
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
+  const sidebarnudge = screensize.viewwidth - viewwidth
+  const centerx = viewwidth * -0.5 + sidebarnudge * -0.5
+  const centery = viewheight * 0.5
 
   const tiltref = useRef<Group>(null)
   const underref = useRef<Group>(null)
@@ -116,29 +124,25 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     }
 
     // camera focus logic
-    const control = layersreadcontrol(
-      useGadgetClient.getState().gadget.layers ?? [],
-    )
+    const { gadget } = useGadgetClient.getState()
+    const control = layersreadcontrol(gadget.layers ?? [])
+    const currentboard = gadget.board
 
-    const animrate = 0.05
-    const currentboard = useGadgetClient.getState().gadget.board
-
-    const userData = cameraref.current.userData as FocusUserData
-    initfocusifneeded(userData, control, currentboard)
-
-    const ud = cameraref.current.userData ?? {}
+    // tracking state
+    const userdata = (cameraref.current.userData ??= {})
+    initfocusifneeded(userdata, control, currentboard)
 
     damp3(
       cameraref.current.position,
       [0, 0, mapviewtoz(control.viewscale)],
-      animrate,
+      FOCUS_ANIM_RATE,
       delta,
     )
 
     dampE(
       tiltref.current.rotation,
       [mapviewtotilt(control.viewscale), 0, 0],
-      animrate,
+      FOCUS_ANIM_RATE,
       delta,
     )
 
@@ -159,27 +163,32 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       drawheight,
     )
 
-    ud.tfocusx = tfocusx
-    ud.tfocusy = tfocusy
+    const boardtransition = stepfocuswithboardtransition(
+      userdata,
+      control,
+      currentboard,
+      tfocusx,
+      tfocusy,
+      delta,
+    )
 
-    const fx = (ud.focusx! + 0.5) * drawwidth
-    const fy = (ud.focusy! + 0.5) * drawheight
+    const fx = (userdata.focusx + 0.5) * drawwidth
+    const fy = (userdata.focusy + 0.5) * drawheight
 
-    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
+    // const sidebarnudge =
+    const targetcornerx = -fx
+    const targetcornery = -fy
 
-    if (currentboard !== ud.currentboard) {
-      ud.focusx = tfocusx
-      ud.focusy = tfocusy
-      ud.currentboard = currentboard
-      cornerref.current.position.set(
-        -((ud.focusx + 0.5) * drawwidth),
-        -((ud.focusy + 0.5) * drawheight),
-        0,
-      )
-    } else {
-      damp(userData, 'focusx', tfocusx, animrate)
-      damp(userData, 'focusy', tfocusy, animrate)
+    // handle board transition
+    if (boardtransition) {
+      cornerref.current.position.set(targetcornerx, targetcornery, 0)
     }
+    damp3(
+      cornerref.current.position,
+      [targetcornerx, targetcornery, 0],
+      FOCUS_ANIM_RATE,
+      delta,
+    )
 
     // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
@@ -198,8 +207,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
         break
     }
 
-    const gadgetlayers = useGadgetClient.getState().gadget.layers ?? []
-    const playerspritez = maxspriteslayerz(gadgetlayers, 'mode7')
+    const playerspritez = maxspriteslayerz(gadget.layers ?? [], 'mode7')
+
     cornerref.current.updateMatrixWorld(true)
     dofplayerworld.current.set(
       (control.focusx + 0.5) * drawwidth,
@@ -250,8 +259,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   )
 
   const layersindex = under.length * 2 + 2
-  const centerx = viewwidth * -0.5
-  const centery = viewheight * 0.5
   return (
     <>
       <perspectiveCamera

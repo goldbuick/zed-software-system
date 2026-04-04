@@ -85,7 +85,6 @@ export const RenderLayer = memo(function RenderLayer({
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const { viewport } = useThree()
-  // const screensize = useScreenSize()
   const dpr = viewport.dpr * dprscale
   const fbo = useFBO(viewwidth * dpr, viewheight * dpr, {
     samples: 0,

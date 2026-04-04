@@ -13,7 +13,6 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
-import type { FocusUserData } from 'zss/gadget/graphics/camerafocus'
 import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
 import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
@@ -21,8 +20,8 @@ import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { PillarwMeshes } from 'zss/gadget/graphics/pillarmeshes'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
 import { COLOR } from 'zss/words/types'
@@ -31,16 +30,6 @@ import { useShallow } from 'zustand/react/shallow'
 type GraphicsProps = {
   width: number
   height: number
-}
-
-type FpvCameraUserData = FocusUserData & {
-  lfocusx?: number
-  lfocusy?: number
-  lfacing?: number
-  sway?: number
-  vsway?: number
-  lean?: number
-  vlean?: number
 }
 
 function maptofov(viewscale: VIEWSCALE): number {
@@ -79,6 +68,7 @@ export const FPVGraphics = memo(function FPVGraphics({
   width,
   height,
 }: GraphicsProps) {
+  const screensize = useScreenSize()
   const islowrez = useDeviceData((s) => s.islowrez)
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -87,6 +77,9 @@ export const FPVGraphics = memo(function FPVGraphics({
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
   const cameraz = 512 + drawheight * 0.55
+  const sidebarnudge = screensize.viewwidth - viewwidth
+  const centerx = viewwidth * -0.5 + sidebarnudge * -0.5
+  const centery = viewheight * 0.5
 
   const positionref = useRef<Group>(null)
   const tiltref = useRef<Group>(null)
@@ -124,72 +117,62 @@ export const FPVGraphics = memo(function FPVGraphics({
     const animrate = 0.05
     const animrateslow = 0.111
 
-    const userData = cameraref.current.userData as FpvCameraUserData
-    if (initfocusifneeded(userData, control, currentboard)) {
-      userData.lfocusx = control.focusx
-      userData.lfocusy = control.focusy
-      userData.lfacing = control.facing
-      userData.sway = 0
-      userData.vsway = 0
-      userData.lean = 0
-      userData.vlean = 0
+    const userdata = (cameraref.current.userData ??= {})
+    if (initfocusifneeded(userdata, control, currentboard)) {
+      userdata.lfocusx = control.focusx
+      userdata.lfocusy = control.focusy
+      userdata.lfacing = control.facing
+      userdata.sway = 0
+      userdata.vsway = 0
+      userdata.lean = 0
+      userdata.vlean = 0
     }
 
-    if (!ispresent(userData.lfocusx)) {
-      userData.lfocusx = control.focusx
-      userData.lfocusy = control.focusy
-      userData.lfacing = control.facing
-      userData.sway = 0
-      userData.vsway = 0
-      userData.lean = 0
-      userData.vlean = 0
-    }
-
-    const fx = (userData.focusx! + 0.5) * drawwidth
-    const fy = (userData.focusy! + 0.5) * drawheight
+    const fx = (userdata.focusx! + 0.5) * drawwidth
+    const fy = (userdata.focusy! + 0.5) * drawheight
 
     if (
-      userData.lfocusx !== control.focusx ||
-      userData.lfocusy !== control.focusy
+      userdata.lfocusx !== control.focusx ||
+      userdata.lfocusy !== control.focusy
     ) {
       const swayscale = 7
       const leanscale = 0.02
-      const dx = userData.lfocusx - control.focusx
-      const dy = userData.lfocusy! - control.focusy
+      const dx = userdata.lfocusx - control.focusx
+      const dy = userdata.lfocusy! - control.focusy
       const mappedfacing = Math.round(control.facing / (Math.PI * 0.5))
       switch (mappedfacing) {
         default:
         case 0: // north
-          userData.vsway = dy * swayscale
-          userData.vlean = dx * leanscale
+          userdata.vsway = dy * swayscale
+          userdata.vlean = dx * leanscale
           break
         case 1: // east
-          userData.vsway = -dx * swayscale
-          userData.vlean = dy * leanscale
+          userdata.vsway = -dx * swayscale
+          userdata.vlean = dy * leanscale
           break
         case 2: // south
-          userData.vsway = -dy * swayscale
-          userData.vlean = -dx * leanscale
+          userdata.vsway = -dy * swayscale
+          userdata.vlean = -dx * leanscale
           break
         case 3: // west
-          userData.vsway = dx * swayscale
-          userData.vlean = -dy * leanscale
+          userdata.vsway = dx * swayscale
+          userdata.vlean = -dy * leanscale
           break
       }
-      userData.lfocusx = control.focusx
-      userData.lfocusy = control.focusy
+      userdata.lfocusx = control.focusx
+      userdata.lfocusy = control.focusy
     }
 
-    if (userData.lfacing !== control.facing) {
-      let df = control.facing - userData.lfacing!
+    if (userdata.lfacing !== control.facing) {
+      let df = control.facing - userdata.lfacing!
       if (df < -Math.PI) {
         df += Math.PI * 2
       } else if (df > Math.PI) {
         df += Math.PI * -2
       }
       const leanscale = 0.02
-      userData.vlean = df * leanscale
-      userData.lfacing = control.facing
+      userdata.vlean = df * leanscale
+      userdata.lfacing = control.facing
     }
 
     damp3(positionref.current.position, [fx, -fy, cameraz], animrate, delta)
@@ -203,41 +186,41 @@ export const FPVGraphics = memo(function FPVGraphics({
 
     dampE(
       cameraref.current.rotation,
-      [Math.PI * -0.49, 0, userData.lean ?? 0],
+      [Math.PI * -0.49, 0, userdata.lean ?? 0],
       animrate,
       delta,
     )
 
     const srange = 1.2
-    const swx = Math.sin(userData.sway ?? 0) * srange
-    const swy = Math.abs(Math.sin(userData.sway ?? 0) * srange)
+    const swx = Math.sin(userdata.sway ?? 0) * srange
+    const swy = Math.abs(Math.sin(userdata.sway ?? 0) * srange)
     damp3(cameraref.current.position, [swx, 0, swy], animrate, delta)
 
-    userData.sway = (userData.sway ?? 0) + (userData.vsway ?? 0) * delta
+    userdata.sway = (userdata.sway ?? 0) + (userdata.vsway ?? 0) * delta
     damp(cameraref.current.userData, 'vsway', 0, animrateslow)
 
-    damp(cameraref.current.userData, 'lean', userData.vlean ?? 0, animrateslow)
+    damp(cameraref.current.userData, 'lean', userdata.vlean ?? 0, animrateslow)
     damp(cameraref.current.userData, 'vlean', 0, animrateslow)
 
-    if (currentboard !== userData.currentboard) {
-      userData.sway = 0
-      userData.vsway = 0
-      userData.lean = 0
-      userData.vlean = 0
-      userData.focusx = control.focusx
-      userData.focusy = control.focusy
-      userData.lfocusx = userData.focusx
-      userData.lfocusy = userData.focusy
-      userData.currentboard = currentboard
-      const ffx = (userData.focusx + 0.5) * drawwidth
-      const ffy = (userData.focusy + 0.5) * drawheight
+    if (currentboard !== userdata.currentboard) {
+      userdata.sway = 0
+      userdata.vsway = 0
+      userdata.lean = 0
+      userdata.vlean = 0
+      userdata.focusx = control.focusx
+      userdata.focusy = control.focusy
+      userdata.lfocusx = userdata.focusx
+      userdata.lfocusy = userdata.focusy
+      userdata.currentboard = currentboard
+      const ffx = (userdata.focusx + 0.5) * drawwidth
+      const ffy = (userdata.focusy + 0.5) * drawheight
       positionref.current.position.set(ffx, -ffy, cameraz)
-      const rsx = Math.sin(userData.sway ?? 0) * srange
-      const rsy = Math.abs(Math.sin(userData.sway ?? 0) * srange)
+      const rsx = Math.sin(userdata.sway ?? 0) * srange
+      const rsy = Math.abs(Math.sin(userdata.sway ?? 0) * srange)
       cameraref.current.position.set(rsx, 0, rsy)
-      cameraref.current.rotation.set(Math.PI * -0.49, 0, userData.lean ?? 0)
+      cameraref.current.rotation.set(Math.PI * -0.49, 0, userdata.lean ?? 0)
     } else {
-      dampfocus(userData, control, animrate)
+      dampfocus(userdata, control, animrate)
     }
 
     damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
@@ -362,8 +345,6 @@ export const FPVGraphics = memo(function FPVGraphics({
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
-  const centerx = viewwidth * -0.5
-  const centery = viewheight * 0.5
   const fpvdprscale = islowrez ? 0.5 : 1
 
   return (

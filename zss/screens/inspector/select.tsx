@@ -4,11 +4,13 @@ import {
   DoubleSide,
   EdgesGeometry,
   FrontSide,
-  LineBasicMaterial,
   PlaneGeometry,
   SphereGeometry,
   Vector3,
 } from 'three'
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js'
 import { RAYCAST_DEBUG_DOT, RAYCAST_DEBUG_PICKSHEET, RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -111,31 +113,41 @@ export function InspectorSelect() {
       debugdotgeo.dispose()
     }
   }, [debugdotgeo])
-  const tileboxedges = useMemo(() => {
+  const tileboxlinegeo = useMemo(() => {
     const plane = new PlaneGeometry(cw, ch)
     const edges = new EdgesGeometry(plane)
     plane.dispose()
-    return edges
+    const geo = new LineSegmentsGeometry()
+    geo.fromEdgesGeometry(edges)
+    edges.dispose()
+    return geo
   }, [cw, ch])
   useEffect(() => {
     return () => {
-      tileboxedges.dispose()
+      tileboxlinegeo.dispose()
     }
-  }, [tileboxedges])
-  const tileboxmaterial = useMemo(
+  }, [tileboxlinegeo])
+  const tileboxlinemat = useMemo(
     () =>
-      new LineBasicMaterial({
+      new LineMaterial({
         color: '#00ffaa',
+        linewidth: 5,
+        opacity: 0.5,
         depthWrite: false,
         depthTest: false,
+        transparent: true,
       }),
     [],
   )
   useEffect(() => {
     return () => {
-      tileboxmaterial.dispose()
+      tileboxlinemat.dispose()
     }
-  }, [tileboxmaterial])
+  }, [tileboxlinemat])
+  const tileboxline = useMemo(
+    () => new LineSegments2(tileboxlinegeo, tileboxlinemat),
+    [tileboxlinegeo, tileboxlinemat],
+  )
   const selouterwpx = selectwidth * cw
   const selouterhpx = selectheight * ch
   const selinnerwpx = Math.max(0.001, selectwidth - 0.5) * cw
@@ -253,10 +265,9 @@ export function InspectorSelect() {
             </mesh>
           )}
           {hovertile && (
-            <lineSegments
+            <primitive
+              object={tileboxline}
               position={[(hovertile.x + 0.5) * cw, (hovertile.y + 0.5) * ch, 2]}
-              geometry={tileboxedges}
-              material={tileboxmaterial}
               raycast={noraycastmesh}
               renderOrder={52}
             />

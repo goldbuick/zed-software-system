@@ -1,8 +1,7 @@
 import { useFrame } from '@react-three/fiber'
-import { damp, damp3 } from 'maath/easing'
-import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { damp3 } from 'maath/easing'
+import { memo, useCallback, useRef, useState } from 'react'
 import {
-  Box3,
   Group,
   OrthographicCamera as OrthographicCameraImpl,
   Vector3,
@@ -11,15 +10,15 @@ import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
-import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import {
-  flatcameraboardworldbox,
-  flatcameradevassertboardinortho,
-  flatcameratargetfocus,
-} from 'zss/gadget/graphics/flatcamerabounds'
+  FOCUS_ANIM_RATE,
+  initfocusifneeded,
+  stepfocuswithboardtransition,
+} from 'zss/gadget/graphics/camerafocus'
+import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
+import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
-import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
 
@@ -38,6 +37,8 @@ export const FlatGraphics = memo(function FlatGraphics({
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const centerx = viewwidth * -0.5
+  const centery = viewheight * -0.5
 
   const cameraref = useRef<OrthographicCameraImpl>(null)
   const [boardcamera, setboardcamera] = useState<OrthographicCameraImpl | null>(
@@ -45,11 +46,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   )
   const cornerref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
-  const centeroffsetref = useRef({ x: 0, y: 0 })
-  const devassertframeref = useRef(0)
   const looktarget = useRef(new Vector3())
-  const worldfocus = useRef(new Vector3())
-  const boundarybox = useRef(new Box3())
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
     cameraref.current = c
@@ -63,25 +60,16 @@ export const FlatGraphics = memo(function FlatGraphics({
 
     const gadget = useGadgetClient.getState().gadget
     const control = layersreadcontrol(gadget.layers ?? [])
-    const animrate = 0.05
     const currentboard = gadget.board
 
-    // setup tracking state
-    if (!ispresent(cameraref.current.userData.focusx)) {
-      cameraref.current.userData = {
-        focusx: control.focusx,
-        focusy: control.focusy,
-        tfocusx: control.focusx,
-        tfocusy: control.focusy,
-        currentboard,
-      }
+    // tracking state
+    const userdata = (cameraref.current.userData ??= {})
+    if (initfocusifneeded(userdata, control, currentboard)) {
       zoomref.current.scale.setScalar(control.viewscale)
     }
 
-    const userData = cameraref.current.userData ?? {}
-
     // zoom
-    damp3(zoomref.current.scale, control.viewscale, animrate, delta)
+    damp3(zoomref.current.scale, control.viewscale, FOCUS_ANIM_RATE, delta)
 
     const viewscale = zoomref.current.scale.x
     const { tfocusx, tfocusy } = flatcameratargetfocus({
@@ -95,91 +83,34 @@ export const FlatGraphics = memo(function FlatGraphics({
       controlfocusx: control.focusx,
       controlfocusy: control.focusy,
     })
-    userData.tfocusx = tfocusx
-    userData.tfocusy = tfocusy
 
-    const c = centeroffsetref.current
-
-    // smoothed change in focus
-    if (currentboard !== userData.currentboard) {
-      userData.focusx = userData.tfocusx
-      userData.focusy = userData.tfocusy
-      userData.currentboard = currentboard
-      cornerref.current.position.set(
-        -c.x / viewscale - (userData.focusx + 0.5) * drawwidth,
-        -c.y / viewscale - (userData.focusy + 0.5) * drawheight,
-        0,
-      )
-    } else {
-      damp(userData, 'focusx', userData.tfocusx, animrate)
-      damp(userData, 'focusy', userData.tfocusy, animrate)
-    }
-
-    const fx = (userData.focusx + 0.5) * drawwidth
-    const fy = (userData.focusy + 0.5) * drawheight
-
-    // Focus cell center at portal origin: center + scale * (corner + local) = 0
-    const targetcornerx = -c.x / viewscale - fx
-    const targetcornery = -c.y / viewscale - fy
-    damp3(
-      cornerref.current.position,
-      [targetcornerx, targetcornery, 0],
-      animrate,
+    const boardtransition = stepfocuswithboardtransition(
+      userdata,
+      control,
+      currentboard,
+      tfocusx,
+      tfocusy,
       delta,
     )
 
-    if (import.meta.env.DEV) {
-      devassertframeref.current += 1
-      if (devassertframeref.current % 60 === 0) {
-        const boardwscaled = BOARD_WIDTH * drawwidth * viewscale
-        const boardhscaled = BOARD_HEIGHT * drawheight * viewscale
-        flatcameradevassertboardinortho({
-          centerx: c.x,
-          centery: c.y,
-          viewscale,
-          cornerx: cornerref.current.position.x,
-          cornery: cornerref.current.position.y,
-          drawwidth,
-          drawheight,
-          boardwidth: BOARD_WIDTH,
-          boardheight: BOARD_HEIGHT,
-          viewwidth,
-          viewheight,
-          cellepsilon: Math.max(drawwidth, drawheight) * viewscale,
-          checkhoriz: viewwidth <= boardwscaled,
-          checkvert: viewheight <= boardhscaled,
-        })
-      }
+    const fx = (userdata.focusx + 0.5) * drawwidth
+    const fy = (userdata.focusy + 0.5) * drawheight
+
+    // Focus cell center at portal origin: center + scale * (corner + local) = 0
+    const targetcornerx = -centerx / viewscale - fx
+    const targetcornery = -centery / viewscale - fy
+
+    // handle board transition
+    if (boardtransition) {
+      cornerref.current.position.set(targetcornerx, targetcornery, 0)
     }
-
-    // camera-controls setBoundary equivalent: clamp world focus point to board Box3
-    const cornerx = cornerref.current.position.x
-    const cornery = cornerref.current.position.y
-    const boundary = boundarybox.current
-    flatcameraboardworldbox(
-      {
-        centerx: c.x,
-        centery: c.y,
-        viewscale,
-        cornerx,
-        cornery,
-        drawwidth,
-        drawheight,
-        boardwidth: BOARD_WIDTH,
-        boardheight: BOARD_HEIGHT,
-      },
-      boundary,
+    damp3(
+      cornerref.current.position,
+      [targetcornerx, targetcornery, 0],
+      FOCUS_ANIM_RATE,
+      delta,
     )
-    worldfocus.current.set(
-      c.x + viewscale * (cornerx + fx),
-      c.y + viewscale * (cornery + fy),
-      0,
-    )
-    boundary.clampPoint(worldfocus.current, worldfocus.current)
-    cornerref.current.position.x = (worldfocus.current.x - c.x) / viewscale - fx
-    cornerref.current.position.y = (worldfocus.current.y - c.y) / viewscale - fy
 
-    // camera-controls would fight this; we drive a fixed ortho top-down (+Z) view in portal space.
     const cam = cameraref.current
     cam.up.set(0, 1, 0)
     looktarget.current.set(0, 0, 0)
@@ -229,15 +160,6 @@ export const FlatGraphics = memo(function FlatGraphics({
     }
   }
   const inspectorz = maxcornerz + BOARD_INSPECTOR_Z_BUFFER
-
-  // Align with framed `width` (shrinks when sidebar is open), not full-screen column count.
-  const centerx = viewwidth * -0.5
-  // Standard ortho frustum (top > bottom): +Y is screen-up; tiles grow +Y from y=0 so center is -vh/2.
-  const centery = viewheight * -0.5
-  useLayoutEffect(() => {
-    centeroffsetref.current = { x: centerx, y: centery }
-  }, [centerx, centery])
-
   return (
     <>
       <RenderLayer
