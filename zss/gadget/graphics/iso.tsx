@@ -20,6 +20,7 @@ import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
@@ -73,12 +74,16 @@ export const IsoGraphics = memo(function IsoGraphics({
   width,
   height,
 }: GraphicsProps) {
+  const screensize = useScreenSize()
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
   const viewheight = height * drawheight
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
+  const sidebarnudge = screensize.viewwidth - viewwidth
+  const centerx = viewwidth * -0.5 + sidebarnudge * -0.5
+  const centery = viewheight * 0.5
 
   const zoomref = useRef<Group>(null)
   const underref = useRef<Group>(null)
@@ -117,11 +122,7 @@ export const IsoGraphics = memo(function IsoGraphics({
 
     // tracking state
     const userdata = (cameraref.current.userData ??= {})
-    const didinit = initfocusifneeded(userdata, control, currentboard, {
-      withfacing: true,
-      smoothing: true,
-    })
-    if (didinit) {
+    if (initfocusifneeded(userdata, control, currentboard)) {
       zoomref.current.scale.setScalar(control.viewscale)
     }
 
@@ -231,9 +232,6 @@ export const IsoGraphics = memo(function IsoGraphics({
   )
 
   const layersindex = under.length * 2 + 2
-  // Match ortho left/right (framed `viewwidth`), including when sidebar narrows the frame.
-  const centerx = viewwidth * -0.5
-  const centery = viewheight * 0.5
   return (
     <>
       <group position-z={layersindex}>

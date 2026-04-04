@@ -31,22 +31,17 @@ export function initfocusifneeded(
   userData: FocusUserData,
   control: LayerControl,
   currentboard: unknown,
-  options?: { withfacing?: boolean; smoothing?: boolean },
 ): boolean {
   if (!ispresent(userData.focusx)) {
     userData.focusx = control.focusx
     userData.focusy = control.focusy
     userData.tfocusx = control.focusx
     userData.tfocusy = control.focusy
+    userData.lfocusx = control.focusx
+    userData.lfocusy = control.focusy
+    userData.facing = control.facing
     userData.currentboard = currentboard
-    if (options?.smoothing) {
-      userData.lfocusx = control.focusx
-      userData.lfocusy = control.focusy
-      userData.focussmooth = FOCUS_ANIM_RATE
-    }
-    if (options?.withfacing && control.facing !== undefined) {
-      userData.facing = control.facing
-    }
+    userData.focussmooth = FOCUS_ANIM_RATE
     return true
   }
   return false
@@ -60,7 +55,6 @@ export function stepfocuswithboardtransition(
   tfocusx: number,
   tfocusy: number,
   delta: number,
-  lfocusforboard?: { x: number; y: number },
 ): boolean {
   // init values if needed
   if (!ispresent(userData.lfocusx) || !ispresent(userData.lfocusy)) {
@@ -77,10 +71,8 @@ export function stepfocuswithboardtransition(
 
   // board transition
   if (currentboard !== userData.currentboard) {
-    const lx = lfocusforboard?.x ?? userData.lfocusx
-    const ly = lfocusforboard?.y ?? userData.lfocusy
-    const dx = control.focusx - lx
-    const dy = control.focusy - ly
+    const dx = control.focusx - userData.lfocusx
+    const dy = control.focusy - userData.lfocusy
     userData.focusx = (userData.focusx ?? 0) + Math.sign(dx) * BOARD_WIDTH
     userData.focusy = (userData.focusy ?? 0) + Math.sign(dy) * BOARD_HEIGHT
     userData.currentboard = currentboard

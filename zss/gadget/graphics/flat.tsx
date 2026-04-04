@@ -64,9 +64,7 @@ export const FlatGraphics = memo(function FlatGraphics({
 
     // tracking state
     const userdata = (cameraref.current.userData ??= {})
-    if (
-      initfocusifneeded(userdata, control, currentboard, { smoothing: true })
-    ) {
+    if (initfocusifneeded(userdata, control, currentboard)) {
       zoomref.current.scale.setScalar(control.viewscale)
     }
 
@@ -98,17 +96,14 @@ export const FlatGraphics = memo(function FlatGraphics({
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
 
-    if (boardtransition) {
-      cornerref.current.position.set(
-        -centerx / viewscale - fx,
-        -centery / viewscale - fy,
-        0,
-      )
-    }
-
     // Focus cell center at portal origin: center + scale * (corner + local) = 0
     const targetcornerx = -centerx / viewscale - fx
     const targetcornery = -centery / viewscale - fy
+
+    // handle board transition
+    if (boardtransition) {
+      cornerref.current.position.set(targetcornerx, targetcornery, 0)
+    }
     damp3(
       cornerref.current.position,
       [targetcornerx, targetcornery, 0],
