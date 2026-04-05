@@ -11,6 +11,7 @@ import {
 import {
   formatagentinfofortext,
   formatboardfortext,
+  stripzsstextcodesforllm,
 } from 'zss/feature/heavy/formatstate'
 import { enqueueheavyjob } from 'zss/feature/heavy/heavyjobqueue'
 import {
@@ -139,7 +140,7 @@ async function queryboardstate(
     })
     const boarddata = data as Parameters<typeof formatboardfortext>[0]
     return {
-      context: formatboardfortext(boarddata),
+      context: stripzsstextcodesforllm(formatboardfortext(boarddata)),
       agentinfo: formatagentinfofortext(boarddata, agentid, agentname),
     }
   } catch {

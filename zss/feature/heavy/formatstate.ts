@@ -1,8 +1,11 @@
 /**
  * Serialize acklook data to plain text for LLM consumption.
  * Strips color codes and formats board, scroll, sidebar, and tickers.
+ * `formatboardfortext` / `formatboardlistfortext` use zsstext table lines for `#query`;
+ * use `stripzsstextcodesforllm` when the same snapshot is sent to an LLM.
  * Formatters accept data blobs from boardstate query; `BOARDSTATE_DATA` is defined in `zss/memory/boardstatequery`.
  */
+import { zsstexttablelines, zsstexttape } from 'zss/feature/zsstextui'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import {
   MAYBE,
@@ -49,6 +52,11 @@ export type LOOK_STATE = {
 }
 
 const MAX_CODEPAGE_LENGTH = 1500
+
+/** Remove zsstext `$name` / `$123` tokens for LLM-safe board snapshots. */
+export function stripzsstextcodesforllm(s: string): string {
+  return s.replace(/\$[a-zA-Z0-9]+/g, '')
+}
 
 function stripcodes(s: string): string {
   return s.replace(/\$[a-zA-Z0-9]+/g, '').trim()
@@ -144,7 +152,7 @@ export function formatboardfortext(
     parts.push(`YOU: (${d.self.x ?? '?'}, ${d.self.y ?? '?'})`)
   }
 
-  const objectlines: string[] = []
+  const objectrows: string[][] = []
   const ids = Object.keys(board.objects)
   for (let i = 0; i < ids.length; ++i) {
     const id = ids[i]
@@ -152,28 +160,33 @@ export function formatboardfortext(
     if (!ispresent(obj) || obj.removed) {
       continue
     }
-    const label = obj.label
-    const playermarker = ispresent(obj.player) ? ' [player]' : ''
-    objectlines.push(
-      `- ${label}${playermarker} at (${obj.x ?? '?'}, ${obj.y ?? '?'})`,
-    )
+    objectrows.push([
+      obj.label,
+      String(obj.x ?? '?'),
+      String(obj.y ?? '?'),
+      ispresent(obj.player) ? 'yes' : '',
+    ])
   }
 
-  if (objectlines.length > 0) {
+  if (objectrows.length > 0) {
     parts.push('OBJECTS:')
-    parts.push(...objectlines)
+    parts.push(...zsstexttablelines(objectrows, ['label', 'x', 'y', 'player']))
   } else {
     parts.push('OBJECTS: none')
   }
 
-  const terrainentries = Object.entries(d.terrainlabels)
+  const terrainrows = Object.entries(d.terrainlabels)
     .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => `${count} ${name}`)
-  parts.push(`TERRAIN: ${terrainentries.join(', ')}`)
+    .map(([name, count]) => [String(count), name])
+  parts.push('TERRAIN:')
+  if (terrainrows.length > 0) {
+    parts.push(...zsstexttablelines(terrainrows, ['count', 'name']))
+  }
 
   if (d.exits.length > 0) {
-    const exitlines = d.exits.map((e) => `${e.dir} -> ${e.label}`)
-    parts.push(`EXITS: ${exitlines.join(', ')}`)
+    const exitrows = d.exits.map((e) => [e.dir, e.label])
+    parts.push('EXITS:')
+    parts.push(...zsstexttablelines(exitrows, ['dir', 'board']))
   }
 
   parts.push(`COLORS: ${AGENT_COLORS}`)
@@ -197,8 +210,11 @@ export function formatboardlistfortext(
   if (d.exits.length === 0) {
     return 'Boards you can reach: (none from here)'
   }
-  const exitlines = d.exits.map((e) => `${e.dir} -> ${e.label}`)
-  return `Boards you can reach: ${exitlines.join(', ')}`
+  const exitrows = d.exits.map((e) => [e.dir, e.label])
+  return zsstexttape(
+    'Boards you can reach:',
+    zsstexttablelines(exitrows, ['dir', 'board']),
+  )
 }
 
 export function formatagentinfofortext(

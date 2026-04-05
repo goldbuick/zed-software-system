@@ -16,6 +16,7 @@ import {
   zsszedlinklinechip,
   zsszedlinklines,
 } from 'zss/feature/zsstextui'
+import { BOARD_WIDTH } from 'zss/memory/types'
 
 describe('zsstextui', () => {
   it('exports divider and spouts', () => {
@@ -101,32 +102,64 @@ describe('zsstextui', () => {
         ['id', 'name'],
       ),
     ).toEqual([
-      '$dkpurple+----+------+',
-      '$dkpurple| $whiteid $dkpurple| $whitename $dkpurple|',
-      '$dkpurple+----+------+',
-      '$dkpurple| $gray1  $dkpurple| $grayone  $dkpurple|',
-      '$dkpurple| $gray2  $dkpurple| $graytwo  $dkpurple|',
-      '$dkpurple+----+------+',
+      '$dkpurple$218----$194------$191',
+      '$dkpurple| $ondkblue$whiteid $dkpurple| $ondkblue$whitename $dkpurple|',
+      '$dkpurple$195----$197------$180',
+      '$dkpurple| $onblack$gray1  $dkpurple| $onblack$grayone  $dkpurple|',
+      '$dkpurple| $ondkblue$gray2  $dkpurple| $ondkblue$graytwo  $dkpurple|',
+      '$dkpurple$192----$193------$217',
     ])
   })
 
   it('zsstexttablelines header-less and ragged rows', () => {
     expect(zsstexttablelines([['x', 'y'], ['only']])).toEqual([
-      '$dkpurple+------+---+',
-      '$dkpurple| $grayx    $dkpurple| $grayy $dkpurple|',
-      '$dkpurple| $grayonly $dkpurple| $gray  $dkpurple|',
-      '$dkpurple+------+---+',
+      '$dkpurple$218------$194---$191',
+      '$dkpurple| $ondkblue$grayx    $dkpurple| $ondkblue$grayy $dkpurple|',
+      '$dkpurple| $onblack$grayonly $dkpurple| $onblack$gray  $dkpurple|',
+      '$dkpurple$192------$193---$217',
     ])
   })
 
   it('zsstexttablelines first line only and empty table', () => {
     expect(zsstexttablelines([['a\nb']], ['h'])).toEqual([
-      '$dkpurple+---+',
-      '$dkpurple| $whiteh $dkpurple|',
-      '$dkpurple+---+',
-      '$dkpurple| $graya $dkpurple|',
-      '$dkpurple+---+',
+      '$dkpurple$218---$191',
+      '$dkpurple| $ondkblue$whiteh $dkpurple|',
+      '$dkpurple$195---$180',
+      '$dkpurple| $onblack$graya $dkpurple|',
+      '$dkpurple$192---$217',
     ])
     expect(zsstexttablelines([])).toEqual([])
+  })
+
+  it('zsstexttablelines aligns by drawn width when cells contain zsstext codes', () => {
+    expect(
+      zsstexttablelines(
+        [
+          ['$greenhi', 'x'],
+          ['no', '$redy'],
+        ],
+        ['a', 'b'],
+      ),
+    ).toEqual([
+      '$dkpurple$218----$194---$191',
+      '$dkpurple| $ondkblue$whitea  $dkpurple| $ondkblue$whiteb $dkpurple|',
+      '$dkpurple$195----$197---$180',
+      '$dkpurple| $onblack$gray$greenhi $dkpurple| $onblack$grayx $dkpurple|',
+      '$dkpurple| $ondkblue$grayno $dkpurple| $ondkblue$gray$redy $dkpurple|',
+      '$dkpurple$192----$193---$217',
+    ])
+  })
+
+  it('zsstexttablelines clamps so ASCII rule fits BOARD_WIDTH and wraps cells', () => {
+    const longa = 'a'.repeat(80)
+    const longb = 'b'.repeat(80)
+    const lines = zsstexttablelines([[longa, longb]], ['c', 'd'])
+    const stripzs = (s: string) => s.replace(/\$[a-zA-Z0-9]+/g, '')
+    for (let i = 0; i < lines.length; ++i) {
+      expect(stripzs(lines[i]).length).toBeLessThanOrEqual(BOARD_WIDTH)
+    }
+    expect(lines.length).toBeGreaterThan(5)
+    expect(lines.some((ln) => ln.includes('aaa'))).toBe(true)
+    expect(lines.some((ln) => ln.includes('bbb'))).toBe(true)
   })
 })

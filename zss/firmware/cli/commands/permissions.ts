@@ -89,7 +89,7 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         const breakdownbyrole = memoryreadallowlistbreakdownbyrole()
         const banned = memoryreadbannedtokens()
 
-        const rolebloclines: string[] = []
+        const rolerows: string[][] = []
         for (let ri = 0; ri < PERMISSION_ROLES.length; ++ri) {
           const role = PERMISSION_ROLES[ri]
           const row = breakdownbyrole[role]
@@ -100,12 +100,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           const commandsspan = parts.length
             ? parts.join('$GRAY, ')
             : `$GRAY${nonestr}`
-          rolebloclines.push(`$GREEN${role}: ${commandsspan}`)
-          if (row.overridedeny.length > 0) {
-            rolebloclines.push(
-              `$GRAY  revoked vs base: ${row.overridedeny.join(', ')}`,
-            )
-          }
+          const revoked =
+            row.overridedeny.length > 0 ? row.overridedeny.join(', ') : ''
+          rolerows.push([`$GREEN${role}`, commandsspan, revoked])
         }
 
         const currentconfig = memoryreadpermissionconfig()
@@ -113,26 +110,19 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           zsstexttape(
-            zssheaderlines(
-              'permissions (list) — #access <lockdown | creative>',
-            ),
+            '$WHITEpermissions (list) — #access <lockdown | creative>',
             `$GRAY($YELLOWyellow$GRAY = override on base preset; gray = from preset)`,
             `current config: $GREEN${currentconfig}`,
-            '$32',
             zsstexttablelines(grouprows, ['group', 'description']),
-            '$32',
             ...(players.length > 0
               ? [
-                  zssheaderlines('player $26 role - use #role to modify'),
+                  '$white  player $26 role - use #role to modify',
                   zsstexttablelines(playerrows, ['player', 'role']),
-                  '$32',
                 ]
               : []),
-            zssheaderlines(
-              'role $26 commands - use #allow and #revoke to modify',
-            ),
-            rolebloclines,
-            zssheaderlines('banned players'),
+            '$white  role $26 commands - use #allow and #revoke to modify',
+            zsstexttablelines(rolerows, ['role', 'commands', 'revoked']),
+            '$white  banned players',
             `$GRAY${banned.length ? banned.join(', ') : nonestr}`,
           ),
         )
