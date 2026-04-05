@@ -7,7 +7,7 @@ import {
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
 import { write, writeopenit } from 'zss/feature/writeui'
-import { zsstextline } from 'zss/feature/zsstextui'
+import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { isemail } from 'zss/firmware/cli/utils'
 import { doasync } from 'zss/mapping/func'
@@ -112,15 +112,13 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
         case 'restart':
           bbsemail = ''
           bbscode = ''
-          write(
+          terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            zsstextline(`bbs restarted`),
-          )
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            zsstextline(`please login with $green#bbs <email> <tag>`),
+            zsstexttape(
+              zsstextline(`bbs restarted`),
+              zsstextline(`please login with $green#bbs <email> <tag>`),
+            ),
           )
           break
         case 'list':

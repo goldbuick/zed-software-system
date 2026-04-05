@@ -1,10 +1,9 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { DIVIDER } from 'zss/feature/zsstextui'
+import { DIVIDER, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 import { memoryreadplayerboard } from './playermanagement'
@@ -90,18 +89,18 @@ export async function memoryfindanymenu(player: string) {
   const lines = [
     `find any element(s)`,
     DIVIDER,
-    `!expr1 text;${scrolllinkescapefrag('slot 1: any')}`,
-    `!expr2 text;${scrolllinkescapefrag('slot 2: any')}`,
-    `!expr3 text;${scrolllinkescapefrag('slot 3: any')}`,
-    `!expr4 text;${scrolllinkescapefrag('slot 4: any')}`,
+    zsszedlinkline('expr1 text', 'slot 1: any'),
+    zsszedlinkline('expr2 text', 'slot 2: any'),
+    zsszedlinkline('expr3 text', 'slot 3: any'),
+    zsszedlinkline('expr4 text', 'slot 4: any'),
     DIVIDER,
-    `!clear hk c " C ";clear find(s)`,
-    `!expr1 hk 1 " 1 ";find 1`,
-    `!expr2 hk 2 " 2 ";find 2`,
-    `!expr3 hk 3 " 3 ";find 3`,
-    `!expr4 hk 4 " 4 ";find 4`,
+    zsszedlinkline('clear hk c " C "', 'clear find(s)'),
+    zsszedlinkline('expr1 hk 1 " 1 "', 'find 1'),
+    zsszedlinkline('expr2 hk 2 " 2 "', 'find 2'),
+    zsszedlinkline('expr3 hk 3 " 3 "', 'find 3'),
+    zsszedlinkline('expr4 hk 4 " 4 "', 'find 4'),
   ]
-  scrollwritelines(player, 'findany', lines.join('\n'), 'findany')
+  scrollwritelines(player, 'findany', zsstexttape(lines), 'findany')
 }
 
 export async function memoryreadfindanyconfig(): Promise<

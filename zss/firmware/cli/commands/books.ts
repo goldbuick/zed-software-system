@@ -223,9 +223,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('books', ['all books'], () => {
-      for (const line of zsssectionlines(`books`)) {
-        write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-      }
+      terminalwritelines(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zsstexttape(zsssectionlines(`books`)),
+      )
       const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
       write(
         SOFTWARE,
@@ -273,9 +275,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       if (!ispresent(mainbook)) {
         return 0
       }
-      for (const line of zsssectionlines(`pages`)) {
-        write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-      }
+      terminalwritelines(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zsstexttape(zsssectionlines(`pages`)),
+      )
       write(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
@@ -342,9 +346,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       (_, words) => {
         const [querywords] = readargsuntilend(words, 0, ARG_TYPE.NAME)
         const q = querywords.join(' ')
-        for (const line of zsssectionlines(`search: ${q}`)) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-        }
+        terminalwritelines(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          zsstexttape(zsssectionlines(`search: ${q}`)),
+        )
         const booklist = memoryreadbooklist()
         let count = 0
         // Batch only `!payload;label` tape rows via terminalwritelines; section / zsstextline above stay imperative.
@@ -452,9 +458,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       },
     )
     .command('boards', ['all boards as goto hyperlinks'], () => {
-      for (const line of zsssectionlines(`boards`)) {
-        write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-      }
+      terminalwritelines(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zsstexttape(zsssectionlines(`boards`)),
+      )
       const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
       if (ispresent(mainbook)) {
         write(
@@ -482,16 +490,14 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           )
         }
         if (sorted.length === 0) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-          write(
+          terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            zsstextline(`$white no boards found`),
-          )
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            zsstextline(`$white use @board name to create a board`),
+            zsstexttape(
+              '',
+              zsstextline(`$white no boards found`),
+              zsstextline(`$white use @board name to create a board`),
+            ),
           )
         }
       }
@@ -526,9 +532,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('trash', ['books/codepages to delete (operator only)'], () => {
-      for (const line of zsssectionlines(`$REDTRASH`)) {
-        write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-      }
+      terminalwritelines(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zsstexttape(zsssectionlines(`$REDTRASH`)),
+      )
       write(SOFTWARE, READ_CONTEXT.elementfocus, zsstextline(`books`))
       const list = memoryreadbooklist()
       if (list.length) {

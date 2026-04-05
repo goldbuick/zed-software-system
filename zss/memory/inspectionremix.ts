@@ -3,7 +3,7 @@ import { parsetarget } from 'zss/device'
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
-import { DIVIDER } from 'zss/feature/zsstextui'
+import { DIVIDER, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea } from 'zss/mapping/2d'
@@ -117,13 +117,13 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!stat text;source board`,
-    `!patternsize number 1 5;patternsize`,
-    `!mirror number 1 8;mirror`,
+    zsszedlinkline('stat text', 'source board'),
+    zsszedlinkline('patternsize number 1 5', 'patternsize'),
+    zsszedlinkline('mirror number 1 8', 'mirror'),
     DIVIDER,
-    `!remixrun:${area} hk r " R ";run`,
+    zsszedlinkline(`remixrun:${area} hk r " R "`, 'run'),
   ]
-  scrollwritelines(player, 'remix', lines.join('\n'), 'remix')
+  scrollwritelines(player, 'remix', zsstexttape(lines), 'remix')
 }
 
 export async function memoryreadremixconfig(): Promise<

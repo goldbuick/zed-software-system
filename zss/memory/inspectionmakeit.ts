@@ -1,9 +1,9 @@
 import { vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
+import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
@@ -62,7 +62,10 @@ function previewcodepage(codepage: CODE_PAGE, out: string[]) {
   const typelabel = memoryreadcodepagetypeasstring(codepage)
   const cpname = memoryreadcodepagename(codepage)
   out.push(
-    `!edit "" ${codepage.id};${scrolllinkescapefrag(`edit$CYAN @${typelabel} ${cpname}`)}`,
+    zsszedlinkline(
+      `edit "" ${codepage.id}`,
+      `edit$CYAN @${typelabel} ${cpname}`,
+    ),
   )
   const codelines = codepage.code.split('\n').slice(1, 6)
   for (let i = 0; i < codelines.length; ++i) {
@@ -236,32 +239,50 @@ export function memorymakeitscroll(makeit: string, player: string) {
     switch (type) {
       case STAT_TYPE.OBJECT:
         out.push(
-          `!create hk o "" "" ${tn} ${nm};${scrolllinkescapefrag(`create object$CYAN @${name}`)}`,
+          zsszedlinkline(
+            `create hk o "" "" ${tn} ${nm}`,
+            `create object$CYAN @${name}`,
+          ),
         )
         break
       case STAT_TYPE.TERRAIN:
         out.push(
-          `!create hk t "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @terrain ${name}`)}`,
+          zsszedlinkline(
+            `create hk t "" "" ${tn} ${nm}`,
+            `create$CYAN @terrain ${name}`,
+          ),
         )
         break
       case STAT_TYPE.BOARD:
         out.push(
-          `!create hk b "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @board ${name}`)}`,
+          zsszedlinkline(
+            `create hk b "" "" ${tn} ${nm}`,
+            `create$CYAN @board ${name}`,
+          ),
         )
         break
       case STAT_TYPE.LOADER:
         out.push(
-          `!create hk l "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @loader ${name}`)}`,
+          zsszedlinkline(
+            `create hk l "" "" ${tn} ${nm}`,
+            `create$CYAN @loader ${name}`,
+          ),
         )
         break
       case STAT_TYPE.PALETTE:
         out.push(
-          `!create hk p "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @palette ${name}`)}`,
+          zsszedlinkline(
+            `create hk p "" "" ${tn} ${nm}`,
+            `create$CYAN @palette ${name}`,
+          ),
         )
         break
       case STAT_TYPE.CHARSET:
         out.push(
-          `!create hk c "" "" ${tn} ${nm};${scrolllinkescapefrag(`create$CYAN @charset ${name}`)}`,
+          zsszedlinkline(
+            `create hk c "" "" ${tn} ${nm}`,
+            `create$CYAN @charset ${name}`,
+          ),
         )
         break
     }
@@ -321,5 +342,5 @@ export function memorymakeitscroll(makeit: string, player: string) {
     }
   }
 
-  scrollwritelines(player, 'makeit', scrolllines.join('\n'), 'makeit')
+  scrollwritelines(player, 'makeit', zsstexttape(scrolllines), 'makeit')
 }

@@ -5,9 +5,9 @@ import {
   readzipfilelist,
   readzipfilelistitem,
 } from 'zss/feature/parse/file'
+import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { NAME } from 'zss/words/types'
 
 registerhyperlinksharedbridge(
@@ -41,7 +41,7 @@ export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
   const list = readzipfilelist()
   const lines: string[] = []
   lines.push('$CENTER Select Files')
-  lines.push(`!importfiles;${scrolllinkescapefrag('import selected')}`)
+  lines.push(zsszedlinkline('importfiles', 'import selected'))
   for (let i = 0; i < list.length; ++i) {
     const [type, filename] = list[i]
     if (!type) {
@@ -51,12 +51,12 @@ export function handlereadzipfilelist(_vm: DEVICE, message: MESSAGE): void {
     const fname = NAME(filename)
     const cmd = `${quotezipscrollselecttarget(fname)} select NO 0 YES 1`
     const label = `$cyan[${type}]$white`
-    lines.push(`!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(label)}`)
+    lines.push(zsszedlinkline(cmd, label))
   }
   scrollwritelines(
     message.player,
     'zipfilelist',
-    lines.join('\n').trim(),
+    zsstexttape(lines).trim(),
     'zipfilelist',
   )
 }

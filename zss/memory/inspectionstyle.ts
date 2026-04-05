@@ -1,5 +1,5 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
-import { DIVIDER } from 'zss/feature/zsstextui'
+import { DIVIDER, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, pttoindex } from 'zss/mapping/2d'
@@ -122,15 +122,18 @@ export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     `apply visuals from the terrain`,
     `stored in the paste buffer`,
-    `!stylechars select no 0 yes 1;style chars?`,
-    `!stylecolors select no 0 yes 1;style colors?`,
-    `!stylebgs select no 0 yes 1;style bgs?`,
+    zsszedlinkline('stylechars select no 0 yes 1', 'style chars?'),
+    zsszedlinkline('stylecolors select no 0 yes 1', 'style colors?'),
+    zsszedlinkline('stylebgs select no 0 yes 1', 'style bgs?'),
     DIVIDER,
-    `!styleall:${area} hk 1 " 1 " next;style terrain & objects`,
-    `!styleobjects:${area} hk 2 " 2 " next;style objects`,
-    `!styleterrain:${area} hk 3 " 3 " next;style terrain`,
+    zsszedlinkline(
+      `styleall:${area} hk 1 " 1 " next`,
+      'style terrain & objects',
+    ),
+    zsszedlinkline(`styleobjects:${area} hk 2 " 2 " next`, 'style objects'),
+    zsszedlinkline(`styleterrain:${area} hk 3 " 3 " next`, 'style terrain'),
   ]
-  scrollwritelines(player, 'style', lines.join('\n'), 'batch')
+  scrollwritelines(player, 'style', zsstexttape(lines), 'batch')
 }
 
 export async function memoryreadstyleconfig(): Promise<

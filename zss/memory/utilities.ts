@@ -10,7 +10,7 @@ import {
   unpackformat,
 } from 'zss/feature/format'
 import { isjoin } from 'zss/feature/url'
-import { DIVIDER } from 'zss/feature/zsstextui'
+import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import {
   scrolllinkescapefrag,
@@ -208,7 +208,11 @@ export function memoryadminmenu(
     const idletext = idletxt ? ` $GREY(idle ${idletxt})` : ''
     if (isop && ispresent(playerboard)) {
       rows.push(
-        `!@admingoto ${pid};${scrolllinkescapefrag(`${icontext} ${withuser} ${location}${idletext}`)}`,
+        zsszedlinklinechip(
+          'admingoto',
+          pid,
+          `${icontext} ${withuser} ${location}${idletext}`,
+        ),
       )
     } else {
       rows.push(`${icontext} ${withuser} ${isop ? location : ''}${idletext}`)
@@ -222,9 +226,7 @@ export function memoryadminmenu(
   for (let i = 0; i < configlist.length; ++i) {
     const [key] = configlist[i]
     const target = quotescrollarg(`${player}:${key}`)
-    rows.push(
-      `!@admin ${target} select off 0 on 1;${scrolllinkescapefrag(key)}`,
-    )
+    rows.push(zsszedlinklinechip('admin', `${target} select off 0 on 1`, key))
   }
 
   rows.push('')
@@ -236,7 +238,11 @@ export function memoryadminmenu(
       getclimode() && !isjoin() ? 'https://zed.cafe' : location.origin
     const joinurl = isjoin() ? location.href : `${base}/join/#${topic}`
     rows.push(
-      `!@adminop copyit ${quotescrollarg(scrolllinkescapefrag(joinurl))};${scrolllinkescapefrag(topic)}`,
+      zsszedlinklinechip(
+        'adminop',
+        `copyit ${quotescrollarg(scrolllinkescapefrag(joinurl))}`,
+        topic,
+      ),
     )
     rows.push('')
     const ascii = qrlines(joinurl)
@@ -247,13 +253,13 @@ export function memoryadminmenu(
     rows.push('session not active')
     if (!isjoin()) {
       rows.push(
-        `!@adminop joincode;${scrolllinkescapefrag('open multiplayer session')}`,
+        zsszedlinklinechip('adminop', 'joincode', 'open multiplayer session'),
       )
     }
     rows.push('')
   }
 
-  scrollwritelines(player, 'cpu #admin', rows.join('\n'), 'refscroll')
+  scrollwritelines(player, 'cpu #admin', zsstexttape(...rows), 'refscroll')
 }
 
 export function memoryexportbooksasjson(books: BOOK[]): string {

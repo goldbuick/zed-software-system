@@ -313,24 +313,29 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
             `banned player ${player} (token; login blocked)`,
           )
         } else {
+          const nonestr = '(none)'
           const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
           const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
           activelistvalues.add(memoryreadoperator())
           const players = [...activelistvalues]
-          for (const line of zssheaderlines(
-            'active players (use #ban <playerid> to ban)',
-          )) {
-            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          const playerrows: string[][] = []
+          for (let pi = 0; pi < players.length; ++pi) {
+            const pid = players[pi]
+            const flags = memoryreadflags(pid)
+            const name = isstring(flags?.user) ? flags.user : pid
+            playerrows.push([pid, name])
           }
-          if (players.length === 0) {
-            write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
-          } else {
-            for (const pid of players) {
-              const flags = memoryreadflags(pid)
-              const name = isstring(flags?.user) ? flags.user : pid
-              write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${pid}  ${name}`)
-            }
-          }
+          terminalwritelines(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            zsstexttape(
+              zssheaderlines('active players (use #ban <playerid> to ban)'),
+              '$32',
+              players.length === 0
+                ? `$GRAY${nonestr}`
+                : zsstexttablelines(playerrows, ['playerid', 'name']),
+            ),
+          )
         }
         return 0
       },
@@ -367,20 +372,25 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
             `unbanned player ${player} (token; login allowed)`,
           )
         } else {
+          const nonestr = '(none)'
           const bannedtokens = memoryreadbannedtokens()
-          for (const line of zssheaderlines(
-            'banned players (use #unban <playerid> to unban)',
-          )) {
-            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          const rolebytoken = memoryreadrolebytoken()
+          const bannedrows: string[][] = []
+          for (let bi = 0; bi < bannedtokens.length; ++bi) {
+            const token = bannedtokens[bi]
+            bannedrows.push([token, rolebytoken[token] ?? ''])
           }
-          if (bannedtokens.length === 0) {
-            write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
-          } else {
-            for (const token of bannedtokens) {
-              const p = memoryreadrolebytoken()[token]
-              write(SOFTWARE, READ_CONTEXT.elementfocus, `  ${p}`)
-            }
-          }
+          terminalwritelines(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            zsstexttape(
+              zssheaderlines('banned players (use #unban <playerid> to unban)'),
+              '$32',
+              bannedtokens.length === 0
+                ? `$GRAY${nonestr}`
+                : zsstexttablelines(bannedrows, ['token', 'role']),
+            ),
+          )
         }
         return 0
       },

@@ -13,6 +13,9 @@
  * length. Embedded zsstext color codes (e.g. `$white`) inside a cell are not stripped
  * and will throw off alignment. Only the first line of a cell is used if a value
  * contains newlines.
+ *
+ * **CLI reference:** [`zss/firmware/cli/commands/permissions.ts`](zss/firmware/cli/commands/permissions.ts)
+ * (`permissions` with no args) — `zsstexttape` → `terminalwritelines` for multiline output.
  */
 
 import { scrolllinkescapefrag } from 'zss/mapping/string'

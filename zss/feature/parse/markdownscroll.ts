@@ -2,7 +2,7 @@ import {
   MarkdownZedSink,
   parsemarkdownwithzsstextsink,
 } from 'zss/feature/parse/markdownzsstext'
-import { zsszedlinkline } from 'zss/feature/zsstextui'
+import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 
 function createscrollsink(lines: string[]): MarkdownZedSink {
@@ -24,5 +24,5 @@ export function scrollwritemarkdownlines(
 ) {
   const lines: string[] = []
   parsemarkdownwithzsstextsink(createscrollsink(lines), content)
-  scrollwritelines(player, scrollname, lines.join('\n'), chip)
+  scrollwritelines(player, scrollname, zsstexttape(lines), chip)
 }

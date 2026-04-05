@@ -40,4 +40,4 @@ Call sites import `zss/feature/zsstextui` and loop lines into `write` or `gadget
 ## Related
 
 - [`markdownzsstext.ts`](../parse/markdownzsstext.ts) — CommonMark → zsstext lines (`parsemarkdownwithzsstextsink`, `parsetokenzsstext`)
-- [`terminalwritelines.ts`](../terminalwritelines.ts) / [`scrollwritelines`](../../gadget/data/scrollwritelines.ts) — bulk multiline sinks
+- [`terminalwritelines.ts`](../terminalwritelines.ts) / [`scrollwritelines`](../../gadget/data/scrollwritelines.ts) — bulk multiline sinks; for scroll, build tape with [`zsstextui.ts`](../zsstextui.ts) then pass one string to `scrollwritelines`
