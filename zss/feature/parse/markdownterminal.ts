@@ -3,13 +3,9 @@ import {
   MarkdownZedSink,
   parsemarkdownwithzsstextsink,
 } from 'zss/feature/parse/markdownzsstext'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
+import { zsszedlinkline } from 'zss/feature/zsstextui'
 
 import { terminalwritelines } from '../terminalwritelines'
-
-function banglinkrow(command: string, label: string): string {
-  return `!${scrolllinkescapefrag(command)};${scrolllinkescapefrag(label)}`
-}
 
 function createterminalsink(lines: string[]): MarkdownZedSink {
   return {
@@ -17,7 +13,7 @@ function createterminalsink(lines: string[]): MarkdownZedSink {
       lines.push(s)
     },
     hyperlink: (command: string, label: string) => {
-      lines.push(banglinkrow(command, label))
+      lines.push(zsszedlinkline(command, label))
     },
   }
 }

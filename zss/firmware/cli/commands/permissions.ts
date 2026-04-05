@@ -1,7 +1,7 @@
 import { apierror, registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
-import { zssheaderlines } from 'zss/feature/zsstextui'
+import { zssheaderlines, zsstexttablelines } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
@@ -83,8 +83,15 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         )
         write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
 
+        const grouprows: string[][] = []
         for (const [group, desc] of PERMISSION_CONTROLLED_GROUPS) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, `${group}: $GRAY${desc}`)
+          grouprows.push([group, desc])
+        }
+        for (const line of zsstexttablelines(grouprows, [
+          'group',
+          'description',
+        ])) {
+          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
         }
         write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
 
@@ -97,16 +104,16 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           )) {
             write(SOFTWARE, READ_CONTEXT.elementfocus, line)
           }
+          const playerrows: string[][] = []
           for (const player of players) {
             const token = playertotoken[player]
             const role =
               rolebytoken[token] ??
               (memoryisoperator(player) ? 'operator' : 'player')
-            write(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
-              `${player} $26 $GREEN${role}`,
-            )
+            playerrows.push([player, role])
+          }
+          for (const line of zsstexttablelines(playerrows, ['player', 'role'])) {
+            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
           }
           write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
         }

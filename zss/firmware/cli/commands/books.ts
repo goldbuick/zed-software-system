@@ -15,6 +15,7 @@ import {
   zssoptionline,
   zsssectionlines,
   zsstextline,
+  zsstexttape,
 } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
@@ -300,7 +301,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         terminalwritelines(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          pagerows.join('\n'),
+          zsstexttape(pagerows),
         )
       } else {
         write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
@@ -333,7 +334,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            pagerows.join('\n'),
+            zsstexttape(pagerows),
           )
         }
       }
@@ -381,7 +382,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             terminalwritelines(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              matchrows.join('\n'),
+              zsstexttape(matchrows),
             )
           }
         }
@@ -439,7 +440,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
               terminalwritelines(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
-                objectmatches.join('\n'),
+                zsstexttape(objectmatches),
               )
             }
           }
@@ -481,7 +482,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            mainboardrows.join('\n'),
+            zsstexttape(mainboardrows),
           )
         }
         if (sorted.length === 0) {
@@ -521,7 +522,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             terminalwritelines(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              boardrows.join('\n'),
+              zsstexttape(boardrows),
             )
           }
         }

@@ -1,4 +1,5 @@
 import type { DEVICELIKE } from 'zss/device/api'
+import { iszedlinkline } from 'zss/feature/zsstextui'
 import { write, writehyperlink } from 'zss/feature/writeui'
 import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
@@ -23,7 +24,7 @@ export function terminalwritelines(
       write(device, player, '')
       continue
     }
-    if (line.startsWith('!') && line.includes(';')) {
+    if (iszedlinkline(line)) {
       const semi = line.indexOf(';')
       const left = scrolllinkunescapefrag(line.slice(0, semi).trimEnd())
       const label = scrolllinkunescapefrag(line.slice(semi + 1).trim())

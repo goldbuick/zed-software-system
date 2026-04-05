@@ -4,14 +4,18 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import {
-  scrolllinkescapefrag,
-  scrolllinkunescapefrag,
-} from 'zss/mapping/string'
+import { iszedlinkline } from 'zss/feature/zsstextui'
+import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
-export { scrolllinkescapefrag, scrolllinkunescapefrag }
+export { scrolllinkunescapefrag } from 'zss/mapping/string'
+export { scrolllinkescapefrag } from 'zss/mapping/string'
+/** Re-export for callers that build scroll tape next to gadget APIs. */
+export { zsszedlinklinechip } from 'zss/feature/zsstextui'
 
-/** Whitespace-separated tokens; `"..."` keeps inner spaces. Inside quotes, `\"` and `\\` are escapes. */
+/**
+ * Whitespace-separated tokens for `gadgethyperlink` command parts; stays here with
+ * scroll dispatch (not `zsstextui`, which is layout-only).
+ */
 export function scrolllinksplittokens(s: string): string[] {
   const out: string[] = []
   let i = 0
@@ -75,7 +79,7 @@ export function gadgethyperlinkfromzedline(
   chip = 'refscroll',
 ): void {
   const trimmed = line.trim()
-  if (!trimmed.startsWith('!') || !trimmed.includes(';')) {
+  if (!iszedlinkline(trimmed)) {
     return
   }
   const semi = trimmed.indexOf(';')
@@ -102,7 +106,7 @@ export function scrollwritelines(
   const lines = content.split('\n')
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
-    if (line.startsWith('!') && line.includes(';')) {
+    if (iszedlinkline(line)) {
       gadgethyperlinkfromzedline(player, line, chip)
     } else {
       gadgettext(player, line)
