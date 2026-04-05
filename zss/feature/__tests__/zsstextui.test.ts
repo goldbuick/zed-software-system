@@ -102,31 +102,31 @@ describe('zsstextui', () => {
         ['id', 'name'],
       ),
     ).toEqual([
-      '$dkpurple$218----$194------$191',
-      '$dkpurple| $ondkblue$whiteid $dkpurple| $ondkblue$whitename $dkpurple|',
-      '$dkpurple$195----$197------$180',
-      '$dkpurple| $onblack$gray1  $dkpurple| $onblack$grayone  $dkpurple|',
-      '$dkpurple| $ondkblue$gray2  $dkpurple| $ondkblue$graytwo  $dkpurple|',
-      '$dkpurple$192----$193------$217',
+      '$dkpurple$218$196$196$196$196$194$196$196$196$196$196$196$191',
+      '$dkpurple$179 $whiteid $dkpurple$179 $whitename $dkpurple$179',
+      '$dkpurple$195$196$196$196$196$197$196$196$196$196$196$196$180',
+      '$dkpurple$179 $gray1  $dkpurple$179 $grayone  $dkpurple$179',
+      '$dkpurple$179 $gray2  $dkpurple$179 $graytwo  $dkpurple$179',
+      '$dkpurple$192$196$196$196$196$193$196$196$196$196$196$196$217',
     ])
   })
 
   it('zsstexttablelines header-less and ragged rows', () => {
     expect(zsstexttablelines([['x', 'y'], ['only']])).toEqual([
-      '$dkpurple$218------$194---$191',
-      '$dkpurple| $ondkblue$grayx    $dkpurple| $ondkblue$grayy $dkpurple|',
-      '$dkpurple| $onblack$grayonly $dkpurple| $onblack$gray  $dkpurple|',
-      '$dkpurple$192------$193---$217',
+      '$dkpurple$218$196$196$196$196$196$196$194$196$196$196$191',
+      '$dkpurple$179 $grayx    $dkpurple$179 $grayy $dkpurple$179',
+      '$dkpurple$179 $grayonly $dkpurple$179 $gray  $dkpurple$179',
+      '$dkpurple$192$196$196$196$196$196$196$193$196$196$196$217',
     ])
   })
 
   it('zsstexttablelines first line only and empty table', () => {
     expect(zsstexttablelines([['a\nb']], ['h'])).toEqual([
-      '$dkpurple$218---$191',
-      '$dkpurple| $ondkblue$whiteh $dkpurple|',
-      '$dkpurple$195---$180',
-      '$dkpurple| $onblack$graya $dkpurple|',
-      '$dkpurple$192---$217',
+      '$dkpurple$218$196$196$196$191',
+      '$dkpurple$179 $whiteh $dkpurple$179',
+      '$dkpurple$195$196$196$196$180',
+      '$dkpurple$179 $graya $dkpurple$179',
+      '$dkpurple$192$196$196$196$217',
     ])
     expect(zsstexttablelines([])).toEqual([])
   })
@@ -141,12 +141,12 @@ describe('zsstextui', () => {
         ['a', 'b'],
       ),
     ).toEqual([
-      '$dkpurple$218----$194---$191',
-      '$dkpurple| $ondkblue$whitea  $dkpurple| $ondkblue$whiteb $dkpurple|',
-      '$dkpurple$195----$197---$180',
-      '$dkpurple| $onblack$gray$greenhi $dkpurple| $onblack$grayx $dkpurple|',
-      '$dkpurple| $ondkblue$grayno $dkpurple| $ondkblue$gray$redy $dkpurple|',
-      '$dkpurple$192----$193---$217',
+      '$dkpurple$218$196$196$196$196$194$196$196$196$191',
+      '$dkpurple$179 $whitea  $dkpurple$179 $whiteb $dkpurple$179',
+      '$dkpurple$195$196$196$196$196$197$196$196$196$180',
+      '$dkpurple$179 $gray$greenhi $dkpurple$179 $grayx $dkpurple$179',
+      '$dkpurple$179 $grayno $dkpurple$179 $gray$redy $dkpurple$179',
+      '$dkpurple$192$196$196$196$196$193$196$196$196$217',
     ])
   })
 
