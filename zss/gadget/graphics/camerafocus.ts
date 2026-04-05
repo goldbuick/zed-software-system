@@ -9,15 +9,15 @@ export type LayerControl = {
 }
 
 export type FocusUserData = {
+  facing?: number
   focusx?: number
   focusy?: number
   tfocusx?: number
   tfocusy?: number
-  currentboard?: unknown
-  facing?: number
   lfocusx?: number
   lfocusy?: number
   focussmooth?: number
+  currentboard?: unknown
   [key: string]: unknown
 }
 
