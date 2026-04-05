@@ -3,7 +3,10 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
-import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import {
+  scrollwritelines,
+  zsszedlinklinechip,
+} from 'zss/gadget/data/scrollwritelines'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 
 jest.mock('zss/device/modem', () => ({
@@ -79,6 +82,23 @@ describe('scrollwritelines', () => {
     expect((s[0] as unknown[])[0]).toBe('mychip')
     expect((s[1] as unknown[])[0]).toBe('otherchip')
     expect((s[1] as unknown[])[2]).toBe('z')
+  })
+
+  it('zsszedlinklinechip matches manual !@chip tape and escapes semicolons', () => {
+    const line = zsszedlinklinechip('otherchip', 'z w', 'lbl')
+    expect(line).toBe('!@otherchip z w;lbl')
+    scrollwritelines('p1', 'chipb', line, 'mychip')
+    const row = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row[0]).toBe('otherchip')
+    expect(row[1]).toBe('lbl')
+    expect(row[2]).toBe('z')
+    expect(row[3]).toBe('w')
+    const line2 = zsszedlinklinechip('batch', 'a;b', 'c;d')
+    scrollwritelines('p1', 'chipc', line2, 'refscroll')
+    const row2 = gadgetstate('p1').scroll![0] as unknown[]
+    expect(row2[0]).toBe('batch')
+    expect(row2[1]).toBe('c;d')
+    expect(row2[2]).toBe('a;b')
   })
 
   it('treats ! without semicolon as plain text', () => {

@@ -1,8 +1,8 @@
 import { DEVICELIKE, registerforkmem, registersavemem } from 'zss/device/api'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
+import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { randominteger } from 'zss/mapping/number'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
 import {
   memoryreadbookbysoftware,
@@ -52,28 +52,26 @@ export function writezztcontentwait(player: string) {
 }
 
 export function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
-  const rows: string[] = []
+  const parts: (string | string[])[] = []
   for (let i = 0; i < list.length; ++i) {
     const entry = list[i]
     const pubtag = `pub: ${new Date(entry.publish_date).toLocaleDateString()}`
-    rows.push(`$white${entry.title}`)
-    rows.push(`$yellow  ${entry.author.join(', ')}`)
-    rows.push(`$dkgreen  ${entry.genres.join(', ')}`)
-    rows.push(`$purple  ${pubtag}`)
+    const block: string[] = []
+    block.push(`$white${entry.title}`)
+    block.push(`$yellow  ${entry.author.join(', ')}`)
+    block.push(`$dkgreen  ${entry.genres.join(', ')}`)
+    block.push(`$purple  ${pubtag}`)
     if (entry.screenshot) {
       const url = museumofzztscreenshoturl(entry.screenshot)
-      rows.push(
-        `!istargetless viewit ${scrolllinkescapefrag(url)};${scrolllinkescapefrag(entry.screenshot)}`,
-      )
+      block.push(zsszedlinkline(`istargetless viewit ${url}`, entry.screenshot))
     }
     const path = `${entry.letter}/${entry.filename}`
     // Panel rows are [chip, label, target, maybetype, ...args]. Without an explicit
     // maybetype, the path is misread as the widget type and never reaches message.data
     // (fetch becomes /zgames/undefined).
-    rows.push(
-      `!zztimport hyperlink ${scrolllinkescapefrag(path)};${scrolllinkescapefrag(entry.filename)}`,
-    )
-    rows.push(' ')
+    block.push(zsszedlinkline(`zztimport hyperlink ${path}`, entry.filename))
+    block.push(' ')
+    parts.push(block)
   }
-  scrollwritelines(player, ZZT_BRIDGE, rows.join('\n'), 'zztbridge')
+  scrollwritelines(player, ZZT_BRIDGE, zsstexttape(...parts), 'zztbridge')
 }

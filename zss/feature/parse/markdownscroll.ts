@@ -1,13 +1,9 @@
 import {
   MarkdownZedSink,
-  parsemarkdownwithzetextsink,
-} from 'zss/feature/parse/markdownzetext'
+  parsemarkdownwithzsstextsink,
+} from 'zss/feature/parse/markdownzsstext'
+import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
-
-function banglinkrow(command: string, label: string): string {
-  return `!${scrolllinkescapefrag(command)};${scrolllinkescapefrag(label)}`
-}
 
 function createscrollsink(lines: string[]): MarkdownZedSink {
   return {
@@ -15,7 +11,7 @@ function createscrollsink(lines: string[]): MarkdownZedSink {
       lines.push(s)
     },
     hyperlink: (command: string, label: string) => {
-      lines.push(banglinkrow(command, label))
+      lines.push(zsszedlinkline(command, label))
     },
   }
 }
@@ -27,6 +23,6 @@ export function scrollwritemarkdownlines(
   chip = 'refscroll',
 ) {
   const lines: string[] = []
-  parsemarkdownwithzetextsink(createscrollsink(lines), content)
-  scrollwritelines(player, scrollname, lines.join('\n'), chip)
+  parsemarkdownwithzsstextsink(createscrollsink(lines), content)
+  scrollwritelines(player, scrollname, zsstexttape(lines), chip)
 }

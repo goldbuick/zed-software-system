@@ -9,13 +9,14 @@ import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import { write } from 'zss/feature/writeui'
 import {
-  write,
-  writebbar,
-  writeoption,
-  writesection,
-  writetext,
-} from 'zss/feature/writeui'
+  zssbbarline,
+  zssoptionline,
+  zsssectionlines,
+  zsstextline,
+  zsstexttape,
+} from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
@@ -66,11 +67,13 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
       memoryupdatebookname(mainbook)
       if (ispresent(mainbook)) {
-        writeoption(
+        write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          'main',
-          `${mainbook?.name ?? 'empty'} $GREEN${mainbook?.id ?? ''}`,
+          zssoptionline(
+            'main',
+            `${mainbook?.name ?? 'empty'} $GREEN${mainbook?.id ?? ''}`,
+          ),
         )
       }
       return 0
@@ -220,22 +223,30 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('books', ['all books'], () => {
-      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
-      const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-      writeoption(
+      terminalwritelines(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
-        'main',
-        `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
+        zsstexttape(zsssectionlines(`books`)),
+      )
+      const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zssoptionline(
+          'main',
+          `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
+        ),
       )
       const content = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-      writeoption(
+      write(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
-        'content',
-        `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
+        zssoptionline(
+          'content',
+          `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
+        ),
       )
-      writebbar(SOFTWARE, READ_CONTEXT.elementfocus, 7)
+      write(SOFTWARE, READ_CONTEXT.elementfocus, zssbbarline(7))
       const list = memoryreadbooklist()
       if (list.length) {
         list.forEach((book) => {
@@ -246,7 +257,11 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           )
         })
       } else {
-        writetext(SOFTWARE, READ_CONTEXT.elementfocus, `no books found`)
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          zsstextline(`no books found`),
+        )
       }
       write(
         SOFTWARE,
@@ -260,12 +275,15 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       if (!ispresent(mainbook)) {
         return 0
       }
-      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
-      writeoption(
+      terminalwritelines(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
-        'main',
-        `${mainbook.name} $GREEN${mainbook.id}`,
+        zsstexttape(zsssectionlines(`pages`)),
+      )
+      write(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zssoptionline('main', `${mainbook.name} $GREEN${mainbook.id}`),
       )
       if (mainbook.pages.length) {
         const sorted = memorylistcodepagessorted(mainbook)
@@ -283,7 +301,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         terminalwritelines(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          pagerows.join('\n'),
+          zsstexttape(pagerows),
         )
       } else {
         write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
@@ -296,11 +314,10 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       for (let i = 0; i < booklist.length; ++i) {
         const book = booklist[i]
         if (book.id !== mainbook.id) {
-          writeoption(
+          write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            'content',
-            `${book.name} $GREEN${book.id}`,
+            zssoptionline('content', `${book.name} $GREEN${book.id}`),
           )
           const sorted = memorylistcodepagessorted(book)
           // Batch `!pageopen …;…` rows only.
@@ -317,7 +334,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            pagerows.join('\n'),
+            zsstexttape(pagerows),
           )
         }
       }
@@ -329,10 +346,14 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       (_, words) => {
         const [querywords] = readargsuntilend(words, 0, ARG_TYPE.NAME)
         const q = querywords.join(' ')
-        writesection(SOFTWARE, READ_CONTEXT.elementfocus, `search: ${q}`)
+        terminalwritelines(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          zsstexttape(zsssectionlines(`search: ${q}`)),
+        )
         const booklist = memoryreadbooklist()
         let count = 0
-        // Batch only `!payload;label` tape rows via terminalwritelines; keep writesection / writetext imperative.
+        // Batch only `!payload;label` tape rows via terminalwritelines; section / zsstextline above stay imperative.
         for (let i = 0; i < booklist.length; ++i) {
           const book = booklist[i]
           const sorted = memorylistcodepagessorted(book)
@@ -363,7 +384,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             terminalwritelines(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              matchrows.join('\n'),
+              zsstexttape(matchrows),
             )
           }
         }
@@ -421,30 +442,33 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
               terminalwritelines(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
-                objectmatches.join('\n'),
+                zsstexttape(objectmatches),
               )
             }
           }
         }
         if (count === 0) {
-          writetext(
+          write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `$white no matches for "${q}"`,
+            zsstextline(`$white no matches for "${q}"`),
           )
         }
         return 0
       },
     )
     .command('boards', ['all boards as goto hyperlinks'], () => {
-      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `boards`)
+      terminalwritelines(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zsstexttape(zsssectionlines(`boards`)),
+      )
       const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
       if (ispresent(mainbook)) {
-        writeoption(
+        write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          'main',
-          `${mainbook.name} $GREEN${mainbook.id}`,
+          zssoptionline('main', `${mainbook.name} $GREEN${mainbook.id}`),
         )
         const sorted = memorylistcodepagessorted(mainbook)
         // Batch `!boardopen …;…` rows only.
@@ -462,20 +486,18 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            mainboardrows.join('\n'),
+            zsstexttape(mainboardrows),
           )
         }
         if (sorted.length === 0) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-          writetext(
+          terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `$white no boards found`,
-          )
-          writetext(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `$white use @board name to create a board`,
+            zsstexttape(
+              '',
+              zsstextline(`$white no boards found`),
+              zsstextline(`$white use @board name to create a board`),
+            ),
           )
         }
       }
@@ -483,11 +505,10 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       for (let i = 0; i < booklist.length; ++i) {
         const book = booklist[i]
         if (book.id !== mainbook?.id) {
-          writeoption(
+          write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            'content',
-            `${book.name} $GREEN${book.id}`,
+            zssoptionline('content', `${book.name} $GREEN${book.id}`),
           )
           const sorted = memorylistcodepagessorted(book)
           // Batch `!boardopen …;…` rows only.
@@ -503,7 +524,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             terminalwritelines(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              boardrows.join('\n'),
+              zsstexttape(boardrows),
             )
           }
         }
@@ -511,8 +532,12 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('trash', ['books/codepages to delete (operator only)'], () => {
-      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `$REDTRASH`)
-      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
+      terminalwritelines(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zsstexttape(zsssectionlines(`$REDTRASH`)),
+      )
+      write(SOFTWARE, READ_CONTEXT.elementfocus, zsstextline(`books`))
       const list = memoryreadbooklist()
       if (list.length) {
         list.forEach((book) => {
@@ -526,10 +551,10 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       }
       const book = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
       if (ispresent(book)) {
-        writetext(
+        write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `pages in open ${book.name} book`,
+          zsstextline(`pages in open ${book.name} book`),
         )
         book.pages.forEach((page) => {
           const name = memoryreadcodepagename(page)

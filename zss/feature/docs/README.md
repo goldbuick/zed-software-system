@@ -12,7 +12,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **heavy** — ML/TTS workloads (Piper, Supertonic; transformers models; agent)
 - **ROM** — Embedded help/documentation content
 - **Synth** — Audio synthesis (see [synth/docs](../synth/docs/README.md))
-- **WriteUI** — Terminal log formatting (headers, sections, hyperlinks)
+- **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
 
 ## Module Index
 
@@ -29,7 +29,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [heavy.md](heavy.md) | Heavy processing (TTS engines, models, agent) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |
 | [rom.md](rom.md) | ROM/help content and scroll display |
-| [writeui.md](writeui.md) | Terminal log helpers (write, header, section, hyperlink) |
+| [writeui.md](writeui.md) | zsstextui layout + writeui terminal sinks |
 | [bytes.md](bytes.md) | Palette and charset loading from bytes |
 | [url.md](url.md) | URL shortening, BBS, Museum of ZZT |
 | [storage.md](storage.md) | IndexedDB config, history, content |

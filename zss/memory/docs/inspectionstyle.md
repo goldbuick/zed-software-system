@@ -5,7 +5,7 @@
 ## Dependencies
 
 - `idb-keyval` — get, update
-- `zss/feature/writeui` — DIVIDER
+- `zss/feature/zsstextui` — DIVIDER
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/*` — 2d, types
 - `zss/words/types` — PT, WORD

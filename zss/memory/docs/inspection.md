@@ -5,7 +5,7 @@
 ## Dependencies
 
 - `zss/device/*` — parsetarget, api, modem
-- `zss/feature/writeui` — DIVIDER
+- `zss/feature/zsstextui` — DIVIDER
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/*` — 2d, array, func, tick, types
 - `zss/words/types` — CATEGORY, COLLISION, PT, WORD

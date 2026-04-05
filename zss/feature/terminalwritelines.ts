@@ -1,11 +1,12 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { write, writehyperlink } from 'zss/feature/writeui'
+import { iszedlinkline } from 'zss/feature/zsstextui'
 import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
 /**
  * Terminal/write analogue of scrollwritelines: same newline handling,
  * blank lines (empty / whitespace-only physical lines) as empty log rows,
- * `scrolllinkunescapefrag` from `zss/mapping/string`, and !payload;label vs plain zetext.
+ * `scrolllinkunescapefrag` from `zss/mapping/string`, and !payload;label vs plain zsstext.
  *
  * @param chip Reserved for API parity with scrollwritelines; currently unused.
  */
@@ -23,7 +24,7 @@ export function terminalwritelines(
       write(device, player, '')
       continue
     }
-    if (line.startsWith('!') && line.includes(';')) {
+    if (iszedlinkline(line)) {
       const semi = line.indexOf(';')
       const left = scrolllinkunescapefrag(line.slice(0, semi).trimEnd())
       const label = scrolllinkunescapefrag(line.slice(semi + 1).trim())

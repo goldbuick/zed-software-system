@@ -8,14 +8,18 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { DIVIDER } from 'zss/feature/writeui'
+import {
+  DIVIDER,
+  zsstexttape,
+  zsszedlinkline,
+  zsszedlinklinechip,
+} from 'zss/feature/zsstextui'
 import { codepagepicksuffix } from 'zss/firmware/cli/utils'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
@@ -84,10 +88,17 @@ export function memoryinspectboardlines(board: string): string[] {
     board,
   )
   const boardname = memoryreadcodepagename(boardcodepage)
-  const copylabel = scrolllinkescapefrag(`board id ${board}`)
   return [
-    `!@batch pageopen:${board};edit $blue[board] $white${boardname}`,
-    `!@batch istargetless copyit ${board};${copylabel}`,
+    zsszedlinklinechip(
+      'batch',
+      `pageopen:${board}`,
+      `edit $blue[board] $white${boardname}`,
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `istargetless copyit ${board}`,
+      `board id ${board}`,
+    ),
   ]
 }
 
@@ -102,7 +113,11 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
     const codepage = loaders[i]
     const name = memoryreadcodepagename(codepage)
     lines.push(
-      `!@gadget action "" ${codepage.id} ${area};${scrolllinkescapefrag(`run ${name}`)}`,
+      zsszedlinklinechip(
+        'gadget',
+        `action "" ${codepage.id} ${area}`,
+        `run ${name}`,
+      ),
     )
   }
   return lines
@@ -143,11 +158,15 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
       const emptylines = [
         `empty: ${p1.x}, ${p1.y}`,
         DIVIDER,
-        `!@empty copycoords:${p1.x},${p1.y} hk 5 " 5 ";copy coords`,
+        zsszedlinklinechip(
+          'empty',
+          `copycoords:${p1.x},${p1.y} hk 5 " 5 "`,
+          'copy coords',
+        ),
         ...memoryinspectloaderlines(p1, p2),
         ...memoryinspectboardlines(board.id),
       ]
-      scrollwritelines(player, 'inspect', emptylines.join('\n'), 'refscroll')
+      scrollwritelines(player, 'inspect', zsstexttape(emptylines), 'refscroll')
       return
     }
   } else {
@@ -207,28 +226,54 @@ export function memoryinspectarea(
       .map((i) => [`group${i}`, `${i}`])
       .flat(),
   ]
-  const groupline = `!${grouptokens.join(' ')};group`
+  const groupline = zsszedlinkline(grouptokens.join(' '), 'group')
 
   const lines: string[] = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch copy:${area} hk 1 " 1 " next;copy elements`,
-    `!@batch cut:${area} hk 2 " 2 " next;cut elements`,
+    zsszedlinklinechip(
+      'batch',
+      `copy:${area} hk 1 " 1 " next`,
+      'copy elements',
+    ),
+    zsszedlinklinechip('batch', `cut:${area} hk 2 " 2 " next`, 'cut elements'),
   ]
   if (memoryhassecretheap) {
-    lines.push(`!@batch paste:${area} hk 3 " 3 " next;paste elements`)
-  }
-  lines.push(`!@batch copycoords:${area} hk 5 " 5 ";copy coords`)
-  if (memoryhassecretheap) {
-    lines.push(`!@batch style:${area} hk s " S " next;style transfer`)
+    lines.push(
+      zsszedlinklinechip(
+        'batch',
+        `paste:${area} hk 3 " 3 " next`,
+        'paste elements',
+      ),
+    )
   }
   lines.push(
-    `!@remix remix:${area} hk r " R " next;remix coords`,
+    zsszedlinklinechip('batch', `copycoords:${area} hk 5 " 5 "`, 'copy coords'),
+  )
+  if (memoryhassecretheap) {
+    lines.push(
+      zsszedlinklinechip(
+        'batch',
+        `style:${area} hk s " S " next`,
+        'style transfer',
+      ),
+    )
+  }
+  lines.push(
+    zsszedlinklinechip(
+      'remix',
+      `remix:${area} hk r " R " next`,
+      'remix coords',
+    ),
     DIVIDER,
-    `!@batch chars:${area} hk a " A " next;set chars:`,
-    `!@batch colors:${area} hk c " C " next;set colors:`,
-    `!@batch bgs:${area} hk b " B " next;set bgs:`,
-    `!@batch empty:${area} hk 0 " 0 " next;make empty`,
+    zsszedlinklinechip('batch', `chars:${area} hk a " A " next`, 'set chars:'),
+    zsszedlinklinechip(
+      'batch',
+      `colors:${area} hk c " C " next`,
+      'set colors:',
+    ),
+    zsszedlinklinechip('batch', `bgs:${area} hk b " B " next`, 'set bgs:'),
+    zsszedlinklinechip('batch', `empty:${area} hk 0 " 0 " next`, 'make empty'),
     DIVIDER,
     groupline,
     ...memoryinspectloaderlines(p1, p2),
@@ -249,7 +294,11 @@ export function memoryinspectarea(
         const type = memoryreadcodepagetypeasstring(codepage)
         const prefix = memorycodepagetoprefix(codepage)
         lines.push(
-          `!@batch pageopen:${codepage.id};edit $blue[${type}] ${prefix}$white${name}${codepagepicksuffix(codepage)}`,
+          zsszedlinklinechip(
+            'batch',
+            `pageopen:${codepage.id}`,
+            `edit $blue[${type}] ${prefix}$white${name}${codepagepicksuffix(codepage)}`,
+          ),
         )
       }
     }
@@ -257,7 +306,7 @@ export function memoryinspectarea(
 
   lines.push(...memoryinspectboardlines(board.id))
 
-  scrollwritelines(player, 'inspect', lines.join('\n'), groupchip)
+  scrollwritelines(player, 'inspect', zsstexttape(lines), groupchip)
 }
 
 export function memoryinspectbgarea(
@@ -293,9 +342,9 @@ export function memoryinspectbgarea(
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!${name} bgedit;bg`,
+    zsszedlinkline(`${name} bgedit`, 'bg'),
   ]
-  scrollwritelines(player, 'bulk set bg', lines.join('\n'), batchchip)
+  scrollwritelines(player, 'bulk set bg', zsstexttape(lines), batchchip)
 }
 
 export function memoryinspectchar(
@@ -337,9 +386,9 @@ export function memoryinspectchar(
   const lines = [
     `${strcategory}: ${strname} ${strpos}`,
     DIVIDER,
-    `!${name} charedit;char`,
+    zsszedlinkline(`${name} charedit`, 'char'),
   ]
-  scrollwritelines(player, 'char', lines.join('\n'), chip)
+  scrollwritelines(player, 'char', zsstexttape(lines), chip)
 }
 
 export function memoryinspectchararea(
@@ -375,9 +424,9 @@ export function memoryinspectchararea(
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!${name} charedit;char`,
+    zsszedlinkline(`${name} charedit`, 'char'),
   ]
-  scrollwritelines(player, 'bulk set char', lines.join('\n'), batchchip)
+  scrollwritelines(player, 'bulk set char', zsstexttape(lines), batchchip)
 }
 
 export function memoryinspectcolor(
@@ -420,9 +469,9 @@ export function memoryinspectcolor(
   const lines = [
     `${strcategory}: ${strname} ${strpos}`,
     DIVIDER,
-    `!${name} ${edittype};color`,
+    zsszedlinkline(`${name} ${edittype}`, 'color'),
   ]
-  scrollwritelines(player, name, lines.join('\n'), chip)
+  scrollwritelines(player, name, zsstexttape(lines), chip)
 }
 
 export function memoryinspectcolorarea(
@@ -460,9 +509,9 @@ export function memoryinspectcolorarea(
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!${name} coloredit;color`,
+    zsszedlinkline(`${name} coloredit`, 'color'),
   ]
-  scrollwritelines(player, 'bulk set color', lines.join('\n'), batchchip)
+  scrollwritelines(player, 'bulk set color', zsstexttape(lines), batchchip)
 }
 
 export function memoryinspectcommand(path: string, player: string) {
@@ -682,7 +731,7 @@ export function memoryinspectelement(
             const linklabel = label || target
             const words: WORD[] = [target, type, ...args]
             lines.push(
-              `!${memoryinspectjoinlinkwords(words)};${scrolllinkescapefrag(linklabel)}`,
+              zsszedlinkline(memoryinspectjoinlinkwords(words), linklabel),
             )
           }
         }
@@ -691,19 +740,36 @@ export function memoryinspectelement(
   }
 
   lines.push(
-    `!${memoryinspectjoinlinkwords(['copycoords', 'hk', '5', ' 5 '])};copy coords`,
+    zsszedlinkline(
+      memoryinspectjoinlinkwords(['copycoords', 'hk', '5', ' 5 ']),
+      'copy coords',
+    ),
   )
   lines.push(DIVIDER)
   lines.push(
-    `!${memoryinspectjoinlinkwords(['char', 'hk', 'a', ' A ', 'next'])};${scrolllinkescapefrag(`char: ${element.char ?? element.kinddata?.char ?? 1}`)}`,
+    zsszedlinkline(
+      memoryinspectjoinlinkwords(['char', 'hk', 'a', ' A ', 'next']),
+      `char: ${element.char ?? element.kinddata?.char ?? 1}`,
+    ),
   )
   lines.push(
-    `!${memoryinspectjoinlinkwords(['color', 'hk', 'c', ' C ', 'next'])};${scrolllinkescapefrag(`color: ${element.color ?? element.kinddata?.color ?? 15}`)}`,
+    zsszedlinkline(
+      memoryinspectjoinlinkwords(['color', 'hk', 'c', ' C ', 'next']),
+      `color: ${element.color ?? element.kinddata?.color ?? 15}`,
+    ),
   )
   lines.push(
-    `!${memoryinspectjoinlinkwords(['bg', 'hk', 'b', ' B ', 'next'])};${scrolllinkescapefrag(`bg: ${element.bg ?? element.kinddata?.bg ?? 0}`)}`,
+    zsszedlinkline(
+      memoryinspectjoinlinkwords(['bg', 'hk', 'b', ' B ', 'next']),
+      `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
+    ),
   )
-  lines.push(`!${memoryinspectjoinlinkwords(['empty', 'hk', '0'])};make empty`)
+  lines.push(
+    zsszedlinkline(
+      memoryinspectjoinlinkwords(['empty', 'hk', '0']),
+      'make empty',
+    ),
+  )
   lines.push(DIVIDER)
 
   const grouptokens = [
@@ -715,19 +781,23 @@ export function memoryinspectelement(
       .map((i) => [`group${i}`, `${i}`])
       .flat(),
   ]
-  lines.push(`!${grouptokens.join(' ')};group`)
+  lines.push(zsszedlinkline(grouptokens.join(' '), 'group'))
   lines.push(...memoryinspectloaderlines(p1, p1))
   if (ispresent(codepage)) {
     const name = memoryreadcodepagename(codepage)
     const type = memoryreadcodepagetypeasstring(codepage)
     const prefix = memorycodepagetoprefix(codepage)
     lines.push(
-      `!@batch pageopen:${codepage.id};edit $blue[${type}] ${prefix}$white${name}${codepagepicksuffix(codepage)}`,
+      zsszedlinklinechip(
+        'batch',
+        `pageopen:${codepage.id}`,
+        `edit $blue[${type}] ${prefix}$white${name}${codepagepicksuffix(codepage)}`,
+      ),
     )
   }
   lines.push(...memoryinspectboardlines(board.id))
 
-  scrollwritelines(player, 'inspect', lines.join('\n'), chip)
+  scrollwritelines(player, 'inspect', zsstexttape(lines), chip)
 }
 
 export function memoryinspectempty(
@@ -796,9 +866,21 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch emptyall:${area} hk 1 " 1 ";clear terrain & objects`,
-    `!@batch emptyobjects:${area} hk 2 " 2 ";clear objects`,
-    `!@batch emptyterrain:${area} hk 3 " 3 ";clear terrain`,
+    zsszedlinklinechip(
+      'batch',
+      `emptyall:${area} hk 1 " 1 "`,
+      'clear terrain & objects',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `emptyobjects:${area} hk 2 " 2 "`,
+      'clear objects',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `emptyterrain:${area} hk 3 " 3 "`,
+      'clear terrain',
+    ),
   ]
-  scrollwritelines(player, 'empty', lines.join('\n'), 'batch')
+  scrollwritelines(player, 'empty', zsstexttape(lines), 'batch')
 }

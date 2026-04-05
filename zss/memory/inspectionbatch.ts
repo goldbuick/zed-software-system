@@ -2,7 +2,7 @@ import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { parsetarget } from 'zss/device'
 import { apitoast, registercopy, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { DIVIDER } from 'zss/feature/writeui'
+import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, pttoindex, ptwithin } from 'zss/mapping/2d'
 import { doasync } from 'zss/mapping/func'
@@ -245,12 +245,28 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch copyall:${area} hk 1 " 1 ";copy terrain & objects`,
-    `!@batch copyobjects:${area} hk 2 " 2 ";copy objects`,
-    `!@batch copyterrain:${area} hk 3 " 3 ";copy terrain`,
-    `!@batch copyastext:${area} hk 4 " 4 ";copy as text`,
+    zsszedlinklinechip(
+      'batch',
+      `copyall:${area} hk 1 " 1 "`,
+      'copy terrain & objects',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `copyobjects:${area} hk 2 " 2 "`,
+      'copy objects',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `copyterrain:${area} hk 3 " 3 "`,
+      'copy terrain',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `copyastext:${area} hk 4 " 4 "`,
+      'copy as text',
+    ),
   ]
-  scrollwritelines(player, 'copy', lines.join('\n'), 'batch')
+  scrollwritelines(player, 'copy', zsstexttape(lines), 'batch')
 }
 
 export async function memoryinspectcut(
@@ -321,11 +337,15 @@ export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch cutall:${area} hk 1 " 1 ";cut terrain & objects`,
-    `!@batch cutobjects:${area} hk 2 " 2 ";cut objects`,
-    `!@batch cutterrain:${area} hk 3 " 3 ";cut terrain`,
+    zsszedlinklinechip(
+      'batch',
+      `cutall:${area} hk 1 " 1 "`,
+      'cut terrain & objects',
+    ),
+    zsszedlinklinechip('batch', `cutobjects:${area} hk 2 " 2 "`, 'cut objects'),
+    zsszedlinklinechip('batch', `cutterrain:${area} hk 3 " 3 "`, 'cut terrain'),
   ]
-  scrollwritelines(player, 'cut', lines.join('\n'), 'batch')
+  scrollwritelines(player, 'cut', zsstexttape(lines), 'batch')
 }
 
 export async function memoryinspectpaste(
@@ -430,12 +450,28 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    `!@batch pasteall:${area} hk 1 " 1 ";paste terrain & objects`,
-    `!@batch pasteobjects:${area} hk 2 " 2 ";paste objects`,
-    `!@batch pasteterrain:${area} hk 3 " 3 ";paste terrain`,
-    `!@batch pasteterraintiled:${area} hk 4 " 4 ";paste terrain tiled`,
+    zsszedlinklinechip(
+      'batch',
+      `pasteall:${area} hk 1 " 1 "`,
+      'paste terrain & objects',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `pasteobjects:${area} hk 2 " 2 "`,
+      'paste objects',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `pasteterrain:${area} hk 3 " 3 "`,
+      'paste terrain',
+    ),
+    zsszedlinklinechip(
+      'batch',
+      `pasteterraintiled:${area} hk 4 " 4 "`,
+      'paste terrain tiled',
+    ),
   ]
-  scrollwritelines(player, 'paste', lines.join('\n'), 'batch')
+  scrollwritelines(player, 'paste', zsstexttape(lines), 'batch')
 }
 
 export async function memoryreadsecretheap(): Promise<

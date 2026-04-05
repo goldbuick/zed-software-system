@@ -1,15 +1,11 @@
 import { SOFTWARE } from 'zss/device/session'
 import {
   MarkdownZedSink,
-  parsemarkdownwithzetextsink,
-} from 'zss/feature/parse/markdownzetext'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
+  parsemarkdownwithzsstextsink,
+} from 'zss/feature/parse/markdownzsstext'
+import { zsszedlinkline } from 'zss/feature/zsstextui'
 
 import { terminalwritelines } from '../terminalwritelines'
-
-function banglinkrow(command: string, label: string): string {
-  return `!${scrolllinkescapefrag(command)};${scrolllinkescapefrag(label)}`
-}
 
 function createterminalsink(lines: string[]): MarkdownZedSink {
   return {
@@ -17,13 +13,13 @@ function createterminalsink(lines: string[]): MarkdownZedSink {
       lines.push(s)
     },
     hyperlink: (command: string, label: string) => {
-      lines.push(banglinkrow(command, label))
+      lines.push(zsszedlinkline(command, label))
     },
   }
 }
 
 export function terminalwritemarkdownlines(player: string, content: string) {
   const lines: string[] = []
-  parsemarkdownwithzetextsink(createterminalsink(lines), content)
+  parsemarkdownwithzsstextsink(createterminalsink(lines), content)
   terminalwritelines(SOFTWARE, player, lines.join('\n'))
 }

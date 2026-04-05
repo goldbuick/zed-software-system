@@ -6,7 +6,7 @@ export const MARKDOWN_HR_TBAR_WIDTH = 10
 
 const EDGE = '$dkpurple'
 
-/** Top / thematic bar (`$196`), matches gadget `SCROLL_CHR_TM`. */
+/** Top / thematic bar (`$196`), matches zsstextui `CHR_TM`. */
 const CHR_TM = '$196'
 const BAR = '$205'
 const RESET = '$white'
@@ -294,7 +294,7 @@ function emitlistitembody(sink: MarkdownZedSink, item: Tokens.ListItem) {
         sink.line(prefix)
       }
       buf = prefix
-      parsetokenzetext(sink, t)
+      parsetokenzsstext(sink, t)
       continue
     }
     if (t.type === 'paragraph') {
@@ -322,10 +322,10 @@ function emitlistitembody(sink: MarkdownZedSink, item: Tokens.ListItem) {
   flushifcontent()
 }
 
-export function parsetokenzetext(sink: MarkdownZedSink, token: Token) {
+export function parsetokenzsstext(sink: MarkdownZedSink, token: Token) {
   switch (token.type) {
     default:
-      console.info('markdownzetext unknown', token)
+      console.info('markdownzsstext unknown', token)
       break
     case 'space':
       break
@@ -363,7 +363,7 @@ export function parsetokenzetext(sink: MarkdownZedSink, token: Token) {
       for (let i = 0; i < (list.items?.length ?? 0); ++i) {
         const it = list.items[i]
         if (ispresent(it)) {
-          parsetokenzetext(sink, it)
+          parsetokenzsstext(sink, it)
         }
       }
       sink.line(' ')
@@ -378,31 +378,31 @@ export function parsetokenzetext(sink: MarkdownZedSink, token: Token) {
 function createrenderer(sink: MarkdownZedSink) {
   return {
     heading(t: Tokens.Heading) {
-      parsetokenzetext(sink, t)
+      parsetokenzsstext(sink, t)
       return ''
     },
     blockquote(t: Tokens.Blockquote) {
-      parsetokenzetext(sink, t)
+      parsetokenzsstext(sink, t)
       return ''
     },
     hr(_t: Tokens.Hr) {
-      parsetokenzetext(sink, _t)
+      parsetokenzsstext(sink, _t)
       return ''
     },
     list(t: Tokens.List) {
-      parsetokenzetext(sink, t)
+      parsetokenzsstext(sink, t)
       return ''
     },
     listitem(t: Tokens.ListItem) {
-      parsetokenzetext(sink, t)
+      parsetokenzsstext(sink, t)
       return ''
     },
     paragraph(t: Tokens.Paragraph) {
-      parsetokenzetext(sink, t)
+      parsetokenzsstext(sink, t)
       return ''
     },
     code(t: Tokens.Code) {
-      parsetokenzetext(sink, t)
+      parsetokenzsstext(sink, t)
       return ''
     },
     html() {
@@ -411,7 +411,7 @@ function createrenderer(sink: MarkdownZedSink) {
   }
 }
 
-export function parsemarkdownwithzetextsink(
+export function parsemarkdownwithzsstextsink(
   sink: MarkdownZedSink,
   content: string,
 ) {

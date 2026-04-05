@@ -6,10 +6,10 @@ import { lastinputtime } from 'zss/device/vm/state'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
+import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
@@ -40,8 +40,10 @@ import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handlezztbridge } from './zzt'
 
-const MAIN_MENU_BACK_HYPERLINK =
-  '!menu hk b " B " next;$ltgreyBack to main menu'
+const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
+  'menu hk b " B " next',
+  '$ltgreyBack to main menu',
+)
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
   const { target, path } = parsetarget(message.target)
@@ -86,16 +88,13 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
             const name = memoryreadcodepagename(codepage)
             const codelines = codepage.code.split('\n').slice(0, 2)
             const label = `@${name}$ltgrey ${codelines[1] ?? ''}`
-            const escname = scrolllinkescapefrag(name)
-            rows.push(
-              `!istargetless copyit ${escname};${scrolllinkescapefrag(label)}`,
-            )
+            rows.push(zsszedlinkline(`istargetless copyit ${name}`, label))
           }
           rows.push(MAIN_MENU_BACK_HYPERLINK)
           scrollwritelines(
             message.player,
             'object list',
-            rows.join('\n').trim(),
+            zsstexttape(rows).trim(),
             'list',
           )
           break
@@ -108,16 +107,13 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
             const name = memoryreadcodepagename(codepage)
             const codelines = codepage.code.split('\n').slice(0, 2)
             const label = `@${name}$ltgrey ${codelines[1] ?? ''}`
-            const escname = scrolllinkescapefrag(name)
-            rows.push(
-              `!istargetless copyit ${escname};${scrolllinkescapefrag(label)}`,
-            )
+            rows.push(zsszedlinkline(`istargetless copyit ${name}`, label))
           }
           rows.push(MAIN_MENU_BACK_HYPERLINK)
           scrollwritelines(
             message.player,
             'terrain list',
-            rows.join('\n').trim(),
+            zsstexttape(rows).trim(),
             'list',
           )
           break
@@ -126,7 +122,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           scrollwritelines(
             message.player,
             'chars',
-            '!char charedit;char',
+            zsszedlinkline('char charedit', 'char'),
             'refscroll',
           )
           break
@@ -135,13 +131,18 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           scrollwritelines(
             message.player,
             'colors',
-            '!color coloredit;color',
+            zsszedlinkline('color coloredit', 'color'),
             'refscroll',
           )
           break
         }
         case 'bgscroll': {
-          scrollwritelines(message.player, 'bgs', '!bg bgedit;bg', 'refscroll')
+          scrollwritelines(
+            message.player,
+            'bgs',
+            zsszedlinkline('bg bgedit', 'bg'),
+            'refscroll',
+          )
           break
         }
         default: {

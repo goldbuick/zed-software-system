@@ -6,7 +6,8 @@ import {
 } from 'zss/feature/heavy/formatstate'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
-import { writeopenit, writetext } from 'zss/feature/writeui'
+import { write, writeopenit } from 'zss/feature/writeui'
+import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { isemail } from 'zss/firmware/cli/utils'
 import { doasync } from 'zss/mapping/func'
@@ -57,73 +58,85 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
             ])
             if (isemail(maybeemail) && maybetag) {
               doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-                writetext(
+                write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  `starting login with $green${maybeemail} ${maybetag}`,
+                  zsstextline(
+                    `starting login with $green${maybeemail} ${maybetag}`,
+                  ),
                 )
                 const result = await bbslogin(maybeemail, maybetag)
                 if (result.success) {
                   bbsemail = maybeemail
-                  writetext(
+                  write(
                     SOFTWARE,
                     READ_CONTEXT.elementfocus,
-                    `check your email for #bbs <code>`,
+                    zsstextline(`check your email for #bbs <code>`),
                   )
                 }
               })
             } else {
-              writetext(
+              write(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
-                `please login with $green#bbs <email> <tag>`,
+                zsstextline(`please login with $green#bbs <email> <tag>`),
               )
             }
           } else if (!bbscode) {
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              writetext(
+              write(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
-                `confirming login with $green${action}`,
+                zsstextline(`confirming login with $green${action}`),
               )
               const result = await bbslogincode(bbsemail, action)
               if (result.success) {
                 bbscode = `${action}`
-                writetext(
+                write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  `$green${bbsemail} has been logged in`,
+                  zsstextline(`$green${bbsemail} has been logged in`),
                 )
               }
             })
           } else {
-            writetext(
+            write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `you are already logged in, use #bbs restart to login again`,
+              zsstextline(
+                `you are already logged in, use #bbs restart to login again`,
+              ),
             )
           }
           break
         case 'restart':
           bbsemail = ''
           bbscode = ''
-          writetext(SOFTWARE, READ_CONTEXT.elementfocus, `bbs restarted`)
-          writetext(
+          terminalwritelines(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `please login with $green#bbs <email> <tag>`,
+            zsstexttape(
+              zsstextline(`bbs restarted`),
+              zsstextline(`please login with $green#bbs <email> <tag>`),
+            ),
           )
           break
         case 'list':
           if (!bbsemail || !bbscode) {
-            writetext(
+            write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `please login with $green#bbs <email> <tag>$blue first`,
+              zsstextline(
+                `please login with $green#bbs <email> <tag>$blue first`,
+              ),
             )
           } else {
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              writetext(SOFTWARE, READ_CONTEXT.elementfocus, `listing files`)
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                zsstextline(`listing files`),
+              )
               const result = await bbslist(bbsemail, bbscode)
               if (result.success) {
                 for (let i = 0; i < result.list.length; ++i) {
@@ -147,10 +160,12 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
         case 'pub':
         case 'publish':
           if (!bbsemail || !bbscode) {
-            writetext(
+            write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `please login with $green#bbs <email> <tag>$blue first`,
+              zsstextline(
+                `please login with $green#bbs <email> <tag>$blue first`,
+              ),
             )
           } else {
             const [filename, iii] = readargs(words, ii, [ARG_TYPE.NAME])
@@ -169,25 +184,27 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
         case 'del':
         case 'delete':
           if (!bbsemail || !bbscode) {
-            writetext(
+            write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `please login with $green#bbs <email> <tag>$blue first`,
+              zsstextline(
+                `please login with $green#bbs <email> <tag>$blue first`,
+              ),
             )
           } else {
             const [filename] = readargs(words, ii, [ARG_TYPE.NAME])
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              writetext(
+              write(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
-                `deleting ${filename}`,
+                zsstextline(`deleting ${filename}`),
               )
               const result = await bbsdelete(bbsemail, bbscode, filename)
               if (result.success) {
-                writetext(
+                write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  `$red${filename} has been deleted`,
+                  zsstextline(`$red${filename} has been deleted`),
                 )
               }
             })

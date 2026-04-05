@@ -21,7 +21,8 @@ import {
   netterminaljoin,
   readsubscribetopic,
 } from 'zss/feature/netterminal'
-import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
+import { write, writecopyit } from 'zss/feature/writeui'
+import { zssheaderlines, zssoptionline } from 'zss/feature/zsstextui'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -615,14 +616,18 @@ const bridge = createdevice('bridge', [], (message) => {
           apilog(bridge, message.player, `created client`)
         }
         if (isstring(message.data) && ispresent(broadcastclient)) {
-          writeheader(bridge, message.player, 'broadcasting in')
-          writeoption(bridge, message.player, '3', '...')
+          for (const line of zssheaderlines('broadcasting in')) {
+            write(bridge, message.player, line)
+          }
+          write(bridge, message.player, zssoptionline('3', '...'))
           await waitfor(1000)
-          writeoption(bridge, message.player, '2', '...')
+          write(bridge, message.player, zssoptionline('2', '...'))
           await waitfor(1000)
-          writeoption(bridge, message.player, '1', '...')
+          write(bridge, message.player, zssoptionline('1', '...'))
           await waitfor(1000)
-          writeheader(bridge, message.player, 'GOING LIVE')
+          for (const line of zssheaderlines('GOING LIVE')) {
+            write(bridge, message.player, line)
+          }
           await broadcastclient.startBroadcast(
             message.data,
             'https://g.webrtc.live-video.net:4443',

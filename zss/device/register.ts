@@ -41,7 +41,12 @@ import {
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
-import { writeheader, writeoption, writetext } from 'zss/feature/writeui'
+import { write } from 'zss/feature/writeui'
+import {
+  zssheaderlines,
+  zssoptionline,
+  zsstextline,
+} from 'zss/feature/zsstextui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
 import {
   TAPE_DISPLAY,
@@ -132,10 +137,10 @@ async function writewikilink() {
 
 async function writehelphint() {
   await waitfor(1000)
-  writetext(
+  write(
     register,
     myplayerid,
-    `try typing $green#help$blue and pressing enter!`,
+    zsstextline(`try typing $green#help$blue and pressing enter!`),
   )
 }
 
@@ -701,14 +706,18 @@ export const register = createdevice(
       case 'nuke':
         agentdootids.clear()
         doasync(register, message.player, async function () {
-          writeheader(register, message.player, 'nuke in')
-          writeoption(register, message.player, '3', '...')
+          for (const line of zssheaderlines('nuke in')) {
+            write(register, message.player, line)
+          }
+          write(register, message.player, zssoptionline('3', '...'))
           await waitfor(1000)
-          writeoption(register, message.player, '2', '...')
+          write(register, message.player, zssoptionline('2', '...'))
           await waitfor(1000)
-          writeoption(register, message.player, '1', '...')
+          write(register, message.player, zssoptionline('1', '...'))
           await waitfor(1000)
-          writeheader(register, message.player, 'BYE')
+          for (const line of zssheaderlines('BYE')) {
+            write(register, message.player, line)
+          }
           await waitfor(100)
           storagenukecontent(message.player)
         })
@@ -755,13 +764,19 @@ export const register = createdevice(
                 // publish info
                 const [, , name] = message.data
                 if (isstring(content) && isstring(name)) {
-                  writetext(register, message.player, `publishing ${name}`)
-                  // save zipfile
-                  await itchiopublish(name, content)
-                  writetext(
+                  write(
                     register,
                     message.player,
-                    `$green${name} has been exported for upload to itch.io`,
+                    zsstextline(`publishing ${name}`),
+                  )
+                  // save zipfile
+                  await itchiopublish(name, content)
+                  write(
+                    register,
+                    message.player,
+                    zsstextline(
+                      `$green${name} has been exported for upload to itch.io`,
+                    ),
                   )
                 }
                 break
@@ -775,7 +790,11 @@ export const register = createdevice(
                   isstring(bbscode) &&
                   isstring(filename)
                 ) {
-                  writetext(register, message.player, `publishing ${filename}`)
+                  write(
+                    register,
+                    message.player,
+                    zsstextline(`publishing ${filename}`),
+                  )
                   const url = await shorturl(`${location.origin}/#${content}`)
                   const result = await bbspublish(
                     bbsemail,
@@ -785,10 +804,12 @@ export const register = createdevice(
                     tags,
                   )
                   if (result.success) {
-                    writetext(
+                    write(
                       register,
                       message.player,
-                      `$green${filename} has been published to bbs`,
+                      zsstextline(
+                        `$green${filename} has been published to bbs`,
+                      ),
                     )
                   }
                 }

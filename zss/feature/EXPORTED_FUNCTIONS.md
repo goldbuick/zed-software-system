@@ -22,29 +22,11 @@ This document categorizes and summarizes all exported functions from the `featur
 
 ## UI Writing & Display
 
-**File:** `writeui.ts`
+**Files:** `writeui.ts`, `zsstextui.ts`
 
-Helper functions for writing formatted log lines to the terminal with various UI elements.
+**`zsstextui.ts`** — Pure layout line strings: `layoutheaderlines`, `layoutsectionlines`, `layouttbarline`, `layoutbbarline`, `layoutoptionline`, `layouttextline`; constants `DIVIDER`, `DOWN_SPOUT`, `UP_SPOUT`. Callers combine with `write` or `gadgettext`.
 
-### Constants
-- `DIVIDER` - Pre-formatted divider string constant
-
-### Basic Writing
-- `write(device, player, text)` - Write text to terminal log
-- `writetext(device, player, text)` - Write colored text to terminal
-
-### Structured UI Elements
-- `writeheader(device, player, header)` - Write a formatted header with top and bottom bars
-- `writesection(device, player, section)` - Write a section separator
-- `writeoption(device, player, option, label)` - Write an option with label
-- `writetbar(device, player, width)` - Write top bar of specified width
-- `writebbar(device, player, width)` - Write bottom bar of specified width
-
-### Interactive Elements
-- `writehyperlink(device, player, hyperlink, label)` - Write a hyperlink with label
-- `writecopyit(device, player, content, label, showqr?)` - Write copyable content with optional QR code
-- `writeopenit(device, player, content, label)` - Write openable content link
-- `writeqr(device, player, content)` - Write QR code as ASCII art
+**`writeui.ts`** — Terminal sinks: `write`, `writehyperlink`, `writerunit`, `writeqr`, `writecopyit`, `writeopenit`.
 
 ---
 
@@ -283,7 +265,7 @@ Read-only memory system for help text and documentation.
 - `romread(address)` - Read ROM content by address (returns help text or undefined)
 - `romhintfrommarkdown(content)` - Extract `hint:` from editor ROM markdown (or legacy `desc;` line)
 - `romparse(content, handler)` - Parse ROM content line by line with handler
-- `romprint(player, line)` - Print ROM line to terminal using writeui functions
+- `romprint(player, line)` - Print ROM line to terminal using zsstextui layout + write
 - `romscroll(player, line)` - Print ROM line to scroll using gadget functions
 - `romintolookup(content)` - Convert ROM content to key-value lookup object
 

@@ -6,7 +6,7 @@
 
 - `zss/device/api` — vmcli
 - `zss/device/session` — SOFTWARE
-- `zss/feature/writeui` — write
+- `zss/feature/writeui` — `write`
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/func` — doasync
 - `zss/mapping/tick` — waitfor

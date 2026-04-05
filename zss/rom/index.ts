@@ -1,19 +1,12 @@
 import { parsetarget } from 'zss/device'
 import { SOFTWARE } from 'zss/device/session'
+import { write, writehyperlink } from 'zss/feature/writeui'
 import {
-  write,
-  writeheader,
-  writehyperlink,
-  writeoption,
-  writesection,
-} from 'zss/feature/writeui'
-import {
-  gadgetheader,
-  gadgethyperlink,
-  gadgetoption,
-  gadgetsection,
-  gadgettext,
-} from 'zss/gadget/data/api'
+  zssheaderlines,
+  zssoptionline,
+  zsssectionlines,
+} from 'zss/feature/zsstextui'
+import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
 import { scrolllinksplittokens } from 'zss/gadget/data/scrollwritelines'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
@@ -62,13 +55,17 @@ export function romprint(player: string, line: string[]) {
   const arg2 = values[1] ?? ''
   switch (NAME(op.trim())) {
     case 'header':
-      writeheader(SOFTWARE, player, arg1)
+      for (const line of zssheaderlines(arg1)) {
+        write(SOFTWARE, player, line)
+      }
       break
     case 'section':
-      writesection(SOFTWARE, player, arg1)
+      for (const line of zsssectionlines(arg1)) {
+        write(SOFTWARE, player, line)
+      }
       break
     case 'option':
-      writeoption(SOFTWARE, player, arg1, arg2)
+      write(SOFTWARE, player, zssoptionline(arg1, arg2))
       break
     default:
       if (op.trimStart().startsWith('!')) {
@@ -86,13 +83,17 @@ export function romscroll(player: string, line: string[]) {
   const arg2 = values[1] ?? ''
   switch (NAME(op.trim())) {
     case 'header':
-      gadgetheader(player, arg1)
+      for (const line of zssheaderlines(arg1)) {
+        gadgettext(player, line)
+      }
       break
     case 'section':
-      gadgetsection(player, arg1)
+      for (const line of zsssectionlines(arg1)) {
+        gadgettext(player, line)
+      }
       break
     case 'option':
-      gadgetoption(player, arg1, arg2)
+      gadgettext(player, zssoptionline(arg1, arg2))
       break
     default:
       if (op.trimStart().startsWith('!')) {

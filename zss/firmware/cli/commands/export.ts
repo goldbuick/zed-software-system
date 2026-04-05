@@ -6,7 +6,12 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { exportbooktozzt } from 'zss/feature/parse/zztexport'
-import { write, writeheader, writesection } from 'zss/feature/writeui'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import {
+  zssheaderlines,
+  zsssectionlines,
+  zsstexttape,
+} from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import {
@@ -30,18 +35,19 @@ import { ARG_TYPE } from 'zss/words/types'
 export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('export', ['export menu (operator only)'], () => {
-      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
-      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
       const list = memoryreadbooklist()
-      if (list.length) {
-        list.forEach((book) =>
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `!bookexport ${book.id};${book.name}`,
-          ),
-        )
-      }
+      const booklinks = list.map(
+        (book) => `!bookexport ${book.id};${book.name}`,
+      )
+      terminalwritelines(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        zsstexttape(
+          zssheaderlines(`E X P O R T`),
+          zsssectionlines(`books`),
+          ...(booklinks.length > 0 ? booklinks : []),
+        ),
+      )
       return 0
     })
     .command(
@@ -51,31 +57,32 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
         const [address] = readargs(words, 0, [ARG_TYPE.NAME])
         const book = memoryreadbookbyaddress(address)
         if (ispresent(book)) {
-          writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
-          writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
+          terminalwritelines(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            zsstexttape(
+              zssheaderlines(`E X P O R T`),
+              zsssectionlines(`pages`),
+            ),
+          )
           setTimeout(() => {
             if (book.pages.length) {
               const sorted = memorylistcodepagessorted(book)
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                `!bookallexport ${address};$blue[all] $whiteexport book`,
-              )
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                `!bookzztexport ${address};$magenta[zzt] $whiteexport ZZT world`,
-              )
-              sorted.forEach((page) => {
+              const pagelines = sorted.map((page) => {
                 const name = memoryreadcodepagename(page)
                 const type = memoryreadcodepagetypeasstring(page)
                 const prefix = memorycodepagetoprefix(page)
-                write(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  `!pageexport ${address}:${page.id};$blue[${type}] ${prefix}$white${name}`,
-                )
+                return `!pageexport ${address}:${page.id};$blue[${type}] ${prefix}$white${name}`
               })
+              terminalwritelines(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                zsstexttape(
+                  `!bookallexport ${address};$blue[all] $whiteexport book`,
+                  `!bookzztexport ${address};$magenta[zzt] $whiteexport ZZT world`,
+                  pagelines,
+                ),
+              )
             }
           }, 1000)
         }
@@ -117,13 +124,12 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
               'application/octet-stream',
             )
           } else {
-            for (let i = 0; i < zztresult.errors.length; ++i) {
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                `$red${zztresult.errors[i].message}`,
-              )
-            }
+            const errlines = zztresult.errors.map((e) => `$red${e.message}`)
+            terminalwritelines(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              zsstexttape(errlines),
+            )
           }
         }
         return 0

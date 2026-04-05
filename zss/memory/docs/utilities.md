@@ -7,7 +7,7 @@
 - `@bokuweb/zstd-wasm` — compress, decompress
 - `jszip` — JSZip
 - `zss/device/session` — SOFTWARE
-- `zss/feature/*` — format, storage, url, writeui
+- `zss/feature/*` — format, storage, url, zsstextui
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/func` — doasync
 - `zss/mapping/qr` — qrlines

@@ -16,7 +16,11 @@ import {
 } from 'zss/feature/heavy/heavyllmpreset'
 import { pullstoragevarfrommain } from 'zss/feature/storagepull'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { writeheader } from 'zss/feature/writeui'
+import {
+  zssheaderlines,
+  zsstexttape,
+  zsszedlinklines,
+} from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -32,22 +36,29 @@ function showheavylmpresetmenu(player: string) {
       'vm',
     )
     const effective = resolveheavylmpresetfromsources(stored)
-    writeheader(SOFTWARE, player, 'model selection')
     const ids = heavylmpresetids()
-    const menulines: string[] = [
-      `$grayCurrent$white $cyan${effective}$white $7 $grayEnter on a row to switch$white`,
-    ]
-    for (let i = 0; i < ids.length; ++i) {
-      const id = ids[i]
-      const row = HEAVY_LLM_PRESETS[id]
-      const cmd = `#agent model ${id}`
-      const iscurrent = id === effective
-      const label = iscurrent
-        ? `$green ${id}$white ${row.modelid} $gray(active)`
-        : `$white ${id} ${row.modelid}`
-      menulines.push(`!runit ${cmd};${label}`)
-    }
-    terminalwritelines(SOFTWARE, player, menulines.join('\n'))
+    const linklines = zsszedlinklines(
+      ids.map((id) => {
+        const row = HEAVY_LLM_PRESETS[id]
+        const cmd = `#agent model ${id}`
+        const iscurrent = id === effective
+        return {
+          command: `runit ${cmd}`,
+          label: iscurrent
+            ? `$green ${id}$white ${row.modelid} $gray(active)`
+            : `$white ${id} ${row.modelid}`,
+        }
+      }),
+    )
+    terminalwritelines(
+      SOFTWARE,
+      player,
+      zsstexttape(
+        zssheaderlines('model selection'),
+        `$grayCurrent$white $cyan${effective}$white $7 $grayEnter on a row to switch$white`,
+        linklines,
+      ),
+    )
   })
 }
 
