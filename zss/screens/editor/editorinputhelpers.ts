@@ -1,4 +1,3 @@
-import type { RefObject } from 'react'
 import type { PresenceState, SharedTextHandle } from 'zss/device/modem'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
@@ -21,7 +20,6 @@ import {
   applycolortoindexes,
   textformatreadedges,
 } from 'zss/words/textformat'
-import { PT } from 'zss/words/types'
 
 export type EditorEdge = ReturnType<typeof textformatreadedges>
 
@@ -40,30 +38,24 @@ export function drawlocalcursor(
   codepage: MAYBE<SharedTextHandle>,
   xblink: number,
   yblink: number,
-  blinkdelta: RefObject<PT | undefined>,
   edge: EditorEdge,
   context: WRITE_TEXT_CONTEXT,
 ) {
   if (ispresent(codepage)) {
-    const moving =
-      blinkdelta.current?.x !== xblink || blinkdelta.current?.y !== yblink
-    if (moving) {
-      const x = edge.left + xblink
-      const y = edge.top + yblink
-      if (
-        y > edge.top + 1 &&
-        y < edge.bottom &&
-        x > edge.left &&
-        x < edge.right
-      ) {
-        drawblockcursor(xblink, yblink, edge as TextEdge, context, {
-          fg: ZSS_CURSOR_FG,
-          bg: ZSS_CURSOR_BG,
-        })
-      }
+    const x = edge.left + xblink
+    const y = edge.top + yblink
+    if (
+      y > edge.top + 1 &&
+      y < edge.bottom &&
+      x > edge.left &&
+      x < edge.right
+    ) {
+      drawblockcursor(xblink, yblink, edge as TextEdge, context, {
+        fg: ZSS_CURSOR_FG,
+        bg: ZSS_CURSOR_BG,
+      })
     }
   }
-  blinkdelta.current = { x: xblink, y: yblink }
 }
 
 export function drawremotecursors(

@@ -16,6 +16,7 @@ import {
   EDITOR_CODE_ROW,
   findcursorinrows,
   findmaxwidthinrows,
+  splitcoderows,
 } from 'zss/screens/tape/common'
 
 const CHUNK_STEP = 32
@@ -74,6 +75,7 @@ export function usePresenceBroadcast(
 
 export function useCursorNavigation(
   rows: EDITOR_CODE_ROW[],
+  codepage: MAYBE<SharedTextHandle>,
   edgeWidth: number,
   edgeHeight: number,
   codeend: number,
@@ -84,8 +86,11 @@ export function useCursorNavigation(
   const updatescrolling = useCallback(
     function (cursor: number) {
       useEditor.setState((state) => {
-        const ycursor2 = findcursorinrows(cursor, rows)
-        const xcursor2 = cursor - rows[ycursor2].start
+        const rowsource = ispresent(codepage)
+          ? splitcoderows(codepage.toJSON())
+          : rows
+        const ycursor2 = findcursorinrows(cursor, rowsource)
+        const xcursor2 = cursor - rowsource[ycursor2].start
 
         const xview = edgeWidth - 8
         const yview = edgeHeight - 4
@@ -97,9 +102,9 @@ export function useCursorNavigation(
         const xscroll = xdelta < hxstep ? state.xscroll : xcursor2 - xstep
         const yscroll = ycursor2 - ystep
 
-        const maxwidth = findmaxwidthinrows(rows)
+        const maxwidth = findmaxwidthinrows(rowsource)
         const xmaxscroll = (Math.round(maxwidth / CHUNK_STEP) + 1) * CHUNK_STEP
-        const ymaxscroll = rows.length - yview
+        const ymaxscroll = rowsource.length - yview
 
         return {
           xscroll: Math.round(clamp(xscroll, 0, xmaxscroll)),
@@ -107,7 +112,7 @@ export function useCursorNavigation(
         }
       })
     },
-    [rows, edgeWidth, edgeHeight],
+    [rows, codepage, edgeWidth, edgeHeight],
   )
 
   const movexcursor = useCallback(

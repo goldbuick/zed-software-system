@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import {
   apierror,
   apitoast,
@@ -32,7 +31,7 @@ import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
-import { COLOR, NAME, PT } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -79,7 +78,6 @@ export function EditorInput({
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const player = registerreadplayer()
-  const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
 
   const codepageKey = ispresent(codepage) ? codepage.nodeId.key : undefined
@@ -102,6 +100,7 @@ export function EditorInput({
 
   const { updatescrolling, movexcursor, moveycursor } = useCursorNavigation(
     rows,
+    codepage,
     edge.width,
     edge.height,
     codeend,
@@ -122,7 +121,7 @@ export function EditorInput({
   const xblink = xcursor + 1 - xoffset
   const yblink = ycursor + 2 - yoffset
 
-  drawlocalcursor(codepage, xblink, yblink, blinkdelta, edge, context)
+  drawlocalcursor(codepage, xblink, yblink, edge, context)
   drawremotecursors(
     codepage,
     remotePresence,
