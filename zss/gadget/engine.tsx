@@ -72,6 +72,8 @@ export function Engine() {
   const islowrez = forcelowrez || minrez < 600
   RUNTIME.DRAW_CHAR_SCALE = islowrez ? 1 : 2
 
+  console.info('ENGINE islowrez', islowrez, viewwidth, viewheight)
+
   // config LAYOUT
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
@@ -137,19 +139,21 @@ export function Engine() {
           )}
         </UserScreen>
       </UserFocus>
-      {shouldcrt && (
-        <EffectComposerMain width={viewwidth} height={viewheight}>
-          <>
-            {scanlines && <Scanlines />}
-            <Vignette
-              technique={VignetteTechnique.ESKIL}
-              offset={0.89}
-              darkness={0.911}
-            />
-            <CRTShape viewheight={viewheight} />
-          </>
-        </EffectComposerMain>
-      )}
+      <EffectComposerMain width={viewwidth} height={viewheight}>
+        <>
+          {shouldcrt && (
+            <>
+              {scanlines && <Scanlines />}
+              <Vignette
+                technique={VignetteTechnique.ESKIL}
+                offset={0.89}
+                darkness={0.911}
+              />
+              <CRTShape viewheight={viewheight} />
+            </>
+          )}
+        </>
+      </EffectComposerMain>
     </>
   )
 }
