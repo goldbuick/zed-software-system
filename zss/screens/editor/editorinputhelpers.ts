@@ -1,4 +1,3 @@
-import type { RefObject } from 'react'
 import type { PresenceState, SharedTextHandle } from 'zss/device/modem'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
