@@ -6,7 +6,7 @@ import {
 } from 'zss/feature/heavy/formatstate'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
-import { writeopenit, write } from 'zss/feature/writeui'
+import { write, writeopenit } from 'zss/feature/writeui'
 import { zsstextline } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { isemail } from 'zss/firmware/cli/utils'

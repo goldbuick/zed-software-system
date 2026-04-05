@@ -1,10 +1,10 @@
+import { iszedlinkline } from 'zss/feature/zsstextui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { iszedlinkline } from 'zss/feature/zsstextui'
 import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
 export { scrolllinkunescapefrag } from 'zss/mapping/string'

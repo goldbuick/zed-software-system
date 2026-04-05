@@ -1,7 +1,12 @@
 import { apierror, registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { write } from 'zss/feature/writeui'
-import { zssheaderlines, zsstexttablelines } from 'zss/feature/zsstextui'
+import {
+  zssheaderlines,
+  zsstexttablelines,
+  zsstexttape,
+} from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
@@ -65,66 +70,28 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
       ['list player $26 role and role $26 commands - #access to change preset'],
       () => {
         const nonestr = '(none)'
-        for (const line of zssheaderlines(
-          'permissions (list) — #access lockdown | creative',
-        )) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-        }
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$GRAY($YELLOWyellow$GRAY = override on base preset; gray = from preset)`,
-        )
-        const currentconfig = memoryreadpermissionconfig()
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `current config: $GREEN${currentconfig}`,
-        )
-        write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
-
+        const playertotoken = memoryreadplayertotoken()
+        const rolebytoken = memoryreadrolebytoken()
+        const players = Object.keys(playertotoken)
         const grouprows: string[][] = []
         for (const [group, desc] of PERMISSION_CONTROLLED_GROUPS) {
           grouprows.push([group, desc])
         }
-        for (const line of zsstexttablelines(grouprows, [
-          'group',
-          'description',
-        ])) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+        const playerrows: string[][] = []
+        for (let pi = 0; pi < players.length; ++pi) {
+          const player = players[pi]
+          const token = playertotoken[player]
+          const role =
+            rolebytoken[token] ??
+            (memoryisoperator(player) ? 'operator' : 'player')
+          playerrows.push([player, role])
         }
-        write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
-
-        const playertotoken = memoryreadplayertotoken()
-        const rolebytoken = memoryreadrolebytoken()
-        const players = Object.keys(playertotoken)
-        if (players.length > 0) {
-          for (const line of zssheaderlines(
-            'player $26 role - use #role to modify',
-          )) {
-            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-          }
-          const playerrows: string[][] = []
-          for (const player of players) {
-            const token = playertotoken[player]
-            const role =
-              rolebytoken[token] ??
-              (memoryisoperator(player) ? 'operator' : 'player')
-            playerrows.push([player, role])
-          }
-          for (const line of zsstexttablelines(playerrows, ['player', 'role'])) {
-            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-          }
-          write(SOFTWARE, READ_CONTEXT.elementfocus, '$32')
-        }
-
         const breakdownbyrole = memoryreadallowlistbreakdownbyrole()
-        for (const line of zssheaderlines(
-          'role $26 commands - use #allow and #revoke to modify',
-        )) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-        }
-        for (const role of PERMISSION_ROLES) {
+        const banned = memoryreadbannedtokens()
+
+        const rolebloclines: string[] = []
+        for (let ri = 0; ri < PERMISSION_ROLES.length; ++ri) {
+          const role = PERMISSION_ROLES[ri]
           const row = breakdownbyrole[role]
           const og = new Set(row.overridegrant)
           const parts = row.effective.map((f) =>
@@ -133,28 +100,41 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           const commandsspan = parts.length
             ? parts.join('$GRAY, ')
             : `$GRAY${nonestr}`
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `$GREEN${role}: ${commandsspan}`,
-          )
+          rolebloclines.push(`$GREEN${role}: ${commandsspan}`)
           if (row.overridedeny.length > 0) {
-            write(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
+            rolebloclines.push(
               `$GRAY  revoked vs base: ${row.overridedeny.join(', ')}`,
             )
           }
         }
 
-        const banned = memoryreadbannedtokens()
-        for (const line of zssheaderlines('banned players')) {
-          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
-        }
-        write(
+        const currentconfig = memoryreadpermissionconfig()
+        terminalwritelines(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          `$GRAY${banned.length ? banned.join(', ') : nonestr}`,
+          zsstexttape(
+            zssheaderlines(
+              'permissions (list) — #access <lockdown | creative>',
+            ),
+            `$GRAY($YELLOWyellow$GRAY = override on base preset; gray = from preset)`,
+            `current config: $GREEN${currentconfig}`,
+            '$32',
+            zsstexttablelines(grouprows, ['group', 'description']),
+            '$32',
+            ...(players.length > 0
+              ? [
+                  zssheaderlines('player $26 role - use #role to modify'),
+                  zsstexttablelines(playerrows, ['player', 'role']),
+                  '$32',
+                ]
+              : []),
+            zssheaderlines(
+              'role $26 commands - use #allow and #revoke to modify',
+            ),
+            rolebloclines,
+            zssheaderlines('banned players'),
+            `$GRAY${banned.length ? banned.join(', ') : nonestr}`,
+          ),
         )
         return 0
       },

@@ -21,11 +21,8 @@ import {
   netterminaljoin,
   readsubscribetopic,
 } from 'zss/feature/netterminal'
-import { writecopyit, write } from 'zss/feature/writeui'
-import {
-  zssheaderlines,
-  zssoptionline,
-} from 'zss/feature/zsstextui'
+import { write, writecopyit } from 'zss/feature/writeui'
+import { zssheaderlines, zssoptionline } from 'zss/feature/zsstextui'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'

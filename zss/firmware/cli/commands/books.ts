@@ -244,11 +244,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
         ),
       )
-      write(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        zssbbarline(7),
-      )
+      write(SOFTWARE, READ_CONTEXT.elementfocus, zssbbarline(7))
       const list = memoryreadbooklist()
       if (list.length) {
         list.forEach((book) => {
@@ -533,11 +529,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       for (const line of zsssectionlines(`$REDTRASH`)) {
         write(SOFTWARE, READ_CONTEXT.elementfocus, line)
       }
-      write(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        zsstextline(`books`),
-      )
+      write(SOFTWARE, READ_CONTEXT.elementfocus, zsstextline(`books`))
       const list = memoryreadbooklist()
       if (list.length) {
         list.forEach((book) => {

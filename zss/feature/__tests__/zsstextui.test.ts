@@ -2,19 +2,19 @@ import {
   DIVIDER,
   DOWN_SPOUT,
   UP_SPOUT,
+  iszedlinkline,
   zssbbarline,
   zssboxinnerwidth,
   zssheaderlines,
-  iszedlinkline,
   zssoptionline,
   zsssectionlines,
   zsstbarline,
   zsstextline,
+  zsstexttablelines,
   zsstexttape,
   zsszedlinkline,
   zsszedlinklinechip,
   zsszedlinklines,
-  zsstexttablelines,
 } from 'zss/feature/zsstextui'
 
 describe('zsstextui', () => {
@@ -46,9 +46,7 @@ describe('zsstextui', () => {
   })
 
   it('zssoptionline and zsstextline', () => {
-    expect(zssoptionline('1', 'go')).toBe(
-      '$dkpurple $white1 $bluego',
-    )
+    expect(zssoptionline('1', 'go')).toBe('$dkpurple $white1 $bluego')
     expect(zsstextline('msg')).toBe('$dkpurple$bluemsg')
   })
 
@@ -113,12 +111,7 @@ describe('zsstextui', () => {
   })
 
   it('zsstexttablelines header-less and ragged rows', () => {
-    expect(
-      zsstexttablelines([
-        ['x', 'y'],
-        ['only'],
-      ]),
-    ).toEqual([
+    expect(zsstexttablelines([['x', 'y'], ['only']])).toEqual([
       '$dkpurple+------+---+',
       '$dkpurple| $grayx    $dkpurple| $grayy $dkpurple|',
       '$dkpurple| $grayonly $dkpurple| $gray  $dkpurple|',
