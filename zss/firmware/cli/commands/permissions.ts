@@ -1,6 +1,7 @@
 import { apierror, registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { write, writeheader } from 'zss/feature/writeui'
+import { write } from 'zss/feature/writeui'
+import { zssheaderlines } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
@@ -64,11 +65,11 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
       ['list player $26 role and role $26 commands - #access to change preset'],
       () => {
         const nonestr = '(none)'
-        writeheader(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
+        for (const line of zssheaderlines(
           'permissions (list) — #access lockdown | creative',
-        )
+        )) {
+          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+        }
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
@@ -91,11 +92,11 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         const rolebytoken = memoryreadrolebytoken()
         const players = Object.keys(playertotoken)
         if (players.length > 0) {
-          writeheader(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
+          for (const line of zssheaderlines(
             'player $26 role - use #role to modify',
-          )
+          )) {
+            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          }
           for (const player of players) {
             const token = playertotoken[player]
             const role =
@@ -111,11 +112,11 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         }
 
         const breakdownbyrole = memoryreadallowlistbreakdownbyrole()
-        writeheader(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
+        for (const line of zssheaderlines(
           'role $26 commands - use #allow and #revoke to modify',
-        )
+        )) {
+          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+        }
         for (const role of PERMISSION_ROLES) {
           const row = breakdownbyrole[role]
           const og = new Set(row.overridegrant)
@@ -140,7 +141,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         }
 
         const banned = memoryreadbannedtokens()
-        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, 'banned players')
+        for (const line of zssheaderlines('banned players')) {
+          write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+        }
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
@@ -327,11 +330,11 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
           activelistvalues.add(memoryreadoperator())
           const players = [...activelistvalues]
-          writeheader(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
+          for (const line of zssheaderlines(
             'active players (use #ban <playerid> to ban)',
-          )
+          )) {
+            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          }
           if (players.length === 0) {
             write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
           } else {
@@ -378,11 +381,11 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           )
         } else {
           const bannedtokens = memoryreadbannedtokens()
-          writeheader(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
+          for (const line of zssheaderlines(
             'banned players (use #unban <playerid> to unban)',
-          )
+          )) {
+            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          }
           if (bannedtokens.length === 0) {
             write(SOFTWARE, READ_CONTEXT.elementfocus, '  (none)')
           } else {

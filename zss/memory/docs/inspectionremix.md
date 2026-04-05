@@ -8,7 +8,7 @@
 - `zss/device/*` — parsetarget, apitoast
 - `zss/device/session` — SOFTWARE
 - `zss/feature/boardremix` — boardremix
-- `zss/feature/writeui` — DIVIDER
+- `zss/feature/zsstextui` — DIVIDER
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/*` — 2d, tick, types
 - `zss/words/types` — PT, WORD

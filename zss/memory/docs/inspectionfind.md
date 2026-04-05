@@ -7,7 +7,7 @@
 - `idb-keyval` — get, update
 - `zss/device/api` — vmcli
 - `zss/device/session` — SOFTWARE
-- `zss/feature/writeui` — DIVIDER
+- `zss/feature/zsstextui` — DIVIDER
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/types` — isnumber, ispresent, isstring
 - `zss/words/types` — WORD

@@ -1,8 +1,8 @@
 import { SOFTWARE } from 'zss/device/session'
 import {
   MarkdownZedSink,
-  parsemarkdownwithzetextsink,
-} from 'zss/feature/parse/markdownzetext'
+  parsemarkdownwithzsstextsink,
+} from 'zss/feature/parse/markdownzsstext'
 import { scrolllinkescapefrag } from 'zss/mapping/string'
 
 import { terminalwritelines } from '../terminalwritelines'
@@ -24,6 +24,6 @@ function createterminalsink(lines: string[]): MarkdownZedSink {
 
 export function terminalwritemarkdownlines(player: string, content: string) {
   const lines: string[] = []
-  parsemarkdownwithzetextsink(createterminalsink(lines), content)
+  parsemarkdownwithzsstextsink(createterminalsink(lines), content)
   terminalwritelines(SOFTWARE, player, lines.join('\n'))
 }

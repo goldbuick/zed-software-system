@@ -16,7 +16,8 @@ import {
 } from 'zss/feature/heavy/heavyllmpreset'
 import { pullstoragevarfrommain } from 'zss/feature/storagepull'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { writeheader } from 'zss/feature/writeui'
+import { write } from 'zss/feature/writeui'
+import { zssheaderlines } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -32,7 +33,9 @@ function showheavylmpresetmenu(player: string) {
       'vm',
     )
     const effective = resolveheavylmpresetfromsources(stored)
-    writeheader(SOFTWARE, player, 'model selection')
+    for (const line of zssheaderlines('model selection')) {
+      write(SOFTWARE, player, line)
+    }
     const ids = heavylmpresetids()
     const menulines: string[] = [
       `$grayCurrent$white $cyan${effective}$white $7 $grayEnter on a row to switch$white`,

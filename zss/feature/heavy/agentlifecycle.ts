@@ -15,7 +15,8 @@ import {
   AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
-import { writeheader } from 'zss/feature/writeui'
+import { write } from 'zss/feature/writeui'
+import { zssheaderlines } from 'zss/feature/zsstextui'
 import { createshortnameid } from 'zss/mapping/guid'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
@@ -37,7 +38,9 @@ function persistrostertostorage(heavydev: DEVICE, requestplayer: string) {
 }
 
 function writeagentlistto(heavydev: DEVICE, requestplayer: string) {
-  writeheader(heavydev, requestplayer, 'agents')
+  for (const line of zssheaderlines('agents')) {
+    write(heavydev, requestplayer, line)
+  }
   const lines: string[] = []
   const ids = Object.keys(agents)
   if (ids.length === 0) {

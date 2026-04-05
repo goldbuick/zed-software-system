@@ -6,7 +6,8 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { exportbooktozzt } from 'zss/feature/parse/zztexport'
-import { write, writeheader, writesection } from 'zss/feature/writeui'
+import { write } from 'zss/feature/writeui'
+import { zssheaderlines, zsssectionlines } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import {
@@ -30,8 +31,12 @@ import { ARG_TYPE } from 'zss/words/types'
 export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('export', ['export menu (operator only)'], () => {
-      writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
-      writesection(SOFTWARE, READ_CONTEXT.elementfocus, `books`)
+      for (const line of zssheaderlines(`E X P O R T`)) {
+        write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+      }
+      for (const line of zsssectionlines(`books`)) {
+        write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+      }
       const list = memoryreadbooklist()
       if (list.length) {
         list.forEach((book) =>
@@ -51,8 +56,12 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
         const [address] = readargs(words, 0, [ARG_TYPE.NAME])
         const book = memoryreadbookbyaddress(address)
         if (ispresent(book)) {
-          writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `E X P O R T`)
-          writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
+          for (const line of zssheaderlines(`E X P O R T`)) {
+            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          }
+          for (const line of zsssectionlines(`pages`)) {
+            write(SOFTWARE, READ_CONTEXT.elementfocus, line)
+          }
           setTimeout(() => {
             if (book.pages.length) {
               const sorted = memorylistcodepagessorted(book)

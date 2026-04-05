@@ -12,7 +12,7 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 - `zss/device/modem` — modemwriteinitstring
 - `zss/rom` — romparse, romprint, romread
 - `zss/feature/url` — bbslogin, bbslist, bbsdelete, etc.
-- `zss/feature/writeui` — write, writebbar, writeheader, etc.
+- `zss/feature/zsstextui` — layout lines; `zss/feature/writeui` — write, hyperlinks, QR, copy
 - `zss/memory/*` — book/page/board/codepage operations
 
 ## Command Categories

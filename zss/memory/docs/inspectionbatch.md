@@ -6,7 +6,7 @@
 
 - `idb-keyval` — get, update
 - `zss/device/*` — parsetarget, api
-- `zss/feature/writeui` — DIVIDER
+- `zss/feature/zsstextui` — DIVIDER
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/*` — 2d, func, tick, types
 - `zss/words/types` — CATEGORY, COLOR, PT, WORD

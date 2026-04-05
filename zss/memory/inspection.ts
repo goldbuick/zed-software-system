@@ -8,7 +8,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { DIVIDER } from 'zss/feature/writeui'
+import { DIVIDER } from 'zss/feature/zsstextui'
 import { codepagepicksuffix } from 'zss/firmware/cli/utils'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'

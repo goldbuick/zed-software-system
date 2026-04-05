@@ -10,7 +10,7 @@ import {
   unpackformat,
 } from 'zss/feature/format'
 import { isjoin } from 'zss/feature/url'
-import { DIVIDER } from 'zss/feature/writeui'
+import { DIVIDER } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import {
   scrolllinkescapefrag,

@@ -1,29 +1,43 @@
-# writeui.ts
+# writeui.ts and zsstextui.ts
 
-**Purpose**: Helper functions for writing formatted log lines to the terminal. Used by firmware, device, memory, and heavy modules for user-facing output.
+**Purpose**
+
+- **`zsstextui.ts`** — Pure zsstext line strings: `layoutheaderlines`, `layoutsectionlines`, `layouttbarline`, `layoutbbarline`, `layoutoptionline`, `layouttextline`, and constants `DIVIDER`, `DOWN_SPOUT`, `UP_SPOUT`. Use these for any tape/terminal/scroll line layout; emit with `write` (terminal) or `gadgettext` (scroll).
+- **`writeui.ts`** — Terminal **sinks** only: `write` (`apilog`), `writehyperlink`, `writerunit`, `writeqr`, `writecopyit`, `writeopenit`. No layout composition here.
 
 ## Dependencies
 
-- `zss/device/api` — apilog, registerterminalfull
-- `zss/mapping/qr` — qrlines
+**writeui:** `zss/device/api`, `zss/mapping/qr`
 
-## Exports
+**zsstextui:** none (pure strings)
 
-| Function | Args | Description |
-|----------|------|-------------|
-| `write` | `device`, `player`, `text` | Write text to terminal log |
-| `writetext` | `device`, `player`, `text` | Write colored text |
-| `writeheader` | `device`, `player`, `header` | Header with top/bottom bars |
-| `writesection` | `device`, `player`, `section` | Section separator |
-| `writeoption` | `device`, `player`, `option`, `label` | Option with label |
-| `writetbar` | `device`, `player`, `width` | Top bar |
-| `writebbar` | `device`, `player`, `width` | Bottom bar |
-| `writehyperlink` | `device`, `player`, `hyperlink`, `label` | Hyperlink (format: `!hyperlink;label`) |
-| `writecopyit` | `device`, `player`, `content`, `label`, `showqr?` | Copyable content with optional QR |
-| `writeopenit` | `device`, `player`, `content`, `label` | Openable link |
-| `writeqr` | `device`, `player`, `content` | QR code as ASCII |
+## Where layout is used
 
-## Constants
+Call sites import `zss/feature/zsstextui` and loop lines into `write` or `gadgettext`. Examples: `zss/device/register.ts`, `zss/device/bridge.ts`, `zss/firmware/cli/commands/*`, `zss/rom/index.ts`, `zss/memory/*` (for `DIVIDER`).
 
-- `DIVIDER` — `$yellow$205$205$205$196` (horizontal rule)
+## writeui exports
 
+| Function | Description |
+|----------|-------------|
+| `write` | Raw line to terminal log |
+| `writehyperlink` | `!payload;label` |
+| `writerunit` | `!runit cmd;label` |
+| `writeqr` | QR ASCII lines |
+| `writecopyit` | Copy + optional QR + `registerterminalfull` |
+| `writeopenit` | `!openit …;label` |
+
+## zsstextui exports
+
+| Symbol | Description |
+|--------|-------------|
+| `layouttbarline` / `layoutbbarline` | Single bar line by width |
+| `layoutheaderlines` | Three lines: tbar, title, bbar |
+| `layoutsectionlines` | Section block (spacer, gray label, bbar) |
+| `layoutoptionline` | Option key + label |
+| `layouttextline` | Edge + blue body |
+| `DIVIDER`, `DOWN_SPOUT`, `UP_SPOUT` | Shared constants |
+
+## Related
+
+- [`markdownzsstext.ts`](../parse/markdownzsstext.ts) — CommonMark → zsstext lines (`parsemarkdownwithzsstextsink`, `parsetokenzsstext`)
+- [`terminalwritelines.ts`](../terminalwritelines.ts) / [`scrollwritelines`](../../gadget/data/scrollwritelines.ts) — bulk multiline sinks

@@ -1,5 +1,5 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
-import { DIVIDER } from 'zss/feature/writeui'
+import { DIVIDER } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, pttoindex } from 'zss/mapping/2d'

@@ -3,7 +3,7 @@ import {
   EDITOR_BOOKMARK_SCROLL_SCROLLNAME,
   type ZssEditorBookmark,
 } from 'zss/feature/bookmarks'
-import { DIVIDER } from 'zss/feature/writeui'
+import { DIVIDER } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { isstring } from 'zss/mapping/types'
