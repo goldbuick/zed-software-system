@@ -76,8 +76,6 @@ export function Engine() {
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
     deviceType === 'touchOnly' || primaryInput === 'touch'
-  const usetouchtextsync =
-    deviceType === 'touchOnly' && primaryInput === 'touch'
 
   // config FX
   const shouldcrt =
@@ -96,10 +94,9 @@ export function Engine() {
         islowrez,
         islandscape,
         showtouchcontrols,
-        usetouchtextsync,
       }
     })
-  }, [islowrez, islandscape, showtouchcontrols, usetouchtextsync])
+  }, [islowrez, islandscape, showtouchcontrols])
 
   // click to un-mute overlay for firefox
   const [showunmute, setshowunmute] = useState(isfirefox)

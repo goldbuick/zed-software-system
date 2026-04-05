@@ -22,15 +22,8 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/state'
-import { useDeviceData } from 'zss/gadget/device'
 import { Scrollable } from 'zss/gadget/scrollable'
-import {
-  UserInput,
-  gettouchtextelement,
-  modsfromevent,
-  ontouchtextinput,
-  touchtextfocus,
-} from 'zss/gadget/userinput'
+import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
@@ -106,7 +99,6 @@ export function TerminalInput({
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
 
   const player = registerreadplayer()
-  const usetouchtextsync = useDeviceData((state) => state.usetouchtextsync)
   const edge = textformatreadedges(context)
 
   // input & selection
@@ -233,40 +225,6 @@ export function TerminalInput({
     },
     [logrowtotalheight, visiblerows],
   )
-
-  // mobile: when touchtext is focused, push its value into terminal state
-  useEffect(() => {
-    if (!usetouchtextsync) {
-      return
-    }
-    return ontouchtextinput((value, selectionstart) => {
-      inputstatereplace(value)
-      useTerminal.setState({
-        xcursor: clamp(Math.round(selectionstart), 0, value.length),
-        xselect: undefined,
-      })
-    })
-  }, [usetouchtextsync, inputstatereplace])
-
-  useEffect(() => {
-    if (!usetouchtextsync) {
-      return
-    }
-    const el = gettouchtextelement()
-    if (!el || document.activeElement !== el) {
-      return
-    }
-    const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-    el.value = line
-    const pos = clamp(tapeterminal.xcursor, 0, line.length)
-    el.setSelectionRange(pos, pos)
-  }, [
-    usetouchtextsync,
-    inputstate,
-    tapeterminal.buffer,
-    tapeterminal.bufferindex,
-    tapeterminal.xcursor,
-  ])
 
   // navigate input history
   function inputstateswitch(switchto: number) {
@@ -545,18 +503,6 @@ export function TerminalInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
-        onClick={() => {
-          touchtextfocus()
-          if (usetouchtextsync) {
-            const el = gettouchtextelement()
-            if (el) {
-              const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-              el.value = line
-              const pos = clamp(tapeterminal.xcursor, 0, line.length)
-              el.setSelectionRange(pos, pos)
-            }
-          }
-        }}
         onScroll={(deltay: number) => {
           trackselection(false)
           inputstateycursor(-deltay)
