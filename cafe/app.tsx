@@ -5,14 +5,15 @@ import { enableaudio } from 'zss/device/synth'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
 import { ispresent } from 'zss/mapping/types'
-import { isfirefox } from 'zss/words/system'
 
 if (typeof window !== 'undefined') {
-  if (!isfirefox) {
-    window.addEventListener('keyup', () => {
+  window.addEventListener(
+    'keydown',
+    () => {
       enableaudio()
-    })
-  }
+    },
+    { capture: true },
+  )
 
   window.addEventListener('click', () => {
     enableaudio()
@@ -112,6 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 200)
     }, 3000)
   })
+
+  document.body.focus()
 })
 
 export function App() {
