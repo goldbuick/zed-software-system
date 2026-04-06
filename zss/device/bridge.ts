@@ -544,10 +544,7 @@ const bridge = createdevice('bridge', [], (message) => {
             ? IVSBroadcastClient.STANDARD_PORTRAIT
             : IVSBroadcastClient.STANDARD_LANDSCAPE
           broadcastclient = IVSBroadcastClient.create({
-            streamConfig: {
-              ...streamconfig,
-              maxFramerate: 60, // attempt smoother broadcasting
-            },
+            streamConfig: streamconfig,
           })
 
           // event handlers

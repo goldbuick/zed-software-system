@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "1.1.4",
+  "version": "1.1.7",
   "type": "module",
   "files": [
     "bin",
@@ -63,7 +63,7 @@
     "@react-three/fiber": "^9.4.0",
     "@react-three/postprocessing": "^3.0.4",
     "@twurple/auth": "^8.0.3",
-    "@twurple/chat": "^7.4.0",
+    "@twurple/chat": "^8.0.3",
     "@types/audioworklet": "^0.0.72",
     "@types/file-saver": "^2.0.7",
     "@types/is-hotkey": "^0.1.10",
@@ -79,7 +79,7 @@
     "@typescript-eslint/parser": "^8.14.0",
     "@vitejs/plugin-react-swc": "^4.2.2",
     "alea": "^1.0.1",
-    "amazon-ivs-web-broadcast": "^1.31.1",
+    "amazon-ivs-web-broadcast": "^1.33.0",
     "case": "^1.6.3",
     "chevrotain": "^11.0.3",
     "debounce": "^2.2.0",
