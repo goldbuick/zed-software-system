@@ -4148,12 +4148,11 @@ alea@^1.0.1:
   resolved "https://registry.npmjs.org/alea/-/alea-1.0.1.tgz"
   integrity sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==
 
-amazon-ivs-web-broadcast@^1.31.1:
-  version "1.31.1"
-  resolved "https://registry.npmjs.org/amazon-ivs-web-broadcast/-/amazon-ivs-web-broadcast-1.31.1.tgz"
-  integrity sha512-HbNeKxPIyqvIme7TL0WVeRFwNVEQuOsuFdIYi6Iadp7L0MQHTyK3YAa3koqDdN+bIsJ7DTb/dfx0+EI+avaUbQ==
+amazon-ivs-web-broadcast@^1.33.0:
+  version "1.33.0"
+  resolved "https://registry.yarnpkg.com/amazon-ivs-web-broadcast/-/amazon-ivs-web-broadcast-1.33.0.tgz#e4da1373dc56fff0f2c2dafb6efdc242fbe7de60"
+  integrity sha512-tz4Par0Lp3o/mgnHQ1YsEv69r+JrUYqq4urI25HmB7VeEUZYUq48uX3fnuMn/Y9pQ8/PislcM7ekaSGYVT8SNw==
   dependencies:
-    axios "0.27.2"
     bowser "^2.11.0"
     eventemitter3 "^4.0.7"
     jest-environment-jsdom "^29.7.0"
@@ -4398,14 +4397,6 @@ available-typed-arrays@^1.0.7:
   integrity sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==
   dependencies:
     possible-typed-array-names "^1.0.0"
-
-axios@0.27.2:
-  version "0.27.2"
-  resolved "https://registry.npmjs.org/axios/-/axios-0.27.2.tgz"
-  integrity sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==
-  dependencies:
-    follow-redirects "^1.14.9"
-    form-data "^4.0.0"
 
 axios@^1.12.2:
   version "1.13.4"
@@ -6224,7 +6215,7 @@ flatted@^3.2.9:
   resolved "https://registry.npmjs.org/flatted/-/flatted-3.3.3.tgz"
   integrity sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==
 
-follow-redirects@^1.14.9, follow-redirects@^1.15.6:
+follow-redirects@^1.15.6:
   version "1.15.11"
   resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.11.tgz"
   integrity sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==

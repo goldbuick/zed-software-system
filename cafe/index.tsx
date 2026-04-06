@@ -54,11 +54,6 @@ function shoulde2ebridge(): boolean {
   return import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
 }
 
-/** Off unless dev/E2E — `preserveDrawingBuffer` costs bandwidth on some GPUs. */
-function shouldpreservedrawingbuffer(): boolean {
-  return import.meta.env.DEV || shoulde2ebridge()
-}
-
 async function bootheadless(): Promise<void> {
   const g = globalThis as any
   const readplayer = g.__nodeStorageReadPlayer
@@ -155,7 +150,7 @@ async function main() {
           alpha: true,
           stencil: false,
           antialias: false,
-          preserveDrawingBuffer: shouldpreservedrawingbuffer(),
+          preserveDrawingBuffer: true,
         },
       })
       .then(() => {
@@ -203,7 +198,7 @@ async function main() {
       alpha: true,
       stencil: false,
       antialias: false,
-      preserveDrawingBuffer: shouldpreservedrawingbuffer(),
+      preserveDrawingBuffer: true,
     },
   })
 
