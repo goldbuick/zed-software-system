@@ -14,11 +14,16 @@ import { useShallow } from 'zustand/react/shallow'
 import { ToggleKey } from './togglekey'
 
 type KeyboardGameProps = {
-  width: number
   height: number
+  leftedge: number
+  rightedge: number
 }
 
-export function KeyboardGame({ width, height }: KeyboardGameProps) {
+export function KeyboardGame({
+  height,
+  leftedge,
+  rightedge,
+}: KeyboardGameProps) {
   const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData(
     useShallow((state) => ({
       keyboardalt: state.keyboardalt,
@@ -26,19 +31,53 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
       keyboardshift: state.keyboardshift,
     })),
   )
-  const left = width - 18
-  const mid = width - 12
-  const right = width - 6
+  // 5 + 1 + 5 + 1 + 5 = 18
+  const midstart = leftedge
+  const midcols = rightedge - leftedge + 1
   const top = 1
-  const ycenter = Math.floor(height * 0.5) - 2
   const bottom = height - 4
-  const center = Math.round(width * 0.5) - 3
+  const ycenter = Math.floor(height * 0.5) - 2
+  const row3x = midstart
+  const ctrlx = row3x
+  const altx = row3x + 7
+  const shiftx = row3x + 14
+  const ctrly = top + 1
+  const alty = top
+  const shifty = top + 1
+
+  const navy = top + 4
+  const tabx = row3x
+  const enterx = row3x + 7
+  const escx = row3x + 14
+  const taby = navy + 1
+  const entery = navy
+  const escy = navy + 1
+
+  const termrowy = navy + 4
+  const termq = tabx
+  const termhash = enterx
+  const termc = escx
+  const termqy = termrowy + 1
+  const termhashy = termrowy
+  const termcy = termrowy + 1
+
+  const cx = midstart + Math.floor(midcols / 2) - 2
+  const dpadleftx = midstart
+  const dpadrightx = rightedge - 4
+  const belowtermrow = Math.max(termqy, termhashy, termcy) + 4
+  const dpadupy = Math.max(belowtermrow, ycenter)
+  const dpadmidy = Math.min(bottom, dpadupy + 4)
+  const dpaddowny = Math.min(bottom, dpadmidy + 4)
+
+  const termy = bottom - 1
+  const termrepeat = midstart + Math.max(0, midcols - 5)
+
   const player = registerreadplayer()
   return (
     <>
       <ToggleKey
-        x={0}
-        y={top}
+        x={ctrlx}
+        y={ctrly}
         letters={keyboardctrl ? metakey.toUpperCase() : metakey.toLowerCase()}
         onToggle={() => {
           if (keyboardctrl) {
@@ -50,8 +89,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={6}
-        y={top + 1}
+        x={altx}
+        y={alty}
         letters={keyboardalt ? 'ALT' : 'alt'}
         onToggle={() => {
           if (keyboardalt) {
@@ -63,8 +102,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={12}
-        y={top}
+        x={shiftx}
+        y={shifty}
         letters={keyboardshift ? 'SHIFT' : 'shift'}
         onToggle={() => {
           if (keyboardshift) {
@@ -76,8 +115,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={left}
-        y={top}
+        x={tabx}
+        y={taby}
         letters="tab"
         onToggle={() => {
           inputdown(0, INPUT.MENU_BUTTON)
@@ -85,8 +124,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={mid}
-        y={top + 1}
+        x={enterx}
+        y={entery}
         letters="enter"
         onToggle={() => {
           inputdown(0, INPUT.OK_BUTTON)
@@ -94,8 +133,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={right}
-        y={top}
+        x={escx}
+        y={escy}
         letters="esc"
         onToggle={() => {
           inputdown(0, INPUT.CANCEL_BUTTON)
@@ -103,32 +142,32 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={1}
-        y={bottom - 1}
+        x={termq}
+        y={termqy}
         letters="?"
         onToggle={() => {
           registerterminalopen(SOFTWARE, player)
         }}
       />
       <ToggleKey
-        x={7}
-        y={bottom}
+        x={termhash}
+        y={termhashy}
         letters="#"
         onToggle={() => {
           registerterminalopen(SOFTWARE, player, '#')
         }}
       />
       <ToggleKey
-        x={13}
-        y={bottom - 1}
+        x={termc}
+        y={termcy}
         letters="c"
         onToggle={() => {
           registerterminalquickopen(SOFTWARE, player, '')
         }}
       />
       <ToggleKey
-        x={right}
-        y={bottom - 1}
+        x={termrepeat}
+        y={termy}
         letters="$meta+p"
         onToggle={() => {
           vmclirepeatlast(SOFTWARE, player)
@@ -136,8 +175,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
       />
 
       <ToggleKey
-        x={center}
-        y={top}
+        x={cx}
+        y={dpadupy}
         letters="$24"
         onToggle={() => {
           inputdown(0, INPUT.MOVE_UP)
@@ -145,8 +184,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={center}
-        y={bottom}
+        x={cx}
+        y={dpaddowny}
         letters="$25"
         onToggle={() => {
           inputdown(0, INPUT.MOVE_DOWN)
@@ -154,8 +193,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={width - 5}
-        y={ycenter}
+        x={dpadrightx}
+        y={dpadmidy}
         letters="$26"
         onToggle={() => {
           inputdown(0, INPUT.MOVE_RIGHT)
@@ -163,8 +202,8 @@ export function KeyboardGame({ width, height }: KeyboardGameProps) {
         }}
       />
       <ToggleKey
-        x={0}
-        y={ycenter}
+        x={dpadleftx}
+        y={dpadmidy}
         letters="$27"
         onToggle={() => {
           inputdown(0, INPUT.MOVE_LEFT)

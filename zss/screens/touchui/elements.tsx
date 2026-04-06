@@ -6,11 +6,14 @@ import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import { resettiles, writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
 import { snap } from 'zss/mapping/number'
-import { tokenizeandwritetextformat } from 'zss/words/textformat'
+import {
+  type WRITE_TEXT_CONTEXT,
+  tokenizeandwritetextformat,
+} from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
 import { KeyboardGame } from './keyboardgame'
-import { ThumbStick } from './thumbstick'
+import { DualThumbSticks } from './thumbstick'
 import { TouchPlane } from './touchplane'
 
 type ElementsProps = {
@@ -25,13 +28,46 @@ const FG = COLOR.WHITE
 const BG = COLOR.DKPURPLE
 const LABEL = 'tap to toggle '
 
+function clearstickdecoration(
+  context: WRITE_TEXT_CONTEXT,
+  width: number,
+  height: number,
+  side: 'left' | 'right',
+  leftedge: number,
+  rightedge: number,
+) {
+  if (side === 'left') {
+    for (let y = 1; y < height; ++y) {
+      for (let x = 0; x < leftedge; ++x) {
+        writetile(context, width, height, x, y, {
+          char: DECO,
+          color: FG,
+          bg: BG,
+        })
+      }
+    }
+  } else {
+    for (let y = 1; y < height; ++y) {
+      for (let x = rightedge + 1; x < width; ++x) {
+        writetile(context, width, height, x, y, {
+          char: DECO,
+          color: FG,
+          bg: BG,
+        })
+      }
+    }
+  }
+}
+
 export function Elements({ width, height, onReset }: ElementsProps) {
   const context = useWriteText()
 
   resettiles(context, DECO, FG, BG)
 
-  const leftedge = Math.floor(width * 0.333)
-  const rightedge = Math.round(width * 0.666)
+  // middle is 18 chars wide
+  const mid = Math.round(width * 0.5)
+  const leftedge = mid - 9
+  const rightedge = mid + 9
   for (let y = 1; y < height; ++y) {
     for (let x = leftedge; x <= rightedge; ++x) {
       writetile(context, width, height, x, y, { char: 176 })
@@ -72,12 +108,24 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           }))
         }}
       />
-      <KeyboardGame width={width} height={height} />
-      <ThumbStick
+      <KeyboardGame height={height} leftedge={leftedge} rightedge={rightedge} />
+      <DualThumbSticks
         width={width}
         height={height}
+        leftedge={leftedge}
+        rightedge={rightedge}
         onUp={onReset}
-        onDrawStick={(startx, starty, tipx, tipy) => {
+        onStickClear={(side) => {
+          clearstickdecoration(
+            context,
+            width,
+            height,
+            side,
+            leftedge,
+            rightedge,
+          )
+        }}
+        onDrawStick={(_side, startx, starty, tipx, tipy) => {
           for (let i = 0; i < 11; ++i) {
             context.x = startx - 5
             context.y = starty - 5 + i
@@ -87,7 +135,6 @@ export function Elements({ width, height, onReset }: ElementsProps) {
               false,
             )
           }
-          // limit knob range
           const raddist = 4
           motion.x = tipx - startx
           motion.y = tipy - starty
