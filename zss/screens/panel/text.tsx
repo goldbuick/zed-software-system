@@ -1,8 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { withclipboard } from 'zss/feature/keyboard'
 import { paneladdress } from 'zss/gadget/data/types'
-import { UserFocus, UserInput, UserInputMods } from 'zss/gadget/userinput'
+import { useDeviceData } from 'zss/gadget/device'
+import {
+  UserFocus,
+  UserInput,
+  UserInputMods,
+  getmobiletextelement,
+  mobiletextfocus,
+  onmobiletextinput,
+} from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
@@ -38,6 +46,10 @@ export function PanelText({
   const [cursor, setCursor] = useState(0)
   const [focus, setFocus] = useState(false)
   const [selection, setSelection] = useState<number | undefined>(undefined)
+  const usemobiletextcapture = useDeviceData(
+    (s) => s.usemobiletextcapture,
+  )
+  const editfocusopened = useRef(false)
 
   const tvalue = `${state} `
   const tlabel = label.trim()
@@ -82,6 +94,64 @@ export function PanelText({
       value.delete(left, right - left + 1)
     }
   }
+
+  useEffect(() => {
+    if (!focus) {
+      editfocusopened.current = false
+      return
+    }
+    if (!usemobiletextcapture || !value) {
+      return
+    }
+    if (!editfocusopened.current) {
+      editfocusopened.current = true
+      mobiletextfocus()
+      queueMicrotask(() => {
+        const el = getmobiletextelement()
+        if (!el || !value) {
+          return
+        }
+        const s = value.toJSON()
+        el.value = s
+        el.setSelectionRange(s.length, s.length)
+      })
+    }
+  }, [focus, usemobiletextcapture, value])
+
+  useEffect(() => {
+    if (!focus || !usemobiletextcapture || !value) {
+      return
+    }
+    return onmobiletextinput((newstr, sel) => {
+      const capped = newstr.slice(0, visiblerange)
+      const prev = value.toJSON()
+      value.splice(0, prev.length, capped)
+      setCursor(clamp(sel, 0, capped.length))
+      setSelection(undefined)
+    })
+  }, [focus, usemobiletextcapture, value, visiblerange])
+
+  useEffect(() => {
+    if (!focus || !usemobiletextcapture || !value) {
+      return
+    }
+    const el = getmobiletextelement()
+    if (!el || document.activeElement !== el) {
+      return
+    }
+    const s = value.toJSON()
+    el.value = s
+    if (!ispresent(selection)) {
+      el.setSelectionRange(cursor, cursor)
+    } else {
+      let l = Math.min(selection, cursor)
+      let r = Math.max(selection, cursor)
+      if (r !== l && r === cursor) {
+        r--
+      }
+      el.setSelectionRange(l, r + 1)
+    }
+  }, [focus, usemobiletextcapture, state, cursor, selection, value])
 
   return (
     <>

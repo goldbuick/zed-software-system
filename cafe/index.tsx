@@ -35,6 +35,7 @@ import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
 import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
+import { bootstrapmobiletextcapture } from 'zss/gadget/mobiletextcapture'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
 import { installe2ebridge } from 'zss/testsupport/e2escrollbridge'
@@ -212,6 +213,8 @@ async function main() {
     window.visualViewport.addEventListener('scroll', handleresize)
   }
   r3fcontext.store = root.render(<App />)
+  // Tier A mobile text: imperative DOM + zustand subscribe (no second React root — avoids invalid hook call).
+  bootstrapmobiletextcapture()
   // Debounced `handleresize` does not run on first call until `wait` elapses, so the
   // canvas would stay on the sizeless initial `configure` until resize or ~256ms.
   applyconfig()

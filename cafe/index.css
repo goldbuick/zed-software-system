@@ -27,10 +27,19 @@ canvas {
   image-rendering: pixelated;
 }
 
-#touchtext {
+.mobiletextcapture {
   left: 0;
   top: -100px;
   position: fixed;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  resize: none;
+  overflow: hidden;
 }
 
 #webgl-required {
