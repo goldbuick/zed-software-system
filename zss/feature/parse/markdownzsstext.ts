@@ -85,6 +85,15 @@ function linklabeltext(token: Tokens.Link): string {
   return label
 }
 
+function buildimagecommand(im: Tokens.Image): string {
+  return `viewit ${im.href}`
+}
+
+function imagelinklabel(im: Tokens.Image): string {
+  const showlabel = im.title ?? (im.text?.trim() ? im.text.trim() : im.href)
+  return `view ${showlabel}`
+}
+
 /**
  * Zed scroll tape line: `!command;label` — not markdown images `![`.
  * Used only outside fenced code blocks in `preparemarkdownforscroll`.
@@ -162,6 +171,12 @@ function walkparagraphinlines(
       b = flushline(sink, b, prefix)
       const lt = t as Tokens.Link
       sink.hyperlink(buildlinkcommand(lt), linklabeltext(lt))
+      continue
+    }
+    if (t.type === 'image') {
+      b = flushline(sink, b, prefix)
+      const im = t as Tokens.Image
+      sink.hyperlink(buildimagecommand(im), imagelinklabel(im))
       continue
     }
     b += inlinetostring([t])
@@ -313,6 +328,12 @@ function emitlistitembody(sink: MarkdownZedSink, item: Tokens.ListItem) {
       sink.hyperlink(buildlinkcommand(lt), linklabeltext(lt))
       continue
     }
+    if (t.type === 'image') {
+      flushifcontent()
+      const im = t as Tokens.Image
+      sink.hyperlink(buildimagecommand(im), imagelinklabel(im))
+      continue
+    }
     if (t.type === 'text') {
       buf += (t as Tokens.Text).text
       continue
@@ -351,8 +372,7 @@ export function parsetokenzsstext(sink: MarkdownZedSink, token: Token) {
     }
     case 'image': {
       const im = token as Tokens.Image
-      const showlabel = im.title ?? (im.text?.trim() ? im.text.trim() : im.href)
-      sink.hyperlink(`openit ${im.href}`, `show ${showlabel}`)
+      sink.hyperlink(buildimagecommand(im), imagelinklabel(im))
       break
     }
     case 'blockquote':
