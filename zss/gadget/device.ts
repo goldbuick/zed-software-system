@@ -12,6 +12,8 @@ export type DEVICE_DATA = {
   keyboardctrl: boolean
   keyboardshift: boolean
   showtouchcontrols: boolean
+  /** Tier A: terminal/editor sync with hidden touchtext input (touch-only, no hardware keyboard). */
+  usetouchtextsync: boolean
   checknumbers: string
   wordlist: string[]
   wordlistflag: string
@@ -29,6 +31,7 @@ export const useDeviceData = create<DEVICE_DATA>(() => ({
   keyboardctrl: false,
   keyboardshift: false,
   showtouchcontrols: false,
+  usetouchtextsync: false,
   checknumbers: '',
   wordlist: [],
   wordlistflag: '',

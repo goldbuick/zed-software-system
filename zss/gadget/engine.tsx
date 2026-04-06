@@ -72,12 +72,12 @@ export function Engine() {
   const islowrez = forcelowrez || minrez < 600
   RUNTIME.DRAW_CHAR_SCALE = islowrez ? 1 : 2
 
-  console.info('ENGINE islowrez', islowrez, viewwidth, viewheight)
-
   // config LAYOUT
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
     deviceType === 'touchOnly' || primaryInput === 'touch'
+  const usetouchtextsync =
+    deviceType === 'touchOnly' && primaryInput === 'touch'
 
   // config FX
   const shouldcrt =
@@ -96,9 +96,10 @@ export function Engine() {
         islowrez,
         islandscape,
         showtouchcontrols,
+        usetouchtextsync,
       }
     })
-  }, [islowrez, islandscape, showtouchcontrols])
+  }, [islowrez, islandscape, showtouchcontrols, usetouchtextsync])
 
   // click to un-mute overlay for firefox
   const [showunmute, setshowunmute] = useState(isfirefox)

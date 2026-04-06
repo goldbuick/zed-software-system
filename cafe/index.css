@@ -27,6 +27,12 @@ canvas {
   image-rendering: pixelated;
 }
 
+#touchtext {
+  left: 0;
+  top: -100px;
+  position: fixed;
+}
+
 #webgl-required {
   position: fixed;
   inset: 0;

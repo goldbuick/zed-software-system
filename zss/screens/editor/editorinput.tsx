@@ -18,7 +18,7 @@ import {
   useTape,
 } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
-import { UserInput, modsfromevent } from 'zss/gadget/userinput'
+import { UserInput, modsfromevent, touchtextfocus } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
@@ -221,6 +221,9 @@ export function EditorInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
+        onClick={() => {
+          touchtextfocus()
+        }}
         onScroll={(ydelta: number) => moveycursor(ydelta * 0.75)}
       />
       <UserInput

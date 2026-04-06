@@ -190,6 +190,58 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
   })
 }
 
+const TOUCHTEXT_ID = 'touchtext'
+
+export function touchtextfocus() {
+  document.getElementById(TOUCHTEXT_ID)?.focus()
+}
+
+export function gettouchtextelement(): HTMLInputElement | null {
+  return document.getElementById(TOUCHTEXT_ID) as HTMLInputElement | null
+}
+
+export type TouchtextInputCallback = (
+  value: string,
+  selectionstart: number,
+) => void
+
+/**
+ * Subscribe to touchtext value changes. Skips sync during IME composition;
+ * callback runs on `input` when not composing and on `compositionend`.
+ * Returns unsubscribe.
+ */
+export function ontouchtextinput(callback: TouchtextInputCallback): () => void {
+  const el = gettouchtextelement()
+  if (!el) {
+    return () => {}
+  }
+  const element = el
+  let composing = false
+  function run() {
+    callback(element.value, element.selectionStart ?? 0)
+  }
+  function oninput() {
+    if (!composing) {
+      run()
+    }
+  }
+  function oncompositionstart() {
+    composing = true
+  }
+  function oncompositionend() {
+    composing = false
+    run()
+  }
+  element.addEventListener('input', oninput)
+  element.addEventListener('compositionstart', oncompositionstart)
+  element.addEventListener('compositionend', oncompositionend)
+  return () => {
+    element.removeEventListener('input', oninput)
+    element.removeEventListener('compositionstart', oncompositionstart)
+    element.removeEventListener('compositionend', oncompositionend)
+  }
+}
+
 function handlekeydown(event: KeyboardEvent) {
   const key = NAME(event.key)
   const mods = modsfromevent(event)
@@ -395,6 +447,47 @@ function handlekeyup(event: KeyboardEvent) {
   }
 }
 
+function bindtouchtextkeyboard() {
+  const touchtext = document.getElementById(TOUCHTEXT_ID)
+  if (!touchtext) {
+    return
+  }
+  touchtext.addEventListener(
+    'keydown',
+    (event) => {
+      const target = event.target as HTMLElement | null
+      if (target?.id !== TOUCHTEXT_ID) {
+        return
+      }
+      event.preventDefault()
+      event.stopPropagation()
+      handlekeydown(event)
+    },
+    { capture: true },
+  )
+  touchtext.addEventListener(
+    'keyup',
+    (event) => {
+      const target = event.target as HTMLElement | null
+      if (target?.id !== TOUCHTEXT_ID) {
+        return
+      }
+      event.preventDefault()
+      event.stopPropagation()
+      handlekeyup(event)
+    },
+    { capture: true },
+  )
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindtouchtextkeyboard)
+  } else {
+    bindtouchtextkeyboard()
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener(
     'wheel',
@@ -404,7 +497,17 @@ if (typeof window !== 'undefined') {
     { passive: false },
   )
 
-  window.addEventListener('keydown', handlekeydown, { capture: true })
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      const target = event.target as HTMLElement | null
+      if (target?.id === TOUCHTEXT_ID) {
+        return
+      }
+      handlekeydown(event)
+    },
+    { capture: true },
+  )
 
   window.addEventListener('keyup', (event) => handlekeyup(event), {
     capture: true,
