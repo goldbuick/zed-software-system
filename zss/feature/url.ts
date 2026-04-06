@@ -20,7 +20,44 @@ export function isjoin() {
   return location.href.includes(`/join/`)
 }
 
-// bridge api
+// brick proxy: museum API + images use BRICK_BASE/?brick=<full upstream https URL>
+
+export const BRICK_BASE = 'https://brick.zed.cafe'
+
+/** Load remote http(s) images via brick `?brick=`; brick decodes with decodeURIComponent once. */
+export function brickproxiedurl(url: string): string {
+  const trimmed = url.trim()
+  if (!trimmed) {
+    return trimmed
+  }
+  if (trimmed.startsWith(`${BRICK_BASE}/`)) {
+    return trimmed
+  }
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed
+  }
+  let absolute = trimmed
+  if (typeof location !== 'undefined') {
+    try {
+      absolute = new URL(trimmed, location.href).href
+    } catch {
+      return trimmed
+    }
+  }
+  let parsed: URL
+  try {
+    parsed = new URL(absolute)
+  } catch {
+    return trimmed
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return trimmed
+  }
+  return `${BRICK_BASE}/?brick=${encodeURIComponent(absolute)}`
+}
+
+/** Upstream Museum of ZZT HTTP URLs; clients reach them only via {@link brickproxiedurl}. */
+export const MUSEUMOFZZT_URL_BASE = 'https://museumofzzt.com'
 
 export type MOSTLY_ZZT_META = {
   title: string
@@ -32,17 +69,14 @@ export type MOSTLY_ZZT_META = {
   publish_date: string
 }
 
-const BRIDGE_URL = `https://bridge.zed.cafe`
-
 export async function museumofzztsearch(
   field: string,
   text: string,
   offset: number,
 ): Promise<MOSTLY_ZZT_META[]> {
   const searchargs = `offset=${offset}&${field}=${text}`
-  const request = new Request(
-    `${BRIDGE_URL}/api/v1/search/files/?${searchargs}`,
-  )
+  const target = `${MUSEUMOFZZT_URL_BASE}/api/v1/search/files/?${searchargs}`
+  const request = new Request(brickproxiedurl(target))
   const response = await fetch(request)
   const contentjson = await response.json()
   const contentlist = contentjson.data.results as MOSTLY_ZZT_META[]
@@ -50,7 +84,8 @@ export async function museumofzztsearch(
 }
 
 export async function museumofzztrandom(): Promise<MOSTLY_ZZT_META[]> {
-  const request = new Request(`${BRIDGE_URL}/api/v1/get/random-file/`)
+  const target = `${MUSEUMOFZZT_URL_BASE}/api/v1/get/random-file/`
+  const request = new Request(brickproxiedurl(target))
   const response = await fetch(request)
   const contentjson = await response.json()
   const contentdata = contentjson.data
@@ -58,14 +93,16 @@ export async function museumofzztrandom(): Promise<MOSTLY_ZZT_META[]> {
 }
 
 export function museumofzztscreenshoturl(content: string) {
-  return `${BRIDGE_URL}/static/${content}`
+  const target = `${MUSEUMOFZZT_URL_BASE}/static/${content}`
+  return brickproxiedurl(target)
 }
 
 export async function museumofzztdownload(
   player: string,
   content: string,
 ): Promise<void> {
-  const response = await fetch(`${BRIDGE_URL}/zgames/${content}`)
+  const target = `${MUSEUMOFZZT_URL_BASE}/zgames/${content}`
+  const response = await fetch(brickproxiedurl(target))
   const zipdata = await response.arrayBuffer()
   const file = new File([zipdata], content)
   parsewebfile(player, file)

@@ -2,6 +2,7 @@ import { useLoader } from '@react-three/fiber'
 import { Suspense, useEffect } from 'react'
 import { TextureLoader } from 'three'
 import { RUNTIME } from 'zss/config'
+import { brickproxiedurl } from 'zss/feature/url'
 import { useMedia } from 'zss/gadget/media'
 
 import { updateTexture } from './display/textures'
@@ -16,7 +17,8 @@ type TapeShowImage = {
 }
 
 function TapeShowImage({ url, drawwidth, drawheight }: TapeShowImage) {
-  const texture = useLoader(TextureLoader, url)
+  const loadurl = brickproxiedurl(url)
+  const texture = useLoader(TextureLoader, loadurl)
 
   useEffect(() => {
     texture.flipY = true

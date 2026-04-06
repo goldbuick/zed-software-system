@@ -28,6 +28,7 @@ The memory system manages the ZSS game state — books, codepages, boards, eleme
 | [runtime.md](runtime.md) | Chip OS, tick, CLI, run |
 | [spatialqueries.md](spatialqueries.md) | Collision, any, countof, path |
 | [rendering.md](rendering.md) | Gadget layer conversion, display |
+| [board-lighting.md](board-lighting.md) | Dark-board lighting (geometry, occlusion, shading) |
 | [utilities.md](utilities.md) | Admin menu, compress/decompress |
 | [inspection.md](inspection.md) | Inspector UI entry |
 | [inspectionbatch.md](inspectionbatch.md) | Copy/paste, secret heap |
