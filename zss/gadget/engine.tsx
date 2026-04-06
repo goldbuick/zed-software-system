@@ -7,7 +7,6 @@ import { useEffect, useLayoutEffect, useState } from 'react'
 import { FORCE_TOUCH_UI, RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { enableaudio } from 'zss/device/synth'
 import { isclimode } from 'zss/feature/detect'
 import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
@@ -22,11 +21,9 @@ import {
   ScreenUIScrollProvider,
 } from 'zss/screens/screenui/component'
 import { TapeComponent } from 'zss/screens/tape/component'
-import { isfirefox } from 'zss/words/system'
 
 import { Scanlines } from './fx/scanlines'
-import { Rect } from './rect'
-import { TapeToast, TapeToastConnected } from './toast'
+import { TapeToastConnected } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
@@ -102,9 +99,6 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])
 
-  // click to un-mute overlay for firefox
-  const [showunmute, setshowunmute] = useState(isfirefox)
-
   return (
     <>
       <OrthographicCamera
@@ -122,23 +116,6 @@ export function Engine() {
             <TapeViewImage />
             <ScreenUIScrollLayer />
           </ScreenUIScrollProvider>
-          {showunmute && (
-            <>
-              <Rect
-                blocking
-                opacity={0.5}
-                color="black"
-                cursor="pointer"
-                width={Math.ceil(viewwidth / RUNTIME.DRAW_CHAR_WIDTH())}
-                height={Math.ceil(viewheight / RUNTIME.DRAW_CHAR_HEIGHT())}
-                onClick={() => {
-                  enableaudio()
-                  setshowunmute(false)
-                }}
-              />
-              <TapeToast toast="Click to un-mute" />
-            </>
-          )}
         </UserScreen>
       </UserFocus>
       <EffectComposerMain width={viewwidth} height={viewheight}>

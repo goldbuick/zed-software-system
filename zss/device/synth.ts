@@ -1,4 +1,4 @@
-import { Context, getTransport, setContext, start } from 'tone'
+import { Context, getContext, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth, setupsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synth/voiceconfig'
@@ -35,6 +35,45 @@ type CustomNavigator = {
 
 let locked = false
 let enabled = false
+
+/** Firefox can leave `AudioContext.resume()` pending; resolve when context is running or start() settles. */
+function waitforrunningaudiocontext(): Promise<void> {
+  const raw = getContext().rawContext as AudioContext
+  if (raw.state === 'running') {
+    return Promise.resolve()
+  }
+  return new Promise((resolve, reject) => {
+    let settled = false
+    const finish = () => {
+      if (settled) {
+        return
+      }
+      settled = true
+      raw.removeEventListener('statechange', onstate)
+      resolve()
+    }
+    const onstate = () => {
+      if (raw.state === 'running') {
+        finish()
+      }
+    }
+    raw.addEventListener('statechange', onstate)
+    start()
+      .then(() => {
+        if (raw.state === 'running') {
+          finish()
+        }
+      })
+      .catch((err: unknown) => {
+        raw.removeEventListener('statechange', onstate)
+        reject(err instanceof Error ? err : new Error(String(err)))
+      })
+    if (raw.state === 'running') {
+      finish()
+    }
+  })
+}
+
 export function enableaudio() {
   if (enabled || locked) {
     return
@@ -42,12 +81,17 @@ export function enableaudio() {
 
   // synth setup
   locked = true
+  apilog(synthdevice, registerreadplayer(), 'enabling audio…')
 
   // create new context (lookAhead gives scheduler more time, reduces glitches on slow devices)
   setContext(new Context({ latencyHint: 'playback', lookAhead: 0.15 }), true)
 
-  // resume audio context
-  start()
+  const rawcontext = getContext().rawContext as AudioContext
+  if (rawcontext.state === 'suspended') {
+    void rawcontext.resume()
+  }
+
+  waitforrunningaudiocontext()
     .then(() => {
       if (!enabled) {
         // better audio playback for mobile safari
