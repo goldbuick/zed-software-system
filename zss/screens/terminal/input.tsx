@@ -26,10 +26,10 @@ import { useDeviceData } from 'zss/gadget/device'
 import { Scrollable } from 'zss/gadget/scrollable'
 import {
   UserInput,
-  gettouchtextelement,
+  getmobiletextelement,
+  mobiletextfocus,
   modsfromevent,
-  ontouchtextinput,
-  touchtextfocus,
+  onmobiletextinput,
 } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
@@ -106,7 +106,9 @@ export function TerminalInput({
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
 
   const player = registerreadplayer()
-  const usetouchtextsync = useDeviceData((state) => state.usetouchtextsync)
+  const usemobiletextcapture = useDeviceData(
+    (state) => state.usemobiletextcapture,
+  )
   const edge = textformatreadedges(context)
 
   // input & selection
@@ -235,23 +237,30 @@ export function TerminalInput({
   )
 
   useEffect(() => {
-    if (!usetouchtextsync) {
+    if (!usemobiletextcapture) {
       return
     }
-    return ontouchtextinput((value, selectionstart) => {
-      inputstatereplace(value)
+    return onmobiletextinput((value, selectionstart) => {
+      // CLI is single-line; hidden field is a textarea so editor can use newlines.
+      const line = value.split(/\r?\n/)[0] ?? ''
+      const pos = clamp(
+        Math.round(Math.min(selectionstart, line.length)),
+        0,
+        line.length,
+      )
+      inputstatereplace(line)
       useTerminal.setState({
-        xcursor: clamp(Math.round(selectionstart), 0, value.length),
+        xcursor: pos,
         xselect: undefined,
       })
     })
-  }, [usetouchtextsync, inputstatereplace])
+  }, [usemobiletextcapture, inputstatereplace])
 
   useEffect(() => {
-    if (!usetouchtextsync) {
+    if (!usemobiletextcapture) {
       return
     }
-    const el = gettouchtextelement()
+    const el = getmobiletextelement()
     if (!el || document.activeElement !== el) {
       return
     }
@@ -260,7 +269,7 @@ export function TerminalInput({
     const pos = clamp(tapeterminal.xcursor, 0, line.length)
     el.setSelectionRange(pos, pos)
   }, [
-    usetouchtextsync,
+    usemobiletextcapture,
     inputstate,
     tapeterminal.buffer,
     tapeterminal.bufferindex,
@@ -545,9 +554,9 @@ export function TerminalInput({
         width={edge.width}
         height={edge.height}
         onClick={() => {
-          touchtextfocus()
-          if (usetouchtextsync) {
-            const el = gettouchtextelement()
+          mobiletextfocus()
+          if (usemobiletextcapture) {
+            const el = getmobiletextelement()
             if (el) {
               const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
               el.value = line

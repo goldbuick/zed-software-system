@@ -4,7 +4,7 @@ import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { VignetteTechnique } from 'postprocessing'
 import { useEffect, useLayoutEffect, useState } from 'react'
-import { RUNTIME } from 'zss/config'
+import { FORCE_TOUCH_UI, RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
@@ -76,8 +76,9 @@ export function Engine() {
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
     deviceType === 'touchOnly' || primaryInput === 'touch'
-  const usetouchtextsync =
-    deviceType === 'touchOnly' && primaryInput === 'touch'
+  /** True on touch-primary-only devices, or when ZSS_FORCE_TOUCH_UI=true (desktop smoke test for hidden input). */
+  const usemobiletextcapture =
+    (deviceType === 'touchOnly' && primaryInput === 'touch') || FORCE_TOUCH_UI
 
   // config FX
   const shouldcrt =
@@ -96,10 +97,10 @@ export function Engine() {
         islowrez,
         islandscape,
         showtouchcontrols,
-        usetouchtextsync,
+        usemobiletextcapture,
       }
     })
-  }, [islowrez, islandscape, showtouchcontrols, usetouchtextsync])
+  }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])
 
   // click to un-mute overlay for firefox
   const [showunmute, setshowunmute] = useState(isfirefox)

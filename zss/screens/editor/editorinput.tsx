@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   apierror,
   apitoast,
@@ -17,9 +18,17 @@ import {
   useGadgetClient,
   useTape,
 } from 'zss/gadget/data/state'
+import { useDeviceData } from 'zss/gadget/device'
 import { Scrollable } from 'zss/gadget/scrollable'
-import { UserInput, modsfromevent, touchtextfocus } from 'zss/gadget/userinput'
+import {
+  UserInput,
+  getmobiletextelement,
+  mobiletextfocus,
+  modsfromevent,
+  onmobiletextinput,
+} from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
+import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   AUTO_COMPLETE,
@@ -78,6 +87,9 @@ export function EditorInput({
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
   const player = registerreadplayer()
+  const usemobiletextcapture = useDeviceData(
+    (state) => state.usemobiletextcapture,
+  )
   const edge = textformatreadedges(context)
 
   const codepageKey = ispresent(codepage) ? codepage.nodeId.key : undefined
@@ -115,6 +127,52 @@ export function EditorInput({
     codepage,
     updatescrolling,
   )
+
+  // Tier A: Android soft keyboard — `input`/IME on hidden field (keydown alone is unreliable).
+  useEffect(() => {
+    if (!usemobiletextcapture || !ispresent(codepage)) {
+      return
+    }
+    return onmobiletextinput((newString, selectionStart) => {
+      const prev = codepage.toJSON()
+      if (newString === prev) {
+        return
+      }
+      strvaluesplice(0, prev.length, newString)
+      const pos = clamp(selectionStart, 0, newString.length)
+      updatescrolling(pos)
+      useEditor.setState({ cursor: pos, select: undefined })
+    })
+  }, [usemobiletextcapture, codepage, strvaluesplice, updatescrolling])
+
+  useEffect(() => {
+    if (!usemobiletextcapture || !ispresent(codepage)) {
+      return
+    }
+    const el = getmobiletextelement()
+    if (!el || document.activeElement !== el) {
+      return
+    }
+    el.value = strvalue
+    const cur = tapeeditor.cursor
+    const sel = tapeeditor.select
+    if (!ispresent(sel)) {
+      el.setSelectionRange(cur, cur)
+    } else {
+      const l = Math.min(sel, cur)
+      let r = Math.max(sel, cur)
+      if (r !== l && r === cur) {
+        r--
+      }
+      el.setSelectionRange(l, r + 1)
+    }
+  }, [
+    usemobiletextcapture,
+    strvalue,
+    tapeeditor.cursor,
+    tapeeditor.select,
+    codepage,
+  ])
 
   // --- drawing ---
 
@@ -222,7 +280,28 @@ export function EditorInput({
         width={edge.width}
         height={edge.height}
         onClick={() => {
-          touchtextfocus()
+          if (usemobiletextcapture) {
+            mobiletextfocus()
+            queueMicrotask(() => {
+              const el = getmobiletextelement()
+              if (!el || !ispresent(codepage)) {
+                return
+              }
+              const s = codepage.toJSON()
+              el.value = s
+              const { cursor: cur, select: sel } = useEditor.getState()
+              if (!ispresent(sel)) {
+                el.setSelectionRange(cur, cur)
+              } else {
+                const l = Math.min(sel, cur)
+                let r = Math.max(sel, cur)
+                if (r !== l && r === cur) {
+                  r--
+                }
+                el.setSelectionRange(l, r + 1)
+              }
+            })
+          }
         }}
         onScroll={(ydelta: number) => moveycursor(ydelta * 0.75)}
       />

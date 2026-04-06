@@ -32,6 +32,16 @@ import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
 import { DIR, NAME } from 'zss/words/types'
 
+import {
+  type Mobiletextfield,
+  getmobiletextelement,
+  mobiletextfocus,
+  onmobiletextinput,
+} from './mobiletext'
+
+export { getmobiletextelement, mobiletextfocus, onmobiletextinput }
+export type { MobiletextInputCallback } from './mobiletext'
+
 // user input
 
 type INPUT_STATE = Record<INPUT, boolean>
@@ -188,58 +198,6 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
       vminput(SOFTWARE, player, input, bits)
     }
   })
-}
-
-const TOUCHTEXT_ID = 'touchtext'
-
-export function touchtextfocus() {
-  document.getElementById(TOUCHTEXT_ID)?.focus()
-}
-
-export function gettouchtextelement(): HTMLInputElement | null {
-  return document.getElementById(TOUCHTEXT_ID) as HTMLInputElement | null
-}
-
-export type TouchtextInputCallback = (
-  value: string,
-  selectionstart: number,
-) => void
-
-/**
- * Subscribe to touchtext value changes. Skips sync during IME composition;
- * callback runs on `input` when not composing and on `compositionend`.
- * Returns unsubscribe.
- */
-export function ontouchtextinput(callback: TouchtextInputCallback): () => void {
-  const el = gettouchtextelement()
-  if (!el) {
-    return () => {}
-  }
-  const element = el
-  let composing = false
-  function run() {
-    callback(element.value, element.selectionStart ?? 0)
-  }
-  function oninput() {
-    if (!composing) {
-      run()
-    }
-  }
-  function oncompositionstart() {
-    composing = true
-  }
-  function oncompositionend() {
-    composing = false
-    run()
-  }
-  element.addEventListener('input', oninput)
-  element.addEventListener('compositionstart', oncompositionstart)
-  element.addEventListener('compositionend', oncompositionend)
-  return () => {
-    element.removeEventListener('input', oninput)
-    element.removeEventListener('compositionstart', oncompositionstart)
-    element.removeEventListener('compositionend', oncompositionend)
-  }
 }
 
 function handlekeydown(event: KeyboardEvent) {
@@ -447,44 +405,59 @@ function handlekeyup(event: KeyboardEvent) {
   }
 }
 
-function bindtouchtextkeyboard() {
-  const touchtext = document.getElementById(TOUCHTEXT_ID)
-  if (!touchtext) {
-    return
+/**
+ * Capture-phase key routing from the hidden mobile text field into `handlekeydown` / `handlekeyup`.
+ * Call from `bootstrapmobiletextcapture`; cleanup on unmount. Enter is passed through for textarea
+ * when the editor is open so `\n` can be inserted.
+ */
+export function setupmobiletextkeyboardlisteners(
+  element: Mobiletextfield,
+): () => void {
+  function editoropen() {
+    return useTape.getState().editor.open
   }
-  touchtext.addEventListener(
-    'keydown',
-    (event) => {
-      const target = event.target as HTMLElement | null
-      if (target?.id !== TOUCHTEXT_ID) {
-        return
-      }
-      event.preventDefault()
-      event.stopPropagation()
-      handlekeydown(event)
-    },
-    { capture: true },
-  )
-  touchtext.addEventListener(
-    'keyup',
-    (event) => {
-      const target = event.target as HTMLElement | null
-      if (target?.id !== TOUCHTEXT_ID) {
-        return
-      }
-      event.preventDefault()
-      event.stopPropagation()
-      handlekeyup(event)
-    },
-    { capture: true },
-  )
-}
-
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindtouchtextkeyboard)
-  } else {
-    bindtouchtextkeyboard()
+  function onkeydowncapture(event: Event) {
+    const ev = event as KeyboardEvent
+    if (ev.target !== element) {
+      return
+    }
+    const key = NAME(ev.key)
+    // Textarea + editor: allow default Enter so `\n` is inserted; `onmobiletextinput` syncs.
+    if (
+      element instanceof HTMLTextAreaElement &&
+      editoropen() &&
+      key === 'enter'
+    ) {
+      ev.stopPropagation()
+      return
+    }
+    ev.preventDefault()
+    ev.stopPropagation()
+    handlekeydown(ev)
+  }
+  function onkeyupcapture(event: Event) {
+    const ev = event as KeyboardEvent
+    if (ev.target !== element) {
+      return
+    }
+    const key = NAME(ev.key)
+    if (
+      element instanceof HTMLTextAreaElement &&
+      editoropen() &&
+      key === 'enter'
+    ) {
+      ev.stopPropagation()
+      return
+    }
+    ev.preventDefault()
+    ev.stopPropagation()
+    handlekeyup(ev)
+  }
+  element.addEventListener('keydown', onkeydowncapture, { capture: true })
+  element.addEventListener('keyup', onkeyupcapture, { capture: true })
+  return () => {
+    element.removeEventListener('keydown', onkeydowncapture, { capture: true })
+    element.removeEventListener('keyup', onkeyupcapture, { capture: true })
   }
 }
 
@@ -500,8 +473,8 @@ if (typeof window !== 'undefined') {
   window.addEventListener(
     'keydown',
     (event) => {
-      const target = event.target as HTMLElement | null
-      if (target?.id === TOUCHTEXT_ID) {
+      const captureel = getmobiletextelement()
+      if (captureel && event.target === captureel) {
         return
       }
       handlekeydown(event)
@@ -509,9 +482,17 @@ if (typeof window !== 'undefined') {
     { capture: true },
   )
 
-  window.addEventListener('keyup', (event) => handlekeyup(event), {
-    capture: true,
-  })
+  window.addEventListener(
+    'keyup',
+    (event) => {
+      const captureel = getmobiletextelement()
+      if (captureel && event.target === captureel) {
+        return
+      }
+      handlekeyup(event)
+    },
+    { capture: true },
+  )
 
   window.addEventListener('blur', () => {
     inputup(0, INPUT.ALT)
