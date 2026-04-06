@@ -500,8 +500,6 @@ if (typeof window !== 'undefined') {
   window.addEventListener(
     'keydown',
     (event) => {
-      // when focus is on the hidden touchtext input (editor/terminal), only
-      // the touchtext listener should handle keys so we don't get duplicate chars
       const target = event.target as HTMLElement | null
       if (target?.id === TOUCHTEXT_ID) {
         return

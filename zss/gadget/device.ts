@@ -12,7 +12,7 @@ export type DEVICE_DATA = {
   keyboardctrl: boolean
   keyboardshift: boolean
   showtouchcontrols: boolean
-  /** When true, terminal/editor sync with touchtext input value (mobile + no keyboard). */
+  /** Tier A: terminal/editor sync with hidden touchtext input (touch-only, no hardware keyboard). */
   usetouchtextsync: boolean
   checknumbers: string
   wordlist: string[]

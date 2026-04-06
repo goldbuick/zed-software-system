@@ -234,7 +234,6 @@ export function TerminalInput({
     [logrowtotalheight, visiblerows],
   )
 
-  // mobile: when touchtext is focused, push its value into terminal state
   useEffect(() => {
     if (!usetouchtextsync) {
       return
