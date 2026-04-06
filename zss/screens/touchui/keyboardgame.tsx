@@ -14,14 +14,12 @@ import { useShallow } from 'zustand/react/shallow'
 import { ToggleKey } from './togglekey'
 
 type KeyboardGameProps = {
-  width: number
   height: number
   leftedge: number
   rightedge: number
 }
 
 export function KeyboardGame({
-  width: _width,
   height,
   leftedge,
   rightedge,
@@ -33,65 +31,45 @@ export function KeyboardGame({
       keyboardshift: state.keyboardshift,
     })),
   )
+  // 5 + 1 + 5 + 1 + 5 = 18
   const midstart = leftedge
   const midcols = rightedge - leftedge + 1
   const top = 1
   const bottom = height - 4
   const ycenter = Math.floor(height * 0.5) - 2
-  const canfitthree = midcols >= 15
-  const row3x = midstart + Math.max(0, Math.floor((midcols - 15) / 2))
-  const modx = midstart + Math.max(0, Math.floor((midcols - 5) / 2))
+  const row3x = midstart
+  const ctrlx = row3x
+  const altx = row3x + 7
+  const shiftx = row3x + 14
+  const ctrly = top + 1
+  const alty = top
+  const shifty = top + 1
 
-  let ctrlx: number
-  let altx: number
-  let shiftx: number
-  let ctrly: number
-  let alty: number
-  let shifty: number
-  if (canfitthree) {
-    ctrlx = row3x
-    altx = row3x + 5
-    shiftx = row3x + 10
-    ctrly = alty = shifty = top
-  } else {
-    ctrlx = altx = shiftx = modx
-    ctrly = top
-    alty = top + 3
-    shifty = top + 6
-  }
+  const navy = top + 4
+  const tabx = row3x
+  const enterx = row3x + 7
+  const escx = row3x + 14
+  const taby = navy + 1
+  const entery = navy
+  const escy = navy + 1
 
-  const navy = canfitthree ? top + 3 : top + 9
-  let tabx: number
-  let enterx: number
-  let escx: number
-  let taby: number
-  let entery: number
-  let escy: number
-  if (canfitthree) {
-    tabx = row3x
-    enterx = row3x + 5
-    escx = row3x + 10
-    taby = entery = escy = navy
-  } else {
-    tabx = enterx = escx = modx
-    taby = navy
-    entery = navy + 3
-    escy = navy + 6
-  }
+  const termrowy = navy + 4
+  const termq = tabx
+  const termhash = enterx
+  const termc = escx
+  const termqy = termrowy + 1
+  const termhashy = termrowy
+  const termcy = termrowy + 1
 
   const cx = midstart + Math.floor(midcols / 2) - 2
   const dpadleftx = midstart
   const dpadrightx = rightedge - 4
-  const dpadupy = Math.max(top + 1, ycenter - 4)
-  const dpaddowny = Math.min(bottom, ycenter + 4)
+  const belowtermrow = Math.max(termqy, termhashy, termcy) + 4
+  const dpadupy = Math.max(belowtermrow, ycenter)
+  const dpadmidy = Math.min(bottom, dpadupy + 4)
+  const dpaddowny = Math.min(bottom, dpadmidy + 4)
 
   const termy = bottom - 1
-  const termspread = Math.min(6, Math.max(1, Math.floor(midcols / 4)))
-  const termx0 =
-    midstart + Math.max(0, Math.floor((midcols - (4 * termspread + 1)) / 2))
-  const termq = termx0
-  const termhash = termx0 + termspread
-  const termc = termx0 + 2 * termspread
   const termrepeat = midstart + Math.max(0, midcols - 5)
 
   const player = registerreadplayer()
@@ -165,7 +143,7 @@ export function KeyboardGame({
       />
       <ToggleKey
         x={termq}
-        y={termy}
+        y={termqy}
         letters="?"
         onToggle={() => {
           registerterminalopen(SOFTWARE, player)
@@ -173,7 +151,7 @@ export function KeyboardGame({
       />
       <ToggleKey
         x={termhash}
-        y={bottom}
+        y={termhashy}
         letters="#"
         onToggle={() => {
           registerterminalopen(SOFTWARE, player, '#')
@@ -181,7 +159,7 @@ export function KeyboardGame({
       />
       <ToggleKey
         x={termc}
-        y={termy}
+        y={termcy}
         letters="c"
         onToggle={() => {
           registerterminalquickopen(SOFTWARE, player, '')
@@ -216,7 +194,7 @@ export function KeyboardGame({
       />
       <ToggleKey
         x={dpadrightx}
-        y={ycenter}
+        y={dpadmidy}
         letters="$26"
         onToggle={() => {
           inputdown(0, INPUT.MOVE_RIGHT)
@@ -225,7 +203,7 @@ export function KeyboardGame({
       />
       <ToggleKey
         x={dpadleftx}
-        y={ycenter}
+        y={dpadmidy}
         letters="$27"
         onToggle={() => {
           inputdown(0, INPUT.MOVE_LEFT)

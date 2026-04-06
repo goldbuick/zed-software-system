@@ -7,14 +7,13 @@ import { resettiles, writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
 import { snap } from 'zss/mapping/number'
 import {
-  tokenizeandwritetextformat,
   type WRITE_TEXT_CONTEXT,
+  tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { touchuileftedge, touchuirightedge } from './common'
-import { DualThumbSticks } from './thumbstick'
 import { KeyboardGame } from './keyboardgame'
+import { DualThumbSticks } from './thumbstick'
 import { TouchPlane } from './touchplane'
 
 type ElementsProps = {
@@ -40,13 +39,21 @@ function clearstickdecoration(
   if (side === 'left') {
     for (let y = 1; y < height; ++y) {
       for (let x = 0; x < leftedge; ++x) {
-        writetile(context, width, height, x, y, { char: DECO, color: FG, bg: BG })
+        writetile(context, width, height, x, y, {
+          char: DECO,
+          color: FG,
+          bg: BG,
+        })
       }
     }
   } else {
     for (let y = 1; y < height; ++y) {
       for (let x = rightedge + 1; x < width; ++x) {
-        writetile(context, width, height, x, y, { char: DECO, color: FG, bg: BG })
+        writetile(context, width, height, x, y, {
+          char: DECO,
+          color: FG,
+          bg: BG,
+        })
       }
     }
   }
@@ -57,8 +64,10 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
   resettiles(context, DECO, FG, BG)
 
-  const leftedge = touchuileftedge(width)
-  const rightedge = touchuirightedge(width)
+  // middle is 18 chars wide
+  const mid = Math.round(width * 0.5)
+  const leftedge = mid - 9
+  const rightedge = mid + 9
   for (let y = 1; y < height; ++y) {
     for (let x = leftedge; x <= rightedge; ++x) {
       writetile(context, width, height, x, y, { char: 176 })
@@ -99,27 +108,24 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           }))
         }}
       />
-      <KeyboardGame
+      <KeyboardGame height={height} leftedge={leftedge} rightedge={rightedge} />
+      <DualThumbSticks
         width={width}
         height={height}
         leftedge={leftedge}
         rightedge={rightedge}
-      />
-      <DualThumbSticks
-        width={width}
-        height={height}
         onUp={onReset}
         onStickClear={(side) => {
-          clearstickdecoration(context, width, height, side, leftedge, rightedge)
+          clearstickdecoration(
+            context,
+            width,
+            height,
+            side,
+            leftedge,
+            rightedge,
+          )
         }}
-        onDrawStick={(
-          _side,
-          startx,
-          starty,
-          tipx,
-          tipy,
-          _tileoriginx,
-        ) => {
+        onDrawStick={(_side, startx, starty, tipx, tipy) => {
           for (let i = 0; i < 11; ++i) {
             context.x = startx - 5
             context.y = starty - 5 + i

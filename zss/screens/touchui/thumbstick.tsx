@@ -6,7 +6,6 @@ import { RUNTIME } from 'zss/config'
 import { INPUT_RATE } from 'zss/gadget/userinput'
 import { snap } from 'zss/mapping/number'
 
-import { touchuileftedge, touchuirightedge } from './common'
 import { handlestickdirsmerged } from './stickinputs'
 import { TouchPlane } from './touchplane'
 
@@ -51,6 +50,8 @@ function createstick(): MoveStick {
 type DualThumbSticksProps = {
   width: number
   height: number
+  leftedge: number
+  rightedge: number
   onUp: () => void
   /** When one finger lifts while the other stick is still active, clear that side’s stick art. */
   onStickClear: (side: 'left' | 'right') => void
@@ -80,12 +81,12 @@ function snapfromstick(stick: MoveStick): number | null {
 export function DualThumbSticks({
   width,
   height,
+  leftedge,
+  rightedge,
   onUp,
   onStickClear,
   onDrawStick,
 }: DualThumbSticksProps) {
-  const leftedge = touchuileftedge(width)
-  const rightedge = touchuirightedge(width)
   const leftwidth = leftedge
   const rightx = rightedge + 1
   const rightwidth = width - rightx
