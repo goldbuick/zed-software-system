@@ -44,9 +44,7 @@ export function TerminalText({
   const [cursor, setCursor] = useState(0)
   const [focus, setFocus] = useState(false)
   const [selection, setSelection] = useState<number | undefined>(undefined)
-  const usemobiletextcapture = useDeviceData(
-    (s) => s.usemobiletextcapture,
-  )
+  const usemobiletextcapture = useDeviceData((s) => s.usemobiletextcapture)
   const editfocusopened = useRef(false)
 
   const tvalue = `${state} `
@@ -140,7 +138,7 @@ export function TerminalText({
     if (!ispresent(selection)) {
       el.setSelectionRange(cursor, cursor)
     } else {
-      let l = Math.min(selection, cursor)
+      const l = Math.min(selection, cursor)
       let r = Math.max(selection, cursor)
       if (r !== l && r === cursor) {
         r--

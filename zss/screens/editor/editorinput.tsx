@@ -159,7 +159,7 @@ export function EditorInput({
     if (!ispresent(sel)) {
       el.setSelectionRange(cur, cur)
     } else {
-      let l = Math.min(sel, cur)
+      const l = Math.min(sel, cur)
       let r = Math.max(sel, cur)
       if (r !== l && r === cur) {
         r--
@@ -293,7 +293,7 @@ export function EditorInput({
               if (!ispresent(sel)) {
                 el.setSelectionRange(cur, cur)
               } else {
-                let l = Math.min(sel, cur)
+                const l = Math.min(sel, cur)
                 let r = Math.max(sel, cur)
                 if (r !== l && r === cur) {
                   r--

@@ -39,11 +39,7 @@ import {
   onmobiletextinput,
 } from './mobiletext'
 
-export {
-  getmobiletextelement,
-  mobiletextfocus,
-  onmobiletextinput,
-}
+export { getmobiletextelement, mobiletextfocus, onmobiletextinput }
 export type { MobiletextInputCallback } from './mobiletext'
 
 // user input

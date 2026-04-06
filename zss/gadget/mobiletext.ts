@@ -76,7 +76,9 @@ export function mobiletextfocus() {
  * If the input is not mounted yet, subscribes when it appears.
  * Returns unsubscribe.
  */
-export function onmobiletextinput(callback: MobiletextInputCallback): () => void {
+export function onmobiletextinput(
+  callback: MobiletextInputCallback,
+): () => void {
   subscribers.add(callback)
   if (mobiletextelement) {
     attachsubscriber(callback, mobiletextelement)
