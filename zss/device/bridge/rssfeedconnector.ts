@@ -94,7 +94,7 @@ export function createrssfeedconnector(opts: RSS_FEED_OPTIONS): CHAT_CONNECTOR {
       if (firstpoll) {
         firstpoll = false
         phase = 'live'
-        handlers.onconnect()
+        handlers.onconnect(routekey)
       } else {
         for (let i = 0; i < batch.length; ++i) {
           const { title, link } = batch[i]
@@ -123,7 +123,7 @@ export function createrssfeedconnector(opts: RSS_FEED_OPTIONS): CHAT_CONNECTOR {
         clearInterval(timer)
         timer = undefined
       }
-      handlers.ondisconnect()
+      handlers.ondisconnect(routekey)
     },
     describestatus(): CHAT_CONNECTOR_STATUS {
       return {

@@ -149,11 +149,9 @@
   "dependencies": {
     "@oclif/core": "^4.8.3",
     "@tonejs/midi": "^2.0.28",
-    "@xmpp/client": "0.14.0",
     "fuse.js": "^7.1.0",
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
-    "irc-framework": "4.14.0",
     "playwright": "^1.49.0",
     "vosk-browser": "^0.0.8"
   },

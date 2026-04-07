@@ -32,11 +32,9 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 function chatusagebridge() {
   return (
     'usage: chat <twitch-channel> | chat start <kind> … | chat stop <kind> | chat profile … ' +
-    '(kinds: twitch, irc, xmpp, rss, mastodon, bluesky). ' +
+    '(kinds: twitch, rss, mastodon, bluesky). ' +
     'Start with @profilename to load a saved profile; add key=value to override. ' +
-    'RSS/feeds use browser fetch—URLs must allow CORS. ' +
-    'IRC example: wss://irc.example.com/ws (WebSocket gateway). ' +
-    'XMPP service is often wss://host:5281/xmpp-websocket'
+    'RSS/feeds use browser fetch—URLs must allow CORS.'
   )
 }
 
@@ -83,10 +81,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
     )
     .command(
       'chat',
-      [
-        ARG_TYPE.MAYBE_NAME,
-        'chat bridge: twitch / irc / xmpp / feeds (operator only)',
-      ],
+      [ARG_TYPE.MAYBE_NAME, 'chat bridge: twitch / feeds (operator only)'],
       (_, words) => {
         const w = words.map((x) => String(x))
         const player = READ_CONTEXT.elementfocus
@@ -125,9 +120,6 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
                 return
               }
               const redacted = { ...p }
-              if (redacted.password) {
-                redacted.password = '***'
-              }
               if (redacted.mastodontoken) {
                 redacted.mastodontoken = '***'
               }
@@ -192,7 +184,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
               SOFTWARE,
               player,
               'bridge',
-              'chat start needs kind: twitch, irc, xmpp, rss, mastodon, bluesky',
+              'chat start needs kind: twitch, rss, mastodon, bluesky',
             )
             return 0
           }
@@ -215,7 +207,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
               SOFTWARE,
               player,
               'bridge',
-              'chat stop needs kind: twitch, irc, xmpp, rss, mastodon, bluesky',
+              'chat stop needs kind: twitch, rss, mastodon, bluesky',
             )
             return 0
           }

@@ -3,8 +3,6 @@ import { NAME } from 'zss/words/types'
 
 export const CHAT_KIND = {
   TWITCH: 'twitch',
-  IRC: 'irc',
-  XMPP: 'xmpp',
   RSS: 'rss',
   MASTODON: 'mastodon',
   BLUESKY: 'bluesky',
@@ -14,8 +12,6 @@ export type CHAT_KIND = (typeof CHAT_KIND)[keyof typeof CHAT_KIND]
 
 export const ALL_CHAT_KINDS: CHAT_KIND[] = [
   CHAT_KIND.TWITCH,
-  CHAT_KIND.IRC,
-  CHAT_KIND.XMPP,
   CHAT_KIND.RSS,
   CHAT_KIND.MASTODON,
   CHAT_KIND.BLUESKY,
@@ -24,18 +20,8 @@ export const ALL_CHAT_KINDS: CHAT_KIND[] = [
 export type BRIDGE_CHAT_START_OBJECT = {
   kind: CHAT_KIND
   routekey: string
-  /** IRC: full wss:// or ws:// URL (path allowed) */
-  websocketurl?: string
+  /** Twitch: channel name (optional; defaults to routekey) */
   channel?: string
-  nick?: string
-  password?: string
-  /** XMPP */
-  service?: string
-  domain?: string
-  username?: string
-  muc?: string
-  /** XMPP MUC display nick (defaults to username) */
-  mucnick?: string
   /** RSS / Atom feed (browser fetch; URL must allow CORS or be same-origin) */
   feedurl?: string
   /** Poll interval seconds (default 120) */
@@ -62,8 +48,6 @@ export function normalizechatkind(value: string): MAYBE<CHAT_KIND> {
   const n = NAME(value)
   if (
     n === CHAT_KIND.TWITCH ||
-    n === CHAT_KIND.IRC ||
-    n === CHAT_KIND.XMPP ||
     n === CHAT_KIND.RSS ||
     n === CHAT_KIND.MASTODON ||
     n === CHAT_KIND.BLUESKY
@@ -112,16 +96,7 @@ export function parsechatstartpayload(
   return {
     kind,
     routekey,
-    websocketurl:
-      typeof o.websocketurl === 'string' ? o.websocketurl.trim() : undefined,
     channel: typeof o.channel === 'string' ? o.channel.trim() : undefined,
-    nick: typeof o.nick === 'string' ? o.nick.trim() : undefined,
-    password: typeof o.password === 'string' ? o.password : undefined,
-    service: typeof o.service === 'string' ? o.service.trim() : undefined,
-    domain: typeof o.domain === 'string' ? o.domain.trim() : undefined,
-    username: typeof o.username === 'string' ? o.username.trim() : undefined,
-    muc: typeof o.muc === 'string' ? o.muc.trim() : undefined,
-    mucnick: typeof o.mucnick === 'string' ? o.mucnick.trim() : undefined,
     feedurl: typeof o.feedurl === 'string' ? o.feedurl.trim() : undefined,
     pollintervalsec,
     mastodoninstance:

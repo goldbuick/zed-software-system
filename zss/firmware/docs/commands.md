@@ -168,13 +168,10 @@ All firmware commands and their descriptions. Commands are available depending o
 | `fetch` | URL with label, method, and optional data |
 | `fetchwith` | URL with argument, label, method, and optional data |
 
-### Bridge chat (Twitch, IRC, XMPP)
+### Bridge chat (Twitch, feeds)
 
-- **Route key:** `routekey` is the suffix for VM events `chat:message:<routekey>` and `chat:action:<routekey>`. Match it to a **board address** (or other routing key your loader expects) so `vmloader` and agent routing resolve correctly.
+- **Route key:** `routekey` is the suffix for VM events `chat:message:<routekey>`, `chat:action:<routekey>`, `chat:connect:<routekey>`, and `chat:disconnect:<routekey>`. Match it to a **board address** (or other routing key your loader expects) so `vmloader` and agent routing resolve correctly.
 - **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens.
-- **IRC (browser only):** WebSocket IRC only (`wss://` or `ws://`). The network must expose IRC-over-WebSocket (bouncer, gateway, or host that speaks `wss`). CLI: `#chat start irc <routekey> <websocketurl> <channel> <nick> [password]`. Optional IRC password is a single token (spaces not supported in v1).
-- **XMPP MUC (browser only):** CLI: `#chat start xmpp <routekey> <service> <domain> <username> <password> <muc> [mucnick]` where `service` is the XMPP WebSocket URL (for example `wss://…/xmpp-websocket`) and `muc` is the room JID. Many browsers use SASL mechanisms bundled with `@xmpp/client` (SCRAM may be stubbed in some builds; prefer servers that accept PLAIN over TLS). Treat password and stream keys as secrets; do not log or commit them.
-- **Headless / non-browser:** IRC and XMPP return a clear `bridge` error when WebSockets are not available (same detection as other bridge headless paths). Twitch keeps prior behavior.
 - **Status:** `#bridge` or `#bridge status` prints chat slot state and IVS broadcast summary **without** secrets.
 - **Saved profiles (IndexedDB):** `#chat profile` (same as `#chat profile list`) prints profile names; `#chat profile show <name>` prints one profile (secrets redacted); `#chat profile save …` / `#chat profile delete <name>` manage them. Use `#chat start <kind> @profilename` to apply a profile.
 

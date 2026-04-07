@@ -23,8 +23,8 @@ function striptext(msg: ChatMessage) {
 }
 
 export type TWITCH_CHAT_HANDLERS = {
-  onconnect: () => void
-  ondisconnect: () => void
+  onconnect: (routekey: string) => void
+  ondisconnect: (routekey: string) => void
   onmessage: (
     routekey: string,
     mode: 'message' | 'action',
@@ -45,11 +45,11 @@ export function createtwitchchatconnector(
   client.connect()
   client.onConnect(() => {
     connected = true
-    handlers.onconnect()
+    handlers.onconnect(routekey)
   })
   client.onDisconnect(() => {
     connected = false
-    handlers.ondisconnect()
+    handlers.ondisconnect(routekey)
   })
   client.onMessage((_, user, __, msg) => {
     const simpletext = striptext(msg)

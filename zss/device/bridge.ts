@@ -9,12 +9,10 @@ import {
   normalizechatkind,
   parsechatstartpayload,
 } from 'zss/device/bridge/chattypes'
-import { createircchatconnector } from 'zss/device/bridge/ircchatconnector'
 import { createmastodonfeedconnector } from 'zss/device/bridge/mastodonfeedconnector'
 import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
 import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
 import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
-import { createxmppchatconnector } from 'zss/device/bridge/xmppchatconnector'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
   netterminalhost,
@@ -153,8 +151,28 @@ function pushchatline(
 
 function makechathandlers(player: string): TWITCH_CHAT_HANDLERS {
   return {
-    onconnect: () => apilog(bridge, player, 'chat connected'),
-    ondisconnect: () => apilog(bridge, player, 'chat disconnected'),
+    onconnect: (routekey) => {
+      apilog(bridge, player, 'chat connected')
+      vmloader(
+        bridge,
+        player,
+        undefined,
+        'text',
+        `chat:connect:${routekey}`,
+        '',
+      )
+    },
+    ondisconnect: (routekey) => {
+      apilog(bridge, player, 'chat disconnected')
+      vmloader(
+        bridge,
+        player,
+        undefined,
+        'text',
+        `chat:disconnect:${routekey}`,
+        '',
+      )
+    },
     onmessage: (routekey, mode, user, text) =>
       pushchatline(player, routekey, mode, user, text),
     onerror: (msg) => apierror(bridge, player, 'bridge', msg),
@@ -249,18 +267,6 @@ const bridge = createdevice('bridge', [], (message) => {
         )
         break
       }
-      if (
-        (parsed.kind === CHAT_KIND.IRC || parsed.kind === CHAT_KIND.XMPP) &&
-        isbridgeheadless()
-      ) {
-        apierror(
-          bridge,
-          message.player,
-          'bridge',
-          `${parsed.kind} chat needs a browser tab with WebSocket support (not available in this environment)`,
-        )
-        break
-      }
       const prev = chatslots.get(parsed.kind)
       if (ispresent(prev)) {
         apilog(
@@ -285,53 +291,6 @@ const bridge = createdevice('bridge', [], (message) => {
             channel,
             makechathandlers(message.player),
           ),
-        )
-        break
-      }
-      if (parsed.kind === CHAT_KIND.IRC) {
-        const ws = parsed.websocketurl?.trim() ?? ''
-        const ch = parsed.channel?.trim() ?? ''
-        const nick = parsed.nick?.trim() ?? ''
-        if (!ws || !ch || !nick) {
-          apierror(
-            bridge,
-            message.player,
-            'bridge',
-            'irc chat needs websocketurl, channel, and nick',
-          )
-          break
-        }
-        let ircurlvalid = false
-        try {
-          new URL(ws)
-          ircurlvalid = true
-        } catch {
-          ircurlvalid = false
-        }
-        if (!ircurlvalid) {
-          apierror(
-            bridge,
-            message.player,
-            'bridge',
-            'irc websocketurl is invalid',
-          )
-          break
-        }
-        apilog(
-          bridge,
-          message.player,
-          `irc chat starting routekey=${parsed.routekey} channel=${ch}`,
-        )
-        chatslots.set(
-          CHAT_KIND.IRC,
-          createircchatconnector({
-            routekey: parsed.routekey,
-            websocketurl: ws,
-            channel: ch,
-            nick,
-            password: parsed.password,
-            handlers: makechathandlers(message.player),
-          }),
         )
         break
       }
@@ -446,41 +405,6 @@ const bridge = createdevice('bridge', [], (message) => {
         )
         break
       }
-      if (parsed.kind === CHAT_KIND.XMPP) {
-        const service = parsed.service?.trim() ?? ''
-        const domain = parsed.domain?.trim() ?? ''
-        const username = parsed.username?.trim() ?? ''
-        const password = parsed.password ?? ''
-        const muc = parsed.muc?.trim() ?? ''
-        if (!service || !domain || !username || !password || !muc) {
-          apierror(
-            bridge,
-            message.player,
-            'bridge',
-            'xmpp chat needs service, domain, username, password, and muc',
-          )
-          break
-        }
-        apilog(
-          bridge,
-          message.player,
-          `xmpp chat starting routekey=${parsed.routekey} muc=${muc}`,
-        )
-        chatslots.set(
-          CHAT_KIND.XMPP,
-          createxmppchatconnector({
-            routekey: parsed.routekey,
-            service,
-            domain,
-            username,
-            password,
-            muc,
-            mucnick: parsed.mucnick,
-            handlers: makechathandlers(message.player),
-          }),
-        )
-        break
-      }
       break
     }
     case 'chatstop': {
@@ -490,7 +414,7 @@ const bridge = createdevice('bridge', [], (message) => {
           bridge,
           message.player,
           'bridge',
-          'bridge chat stop requires kind: twitch, irc, xmpp, rss, mastodon, bluesky',
+          'bridge chat stop requires kind: twitch, rss, mastodon, bluesky',
         )
         break
       }
