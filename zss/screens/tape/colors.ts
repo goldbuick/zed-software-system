@@ -1,12 +1,12 @@
 import type { IToken } from 'chevrotain'
 import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
+import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
 import {
   type WRITE_TEXT_CONTEXT,
   clippedapplycolortoindexes,
-  codeunitoffsettocellindex,
 } from 'zss/words/textformat'
 import { COLOR, STAT_TYPE } from 'zss/words/types'
 

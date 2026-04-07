@@ -1,4 +1,6 @@
 import { Marked, Token, Tokens } from 'marked'
+import { graphemelength } from 'zss/mapping/grapheme'
+import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 /** Width for `hr` / thematic break tbar (purple `$196`). */
@@ -10,16 +12,6 @@ const EDGE = '$dkpurple'
 const CHR_TM = '$196'
 const BAR = '$205'
 const RESET = '$white'
-
-const graphemer = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
-
-export function graphemelength(source: string): number {
-  return [...graphemer.segment(source)].length
-}
-
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.min(hi, Math.max(lo, n))
-}
 
 export function escapezedollar(source: string): string {
   return source.replaceAll('$', '$$')

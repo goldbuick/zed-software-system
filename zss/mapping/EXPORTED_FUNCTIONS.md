@@ -82,6 +82,18 @@
 ### String Parsing
 - **totarget(scope)** - Parses scope string to extract target and label, returns [target, label] tuple
 
+## Grapheme (Unicode clusters)
+
+### Intl.Segmenter helpers
+- **graphemelength(source)** - Counts grapheme clusters in a string (uses `Intl.Segmenter` with `granularity: 'grapheme'`)
+- **graphemes(str)** - Generator yielding each grapheme cluster in order
+- **codeunitoffsettocellindex(line, codeunitoffset)** - Maps a UTF-16 code-unit offset to grapheme cell index (lexer columns ↔ display cells)
+
+## Validation
+
+### Format checks
+- **isemail(email)** - Returns a regex match result if the string looks like an email address, otherwise null
+
 ## Value & Type Mapping
 
 ### Type Conversion

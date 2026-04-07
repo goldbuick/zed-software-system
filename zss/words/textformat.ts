@@ -1,42 +1,12 @@
-import './intl-segmenter.d.ts'
 import { IToken, Lexer, createToken, createTokenInstance } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
+import { graphemes } from 'zss/mapping/grapheme'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { colortobg, colortofg } from 'zss/words/color'
 import { colorconsts } from 'zss/words/colorconsts'
 import { COLOR } from 'zss/words/types'
 
 import { metakey } from './system'
-
-const graphemesegmenter = new Intl.Segmenter(undefined, {
-  granularity: 'grapheme',
-})
-
-function* graphemes(str: string): Generator<string> {
-  for (const { segment } of graphemesegmenter.segment(str)) {
-    yield segment
-  }
-}
-
-/**
- * Map a code-unit offset (e.g. from lexer startColumn/endColumn) to cell (grapheme) index
- * so token-based positions align with the grapheme-per-cell buffer.
- */
-export function codeunitoffsettocellindex(
-  line: string,
-  codeunitoffset: number,
-): number {
-  let cell = 0
-  let offset = 0
-  for (const { segment } of graphemesegmenter.segment(line)) {
-    if (offset >= codeunitoffset) {
-      return cell
-    }
-    offset += segment.length
-    cell++
-  }
-  return cell
-}
 
 export const Whitespace = createToken({
   name: 'Whitespace',

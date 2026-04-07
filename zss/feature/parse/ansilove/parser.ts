@@ -1,5 +1,6 @@
 // Parser module for AnsiLove
 
+import { clamp } from 'zss/mapping/number'
 import { display, validateoptions } from './display'
 import { File } from './file'
 import { FontModule } from './font'
@@ -75,8 +76,8 @@ function ans(bytes: Uint8Array, options: RenderOptions): ParsedData {
   }
 
   function setPos(newX: number, newY: number): void {
-    x = Math.min(columns, Math.max(1, newX))
-    y = Math.min(26, Math.max(1, newY))
+    x = clamp(newX, 1, columns)
+    y = clamp(newY, 1, 26)
   }
 
   function getValues(): number[] {
