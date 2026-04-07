@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
 import { useEditor, useTape } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
+import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   BG_ACTIVE,
@@ -17,7 +18,6 @@ import { EDITOR_CODE_ROW, setupeditoritem } from 'zss/screens/tape/common'
 import {
   clippedapplybgtoindexes,
   clippedapplycolortoindexes,
-  codeunitoffsettocellindex,
   textformatreadedges,
   tokenizeandwritetextformat,
   writeplaintext,
