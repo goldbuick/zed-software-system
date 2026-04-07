@@ -39,27 +39,6 @@ function kvget(kv: Record<string, string>, ...keys: string[]): string {
   return ''
 }
 
-function buildwebsocketfromhost(kv: Record<string, string>): string {
-  const host = kvget(kv, 'host', 'hostname')
-  if (!host) {
-    return ''
-  }
-  const tlstext = kvget(kv, 'tls', 'ssl').toLowerCase()
-  const tls =
-    tlstext === '' || tlstext === '1' || tlstext === 'true' || tlstext === 'on'
-  const path = kvget(kv, 'path', 'ws_path') || '/'
-  const port = kvget(kv, 'port')
-  const scheme = tls ? 'wss' : 'ws'
-  const portpart = port ? `:${port}` : ''
-  try {
-    return new URL(
-      `${scheme}://${host}${portpart}${path.startsWith('/') ? path : `/${path}`}`,
-    ).href
-  } catch {
-    return ''
-  }
-}
-
 export function mergetostartobject(
   base: BRIDGE_CHAT_START_OBJECT,
   kv: Record<string, string>,
@@ -74,14 +53,6 @@ export function mergetostartobject(
   }
   assign('routekey', 'routekey', 'rk', 'key')
   assign('channel', 'channel', 'chan', 'ch')
-  assign('websocketurl', 'websocketurl', 'ws', 'wss')
-  assign('nick', 'nick', 'nickname')
-  assign('password', 'password', 'pass')
-  assign('service', 'service')
-  assign('domain', 'domain')
-  assign('username', 'username', 'user', 'jid_user')
-  assign('muc', 'muc', 'room')
-  assign('mucnick', 'mucnick', 'roomnick')
   assign('feedurl', 'feedurl', 'url', 'feed')
   assign('mastodoninstance', 'mastodoninstance', 'instance', 'md_instance')
   assign('mastodonaccount', 'mastodonaccount', 'account', 'acct', 'md_account')
@@ -104,48 +75,6 @@ export function mergetostartobject(
     }
   }
   return o
-}
-
-function ircfrompositional(p: string[]): BRIDGE_CHAT_START_OBJECT | undefined {
-  const routekey = p[0]?.trim()
-  const websocketurl = p[1]?.trim()
-  const channel = p[2]?.trim()
-  const nick = p[3]?.trim()
-  const password = p[4]?.trim()
-  if (!routekey || !websocketurl || !channel || !nick) {
-    return undefined
-  }
-  return {
-    kind: CHAT_KIND.IRC,
-    routekey,
-    websocketurl,
-    channel,
-    nick,
-    ...(password ? { password } : {}),
-  }
-}
-
-function xmppfrompositional(p: string[]): BRIDGE_CHAT_START_OBJECT | undefined {
-  const routekey = p[0]?.trim()
-  const service = p[1]?.trim()
-  const domain = p[2]?.trim()
-  const username = p[3]?.trim()
-  const password = p[4]?.trim()
-  const muc = p[5]?.trim()
-  const mucnick = p[6]?.trim()
-  if (!routekey || !service || !domain || !username || !password || !muc) {
-    return undefined
-  }
-  return {
-    kind: CHAT_KIND.XMPP,
-    routekey,
-    service,
-    domain,
-    username,
-    password,
-    muc,
-    ...(mucnick ? { mucnick } : {}),
-  }
 }
 
 function twitchfrompositional(
@@ -237,62 +166,6 @@ export function buildchatstartforkind(
     case CHAT_KIND.TWITCH:
       base = twitchfrompositional(positional)
       break
-    case CHAT_KIND.IRC: {
-      base = ircfrompositional(positional)
-      const wsfromhost = buildwebsocketfromhost(kv)
-      if (!base && (kvget(kv, 'routekey', 'rk') || positional.length > 0)) {
-        const routekey =
-          kvget(kv, 'routekey', 'rk', 'key') || positional[0]?.trim() || ''
-        const websocketurl =
-          kvget(kv, 'websocketurl', 'ws', 'wss') || wsfromhost || ''
-        const channel =
-          kvget(kv, 'channel', 'chan', 'ch') || positional[1]?.trim() || ''
-        const nick =
-          kvget(kv, 'nick', 'nickname') || positional[2]?.trim() || ''
-        const password =
-          kvget(kv, 'password', 'pass') || positional[3]?.trim() || ''
-        if (routekey && websocketurl && channel && nick) {
-          base = {
-            kind: CHAT_KIND.IRC,
-            routekey,
-            websocketurl,
-            channel,
-            nick,
-            ...(password ? { password } : {}),
-          }
-        }
-      }
-      break
-    }
-    case CHAT_KIND.XMPP: {
-      base = xmppfrompositional(positional)
-      if (!base) {
-        const routekey =
-          kvget(kv, 'routekey', 'rk', 'key') || positional[0]?.trim() || ''
-        const service = kvget(kv, 'service') || positional[1]?.trim() || ''
-        const domain = kvget(kv, 'domain') || positional[2]?.trim() || ''
-        const username =
-          kvget(kv, 'username', 'user') || positional[3]?.trim() || ''
-        const password =
-          kvget(kv, 'password', 'pass') || positional[4]?.trim() || ''
-        const muc = kvget(kv, 'muc', 'room') || positional[5]?.trim() || ''
-        const mucnick =
-          kvget(kv, 'mucnick', 'roomnick') || positional[6]?.trim() || ''
-        if (routekey && service && domain && username && password && muc) {
-          base = {
-            kind: CHAT_KIND.XMPP,
-            routekey,
-            service,
-            domain,
-            username,
-            password,
-            muc,
-            ...(mucnick ? { mucnick } : {}),
-          }
-        }
-      }
-      break
-    }
     case CHAT_KIND.RSS: {
       base = rssfrompositional(positional)
       if (!base) {

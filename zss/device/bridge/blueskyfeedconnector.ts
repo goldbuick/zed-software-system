@@ -90,7 +90,7 @@ export function createblueskyfeedconnector(
       if (firstpoll) {
         firstpoll = false
         phase = 'live'
-        handlers.onconnect()
+        handlers.onconnect(routekey)
       } else {
         for (let i = 0; i < batch.length; ++i) {
           const { handle: h, text } = batch[i]
@@ -122,7 +122,7 @@ export function createblueskyfeedconnector(
         clearInterval(timer)
         timer = undefined
       }
-      handlers.ondisconnect()
+      handlers.ondisconnect(routekey)
     },
     describestatus(): CHAT_CONNECTOR_STATUS {
       return {

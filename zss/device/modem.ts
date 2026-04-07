@@ -57,6 +57,8 @@ const cursorbeforeedit = new Map<string, number>()
 const cursorrestorecallbacks = new Map<string, (cursor: number) => void>()
 
 const LOCAL_ORIGIN = Symbol('local')
+/** Yjs transaction origin for deltas applied from the peer realm (joinack/sync). Excluded from outbound modem:sync to avoid echo. */
+const MODEM_REMOTE_APPLY = Symbol('modem_remote_apply')
 
 function getorcreatetext(key: string): Y.Text {
   const raw = ROOT.get(key)
@@ -452,7 +454,7 @@ const modem = createdevice('modem', ['second'], (message) => {
         joined = true
         try {
           const data = hex2arr(message.data)
-          Y.applyUpdate(SYNC_DOC, data)
+          Y.applyUpdate(SYNC_DOC, data, MODEM_REMOTE_APPLY)
           undomanagers.clear()
         } catch (e) {
           console.error('modem joinack decode', e)
@@ -462,7 +464,7 @@ const modem = createdevice('modem', ['second'], (message) => {
     case 'sync': {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
-          Y.applyUpdate(SYNC_DOC, hex2arr(message.data))
+          Y.applyUpdate(SYNC_DOC, hex2arr(message.data), MODEM_REMOTE_APPLY)
         } catch (e) {
           console.error('modem sync decode', e)
         }
@@ -486,8 +488,10 @@ const modem = createdevice('modem', ['second'], (message) => {
   }
 })
 
+// Main and sim worker each have a SYNC_DOC; cross-realm sync must include undo/redo
+// (Yjs uses UndoManager as origin, not LOCAL_ORIGIN). Only skip updates applied from a peer delta.
 SYNC_DOC.on('update', (update: Uint8Array, origin: unknown) => {
-  if (origin === LOCAL_ORIGIN) {
+  if (origin !== MODEM_REMOTE_APPLY) {
     modem.emit('', 'modem:sync', arr2hex(update))
   }
 })
