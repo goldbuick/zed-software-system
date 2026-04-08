@@ -1,9 +1,10 @@
+import { COLOR } from 'zss/words/types'
+
 import {
   memoryelementtologprefix,
   memoryelementtotickerprefix,
 } from '../rendering'
 import { BOARD_ELEMENT } from '../types'
-import { COLOR } from 'zss/words/types'
 
 const mockedmemoryreadflags = jest.fn()
 
@@ -46,9 +47,7 @@ describe('memoryelementtotickerprefix', () => {
     const el = baseelement({
       kinddata: { id: 'chest', name: 'chest', displayname: 'FromKind' },
     })
-    expect(memoryelementtotickerprefix(el)).toContain(
-      '$CYAN fromkind:$WHITE ',
-    )
+    expect(memoryelementtotickerprefix(el)).toContain('$CYAN fromkind:$WHITE ')
   })
 
   it('falls back to logical name when displayname unset', () => {
@@ -63,12 +62,16 @@ describe('memoryelementtotickerprefix', () => {
       displayname: 'ignored for player',
     })
     expect(memoryelementtotickerprefix(el)).toContain('$CYAN Pat:$WHITE ')
-    expect(memoryelementtologprefix(el)).toEqual(memoryelementtotickerprefix(el))
+    expect(memoryelementtologprefix(el)).toEqual(
+      memoryelementtotickerprefix(el),
+    )
   })
 
   it('differs from log prefix when object has displayname', () => {
     const el = baseelement({ displayname: 'TickerOnly' })
-    expect(memoryelementtotickerprefix(el)).toContain('$CYAN tickeronly:$WHITE ')
+    expect(memoryelementtotickerprefix(el)).toContain(
+      '$CYAN tickeronly:$WHITE ',
+    )
     expect(memoryelementtologprefix(el)).toContain('$CYAN logical:$WHITE ')
   })
 })
