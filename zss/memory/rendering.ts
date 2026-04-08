@@ -484,9 +484,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
         ? NAME(fromdisplay)
         : ''
     withname =
-      trimmed.length > 0
-        ? trimmed
-        : memoryreadelementdisplay(element).name
+      trimmed.length > 0 ? trimmed : memoryreadelementdisplay(element).name
   }
 
   const displayprefix = memoryelementtodisplayprefix(element)
