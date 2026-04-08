@@ -137,7 +137,6 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
       'any',
       'countof',
       'color',
-      'detect',
       'rnd',
       'abs',
       'intceil',

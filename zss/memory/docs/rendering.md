@@ -21,4 +21,5 @@
 | `memorycodepagetoprefix` | Display prefix for codepage |
 | `memoryconverttogadgetcontrollayer` | Board → control layer |
 | `memoryelementtodisplayprefix` | Element → $COLOR$ONCOLOR$char |
-| `memoryelementtologprefix` | Element → log prefix |
+| `memoryelementtologprefix` | Element → log/chat prefix (logical name) |
+| `memoryelementtotickerprefix` | Element → ticker strip prefix (`@displayname` when set) |

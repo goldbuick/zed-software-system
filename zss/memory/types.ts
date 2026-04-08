@@ -69,6 +69,7 @@ export enum BOARD_ELEMENT_KEYS {
   p9,
   p10,
   didfail,
+  displayname,
 }
 
 export enum BOARD_KEYS {
@@ -219,6 +220,7 @@ export type BOARD_ELEMENT = {
   displaychar?: number
   displaycolor?: number
   displaybg?: number
+  displayname?: string
   light?: number
   lightdir?: STR_DIR
   // interaction

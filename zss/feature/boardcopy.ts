@@ -70,6 +70,7 @@ export function mapelementcopy(
   maybenew.displaychar = from.displaychar
   maybenew.displaycolor = from.displaycolor
   maybenew.displaybg = from.displaybg
+  maybenew.displayname = from.displayname
   maybenew.p1 = from.p1
   maybenew.p2 = from.p2
   maybenew.p3 = from.p3

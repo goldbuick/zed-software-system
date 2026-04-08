@@ -246,7 +246,8 @@
 - **memoryconverttogadgetlayers(player, index, board, tickers, whichlayer, multi?)** - Converts board to gadget render layers
 - **memorycreatecachedsprite(player, index, id, spriteindex)** - Creates a cached sprite for rendering
 - **memoryelementtodisplayprefix(element)** - Gets display prefix for an element
-- **memoryelementtologprefix(element)** - Gets log prefix for an element
+- **memoryelementtologprefix(element)** - Gets log/chat prefix for an element (logical name; not affected by `@displayname`)
+- **memoryelementtotickerprefix(element)** - Prefix for board ticker lines only; uses `@displayname` on element or kind when set, else same name as log prefix
 - **memoryreadgadgetlayers(player, board)** - Reads complete gadget layer data for a board
 
 ## spatialqueries.ts
