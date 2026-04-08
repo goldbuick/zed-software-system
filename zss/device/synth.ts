@@ -33,6 +33,8 @@ type CustomNavigator = {
   }
 } & Navigator
 
+const SYNTH_AUDIO_SAMPLE_RATE = 22050
+
 let locked = false
 let enabled = false
 
@@ -83,8 +85,18 @@ export function enableaudio() {
   locked = true
   apilog(synthdevice, registerreadplayer(), 'enabling audio…')
 
-  // create new context (lookAhead gives scheduler more time, reduces glitches on slow devices)
-  setContext(new Context({ latencyHint: 'playback', lookAhead: 0.15 }), true)
+  // we want a config to reduce cpu load
+  const MakeAudioContext = getContext().rawContext.constructor
+  setContext(
+    new Context({
+      latencyHint: 'playback',
+      // @ts-expect-error dont bother me
+      context: new MakeAudioContext({
+        sampleRate: SYNTH_AUDIO_SAMPLE_RATE,
+      }),
+    }),
+    true,
+  )
 
   const rawcontext = getContext().rawContext as AudioContext
   if (rawcontext.state === 'suspended') {
