@@ -141,6 +141,7 @@ export function memoryapplyelementstats(
       case 'shootx':
       case 'shooty':
       case 'displaychar':
+      case 'displayname':
         element[key as keyof BOARD_ELEMENT] = value
         break
       case 'color':

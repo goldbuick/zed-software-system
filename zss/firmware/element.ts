@@ -79,6 +79,7 @@ const STANDARD_STAT_NAMES = new Set([
   'displaychar',
   'displaycolor',
   'displaybg',
+  'displayname',
   // interaction
   'item',
   'group',
