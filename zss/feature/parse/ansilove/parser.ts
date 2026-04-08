@@ -1,6 +1,7 @@
 // Parser module for AnsiLove
 
 import { clamp } from 'zss/mapping/number'
+
 import { display, validateoptions } from './display'
 import { File } from './file'
 import { FontModule } from './font'
