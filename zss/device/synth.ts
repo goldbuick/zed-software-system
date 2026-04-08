@@ -122,6 +122,7 @@ export function enableaudio() {
           locked = false
           enabled = true
           synthaudioenabled(synthdevice, registerreadplayer())
+          console.info('using sample rate', getContext().sampleRate)
         })
       }
     })
