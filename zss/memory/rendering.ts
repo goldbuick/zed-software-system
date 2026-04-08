@@ -19,6 +19,7 @@ import {
 import {
   memoryinitboard,
   memoryreadboardbyaddress,
+  memoryreadelementkind,
   memoryreadelementstat,
   memoryreadoverboard,
   memoryreadunderboard,
@@ -349,7 +350,7 @@ export function memoryconverttogadgetlayers(
       isnumber(object.tickertime) &&
       object.tickertext.length
     ) {
-      tickers.push(`${memoryelementtologprefix(object)}${object.tickertext}`)
+      tickers.push(`${memoryelementtotickerprefix(object)}${object.tickertext}`)
     }
   }
 
@@ -458,6 +459,34 @@ export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
   if (element.kind === 'player') {
     const { user } = memoryreadflags(element.id)
     withname = isstring(user) ? user : 'player'
+  }
+
+  const displayprefix = memoryelementtodisplayprefix(element)
+  return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
+}
+
+/** Ticker strip prefix only; uses @displayname when set (element then kind). Chat logs use memoryelementtologprefix. */
+export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
+  if (!ispresent(element?.id)) {
+    return ''
+  }
+
+  let withname: string
+  if (element.kind === 'player') {
+    const { user } = memoryreadflags(element.id)
+    withname = isstring(user) ? user : 'player'
+  } else {
+    memoryreadelementkind(element)
+    const kind = element.kinddata
+    const fromdisplay = element.displayname ?? kind?.displayname
+    const trimmed =
+      isstring(fromdisplay) && fromdisplay.trim().length > 0
+        ? NAME(fromdisplay)
+        : ''
+    withname =
+      trimmed.length > 0
+        ? trimmed
+        : memoryreadelementdisplay(element).name
   }
 
   const displayprefix = memoryelementtodisplayprefix(element)

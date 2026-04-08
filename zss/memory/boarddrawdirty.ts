@@ -55,6 +55,7 @@ function memoryelementdrawfingerprint(element: BOARD_ELEMENT) {
     element.displaychar ?? '',
     element.displaycolor ?? '',
     element.displaybg ?? '',
+    element.displayname ?? '',
     element.light ?? '',
     element.lightdir ?? '',
     element.tickertext ?? '',

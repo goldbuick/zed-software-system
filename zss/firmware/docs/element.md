@@ -19,7 +19,7 @@ Provides stat/variable access for the chip:
 - **Input flags** — For players: `inputmove`, `inputok`, `inputcancel`, `inputmenu`, `inputalt`, `inputctrl`, `inputshift` (from input queue, with FPV rotation)
 - **Board stats** — `isdark`, `startx`, `starty`, `over`, `under`, `palette`, `charset`, exits, `timelimit`, `restartonzap`, `maxplayershots`, `b1`–`b10`, `camera`, `graphics`, `facing`
 - **Env** — `currenttick`, `boardid`, `playerid`, `playerx`, `playery`, `thisid`, `thisx`, `thisy`, `senderid`, `senderx`, `sendery`
-- **Standard stats** — char, color, bg, displaychar/color/bg, item, group, party, player, pushable, collision, breakable, p1–p10, cycle, stepx/y, shootx/y, light, lightdir, arg
+- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p10, cycle, stepx/y, shootx/y, light, lightdir, arg
 - **Fallback** — Player flags
 
 ### set(chip, name, value)
@@ -27,7 +27,7 @@ Provides stat/variable access for the chip:
 Writes stats:
 
 - **Board** — isdark, startx/y, over, under, palette, charset, exits, timelimit, etc.
-- **Element** — color, bg, displaycolor/bg, standard stats
+- **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only; chat/log prefix still uses the logical name)
 - **senderid** — Writes to element.sender
 - **Fallback** — Player flags; `user` is persisted via registerstore
 
