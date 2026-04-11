@@ -175,6 +175,12 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     return 0
   }
 
+  // guard against bad ids
+  if (ispresent(id) && !isstring(id)) {
+    chip.set('didfail', 1)
+    return 0
+  }
+
   // read
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 

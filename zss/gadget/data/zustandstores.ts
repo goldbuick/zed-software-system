@@ -58,6 +58,7 @@ export const useGadgetClient = create<{
     dirs: [],
     dirmods: [],
     exprs: [],
+    commandargmeta: {},
   },
   gadget: {
     id: '',

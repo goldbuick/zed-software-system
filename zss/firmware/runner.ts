@@ -1,6 +1,7 @@
 import { CHIP } from 'zss/chip'
 import {
   COMMAND_ARGS_SIGNATURE,
+  COMMAND_ARG_AUTOCOMPLETE,
   FIRMWARE,
   FIRMWARE_COMMAND,
 } from 'zss/firmware'
@@ -103,6 +104,20 @@ export function firmwaregetcommandargs(
     const args = wares[i].getcommandargs(method)
     if (ispresent(args)) {
       return args
+    }
+  }
+  return undefined
+}
+
+export function firmwaregetcommandargmeta(
+  driver: DRIVER_TYPE,
+  method: string,
+): MAYBE<COMMAND_ARG_AUTOCOMPLETE> {
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    const meta = wares[i].getcommandargmeta(method)
+    if (ispresent(meta)) {
+      return meta
     }
   }
   return undefined

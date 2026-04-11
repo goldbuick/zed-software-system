@@ -11,6 +11,7 @@ import {
 } from 'zss/device/vm/state'
 import {
   DRIVER_TYPE,
+  firmwaregetcommandargmeta,
   firmwaregetcommandargs,
   firmwarelistcommands,
 } from 'zss/firmware/runner'
@@ -81,6 +82,19 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
       runtimecommands[cmd] = sig
     }
   }
+  const commandargmeta: GADGET_ZSS_WORDS['commandargmeta'] = {}
+  for (const driver of [
+    DRIVER_TYPE.CLI,
+    DRIVER_TYPE.LOADER,
+    DRIVER_TYPE.RUNTIME,
+  ] as const) {
+    for (const cmd of firmwarelistcommands(driver)) {
+      const meta = firmwaregetcommandargmeta(driver, cmd)
+      if (ispresent(meta)) {
+        commandargmeta[cmd] = meta
+      }
+    }
+  }
   const zsswords: GADGET_ZSS_WORDS = {
     langcommands,
     clicommands,
@@ -129,6 +143,7 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
       ),
     ],
     dirmods: [...dirmods, ...objectKeys(collisionconsts)],
+    commandargmeta,
     exprs: [
       'aligned',
       'alligned',

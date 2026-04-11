@@ -16,16 +16,23 @@ import {
 import { enqueueheavyjob } from 'zss/feature/heavy/heavyjobqueue'
 import {
   type HEAVY_LLM_PRESET,
+  heavyllmpresetbackend,
   normalizeheavylmpreset,
 } from 'zss/feature/heavy/heavyllmpreset'
+import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import type { MODEL_RESULT } from 'zss/feature/heavy/model'
 import {
   applyheavylmpreset,
   destroysharedmodel,
+  getheavylmeffectivepreset,
   modelclassify,
   modelgenerate,
+  modelgenerategemma4,
 } from 'zss/feature/heavy/model'
-import { buildsystemprompt } from 'zss/feature/heavy/prompt'
+import {
+  buildsystemprompt,
+  buildsystempromptgemma,
+} from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
   query as memoryquery,
@@ -39,6 +46,8 @@ import { apierror, apilog, apitoast, vmlastinputtouch } from './api'
 
 const MAX_REPROMPT = 5
 const activeagents = new Set<string>()
+
+type Agenthistorymessage = Message & { name?: string }
 
 async function executeclicommands(
   player: string,
@@ -162,7 +171,9 @@ async function runagentprompt(
 ) {
   const promptloggingenabled = promptlogging === 'on'
   activeagents.add(agentid)
-  const history: Message[] = [{ role: 'user', content: prompt }]
+  const history: Agenthistorymessage[] = [{ role: 'user', content: prompt }]
+  const usegemma =
+    heavyllmpresetbackend(getheavylmeffectivepreset()) === 'gemma4'
 
   apilog(heavy, player, '$21 input $7', prompt)
 
@@ -170,6 +181,69 @@ async function runagentprompt(
     let result!: MODEL_RESULT
     for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
       const { context, agentinfo } = await queryboardstate(agentid, agentname)
+
+      if (usegemma) {
+        const systemprompt = buildsystempromptgemma(
+          agentname,
+          agentinfo,
+          context,
+          intent,
+        )
+        const g = await modelgenerategemma4(
+          systemprompt,
+          history,
+          onworking,
+          promptloggingenabled,
+        )
+        if (promptloggingenabled) {
+          console.info(
+            '%c[heavy] generated response (gemma):\n%c%s',
+            'color: purple; font-weight: bold',
+            'color: orange',
+            g.toolcommandlines.length > 0 ? g.raw : g.text,
+          )
+        }
+
+        if (g.toolcommandlines.length > 0) {
+          history.push({ role: 'assistant', content: g.raw })
+          const hascontinue = g.toolcommandlines.some(
+            (line) => line.trim() === '#continue',
+          )
+          const execcommands = g.toolcommandlines.filter(
+            (line) => line.trim() !== '#continue',
+          )
+          if (execcommands.length > 0) {
+            await executeclicommands(
+              player,
+              agentid,
+              execcommands,
+              promptloggingenabled,
+            )
+          }
+          history.push({
+            role: 'tool',
+            name: RUN_ZSS_COMMAND_TOOL_NAME,
+            content: JSON.stringify({
+              ok: true,
+              executed:
+                execcommands.length > 0
+                  ? execcommands.join('\n')
+                  : '(#continue)',
+            }),
+          })
+          if (!hascontinue) {
+            break
+          }
+          continue
+        }
+
+        history.push({
+          role: 'assistant',
+          content: g.text || g.raw,
+        })
+        break
+      }
+
       const systemprompt = buildsystemprompt(
         agentname,
         agentinfo,

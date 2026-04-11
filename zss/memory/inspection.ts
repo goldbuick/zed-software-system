@@ -671,7 +671,7 @@ export function memoryinspectelement(
   const lines: string[] = []
   if (isobject) {
     lines.push(
-      `object: ${element.name ?? element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`,
+      `object: ${element.name ?? element.kind ?? 'ERR'} ${p1.x}, ${p1.y} $white${element.id ?? ''}`,
     )
   } else {
     lines.push(`terrain: ${element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`)

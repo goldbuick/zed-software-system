@@ -1,4 +1,7 @@
-import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
+import type {
+  COMMAND_ARGS_SIGNATURE,
+  COMMAND_ARG_AUTOCOMPLETE,
+} from 'zss/firmware'
 import { MAYBE } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
@@ -306,6 +309,8 @@ export type GADGET_ZSS_WORDS = {
   dirs: string[]
   dirmods: string[]
   exprs: string[]
+  /** Lowercase command name → optional per-arg keyword lists / first-arg variants (from firmware). */
+  commandargmeta: Record<string, COMMAND_ARG_AUTOCOMPLETE>
 }
 
 export const INPUT_ALT = 0x0001

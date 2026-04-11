@@ -275,6 +275,7 @@ export type ZSS_WORD_LIST_KEY = keyof Pick<
   | 'palettes'
   | 'charsets'
   | 'loaders'
+  | 'categories'
   | 'colors'
   | 'dirs'
   | 'dirmods'
@@ -296,6 +297,7 @@ export const ZSS_WORD_LIST_COLOR_MAP: Record<ZSS_WORD_LIST_KEY, number> = {
   palettes: ZSS_TYPE_SYMBOL,
   charsets: ZSS_TYPE_SYMBOL,
   loaders: ZSS_TYPE_SYMBOL,
+  categories: ZSS_TYPE_SYMBOL,
   colors: ZSS_TYPE_COLOR,
   dirs: ZSS_TYPE_DIR,
   dirmods: ZSS_TYPE_DIR_MOD,
@@ -309,7 +311,7 @@ let ZSS_WORD_MAP = new Map<string, COLOR>()
  * without touching the global used by `zsswordcolor()`.
  */
 export function createzsswordcolormap(
-  words: Pick<GADGET_ZSS_WORDS, ZSS_WORD_LIST_KEY>,
+  words: GADGET_ZSS_WORDS,
 ): Map<string, COLOR> {
   const map = new Map<string, COLOR>()
   const keys = Object.keys(ZSS_WORD_LIST_COLOR_MAP) as ZSS_WORD_LIST_KEY[]
@@ -322,6 +324,30 @@ export function createzsswordcolormap(
       }
     }
   }
+  const argmeta = words.commandargmeta
+  if (ispresent(argmeta)) {
+    for (const spec of Object.values(argmeta)) {
+      for (const row of spec.byposition ?? []) {
+        if (isarray(row)) {
+          for (const w of row) {
+            map.set(w.toLowerCase(), ZSS_TYPE_COMMAND)
+          }
+        }
+      }
+      for (const perarglists of Object.values(spec.whenfirst ?? {})) {
+        if (!isarray(perarglists)) {
+          continue
+        }
+        for (const list of perarglists) {
+          if (isarray(list)) {
+            for (const w of list) {
+              map.set(w.toLowerCase(), ZSS_TYPE_COMMAND)
+            }
+          }
+        }
+      }
+    }
+  }
   return map
 }
 
@@ -330,7 +356,7 @@ export function createzsswordcolormap(
  * (`applycodetokencolors`, `zsswordcolor` without a second arg).
  */
 export function buildzsswordcolors(
-  words: Pick<GADGET_ZSS_WORDS, ZSS_WORD_LIST_KEY>,
+  words: GADGET_ZSS_WORDS,
 ): Map<string, COLOR> {
   ZSS_WORD_MAP = createzsswordcolormap(words)
   return ZSS_WORD_MAP
