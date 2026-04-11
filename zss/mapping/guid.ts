@@ -10,7 +10,7 @@ export function createsid() {
 }
 
 export function issid(id: MAYBE<string>): id is string {
-  return id?.startsWith('sid_') ?? false
+  return typeof id === 'string' && id.startsWith('sid_')
 }
 
 const JUST_NUMBER_CHARS = customAlphabet(numbers, 4)
@@ -25,7 +25,7 @@ export function createtopic() {
 }
 
 export function ispid(id: MAYBE<string>): id is string {
-  return id?.startsWith('pid_') ?? false
+  return typeof id === 'string' && id.startsWith('pid_')
 }
 
 export function createnameid() {

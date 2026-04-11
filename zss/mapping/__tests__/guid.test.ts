@@ -45,6 +45,10 @@ describe('guid', () => {
       expect(issid(undefined)).toBe(false)
       expect(issid(null as any)).toBe(false)
     })
+
+    it('should reject non-string ids', () => {
+      expect(issid(123 as any)).toBe(false)
+    })
   })
 
   describe('createpid', () => {
@@ -98,6 +102,11 @@ describe('guid', () => {
     it('should handle undefined and null', () => {
       expect(ispid(undefined)).toBe(false)
       expect(ispid(null as any)).toBe(false)
+    })
+
+    it('should reject non-string ids', () => {
+      expect(ispid(123 as any)).toBe(false)
+      expect(ispid({} as any)).toBe(false)
     })
   })
 

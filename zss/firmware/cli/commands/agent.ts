@@ -45,8 +45,8 @@ function showheavylmpresetmenu(player: string) {
         return {
           command: `runit ${cmd}`,
           label: iscurrent
-            ? `$green ${id}$white ${row.modelid} $gray(active)`
-            : `$white ${id} ${row.modelid}`,
+            ? `$green ${id}$white ${row.modelid} $gray(${row.backend}, active)`
+            : `$white ${id} ${row.modelid} $gray(${row.backend})`,
         }
       }),
     )
@@ -86,7 +86,12 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           } else {
             const p = normalizeheavylmpreset(raw)
             if (!p) {
-              apierror(SOFTWARE, player, 'agent', '#agent model | llama | tiny')
+              apierror(
+                SOFTWARE,
+                player,
+                'agent',
+                '#agent model | llama | tiny | gemma',
+              )
             } else {
               registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
               heavyllmpreset(SOFTWARE, player, p)

@@ -16,6 +16,17 @@ export type COMMAND_ARGS_SIGNATURE = [...number[], string]
 /** No-arg command: single signature with no ARG_TYPEs and empty description. */
 export const NO_COMMAND_ARGS: COMMAND_ARGS_SIGNATURE = ['']
 
+/**
+ * Optional tape autocomplete metadata per `#` command (firmware-adjacent).
+ * `whenfirst` covers first-token peek variants; broader `wordsSoFar` dispatch can extend this type later.
+ */
+export type COMMAND_ARG_AUTOCOMPLETE = {
+  /** Arg index 0 = first token after command name. */
+  byposition?: string[][]
+  /** When first arg matches key (lowercase NAME), use per-arg keyword lists at each index. */
+  whenfirst?: Record<string, string[][]>
+}
+
 export type FIRMWARE_EVENTS = {
   get?: FIRMWARE_GET
   set?: FIRMWARE_SET
@@ -34,10 +45,12 @@ export type FIRMWARE = {
   aftertick: FIRMWARE_CYCLE
   getcommand: (name: string) => FIRMWARE_COMMAND | undefined
   getcommandargs: (name: string) => COMMAND_ARGS_SIGNATURE | undefined
+  getcommandargmeta: (name: string) => COMMAND_ARG_AUTOCOMPLETE | undefined
   command: (
     name: string,
     args: COMMAND_ARGS_SIGNATURE,
     func: FIRMWARE_COMMAND,
+    argmeta?: COMMAND_ARG_AUTOCOMPLETE,
   ) => FIRMWARE
   listcommands: () => string[]
 }
@@ -45,6 +58,7 @@ export type FIRMWARE = {
 export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
   const commands: Record<string, FIRMWARE_COMMAND> = {}
   const commandArgs: Record<string, COMMAND_ARGS_SIGNATURE> = {}
+  const commandArgMeta: Record<string, COMMAND_ARG_AUTOCOMPLETE> = {}
 
   const firmware: FIRMWARE = {
     everytick() {},
@@ -59,9 +73,15 @@ export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
     getcommandargs(name) {
       return commandArgs[name]
     },
-    command(name, args, func): FIRMWARE {
+    getcommandargmeta(name) {
+      return commandArgMeta[name]
+    },
+    command(name, args, func, argmeta): FIRMWARE {
       commands[name] = func
       commandArgs[name] = args
+      if (argmeta !== undefined) {
+        commandArgMeta[name] = argmeta
+      }
       return firmware
     },
   }

@@ -1,6 +1,8 @@
-/** Heavy causal LM preset ids (register IndexedDB + worker; default from `HEAVY_LLM_DEFAULT_PRESET`). */
+/** Heavy agent LM preset ids (register IndexedDB + worker; default from `HEAVY_LLM_DEFAULT_PRESET`). */
 
-export type HEAVY_LLM_PRESET = 'llama' | 'tiny'
+export type HEAVY_LLM_PRESET = 'llama' | 'tiny' | 'gemma'
+
+export type HEAVY_LLM_BACKEND = 'causal_lm' | 'gemma4'
 
 export const HEAVY_LLM_STORAGE_KEY = 'heavy_llm_preset'
 
@@ -10,6 +12,8 @@ export type HEAVY_LLM_ROW = {
   modelid: string
   dtype: string
   contexttokens: number
+  /** Which generation stack in `model.ts` loads this preset. */
+  backend: HEAVY_LLM_BACKEND
 }
 
 export const HEAVY_LLM_PRESETS: Record<HEAVY_LLM_PRESET, HEAVY_LLM_ROW> = {
@@ -17,13 +21,26 @@ export const HEAVY_LLM_PRESETS: Record<HEAVY_LLM_PRESET, HEAVY_LLM_ROW> = {
     modelid: 'onnx-community/Llama-3.2-3B-Instruct-ONNX',
     dtype: 'q4f16',
     contexttokens: 16384,
+    backend: 'causal_lm',
   },
   tiny: {
-    // Smallest Llama 3.2 instruct ONNX slot (1B); q4f16 + split onnx_data like Phi — better WebGPU fit than Qwen here.
     modelid: 'onnx-community/Llama-3.2-1B-Instruct-ONNX',
     dtype: 'q4f16',
     contexttokens: 8192,
+    backend: 'causal_lm',
   },
+  gemma: {
+    modelid: 'onnx-community/gemma-4-E2B-it-ONNX',
+    dtype: 'q4f16',
+    contexttokens: 131072,
+    backend: 'gemma4',
+  },
+}
+
+export function heavyllmpresetbackend(
+  preset: HEAVY_LLM_PRESET,
+): HEAVY_LLM_BACKEND {
+  return HEAVY_LLM_PRESETS[preset].backend
 }
 
 /** Stable order for CLI / help (subset keys of `HEAVY_LLM_PRESETS`). */
@@ -32,7 +49,7 @@ export function heavylmpresetids(): HEAVY_LLM_PRESET[] {
 }
 
 export function isvalidheavylmpreset(s: string): s is HEAVY_LLM_PRESET {
-  return s === 'llama' || s === 'tiny'
+  return s === 'llama' || s === 'tiny' || s === 'gemma'
 }
 
 export function normalizeheavylmpreset(

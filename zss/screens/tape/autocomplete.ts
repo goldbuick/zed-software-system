@@ -1,4 +1,7 @@
-import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
+import type {
+  COMMAND_ARGS_SIGNATURE,
+  COMMAND_ARG_AUTOCOMPLETE,
+} from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -22,6 +25,7 @@ const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'palettes',
   'charsets',
   'loaders',
+  'categories',
   'colors',
   'dirs',
   'dirmods',
@@ -135,6 +139,97 @@ function tagrecordkeys(
   category: string,
 ): AUTO_COMPLETE_SUGGESTION[] {
   return Object.keys(rec).map((word) => ({ word, category }))
+}
+
+/** Resolve declared keyword list for `#cmd` argument position (exported for tests). */
+export function keywordsforcommandargcomplete(
+  meta: COMMAND_ARG_AUTOCOMPLETE | undefined,
+  argindex: number,
+  firstarglower: string,
+): string[] | undefined {
+  if (!meta) {
+    return undefined
+  }
+  if (argindex > 0 && firstarglower) {
+    const variant = meta.whenfirst?.[firstarglower]?.[argindex]
+    if (variant?.length) {
+      return variant
+    }
+  }
+  const bypos = meta.byposition?.[argindex]
+  if (bypos?.length) {
+    return bypos
+  }
+  return undefined
+}
+
+function commandargsnumeric(sig: COMMAND_ARGS_SIGNATURE): ARG_TYPE[] {
+  const out: ARG_TYPE[] = []
+  for (let i = 0; i < sig.length; i++) {
+    const x = sig[i]
+    if (typeof x === 'number') {
+      out.push(x)
+    }
+  }
+  return out
+}
+
+function alldefaultsuggestionitems(
+  words: GADGET_ZSS_WORDS,
+): AUTO_COMPLETE_SUGGESTION[] {
+  return [
+    ...tagwords(words.flags, 'flags'),
+    ...tagwords(words.statsboard, 'stats'),
+    ...tagwords(words.statshelper, 'stats'),
+    ...tagwords(words.statssender, 'stats'),
+    ...tagwords(words.statsinteraction, 'stats'),
+    ...tagwords(words.statsboolean, 'stats'),
+    ...tagwords(words.statsconfig, 'stats'),
+    ...tagwords(words.objects, 'objects'),
+    ...tagwords(words.terrains, 'terrains'),
+    ...tagwords(words.boards, 'boards'),
+    ...tagwords(words.palettes, 'palettes'),
+    ...tagwords(words.charsets, 'charsets'),
+    ...tagwords(words.loaders, 'loaders'),
+    ...tagwords(words.categories, 'categories'),
+    ...tagwords(words.colors, 'colors'),
+    ...tagwords(words.dirs, 'dirs'),
+    ...tagwords(words.dirmods, 'dirmods'),
+    ...tagwords(words.exprs, 'exprs'),
+  ]
+}
+
+function itemsforargtype(
+  words: GADGET_ZSS_WORDS,
+  t: ARG_TYPE,
+): AUTO_COMPLETE_SUGGESTION[] {
+  switch (t) {
+    case ARG_TYPE.COLOR:
+    case ARG_TYPE.COLOR_OR_KIND:
+      return tagwords(words.colors, 'colors')
+    case ARG_TYPE.DIR:
+      return [
+        ...tagwords(words.dirs, 'dirs'),
+        ...tagwords(words.dirmods, 'dirmods'),
+      ]
+    case ARG_TYPE.KIND:
+    case ARG_TYPE.MAYBE_KIND:
+      return tagwords(words.categories, 'categories')
+    case ARG_TYPE.ANY:
+    case ARG_TYPE.NUMBER:
+    case ARG_TYPE.MAYBE_NUMBER:
+    case ARG_TYPE.NAME:
+    case ARG_TYPE.MAYBE_NAME:
+    case ARG_TYPE.NUMBER_OR_NAME:
+    case ARG_TYPE.MAYBE_NUMBER_OR_NAME:
+    case ARG_TYPE.STRING:
+    case ARG_TYPE.MAYBE_STRING:
+    case ARG_TYPE.NUMBER_OR_STRING:
+    case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
+      return []
+    default:
+      return alldefaultsuggestionitems(words)
+  }
 }
 
 function hintfromrom(category: string, word = ''): string {
@@ -300,25 +395,29 @@ function getautocompletefromtokens(
         }
       }
       default: {
-        const items = [
-          ...tagwords(words.flags, 'flags'),
-          ...tagwords(words.statsboard, 'stats'),
-          ...tagwords(words.statshelper, 'stats'),
-          ...tagwords(words.statssender, 'stats'),
-          ...tagwords(words.statsinteraction, 'stats'),
-          ...tagwords(words.statsboolean, 'stats'),
-          ...tagwords(words.statsconfig, 'stats'),
-          ...tagwords(words.objects, 'objects'),
-          ...tagwords(words.terrains, 'terrains'),
-          ...tagwords(words.boards, 'boards'),
-          ...tagwords(words.palettes, 'palettes'),
-          ...tagwords(words.charsets, 'charsets'),
-          ...tagwords(words.loaders, 'loaders'),
-          ...tagwords(words.colors, 'colors'),
-          ...tagwords(words.dirs, 'dirs'),
-          ...tagwords(words.dirmods, 'dirmods'),
-          ...tagwords(words.exprs, 'exprs'),
-        ]
+        let items: AUTO_COMPLETE_SUGGESTION[]
+        if (cmdidx >= 0 && activetokenidx >= cmdidx + 2) {
+          const argindex = activetokenidx - cmdidx - 2
+          const meta = words.commandargmeta?.[hintcommandname]
+          let firstlower = ''
+          if (argindex > 0 && cmdidx + 2 < tokens.length) {
+            firstlower = NAME(tokens[cmdidx + 2]?.image ?? '').toLowerCase()
+          }
+          const sub = keywordsforcommandargcomplete(meta, argindex, firstlower)
+          if (ispresent(sub) && sub.length > 0) {
+            items = tagwords(sub, 'commandargmeta')
+          } else {
+            const types = maybesig ? commandargsnumeric(maybesig) : []
+            const t = types[argindex]
+            if (ispresent(t)) {
+              items = itemsforargtype(words, t)
+            } else {
+              items = alldefaultsuggestionitems(words)
+            }
+          }
+        } else {
+          items = alldefaultsuggestionitems(words)
+        }
         const suggestions = filtersuggestions(prefix, items)
         return {
           suggestions,
