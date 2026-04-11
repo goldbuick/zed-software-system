@@ -52,6 +52,8 @@ export const RUNTIME_FIRMWARE = createfirmware({
         // element sending a scroll to a player
         const shared = gadgetstate(player)
         shared.scrollname =
+          READ_CONTEXT.element?.displayname ??
+          READ_CONTEXT.element?.kinddata?.displayname ??
           READ_CONTEXT.element?.name ??
           READ_CONTEXT.element?.kinddata?.name ??
           ''
