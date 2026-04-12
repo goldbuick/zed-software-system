@@ -6,7 +6,7 @@ import {
   OrthographicCamera as OrthographicCameraImpl,
   Vector3,
 } from 'three'
-import { RUNTIME } from 'zss/config'
+import { FLAT_CAMERA_ORTHO_ASSERT, RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
@@ -16,7 +16,10 @@ import {
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
-import { flatcameratargetfocus } from 'zss/gadget/graphics/flatcamerabounds'
+import {
+  flatcameradevassertboardinortho,
+  flatcameratargetfocus,
+} from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -110,6 +113,27 @@ export const FlatGraphics = memo(function FlatGraphics({
       FOCUS_ANIM_RATE,
       delta,
     )
+
+    if (FLAT_CAMERA_ORTHO_ASSERT) {
+      const boardwscaled = BOARD_WIDTH * drawwidth * viewscale
+      const boardhscaled = BOARD_HEIGHT * drawheight * viewscale
+      flatcameradevassertboardinortho({
+        centerx,
+        centery,
+        viewscale,
+        cornerx: cornerref.current.position.x,
+        cornery: cornerref.current.position.y,
+        drawwidth,
+        drawheight,
+        boardwidth: BOARD_WIDTH,
+        boardheight: BOARD_HEIGHT,
+        viewwidth,
+        viewheight,
+        cellepsilon: drawwidth * viewscale,
+        checkhoriz: viewwidth <= boardwscaled,
+        checkvert: viewheight <= boardhscaled,
+      })
+    }
 
     const cam = cameraref.current
     cam.up.set(0, 1, 0)

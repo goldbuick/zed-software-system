@@ -19,6 +19,8 @@ const FORCE_TOUCH_UI = zssjsonbool('ZSS_FORCE_TOUCH_UI')
 const RAYCAST_DEBUG_DOT = zssjsonbool('ZSS_DEBUG_RAYCAST_DOT')
 /** Inspector: wireframe pick sheet + colored selection quads (see `InspectorSelect`). */
 const RAYCAST_DEBUG_PICKSHEET = zssjsonbool('ZSS_DEBUG_RAYCAST_PICKSHEET')
+/** Flat ortho: assert board fills frustum on cropped axes (see `flatcameradevassertboardinortho`). */
+const FLAT_CAMERA_ORTHO_ASSERT = zssjsonbool('ZSS_DEBUG_FLAT_CAMERA_ORTHO')
 
 // runtime config
 export const RUNTIME = {
@@ -46,4 +48,5 @@ export {
   FORCE_TOUCH_UI,
   RAYCAST_DEBUG_DOT,
   RAYCAST_DEBUG_PICKSHEET,
+  FLAT_CAMERA_ORTHO_ASSERT,
 }

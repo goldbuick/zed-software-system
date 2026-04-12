@@ -69,8 +69,8 @@ describe('flatcamerabounds', () => {
         controlfocusx: 3,
         controlfocusy: 7,
       })
-      expect(tfocusx).toBe(BOARD_W * 0.5)
-      expect(tfocusy).toBe(BOARD_H * 0.5)
+      expect(tfocusx).toBe(BOARD_W * 0.5 - 0.5)
+      expect(tfocusy).toBe(BOARD_H * 0.5 - 0.5)
     })
   })
 
@@ -274,8 +274,8 @@ describe('flatcamerabounds', () => {
       const viewwidth = boarddraww + 32
       const viewheight = boarddrawh + 32
       const viewscale = 1
-      const focusx = BOARD_W * 0.5
-      const focusy = BOARD_H * 0.5
+      const focusx = BOARD_W * 0.5 - 0.5
+      const focusy = BOARD_H * 0.5 - 0.5
       const fx = (focusx + 0.5) * drawwidth
       const fy = (focusy + 0.5) * drawheight
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
@@ -309,7 +309,7 @@ describe('flatcamerabounds', () => {
       const leftedge = (viewwidth * 0.5) / (drawwidth * viewscale)
       const minfocusx = leftedge - 1
       const fx = (minfocusx + 0.5) * drawwidth
-      const focusy = BOARD_H * 0.5
+      const focusy = BOARD_H * 0.5 - 0.5
       const fy = (focusy + 0.5) * drawheight
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
       const boardwscaled = BOARD_W * drawwidth * viewscale
