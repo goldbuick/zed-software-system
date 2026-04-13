@@ -9,6 +9,7 @@ import {
   createwritetextcontext,
 } from 'zss/words/textformat'
 
+import { PanelEndPass } from './panelendpass'
 import { PanelItem } from './panelitem'
 
 type PanelProps = {
@@ -74,13 +75,18 @@ export function PanelComponent({
           text.map((item, index) => (
             <PanelItem
               key={index}
-              row={inline ? undefined : index}
+              row={inline ? undefined : index + ymargin}
               item={item}
               active={index === selected}
               sidebar={xmargin !== 0}
             />
           )),
         )}
+        <PanelEndPass
+          defaultcolor={color}
+          defaultbg={bg}
+          hastext={text.length > 0}
+        />
       </WriteTextContext.Provider>
     </TilesData>
   )

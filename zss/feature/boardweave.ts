@@ -278,14 +278,8 @@ export function boardweavegroup(
           : false
         const shouldpushfromelement = hasfromelement && carriedispushable
 
-        // detect we can make room
-        if (
-          memorycheckelementpushable(fromelement, destelement) &&
-          (fromcollision !== COLLISION.ISWALK || hasfromelement)
-        ) {
-          // if we are doing a carry, we should push
-          let shouldpush = hasfromelement
-
+        // detect we can make room (pushable dest: walkable group tiles shove too)
+        if (memorycheckelementpushable(fromelement, destelement)) {
           // if from element is pushable try that first
           if (ispresent(carriedelement) && carriedispushable) {
             didcollide =
@@ -298,21 +292,15 @@ export function boardweavegroup(
                   y: (carriedelement.y ?? 0) - delta.y,
                 },
               ) !== true
-            if (!didcollide) {
-              shouldpush = false
-            }
           }
 
-          // would the terrain & destelement collide ?
-          if (shouldpush || fromcollision !== COLLISION.ISWALK) {
-            didcollide =
-              boardmovement.memorymoveobject(book, targetboard, destelement, {
-                x: (destelement.x ?? 0) + delta.x,
-                y: (destelement.y ?? 0) + delta.y,
-              }) !== true
-            if (didcollide) {
-              pushfromelement = shouldpushfromelement
-            }
+          didcollide =
+            boardmovement.memorymoveobject(book, targetboard, destelement, {
+              x: (destelement.x ?? 0) + delta.x,
+              y: (destelement.y ?? 0) + delta.y,
+            }) !== true
+          if (didcollide) {
+            pushfromelement = shouldpushfromelement
           }
         } else if (
           fromcollision !== COLLISION.ISWALK ||
@@ -374,18 +362,26 @@ export function boardweavegroup(
       if (
         ispresent(destelement) &&
         memoryboardelementisobject(destelement) &&
-        carriedids.includes(destid) &&
         groupids.includes(destid) !== true
       ) {
+        const pushdest: PT = {
+          x: (destelement.x ?? 0) + delta.x,
+          y: (destelement.y ?? 0) + delta.y,
+        }
         if (memorycheckelementpushable(fromelement, destelement)) {
           didcollide =
             boardmovement.memorymoveobject(
               book,
               targetboard,
               destelement,
-              dest,
+              pushdest,
             ) !== true
-        } else {
+        } else if (carriedids.includes(destid)) {
+          didcollide = true
+        } else if (
+          memorycheckcollision(fromollision, destcollision) &&
+          targetgroup !== destgroup
+        ) {
           didcollide = true
         }
       } else if (

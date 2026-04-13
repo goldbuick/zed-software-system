@@ -290,11 +290,12 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                     />
                   ))}
                   {over.map((layer) => (
-                    <FlatLayer
+                    <Mode7Layer
                       key={layer.id}
-                      from="over"
                       id={layer.id}
-                      z={maptolayerz(layer, 'mode7') + drawheight * 1.125}
+                      from="over"
+                      z={maptolayerz(layer, 'mode7') + drawheight * 1.5}
+                      shadowheight={1.25}
                     />
                   ))}
                   {exitpreviewgroups.map(({ key, preview, position }) =>
@@ -320,7 +321,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       </group>
       <group ref={underref}>
         {under.map((layer, i) => (
-          <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
+          <FlatLayer key={layer.id} id={layer.id} from="under" z={i * 2} />
         ))}
       </group>
     </>

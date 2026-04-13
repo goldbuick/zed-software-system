@@ -245,6 +245,99 @@ describe('boardweavegroup', () => {
     expect(terrainat(b, { x: 6, y: y + 2 })?.kind).toBe('d1')
   })
 
+  it('pushes a pushable when a group object weaves into its cell', () => {
+    const board = memorycreateboard()
+    const y = 11
+    const xfrom = 4
+    const xcrate = 5
+    const xempty = 6
+    board.terrain[xfrom + y * BOARD_WIDTH] = {
+      kind: 'floor',
+      x: xfrom,
+      y,
+      collision: COLLISION.ISWALK,
+    }
+    board.terrain[xcrate + y * BOARD_WIDTH] = {
+      kind: 'floor',
+      x: xcrate,
+      y,
+      collision: COLLISION.ISWALK,
+    }
+    board.terrain[xempty + y * BOARD_WIDTH] = {
+      kind: 'floor',
+      x: xempty,
+      y,
+      collision: COLLISION.ISWALK,
+    }
+    board.objects.weaver = {
+      id: 'weaver',
+      kind: 'block',
+      x: xfrom,
+      y,
+      collision: COLLISION.ISWALK,
+      group: 'pushobjg',
+    }
+    board.objects.crate = {
+      id: 'crate',
+      kind: 'crate',
+      x: xcrate,
+      y,
+      collision: COLLISION.ISWALK,
+      pushable: 1,
+    }
+    installbookwithboard('bw_pushobj', board)
+    const b = memoryreadboardbyaddress('bw_pushobj')!
+    memoryinitboard(b)
+
+    const ok = boardweavegroup('bw_pushobj', { x: 1, y: 0 }, '', 'pushobjg')
+    expect(ok).toBe(true)
+    expect(b.objects.weaver?.x).toBe(xcrate)
+    expect(b.objects.crate?.x).toBe(xempty)
+  })
+
+  it('pushes a pushable when walkable group terrain weaves into its cell', () => {
+    const board = memorycreateboard()
+    const y = 12
+    const xfrom = 3
+    const xcrate = 4
+    const xempty = 5
+    board.terrain[xfrom + y * BOARD_WIDTH] = {
+      kind: 'gfloor',
+      x: xfrom,
+      y,
+      collision: COLLISION.ISWALK,
+      group: 'pushterr',
+    }
+    board.terrain[xcrate + y * BOARD_WIDTH] = {
+      kind: 'floor',
+      x: xcrate,
+      y,
+      collision: COLLISION.ISWALK,
+    }
+    board.terrain[xempty + y * BOARD_WIDTH] = {
+      kind: 'floor',
+      x: xempty,
+      y,
+      collision: COLLISION.ISWALK,
+    }
+    board.objects.crate2 = {
+      id: 'crate2',
+      kind: 'crate',
+      x: xcrate,
+      y,
+      collision: COLLISION.ISWALK,
+      pushable: 1,
+    }
+    installbookwithboard('bw_pushterr', board)
+    const b = memoryreadboardbyaddress('bw_pushterr')!
+    memoryinitboard(b)
+
+    const ok = boardweavegroup('bw_pushterr', { x: 1, y: 0 }, '', 'pushterr')
+    expect(ok).toBe(true)
+    expect(b.objects.crate2?.x).toBe(xempty)
+    expect(terrainat(b, { x: xcrate, y })?.kind).toBe('gfloor')
+  })
+
   it('moves an object on grouped terrain by exactly one delta (not carry + object)', () => {
     const board = memorycreateboard()
     const y = 8
