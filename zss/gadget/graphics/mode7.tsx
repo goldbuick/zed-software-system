@@ -69,15 +69,28 @@ function clampfocus(
   viewheight: number,
   drawwidth: number,
   drawheight: number,
+  sidebarnudge: number,
 ) {
   const charwidth = drawwidth * viewscale
   const charheight = drawheight * viewscale
-  const margin = 0.7
-  const cols = Math.floor((viewwidth * 0.5) / charwidth) * margin
-  const rows = Math.floor((viewheight * 0.5) / charheight) * margin
+  const margin = 2
+  const viewcols = Math.floor(viewwidth / charwidth) - margin
+  const viewrows = Math.floor(viewheight / charheight) - margin
+
+  const maxcols = BOARD_WIDTH - viewcols
+  const maxrows = BOARD_HEIGHT - viewrows
+
+  const shouldcenterx = maxcols < viewcols
+  const shouldcentery = maxrows < viewrows
+
   return [
-    clamp(focusx, cols, BOARD_WIDTH - cols - 1),
-    clamp(focusy, rows, BOARD_HEIGHT - rows - 1),
+    shouldcenterx
+      ? Math.round(BOARD_WIDTH * 0.5)
+      : clamp(focusx, viewcols, maxcols),
+    shouldcentery
+      ? Math.round(BOARD_HEIGHT * 0.5)
+      : clamp(focusy, viewrows, maxrows),
+    sidebarnudge * -0.5,
   ]
 }
 
@@ -93,7 +106,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
   const sidebarnudge = screensize.viewwidth - viewwidth
-  const centerx = viewwidth * -0.5 + sidebarnudge * -0.5
+  const centerx = viewwidth * -0.5
   const centery = viewheight * 0.5
 
   const tiltref = useRef<Group>(null)
@@ -153,7 +166,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     cameraref.current.updateMatrixWorld(true)
     cornerref.current.updateWorldMatrix(true, false)
 
-    const [tfocusx, tfocusy] = clampfocus(
+    const [tfocusx, tfocusy, withnudge] = clampfocus(
       control.focusx,
       control.focusy,
       control.viewscale,
@@ -161,6 +174,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       viewheight,
       drawwidth,
       drawheight,
+      sidebarnudge,
     )
 
     const boardtransition = stepfocuswithboardtransition(
@@ -175,7 +189,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
 
-    const targetcornerx = -fx
+    console.info('withnudge', withnudge)
+    const targetcornerx = -fx + withnudge
     const targetcornery = -fy
 
     // handle board transition
