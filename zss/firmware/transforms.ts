@@ -9,10 +9,11 @@ import { boardremix } from 'zss/feature/boardremix'
 import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { isstrdir } from 'zss/words/dir'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, PT, WORD } from 'zss/words/types'
 
@@ -41,8 +42,16 @@ function parsefilterrectoneword(word: WORD): { pt1: PT; pt2: PT } | undefined {
   }
 }
 
-function readfilter(words: WORD[], index: number) {
+type ReadFilterResult = {
+  targetset: string
+  pt1: PT
+  pt2: PT
+  dest: MAYBE<PT>
+}
+
+function readfilter(words: WORD[], index: number): ReadFilterResult {
   let targetset = 'all'
+  let dest: MAYBE<PT> = undefined
   const pt1: PT = { x: 0, y: 0 }
   const pt2: PT = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
   for (let i = index; i < words.length; ) {
@@ -55,8 +64,14 @@ function readfilter(words: WORD[], index: number) {
       i += 1
       continue
     }
-    const [checkarg, ii] = readargs(words, i, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
-    if (isstring(checkarg)) {
+    const [checkarg, ii] = readargs(words, i, [ARG_TYPE.ANY])
+    if (isstrdir(checkarg)) {
+      const [destdir, iii] = readargs(words, i, [ARG_TYPE.DIR])
+      // use resolve pt for dest
+      dest = destdir.destpt
+      // parse next set
+      i = iii
+    } else if (isstring(checkarg)) {
       targetset = NAME(checkarg)
       // parse next set
       i = ii
@@ -76,7 +91,7 @@ function readfilter(words: WORD[], index: number) {
       break
     }
   }
-  return { targetset, pt1, pt2 }
+  return { targetset, pt1, pt2, dest }
 }
 
 /** Parses optional targetset and region after command-specific args (exported for tests). */
@@ -142,6 +157,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
           filter.pt1,
           filter.pt2,
           filter.targetset,
+          filter.dest,
         )
           ? 0
           : 1,

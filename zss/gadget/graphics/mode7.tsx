@@ -61,6 +61,18 @@ function mapviewtotilt(viewscale: number) {
   }
 }
 
+function mapviewtoviewmeasure(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 1.2
+    default:
+    case VIEWSCALE.MID:
+      return 1.5
+    case VIEWSCALE.FAR:
+      return 1.0
+  }
+}
+
 function clampfocus(
   focusx: number,
   focusy: number,
@@ -70,14 +82,23 @@ function clampfocus(
   drawwidth: number,
   drawheight: number,
 ) {
-  const charwidth = drawwidth * viewscale
-  const charheight = drawheight * viewscale
-  const margin = 0.7
-  const cols = Math.floor((viewwidth * 0.5) / charwidth) * margin
-  const rows = Math.floor((viewheight * 0.5) / charheight) * margin
+  const margin = 3
+  const tiltscale = mapviewtoviewmeasure(viewscale)
+  const charwidth = drawwidth * viewscale * tiltscale
+  const charheight = drawheight * viewscale * tiltscale
+  const viewcols = Math.floor((viewwidth / charwidth) * 0.5) - margin
+  const viewrows = Math.floor((viewheight / charheight) * 0.5) - margin
+  const maxcols = Math.round(BOARD_WIDTH - viewcols)
+  const maxrows = Math.round(BOARD_HEIGHT - viewrows)
+  const shouldcenterx = BOARD_WIDTH - viewcols * 2 < 0
+  const shouldcentery = BOARD_HEIGHT - viewrows * 2 < 0
   return [
-    clamp(focusx, cols, BOARD_WIDTH - cols - 1),
-    clamp(focusy, rows, BOARD_HEIGHT - rows - 1),
+    shouldcenterx
+      ? Math.round(BOARD_WIDTH * 0.5)
+      : clamp(focusx, viewcols, maxcols),
+    shouldcentery
+      ? Math.round(BOARD_HEIGHT * 0.5)
+      : clamp(focusy, viewrows, maxrows),
   ]
 }
 
@@ -174,7 +195,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
-
     const targetcornerx = -fx
     const targetcornery = -fy
 
@@ -294,7 +314,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       key={layer.id}
                       id={layer.id}
                       from="over"
-                      z={maptolayerz(layer, 'mode7') + drawheight * 1.5}
+                      z={maptolayerz(layer, 'mode7') + drawheight * 1.75}
                       shadowheight={1.25}
                     />
                   ))}

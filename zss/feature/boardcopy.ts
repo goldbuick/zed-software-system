@@ -102,9 +102,10 @@ export function mapelementcopy(
 export function boardcopy(
   source: string,
   target: string,
-  p1: PT,
-  p2: PT,
+  srcp1: PT,
+  srcp2: PT,
   targetset: string,
+  dest?: PT,
 ) {
   switch (targetset) {
     case 'all':
@@ -112,7 +113,7 @@ export function boardcopy(
     case 'terrain':
       break
     default:
-      return boardcopygroup(source, target, p1, '', targetset)
+      return boardcopygroup(source, target, dest ?? srcp1, '', targetset)
   }
   if (!ispresent(READ_CONTEXT.book)) {
     return false
@@ -133,18 +134,23 @@ export function boardcopy(
   memoryinitboard(sourceboard)
   memoryinitboard(targetboard)
 
+  const dx = srcp2.x - srcp1.x
+  const dy = srcp2.y - srcp1.y
+  const destp1 = dest ?? srcp1
+  const destp2: PT = { x: destp1.x + dx, y: destp1.y + dy }
+
   let isgroup = false
   if (ispresent(sourceboard) && ispresent(targetboard)) {
     // blank target region
     switch (targetset) {
       case 'all':
-        emptyarea(book, targetboard, p1, p2)
+        emptyarea(book, targetboard, destp1, destp2)
         break
       case 'object':
-        emptyareaobject(book, targetboard, p1, p2)
+        emptyareaobject(book, targetboard, destp1, destp2)
         break
       case 'terrain':
-        emptyareaterrain(targetboard, p1, p2)
+        emptyareaterrain(targetboard, destp1, destp2)
         break
       default:
         // todo: split this off into it's own function, just like weave
@@ -153,8 +159,8 @@ export function boardcopy(
     }
 
     // copy new elements
-    for (let y = p1.y; y <= p2.y; ++y) {
-      for (let x = p1.x; x <= p2.x; ++x) {
+    for (let y = 0; y <= dy; ++y) {
+      for (let x = 0; x <= dx; ++x) {
         let copyobject = false
         let copyterrain = false
         switch (targetset) {
@@ -171,11 +177,11 @@ export function boardcopy(
         }
 
         // read source element
-        const pt: PT = { x, y }
+        const src: PT = { x: srcp1.x + x, y: srcp1.y + y }
         let terrain: MAYBE<BOARD_ELEMENT>
-        let object = memoryreadelement(sourceboard, pt)
+        let object = memoryreadelement(sourceboard, src)
         if (memoryboardelementisobject(object)) {
-          terrain = memoryreadterrain(sourceboard, x, y)
+          terrain = memoryreadterrain(sourceboard, src.x, src.y)
           if (ispid(object?.id)) {
             object = undefined
           }
@@ -184,18 +190,20 @@ export function boardcopy(
           object = undefined
         }
 
+        // write dest element
+        const dest: PT = { x: destp1.x + x, y: destp1.y + y }
         if (
           ispresent(terrain) &&
           (copyterrain ||
             (isgroup && memoryreadelementstat(terrain, 'group') === targetset))
         ) {
           if (isgroup) {
-            emptyarea(book, targetboard, pt, pt)
+            emptyarea(book, targetboard, dest, dest)
           }
           const el = memorywriteelementfromkind(
             targetboard,
             [terrain.kind ?? ''],
-            pt,
+            dest,
           )
           mapelementcopy(el, terrain)
         }
@@ -206,12 +214,12 @@ export function boardcopy(
             (isgroup && memoryreadelementstat(object, 'group') === targetset))
         ) {
           if (isgroup) {
-            emptyareaobject(book, targetboard, pt, pt)
+            emptyareaobject(book, targetboard, dest, dest)
           }
           const el = memorywriteelementfromkind(
             targetboard,
             [object.kind ?? ''],
-            pt,
+            dest,
           )
           mapelementcopy(el, object)
         }
