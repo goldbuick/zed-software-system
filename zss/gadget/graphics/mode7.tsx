@@ -61,6 +61,18 @@ function mapviewtotilt(viewscale: number) {
   }
 }
 
+function mapviewtoviewmeasure(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 1.2
+    default:
+    case VIEWSCALE.MID:
+      return 1.5
+    case VIEWSCALE.FAR:
+      return 1.0
+  }
+}
+
 function clampfocus(
   focusx: number,
   focusy: number,
@@ -69,20 +81,17 @@ function clampfocus(
   viewheight: number,
   drawwidth: number,
   drawheight: number,
-  sidebarnudge: number,
 ) {
-  const charwidth = drawwidth * viewscale
-  const charheight = drawheight * viewscale
-  const margin = 2
-  const viewcols = Math.floor(viewwidth / charwidth) - margin
-  const viewrows = Math.floor(viewheight / charheight) - margin
-
-  const maxcols = BOARD_WIDTH - viewcols
-  const maxrows = BOARD_HEIGHT - viewrows
-
-  const shouldcenterx = maxcols < viewcols
-  const shouldcentery = maxrows < viewrows
-
+  const margin = 3
+  const tiltscale = mapviewtoviewmeasure(viewscale)
+  const charwidth = drawwidth * viewscale * tiltscale
+  const charheight = drawheight * viewscale * tiltscale
+  const viewcols = Math.floor((viewwidth / charwidth) * 0.5) - margin
+  const viewrows = Math.floor((viewheight / charheight) * 0.5) - margin
+  const maxcols = Math.round(BOARD_WIDTH - viewcols)
+  const maxrows = Math.round(BOARD_HEIGHT - viewrows)
+  const shouldcenterx = BOARD_WIDTH - viewcols * 2 < 0
+  const shouldcentery = BOARD_HEIGHT - viewrows * 2 < 0
   return [
     shouldcenterx
       ? Math.round(BOARD_WIDTH * 0.5)
@@ -90,7 +99,6 @@ function clampfocus(
     shouldcentery
       ? Math.round(BOARD_HEIGHT * 0.5)
       : clamp(focusy, viewrows, maxrows),
-    sidebarnudge * -0.5,
   ]
 }
 
@@ -106,7 +114,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const boarddrawwidth = BOARD_WIDTH * drawwidth
   const boarddrawheight = BOARD_HEIGHT * drawheight
   const sidebarnudge = screensize.viewwidth - viewwidth
-  const centerx = viewwidth * -0.5
+  const centerx = viewwidth * -0.5 + sidebarnudge * -0.5
   const centery = viewheight * 0.5
 
   const tiltref = useRef<Group>(null)
@@ -166,7 +174,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     cameraref.current.updateMatrixWorld(true)
     cornerref.current.updateWorldMatrix(true, false)
 
-    const [tfocusx, tfocusy, withnudge] = clampfocus(
+    const [tfocusx, tfocusy] = clampfocus(
       control.focusx,
       control.focusy,
       control.viewscale,
@@ -174,7 +182,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       viewheight,
       drawwidth,
       drawheight,
-      sidebarnudge,
     )
 
     const boardtransition = stepfocuswithboardtransition(
@@ -188,9 +195,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
-
-    console.info('withnudge', withnudge)
-    const targetcornerx = -fx + withnudge
+    const targetcornerx = -fx
     const targetcornery = -fy
 
     // handle board transition
