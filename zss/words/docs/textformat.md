@@ -53,4 +53,8 @@
 
 **WRITE_PEN_CONTEXT**: color, bg, topedge, leftedge, rightedge, bottomedge (all optional except color/bg).
 
-**WRITE_TEXT_CONTEXT**: cursor (x, y), region (width, height), active/reset pen (WRITE_PEN_CONTEXT), output arrays (char, color, bg), plus disablewrap, measureonly, measuredwidth, writefullwidth, iseven, changed(). Supports measure-only mode and writefullwidth for line filling.
+**WRITE_TEXT_CONTEXT**: cursor (x, y), region (width, height), active/reset pen (WRITE_PEN_CONTEXT), output arrays (char, color, bg), plus disablewrap, measureonly, measuredwidth, writefullwidth, **`padlineright`**, **`panelcarry`**, optional **`panelcarrycolor`** / **`panelcarrybg`**, iseven, changed(). Supports measure-only mode and writefullwidth for line filling.
+
+**`padlineright`** (default `false`): When `true`, each newline pads the row to **`width - 1`** with the **active** pen (text wrap still uses **`active.rightedge`**). The last line is padded the same way. When set, **`writefullwidth`** also fills to **`width - 1`** (still **`writetextreset`** colors for that tail). After **`tokenizeandwritetextformat`** / **`writeplaintext`**, **`syncpanelguttercolumn`** in [`zss/screens/panel/guttersync.ts`](zss/screens/panel/guttersync.ts) runs: if **`reset.leftedge` > 0**, column **`leftedge - 1`** copies fg/bg from column **`leftedge`** for touched rows. **`PanelComponent`** sets **`padlineright: true`** (with **`panelcarry`**).
+
+When **`panelcarry`** is `true`, **`tokenizeandwritetextformat`** applies **`panelcarrycolor`** / **`panelcarrybg`** to the active pen before rendering (if defined), then stores **`active.color`** / **`active.bg`** after **`writetextformat`** (before **`writetextreset`** when `shouldreset` is true). **`PanelComponent`** clears carry when the **`text`** reference changes. Use **`$onclear`** or explicit colors to break the chain.

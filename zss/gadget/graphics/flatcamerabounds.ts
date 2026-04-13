@@ -51,7 +51,9 @@ export function flatcameratargetfocus(input: FlatCameraTargetFocusInput): {
 
   let tfocusx: number
   if (viewwidth - padleft - padright > boarddrawwidth * viewscale) {
-    tfocusx = boardwidth * 0.5
+    // Flat pan uses (focusx + 0.5) * drawwidth as the point brought to the view origin;
+    // geometric board center in px is boardwidth * drawwidth / 2, so focusx = boardwidth/2 - 0.5.
+    tfocusx = boardwidth * 0.5 - 0.5
   } else {
     const leftedge = (halfw + padleft) / (drawwidth * viewscale)
     const rightedge = boardwidth - (halfw + padright) / (drawwidth * viewscale)
@@ -60,7 +62,7 @@ export function flatcameratargetfocus(input: FlatCameraTargetFocusInput): {
 
   let tfocusy: number
   if (viewheight - padtop - padbottom > boarddrawheight * viewscale) {
-    tfocusy = boardheight * 0.5
+    tfocusy = boardheight * 0.5 - 0.5
   } else {
     const topedge = (halfh + padtop) / (drawheight * viewscale)
     const bottomedge =

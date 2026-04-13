@@ -175,7 +175,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
 
-    // const sidebarnudge =
     const targetcornerx = -fx
     const targetcornery = -fy
 
