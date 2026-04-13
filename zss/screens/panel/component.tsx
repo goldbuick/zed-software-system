@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
@@ -34,6 +34,7 @@ export function PanelComponent({
   bg,
   text,
 }: PanelProps) {
+  const textref = useRef(text)
   const store = useTiles(width, height, 0, color, bg)
   const state = store.getState()
   const context: WRITE_TEXT_CONTEXT = useMemo(
@@ -49,11 +50,19 @@ export function PanelComponent({
         height - ymargin,
       ),
       ...store.getState(),
+      padlineright: true,
+      panelcarry: true,
       x: xmargin,
       y: ymargin,
     }),
     [bg, color, height, store, width, xmargin, ymargin],
   )
+
+  if (textref.current !== text) {
+    context.panelcarrycolor = undefined
+    context.panelcarrybg = undefined
+    textref.current = text
+  }
 
   resettiles(state, 0, color, bg)
 

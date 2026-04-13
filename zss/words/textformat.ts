@@ -6,6 +6,8 @@ import { colortobg, colortofg } from 'zss/words/color'
 import { colorconsts } from 'zss/words/colorconsts'
 import { COLOR } from 'zss/words/types'
 
+import { syncpanelguttercolumn } from 'zss/screens/panel/guttersync'
+
 import { metakey } from './system'
 
 export const Whitespace = createToken({
@@ -152,6 +154,17 @@ export type WRITE_TEXT_CONTEXT = {
   measureonly: boolean
   measuredwidth: number
   writefullwidth: MAYBE<number>
+  /**
+   * Panel: pad each line to tile `width - 1` with the active pen; `writefullwidth` uses the same edge.
+   * Enables gutter sync (`zss/screens/panel/guttersync.ts`) after each write.
+   */
+  padlineright: boolean
+  /** When true, `tokenizeandwritetextformat` restores/saves `panelcarrycolor` / `panelcarrybg` across rows. */
+  panelcarry: boolean
+  /** End-of-row fg (after each `tokenizeandwritetextformat` when `panelcarry`). */
+  panelcarrycolor?: number
+  /** End-of-row bg (after each `tokenizeandwritetextformat` when `panelcarry`). */
+  panelcarrybg?: number
   // cursor
   x: number
   y: number
@@ -186,6 +199,8 @@ export function createwritetextcontext(
     measureonly: false,
     measuredwidth: 0,
     writefullwidth: undefined,
+    padlineright: false,
+    panelcarry: false,
     x: 0,
     y: 0,
     iseven: true,
@@ -222,10 +237,38 @@ export function applywritetextcontext(
   dest.y = source.y
   dest.active.color = source.active.color
   dest.active.bg = source.active.bg
+  dest.padlineright = source.padlineright
+  dest.panelcarry = source.panelcarry
+  dest.panelcarrycolor = source.panelcarrycolor
+  dest.panelcarrybg = source.panelcarrybg
 }
 
 export function writetextreset(context: WRITE_TEXT_CONTEXT) {
   context.active = { ...context.reset }
+}
+
+function padlinerightwithactivepen(context: WRITE_TEXT_CONTEXT, fillcp: number) {
+  if (!context.padlineright || context.measureonly === true) {
+    return
+  }
+  const padrightedge = context.width - 1
+  if (context.x > padrightedge) {
+    return
+  }
+  const fill = padrightedge - context.x
+  if (fill <= 0) {
+    return
+  }
+  const pttrn = String.fromCodePoint(fillcp).repeat(fill)
+  const i = context.x + context.y * context.width
+  applycolortoindexes(
+    i,
+    i + fill,
+    context.active.color,
+    context.active.bg,
+    context,
+  )
+  applystrtoindex(i, pttrn, context)
 }
 
 function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
@@ -299,6 +342,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         break
 
       case Newline: {
+        padlinerightwithactivepen(context, 0x20)
         context.x = context.active.leftedge ?? 0
         ++context.y
         break
@@ -342,14 +386,24 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     context.measuredwidth = context.x + 1
   }
 
-  // fill line
   const leftedge = context.active.leftedge ?? 0
+  if (
+    context.padlineright &&
+    (context.x > leftedge || context.y === starty)
+  ) {
+    padlinerightwithactivepen(context, 0x20)
+  }
+
+  // fill line
   if (
     ispresent(context.writefullwidth) &&
     (context.x > leftedge || context.y === starty)
   ) {
-    const rightedge = context.active.rightedge ?? context.width - 1
-    const fill = rightedge - context.x
+    const wright =
+      context.padlineright === true
+        ? context.width - 1
+        : context.active.rightedge ?? context.width - 1
+    const fill = wright - context.x
     if (fill > 0) {
       writetextreset(context)
       const fillcp = context.writefullwidth ?? 0x20
@@ -377,7 +431,24 @@ export function tokenizeandwritetextformat(
     return
   }
 
+  if (context.panelcarry === true) {
+    if (context.panelcarrycolor !== undefined) {
+      context.active.color = context.panelcarrycolor
+    }
+    if (context.panelcarrybg !== undefined) {
+      context.active.bg = context.panelcarrybg
+    }
+  }
+
+  const ybeforewrite = context.y
   writetextformat(result.tokens, context)
+  syncpanelguttercolumn(context, ybeforewrite, context.y)
+
+  if (context.panelcarry === true) {
+    context.panelcarrycolor = context.active.color
+    context.panelcarrybg = context.active.bg
+  }
+
   if (shouldreset) {
     writetextreset(context)
   }
@@ -541,8 +612,10 @@ export function writeplaintext(
 ) {
   // create plaintext token
   const plaintext = createTokenInstance(StringLiteral, text, 0, 0, 0, 0, 0, 0)
+  const ybeforewrite = context.y
   // render it
   writetextformat([plaintext], context)
+  syncpanelguttercolumn(context, ybeforewrite, context.y)
   if (shouldreset) {
     writetextreset(context)
   }
