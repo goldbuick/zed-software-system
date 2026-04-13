@@ -245,7 +245,10 @@ export function writetextreset(context: WRITE_TEXT_CONTEXT) {
   context.active = { ...context.reset }
 }
 
-function padlinerightwithactivepen(context: WRITE_TEXT_CONTEXT, fillcp: number) {
+function padlinerightwithactivepen(
+  context: WRITE_TEXT_CONTEXT,
+  fillcp: number,
+) {
   if (!context.padlineright || context.measureonly === true) {
     return
   }
@@ -385,10 +388,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   const leftedge = context.active.leftedge ?? 0
-  if (
-    context.padlineright &&
-    (context.x > leftedge || context.y === starty)
-  ) {
+  if (context.padlineright && (context.x > leftedge || context.y === starty)) {
     padlinerightwithactivepen(context, 0x20)
   }
 
@@ -400,7 +400,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     const wright =
       context.padlineright === true
         ? context.width - 1
-        : context.active.rightedge ?? context.width - 1
+        : (context.active.rightedge ?? context.width - 1)
     const fill = wright - context.x
     if (fill > 0) {
       writetextreset(context)

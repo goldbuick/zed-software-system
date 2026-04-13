@@ -50,10 +50,10 @@ type ReadFilterResult = {
 }
 
 function readfilter(words: WORD[], index: number): ReadFilterResult {
-  const targetset = 'all'
+  let targetset = 'all'
+  let dest: MAYBE<PT> = undefined
   const pt1: PT = { x: 0, y: 0 }
   const pt2: PT = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
-  let dest: MAYBE<PT> = undefined
   for (let i = index; i < words.length; ) {
     const onewordrect = parsefilterrectoneword(words[i])
     if (ispresent(onewordrect)) {
@@ -71,6 +71,10 @@ function readfilter(words: WORD[], index: number): ReadFilterResult {
       dest = destdir.destpt
       // parse next set
       i = iii
+    } else if (isstring(checkarg)) {
+      targetset = NAME(checkarg)
+      // parse next set
+      i = ii
     } else if (isnumber(checkarg)) {
       const [y1, x2, y2, iii] = readargs(words, ii, [
         ARG_TYPE.NUMBER,
