@@ -21,9 +21,16 @@ type Mode7LayerProps = {
   z: number
   from?: 'under' | 'over' | 'layers'
   layers?: LAYER[]
+  shadowheight?: number
 }
 
-export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
+export function Mode7Layer({
+  id,
+  z,
+  from,
+  layers,
+  shadowheight = 0.5,
+}: Mode7LayerProps) {
   const layer = useGadgetClient(
     useShallow((state) => {
       if (ispresent(from)) {
@@ -38,7 +45,6 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
 
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-
   switch (layer?.type) {
     default:
     case LAYER_TYPE.BLANK:
@@ -114,7 +120,7 @@ export function Mode7Layer({ id, z, from, layers }: Mode7LayerProps) {
             {(ix, iy) => [
               ix * drawwidth,
               (iy + 0.5) * drawheight,
-              drawheight * -0.5 + 0.5,
+              drawheight * -shadowheight + 0.5,
             ]}
           </ShadowMeshes>
           <SpriteMeshes sprites={othersprites} withbillboards={true} />
