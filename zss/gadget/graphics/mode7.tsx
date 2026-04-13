@@ -294,7 +294,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       key={layer.id}
                       id={layer.id}
                       from="over"
-                      z={maptolayerz(layer, 'mode7') + drawheight * 1.5}
+                      z={maptolayerz(layer, 'mode7') + drawheight * 1.75}
                       shadowheight={1.25}
                     />
                   ))}
