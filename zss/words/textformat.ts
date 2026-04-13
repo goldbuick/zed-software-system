@@ -6,8 +6,6 @@ import { colortobg, colortofg } from 'zss/words/color'
 import { colorconsts } from 'zss/words/colorconsts'
 import { COLOR } from 'zss/words/types'
 
-import { syncpanelguttercolumn } from 'zss/screens/panel/guttersync'
-
 import { metakey } from './system'
 
 export const Whitespace = createToken({
@@ -156,7 +154,7 @@ export type WRITE_TEXT_CONTEXT = {
   writefullwidth: MAYBE<number>
   /**
    * Panel: pad each line to tile `width - 1` with the active pen; `writefullwidth` uses the same edge.
-   * Enables gutter sync (`zss/screens/panel/guttersync.ts`) after each write.
+   * Gutter sync runs only from `runpanelpostpass` when `PANEL_END_PASS_ENABLED` (`guttersync.ts`).
    */
   padlineright: boolean
   /** When true, `tokenizeandwritetextformat` restores/saves `panelcarrycolor` / `panelcarrybg` across rows. */
@@ -440,9 +438,7 @@ export function tokenizeandwritetextformat(
     }
   }
 
-  const ybeforewrite = context.y
   writetextformat(result.tokens, context)
-  syncpanelguttercolumn(context, ybeforewrite, context.y)
 
   if (context.panelcarry === true) {
     context.panelcarrycolor = context.active.color
@@ -612,10 +608,8 @@ export function writeplaintext(
 ) {
   // create plaintext token
   const plaintext = createTokenInstance(StringLiteral, text, 0, 0, 0, 0, 0, 0)
-  const ybeforewrite = context.y
   // render it
   writetextformat([plaintext], context)
-  syncpanelguttercolumn(context, ybeforewrite, context.y)
   if (shouldreset) {
     writetextreset(context)
   }
