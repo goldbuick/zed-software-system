@@ -208,35 +208,19 @@ export function boardweavegroup(
     return false
   }
 
+  // process elements by the direction of the delta
   sortgroupelementsbydelta(terrainelements, objectelements, delta)
 
   // define included ids and indexes
-  const groupids = objectelements.map((el: any) => el.id ?? '')
-  const groupindexes = terrainelements.map((el: any) =>
+  const groupindexes = terrainelements.map((el: BOARD_ELEMENT) =>
     pttoindex({ x: el.x ?? 0, y: el.y ?? 0 }, BOARD_WIDTH),
   )
 
   // collect carried object ids
-  const carriedids: string[] = []
-  const carriedindexes: number[] = []
-  for (let i = 0; i < terrainelements.length; ++i) {
-    const fromelement = terrainelements[i]
-    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    // detect and track carried objects
-    const maybefromobject = memoryreadelement(targetboard, from)
-    if (
-      ispresent(maybefromobject) &&
-      memoryboardelementisobject(maybefromobject)
-    ) {
-      carriedids.push(maybefromobject.id ?? '')
-      carriedindexes.push(
-        pttoindex(
-          { x: maybefromobject.x ?? 0, y: maybefromobject.y ?? 0 },
-          BOARD_WIDTH,
-        ),
-      )
-    }
-  }
+  const carriedids = objectelements.map((el: BOARD_ELEMENT) => el.id ?? '')
+  const carriedindexes: number[] = objectelements.map((el: BOARD_ELEMENT) =>
+    pttoindex({ x: el.x ?? 0, y: el.y ?? 0 }, BOARD_WIDTH),
+  )
 
   // collision detection pass
   let didcollide = false
@@ -248,15 +232,12 @@ export function boardweavegroup(
     )
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     const fromindex = pttoindex(from, BOARD_WIDTH)
-
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (memoryptwithinboard(dest)) {
       const destelement = memoryreadelement(targetboard, dest)
       const destid = destelement?.id ?? ''
-      const destindex = pttoindex(
-        { x: destelement?.x ?? 0, y: destelement?.y ?? 0 },
-        BOARD_WIDTH,
-      )
+      const destpt = { x: destelement?.x ?? 0, y: destelement?.y ?? 0 }
+      const destindex = pttoindex(destpt, BOARD_WIDTH)
       const destcollision: COLLISION = memoryreadelementstat(
         destelement,
         'collision',
@@ -265,8 +246,7 @@ export function boardweavegroup(
       if (
         ispresent(destelement) &&
         memoryboardelementisobject(destelement) &&
-        carriedids.includes(destid) !== true &&
-        groupids.includes(destid) !== true
+        carriedids.includes(destid) !== true
       ) {
         let pushfromelement = false
         const hasfromelement = carriedindexes.includes(fromindex)
@@ -358,11 +338,10 @@ export function boardweavegroup(
         'collision',
       )
       const destgroup: string = memoryreadelementstat(destelement, 'group')
-
       if (
         ispresent(destelement) &&
         memoryboardelementisobject(destelement) &&
-        groupids.includes(destid) !== true
+        carriedids.includes(destid) !== true
       ) {
         const pushdest: PT = {
           x: (destelement.x ?? 0) + delta.x,
@@ -463,21 +442,12 @@ export function boardweavegroup(
   targetboard.terrain = newterrain
   delete targetboard.distmaps
 
-  memoryinitboard(targetboard)
-
   for (let i = 0; i < objectelements.length; ++i) {
     const fromelement = objectelements[i]
-    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
-    if (!boardmovement.memorymoveobject(book, targetboard, fromelement, dest)) {
-      const restored = memoryimportboard(rollback)
-      if (ispresent(restored)) {
-        targetboard.terrain = restored.terrain
-        targetboard.objects = restored.objects
-        memoryinitboard(targetboard)
-      }
-      return false
-    }
+    const fromx = fromelement.x ?? 0
+    const fromy = fromelement.y ?? 0
+    fromelement.x = fromx + delta.x
+    fromelement.y = fromy + delta.y
   }
 
   memoryinitboard(targetboard)
