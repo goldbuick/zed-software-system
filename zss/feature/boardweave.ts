@@ -2,12 +2,7 @@ import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
-import {
-  memorycreateboard,
-  memoryexportboard,
-  memoryimportboard,
-  memoryreadgroup,
-} from 'zss/memory/boardlifecycle'
+import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
 import * as boardmovement from 'zss/memory/boardmovement'
 import {
   memorycheckelementpushable,
@@ -378,8 +373,6 @@ export function boardweavegroup(
   if (didcollide) {
     return false
   }
-
-  const rollback = memoryexportboard(targetboard)
 
   const gset = new Set(groupindexes)
   const oldterrain = targetboard.terrain

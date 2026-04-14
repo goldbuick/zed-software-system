@@ -10,7 +10,6 @@ import { MAYBE, deepcopy, ispresent, noop } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 import {
-  memoryboardelementisobject,
   memoryexportboardelement,
   memoryimportboardelement,
 } from './boardelement'
