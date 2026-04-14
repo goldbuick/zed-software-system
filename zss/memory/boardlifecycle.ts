@@ -4,12 +4,12 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
+import { pttoindex } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent, noop } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 import {
-  memoryboardelementisobject,
   memoryexportboardelement,
   memoryimportboardelement,
 } from './boardelement'
@@ -143,23 +143,33 @@ export function memoryreadgroup(
     )
   }
 
+  // first pass collect terrain elements
+  const terrainindexes = new Set<number>()
   for (let i = 0; i < BOARD_SIZE; ++i) {
     const maybeterrain: MAYBE<BOARD_ELEMENT> = board.terrain[i]
-    const maybeobject: MAYBE<BOARD_ELEMENT> =
-      board.objects[board.lookup?.[i] ?? '']
     if (ispresent(maybeterrain) && checkelement(maybeterrain, true)) {
       terrainelements.push(maybeterrain)
-      const maybeobject = board.objects[board.lookup?.[i] ?? '']
-      if (ispresent(maybeobject) && memoryboardelementisobject(maybeobject)) {
-        objectelements.push(maybeobject)
-      }
-    } else if (
-      memoryboardelementisobject(maybeobject) &&
-      checkelement(maybeobject, false)
-    ) {
-      objectelements.push(maybeobject)
+      terrainindexes.add(i)
     }
   }
+
+  // second pass collect object elements
+  const allobjects = Object.values(board.objects)
+  for (let i = 0; i < allobjects.length; ++i) {
+    const object = allobjects[i]
+    if (checkelement(object, false)) {
+      // object element is a match!
+      objectelements.push(object)
+    } else {
+      // check if the object is on the terrain
+      const pt = { x: object.x ?? 0, y: object.y ?? 0 }
+      const index = pttoindex(pt, BOARD_WIDTH)
+      if (terrainindexes.has(index)) {
+        objectelements.push(object)
+      }
+    }
+  }
+
   return { objectelements, terrainelements }
 }
 
