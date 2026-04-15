@@ -59,6 +59,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       switch (route.target) {
         case 'vm':
         case 'heavy':
+        case 'boardrunner':
         case 'synth':
         case 'modem':
         case 'bridge':
@@ -104,6 +105,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'modem':
     case 'gadgetserver':
     case 'jsonsync':
+    case 'boardrunner':
       return true
   }
   switch (route.path) {
@@ -148,5 +150,23 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
 
 // create heavy -> client forward
 export function shouldforwardheavytoclient(): boolean {
+  return true
+}
+
+// boardrunner worker messages
+
+// create client -> boardrunner forward
+export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
+  const route = parsetarget(message.target)
+  return route.target === 'boardrunner'
+}
+
+// create boardrunner -> server forward
+export function shouldforwardboardrunnertoserver(message: MESSAGE): boolean {
+  return shouldforwardclienttoserver(message)
+}
+
+// create boardrunner -> client forward
+export function shouldforwardboardrunnertoclient(): boolean {
   return true
 }
