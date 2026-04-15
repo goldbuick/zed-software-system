@@ -1,5 +1,6 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
 import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
@@ -158,6 +159,7 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
 export function memoryreadboardrunnerchoices(
   book: MAYBE<BOOK>,
   tracking: Record<string, number>,
+  boardrunnerfailed?: Record<string, Record<string, number>>,
 ) {
   // list of current good choices for board runners
   const runnerchoices: Record<string, string> = {}
@@ -181,6 +183,10 @@ export function memoryreadboardrunnerchoices(
     // track active players on boards
     playeridsbyboard[board] ??= []
     playeridsbyboard[board].push(player)
+
+    if (boardrunnerfailed?.[board]?.[player] === BOARDRUNNER_ACK_FAIL_COUNT) {
+      continue
+    }
 
     // track scores for the current choices
     const score = tracking[player] ?? 1000

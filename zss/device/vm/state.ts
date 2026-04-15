@@ -5,6 +5,7 @@
 
 export const SECOND_TIMEOUT = 16
 export const FLUSH_RATE = 60
+export const BOARDRUNNER_ACK_FAIL_COUNT = 2
 
 export const tracking: Record<string, number> = {}
 export const trackinglastlog: Record<string, number> = {}
@@ -14,8 +15,8 @@ export const lastinputtime: Record<string, number> = {}
 export const boardrunners: Record<string, string> = {}
 // board runners that have acknowledged their election
 export const ackboardrunners: Record<string, string> = {}
-// board runners that have failed to acknowledge their election
-export const failedboardrunners: Record<string, string> = {}
+/** Per-board per-player ack retry count; `BOARDRUNNER_ACK_FAIL_COUNT` means failed (skip until valid ack). */
+export const failedboardrunners: Record<string, Record<string, number>> = {}
 
 let flushtick = 0
 export function getflushtick(): number {

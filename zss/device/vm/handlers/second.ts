@@ -3,10 +3,12 @@ import type { MESSAGE } from 'zss/device/api'
 import { registerboardrunnerask, vmlogout } from 'zss/device/api'
 import { savestate } from 'zss/device/vm/helpers'
 import {
+  BOARDRUNNER_ACK_FAIL_COUNT,
   FLUSH_RATE,
   SECOND_TIMEOUT,
   ackboardrunners,
   boardrunners,
+  failedboardrunners,
   incflushtick,
   setflushtick,
   tracking,
@@ -32,6 +34,27 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
           vmlogout(vm, player, false)
         }
       }
+
+      const boards = Object.keys(boardrunners)
+      for (let i = 0; i < boards.length; ++i) {
+        const boardid = boards[i]
+        const playerid = boardrunners[boardid]
+        if (!ispresent(playerid)) {
+          continue
+        }
+        if (ackboardrunners[boardid] === playerid) {
+          continue
+        }
+        registerboardrunnerask(vm, playerid, boardid)
+        failedboardrunners[boardid] ??= {}
+        const prev = failedboardrunners[boardid][playerid] ?? 0
+        const next = prev + 1
+        failedboardrunners[boardid][playerid] = next
+        if (next >= BOARDRUNNER_ACK_FAIL_COUNT) {
+          delete boardrunners[boardid]
+          delete ackboardrunners[boardid]
+        }
+      }
     }
 
     const flushtick = incflushtick()
@@ -40,15 +63,6 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
       doasync(vm, message.player, async () => {
         await savestate(vm, true)
       })
-    }
-
-    // signal board runners that have not acknowledged their election
-    const boards = Object.keys(boardrunners)
-    for (let i = 0; i < boards.length; ++i) {
-      const boardid = boards[i]
-      if (!ispresent(ackboardrunners[boardid])) {
-        registerboardrunnerask(vm, boardrunners[boardid], boardid)
-      }
     }
   })
 }

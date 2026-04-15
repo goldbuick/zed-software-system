@@ -1,6 +1,11 @@
 import type { DEVICE } from 'zss/device'
 import { type MESSAGE, registerboardrunnerask } from 'zss/device/api'
-import { boardrunners, tracking } from 'zss/device/vm/state'
+import {
+  ackboardrunners,
+  boardrunners,
+  failedboardrunners,
+  tracking,
+} from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadboardrunnerchoices } from 'zss/memory/playermanagement'
 import { memorytickmain } from 'zss/memory/runtime'
@@ -31,6 +36,7 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
   const { runnerchoices, playeridsbyboard } = memoryreadboardrunnerchoices(
     mainbook,
     tracking,
+    failedboardrunners,
   )
 
   // iterate through active boards
@@ -46,13 +52,18 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
       } else {
         // remove it
         delete boardrunners[boardid]
+        delete ackboardrunners[boardid]
+        delete failedboardrunners[boardid]
       }
     }
     // elect a player
     if (!ispresent(boardrunners[boardid])) {
-      boardrunners[boardid] = runnerchoices[boardid]
-      // signal the board runner that they have been elected
-      registerboardrunnerask(vm, boardrunners[boardid], boardid)
+      const elected = runnerchoices[boardid]
+      boardrunners[boardid] = elected
+      delete ackboardrunners[boardid]
+      failedboardrunners[boardid] ??= {}
+      failedboardrunners[boardid][elected] = 0
+      registerboardrunnerask(vm, elected, boardid)
     }
   }
 
@@ -63,6 +74,8 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
     const playerids = playeridsbyboard[boardid] ?? []
     if (playerids.length === 0) {
       delete boardrunners[boardid]
+      delete ackboardrunners[boardid]
+      delete failedboardrunners[boardid]
     }
   }
 }
