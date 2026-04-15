@@ -5,6 +5,10 @@ without having to include device code
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
+import type {
+  JSONSYNC_PATCH_PAYLOAD,
+  JSONSYNC_SNAPSHOT_PAYLOAD,
+} from 'zss/feature/jsonsync'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -165,6 +169,22 @@ export function gadgetclientpatch(
   json: any,
 ) {
   device.emit(player, 'gadgetclient:patch', json)
+}
+
+export function jsonsyncsnapshot(
+  device: DEVICELIKE,
+  player: string,
+  payload: JSONSYNC_SNAPSHOT_PAYLOAD,
+) {
+  device.emit(player, 'jsonsync:snapshot', payload)
+}
+
+export function jsonsyncpatch(
+  device: DEVICELIKE,
+  player: string,
+  payload: JSONSYNC_PATCH_PAYLOAD,
+) {
+  device.emit(player, 'jsonsync:patch', payload)
 }
 
 export function gadgetserverdesync(device: DEVICELIKE, player: string) {

@@ -64,6 +64,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'bridge':
         case 'register':
         case 'gadgetclient':
+        case 'jsonsync':
           return true
       }
       switch (route.path) {
@@ -75,6 +76,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'ackoperator':
         case 'ackzsswords':
         case 'gadgetclient':
+        case 'needsnapshot':
           return true
       }
       break
@@ -101,12 +103,14 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'vm':
     case 'modem':
     case 'gadgetserver':
+    case 'jsonsync':
       return true
   }
   switch (route.path) {
     case 'sync':
     case 'desync':
     case 'joinack':
+    case 'needsnapshot':
       return true
   }
   return false
@@ -128,9 +132,13 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
       switch (route.target) {
         case 'heavy':
           return true
+        case 'jsonsync':
+          return true
       }
       switch (route.path) {
         case 'acklook':
+          return true
+        case 'needsnapshot':
           return true
       }
       return false
