@@ -10,6 +10,9 @@ export const tracking: Record<string, number> = {}
 export const trackinglastlog: Record<string, number> = {}
 export const lastinputtime: Record<string, number> = {}
 
+/** Latest elected board runner per `BOARD.id` (main book); replaced each `second`. */
+export const boardrunnerbyboardid: Record<string, string> = {}
+
 let flushtick = 0
 export function getflushtick(): number {
   return flushtick

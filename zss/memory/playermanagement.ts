@@ -155,6 +155,50 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
   return mainboards
 }
 
+/** Per-board runner: lowest `tracking` score (DOOT resets to 0); ties → earlier in `activelist`. */
+export function memoryreadboardrunnerbyboard(
+  book: MAYBE<BOOK>,
+  tracking: Record<string, number>,
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  if (!ispresent(book)) {
+    return out
+  }
+  const activelist = book.activelist
+  const bestscore: Record<string, number> = {}
+  const bestidx: Record<string, number> = {}
+
+  for (let i = 0; i < activelist.length; ++i) {
+    const player = activelist[i]
+    const address = memoryreadbookflag(book, player, 'board')
+    if (!isstring(address) || !address) {
+      continue
+    }
+    const board = memoryreadboardbyaddress(address)
+    if (!ispresent(board)) {
+      continue
+    }
+    const bid = board.id
+    const score = maptonumber(tracking[player], 0)
+    const prev = bestscore[bid]
+    const previdx = bestidx[bid]
+    let replace = false
+    if (prev === undefined) {
+      replace = true
+    } else if (score < prev) {
+      replace = true
+    } else if (score === prev && previdx !== undefined && i < previdx) {
+      replace = true
+    }
+    if (replace) {
+      bestscore[bid] = score
+      bestidx[bid] = i
+      out[bid] = player
+    }
+  }
+  return out
+}
+
 export function memorywritebookplayerboard(
   book: MAYBE<BOOK>,
   player: string,
