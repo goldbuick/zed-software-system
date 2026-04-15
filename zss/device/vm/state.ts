@@ -12,6 +12,10 @@ export const lastinputtime: Record<string, number> = {}
 
 /** Latest elected board runner per `BOARD.id` (main book); replaced each `second`. */
 export const boardrunners: Record<string, string> = {}
+// board runners that have acknowledged their election
+export const ackboardrunners: Record<string, string> = {}
+// board runners that have failed to acknowledge their election
+export const failedboardrunners: Record<string, string> = {}
 
 let flushtick = 0
 export function getflushtick(): number {

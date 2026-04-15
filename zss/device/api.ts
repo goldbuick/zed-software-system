@@ -365,6 +365,14 @@ export function registerloginready(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:loginready', true)
 }
 
+export function registerboardrunnerask(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+) {
+  device.emit(player, 'register:boardrunnerask', board)
+}
+
 export function registersavemem(
   device: DEVICELIKE,
   player: string,

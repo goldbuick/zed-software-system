@@ -113,6 +113,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'desync':
     case 'joinack':
     case 'needsnapshot':
+    case 'ackboardrunner':
       return true
   }
   return false

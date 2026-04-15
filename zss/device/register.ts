@@ -419,6 +419,9 @@ export const register = createdevice(
         }
         break
       }
+      case 'boardrunnerask':
+        register.reply(message, 'ackboardrunner', message.data)
+        break
       case 'bookmarkscroll':
         doasync(register, message.player, async () => {
           const blob = await readbookmarksfromstorage()
