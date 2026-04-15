@@ -155,48 +155,42 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
   return mainboards
 }
 
-/** Per-board runner: lowest `tracking` score (DOOT resets to 0); ties → earlier in `activelist`. */
-export function memoryreadboardrunnerbyboard(
+export function memoryreadboardrunnerchoices(
   book: MAYBE<BOOK>,
   tracking: Record<string, number>,
-): Record<string, string> {
-  const out: Record<string, string> = {}
-  if (!ispresent(book)) {
-    return out
+) {
+  // list of current good choices for board runners
+  const runnerchoices: Record<string, string> = {}
+  // list of active players grouped by board
+  const playeridsbyboard: Record<string, string[]> = {}
+  if (!ispresent(book?.activelist)) {
+    return { runnerchoices, playeridsbyboard }
   }
-  const activelist = book.activelist
-  const bestscore: Record<string, number> = {}
-  const bestidx: Record<string, number> = {}
 
-  for (let i = 0; i < activelist.length; ++i) {
-    const player = activelist[i]
-    const address = memoryreadbookflag(book, player, 'board')
-    if (!isstring(address) || !address) {
+  // list of current scores for the current choices
+  const runnerscore: Record<string, number> = {}
+
+  // iterate over active players
+  for (let i = 0; i < book.activelist.length; ++i) {
+    const player = book.activelist[i]
+    const board = memoryreadbookflag(book, player, 'board') as string
+    if (!isstring(board) || !board) {
       continue
     }
-    const board = memoryreadboardbyaddress(address)
-    if (!ispresent(board)) {
-      continue
-    }
-    const bid = board.id
-    const score = maptonumber(tracking[player], 0)
-    const prev = bestscore[bid]
-    const previdx = bestidx[bid]
-    let replace = false
-    if (prev === undefined) {
-      replace = true
-    } else if (score < prev) {
-      replace = true
-    } else if (score === prev && previdx !== undefined && i < previdx) {
-      replace = true
-    }
-    if (replace) {
-      bestscore[bid] = score
-      bestidx[bid] = i
-      out[bid] = player
+
+    // track active players on boards
+    playeridsbyboard[board] ??= []
+    playeridsbyboard[board].push(player)
+
+    // track scores for the current choices
+    const score = tracking[player] ?? 1000
+    if (score < (runnerscore[board] ?? 999)) {
+      runnerscore[board] = score
+      runnerchoices[board] = player
     }
   }
-  return out
+
+  return { runnerchoices, playeridsbyboard }
 }
 
 export function memorywritebookplayerboard(

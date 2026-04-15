@@ -158,7 +158,7 @@ export function shouldforwardheavytoclient(): boolean {
 // create client -> boardrunner forward
 export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
   const route = parsetarget(message.target)
-  return route.target === 'boardrunner'
+  return route.target === 'jsonsync'
 }
 
 // create boardrunner -> server forward

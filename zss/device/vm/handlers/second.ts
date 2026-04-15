@@ -1,23 +1,23 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apilog, vmlogout } from 'zss/device/api'
+import { vmlogout } from 'zss/device/api'
 import { savestate } from 'zss/device/vm/helpers'
 import {
   FLUSH_RATE,
   SECOND_TIMEOUT,
-  boardrunnerbyboardid,
+  boardrunners,
   incflushtick,
   setflushtick,
   tracking,
 } from 'zss/device/vm/state'
 import { doasync } from 'zss/mapping/func'
+import { ispresent } from 'zss/mapping/types'
 import {
-  memoryreadboardrunnerbyboard,
+  memoryreadboardrunnerchoices,
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import {
   memoryreadbookbysoftware,
-  memoryreadoperator,
   memoryreadsimfreeze,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
@@ -42,18 +42,39 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
 
     // Board runner election: same `tracking` as DOOT idle (incremented above when sim is unfrozen).
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const selection = memoryreadboardrunnerbyboard(mainbook, tracking)
-    for (const k of Object.keys(boardrunnerbyboardid)) {
-      delete boardrunnerbyboardid[k]
+    const { runnerchoices, playeridsbyboard } = memoryreadboardrunnerchoices(
+      mainbook,
+      tracking,
+    )
+
+    // iterate through active boards
+    const choiceboards = Object.keys(runnerchoices)
+    for (let i = 0; i < choiceboards.length; ++i) {
+      const boardid = choiceboards[i]
+      const maybeplayer = boardrunners[boardid]
+      const playerids = playeridsbyboard[boardid] ?? []
+      if (ispresent(maybeplayer)) {
+        // validate the the picked player is still active on the given board
+        if (playerids.includes(maybeplayer)) {
+          // keep it
+        } else {
+          // remove it
+          delete boardrunners[boardid]
+        }
+      }
+      // elect a player
+      if (!ispresent(boardrunners[boardid])) {
+        boardrunners[boardid] = runnerchoices[boardid]
+      }
     }
-    Object.assign(boardrunnerbyboardid, selection)
-    const operator = memoryreadoperator()
-    if (operator) {
-      const parts = Object.keys(selection)
-        .sort()
-        .map((bid) => `${bid}=${selection[bid]}`)
-      if (parts.length > 0) {
-        apilog(vm, operator, `boardrunner ${parts.join(' ')}`)
+
+    // drop runners with no active players
+    const activeboards = Object.keys(boardrunners)
+    for (let i = 0; i < activeboards.length; ++i) {
+      const boardid = activeboards[i]
+      const playerids = playeridsbyboard[boardid] ?? []
+      if (playerids.length === 0) {
+        delete boardrunners[boardid]
       }
     }
 

@@ -1,5 +1,5 @@
 import * as boards from 'zss/memory/boards'
-import { memoryreadboardrunnerbyboard } from 'zss/memory/playermanagement'
+import { memoryreadboardrunnerchoices } from 'zss/memory/playermanagement'
 import type { BOARD, BOOK } from 'zss/memory/types'
 
 function stubbook(
@@ -58,19 +58,19 @@ describe('memoryreadboardrunnerbyboard', () => {
   it('picks lower tracking on same board', () => {
     const book = stubbook(['p1', 'p2'], { p1: 'addr-a', p2: 'addr-a' })
     const t = { p1: 5, p2: 2 }
-    expect(memoryreadboardrunnerbyboard(book, t)).toEqual({ 'board-a': 'p2' })
+    expect(memoryreadboardrunnerchoices(book, t)).toEqual({ 'board-a': 'p2' })
   })
 
   it('ties break by earlier activelist index', () => {
     const book = stubbook(['p1', 'p2'], { p1: 'addr-a', p2: 'addr-a' })
     const t = { p1: 3, p2: 3 }
-    expect(memoryreadboardrunnerbyboard(book, t)).toEqual({ 'board-a': 'p1' })
+    expect(memoryreadboardrunnerchoices(book, t)).toEqual({ 'board-a': 'p1' })
   })
 
   it('returns one runner per board', () => {
     const book = stubbook(['p1', 'p2'], { p1: 'addr-a', p2: 'addr-b' })
     const t = { p1: 1, p2: 0 }
-    expect(memoryreadboardrunnerbyboard(book, t)).toEqual({
+    expect(memoryreadboardrunnerchoices(book, t)).toEqual({
       'board-a': 'p1',
       'board-b': 'p2',
     })

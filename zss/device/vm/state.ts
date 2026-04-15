@@ -11,7 +11,7 @@ export const trackinglastlog: Record<string, number> = {}
 export const lastinputtime: Record<string, number> = {}
 
 /** Latest elected board runner per `BOARD.id` (main book); replaced each `second`. */
-export const boardrunnerbyboardid: Record<string, string> = {}
+export const boardrunners: Record<string, string> = {}
 
 let flushtick = 0
 export function getflushtick(): number {
