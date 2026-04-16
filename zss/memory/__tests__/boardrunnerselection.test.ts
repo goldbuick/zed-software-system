@@ -1,5 +1,5 @@
-import * as boards from 'zss/memory/boards'
 import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
+import * as boards from 'zss/memory/boards'
 import { memoryreadboardrunnerchoices } from 'zss/memory/playermanagement'
 import type { BOARD, BOOK } from 'zss/memory/types'
 

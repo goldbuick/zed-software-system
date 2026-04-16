@@ -1,9 +1,15 @@
-import { DEVICELIKE, registerforkmem, registersavemem } from 'zss/device/api'
+import {
+  DEVICELIKE,
+  jsonsyncsnapshot,
+  registerforkmem,
+  registersavemem,
+} from 'zss/device/api'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { randominteger } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
+import { deepcopy, ispresent } from 'zss/mapping/types'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryreadbookbysoftware,
   memoryreadbooklist,
@@ -13,6 +19,23 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import { memorycompressbooks } from 'zss/memory/utilities'
 
 export const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
+
+export function vmboardrunnersendsnapshot(
+  vm: DEVICELIKE,
+  player: string,
+  boardaddress: string,
+): void {
+  const board = memoryreadboardbyaddress(boardaddress)
+  if (!ispresent(board)) {
+    return
+  }
+  const document = deepcopy(board)
+  jsonsyncsnapshot(vm, player, {
+    streamid: `boardrunner:${board.id}`,
+    seq: 0,
+    document,
+  })
+}
 
 export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   const books = memoryreadbooklist()

@@ -33,7 +33,9 @@ describe('handlesecond board runner ack retries', () => {
     clearboardrunnerrecords()
     setflushtick(0)
     session.memorywritesimfreeze(false)
-    jest.spyOn(playermanagement, 'memoryscanplayers').mockImplementation(() => {})
+    jest
+      .spyOn(playermanagement, 'memoryscanplayers')
+      .mockImplementation(() => {})
     registerask = jest
       .spyOn(api, 'registerboardrunnerask')
       .mockImplementation(() => {})
