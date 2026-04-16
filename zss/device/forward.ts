@@ -105,7 +105,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'modem':
     case 'gadgetserver':
     case 'jsonsync':
-    case 'boardrunner':
       return true
   }
   switch (route.path) {
