@@ -1,9 +1,8 @@
 import { ptwithin } from 'zss/mapping/2d'
-import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 import { memorymoveboardobject } from './boardmovement'
-import { memoryreadboardbyaddress } from './boards'
 import { memoryreadbookflag } from './bookoperations'
 import { memorymoveplayertoboard } from './playermanagement'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
@@ -16,33 +15,33 @@ export function memoryplayerblockedbyedge(
 ) {
   const elementid = element.id ?? ''
   if (dest.x < 0) {
-    const destboard = memoryreadboardbyaddress(board?.exitwest ?? '')
-    if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+    const exit = board?.exitwest
+    if (isstring(exit) && exit) {
+      return memorymoveplayertoboard(book, elementid, exit, {
         x: BOARD_WIDTH - 1,
         y: dest.y,
       })
     }
   } else if (dest.x >= BOARD_WIDTH) {
-    const destboard = memoryreadboardbyaddress(board?.exiteast ?? '')
-    if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+    const exit = board?.exiteast
+    if (isstring(exit) && exit) {
+      return memorymoveplayertoboard(book, elementid, exit, {
         x: 0,
         y: dest.y,
       })
     }
   } else if (dest.y < 0) {
-    const destboard = memoryreadboardbyaddress(board?.exitnorth ?? '')
-    if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+    const exit = board?.exitnorth
+    if (isstring(exit) && exit) {
+      return memorymoveplayertoboard(book, elementid, exit, {
         x: dest.x,
         y: BOARD_HEIGHT - 1,
       })
     }
   } else if (dest.y >= BOARD_HEIGHT) {
-    const destboard = memoryreadboardbyaddress(board?.exitsouth ?? '')
-    if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+    const exit = board?.exitsouth
+    if (isstring(exit) && exit) {
+      return memorymoveplayertoboard(book, elementid, exit, {
         x: dest.x,
         y: 0,
       })

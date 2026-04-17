@@ -179,12 +179,16 @@ export function projectboardcodepage(codepage: CODE_PAGE): unknown {
 
 // flag sub-keys the boardrunner worker owns exclusively. they live on
 // book.flags[id][name] and mutate every tick (inputqueue is consumed by the
-// firmware, synthstate/synthplay by the synth device), so shipping them over
-// the memory stream would (a) burn diff cycles for no reason and (b) let the
+// firmware; inputcurrent is tick-local and cleared in memorytickobject, which
+// the server does not run for boards under Phase 2 — so it would go stale on
+// the canonical doc and hydrate back onto the worker blocking readinput).
+// synthstate/synthplay are owned by the synth device. shipping these over the
+// memory stream would (a) burn diff cycles for no reason and (b) let the
 // server clobber live worker state on hydrate. memoryhydrate.ts preserves
 // these same keys when replacing `book.flags` so the round-trip is safe.
 export const VOLATILE_FLAG_KEYS: readonly string[] = [
   'inputqueue',
+  'inputcurrent',
   'synthstate',
   'synthplay',
 ]

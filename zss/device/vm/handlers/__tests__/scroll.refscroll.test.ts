@@ -44,10 +44,6 @@ jest.mock('zss/memory/playermanagement', () => ({
   memoryreadplayerboard: jest.fn(),
 }))
 
-jest.mock('zss/memory/runtime', () => ({
-  memoryunlockscroll: jest.fn(),
-}))
-
 describe('handlerefscroll', () => {
   const vm = {} as DEVICE
   const message: MESSAGE = {

@@ -1,3 +1,4 @@
+import { createchipid } from 'zss/chip'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
@@ -431,6 +432,17 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
 
     // halt chip
     memoryhaltchip(remove)
+
+    // Also delete the chip's flag entry directly. After the authoritative-tick
+    // refactor the sim runs in loadersonly mode, so os.halt(pid) is a no-op
+    // here (the chip only exists in the elected boardrunner's OS, never in
+    // sim.os.chips). Without this explicit delete, mainbook.flags[<pid>_chip]
+    // persists on the sim, the chip-halted deletion never reaches the worker
+    // via jsonsync, chip.isstale() returns false on re-login, and the worker
+    // keeps ticking the pre-endgame chip from its advanced IP — skipping the
+    // @player init block and crashing the first time the code reads a ZZT
+    // stat (e.g. `if energized > 0`) whose player flag was wiped by endgame.
+    memoryclearbookflags(mainbook, createchipid(remove))
 
     // clear memory
     memoryclearbookflags(mainbook, remove)

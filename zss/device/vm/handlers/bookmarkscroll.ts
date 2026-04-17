@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
-  gadgetserverclearscroll,
+  boardrunnergadgetclearscroll,
   registerbookmarkdelete,
   registerbookmarkurlnavigate,
   registerbookmarkurlsave,
@@ -47,7 +47,7 @@ export function handlebookmarkscrollpanel(
         return
       }
       registerbookmarkdelete(vm, message.player, id)
-      gadgetserverclearscroll(SOFTWARE, message.player)
+      boardrunnergadgetclearscroll(SOFTWARE, message.player)
       break
     }
     case 'bookmarkurl': {

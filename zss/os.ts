@@ -92,6 +92,17 @@ export function createos() {
     boot(id, driver, name, code) {
       let chip = chips[id]
 
+      // if the chip's mainbook.flags entry was externally reset (e.g. another
+      // worker halted this chip and the change reached us via jsonsync), the
+      // chip's closed-over flags reference is now orphaned. drop the instance
+      // so a fresh chip boots with a valid flags reference — this lets
+      // @firstpulse / init blocks run again after endgame + re-login when the
+      // sim clears the chip on logout.
+      if (ispresent(chip) && chip.isstale()) {
+        delete chips[id]
+        chip = undefined
+      }
+
       // attempt to create chip
       if (!ispresent(chips[id])) {
         const result = build(name, code)

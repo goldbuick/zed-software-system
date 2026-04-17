@@ -3,6 +3,7 @@ import {
   shouldforwardboardrunnertoclient,
 } from 'zss/device/forward'
 
+import './device/gadgetmemoryprovider'
 import './device/boardrunner'
 import './device/boardrunnertransfer'
 import './device/boardrunneruser'

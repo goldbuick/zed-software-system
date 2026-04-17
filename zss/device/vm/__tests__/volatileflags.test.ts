@@ -1,8 +1,9 @@
 /*
 VOLATILE_FLAG_KEYS coverage.
 
-The boardrunner worker owns `flags[id].inputqueue` (user:input), and similar
-per-board queues `synthstate` / `synthplay`. These must NOT ride in the
+The boardrunner worker owns `flags[id].inputqueue` (user:input), tick-local
+`inputcurrent`, and similar per-board queues `synthstate` / `synthplay`. These
+must NOT ride in the
 memory stream projection (otherwise we burn diff cycles and let the server
 round-trip clobber live worker state on hydrate). memoryproject strips them
 at projection time; memoryhydrate preserves them on incoming merges.
@@ -24,6 +25,7 @@ function makemainbook(): BOOK {
     p1: {
       board: 'boardA',
       hp: 5,
+      inputcurrent: 6,
       inputqueue: [
         [1, 0],
         [2, 0],
@@ -60,6 +62,7 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
   it('exposes the expected volatile flag keys', () => {
     expect([...VOLATILE_FLAG_KEYS]).toEqual([
       'inputqueue',
+      'inputcurrent',
       'synthstate',
       'synthplay',
     ])
@@ -73,6 +76,7 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
 
     expect(flags.p1.board).toBe('boardA')
     expect(flags.p1.hp).toBe(5)
+    expect(flags.p1.inputcurrent).toBeUndefined()
     expect(flags.p1.inputqueue).toBeUndefined()
 
     expect(flags.boardA.custom).toBe('keep-me')
@@ -91,6 +95,7 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
     const p1 = book?.flags.p1 as Record<string, unknown>
     expect(p1.board).toBe('boardA')
     expect(p1.hp).toBe(5)
+    expect(p1.inputcurrent).toBe(6)
     expect(p1.inputqueue).toEqual([
       [1, 0],
       [2, 0],

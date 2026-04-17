@@ -17,6 +17,7 @@ import {
   memoryplayerwaszapped,
 } from './boardtransitions'
 import { memorysendtoelement } from './gamesend'
+import { memorymarkboarddirty } from './memorydirty'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -174,6 +175,7 @@ export function memorymoveboardobject(
     // update object location
     movingelement.x = dest.x
     movingelement.y = dest.y
+    memorymarkboarddirty(board)
     return undefined
   }
 
@@ -218,6 +220,11 @@ export function memorymoveboardobject(
     // update lookup at dest
     board.lookup[destidx] = movingelement.id ?? ''
   }
+
+  // mark the board stream dirty so boardrunner workers ship the position
+  // update upstream via memoryworkerpushdirty / jsonsyncclientedit. without
+  // this, movement only lives on the authoritative worker.
+  memorymarkboarddirty(board)
 
   // no interaction
   return undefined

@@ -156,35 +156,81 @@ const BOOK_SCALAR_KEYS: readonly (keyof BOOK)[] = [
 ]
 
 // merge an incoming flags projection into the worker's local flags, preserving
-// worker-owned volatile keys (inputqueue / synthstate / synthplay) so the
-// server's view — which never carries these keys after memoryproject.ts
-// strips them — does not clobber live worker state on hydrate.
+// worker-owned volatile keys (inputqueue / inputcurrent / synthstate /
+// synthplay) so the server's view — which never carries these keys after
+// memoryproject.ts strips them — does not clobber live worker state on hydrate.
+//
+// IMPORTANT: this function mutates `existing` in place and keeps the same
+// object reference for every `existing[id]` that also appears in `incoming`.
+// chips (and other long-lived consumers) close over `mainbook.flags[chipid]`
+// at boot via memoryreadflags(mem); if we returned a fresh object each
+// hydrate, those closures would go stale on every memory sync and the chip
+// would silently write to an orphaned object.
 function mergeflagspreservingvolatile(
   existing: Record<string, BOOK_FLAGS>,
   incoming: Record<string, Record<string, unknown>>,
 ): Record<string, BOOK_FLAGS> {
-  const next = deepcopy(incoming)
-  const ids = Object.keys(existing)
-  for (let i = 0; i < ids.length; ++i) {
-    const id = ids[i]
-    const existingentry = existing[id] as Record<string, unknown> | undefined
-    if (!ispresent(existingentry) || typeof existingentry !== 'object') {
+  const seen = new Set<string>()
+  const incomingids = Object.keys(incoming)
+  for (let i = 0; i < incomingids.length; ++i) {
+    const id = incomingids[i]
+    const incomingentry = incoming[id] as Record<string, unknown>
+    if (!ispresent(incomingentry) || typeof incomingentry !== 'object') {
       continue
     }
-    let target = next[id]
+    seen.add(id)
+    const existingentry = existing[id] as Record<string, unknown> | undefined
+    if (!ispresent(existingentry) || typeof existingentry !== 'object') {
+      // new id — deep copy in
+      existing[id] = deepcopy(incomingentry) as BOOK_FLAGS
+      continue
+    }
+    // mutate existingentry in place: snapshot volatile worker-owned keys,
+    // apply incoming values, then restore volatile keys on top.
+    const volatilesnapshot: Record<string, unknown> = {}
     for (let j = 0; j < VOLATILE_FLAG_KEYS.length; ++j) {
       const key = VOLATILE_FLAG_KEYS[j]
-      if (!Object.prototype.hasOwnProperty.call(existingentry, key)) {
+      if (Object.prototype.hasOwnProperty.call(existingentry, key)) {
+        volatilesnapshot[key] = existingentry[key]
+      }
+    }
+    // drop any existing keys not in incoming (except volatile, which the
+    // server never projects anyway).
+    const existingkeys = Object.keys(existingentry)
+    for (let k = 0; k < existingkeys.length; ++k) {
+      const key = existingkeys[k]
+      if (VOLATILE_FLAG_KEYS.indexOf(key) !== -1) {
         continue
       }
-      if (!ispresent(target) || typeof target !== 'object') {
-        target = {}
-        next[id] = target
+      if (!Object.prototype.hasOwnProperty.call(incomingentry, key)) {
+        delete existingentry[key]
       }
-      target[key] = existingentry[key]
+    }
+    // apply incoming (deep-copied values)
+    const incomingkeys = Object.keys(incomingentry)
+    for (let k = 0; k < incomingkeys.length; ++k) {
+      const key = incomingkeys[k]
+      existingentry[key] = deepcopy(incomingentry[key])
+    }
+    // restore volatile worker-owned values
+    const volkeys = Object.keys(volatilesnapshot)
+    for (let k = 0; k < volkeys.length; ++k) {
+      const key = volkeys[k]
+      existingentry[key] = volatilesnapshot[key]
     }
   }
-  return next as Record<string, BOOK_FLAGS>
+  // remove entries not present in incoming — this is how endgame/halt reaches
+  // the worker: the sim deletes flags[chipid] (or flags[pid]) and the missing
+  // entry propagates here. chip.isstale() + os.boot will pick up the orphaned
+  // chip closure on the next tick.
+  const existingids = Object.keys(existing)
+  for (let i = 0; i < existingids.length; ++i) {
+    const id = existingids[i]
+    if (!seen.has(id)) {
+      delete existing[id]
+    }
+  }
+  return existing
 }
 
 function mergebookinto(book: BOOK, incoming: Record<string, unknown>): void {

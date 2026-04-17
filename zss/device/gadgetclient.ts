@@ -67,8 +67,8 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
           }
 
           if (ispresent(didnotpass)) {
-            // we are out of sync and need to request a refresh
-            gadgetclientdevice.reply(message, 'desync')
+            // we are out of sync and need a full paint from the elected boardrunner
+            gadgetclientdevice.emit(message.player, 'boardrunner:desync')
             return {
               ...state,
               desync: true,

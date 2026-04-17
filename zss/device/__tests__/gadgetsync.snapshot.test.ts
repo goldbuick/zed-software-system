@@ -5,7 +5,7 @@ import { deepcopy } from 'zss/mapping/types'
  * Gadget `exportgadgetstate` can embed the same array refs as live tile layers.
  * Storing that export in `gadgetsync` without cloning lets in-place raster updates
  * mutate `previous` before `compare`, yielding empty patches (terrain stuck until
- * board change). See gadgetserver `deepcopy(slim)` on set.
+ * board change). See boardrunnergadget `deepcopy(slim)` on set.
  */
 describe('gadgetsync snapshot isolation', () => {
   it('deepcopy prevents stored slim from aliasing nested tile buffers', () => {

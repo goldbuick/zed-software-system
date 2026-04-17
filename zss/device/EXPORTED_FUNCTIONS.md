@@ -221,15 +221,15 @@ Functions for network operations, streaming, and external service integration.
 
 ---
 
-## Gadget Client/Server
+## Gadget client + boardrunner gadget
 
-**File:** `gadgetserver.ts`, `gadgetclient.ts` (via api.ts)
+**File:** `boardrunnergadget.ts`, `gadgetclient.ts`, `gadgetmemoryprovider.ts` (via api.ts)
 
-Functions for managing gadget (UI) state synchronization between server and client.
+Functions for managing gadget (UI) state: elected **boardrunner** workers diff gadget state and emit paint/patch; **gadgetmemoryprovider** wires `gadgetstate()` to MEMORY on the sim worker.
 
-### Server Operations
-- `gadgetserverdesync(device, player)` - Force desync and full state refresh
-- `gadgetserverclearscroll(device, player)` - Clear scroll on server
+### Boardrunner gadget operations
+- `boardrunnergadgetdesync(device, player)` - Force full gadget paint from the boardrunner
+- `boardrunnergadgetclearscroll(device, player)` - Clear scroll (boardrunner worker mutates gadgetstore + `vm:clearscroll`)
 
 ### Client Operations
 - `gadgetclientpaint(device, player, json)` - Paint full gadget state (desync)

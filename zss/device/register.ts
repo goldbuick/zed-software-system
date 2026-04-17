@@ -80,7 +80,7 @@ import {
   apilog,
   apitoast,
   bridgejoin,
-  gadgetserverdesync,
+  boardrunnergadgetdesync,
   heavyllmpreset,
   heavypullvarresult,
   heavyrestoreagents,
@@ -337,7 +337,7 @@ export const register = createdevice(
         break
       case 'ackoperator':
         // reset display
-        gadgetserverdesync(register, myplayerid)
+        boardrunnergadgetdesync(register, myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)

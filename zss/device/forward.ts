@@ -74,6 +74,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'register':
         case 'gadgetclient':
         case 'jsonsyncclient':
+        case 'boardrunner':
           return true
       }
       switch (route.path) {
@@ -106,11 +107,13 @@ export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
 // create client -> server forward
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   const route = parsetarget(message.target)
+  if (route.target === 'boardrunner') {
+    return false
+  }
   switch (route.target) {
     case 'vm':
     case 'user':
     case 'modem':
-    case 'gadgetserver':
     case 'jsonsyncserver':
       return true
   }
@@ -197,6 +200,7 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
         // lastinputtime tracking.
         case 'user':
         case 'jsonsyncclient':
+        case 'boardrunner':
           return true
       }
       return false

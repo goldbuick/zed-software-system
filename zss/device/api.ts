@@ -172,8 +172,8 @@ export function gadgetclientpatch(
   device.emit(player, 'gadgetclient:patch', json)
 }
 
-export function gadgetserverdesync(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:desync')
+export function boardrunnergadgetdesync(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:desync')
 }
 
 // --- jsonsync ---------------------------------------------------------------
@@ -251,8 +251,8 @@ export function jsonsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {
   device.emit('', 'jsonsync:changed', payload)
 }
 
-export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:clearscroll')
+export function boardrunnergadgetclearscroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:clearscroll')
 }
 
 export function heavyttsinfo(

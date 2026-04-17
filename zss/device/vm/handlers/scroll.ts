@@ -3,17 +3,28 @@ import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
+import {
+  memoryreadbookflag,
+  memorywritebookflag,
+} from 'zss/memory/bookoperations'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryunlockscroll } from 'zss/memory/runtime'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { romread } from 'zss/rom'
 
 export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const maybeboard = memoryreadplayerboard(message.player)
-  if (ispresent(maybeboard)) {
-    const objids = Object.keys(maybeboard.objects)
-    for (let i = 0; i < objids.length; ++i) {
-      memoryunlockscroll(objids[i], message.player)
+  if (!ispresent(mainbook) || !ispresent(maybeboard)) {
+    return
+  }
+  const objids = Object.keys(maybeboard.objects)
+  for (let i = 0; i < objids.length; ++i) {
+    const objid = objids[i]
+    const sk = memoryreadbookflag(mainbook, objid, 'sk')
+    if (sk === message.player) {
+      memorywritebookflag(mainbook, objid, 'sk', '')
     }
   }
 }

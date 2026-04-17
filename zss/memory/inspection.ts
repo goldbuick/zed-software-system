@@ -1,7 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import {
-  gadgetserverclearscroll,
+  boardrunnergadgetclearscroll,
   registercopy,
   registereditoropen,
   vmcodeaddress,
@@ -560,7 +560,7 @@ export function memoryinspectcommand(path: string, player: string) {
         )
 
         // close scroll
-        gadgetserverclearscroll(SOFTWARE, player)
+        boardrunnergadgetclearscroll(SOFTWARE, player)
 
         // wait a little
         await waitfor(800)
