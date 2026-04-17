@@ -134,21 +134,6 @@ function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
   void dataconnection.send(serializable(message))
 }
 
-// server->client jsonsync envelopes ride under the jsonsyncclient:* namespace.
-// every payload emitted by the device layer is stamped with the target player,
-// so the host bridge can skip forwarding a stream event to a peer that isn't
-// the intended recipient (e.g. a board:cp2 serverpatch intended for player-B
-// must not ship down player-A's dataconnection).
-function isjsonsyncserverclienttarget(target: string): boolean {
-  return (
-    target === 'jsonsyncclient:snapshot' ||
-    target === 'jsonsyncclient:serverpatch' ||
-    target === 'jsonsyncclient:antipatch' ||
-    target === 'jsonsyncclient:needsnapshot' ||
-    target === 'jsonsyncclient:poke'
-  )
-}
-
 function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
   let topicbridge: MAYBE<ReturnType<typeof createforward>>
@@ -167,20 +152,16 @@ function handledataconnection(dataconnection: DataConnection) {
         shouldforwardservertoclient(message) &&
         shouldnotforwardonpeerserver(message) === false
       ) {
-        // jsonsync filter: payload.player is the intended recipient. drop if
-        // we know this peer's player id and the payload targets someone else.
-        if (isjsonsyncserverclienttarget(message.target)) {
-          const payloadplayer = (
-            message.data as { player?: string } | undefined
-          )?.player
-          if (
-            isstring(payloadplayer) &&
-            payloadplayer.length > 0 &&
-            remotepeerplayer.length > 0 &&
-            payloadplayer !== remotepeerplayer
-          ) {
-            return
-          }
+        // envelope-level fan-out filter: if this message targets a specific
+        // player (non-empty message.player) and we know this peer's player id,
+        // only forward when they match. broadcasts (message.player === '') and
+        // pre-handshake traffic (remotepeerplayer === '') pass through.
+        if (
+          message.player.length > 0 &&
+          remotepeerplayer.length > 0 &&
+          message.player !== remotepeerplayer
+        ) {
+          return
         }
         sendpeer(dataconnection, message)
       }

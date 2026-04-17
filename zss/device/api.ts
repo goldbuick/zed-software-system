@@ -191,7 +191,7 @@ export function jsonsyncsnapshot(
   player: string,
   payload: JSONSYNC_SNAPSHOT,
 ) {
-  device.emit(player, 'jsonsyncclient:snapshot', { ...payload, player })
+  device.emit(player, 'jsonsyncclient:snapshot', payload)
 }
 
 export function jsonsyncserverpatch(
@@ -199,7 +199,7 @@ export function jsonsyncserverpatch(
   player: string,
   payload: JSONSYNC_PATCH,
 ) {
-  device.emit(player, 'jsonsyncclient:serverpatch', { ...payload, player })
+  device.emit(player, 'jsonsyncclient:serverpatch', payload)
 }
 
 export function jsonsyncclientpatch(
@@ -207,7 +207,7 @@ export function jsonsyncclientpatch(
   player: string,
   payload: JSONSYNC_PATCH,
 ) {
-  device.emit(player, 'jsonsyncserver:clientpatch', { ...payload, player })
+  device.emit(player, 'jsonsyncserver:clientpatch', payload)
 }
 
 export function jsonsyncantipatch(
@@ -215,7 +215,7 @@ export function jsonsyncantipatch(
   player: string,
   payload: JSONSYNC_ANTI,
 ) {
-  device.emit(player, 'jsonsyncclient:antipatch', { ...payload, player })
+  device.emit(player, 'jsonsyncclient:antipatch', payload)
 }
 
 export function jsonsyncneedsnapshot(
@@ -223,7 +223,7 @@ export function jsonsyncneedsnapshot(
   player: string,
   streamid: string,
 ) {
-  device.emit(player, 'jsonsyncserver:needsnapshot', { streamid, player })
+  device.emit(player, 'jsonsyncserver:needsnapshot', { streamid })
 }
 
 export function jsonsyncserversnapshotrequest(
@@ -231,7 +231,7 @@ export function jsonsyncserversnapshotrequest(
   player: string,
   streamid: string,
 ) {
-  device.emit(player, 'jsonsyncclient:needsnapshot', { streamid, player })
+  device.emit(player, 'jsonsyncclient:needsnapshot', { streamid })
 }
 
 // poke: zero-payload "something changed" ping per Neil Fraser's DiffSync paper.
@@ -242,7 +242,7 @@ export function jsonsyncpoke(
   player: string,
   streamid: string,
 ) {
-  device.emit(player, 'jsonsyncclient:poke', { streamid, player })
+  device.emit(player, 'jsonsyncclient:poke', { streamid })
 }
 
 // local broadcast: any device that subscribes to the `jsonsync` topic (or `all`)
