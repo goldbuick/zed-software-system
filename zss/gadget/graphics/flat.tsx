@@ -9,6 +9,7 @@ import {
 import { FLAT_CAMERA_ORTHO_ASSERT, RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol } from 'zss/gadget/data/types'
+import { useDeviceData } from 'zss/gadget/device'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
@@ -24,6 +25,7 @@ import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
+import { useShallow } from 'zustand/react/shallow'
 
 import { RenderLayer } from './renderlayer'
 
@@ -36,6 +38,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   width,
   height,
 }: GraphicsProps) {
+  const gpudprscale = useDeviceData((s) => s.gpudprscale)
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
@@ -148,14 +151,18 @@ export const FlatGraphics = memo(function FlatGraphics({
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
-  useGadgetClient((state) => state.gadget.exiteast)
-  useGadgetClient((state) => state.gadget.exitwest)
-  useGadgetClient((state) => state.gadget.exitnorth)
-  useGadgetClient((state) => state.gadget.exitsouth)
-  useGadgetClient((state) => state.gadget.exitne)
-  useGadgetClient((state) => state.gadget.exitnw)
-  useGadgetClient((state) => state.gadget.exitse)
-  useGadgetClient((state) => state.gadget.exitsw)
+  useGadgetClient(
+    useShallow((state) => ({
+      exiteast: state.gadget.exiteast,
+      exitwest: state.gadget.exitwest,
+      exitnorth: state.gadget.exitnorth,
+      exitsouth: state.gadget.exitsouth,
+      exitne: state.gadget.exitne,
+      exitnw: state.gadget.exitnw,
+      exitse: state.gadget.exitse,
+      exitsw: state.gadget.exitsw,
+    })),
+  )
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
@@ -190,6 +197,7 @@ export const FlatGraphics = memo(function FlatGraphics({
         camera={boardcamera}
         viewwidth={viewwidth}
         viewheight={viewheight}
+        dprscale={gpudprscale}
         effects={<></>}
       >
         <orthographicCamera

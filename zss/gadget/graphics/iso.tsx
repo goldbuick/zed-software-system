@@ -11,6 +11,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { useDeviceData } from 'zss/gadget/device'
 import {
   initfocusifneeded,
   stepfocuswithboardtransition,
@@ -75,6 +76,7 @@ export const IsoGraphics = memo(function IsoGraphics({
   height,
 }: GraphicsProps) {
   const screensize = useScreenSize()
+  const gpudprscale = useDeviceData((s) => s.gpudprscale)
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -250,6 +252,7 @@ export const IsoGraphics = memo(function IsoGraphics({
             camera={boardcamera}
             viewwidth={viewwidth}
             viewheight={viewheight}
+            dprscale={gpudprscale}
             effects={
               <>
                 <DepthOfField ref={depthoffield} />

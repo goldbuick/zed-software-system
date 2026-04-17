@@ -14,6 +14,7 @@ import { useDeviceData } from 'zss/gadget/device'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { EffectComposerMain } from 'zss/gadget/graphics/effectcomposer'
 import { doasync } from 'zss/mapping/func'
+import { PerfHud } from 'zss/perf/hud'
 import { createplatform, haltplatform } from 'zss/platform'
 import {
   ScreenUILayout,
@@ -86,6 +87,10 @@ export function Engine() {
     (gputier.tier > 2 || gputier.gpu?.includes('apple gpu')) &&
     !gputier.isMobile
 
+  // derive GPU tier-based dprscale for board FBOs (text stays crisp at root dpr)
+  const tiernum = gputier?.tier ?? 2
+  const gpudprscale = islowrez || tiernum <= 1 ? 0.5 : tiernum === 2 ? 0.75 : 1
+
   // update device config
   useEffect(() => {
     useDeviceData.setState((state) => {
@@ -95,9 +100,16 @@ export function Engine() {
         islandscape,
         showtouchcontrols,
         usemobiletextcapture,
+        gpudprscale,
       }
     })
-  }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])
+  }, [
+    islowrez,
+    islandscape,
+    showtouchcontrols,
+    usemobiletextcapture,
+    gpudprscale,
+  ])
 
   return (
     <>
@@ -133,6 +145,7 @@ export function Engine() {
           )}
         </>
       </EffectComposerMain>
+      <PerfHud />
     </>
   )
 }

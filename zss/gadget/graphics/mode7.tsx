@@ -11,6 +11,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { useDeviceData } from 'zss/gadget/device'
 import {
   FOCUS_ANIM_RATE,
   initfocusifneeded,
@@ -107,6 +108,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   height,
 }: GraphicsProps) {
   const screensize = useScreenSize()
+  const gpudprscale = useDeviceData((s) => s.gpudprscale)
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -292,6 +294,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
             camera={boardcamera}
             viewwidth={viewwidth}
             viewheight={viewheight}
+            dprscale={gpudprscale}
             effects={
               <>
                 <DepthOfField ref={depthoffield} />

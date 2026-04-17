@@ -150,7 +150,9 @@ async function main() {
           alpha: true,
           stencil: false,
           antialias: false,
+          // required for canvas.captureStream() in the LiveKit broadcast path
           preserveDrawingBuffer: true,
+          powerPreference: 'high-performance',
         },
       })
       .then(() => {
@@ -198,7 +200,9 @@ async function main() {
       alpha: true,
       stencil: false,
       antialias: false,
+      // required for canvas.captureStream() in the LiveKit broadcast path
       preserveDrawingBuffer: true,
+      powerPreference: 'high-performance',
     },
   })
 

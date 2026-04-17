@@ -70,6 +70,7 @@ export const FPVGraphics = memo(function FPVGraphics({
 }: GraphicsProps) {
   const screensize = useScreenSize()
   const islowrez = useDeviceData((s) => s.islowrez)
+  const gpudprscale = useDeviceData((s) => s.gpudprscale)
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * drawwidth
@@ -345,7 +346,7 @@ export const FPVGraphics = memo(function FPVGraphics({
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
-  const fpvdprscale = islowrez ? 0.5 : 1
+  const fpvdprscale = Math.min(gpudprscale, islowrez ? 0.5 : 1)
 
   return (
     <>

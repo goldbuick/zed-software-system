@@ -31,6 +31,8 @@ type UnicodeOverlayProps = {
   /** Scale factor for glyph size (default 1). Only affects overlay chars, not grid position. */
   scale?: number
   skipraycast?: boolean
+  /** Change-counter for stable-identity char/color/bg arrays (see `Tiles#version`). */
+  version?: number
 }
 
 export function UnicodeOverlay({
@@ -41,6 +43,7 @@ export function UnicodeOverlay({
   bg,
   scale = 1,
   skipraycast = false,
+  version,
 }: UnicodeOverlayProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const resolvedpalette = mediapalette ?? defaultpalette
@@ -94,7 +97,8 @@ export function UnicodeOverlay({
       }
     }
     return list
-  }, [char, color, bg])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [char, color, bg, version])
 
   const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])
 

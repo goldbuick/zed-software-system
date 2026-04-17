@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useWriteText } from 'zss/gadget/writetext'
 import {
   SCROLL_SPEED,
@@ -29,14 +29,7 @@ export function ScrollMarquee({
   const { content, contentmax } = measuremarqueeline(line, color)
 
   const acc = useRef(0)
-  const [offset, setoffset] = useState(0)
-  useFrame((_, delta) => {
-    acc.current += delta
-    if (acc.current >= SCROLL_SPEED) {
-      acc.current %= SCROLL_SPEED
-      setoffset((state) => (state - 1) % contentmax)
-    }
-  })
+  const offset = useRef(0)
 
   fillmarqueebuffer(
     context,
@@ -45,9 +38,28 @@ export function ScrollMarquee({
     leftedge,
     margin,
     rightedge,
-    offset,
+    offset.current,
     y,
   )
+
+  useFrame((_, delta) => {
+    acc.current += delta
+    if (acc.current < SCROLL_SPEED) {
+      return
+    }
+    acc.current %= SCROLL_SPEED
+    offset.current = (offset.current - 1) % contentmax
+    fillmarqueebuffer(
+      context,
+      content,
+      contentmax,
+      leftedge,
+      margin,
+      rightedge,
+      offset.current,
+      y,
+    )
+  })
 
   return null
 }

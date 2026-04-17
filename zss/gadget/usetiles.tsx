@@ -1,9 +1,7 @@
 import { useContext } from 'react'
 import type { Plane } from 'three'
 import { TILE_DATA, TilesContext } from 'zss/gadget/tiles'
-import { perfmeasure } from 'zss/perf/ui'
 import { StoreApi, useStore } from 'zustand'
-import { useShallow } from 'zustand/react/shallow'
 
 import { Tiles } from './graphics/tiles'
 
@@ -23,6 +21,12 @@ type TilesRenderProps = {
   skipraycast?: boolean
 }
 
+/**
+ * Subscribes only to `state.render` (microtask-batched version counter). Reads
+ * char/color/bg via `getState()` and passes stable array references through; the
+ * `version` prop on `<Tiles>` drives its data-upload effect, so no `.slice()`
+ * copies are needed per render.
+ */
 export function TilesRender({
   label,
   width,
@@ -31,23 +35,17 @@ export function TilesRender({
   skipraycast,
 }: TilesRenderProps) {
   const store = useContext(TilesContext)
-  const [char, color, bg] = useStore(
-    store,
-    useShallow((state) => [state.char, state.color, state.bg, state.render]),
-  )
-  const sliced = perfmeasure(`tiles:slice:${label}`, () => ({
-    char: char.slice(),
-    color: color.slice(),
-    bg: bg.slice(),
-  }))
+  const render = useStore(store, (state) => state.render)
+  const { char, color, bg } = store.getState()
   return (
     width > 0 &&
     height > 0 && (
       <Tiles
         label={label}
-        char={sliced.char}
-        color={sliced.color}
-        bg={sliced.bg}
+        char={char}
+        color={color}
+        bg={bg}
+        version={render}
         width={width}
         height={height}
         clippingplanes={clippingplanes}

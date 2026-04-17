@@ -34,6 +34,26 @@ type TilesProps = {
   clippingplanes?: Plane[]
   /** Omit from raycasting (e.g. inspector pts overlay above the pick plane). */
   skipraycast?: boolean
+  /**
+   * Change-counter driving the data-upload effect when `char/color/bg` are
+   * stable-identity arrays (e.g. mutated in place by `TilesRender`). Omit for
+   * consumers whose arrays change identity on every update (e.g. `FlatLayer`).
+   */
+  version?: number
+}
+
+function scanhasunicode(char: (string | number)[]): boolean {
+  for (let i = 0; i < char.length; i++) {
+    const v = char[i]
+    if (typeof v === 'number') {
+      if (v > 255) {
+        return true
+      }
+    } else if ((v?.codePointAt?.(0) ?? 0) > 255) {
+      return true
+    }
+  }
+  return false
 }
 
 export function Tiles({
@@ -46,6 +66,7 @@ export function Tiles({
   fliptexture = true,
   clippingplanes,
   skipraycast = false,
+  version,
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
@@ -56,7 +77,7 @@ export function Tiles({
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
 
-  // create data texture
+  // create data texture (size-scoped)
   useEffect(() => {
     if (width === 0 || height === 0) {
       return
@@ -64,9 +85,10 @@ export function Tiles({
     material.uniforms.data.value = createTilemapDataTexture(width, height)
   }, [material.uniforms.data, width, height])
 
-  // set data texture
+  // upload grid data and static uniforms in one pass; fires on any visible change
+  // (size/char/color/bg identity or `version` bump, palette/charset/flip update)
   useEffect(() => {
-    if (width === 0 || height === 0) {
+    if (width === 0 || height === 0 || !charset) {
       return
     }
     updateTilemapDataTexture(
@@ -77,13 +99,6 @@ export function Tiles({
       color,
       bg,
     )
-  }, [material.uniforms.data.value, width, height, char, color, bg, label])
-
-  // create / config material
-  useEffect(() => {
-    if (width === 0 || height === 0 || !charset) {
-      return
-    }
     material.uniforms.map.value = charset
     material.uniforms.palette.value = palette
     material.uniforms.size.value.x = 1 / width
@@ -93,14 +108,19 @@ export function Tiles({
     material.uniforms.flip.value = fliptexture
     material.needsUpdate = true
   }, [
+    material,
     palette,
     charset,
-    material,
     width,
     height,
+    char,
+    color,
+    bg,
+    version,
     imageWidth,
     imageHeight,
     fliptexture,
+    label,
   ])
 
   useEffect(() => {
@@ -114,6 +134,14 @@ export function Tiles({
     [width, height],
   )
 
+  // pre-scan for unicode code points; skip the UnicodeOverlay subtree entirely
+  // when the grid is pure ASCII (avoids InstancedMesh alloc + SDF lookups)
+  const hasunicode = useMemo(
+    () => scanhasunicode(char),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [char, version],
+  )
+
   return (
     <>
       <mesh raycast={skipraycast ? noraycastmesh : undefined}>
@@ -123,15 +151,18 @@ export function Tiles({
         </bufferGeometry>
         <primitive object={material} attach="material" />
       </mesh>
-      <UnicodeOverlay
-        width={width}
-        height={height}
-        char={char}
-        color={color}
-        bg={bg}
-        scale={1.15}
-        skipraycast={skipraycast}
-      />
+      {hasunicode && (
+        <UnicodeOverlay
+          width={width}
+          height={height}
+          char={char}
+          color={color}
+          bg={bg}
+          version={version}
+          scale={1.15}
+          skipraycast={skipraycast}
+        />
+      )}
     </>
   )
 }
