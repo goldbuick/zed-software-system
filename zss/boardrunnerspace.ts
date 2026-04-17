@@ -4,10 +4,10 @@ import {
 } from 'zss/device/forward'
 
 import './device/boardrunner'
-import './device/jsonsync'
+import './device/jsonsyncclient'
 
 const { forward } = createforward((message) => {
-  if (shouldforwardboardrunnertoclient()) {
+  if (shouldforwardboardrunnertoclient(message)) {
     postMessage(message)
   }
 })

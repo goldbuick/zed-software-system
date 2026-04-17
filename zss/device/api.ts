@@ -6,8 +6,9 @@ import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import type {
-  JSONSYNC_PATCH_PAYLOAD,
-  JSONSYNC_SNAPSHOT_PAYLOAD,
+  JSONSYNC_ANTI,
+  JSONSYNC_PATCH,
+  JSONSYNC_SNAPSHOT,
 } from 'zss/feature/jsonsync'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
@@ -171,24 +172,72 @@ export function gadgetclientpatch(
   device.emit(player, 'gadgetclient:patch', json)
 }
 
+export function gadgetserverdesync(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetserver:desync')
+}
+
+// --- jsonsync ---------------------------------------------------------------
+
+export type JSONSYNC_CHANGED = {
+  streamid: string
+  reason: 'snapshot' | 'serverpatch' | 'antipatch'
+  cv: number
+  sv: number
+  document: unknown
+}
+
 export function jsonsyncsnapshot(
   device: DEVICELIKE,
   player: string,
-  payload: JSONSYNC_SNAPSHOT_PAYLOAD,
+  payload: JSONSYNC_SNAPSHOT,
 ) {
-  device.emit(player, 'jsonsync:snapshot', payload)
+  device.emit(player, 'jsonsyncclient:snapshot', payload)
 }
 
-export function jsonsyncpatch(
+export function jsonsyncserverpatch(
   device: DEVICELIKE,
   player: string,
-  payload: JSONSYNC_PATCH_PAYLOAD,
+  payload: JSONSYNC_PATCH,
 ) {
-  device.emit(player, 'jsonsync:patch', payload)
+  device.emit(player, 'jsonsyncclient:serverpatch', payload)
 }
 
-export function gadgetserverdesync(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:desync')
+export function jsonsyncclientpatch(
+  device: DEVICELIKE,
+  player: string,
+  payload: JSONSYNC_PATCH,
+) {
+  device.emit(player, 'jsonsyncserver:clientpatch', payload)
+}
+
+export function jsonsyncantipatch(
+  device: DEVICELIKE,
+  player: string,
+  payload: JSONSYNC_ANTI,
+) {
+  device.emit(player, 'jsonsyncclient:antipatch', payload)
+}
+
+export function jsonsyncneedsnapshot(
+  device: DEVICELIKE,
+  player: string,
+  streamid: string,
+) {
+  device.emit(player, 'jsonsyncserver:needsnapshot', { streamid })
+}
+
+export function jsonsyncserversnapshotrequest(
+  device: DEVICELIKE,
+  player: string,
+  streamid: string,
+) {
+  device.emit(player, 'jsonsyncclient:needsnapshot', { streamid })
+}
+
+// local broadcast: any device that subscribes to the `jsonsync` topic (or `all`)
+// will receive this whenever the client-side shadow mutates.
+export function jsonsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {
+  device.emit('', 'jsonsync:changed', payload)
 }
 
 export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {

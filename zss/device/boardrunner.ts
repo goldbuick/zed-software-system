@@ -1,40 +1,27 @@
 import { createdevice } from 'zss/device'
-import { jsonsyncreadreceiverstate } from 'zss/device/jsonsync'
 
-function boardrunnerlogjsonsyncstreams() {
-  const { streams } = jsonsyncreadreceiverstate()
-  if (streams.size === 0) {
-    return
-  }
-  const parts: string[] = []
-  streams.forEach((state, streamid) => {
-    const doc = state.document
-    let boardhint = ''
-    if (
-      typeof doc === 'object' &&
-      doc !== null &&
-      'id' in doc &&
-      typeof (doc as { id: unknown }).id === 'string'
-    ) {
-      const b = doc as { id: string; name?: string }
-      boardhint = b.name ? `${b.id}(${b.name})` : b.id
+import { JSONSYNC_CHANGED } from './api'
+
+const boardrunner = createdevice(
+  'boardrunner',
+  ['second', 'jsonsync'],
+  (message) => {
+    if (!boardrunner.session(message)) {
+      return
     }
-    parts.push(
-      `${streamid} nextseq=${state.expectednextseq}${boardhint ? ` board=${boardhint}` : ''}`,
-    )
-  })
-  console.info(`[boardrunner] jsonsync ${parts.join(' | ')}`)
-}
-
-const boardrunner = createdevice('boardrunner', ['second'], (message) => {
-  if (!boardrunner.session(message)) {
-    return
-  }
-  switch (message.target) {
-    case 'second':
-      boardrunnerlogjsonsyncstreams()
-      break
-    default:
-      break
-  }
-})
+    switch (message.target) {
+      case 'jsonsync:changed': {
+        const payload = message.data as JSONSYNC_CHANGED
+        console.info(
+          `[boardrunner] jsonsync ${payload.streamid} ${payload.reason} cv=${payload.cv} sv=${payload.sv}`,
+          payload.document,
+        )
+        break
+      }
+      case 'second':
+        break
+      default:
+        break
+    }
+  },
+)

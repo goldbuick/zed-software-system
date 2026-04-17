@@ -1,0 +1,144 @@
+/*
+jsonsyncclient: client side of the differential sync loop.
+
+Lives in every non-server process: browser bootstrap, heavy worker, boardrunner
+worker. Maintains a local shadow + document + [cv, sv] per streamid. On every
+shadow mutation (snapshot / serverpatch / antipatch) it broadcasts a
+`jsonsync:changed` message for any observer device to consume.
+*/
+import { createdevice } from 'zss/device'
+import {
+  JSONSYNC_ANTI,
+  JSONSYNC_CLIENT_STREAM,
+  JSONSYNC_PATCH,
+  JSONSYNC_SNAPSHOT,
+  jsonsyncclientapplyanti,
+  jsonsyncclientapplyserverpatch,
+  jsonsyncclientapplysnapshot,
+  jsonsyncclientlocalupdate,
+  jsonsynccreateclientstream,
+} from 'zss/feature/jsonsync'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
+
+import {
+  JSONSYNC_CHANGED,
+  jsonsyncchanged,
+  jsonsyncclientpatch,
+  jsonsyncneedsnapshot,
+} from './api'
+
+const streams = new Map<string, JSONSYNC_CLIENT_STREAM>()
+
+export function jsonsyncclientreadstream(
+  streamid: string,
+): JSONSYNC_CLIENT_STREAM | undefined {
+  return streams.get(streamid)
+}
+
+export function jsonsyncclientreadstreams(): Map<
+  string,
+  JSONSYNC_CLIENT_STREAM
+> {
+  return streams
+}
+
+// called by consumer code to publish a local edit. we compute a changeset vs
+// the shadow, update local state, and emit a clientpatch upstream.
+export function jsonsyncclientedit(
+  streamid: string,
+  producer: (document: unknown) => unknown,
+) {
+  const stream = streams.get(streamid)
+  if (!ispresent(stream)) {
+    return
+  }
+  const nextdoc = producer(deepcopy(stream.document))
+  const local = jsonsyncclientlocalupdate(stream, nextdoc, streamid)
+  streams.set(streamid, local.stream)
+  if (local.patch.changes.length === 0) {
+    return
+  }
+  jsonsyncclientpatch(jsonsyncclientdevice, '', local.patch)
+}
+
+function emitchanged(
+  streamid: string,
+  reason: JSONSYNC_CHANGED['reason'],
+  stream: JSONSYNC_CLIENT_STREAM,
+) {
+  jsonsyncchanged(jsonsyncclientdevice, {
+    streamid,
+    reason,
+    cv: stream.cv,
+    sv: stream.sv,
+    document: deepcopy(stream.document),
+  })
+}
+
+const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
+  if (!jsonsyncclientdevice.session(message)) {
+    return
+  }
+
+  switch (message.target) {
+    case 'snapshot': {
+      const snapshot = message.data as JSONSYNC_SNAPSHOT
+      if (!ispresent(snapshot) || !isstring(snapshot.streamid)) {
+        break
+      }
+      const previous =
+        streams.get(snapshot.streamid) ?? jsonsynccreateclientstream()
+      const next = jsonsyncclientapplysnapshot(previous, snapshot)
+      streams.set(snapshot.streamid, next)
+      emitchanged(snapshot.streamid, 'snapshot', next)
+      break
+    }
+    case 'serverpatch': {
+      const patch = message.data as JSONSYNC_PATCH
+      if (!ispresent(patch) || !isstring(patch.streamid)) {
+        break
+      }
+      const stream = streams.get(patch.streamid)
+      if (!ispresent(stream)) {
+        jsonsyncneedsnapshot(jsonsyncclientdevice, '', patch.streamid)
+        break
+      }
+      const result = jsonsyncclientapplyserverpatch(stream, patch)
+      if (result.kind === 'ok') {
+        streams.set(patch.streamid, result.stream)
+        emitchanged(patch.streamid, 'serverpatch', result.stream)
+      } else {
+        jsonsyncneedsnapshot(jsonsyncclientdevice, '', patch.streamid)
+      }
+      break
+    }
+    case 'antipatch': {
+      const anti = message.data as JSONSYNC_ANTI
+      if (!ispresent(anti) || !isstring(anti.streamid)) {
+        break
+      }
+      const stream = streams.get(anti.streamid)
+      if (!ispresent(stream)) {
+        break
+      }
+      const result = jsonsyncclientapplyanti(stream, anti)
+      if (result.kind === 'ok') {
+        streams.set(anti.streamid, result.stream)
+        emitchanged(anti.streamid, 'antipatch', result.stream)
+      }
+      break
+    }
+    case 'needsnapshot': {
+      // server is telling us to reset; drop our stream and ask for a fresh snapshot
+      const data = message.data as { streamid?: string } | undefined
+      const streamid = isstring(data?.streamid) ? data.streamid : ''
+      if (streamid) {
+        streams.delete(streamid)
+        jsonsyncneedsnapshot(jsonsyncclientdevice, '', streamid)
+      }
+      break
+    }
+    default:
+      break
+  }
+})

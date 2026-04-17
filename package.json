@@ -152,6 +152,7 @@
     "fuse.js": "^7.1.0",
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
+    "json-diff-ts": "^4.10.4",
     "playwright": "^1.49.0",
     "vosk-browser": "^0.0.8"
   },

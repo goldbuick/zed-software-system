@@ -1,10 +1,10 @@
 import { createforward, shouldforwardheavytoclient } from 'zss/device/forward'
 
 import './device/heavy'
-import './device/jsonsync'
+import './device/jsonsyncclient'
 
 const { forward } = createforward((message) => {
-  if (shouldforwardheavytoclient()) {
+  if (shouldforwardheavytoclient(message)) {
     postMessage(message)
   }
 })

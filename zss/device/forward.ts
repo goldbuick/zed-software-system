@@ -59,13 +59,12 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       switch (route.target) {
         case 'vm':
         case 'heavy':
-        case 'boardrunner':
         case 'synth':
         case 'modem':
         case 'bridge':
         case 'register':
         case 'gadgetclient':
-        case 'jsonsync':
+        case 'jsonsyncclient':
           return true
       }
       switch (route.path) {
@@ -77,7 +76,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'ackoperator':
         case 'ackzsswords':
         case 'gadgetclient':
-        case 'needsnapshot':
           return true
       }
       break
@@ -104,7 +102,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'vm':
     case 'modem':
     case 'gadgetserver':
-    case 'jsonsync':
+    case 'jsonsyncserver':
       return true
   }
   switch (route.path) {
@@ -133,14 +131,11 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'heavy':
-          return true
-        case 'jsonsync':
+        case 'jsonsyncclient':
           return true
       }
       switch (route.path) {
         case 'acklook':
-          return true
-        case 'needsnapshot':
           return true
       }
       return false
@@ -149,16 +144,50 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
 }
 
 // create heavy -> client forward
-export function shouldforwardheavytoclient(): boolean {
-  return true
+export function shouldforwardheavytoclient(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'tock':
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'heavy':
+        case 'jsonsyncserver':
+          return true
+      }
+      switch (route.path) {
+        case 'acklook':
+          return true
+      }
+      return false
+    }
+  }
 }
 
 // boardrunner worker messages
 
 // create client -> boardrunner forward
 export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
-  const route = parsetarget(message.target)
-  return route.target === 'jsonsync'
+  switch (message.target) {
+    case 'tock':
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'jsonsyncclient':
+          return true
+      }
+      return false
+    }
+  }
 }
 
 // create boardrunner -> server forward
@@ -167,6 +196,11 @@ export function shouldforwardboardrunnertoserver(message: MESSAGE): boolean {
 }
 
 // create boardrunner -> client forward
-export function shouldforwardboardrunnertoclient(): boolean {
+export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
+  // jsonsync:changed is a local broadcast used by in-process observers; do not
+  // leak it across the process boundary.
+  if (message.target === 'jsonsync:changed') {
+    return false
+  }
   return true
 }

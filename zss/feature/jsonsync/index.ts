@@ -1,5 +1,24 @@
-import { applyPatch, compare } from 'fast-json-patch'
-import type { Operation } from 'fast-json-patch'
+/*
+jsonsync: differential synchronization for json documents using json-diff-ts.
+
+Adapted from Neil Fraser's Differential Synchronization (2009). One authoritative
+document lives on the server. Each (stream, player) pair maintains a shadow on the
+server and a mirror shadow on the client. A sync tuple [cv, sv] rides on every
+patch so both sides detect drift and can request a fresh snapshot.
+
+We use json-diff-ts v4 (stable). v4 ships `diff` / `applyChangeset` /
+`revertChangeset` with key-based array identity (`embeddedObjKeys`) and JSONPath
+filter paths — same algorithm as the v5 atom API, just without the envelope. The
+wire payload is a `Changeset` (IChange[]); anti-patches are sent as the SAME
+changeset with a flag and the receiver uses `revertChangeset` to undo.
+*/
+import {
+  Changeset,
+  EmbeddedObjKeysType,
+  applyChangeset,
+  diff,
+  revertChangeset,
+} from 'json-diff-ts'
 import {
   deepcopy,
   isarray,
@@ -8,100 +27,363 @@ import {
   isstring,
 } from 'zss/mapping/types'
 
-export type JSONSYNC_STREAM_STATE = {
+export type JSONSYNC_ARRAY_KEYS = EmbeddedObjKeysType
+
+export type JSONSYNC_STREAM_OPTIONS = {
+  arrayidentitykeys?: JSONSYNC_ARRAY_KEYS
+}
+
+export type JSONSYNC_SERVER_CLIENT_STATE = {
+  shadow: unknown
+  cv: number
+  sv: number
+  writable: boolean
+}
+
+export type JSONSYNC_SERVER_STREAM = {
   document: unknown
-  expectednextseq: number
+  clients: Map<string, JSONSYNC_SERVER_CLIENT_STATE>
+  arrayidentitykeys?: JSONSYNC_ARRAY_KEYS
 }
 
-export type JSONSYNC_RECEIVER_STATE = {
-  streams: Map<string, JSONSYNC_STREAM_STATE>
-}
-
-export type JSONSYNC_SNAPSHOT_PAYLOAD = {
-  streamid: string
-  seq: number
+export type JSONSYNC_CLIENT_STREAM = {
   document: unknown
+  shadow: unknown
+  cv: number
+  sv: number
+  arrayidentitykeys?: JSONSYNC_ARRAY_KEYS
 }
 
-export type JSONSYNC_PATCH_PAYLOAD = {
+export type JSONSYNC_SNAPSHOT = {
   streamid: string
-  seq: number
-  ops: Operation[]
+  cv: number
+  sv: number
+  document: unknown
+  arrayidentitykeys?: JSONSYNC_ARRAY_KEYS
 }
 
-export type JSONSYNC_APPLY_RESULT =
-  | { ok: true; state: JSONSYNC_RECEIVER_STATE }
-  | { ok: false; state: JSONSYNC_RECEIVER_STATE; reason: string }
-
-export function jsonsyncstreamkey(streamid: string): string {
-  return streamid
+export type JSONSYNC_PATCH = {
+  streamid: string
+  cv: number
+  sv: number
+  changes: Changeset
 }
 
-export function jsonsynccreatereceiverstate(): JSONSYNC_RECEIVER_STATE {
-  return { streams: new Map() }
+export type JSONSYNC_ANTI = {
+  streamid: string
+  cv: number
+  sv: number
+  changes: Changeset
 }
 
-export function jsonsyncapplysnapshot(
-  state: JSONSYNC_RECEIVER_STATE,
-  payload: JSONSYNC_SNAPSHOT_PAYLOAD,
-): JSONSYNC_APPLY_RESULT {
-  if (!isnumber(payload.seq)) {
-    return { ok: false, state, reason: 'seq' }
-  }
-  if (!isstring(payload.streamid)) {
-    return { ok: false, state, reason: 'streamid' }
-  }
-  const key = jsonsyncstreamkey(payload.streamid)
-  const nextexpected = payload.seq + 1
-  const newstreams = new Map(state.streams)
-  newstreams.set(key, {
-    document: deepcopy(payload.document),
-    expectednextseq: nextexpected,
-  })
-  return { ok: true, state: { streams: newstreams } }
+export type JSONSYNC_ACCEPT_RESULT =
+  | { kind: 'ok'; stream: JSONSYNC_SERVER_STREAM }
+  | {
+      kind: 'readonlyanti'
+      stream: JSONSYNC_SERVER_STREAM
+      anti: JSONSYNC_ANTI
+    }
+  | { kind: 'versionmismatch'; stream: JSONSYNC_SERVER_STREAM }
+  | { kind: 'unknownclient'; stream: JSONSYNC_SERVER_STREAM }
+
+export type JSONSYNC_CLIENT_APPLY_RESULT =
+  | { kind: 'ok'; stream: JSONSYNC_CLIENT_STREAM }
+  | { kind: 'versionmismatch'; stream: JSONSYNC_CLIENT_STREAM }
+
+// --- helpers -----------------------------------------------------------
+
+// strict apply: returns a fresh document with the changeset applied, throws on failure
+function strictapply(document: unknown, changes: Changeset): unknown {
+  const next = deepcopy(document)
+  return applyChangeset(next as any, deepcopy(changes))
 }
 
-export function jsonsyncapplypatch(
-  state: JSONSYNC_RECEIVER_STATE,
-  payload: JSONSYNC_PATCH_PAYLOAD,
-): JSONSYNC_APPLY_RESULT {
-  if (
-    !isnumber(payload.seq) ||
-    !isarray(payload.ops) ||
-    !isstring(payload.streamid)
-  ) {
-    return { ok: false, state, reason: 'payload' }
+// fuzzy apply: apply each top-level change inside try/catch; skip failures.
+// per the paper, the authoritative doc may be patched best-effort so concurrent
+// edits from other clients don't abort the whole batch.
+function fuzzyapply(document: unknown, changes: Changeset): unknown {
+  let next = deepcopy(document)
+  for (let i = 0; i < changes.length; ++i) {
+    try {
+      next = applyChangeset(next as any, deepcopy([changes[i]]))
+    } catch {
+      // skip bad op; last writer wins semantics
+    }
   }
-  const key = jsonsyncstreamkey(payload.streamid)
-  const stream = state.streams.get(key)
-  if (!ispresent(stream)) {
-    return { ok: false, state, reason: 'nostream' }
-  }
-  if (payload.seq !== stream.expectednextseq) {
-    return { ok: false, state, reason: 'seq' }
-  }
-  try {
-    const doccopy = deepcopy(stream.document)
-    const applied = applyPatch(doccopy, payload.ops, true, true)
-    const newstreams = new Map(state.streams)
-    newstreams.set(key, {
-      document: applied.newDocument,
-      expectednextseq: stream.expectednextseq + 1,
-    })
-    return { ok: true, state: { streams: newstreams } }
-  } catch {
-    return { ok: false, state, reason: 'patch' }
-  }
+  return next
 }
 
-export function jsonsyncbuildpatch(input: {
-  previous: unknown
-  next: unknown
-  seq: number
-}): { seq: number; ops: Operation[] } {
-  const ops = compare(
-    deepcopy(input.previous) as any,
-    deepcopy(input.next) as any,
+function diffdocs(
+  previous: unknown,
+  next: unknown,
+  keys?: JSONSYNC_ARRAY_KEYS,
+): Changeset {
+  return diff(
+    deepcopy(previous) as any,
+    deepcopy(next) as any,
+    ispresent(keys) ? { embeddedObjKeys: keys } : undefined,
   )
-  return { seq: input.seq, ops }
+}
+
+// --- server side -------------------------------------------------------
+
+export function jsonsynccreateserverstream(
+  document: unknown,
+  options?: JSONSYNC_STREAM_OPTIONS,
+): JSONSYNC_SERVER_STREAM {
+  return {
+    document: deepcopy(document),
+    clients: new Map(),
+    arrayidentitykeys: options?.arrayidentitykeys,
+  }
+}
+
+export function jsonsyncserverupdatedoc(
+  stream: JSONSYNC_SERVER_STREAM,
+  nextdoc: unknown,
+): JSONSYNC_SERVER_STREAM {
+  return {
+    ...stream,
+    document: deepcopy(nextdoc),
+  }
+}
+
+export function jsonsyncserveradmit(
+  stream: JSONSYNC_SERVER_STREAM,
+  player: string,
+  writable: boolean,
+): { stream: JSONSYNC_SERVER_STREAM; snapshot: JSONSYNC_SNAPSHOT } {
+  const nextclients = new Map(stream.clients)
+  nextclients.set(player, {
+    shadow: deepcopy(stream.document),
+    cv: 0,
+    sv: 0,
+    writable,
+  })
+  const nextstream: JSONSYNC_SERVER_STREAM = {
+    ...stream,
+    clients: nextclients,
+  }
+  const snapshot: JSONSYNC_SNAPSHOT = {
+    streamid: '',
+    cv: 0,
+    sv: 0,
+    document: deepcopy(stream.document),
+    arrayidentitykeys: stream.arrayidentitykeys,
+  }
+  return { stream: nextstream, snapshot }
+}
+
+export function jsonsyncserverremove(
+  stream: JSONSYNC_SERVER_STREAM,
+  player: string,
+): JSONSYNC_SERVER_STREAM {
+  const nextclients = new Map(stream.clients)
+  nextclients.delete(player)
+  return { ...stream, clients: nextclients }
+}
+
+// server receives a client patch: validate sync tuple, enforce read-only, strict
+// apply to that client's server-shadow, fuzzy-apply to the authoritative doc.
+export function jsonsyncserveraccept(
+  stream: JSONSYNC_SERVER_STREAM,
+  player: string,
+  patch: JSONSYNC_PATCH,
+): JSONSYNC_ACCEPT_RESULT {
+  const state = stream.clients.get(player)
+  if (!ispresent(state)) {
+    return { kind: 'unknownclient', stream }
+  }
+  if (patch.cv !== state.cv || patch.sv !== state.sv) {
+    return { kind: 'versionmismatch', stream }
+  }
+  if (!isarray(patch.changes)) {
+    return { kind: 'versionmismatch', stream }
+  }
+  if (state.writable === false) {
+    // read-only: do NOT mutate doc or shadow; reply with the same changeset as an
+    // anti-patch. the client applies it via revertChangeset to undo its local edit.
+    const anti: JSONSYNC_ANTI = {
+      streamid: patch.streamid,
+      cv: state.cv,
+      sv: state.sv,
+      changes: deepcopy(patch.changes),
+    }
+    return { kind: 'readonlyanti', stream, anti }
+  }
+  let newshadow: unknown
+  try {
+    newshadow = strictapply(state.shadow, patch.changes)
+  } catch {
+    return { kind: 'versionmismatch', stream }
+  }
+  const newdoc = fuzzyapply(stream.document, patch.changes)
+  const nextstate: JSONSYNC_SERVER_CLIENT_STATE = {
+    ...state,
+    shadow: newshadow,
+    cv: state.cv + 1,
+  }
+  const nextclients = new Map(stream.clients)
+  nextclients.set(player, nextstate)
+  return {
+    kind: 'ok',
+    stream: { ...stream, document: newdoc, clients: nextclients },
+  }
+}
+
+// diff the authoritative doc against each client's shadow and advance their sv.
+// returns per-player patches ready to emit. skips clients with empty diffs.
+export function jsonsyncserverbuildpatches(
+  stream: JSONSYNC_SERVER_STREAM,
+  streamid: string,
+): {
+  stream: JSONSYNC_SERVER_STREAM
+  patches: { player: string; patch: JSONSYNC_PATCH }[]
+} {
+  const patches: { player: string; patch: JSONSYNC_PATCH }[] = []
+  const nextclients = new Map<string, JSONSYNC_SERVER_CLIENT_STATE>()
+  stream.clients.forEach((state, player) => {
+    const changes = diffdocs(
+      state.shadow,
+      stream.document,
+      stream.arrayidentitykeys,
+    )
+    if (changes.length === 0) {
+      nextclients.set(player, state)
+      return
+    }
+    patches.push({
+      player,
+      patch: {
+        streamid,
+        cv: state.cv,
+        sv: state.sv,
+        changes,
+      },
+    })
+    nextclients.set(player, {
+      ...state,
+      shadow: deepcopy(stream.document),
+      sv: state.sv + 1,
+    })
+  })
+  return { stream: { ...stream, clients: nextclients }, patches }
+}
+
+// --- client side -------------------------------------------------------
+
+export function jsonsynccreateclientstream(): JSONSYNC_CLIENT_STREAM {
+  return {
+    document: undefined,
+    shadow: undefined,
+    cv: 0,
+    sv: 0,
+  }
+}
+
+export function jsonsyncclientapplysnapshot(
+  _stream: JSONSYNC_CLIENT_STREAM,
+  snapshot: JSONSYNC_SNAPSHOT,
+): JSONSYNC_CLIENT_STREAM {
+  return {
+    document: deepcopy(snapshot.document),
+    shadow: deepcopy(snapshot.document),
+    cv: snapshot.cv,
+    sv: snapshot.sv,
+    arrayidentitykeys: snapshot.arrayidentitykeys,
+  }
+}
+
+// strict-apply a server patch to the client's shadow and document.
+// validates the [cv, sv] tuple matches; advances sv.
+export function jsonsyncclientapplyserverpatch(
+  stream: JSONSYNC_CLIENT_STREAM,
+  patch: JSONSYNC_PATCH,
+): JSONSYNC_CLIENT_APPLY_RESULT {
+  if (!isnumber(patch.cv) || !isnumber(patch.sv) || !isarray(patch.changes)) {
+    return { kind: 'versionmismatch', stream }
+  }
+  if (patch.cv !== stream.cv || patch.sv !== stream.sv) {
+    return { kind: 'versionmismatch', stream }
+  }
+  let newshadow: unknown
+  let newdoc: unknown
+  try {
+    newshadow = strictapply(stream.shadow, patch.changes)
+    newdoc = strictapply(stream.document, patch.changes)
+  } catch {
+    return { kind: 'versionmismatch', stream }
+  }
+  return {
+    kind: 'ok',
+    stream: {
+      ...stream,
+      shadow: newshadow,
+      document: newdoc,
+      sv: stream.sv + 1,
+    },
+  }
+}
+
+// anti-patch: revert a rejected local edit. receiver applies revertChangeset
+// to both shadow and document so local state matches what the server kept.
+export function jsonsyncclientapplyanti(
+  stream: JSONSYNC_CLIENT_STREAM,
+  anti: JSONSYNC_ANTI,
+): JSONSYNC_CLIENT_APPLY_RESULT {
+  if (!isarray(anti.changes)) {
+    return { kind: 'versionmismatch', stream }
+  }
+  let newshadow: unknown
+  let newdoc: unknown
+  try {
+    newshadow = revertChangeset(
+      deepcopy(stream.shadow) as any,
+      deepcopy(anti.changes),
+    )
+    newdoc = revertChangeset(
+      deepcopy(stream.document) as any,
+      deepcopy(anti.changes),
+    )
+  } catch {
+    return { kind: 'versionmismatch', stream }
+  }
+  // anti-patches rewind our cv because the proposed edit never happened
+  return {
+    kind: 'ok',
+    stream: {
+      ...stream,
+      shadow: newshadow,
+      document: newdoc,
+      cv: Math.max(0, stream.cv - 1),
+    },
+  }
+}
+
+// diff local state against local shadow, produce a client patch, advance cv,
+// replace shadow with the new local document.
+export function jsonsyncclientlocalupdate(
+  stream: JSONSYNC_CLIENT_STREAM,
+  nextdoc: unknown,
+  streamid: string,
+): { stream: JSONSYNC_CLIENT_STREAM; patch: JSONSYNC_PATCH } {
+  const changes = diffdocs(stream.shadow, nextdoc, stream.arrayidentitykeys)
+  const patch: JSONSYNC_PATCH = {
+    streamid,
+    cv: stream.cv,
+    sv: stream.sv,
+    changes,
+  }
+  const nextstream: JSONSYNC_CLIENT_STREAM = {
+    ...stream,
+    document: deepcopy(nextdoc),
+    shadow: deepcopy(nextdoc),
+    cv: stream.cv + (changes.length > 0 ? 1 : 0),
+  }
+  return { stream: nextstream, patch }
+}
+
+// utility for device layer: safe stream key
+export function jsonsyncstreamkey(streamid: string): string {
+  return isstring(streamid) ? streamid : ''
 }

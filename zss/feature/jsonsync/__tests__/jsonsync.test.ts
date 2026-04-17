@@ -1,162 +1,271 @@
-import { compare } from 'fast-json-patch'
-import { deepcopy } from 'zss/mapping/types'
-
 import {
-  jsonsyncapplypatch,
-  jsonsyncapplysnapshot,
-  jsonsyncbuildpatch,
-  jsonsynccreatereceiverstate,
-  jsonsyncstreamkey,
+  JSONSYNC_PATCH,
+  jsonsyncclientapplyanti,
+  jsonsyncclientapplyserverpatch,
+  jsonsyncclientapplysnapshot,
+  jsonsyncclientlocalupdate,
+  jsonsynccreateclientstream,
+  jsonsynccreateserverstream,
+  jsonsyncserveraccept,
+  jsonsyncserveradmit,
+  jsonsyncserverbuildpatches,
+  jsonsyncserverupdatedoc,
 } from '../index'
 
-const STREAM = 'test-stream'
+const STREAM = 'board:test'
 
-describe('jsonsync', () => {
-  it('jsonsyncstreamkey returns streamid', () => {
-    expect(jsonsyncstreamkey('lane-a')).toBe('lane-a')
+function mksnapshot(
+  snapshot: ReturnType<typeof jsonsyncserveradmit>['snapshot'],
+) {
+  return { ...snapshot, streamid: STREAM }
+}
+
+describe('jsonsync feature', () => {
+  it('admit snapshot round-trips to client', () => {
+    const server = jsonsynccreateserverstream({ count: 1, items: [] })
+    const { stream, snapshot } = jsonsyncserveradmit(server, 'alice', true)
+    expect(stream.clients.get('alice')?.cv).toBe(0)
+    expect(stream.clients.get('alice')?.sv).toBe(0)
+    expect(stream.clients.get('alice')?.writable).toBe(true)
+    const client = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(snapshot),
+    )
+    expect(client.document).toEqual({ count: 1, items: [] })
+    expect(client.shadow).toEqual({ count: 1, items: [] })
+    expect(client.cv).toBe(0)
+    expect(client.sv).toBe(0)
   })
 
-  it('snapshot sets document and expectednextseq', () => {
-    let state = jsonsynccreatereceiverstate()
-    const r = jsonsyncapplysnapshot(state, {
-      seq: 4,
-      document: { a: 1 },
+  it('client local edit produces patch; server accepts; bumps cv', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admit = jsonsyncserveradmit(server, 'alice', true)
+    server = admit.stream
+    let client = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admit.snapshot),
+    )
+    const local = jsonsyncclientlocalupdate(client, { value: 'b' }, STREAM)
+    client = local.stream
+    expect(client.cv).toBe(1)
+    expect(local.patch.changes.length).toBeGreaterThan(0)
+    const accepted = jsonsyncserveraccept(server, 'alice', local.patch)
+    expect(accepted.kind).toBe('ok')
+    if (accepted.kind !== 'ok') {
+      return
+    }
+    server = accepted.stream
+    expect(server.document).toEqual({ value: 'b' })
+    expect(server.clients.get('alice')?.cv).toBe(1)
+  })
+
+  it('broadcasts server patch to other clients', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admita = jsonsyncserveradmit(server, 'alice', true)
+    server = admita.stream
+    const admitb = jsonsyncserveradmit(server, 'bob', true)
+    server = admitb.stream
+    let bob = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admitb.snapshot),
+    )
+
+    // alice edits and server accepts
+    let alice = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admita.snapshot),
+    )
+    const local = jsonsyncclientlocalupdate(alice, { value: 'c' }, STREAM)
+    alice = local.stream
+    const accepted = jsonsyncserveraccept(server, 'alice', local.patch)
+    if (accepted.kind !== 'ok') {
+      throw new Error(`expected ok, got ${accepted.kind}`)
+    }
+    server = accepted.stream
+
+    // build patches for all clients
+    const built = jsonsyncserverbuildpatches(server, STREAM)
+    server = built.stream
+    const forbob = built.patches.find((entry) => entry.player === 'bob')
+    expect(forbob).toBeDefined()
+    if (!forbob) {
+      return
+    }
+    const apply = jsonsyncclientapplyserverpatch(bob, forbob.patch)
+    expect(apply.kind).toBe('ok')
+    if (apply.kind !== 'ok') {
+      return
+    }
+    bob = apply.stream
+    expect(bob.document).toEqual({ value: 'c' })
+    expect(bob.sv).toBe(1)
+  })
+
+  it('version mismatch -> versionmismatch result', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admit = jsonsyncserveradmit(server, 'alice', true)
+    server = admit.stream
+    const client = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admit.snapshot),
+    )
+    const badpatch: JSONSYNC_PATCH = {
       streamid: STREAM,
-    })
-    expect(r.ok).toBe(true)
-    if (!r.ok) {
-      return
+      cv: 99,
+      sv: 0,
+      changes: jsonsyncclientlocalupdate(client, { value: 'b' }, STREAM).patch
+        .changes,
     }
-    state = r.state
-    const stream = state.streams.get(STREAM)
-    expect(stream?.document).toEqual({ a: 1 })
-    expect(stream?.expectednextseq).toBe(5)
+    const result = jsonsyncserveraccept(server, 'alice', badpatch)
+    expect(result.kind).toBe('versionmismatch')
   })
 
-  it('snapshot rejects invalid seq', () => {
-    const state = jsonsynccreatereceiverstate()
-    const r = jsonsyncapplysnapshot(state, {
-      seq: NaN,
-      document: {},
-      streamid: STREAM,
-    })
-    expect(r.ok).toBe(false)
-  })
-
-  it('snapshot rejects non-string streamid', () => {
-    const state = jsonsynccreatereceiverstate()
-    const r = jsonsyncapplysnapshot(state, {
-      seq: 0,
-      document: {},
-      streamid: 1 as unknown as string,
-    })
-    expect(r.ok).toBe(false)
-    if (r.ok) {
+  it('read-only player write returns anti-patch; server doc untouched', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admit = jsonsyncserveradmit(server, 'alice', false)
+    server = admit.stream
+    const client = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admit.snapshot),
+    )
+    const local = jsonsyncclientlocalupdate(client, { value: 'b' }, STREAM)
+    const result = jsonsyncserveraccept(server, 'alice', local.patch)
+    expect(result.kind).toBe('readonlyanti')
+    if (result.kind !== 'readonlyanti') {
       return
     }
-    expect(r.reason).toBe('streamid')
-  })
-
-  it('patch applies when seq matches and advances expectednextseq', () => {
-    let state = jsonsynccreatereceiverstate()
-    const s0 = jsonsyncapplysnapshot(state, {
-      seq: 0,
-      document: { x: 0 },
-      streamid: STREAM,
-    })
-    expect(s0.ok).toBe(true)
-    if (!s0.ok) {
+    expect(result.stream.document).toEqual({ value: 'a' })
+    expect(result.anti.changes.length).toBeGreaterThan(0)
+    const reverted = jsonsyncclientapplyanti(local.stream, result.anti)
+    expect(reverted.kind).toBe('ok')
+    if (reverted.kind !== 'ok') {
       return
     }
-    state = s0.state
-    const p1 = jsonsyncapplypatch(state, {
-      seq: 1,
-      ops: [{ op: 'replace', path: '/x', value: 1 }],
-      streamid: STREAM,
-    })
-    expect(p1.ok).toBe(true)
-    if (!p1.ok) {
-      return
-    }
-    state = p1.state
-    expect(state.streams.get(STREAM)?.document).toEqual({ x: 1 })
-    expect(state.streams.get(STREAM)?.expectednextseq).toBe(2)
+    expect(reverted.stream.document).toEqual({ value: 'a' })
+    expect(reverted.stream.cv).toBe(0)
   })
 
-  it('patch fails on seq gap', () => {
-    let state = jsonsynccreatereceiverstate()
-    const s0 = jsonsyncapplysnapshot(state, {
-      seq: 0,
-      document: { x: 0 },
-      streamid: STREAM,
+  it('keyed array reorder produces stable paths', () => {
+    const keys = { items: 'id' }
+    const initial = {
+      items: [
+        { id: 1, name: 'Widget' },
+        { id: 2, name: 'Gadget' },
+      ],
+    }
+    let server = jsonsynccreateserverstream(initial, {
+      arrayidentitykeys: keys,
     })
-    if (!s0.ok) {
+    const admit = jsonsyncserveradmit(server, 'alice', true)
+    server = admit.stream
+    let client = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admit.snapshot),
+    )
+
+    // reorder + rename
+    const next = {
+      items: [
+        { id: 2, name: 'Gadget' },
+        { id: 1, name: 'WidgetPro' },
+      ],
+    }
+    const local = jsonsyncclientlocalupdate(client, next, STREAM)
+    client = local.stream
+    const accepted = jsonsyncserveraccept(server, 'alice', local.patch)
+    expect(accepted.kind).toBe('ok')
+    if (accepted.kind !== 'ok') {
       return
     }
-    state = s0.state
-    const bad = jsonsyncapplypatch(state, {
-      seq: 2,
-      ops: [{ op: 'replace', path: '/x', value: 9 }],
-      streamid: STREAM,
-    })
-    expect(bad.ok).toBe(false)
-    if (bad.ok) {
-      return
+    server = accepted.stream
+    const serveritems = (
+      server.document as { items: { id: number; name: string }[] }
+    ).items
+    const widget = serveritems.find((entry) => entry.id === 1)
+    expect(widget?.name).toBe('WidgetPro')
+  })
+
+  it('concurrent edits: both survive when they target different leaves', () => {
+    const keys = { items: 'id' }
+    const initial = {
+      items: [
+        { id: 1, name: 'Widget', price: 10 },
+        { id: 2, name: 'Gadget', price: 20 },
+      ],
     }
-    expect(bad.reason).toBe('seq')
-  })
-
-  it('patch fails when stream missing', () => {
-    const state = jsonsynccreatereceiverstate()
-    const r = jsonsyncapplypatch(state, {
-      seq: 1,
-      ops: [],
-      streamid: 'no-snapshot-for-this-lane',
+    let server = jsonsynccreateserverstream(initial, {
+      arrayidentitykeys: keys,
     })
-    expect(r.ok).toBe(false)
-    if (r.ok) {
-      return
+    const admita = jsonsyncserveradmit(server, 'alice', true)
+    server = admita.stream
+    const admitb = jsonsyncserveradmit(server, 'bob', true)
+    server = admitb.stream
+
+    let alice = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admita.snapshot),
+    )
+    let bob = jsonsyncclientapplysnapshot(
+      jsonsynccreateclientstream(),
+      mksnapshot(admitb.snapshot),
+    )
+
+    // alice renames item 1
+    const alicenext = {
+      items: [
+        { id: 1, name: 'WidgetPro', price: 10 },
+        { id: 2, name: 'Gadget', price: 20 },
+      ],
     }
-    expect(r.reason).toBe('nostream')
-  })
-
-  it('multiplexes streams by streamid', () => {
-    let state = jsonsynccreatereceiverstate()
-    const sa = jsonsyncapplysnapshot(state, {
-      seq: 0,
-      document: { id: 'a' },
-      streamid: 'A',
-    })
-    const sb = jsonsyncapplysnapshot(sa.ok ? sa.state : state, {
-      seq: 0,
-      document: { id: 'b' },
-      streamid: 'B',
-    })
-    expect(sb.ok).toBe(true)
-    if (!sb.ok) {
-      return
+    const alocal = jsonsyncclientlocalupdate(alice, alicenext, STREAM)
+    alice = alocal.stream
+    const aaccept = jsonsyncserveraccept(server, 'alice', alocal.patch)
+    if (aaccept.kind !== 'ok') {
+      throw new Error(`alice accept failed: ${aaccept.kind}`)
     }
-    state = sb.state
-    expect(state.streams.get('A')?.document).toEqual({ id: 'a' })
-    expect(state.streams.get('B')?.document).toEqual({ id: 'b' })
+    server = aaccept.stream
+
+    // bob (still on original) reprices item 2
+    const bobnext = {
+      items: [
+        { id: 1, name: 'Widget', price: 10 },
+        { id: 2, name: 'Gadget', price: 25 },
+      ],
+    }
+    const blocal = jsonsyncclientlocalupdate(bob, bobnext, STREAM)
+    bob = blocal.stream
+    const baccept = jsonsyncserveraccept(server, 'bob', blocal.patch)
+    if (baccept.kind !== 'ok') {
+      throw new Error(`bob accept failed: ${baccept.kind}`)
+    }
+    server = baccept.stream
+
+    const finalitems = (
+      server.document as {
+        items: { id: number; name: string; price: number }[]
+      }
+    ).items
+    expect(finalitems.find((entry) => entry.id === 1)?.name).toBe('WidgetPro')
+    expect(finalitems.find((entry) => entry.id === 2)?.price).toBe(25)
   })
 
-  it('jsonsyncbuildpatch sees diff when nested arrays are not aliased in stored previous', () => {
-    const char = [1, 2, 3]
-    const doc = { tiles: { char } }
-    const previous = deepcopy(doc)
-    char[0] = 7
-    const { ops } = jsonsyncbuildpatch({ previous, next: doc, seq: 1 })
-    expect(ops.length).toBeGreaterThan(0)
-    expect(compare(previous, doc).length).toBe(ops.length)
-  })
+  it('server vm-driven update broadcasts patch to every client', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admita = jsonsyncserveradmit(server, 'alice', true)
+    server = admita.stream
+    const admitb = jsonsyncserveradmit(server, 'bob', true)
+    server = admitb.stream
 
-  it('compare still sees diff when previous is deep snapshot and live mutates', () => {
-    const char = [1, 2, 3]
-    const doc = { tiles: { char } }
-    const previous = deepcopy(doc)
-    char[0] = 7
-    const patch = compare(previous, doc)
-    expect(patch.length).toBeGreaterThan(0)
+    server = jsonsyncserverupdatedoc(server, { value: 'x' })
+    const built = jsonsyncserverbuildpatches(server, STREAM)
+    server = built.stream
+    expect(built.patches.length).toBe(2)
+    const players = built.patches.map((entry) => entry.player).sort()
+    expect(players).toEqual(['alice', 'bob'])
+    built.patches.forEach((entry) => {
+      expect(entry.patch.changes.length).toBeGreaterThan(0)
+    })
+    expect(server.clients.get('alice')?.sv).toBe(1)
+    expect(server.clients.get('bob')?.sv).toBe(1)
   })
 })
