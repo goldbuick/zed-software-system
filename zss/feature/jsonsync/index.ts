@@ -65,6 +65,11 @@ export type JSONSYNC_SNAPSHOT = {
   sv: number
   document: unknown
   arrayidentitykeys?: JSONSYNC_ARRAY_KEYS
+  // target player for server->client sends (authoritative); empty or
+  // originator-scoped for client->server sends. stamped by the device-layer
+  // emitter so the peer bridge can filter large payloads to the right peer
+  // without reading the MESSAGE envelope.
+  player?: string
 }
 
 export type JSONSYNC_PATCH = {
@@ -72,6 +77,7 @@ export type JSONSYNC_PATCH = {
   cv: number
   sv: number
   changes: Changeset
+  player?: string
 }
 
 export type JSONSYNC_ANTI = {
@@ -79,6 +85,7 @@ export type JSONSYNC_ANTI = {
   cv: number
   sv: number
   changes: Changeset
+  player?: string
 }
 
 export type JSONSYNC_ACCEPT_RESULT =

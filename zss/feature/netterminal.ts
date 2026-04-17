@@ -12,7 +12,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 async function readpeerid(): Promise<string | undefined> {
   return await storagereadnetid()
@@ -134,9 +134,28 @@ function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
   void dataconnection.send(serializable(message))
 }
 
+// server->client jsonsync envelopes ride under the jsonsyncclient:* namespace.
+// every payload emitted by the device layer is stamped with the target player,
+// so the host bridge can skip forwarding a stream event to a peer that isn't
+// the intended recipient (e.g. a board:cp2 serverpatch intended for player-B
+// must not ship down player-A's dataconnection).
+function isjsonsyncserverclienttarget(target: string): boolean {
+  return (
+    target === 'jsonsyncclient:snapshot' ||
+    target === 'jsonsyncclient:serverpatch' ||
+    target === 'jsonsyncclient:antipatch' ||
+    target === 'jsonsyncclient:needsnapshot' ||
+    target === 'jsonsyncclient:poke'
+  )
+}
+
 function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
   let topicbridge: MAYBE<ReturnType<typeof createforward>>
+  // learned from the first inbound message on this dataconnection. the joiner
+  // stamps message.player on every emit, so the host learns its peer's player
+  // id lazily without any extra handshake.
+  let remotepeerplayer = ''
 
   function hostbridge() {
     // open bridge between peers
@@ -148,6 +167,21 @@ function handledataconnection(dataconnection: DataConnection) {
         shouldforwardservertoclient(message) &&
         shouldnotforwardonpeerserver(message) === false
       ) {
+        // jsonsync filter: payload.player is the intended recipient. drop if
+        // we know this peer's player id and the payload targets someone else.
+        if (isjsonsyncserverclienttarget(message.target)) {
+          const payloadplayer = (
+            message.data as { player?: string } | undefined
+          )?.player
+          if (
+            isstring(payloadplayer) &&
+            payloadplayer.length > 0 &&
+            remotepeerplayer.length > 0 &&
+            payloadplayer !== remotepeerplayer
+          ) {
+            return
+          }
+        }
         sendpeer(dataconnection, message)
       }
     })
@@ -199,6 +233,16 @@ function handledataconnection(dataconnection: DataConnection) {
     const message = (
       typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
     ) as MESSAGE
+    // learn the remote peer's player id from their own emits. every
+    // client->server message carries message.player = joiner's player, so the
+    // first non-empty value is authoritative for the life of this connection.
+    if (
+      remotepeerplayer.length === 0 &&
+      isstring(message.player) &&
+      message.player.length > 0
+    ) {
+      remotepeerplayer = message.player
+    }
     topicbridge?.forward({
       ...message,
       session: SOFTWARE.session(),
