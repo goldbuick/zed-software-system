@@ -4,6 +4,7 @@ import {
 } from 'zss/device/forward'
 
 import './device/boardrunner'
+import './device/boardrunnertransfer'
 import './device/boardrunneruser'
 import './device/jsonsyncclient'
 

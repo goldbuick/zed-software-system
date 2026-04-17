@@ -1,5 +1,12 @@
 import Peer, { DataConnection } from 'peerjs'
-import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
+import {
+  MESSAGE,
+  apierror,
+  apilog,
+  vmpeergone,
+  vmsearch,
+  vmtopic,
+} from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,
@@ -203,6 +210,12 @@ function handledataconnection(dataconnection: DataConnection) {
     topicbridge?.disconnect()
     if (ispresent(networkpeer)) {
       apilog(SOFTWARE, player, `disconnection from ${dataconnection.peer}`)
+    }
+    // Phase 3 failover: signal the VM that this peer has departed so it
+    // can clear board-runner election entries that reference the gone
+    // player. The next `second`-cycle election picks a fresh runner.
+    if (remotepeerplayer.length > 0) {
+      vmpeergone(SOFTWARE, remotepeerplayer)
     }
   })
 

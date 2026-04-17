@@ -154,6 +154,48 @@ describe('memoryhydratefromjsonsync', () => {
     expect(boardpage?.board).toBeDefined()
   })
 
+  it('removes worker-local books when the authoritative memory stream drops them', () => {
+    // First hydrate creates main-id + stale-id locally.
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      software: { main: 'main-id', temp: '' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+        'stale-id': {
+          id: 'stale-id',
+          name: 'stale',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+    expect(memoryreadbookbyaddress('stale-id')).toBeDefined()
+
+    // Subsequent memory document drops stale-id; worker must converge.
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      software: { main: 'main-id', temp: '' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+
+    expect(memoryreadbookbyaddress('stale-id')).toBeUndefined()
+    expect(memoryreadbookbyaddress('main-id')).toBeDefined()
+    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+  })
+
   it('drops board snapshots arriving before main book exists', () => {
     expect(() =>
       memoryhydratefromjsonsync(boardstreamid('orphan'), {

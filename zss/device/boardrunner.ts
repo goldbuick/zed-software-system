@@ -46,13 +46,8 @@ const boardrunner = createdevice(
         // Hydrate the worker-local MEMORY singleton from every accepted
         // jsonsync mutation (snapshot / serverpatch / antipatch).
         // memoryhydratefromjsonsync runs inside memorywithsilentwrites, so
-        // this never re-fires the worker dirty bits. Phase 4 task
-        // `phase4-cleanup-changed-log` decides whether this debug log stays
-        // after Phase 2 lands.
+        // this never re-fires the worker dirty bits.
         memoryhydratefromjsonsync(payload.streamid, payload.document)
-        console.info(
-          `[boardrunner] jsonsync ${payload.streamid} ${payload.reason} cv=${payload.cv} sv=${payload.sv}`,
-        )
         break
       }
       case 'ticktock':

@@ -31,7 +31,13 @@ import {
   memoryconsumealldirty,
   memorywithsilentwrites,
 } from 'zss/memory/memorydirty'
-import { memoryreadbookbyaddress, memoryreadroot } from 'zss/memory/session'
+import {
+  memoryclearbook,
+  memoryreadbookbyaddress,
+  memoryreadbooklist,
+  memoryreadroot,
+  memorywritebook,
+} from 'zss/memory/session'
 import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import {
@@ -201,22 +207,71 @@ function reverseprojectmemory(document: Record<string, unknown>): void {
   if (!ispresent(incoming) || typeof incoming !== 'object') {
     return
   }
-  const bookids = Object.keys(incoming)
-  for (let i = 0; i < bookids.length; ++i) {
-    const bookid = bookids[i]
+  const incomingids = Object.keys(incoming)
+  const seen = new Set<string>()
+  for (let i = 0; i < incomingids.length; ++i) {
+    const bookid = incomingids[i]
     const incomingbook = incoming[bookid] as Record<string, unknown>
     if (!ispresent(incomingbook)) {
       continue
     }
+    seen.add(bookid)
     const localbook = memoryreadbookbyaddress(bookid)
     if (!ispresent(localbook)) {
-      // runtime book add/remove is a Phase 4 task; ignore unknown ids here.
+      // Phase 4 book add: materialize a new BOOK from the incoming record.
+      // Books in the memory stream projection omit BOARD-type codepages
+      // (they travel via their own `board:<id>` streams); the created book
+      // starts with the non-BOARD pages it carries. BOARD pages arrive on
+      // their admission cycle and are attached by memoryhydrate.
+      const created = createbookfromincoming(bookid, incomingbook)
+      if (ispresent(created)) {
+        memorywritebook(created)
+      }
       continue
     }
     mergebookscalars(localbook, incomingbook)
     mergebookflags(localbook, incomingbook)
     mergebooknonboardpages(localbook, incomingbook)
   }
+  // Phase 4 book remove: any local book id not mentioned by the incoming
+  // document dropped out of the authoritative projection and must be
+  // deleted locally. We only act on the SERVER side of reverse-projection
+  // (where the stream document IS the authority). The memory stream's
+  // projection always includes every MEMORY.books entry, so absence is a
+  // real delete signal and not a partial view.
+  const locals = memoryreadbooklist()
+  for (let i = 0; i < locals.length; ++i) {
+    const local = locals[i]
+    if (!seen.has(local.id)) {
+      memoryclearbook(local.id)
+    }
+  }
+}
+
+function createbookfromincoming(
+  bookid: string,
+  incomingbook: Record<string, unknown>,
+): BOOK | undefined {
+  const name = isstring(incomingbook.name) ? incomingbook.name : ''
+  const book: BOOK = {
+    id: bookid,
+    name,
+    timestamp: 0,
+    activelist: isarray(incomingbook.activelist)
+      ? (deepcopy(incomingbook.activelist) as string[])
+      : [],
+    pages: isarray(incomingbook.pages)
+      ? (deepcopy(incomingbook.pages) as CODE_PAGE[])
+      : [],
+    flags:
+      ispresent(incomingbook.flags) && typeof incomingbook.flags === 'object'
+        ? (deepcopy(incomingbook.flags) as Record<string, BOOK_FLAGS>)
+        : {},
+  }
+  if (isstring(incomingbook.token)) {
+    ;(book as unknown as Record<string, unknown>).token = incomingbook.token
+  }
+  return book
 }
 
 const BOOK_SCALAR_KEYS: readonly string[] = ['name', 'activelist', 'token']

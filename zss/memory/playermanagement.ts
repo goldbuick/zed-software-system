@@ -40,6 +40,7 @@ import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
+  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
@@ -47,6 +48,34 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
+
+// Phase 3 of the boardrunner authoritative-tick plan: the elected
+// boardrunner worker cannot write to board streams it does not own. When
+// the firmware runs `memorymoveplayertoboard` on the worker and the
+// destination lives in another runner's board stream, the mutation must
+// route through a server-mediated transfer message instead of a direct
+// cross-board insert. The worker installs a hook on boot; the server
+// leaves it unset and keeps the in-process default behavior.
+export type MEMORY_MOVEPLAYER_HOOK = (args: {
+  book: BOOK
+  player: string
+  fromboard: BOARD
+  toboardid: string
+  element: BOARD_ELEMENT
+  dest: PT
+}) => boolean
+
+let moveplayerhook: MEMORY_MOVEPLAYER_HOOK | null = null
+
+export function memorysetmoveplayerhook(
+  hook: MEMORY_MOVEPLAYER_HOOK | null,
+): void {
+  moveplayerhook = hook
+}
+
+export function memoryreadmoveplayerhook(): MEMORY_MOVEPLAYER_HOOK | null {
+  return moveplayerhook
+}
 
 // Player Management Functions
 
@@ -66,6 +95,24 @@ export function memorymoveplayertoboard(
   const element = memoryreadobject(currentboard, player)
   if (!memoryboardelementisobject(element) || !element?.id) {
     return false
+  }
+
+  // runner-side hook: if installed and the destination is not locally
+  // owned by this worker, the hook emits the cross-board transfer upstream
+  // (and typically removes the element from the source board) instead of
+  // the default in-process move. Hook returns true to short-circuit.
+  if (moveplayerhook) {
+    const handled = moveplayerhook({
+      book,
+      player,
+      fromboard: currentboard,
+      toboardid: board,
+      element,
+      dest,
+    })
+    if (handled) {
+      return true
+    }
   }
 
   // dest board

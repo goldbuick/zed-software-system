@@ -10,6 +10,7 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
+import { handleboardrunnertransfer } from './boardrunnertransfer'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
@@ -24,6 +25,7 @@ import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
+import { handlepeergone } from './peergone'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
 import { handlequery } from './query'
@@ -66,6 +68,8 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   ticktock: handletick,
   second: handlesecond,
   ackboardrunner: handleackboardrunner,
+  boardrunnertransfer: handleboardrunnertransfer,
+  peergone: handlepeergone,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,
   gadgetscroll: handlegadgetscroll,

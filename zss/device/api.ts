@@ -12,7 +12,7 @@ import type {
 } from 'zss/feature/jsonsync'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { BOOK } from 'zss/memory/types'
+import { BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
@@ -954,6 +954,40 @@ export function vmlogout(
 
 export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
+}
+
+// Phase 3 of the boardrunner authoritative-tick plan: when the elected runner
+// observes a player element crossing from its owned board (from) to a board
+// owned by a different runner (to), it cannot write to the destination
+// `board:*` stream directly. Instead it emits this message upstream to the
+// server, which mediates the handoff: validates ownership, inserts the
+// element into the destination board, updates player flags, and pokes the
+// destination runner. The `player` envelope carries the elected runner's own
+// id (for ownership validation); the payload carries the element id being
+// moved plus the source/destination boards and the entry point.
+export type VM_BOARDRUNNER_TRANSFER = {
+  player: string
+  fromboardid: string
+  toboardid: string
+  element: BOARD_ELEMENT
+  dest: PT
+}
+
+export function vmboardrunnertransfer(
+  device: DEVICELIKE,
+  player: string,
+  payload: VM_BOARDRUNNER_TRANSFER,
+) {
+  device.emit(player, 'vm:boardrunnertransfer', payload)
+}
+
+// Phase 3 of the boardrunner authoritative-tick plan: emitted by
+// netterminal when a peer's webrtc dataconnection closes. The VM handler
+// clears `ackboardrunners`/`boardrunners` entries that reference the
+// departed player, letting the next `second`-cycle election pick a fresh
+// runner for any now-orphaned boards.
+export function vmpeergone(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:peergone')
 }
 
 export function userinput(

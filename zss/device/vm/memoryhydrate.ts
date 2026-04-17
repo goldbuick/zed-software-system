@@ -30,8 +30,10 @@ import {
   memorywithsilentwrites,
 } from 'zss/memory/memorydirty'
 import {
+  memoryclearbook,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
+  memoryreadbooklist,
   memoryreadroot,
   memorywritebook,
   memorywritehalt,
@@ -98,17 +100,30 @@ function hydratebooks(document: Record<string, unknown>): void {
     return
   }
   const ids = Object.keys(incoming)
+  const seen = new Set<string>()
   for (let i = 0; i < ids.length; ++i) {
     const id = ids[i]
     const incomingbook = incoming[id] as Record<string, unknown>
     if (!ispresent(incomingbook) || typeof incomingbook !== 'object') {
       continue
     }
+    seen.add(id)
     const existing = memoryreadbookbyaddress(id)
     if (ispresent(existing)) {
       mergebookinto(existing, incomingbook)
     } else {
       memorywritebook(buildbookfromincoming(id, incomingbook))
+    }
+  }
+  // Phase 4 book remove: if a local book id is not mentioned by the
+  // authoritative memory stream, delete it from the worker's MEMORY so
+  // the two views converge. Server-driven deletes propagate here via
+  // hydration; worker never originates book-level creates/removes.
+  const locals = memoryreadbooklist()
+  for (let i = 0; i < locals.length; ++i) {
+    const local = locals[i]
+    if (!seen.has(local.id)) {
+      memoryclearbook(local.id)
     }
   }
 }

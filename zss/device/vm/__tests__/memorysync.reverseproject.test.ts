@@ -195,6 +195,65 @@ describe('memorysyncreverseproject', () => {
     expect(memorydirtyhas(streamid)).toBe(false)
   })
 
+  it('materializes a new book when the memory stream carries an unknown id', () => {
+    const main = makebook({ id: 'main-id', name: 'main' })
+    memoryresetbooks([main])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+    memorydirtyclear()
+
+    memorysyncreverseproject(MEMORY_STREAM_ID, {
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+        'extra-id': {
+          id: 'extra-id',
+          name: 'extra',
+          activelist: [],
+          pages: [],
+          flags: { player1: { hp: 3 } },
+        },
+      },
+    })
+
+    const extra = memoryreadbookbyaddress('extra-id')
+    expect(extra).toBeDefined()
+    expect(extra?.name).toBe('extra')
+    expect(extra?.flags.player1).toEqual({ hp: 3 })
+    // silent-writes guard must keep MEMORY_STREAM_ID out of the dirty set.
+    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+  })
+
+  it('removes a local book when the authoritative memory stream drops it', () => {
+    const main = makebook({ id: 'main-id', name: 'main' })
+    const stale = makebook({ id: 'stale-id', name: 'stale' })
+    memoryresetbooks([main, stale])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+    memorydirtyclear()
+
+    expect(memoryreadbookbyaddress('stale-id')).toBeDefined()
+
+    memorysyncreverseproject(MEMORY_STREAM_ID, {
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+
+    expect(memoryreadbookbyaddress('stale-id')).toBeUndefined()
+    expect(memoryreadbookbyaddress('main-id')).toBeDefined()
+    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+  })
+
   it('ignores documents for unknown streams without throwing', () => {
     expect(() =>
       memorysyncreverseproject('unknown-stream', { foo: 'bar' }),

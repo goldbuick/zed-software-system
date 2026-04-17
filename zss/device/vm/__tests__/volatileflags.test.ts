@@ -14,33 +14,34 @@ import {
   memoryresetbooks,
   memorywritesoftwarebook,
 } from 'zss/memory/session'
-import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
+import { BOOK, BOOK_FLAGS, MEMORY_LABEL } from 'zss/memory/types'
 
 import { memoryhydratefromjsonsync } from '../memoryhydrate'
 import { VOLATILE_FLAG_KEYS, projectmemory } from '../memoryproject'
 
 function makemainbook(): BOOK {
+  const flags = {
+    p1: {
+      board: 'boardA',
+      hp: 5,
+      inputqueue: [
+        [1, 0],
+        [2, 0],
+      ],
+    } as unknown as BOOK_FLAGS,
+    boardA: {
+      synthstate: { voices: {}, voicefx: {} },
+      synthplay: [],
+      custom: 'keep-me',
+    } as unknown as BOOK_FLAGS,
+  }
   return {
     id: 'main-id',
     name: 'main',
     timestamp: 0,
     activelist: ['p1'],
     pages: [],
-    flags: {
-      p1: {
-        board: 'boardA',
-        hp: 5,
-        inputqueue: [
-          [1, 0],
-          [2, 0],
-        ],
-      } as unknown as Record<string, unknown>,
-      boardA: {
-        synthstate: { voices: {}, voicefx: {} },
-        synthplay: [],
-        custom: 'keep-me',
-      } as unknown as Record<string, unknown>,
-    },
+    flags,
   }
 }
 

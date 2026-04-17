@@ -30,6 +30,28 @@ import {
 
 const streams = new Map<string, JSONSYNC_CLIENT_STREAM>()
 
+// worker self-identity. The server admits a specific player to each stream
+// and routes subsequent server->client traffic through `message.player =
+// <admitted player>`. The jsonsync client captures the first non-empty
+// player id it sees and uses it to stamp all outgoing clientpatches so the
+// server can find the matching shadow (otherwise jsonsyncserveraccept sees
+// `player=''` and returns `unknownclient`, which loses worker-originated
+// edits).
+let ownplayerid = ''
+
+function captureownplayer(candidate: unknown): void {
+  if (!isstring(candidate) || candidate.length === 0) {
+    return
+  }
+  if (ownplayerid.length === 0) {
+    ownplayerid = candidate
+  }
+}
+
+export function jsonsyncclientreadownplayer(): string {
+  return ownplayerid
+}
+
 export function jsonsyncclientreadstream(
   streamid: string,
 ): JSONSYNC_CLIENT_STREAM | undefined {
@@ -59,7 +81,7 @@ export function jsonsyncclientedit(
   if (local.patch.changes.length === 0) {
     return
   }
-  jsonsyncclientpatch(jsonsyncclientdevice, '', local.patch)
+  jsonsyncclientpatch(jsonsyncclientdevice, ownplayerid, local.patch)
 }
 
 function emitchanged(
@@ -81,6 +103,8 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
     return
   }
 
+  captureownplayer(message.player)
+
   switch (message.target) {
     case 'snapshot': {
       const snapshot = message.data as JSONSYNC_SNAPSHOT
@@ -101,7 +125,7 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
       }
       const stream = streams.get(patch.streamid)
       if (!ispresent(stream)) {
-        jsonsyncneedsnapshot(jsonsyncclientdevice, '', patch.streamid)
+        jsonsyncneedsnapshot(jsonsyncclientdevice, ownplayerid, patch.streamid)
         break
       }
       const result = jsonsyncclientapplyserverpatch(stream, patch)
@@ -109,7 +133,7 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
         streams.set(patch.streamid, result.stream)
         emitchanged(patch.streamid, 'serverpatch', result.stream)
       } else {
-        jsonsyncneedsnapshot(jsonsyncclientdevice, '', patch.streamid)
+        jsonsyncneedsnapshot(jsonsyncclientdevice, ownplayerid, patch.streamid)
       }
       break
     }
@@ -135,7 +159,7 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
       const streamid = isstring(data?.streamid) ? data.streamid : ''
       if (streamid) {
         streams.delete(streamid)
-        jsonsyncneedsnapshot(jsonsyncclientdevice, '', streamid)
+        jsonsyncneedsnapshot(jsonsyncclientdevice, ownplayerid, streamid)
       }
       break
     }
@@ -151,13 +175,13 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
       }
       const stream = streams.get(streamid)
       if (!ispresent(stream)) {
-        jsonsyncneedsnapshot(jsonsyncclientdevice, '', streamid)
+        jsonsyncneedsnapshot(jsonsyncclientdevice, ownplayerid, streamid)
         break
       }
       if (jsonsyncclienthaspending(stream)) {
         break
       }
-      jsonsyncclientpatch(jsonsyncclientdevice, '', {
+      jsonsyncclientpatch(jsonsyncclientdevice, ownplayerid, {
         streamid,
         cv: stream.cv,
         sv: stream.sv,
