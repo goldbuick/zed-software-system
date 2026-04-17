@@ -15,6 +15,7 @@ import {
   jsonsyncclientapplyanti,
   jsonsyncclientapplyserverpatch,
   jsonsyncclientapplysnapshot,
+  jsonsyncclienthaspending,
   jsonsyncclientlocalupdate,
   jsonsynccreateclientstream,
 } from 'zss/feature/jsonsync'
@@ -136,6 +137,32 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
         streams.delete(streamid)
         jsonsyncneedsnapshot(jsonsyncclientdevice, '', streamid)
       }
+      break
+    }
+    case 'poke': {
+      // v2: server is telling us "something changed; catch yourself up".
+      // if we're idle (no pending local edits), send an empty clientpatch with
+      // our current [cv, sv]; the server will reply with the catch-up diff.
+      // if we have pending edits, the normal edit flow already handles it.
+      const data = message.data as { streamid?: string } | undefined
+      const streamid = isstring(data?.streamid) ? data.streamid : ''
+      if (!streamid) {
+        break
+      }
+      const stream = streams.get(streamid)
+      if (!ispresent(stream)) {
+        jsonsyncneedsnapshot(jsonsyncclientdevice, '', streamid)
+        break
+      }
+      if (jsonsyncclienthaspending(stream)) {
+        break
+      }
+      jsonsyncclientpatch(jsonsyncclientdevice, '', {
+        streamid,
+        cv: stream.cv,
+        sv: stream.sv,
+        changes: [],
+      })
       break
     }
     default:

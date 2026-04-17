@@ -1,10 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { vmboardrunnersendsnapshot } from 'zss/device/vm/helpers'
+import { boardrunnersendsnapshot } from 'zss/device/vm/helpers'
 import { ackboardrunners, boardrunners } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 
-export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
+export function handleackboardrunner(_vm: DEVICE, message: MESSAGE): void {
   const boardid = message.data
   if (!isstring(boardid) || !boardid) {
     return
@@ -13,5 +13,5 @@ export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
     return
   }
   ackboardrunners[boardid] = message.player
-  vmboardrunnersendsnapshot(vm, message.player, boardid)
+  boardrunnersendsnapshot(message.player, boardid)
 }

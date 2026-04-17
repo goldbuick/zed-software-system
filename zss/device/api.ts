@@ -234,6 +234,17 @@ export function jsonsyncserversnapshotrequest(
   device.emit(player, 'jsonsyncclient:needsnapshot', { streamid })
 }
 
+// poke: zero-payload "something changed" ping per Neil Fraser's DiffSync paper.
+// the client responds by running its own diff cycle against its local shadow and
+// emitting a clientpatch to pull the update.
+export function jsonsyncpoke(
+  device: DEVICELIKE,
+  player: string,
+  streamid: string,
+) {
+  device.emit(player, 'jsonsyncclient:poke', { streamid })
+}
+
 // local broadcast: any device that subscribes to the `jsonsync` topic (or `all`)
 // will receive this whenever the client-side shadow mutates.
 export function jsonsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {

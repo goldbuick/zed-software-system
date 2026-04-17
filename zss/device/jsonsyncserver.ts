@@ -14,7 +14,8 @@ import {
   jsonsynccreateserverstream,
   jsonsyncserveraccept,
   jsonsyncserveradmit,
-  jsonsyncserverbuildpatches,
+  jsonsyncserverbuildpatchfor,
+  jsonsyncserverlistpeers,
   jsonsyncserverremove,
   jsonsyncserverupdatedoc,
 } from 'zss/feature/jsonsync'
@@ -22,6 +23,7 @@ import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 
 import {
   jsonsyncantipatch,
+  jsonsyncpoke,
   jsonsyncserverpatch,
   jsonsyncserversnapshotrequest,
   jsonsyncsnapshot,
@@ -29,16 +31,33 @@ import {
 
 const streams = new Map<string, JSONSYNC_SERVER_STREAM>()
 
-function broadcastpatches(streamid: string) {
+// poke every player in the stream. optionally skip one player (the originator
+// of a just-accepted clientpatch). peers respond by running their own diff
+// cycle and sending a clientpatch, which the server turns into a targeted
+// serverpatch via jsonsyncserverbuildpatchfor on receipt.
+function pokepeers(streamid: string, excludeplayer?: string) {
   const stream = streams.get(streamid)
   if (!ispresent(stream)) {
     return
   }
-  const built = jsonsyncserverbuildpatches(stream, streamid)
+  const peers = jsonsyncserverlistpeers(stream, excludeplayer)
+  for (let i = 0; i < peers.length; ++i) {
+    jsonsyncpoke(jsonsyncserverdevice, peers[i], streamid)
+  }
+}
+
+// build a targeted catch-up patch for a single player. used after an accept to
+// close the cv/sv loop with the originator (no-op in the happy path; carries
+// fuzzy-vs-strict drift in the rare concurrent-edit case).
+function pushcatchuppatch(streamid: string, player: string) {
+  const stream = streams.get(streamid)
+  if (!ispresent(stream)) {
+    return
+  }
+  const built = jsonsyncserverbuildpatchfor(stream, streamid, player)
   streams.set(streamid, built.stream)
-  for (let i = 0; i < built.patches.length; ++i) {
-    const entry = built.patches[i]
-    jsonsyncserverpatch(jsonsyncserverdevice, entry.player, entry.patch)
+  if (ispresent(built.patch)) {
+    jsonsyncserverpatch(jsonsyncserverdevice, player, built.patch)
   }
 }
 
@@ -73,7 +92,8 @@ export function jsonsyncserverupdate(streamid: string, nextdoc: unknown) {
     return
   }
   streams.set(streamid, jsonsyncserverupdatedoc(stream, nextdoc))
-  broadcastpatches(streamid)
+  // VM-driven change has no originator; poke everyone.
+  pokepeers(streamid)
 }
 
 export function jsonsyncserverclose(streamid: string) {
@@ -118,7 +138,15 @@ const jsonsyncserverdevice = createdevice('jsonsyncserver', [], (message) => {
       switch (result.kind) {
         case 'ok':
           streams.set(patch.streamid, result.stream)
-          broadcastpatches(patch.streamid)
+          // close the cv/sv loop with the originator. empty in the happy path
+          // after a real edit; non-empty when fuzzy drift occurred, or when
+          // this clientpatch was itself an empty catch-up ping (poke response).
+          pushcatchuppatch(patch.streamid, message.player)
+          // only propagate to peers when the originator actually changed
+          // something. an empty clientpatch means "catch me up" not "broadcast".
+          if (patch.changes.length > 0) {
+            pokepeers(patch.streamid, message.player)
+          }
           break
         case 'readonlyanti':
           streams.set(patch.streamid, result.stream)

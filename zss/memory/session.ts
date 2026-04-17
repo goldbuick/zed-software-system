@@ -136,3 +136,21 @@ export function memoryreadfirstcontentbook(): MAYBE<BOOK> {
 }
 
 export type SoftwareSlot = keyof typeof MEMORY.software
+
+// readonly accessor for the sync layer. returns the live MEMORY reference so
+// callers can deepcopy / project without circumventing the module boundary via
+// further writer apis. do NOT mutate the returned value directly.
+export type MEMORY_ROOT = {
+  halt: boolean
+  simfreeze: boolean
+  session: string
+  operator: string
+  software: { main: string; temp: string }
+  books: Map<string, BOOK>
+  loaders: Map<string, string>
+  topic: string
+}
+
+export function memoryreadroot(): MEMORY_ROOT {
+  return MEMORY
+}

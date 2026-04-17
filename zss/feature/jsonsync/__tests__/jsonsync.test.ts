@@ -3,12 +3,15 @@ import {
   jsonsyncclientapplyanti,
   jsonsyncclientapplyserverpatch,
   jsonsyncclientapplysnapshot,
+  jsonsyncclienthaspending,
   jsonsyncclientlocalupdate,
   jsonsynccreateclientstream,
   jsonsynccreateserverstream,
   jsonsyncserveraccept,
   jsonsyncserveradmit,
   jsonsyncserverbuildpatches,
+  jsonsyncserverbuildpatchfor,
+  jsonsyncserverlistpeers,
   jsonsyncserverupdatedoc,
 } from '../index'
 
@@ -249,6 +252,164 @@ describe('jsonsync feature', () => {
     expect(finalitems.find((entry) => entry.id === 2)?.price).toBe(25)
   })
 
+  // --- v2 poke optimization ------------------------------------------------
+
+  it('v2 poke: listpeers excludes the originator', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    server = jsonsyncserveradmit(server, 'alice', true).stream
+    server = jsonsyncserveradmit(server, 'bob', true).stream
+    server = jsonsyncserveradmit(server, 'carol', false).stream
+    const peers = jsonsyncserverlistpeers(server, 'alice').sort()
+    expect(peers).toEqual(['bob', 'carol'])
+    const all = jsonsyncserverlistpeers(server).sort()
+    expect(all).toEqual(['alice', 'bob', 'carol'])
+  })
+
+  it('v2 poke: idle client replies with empty clientpatch and pulls catch-up', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admita = jsonsyncserveradmit(server, 'alice', true)
+    server = admita.stream
+    const admitb = jsonsyncserveradmit(server, 'bob', true)
+    server = admitb.stream
+
+    let bob = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+      ...admitb.snapshot,
+      streamid: STREAM,
+    })
+
+    // alice edits; server accepts; in v2 bob is only poked (not pushed to).
+    let alice = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+      ...admita.snapshot,
+      streamid: STREAM,
+    })
+    const alocal = jsonsyncclientlocalupdate(alice, { value: 'c' }, STREAM)
+    alice = alocal.stream
+    const aaccept = jsonsyncserveraccept(server, 'alice', alocal.patch)
+    if (aaccept.kind !== 'ok') {
+      throw new Error(`alice accept failed: ${aaccept.kind}`)
+    }
+    server = aaccept.stream
+
+    // bob receives poke -> sends empty clientpatch as catch-up ping.
+    expect(jsonsyncclienthaspending(bob)).toBe(false)
+    const pokereply: JSONSYNC_PATCH = {
+      streamid: STREAM,
+      cv: bob.cv,
+      sv: bob.sv,
+      changes: [],
+    }
+    const pong = jsonsyncserveraccept(server, 'bob', pokereply)
+    expect(pong.kind).toBe('ok')
+    if (pong.kind !== 'ok') {
+      return
+    }
+    server = pong.stream
+    // empty patch: no cv bump, no doc mutation.
+    expect(server.document).toEqual({ value: 'c' })
+    expect(server.clients.get('bob')?.cv).toBe(0)
+
+    // server computes the targeted catch-up for bob.
+    const built = jsonsyncserverbuildpatchfor(server, STREAM, 'bob')
+    server = built.stream
+    expect(built.patch).toBeDefined()
+    if (!built.patch) {
+      return
+    }
+    const apply = jsonsyncclientapplyserverpatch(bob, built.patch)
+    expect(apply.kind).toBe('ok')
+    if (apply.kind !== 'ok') {
+      return
+    }
+    bob = apply.stream
+    expect(bob.document).toEqual({ value: 'c' })
+    expect(bob.sv).toBe(1)
+  })
+
+  it('v2 poke: client with pending local edit does not send empty catch-up', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admit = jsonsyncserveradmit(server, 'alice', true)
+    server = admit.stream
+    let alice = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+      ...admit.snapshot,
+      streamid: STREAM,
+    })
+    // alice has a local unsubmitted edit (document != shadow). simulate the
+    // pre-flush state by mutating document directly.
+    alice = { ...alice, document: { value: 'draft' } }
+    expect(jsonsyncclienthaspending(alice)).toBe(true)
+    // contract: the jsonsyncclient device handler returns early in this case
+    // and the normal edit flow sends a real patch instead.
+  })
+
+  it('v2 poke: read-only client still receives catch-up serverpatch', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admita = jsonsyncserveradmit(server, 'alice', true)
+    server = admita.stream
+    const admitc = jsonsyncserveradmit(server, 'carol', false)
+    server = admitc.stream
+
+    let carol = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+      ...admitc.snapshot,
+      streamid: STREAM,
+    })
+
+    // alice edits; server accepts.
+    let alice = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+      ...admita.snapshot,
+      streamid: STREAM,
+    })
+    const alocal = jsonsyncclientlocalupdate(alice, { value: 'new' }, STREAM)
+    alice = alocal.stream
+    const aaccept = jsonsyncserveraccept(server, 'alice', alocal.patch)
+    if (aaccept.kind !== 'ok') {
+      throw new Error(`alice accept failed: ${aaccept.kind}`)
+    }
+    server = aaccept.stream
+
+    // carol (read-only) responds to the poke with an empty clientpatch.
+    const pokereply: JSONSYNC_PATCH = {
+      streamid: STREAM,
+      cv: carol.cv,
+      sv: carol.sv,
+      changes: [],
+    }
+    const pong = jsonsyncserveraccept(server, 'carol', pokereply)
+    // read-only gate must not kick in for empty changes; result is plain ok.
+    expect(pong.kind).toBe('ok')
+    if (pong.kind !== 'ok') {
+      return
+    }
+    server = pong.stream
+
+    const built = jsonsyncserverbuildpatchfor(server, STREAM, 'carol')
+    server = built.stream
+    expect(built.patch).toBeDefined()
+    if (!built.patch) {
+      return
+    }
+    const apply = jsonsyncclientapplyserverpatch(carol, built.patch)
+    expect(apply.kind).toBe('ok')
+    if (apply.kind !== 'ok') {
+      return
+    }
+    carol = apply.stream
+    expect(carol.document).toEqual({ value: 'new' })
+  })
+
+  it('v2 poke: buildpatchfor only advances sv for the targeted player', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    server = jsonsyncserveradmit(server, 'alice', true).stream
+    server = jsonsyncserveradmit(server, 'bob', true).stream
+    server = jsonsyncserverupdatedoc(server, { value: 'z' })
+
+    const built = jsonsyncserverbuildpatchfor(server, STREAM, 'alice')
+    server = built.stream
+    expect(built.patch?.changes.length).toBeGreaterThan(0)
+    expect(server.clients.get('alice')?.sv).toBe(1)
+    // bob untouched: no work was done for him.
+    expect(server.clients.get('bob')?.sv).toBe(0)
+  })
+
   it('server vm-driven update broadcasts patch to every client', () => {
     let server = jsonsynccreateserverstream({ value: 'a' })
     const admita = jsonsyncserveradmit(server, 'alice', true)
@@ -267,5 +428,63 @@ describe('jsonsync feature', () => {
     })
     expect(server.clients.get('alice')?.sv).toBe(1)
     expect(server.clients.get('bob')?.sv).toBe(1)
+  })
+
+  // --- topkeys allowlist ---------------------------------------------------
+
+  it('topkeys on register: snapshot only carries allowed keys', () => {
+    const server = jsonsynccreateserverstream(
+      { a: 1, b: 2, c: 3 },
+      { topkeys: ['a', 'b'] },
+    )
+    const { snapshot } = jsonsyncserveradmit(server, 'alice', true)
+    expect(snapshot.document).toEqual({ a: 1, b: 2 })
+  })
+
+  it('topkeys on update: out-of-scope keys in nextdoc are dropped', () => {
+    let server = jsonsynccreateserverstream(
+      { a: 1, b: 2 },
+      { topkeys: ['a', 'b'] },
+    )
+    const admit = jsonsyncserveradmit(server, 'bob', true)
+    server = admit.stream
+    // nextdoc carries an out-of-scope `c` key; projection must strip it before
+    // the diff so no patch op ever references `c`.
+    server = jsonsyncserverupdatedoc(server, { a: 10, b: 20, c: 999 })
+    expect(server.document).toEqual({ a: 10, b: 20 })
+    const built = jsonsyncserverbuildpatches(server, STREAM)
+    server = built.stream
+    const forbob = built.patches.find((entry) => entry.player === 'bob')
+    expect(forbob).toBeDefined()
+    if (!forbob) {
+      return
+    }
+    const flatpath = JSON.stringify(forbob.patch.changes)
+    expect(flatpath).not.toMatch(/"c"/)
+    expect(flatpath).not.toMatch(/999/)
+  })
+
+  it('topkeys undefined: behavior unchanged', () => {
+    const server = jsonsynccreateserverstream({ a: 1, b: 2, c: 3 })
+    const { snapshot } = jsonsyncserveradmit(server, 'alice', true)
+    expect(snapshot.document).toEqual({ a: 1, b: 2, c: 3 })
+  })
+
+  it('topkeys empty array: behavior unchanged', () => {
+    const server = jsonsynccreateserverstream(
+      { a: 1, b: 2, c: 3 },
+      { topkeys: [] },
+    )
+    const { snapshot } = jsonsyncserveradmit(server, 'alice', true)
+    expect(snapshot.document).toEqual({ a: 1, b: 2, c: 3 })
+  })
+
+  it('topkeys ignores keys not present on doc', () => {
+    const server = jsonsynccreateserverstream(
+      { a: 1 },
+      { topkeys: ['a', 'b', 'c'] },
+    )
+    const { snapshot } = jsonsyncserveradmit(server, 'alice', true)
+    expect(snapshot.document).toEqual({ a: 1 })
   })
 })

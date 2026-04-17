@@ -20,7 +20,7 @@ describe('handleackboardrunner', () => {
   beforeEach(() => {
     clearboardrunnerstate()
     sendsnapshot = jest
-      .spyOn(helpers, 'vmboardrunnersendsnapshot')
+      .spyOn(helpers, 'boardrunnersendsnapshot')
       .mockImplementation(() => {})
   })
 
@@ -39,7 +39,7 @@ describe('handleackboardrunner', () => {
     handleackboardrunner(vm, message)
 
     expect(ackboardrunners['board-a']).toBe('player-1')
-    expect(sendsnapshot).toHaveBeenCalledWith(vm, 'player-1', 'board-a')
+    expect(sendsnapshot).toHaveBeenCalledWith('player-1', 'board-a')
   })
 
   it('ignores ack from non-runner', () => {

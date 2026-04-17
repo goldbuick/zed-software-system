@@ -31,6 +31,10 @@ export type JSONSYNC_ARRAY_KEYS = EmbeddedObjKeysType
 
 export type JSONSYNC_STREAM_OPTIONS = {
   arrayidentitykeys?: JSONSYNC_ARRAY_KEYS
+  // shallow top-level key allowlist. when present and non-empty, every
+  // document written to the stream (create + update) is projected to only
+  // these top-level keys before diff/patch/snapshot.
+  topkeys?: string[]
 }
 
 export type JSONSYNC_SERVER_CLIENT_STATE = {
@@ -44,6 +48,7 @@ export type JSONSYNC_SERVER_STREAM = {
   document: unknown
   clients: Map<string, JSONSYNC_SERVER_CLIENT_STATE>
   arrayidentitykeys?: JSONSYNC_ARRAY_KEYS
+  topkeys?: string[]
 }
 
 export type JSONSYNC_CLIENT_STREAM = {
@@ -125,16 +130,42 @@ function diffdocs(
   )
 }
 
+// shallow top-level key allowlist. returns a new plain object containing only
+// the own enumerable keys listed in `topkeys` that are actually present on
+// `doc`. if topkeys is undefined / empty or `doc` isn't a plain object, the
+// input is returned unchanged so non-object streams (strings, arrays) still
+// work end-to-end.
+function projecttopkeys(doc: unknown, topkeys?: string[]): unknown {
+  if (!isarray(topkeys) || topkeys.length === 0) {
+    return doc
+  }
+  if (!ispresent(doc) || typeof doc !== 'object' || isarray(doc)) {
+    return doc
+  }
+  const source = doc as Record<string, unknown>
+  const projected: Record<string, unknown> = {}
+  for (let i = 0; i < topkeys.length; ++i) {
+    const key = topkeys[i]
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      projected[key] = source[key]
+    }
+  }
+  return projected
+}
+
 // --- server side -------------------------------------------------------
 
 export function jsonsynccreateserverstream(
   document: unknown,
   options?: JSONSYNC_STREAM_OPTIONS,
 ): JSONSYNC_SERVER_STREAM {
+  const topkeys = options?.topkeys
+  const projected = projecttopkeys(document, topkeys)
   return {
-    document: deepcopy(document),
+    document: deepcopy(projected),
     clients: new Map(),
     arrayidentitykeys: options?.arrayidentitykeys,
+    topkeys,
   }
 }
 
@@ -142,9 +173,10 @@ export function jsonsyncserverupdatedoc(
   stream: JSONSYNC_SERVER_STREAM,
   nextdoc: unknown,
 ): JSONSYNC_SERVER_STREAM {
+  const projected = projecttopkeys(nextdoc, stream.topkeys)
   return {
     ...stream,
-    document: deepcopy(nextdoc),
+    document: deepcopy(projected),
   }
 }
 
@@ -200,6 +232,12 @@ export function jsonsyncserveraccept(
   if (!isarray(patch.changes)) {
     return { kind: 'versionmismatch', stream }
   }
+  // empty changes = "catch-up ping" (the v2 client response to a poke). no doc
+  // or shadow mutation, no cv bump, and the read-only gate doesn't apply since
+  // there are no writes being claimed.
+  if (patch.changes.length === 0) {
+    return { kind: 'ok', stream }
+  }
   if (state.writable === false) {
     // read-only: do NOT mutate doc or shadow; reply with the same changeset as an
     // anti-patch. the client applies it via revertChangeset to undo its local edit.
@@ -229,6 +267,44 @@ export function jsonsyncserveraccept(
     kind: 'ok',
     stream: { ...stream, document: newdoc, clients: nextclients },
   }
+}
+
+// diff a single client's shadow against the authoritative doc and advance that
+// client's sv. returns { stream, patch } with patch=undefined if no diff.
+// used by the poke v2 flow so the server only does work for one client at a time.
+export function jsonsyncserverbuildpatchfor(
+  stream: JSONSYNC_SERVER_STREAM,
+  streamid: string,
+  player: string,
+): {
+  stream: JSONSYNC_SERVER_STREAM
+  patch?: JSONSYNC_PATCH
+} {
+  const state = stream.clients.get(player)
+  if (!ispresent(state)) {
+    return { stream }
+  }
+  const changes = diffdocs(
+    state.shadow,
+    stream.document,
+    stream.arrayidentitykeys,
+  )
+  if (changes.length === 0) {
+    return { stream }
+  }
+  const patch: JSONSYNC_PATCH = {
+    streamid,
+    cv: state.cv,
+    sv: state.sv,
+    changes,
+  }
+  const nextclients = new Map(stream.clients)
+  nextclients.set(player, {
+    ...state,
+    shadow: deepcopy(stream.document),
+    sv: state.sv + 1,
+  })
+  return { stream: { ...stream, clients: nextclients }, patch }
 }
 
 // diff the authoritative doc against each client's shadow and advance their sv.
@@ -386,4 +462,33 @@ export function jsonsyncclientlocalupdate(
 // utility for device layer: safe stream key
 export function jsonsyncstreamkey(streamid: string): string {
   return isstring(streamid) ? streamid : ''
+}
+
+// true when the client has local edits that haven't been shipped yet (doc
+// differs from shadow). used by the v2 poke handler to avoid sending an empty
+// catch-up ping that would collide with the normal edit flow.
+export function jsonsyncclienthaspending(
+  stream: JSONSYNC_CLIENT_STREAM,
+): boolean {
+  const changes = diffdocs(
+    stream.shadow,
+    stream.document,
+    stream.arrayidentitykeys,
+  )
+  return changes.length > 0
+}
+
+// return every player in the stream except the excluded one (the originator of
+// a local edit). used by the device layer to decide who to poke after an accept.
+export function jsonsyncserverlistpeers(
+  stream: JSONSYNC_SERVER_STREAM,
+  excludeplayer?: string,
+): string[] {
+  const peers: string[] = []
+  stream.clients.forEach((_state, player) => {
+    if (player !== excludeplayer) {
+      peers.push(player)
+    }
+  })
+  return peers
 }
