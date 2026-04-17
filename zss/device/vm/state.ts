@@ -18,6 +18,22 @@ export const ackboardrunners: Record<string, string> = {}
 /** Per-board per-player ack retry count; `BOARDRUNNER_ACK_FAIL_COUNT` means failed (skip until valid ack). */
 export const failedboardrunners: Record<string, Record<string, number>> = {}
 
+/**
+ * True when a worker has acknowledged it owns the per-tick simulation of the
+ * given board. Phase 2 of the boardrunner authoritative-tick plan stops the
+ * server from ticking owned boards; remaining server-side code paths (e.g.
+ * the Phase 3 cross-board transfer mediator) consult this helper to know
+ * whether they may mutate a board directly or must instead route the change
+ * through the elected runner.
+ */
+export function boardisowned(boardid: string): boolean {
+  if (!boardid) {
+    return false
+  }
+  const owner = ackboardrunners[boardid]
+  return typeof owner === 'string' && owner.length > 0
+}
+
 let flushtick = 0
 export function getflushtick(): number {
   return flushtick

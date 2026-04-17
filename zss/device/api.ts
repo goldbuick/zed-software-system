@@ -112,8 +112,8 @@ export function bridgechatstop(
   device.emit(player, 'bridge:chatstop', kind)
 }
 
-export function bridgestatus(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:status', undefined)
+export function bridgechatlist(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:chatlist', undefined)
 }
 
 export function bridgefetch(

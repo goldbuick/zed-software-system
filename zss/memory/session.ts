@@ -6,6 +6,7 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import { memorymarkmemorydirty } from './memorydirty'
 import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
@@ -41,7 +42,11 @@ export function memoryisoperator(player: string) {
 }
 
 export function memorywriteoperator(operator: string) {
+  if (MEMORY.operator === operator) {
+    return
+  }
   MEMORY.operator = operator
+  memorymarkmemorydirty()
 }
 
 export function memoryreadtopic() {
@@ -53,7 +58,11 @@ export function memorywritetopic(topic: string) {
 }
 
 export function memorywritehalt(halt: boolean) {
+  if (MEMORY.halt === halt) {
+    return
+  }
   MEMORY.halt = halt
+  memorymarkmemorydirty()
 }
 
 export function memoryreadhalt() {
@@ -61,7 +70,11 @@ export function memoryreadhalt() {
 }
 
 export function memorywritesimfreeze(frozen: boolean) {
+  if (MEMORY.simfreeze === frozen) {
+    return
+  }
   MEMORY.simfreeze = frozen
+  memorymarkmemorydirty()
 }
 
 export function memoryreadsimfreeze() {
@@ -89,9 +102,14 @@ export function memorywritesoftwarebook(
   slot: keyof typeof MEMORY.software,
   book: string,
 ) {
-  if (ispresent(memoryreadbookbyaddress(book))) {
-    MEMORY.software[slot] = book
+  if (!ispresent(memoryreadbookbyaddress(book))) {
+    return
   }
+  if (MEMORY.software[slot] === book) {
+    return
+  }
+  MEMORY.software[slot] = book
+  memorymarkmemorydirty()
 }
 
 export function memoryreadbookbysoftware(
@@ -114,10 +132,12 @@ export function memoryresetbooks(books: BOOK[]) {
       MEMORY.software.main = first.value.id
     }
   }
+  memorymarkmemorydirty()
 }
 
 export function memorywritebook(book: BOOK) {
   MEMORY.books.set(book.id, book)
+  memorymarkmemorydirty()
   return book.id
 }
 
@@ -125,6 +145,7 @@ export function memoryclearbook(address: string) {
   const book = memoryreadbookbyaddress(address)
   if (book) {
     MEMORY.books.delete(book.id)
+    memorymarkmemorydirty()
   }
 }
 

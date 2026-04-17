@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { type MESSAGE, registerboardrunnerask } from 'zss/device/api'
+import { memorysyncpushdirty } from 'zss/device/vm/memorysync'
 import {
   ackboardrunners,
   boardrunners,
@@ -28,7 +29,17 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
     pilottick(vm)
   })
   perfmeasure('vm:memorytickmain', () => {
-    memorytickmain(memoryreadhalt())
+    // Phase 2 of the boardrunner authoritative-tick plan: server runs only
+    // the loader half of the tick. Per-board chip code runs in elected
+    // boardrunner workers, which push their results via jsonsyncclientedit.
+    memorytickmain(memoryreadhalt(), true)
+  })
+  // drain any per-stream dirty bits set during the tick (player flags, board
+  // mutations, simfreeze flips, etc.) and push refreshed projections to
+  // jsonsync. simfreeze guard above already short-circuits the whole tick;
+  // unregistered streams are silently skipped inside `memorysyncpushdirty`.
+  perfmeasure('vm:memorysyncpushdirty', () => {
+    memorysyncpushdirty()
   })
 
   // Board runner election: same `tracking` as DOOT idle (incremented above when sim is unfrozen).

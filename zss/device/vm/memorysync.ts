@@ -10,6 +10,13 @@ Owns the projections that carve MEMORY into what boardrunners actually need:
 
 Each boardrunner is admitted to the shared `memory` stream and only to the
 board codepage streams it actually runs.
+
+Push cadence is dirty-flag driven (see memory/memorydirty.ts). Memory writes
+mark the relevant stream(s) dirty; the VM tick handler calls
+`memorysyncpushdirty` after `memorytickmain` to drain the dirty set and call
+`jsonsyncserverupdate` for each registered + dirty stream. Reverse-projection
+of accepted client patches goes through `memorywithsilentwrites` to avoid
+re-pushing the same change in a feedback loop.
 */
 import {
   jsonsyncserveradmitplayer,
@@ -19,203 +26,29 @@ import {
 } from 'zss/device/jsonsyncserver'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memoryreadroot } from 'zss/memory/session'
 import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOOK,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+  MEMORY_STREAM_ID,
+  memoryconsumealldirty,
+  memorywithsilentwrites,
+} from 'zss/memory/memorydirty'
+import { memoryreadbookbyaddress, memoryreadroot } from 'zss/memory/session'
+import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 
-export const MEMORY_STREAM_ID = 'memory'
+import {
+  BOARD_SYNC_TOPKEYS,
+  MEMORY_SYNC_TOPKEYS,
+  boardstreamid,
+  projectboardcodepage,
+  projectmemory,
+} from './memoryproject'
 
-export function boardstreamid(codepage: CODE_PAGE): string {
-  return `board:${codepage.id}`
-}
-
-// what ships in the `memory` stream. halt is a server-local shutdown flag;
-// loaders is server-local async state; topic is routing metadata. simfreeze
-// IS included: clients need to know when the sim is paused for async loads.
-export const MEMORY_SYNC_TOPKEYS = [
-  'session',
-  'operator',
-  'software',
-  'books',
-  'halt',
-] as const
-
-// BOARD fields every client needs to render / step the board. runtime caches
-// (draw fingerprints, distmaps, named/lookup indexes) are excluded because
-// clients rebuild them locally.
-const BOARD_SYNC_TOPKEYS: readonly string[] = [
-  'id',
-  'name',
-  'isdark',
-  'startx',
-  'starty',
-  'over',
-  'under',
-  'camera',
-  'graphics',
-  'facing',
-  'charset',
-  'palette',
-  'charsetpage',
-  'palettepage',
-  'exitnorth',
-  'exitsouth',
-  'exitwest',
-  'exiteast',
-  'timelimit',
-  'restartonzap',
-  'maxplayershots',
-  'b1',
-  'b2',
-  'b3',
-  'b4',
-  'b5',
-  'b6',
-  'b7',
-  'b8',
-  'b9',
-  'b10',
-  'terrain',
-  'objects',
-]
-
-// BOARD_ELEMENT fields that travel over the wire. mirrors the keep-list of
-// memoryexportboardelement in zss/memory/boardelement.ts: persisted identity,
-// display, interaction, and config state. runtime fields (kinddata, category,
-// display* overrides, didfail, removed, sender, arg) are rebuilt/derived on
-// the client.
-const BOARD_ELEMENT_SYNC_TOPKEYS: readonly string[] = [
-  'kind',
-  'id',
-  'x',
-  'y',
-  'lx',
-  'ly',
-  'code',
-  'name',
-  'char',
-  'color',
-  'bg',
-  'light',
-  'lightdir',
-  'item',
-  'group',
-  'party',
-  'player',
-  'pushable',
-  'collision',
-  'breakable',
-  'tickertext',
-  'tickertime',
-  'p1',
-  'p2',
-  'p3',
-  'p4',
-  'p5',
-  'p6',
-  'p7',
-  'p8',
-  'p9',
-  'p10',
-  'cycle',
-  'stepx',
-  'stepy',
-  'shootx',
-  'shooty',
-]
-
-function picktopkeys(
-  source: Record<string, unknown>,
-  keys: readonly string[],
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (let i = 0; i < keys.length; ++i) {
-    const k = keys[i]
-    if (Object.prototype.hasOwnProperty.call(source, k)) {
-      out[k] = source[k]
-    }
-  }
-  return out
-}
-
-function projectboardelement(el: BOARD_ELEMENT): Record<string, unknown> {
-  return picktopkeys(
-    el as unknown as Record<string, unknown>,
-    BOARD_ELEMENT_SYNC_TOPKEYS,
-  )
-}
-
-function projectboard(board: BOARD): unknown {
-  const copy = deepcopy(board) as unknown as Record<string, unknown>
-  const trimmed = picktopkeys(copy, BOARD_SYNC_TOPKEYS)
-  // terrain is MAYBE<BOARD_ELEMENT>[]: preserve holes so index === tile coord
-  // math (y * width + x) still holds on the client.
-  if (isarray(trimmed.terrain)) {
-    trimmed.terrain = (trimmed.terrain as (BOARD_ELEMENT | undefined)[]).map(
-      (entry) => (ispresent(entry) ? projectboardelement(entry) : entry),
-    )
-  }
-  // objects is Record<id, BOARD_ELEMENT>: rebuild the record keyed by id.
-  if (ispresent(trimmed.objects) && typeof trimmed.objects === 'object') {
-    const src = trimmed.objects as Record<string, BOARD_ELEMENT>
-    const out: Record<string, unknown> = {}
-    for (const k of Object.keys(src)) {
-      out[k] = projectboardelement(src[k])
-    }
-    trimmed.objects = out
-  }
-  return trimmed
-}
-
-// return a new CODE_PAGE copy safe to sync: deepcopy, trim the embedded BOARD
-// (if any) to the runtime-free top keys, and drop `stats` since clients
-// re-parse it locally from `code`. non-board fields (object, terrain, charset,
-// palette) are left intact.
-export function projectboardcodepage(codepage: CODE_PAGE): unknown {
-  const copy = deepcopy(codepage) as unknown as Record<string, unknown>
-  if (ispresent(copy.board)) {
-    copy.board = projectboard(copy.board as BOARD)
-  }
-  delete copy.stats
-  return copy
-}
-
-// convert a BOOK for the `memory` stream: deepcopy, strip board-type codepages
-// from `pages` (they travel via their own board:${id} streams), leave the rest
-// intact so clients keep the full list of objects/terrain/charset/palette
-// codepages referenced by elements via `kind`.
-function projectbook(book: BOOK): unknown {
-  const copy = deepcopy(book) as unknown as Record<string, unknown>
-  const pages = copy.pages as CODE_PAGE[] | undefined
-  if (ispresent(pages)) {
-    copy.pages = pages.filter((page) => {
-      const t = page.stats?.type
-      return t !== CODE_PAGE_TYPE.BOARD
-    })
-  }
-  return copy
-}
-
-// project the MEMORY root into a jsonsync-shippable plain object.
-// - top-level keys filtered to MEMORY_SYNC_TOPKEYS
-// - books Map -> Record<bookid, BOOK>, each BOOK filtered via projectbook
-// - loaders (excluded by allowlist) and topic/halt never appear
-export function projectmemory(): unknown {
-  const root = memoryreadroot() as unknown as Record<string, unknown>
-  const picked = picktopkeys(root, MEMORY_SYNC_TOPKEYS as readonly string[])
-  if (picked.books instanceof Map) {
-    const record: Record<string, unknown> = {}
-    for (const [id, book] of picked.books.entries()) {
-      record[id] = projectbook(book as BOOK)
-    }
-    picked.books = record
-  }
-  return picked
+export {
+  BOARD_SYNC_TOPKEYS,
+  MEMORY_STREAM_ID,
+  MEMORY_SYNC_TOPKEYS,
+  boardstreamid,
+  projectboardcodepage,
+  projectmemory,
 }
 
 export function memorysyncensureregistered(): void {
@@ -261,12 +94,229 @@ export function memorysyncadmitboardrunner(
   jsonsyncserveradmitplayer(boardstreamid(codepage), player, true)
 }
 
-// VM tick hooks (intentionally not wired into the tick loop here; callers
-// decide when to push. integration into the tick is a follow-up task).
+// VM tick hooks: callers decide when to push. The handler in vm/handlers/tick
+// invokes `memorysyncpushdirty` after `memorytickmain` to drain the dirty set.
 export function memorysyncupdatememory(): void {
   jsonsyncserverupdate(MEMORY_STREAM_ID, projectmemory())
 }
 
 export function memorysyncupdateboard(codepage: CODE_PAGE): void {
   jsonsyncserverupdate(boardstreamid(codepage), projectboardcodepage(codepage))
+}
+
+// stream id form is `board:<codepage.id>` — use codepage.id (which the runtime
+// also writes onto board.id) to recover the codepage we need to project.
+function codepagefromboardstreamid(streamid: string): CODE_PAGE | undefined {
+  if (!streamid.startsWith('board:')) {
+    return undefined
+  }
+  const id = streamid.slice('board:'.length)
+  if (!id) {
+    return undefined
+  }
+  return memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.BOARD, id)
+}
+
+// Iterate the dirty set: for each registered stream that is dirty, project
+// its current shape and call `jsonsyncserverupdate` (which pokes peers via
+// jsonsyncserver). Streams that are dirty but unregistered are silently
+// dropped (no admitted clients to notify yet). Caller is responsible for
+// gating on `memoryreadsimfreeze()`.
+//
+// Phase 2 of the boardrunner authoritative-tick plan: this also includes
+// owned-board streams. Server-side loaders can still mutate any book or
+// board (loader code can edit anything), and those mutations flip the same
+// dirty bits. We push them upstream just like any other change; the elected
+// runner reconciles via fuzzy apply against its local shadow.
+export function memorysyncpushdirty(): void {
+  const dirtyids = memoryconsumealldirty()
+  for (let i = 0; i < dirtyids.length; ++i) {
+    const streamid = dirtyids[i]
+    if (!ispresent(jsonsyncserverreadstream(streamid))) {
+      // not registered yet; nothing to push to
+      continue
+    }
+    if (streamid === MEMORY_STREAM_ID) {
+      jsonsyncserverupdate(streamid, projectmemory())
+      continue
+    }
+    const codepage = codepagefromboardstreamid(streamid)
+    if (ispresent(codepage)) {
+      jsonsyncserverupdate(streamid, projectboardcodepage(codepage))
+    }
+  }
+}
+
+// merge a stream's just-accepted document back into MEMORY. Wrapped in
+// `memorywithsilentwrites` so the writes do not re-mark this stream dirty,
+// which would create a feedback loop where the server re-pushes the same
+// change every tick. Runtime caches (named/lookup/distmaps/draw fingerprints)
+// and overlay state (kinddata/category/display*) are NOT touched here; the
+// next `memoryinitboard` (called by the tick) rebuilds them from `kind`.
+export function memorysyncreverseproject(
+  streamid: string,
+  document: unknown,
+): void {
+  if (!ispresent(document) || typeof document !== 'object') {
+    return
+  }
+  memorywithsilentwrites(() => {
+    if (streamid === MEMORY_STREAM_ID) {
+      reverseprojectmemory(document as Record<string, unknown>)
+      return
+    }
+    if (streamid.startsWith('board:')) {
+      reverseprojectboard(streamid, document as Record<string, unknown>)
+    }
+  })
+}
+
+const MEMORY_SCALAR_TOPKEYS: readonly string[] = [
+  'session',
+  'operator',
+  'software',
+  'halt',
+  'simfreeze',
+]
+
+function reverseprojectmemory(document: Record<string, unknown>): void {
+  const root = memoryreadroot() as unknown as Record<string, unknown>
+  for (let i = 0; i < MEMORY_SCALAR_TOPKEYS.length; ++i) {
+    const key = MEMORY_SCALAR_TOPKEYS[i]
+    if (Object.prototype.hasOwnProperty.call(document, key)) {
+      const value = document[key]
+      if (key === 'software' && ispresent(value) && typeof value === 'object') {
+        // shallow merge so we don't replace the live `software` object
+        // reference observed elsewhere in MEMORY readers.
+        Object.assign(
+          root.software as Record<string, unknown>,
+          value as Record<string, unknown>,
+        )
+      } else {
+        root[key] = value as never
+      }
+    }
+  }
+  const incoming = document.books as Record<string, unknown> | undefined
+  if (!ispresent(incoming) || typeof incoming !== 'object') {
+    return
+  }
+  const bookids = Object.keys(incoming)
+  for (let i = 0; i < bookids.length; ++i) {
+    const bookid = bookids[i]
+    const incomingbook = incoming[bookid] as Record<string, unknown>
+    if (!ispresent(incomingbook)) {
+      continue
+    }
+    const localbook = memoryreadbookbyaddress(bookid)
+    if (!ispresent(localbook)) {
+      // runtime book add/remove is a Phase 4 task; ignore unknown ids here.
+      continue
+    }
+    mergebookscalars(localbook, incomingbook)
+    mergebookflags(localbook, incomingbook)
+    mergebooknonboardpages(localbook, incomingbook)
+  }
+}
+
+const BOOK_SCALAR_KEYS: readonly string[] = ['name', 'activelist', 'token']
+
+function mergebookscalars(book: BOOK, incoming: Record<string, unknown>): void {
+  for (let i = 0; i < BOOK_SCALAR_KEYS.length; ++i) {
+    const key = BOOK_SCALAR_KEYS[i]
+    if (Object.prototype.hasOwnProperty.call(incoming, key)) {
+      // book.timestamp is intentionally NOT in the projection; runners never
+      // see it, so we never overwrite it here either.
+      ;(book as unknown as Record<string, unknown>)[key] = incoming[key]
+    }
+  }
+}
+
+function mergebookflags(book: BOOK, incoming: Record<string, unknown>): void {
+  if (!Object.prototype.hasOwnProperty.call(incoming, 'flags')) {
+    return
+  }
+  const flags = incoming.flags
+  if (!ispresent(flags) || typeof flags !== 'object') {
+    return
+  }
+  // replace flags entirely so deletes round-trip.
+  book.flags = deepcopy(flags) as Record<string, BOOK_FLAGS>
+}
+
+// non-BOARD pages are carried in the memory stream; BOARD pages live in their
+// own board:<id> stream. Preserve the local BOARD pages, replace everything
+// else from the incoming list (matched by id where possible to avoid losing
+// the live runtime references on shared codepages).
+function mergebooknonboardpages(
+  book: BOOK,
+  incoming: Record<string, unknown>,
+): void {
+  if (!Object.prototype.hasOwnProperty.call(incoming, 'pages')) {
+    return
+  }
+  const pages = incoming.pages
+  if (!isarray(pages)) {
+    return
+  }
+  const nextpages: CODE_PAGE[] = []
+  // keep all local BOARD pages
+  for (let i = 0; i < book.pages.length; ++i) {
+    const page = book.pages[i]
+    if (page.stats?.type === CODE_PAGE_TYPE.BOARD) {
+      nextpages.push(page)
+    }
+  }
+  // append non-BOARD pages from incoming, preferring the live local copy by
+  // id when it exists (so any runtime caches on shared codepages survive).
+  const localbyid = new Map<string, CODE_PAGE>()
+  for (let i = 0; i < book.pages.length; ++i) {
+    localbyid.set(book.pages[i].id, book.pages[i])
+  }
+  for (let i = 0; i < (pages as CODE_PAGE[]).length; ++i) {
+    const incomingpage = (pages as CODE_PAGE[])[i]
+    if (!ispresent(incomingpage) || typeof incomingpage !== 'object') {
+      continue
+    }
+    if (incomingpage.stats?.type === CODE_PAGE_TYPE.BOARD) {
+      // shouldn't appear (projection strips them) but defensively skip.
+      continue
+    }
+    const local = localbyid.get(incomingpage.id)
+    if (ispresent(local)) {
+      // overwrite scalar fields on the live page reference
+      Object.assign(local, incomingpage)
+      nextpages.push(local)
+    } else {
+      nextpages.push(incomingpage)
+    }
+  }
+  book.pages = nextpages
+}
+
+function reverseprojectboard(
+  streamid: string,
+  document: Record<string, unknown>,
+): void {
+  const codepage = codepagefromboardstreamid(streamid)
+  if (!ispresent(codepage) || !ispresent(codepage.board)) {
+    return
+  }
+  // overlay the BOARD_SYNC_TOPKEYS fields from the incoming document.board
+  const incomingboard = document.board as Record<string, unknown> | undefined
+  if (!ispresent(incomingboard) || typeof incomingboard !== 'object') {
+    return
+  }
+  const target = codepage.board as unknown as Record<string, unknown>
+  for (let i = 0; i < BOARD_SYNC_TOPKEYS.length; ++i) {
+    const key = BOARD_SYNC_TOPKEYS[i]
+    if (Object.prototype.hasOwnProperty.call(incomingboard, key)) {
+      target[key] = incomingboard[key]
+    }
+  }
+  // any non-board codepage scalars (e.g. `code`) come along too
+  const codepageasrecord = codepage as unknown as Record<string, unknown>
+  if (Object.prototype.hasOwnProperty.call(document, 'code')) {
+    codepageasrecord.code = document.code
+  }
 }

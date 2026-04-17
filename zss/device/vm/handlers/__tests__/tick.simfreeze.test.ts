@@ -38,6 +38,8 @@ describe('handletick sim freeze', () => {
     handletick(vm, msg)
 
     expect(pilottick).toHaveBeenCalledWith(vm)
-    expect(memorytickmain).toHaveBeenCalledWith(false)
+    // Phase 2: server tick runs loader-only (second arg `loadersonly = true`).
+    // Boards are now ticked by the elected boardrunner worker.
+    expect(memorytickmain).toHaveBeenCalledWith(false, true)
   })
 })

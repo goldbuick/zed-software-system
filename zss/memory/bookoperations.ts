@@ -14,6 +14,7 @@ import {
   memoryreadcodepagestats,
   memoryreadcodepagetype,
 } from './codepageoperations'
+import { memorymarkmemorydirty } from './memorydirty'
 import {
   BOARD_ELEMENT,
   BOOK,
@@ -61,6 +62,7 @@ export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
         item.id !== address && laddress !== memoryreadcodepagename(item),
     )
     memoryupdatebooktoken(book)
+    memorymarkmemorydirty()
     return codepage
   }
 }
@@ -69,7 +71,10 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   if (!book) {
     return
   }
-  delete book.flags[id]
+  if (ispresent(book.flags[id])) {
+    delete book.flags[id]
+    memorymarkmemorydirty()
+  }
 }
 
 export function memoryreadelementdisplay(
@@ -302,12 +307,14 @@ export function memorylistcodepagessorted(book: MAYBE<BOOK>) {
 export function memoryupdatebookname(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.name = createnameid()
+    memorymarkmemorydirty()
   }
 }
 
 export function memoryupdatebooktoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.token = `${createshortnameid()}${randominteger(1111, 9999)}`
+    memorymarkmemorydirty()
   }
 }
 
@@ -338,7 +345,10 @@ export function memorywritebookflag(
 ) {
   const flags = memoryreadbookflags(book, id)
   if (flags) {
-    flags[name] = value
+    if (flags[name] !== value) {
+      flags[name] = value
+      memorymarkmemorydirty()
+    }
   }
   return value
 }

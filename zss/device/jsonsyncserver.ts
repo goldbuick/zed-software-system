@@ -28,6 +28,7 @@ import {
   jsonsyncserversnapshotrequest,
   jsonsyncsnapshot,
 } from './api'
+import { memorysyncreverseproject } from './vm/memorysync'
 
 const streams = new Map<string, JSONSYNC_SERVER_STREAM>()
 
@@ -138,6 +139,13 @@ const jsonsyncserverdevice = createdevice('jsonsyncserver', [], (message) => {
       switch (result.kind) {
         case 'ok':
           streams.set(patch.streamid, result.stream)
+          // merge the accepted document back into MEMORY so the canonical
+          // server state stays in sync with what jsonsync just published.
+          // memorysyncreverseproject wraps the writes in memorywithsilentwrites
+          // to keep dirty bits from re-firing.
+          if (patch.changes.length > 0) {
+            memorysyncreverseproject(patch.streamid, result.stream.document)
+          }
           // close the cv/sv loop with the originator. empty in the happy path
           // after a real edit; non-empty when fuzzy drift occurred, or when
           // this clientpatch was itself an empty catch-up ping (poke response).

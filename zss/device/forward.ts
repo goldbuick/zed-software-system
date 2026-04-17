@@ -3,19 +3,30 @@ import { hub } from 'zss/hub'
 
 import { MESSAGE, ismessage } from './api'
 
-export function createforward(handler: (message: MESSAGE) => void) {
+export function createforward(
+  handler: (message: MESSAGE) => void,
+  options: { allowticktock?: boolean } = {},
+) {
   const syncids = new Set<string>()
+  // tick/tock are high-frequency clock pulses that we normally drop at the
+  // bridge boundary so each worker hub doesn't have to dispatch them. The
+  // boardrunner worker is an exception: Phase 2 of the boardrunner
+  // authoritative-tick plan needs the server clock pulse to reach the worker
+  // so it can run its own `memorytickmain`. Callers in that role pass
+  // `allowticktock: true` to opt-in.
+  const allowticktock = options.allowticktock === true
 
   function forward(message: any) {
     if (
-      ismessage(message) &&
-      message.target !== 'tock' &&
-      message.target !== 'ticktock' &&
-      syncids.has(message.id) === false
+      !ismessage(message) ||
+      syncids.has(message.id) ||
+      (!allowticktock &&
+        (message.target === 'tock' || message.target === 'ticktock'))
     ) {
-      syncids.add(message.id)
-      hub.invoke(message)
+      return
     }
+    syncids.add(message.id)
+    hub.invoke(message)
   }
 
   const device = createdevice('forward', ['all'], (message) => {
@@ -174,8 +185,12 @@ export function shouldforwardheavytoclient(message: MESSAGE): boolean {
 export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
   switch (message.target) {
     case 'tock':
-    case 'ticktock':
       return false
+    // boardrunner workers are now authoritative for their elected boards
+    // (Phase 2 of the boardrunner authoritative-tick plan), so the server's
+    // clock pulse must reach them. ticktock is the per-frame heartbeat;
+    // second is still the once-per-second housekeeping pulse.
+    case 'ticktock':
     case 'second':
     case 'ready':
       return true

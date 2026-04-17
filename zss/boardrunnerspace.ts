@@ -6,11 +6,17 @@ import {
 import './device/boardrunner'
 import './device/jsonsyncclient'
 
-const { forward } = createforward((message) => {
-  if (shouldforwardboardrunnertoclient(message)) {
-    postMessage(message)
-  }
-})
+const { forward } = createforward(
+  (message) => {
+    if (shouldforwardboardrunnertoclient(message)) {
+      postMessage(message)
+    }
+  },
+  // boardrunner worker is authoritative for its elected boards (Phase 2 of
+  // the boardrunner authoritative-tick plan), so it needs the server clock
+  // pulse. Allow ticktock through this bridge.
+  { allowticktock: true },
+)
 
 onmessage = function handleMessage(event) {
   forward(event.data)

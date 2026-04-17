@@ -1,0 +1,279 @@
+/*
+memoryhydrate: worker-side bridge between jsonsync streams and the local
+MEMORY singleton.
+
+Counterpart to `memorysync.ts`. memorysync runs on the SERVER (simspace) and
+projects MEMORY -> jsonsync streams + reverse-projects accepted client patches
+back into MEMORY. memoryhydrate runs on a CLIENT process (boardrunner /
+heavy worker) and applies inbound jsonsync snapshots & patches into that
+worker's local MEMORY singleton, creating books/pages on the fly.
+
+Differences vs server-side reverseproject:
+- The worker may receive a snapshot for a book it has never seen before;
+  hydrate must create it (memorywritebook) instead of skipping.
+- Likewise, a `board:<id>` snapshot can arrive before the matching book has
+  any record of that board; hydrate appends a fresh CODE_PAGE_TYPE.BOARD
+  page to the main book and runs `memoryinitboard` to rebuild runtime caches
+  (lookup/named/distmaps) the local tick will rely on.
+- All writes are wrapped in `memorywithsilentwrites` so server-driven
+  hydration never re-marks the just-applied stream dirty (which would loop
+  the change right back upstream).
+
+Worker DOES still mark dirty when its own local tick mutates state — those
+writes happen outside hydration and feed `memorysyncpushdirty` on the worker
+side (see phase2-worker-emit-patches).
+*/
+import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
+import { memoryinitboard } from 'zss/memory/boards'
+import {
+  MEMORY_STREAM_ID,
+  memorywithsilentwrites,
+} from 'zss/memory/memorydirty'
+import {
+  memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
+  memoryreadroot,
+  memorywritebook,
+  memorywritehalt,
+  memorywriteoperator,
+  memorywritesimfreeze,
+  memorywritesoftwarebook,
+} from 'zss/memory/session'
+import {
+  BOARD,
+  BOOK,
+  BOOK_FLAGS,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
+
+export function memoryhydratefromjsonsync(
+  streamid: string,
+  document: unknown,
+): void {
+  if (!ispresent(document) || typeof document !== 'object') {
+    return
+  }
+  memorywithsilentwrites(() => {
+    if (streamid === MEMORY_STREAM_ID) {
+      hydratememory(document as Record<string, unknown>)
+      return
+    }
+    if (streamid.startsWith('board:')) {
+      const id = streamid.slice('board:'.length)
+      if (id) {
+        hydrateboard(id, document as Record<string, unknown>)
+      }
+    }
+  })
+}
+
+function hydratememory(document: Record<string, unknown>): void {
+  // scalar top-level keys (operator, halt, simfreeze). session is read-only
+  // identity from the server and is not surfaced via a writer; software is
+  // applied below after we ensure the referenced books exist.
+  if (Object.prototype.hasOwnProperty.call(document, 'operator')) {
+    const operator = document.operator
+    if (typeof operator === 'string') {
+      memorywriteoperator(operator)
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(document, 'halt')) {
+    memorywritehalt(Boolean(document.halt))
+  }
+  if (Object.prototype.hasOwnProperty.call(document, 'simfreeze')) {
+    memorywritesimfreeze(Boolean(document.simfreeze))
+  }
+
+  hydratebooks(document)
+  hydratesoftware(document)
+}
+
+function hydratebooks(document: Record<string, unknown>): void {
+  const incoming = document.books as Record<string, unknown> | undefined
+  if (!ispresent(incoming) || typeof incoming !== 'object') {
+    return
+  }
+  const ids = Object.keys(incoming)
+  for (let i = 0; i < ids.length; ++i) {
+    const id = ids[i]
+    const incomingbook = incoming[id] as Record<string, unknown>
+    if (!ispresent(incomingbook) || typeof incomingbook !== 'object') {
+      continue
+    }
+    const existing = memoryreadbookbyaddress(id)
+    if (ispresent(existing)) {
+      mergebookinto(existing, incomingbook)
+    } else {
+      memorywritebook(buildbookfromincoming(id, incomingbook))
+    }
+  }
+}
+
+function hydratesoftware(document: Record<string, unknown>): void {
+  const software = document.software as Record<string, unknown> | undefined
+  if (!ispresent(software) || typeof software !== 'object') {
+    return
+  }
+  const root = memoryreadroot()
+  const slots = Object.keys(software)
+  for (let i = 0; i < slots.length; ++i) {
+    const slot = slots[i]
+    const value = software[slot]
+    if (typeof value !== 'string') {
+      continue
+    }
+    if (slot in root.software) {
+      // memorywritesoftwarebook is a no-op if the book id is unknown; we
+      // already hydrated books above, so the intended target should resolve.
+      memorywritesoftwarebook(slot as keyof typeof root.software, value)
+    }
+  }
+}
+
+const BOOK_SCALAR_KEYS: readonly (keyof BOOK)[] = [
+  'name',
+  'activelist',
+  'token',
+]
+
+function mergebookinto(
+  book: BOOK,
+  incoming: Record<string, unknown>,
+): void {
+  for (let i = 0; i < BOOK_SCALAR_KEYS.length; ++i) {
+    const key = BOOK_SCALAR_KEYS[i]
+    if (Object.prototype.hasOwnProperty.call(incoming, key)) {
+      ;(book as unknown as Record<string, unknown>)[key as string] =
+        deepcopy(incoming[key as string])
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(incoming, 'flags')) {
+    const flags = incoming.flags
+    if (ispresent(flags) && typeof flags === 'object') {
+      book.flags = deepcopy(flags) as Record<string, BOOK_FLAGS>
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(incoming, 'pages')) {
+    mergenonboardpagesinto(book, incoming.pages)
+  }
+}
+
+// preserve any locally-known BOARD pages (they hydrate via the board:<id>
+// stream, never via the memory stream's pages list) and replace non-BOARD
+// pages from incoming.
+function mergenonboardpagesinto(book: BOOK, incomingpages: unknown): void {
+  if (!isarray(incomingpages)) {
+    return
+  }
+  const nextpages: CODE_PAGE[] = []
+  for (let i = 0; i < book.pages.length; ++i) {
+    const page = book.pages[i]
+    if (page.stats?.type === CODE_PAGE_TYPE.BOARD) {
+      nextpages.push(page)
+    }
+  }
+  const localbyid = new Map<string, CODE_PAGE>()
+  for (let i = 0; i < book.pages.length; ++i) {
+    localbyid.set(book.pages[i].id, book.pages[i])
+  }
+  const pages = incomingpages as CODE_PAGE[]
+  for (let i = 0; i < pages.length; ++i) {
+    const incomingpage = pages[i]
+    if (!ispresent(incomingpage) || typeof incomingpage !== 'object') {
+      continue
+    }
+    if (incomingpage.stats?.type === CODE_PAGE_TYPE.BOARD) {
+      // memory stream projection strips board pages; defensive skip.
+      continue
+    }
+    const local = localbyid.get(incomingpage.id)
+    if (ispresent(local)) {
+      Object.assign(local, deepcopy(incomingpage))
+      nextpages.push(local)
+    } else {
+      nextpages.push(deepcopy(incomingpage))
+    }
+  }
+  book.pages = nextpages
+}
+
+function buildbookfromincoming(
+  id: string,
+  incoming: Record<string, unknown>,
+): BOOK {
+  const flags = incoming.flags
+  const pages = incoming.pages
+  const book: BOOK = {
+    id,
+    name: typeof incoming.name === 'string' ? incoming.name : id,
+    timestamp: 0,
+    activelist: isarray(incoming.activelist)
+      ? (deepcopy(incoming.activelist) as string[])
+      : [],
+    pages: [],
+    flags:
+      ispresent(flags) && typeof flags === 'object'
+        ? (deepcopy(flags) as Record<string, BOOK_FLAGS>)
+        : {},
+  }
+  if (typeof incoming.token === 'string') {
+    book.token = incoming.token
+  }
+  if (isarray(pages)) {
+    const list = pages as CODE_PAGE[]
+    for (let i = 0; i < list.length; ++i) {
+      const incomingpage = list[i]
+      if (!ispresent(incomingpage) || typeof incomingpage !== 'object') {
+        continue
+      }
+      if (incomingpage.stats?.type === CODE_PAGE_TYPE.BOARD) {
+        continue
+      }
+      book.pages.push(deepcopy(incomingpage) as CODE_PAGE)
+    }
+  }
+  return book
+}
+
+// place the incoming board codepage in the main book, creating the page if
+// missing. We use the main book because boardrunners only run boards owned by
+// `software.main` (per memoryreadboardrunnerchoices).
+function hydrateboard(boardid: string, document: Record<string, unknown>): void {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    // no main book yet — memory snapshot hasn't arrived. drop on the floor;
+    // a follow-up board patch (or the next snapshot) will retry.
+    return
+  }
+  let codepage = mainbook.pages.find((p) => p.id === boardid)
+  if (!ispresent(codepage)) {
+    codepage = {
+      id: boardid,
+      code: typeof document.code === 'string' ? document.code : '',
+      board: undefined,
+      stats: { type: CODE_PAGE_TYPE.BOARD },
+    }
+    mainbook.pages.push(codepage)
+  }
+  if (Object.prototype.hasOwnProperty.call(document, 'code')) {
+    if (typeof document.code === 'string') {
+      codepage.code = document.code
+    }
+  }
+  const incomingboard = document.board as Record<string, unknown> | undefined
+  if (!ispresent(incomingboard) || typeof incomingboard !== 'object') {
+    return
+  }
+  const cloned = deepcopy(incomingboard) as unknown as BOARD
+  // ensure id is present for downstream consumers (memoryresetboardlookups
+  // doesn't require it, but every other helper does).
+  if (!cloned.id) {
+    cloned.id = boardid
+  }
+  codepage.board = cloned
+  // rebuild lookup/named caches and resolve element kinds. This is the same
+  // shape memoryinitboard runs after a board is freshly loaded server-side.
+  memoryinitboard(codepage.board)
+}

@@ -19,8 +19,14 @@ import {
   netterminaljoin,
   readsubscribetopic,
 } from 'zss/feature/netterminal'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { write, writecopyit } from 'zss/feature/writeui'
-import { zssheaderlines, zssoptionline } from 'zss/feature/zsstextui'
+import {
+  zssheaderlines,
+  zssoptionline,
+  zsstexttablelines,
+  zsstexttape,
+} from 'zss/feature/zsstextui'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -433,29 +439,40 @@ const bridge = createdevice('bridge', [], (message) => {
       apilog(bridge, message.player, `${kind} chat stopped`)
       break
     }
-    case 'status':
+    case 'chatlist': {
+      const rows: string[][] = []
       for (let i = 0; i < ALL_CHAT_KINDS.length; ++i) {
         const k = ALL_CHAT_KINDS[i]
         const slot = chatslots.get(k)
         if (ispresent(slot)) {
           const s = slot.describestatus()
-          apilog(
-            bridge,
-            message.player,
-            `${s.kind}: connected=${s.connected} routekey=${s.routekey}` +
-              (s.phase ? ` phase=${s.phase}` : '') +
-              (s.detail ? ` detail=${s.detail}` : ''),
-          )
+          rows.push([
+            k,
+            '$GREENconnected',
+            s.routekey,
+            s.phase ?? '',
+            s.detail ?? '',
+          ])
         } else {
-          apilog(bridge, message.player, `${k}: idle`)
+          rows.push([k, '$GRAYidle', '', '', ''])
         }
       }
-      apilog(
+      terminalwritelines(
         bridge,
         message.player,
-        `broadcast: client=${ispresent(broadcastclient) ? 'present' : 'absent'} ivs=${broadcastivsconnection} live=${broadcastlive}`,
+        zsstexttape(
+          zssheaderlines('chat connections'),
+          zsstexttablelines(rows, [
+            'kind',
+            'state',
+            'routekey',
+            'phase',
+            'detail',
+          ]),
+        ),
       )
       break
+    }
     case 'streamstart':
       doasync(bridge, message.player, async () => {
         if (ispresent(broadcastclient)) {

@@ -207,7 +207,7 @@ Functions for network operations, streaming, and external service integration.
 ### Chat Integration
 - `bridgechatstart(device, player, payload)` - Start or replace a chat connector. `payload` may be a string (legacy Twitch channel; `routekey` = channel) or an object `{ kind, routekey, … }` with `kind` `twitch` | `rss` | `mastodon` | `bluesky`. Twitch: optional `channel` (defaults to `routekey`). RSS: `feedurl`, optional `pollintervalsec` (default 120); **browser `fetch` only**—the feed URL must allow CORS from the app origin or be same-origin. Mastodon: `mastodoninstance`, and either `mastodonaccount` or `mastodonhashtag`, optional `mastodontoken`, optional `pollintervalsec`. Bluesky: `blueskyhandle`, optional `blueskyfeeduri` (`at://…` feed generator), optional `pollintervalsec`. Store tokens in saved bridge profiles (CLI `chat profile save`), not in shell history.
 - `bridgechatstop(device, player, kind)` - Stop the connector for that `kind` (`twitch`, `rss`, `mastodon`, `bluesky`).
-- `bridgestatus(device, player)` - Request a read-only snapshot of chat slots and IVS broadcast state (handled in `bridge.ts`, emitted as `apilog` lines; no secrets). **RSS, Mastodon, and Bluesky** pollers use `fetch` and run wherever the bridge runtime can reach the network (subject to CORS for browser origins).
+- `bridgechatlist(device, player)` - Request a read-only table of chat slot state for all four kinds (handled in `bridge.ts`, rendered via `terminalwritelines` + `zsstexttablelines`; no secrets). **RSS, Mastodon, and Bluesky** pollers use `fetch` and run wherever the bridge runtime can reach the network (subject to CORS for browser origins).
 
 ### Peer Connection
 - `bridgestart(device, player, hidden)` - Start peer server

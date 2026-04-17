@@ -77,14 +77,14 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         for (const [group, desc] of PERMISSION_CONTROLLED_GROUPS) {
           grouprows.push([group, desc])
         }
-        const playerrows: string[][] = []
+        const playerlinks: string[] = []
         for (let pi = 0; pi < players.length; ++pi) {
           const player = players[pi]
           const token = playertotoken[player]
           const role =
             rolebytoken[token] ??
             (memoryisoperator(player) ? 'operator' : 'player')
-          playerrows.push([player, role])
+          playerlinks.push(`!copyit ${player};${player} $GRAY${role}`)
         }
         const breakdownbyrole = memoryreadallowlistbreakdownbyrole()
         const banned = memoryreadbannedtokens()
@@ -114,16 +114,18 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
             `$GRAY($YELLOWyellow$GRAY = override on base preset; gray = from preset)`,
             `current config: $GREEN${currentconfig}`,
             zsstexttablelines(grouprows, ['group', 'description']),
-            ...(players.length > 0
-              ? [
-                  '$white  player $26 role - use #role to modify',
-                  zsstexttablelines(playerrows, ['player', 'role']),
-                ]
-              : []),
             '$white  role $26 commands - use #allow and #revoke to modify',
             zsstexttablelines(rolerows, ['role', 'commands', 'revoked']),
-            '$white  banned players',
-            `$GRAY${banned.length ? banned.join(', ') : nonestr}`,
+            ...(players.length > 0
+              ? [
+                  '$white  player $26 role - tap to copy playerid, then use #role or #ban',
+                  ...playerlinks,
+                ]
+              : []),
+            '$white  banned players - tap to copy token',
+            ...(banned.length
+              ? banned.map((tok) => `!copyit ${tok};${tok}`)
+              : [`$GRAY${nonestr}`]),
           ),
         )
         return 0
