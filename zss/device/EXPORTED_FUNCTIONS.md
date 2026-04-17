@@ -73,7 +73,10 @@ Core virtual machine operations for managing game state, memory, code execution,
 - `vmsearch(device, player)` - Search for player
 
 ### Input & CLI
-- `vminput(device, player, input, mods)` - Send input to VM
+- `userinput(device, player, input, mods)` - Send user input (routed to server and elected boardrunner)
+- `userpilotstart(device, player, x, y)` - Start pilot navigation to (x, y)
+- `userpilotstop(device, player)` - Stop pilot navigation
+- `userpilotclear(device, player, playerid)` - Clear pilot for a player
 - `vmcli(device, player, input)` - Execute CLI command
 - `vmclirepeatlast(device, player)` - Repeat last CLI command
 

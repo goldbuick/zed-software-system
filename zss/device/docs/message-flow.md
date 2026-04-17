@@ -79,7 +79,7 @@ flowchart TB
     │ build gadget │                  └──────┬───────┘                  └──────┬───────┘
     │ state       │                           │                                │
     │ diff→patch  │                           │ vm:loader                      │ loadmem
-    │ or paint    │                           │ vm:cli,vm:input                 │ gadgetserver-
+    │ or paint    │                           │ vm:cli,user:input               │ gadgetserver-
     └──────┬──────┘                           │                                 │ desync
            │                                  │                                 │
            │ gadgetclient:paint               │                                 │
@@ -165,7 +165,10 @@ flowchart TB
 | register  | vm         | `vm:login`           | Player login                    |
 | register  | vm         | `vm:loader`          | Load books/content              |
 | register  | vm         | `vm:cli`             | CLI command                     |
-| register  | vm         | `vm:input`           | Keyboard/gamepad input          |
+| UI        | user       | `user:input`         | Keyboard/gamepad input (fanout: server + boardrunner) |
+| UI        | user       | `user:pilotstart`    | Start pilot navigation (boardrunner) |
+| UI        | user       | `user:pilotstop`     | Stop pilot navigation (boardrunner)  |
+| heavy     | user       | `user:pilotclear`    | Clear pilot for agent (boardrunner)  |
 | vm        | register   | `register:ackoperator`| Operator set ack                |
 | vm        | register   | `register:loginready` | Login result / logout ack      |
 | vm        | register   | `register:acklogin`  | Login success/failure           |

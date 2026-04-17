@@ -7,7 +7,7 @@ import {
   registeragentdootoff,
   registeragentdooton,
   registerstore,
-  vmpilotclear,
+  userpilotclear,
 } from 'zss/device/api'
 import { createagent } from 'zss/feature/heavy/agent'
 import {
@@ -94,7 +94,7 @@ function stopagentbyid(
     return false
   }
   registeragentdootoff(heavydev, requestplayer, agentid)
-  vmpilotclear(heavydev, requestplayer, agentid)
+  userpilotclear(heavydev, requestplayer, agentid)
   heavymodelstop(heavydev, requestplayer, agentid)
   agent.stop()
   delete agents[agentid]

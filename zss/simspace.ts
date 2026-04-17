@@ -9,6 +9,7 @@ import './device/clock'
 import './device/gadgetserver'
 import './device/jsonsyncserver'
 import './device/modem'
+import './device/user'
 
 const { forward } = createforward((message) => {
   if (shouldforwardservertoclient(message)) {

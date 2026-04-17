@@ -2,23 +2,18 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { vmlocal } from 'zss/device/api'
 import { lastinputtime } from 'zss/device/vm/state'
-import { INPUT } from 'zss/gadget/data/types'
-import { isarray } from 'zss/mapping/types'
-import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
+import { memoryhasflags } from 'zss/memory/flags'
 
-export function handleinput(vm: DEVICE, message: MESSAGE): void {
+// Server-side handler for user:input. Post-Phase 2 the boardrunner worker
+// owns flags.inputqueue on its local MEMORY (see boardrunneruser.ts). The
+// server only needs to:
+//   1. Bootstrap a local-* player on first input (vmlocal).
+//   2. Record lastinputtime[player] for idle/doot tracking.
+export function handleuserinput(dev: DEVICE, message: MESSAGE): void {
   if (message.player.includes('local') && !memoryhasflags(message.player)) {
-    vmlocal(vm, message.player)
+    vmlocal(dev, message.player)
   }
   if (!message.player.includes('local') || memoryhasflags(message.player)) {
     lastinputtime[message.player] = Date.now()
-    const flags = memoryreadflags(message.player)
-    const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
-    if (!isarray(flags.inputqueue)) {
-      flags.inputqueue = []
-    }
-    if (input !== INPUT.NONE) {
-      flags.inputqueue.push([input, mods])
-    }
   }
 }

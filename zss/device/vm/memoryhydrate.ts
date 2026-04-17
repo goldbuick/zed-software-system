@@ -48,6 +48,8 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
+import { VOLATILE_FLAG_KEYS } from './memoryproject'
+
 export function memoryhydratefromjsonsync(
   streamid: string,
   document: unknown,
@@ -138,21 +140,54 @@ const BOOK_SCALAR_KEYS: readonly (keyof BOOK)[] = [
   'token',
 ]
 
-function mergebookinto(
-  book: BOOK,
-  incoming: Record<string, unknown>,
-): void {
+// merge an incoming flags projection into the worker's local flags, preserving
+// worker-owned volatile keys (inputqueue / synthstate / synthplay) so the
+// server's view — which never carries these keys after memoryproject.ts
+// strips them — does not clobber live worker state on hydrate.
+function mergeflagspreservingvolatile(
+  existing: Record<string, BOOK_FLAGS>,
+  incoming: Record<string, Record<string, unknown>>,
+): Record<string, BOOK_FLAGS> {
+  const next = deepcopy(incoming)
+  const ids = Object.keys(existing)
+  for (let i = 0; i < ids.length; ++i) {
+    const id = ids[i]
+    const existingentry = existing[id] as Record<string, unknown> | undefined
+    if (!ispresent(existingentry) || typeof existingentry !== 'object') {
+      continue
+    }
+    let target = next[id]
+    for (let j = 0; j < VOLATILE_FLAG_KEYS.length; ++j) {
+      const key = VOLATILE_FLAG_KEYS[j]
+      if (!Object.prototype.hasOwnProperty.call(existingentry, key)) {
+        continue
+      }
+      if (!ispresent(target) || typeof target !== 'object') {
+        target = {}
+        next[id] = target
+      }
+      target[key] = existingentry[key]
+    }
+  }
+  return next as Record<string, BOOK_FLAGS>
+}
+
+function mergebookinto(book: BOOK, incoming: Record<string, unknown>): void {
   for (let i = 0; i < BOOK_SCALAR_KEYS.length; ++i) {
     const key = BOOK_SCALAR_KEYS[i]
     if (Object.prototype.hasOwnProperty.call(incoming, key)) {
-      ;(book as unknown as Record<string, unknown>)[key as string] =
-        deepcopy(incoming[key as string])
+      ;(book as unknown as Record<string, unknown>)[key as string] = deepcopy(
+        incoming[key as string],
+      )
     }
   }
   if (Object.prototype.hasOwnProperty.call(incoming, 'flags')) {
     const flags = incoming.flags
     if (ispresent(flags) && typeof flags === 'object') {
-      book.flags = deepcopy(flags) as Record<string, BOOK_FLAGS>
+      book.flags = mergeflagspreservingvolatile(
+        book.flags,
+        flags as Record<string, Record<string, unknown>>,
+      )
     }
   }
   if (Object.prototype.hasOwnProperty.call(incoming, 'pages')) {
@@ -231,7 +266,7 @@ function buildbookfromincoming(
       if (incomingpage.stats?.type === CODE_PAGE_TYPE.BOARD) {
         continue
       }
-      book.pages.push(deepcopy(incomingpage) as CODE_PAGE)
+      book.pages.push(deepcopy(incomingpage))
     }
   }
   return book
@@ -240,7 +275,10 @@ function buildbookfromincoming(
 // place the incoming board codepage in the main book, creating the page if
 // missing. We use the main book because boardrunners only run boards owned by
 // `software.main` (per memoryreadboardrunnerchoices).
-function hydrateboard(boardid: string, document: Record<string, unknown>): void {
+function hydrateboard(
+  boardid: string,
+  document: Record<string, unknown>,
+): void {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     // no main book yet — memory snapshot hasn't arrived. drop on the floor;

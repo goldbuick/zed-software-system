@@ -4,6 +4,7 @@ import { memoryreadhalt, memoryreadsimfreeze } from 'zss/memory/session'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { JSONSYNC_CHANGED } from './api'
+import { pilottick } from './vm/handlers/pilot'
 import { memoryhydratefromjsonsync } from './vm/memoryhydrate'
 import { memoryworkerpushdirty } from './vm/memoryworkersync'
 
@@ -12,12 +13,18 @@ import { memoryworkerpushdirty } from './vm/memoryworkersync'
 // hydrated via `board:<id>` snapshots — i.e. boards we were elected to run.
 // `memoryreadhalt()` is forwarded as `playeronly` so #dev gating matches the
 // server. `memoryreadsimfreeze()` short-circuits the whole tick to keep the
-// worker quiet during async loads. After the tick, drain whatever per-stream
-// dirty bits the tick produced and emit jsonsyncclientedit upstream.
-function runworkertick(): void {
+// worker quiet during async loads. pilot ticks moved here from the server
+// (boardrunner authoritative-tick plan) — pilot synthesizes inputs onto
+// flags.inputqueue, which the firmware then consumes during memorytickmain.
+// After the tick, drain per-stream dirty bits and emit jsonsyncclientedit
+// upstream.
+function runworkertick(dev: ReturnType<typeof createdevice>): void {
   if (memoryreadsimfreeze()) {
     return
   }
+  perfmeasure('boardrunner:pilottick', () => {
+    pilottick(dev)
+  })
   perfmeasure('boardrunner:memorytickmain', () => {
     memorytickmain(memoryreadhalt())
   })
@@ -49,7 +56,7 @@ const boardrunner = createdevice(
         break
       }
       case 'ticktock':
-        runworkertick()
+        runworkertick(boardrunner)
         break
       case 'second':
         break

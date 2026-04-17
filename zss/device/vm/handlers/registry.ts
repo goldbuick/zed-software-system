@@ -19,13 +19,11 @@ import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
-import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
-import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
 import { handlequery } from './query'
@@ -58,13 +56,9 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   playertoken: handleplayertoken,
   local: handlelocal,
   doot: handledoot,
-  input: handleinput,
   lastinputtouch: handlelastinputtouch,
   query: handlequery,
   pullvarresult: handlepullvarresult,
-  pilotclear: handlepilotclear,
-  pilotstart: handlepilotstart,
-  pilotstop: handlepilotstop,
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,

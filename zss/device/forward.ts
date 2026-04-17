@@ -20,8 +20,7 @@ export function createforward(
     if (
       !ismessage(message) ||
       syncids.has(message.id) ||
-      (!allowticktock &&
-        (message.target === 'tock' || message.target === 'ticktock'))
+      (!allowticktock && message.target === 'ticktock')
     ) {
       return
     }
@@ -46,9 +45,8 @@ export function createforward(
 // outbound message
 export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
-    case 'ticktock':
     case 'ready':
+    case 'ticktock':
       return true
   }
   return false
@@ -59,16 +57,16 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'log':
     case 'chat':
-    case 'tock':
-    case 'ticktock':
     case 'ready':
     case 'toast':
     case 'second':
+    case 'ticktock':
       return true
     default: {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'vm':
+        case 'user':
         case 'heavy':
         case 'synth':
         case 'modem':
@@ -98,7 +96,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
 // outbound message
 export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
     case 'ticktock':
     case 'second':
       return true
@@ -111,6 +108,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   const route = parsetarget(message.target)
   switch (route.target) {
     case 'vm':
+    case 'user':
     case 'modem':
     case 'gadgetserver':
     case 'jsonsyncserver':
@@ -132,7 +130,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
 // create client -> heavy forward
 export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
     case 'ticktock':
       return false
     case 'second':
@@ -157,7 +154,6 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
 // create heavy -> client forward
 export function shouldforwardheavytoclient(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
     case 'ticktock':
       return false
     case 'second':
@@ -184,8 +180,6 @@ export function shouldforwardheavytoclient(message: MESSAGE): boolean {
 // create client -> boardrunner forward
 export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
-      return false
     // boardrunner workers are now authoritative for their elected boards
     // (Phase 2 of the boardrunner authoritative-tick plan), so the server's
     // clock pulse must reach them. ticktock is the per-frame heartbeat;
@@ -197,6 +191,11 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
     default: {
       const route = parsetarget(message.target)
       switch (route.target) {
+        // user:* carries player-originated events (input, pilot*) that the
+        // boardrunner consumes to populate flags.inputqueue on its local
+        // MEMORY. Server-side also sees user:input for login bootstrap +
+        // lastinputtime tracking.
+        case 'user':
         case 'jsonsyncclient':
           return true
       }

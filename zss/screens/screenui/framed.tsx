@@ -4,9 +4,9 @@ import {
   registerterminalopen,
   registerterminalquickopen,
   synthupdate,
+  userinput,
   vmclirepeatlast,
   vmfindany,
-  vminput,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -42,7 +42,7 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
     bits |= INPUT_SHIFT
   }
   if (ispid(player)) {
-    vminput(SOFTWARE, player, input, bits)
+    userinput(SOFTWARE, player, input, bits)
   }
 }
 

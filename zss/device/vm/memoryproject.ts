@@ -177,10 +177,50 @@ export function projectboardcodepage(codepage: CODE_PAGE): unknown {
   return copy
 }
 
+// flag sub-keys the boardrunner worker owns exclusively. they live on
+// book.flags[id][name] and mutate every tick (inputqueue is consumed by the
+// firmware, synthstate/synthplay by the synth device), so shipping them over
+// the memory stream would (a) burn diff cycles for no reason and (b) let the
+// server clobber live worker state on hydrate. memoryhydrate.ts preserves
+// these same keys when replacing `book.flags` so the round-trip is safe.
+export const VOLATILE_FLAG_KEYS: readonly string[] = [
+  'inputqueue',
+  'synthstate',
+  'synthplay',
+]
+
+function stripvolatileflags(
+  flags: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  const ids = Object.keys(flags)
+  for (let i = 0; i < ids.length; ++i) {
+    const id = ids[i]
+    const entry = flags[id]
+    if (!ispresent(entry) || typeof entry !== 'object') {
+      out[id] = entry
+      continue
+    }
+    const src = entry as Record<string, unknown>
+    const dst: Record<string, unknown> = {}
+    const keys = Object.keys(src)
+    for (let j = 0; j < keys.length; ++j) {
+      const key = keys[j]
+      if (VOLATILE_FLAG_KEYS.includes(key)) {
+        continue
+      }
+      dst[key] = src[key]
+    }
+    out[id] = dst
+  }
+  return out
+}
+
 // convert a BOOK for the `memory` stream: deepcopy, strip board-type codepages
-// from `pages` (they travel via their own board:${id} streams), and drop
+// from `pages` (they travel via their own board:${id} streams), drop
 // `timestamp` (server-local clock metadata; clients re-derive cadence from
-// `ticktock`). Leaving timestamp in would re-fire the dirty diff every tick.
+// `ticktock`), and strip VOLATILE_FLAG_KEYS from every flags[id] record so
+// worker-local queues never round-trip through the server.
 function projectbook(book: BOOK): unknown {
   const copy = deepcopy(book) as unknown as Record<string, unknown>
   const pages = copy.pages as CODE_PAGE[] | undefined
@@ -189,6 +229,9 @@ function projectbook(book: BOOK): unknown {
       const t = page.stats?.type
       return t !== CODE_PAGE_TYPE.BOARD
     })
+  }
+  if (ispresent(copy.flags) && typeof copy.flags === 'object') {
+    copy.flags = stripvolatileflags(copy.flags as Record<string, unknown>)
   }
   delete copy.timestamp
   return copy

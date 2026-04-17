@@ -183,7 +183,7 @@ flowchart LR
     Hy[heavy]
     Ag[agent_*]
   end
-  UI -->|vminput| VM
+  UI -->|userinput| VM
   RegIn -->|vmoperator_vmlogin_vmloader_vmcli| VM
   VM -->|register_acks_loginready| RegOut
   VM -->|gadgetserver_desync| GS
@@ -279,7 +279,8 @@ Notes:
 | `second` | `heavy`, `agent_*` | Heavy worker | `clock` / main forward | Sim / main → heavy |
 | `ready` | all devices | per hub | `vm` / stub, [`platformready`](../api.ts) | Sim (or stub worker) |
 | `sessionreset` | all devices | per hub | [`sessionreset`](../api.ts) | usually main (`SOFTWARE`) |
-| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `heavy` (`vm:pilotclear`, `vm:lastinputtouch`), `SOFTWARE` | Main / sim / heavy → sim |
+| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `heavy` (`vm:lastinputtouch`), `SOFTWARE` | Main / sim / heavy → sim |
+| `user` | `user` | Sim worker + boardrunner worker | `userinput.tsx`, `userpilotclear` (heavy) | Main → sim + boardrunner |
 | `register` | `register` | Main thread | `vm` (replies), `userinput`, `api` | Sim → main / main |
 | `gadgetserver` | `gadgetserver` | Sim worker | `gadgetclient`, `register`, `api` | Main → sim |
 | `gadgetclient` | `gadgetclient` | Main thread | `gadgetserver`, `api` | Sim → main / main |

@@ -325,12 +325,12 @@ export function vmlastinputtouch(
   device.emit(player, 'vm:lastinputtouch', targetplayer)
 }
 
-export function vmpilotclear(
+export function userpilotclear(
   device: DEVICELIKE,
   player: string,
   playerid: string,
 ) {
-  device.emit(player, 'vm:pilotclear', playerid)
+  device.emit(player, 'user:pilotclear', playerid)
 }
 
 export function heavyagentstart(
@@ -956,26 +956,26 @@ export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
 }
 
-export function vminput(
+export function userinput(
   device: DEVICELIKE,
   player: string,
   input: INPUT,
   mods: number,
 ) {
-  device.emit(player, 'vm:input', [input, mods])
+  device.emit(player, 'user:input', [input, mods])
 }
 
-export function vmpilotstart(
+export function userpilotstart(
   device: DEVICELIKE,
   player: string,
   x: number,
   y: number,
 ) {
-  device.emit(player, 'vm:pilotstart', { x, y })
+  device.emit(player, 'user:pilotstart', { x, y })
 }
 
-export function vmpilotstop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:pilotstop')
+export function userpilotstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'user:pilotstop')
 }
 
 export function vmmakeitscroll(
