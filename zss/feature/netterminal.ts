@@ -243,17 +243,20 @@ function handledataconnection(dataconnection: DataConnection) {
 
   function joinbridge() {
     // open bridge between peers
-    topicbridge = createforward((message) => {
-      if (!ispresent(networkpeer)) {
-        return
-      }
-      if (
-        shouldforwardclienttoserver(message) &&
-        shouldnotforwardonpeerclient(message) === false
-      ) {
-        sendpeermessage(message)
-      }
-    })
+    topicbridge = createforward(
+      (message) => {
+        if (!ispresent(networkpeer)) {
+          return
+        }
+        if (
+          shouldforwardclienttoserver(message) &&
+          shouldnotforwardonpeerclient(message) === false
+        ) {
+          sendpeermessage(message)
+        }
+      },
+      { allowticktock: true },
+    )
     // signal ready to login
     vmsearch(SOFTWARE, player)
   }

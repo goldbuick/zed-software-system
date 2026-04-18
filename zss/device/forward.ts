@@ -16,7 +16,9 @@ function peerblockedleaf(
   }
   const leaf =
     r.path.length > 0 ? r.path.slice(r.path.lastIndexOf(':') + 1) : r.target
-  if (leaf === 'ticktock') {
+  // Join peers need host ticktock; block joiner→host only (defense in depth;
+  // shouldforwardclienttoserver also rejects bare ticktock).
+  if (mode === 'clienttoserver' && leaf === 'ticktock') {
     return true
   }
   if (mode === 'servertoclient' && leaf === 'ready') {

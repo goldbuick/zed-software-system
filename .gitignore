@@ -16,6 +16,7 @@ oclif.manifest.json
 *.local
 
 # Editor directories and files
+.cursor/debug-*.ndjson
 .vscode/*
 !.vscode/extensions.json
 .idea
