@@ -1,6 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
+import { boardrunnerowned } from 'zss/device/api'
 import {
+  memorysyncrevokeboardrunner,
   memorysyncupdateboard,
   memorysyncupdatememory,
 } from 'zss/device/vm/memorysync'
@@ -8,6 +10,7 @@ import {
   ackboardrunners,
   boardrunners,
   failedboardrunners,
+  playerownedboards,
 } from 'zss/device/vm/state'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
@@ -18,8 +21,7 @@ import {
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
-export function handleplayermovetoboard(_vm: DEVICE, message: MESSAGE): void {
-  void _vm
+export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   const payload = message.data as VM_PLAYERMOVETOBOARD | undefined
   if (
     !ispresent(payload) ||
@@ -60,6 +62,8 @@ export function handleplayermovetoboard(_vm: DEVICE, message: MESSAGE): void {
     delete boardrunners[fromboardid]
     delete ackboardrunners[fromboardid]
     delete failedboardrunners[fromboardid]
+    memorysyncrevokeboardrunner(message.player, fromboardid)
+    boardrunnerowned(vm, message.player, playerownedboards(message.player))
   }
 
   memorysyncupdatememory()

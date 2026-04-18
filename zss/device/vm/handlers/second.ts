@@ -15,6 +15,7 @@ import {
   boardrunners,
   failedboardrunners,
   incflushtick,
+  playerownedboards,
   setflushtick,
   tracking,
 } from 'zss/device/vm/state'
@@ -23,17 +24,6 @@ import { ispresent } from 'zss/mapping/types'
 import { memoryscanplayers } from 'zss/memory/playermanagement'
 import { memoryreadsimfreeze } from 'zss/memory/session'
 import { perfmeasure } from 'zss/perf/ui'
-
-function playerownedboards(player: string): string[] {
-  const result: string[] = []
-  const boards = Object.keys(ackboardrunners)
-  for (let i = 0; i < boards.length; ++i) {
-    if (ackboardrunners[boards[i]] === player) {
-      result.push(boards[i])
-    }
-  }
-  return result
-}
 
 export function handlesecond(vm: DEVICE, message: MESSAGE): void {
   perfmeasure('vm:second', () => {
@@ -71,16 +61,11 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
         const next = prev + 1
         failedboardrunners[boardid][playerid] = next
         if (next >= BOARDRUNNER_ACK_FAIL_COUNT) {
-          // Player failed to ack in time. If a different player was previously
-          // the acked runner, revoke their admission so they do not keep
-          // ticking the board. The next tick's election will pick a new
-          // candidate from the remaining eligible players.
+          // Player failed to ack in time. Revoke whoever was acked (including
+          // the same playerid) so jsonsync admissions never orphan when maps
+          // are cleared without a new ack flip.
           const prevack = ackboardrunners[boardid]
-          if (
-            typeof prevack === 'string' &&
-            prevack.length > 0 &&
-            prevack !== playerid
-          ) {
+          if (typeof prevack === 'string' && prevack.length > 0) {
             memorysyncrevokeboardrunner(prevack, boardid)
             ownershipdirty.add(prevack)
           }

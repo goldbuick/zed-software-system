@@ -110,5 +110,6 @@ describe('handleackboardrunner', () => {
 
     expect(revoke).not.toHaveBeenCalled()
     expect(ackboardrunners['board-a']).toBe('player-1')
+    expect(owned).toHaveBeenCalledWith(vm, 'player-1', ['board-a'])
   })
 })

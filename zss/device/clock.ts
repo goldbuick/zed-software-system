@@ -19,6 +19,11 @@ function wake() {
   const delta = now - previous
 
   acc += delta
+  // Cap catch-up after background throttling so one wake cannot run minutes of sim.
+  const accCatchupMax = TICK_RATE * 4
+  if (acc > accCatchupMax) {
+    acc = accCatchupMax
+  }
   while (acc >= TICK_RATE) {
     acc -= TICK_RATE
     clockdevice.emit('', 'ticktock', timestamp)
@@ -26,6 +31,10 @@ function wake() {
   }
 
   second += delta
+  const secondCatchupMax = 4000
+  if (second > secondCatchupMax) {
+    second = secondCatchupMax
+  }
   while (second >= 1000) {
     second -= 1000
     clockdevice.emit('', 'second', timestamp)

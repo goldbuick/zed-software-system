@@ -29,8 +29,14 @@ export type DEVICE = {
 }
 
 export function parsetarget(targetString: string) {
-  const [target, ...path] = targetString.split(':')
-  return { target, path: path.join(':') }
+  const i = targetString.indexOf(':')
+  if (i < 0) {
+    return { target: targetString, path: '' }
+  }
+  return {
+    target: targetString.slice(0, i),
+    path: targetString.slice(i + 1),
+  }
 }
 
 export function createdevice(

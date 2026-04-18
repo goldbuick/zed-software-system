@@ -3,25 +3,12 @@ import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerowned } from 'zss/device/api'
 import { boardrunnersendsnapshot } from 'zss/device/vm/helpers'
 import { memorysyncrevokeboardrunner } from 'zss/device/vm/memorysync'
-import { ackboardrunners, boardrunners } from 'zss/device/vm/state'
+import {
+  ackboardrunners,
+  boardrunners,
+  playerownedboards,
+} from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
-
-// Collect every boardid this player is the acked runner for, used to tell
-// the player's worker which boards it currently owns. Without this the
-// worker has no way to know it is or isn't authoritative, and would either
-// run the tick/paint for every player unconditionally (causing a paint
-// storm when multiple workers are admitted to the same board stream) or
-// skip everything (leaving boards un-ticked after an election flip).
-function playerownedboards(player: string): string[] {
-  const result: string[] = []
-  const boards = Object.keys(ackboardrunners)
-  for (let i = 0; i < boards.length; ++i) {
-    if (ackboardrunners[boards[i]] === player) {
-      result.push(boards[i])
-    }
-  }
-  return result
-}
 
 export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
   const boardid = message.data
@@ -46,10 +33,14 @@ export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
 
   ackboardrunners[boardid] = message.player
 
-  if (flipped) {
-    boardrunnerowned(vm, previous, playerownedboards(previous))
+  const refresh = new Set<string>()
+  if (flipped && isstring(previous) && previous.length > 0) {
+    refresh.add(previous)
   }
-  boardrunnerowned(vm, message.player, playerownedboards(message.player))
+  refresh.add(message.player)
+  refresh.forEach((pid) => {
+    boardrunnerowned(vm, pid, playerownedboards(pid))
+  })
 
   boardrunnersendsnapshot(message.player, boardid)
 }

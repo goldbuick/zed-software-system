@@ -24,7 +24,7 @@ How **devices** talk to each other in ZSS: **three JavaScript realms** (main thr
 4. **Multiple hubs** — The browser runs **main-thread** code plus **Web Workers** (see [what creates each realm](#what-creates-each-thread-or-worker)). Each realm has its **own** `hub` singleton; `postMessage` + **`forward`** sync selected traffic ([`forward.ts`](../forward.ts), [`platform.ts`](../../platform.ts)).
 5. **`SOFTWARE`** ([`session.ts`](../session.ts)) — A minimal `createdevice('SOFTWARE')` used as a **convenient `emit` sender** (session id from first `ready`). UI and chip code often call `SOFTWARE.emit(...)` so messages enter the **caller’s** hub with the right session.
 6. **`MESSAGE`** ([`api.ts`](../api.ts)) — Shape: `session`, `player`, `id`, `sender`, `target`, `data`. **`reply(to, subtarget)`** / **`replynext`** emit a new message whose `target` is **`to.sender:subtarget`**, so the original sender’s device handles `subtarget` as `message.target` after routing.
-7. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops).
+7. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a bounded ring (`syncids` + eviction) so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops without unbounded memory growth).
 
 See also: [message-flow.md](message-flow.md) (ASCII + first mermaid, boot sequence, flow table).
 

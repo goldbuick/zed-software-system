@@ -1,4 +1,4 @@
-import { arr2hex, hex2arr } from 'uint8-util'
+import { hex2arr } from 'uint8-util'
 import * as awarenessProtocol from 'y-protocols/awareness'
 import * as Y from 'yjs'
 import { createdevice } from 'zss/device'
@@ -59,6 +59,20 @@ const cursorrestorecallbacks = new Map<string, (cursor: number) => void>()
 const LOCAL_ORIGIN = Symbol('local')
 /** Yjs transaction origin for deltas applied from the peer realm (joinack/sync). Excluded from outbound modem:sync to avoid echo. */
 const MODEM_REMOTE_APPLY = Symbol('modem_remote_apply')
+
+/** Accept legacy hex strings or binary payloads from PeerJS / postMessage. */
+function modemdecodedata(data: unknown): Uint8Array | undefined {
+  if (data instanceof Uint8Array) {
+    return data
+  }
+  if (typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer) {
+    return new Uint8Array(data)
+  }
+  if (typeof data === 'string') {
+    return hex2arr(data)
+  }
+  return undefined
+}
 
 function getorcreatetext(key: string): Y.Text {
   const raw = ROOT.get(key)
@@ -435,16 +449,14 @@ const modem = createdevice('modem', ['second'], (message) => {
         modem.reply(
           message,
           'joinack',
-          arr2hex(Y.encodeStateAsUpdate(SYNC_DOC)),
+          Y.encodeStateAsUpdate(SYNC_DOC),
         )
         const myclientids = Array.from(AWARENESS.getStates().keys())
         if (myclientids.length > 0) {
           modem.emit(
             message.sender,
             'modem:awareness',
-            arr2hex(
-              awarenessProtocol.encodeAwarenessUpdate(AWARENESS, myclientids),
-            ),
+            awarenessProtocol.encodeAwarenessUpdate(AWARENESS, myclientids),
           )
         }
       }
@@ -453,7 +465,10 @@ const modem = createdevice('modem', ['second'], (message) => {
       if (message.sender !== modem.id()) {
         joined = true
         try {
-          const data = hex2arr(message.data)
+          const data = modemdecodedata(message.data)
+          if (!ispresent(data)) {
+            break
+          }
           Y.applyUpdate(SYNC_DOC, data, MODEM_REMOTE_APPLY)
           undomanagers.clear()
         } catch (e) {
@@ -464,7 +479,11 @@ const modem = createdevice('modem', ['second'], (message) => {
     case 'sync': {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
-          Y.applyUpdate(SYNC_DOC, hex2arr(message.data), MODEM_REMOTE_APPLY)
+          const data = modemdecodedata(message.data)
+          if (!ispresent(data)) {
+            break
+          }
+          Y.applyUpdate(SYNC_DOC, data, MODEM_REMOTE_APPLY)
         } catch (e) {
           console.error('modem sync decode', e)
         }
@@ -474,11 +493,11 @@ const modem = createdevice('modem', ['second'], (message) => {
     case 'modem:awareness': {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
-          awarenessProtocol.applyAwarenessUpdate(
-            AWARENESS,
-            hex2arr(message.data),
-            null,
-          )
+          const data = modemdecodedata(message.data)
+          if (!ispresent(data)) {
+            break
+          }
+          awarenessProtocol.applyAwarenessUpdate(AWARENESS, data, null)
         } catch (e) {
           console.error('modem awareness decode', e)
         }
@@ -492,7 +511,7 @@ const modem = createdevice('modem', ['second'], (message) => {
 // (Yjs uses UndoManager as origin, not LOCAL_ORIGIN). Only skip updates applied from a peer delta.
 SYNC_DOC.on('update', (update: Uint8Array, origin: unknown) => {
   if (origin !== MODEM_REMOTE_APPLY) {
-    modem.emit('', 'modem:sync', arr2hex(update))
+    modem.emit('', 'modem:sync', update)
   }
 })
 
@@ -512,7 +531,7 @@ AWARENESS.on(
       modem.emit(
         '',
         'modem:awareness',
-        arr2hex(awarenessProtocol.encodeAwarenessUpdate(AWARENESS, changed)),
+        awarenessProtocol.encodeAwarenessUpdate(AWARENESS, changed),
       )
     }
   },

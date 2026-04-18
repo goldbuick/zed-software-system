@@ -156,6 +156,11 @@ export function bridgeshowjoincode(
   device.emit(player, 'bridge:showjoincode', hidden)
 }
 
+/** Tear down PeerJS / netterminal (call on session reset or logout). */
+export function bridgehalt(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:halt', undefined)
+}
+
 export function gadgetclientpaint(
   device: DEVICELIKE,
   player: string,

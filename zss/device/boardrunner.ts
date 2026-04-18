@@ -81,17 +81,19 @@ function ownedplayerids(): string[] {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const active = mainbook?.activelist ?? []
   const out: string[] = []
+  const seen = new Set<string>()
   for (let i = 0; i < active.length; ++i) {
     const player = active[i]
     const board = memoryreadbookflag(mainbook, player, 'board')
     if (isstring(board) && isowned(board)) {
       out.push(player)
+      seen.add(player)
     }
   }
   // Ensure the operator is always considered (they may not be in activelist
   // on a fresh boot) if their board is owned.
   const op = memoryreadoperator()
-  if (isstring(op) && op.length > 0 && !out.includes(op)) {
+  if (isstring(op) && op.length > 0 && !seen.has(op)) {
     const opboard = memoryreadbookflag(mainbook, op, 'board')
     if (isstring(opboard) && isowned(opboard)) {
       out.push(op)
@@ -154,6 +156,9 @@ const boardrunner = createdevice(
         // jsonsync mutation (snapshot / serverpatch / antipatch).
         // memoryhydratefromjsonsync runs inside memorywithsilentwrites, so
         // this never re-fires the worker dirty bits.
+        // Non-owners still need full neighbor-board hydration for exit
+        // previews; a shallower merge is a future perf win if profiling shows
+        // hotspot pressure here.
         memoryhydratefromjsonsync(payload.streamid, payload.document)
         // Board tiles can mutate in place; gadget slim diff baseline may still
         // compare equal to the new export so the client never gets a patch.

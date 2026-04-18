@@ -63,6 +63,9 @@ let signalreconnectverifytimer: ReturnType<typeof setTimeout> | undefined
 let signalretrytimer: ReturnType<typeof setTimeout> | undefined
 let netterminalunloadregistered = false
 
+/** Host queues player-targeted outbound messages until joiner id is known. */
+const PREHANDSHAKE_HOST_QUEUE_MAX = 128
+
 function netterminalclearhandshaketimer() {
   if (signalhandshaketimer !== undefined) {
     clearTimeout(signalhandshaketimer)
@@ -142,6 +145,8 @@ function netterminalparsedata(netmsg: unknown): MESSAGE {
   return netmsg
 }
 
+const netterminalencodecache = new WeakMap<MESSAGE, Uint8Array>()
+
 function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
   let topicbridge: MAYBE<ReturnType<typeof createforward>>
@@ -149,7 +154,11 @@ function handledataconnection(dataconnection: DataConnection) {
   // stamps message.player on every emit, so the host learns its peer's player
   // id lazily without any extra handshake.
   let remotepeerplayer = ''
+  /** Joiner: host player id from `netterminal:cap` (reliable vmpeergone target). */
+  let joinhostplayer = ''
   let peersendnetformat = false
+  const pendingpeerhost: MESSAGE[] = []
+  let pendingpeerhostdroplogged = false
 
   function sendpeerlegacy(message: MESSAGE) {
     void dataconnection.send(netserializable(message))
@@ -157,9 +166,36 @@ function handledataconnection(dataconnection: DataConnection) {
 
   function sendpeermessage(message: MESSAGE) {
     if (peersendnetformat && !netformatdebugsendlegacy()) {
-      void dataconnection.send(netformatencode(message))
+      let bytes = netterminalencodecache.get(message)
+      if (!bytes) {
+        bytes = netformatencode(message)
+        netterminalencodecache.set(message, bytes)
+      }
+      void dataconnection.send(bytes)
     } else {
       sendpeerlegacy(message)
+    }
+  }
+
+  function flushpendingpeerhost() {
+    if (!ishost()) {
+      return
+    }
+    while (pendingpeerhost.length > 0) {
+      const m = pendingpeerhost.shift()!
+      if (
+        m.player.length > 0 &&
+        remotepeerplayer.length > 0 &&
+        m.player !== remotepeerplayer
+      ) {
+        continue
+      }
+      if (
+        shouldforwardservertoclient(m) &&
+        shouldnotforwardonpeerserver(m) === false
+      ) {
+        sendpeermessage(m)
+      }
     }
   }
 
@@ -175,13 +211,28 @@ function handledataconnection(dataconnection: DataConnection) {
       ) {
         // envelope-level fan-out filter: if this message targets a specific
         // player (non-empty message.player) and we know this peer's player id,
-        // only forward when they match. broadcasts (message.player === '') and
-        // pre-handshake traffic (remotepeerplayer === '') pass through.
+        // only forward when they match. broadcasts (message.player === '')
+        // always pass through.
         if (
           message.player.length > 0 &&
           remotepeerplayer.length > 0 &&
           message.player !== remotepeerplayer
         ) {
+          return
+        }
+        if (message.player.length > 0 && remotepeerplayer.length === 0) {
+          if (pendingpeerhost.length >= PREHANDSHAKE_HOST_QUEUE_MAX) {
+            pendingpeerhost.shift()
+            if (!pendingpeerhostdroplogged) {
+              pendingpeerhostdroplogged = true
+              apilog(
+                SOFTWARE,
+                player,
+                `peer ${dataconnection.peer}: dropped oldest queued targeted message (pre-handshake cap ${PREHANDSHAKE_HOST_QUEUE_MAX})`,
+              )
+            }
+          }
+          pendingpeerhost.push(message)
           return
         }
         sendpeermessage(message)
@@ -225,7 +276,7 @@ function handledataconnection(dataconnection: DataConnection) {
           id: createsid(),
           sender: 'netterminal',
           target: NETFORMAT_CAP_TARGET,
-          data: { v: 1 },
+          data: { v: 1, host: player },
         })
         peersendnetformat = true
         apilog(
@@ -249,8 +300,13 @@ function handledataconnection(dataconnection: DataConnection) {
     // Phase 3 failover: signal the VM that this peer has departed so it
     // can clear board-runner election entries that reference the gone
     // player. The next `second`-cycle election picks a fresh runner.
-    if (remotepeerplayer.length > 0) {
-      vmpeergone(SOFTWARE, remotepeerplayer)
+    const departed = ishost()
+      ? remotepeerplayer
+      : joinhostplayer.length > 0
+        ? joinhostplayer
+        : remotepeerplayer
+    if (departed.length > 0) {
+      vmpeergone(SOFTWARE, departed)
     }
   })
 
@@ -273,6 +329,10 @@ function handledataconnection(dataconnection: DataConnection) {
     if (message.target === NETFORMAT_CAP_TARGET) {
       if (!ishost()) {
         peersendnetformat = true
+        const cap = message.data as { v?: number; host?: string } | undefined
+        if (isstring(cap?.host) && cap.host.length > 0) {
+          joinhostplayer = cap.host
+        }
         apilog(
           SOFTWARE,
           player,
@@ -290,6 +350,7 @@ function handledataconnection(dataconnection: DataConnection) {
       message.player.length > 0
     ) {
       remotepeerplayer = message.player
+      flushpendingpeerhost()
     }
     topicbridge?.forward({
       ...message,

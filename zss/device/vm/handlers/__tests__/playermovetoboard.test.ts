@@ -1,7 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
 import { handleplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
+import { boardrunnerowned } from 'zss/device/api'
 import {
+  memorysyncrevokeboardrunner,
   memorysyncupdateboard,
   memorysyncupdatememory,
 } from 'zss/device/vm/memorysync'
@@ -26,9 +28,14 @@ jest.mock('zss/config', () => ({
   LOG_DEBUG: false,
 }))
 
+jest.mock('zss/device/api', () => ({
+  boardrunnerowned: jest.fn(),
+}))
+
 jest.mock('zss/device/vm/memorysync', () => ({
   memorysyncupdateboard: jest.fn(),
   memorysyncupdatememory: jest.fn(),
+  memorysyncrevokeboardrunner: jest.fn(),
 }))
 
 jest.mock('zss/memory/session', () => ({
@@ -188,6 +195,11 @@ describe('handleplayermovetoboard', () => {
     expect(boardrunners['board-a']).toBeUndefined()
     expect(ackboardrunners['board-a']).toBeUndefined()
     expect(failedboardrunners['board-a']).toBeUndefined()
+    expect(memorysyncrevokeboardrunner).toHaveBeenCalledWith(
+      'player-1',
+      'board-a',
+    )
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', [])
   })
 
   it('clears runner election when moving player was only acked runner', () => {
@@ -220,5 +232,10 @@ describe('handleplayermovetoboard', () => {
 
     expect(boardrunners['board-a']).toBeUndefined()
     expect(ackboardrunners['board-a']).toBeUndefined()
+    expect(memorysyncrevokeboardrunner).toHaveBeenCalledWith(
+      'player-1',
+      'board-a',
+    )
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', [])
   })
 })

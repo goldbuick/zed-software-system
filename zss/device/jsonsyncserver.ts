@@ -19,7 +19,7 @@ import {
   jsonsyncserverremove,
   jsonsyncserverupdatedoc,
 } from 'zss/feature/jsonsync'
-import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 
 import {
   jsonsyncantipatch,
@@ -186,7 +186,7 @@ const jsonsyncserverdevice = createdevice('jsonsyncserver', [], (message) => {
         streamid,
         cv: state.cv,
         sv: state.sv,
-        document: deepcopy(stream.document),
+        document: stream.document,
         arrayidentitykeys: stream.arrayidentitykeys,
       })
       break

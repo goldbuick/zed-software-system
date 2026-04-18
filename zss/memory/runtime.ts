@@ -216,7 +216,6 @@ export function memorytickmain(playeronly = false, loadersonly = false) {
         if (play) {
           // dispatch play
           synthplay(SOFTWARE, '', board.id, play)
-          console.info('play queue', board.id, play)
         }
         if (dec > 0) {
           queue[0] = ['', dec]

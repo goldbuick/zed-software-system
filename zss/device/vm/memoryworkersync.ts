@@ -26,7 +26,11 @@ import {
   jsonsyncclientreadstream,
 } from 'zss/device/jsonsyncclient'
 import { ispresent } from 'zss/mapping/types'
-import { MEMORY_STREAM_ID, memoryconsumealldirty } from 'zss/memory/memorydirty'
+import {
+  MEMORY_STREAM_ID,
+  memoryconsumealldirty,
+  memorymarkdirty,
+} from 'zss/memory/memorydirty'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
@@ -37,9 +41,8 @@ export function memoryworkerpushdirty(): void {
   for (let i = 0; i < dirtyids.length; ++i) {
     const streamid = dirtyids[i]
     if (!ispresent(jsonsyncclientreadstream(streamid))) {
-      // not admitted to this stream; the server hasn't approved this worker
-      // for it yet (or the worker isn't an authoritative runner for this
-      // particular board). Drop on the floor.
+      // not admitted yet — re-queue so admission + next tick still pushes.
+      memorymarkdirty(streamid)
       continue
     }
     if (streamid === MEMORY_STREAM_ID) {

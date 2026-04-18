@@ -80,6 +80,7 @@ import {
   apilog,
   apitoast,
   boardrunnergadgetdesync,
+  bridgehalt,
   bridgejoin,
   heavyllmpreset,
   heavypullvarresult,
@@ -334,6 +335,7 @@ export const register = createdevice(
       }
       case 'sessionreset':
         agentdootids.clear()
+        bridgehalt(register, myplayerid)
         break
       case 'ackoperator':
         // reset display

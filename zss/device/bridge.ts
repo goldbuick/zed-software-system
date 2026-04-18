@@ -15,6 +15,7 @@ import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector
 import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
+  netterminalhalt,
   netterminalhost,
   netterminaljoin,
   readsubscribetopic,
@@ -250,6 +251,9 @@ const bridge = createdevice('bridge', [], (message) => {
       if (isstring(message.data)) {
         netterminaljoin(message.data)
       }
+      break
+    case 'halt':
+      netterminalhalt()
       break
     case 'showjoincode': {
       const joinurl = joinurlread()

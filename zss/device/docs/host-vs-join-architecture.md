@@ -219,7 +219,42 @@ flowchart LR
 ### Host-only facts
 - `clock` lives only on sim ([`zss/device/clock.ts`](../clock.ts) 4–43). All `ticktock` originates here.
 - `jsonsyncserver` is authoritative only on the host ([`zss/device/jsonsyncserver.ts`](../jsonsyncserver.ts) 118–197).
-- Host bridge fans messages out **per remote player** if `message.player` is set ([`zss/feature/netterminal.ts`](../../feature/netterminal.ts) 166–188).
+- Host bridge fans messages out **per remote player** if `message.player` is set ([`zss/feature/netterminal.ts`](../../feature/netterminal.ts)); player-targeted host→join traffic is **queued** until the host learns the joiner’s `message.player` from the first inbound message (avoids mis-delivery before handshake).
+
+### 3.1 Per-frame order of operations (host)
+
+Authoritative ordering for one sim frame (see also [`zss/device/vm/handlers/tick.ts`](../vm/handlers/tick.ts), [`zss/device/boardrunner.ts`](../boardrunner.ts)):
+
+1. **Sim `clock`** emits `ticktock` into the sim worker hub.
+2. **`vm` tick handler** runs `memorytickmain(…, loadersonly=true)` then **`memorysyncpushdirty`** so server jsonsync streams catch loader-side mutations.
+3. **Board election** updates `boardrunners` / asks / revokes (same tick handler); **`boardrunner:ownedboards`** should reach the main hub and boardrunner worker **before** that worker’s next `ticktock` applies an authoritative `memorytickmain` for newly owned boards.
+4. **Main hub** forwards `ticktock` / patches / ownership to the boardrunner worker (`allowticktock`) and to **PeerJS** per [`shouldforwardservertoclient`](../forward.ts) minus peer blocks.
+5. **Boardrunner worker** on `ticktock`: pilot → full `memorytickmain` → gadget sync → `memoryworkerpushdirty` (client patches upstream).
+
+**Barrier:** a worker should not treat a board as authoritative until it has received **`boardrunner:ownedboards`** for that board *and* a **`jsonsyncclient:snapshot`** (or equivalent hydrate) for the corresponding `board:*` stream; otherwise skip authoritative tick work for that board (handled via ownership set + hydrate in [`boardrunner.ts`](../boardrunner.ts)).
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant CLK as clock_sim
+  participant VM as vm_sim
+  participant JSS as jsonsyncserver
+  participant FWD as forward_simToMain
+  participant MAIN as mainHub
+  participant BR as boardrunnerWorker
+  participant PEER as PeerJS
+
+  CLK->>VM: ticktock
+  VM->>VM: memorytickmain_loadersOnly
+  VM->>JSS: memorysyncpushdirty
+  JSS-->>FWD: snapshot_serverpatch
+  VM->>VM: boardrunner_election
+  VM-->>FWD: boardrunner_ownedboards
+  FWD-->>MAIN: postMessage
+  MAIN-->>BR: ticktock_allow
+  MAIN-->>PEER: serverToClient_minus_peerBlocks
+  BR->>BR: runworkertick_fullTick_gadget_pushDirty
+```
 
 ---
 
@@ -293,8 +328,15 @@ flowchart LR
 
 ### Join-only facts
 - Join replaces `simspace` with **`stubspace`** ([`zss/device/stub.ts`](../stub.ts) 9–26, [`zss/stubspace.ts`](../../stubspace.ts) 6–8). No `clock`, no `jsonsyncserver`, no sim `user`/`modem`, no full `vm` handlers.
-- Join's `forward` has `allowticktock: true` so ticks can still reach the boardrunner, but **no** `ticktock` comes over PeerJS from the host (blocked by `shouldnotforwardonpeerserver` in [`zss/device/forward.ts`](../forward.ts) 46–52).
+- Join's `forward` has `allowticktock: true` so ticks can still reach the boardrunner, but **no** `ticktock` comes over PeerJS from the host (blocked by `shouldnotforwardonpeerserver` in [`zss/device/forward.ts`](../forward.ts)).
 - Heavy + boardrunner workers still exist per-browser; a join player can be **elected** to run boards via `boardrunner:ownedboards` from the host VM.
+
+### 4.1 Per-frame order of operations (join)
+
+1. **No sim `clock`:** `ticktock` is produced on the **main thread** (same hub as `register` / `gadgetclient`) and forwarded into the boardrunner worker with `allowticktock: true` ([`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts)).
+2. **Stub `vm`** only answers `operator` → `ackoperator`; multiplayer state changes arrive as forwarded **`vm:*` acks** and **`jsonsyncclient:*`** from the host over PeerJS.
+3. **`netterminal:cap`** carries `{ v: 1, host: <hostPlayerId> }` so the joiner can call **`vm:peergone`** with the correct host id on disconnect (not inferred from arbitrary first `message.player`).
+4. **PeerJS** never carries `ticktock` host→join; join boardrunner still ticks from **local** main-thread `ticktock` only.
 
 ---
 
@@ -375,12 +417,13 @@ All inter-hub edges are gated by predicates in [`zss/device/forward.ts`](../forw
 
 | Predicate | Used by | Approx. line range | Passes |
 |---|---|:-:|---|
-| `shouldforwardclienttoserver` | main → sim, join → host (PeerJS) | 109–137 | `vm`, `user`, `modem`, `jsonsyncserver`, `gadgetclient`, paths `sync`, `desync`, `joinack`, `needsnapshot`, `ackboardrunner` |
-| `shouldforwardservertoclient` | sim → main, host → join (PeerJS) | 57–95 | `log`, `chat`, `ready`, `toast`, `second`, `ticktock`, routed `vm`, `user`, `heavy`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, `jsonsyncclient`, `boardrunner`, several `vm:*` ack paths |
-| `shouldnotforwardonpeerserver` | host bridge | 46–52 | Blocks `ready`, `ticktock`, `netterminal:cap` |
-| `shouldnotforwardonpeerclient` | join bridge | 99–105 | Blocks `ticktock`, `second`, `netterminal:cap` |
-| `shouldforwardclienttoheavy` / `heavytoclient` | main ↔ heavy | 143–187 | `second`, `ready`, `heavy`, `jsonsyncclient`, `acklook`; heavy→main skips `ticktock` |
-| `shouldforwardclienttoboardrunner` | main → boardrunner | 193–217 | `ticktock`, `second`, `ready`, `user`, `jsonsyncclient`, `boardrunner` |
+| `shouldforwardclienttoserver` | main → sim, join → host (PeerJS) | see `forward.ts` | `vm`, `user`, `modem`, `jsonsyncserver`, `gadgetclient`, paths `sync`, `desync`, `joinack`, `needsnapshot`, `ackboardrunner` (plus literal fast paths) |
+| `shouldforwardservertoclient` | sim → main, host → join (PeerJS) | see `forward.ts` | `log`, `chat`, `ready`, `toast`, `second`, `ticktock`, routed `vm`, `user`, `heavy`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, `jsonsyncclient`, `boardrunner`, several `vm:*` ack paths |
+| `shouldnotforwardonpeerserver` | host bridge | see `forward.ts` | Blocks `ready` / `ticktock` / `netterminal:cap` by **target leaf** (including e.g. `vm:ticktock`) |
+| `shouldnotforwardonpeerclient` | join bridge | see `forward.ts` | Blocks `ticktock`, `second`, `ready`, `netterminal:cap` by leaf |
+| `shouldforwardclienttoheavy` / `heavytoclient` | main ↔ heavy | see `forward.ts` | `second`, `ready`, `heavy`, `jsonsyncclient`, `acklook`; heavy→main skips `ticktock` |
+| `shouldforwardclienttoboardrunner` | main → boardrunner | see `forward.ts` | `ticktock`, `second`, `ready`, `user`, `jsonsyncclient`, `boardrunner` |
+| `shouldforwardboardrunnertoclient` | boardrunner → main | see `forward.ts` | Same allowlist as `shouldforwardservertoclient` except blocks `jsonsync:changed`, `ticktock`, `second` |
 
 ### Representative targets (grouped by device prefix)
 

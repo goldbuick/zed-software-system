@@ -3,6 +3,7 @@ import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
   boardrunnerowned,
+  bridgehalt,
   registerinspector,
   registerloginready,
   vmclearscroll,
@@ -71,6 +72,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   delete tracking[message.player]
   delete lastinputtime[message.player]
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
+  bridgehalt(vm, message.player)
   registerloginready(vm, message.player)
 }
 
@@ -89,7 +91,6 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     zss_bookmarks: _zssbookmarks,
     ...flags
   } = message.data ?? {}
-  console.info('VM => storage', flags)
 
   if (memoryisoperator(message.player)) {
     memorysetcommandpermissions(

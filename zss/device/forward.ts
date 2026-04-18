@@ -3,11 +3,49 @@ import { hub } from 'zss/hub'
 
 import { MESSAGE, ismessage } from './api'
 
+/** Cap dedupe set so long sessions do not grow `syncids` without bound. */
+const FORWARD_SYNCIDS_CAP = 4096
+
+function peerblockedleaf(
+  message: MESSAGE,
+  mode: 'servertoclient' | 'clienttoserver',
+): boolean {
+  const r = parsetarget(message.target)
+  if (r.target === 'netterminal' && r.path === 'cap') {
+    return true
+  }
+  const leaf =
+    r.path.length > 0 ? r.path.slice(r.path.lastIndexOf(':') + 1) : r.target
+  if (leaf === 'ticktock') {
+    return true
+  }
+  if (mode === 'servertoclient' && leaf === 'ready') {
+    return true
+  }
+  if (mode === 'clienttoserver' && (leaf === 'second' || leaf === 'ready')) {
+    return true
+  }
+  return false
+}
+
 export function createforward(
   handler: (message: MESSAGE) => void,
   options: { allowticktock?: boolean } = {},
 ) {
   const syncids = new Set<string>()
+  const syncidorder: string[] = []
+
+  function syncidsrecord(id: string): void {
+    syncids.add(id)
+    syncidorder.push(id)
+    while (syncidorder.length > FORWARD_SYNCIDS_CAP) {
+      const old = syncidorder.shift()
+      if (old !== undefined) {
+        syncids.delete(old)
+      }
+    }
+  }
+
   // tick/tock are high-frequency clock pulses that we normally drop at the
   // bridge boundary so each worker hub doesn't have to dispatch them. The
   // boardrunner worker is an exception: Phase 2 of the boardrunner
@@ -24,13 +62,13 @@ export function createforward(
     ) {
       return
     }
-    syncids.add(message.id)
+    syncidsrecord(message.id)
     hub.invoke(message)
   }
 
   const device = createdevice('forward', ['all'], (message) => {
     if (!syncids.has(message.id)) {
-      syncids.add(message.id)
+      syncidsrecord(message.id)
       handler(message)
     }
   })
@@ -44,13 +82,7 @@ export function createforward(
 
 // outbound message
 export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ready':
-    case 'ticktock':
-    case 'netterminal:cap':
-      return true
-  }
-  return false
+  return peerblockedleaf(message, 'servertoclient')
 }
 
 // create server -> client forward
@@ -97,18 +129,36 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
 
 // outbound message
 export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ticktock':
-    case 'second':
-    case 'netterminal:cap':
-      return true
-  }
-  return false
+  return peerblockedleaf(message, 'clienttoserver')
 }
 
 // create client -> server forward
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
-  const route = parsetarget(message.target)
+  const t = message.target
+  if (t === 'ticktock') {
+    return false
+  }
+  // Hot paths: avoid parsetarget alloc on common multiplayer messages.
+  switch (t) {
+    case 'user:input':
+    case 'user:pilotstart':
+    case 'user:pilotstop':
+    case 'user:pilotclear':
+    case 'jsonsyncserver:clientpatch':
+    case 'jsonsyncserver:needsnapshot':
+    case 'gadgetclient:paint':
+    case 'gadgetclient:patch':
+      return true
+    default:
+      break
+  }
+  if (t.startsWith('vm:')) {
+    return true
+  }
+  if (t.startsWith('modem:')) {
+    return true
+  }
+  const route = parsetarget(t)
   if (route.target === 'boardrunner') {
     return false
   }
@@ -217,17 +267,16 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
   }
 }
 
-// create boardrunner -> server forward
-export function shouldforwardboardrunnertoserver(message: MESSAGE): boolean {
-  return shouldforwardclienttoserver(message)
-}
-
-// create boardrunner -> client forward
+// create boardrunner -> client forward (align with server→main minus clock)
 export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
-  // jsonsync:changed is a local broadcast used by in-process observers; do not
-  // leak it across the process boundary.
   if (message.target === 'jsonsync:changed') {
     return false
   }
-  return true
+  const r = parsetarget(message.target)
+  const leaf =
+    r.path.length > 0 ? r.path.slice(r.path.lastIndexOf(':') + 1) : r.target
+  if (leaf === 'ticktock' || leaf === 'second') {
+    return false
+  }
+  return shouldforwardservertoclient(message)
 }

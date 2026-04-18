@@ -19,7 +19,7 @@ import {
   jsonsyncclientlocalupdate,
   jsonsynccreateclientstream,
 } from 'zss/feature/jsonsync'
-import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 
 import {
   JSONSYNC_CHANGED,
@@ -75,7 +75,7 @@ export function jsonsyncclientedit(
   if (!ispresent(stream)) {
     return
   }
-  const nextdoc = producer(deepcopy(stream.document))
+  const nextdoc = producer(stream.document)
   const local = jsonsyncclientlocalupdate(stream, nextdoc, streamid)
   streams.set(streamid, local.stream)
   if (local.patch.changes.length === 0) {
@@ -94,7 +94,7 @@ function emitchanged(
     reason,
     cv: stream.cv,
     sv: stream.sv,
-    document: deepcopy(stream.document),
+    document: stream.document,
   })
 }
 

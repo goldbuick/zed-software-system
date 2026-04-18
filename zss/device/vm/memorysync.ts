@@ -30,6 +30,7 @@ import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
   MEMORY_STREAM_ID,
   memoryconsumealldirty,
+  memorymarkdirty,
   memorywithsilentwrites,
 } from 'zss/memory/memorydirty'
 import {
@@ -252,7 +253,9 @@ export function memorysyncpushdirty(): void {
   for (let i = 0; i < dirtyids.length; ++i) {
     const streamid = dirtyids[i]
     if (!ispresent(jsonsyncserverreadstream(streamid))) {
-      // not registered yet; nothing to push to
+      // Stream not registered yet — re-queue so a later register + tick
+      // still pushes this edit.
+      memorymarkdirty(streamid)
       continue
     }
     if (streamid === MEMORY_STREAM_ID) {

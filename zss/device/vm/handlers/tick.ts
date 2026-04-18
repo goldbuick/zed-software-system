@@ -12,6 +12,7 @@ import {
   ackboardrunners,
   boardrunners,
   failedboardrunners,
+  playerownedboards,
   tracking,
 } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
@@ -24,20 +25,6 @@ import {
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
-
-// Compute the list of boards this player is still the acked runner for.
-// Used to refresh a player's worker after an election change so it stops
-// painting / simulating for boards it no longer owns.
-function playerownedboards(player: string): string[] {
-  const result: string[] = []
-  const boards = Object.keys(ackboardrunners)
-  for (let i = 0; i < boards.length; ++i) {
-    if (ackboardrunners[boards[i]] === player) {
-      result.push(boards[i])
-    }
-  }
-  return result
-}
 
 export function handletick(vm: DEVICE, _message: MESSAGE): void {
   void _message
