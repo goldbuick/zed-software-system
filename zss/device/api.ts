@@ -196,6 +196,36 @@ export function boardrunnerowned(
   device.emit(player, 'boardrunner:ownedboards', boardids)
 }
 
+// Server VM -> elected runner's boardrunner worker: run a CLI command against
+// the worker-local authoritative MEMORY. `runnerplayer` is the routing target
+// (the acked boardrunner for the originating player's current board). The
+// payload preserves the originating player so memoryruncli can resolve
+// READ_CONTEXT.board / element correctly on the worker. Routed via
+// shouldforwardservertoclient (boardrunner:* whitelist) then
+// shouldforwardclienttoboardrunner into the worker.
+export type BOARDRUNNER_CLI = {
+  player: string
+  input: string
+}
+export function boardrunnercli(
+  device: DEVICELIKE,
+  runnerplayer: string,
+  payload: BOARDRUNNER_CLI,
+) {
+  device.emit(runnerplayer, 'boardrunner:cli', payload)
+}
+
+export type BOARDRUNNER_CLIREPEATLAST = {
+  player: string
+}
+export function boardrunnerclirepeatlast(
+  device: DEVICELIKE,
+  runnerplayer: string,
+  payload: BOARDRUNNER_CLIREPEATLAST,
+) {
+  device.emit(runnerplayer, 'boardrunner:clirepeatlast', payload)
+}
+
 // --- jsonsync ---------------------------------------------------------------
 
 export type JSONSYNC_CHANGED = {

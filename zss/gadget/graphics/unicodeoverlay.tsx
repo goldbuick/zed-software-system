@@ -8,9 +8,9 @@ import {
 import { RUNTIME } from 'zss/config'
 import { loadpalettefrombytes } from 'zss/feature/bytes'
 import { PALETTE } from 'zss/feature/palette'
-import { useDeviceData } from 'zss/gadget/device'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { palettetothreecolors } from 'zss/gadget/data/palettethree'
+import { useDeviceData } from 'zss/gadget/device'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import {
   getunicodeatlas,

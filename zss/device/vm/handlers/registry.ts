@@ -10,7 +10,6 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
-import { handleplayermovetoboard } from './playermovetoboard'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
@@ -26,6 +25,7 @@ import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
 import { handlepeergone } from './peergone'
+import { handleplayermovetoboard } from './playermovetoboard'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
 import { handlequery } from './query'

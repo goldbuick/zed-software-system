@@ -47,4 +47,16 @@ describe('forward rules for boardrunner gadget routes', () => {
     const m = msg('boardrunner:ownedboards')
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
+
+  it('forwards boardrunner:cli from server to client then into the boardrunner worker', () => {
+    const m = msg('boardrunner:cli')
+    expect(shouldforwardservertoclient(m)).toBe(true)
+    expect(shouldforwardclienttoboardrunner(m)).toBe(true)
+  })
+
+  it('forwards boardrunner:clirepeatlast from server to client then into the boardrunner worker', () => {
+    const m = msg('boardrunner:clirepeatlast')
+    expect(shouldforwardservertoclient(m)).toBe(true)
+    expect(shouldforwardclienttoboardrunner(m)).toBe(true)
+  })
 })

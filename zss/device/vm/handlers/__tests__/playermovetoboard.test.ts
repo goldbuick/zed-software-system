@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
-import { handleplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
 import { boardrunnerowned } from 'zss/device/api'
+import { handleplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
 import {
   memorysyncrevokeboardrunner,
   memorysyncupdateboard,
@@ -200,6 +200,49 @@ describe('handleplayermovetoboard', () => {
       'board-a',
     )
     expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', [])
+  })
+
+  it('pushes dest board stream before memory stream to prevent zoom flip', () => {
+    // Regression: the worker hydrates each jsonsync:changed separately, and a
+    // gadget sync can fire between hydrations. If memory (player.board = B)
+    // arrives before board:B (player in B.objects), memoryconverttogadgetcontrollayer
+    // sees no player on B and drops the CONTROL layer, flipping viewscale to MID.
+    // Dest board must be pushed first so B.objects already contains the player
+    // by the time the memory stream advertises the new player.board.
+    const book = {}
+    ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(book)
+    ;(memoryreadplayerboard as jest.Mock).mockReturnValue({ id: 'board-a' })
+    const destpage = { id: 'board-b' }
+    const sourcepage = { id: 'board-a' }
+    ;(memorypickcodepagewithtypeandstat as jest.Mock).mockImplementation(
+      (_type: unknown, id: string) => {
+        if (id === 'board-b') {
+          return destpage
+        }
+        if (id === 'board-a') {
+          return sourcepage
+        }
+        return undefined
+      },
+    )
+    const calls: string[] = []
+    ;(memorysyncupdateboard as jest.Mock).mockImplementation(
+      (page: { id: string }) => {
+        calls.push(`board:${page.id}`)
+      },
+    )
+    ;(memorysyncupdatememory as jest.Mock).mockImplementation(() => {
+      calls.push('memory')
+    })
+
+    const message = {
+      player: 'player-1',
+      data: makepayload(),
+    } as unknown as MESSAGE
+
+    handleplayermovetoboard(vm, message)
+
+    expect(calls).toEqual(['board:board-b', 'memory', 'board:board-a'])
   })
 
   it('clears runner election when moving player was only acked runner', () => {

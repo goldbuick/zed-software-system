@@ -446,11 +446,7 @@ const modem = createdevice('modem', ['second'], (message) => {
       break
     case 'join':
       if (message.sender !== modem.id()) {
-        modem.reply(
-          message,
-          'joinack',
-          Y.encodeStateAsUpdate(SYNC_DOC),
-        )
+        modem.reply(message, 'joinack', Y.encodeStateAsUpdate(SYNC_DOC))
         const myclientids = Array.from(AWARENESS.getStates().keys())
         if (myclientids.length > 0) {
           modem.emit(

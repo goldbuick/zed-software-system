@@ -11,7 +11,11 @@ import {
   memoryreadbookflags,
 } from 'zss/memory/bookoperations'
 import { memorymarkmemorydirty } from 'zss/memory/memorydirty'
-import { memorytickmain } from 'zss/memory/runtime'
+import {
+  memoryrepeatclilast,
+  memoryruncli,
+  memorytickmain,
+} from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
   memoryreadhalt,
@@ -267,6 +271,29 @@ const boardrunner = createdevice(
         memorymarkmemorydirty()
         vmclearscroll(boardrunner, message.player)
         break
+      case 'cli': {
+        // sim vm forwarded a CLI command here because this worker is the
+        // acked runner for the originating player's current board. run
+        // memoryruncli against worker-local authoritative MEMORY so
+        // READ_CONTEXT.board / element resolve correctly.
+        const payload = message.data as
+          | { player?: unknown; input?: unknown }
+          | undefined
+        const player = isstring(payload?.player) ? payload.player : ''
+        const input = isstring(payload?.input) ? payload.input : ''
+        if (player && input) {
+          memoryruncli(player, input)
+        }
+        break
+      }
+      case 'clirepeatlast': {
+        const payload = message.data as { player?: unknown } | undefined
+        const player = isstring(payload?.player) ? payload.player : ''
+        if (player) {
+          memoryrepeatclilast(player)
+        }
+        break
+      }
       default:
         break
     }

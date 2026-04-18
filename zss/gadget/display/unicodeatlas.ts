@@ -1,10 +1,5 @@
 import TinySDF from '@mapbox/tiny-sdf'
-import {
-  DataTexture,
-  LinearFilter,
-  RedFormat,
-  UnsignedByteType,
-} from 'three'
+import { DataTexture, LinearFilter, RedFormat, UnsignedByteType } from 'three'
 
 /** Slot edge length in texels (glyph + padding + SDF halo). */
 const SLOT_SIZE = 48
@@ -27,10 +22,7 @@ const MAX_FONT_FIT =
 
 function computedfontsize(hint: number): number {
   const tier = Math.min(2, Math.max(0.5, hint))
-  return Math.min(
-    MAX_FONT_FIT,
-    Math.round(MAX_FONT_FIT * (0.75 + 0.25 * tier)),
-  )
+  return Math.min(MAX_FONT_FIT, Math.round(MAX_FONT_FIT * (0.75 + 0.25 * tier)))
 }
 
 export type GlyphSlot = {
@@ -106,9 +98,9 @@ function ensureglyph(codepoint: number): GlyphSlot | null {
     return null
   }
   if (nextslot >= ATLAS_COLS * ATLAS_COLS) {
-    if (!atlasfullwarned && typeof import.meta !== 'undefined' && import.meta.env.DEV) {
+    if (!atlasfullwarned && import.meta?.env.DEV) {
       atlasfullwarned = true
-      // eslint-disable-next-line no-console
+
       console.warn(
         '[unicodeatlas] atlas full (1024 slots); further code points will not render',
       )
@@ -171,9 +163,7 @@ export function lookupglyph(codepoint: number): GlyphSlot | null {
  * Resolves with the glyph slot after creating it asynchronously so the main
  * thread is not blocked. Use this when building the overlay for many cells.
  */
-export function lookupglyphasync(
-  codepoint: number,
-): Promise<GlyphSlot | null> {
+export function lookupglyphasync(codepoint: number): Promise<GlyphSlot | null> {
   const cached = glyphcache.get(codepoint)
   if (cached) {
     return Promise.resolve(cached)

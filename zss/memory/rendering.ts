@@ -135,15 +135,25 @@ export function memoryconverttogadgetcontrollayer(
   board: MAYBE<BOARD>,
 ): LAYER[] {
   const control = createcachedcontrol(player, index)
-  const maybeobject = memoryreadobject(board, player)
-  if (!ispresent(board) || !ispresent(maybeobject)) {
+  // A board must be present to read graphics/camera/facing flags; without one
+  // we have nothing meaningful to project.
+  if (!ispresent(board)) {
     return []
   }
 
-  // setup focus
-  control.focusid = maybeobject.id ?? ''
-  control.focusx = maybeobject.x ?? 0
-  control.focusy = maybeobject.y ?? 0
+  // The player object can be transiently absent during a board hop: the
+  // memory stream (player.board flag) may hydrate on the worker before the
+  // dest board stream (which carries the player in board.objects). Keep the
+  // cached control alive with its previous focus so viewscale/graphics/facing
+  // stay stable — returning [] here drops the CONTROL layer entirely and the
+  // client falls back to VIEWSCALE.MID defaults, producing a brief zoom flip.
+  const maybeobject = memoryreadobject(board, player)
+  if (ispresent(maybeobject)) {
+    // setup focus
+    control.focusid = maybeobject.id ?? ''
+    control.focusx = maybeobject.x ?? 0
+    control.focusy = maybeobject.y ?? 0
+  }
 
   // player flags, then board flags
   const { graphics, camera, facing } = readgraphics(player, board)

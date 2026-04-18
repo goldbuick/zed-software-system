@@ -66,7 +66,12 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     boardrunnerowned(vm, message.player, playerownedboards(message.player))
   }
 
-  memorysyncupdatememory()
+  // Push dest board BEFORE the memory stream so the worker sees the player
+  // in board.objects of B before it learns (via the memory stream) that
+  // player.board === B. Otherwise a gadget sync tick can fire between the two
+  // hydrations and emit a gadget with no CONTROL layer (memoryreadobject
+  // returns undefined), causing the client to briefly fall back to
+  // VIEWSCALE.MID and flip the zoom.
   const destcodepage = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.BOARD,
     payload.board,
@@ -74,6 +79,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   if (ispresent(destcodepage)) {
     memorysyncupdateboard(destcodepage)
   }
+  memorysyncupdatememory()
   if (fromboardid) {
     const sourcecodepage = memorypickcodepagewithtypeandstat(
       CODE_PAGE_TYPE.BOARD,

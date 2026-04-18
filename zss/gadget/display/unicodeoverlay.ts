@@ -3,7 +3,11 @@ import type { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { COLOR } from 'zss/words/types'
 
-import { UNICODE_ATLAS_COLS, UNICODE_SDF_EDGE, getunicodeatlas } from './unicodeatlas'
+import {
+  UNICODE_ATLAS_COLS,
+  UNICODE_SDF_EDGE,
+  getunicodeatlas,
+} from './unicodeatlas'
 
 const QUAD_POSITIONS = new Float32Array([
   0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
