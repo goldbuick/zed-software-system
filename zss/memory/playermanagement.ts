@@ -40,7 +40,11 @@ import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memorymarkboarddirty, memorymarkmemorydirty } from './memorydirty'
 import { memoryhaltchip } from './runtime'
-import { memoryisoperator, memoryreadbookbysoftware } from './session'
+import {
+  memoryisoperator,
+  memoryreadbookbysoftware,
+  memoryreadoperator,
+} from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -226,6 +230,30 @@ export function memoryreadboardrunnerchoices(
       const ackedscore = tracking[acked] ?? 1000
       runnerscore[board] = ackedscore - BOARDRUNNER_STICKY_BIAS
       runnerchoices[board] = acked
+    }
+  }
+
+  // Host / session operator must stay the boardrunner on any board they occupy
+  // while a joiner is present: joiner tracking starts at INITIAL_TRACKING but
+  // the operator often has a much higher score from solo play, and this
+  // function otherwise picks the *lowest* score — which always steals the
+  // election from the host and stops their boardrunner worker (no movement).
+  const sessionop = memoryreadoperator()
+  if (isstring(sessionop) && sessionop.length > 0) {
+    const boardids = Object.keys(playeridsbyboard)
+    for (let i = 0; i < boardids.length; ++i) {
+      const board = boardids[i]
+      const onboard = playeridsbyboard[board] ?? []
+      if (!onboard.includes(sessionop)) {
+        continue
+      }
+      if (
+        boardrunnerfailed?.[board]?.[sessionop] === BOARDRUNNER_ACK_FAIL_COUNT
+      ) {
+        continue
+      }
+      runnerchoices[board] = sessionop
+      runnerscore[board] = Number.NEGATIVE_INFINITY
     }
   }
 

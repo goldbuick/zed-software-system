@@ -1,6 +1,7 @@
 import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
 import * as boards from 'zss/memory/boards'
 import { memoryreadboardrunnerchoices } from 'zss/memory/playermanagement'
+import * as session from 'zss/memory/session'
 import type { BOARD, BOOK } from 'zss/memory/types'
 
 function stubbook(
@@ -37,8 +38,10 @@ const boardb: BOARD = {
 
 describe('memoryreadboardrunnerbyboard', () => {
   let spy: jest.SpiedFunction<typeof boards.memoryreadboardbyaddress>
+  let opSpy: jest.SpiedFunction<typeof session.memoryreadoperator>
 
   beforeEach(() => {
+    opSpy = jest.spyOn(session, 'memoryreadoperator').mockReturnValue('')
     spy = jest
       .spyOn(boards, 'memoryreadboardbyaddress')
       .mockImplementation((addr: string) => {
@@ -54,6 +57,7 @@ describe('memoryreadboardrunnerbyboard', () => {
 
   afterEach(() => {
     spy.mockRestore()
+    opSpy.mockRestore()
   })
 
   it('picks lower tracking on same board', () => {
@@ -107,6 +111,19 @@ describe('memoryreadboardrunnerbyboard', () => {
     const t = { op: 10, joiner: 8 }
     const acked = { 'addr-a': 'op' }
     expect(memoryreadboardrunnerchoices(book, t, undefined, acked)).toEqual({
+      runnerchoices: { 'addr-a': 'op' },
+      playeridsbyboard: { 'addr-a': ['op', 'joiner'] },
+    })
+  })
+
+  it('prefers session operator on a shared board even when joiner has much lower tracking', () => {
+    const book = stubbook(['op', 'joiner'], {
+      op: 'addr-a',
+      joiner: 'addr-a',
+    })
+    const t = { op: 100, joiner: 8 }
+    opSpy.mockReturnValue('op')
+    expect(memoryreadboardrunnerchoices(book, t)).toEqual({
       runnerchoices: { 'addr-a': 'op' },
       playeridsbyboard: { 'addr-a': ['op', 'joiner'] },
     })

@@ -1,6 +1,7 @@
 import { createdevice } from 'zss/device'
 import {
   gadgetclearscroll,
+  gadgetstate,
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
@@ -11,11 +12,7 @@ import {
   memoryreadbookflags,
 } from 'zss/memory/bookoperations'
 import { memorymarkmemorydirty } from 'zss/memory/memorydirty'
-import {
-  memoryrepeatclilast,
-  memoryruncli,
-  memorytickmain,
-} from 'zss/memory/runtime'
+import { memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
   memoryreadhalt,
@@ -25,7 +22,11 @@ import {
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
-import { JSONSYNC_CHANGED, vmclearscroll } from './api'
+import {
+  BOARDRUNNER_GADGETSCROLLPUSH,
+  JSONSYNC_CHANGED,
+  vmclearscroll,
+} from './api'
 import {
   boardrunnergadgetclearsyncbaseline,
   boardrunnergadgetdesyncpaint,
@@ -71,6 +72,9 @@ gadgetstateprovider((element) => {
 // hitches, and blank screens on join.
 const ownedboards = new Set<string>()
 
+/** Owned `board:<id>` streams that hydrated this frame batch; gadget baseline clear + paint coalesced to next ticktock (avoids repainting inside jsonsync before MEMORY is settled). */
+const pendingOwnedBoardGadgetResync = new Set<string>()
+
 function isowned(boardid: string): boolean {
   return isstring(boardid) && ownedboards.has(boardid)
 }
@@ -106,6 +110,42 @@ function ownedplayerids(): string[] {
   return out
 }
 
+function flushOwnedBoardGadgetResync(dev: ReturnType<typeof createdevice>) {
+  if (pendingOwnedBoardGadgetResync.size === 0) {
+    return
+  }
+  const boards = [...pendingOwnedBoardGadgetResync]
+  pendingOwnedBoardGadgetResync.clear()
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  let clearedgadgetbaseline = false
+  for (let b = 0; b < boards.length; ++b) {
+    const boardaddress = boards[b]
+    if (!isowned(boardaddress) || !ispresent(mainbook?.activelist)) {
+      continue
+    }
+    const players = new Set<string>(mainbook.activelist)
+    const op = memoryreadoperator()
+    if (isstring(op) && op.length > 0) {
+      players.add(op)
+    }
+    const playerlist = [...players]
+    for (let p = 0; p < playerlist.length; ++p) {
+      const player = playerlist[p]
+      const bf = memoryreadbookflag(mainbook, player, 'board')
+      if (isstring(bf) && bf === boardaddress) {
+        boardrunnergadgetclearsyncbaseline(player)
+        clearedgadgetbaseline = true
+      }
+    }
+  }
+  if (clearedgadgetbaseline) {
+    const paintplayers = ownedplayerids()
+    if (paintplayers.length > 0) {
+      boardrunnergadgetsynctick(dev, paintplayers)
+    }
+  }
+}
+
 // run our local authoritative tick. memoryreadbookplayerboards filters by
 // `memoryreadboardbyaddress`, which only resolves boards the worker has
 // hydrated via `board:<id>` snapshots — i.e. boards we were elected to run.
@@ -117,6 +157,7 @@ function ownedplayerids(): string[] {
 // After the tick, drain per-stream dirty bits and emit jsonsyncclientedit
 // upstream.
 function runworkertick(dev: ReturnType<typeof createdevice>): void {
+  flushOwnedBoardGadgetResync(dev)
   if (memoryreadsimfreeze()) {
     return
   }
@@ -166,8 +207,12 @@ const boardrunner = createdevice(
         memoryhydratefromjsonsync(payload.streamid, payload.document)
         // Board tiles can mutate in place; gadget slim diff baseline may still
         // compare equal to the new export so the client never gets a patch.
-        // Drop baseline for anyone standing on this board so the next tick
-        // re-diffs from scratch (empty compare storms after in-place tile edits).
+        // We only bust the baseline on snapshot/antipatch: those reshape
+        // stream state enough that a fresh paint is appropriate. The hot
+        // multiplayer path is `serverpatch`; clearing baseline there forces
+        // gadgetclientpaint (!hadbaseline) on every merge and causes severe
+        // rubber-banding on /join/ clients — normal ticktock
+        // boardrunnergadgetsynctick still diffs patch from the kept baseline.
         if (isboardstream) {
           const boardaddress = streamid.slice('board:'.length)
           // Only clear baselines and trigger an immediate repaint for this
@@ -177,29 +222,11 @@ const boardrunner = createdevice(
           if (!isowned(boardaddress)) {
             break
           }
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          let clearedgadgetbaseline = false
-          if (ispresent(mainbook?.activelist)) {
-            const players = new Set<string>(mainbook.activelist)
-            const op = memoryreadoperator()
-            if (isstring(op) && op.length > 0) {
-              players.add(op)
-            }
-            const playerlist = [...players]
-            for (let p = 0; p < playerlist.length; ++p) {
-              const player = playerlist[p]
-              const bf = memoryreadbookflag(mainbook, player, 'board')
-              if (isstring(bf) && bf === boardaddress) {
-                boardrunnergadgetclearsyncbaseline(player)
-                clearedgadgetbaseline = true
-              }
-            }
-          }
-          if (clearedgadgetbaseline) {
-            const paintplayers = ownedplayerids()
-            if (paintplayers.length > 0) {
-              boardrunnergadgetsynctick(boardrunner, paintplayers)
-            }
+          if (
+            payload.reason === 'snapshot' ||
+            payload.reason === 'antipatch'
+          ) {
+            pendingOwnedBoardGadgetResync.add(boardaddress)
           }
         }
         break
@@ -235,6 +262,9 @@ const boardrunner = createdevice(
         })
         ownedboards.clear()
         next.forEach((b) => ownedboards.add(b))
+        for (let r = 0; r < removed.length; ++r) {
+          pendingOwnedBoardGadgetResync.delete(removed[r])
+        }
         if (removed.length > 0 || added.length > 0) {
           // Clear baselines for affected players so the next paint or the
           // immediate paint below starts from scratch (no stale diff
@@ -271,27 +301,27 @@ const boardrunner = createdevice(
         memorymarkmemorydirty()
         vmclearscroll(boardrunner, message.player)
         break
-      case 'cli': {
-        // sim vm forwarded a CLI command here because this worker is the
-        // acked runner for the originating player's current board. run
-        // memoryruncli against worker-local authoritative MEMORY so
-        // READ_CONTEXT.board / element resolve correctly.
+      case 'gadgetscrollpush': {
+        // Sim-authored scroll content lands here; the runner is authoritative
+        // for painting, so we mirror the push into the worker's gadgetstate
+        // and let the next boardrunnergadgetsynctick diff/emit it. We do NOT
+        // mark memory dirty: `gadgetstore` is worker-local (volatile), and
+        // paints ship via gadgetclient:paint/patch, not memoryworkerpushdirty.
         const payload = message.data as
-          | { player?: unknown; input?: unknown }
+          | BOARDRUNNER_GADGETSCROLLPUSH
           | undefined
         const player = isstring(payload?.player) ? payload.player : ''
-        const input = isstring(payload?.input) ? payload.input : ''
-        if (player && input) {
-          memoryruncli(player, input)
+        if (!player) {
+          break
         }
-        break
-      }
-      case 'clirepeatlast': {
-        const payload = message.data as { player?: unknown } | undefined
-        const player = isstring(payload?.player) ? payload.player : ''
-        if (player) {
-          memoryrepeatclilast(player)
-        }
+        const shared = gadgetstate(player)
+        shared.scrollname = isstring(payload?.scrollname)
+          ? payload.scrollname
+          : ''
+        shared.scroll = isarray(payload?.scroll) ? payload.scroll : []
+        // Clearing the sync baseline here would force an unnecessary full
+        // paint every click; the ordinary compare() path will include the
+        // scroll add/remove in the next patch.
         break
       }
       default:

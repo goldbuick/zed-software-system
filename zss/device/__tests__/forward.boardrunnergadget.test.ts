@@ -1,6 +1,7 @@
 import { createmessage } from 'zss/device'
 import { MESSAGE } from 'zss/device/api'
 import {
+  shouldforwardboardrunnertoclient,
   shouldforwardclienttoboardrunner,
   shouldforwardclienttoserver,
   shouldforwardservertoclient,
@@ -48,14 +49,26 @@ describe('forward rules for boardrunner gadget routes', () => {
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
 
-  it('forwards boardrunner:cli from server to client then into the boardrunner worker', () => {
-    const m = msg('boardrunner:cli')
+  it('forwards boardrunner:gadgetscrollpush from server to client then into the boardrunner worker', () => {
+    const m = msg('boardrunner:gadgetscrollpush')
     expect(shouldforwardservertoclient(m)).toBe(true)
     expect(shouldforwardclienttoboardrunner(m)).toBe(true)
   })
 
-  it('forwards boardrunner:clirepeatlast from server to client then into the boardrunner worker', () => {
-    const m = msg('boardrunner:clirepeatlast')
+  it('forwards jsonsyncserver:clientpatch from boardrunner worker to main, then on to sim', () => {
+    const m = msg('jsonsyncserver:clientpatch')
+    expect(shouldforwardboardrunnertoclient(m)).toBe(true)
+    expect(shouldforwardclienttoserver(m)).toBe(true)
+  })
+
+  it('forwards jsonsyncserver:needsnapshot from boardrunner worker to main, then on to sim', () => {
+    const m = msg('jsonsyncserver:needsnapshot')
+    expect(shouldforwardboardrunnertoclient(m)).toBe(true)
+    expect(shouldforwardclienttoserver(m)).toBe(true)
+  })
+
+  it('still forwards jsonsyncclient:serverpatch from server into the boardrunner worker', () => {
+    const m = msg('jsonsyncclient:serverpatch')
     expect(shouldforwardservertoclient(m)).toBe(true)
     expect(shouldforwardclienttoboardrunner(m)).toBe(true)
   })

@@ -80,8 +80,7 @@ Loaded in [`zss/heavyspace.ts`](../../heavyspace.ts); [`zss/device/heavy.ts`](..
 | Routing name | Role |
 |---|---|
 | `heavy` | LLM / TTS / agent jobs: `ttsinfo`, `ttsrequest`, `modelprompt`, `modelstop`, `llmpreset`, `queryresult`, `pullvarresult`, `agentstart/stop/list/name`, `syncuserdisplay`, `restoreagents`. |
-| `jsonsyncclient` | Same client jsonsync stack as main ([`heavyspace.ts`](../../heavyspace.ts) 4). |
-| `forward` | Forwards `shouldforwardheavytoclient` to parent ([`heavyspace.ts`](../../heavyspace.ts) 6–9). |
+| `forward` | Forwards `shouldforwardheavytoclient` to parent ([`heavyspace.ts`](../../heavyspace.ts) 6–8). |
 
 ### Boardrunner worker (`boardrunnerspace`)
 
@@ -117,7 +116,6 @@ Loaded in [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts); core device [`
 | `modem` (worker) | | ✓ | | | | | | |
 | `gadgetmemoryprovider` | | ✓ | | ✓ | | | | ✓ |
 | `heavy` | | | ✓ | | | | ✓ | |
-| `jsonsyncclient` (heavy) | | | ✓ | | | | ✓ | |
 | `boardrunner` | | | | ✓ | | | | ✓ |
 | `user` (boardrunner pilot) | | | | ✓ | | | | ✓ |
 | `jsonsyncclient` (br) | | | | ✓ | | | | ✓ |
@@ -160,7 +158,6 @@ flowchart LR
   subgraph HEAVY["Heavy worker — heavyspace.ts"]
     direction TB
     HV_H[heavy<br/>LLM / TTS / agents]:::heavy
-    HV_JSC[jsonsyncclient]:::heavy
     HV_FWD[forward]:::heavy
   end
 
@@ -196,8 +193,8 @@ flowchart LR
   S_GMP -->|gadgetstate flags| S_VM
 
   %% Main -> Heavy
-  H_FWD -. heavy:* / jsonsyncclient / second .-> HV_FWD
-  HV_FWD -. heavy:* / acklook / jsonsyncclient<br/>(no ticktock) .-> H_FWD
+  H_FWD -. heavy:* / second .-> HV_FWD
+  HV_FWD -. heavy:* / acklook<br/>(no ticktock) .-> H_FWD
 
   %% Main -> Boardrunner
   H_FWD -. ticktock / second / user<br/>jsonsyncclient / boardrunner .-> B_FWD
@@ -289,7 +286,6 @@ flowchart LR
   subgraph HEAVY["Heavy worker — heavyspace.ts"]
     direction TB
     JHV_H[heavy]:::heavy
-    JHV_JSC[jsonsyncclient]:::heavy
     JHV_FWD[forward]:::heavy
   end
 
@@ -314,8 +310,8 @@ flowchart LR
   ST_FWD -. ackoperator + anything<br/>allowticktock passes .-> J_FWD
 
   %% Main -> Heavy (unchanged)
-  J_FWD -. heavy:* / jsonsyncclient / second .-> JHV_FWD
-  JHV_FWD -. heavy / acklook / jsonsyncclient .-> J_FWD
+  J_FWD -. heavy:* / second .-> JHV_FWD
+  JHV_FWD -. heavy / acklook .-> J_FWD
 
   %% Main -> Boardrunner (unchanged)
   J_FWD -. ticktock local tick<br/>second / user<br/>jsonsyncclient / boardrunner .-> JB_FWD
@@ -421,9 +417,9 @@ All inter-hub edges are gated by predicates in [`zss/device/forward.ts`](../forw
 | `shouldforwardservertoclient` | sim → main, host → join (PeerJS) | see `forward.ts` | `log`, `chat`, `ready`, `toast`, `second`, `ticktock`, routed `vm`, `user`, `heavy`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, `jsonsyncclient`, `boardrunner`, several `vm:*` ack paths |
 | `shouldnotforwardonpeerserver` | host bridge | see `forward.ts` | Blocks `ready` / `ticktock` / `netterminal:cap` by **target leaf** (including e.g. `vm:ticktock`) |
 | `shouldnotforwardonpeerclient` | join bridge | see `forward.ts` | Blocks `ticktock`, `second`, `ready`, `netterminal:cap` by leaf |
-| `shouldforwardclienttoheavy` / `heavytoclient` | main ↔ heavy | see `forward.ts` | `second`, `ready`, `heavy`, `jsonsyncclient`, `acklook`; heavy→main skips `ticktock` |
+| `shouldforwardclienttoheavy` / `heavytoclient` | main ↔ heavy | see `forward.ts` | `second`, `ready`, `heavy`, `acklook`; heavy→main skips `ticktock` |
 | `shouldforwardclienttoboardrunner` | main → boardrunner | see `forward.ts` | `ticktock`, `second`, `ready`, `user`, `jsonsyncclient`, `boardrunner` |
-| `shouldforwardboardrunnertoclient` | boardrunner → main | see `forward.ts` | Same allowlist as `shouldforwardservertoclient` except blocks `jsonsync:changed`, `ticktock`, `second` |
+| `shouldforwardboardrunnertoclient` | boardrunner → main | see `forward.ts` | Same allowlist as `shouldforwardservertoclient` plus target `jsonsyncserver` (so `jsonsyncserver:clientpatch` / `needsnapshot` from `memoryworkerpushdirty` reach the sim's `jsonsyncserver`); blocks `jsonsync:changed`, `ticktock`, `second` |
 
 ### Representative targets (grouped by device prefix)
 

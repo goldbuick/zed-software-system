@@ -5,7 +5,8 @@
 
 export const SECOND_TIMEOUT = 16
 export const FLUSH_RATE = 60
-export const BOARDRUNNER_ACK_FAIL_COUNT = 2
+/** Seconds (1 `second` tick each) to wait for boardrunner ack before clearing election. */
+export const BOARDRUNNER_ACK_FAIL_COUNT = 6
 /**
  * Bias applied to a currently-acked board runner when deciding the next
  * election (see memoryreadboardrunnerchoices). A challenger must beat the
@@ -19,6 +20,15 @@ export const BOARDRUNNER_STICKY_BIAS = 4
  * tracking is a few seconds old. Combined with BOARDRUNNER_STICKY_BIAS this
  * gives the existing runner a multi-tick stability window. */
 export const INITIAL_TRACKING = 8
+
+/**
+ * `handlesecond` calls `vmlogout` when `tracking[player]` reaches this value
+ * (increments once per host sim second; `vm:doot` resets to 0). The host keeps
+ * ticking even when a joiner's tab is throttled, so `doot` can lag many real
+ * seconds — `SECOND_TIMEOUT + INITIAL_TRACKING` (~24) was still too tight in
+ * practice. Use an absolute multi-second floor independent of election bias.
+ */
+export const IDLE_LOGOUT_TRACKING = SECOND_TIMEOUT * 3
 
 export const tracking: Record<string, number> = {}
 export const trackinglastlog: Record<string, number> = {}

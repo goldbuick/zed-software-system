@@ -16,7 +16,10 @@ import {
   tracking,
 } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadboardrunnerchoices } from 'zss/memory/playermanagement'
+import {
+  memoryreadboardrunnerchoices,
+  memoryscanplayers,
+} from 'zss/memory/playermanagement'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
@@ -31,6 +34,13 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
   if (memoryreadsimfreeze()) {
     return
   }
+  // Same invariant as handlesecond: every activelist / on-board pid must have a
+  // tracking slot before boardrunner election. handlesecond only runs 1 Hz; a
+  // new /join/ player can land on activelist mid-second while handletick runs
+  // every frame — undefined tracking becomes score 1000 in
+  // memoryreadboardrunnerchoices and they cannot be elected until the next
+  // second's scan.
+  memoryscanplayers(tracking)
   perfmeasure('vm:memorytickmain', () => {
     // Phase 2 of the boardrunner authoritative-tick plan: server runs only
     // the loader half of the tick. Per-board chip code runs in elected

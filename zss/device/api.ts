@@ -196,34 +196,28 @@ export function boardrunnerowned(
   device.emit(player, 'boardrunner:ownedboards', boardids)
 }
 
-// Server VM -> elected runner's boardrunner worker: run a CLI command against
-// the worker-local authoritative MEMORY. `runnerplayer` is the routing target
-// (the acked boardrunner for the originating player's current board). The
-// payload preserves the originating player so memoryruncli can resolve
-// READ_CONTEXT.board / element correctly on the worker. Routed via
-// shouldforwardservertoclient (boardrunner:* whitelist) then
+// Sim VM -> elected runner's boardrunner worker: push a freshly authored scroll
+// (`scrollname` + `scroll` content) onto the runner's worker-local gadgetstate.
+// Scroll-producing vm handlers (inspect / refscroll / batch / …) continue to
+// run on the sim because they need stable READ_CONTEXT and can register
+// hyperlink bridges in sim. The sim writes to its own gadgetstore, then emits
+// this message so the authoritative runner — which owns the UI paint loop via
+// `boardrunnergadgetsynctick` — can include the scroll in its next diff.
+// `gadgetstore` is kept worker-local (see VOLATILE_FLAG_KEYS); this push is
+// the only path by which sim-authored scroll content reaches the runner.
+// Routed via shouldforwardservertoclient (boardrunner:* whitelist) then
 // shouldforwardclienttoboardrunner into the worker.
-export type BOARDRUNNER_CLI = {
+export type BOARDRUNNER_GADGETSCROLLPUSH = {
   player: string
-  input: string
+  scrollname: string
+  scroll: unknown[]
 }
-export function boardrunnercli(
+export function boardrunnergadgetscrollpush(
   device: DEVICELIKE,
   runnerplayer: string,
-  payload: BOARDRUNNER_CLI,
+  payload: BOARDRUNNER_GADGETSCROLLPUSH,
 ) {
-  device.emit(runnerplayer, 'boardrunner:cli', payload)
-}
-
-export type BOARDRUNNER_CLIREPEATLAST = {
-  player: string
-}
-export function boardrunnerclirepeatlast(
-  device: DEVICELIKE,
-  runnerplayer: string,
-  payload: BOARDRUNNER_CLIREPEATLAST,
-) {
-  device.emit(runnerplayer, 'boardrunner:clirepeatlast', payload)
+  device.emit(runnerplayer, 'boardrunner:gadgetscrollpush', payload)
 }
 
 // --- jsonsync ---------------------------------------------------------------

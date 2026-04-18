@@ -150,6 +150,7 @@ const netterminalencodecache = new WeakMap<MESSAGE, Uint8Array>()
 function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
   let topicbridge: MAYBE<ReturnType<typeof createforward>>
+  let bridgeinited = false
   // learned from the first inbound message on this dataconnection. the joiner
   // stamps message.player on every emit, so the host learns its peer's player
   // id lazily without any extra handshake.
@@ -261,6 +262,10 @@ function handledataconnection(dataconnection: DataConnection) {
     if (!dataconnection.open) {
       return
     }
+    if (bridgeinited) {
+      return
+    }
+    bridgeinited = true
     apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
     if (ishost()) {
       hostbridge()

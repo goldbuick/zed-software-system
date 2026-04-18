@@ -10,7 +10,7 @@ import { memorysyncrevokeboardrunner } from 'zss/device/vm/memorysync'
 import {
   BOARDRUNNER_ACK_FAIL_COUNT,
   FLUSH_RATE,
-  SECOND_TIMEOUT,
+  IDLE_LOGOUT_TRACKING,
   ackboardrunners,
   boardrunners,
   failedboardrunners,
@@ -36,7 +36,7 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
       }
       for (let i = 0; i < players.length; ++i) {
         const player = players[i]
-        if (tracking[player] >= SECOND_TIMEOUT) {
+        if (tracking[player] >= IDLE_LOGOUT_TRACKING) {
           vmlogout(vm, player, false)
         }
       }
@@ -71,6 +71,18 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
           }
           delete boardrunners[boardid]
           delete ackboardrunners[boardid]
+          // Clear retry state for this (board, player) pair so election can
+          // pick the same peer again after a slow network / join race. Without
+          // this, failedboardrunners stays at FAIL_COUNT forever and
+          // memoryreadboardrunnerchoices permanently excludes the player
+          // (observed as join client stuck with empty boardrunner:ownedboards).
+          if (failedboardrunners[boardid]) {
+            delete failedboardrunners[boardid][playerid]
+            if (Object.keys(failedboardrunners[boardid]).length === 0) {
+              delete failedboardrunners[boardid]
+            }
+          }
+          ownershipdirty.add(playerid)
         }
       }
 
@@ -86,5 +98,10 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
         await savestate(vm, true)
       })
     }
+
+    console.info('vm:second boardrunner assignments', {
+      elected: { ...boardrunners },
+      acked: { ...ackboardrunners },
+    })
   })
 }

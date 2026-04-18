@@ -197,6 +197,16 @@ export const VOLATILE_FLAG_KEYS: readonly string[] = [
   'synthplay',
 ]
 
+// Outer flag ids that are entirely worker-local and must never round-trip
+// through the memory stream. `gadgetstore` holds per-player scroll/sidebar
+// content authored by scroll-producing vm handlers on sim and mirrored to
+// the elected boardrunner worker via `boardrunner:gadgetscrollpush`. Each
+// realm maintains its own copy (sim for hyperlink bridge dispatch, worker
+// for UI paint via boardrunnergadgetsynctick). Projecting it up would let
+// sim's (potentially partial) view clobber the worker's authoritative view
+// on hydrate — memoryhydrate deletes worker entries not present in incoming.
+export const VOLATILE_FLAG_IDS: readonly string[] = ['gadgetstore']
+
 function stripvolatileflags(
   flags: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -204,6 +214,9 @@ function stripvolatileflags(
   const ids = Object.keys(flags)
   for (let i = 0; i < ids.length; ++i) {
     const id = ids[i]
+    if (VOLATILE_FLAG_IDS.includes(id)) {
+      continue
+    }
     const entry = flags[id]
     if (!ispresent(entry) || typeof entry !== 'object') {
       out[id] = entry

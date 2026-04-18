@@ -201,7 +201,6 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'heavy':
-        case 'jsonsyncclient':
           return true
       }
       switch (route.path) {
@@ -225,7 +224,6 @@ export function shouldforwardheavytoclient(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'heavy':
-        case 'jsonsyncserver':
           return true
       }
       switch (route.path) {
@@ -277,6 +275,17 @@ export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
     r.path.length > 0 ? r.path.slice(r.path.lastIndexOf(':') + 1) : r.target
   if (leaf === 'ticktock' || leaf === 'second') {
     return false
+  }
+  // The boardrunner worker is authoritative for elected boards and pushes
+  // mutations back up via `memoryworkerpushdirty` -> `jsonsyncclientedit`,
+  // which emits `jsonsyncserver:clientpatch` / `jsonsyncserver:needsnapshot`
+  // targets. `shouldforwardservertoclient` only allowlists `jsonsyncclient`
+  // (downstream snapshots/patches), so without this passthrough the worker's
+  // client-side edits never reach the main hub and the sim's jsonsyncserver
+  // never reverse-projects them into canonical MEMORY. Mirrors the heavy
+  // worker's bridge, which allowlists `jsonsyncserver` for the same reason.
+  if (r.target === 'jsonsyncserver') {
+    return true
   }
   return shouldforwardservertoclient(message)
 }
