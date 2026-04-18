@@ -40,15 +40,6 @@ import { pilottick } from './vm/handlers/pilot'
 import { memoryhydratefromjsonsync } from './vm/memoryhydrate'
 import { memoryworkerpushdirty } from './vm/memoryworkersync'
 
-// the boardrunner worker is authoritative for elected player boards, so chip
-// aftertick writes (sidebar / scroll) produced by RUNTIME_FIRMWARE land in
-// mainbook.flags[GADGETSTORE] (same shape as sim gadgetmemoryprovider.ts). the
-// worker diffs gadgetstate(player) each tick and emits gadgetclientpatch /
-// paint to the client directly — no sim-side code reads GADGETSTORE, so this
-// store is worker-local and must NOT mark the memory stream dirty on access
-// (that forces a ~120KB projectmemory + diff every tick). callers that need
-// to round-trip other memory mutations upstream should call
-// memorymarkmemorydirty() at the actual mutation site.
 gadgetstateprovider((element) => {
   if (ispid(element)) {
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -66,18 +57,16 @@ gadgetstateprovider((element) => {
   return initstate()
 })
 
-// Election sends one codepage id (`boardrunner:ownedboard`). The runner may
-// authoritatively touch one or two `board:<id>` streams: the mid board and,
-// when present, its overboard (see BOARD.over → memoryreadoverboard). We
-// expand the assigned id into `ownedboardids` whenever MEMORY hydrates so
 // jsonsync resync + gadget baselines treat both layers as ours.
 let assignedboardid = ''
 
+let assignedplayerid = ''
+export function setassignedplayerid(player: string) {
+  assignedplayerid = player
+}
+
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
 const ownedboardids = new Set<string>()
-
-/** Owned `board:<id>` streams that hydrated this batch; gadget baseline coalesced to next ticktock. */
-// const pendingOwnedBoardGadgetResync = new Set<string>()
 
 function snapshotownedids(assigned: string): Set<string> {
   const ids = new Set<string>()
@@ -172,6 +161,23 @@ const boardrunner = createdevice(
     if (!boardrunner.session(message)) {
       return
     }
+
+    // filter messages by target
+    switch (message.target) {
+      case 'ticktock':
+      case 'jsonsync:changed':
+        // no player filter on these messages
+        break
+      default:
+        // everything else is filtered by assignedplayerid
+        if (message.player !== assignedplayerid) {
+          console.info('filtered message', message.target)
+          return
+        }
+        break
+    }
+
+    // handle messages
     switch (message.target) {
       case 'jsonsync:changed': {
         const payload = message.data as JSONSYNC_CHANGED

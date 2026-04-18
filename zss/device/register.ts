@@ -102,7 +102,6 @@ import {
   vmzsswords,
 } from './api'
 import { runbookmarkcopytogame, runbookmarkurlnavigate } from './runbookmark'
-import { platformsetgadgetpaintfilterplayer } from 'zss/platform'
 
 // read / write from session
 
@@ -276,7 +275,6 @@ async function syncterminalbookmarkpins() {
 
 export function registersetmyplayerid(id: string) {
   myplayerid = id
-  platformsetgadgetpaintfilterplayer(id)
 }
 
 // timeout for TOAST
@@ -314,7 +312,6 @@ export const register = createdevice(
     const currentboard = useGadgetClient.getState().gadget.board
     switch (message.target) {
       case 'ready': {
-        platformsetgadgetpaintfilterplayer(myplayerid)
         doasync(register, message.player, async () => {
           // setup content watcher
           storagewatchcontent(myplayerid)
@@ -333,19 +330,16 @@ export const register = createdevice(
           await waitfor(256)
           apilog(register, myplayerid, `myplayerid ${myplayerid}`)
           vmoperator(register, myplayerid)
-          platformsetgadgetpaintfilterplayer(myplayerid)
         })
         break
       }
       case 'sessionreset':
         agentdootids.clear()
         bridgehalt(register, myplayerid)
-        platformsetgadgetpaintfilterplayer('')
         break
       case 'ackoperator':
         // reset display
         boardrunnergadgetdesync(register, myplayerid)
-        platformsetgadgetpaintfilterplayer(myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)
