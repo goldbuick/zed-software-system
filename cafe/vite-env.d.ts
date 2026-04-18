@@ -6,5 +6,7 @@ interface ImportMetaEnv {
   readonly ZSS_DEBUG_RAYCAST_DOT?: string
   readonly ZSS_DEBUG_RAYCAST_PICKSHEET?: string
   readonly ZSS_DEBUG_FLAT_CAMERA_ORTHO?: string
+  /** When "1", PeerJS sends legacy serializable objects instead of CBOR. */
+  readonly ZSS_NETFORMAT_DEBUG?: string
   readonly ZSS_E2E?: string
 }

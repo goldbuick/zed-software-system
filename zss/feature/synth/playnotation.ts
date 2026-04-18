@@ -1,4 +1,3 @@
-import { Time } from 'tone'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 export const SYNTH_SFX_RESET = 4
@@ -91,23 +90,13 @@ export type SYNTH_NOTE = null | string | number
 export type SYNTH_NOTE_ON = [number, string, SYNTH_NOTE]
 export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
 
-const BASE_NOTE = '64n'
-
-function durationnotation(duration: number) {
-  return Time({ [BASE_NOTE]: duration }).toNotation()
-}
-
-function durationseconds(duration: number) {
-  return Time({ [BASE_NOTE]: duration }).toSeconds()
-}
-
 export function invokeplay(
   synth: number,
   starttime: number,
   play: SYNTH_OP[] | string,
-  withendofpattern = true,
-  makenotation = durationnotation,
-  calcseconds = durationseconds,
+  withendofpattern: boolean,
+  makenotation: (duration: number) => string,
+  calcseconds: (duration: number) => number,
 ) {
   // translate ops into time, note pairs
   let time = starttime

@@ -15,9 +15,12 @@ import { memoryreadsynth } from 'zss/memory/synthstate'
 import { gadgetclientpaint, gadgetclientpatch } from './api'
 
 const gadgetsync = new Map<string, FORMAT_OBJECT>()
+/** Last `playerboard.id` we stored in `gadgetsync` (survives flag vs hydrate ordering). */
+const gadgetlastexportboard = new Map<string, string>()
 
 export function boardrunnergadgetclearsyncbaseline(player: string) {
   gadgetsync.delete(player)
+  gadgetlastexportboard.delete(player)
 }
 
 export function boardrunnergadgetsynctick(
@@ -97,19 +100,32 @@ export function boardrunnergadgetsynctick(
       continue
     }
 
+    const lastexportboard = gadgetlastexportboard.get(player)
+    if (
+      boardid.length > 0 &&
+      ispresent(lastexportboard) &&
+      lastexportboard.length > 0 &&
+      lastexportboard !== boardid
+    ) {
+      boardrunnergadgetclearsyncbaseline(player)
+    }
+
     const hadbaseline = gadgetsync.has(player)
     const previous = gadgetsync.get(player) ?? []
     const patch = compare(previous, slim)
     gadgetsync.set(player, deepcopy(slim))
+    if (boardid.length > 0) {
+      gadgetlastexportboard.set(player, boardid)
+    } else {
+      gadgetlastexportboard.delete(player)
+    }
 
     // No baseline: paint so patches are not the only path (desync drops patches;
     // compare([], FORMAT_OBJECT slim) can yield []). Skip paint when there are no
     // gadget layers: that branch zeroes gadget and would wipe the client.
-    if (!hadbaseline) {
-      if (ispresent(gadgetlayers)) {
-        gadgetclientpaint(dev, player, slim)
-      }
-    } else if (patch.length) {
+    if (!hadbaseline && ispresent(gadgetlayers)) {
+      gadgetclientpaint(dev, player, slim)
+    } else if (hadbaseline && patch.length) {
       gadgetclientpatch(dev, player, patch)
     }
   }
@@ -129,5 +145,11 @@ export function boardrunnergadgetdesyncpaint(dev: DEVICE, player: string): void 
     return
   }
   gadgetsync.set(player, deepcopy(slim))
+  const paintboard = isstring(gadget.board) ? gadget.board.trim() : ''
+  if (paintboard.length > 0) {
+    gadgetlastexportboard.set(player, paintboard)
+  } else {
+    gadgetlastexportboard.delete(player)
+  }
   gadgetclientpaint(dev, player, slim)
 }

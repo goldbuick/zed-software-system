@@ -47,6 +47,7 @@ export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ready':
     case 'ticktock':
+    case 'netterminal:cap':
       return true
   }
   return false
@@ -99,6 +100,7 @@ export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ticktock':
     case 'second':
+    case 'netterminal:cap':
       return true
   }
   return false

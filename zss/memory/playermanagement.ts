@@ -92,6 +92,15 @@ export function memorymoveplayertoboard(
     return false
   }
 
+  // Ensure runtime caches (lookup/named) and per-element overlay state
+  // (category) are populated on currentboard. On the server side the
+  // reverse-projection replaces board.objects with copies that lack
+  // `category` (BOARD_ELEMENT_SYNC_TOPKEYS excludes it) and the server
+  // runs loadersonly ticks so memoryinitboard is never otherwise called.
+  // Without this, memoryboardelementisobject() below rejects the element
+  // and the server's fallback transfer path silently aborts.
+  memoryinitboard(currentboard)
+
   // player element
   const element = memoryreadobject(currentboard, player)
   if (!memoryboardelementisobject(element) || !element?.id) {

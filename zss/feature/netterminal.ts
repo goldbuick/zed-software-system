@@ -3,6 +3,7 @@ import {
   MESSAGE,
   apierror,
   apilog,
+  ismessage,
   vmpeergone,
   vmsearch,
   vmtopic,
@@ -16,9 +17,15 @@ import {
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  netformatdebugsendlegacy,
+  netformatdecode,
+  netformatencode,
+  netserializable,
+} from 'zss/feature/netformat'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
-import { createinfohash } from 'zss/mapping/guid'
+import { createinfohash, createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 async function readpeerid(): Promise<string | undefined> {
@@ -45,6 +52,9 @@ const SIGNAL_RETRY_BASE_MS = 1_000
 const SIGNAL_RETRY_MAX_MS = 60_000
 const DISCONNECTED_RECONNECT_DELAY_MS = 5_000
 const RECONNECT_VERIFY_TIMEOUT_MS = 15_000
+
+const NETFORMAT_CAP_TARGET = 'netterminal:cap'
+const NETFORMAT_META_SUPPORTS_V1 = 'supportsNetformatV1'
 
 let netterminalsessionserial = 0
 let signalhandshaketimer: ReturnType<typeof setTimeout> | undefined
@@ -112,33 +122,24 @@ function netterminaltopic(player: string) {
   return createinfohash(player)
 }
 
-/** Convert only Set & Map so PeerJS binary pack does not hit "Type Set not yet supported". Leaves Uint8Array etc. alone. */
-function serializable<T>(value: T): T {
-  if (value instanceof Set) {
-    return [...value] as T
+function netterminalparsedata(netmsg: unknown): MESSAGE {
+  if (netmsg instanceof Uint8Array) {
+    return netformatdecode(netmsg)
   }
-  if (value instanceof Map) {
-    return Object.fromEntries(value) as T
-  }
-  if (Array.isArray(value)) {
-    return value.map(serializable) as T
+  if (typeof ArrayBuffer !== 'undefined' && netmsg instanceof ArrayBuffer) {
+    return netformatdecode(netmsg)
   }
   if (
-    value !== null &&
-    typeof value === 'object' &&
-    (value as object).constructor === Object
+    typeof Buffer !== 'undefined' &&
+    typeof Buffer.isBuffer === 'function' &&
+    Buffer.isBuffer(netmsg)
   ) {
-    const out: Record<string, unknown> = {}
-    for (const k of Object.keys(value as object)) {
-      out[k] = serializable((value as Record<string, unknown>)[k])
-    }
-    return out as T
+    return netformatdecode(new Uint8Array(netmsg))
   }
-  return value
-}
-
-function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
-  void dataconnection.send(serializable(message))
+  if (!ismessage(netmsg)) {
+    throw new Error('netterminalparsedata: expected MESSAGE object')
+  }
+  return netmsg
 }
 
 function handledataconnection(dataconnection: DataConnection) {
@@ -148,6 +149,19 @@ function handledataconnection(dataconnection: DataConnection) {
   // stamps message.player on every emit, so the host learns its peer's player
   // id lazily without any extra handshake.
   let remotepeerplayer = ''
+  let peersendnetformat = false
+
+  function sendpeerlegacy(message: MESSAGE) {
+    void dataconnection.send(netserializable(message))
+  }
+
+  function sendpeermessage(message: MESSAGE) {
+    if (peersendnetformat && !netformatdebugsendlegacy()) {
+      void dataconnection.send(netformatencode(message))
+    } else {
+      sendpeerlegacy(message)
+    }
+  }
 
   function hostbridge() {
     // open bridge between peers
@@ -170,7 +184,7 @@ function handledataconnection(dataconnection: DataConnection) {
         ) {
           return
         }
-        sendpeer(dataconnection, message)
+        sendpeermessage(message)
       }
     })
   }
@@ -185,7 +199,7 @@ function handledataconnection(dataconnection: DataConnection) {
         shouldforwardclienttoserver(message) &&
         shouldnotforwardonpeerclient(message) === false
       ) {
-        sendpeer(dataconnection, message)
+        sendpeermessage(message)
       }
     })
     // signal ready to login
@@ -199,6 +213,27 @@ function handledataconnection(dataconnection: DataConnection) {
     apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
     if (ishost()) {
       hostbridge()
+      const meta = (
+        dataconnection as DataConnection & {
+          metadata?: Record<string, unknown>
+        }
+      ).metadata
+      if (meta?.[NETFORMAT_META_SUPPORTS_V1] === true) {
+        sendpeerlegacy({
+          session: SOFTWARE.session(),
+          player,
+          id: createsid(),
+          sender: 'netterminal',
+          target: NETFORMAT_CAP_TARGET,
+          data: { v: 1 },
+        })
+        peersendnetformat = true
+        apilog(
+          SOFTWARE,
+          player,
+          `peer ${dataconnection.peer}: CBOR wire (netformat v1) enabled host→joiner`,
+        )
+      }
     } else {
       joinbridge()
     }
@@ -223,10 +258,29 @@ function handledataconnection(dataconnection: DataConnection) {
     if (!ispresent(networkpeer)) {
       return
     }
-    // Server may send gadgetclient:paint/patch as JSON string (avoids binarypack stack overflow)
-    const message = (
-      typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
-    ) as MESSAGE
+    let message: MESSAGE
+    try {
+      message = netterminalparsedata(netmsg)
+    } catch (err) {
+      apierror(
+        SOFTWARE,
+        player,
+        `netterminal`,
+        `parse peer data: ${String(err)}`,
+      )
+      return
+    }
+    if (message.target === NETFORMAT_CAP_TARGET) {
+      if (!ishost()) {
+        peersendnetformat = true
+        apilog(
+          SOFTWARE,
+          player,
+          `peer ${dataconnection.peer}: CBOR wire (netformat v1) enabled joiner→host`,
+        )
+      }
+      return
+    }
     // learn the remote peer's player id from their own emits. every
     // client->server message carries message.player = joiner's player, so the
     // first non-empty value is authoritative for the life of this connection.
@@ -362,6 +416,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
           apilog(SOFTWARE, player, `joining topic ${subscribetopic}`)
           const maybedataconnection = networkpeer?.connect(topicpeerid, {
             reliable: true,
+            metadata: { [NETFORMAT_META_SUPPORTS_V1]: true },
           })
           if (ispresent(maybedataconnection)) {
             handledataconnection(maybedataconnection)

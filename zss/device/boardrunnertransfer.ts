@@ -30,8 +30,11 @@ import {
 } from 'zss/device/jsonsyncclient'
 import { ispresent } from 'zss/mapping/types'
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
+import { memorywritebookflag } from 'zss/memory/bookoperations'
 import { boardstreamid, memorymarkboarddirty } from 'zss/memory/memorydirty'
 import { memorysetmoveplayerhook } from 'zss/memory/playermanagement'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 
 const boardrunnertransfer = createdevice('boardrunnertransfer', [], () => {})
 
@@ -69,6 +72,29 @@ memorysetmoveplayerhook(({ player, fromboard, toboardid, element, dest }) => {
     delete fromboard.objects[element.id]
     memorymarkboarddirty(fromboard)
   }
+
+  // Update our local view of the player's board. Without this, the
+  // worker keeps reporting the OLD fromboardid in its memory-stream
+  // projection; when that clientedit arrives at the server it races
+  // with the server's authoritative `flags[player].board = toboardid`
+  // write inside the transfer handler, and the server's silent
+  // reverse-projection clobbers its own value. By aligning the local
+  // flag here, subsequent worker memory pushes carry the new board and
+  // the source runner stops painting stale state for this player.
+  //
+  // IMPORTANT: we only write the `board` flag, NOT activelist. The
+  // standard memorywritebookplayerboard helper also manipulates the
+  // book's activelist, and because the worker cannot resolve the
+  // destination board locally (the destination codepage is not admitted
+  // to this worker's jsonsync streams), it would remove the player from
+  // activelist. That empty activelist would then clobber the server's
+  // authoritative activelist via reverse-projection, leaving the server
+  // election loop with no candidates and no runner ever admitted to the
+  // destination board. activelist is server-authoritative; the server's
+  // transfer handler keeps it correct via its own
+  // memorywritebookplayerboard call.
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  memorywritebookflag(mainbook, player, 'board', toboardid)
 
   return true
 })

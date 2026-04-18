@@ -11,6 +11,7 @@ import {
   invokeplay,
   parseplay,
 } from './playnotation'
+import { durationnotation, durationseconds } from './synthtime'
 import { createrecordhandler } from './recordhandler'
 import { addsidechainmodule } from './sidechainworkletnode'
 import { SOURCE_TYPE } from './source'
@@ -82,7 +83,14 @@ export function createsynth() {
     withendofpattern = true,
   ) {
     let endtime = starttime
-    const pattern = invokeplay(idx, starttime, invoke, withendofpattern)
+    const pattern = invokeplay(
+      idx,
+      starttime,
+      invoke,
+      withendofpattern,
+      durationnotation,
+      durationseconds,
+    )
     const last = pattern[pattern.length - 1]
     if (ispresent(last)) {
       endtime = Math.max(endtime, last[0])
