@@ -98,10 +98,5 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
         await savestate(vm, true)
       })
     }
-
-    console.info('vm:second boardrunner assignments', {
-      elected: { ...boardrunners },
-      acked: { ...ackboardrunners },
-    })
   })
 }

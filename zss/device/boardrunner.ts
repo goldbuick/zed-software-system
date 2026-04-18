@@ -5,6 +5,7 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
+import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -185,7 +186,7 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['second', 'ticktock', 'jsonsync'],
+  ['ticktock', 'jsonsync'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
@@ -222,10 +223,7 @@ const boardrunner = createdevice(
           if (!isowned(boardaddress)) {
             break
           }
-          if (
-            payload.reason === 'snapshot' ||
-            payload.reason === 'antipatch'
-          ) {
+          if (payload.reason === 'snapshot' || payload.reason === 'antipatch') {
             pendingOwnedBoardGadgetResync.add(boardaddress)
           }
         }
@@ -233,8 +231,6 @@ const boardrunner = createdevice(
       }
       case 'ticktock':
         runworkertick(boardrunner)
-        break
-      case 'second':
         break
       case 'desync':
         boardrunnergadgetdesyncpaint(boardrunner, message.player)
@@ -307,9 +303,7 @@ const boardrunner = createdevice(
         // and let the next boardrunnergadgetsynctick diff/emit it. We do NOT
         // mark memory dirty: `gadgetstore` is worker-local (volatile), and
         // paints ship via gadgetclient:paint/patch, not memoryworkerpushdirty.
-        const payload = message.data as
-          | BOARDRUNNER_GADGETSCROLLPUSH
-          | undefined
+        const payload = message.data as BOARDRUNNER_GADGETSCROLLPUSH | undefined
         const player = isstring(payload?.player) ? payload.player : ''
         if (!player) {
           break
@@ -318,7 +312,9 @@ const boardrunner = createdevice(
         shared.scrollname = isstring(payload?.scrollname)
           ? payload.scrollname
           : ''
-        shared.scroll = isarray(payload?.scroll) ? payload.scroll : []
+        shared.scroll = (
+          isarray(payload?.scroll) ? payload.scroll : []
+        ) as PANEL_ITEM[]
         // Clearing the sync baseline here would force an unnecessary full
         // paint every click; the ordinary compare() path will include the
         // scroll add/remove in the next patch.

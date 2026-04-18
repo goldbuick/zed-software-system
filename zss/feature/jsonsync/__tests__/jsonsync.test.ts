@@ -325,6 +325,48 @@ describe('jsonsync feature', () => {
     expect(bob.sv).toBe(1)
   })
 
+  it('v2 poke: empty catch-up ok when client [cv,sv] lags server (stale sv)', () => {
+    let server = jsonsynccreateserverstream({ value: 'a' })
+    const admita = jsonsyncserveradmit(server, 'alice', true)
+    server = admita.stream
+    const admitb = jsonsyncserveradmit(server, 'bob', true)
+    server = admitb.stream
+
+    let bob = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+      ...admitb.snapshot,
+      streamid: STREAM,
+    })
+
+    let alice = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+      ...admita.snapshot,
+      streamid: STREAM,
+    })
+    const alocal = jsonsyncclientlocalupdate(alice, { value: 'c' }, STREAM)
+    alice = alocal.stream
+    const aaccept = jsonsyncserveraccept(server, 'alice', alocal.patch)
+    if (aaccept.kind !== 'ok') {
+      throw new Error(`alice accept failed: ${aaccept.kind}`)
+    }
+    server = aaccept.stream
+
+    // server advances bob's sv while computing catch-up; client bob never got
+    // the serverpatch, so still reports [0,0] on the wire.
+    const built = jsonsyncserverbuildpatchfor(server, STREAM, 'bob')
+    server = built.stream
+    expect(built.patch).toBeDefined()
+    expect(server.clients.get('bob')?.sv).toBe(1)
+    expect(bob.sv).toBe(0)
+
+    const pokereply: JSONSYNC_PATCH = {
+      streamid: STREAM,
+      cv: bob.cv,
+      sv: bob.sv,
+      changes: [],
+    }
+    const pong = jsonsyncserveraccept(server, 'bob', pokereply)
+    expect(pong.kind).toBe('ok')
+  })
+
   it('v2 poke: client with pending local edit does not send empty catch-up', () => {
     let server = jsonsynccreateserverstream({ value: 'a' })
     const admit = jsonsyncserveradmit(server, 'alice', true)

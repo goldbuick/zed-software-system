@@ -226,17 +226,19 @@ export function jsonsyncserveraccept(
   if (!ispresent(state)) {
     return { kind: 'unknownclient', stream }
   }
-  if (patch.cv !== state.cv || patch.sv !== state.sv) {
-    return { kind: 'versionmismatch', stream }
-  }
-  if (!isarray(patch.changes)) {
+  if (!isnumber(patch.cv) || !isnumber(patch.sv) || !isarray(patch.changes)) {
     return { kind: 'versionmismatch', stream }
   }
   // empty changes = "catch-up ping" (the v2 client response to a poke). no doc
   // or shadow mutation, no cv bump, and the read-only gate doesn't apply since
-  // there are no writes being claimed.
+  // there are no writes being claimed. must accept before the strict [cv,sv]
+  // check: the client's tuple can lag the server's (e.g. server already bumped
+  // sv while building a targeted catch-up patch).
   if (patch.changes.length === 0) {
     return { kind: 'ok', stream }
+  }
+  if (patch.cv !== state.cv || patch.sv !== state.sv) {
+    return { kind: 'versionmismatch', stream }
   }
   if (state.writable === false) {
     // read-only: do NOT mutate doc or shadow; reply with the same changeset as an
