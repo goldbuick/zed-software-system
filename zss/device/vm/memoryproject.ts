@@ -74,6 +74,10 @@ export const BOARD_SYNC_TOPKEYS: readonly string[] = [
   'b10',
   'terrain',
   'objects',
+  'overboard',
+  'underboard',
+  'charsetpage',
+  'palettepage',
 ]
 
 // BOARD_ELEMENT fields that travel over the wire. mirrors the keep-list of

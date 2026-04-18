@@ -159,7 +159,6 @@ export function Tiles({
           color={color}
           bg={bg}
           version={version}
-          scale={1.15}
           skipraycast={skipraycast}
         />
       )}

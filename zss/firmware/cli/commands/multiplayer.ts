@@ -12,18 +12,7 @@ import {
 } from 'zss/device/api'
 import { normalizechatkind } from 'zss/device/bridge/chattypes'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  buildchatstartforkind,
-  resolvechatstartwords,
-} from 'zss/feature/bridgechatcli'
-import {
-  bridgedeleteprofile,
-  bridgereadallprofiles,
-  bridgereadprofile,
-  bridgewriteprofile,
-} from 'zss/feature/bridgeprofiles'
 import { FIRMWARE } from 'zss/firmware'
-import { doasync } from 'zss/mapping/func'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
@@ -31,17 +20,10 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function chatusagebridge() {
   return (
-    'usage: chat <twitch-channel> | chat start <kind> … | chat stop <kind> | chat profile … ' +
+    'usage: chat <twitch-channel> | chat start <kind> ... | chat stop <kind> | chat profile ... ' +
     '(kinds: twitch, rss, mastodon, bluesky). ' +
     'Start with @profilename to load a saved profile; add key=value to override. ' +
     'RSS/feeds use browser fetch—URLs must allow CORS.'
-  )
-}
-
-function chatusageprofile() {
-  return (
-    'usage: chat profile (lists) | chat profile list | chat profile show <name> | chat profile delete <name> | ' +
-    'chat profile save <name> <kind> … (same fields as chat start <kind> …)'
   )
 }
 

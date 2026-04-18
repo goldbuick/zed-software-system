@@ -27,7 +27,10 @@ import {
   memoryreadcodepagedata,
   memoryreadcodepagestat,
 } from './codepageoperations'
-import { memorypickcodepagewithtypeandstat } from './codepages'
+import {
+  memorylistcodepagesmatchingaddress,
+  memorypickcodepagewithtypeandstat,
+} from './codepages'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -202,6 +205,22 @@ export function memoryreadboardbyaddress(address: string): MAYBE<BOARD> {
     address,
   )
   return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
+}
+
+/**
+ * Deterministic board lookup for rendering / previews. `memoryreadboardbyaddress`
+ * applies shuffle/inorder/random pick semantics across matching codepages, so the
+ * returned board id can change per call even for the same address. Previews and
+ * the layer cache are keyed on that id, so non-stable resolution causes
+ * per-tick flicker and cache misses. Prefer this for any read that must be
+ * stable within a tick (exit previews, corner resolution, gadget exit ids).
+ */
+export function memoryreadboardbyaddressstable(address: string): MAYBE<BOARD> {
+  const matches = memorylistcodepagesmatchingaddress(
+    CODE_PAGE_TYPE.BOARD,
+    address,
+  )
+  return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(matches[0])
 }
 
 export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {

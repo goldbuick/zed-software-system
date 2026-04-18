@@ -79,7 +79,13 @@ export function memorysyncensureboardregistered(codepage: CODE_PAGE): void {
 }
 
 // admit a boardrunner player: refresh the memory stream, register-or-refresh
-// the target board codepage stream, then admit the player to both.
+// the target board codepage stream, then admit the player to both. Also
+// admits the runner to its cardinal + diagonal-reachable neighbor board
+// streams so the runner's worker can hydrate neighbor codepages. Without
+// multi-admission, `memoryreadgadgetlayers` cannot map cardinal exit
+// addresses (e.g. `room2x1`) to neighbor codepage ids: every cardinal
+// falls back to '' and every diagonal reconcile returns '' — misleading
+// fog shows on every side even when the client already has cached layers.
 export function memorysyncadmitboardrunner(
   player: string,
   boardaddress: string,
@@ -97,6 +103,64 @@ export function memorysyncadmitboardrunner(
   memorysyncensureregistered()
   memorysyncensureboardregistered(codepage)
   jsonsyncserveradmitplayer(MEMORY_STREAM_ID, player, true)
+  jsonsyncserveradmitplayer(boardstreamid(codepage), player, true)
+  admitneighborboardstreams(player, codepage)
+}
+
+// Admit the runner to its 4 cardinal neighbor streams and to each
+// cardinal's 4 further neighbors. The second hop is what gives corner
+// (diagonal) exit previews enough context to resolve codepage ids:
+// corner resolution traverses two cardinals, so we must admit the
+// boards two hops away as well.
+function admitneighborboardstreams(
+  player: string,
+  centercodepage: CODE_PAGE,
+): void {
+  const seen = new Set<string>([centercodepage.id])
+  const cardinalcps = collectcardinalneighbors(centercodepage, seen)
+  for (let i = 0; i < cardinalcps.length; ++i) {
+    admitboardstream(player, cardinalcps[i])
+  }
+  for (let i = 0; i < cardinalcps.length; ++i) {
+    const outer = collectcardinalneighbors(cardinalcps[i], seen)
+    for (let j = 0; j < outer.length; ++j) {
+      admitboardstream(player, outer[j])
+    }
+  }
+}
+
+function collectcardinalneighbors(
+  codepage: CODE_PAGE,
+  seen: Set<string>,
+): CODE_PAGE[] {
+  const board = codepage.board
+  if (!ispresent(board)) {
+    return []
+  }
+  const addrs = [
+    board.exitnorth,
+    board.exitsouth,
+    board.exiteast,
+    board.exitwest,
+  ]
+  const out: CODE_PAGE[] = []
+  for (let i = 0; i < addrs.length; ++i) {
+    const addr = addrs[i]
+    if (!isstring(addr) || !addr) {
+      continue
+    }
+    const cp = memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.BOARD, addr)
+    if (!ispresent(cp) || seen.has(cp.id)) {
+      continue
+    }
+    seen.add(cp.id)
+    out.push(cp)
+  }
+  return out
+}
+
+function admitboardstream(player: string, codepage: CODE_PAGE): void {
+  memorysyncensureboardregistered(codepage)
   jsonsyncserveradmitplayer(boardstreamid(codepage), player, true)
 }
 

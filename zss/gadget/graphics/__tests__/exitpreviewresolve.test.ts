@@ -4,9 +4,23 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   CORNER_EXIT_DISPUTED,
+  EXIT_PREVIEW_UNKNOWN,
 } from 'zss/memory/types'
 
 describe('resolveexitpreview', () => {
+  it('uses undiscovered placeholder when exit id is EXIT_PREVIEW_UNKNOWN', () => {
+    const m = new Map<string, import('zss/gadget/data/types').LAYER[]>()
+    const r = resolveexitpreview(EXIT_PREVIEW_UNKNOWN, m, 'ne')
+    expect(r.layers.length).toBe(1)
+    expect(r.layers[0].id).toBe('exitundiscovered:ne')
+  })
+
+  it('omits placeholder when hasunderboard and exit id is EXIT_PREVIEW_UNKNOWN', () => {
+    const m = new Map<string, import('zss/gadget/data/types').LAYER[]>()
+    const r = resolveexitpreview(EXIT_PREVIEW_UNKNOWN, m, 'ne', true)
+    expect(r.layers.length).toBe(0)
+  })
+
   it('uses undiscovered placeholder when exit id is empty', () => {
     const m = new Map<string, import('zss/gadget/data/types').LAYER[]>()
     const r = resolveexitpreview('', m, 'ne')

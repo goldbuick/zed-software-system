@@ -17,7 +17,6 @@ import {
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
-import { memoryreadbookplayerboards } from './playermanagement'
 import { memoryelementtologprefix } from './rendering'
 import { memorymessagechip } from './runtime'
 import { memoryreadbookbysoftware } from './session'
@@ -233,12 +232,6 @@ export function memorysendtoelements(
           memorysendtoelement(fromelement, READ_CONTEXT.element, send.label)
         }
         break
-      case 'ping': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const boards = memoryreadbookplayerboards(mainbook)
-        memorysendtoboards('all', send.label, undefined, boards)
-        break
-      }
       default: {
         // target named elements
         const elements = memorylistboardelementsbyidnameorpts(

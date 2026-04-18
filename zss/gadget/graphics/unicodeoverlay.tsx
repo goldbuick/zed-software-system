@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   DynamicDrawUsage,
@@ -7,10 +8,15 @@ import {
 import { RUNTIME } from 'zss/config'
 import { loadpalettefrombytes } from 'zss/feature/bytes'
 import { PALETTE } from 'zss/feature/palette'
+import { useDeviceData } from 'zss/gadget/device'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
 import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
-import { lookupglyphasync } from 'zss/gadget/display/unicodeatlas'
+import {
+  getunicodeatlas,
+  lookupglyphasync,
+  setunicodeatlasrasterhint,
+} from 'zss/gadget/display/unicodeatlas'
 import {
   createunicodeoverlaymaterial,
   getunicodeoverlayquadgeometry,
@@ -31,6 +37,8 @@ type UnicodeOverlayProps = {
   /** Scale factor for glyph size (default 1). Only affects overlay chars, not grid position. */
   scale?: number
   skipraycast?: boolean
+  /** Subtle dark outline for low-contrast backgrounds (default false). */
+  outline?: boolean
   /** Change-counter for stable-identity char/color/bg arrays (see `Tiles#version`). */
   version?: number
 }
@@ -43,16 +51,19 @@ export function UnicodeOverlay({
   bg,
   scale = 1,
   skipraycast = false,
+  outline = false,
   version,
 }: UnicodeOverlayProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const resolvedpalette = mediapalette ?? defaultpalette
+  const viewportdpr = useThree((s) => s.viewport.dpr)
+  const gpudprscale = useDeviceData((s) => s.gpudprscale)
+  const rasterproduct = viewportdpr * gpudprscale
+
   const basew = RUNTIME.DRAW_CHAR_WIDTH()
   const baseh = RUNTIME.DRAW_CHAR_HEIGHT()
   const cellw = basew * scale
   const cellh = baseh * scale
-  /** Square size so glyph fits in rect; glyph is centered in cell */
-  const cellsize = Math.min(cellw, cellh)
   /** Fraction of cell height where baseline sits (0..1 from top) for vertical alignment */
   const baseline_fraction = 0.8
 
@@ -103,10 +114,16 @@ export function UnicodeOverlay({
   const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])
 
   useLayoutEffect(() => {
-    materialref.current ??= createunicodeoverlaymaterial(resolvedpalette)
+    setunicodeatlasrasterhint(rasterproduct)
+    materialref.current ??= createunicodeoverlaymaterial(
+      resolvedpalette,
+      outline,
+    )
+    materialref.current.uniforms.atlas.value = getunicodeatlas()
     materialref.current.uniforms.palette.value = resolvedpalette
-    materialref.current.uniforms.cellsize.value.set(cellsize, cellsize)
-  }, [resolvedpalette, cellsize])
+    materialref.current.uniforms.cellsize.value.set(cellw, cellh)
+    materialref.current.uniforms.useoutline.value = outline ? 1 : 0
+  }, [resolvedpalette, cellw, cellh, outline, rasterproduct])
 
   const runidref = useRef(0)
 
@@ -129,7 +146,7 @@ export function UnicodeOverlay({
         return
       }
       let n = 0
-      const cellbaseline_y = baseh * baseline_fraction
+      const cellbaseline_y = cellh * baseline_fraction
       for (let i = 0; i < cells.length; i++) {
         const slot = slots[i]
         if (!slot) {
@@ -138,10 +155,9 @@ export function UnicodeOverlay({
         const cell = cells[i]
         const cx = cell.index % width
         const cy = Math.floor(cell.index / width)
-        const halfpadx = (basew - cellsize) * 0.5
-        offsetarray[n * 2] = cx * basew + halfpadx
+        offsetarray[n * 2] = cx * basew + (basew - cellw) * 0.5
         offsetarray[n * 2 + 1] =
-          cy * baseh + cellbaseline_y - slot.baseline_from_top * cellsize
+          cy * baseh + cellbaseline_y - slot.baseline_from_top * cellh
         uvarray[n * 2] = slot.slotx
         uvarray[n * 2 + 1] = slot.sloty
         colorarray[n] = cell.colori
@@ -164,7 +180,8 @@ export function UnicodeOverlay({
     scale,
     basew,
     baseh,
-    cellsize,
+    cellw,
+    cellh,
     baseline_fraction,
     meshref,
     offsetattr,

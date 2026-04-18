@@ -66,6 +66,43 @@ export function memoryreadcodepagebyid(address: string): MAYBE<CODE_PAGE> {
   return undefined
 }
 
+/**
+ * Deterministic collection of every codepage whose id/name/stat matches the
+ * given address, across mainbook and all other books. Callers that must be
+ * stable per tick (rendering, previews) should use this instead of
+ * `memorypickcodepagewithtypeandstat`, which applies random / shuffle /
+ * inorder picking semantics intended for gameplay transitions.
+ */
+export function memorylistcodepagesmatchingaddress<T extends CODE_PAGE_TYPE>(
+  type: T,
+  address: string,
+): CODE_PAGE[] {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const seen: Record<string, true> = {}
+  const out: CODE_PAGE[] = []
+  const mainpages = memorylistcodepagebytypeandstat(mainbook, type, address)
+  for (const page of mainpages) {
+    if (!seen[page.id]) {
+      seen[page.id] = true
+      out.push(page)
+    }
+  }
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    if (book.id !== mainbook?.id) {
+      const pages = memorylistcodepagebytypeandstat(book, type, address)
+      for (const page of pages) {
+        if (!seen[page.id]) {
+          seen[page.id] = true
+          out.push(page)
+        }
+      }
+    }
+  }
+  return out
+}
+
 export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
   type: T,
   address: string,

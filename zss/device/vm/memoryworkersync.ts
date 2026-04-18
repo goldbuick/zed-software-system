@@ -26,10 +26,7 @@ import {
   jsonsyncclientreadstream,
 } from 'zss/device/jsonsyncclient'
 import { ispresent } from 'zss/mapping/types'
-import {
-  MEMORY_STREAM_ID,
-  memoryconsumealldirty,
-} from 'zss/memory/memorydirty'
+import { MEMORY_STREAM_ID, memoryconsumealldirty } from 'zss/memory/memorydirty'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 

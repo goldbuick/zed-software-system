@@ -11,11 +11,11 @@ import {
   invokeplay,
   parseplay,
 } from './playnotation'
-import { durationnotation, durationseconds } from './synthtime'
 import { createrecordhandler } from './recordhandler'
 import { addsidechainmodule } from './sidechainworkletnode'
 import { SOURCE_TYPE } from './source'
 import { createsourcefxsetup } from './sourcefxsetup'
+import { durationnotation, durationseconds } from './synthtime'
 import {
   type PLAYBACK_STATE,
   type RECORDING_STATE,

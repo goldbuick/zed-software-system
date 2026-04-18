@@ -26,7 +26,7 @@ function benchbytes(label: string, bytes: Uint8Array | string) {
     typeof bytes === 'string'
       ? new TextEncoder().encode(bytes).length
       : bytes.length
-  // eslint-disable-next-line no-console
+
   console.info(`${label} bytes: ${n}`)
 }
 
@@ -36,7 +36,7 @@ function benchms(label: string, fn: () => void, iterations: number) {
     fn()
   }
   const ms = (performance.now() - t0) / iterations
-  // eslint-disable-next-line no-console
+
   console.info(`${label} avg ms (${iterations} runs): ${ms.toFixed(3)}`)
 }
 
@@ -63,5 +63,4 @@ benchms(
   80,
 )
 
-// eslint-disable-next-line no-console
 console.info('netformat bench done')

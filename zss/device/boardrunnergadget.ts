@@ -131,10 +131,12 @@ export function boardrunnergadgetsynctick(
   }
 }
 
-export function boardrunnergadgetdesyncpaint(dev: DEVICE, player: string): void {
+export function boardrunnergadgetdesyncpaint(
+  dev: DEVICE,
+  player: string,
+): void {
   const gadget = gadgetstate(player)
-  const hasboard =
-    isstring(gadget.board) && gadget.board.length > 0
+  const hasboard = isstring(gadget.board) && gadget.board.length > 0
   const layerscount = gadget.layers?.length ?? 0
   const sidebarcount = gadget.sidebar?.length ?? 0
   if (!hasboard && layerscount === 0 && sidebarcount === 0) {

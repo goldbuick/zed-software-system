@@ -45,8 +45,6 @@ import { synthbroadcastdestination } from './synth'
 
 const chatslots = new Map<CHAT_KIND, CHAT_CONNECTOR>()
 let broadcastclient: MAYBE<IVSBroadcastClient.AmazonIVSBroadcastClient>
-let broadcastivsconnection = 'idle'
-let broadcastlive = false
 
 async function runnetworkfetch(
   player: string,
@@ -478,8 +476,6 @@ const bridge = createdevice('bridge', [], (message) => {
         if (ispresent(broadcastclient)) {
           apierror(bridge, message.player, 'bridge', 'stream is already open')
         } else {
-          broadcastivsconnection = 'starting'
-          broadcastlive = false
           const isportrait = window.innerHeight > window.innerWidth
           const streamconfig = isportrait
             ? IVSBroadcastClient.STANDARD_PORTRAIT
@@ -493,7 +489,6 @@ const bridge = createdevice('bridge', [], (message) => {
             IVSBroadcastClient.BroadcastClientEvents.ACTIVE_STATE_CHANGE,
             // @ts-expect-error wow?
             function (activestate: boolean) {
-              broadcastlive = activestate
               console.info({ activestate })
             },
           )
@@ -501,7 +496,6 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.CONNECTION_STATE_CHANGE,
             function (state: string) {
-              broadcastivsconnection = state
               apilog(bridge, message.player, state)
             } as Callback,
           )
@@ -509,8 +503,6 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.ERROR,
             function (error: string) {
-              broadcastivsconnection = 'error'
-              broadcastlive = false
               apierror(bridge, message.player, 'bridge', error)
               broadcastclient = undefined
             } as Callback,
@@ -528,8 +520,6 @@ const bridge = createdevice('bridge', [], (message) => {
               'unabled to find canvas element',
             )
             broadcastclient = undefined
-            broadcastivsconnection = 'idle'
-            broadcastlive = false
             return
           }
 
@@ -545,8 +535,6 @@ const bridge = createdevice('bridge', [], (message) => {
               'unable create media audio node destination',
             )
             broadcastclient = undefined
-            broadcastivsconnection = 'idle'
-            broadcastlive = false
             return
           }
 
@@ -578,8 +566,6 @@ const bridge = createdevice('bridge', [], (message) => {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()
         broadcastclient = undefined
-        broadcastivsconnection = 'idle'
-        broadcastlive = false
         apilog(bridge, message.player, `stream stopped`)
       } else {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')

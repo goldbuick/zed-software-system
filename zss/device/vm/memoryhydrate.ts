@@ -25,6 +25,7 @@ side (see phase2-worker-emit-patches).
 */
 import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
 import { memoryinitboard } from 'zss/memory/boards'
+import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
 import {
   MEMORY_STREAM_ID,
   memorywithsilentwrites,
@@ -174,7 +175,7 @@ function mergeflagspreservingvolatile(
   const incomingids = Object.keys(incoming)
   for (let i = 0; i < incomingids.length; ++i) {
     const id = incomingids[i]
-    const incomingentry = incoming[id] as Record<string, unknown>
+    const incomingentry = incoming[id]
     if (!ispresent(incomingentry) || typeof incomingentry !== 'object') {
       continue
     }
@@ -199,7 +200,7 @@ function mergeflagspreservingvolatile(
     const existingkeys = Object.keys(existingentry)
     for (let k = 0; k < existingkeys.length; ++k) {
       const key = existingkeys[k]
-      if (VOLATILE_FLAG_KEYS.indexOf(key) !== -1) {
+      if (VOLATILE_FLAG_KEYS.includes(key)) {
         continue
       }
       if (!Object.prototype.hasOwnProperty.call(incomingentry, key)) {
@@ -352,14 +353,33 @@ function hydrateboard(
       id: boardid,
       code: typeof document.code === 'string' ? document.code : '',
       board: undefined,
-      stats: { type: CODE_PAGE_TYPE.BOARD },
+      stats: undefined,
     }
     mainbook.pages.push(codepage)
   }
   if (Object.prototype.hasOwnProperty.call(document, 'code')) {
-    if (typeof document.code === 'string') {
+    if (typeof document.code === 'string' && codepage.code !== document.code) {
       codepage.code = document.code
+      // code changed; discard cached stats so memoryreadcodepagestats re-parses
+      // the @board <name> directive and other @stat lines. Without this, stats
+      // would keep their previous (possibly empty) name and name-based lookups
+      // like `memorylistcodepagebytypeandstat(..., 'room1x0')` would never
+      // match this codepage.
+      codepage.stats = undefined
     }
+  }
+  // Parse stats from code so stats.name matches the @board <name> directive.
+  // The projection in `projectboardcodepage` deletes `stats` from the wire
+  // (clients re-parse locally from `code`), so the hydrated page arrives
+  // without stats. If we don't re-parse here, subsequent lookups that match
+  // by NAME(stats.name) fail and every cardinal/corner exit resolves to ''.
+  const stats = memoryreadcodepagestats(codepage)
+  // Force type to BOARD in case the code parser couldn't infer it (e.g. the
+  // code is empty and memoryreadcodepagestats defaulted stats.type to OBJECT).
+  // This stream is `board:<id>`, so the contract guarantees this codepage is
+  // a BOARD.
+  if (stats.type !== CODE_PAGE_TYPE.BOARD) {
+    stats.type = CODE_PAGE_TYPE.BOARD
   }
   const incomingboard = document.board as Record<string, unknown> | undefined
   if (!ispresent(incomingboard) || typeof incomingboard !== 'object') {

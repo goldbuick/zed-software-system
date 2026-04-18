@@ -251,7 +251,10 @@ export function jsonsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {
   device.emit('', 'jsonsync:changed', payload)
 }
 
-export function boardrunnergadgetclearscroll(device: DEVICELIKE, player: string) {
+export function boardrunnergadgetclearscroll(
+  device: DEVICELIKE,
+  player: string,
+) {
   device.emit(player, 'boardrunner:clearscroll')
 }
 

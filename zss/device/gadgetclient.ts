@@ -20,7 +20,6 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   switch (message.target) {
     case 'paint': {
       const gadget = importgadgetstate(message.data)
-      // expect compressed json
       useGadgetClient.setState((state) => {
         const layercachemap = applylayercacheupdate(
           state.layercachemap,

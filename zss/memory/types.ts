@@ -14,6 +14,9 @@ export const FIXED_DATE = new Date('1980/09/02')
 /** Gadget-only sentinel: cardinal paths to a corner disagree; show undiscovered placeholder, never cache tint. */
 export const CORNER_EXIT_DISPUTED = '__corner_exit_disputed__'
 
+/** Gadget exit preview: no exit stat / no diagonal neighbor; omit preview layers (not undiscovered fog). */
+export const EXIT_PREVIEW_UNKNOWN = 'unknown'
+
 // enums
 
 export enum BITMAP_KEYS {

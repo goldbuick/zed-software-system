@@ -6,7 +6,7 @@ describe('memorycornerexitboardids', () => {
   let spy: jest.SpyInstance
 
   beforeEach(() => {
-    spy = jest.spyOn(boards, 'memoryreadboardbyaddress')
+    spy = jest.spyOn(boards, 'memoryreadboardbyaddressstable')
   })
 
   afterEach(() => {

@@ -1,6 +1,6 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import * as compress from 'zss/gadget/data/compress'
 import * as gadgetapi from 'zss/gadget/data/api'
+import * as compress from 'zss/gadget/data/compress'
 
 import { boardrunnergadgetdesyncpaint } from '../boardrunnergadget'
 
@@ -20,7 +20,9 @@ describe('boardrunnergadgetdesyncpaint', () => {
   it('emits gadgetclient:paint when exportgadgetstate returns a slim doc', () => {
     const gadget = { board: 'b1' } as any
     jest.spyOn(gadgetapi, 'gadgetstate').mockReturnValue(gadget)
-    jest.spyOn(compress, 'exportgadgetstate').mockReturnValue([['layers', []]] as any)
+    jest
+      .spyOn(compress, 'exportgadgetstate')
+      .mockReturnValue([['layers', []]] as any)
 
     boardrunnergadgetdesyncpaint(dev as any, 'p1')
 

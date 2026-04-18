@@ -1,10 +1,37 @@
 import TinySDF from '@mapbox/tiny-sdf'
-import { DataTexture, RedIntegerFormat, UnsignedByteType } from 'three'
+import {
+  DataTexture,
+  LinearFilter,
+  RedFormat,
+  UnsignedByteType,
+} from 'three'
 
-const SLOT_SIZE = 32
+/** Slot edge length in texels (glyph + padding + SDF halo). */
+const SLOT_SIZE = 48
 const ATLAS_COLS = 32
 const ATLAS_SIZE = ATLAS_COLS * SLOT_SIZE
 const SLOT_PADDING = 1
+
+/** SDF spread in texels (wider ramp than radius=2 for small on-screen cells). */
+const SDF_RADIUS = 6
+const SDF_BUFFER = 3
+const SDF_CUTOFF = 0.5
+
+/** Default stack so overlay weight matches bold-ish 8×14 bitmap tiles. */
+export const UNICODE_OVERLAY_FONT_FAMILY =
+  'ui-monospace, "SF Mono", "JetBrains Mono", "IBM Plex Mono", "Noto Sans Mono", monospace'
+export const UNICODE_OVERLAY_FONT_WEIGHT = '500'
+
+const MAX_FONT_FIT =
+  SLOT_SIZE - 2 * SLOT_PADDING - 2 * SDF_RADIUS - 2 * SDF_BUFFER
+
+function computedfontsize(hint: number): number {
+  const tier = Math.min(2, Math.max(0.5, hint))
+  return Math.min(
+    MAX_FONT_FIT,
+    Math.round(MAX_FONT_FIT * (0.75 + 0.25 * tier)),
+  )
+}
 
 export type GlyphSlot = {
   slotx: number
@@ -20,15 +47,44 @@ let tinysdf: InstanceType<typeof TinySDF> | null = null
 const glyphcache = new Map<number, GlyphSlot>()
 const atlasdata = new Uint8Array(ATLAS_SIZE * ATLAS_SIZE)
 
+let lastFontSizeBucket = computedfontsize(1)
+let atlasfullwarned = false
+
+function resetunicodeatlascore(): void {
+  glyphcache.clear()
+  nextslot = 0
+  atlasdata.fill(0)
+  tinysdf = null
+  if (atlastexture) {
+    atlastexture.dispose()
+    atlastexture = null
+  }
+}
+
+/**
+ * Call from `UnicodeOverlay` when DPR / GPU tier scale changes so cached SDFs
+ * match the current raster budget. Returns whether the atlas was reset (new
+ * texture instance — refresh `uniforms.atlas` on the overlay material).
+ */
+export function setunicodeatlasrasterhint(hint: number): boolean {
+  const clamped = Math.min(2, Math.max(0.5, hint))
+  const nextFs = computedfontsize(clamped)
+  if (nextFs === lastFontSizeBucket && tinysdf !== null) {
+    return false
+  }
+  lastFontSizeBucket = nextFs
+  resetunicodeatlascore()
+  return true
+}
+
 function gettinysdf(): InstanceType<typeof TinySDF> {
-  const fontSize = SLOT_SIZE - SLOT_PADDING * 2
   tinysdf ??= new TinySDF({
-    fontSize,
-    radius: 2,
-    buffer: 1,
-    cutoff: 0.666,
-    fontWeight: '400',
-    fontFamily: 'monospace',
+    fontSize: lastFontSizeBucket,
+    radius: SDF_RADIUS,
+    buffer: SDF_BUFFER,
+    cutoff: SDF_CUTOFF,
+    fontWeight: UNICODE_OVERLAY_FONT_WEIGHT,
+    fontFamily: UNICODE_OVERLAY_FONT_FAMILY,
   })
   return tinysdf
 }
@@ -49,12 +105,19 @@ function ensureglyph(codepoint: number): GlyphSlot | null {
   if (!glyph || glyph.width === 0 || glyph.height === 0) {
     return null
   }
+  if (nextslot >= ATLAS_COLS * ATLAS_COLS) {
+    if (!atlasfullwarned && typeof import.meta !== 'undefined' && import.meta.env.DEV) {
+      atlasfullwarned = true
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[unicodeatlas] atlas full (1024 slots); further code points will not render',
+      )
+    }
+    return null
+  }
   const slotx = nextslot % ATLAS_COLS
   const sloty = Math.floor(nextslot / ATLAS_COLS)
   nextslot++
-  if (sloty >= ATLAS_COLS) {
-    return null
-  }
   const usable = SLOT_SIZE - SLOT_PADDING * 2
   const copyw = Math.min(glyph.width, usable)
   const copyh = Math.min(glyph.height, usable)
@@ -87,9 +150,14 @@ export function getunicodeatlas(): DataTexture {
       atlasdata,
       ATLAS_SIZE,
       ATLAS_SIZE,
-      RedIntegerFormat,
+      RedFormat,
       UnsignedByteType,
     )
+    atlastexture.minFilter = LinearFilter
+    atlastexture.magFilter = LinearFilter
+    atlastexture.generateMipmaps = false
+    atlastexture.flipY = false
+    atlastexture.unpackAlignment = 1
     atlastexture.needsUpdate = true
   }
   return atlastexture
@@ -103,7 +171,9 @@ export function lookupglyph(codepoint: number): GlyphSlot | null {
  * Resolves with the glyph slot after creating it asynchronously so the main
  * thread is not blocked. Use this when building the overlay for many cells.
  */
-export function lookupglyphasync(codepoint: number): Promise<GlyphSlot | null> {
+export function lookupglyphasync(
+  codepoint: number,
+): Promise<GlyphSlot | null> {
   const cached = glyphcache.get(codepoint)
   if (cached) {
     return Promise.resolve(cached)
@@ -129,3 +199,5 @@ export function invalidateatlas(): void {
 export const UNICODE_ATLAS_COLS = ATLAS_COLS
 export const UNICODE_SLOT_SIZE = SLOT_SIZE
 export const UNICODE_ATLAS_SIZE = ATLAS_SIZE
+/** SDF edge threshold in atlas value space (0..1); matches `SDF_CUTOFF`. */
+export const UNICODE_SDF_EDGE = SDF_CUTOFF

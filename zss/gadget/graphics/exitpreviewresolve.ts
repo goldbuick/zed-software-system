@@ -1,5 +1,5 @@
 import type { LAYER } from 'zss/gadget/data/types'
-import { CORNER_EXIT_DISPUTED } from 'zss/memory/types'
+import { CORNER_EXIT_DISPUTED, EXIT_PREVIEW_UNKNOWN } from 'zss/memory/types'
 
 import {
   type EXIT_DIRECTION,
@@ -16,7 +16,10 @@ export function resolveexitpreview(
   direction: EXIT_DIRECTION,
   hasunderboard?: boolean,
 ): ExitPreviewResolve {
-  if (exitboardid === CORNER_EXIT_DISPUTED) {
+  if (
+    exitboardid === EXIT_PREVIEW_UNKNOWN ||
+    exitboardid === CORNER_EXIT_DISPUTED
+  ) {
     if (hasunderboard) {
       return { layers: [] }
     }

@@ -18,7 +18,7 @@ import {
 } from './boardlighting'
 import {
   memoryinitboard,
-  memoryreadboardbyaddress,
+  memoryreadboardbyaddressstable,
   memoryreadelementkind,
   memoryreadelementstat,
   memoryreadoverboard,
@@ -48,6 +48,7 @@ import {
   BOARD_WIDTH,
   CODE_PAGE,
   CODE_PAGE_TYPE,
+  EXIT_PREVIEW_UNKNOWN,
 } from './types'
 
 /**
@@ -413,6 +414,13 @@ export function memoryconverttogadgetlayers(
   return layers
 }
 
+function memorygadgetexitboardid(addr: string | undefined): string {
+  if (!isstring(addr) || addr.trim() === '') {
+    return EXIT_PREVIEW_UNKNOWN
+  }
+  return memoryreadboardbyaddressstable(addr)?.id ?? ''
+}
+
 export type MEMORY_GADGET_LAYERS = {
   id: string
   board: string
@@ -571,13 +579,13 @@ export function memoryreadgadgetlayers(
   }
 
   const corners = memorycornerexitboardids(board)
-  return {
+  const result = {
     id: id4all.join('|'),
     board: board.id,
-    exiteast: memoryreadboardbyaddress(board.exiteast ?? '')?.id ?? '',
-    exitwest: memoryreadboardbyaddress(board.exitwest ?? '')?.id ?? '',
-    exitnorth: memoryreadboardbyaddress(board.exitnorth ?? '')?.id ?? '',
-    exitsouth: memoryreadboardbyaddress(board.exitsouth ?? '')?.id ?? '',
+    exiteast: memorygadgetexitboardid(board.exiteast),
+    exitwest: memorygadgetexitboardid(board.exitwest),
+    exitnorth: memorygadgetexitboardid(board.exitnorth),
+    exitsouth: memorygadgetexitboardid(board.exitsouth),
     exitne: corners.exitne,
     exitnw: corners.exitnw,
     exitse: corners.exitse,
@@ -587,6 +595,7 @@ export function memoryreadgadgetlayers(
     layers,
     tickers,
   }
+  return result
 }
 
 export { memorycreatecachedsprite } from './renderinglayercache'

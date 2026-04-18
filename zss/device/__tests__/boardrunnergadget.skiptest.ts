@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import * as api from 'zss/device/api'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
 import * as gadgetapi from 'zss/gadget/data/api'
+import { LAYER_TYPE } from 'zss/gadget/data/types'
 import * as bookoperations from 'zss/memory/bookoperations'
 import * as playermanagement from 'zss/memory/playermanagement'
 import * as rendering from 'zss/memory/rendering'
@@ -21,7 +21,9 @@ describe('boardrunnergadgetsynctick when player board not hydrated', () => {
   })
 
   it('does not emit patch or paint and does not read gadgetstate when playerboard is undefined', () => {
-    jest.spyOn(playermanagement, 'memoryreadplayerboard').mockReturnValue(undefined)
+    jest
+      .spyOn(playermanagement, 'memoryreadplayerboard')
+      .mockReturnValue(undefined)
     const patchspy = jest.spyOn(api, 'gadgetclientpatch')
     const paintspy = jest.spyOn(api, 'gadgetclientpaint')
     const gadgetstatespy = jest.spyOn(gadgetapi, 'gadgetstate')
@@ -66,12 +68,14 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
   it('emits paint twice instead of patch when resolved playerboard id changes', () => {
     boardrunnergadgetclearsyncbaseline('p1')
     jest.spyOn(session, 'memoryreadbookbysoftware').mockReturnValue({} as any)
-    jest.spyOn(bookoperations, 'memoryreadbookflag').mockImplementation((_b, _p, key) => {
-      if (key === 'board') {
-        return playeraddress
-      }
-      return ''
-    })
+    jest
+      .spyOn(bookoperations, 'memoryreadbookflag')
+      .mockImplementation((_b, _p, key) => {
+        if (key === 'board') {
+          return playeraddress
+        }
+        return ''
+      })
     jest.spyOn(playermanagement, 'memoryreadplayerboard').mockImplementation(
       () =>
         ({
@@ -79,27 +83,29 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
           name: 'N',
         }) as any,
     )
-    jest.spyOn(rendering, 'memoryreadgadgetlayers').mockImplementation((_p, pb: any) => ({
-      id: pb.id,
-      board: pb.id,
-      exiteast: '',
-      exitwest: '',
-      exitnorth: '',
-      exitsouth: '',
-      exitne: '',
-      exitnw: '',
-      exitse: '',
-      exitsw: '',
-      over: [],
-      under: [],
-      layers: [
-        {
-          id: `lay-${pb.id}`,
-          type: LAYER_TYPE.BLANK,
-        },
-      ],
-      tickers: [],
-    }))
+    jest
+      .spyOn(rendering, 'memoryreadgadgetlayers')
+      .mockImplementation((_p, pb: any) => ({
+        id: pb.id,
+        board: pb.id,
+        exiteast: '',
+        exitwest: '',
+        exitnorth: '',
+        exitsouth: '',
+        exitne: '',
+        exitnw: '',
+        exitse: '',
+        exitsw: '',
+        over: [],
+        under: [],
+        layers: [
+          {
+            id: `lay-${pb.id}`,
+            type: LAYER_TYPE.BLANK,
+          },
+        ],
+        tickers: [],
+      }))
     jest
       .spyOn(rendering, 'memoryconverttogadgetcontrollayer')
       .mockReturnValue([] as any)
