@@ -5,7 +5,6 @@ import {
 
 import './device/gadgetmemoryprovider'
 import './device/boardrunner'
-import './device/boardrunnertransfer'
 import './device/boardrunneruser'
 import './device/jsonsyncclient'
 

@@ -20,6 +20,7 @@ re-pushing the same change in a feedback loop.
 */
 import {
   jsonsyncserveradmitplayer,
+  jsonsyncserverdropplayer,
   jsonsyncserverreadstream,
   jsonsyncserverregister,
   jsonsyncserverupdate,
@@ -162,6 +163,54 @@ function collectcardinalneighbors(
 function admitboardstream(player: string, codepage: CODE_PAGE): void {
   memorysyncensureboardregistered(codepage)
   jsonsyncserveradmitplayer(boardstreamid(codepage), player, true)
+}
+
+// Inverse of memorysyncadmitboardrunner: drop the player from the target
+// board stream and all of its cardinal + two-hop neighbor streams. Used when
+// an election flips to a different player so the previous owner stops
+// receiving pokes / snapshots and loses write admission. The shared
+// MEMORY_STREAM_ID is not dropped here — players stay admitted to memory as
+// long as they are logged in (see handlelogout for memory-stream removal).
+export function memorysyncrevokeboardrunner(
+  player: string,
+  boardaddress: string,
+): void {
+  if (!isstring(boardaddress) || !boardaddress) {
+    return
+  }
+  const codepage = memorypickcodepagewithtypeandstat(
+    CODE_PAGE_TYPE.BOARD,
+    boardaddress,
+  )
+  if (!ispresent(codepage)) {
+    return
+  }
+  jsonsyncserverdropplayer(boardstreamid(codepage), player)
+  revokeneighborboardstreams(player, codepage)
+}
+
+function revokeneighborboardstreams(
+  player: string,
+  centercodepage: CODE_PAGE,
+): void {
+  const seen = new Set<string>([centercodepage.id])
+  const cardinalcps = collectcardinalneighbors(centercodepage, seen)
+  for (let i = 0; i < cardinalcps.length; ++i) {
+    jsonsyncserverdropplayer(boardstreamid(cardinalcps[i]), player)
+  }
+  for (let i = 0; i < cardinalcps.length; ++i) {
+    const outer = collectcardinalneighbors(cardinalcps[i], seen)
+    for (let j = 0; j < outer.length; ++j) {
+      jsonsyncserverdropplayer(boardstreamid(outer[j]), player)
+    }
+  }
+}
+
+// Full logout cleanup: drop the player from every stream, including the
+// shared memory stream. Called from handlelogout after memorylogoutplayer
+// has cleared the player's flags.
+export function memorysyncdropplayerfromall(player: string): void {
+  jsonsyncserverdropplayer(MEMORY_STREAM_ID, player)
 }
 
 // VM tick hooks: callers decide when to push. The handler in vm/handlers/tick

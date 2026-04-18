@@ -1,14 +1,15 @@
+import { vmplayermovetoboard } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { ptwithin } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 import { memorymoveboardobject } from './boardmovement'
 import { memoryreadbookflag } from './bookoperations'
-import { memorymoveplayertoboard } from './playermanagement'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
 export function memoryplayerblockedbyedge(
-  book: MAYBE<BOOK>,
+  _book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   element: BOARD_ELEMENT,
   dest: PT,
@@ -17,34 +18,38 @@ export function memoryplayerblockedbyedge(
   if (dest.x < 0) {
     const exit = board?.exitwest
     if (isstring(exit) && exit) {
-      return memorymoveplayertoboard(book, elementid, exit, {
-        x: BOARD_WIDTH - 1,
-        y: dest.y,
+      vmplayermovetoboard(SOFTWARE, elementid, {
+        board: exit,
+        dest: { x: BOARD_WIDTH - 1, y: dest.y },
       })
+      return true
     }
   } else if (dest.x >= BOARD_WIDTH) {
     const exit = board?.exiteast
     if (isstring(exit) && exit) {
-      return memorymoveplayertoboard(book, elementid, exit, {
-        x: 0,
-        y: dest.y,
+      vmplayermovetoboard(SOFTWARE, elementid, {
+        board: exit,
+        dest: { x: 0, y: dest.y },
       })
+      return true
     }
   } else if (dest.y < 0) {
     const exit = board?.exitnorth
     if (isstring(exit) && exit) {
-      return memorymoveplayertoboard(book, elementid, exit, {
-        x: dest.x,
-        y: BOARD_HEIGHT - 1,
+      vmplayermovetoboard(SOFTWARE, elementid, {
+        board: exit,
+        dest: { x: dest.x, y: BOARD_HEIGHT - 1 },
       })
+      return true
     }
   } else if (dest.y >= BOARD_HEIGHT) {
     const exit = board?.exitsouth
     if (isstring(exit) && exit) {
-      return memorymoveplayertoboard(book, elementid, exit, {
-        x: dest.x,
-        y: 0,
+      vmplayermovetoboard(SOFTWARE, elementid, {
+        board: exit,
+        dest: { x: dest.x, y: 0 },
       })
+      return true
     }
   }
   return false

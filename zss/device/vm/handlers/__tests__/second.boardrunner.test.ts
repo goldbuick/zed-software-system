@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
 import { handlesecond } from 'zss/device/vm/handlers/second'
+import * as memorysync from 'zss/device/vm/memorysync'
 import {
   BOARDRUNNER_ACK_FAIL_COUNT,
   ackboardrunners,
@@ -28,6 +29,8 @@ describe('handlesecond board runner ack retries', () => {
   const vm = {} as DEVICE
   const message = { player: '' } as MESSAGE
   let registerask: jest.SpyInstance
+  let boardrunnerowned: jest.SpyInstance
+  let revoke: jest.SpyInstance
 
   beforeEach(() => {
     clearboardrunnerrecords()
@@ -38,6 +41,12 @@ describe('handlesecond board runner ack retries', () => {
       .mockImplementation(() => {})
     registerask = jest
       .spyOn(api, 'registerboardrunnerask')
+      .mockImplementation(() => {})
+    boardrunnerowned = jest
+      .spyOn(api, 'boardrunnerowned')
+      .mockImplementation(() => {})
+    revoke = jest
+      .spyOn(memorysync, 'memorysyncrevokeboardrunner')
       .mockImplementation(() => {})
     jest.spyOn(api, 'vmlogout').mockImplementation(() => {})
   })
@@ -67,6 +76,30 @@ describe('handlesecond board runner ack retries', () => {
     )
     expect(boardrunners['board-x']).toBeUndefined()
     expect(ackboardrunners['board-x']).toBeUndefined()
+    expect(revoke).not.toHaveBeenCalled()
+    expect(boardrunnerowned).not.toHaveBeenCalled()
+  })
+
+  it('revokes prior acked runner and refreshes ownership when unelected runner hits ack fail count', () => {
+    // Election moved to joiner but old operator is still the acked runner
+    // until joiner acks. If joiner never acks, we must revoke the old ack
+    // holder's jsonsync admissions (plan: second-path revoke).
+    boardrunners['board-x'] = 'joiner'
+    ackboardrunners['board-x'] = 'operator'
+    failedboardrunners['board-x'] = { joiner: 0 }
+
+    handlesecond(vm, message)
+    expect(registerask).toHaveBeenCalledWith(vm, 'joiner', 'board-x')
+    expect(boardrunners['board-x']).toBe('joiner')
+
+    handlesecond(vm, message)
+    expect(failedboardrunners['board-x']?.joiner).toBe(
+      BOARDRUNNER_ACK_FAIL_COUNT,
+    )
+    expect(boardrunners['board-x']).toBeUndefined()
+    expect(ackboardrunners['board-x']).toBeUndefined()
+    expect(revoke).toHaveBeenCalledWith('operator', 'board-x')
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'operator', [])
   })
 
   it('does not retry when ack matches current runner', () => {

@@ -12,7 +12,7 @@ import type {
 } from 'zss/feature/jsonsync'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { BOARD_ELEMENT, BOOK } from 'zss/memory/types'
+import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
@@ -174,6 +174,21 @@ export function gadgetclientpatch(
 
 export function boardrunnergadgetdesync(device: DEVICELIKE, player: string) {
   device.emit(player, 'boardrunner:desync')
+}
+
+// Server VM -> elected player's boardrunner worker: the authoritative set of
+// board codepage ids this player currently owns. The worker only runs
+// pilot/memorytickmain/gadgetrender + pushes jsonsync edits for boards it owns.
+// Sent on election change (handleackboardrunner), on ack failure removal
+// (handlesecond), on peer departure (handlepeergone), and on logout
+// (handlelogout). Routed via shouldforwardservertoclient (boardrunner:* is
+// whitelisted) then shouldforwardclienttoboardrunner into the worker.
+export function boardrunnerowned(
+  device: DEVICELIKE,
+  player: string,
+  boardids: string[],
+) {
+  device.emit(player, 'boardrunner:ownedboards', boardids)
 }
 
 // --- jsonsync ---------------------------------------------------------------
@@ -959,29 +974,18 @@ export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
 }
 
-// Phase 3 of the boardrunner authoritative-tick plan: when the elected runner
-// observes a player element crossing from its owned board (from) to a board
-// owned by a different runner (to), it cannot write to the destination
-// `board:*` stream directly. Instead it emits this message upstream to the
-// server, which mediates the handoff: validates ownership, inserts the
-// element into the destination board, updates player flags, and pokes the
-// destination runner. The `player` envelope carries the elected runner's own
-// id (for ownership validation); the payload carries the element id being
-// moved plus the source/destination boards and the entry point.
-export type VM_BOARDRUNNER_TRANSFER = {
-  player: string
-  fromboardid: string
-  toboardid: string
-  element: BOARD_ELEMENT
+/** Edge-triggered cross-board player move; handled on the authoritative VM. */
+export type VM_PLAYERMOVETOBOARD = {
+  board: string
   dest: PT
 }
 
-export function vmboardrunnertransfer(
+export function vmplayermovetoboard(
   device: DEVICELIKE,
   player: string,
-  payload: VM_BOARDRUNNER_TRANSFER,
+  payload: VM_PLAYERMOVETOBOARD,
 ) {
-  device.emit(player, 'vm:boardrunnertransfer', payload)
+  device.emit(player, 'vm:playermovetoboard', payload)
 }
 
 // Phase 3 of the boardrunner authoritative-tick plan: emitted by

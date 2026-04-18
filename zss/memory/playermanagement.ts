@@ -1,7 +1,10 @@
 import { createchipid } from 'zss/chip'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
+import {
+  BOARDRUNNER_ACK_FAIL_COUNT,
+  BOARDRUNNER_STICKY_BIAS,
+} from 'zss/device/vm/state'
 import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
@@ -41,7 +44,6 @@ import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
-  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
@@ -49,34 +51,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-
-// Phase 3 of the boardrunner authoritative-tick plan: the elected
-// boardrunner worker cannot write to board streams it does not own. When
-// the firmware runs `memorymoveplayertoboard` on the worker and the
-// destination lives in another runner's board stream, the mutation must
-// route through a server-mediated transfer message instead of a direct
-// cross-board insert. The worker installs a hook on boot; the server
-// leaves it unset and keeps the in-process default behavior.
-export type MEMORY_MOVEPLAYER_HOOK = (args: {
-  book: BOOK
-  player: string
-  fromboard: BOARD
-  toboardid: string
-  element: BOARD_ELEMENT
-  dest: PT
-}) => boolean
-
-let moveplayerhook: MEMORY_MOVEPLAYER_HOOK | null = null
-
-export function memorysetmoveplayerhook(
-  hook: MEMORY_MOVEPLAYER_HOOK | null,
-): void {
-  moveplayerhook = hook
-}
-
-export function memoryreadmoveplayerhook(): MEMORY_MOVEPLAYER_HOOK | null {
-  return moveplayerhook
-}
 
 // Player Management Functions
 
@@ -105,24 +79,6 @@ export function memorymoveplayertoboard(
   const element = memoryreadobject(currentboard, player)
   if (!memoryboardelementisobject(element) || !element?.id) {
     return false
-  }
-
-  // runner-side hook: if installed and the destination is not locally
-  // owned by this worker, the hook emits the cross-board transfer upstream
-  // (and typically removes the element from the source board) instead of
-  // the default in-process move. Hook returns true to short-circuit.
-  if (moveplayerhook) {
-    const handled = moveplayerhook({
-      book,
-      player,
-      fromboard: currentboard,
-      toboardid: board,
-      element,
-      dest,
-    })
-    if (handled) {
-      return true
-    }
   }
 
   // dest board
@@ -220,6 +176,7 @@ export function memoryreadboardrunnerchoices(
   book: MAYBE<BOOK>,
   tracking: Record<string, number>,
   boardrunnerfailed?: Record<string, Record<string, number>>,
+  currentacked?: Record<string, string>,
 ) {
   // list of current good choices for board runners
   const runnerchoices: Record<string, string> = {}
@@ -229,20 +186,56 @@ export function memoryreadboardrunnerchoices(
     return { runnerchoices, playeridsbyboard }
   }
 
-  // list of current scores for the current choices
-  const runnerscore: Record<string, number> = {}
-
-  // iterate over active players
+  // First pass: collect players per board (needed to validate any
+  // `currentacked` seed — an acked player who has since left the board
+  // must not influence the election).
   for (let i = 0; i < book.activelist.length; ++i) {
     const player = book.activelist[i]
     const board = memoryreadbookflag(book, player, 'board') as string
     if (!isstring(board) || !board) {
       continue
     }
-
-    // track active players on boards
     playeridsbyboard[board] ??= []
     playeridsbyboard[board].push(player)
+  }
+
+  // list of current scores for the current choices
+  const runnerscore: Record<string, number> = {}
+
+  // Stickiness: if a board already has an acked runner who is still on the
+  // board, seed the election with that player at
+  // score(acked) - BOARDRUNNER_STICKY_BIAS. A challenger must have a
+  // meaningfully lower score to flip the election. This prevents fresh
+  // joiners (initial tracking = INITIAL_TRACKING) from instantly stealing
+  // the title board from the operator between ticks.
+  if (ispresent(currentacked)) {
+    const ackedboards = Object.keys(currentacked)
+    for (let i = 0; i < ackedboards.length; ++i) {
+      const board = ackedboards[i]
+      const acked = currentacked[board]
+      if (!isstring(acked) || !acked) {
+        continue
+      }
+      if (boardrunnerfailed?.[board]?.[acked] === BOARDRUNNER_ACK_FAIL_COUNT) {
+        continue
+      }
+      const onboard = playeridsbyboard[board] ?? []
+      if (!onboard.includes(acked)) {
+        continue
+      }
+      const ackedscore = tracking[acked] ?? 1000
+      runnerscore[board] = ackedscore - BOARDRUNNER_STICKY_BIAS
+      runnerchoices[board] = acked
+    }
+  }
+
+  // Second pass: for each player, challenge the current choice.
+  for (let i = 0; i < book.activelist.length; ++i) {
+    const player = book.activelist[i]
+    const board = memoryreadbookflag(book, player, 'board') as string
+    if (!isstring(board) || !board) {
+      continue
+    }
 
     if (boardrunnerfailed?.[board]?.[player] === BOARDRUNNER_ACK_FAIL_COUNT) {
       continue

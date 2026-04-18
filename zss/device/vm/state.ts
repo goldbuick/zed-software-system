@@ -6,6 +6,19 @@
 export const SECOND_TIMEOUT = 16
 export const FLUSH_RATE = 60
 export const BOARDRUNNER_ACK_FAIL_COUNT = 2
+/**
+ * Bias applied to a currently-acked board runner when deciding the next
+ * election (see memoryreadboardrunnerchoices). A challenger must beat the
+ * acked runner's tracking score by more than this to flip the election,
+ * keeping ownership stable in the common case where a fresh joiner logs in
+ * with initial tracking = SECOND_TIMEOUT/2.
+ */
+export const BOARDRUNNER_STICKY_BIAS = 4
+/** Initial tracking score assigned on handlelogin/handlelocal. Set above 0
+ * so a brand-new joiner does not instantly displace an acked runner whose
+ * tracking is a few seconds old. Combined with BOARDRUNNER_STICKY_BIAS this
+ * gives the existing runner a multi-tick stability window. */
+export const INITIAL_TRACKING = 8
 
 export const tracking: Record<string, number> = {}
 export const trackinglastlog: Record<string, number> = {}

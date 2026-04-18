@@ -10,7 +10,7 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
-import { handleboardrunnertransfer } from './boardrunnertransfer'
+import { handleplayermovetoboard } from './playermovetoboard'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
@@ -68,7 +68,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   ticktock: handletick,
   second: handlesecond,
   ackboardrunner: handleackboardrunner,
-  boardrunnertransfer: handleboardrunnertransfer,
+  playermovetoboard: handleplayermovetoboard,
   peergone: handlepeergone,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,

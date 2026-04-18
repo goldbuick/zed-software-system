@@ -2,11 +2,23 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
+  boardrunnerowned,
   registerinspector,
   registerloginready,
   vmclearscroll,
 } from 'zss/device/api'
-import { lastinputtime, tracking } from 'zss/device/vm/state'
+import {
+  memorysyncdropplayerfromall,
+  memorysyncrevokeboardrunner,
+} from 'zss/device/vm/memorysync'
+import {
+  INITIAL_TRACKING,
+  ackboardrunners,
+  boardrunners,
+  failedboardrunners,
+  lastinputtime,
+  tracking,
+} from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
@@ -34,7 +46,28 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   vmclearscroll(vm, message.player)
+  // Before the player's flags are cleared, revoke their admissions to any
+  // board streams they owned as an elected runner, drop any runner slots
+  // that still reference them, and tell their worker ownership is empty.
+  // Without this the departing player's worker would keep its jsonsync
+  // admissions (getting pokes / writes through) and keep emitting paints
+  // from a stale baseline after they log back in.
+  const ownedboards = Object.keys(boardrunners)
+  for (let i = 0; i < ownedboards.length; ++i) {
+    const boardid = ownedboards[i]
+    if (boardrunners[boardid] === message.player) {
+      memorysyncrevokeboardrunner(message.player, boardid)
+      delete boardrunners[boardid]
+      delete ackboardrunners[boardid]
+      delete failedboardrunners[boardid]
+    } else if (ackboardrunners[boardid] === message.player) {
+      memorysyncrevokeboardrunner(message.player, boardid)
+      delete ackboardrunners[boardid]
+    }
+  }
+  boardrunnerowned(vm, message.player, [])
   memorylogoutplayer(message.player, !!message.data)
+  memorysyncdropplayerfromall(message.player)
   delete tracking[message.player]
   delete lastinputtime[message.player]
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
@@ -85,7 +118,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   }
 
   if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
-    tracking[message.player] = 0
+    tracking[message.player] = INITIAL_TRACKING
     lastinputtime[message.player] = Date.now()
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
@@ -102,7 +135,7 @@ export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {
 
 export function handlelocal(vm: DEVICE, message: MESSAGE): void {
   if (memoryloginplayer(message.player, {})) {
-    tracking[message.player] = 0
+    tracking[message.player] = INITIAL_TRACKING
     lastinputtime[message.player] = Date.now()
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)

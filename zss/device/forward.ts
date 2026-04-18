@@ -112,11 +112,18 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   if (route.target === 'boardrunner') {
     return false
   }
+  // gadgetclient traffic must reach the host so the operator's local
+  // gadgetclient can render paints/patches emitted by a joiner's elected
+  // boardrunner worker. Without this, whenever a peer wins the boardrunner
+  // election for a board the operator is on, the host's UI freezes (it
+  // would only ever receive paints from its own local boardrunner, which
+  // is no longer authoritative for that board).
   switch (route.target) {
     case 'vm':
     case 'user':
     case 'modem':
     case 'jsonsyncserver':
+    case 'gadgetclient':
       return true
   }
   switch (route.path) {

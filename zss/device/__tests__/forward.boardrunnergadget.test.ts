@@ -32,4 +32,19 @@ describe('forward rules for boardrunner gadget routes', () => {
     const m = msg('gadgetclient:patch')
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
+
+  it('forwards gadgetclient:paint from client peer to server so a joiner-owned board can paint the host operator', () => {
+    const m = msg('gadgetclient:paint')
+    expect(shouldforwardclienttoserver(m)).toBe(true)
+  })
+
+  it('forwards gadgetclient:patch from client peer to server', () => {
+    const m = msg('gadgetclient:patch')
+    expect(shouldforwardclienttoserver(m)).toBe(true)
+  })
+
+  it('forwards boardrunner:ownedboards from server to client (so the worker receives it)', () => {
+    const m = msg('boardrunner:ownedboards')
+    expect(shouldforwardservertoclient(m)).toBe(true)
+  })
 })

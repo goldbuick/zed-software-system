@@ -92,4 +92,50 @@ describe('memoryreadboardrunnerbyboard', () => {
       playeridsbyboard: { 'addr-a': ['p1', 'p2'] },
     })
   })
+
+  it("keeps current acked runner when a fresh joiner's score only marginally beats theirs (sticky bias)", () => {
+    const book = stubbook(['op', 'joiner'], {
+      op: 'addr-a',
+      joiner: 'addr-a',
+    })
+    // op was just acked last second (score 2), joiner logged in this second
+    // with INITIAL_TRACKING = 8. Without stickiness, op (lower) still wins
+    // so widen the scenario: simulate op tracking climbing to 6 before
+    // joiner lands at 8. Without bias joiner (8) > op (6) so op wins. Use
+    // a case where op's score is higher than joiner's by less than the
+    // sticky bias (4).
+    const t = { op: 10, joiner: 8 }
+    const acked = { 'addr-a': 'op' }
+    expect(memoryreadboardrunnerchoices(book, t, undefined, acked)).toEqual({
+      runnerchoices: { 'addr-a': 'op' },
+      playeridsbyboard: { 'addr-a': ['op', 'joiner'] },
+    })
+  })
+
+  it('allows election flip when challenger beats acked runner by more than the sticky bias', () => {
+    const book = stubbook(['op', 'joiner'], {
+      op: 'addr-a',
+      joiner: 'addr-a',
+    })
+    // op is idle (high tracking), joiner just became active (low). Gap of
+    // 10 easily exceeds BOARDRUNNER_STICKY_BIAS so the election flips.
+    const t = { op: 15, joiner: 1 }
+    const acked = { 'addr-a': 'op' }
+    expect(memoryreadboardrunnerchoices(book, t, undefined, acked)).toEqual({
+      runnerchoices: { 'addr-a': 'joiner' },
+      playeridsbyboard: { 'addr-a': ['op', 'joiner'] },
+    })
+  })
+
+  it('drops phantom acked runner who has since left the board', () => {
+    // acked runner `ghost` is no longer on addr-a. The election should
+    // not reference them at all.
+    const book = stubbook(['op'], { op: 'addr-a' })
+    const t = { op: 5, ghost: 0 }
+    const acked = { 'addr-a': 'ghost' }
+    expect(memoryreadboardrunnerchoices(book, t, undefined, acked)).toEqual({
+      runnerchoices: { 'addr-a': 'op' },
+      playeridsbyboard: { 'addr-a': ['op'] },
+    })
+  })
 })
