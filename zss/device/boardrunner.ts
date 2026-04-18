@@ -171,7 +171,7 @@ const boardrunner = createdevice(
       default:
         // everything else is filtered by assignedplayerid
         if (message.player !== assignedplayerid) {
-          console.info('filtered message', message.target)
+          console.info('filtered message', message.target, message)
           return
         }
         break
@@ -199,7 +199,7 @@ const boardrunner = createdevice(
         }
         assignedboardid = next
         rebuildownedboardids()
-        console.info('updated ownedboardids', ownedboardids)
+        console.info('updated ownedboard', assignedplayerid, assignedboardid)
         break
       }
       case 'clearscroll':
