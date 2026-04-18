@@ -146,10 +146,10 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'user:pilotstart':
     case 'user:pilotstop':
     case 'user:pilotclear':
-    case 'jsonsyncserver:clientpatch':
-    case 'jsonsyncserver:needsnapshot':
     case 'gadgetclient:paint':
     case 'gadgetclient:patch':
+    case 'jsonsyncserver:clientpatch':
+    case 'jsonsyncserver:needsnapshot':
       return true
     default:
       break
@@ -174,8 +174,8 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'vm':
     case 'user':
     case 'modem':
-    case 'jsonsyncserver':
     case 'gadgetclient':
+    case 'jsonsyncserver':
       return true
   }
   switch (route.path) {

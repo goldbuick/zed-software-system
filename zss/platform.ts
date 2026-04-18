@@ -1,4 +1,5 @@
 import boardrunnerspace from './boardrunnerspace??worker'
+import { createmessage } from './device'
 import { MESSAGE, sessionreset } from './device/api'
 import { maybeLogBoardrunnerInbound } from './device/boardrunnerinboundlog'
 import {
@@ -9,7 +10,7 @@ import {
 } from './device/forward'
 import { SOFTWARE } from './device/session'
 import heavyspace from './heavyspace??worker'
-import { MAYBE, ispresent } from './mapping/types'
+import { MAYBE, ispresent, isstring } from './mapping/types'
 import simspace from './simspace??worker'
 import stubspace from './stubspace??worker'
 
@@ -18,10 +19,34 @@ let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
 let platformhalt: MAYBE<() => void>
 
+/** Boardrunner worker → main: drop gadgetclient paint/patch for other players (multiplayer). Empty = no filter. */
+let gadgetpaintfilterplayer = ''
+
+/** Must match `boardrunnerspace.ts` worker inbound handler. */
+const BOARDRUNNER_WORKER_SET_LOCAL_PLAYER = 'boardrunnerworker:setlocalplayer'
+
+export function platformsetgadgetpaintfilterplayer(player: string) {
+  gadgetpaintfilterplayer =
+    typeof player === 'string' && player.length > 0 ? player : ''
+  if (ispresent(boardrunner)) {
+    const pid = isstring(player) && player.length > 0 ? player : ''
+    boardrunner.postMessage(
+      createmessage(
+        '',
+        '',
+        'platform',
+        BOARDRUNNER_WORKER_SET_LOCAL_PLAYER,
+        pid,
+      ),
+    )
+  }
+}
+
 export function createplatform(isstub = false, climode = false) {
   if (ispresent(platform)) {
     return
   }
+  gadgetpaintfilterplayer = ''
   // reset session
   sessionreset(SOFTWARE)
   // create heavy worker
@@ -62,6 +87,14 @@ export function createplatform(isstub = false, climode = false) {
   // handle messages from boardrunner
   function boardrunnermessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
+    const dropforeigngadget =
+      gadgetpaintfilterplayer.length > 0 &&
+      (message.target === 'gadgetclient:paint' ||
+        message.target === 'gadgetclient:patch') &&
+      message.player !== gadgetpaintfilterplayer
+    if (dropforeigngadget) {
+      return
+    }
     if (shouldforwardclienttoserver(message) && ispresent(platform)) {
       platform.postMessage(message)
     }
@@ -85,6 +118,7 @@ export function createplatform(isstub = false, climode = false) {
   platform.addEventListener('message', platformmessages)
 
   platformhalt = () => {
+    gadgetpaintfilterplayer = ''
     disconnect()
     if (ispresent(heavy)) {
       heavy.removeEventListener('message', heavymessages)

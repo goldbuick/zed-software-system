@@ -7,7 +7,11 @@ import {
 } from 'zss/gadget/data/api'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import {
+  memoryreadboardbyaddress,
+  memoryreadoverboard,
+} from 'zss/memory/boards'
 import {
   memoryreadbookflag,
   memoryreadbookflags,
@@ -20,7 +24,7 @@ import {
   memoryreadoperator,
   memoryreadsimfreeze,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
+import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import {
@@ -29,7 +33,6 @@ import {
   vmclearscroll,
 } from './api'
 import {
-  boardrunnergadgetclearsyncbaseline,
   boardrunnergadgetdesyncpaint,
   boardrunnergadgetsynctick,
 } from './boardrunnergadget'
@@ -63,28 +66,58 @@ gadgetstateprovider((element) => {
   return initstate()
 })
 
-// Authoritative ownership set. Populated from the server's
-// `boardrunner:ownedboards` message on every election change / ack /
-// logout. The worker ONLY runs pilottick / memorytickmain / gadgetrender /
-// memoryworkerpushdirty for players whose current `board` flag is in this
-// set. Without this gate, every peer's worker (as soon as jsonsync admits
-// it to the `board:<id>` stream) would tick the same board and emit
-// conflicting paints / writes — observed as host-freezes, player-movement
-// hitches, and blank screens on join.
-const ownedboards = new Set<string>()
+// Election sends one codepage id (`boardrunner:ownedboard`). The runner may
+// authoritatively touch one or two `board:<id>` streams: the mid board and,
+// when present, its overboard (see BOARD.over → memoryreadoverboard). We
+// expand the assigned id into `ownedboardids` whenever MEMORY hydrates so
+// jsonsync resync + gadget baselines treat both layers as ours.
+let assignedboardid = ''
 
-/** Owned `board:<id>` streams that hydrated this frame batch; gadget baseline clear + paint coalesced to next ticktock (avoids repainting inside jsonsync before MEMORY is settled). */
-const pendingOwnedBoardGadgetResync = new Set<string>()
+/** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
+const ownedboardids = new Set<string>()
 
-function isowned(boardid: string): boolean {
-  return isstring(boardid) && ownedboards.has(boardid)
+/** Owned `board:<id>` streams that hydrated this batch; gadget baseline coalesced to next ticktock. */
+// const pendingOwnedBoardGadgetResync = new Set<string>()
+
+function snapshotownedids(assigned: string): Set<string> {
+  const ids = new Set<string>()
+  if (!isstring(assigned) || assigned.length === 0) {
+    return ids
+  }
+  ids.add(assigned)
+  const mid = memoryreadboardbyaddress(assigned)
+  if (!ispresent(mid)) {
+    return ids
+  }
+  const over = memoryreadoverboard(mid)
+  if (ispresent(over?.id) && over.id.length > 0) {
+    ids.add(over.id)
+  }
+  return ids
 }
 
-// For every player we're authoritative over, collect their current board
-// flag. Used both to pick the `gadgetrender` player list and to gate the
-// tick entirely (no owned boards with any player present => no work).
+function rebuildownedboardids() {
+  ownedboardids.clear()
+  if (!isstring(assignedboardid) || assignedboardid.length === 0) {
+    return
+  }
+  snapshotownedids(assignedboardid).forEach((id) => ownedboardids.add(id))
+}
+
+function playerresolvedboardid(mainbook: MAYBE<BOOK>, player: string): string {
+  if (!ispresent(mainbook)) {
+    return ''
+  }
+  const flag = memoryreadbookflag(mainbook, player, 'board')
+  if (!isstring(flag)) {
+    return ''
+  }
+  const resolved = memoryreadboardbyaddress(flag)
+  return ispresent(resolved?.id) && resolved.id.length > 0 ? resolved.id : flag
+}
+
 function ownedplayerids(): string[] {
-  if (ownedboards.size === 0) {
+  if (ownedboardids.size === 0) {
     return []
   }
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -93,79 +126,27 @@ function ownedplayerids(): string[] {
   const seen = new Set<string>()
   for (let i = 0; i < active.length; ++i) {
     const player = active[i]
-    const board = memoryreadbookflag(mainbook, player, 'board')
-    if (isstring(board) && isowned(board)) {
+    const bid = playerresolvedboardid(mainbook, player)
+    if (bid.length > 0 && ownedboardids.has(bid)) {
       out.push(player)
       seen.add(player)
     }
   }
-  // Ensure the operator is always considered (they may not be in activelist
-  // on a fresh boot) if their board is owned.
   const op = memoryreadoperator()
   if (isstring(op) && op.length > 0 && !seen.has(op)) {
-    const opboard = memoryreadbookflag(mainbook, op, 'board')
-    if (isstring(opboard) && isowned(opboard)) {
+    const opbid = playerresolvedboardid(mainbook, op)
+    if (opbid.length > 0 && ownedboardids.has(opbid)) {
       out.push(op)
     }
   }
   return out
 }
 
-function flushOwnedBoardGadgetResync(dev: ReturnType<typeof createdevice>) {
-  if (pendingOwnedBoardGadgetResync.size === 0) {
-    return
-  }
-  const boards = [...pendingOwnedBoardGadgetResync]
-  pendingOwnedBoardGadgetResync.clear()
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  let clearedgadgetbaseline = false
-  for (let b = 0; b < boards.length; ++b) {
-    const boardaddress = boards[b]
-    if (!isowned(boardaddress) || !ispresent(mainbook?.activelist)) {
-      continue
-    }
-    const players = new Set<string>(mainbook.activelist)
-    const op = memoryreadoperator()
-    if (isstring(op) && op.length > 0) {
-      players.add(op)
-    }
-    const playerlist = [...players]
-    for (let p = 0; p < playerlist.length; ++p) {
-      const player = playerlist[p]
-      const bf = memoryreadbookflag(mainbook, player, 'board')
-      if (isstring(bf) && bf === boardaddress) {
-        boardrunnergadgetclearsyncbaseline(player)
-        clearedgadgetbaseline = true
-      }
-    }
-  }
-  if (clearedgadgetbaseline) {
-    const paintplayers = ownedplayerids()
-    if (paintplayers.length > 0) {
-      boardrunnergadgetsynctick(dev, paintplayers)
-    }
-  }
-}
-
-// run our local authoritative tick. memoryreadbookplayerboards filters by
-// `memoryreadboardbyaddress`, which only resolves boards the worker has
-// hydrated via `board:<id>` snapshots — i.e. boards we were elected to run.
-// `memoryreadhalt()` is forwarded as `playeronly` so #dev gating matches the
-// server. `memoryreadsimfreeze()` short-circuits the whole tick to keep the
-// worker quiet during async loads. pilot ticks moved here from the server
-// (boardrunner authoritative-tick plan) — pilot synthesizes inputs onto
-// flags.inputqueue, which the firmware then consumes during memorytickmain.
-// After the tick, drain per-stream dirty bits and emit jsonsyncclientedit
-// upstream.
 function runworkertick(dev: ReturnType<typeof createdevice>): void {
-  flushOwnedBoardGadgetResync(dev)
+  rebuildownedboardids()
   if (memoryreadsimfreeze()) {
     return
   }
-  // Pre-ownership: if we don't own any board with an active player on it,
-  // there is nothing authoritative to do. Skip pilot/tickmain/paint/push to
-  // keep non-elected workers idle — crucial when multiple peers share the
-  // same jsonsync admissions during an election flip.
   const players = ownedplayerids()
   if (players.length === 0) {
     return
@@ -194,39 +175,8 @@ const boardrunner = createdevice(
     switch (message.target) {
       case 'jsonsync:changed': {
         const payload = message.data as JSONSYNC_CHANGED
-        const streamid =
-          typeof payload.streamid === 'string' ? payload.streamid : ''
-        const isboardstream =
-          streamid.length > 0 && streamid.startsWith('board:')
-        // Hydrate the worker-local MEMORY singleton from every accepted
-        // jsonsync mutation (snapshot / serverpatch / antipatch).
-        // memoryhydratefromjsonsync runs inside memorywithsilentwrites, so
-        // this never re-fires the worker dirty bits.
-        // Non-owners still need full neighbor-board hydration for exit
-        // previews; a shallower merge is a future perf win if profiling shows
-        // hotspot pressure here.
         memoryhydratefromjsonsync(payload.streamid, payload.document)
-        // Board tiles can mutate in place; gadget slim diff baseline may still
-        // compare equal to the new export so the client never gets a patch.
-        // We only bust the baseline on snapshot/antipatch: those reshape
-        // stream state enough that a fresh paint is appropriate. The hot
-        // multiplayer path is `serverpatch`; clearing baseline there forces
-        // gadgetclientpaint (!hadbaseline) on every merge and causes severe
-        // rubber-banding on /join/ clients — normal ticktock
-        // boardrunnergadgetsynctick still diffs patch from the kept baseline.
-        if (isboardstream) {
-          const boardaddress = streamid.slice('board:'.length)
-          // Only clear baselines and trigger an immediate repaint for this
-          // board when the worker owns it. Non-owners observe this stream
-          // only so they can stay hydrated for cross-board reads (cardinal
-          // / diagonal neighbor preview), not because they should paint.
-          if (!isowned(boardaddress)) {
-            break
-          }
-          if (payload.reason === 'snapshot' || payload.reason === 'antipatch') {
-            pendingOwnedBoardGadgetResync.add(boardaddress)
-          }
-        }
+        rebuildownedboardids()
         break
       }
       case 'ticktock':
@@ -235,61 +185,15 @@ const boardrunner = createdevice(
       case 'desync':
         boardrunnergadgetdesyncpaint(boardrunner, message.player)
         break
-      case 'ownedboards': {
-        const incoming = isarray(message.data)
-          ? (message.data as unknown[]).filter(isstring)
-          : []
-        const next = new Set<string>(incoming)
-        // Determine added / removed boards so we can clear gadget baselines
-        // and (for newly-owned boards) trigger an immediate repaint once
-        // MEMORY has hydrated. Players are considered for repaint only if
-        // their current board flag matches a newly-owned board.
-        const added: string[] = []
-        const removed: string[] = []
-        next.forEach((b) => {
-          if (!ownedboards.has(b)) {
-            added.push(b)
-          }
-        })
-        ownedboards.forEach((b) => {
-          if (!next.has(b)) {
-            removed.push(b)
-          }
-        })
-        ownedboards.clear()
-        next.forEach((b) => ownedboards.add(b))
-        for (let r = 0; r < removed.length; ++r) {
-          pendingOwnedBoardGadgetResync.delete(removed[r])
+      case 'ownedboard': {
+        const next = isstring(message.data) ? message.data : ''
+        const prev = assignedboardid
+        if (prev === next) {
+          break
         }
-        if (removed.length > 0 || added.length > 0) {
-          // Clear baselines for affected players so the next paint or the
-          // immediate paint below starts from scratch (no stale diff
-          // against a previous owner's gadget state).
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          const active = mainbook?.activelist ?? []
-          const affected: string[] = []
-          for (let i = 0; i < active.length; ++i) {
-            const player = active[i]
-            const board = memoryreadbookflag(mainbook, player, 'board')
-            if (!isstring(board)) {
-              continue
-            }
-            if (added.includes(board) || removed.includes(board)) {
-              boardrunnergadgetclearsyncbaseline(player)
-              if (added.includes(board)) {
-                affected.push(player)
-              }
-            }
-          }
-          if (affected.length > 0) {
-            // Paint immediately so the client sees a full refresh on the
-            // tick we gain ownership rather than waiting for the next
-            // ticktock. The worker may not have MEMORY hydrated yet for
-            // the owned board; boardrunnergadgetsynctick guards against
-            // missing playerboard on its own.
-            boardrunnergadgetsynctick(boardrunner, affected)
-          }
-        }
+        assignedboardid = next
+        rebuildownedboardids()
+        console.info('updated ownedboardids', ownedboardids)
         break
       }
       case 'clearscroll':
@@ -298,11 +202,6 @@ const boardrunner = createdevice(
         vmclearscroll(boardrunner, message.player)
         break
       case 'gadgetscrollpush': {
-        // Sim-authored scroll content lands here; the runner is authoritative
-        // for painting, so we mirror the push into the worker's gadgetstate
-        // and let the next boardrunnergadgetsynctick diff/emit it. We do NOT
-        // mark memory dirty: `gadgetstore` is worker-local (volatile), and
-        // paints ship via gadgetclient:paint/patch, not memoryworkerpushdirty.
         const payload = message.data as BOARDRUNNER_GADGETSCROLLPUSH | undefined
         const player = isstring(payload?.player) ? payload.player : ''
         if (!player) {
@@ -315,9 +214,6 @@ const boardrunner = createdevice(
         shared.scroll = (
           isarray(payload?.scroll) ? payload.scroll : []
         ) as PANEL_ITEM[]
-        // Clearing the sync baseline here would force an unnecessary full
-        // paint every click; the ordinary compare() path will include the
-        // scroll add/remove in the next patch.
         break
       }
       default:

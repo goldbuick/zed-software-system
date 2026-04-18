@@ -12,7 +12,7 @@ import {
   ackboardrunners,
   boardrunners,
   failedboardrunners,
-  playerownedboards,
+  playerownedboard,
   tracking,
 } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
@@ -135,8 +135,8 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
     }
   }
 
-  // emit refreshed ownership sets for any player whose acked boards changed
+  // emit refreshed owned-board id for any player whose acked boards changed
   ownershipdirty.forEach((player) => {
-    boardrunnerowned(vm, player, playerownedboards(player))
+    boardrunnerowned(vm, player, playerownedboard(player))
   })
 }

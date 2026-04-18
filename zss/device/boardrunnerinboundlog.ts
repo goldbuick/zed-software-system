@@ -58,9 +58,8 @@ export function maybeLogBoardrunnerInbound(message: MESSAGE): void {
   let extra = ''
   if (message.target === 'jsonsync:changed') {
     extra = jsonsyncHint(message.data)
-  } else if (message.target === 'boardrunner:ownedboards' && message.data) {
-    const ids = Array.isArray(message.data) ? message.data.length : 0
-    extra = `ownedboards(n=${ids})`
+  } else if (message.target === 'boardrunner:ownedboard' && message.data) {
+    extra = `ownedboard(${String(message.data)})`
   }
   console.info(
     `[boardrunner-inbound] ${role}`,

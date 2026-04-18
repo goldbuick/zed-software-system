@@ -38,6 +38,7 @@ import {
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
+import { memorydebugassertactivelistboardinvariantifenabled } from './debugactivelistinvariant'
 import { memorymarkboarddirty, memorymarkmemorydirty } from './memorydirty'
 import { memoryhaltchip } from './runtime'
 import {
@@ -130,6 +131,7 @@ export function memorymoveplayertoboard(
   memorywritebookflag(book, player, 'enterx', dest.x)
   memorywritebookflag(book, player, 'entery', dest.y)
   memorywritebookplayerboard(book, player, destboard.id)
+  memorydebugassertactivelistboardinvariantifenabled(book)
 
   // we did move
   return true
@@ -415,6 +417,7 @@ export function memoryloginplayer(
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
+    memorydebugassertactivelistboardinvariantifenabled(mainbook)
     return true
   }
 
@@ -507,6 +510,24 @@ export function memoryscanplayers(players: Record<string, number>) {
       const object = board.objects[objects[o]]
       const objectid = object.id
       if (ispid(objectid)) {
+        // If flags already say this pid is on board X and X actually holds the
+        // player object, do not repoint from a duplicate element on another board
+        // (scan order would otherwise flash the wrong board in elections / acks).
+        const booked = memoryreadbookflag(mainbook, objectid, 'board') as string
+        if (isstring(booked) && booked.length > 0) {
+          const canonical = memoryreadboardbyaddress(booked)
+          if (
+            ispresent(canonical?.id) &&
+            memoryboardelementisobject(memoryreadobject(canonical, objectid))
+          ) {
+            if (board.id !== canonical.id) {
+              if (!ispresent(players[objectid])) {
+                players[objectid] = 0
+              }
+              continue
+            }
+          }
+        }
         // ensure marked location
         memorywritebookplayerboard(mainbook, objectid, board.id)
         // ensure tracking

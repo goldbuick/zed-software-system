@@ -66,7 +66,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
       delete ackboardrunners[boardid]
     }
   }
-  boardrunnerowned(vm, message.player, [])
+  boardrunnerowned(vm, message.player, '')
   memorylogoutplayer(message.player, !!message.data)
   memorysyncdropplayerfromall(message.player)
   delete tracking[message.player]

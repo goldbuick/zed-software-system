@@ -199,7 +199,7 @@ describe('handleplayermovetoboard', () => {
       'player-1',
       'board-a',
     )
-    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', [])
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', '')
   })
 
   it('pushes dest board stream before memory stream to prevent zoom flip', () => {
@@ -279,6 +279,6 @@ describe('handleplayermovetoboard', () => {
       'player-1',
       'board-a',
     )
-    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', [])
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', '')
   })
 })

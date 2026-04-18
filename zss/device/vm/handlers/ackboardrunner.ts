@@ -6,9 +6,12 @@ import { memorysyncrevokeboardrunner } from 'zss/device/vm/memorysync'
 import {
   ackboardrunners,
   boardrunners,
-  playerownedboards,
+  playerownedboard,
 } from 'zss/device/vm/state'
-import { isstring } from 'zss/mapping/types'
+import { memoryreadbookflag } from 'zss/memory/bookoperations'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 
 export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
   const boardid = message.data
@@ -17,6 +20,32 @@ export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
   }
   if (message.player !== boardrunners[boardid]) {
     return
+  }
+
+  // Reject stale asks: the client auto-acks every `register:boardrunnerask`.
+  // During join / multi-board races the elected slot can briefly reference a
+  // player whose `board` flag is still another codepage id — accepting that
+  // ack would set ackboardrunners for the wrong board and flash
+  // boardrunner:ownedboard (see debug session 91899f).
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  const playerboard = memoryreadbookflag(mainbook, message.player, 'board')
+  if (!isstring(playerboard) || playerboard !== boardid) {
+    return
+  }
+
+  // One book `board` flag: drop orphan ack slots (e.g. HF) that still name
+  // this player after they ack their real board (title). Otherwise
+  // playerownedboard can sort HF before title and flash wrong ownedboard.
+  const staleackids = Object.keys(ackboardrunners).filter(
+    (obid) => obid !== boardid && ackboardrunners[obid] === message.player,
+  )
+  for (let oi = 0; oi < staleackids.length; ++oi) {
+    const obid = staleackids[oi]
+    delete ackboardrunners[obid]
+    memorysyncrevokeboardrunner(message.player, obid)
   }
 
   // Capture any previous owner before we overwrite. If the election just
@@ -39,7 +68,7 @@ export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
   }
   refresh.add(message.player)
   refresh.forEach((pid) => {
-    boardrunnerowned(vm, pid, playerownedboards(pid))
+    boardrunnerowned(vm, pid, playerownedboard(pid))
   })
 
   boardrunnersendsnapshot(message.player, boardid)

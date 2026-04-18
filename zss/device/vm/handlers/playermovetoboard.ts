@@ -10,9 +10,9 @@ import {
   ackboardrunners,
   boardrunners,
   failedboardrunners,
-  playerownedboards,
+  playerownedboard,
 } from 'zss/device/vm/state'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
   memorymoveplayertoboard,
@@ -20,16 +20,14 @@ import {
 } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { ispt } from 'zss/words/dir'
 
 export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   const payload = message.data as VM_PLAYERMOVETOBOARD | undefined
   if (
     !ispresent(payload) ||
+    !ispt(payload.dest) ||
     !isstring(payload.board) ||
-    !payload.board ||
-    !ispresent(payload.dest) ||
-    !isnumber(payload.dest.x) ||
-    !isnumber(payload.dest.y) ||
     !isstring(message.player) ||
     !message.player
   ) {
@@ -51,6 +49,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     payload.dest,
   )
   if (!moved) {
+    // TODO: send message so boardrunner can THUD the player
     return
   }
 
@@ -63,7 +62,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     delete ackboardrunners[fromboardid]
     delete failedboardrunners[fromboardid]
     memorysyncrevokeboardrunner(message.player, fromboardid)
-    boardrunnerowned(vm, message.player, playerownedboards(message.player))
+    boardrunnerowned(vm, message.player, playerownedboard(message.player))
   }
 
   // Push dest board BEFORE the memory stream so the worker sees the player

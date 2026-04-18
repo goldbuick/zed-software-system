@@ -15,7 +15,7 @@ import {
   boardrunners,
   failedboardrunners,
   incflushtick,
-  playerownedboards,
+  playerownedboard,
   setflushtick,
   tracking,
 } from 'zss/device/vm/state'
@@ -41,8 +41,8 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
         }
       }
 
-      // players whose ownership set changed this second, emit one refresh
-      // per player at the end of the loop below.
+      // players whose owned-board assignment changed this second — emit one
+      // refresh per player at the end of the loop below.
       const ownershipdirty = new Set<string>()
 
       const boards = Object.keys(boardrunners)
@@ -75,7 +75,7 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
           // pick the same peer again after a slow network / join race. Without
           // this, failedboardrunners stays at FAIL_COUNT forever and
           // memoryreadboardrunnerchoices permanently excludes the player
-          // (observed as join client stuck with empty boardrunner:ownedboards).
+          // (observed as join client stuck with empty boardrunner:ownedboard).
           if (failedboardrunners[boardid]) {
             delete failedboardrunners[boardid][playerid]
             if (Object.keys(failedboardrunners[boardid]).length === 0) {
@@ -87,7 +87,7 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
       }
 
       ownershipdirty.forEach((player) => {
-        boardrunnerowned(vm, player, playerownedboards(player))
+        boardrunnerowned(vm, player, playerownedboard(player))
       })
     }
 

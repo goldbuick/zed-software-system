@@ -181,9 +181,10 @@ export function boardrunnergadgetdesync(device: DEVICELIKE, player: string) {
   device.emit(player, 'boardrunner:desync')
 }
 
-// Server VM -> elected player's boardrunner worker: the authoritative set of
-// board codepage ids this player currently owns. The worker only runs
-// pilot/memorytickmain/gadgetrender + pushes jsonsync edits for boards it owns.
+// Server VM -> elected player's boardrunner worker: the one board codepage id
+// this player is the acked runner for, or '' when none. The worker only runs
+// pilot/memorytickmain/gadgetrender + pushes jsonsync edits when that id
+// matches an active player's `board` flag.
 // Sent on election change (handleackboardrunner), on ack failure removal
 // (handlesecond), on peer departure (handlepeergone), and on logout
 // (handlelogout). Routed via shouldforwardservertoclient (boardrunner:* is
@@ -191,9 +192,9 @@ export function boardrunnergadgetdesync(device: DEVICELIKE, player: string) {
 export function boardrunnerowned(
   device: DEVICELIKE,
   player: string,
-  boardids: string[],
+  boardid: string,
 ) {
-  device.emit(player, 'boardrunner:ownedboards', boardids)
+  device.emit(player, 'boardrunner:ownedboard', boardid)
 }
 
 // Sim VM -> elected runner's boardrunner worker: push a freshly authored scroll

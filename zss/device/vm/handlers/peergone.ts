@@ -48,7 +48,7 @@ export function handlepeergone(vm: DEVICE, message: MESSAGE): void {
   // In practice the worker is gone with the peer, but the emit is cheap and
   // keeps server-side bookkeeping consistent (e.g. local main-thread
   // boardrunner worker when a local player logs out without a peer).
-  boardrunnerowned(vm, player, [])
+  boardrunnerowned(vm, player, '')
   if (cleared > 0) {
     apilog(
       vm,

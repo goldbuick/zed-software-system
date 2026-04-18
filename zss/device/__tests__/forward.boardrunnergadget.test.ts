@@ -44,8 +44,8 @@ describe('forward rules for boardrunner gadget routes', () => {
     expect(shouldforwardclienttoserver(m)).toBe(true)
   })
 
-  it('forwards boardrunner:ownedboards from server to client (so the worker receives it)', () => {
-    const m = msg('boardrunner:ownedboards')
+  it('forwards boardrunner:ownedboard from server to client (so the worker receives it)', () => {
+    const m = msg('boardrunner:ownedboard')
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
 

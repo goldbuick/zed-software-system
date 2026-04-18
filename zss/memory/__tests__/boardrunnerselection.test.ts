@@ -155,4 +155,26 @@ describe('memoryreadboardrunnerbyboard', () => {
       playeridsbyboard: { 'addr-a': ['op'] },
     })
   })
+
+  it('splits playeridsbyboard when one player moves to another board (stub state)', () => {
+    const book = stubbook(['host', 'joiner'], {
+      host: 'addr-b',
+      joiner: 'addr-a',
+    })
+    const t = { host: 3, joiner: 4 }
+    expect(memoryreadboardrunnerchoices(book, t)).toEqual({
+      runnerchoices: { 'addr-a': 'joiner', 'addr-b': 'host' },
+      playeridsbyboard: { 'addr-a': ['joiner'], 'addr-b': ['host'] },
+    })
+  })
+
+  it('does not keep acked runner who moved off board when joiner is present', () => {
+    const book = stubbook(['joiner'], { joiner: 'addr-a' })
+    const t = { oldhost: 1, joiner: 8 }
+    const acked = { 'addr-a': 'oldhost' }
+    expect(memoryreadboardrunnerchoices(book, t, undefined, acked)).toEqual({
+      runnerchoices: { 'addr-a': 'joiner' },
+      playeridsbyboard: { 'addr-a': ['joiner'] },
+    })
+  })
 })

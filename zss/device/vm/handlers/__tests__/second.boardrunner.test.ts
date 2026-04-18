@@ -77,7 +77,7 @@ describe('handlesecond board runner ack retries', () => {
     expect(boardrunners['board-x']).toBeUndefined()
     expect(ackboardrunners['board-x']).toBeUndefined()
     expect(revoke).not.toHaveBeenCalled()
-    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-a', [])
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-a', '')
   })
 
   it('revokes prior acked runner and refreshes ownership when unelected runner hits ack fail count', () => {
@@ -98,8 +98,8 @@ describe('handlesecond board runner ack retries', () => {
     expect(boardrunners['board-x']).toBeUndefined()
     expect(ackboardrunners['board-x']).toBeUndefined()
     expect(revoke).toHaveBeenCalledWith('operator', 'board-x')
-    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'operator', [])
-    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'joiner', [])
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'operator', '')
+    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'joiner', '')
   })
 
   it('does not retry when ack matches current runner', () => {

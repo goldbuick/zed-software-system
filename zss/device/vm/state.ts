@@ -41,16 +41,12 @@ export const ackboardrunners: Record<string, string> = {}
 /** Per-board per-player ack retry count; `BOARDRUNNER_ACK_FAIL_COUNT` means failed (skip until valid ack). */
 export const failedboardrunners: Record<string, Record<string, number>> = {}
 
-/** Boards this player is still the acked runner for (worker ownership refresh). */
-export function playerownedboards(player: string): string[] {
-  const result: string[] = []
-  const boards = Object.keys(ackboardrunners)
-  for (let i = 0; i < boards.length; ++i) {
-    if (ackboardrunners[boards[i]] === player) {
-      result.push(boards[i])
-    }
-  }
-  return result
+/** Single acked board id for this player (sorted for stable pick if multiple). */
+export function playerownedboard(player: string): string {
+  const ids = Object.keys(ackboardrunners)
+    .filter((bid) => ackboardrunners[bid] === player)
+    .sort()
+  return ids.length > 0 ? ids[0] : ''
 }
 
 let flushtick = 0
