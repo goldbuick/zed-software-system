@@ -1,10 +1,8 @@
-import { compare } from 'fast-json-patch'
 import type { DEVICE } from 'zss/device'
-import { FORMAT_OBJECT } from 'zss/feature/format'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
-import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
@@ -14,11 +12,21 @@ import {
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import type { BOARD } from 'zss/memory/types'
 
-import { gadgetclientpaint, gadgetclientpatch } from './api'
+import { rxreplpushbatch } from './api'
+import { gadgetsyncpersistrow } from './gadgetsyncdb'
+import { jsonsyncclientreadownplayer } from './jsonsyncclient'
+import type { RXREPL_PUSH_ROW } from './rxrepl/types'
 
-const gadgetsync = new Map<string, FORMAT_OBJECT>()
 /** Last board id we exported (ordering vs flag/hydrate). */
 const gadgetlastexportboard = new Map<string, string>()
+/** Serialized slim last sent on the wire (dedupe). */
+const gadgetlastpushedjson = new Map<string, string>()
+/** Monotonic rev per player for rxrepl gadget rows (worker). */
+const gadgetpushseq = new Map<string, number>()
+
+function gadgetstreamid(player: string): string {
+  return `gadget:${player}`
+}
 
 function gadgetwriterenderlayers(
   gadget: GADGET_STATE,
@@ -84,23 +92,59 @@ function gadgetrememberexportboard(player: string, boardid: string) {
 }
 
 export function boardrunnergadgetclearsyncbaseline(player: string) {
-  gadgetsync.delete(player)
+  gadgetlastpushedjson.delete(player)
+  gadgetpushseq.delete(player)
   gadgetlastexportboard.delete(player)
+}
+
+/** After worker-local gadget mutation (e.g. scroll push), mirror slim over rxrepl. */
+export function boardrunnergadgetpushslimnow(
+  dev: DEVICE,
+  player: string,
+  force: boolean,
+): void {
+  const gadget = gadgetstate(player)
+  const slim = exportgadgetstate(gadget)
+  if (!ispresent(slim)) {
+    return
+  }
+  const slimjson = JSON.stringify(slim)
+  if (!force && gadgetlastpushedjson.get(player) === slimjson) {
+    return
+  }
+  const prev = gadgetpushseq.get(player) ?? 0
+  const rev = prev + 1
+  gadgetpushseq.set(player, rev)
+  gadgetlastpushedjson.set(player, slimjson)
+  gadgetsyncpersistrow({ player, documentjson: slimjson, rev })
+  const runner = jsonsyncclientreadownplayer()
+  if (!runner) {
+    return
+  }
+  rxreplpushbatch(dev, runner, {
+    rows: [
+      {
+        streamid: gadgetstreamid(player),
+        document: slim,
+        baserev: prev,
+      },
+    ],
+  })
 }
 
 export function boardrunnergadgetsynctick(
   dev: DEVICE,
   activelist: string[],
 ): void {
-  // console.info('boardrunnergadgetsynctick', activelist)
   if (!activelist.length) {
     return
   }
 
+  const batchrows: RXREPL_PUSH_ROW[] = []
+  const runner = jsonsyncclientreadownplayer()
+
   for (const player of activelist) {
     const playerboard = memoryreadplayerboard(player)
-    // Board flag can update before `board:<id>` hydrates (transfers / jsonsync).
-    // Skip entirely so we do not wipe sidebar or flash empty layers.
     if (!ispresent(playerboard)) {
       continue
     }
@@ -122,20 +166,39 @@ export function boardrunnergadgetsynctick(
       continue
     }
 
+    const slimjson = JSON.stringify(slim)
+
     gadgetbaselineclearifboardchanged(player, boardid)
 
-    const hadbaseline = gadgetsync.has(player)
-    const previous = gadgetsync.get(player) ?? []
-    const patch = compare(previous, slim)
-    gadgetsync.set(player, deepcopy(slim))
-    gadgetrememberexportboard(player, boardid)
-
+    const hadsync = gadgetlastpushedjson.has(player)
     const haslayers = ispresent(gadgetlayers)
-    if (!hadbaseline && haslayers) {
-      gadgetclientpaint(dev, player, slim)
-    } else if (hadbaseline && patch.length) {
-      gadgetclientpatch(dev, player, patch)
+
+    if (!hadsync && !haslayers) {
+      gadgetrememberexportboard(player, boardid)
+      continue
     }
+
+    if (gadgetlastpushedjson.get(player) === slimjson) {
+      gadgetrememberexportboard(player, boardid)
+      continue
+    }
+
+    const prev = gadgetpushseq.get(player) ?? 0
+    const rev = prev + 1
+    gadgetpushseq.set(player, rev)
+    gadgetlastpushedjson.set(player, slimjson)
+    gadgetsyncpersistrow({ player, documentjson: slimjson, rev })
+
+    batchrows.push({
+      streamid: gadgetstreamid(player),
+      document: slim,
+      baserev: prev,
+    })
+    gadgetrememberexportboard(player, boardid)
+  }
+
+  if (batchrows.length > 0 && runner.length > 0) {
+    rxreplpushbatch(dev, runner, { rows: batchrows })
   }
 }
 
@@ -154,8 +217,7 @@ export function boardrunnergadgetdesyncpaint(
   if (!ispresent(slim)) {
     return
   }
-  gadgetsync.set(player, deepcopy(slim))
   const paintboard = isstring(gadget.board) ? gadget.board.trim() : ''
   gadgetrememberexportboard(player, paintboard)
-  gadgetclientpaint(dev, player, slim)
+  boardrunnergadgetpushslimnow(dev, player, true)
 }

@@ -28,9 +28,12 @@ import {
   jsonsyncserversnapshotrequest,
   jsonsyncsnapshot,
 } from './api'
+import { jsonsyncensureserverdb, jsonsyncserverstreammap } from './jsonsyncdb'
 import { memorysyncreverseproject } from './vm/memorysync'
 
-const streams = new Map<string, JSONSYNC_SERVER_STREAM>()
+const streams = jsonsyncserverstreammap
+
+void jsonsyncensureserverdb()
 
 // poke every player in the stream. optionally skip one player (the originator
 // of a just-accepted clientpatch). peers respond by running their own diff

@@ -36,7 +36,7 @@ const config: Config = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|tone|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked|@jsonjoy.com)/)',
+    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|tone|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked|@jsonjoy.com|rxdb|dexie)/)',
   ],
   testPathIgnorePatterns: ['<rootDir>/e2e/', '\\.bench\\.ts$'],
   testMatch: [

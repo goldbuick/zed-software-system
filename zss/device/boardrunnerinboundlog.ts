@@ -7,7 +7,9 @@ const LS_ROLE = 'zssDebugBoardrunnerInboundRole'
 
 function readls(key: string): string | null {
   try {
-    return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null
+    return typeof localStorage !== 'undefined'
+      ? localStorage.getItem(key)
+      : null
   } catch {
     return null
   }
@@ -18,8 +20,7 @@ function jsonsyncHint(data: unknown): string {
     return ''
   }
   const p = data as JSONSYNC_CHANGED
-  const sid =
-    typeof p.streamid === 'string' ? p.streamid.slice(0, 48) : '?'
+  const sid = typeof p.streamid === 'string' ? p.streamid.slice(0, 48) : '?'
   const reason = p.reason ?? '?'
   return `jsonsync{${sid} ${reason} cv=${p.cv} sv=${p.sv}}`
 }

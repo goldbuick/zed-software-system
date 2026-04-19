@@ -332,7 +332,7 @@ describe('jsonsync feature', () => {
     const admitb = jsonsyncserveradmit(server, 'bob', true)
     server = admitb.stream
 
-    let bob = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
+    const bob = jsonsyncclientapplysnapshot(jsonsynccreateclientstream(), {
       ...admitb.snapshot,
       streamid: STREAM,
     })

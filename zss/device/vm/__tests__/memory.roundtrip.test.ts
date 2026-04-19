@@ -27,6 +27,10 @@ phase 2 verification on it.
 */
 import { jsonsyncclientreadstreams } from 'zss/device/jsonsyncclient'
 import {
+  jsonsyncawaitclientpersistqueue,
+  jsonsyncflushclientdbfortests,
+} from 'zss/device/jsonsyncdb'
+import {
   JSONSYNC_PATCH,
   jsonsyncclientapplysnapshot,
   jsonsynccreateclientstream,
@@ -60,17 +64,21 @@ function makebook(): BOOK {
 }
 
 describe('phase 2 worker -> server round-trip', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     memoryresetbooks([makebook()])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     memorydirtyclear()
     jsonsyncclientreadstreams().clear()
+    await jsonsyncawaitclientpersistqueue()
+    await jsonsyncflushclientdbfortests()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     memoryresetbooks([])
     memorydirtyclear()
     jsonsyncclientreadstreams().clear()
+    await jsonsyncawaitclientpersistqueue()
+    await jsonsyncflushclientdbfortests()
   })
 
   it('worker flag mutation lands in MEMORY via clientpatch + reverseproject', () => {

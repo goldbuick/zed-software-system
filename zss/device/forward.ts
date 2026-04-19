@@ -109,6 +109,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'register':
         case 'gadgetclient':
         case 'jsonsyncclient':
+        case 'rxreplclient':
         case 'boardrunner':
           return true
       }
@@ -150,6 +151,8 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'gadgetclient:patch':
     case 'jsonsyncserver:clientpatch':
     case 'jsonsyncserver:needsnapshot':
+    case 'rxreplserver:push_batch':
+    case 'rxreplserver:pull_request':
       return true
     default:
       break
@@ -164,18 +167,17 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   if (route.target === 'boardrunner') {
     return false
   }
-  // gadgetclient traffic must reach the host so the operator's local
-  // gadgetclient can render paints/patches emitted by a joiner's elected
-  // boardrunner worker. Without this, whenever a peer wins the boardrunner
-  // election for a board the operator is on, the host's UI freezes (it
-  // would only ever receive paints from its own local boardrunner, which
-  // is no longer authoritative for that board).
+  // Legacy gadgetclient:* and rxrepl gadget fan-out must reach every peer
+  // hub (same as when joiner-owned boardrunner drove paints). Gadget slim
+  // updates now use rxreplclient:gadget_row from sim; keep gadgetclient
+  // routes for any straggler tooling/tests.
   switch (route.target) {
     case 'vm':
     case 'user':
     case 'modem':
     case 'gadgetclient':
     case 'jsonsyncserver':
+    case 'rxreplserver':
       return true
   }
   switch (route.path) {
@@ -259,6 +261,7 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
         // lastinputtime tracking.
         case 'user':
         case 'jsonsyncclient':
+        case 'rxreplclient':
         case 'boardrunner':
           return true
       }
@@ -286,7 +289,7 @@ export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
   // client-side edits never reach the main hub and the sim's jsonsyncserver
   // never reverse-projects them into canonical MEMORY. Mirrors the heavy
   // worker's bridge, which allowlists `jsonsyncserver` for the same reason.
-  if (r.target === 'jsonsyncserver') {
+  if (r.target === 'jsonsyncserver' || r.target === 'rxreplserver') {
     return true
   }
   return shouldforwardservertoclient(message)

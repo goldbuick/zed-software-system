@@ -1,6 +1,6 @@
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadbookflag } from 'zss/memory/bookoperations'
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import type { BOOK } from 'zss/memory/types'
 
 /**
@@ -29,7 +29,8 @@ import type { BOOK } from 'zss/memory/types'
  * - **Reads only:** `tick.ts`, `boardrunner.ts`, `utilities.ts`, CLI
  *   `permissions.ts` — no direct `activelist` mutation.
  */
-export const DEBUG_ACTIVELIST_BOARD_INVARIANT_KEY = 'zssDebugActivelistInvariant'
+export const DEBUG_ACTIVELIST_BOARD_INVARIANT_KEY =
+  'zssDebugActivelistInvariant'
 
 export function memorydebugactivelistboardinvariantenabled(): boolean {
   try {

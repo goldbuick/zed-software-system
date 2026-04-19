@@ -34,8 +34,10 @@ import {
 } from './api'
 import {
   boardrunnergadgetdesyncpaint,
+  boardrunnergadgetpushslimnow,
   boardrunnergadgetsynctick,
 } from './boardrunnergadget'
+import { startboardrunnerjsonsyncrxhydrate } from './boardrunnerjsonsyncrx'
 import { pilottick } from './vm/handlers/pilot'
 import { memoryhydratefromjsonsync } from './vm/memoryhydrate'
 import { memoryworkerpushdirty } from './vm/memoryworkersync'
@@ -172,7 +174,6 @@ const boardrunner = createdevice(
         // everything else is filtered by assignedplayerid
         if (message.player !== assignedplayerid) {
           if (import.meta.env.DEV) {
-            // eslint-disable-next-line no-console -- dev-only: wrong-player fan-in
             console.info('filtered message', message.target, message)
           }
           return
@@ -203,7 +204,6 @@ const boardrunner = createdevice(
         assignedboardid = next
         rebuildownedboardids()
         if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console -- dev-only ownership trace
           console.info('updated ownedboard', assignedplayerid, assignedboardid)
         }
         break
@@ -226,6 +226,7 @@ const boardrunner = createdevice(
         shared.scroll = (
           isarray(payload?.scroll) ? payload.scroll : []
         ) as PANEL_ITEM[]
+        boardrunnergadgetpushslimnow(boardrunner, player, false)
         break
       }
       default:
@@ -233,3 +234,5 @@ const boardrunner = createdevice(
     }
   },
 )
+
+startboardrunnerjsonsyncrxhydrate(rebuildownedboardids)

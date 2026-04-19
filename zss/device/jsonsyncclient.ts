@@ -2,7 +2,7 @@
 jsonsyncclient: client side of the differential sync loop.
 
 Lives in every non-server process: browser bootstrap, heavy worker, boardrunner
-worker. Maintains a local shadow + document + [cv, sv] per streamid. On every
+worker. Stream state lives in an in-memory Map mirrored to RxDB. On every
 shadow mutation (snapshot / serverpatch / antipatch) it broadcasts a
 `jsonsync:changed` message for any observer device to consume.
 */
@@ -23,12 +23,18 @@ import { ispresent, isstring } from 'zss/mapping/types'
 
 import {
   JSONSYNC_CHANGED,
+  type MESSAGE,
   jsonsyncchanged,
   jsonsyncclientpatch,
   jsonsyncneedsnapshot,
 } from './api'
+import {
+  jsonsyncclienthydratemapmissing,
+  jsonsyncclientstreammap,
+  jsonsyncensureclientdb,
+} from './jsonsyncdb'
 
-const streams = new Map<string, JSONSYNC_CLIENT_STREAM>()
+const streams = jsonsyncclientstreammap
 
 // worker self-identity. The server admits a specific player to each stream
 // and routes subsequent server->client traffic through `message.player =
@@ -38,6 +44,9 @@ const streams = new Map<string, JSONSYNC_CLIENT_STREAM>()
 // `player=''` and returns `unknownclient`, which loses worker-originated
 // edits).
 let ownplayerid = ''
+
+let clientready = false
+const pendingclientmessages: MESSAGE[] = []
 
 function captureownplayer(candidate: unknown): void {
   if (!isstring(candidate) || candidate.length === 0) {
@@ -98,7 +107,7 @@ function emitchanged(
   })
 }
 
-const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
+function processjsonsyncclientmessage(message: MESSAGE): void {
   if (!jsonsyncclientdevice.session(message)) {
     return
   }
@@ -154,7 +163,6 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
       break
     }
     case 'needsnapshot': {
-      // server is telling us to reset; drop our stream and ask for a fresh snapshot
       const data = message.data as { streamid?: string } | undefined
       const streamid = isstring(data?.streamid) ? data.streamid : ''
       if (streamid) {
@@ -164,10 +172,6 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
       break
     }
     case 'poke': {
-      // v2: server is telling us "something changed; catch yourself up".
-      // if we're idle (no pending local edits), send an empty clientpatch with
-      // our current [cv, sv]; the server will reply with the catch-up diff.
-      // if we have pending edits, the normal edit flow already handles it.
       const data = message.data as { streamid?: string } | undefined
       const streamid = isstring(data?.streamid) ? data.streamid : ''
       if (!streamid) {
@@ -192,4 +196,23 @@ const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
     default:
       break
   }
+}
+
+const jsonsyncclientdevice = createdevice('jsonsyncclient', [], (message) => {
+  if (!clientready) {
+    pendingclientmessages.push(message)
+    return
+  }
+  processjsonsyncclientmessage(message)
 })
+
+void jsonsyncensureclientdb().then(async () => {
+  await jsonsyncclienthydratemapmissing(streams)
+  clientready = true
+  const pending = pendingclientmessages.splice(0, pendingclientmessages.length)
+  for (let i = 0; i < pending.length; ++i) {
+    processjsonsyncclientmessage(pending[i])
+  }
+})
+
+export { jsonsyncclientdevice }

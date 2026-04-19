@@ -24,9 +24,9 @@ writes happen outside hydration and feed `memorysyncpushdirty` on the worker
 side (see phase2-worker-emit-patches).
 */
 import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
-import { memorydebugassertactivelistboardinvariantifenabled } from 'zss/memory/debugactivelistinvariant'
 import { memoryinitboard } from 'zss/memory/boards'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
+import { memorydebugassertactivelistboardinvariantifenabled } from 'zss/memory/debugactivelistinvariant'
 import {
   MEMORY_STREAM_ID,
   memorywithsilentwrites,

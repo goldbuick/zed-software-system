@@ -3,6 +3,15 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
+import type {
+  RXREPL_NOTIFY,
+  RXREPL_PULL_REQUEST,
+  RXREPL_PULL_RESPONSE,
+  RXREPL_PUSH_ACK,
+  RXREPL_PUSH_BATCH,
+  RXREPL_RESYNC,
+  RXREPL_STREAM_DOCUMENT,
+} from 'zss/device/rxrepl/types'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import type {
@@ -294,6 +303,65 @@ export function jsonsyncpoke(
 // will receive this whenever the client-side shadow mutates.
 export function jsonsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {
   device.emit('', 'jsonsync:changed', payload)
+}
+
+// --- rxrepl (Strategy B: document replication over device bus) --------------
+
+export function rxreplpullrequest(
+  device: DEVICELIKE,
+  player: string,
+  payload: RXREPL_PULL_REQUEST,
+) {
+  device.emit(player, 'rxreplserver:pull_request', payload)
+}
+
+export function rxreplpullresponse(
+  device: DEVICELIKE,
+  player: string,
+  payload: RXREPL_PULL_RESPONSE,
+) {
+  device.emit(player, 'rxreplclient:pull_response', payload)
+}
+
+export function rxreplpushbatch(
+  device: DEVICELIKE,
+  player: string,
+  payload: RXREPL_PUSH_BATCH,
+) {
+  device.emit(player, 'rxreplserver:push_batch', payload)
+}
+
+export function rxreplpushack(
+  device: DEVICELIKE,
+  player: string,
+  payload: RXREPL_PUSH_ACK,
+) {
+  device.emit(player, 'rxreplclient:push_ack', payload)
+}
+
+/** Sim → client: one gadget slim row after rxrepl push_batch (full slim, not patch). */
+export function rxreplclientgadgetrow(
+  device: DEVICELIKE,
+  player: string,
+  payload: RXREPL_STREAM_DOCUMENT,
+) {
+  device.emit(player, 'rxreplclient:gadget_row', payload)
+}
+
+export function rxreplresync(
+  device: DEVICELIKE,
+  player: string,
+  payload: RXREPL_RESYNC,
+) {
+  device.emit(player, 'rxreplclient:resync', payload)
+}
+
+export function rxreplnotify(
+  device: DEVICELIKE,
+  player: string,
+  payload: RXREPL_NOTIFY,
+) {
+  device.emit(player, 'rxreplclient:notify', payload)
 }
 
 export function boardrunnergadgetclearscroll(

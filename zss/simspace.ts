@@ -8,6 +8,7 @@ import { started } from './device/vm'
 import './device/clock'
 import './device/gadgetmemoryprovider'
 import './device/jsonsyncserver'
+import './device/rxreplserver'
 import './device/modem'
 import './device/user'
 

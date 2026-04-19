@@ -21,10 +21,14 @@ for these streams; hydration of those is handled separately by
 `memoryhydrate`. Hydration runs inside `memorywithsilentwrites`, so it
 never re-fires the bits this push loop consumes.
 */
+import { rxreplpushbatch } from 'zss/device/api'
 import {
+  jsonsyncclientdevice,
   jsonsyncclientedit,
+  jsonsyncclientreadownplayer,
   jsonsyncclientreadstream,
 } from 'zss/device/jsonsyncclient'
+import { zssrxrepldocumentmode } from 'zss/device/rxrepl/flags'
 import { ispresent } from 'zss/mapping/types'
 import {
   MEMORY_STREAM_ID,
@@ -47,7 +51,13 @@ export function memoryworkerpushdirty(): void {
     }
     if (streamid === MEMORY_STREAM_ID) {
       const projection = projectmemory()
-      jsonsyncclientedit(streamid, () => projection)
+      if (zssrxrepldocumentmode()) {
+        rxreplpushbatch(jsonsyncclientdevice, jsonsyncclientreadownplayer(), {
+          rows: [{ streamid, document: projection }],
+        })
+      } else {
+        jsonsyncclientedit(streamid, () => projection)
+      }
       continue
     }
     if (!streamid.startsWith('board:')) {
@@ -72,6 +82,12 @@ export function memoryworkerpushdirty(): void {
       continue
     }
     const projection = projectboardcodepage(codepage)
-    jsonsyncclientedit(streamid, () => projection)
+    if (zssrxrepldocumentmode()) {
+      rxreplpushbatch(jsonsyncclientdevice, jsonsyncclientreadownplayer(), {
+        rows: [{ streamid, document: projection }],
+      })
+    } else {
+      jsonsyncclientedit(streamid, () => projection)
+    }
   }
 }

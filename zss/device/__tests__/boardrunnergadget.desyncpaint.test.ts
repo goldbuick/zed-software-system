@@ -3,6 +3,7 @@ import * as gadgetapi from 'zss/gadget/data/api'
 import * as compress from 'zss/gadget/data/compress'
 
 import { boardrunnergadgetdesyncpaint } from '../boardrunnergadget'
+import * as jsonsyncclient from '../jsonsyncclient'
 
 describe('boardrunnergadgetdesyncpaint', () => {
   const dev: DEVICELIKE = {
@@ -17,7 +18,10 @@ describe('boardrunnergadgetdesyncpaint', () => {
     jest.restoreAllMocks()
   })
 
-  it('emits gadgetclient:paint when exportgadgetstate returns a slim doc', () => {
+  it('emits rxreplserver:push_batch with gadget slim when exportgadgetstate returns a slim doc', () => {
+    jest
+      .spyOn(jsonsyncclient, 'jsonsyncclientreadownplayer')
+      .mockReturnValue('runner1')
     const gadget = { board: 'b1' } as any
     jest.spyOn(gadgetapi, 'gadgetstate').mockReturnValue(gadget)
     jest
@@ -27,9 +31,16 @@ describe('boardrunnergadgetdesyncpaint', () => {
     boardrunnergadgetdesyncpaint(dev as any, 'p1')
 
     expect(dev.emit).toHaveBeenCalledWith(
-      'p1',
-      'gadgetclient:paint',
-      expect.any(Array),
+      'runner1',
+      'rxreplserver:push_batch',
+      expect.objectContaining({
+        rows: expect.arrayContaining([
+          expect.objectContaining({
+            streamid: 'gadget:p1',
+            document: expect.any(Array),
+          }),
+        ]),
+      }),
     )
   })
 

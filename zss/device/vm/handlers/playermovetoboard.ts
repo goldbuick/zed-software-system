@@ -28,6 +28,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     !ispresent(payload) ||
     !ispt(payload.dest) ||
     !isstring(payload.board) ||
+    payload.board.length === 0 ||
     !isstring(message.player) ||
     !message.player
   ) {

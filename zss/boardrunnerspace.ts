@@ -8,6 +8,7 @@ import './device/gadgetmemoryprovider'
 import { setassignedplayerid } from './device/boardrunner'
 import './device/boardrunneruser'
 import './device/jsonsyncclient'
+import './device/rxreplclient'
 import { isstring } from './mapping/types'
 
 function boardrunnershouldforwardinbound(raw: unknown): boolean {
@@ -15,7 +16,6 @@ function boardrunnershouldforwardinbound(raw: unknown): boolean {
     return false
   }
   if (import.meta.env.DEV && raw.target.startsWith('jsonsync')) {
-    // eslint-disable-next-line no-console -- dev-only trace for boardrunner jsonsync ingress
     console.info('jsonsync message', raw)
   }
   return true

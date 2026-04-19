@@ -16,9 +16,7 @@ describe('memorydebugassertactivelistboardinvariantifenabled', () => {
     Object.defineProperty(globalThis, 'localStorage', {
       value: {
         getItem: (key: string) =>
-          Object.prototype.hasOwnProperty.call(store, key)
-            ? store[key]
-            : null,
+          Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null,
         setItem: (key: string, value: string) => {
           store[key] = value
         },
@@ -85,8 +83,9 @@ describe('memorydebugassertactivelistboardinvariantifenabled', () => {
 
   it('throws when __ZSS_THROW_ACTIVELIST_INVARIANT is true', () => {
     store[DEBUG_ACTIVELIST_BOARD_INVARIANT_KEY] = '1'
-    ;(globalThis as { __ZSS_THROW_ACTIVELIST_INVARIANT?: boolean }).__ZSS_THROW_ACTIVELIST_INVARIANT =
-      true
+    ;(
+      globalThis as { __ZSS_THROW_ACTIVELIST_INVARIANT?: boolean }
+    ).__ZSS_THROW_ACTIVELIST_INVARIANT = true
     const book: BOOK = {
       id: 'b',
       name: 'b',
@@ -95,8 +94,8 @@ describe('memorydebugassertactivelistboardinvariantifenabled', () => {
       pages: [],
       flags: { p1: { board: '' } },
     }
-    expect(() => memorydebugassertactivelistboardinvariantifenabled(book)).toThrow(
-      /activelist invariant/,
-    )
+    expect(() =>
+      memorydebugassertactivelistboardinvariantifenabled(book),
+    ).toThrow(/activelist invariant/)
   })
 })

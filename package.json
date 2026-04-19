@@ -158,6 +158,8 @@
     "ink-text-input": "^6.0.0",
     "json-diff-ts": "^4.10.4",
     "playwright": "^1.49.0",
+    "rxdb": "15",
+    "rxjs": "7",
     "vosk-browser": "^0.0.8"
   },
   "bin": {

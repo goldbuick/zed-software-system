@@ -12,6 +12,7 @@ import {
   boardrunnergadgetclearsyncbaseline,
   boardrunnergadgetsynctick,
 } from '../boardrunnergadget'
+import * as jsonsyncclient from '../jsonsyncclient'
 
 describe('boardrunnergadgetsynctick when player board not hydrated', () => {
   const dev = { emit: jest.fn() } as unknown as DEVICE
@@ -24,14 +25,12 @@ describe('boardrunnergadgetsynctick when player board not hydrated', () => {
     jest
       .spyOn(playermanagement, 'memoryreadplayerboard')
       .mockReturnValue(undefined)
-    const patchspy = jest.spyOn(api, 'gadgetclientpatch')
-    const paintspy = jest.spyOn(api, 'gadgetclientpaint')
+    const batchspy = jest.spyOn(api, 'rxreplpushbatch')
     const gadgetstatespy = jest.spyOn(gadgetapi, 'gadgetstate')
 
     boardrunnergadgetsynctick(dev, ['p1'])
 
-    expect(patchspy).not.toHaveBeenCalled()
-    expect(paintspy).not.toHaveBeenCalled()
+    expect(batchspy).not.toHaveBeenCalled()
     expect(gadgetstatespy).not.toHaveBeenCalled()
   })
 
@@ -47,13 +46,11 @@ describe('boardrunnergadgetsynctick when player board not hydrated', () => {
       .spyOn(rendering, 'memoryreadgadgetlayers')
       .mockReturnValue(undefined as any)
     jest.spyOn(synthstate, 'memoryreadsynth').mockReturnValue(undefined as any)
-    const paintspy = jest.spyOn(api, 'gadgetclientpaint')
-    const patchspy = jest.spyOn(api, 'gadgetclientpatch')
+    const batchspy = jest.spyOn(api, 'rxreplpushbatch')
 
     boardrunnergadgetsynctick(dev, ['p1'])
 
-    expect(paintspy).not.toHaveBeenCalled()
-    expect(patchspy).not.toHaveBeenCalled()
+    expect(batchspy).not.toHaveBeenCalled()
   })
 })
 
@@ -65,7 +62,10 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
     jest.restoreAllMocks()
   })
 
-  it('emits paint twice instead of patch when resolved playerboard id changes', () => {
+  it('emits rxrepl push_batch twice when resolved playerboard id changes', () => {
+    jest
+      .spyOn(jsonsyncclient, 'jsonsyncclientreadownplayer')
+      .mockReturnValue('runner1')
     boardrunnergadgetclearsyncbaseline('p1')
     jest.spyOn(session, 'memoryreadbookbysoftware').mockReturnValue({} as any)
     jest
@@ -110,8 +110,7 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
       .spyOn(rendering, 'memoryconverttogadgetcontrollayer')
       .mockReturnValue([] as any)
     jest.spyOn(synthstate, 'memoryreadsynth').mockReturnValue(undefined as any)
-    const paintspy = jest.spyOn(api, 'gadgetclientpaint')
-    const patchspy = jest.spyOn(api, 'gadgetclientpatch')
+    const batchspy = jest.spyOn(api, 'rxreplpushbatch')
 
     playeraddress = 'boa'
     boardrunnergadgetsynctick(dev, ['p1'])
@@ -119,7 +118,6 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
     playeraddress = 'bob'
     boardrunnergadgetsynctick(dev, ['p1'])
 
-    expect(paintspy).toHaveBeenCalledTimes(2)
-    expect(patchspy).not.toHaveBeenCalled()
+    expect(batchspy).toHaveBeenCalledTimes(2)
   })
 })

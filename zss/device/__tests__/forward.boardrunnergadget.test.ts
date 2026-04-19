@@ -34,6 +34,11 @@ describe('forward rules for boardrunner gadget routes', () => {
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
 
+  it('forwards rxreplclient:gadget_row from server to client', () => {
+    const m = msg('rxreplclient:gadget_row')
+    expect(shouldforwardservertoclient(m)).toBe(true)
+  })
+
   it('forwards gadgetclient:paint from client peer to server so a joiner-owned board can paint the host operator', () => {
     const m = msg('gadgetclient:paint')
     expect(shouldforwardclienttoserver(m)).toBe(true)

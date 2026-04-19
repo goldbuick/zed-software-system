@@ -8,10 +8,10 @@ import {
   boardrunners,
   playerownedboard,
 } from 'zss/device/vm/state'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbookflag } from 'zss/memory/bookoperations'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
-import { ispresent, isstring } from 'zss/mapping/types'
 
 export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
   const boardid = message.data
