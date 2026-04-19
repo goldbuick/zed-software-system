@@ -171,7 +171,10 @@ const boardrunner = createdevice(
       default:
         // everything else is filtered by assignedplayerid
         if (message.player !== assignedplayerid) {
-          console.info('filtered message', message.target, message)
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console -- dev-only: wrong-player fan-in
+            console.info('filtered message', message.target, message)
+          }
           return
         }
         break
@@ -199,7 +202,10 @@ const boardrunner = createdevice(
         }
         assignedboardid = next
         rebuildownedboardids()
-        console.info('updated ownedboard', assignedplayerid, assignedboardid)
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console -- dev-only ownership trace
+          console.info('updated ownedboard', assignedplayerid, assignedboardid)
+        }
         break
       }
       case 'clearscroll':

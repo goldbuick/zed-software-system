@@ -14,7 +14,8 @@ function boardrunnershouldforwardinbound(raw: unknown): boolean {
   if (!ismessage(raw)) {
     return false
   }
-  if (raw.target.startsWith('jsonsync')) {
+  if (import.meta.env.DEV && raw.target.startsWith('jsonsync')) {
+    // eslint-disable-next-line no-console -- dev-only trace for boardrunner jsonsync ingress
     console.info('jsonsync message', raw)
   }
   return true
