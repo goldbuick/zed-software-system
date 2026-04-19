@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { gadgetstate } from 'zss/gadget/data/api'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
@@ -18,7 +18,7 @@ import type { RXREPL_PUSH_ROW } from './rxrepl/types'
 
 /** Last board id we exported (ordering vs flag/hydrate). */
 const gadgetlastexportboard = new Map<string, string>()
-/** Serialized slim last sent on the wire (dedupe). */
+/** Last serialized gadget JSON (`gadgetdocumentjson`) sent for dedupe. */
 const gadgetlastpushedjson = new Map<string, string>()
 /** Monotonic rev per player for rxrepl gadget rows (worker). */
 const gadgetpushseq = new Map<string, number>()
@@ -102,7 +102,7 @@ export function boardrunnergadgetclearsyncbaseline(player: string) {
   gadgetlastexportboard.delete(player)
 }
 
-/** After worker-local gadget mutation (e.g. scroll push), mirror slim over rxrepl. */
+/** After worker-local gadget mutation (e.g. scroll push), mirror gadget document over rxrepl. */
 export function boardrunnergadgetpushnow(
   dev: DEVICE,
   player: string,

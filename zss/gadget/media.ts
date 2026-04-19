@@ -114,4 +114,7 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
   },
 }))
 
-useMedia.getState().reset()
+// Headless CLI (`isclimode`) imports this module without a DOM; skip texture init.
+if (typeof document !== 'undefined') {
+  useMedia.getState().reset()
+}

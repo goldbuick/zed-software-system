@@ -21,7 +21,11 @@ export const rxreplclientdevice = createdevice(
           break
         }
         const player = row.streamid.slice('gadget:'.length)
-        gadgetsyncingest(player, JSON.stringify(row.document), row.rev)
+        const documentjson =
+          typeof row.document === 'string'
+            ? row.document
+            : JSON.stringify(row.document)
+        gadgetsyncingest(player, documentjson, row.rev)
         break
       }
       default:

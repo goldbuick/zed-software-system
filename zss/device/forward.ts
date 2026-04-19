@@ -168,7 +168,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     return false
   }
   // Legacy gadgetclient:* and rxrepl gadget fan-out must reach every peer
-  // hub (same as when joiner-owned boardrunner drove paints). Gadget slim
+  // hub (same as when joiner-owned boardrunner drove paints). Gadget document
   // updates now use rxreplclient:gadget_row from sim; keep gadgetclient
   // routes for any straggler tooling/tests.
   switch (route.target) {

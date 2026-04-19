@@ -2,19 +2,19 @@ import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 
 /**
- * Gadget `exportgadgetstate` can embed the same array refs as live tile layers.
+ * Gadget JSON snapshots can embed the same array refs as live tile layers.
  * Storing that export in `gadgetsync` without cloning lets in-place raster updates
  * mutate `previous` before `compare`, yielding empty patches (terrain stuck until
- * board change). See boardrunnergadget `deepcopy(slim)` on set.
+ * board change).
  */
 describe('gadgetsync snapshot isolation', () => {
-  it('deepcopy prevents stored slim from aliasing nested tile buffers', () => {
+  it('deepcopy prevents stored export from aliasing nested tile buffers', () => {
     const char = [10, 20, 30]
-    const slim = { layers: [{ char }] as { char: number[] }[] }
-    const stored = deepcopy(slim)
+    const snapshot = { layers: [{ char }] as { char: number[] }[] }
+    const stored = deepcopy(snapshot)
     char[0] = 99
     expect(stored.layers[0].char[0]).toBe(10)
-    expect(slim.layers[0].char[0]).toBe(99)
+    expect(snapshot.layers[0].char[0]).toBe(99)
   })
 
   it('compare finds diff when previous is a deep snapshot and live buffer mutates', () => {

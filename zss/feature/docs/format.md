@@ -28,4 +28,4 @@
 
 ## Usage
 
-Used by `zss/memory/bookoperations`, `zss/memory/boardelement`, `zss/gadget/data/compress`, `zss/device/gadgetmemoryprovider` for persisting and transmitting state.
+Used by `zss/memory/bookoperations`, `zss/memory/boardelement`, `zss/device/gadgetmemoryprovider` for persisting and transmitting state. Gadget repl uses JSON via `zss/device/gadgetsyncdb` (`gadgetdocumentjson` / `parsegadgetdocumentjson`).

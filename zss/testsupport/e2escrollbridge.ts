@@ -56,8 +56,12 @@ export function installe2ebridge(): void {
       }
     },
     isgadgetclientready() {
-      const { gadget, slim } = useGadgetClient.getState()
-      return gadget.id !== '' || (Array.isArray(slim) && slim.length > 0)
+      const { gadget } = useGadgetClient.getState()
+      return (
+        gadget.id !== '' ||
+        (gadget.board?.length ?? 0) > 0 ||
+        (gadget.layers?.length ?? 0) > 0
+      )
     },
     getloaderevents() {
       return [...loaderevents]

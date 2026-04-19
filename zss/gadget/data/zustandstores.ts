@@ -1,4 +1,3 @@
-import { FORMAT_OBJECT } from 'zss/feature/format'
 import { MAYBE } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
@@ -28,13 +27,10 @@ export function applylayercacheupdate(
 }
 
 export const useGadgetClient = create<{
-  desync: boolean
   gadget: GADGET_STATE
   layercachemap: Map<string, LAYER[]>
-  slim: FORMAT_OBJECT
   zsswords: GADGET_ZSS_WORDS
 }>(() => ({
-  desync: false,
   zsswords: {
     langcommands: {},
     clicommands: {},
@@ -79,7 +75,6 @@ export const useGadgetClient = create<{
     sidebar: [],
   },
   layercachemap: new Map(),
-  slim: [],
 }))
 
 export type TAPE_ROW = [string, string, ...any[]]

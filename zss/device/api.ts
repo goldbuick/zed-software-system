@@ -20,7 +20,6 @@ import type {
   JSONSYNC_PATCH,
   JSONSYNC_SNAPSHOT,
 } from 'zss/feature/jsonsync'
-import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -321,6 +320,14 @@ export function rxreplpullresponse(
   device.emit(player, 'rxreplclient:pull_response', payload)
 }
 
+/** Wire `document` for a push row (`gadget` is cloned to a plain JSON snapshot). */
+export function rxreplrowdocument(row: RXREPL_PUSH_ROW): unknown {
+  if ('gadget' in row) {
+    return JSON.parse(JSON.stringify(row.gadget))
+  }
+  return row.document
+}
+
 function rxreplpushrowsnormalized(
   rows: RXREPL_PUSH_ROW[],
 ): { streamid: string; document: unknown; baserev?: number }[] {
@@ -328,13 +335,9 @@ function rxreplpushrowsnormalized(
   for (let i = 0; i < rows.length; ++i) {
     const row = rows[i]
     if ('gadget' in row) {
-      const slim = exportgadgetstate(row.gadget)
-      if (!ispresent(slim)) {
-        continue
-      }
       out.push({
         streamid: row.streamid,
-        document: slim,
+        document: rxreplrowdocument(row),
         baserev: row.baserev,
       })
     } else {
@@ -362,7 +365,7 @@ export function rxreplpushack(
   device.emit(player, 'rxreplclient:push_ack', payload)
 }
 
-/** Sim → client: one gadget slim row after rxrepl push_batch (full slim, not patch). */
+/** Sim → client: one gadget document row after rxrepl push_batch (full JSON snapshot, not patch). */
 export function rxreplclientgadgetrow(
   device: DEVICELIKE,
   player: string,

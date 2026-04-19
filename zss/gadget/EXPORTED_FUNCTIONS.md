@@ -138,7 +138,7 @@ Tape and gadget client state management.
 - `useEqual<S, U>(selector)` - Hook that returns a memoized selector function for equality checking
 
 ### Gadget Client State
-- `useGadgetClient` - Zustand store for gadget client state (desync flag, gadget state, layer cache, slim format, zsswords dictionary)
+- `useGadgetClient` - Zustand store for gadget client state (gadget state, layer cache, zsswords dictionary)
 
 ### Tape State Stores
 - `useTape` - Zustand store for tape display state (layout, inspector, quickterminal, toast, terminal, editor)
@@ -515,13 +515,9 @@ API for managing gadget state, panels, and hyperlinks.
 ### Value Tracking
 - `gadgetcheckset(chip, name, value)` - Checks if a set operation matches any tracked shared state and updates it
 
-**File:** `data/compress.ts`
+**File:** `zss/device/gadgetsyncdb.ts` (gadget repl / RxDB)
 
-Gadget state serialization utilities.
-
-### Functions
-- `exportgadgetstate(gadget)` - Exports gadget state to a format object
-- `importgadgetstate(gadget)` - Imports gadget state from a format object
+Gadget state is stored as JSON strings (`gadgetdocumentjson` / `parsegadgetdocumentjson`), not `FORMAT_OBJECT` tuples.
 
 ---
 

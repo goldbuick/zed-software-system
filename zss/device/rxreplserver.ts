@@ -3,7 +3,7 @@ Strategy B: sim-side rxrepl. push_batch merges documents into canonical MEMORY.
 */
 import { createdevice } from 'zss/device'
 
-import { rxreplclientgadgetrow, rxreplpushack } from './api'
+import { rxreplclientgadgetrow, rxreplpushack, rxreplrowdocument } from './api'
 import type { RXREPL_PUSH_BATCH } from './rxrepl/types'
 import { memorysyncreverseproject } from './vm/memorysync'
 
@@ -31,11 +31,11 @@ export const rxreplserverdevice = createdevice(
             accepted.push({ streamid: row.streamid, rev })
             rxreplclientgadgetrow(rxreplserverdevice, gadgetplayer, {
               streamid: row.streamid,
-              document: row.document,
+              document: rxreplrowdocument(row),
               rev,
             })
           } else {
-            memorysyncreverseproject(row.streamid, row.document)
+            memorysyncreverseproject(row.streamid, rxreplrowdocument(row))
             accepted.push({
               streamid: row.streamid,
               rev: row.baserev !== undefined ? row.baserev + 1 : i,
