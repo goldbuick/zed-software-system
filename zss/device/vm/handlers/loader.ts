@@ -7,16 +7,17 @@ import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
+import { memoryensureimportbook } from 'zss/memory/books'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryreadbookbysoftware, memorywritebook } from 'zss/memory/session'
+import { memorywritebook } from 'zss/memory/session'
 import {
   memorylistboardnamedelements,
   memorypickboardnearestpt,
 } from 'zss/memory/spatialqueries'
-import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from 'zss/memory/types'
+import { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
 
 function playerisagent(playerid: string): boolean {
@@ -196,14 +197,10 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
       } else if (/file:.*\..*\.codepage.json/.test(eventname)) {
         apilog(vm, message.player, `loading ${eventname}`)
         const json = JSON.parse(content.json)
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        if (
-          ispresent(mainbook) &&
-          ispresent(json.data) &&
-          isstring(json.exported)
-        ) {
-          memorywritecodepage(mainbook, json.data)
-          apilog(vm, message.player, `loaded ${json.exported}`)
+        const gamebook = memoryensureimportbook()
+        if (ispresent(json.data) && isstring(json.exported)) {
+          memorywritecodepage(gamebook, json.data)
+          apilog(vm, message.player, `loaded ${json.exported} to game book`)
         }
       } else {
         memoryloader(arg, format, eventname, content, message.player)

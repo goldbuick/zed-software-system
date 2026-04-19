@@ -1,6 +1,5 @@
 import boardrunnerspace from './boardrunnerspace??worker'
 import { MESSAGE, sessionreset } from './device/api'
-import { maybeLogBoardrunnerInbound } from './device/boardrunnerinboundlog'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
@@ -48,7 +47,6 @@ export function createplatform(isstub = false, climode = false) {
       heavy.postMessage(message)
     }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
-      maybeLogBoardrunnerInbound(message)
       boardrunner.postMessage(message)
     }
   })
@@ -83,7 +81,6 @@ export function createplatform(isstub = false, climode = false) {
       heavy.postMessage(message)
     }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
-      maybeLogBoardrunnerInbound(message)
       boardrunner.postMessage(message)
     }
     return forward(message)

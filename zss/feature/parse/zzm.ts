@@ -8,7 +8,7 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook } from 'zss/memory/session'
+import { memoryensureimportbook } from 'zss/memory/books'
 import { NAME } from 'zss/words/types'
 
 type ZZM_SONG = {
@@ -32,10 +32,7 @@ function escapestring(value: string): string {
 }
 
 export function parsezzm(player: string, content: string) {
-  const contentbook = memoryreadfirstcontentbook()
-  if (!ispresent(contentbook)) {
-    return
-  }
+  const contentbook = memoryensureimportbook()
 
   const lines = content.split(/\r?\n/)
   const album: ZZM_SET = {

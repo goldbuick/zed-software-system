@@ -20,14 +20,13 @@ import { apilog, apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { midiplaysnippetsbymeasure } from 'zss/feature/parse/midiplay'
 import { write, writecopyit } from 'zss/feature/writeui'
-import { ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook } from 'zss/memory/session'
+import { memoryensureimportbook } from 'zss/memory/books'
 import { NAME } from 'zss/words/types'
 
 function escapestring(value: string): string {
@@ -36,13 +35,7 @@ function escapestring(value: string): string {
 
 export async function parsemidi(player: string, file: File) {
   apilog(SOFTWARE, player, 'parsemidi', file.name)
-  const contentbook = memoryreadfirstcontentbook()
-  if (!ispresent(contentbook)) {
-    const msg = 'no content book to import into'
-    apilog(SOFTWARE, player, 'parsemidi', msg)
-    apitoast(SOFTWARE, player, msg)
-    return
-  }
+  const contentbook = memoryensureimportbook()
 
   let buffer: ArrayBuffer
   try {

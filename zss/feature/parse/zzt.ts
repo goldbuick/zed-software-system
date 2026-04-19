@@ -26,7 +26,8 @@ import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook, memorywritebook } from 'zss/memory/session'
+import { memoryensureimportbook } from 'zss/memory/books'
+import { memorywritebook, memorywritesoftwarebook } from 'zss/memory/session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -34,6 +35,7 @@ import {
   BOARD_WIDTH,
   BOOK,
   CODE_PAGE_TYPE,
+  MEMORY_LABEL,
 } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
@@ -979,11 +981,7 @@ export function zztparseworld(
 }
 
 export function parsebrd(player: string, content: Uint8Array) {
-  const contentbook = memoryreadfirstcontentbook()
-  if (!ispresent(contentbook)) {
-    apitoast(SOFTWARE, player, 'no content book to import into')
-    return
-  }
+  const contentbook = memoryensureimportbook()
   let reader = createreader(content)
   let board = readboardbytes(reader, LAYOUT_ZZT)
   let usedszzt = false
@@ -1044,6 +1042,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     croppedfromszzt: false,
   })
   memorywritebook(book)
+  memorywritesoftwarebook(MEMORY_LABEL.GAME, book.id)
   apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
 }
 
@@ -1079,5 +1078,6 @@ export function parseszt(player: string, content: Uint8Array) {
     croppedfromszzt: true,
   })
   memorywritebook(book)
+  memorywritesoftwarebook(MEMORY_LABEL.GAME, book.id)
   apitoast(SOFTWARE, player, `imported Super ZZT into ${book.name} book`)
 }

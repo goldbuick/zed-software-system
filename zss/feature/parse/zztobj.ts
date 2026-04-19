@@ -1,21 +1,17 @@
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagestatsfromtext,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook } from 'zss/memory/session'
+import { memoryensureimportbook } from 'zss/memory/books'
 
 import { zztoop } from './zztoop'
 
 export function parsezztobj(player: string, filename: string, content: string) {
-  const contentbook = memoryreadfirstcontentbook()
-  if (!ispresent(contentbook)) {
-    return
-  }
+  const contentbook = memoryensureimportbook()
 
   // pre-parse for stats
   const stats = memoryreadcodepagestatsfromtext(content)

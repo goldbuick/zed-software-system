@@ -12,7 +12,7 @@ import type { GADGET_STATE } from 'zss/gadget/data/types'
 import {
   gadgetdocumentjson,
   parsegadgetdocumentjson,
-} from '../gadgetsyncdb'
+} from '../gadgetdocument'
 
 function roundtrip(state: GADGET_STATE) {
   const json = gadgetdocumentjson(state)

@@ -1,5 +1,5 @@
 /*
-memorysync: VM-layer bridge between MEMORY and the jsonsync server device.
+memorysync: VM-layer bridge between MEMORY and the streamrepl server (sim).
 
 Owns the projections that carve MEMORY into what boardrunners actually need:
 - one shared `memory` stream with top-level keys allowlisted, books Map
@@ -14,17 +14,17 @@ board codepage streams it actually runs.
 Push cadence is dirty-flag driven (see memory/memorydirty.ts). Memory writes
 mark the relevant stream(s) dirty; the VM tick handler calls
 `memorysyncpushdirty` after `memorytickmain` to drain the dirty set and call
-`jsonsyncserverupdate` for each registered + dirty stream. Reverse-projection
-of accepted client patches goes through `memorywithsilentwrites` to avoid
+`streamreplserverupdate` for each registered + dirty stream. Reverse-projection
+of client push_batch merges goes through `memorywithsilentwrites` to avoid
 re-pushing the same change in a feedback loop.
 */
 import {
-  jsonsyncserveradmitplayer,
-  jsonsyncserverdropplayer,
-  jsonsyncserverreadstream,
-  jsonsyncserverregister,
-  jsonsyncserverupdate,
-} from 'zss/device/jsonsyncserver'
+  streamreplserveradmitplayer,
+  streamreplserverdropplayer,
+  streamreplserverreadstream,
+  streamreplserverregister,
+  streamreplserverupdate,
+} from 'zss/device/streamreplserver'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
@@ -61,23 +61,23 @@ export {
 
 export function memorysyncensureregistered(): void {
   const projected = projectmemory()
-  if (!ispresent(jsonsyncserverreadstream(MEMORY_STREAM_ID))) {
-    jsonsyncserverregister(MEMORY_STREAM_ID, projected, {
+  if (!ispresent(streamreplserverreadstream(MEMORY_STREAM_ID))) {
+    streamreplserverregister(MEMORY_STREAM_ID, projected, {
       topkeys: [...MEMORY_SYNC_TOPKEYS],
     })
     return
   }
-  jsonsyncserverupdate(MEMORY_STREAM_ID, projected)
+  streamreplserverupdate(MEMORY_STREAM_ID, projected)
 }
 
 export function memorysyncensureboardregistered(codepage: CODE_PAGE): void {
   const streamid = boardstreamid(codepage)
   const projected = projectboardcodepage(codepage)
-  if (!ispresent(jsonsyncserverreadstream(streamid))) {
-    jsonsyncserverregister(streamid, projected)
+  if (!ispresent(streamreplserverreadstream(streamid))) {
+    streamreplserverregister(streamid, projected)
     return
   }
-  jsonsyncserverupdate(streamid, projected)
+  streamreplserverupdate(streamid, projected)
 }
 
 // admit a boardrunner player: refresh the memory stream, register-or-refresh
@@ -104,8 +104,8 @@ export function memorysyncadmitboardrunner(
   }
   memorysyncensureregistered()
   memorysyncensureboardregistered(codepage)
-  jsonsyncserveradmitplayer(MEMORY_STREAM_ID, player, true)
-  jsonsyncserveradmitplayer(boardstreamid(codepage), player, true)
+  streamreplserveradmitplayer(MEMORY_STREAM_ID, player, true)
+  streamreplserveradmitplayer(boardstreamid(codepage), player, true)
   admitneighborboardstreams(player, codepage)
 }
 
@@ -163,7 +163,7 @@ function collectcardinalneighbors(
 
 function admitboardstream(player: string, codepage: CODE_PAGE): void {
   memorysyncensureboardregistered(codepage)
-  jsonsyncserveradmitplayer(boardstreamid(codepage), player, true)
+  streamreplserveradmitplayer(boardstreamid(codepage), player, true)
 }
 
 // Inverse of memorysyncadmitboardrunner: drop the player from the target
@@ -186,7 +186,7 @@ export function memorysyncrevokeboardrunner(
   if (!ispresent(codepage)) {
     return
   }
-  jsonsyncserverdropplayer(boardstreamid(codepage), player)
+  streamreplserverdropplayer(boardstreamid(codepage), player)
   revokeneighborboardstreams(player, codepage)
 }
 
@@ -197,12 +197,12 @@ function revokeneighborboardstreams(
   const seen = new Set<string>([centercodepage.id])
   const cardinalcps = collectcardinalneighbors(centercodepage, seen)
   for (let i = 0; i < cardinalcps.length; ++i) {
-    jsonsyncserverdropplayer(boardstreamid(cardinalcps[i]), player)
+    streamreplserverdropplayer(boardstreamid(cardinalcps[i]), player)
   }
   for (let i = 0; i < cardinalcps.length; ++i) {
     const outer = collectcardinalneighbors(cardinalcps[i], seen)
     for (let j = 0; j < outer.length; ++j) {
-      jsonsyncserverdropplayer(boardstreamid(outer[j]), player)
+      streamreplserverdropplayer(boardstreamid(outer[j]), player)
     }
   }
 }
@@ -211,17 +211,17 @@ function revokeneighborboardstreams(
 // shared memory stream. Called from handlelogout after memorylogoutplayer
 // has cleared the player's flags.
 export function memorysyncdropplayerfromall(player: string): void {
-  jsonsyncserverdropplayer(MEMORY_STREAM_ID, player)
+  streamreplserverdropplayer(MEMORY_STREAM_ID, player)
 }
 
 // VM tick hooks: callers decide when to push. The handler in vm/handlers/tick
 // invokes `memorysyncpushdirty` after `memorytickmain` to drain the dirty set.
 export function memorysyncupdatememory(): void {
-  jsonsyncserverupdate(MEMORY_STREAM_ID, projectmemory())
+  streamreplserverupdate(MEMORY_STREAM_ID, projectmemory())
 }
 
 export function memorysyncupdateboard(codepage: CODE_PAGE): void {
-  jsonsyncserverupdate(boardstreamid(codepage), projectboardcodepage(codepage))
+  streamreplserverupdate(boardstreamid(codepage), projectboardcodepage(codepage))
 }
 
 // stream id form is `board:<codepage.id>` — use codepage.id (which the runtime
@@ -238,8 +238,8 @@ function codepagefromboardstreamid(streamid: string): CODE_PAGE | undefined {
 }
 
 // Iterate the dirty set: for each registered stream that is dirty, project
-// its current shape and call `jsonsyncserverupdate` (which pokes peers via
-// jsonsyncserver). Streams that are dirty but unregistered are silently
+// its current shape and call `streamreplserverupdate` (which fans out
+// stream_row to admitted peers). Streams that are dirty but unregistered are silently
 // dropped (no admitted clients to notify yet). Caller is responsible for
 // gating on `memoryreadsimfreeze()`.
 //
@@ -252,19 +252,19 @@ export function memorysyncpushdirty(): void {
   const dirtyids = memoryconsumealldirty()
   for (let i = 0; i < dirtyids.length; ++i) {
     const streamid = dirtyids[i]
-    if (!ispresent(jsonsyncserverreadstream(streamid))) {
+    if (!ispresent(streamreplserverreadstream(streamid))) {
       // Stream not registered yet — re-queue so a later register + tick
       // still pushes this edit.
       memorymarkdirty(streamid)
       continue
     }
     if (streamid === MEMORY_STREAM_ID) {
-      jsonsyncserverupdate(streamid, projectmemory())
+      streamreplserverupdate(streamid, projectmemory())
       continue
     }
     const codepage = codepagefromboardstreamid(streamid)
     if (ispresent(codepage)) {
-      jsonsyncserverupdate(streamid, projectboardcodepage(codepage))
+      streamreplserverupdate(streamid, projectboardcodepage(codepage))
     }
   }
 }

@@ -108,7 +108,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'bridge':
         case 'register':
         case 'gadgetclient':
-        case 'jsonsyncclient':
         case 'rxreplclient':
         case 'boardrunner':
           return true
@@ -149,8 +148,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'user:pilotclear':
     case 'gadgetclient:paint':
     case 'gadgetclient:patch':
-    case 'jsonsyncserver:clientpatch':
-    case 'jsonsyncserver:needsnapshot':
     case 'rxreplserver:push_batch':
     case 'rxreplserver:pull_request':
       return true
@@ -167,16 +164,14 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   if (route.target === 'boardrunner') {
     return false
   }
-  // Legacy gadgetclient:* and rxrepl gadget fan-out must reach every peer
-  // hub (same as when joiner-owned boardrunner drove paints). Gadget document
-  // updates now use rxreplclient:gadget_row from sim; keep gadgetclient
-  // routes for any straggler tooling/tests.
+  // Legacy gadgetclient:* fan-out must reach every peer hub. Rendered gadget
+  // snapshots ship in the `memory` stream (`gadgetrender` flag); keep
+  // gadgetclient routes for straggler tooling/tests.
   switch (route.target) {
     case 'vm':
     case 'user':
     case 'modem':
     case 'gadgetclient':
-    case 'jsonsyncserver':
     case 'rxreplserver':
       return true
   }
@@ -260,7 +255,6 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
         // MEMORY. Server-side also sees user:input for login bootstrap +
         // lastinputtime tracking.
         case 'user':
-        case 'jsonsyncclient':
         case 'rxreplclient':
         case 'boardrunner':
           return true
@@ -272,7 +266,7 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
 
 // create boardrunner -> client forward (align with server→main minus clock)
 export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
-  if (message.target === 'jsonsync:changed') {
+  if (message.target.endsWith(':changed')) {
     return false
   }
   const r = parsetarget(message.target)
@@ -282,14 +276,10 @@ export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
     return false
   }
   // The boardrunner worker is authoritative for elected boards and pushes
-  // mutations back up via `memoryworkerpushdirty` -> `jsonsyncclientedit`,
-  // which emits `jsonsyncserver:clientpatch` / `jsonsyncserver:needsnapshot`
-  // targets. `shouldforwardservertoclient` only allowlists `jsonsyncclient`
-  // (downstream snapshots/patches), so without this passthrough the worker's
-  // client-side edits never reach the main hub and the sim's jsonsyncserver
-  // never reverse-projects them into canonical MEMORY. Mirrors the heavy
-  // worker's bridge, which allowlists `jsonsyncserver` for the same reason.
-  if (r.target === 'jsonsyncserver' || r.target === 'rxreplserver') {
+  // mutations back up via `memoryworkerpushdirty` -> `rxreplpushbatch`.
+  // Passthrough to the main hub so the sim's rxreplserver can merge into
+  // canonical MEMORY and fan out stream_row to peers.
+  if (r.target === 'rxreplserver') {
     return true
   }
   return shouldforwardservertoclient(message)

@@ -131,6 +131,7 @@
 - **memoryensurebookbyname(name)** - Ensures a book exists by name, creates if missing
 - **memoryensuresoftwarebook(slot, maybename?)** - Ensures a software book exists for a slot
 - **memoryensuresoftwarecodepage(slot, address, createtype)** - Ensures a codepage exists in a software book
+- **memoryensureimportbook()** - Ensures the game software book exists; destination for file imports (parsewebfile, etc.)
 - **memoryhasflags(id)** - Checks if flags exist for an ID
 - **memoryinitboard(board)** - Initializes a board (loads kinds, builds lookups)
 - **memoryisoperator(player)** - Checks if a player is the current operator
@@ -144,7 +145,7 @@
 - **memoryreadelementkind(element)** - Reads and caches the kind data for an element
 - **memoryreadelementstat(element, stat)** - Reads a stat value from element, kind, or codepage with defaults
 - **memoryreadfirstbook()** - Returns the first book
-- **memoryreadfirstcontentbook()** - Returns the first content book (excluding main)
+- **memoryreadfirstcontentbook()** - Returns the first book after main (legacy helper; file imports use **memoryensureimportbook**)
 - **memoryreadflags(id)** - Reads flags for an ID
 - **memoryreadhalt()** - Returns the halt state
 - **memoryreadloaders()** - Returns the loaders map (internal)

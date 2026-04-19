@@ -3,8 +3,13 @@ Strategy B: sim-side rxrepl. push_batch merges documents into canonical MEMORY.
 */
 import { createdevice } from 'zss/device'
 
-import { rxreplclientgadgetrow, rxreplpushack, rxreplrowdocument } from './api'
+import { rxreplpushack, rxreplrowdocument } from './api'
 import type { RXREPL_PUSH_BATCH } from './rxrepl/types'
+import {
+  streamreplplayerwritable,
+  streamreplpublishfrommemory,
+  streamreplserverreadstream,
+} from './streamreplserver'
 import { memorysyncreverseproject } from './vm/memorysync'
 
 export const rxreplserverdevice = createdevice(
@@ -25,22 +30,20 @@ export const rxreplserverdevice = createdevice(
         for (let i = 0; i < batch.rows.length; ++i) {
           const row = batch.rows[i]
           if (row.streamid.startsWith('gadget:')) {
-            const gadgetplayer = row.streamid.slice('gadget:'.length)
-            const prevrev = row.baserev ?? 0
-            const rev = prevrev + 1
-            accepted.push({ streamid: row.streamid, rev })
-            rxreplclientgadgetrow(rxreplserverdevice, gadgetplayer, {
-              streamid: row.streamid,
-              document: rxreplrowdocument(row),
-              rev,
-            })
-          } else {
-            memorysyncreverseproject(row.streamid, rxreplrowdocument(row))
-            accepted.push({
-              streamid: row.streamid,
-              rev: row.baserev !== undefined ? row.baserev + 1 : i,
-            })
+            continue
           }
+          const entry = streamreplserverreadstream(row.streamid)
+          if (
+            !entry ||
+            !streamreplplayerwritable(row.streamid, message.player)
+          ) {
+            continue
+          }
+          memorysyncreverseproject(row.streamid, rxreplrowdocument(row))
+          streamreplpublishfrommemory(row.streamid)
+          const after = streamreplserverreadstream(row.streamid)
+          const rev = after?.rev ?? 0
+          accepted.push({ streamid: row.streamid, rev })
         }
         rxreplpushack(rxreplserverdevice, message.player, { accepted })
         break

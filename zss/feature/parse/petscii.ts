@@ -12,7 +12,7 @@ import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook } from 'zss/memory/session'
+import { memoryensureimportbook } from 'zss/memory/books'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 const PETSCII_COLS = 40
@@ -74,11 +74,7 @@ export function parsepetscii(
   filename: string,
   content: Uint8Array,
 ) {
-  const contentbook = memoryreadfirstcontentbook()
-  if (!ispresent(contentbook)) {
-    apitoast(SOFTWARE, player, 'no content book to import into')
-    return
-  }
+  const contentbook = memoryensureimportbook()
 
   const cells = new Uint8Array(PETSCII_BYTES)
   const n = Math.min(content.length, PETSCII_BYTES)

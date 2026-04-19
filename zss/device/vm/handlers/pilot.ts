@@ -22,7 +22,7 @@ type PILOT_STATE = {
 
 const pilots: Record<string, PILOT_STATE> = {}
 
-export function handlepilotstart(_vm: DEVICE, message: MESSAGE): void {
+export function handlepilotstart(message: MESSAGE): void {
   const data = message.data as { x?: number; y?: number } | undefined
   if (!ispresent(data) || !isnumber(data.x) || !isnumber(data.y)) {
     return
@@ -37,7 +37,7 @@ export function handlepilotstart(_vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handlepilotstop(_vm: DEVICE, message: MESSAGE): void {
+export function handlepilotstop(message: MESSAGE): void {
   delete pilots[message.player]
 }
 
@@ -45,7 +45,7 @@ export function pilotclear(playerid: string): void {
   delete pilots[playerid]
 }
 
-export function handlepilotclear(_vm: DEVICE, message: MESSAGE): void {
+export function handlepilotclear(message: MESSAGE): void {
   if (isstring(message.data)) {
     pilotclear(message.data)
   }

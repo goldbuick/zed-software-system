@@ -18,7 +18,7 @@ import {
   memorywritebook,
   memorywritesoftwarebook,
 } from './session'
-import { CODE_PAGE_TYPE } from './types'
+import { CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
 export function memorycreatesoftwarebook(maybename?: string) {
   const book = memorycreatebook([])
@@ -77,4 +77,9 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
     createtype,
     address,
   )
+}
+
+/** Destination book for file imports (drop/paste, parsewebfile, etc.). */
+export function memoryensureimportbook() {
+  return memoryensuresoftwarebook(MEMORY_LABEL.GAME, 'game')
 }

@@ -15,7 +15,7 @@ const MEMORY = {
   simfreeze: false,
   session: createsid(),
   operator: '',
-  software: { main: '', temp: '' },
+  software: { main: '', game: '' },
   books: new Map<string, BOOK>(),
   loaders: new Map<string, string>(),
   topic: '',
@@ -125,6 +125,9 @@ export function memoryresetbooks(books: BOOK[]) {
     if (book.name === 'main') {
       MEMORY.software.main = book.id
     }
+    if (book.name === 'game') {
+      MEMORY.software.game = book.id
+    }
   })
   if (!MEMORY.software.main) {
     const first = MEMORY.books.values().next()
@@ -166,7 +169,7 @@ export type MEMORY_ROOT = {
   simfreeze: boolean
   session: string
   operator: string
-  software: { main: string; temp: string }
+  software: { main: string; game: string }
   books: Map<string, BOOK>
   loaders: Map<string, string>
   topic: string

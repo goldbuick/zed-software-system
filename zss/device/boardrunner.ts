@@ -1,22 +1,13 @@
 import { createdevice } from 'zss/device'
-import {
-  gadgetclearscroll,
-  gadgetstate,
-  gadgetstateprovider,
-  initstate,
-} from 'zss/gadget/data/api'
+import { gadgetclearscroll, gadgetstate } from 'zss/gadget/data/api'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
-import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
 } from 'zss/memory/boards'
-import {
-  memoryreadbookflag,
-  memoryreadbookflags,
-} from 'zss/memory/bookoperations'
-import { memorymarkmemorydirty } from 'zss/memory/memorydirty'
+import { memoryreadbookflag } from 'zss/memory/bookoperations'
+import { MEMORY_STREAM_ID, memorymarkmemorydirty } from 'zss/memory/memorydirty'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
@@ -36,27 +27,22 @@ import {
   boardrunnergadgetpushnow,
   boardrunnergadgetsynctick,
 } from './boardrunnergadget'
-import { startboardrunnerjsonsyncrxhydrate } from './boardrunnerjsonsyncrx'
 import { pilottick } from './vm/handlers/pilot'
 import { memoryhydratefromjsonsync } from './vm/memoryhydrate'
 import { memoryworkerpushdirty } from './vm/memoryworkersync'
 
-gadgetstateprovider((element) => {
-  if (ispid(element)) {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    // cheating here as data is non-WORD compliant
-    const gadgetstore = memoryreadbookflags(
-      mainbook,
-      MEMORY_LABEL.GADGETSTORE,
-    ) as any
-    let value = gadgetstore[element]
-    if (!ispresent(value)) {
-      gadgetstore[element] = value = initstate()
-    }
-    return value
+import './gadgetmemoryprovider'
+
+function shouldboardrunnerhandlestreamchanged(target: string): boolean {
+  if (target === `${MEMORY_STREAM_ID}:changed`) {
+    return true
   }
-  return initstate()
-})
+  if (!target.endsWith(':changed')) {
+    return false
+  }
+  const streamid = target.slice(0, -':changed'.length)
+  return streamid.startsWith('board:')
+}
 
 // jsonsync resync + gadget baselines treat both layers as ours.
 let assignedboardid = ''
@@ -148,7 +134,7 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
     memorytickmain(memoryreadhalt())
   })
   perfmeasure('boardrunner:gadgetrender', () => {
-    boardrunnergadgetsynctick(dev, players)
+    boardrunnergadgetsynctick(players)
   })
   perfmeasure('boardrunner:memoryworkerpushdirty', () => {
     memoryworkerpushdirty()
@@ -157,7 +143,7 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['ticktock', 'jsonsync'],
+  ['ticktock', 'memory', 'board'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
@@ -166,10 +152,11 @@ const boardrunner = createdevice(
     // filter messages by target
     switch (message.target) {
       case 'ticktock':
-      case 'jsonsync:changed':
-        // no player filter on these messages
         break
       default:
+        if (shouldboardrunnerhandlestreamchanged(message.target)) {
+          break
+        }
         // everything else is filtered by assignedplayerid
         if (message.player !== assignedplayerid) {
           if (import.meta.env.DEV) {
@@ -181,13 +168,14 @@ const boardrunner = createdevice(
     }
 
     // handle messages
+    if (shouldboardrunnerhandlestreamchanged(message.target)) {
+      const payload = message.data as JSONSYNC_CHANGED
+      memoryhydratefromjsonsync(payload.streamid, payload.document)
+      rebuildownedboardids()
+      return
+    }
+
     switch (message.target) {
-      case 'jsonsync:changed': {
-        const payload = message.data as JSONSYNC_CHANGED
-        memoryhydratefromjsonsync(payload.streamid, payload.document)
-        rebuildownedboardids()
-        break
-      }
       case 'ticktock':
         runworkertick(boardrunner)
         break
@@ -222,7 +210,7 @@ const boardrunner = createdevice(
         shared.scroll = (
           isarray(payload?.scroll) ? payload.scroll : []
         ) as PANEL_ITEM[]
-        boardrunnergadgetpushnow(boardrunner, player, false)
+        boardrunnergadgetpushnow(player, false)
         break
       }
       default:
@@ -230,5 +218,3 @@ const boardrunner = createdevice(
     }
   },
 )
-
-startboardrunnerjsonsyncrxhydrate(rebuildownedboardids)

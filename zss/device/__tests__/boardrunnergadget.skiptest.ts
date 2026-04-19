@@ -1,5 +1,4 @@
 import type { DEVICE } from 'zss/device'
-import * as api from 'zss/device/api'
 import * as gadgetapi from 'zss/gadget/data/api'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import * as bookoperations from 'zss/memory/bookoperations'
@@ -12,8 +11,6 @@ import {
   boardrunnergadgetclearsyncbaseline,
   boardrunnergadgetsynctick,
 } from '../boardrunnergadget'
-import * as jsonsyncclient from '../jsonsyncclient'
-
 describe('boardrunnergadgetsynctick when player board not hydrated', () => {
   const dev = { emit: jest.fn() } as unknown as DEVICE
 
@@ -25,18 +22,20 @@ describe('boardrunnergadgetsynctick when player board not hydrated', () => {
     jest
       .spyOn(playermanagement, 'memoryreadplayerboard')
       .mockReturnValue(undefined)
-    const batchspy = jest.spyOn(api, 'rxreplpushbatch')
+    const flagspy = jest.spyOn(bookoperations, 'memorywritebookflag')
     const gadgetstatespy = jest.spyOn(gadgetapi, 'gadgetstate')
 
     boardrunnergadgetsynctick(dev, ['p1'])
 
-    expect(batchspy).not.toHaveBeenCalled()
+    expect(flagspy).not.toHaveBeenCalled()
     expect(gadgetstatespy).not.toHaveBeenCalled()
   })
 
   it('does not paint when baseline cleared but gadgetlayers is missing', () => {
     boardrunnergadgetclearsyncbaseline('p1')
-    jest.spyOn(session, 'memoryreadbookbysoftware').mockReturnValue({} as any)
+    jest
+      .spyOn(session, 'memoryreadbookbysoftware')
+      .mockReturnValue({ id: 'main', flags: {} } as any)
     jest.spyOn(bookoperations, 'memoryreadbookflag').mockReturnValue('sid_x')
     jest.spyOn(playermanagement, 'memoryreadplayerboard').mockReturnValue({
       id: 'sid_x',
@@ -46,11 +45,11 @@ describe('boardrunnergadgetsynctick when player board not hydrated', () => {
       .spyOn(rendering, 'memoryreadgadgetlayers')
       .mockReturnValue(undefined as any)
     jest.spyOn(synthstate, 'memoryreadsynth').mockReturnValue(undefined as any)
-    const batchspy = jest.spyOn(api, 'rxreplpushbatch')
+    const flagspy = jest.spyOn(bookoperations, 'memorywritebookflag')
 
     boardrunnergadgetsynctick(dev, ['p1'])
 
-    expect(batchspy).not.toHaveBeenCalled()
+    expect(flagspy).not.toHaveBeenCalled()
   })
 })
 
@@ -62,12 +61,11 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
     jest.restoreAllMocks()
   })
 
-  it('emits rxrepl push_batch twice when resolved playerboard id changes', () => {
-    jest
-      .spyOn(jsonsyncclient, 'jsonsyncclientreadownplayer')
-      .mockReturnValue('runner1')
+  it('writes gadgetrender flag twice when resolved playerboard id changes', () => {
     boardrunnergadgetclearsyncbaseline('p1')
-    jest.spyOn(session, 'memoryreadbookbysoftware').mockReturnValue({} as any)
+    jest
+      .spyOn(session, 'memoryreadbookbysoftware')
+      .mockReturnValue({ id: 'main-id', flags: {} } as any)
     jest
       .spyOn(bookoperations, 'memoryreadbookflag')
       .mockImplementation((_b, _p, key) => {
@@ -110,7 +108,7 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
       .spyOn(rendering, 'memoryconverttogadgetcontrollayer')
       .mockReturnValue([] as any)
     jest.spyOn(synthstate, 'memoryreadsynth').mockReturnValue(undefined as any)
-    const batchspy = jest.spyOn(api, 'rxreplpushbatch')
+    const flagspy = jest.spyOn(bookoperations, 'memorywritebookflag')
 
     playeraddress = 'boa'
     boardrunnergadgetsynctick(dev, ['p1'])
@@ -118,6 +116,6 @@ describe('boardrunnergadgetsynctick when player board id changes', () => {
     playeraddress = 'bob'
     boardrunnergadgetsynctick(dev, ['p1'])
 
-    expect(batchspy).toHaveBeenCalledTimes(2)
+    expect(flagspy).toHaveBeenCalledTimes(2)
   })
 })

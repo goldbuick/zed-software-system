@@ -34,8 +34,8 @@ describe('forward rules for boardrunner gadget routes', () => {
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
 
-  it('forwards rxreplclient:gadget_row from server to client', () => {
-    const m = msg('rxreplclient:gadget_row')
+  it('forwards rxreplclient:stream_row from server to client', () => {
+    const m = msg('rxreplclient:stream_row')
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
 
@@ -60,21 +60,9 @@ describe('forward rules for boardrunner gadget routes', () => {
     expect(shouldforwardclienttoboardrunner(m)).toBe(true)
   })
 
-  it('forwards jsonsyncserver:clientpatch from boardrunner worker to main, then on to sim', () => {
-    const m = msg('jsonsyncserver:clientpatch')
+  it('forwards rxreplserver:push_batch from boardrunner worker to main, then on to sim', () => {
+    const m = msg('rxreplserver:push_batch')
     expect(shouldforwardboardrunnertoclient(m)).toBe(true)
     expect(shouldforwardclienttoserver(m)).toBe(true)
-  })
-
-  it('forwards jsonsyncserver:needsnapshot from boardrunner worker to main, then on to sim', () => {
-    const m = msg('jsonsyncserver:needsnapshot')
-    expect(shouldforwardboardrunnertoclient(m)).toBe(true)
-    expect(shouldforwardclienttoserver(m)).toBe(true)
-  })
-
-  it('still forwards jsonsyncclient:serverpatch from server into the boardrunner worker', () => {
-    const m = msg('jsonsyncclient:serverpatch')
-    expect(shouldforwardservertoclient(m)).toBe(true)
-    expect(shouldforwardclienttoboardrunner(m)).toBe(true)
   })
 })

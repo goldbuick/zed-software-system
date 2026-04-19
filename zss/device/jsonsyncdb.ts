@@ -1,16 +1,18 @@
 /*
-RxDB persistence for jsonsync client/server stream state (Strategy A).
+RxDB persistence for streamrepl client state (memory / board:* full documents).
 Synchronous Map mirrors stay authoritative for the hot path; RxDB uses in-memory storage only.
+After each persisted upsert, emits `${streamid}:changed` on the registered device (see streamreplregisterstreamchangeddevice).
 */
 import { type RxCollection, type RxDatabase, createRxDatabase } from 'rxdb'
 import { getRxStorageMemory } from 'rxdb/plugins/storage-memory'
-import type {
-  JSONSYNC_CLIENT_STREAM,
-  JSONSYNC_SERVER_STREAM,
-} from 'zss/feature/jsonsync'
+
+import {
+  type DEVICELIKE,
+  type JSONSYNC_CHANGED,
+  streamsyncchanged,
+} from './api'
 
 const CLIENT_COLL = 'client_streams'
-const SERVER_COLL = 'server_streams'
 
 const DB_VERSION = 0
 
@@ -21,46 +23,42 @@ const clientrowschema = {
   properties: {
     streamid: { type: 'string', maxLength: 512 },
     documentjson: { type: 'string' },
-    shadowjson: { type: 'string' },
-    cv: { type: 'number', multipleOf: 1 },
-    sv: { type: 'number', multipleOf: 1 },
-    arrayidentitykeysjson: { type: 'string' },
+    rev: { type: 'number', multipleOf: 1 },
   },
-  required: [
-    'streamid',
-    'documentjson',
-    'shadowjson',
-    'cv',
-    'sv',
-    'arrayidentitykeysjson',
-  ],
+  required: ['streamid', 'documentjson', 'rev'],
 } as const
 
-const serverrowschema = {
-  version: DB_VERSION,
-  primaryKey: 'streamid',
-  type: 'object',
-  properties: {
-    streamid: { type: 'string', maxLength: 512 },
-    payloadjson: { type: 'string' },
-  },
-  required: ['streamid', 'payloadjson'],
-} as const
-
-export type JSONSYNC_CLIENT_STREAM_ROW = {
-  streamid: string
-  documentjson: string
-  shadowjson: string
-  cv: number
-  sv: number
-  arrayidentitykeysjson: string
+export type STREAMREPL_CLIENT_STREAM = {
+  document: unknown
+  rev: number
 }
 
-type CLIENT_ROW = JSONSYNC_CLIENT_STREAM_ROW
-
-type SERVER_ROW = {
+export type STREAMREPL_CLIENT_ROW = {
   streamid: string
-  payloadjson: string
+  documentjson: string
+  rev: number
+}
+
+type CLIENT_ROW = STREAMREPL_CLIENT_ROW
+
+export function clientstreamrowtostream(
+  row: CLIENT_ROW,
+): STREAMREPL_CLIENT_STREAM {
+  return {
+    document: JSON.parse(row.documentjson) as unknown,
+    rev: row.rev,
+  }
+}
+
+function streamtorow(
+  streamid: string,
+  stream: STREAMREPL_CLIENT_STREAM,
+): CLIENT_ROW {
+  return {
+    streamid,
+    documentjson: JSON.stringify(stream.document),
+    rev: stream.rev,
+  }
 }
 
 function jestsuffix(): string {
@@ -70,81 +68,46 @@ function jestsuffix(): string {
   return ''
 }
 
-function serializeserverstream(stream: JSONSYNC_SERVER_STREAM): string {
-  return JSON.stringify({
-    document: stream.document,
-    clients: [...stream.clients.entries()],
-    arrayidentitykeys: stream.arrayidentitykeys,
-    topkeys: stream.topkeys,
-  })
-}
-
-export function clientstreamrowtostream(
-  row: CLIENT_ROW,
-): JSONSYNC_CLIENT_STREAM {
-  return {
-    document: JSON.parse(row.documentjson) as unknown,
-    shadow: JSON.parse(row.shadowjson) as unknown,
-    cv: row.cv,
-    sv: row.sv,
-    arrayidentitykeys: row.arrayidentitykeysjson
-      ? (JSON.parse(
-          row.arrayidentitykeysjson,
-        ) as JSONSYNC_CLIENT_STREAM['arrayidentitykeys'])
-      : undefined,
-  }
-}
-
-function streamtorow(
-  streamid: string,
-  stream: JSONSYNC_CLIENT_STREAM,
-): CLIENT_ROW {
-  return {
-    streamid,
-    documentjson: JSON.stringify(stream.document),
-    shadowjson: JSON.stringify(stream.shadow),
-    cv: stream.cv,
-    sv: stream.sv,
-    arrayidentitykeysjson: stream.arrayidentitykeys
-      ? JSON.stringify(stream.arrayidentitykeys)
-      : '',
-  }
-}
-
 let clientdb: RxDatabase | null = null
 let clientcoll: RxCollection<CLIENT_ROW> | null = null
 let clientinit: Promise<void> | null = null
 
-/** Serializes RxDB writes so clear() and upsert never race (Jest + fast ticks). */
+let streamchangeddevice: DEVICELIKE | null = null
+
+/** Call from rxreplclient (once) so persisted streams emit `${streamid}:changed`. */
+export function streamreplregisterstreamchangeddevice(device: DEVICELIKE): void {
+  streamchangeddevice = device
+}
+
+function emitstreamchangedafterrow(row: CLIENT_ROW): void {
+  if (!streamchangeddevice) {
+    return
+  }
+  const stream = clientstreamrowtostream(row)
+  const payload: JSONSYNC_CHANGED = {
+    streamid: row.streamid,
+    reason: 'document',
+    rev: stream.rev,
+    document: stream.document,
+  }
+  streamsyncchanged(streamchangeddevice, payload)
+}
+
 let clientpersisttail: Promise<void> = Promise.resolve()
 
 function enqueueclientpersist(fn: () => Promise<void>): void {
   clientpersisttail = clientpersisttail.then(fn, () => {})
 }
 
-export function jsonsyncawaitclientpersistqueue(): Promise<void> {
+export function streamreplawaitclientpersistqueue(): Promise<void> {
   return clientpersisttail
-}
-
-let serverdb: RxDatabase | null = null
-let servercoll: RxCollection<SERVER_ROW> | null = null
-let serverinit: Promise<void> | null = null
-
-let serverpersisttail: Promise<void> = Promise.resolve()
-
-function enqueueserverpersist(fn: () => Promise<void>): void {
-  serverpersisttail = serverpersisttail.then(fn, () => {})
-}
-
-export function jsonsyncawaitserverpersistqueue(): Promise<void> {
-  return serverpersisttail
 }
 
 async function initclientdbinner(): Promise<void> {
   if (clientdb) {
     return
   }
-  const name = `zss_jsonsync_client_v1${jestsuffix()}`
+  const name = `zss_streamrepl_client_v1${jestsuffix()}`
   const db = await createRxDatabase({
     name,
     storage: getRxStorageMemory(),
@@ -158,36 +121,14 @@ async function initclientdbinner(): Promise<void> {
   clientcoll = cols[CLIENT_COLL] as RxCollection<CLIENT_ROW>
 }
 
-async function initserverdbinner(): Promise<void> {
-  if (serverdb) {
-    return
-  }
-  const name = `zss_jsonsync_server_v1${jestsuffix()}`
-  const db = await createRxDatabase({
-    name,
-    storage: getRxStorageMemory(),
-    multiInstance: false,
-    eventReduce: false,
-  })
-  const cols = await db.addCollections({
-    [SERVER_COLL]: { schema: serverrowschema },
-  })
-  serverdb = db
-  servercoll = cols[SERVER_COLL] as RxCollection<SERVER_ROW>
-}
-
-export function jsonsyncensureclientdb(): Promise<void> {
+export function streamreplensureclientdb(): Promise<void> {
   return (clientinit ??= initclientdbinner())
 }
 
-export function jsonsyncensureserverdb(): Promise<void> {
-  return (serverinit ??= initserverdbinner())
-}
-
-export async function jsonsyncclienthydratemapmissing(
-  map: Map<string, JSONSYNC_CLIENT_STREAM>,
+export async function streamreplclienthydratemapmissing(
+  map: Map<string, STREAMREPL_CLIENT_STREAM>,
 ): Promise<void> {
-  await jsonsyncensureclientdb()
+  await streamreplensureclientdb()
   if (!clientcoll) {
     return
   }
@@ -200,22 +141,24 @@ export async function jsonsyncclienthydratemapmissing(
   }
 }
 
-export function jsonsyncpersistclientstream(
+export function streamreplpersistclientstream(
   streamid: string,
-  stream: JSONSYNC_CLIENT_STREAM,
+  stream: STREAMREPL_CLIENT_STREAM,
 ): void {
   enqueueclientpersist(async () => {
-    await jsonsyncensureclientdb()
+    await streamreplensureclientdb()
     if (!clientcoll) {
       return
     }
-    await clientcoll.incrementalUpsert(streamtorow(streamid, stream))
+    const row = streamtorow(streamid, stream)
+    await clientcoll.incrementalUpsert(row)
+    emitstreamchangedafterrow(row)
   })
 }
 
-export function jsonsyncdeleteclientstream(streamid: string): void {
+export function streamrepldeleteclientstream(streamid: string): void {
   enqueueclientpersist(async () => {
-    await jsonsyncensureclientdb()
+    await streamreplensureclientdb()
     if (!clientcoll) {
       return
     }
@@ -226,9 +169,9 @@ export function jsonsyncdeleteclientstream(streamid: string): void {
   })
 }
 
-export function jsonsyncclearclientstreamsdb(): void {
+export function streamreplclearclientstreamsdb(): void {
   enqueueclientpersist(async () => {
-    await jsonsyncensureclientdb()
+    await streamreplensureclientdb()
     if (!clientcoll) {
       return
     }
@@ -237,10 +180,10 @@ export function jsonsyncclearclientstreamsdb(): void {
   })
 }
 
-export function jsonsyncflushclientdbfortests(): Promise<void> {
+export function streamreplflushclientdbfortests(): Promise<void> {
   return new Promise((resolve) => {
     enqueueclientpersist(async () => {
-      await jsonsyncensureclientdb()
+      await streamreplensureclientdb()
       if (!clientcoll) {
         resolve()
         return
@@ -252,95 +195,34 @@ export function jsonsyncflushclientdbfortests(): Promise<void> {
   })
 }
 
-export function jsonsyncpersistservstream(
-  streamid: string,
-  stream: JSONSYNC_SERVER_STREAM,
-): void {
-  enqueueserverpersist(async () => {
-    await jsonsyncensureserverdb()
-    if (!servercoll) {
-      return
-    }
-    await servercoll.incrementalUpsert({
-      streamid,
-      payloadjson: serializeserverstream(stream),
-    })
-  })
-}
-
-export function jsonsyncdeleteservstream(streamid: string): void {
-  enqueueserverpersist(async () => {
-    await jsonsyncensureserverdb()
-    if (!servercoll) {
-      return
-    }
-    const doc = await servercoll.findOne(streamid).exec()
-    if (doc) {
-      await doc.remove()
-    }
-  })
-}
-
-export function jsonsyncclearservstreamsdb(): void {
-  enqueueserverpersist(async () => {
-    await jsonsyncensureserverdb()
-    if (!servercoll) {
-      return
-    }
-    const docs = await servercoll.find().exec()
-    await Promise.all(docs.map((d) => d.remove()))
-  })
-}
-
-export function jsonsyncclientcollection(): RxCollection<CLIENT_ROW> | null {
+export function streamreplclientcollection(): RxCollection<CLIENT_ROW> | null {
   return clientcoll
 }
 
-export function jsonsyncreadclientstreamobservable(streamid: string) {
+export function streamreplreadclientstreamobservable(streamid: string) {
   if (!clientcoll) {
     return null
   }
   return clientcoll.findOne(streamid).$
 }
 
-class JsonsyncClientStreamMap extends Map<string, JSONSYNC_CLIENT_STREAM> {
-  override set(streamid: string, stream: JSONSYNC_CLIENT_STREAM) {
+class StreamreplClientStreamMap extends Map<string, STREAMREPL_CLIENT_STREAM> {
+  override set(streamid: string, stream: STREAMREPL_CLIENT_STREAM) {
     super.set(streamid, stream)
-    jsonsyncpersistclientstream(streamid, stream)
+    streamreplpersistclientstream(streamid, stream)
     return this
   }
 
   override delete(streamid: string) {
     const r = super.delete(streamid)
-    jsonsyncdeleteclientstream(streamid)
+    streamrepldeleteclientstream(streamid)
     return r
   }
 
   override clear() {
     super.clear()
-    jsonsyncclearclientstreamsdb()
+    streamreplclearclientstreamsdb()
   }
 }
 
-class JsonsyncServerStreamMap extends Map<string, JSONSYNC_SERVER_STREAM> {
-  override set(streamid: string, stream: JSONSYNC_SERVER_STREAM) {
-    super.set(streamid, stream)
-    jsonsyncpersistservstream(streamid, stream)
-    return this
-  }
-
-  override delete(streamid: string) {
-    const r = super.delete(streamid)
-    jsonsyncdeleteservstream(streamid)
-    return r
-  }
-
-  override clear() {
-    super.clear()
-    jsonsyncclearservstreamsdb()
-  }
-}
-
-export const jsonsyncclientstreammap = new JsonsyncClientStreamMap()
-
-export const jsonsyncserverstreammap = new JsonsyncServerStreamMap()
+export const streamreplclientstreammap = new StreamreplClientStreamMap()

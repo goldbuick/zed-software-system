@@ -1,39 +1,36 @@
 import {
   clientstreamrowtostream,
-  jsonsyncawaitclientpersistqueue,
-  jsonsyncclientstreammap,
-  jsonsyncflushclientdbfortests,
+  streamreplawaitclientpersistqueue,
+  streamreplclientstreammap,
+  streamreplflushclientdbfortests,
 } from 'zss/device/jsonsyncdb'
 
-describe('jsonsyncdb client persistence', () => {
+describe('streamrepldb client persistence', () => {
   beforeEach(async () => {
-    jsonsyncclientstreammap.clear()
-    await jsonsyncawaitclientpersistqueue()
-    await jsonsyncflushclientdbfortests()
+    streamreplclientstreammap.clear()
+    await streamreplawaitclientpersistqueue()
+    await streamreplflushclientdbfortests()
   })
 
   afterEach(async () => {
-    jsonsyncclientstreammap.clear()
-    await jsonsyncawaitclientpersistqueue()
-    await jsonsyncflushclientdbfortests()
+    streamreplclientstreammap.clear()
+    await streamreplawaitclientpersistqueue()
+    await streamreplflushclientdbfortests()
   })
 
   it('round-trips a row through JSON fields', () => {
     const row = {
       streamid: 's',
       documentjson: '{"a":1}',
-      shadowjson: '{"a":1}',
-      cv: 0,
-      sv: 0,
-      arrayidentitykeysjson: '',
+      rev: 3,
     }
     const st = clientstreamrowtostream(row)
     expect(st.document).toEqual({ a: 1 })
-    expect(st.shadow).toEqual({ a: 1 })
+    expect(st.rev).toBe(3)
   })
 
   it('flush + await persist queue completes without throwing', async () => {
-    await jsonsyncawaitclientpersistqueue()
-    await jsonsyncflushclientdbfortests()
+    await streamreplawaitclientpersistqueue()
+    await streamreplflushclientdbfortests()
   })
 })

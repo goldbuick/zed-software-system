@@ -15,11 +15,6 @@ import type {
 } from 'zss/device/rxrepl/types'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
-import type {
-  JSONSYNC_ANTI,
-  JSONSYNC_PATCH,
-  JSONSYNC_SNAPSHOT,
-} from 'zss/feature/jsonsync'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -227,79 +222,27 @@ export function boardrunnergadgetscrollpush(
   device.emit(runnerplayer, 'boardrunner:gadgetscrollpush', payload)
 }
 
-// --- jsonsync ---------------------------------------------------------------
+// --- stream replication (memory / board:*) ---------------------------------
 
 export type JSONSYNC_CHANGED = {
   streamid: string
-  reason: 'snapshot' | 'serverpatch' | 'antipatch'
-  cv: number
-  sv: number
+  reason: 'document'
+  rev: number
   document: unknown
 }
 
-export function jsonsyncsnapshot(
-  device: DEVICELIKE,
-  player: string,
-  payload: JSONSYNC_SNAPSHOT,
-) {
-  device.emit(player, 'jsonsyncclient:snapshot', payload)
+/** Local broadcast when a client stream document updates (target `${streamid}:changed`). */
+export function streamsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {
+  device.emit('', `${payload.streamid}:changed`, payload)
 }
 
-export function jsonsyncserverpatch(
+/** Sim → client: full memory or board stream document + rev. */
+export function rxreplclientstreamrow(
   device: DEVICELIKE,
   player: string,
-  payload: JSONSYNC_PATCH,
+  payload: RXREPL_STREAM_DOCUMENT,
 ) {
-  device.emit(player, 'jsonsyncclient:serverpatch', payload)
-}
-
-export function jsonsyncclientpatch(
-  device: DEVICELIKE,
-  player: string,
-  payload: JSONSYNC_PATCH,
-) {
-  device.emit(player, 'jsonsyncserver:clientpatch', payload)
-}
-
-export function jsonsyncantipatch(
-  device: DEVICELIKE,
-  player: string,
-  payload: JSONSYNC_ANTI,
-) {
-  device.emit(player, 'jsonsyncclient:antipatch', payload)
-}
-
-export function jsonsyncneedsnapshot(
-  device: DEVICELIKE,
-  player: string,
-  streamid: string,
-) {
-  device.emit(player, 'jsonsyncserver:needsnapshot', { streamid })
-}
-
-export function jsonsyncserversnapshotrequest(
-  device: DEVICELIKE,
-  player: string,
-  streamid: string,
-) {
-  device.emit(player, 'jsonsyncclient:needsnapshot', { streamid })
-}
-
-// poke: zero-payload "something changed" ping per Neil Fraser's DiffSync paper.
-// the client responds by running its own diff cycle against its local shadow and
-// emitting a clientpatch to pull the update.
-export function jsonsyncpoke(
-  device: DEVICELIKE,
-  player: string,
-  streamid: string,
-) {
-  device.emit(player, 'jsonsyncclient:poke', { streamid })
-}
-
-// local broadcast: any device that subscribes to the `jsonsync` topic (or `all`)
-// will receive this whenever the client-side shadow mutates.
-export function jsonsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {
-  device.emit('', 'jsonsync:changed', payload)
+  device.emit(player, 'rxreplclient:stream_row', payload)
 }
 
 // --- rxrepl (Strategy B: document replication over device bus) --------------
@@ -363,15 +306,6 @@ export function rxreplpushack(
   payload: RXREPL_PUSH_ACK,
 ) {
   device.emit(player, 'rxreplclient:push_ack', payload)
-}
-
-/** Sim → client: one gadget document row after rxrepl push_batch (full JSON snapshot, not patch). */
-export function rxreplclientgadgetrow(
-  device: DEVICELIKE,
-  player: string,
-  payload: RXREPL_STREAM_DOCUMENT,
-) {
-  device.emit(player, 'rxreplclient:gadget_row', payload)
 }
 
 export function rxreplresync(

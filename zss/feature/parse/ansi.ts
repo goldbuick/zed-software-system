@@ -13,7 +13,7 @@ import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook } from 'zss/memory/session'
+import { memoryensureimportbook } from 'zss/memory/books'
 import {
   BOARD,
   BOARD_HEIGHT,
@@ -29,10 +29,7 @@ export function parseansi(
   filetype: string,
   content: Uint8Array,
 ) {
-  const contentbook = memoryreadfirstcontentbook()
-  if (!ispresent(contentbook)) {
-    return
-  }
+  const contentbook = memoryensureimportbook()
 
   renderbytes(
     content,

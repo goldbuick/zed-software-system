@@ -1,34 +1,27 @@
 /*
 memoryworkersync: worker-side push loop. Counterpart to `memorysync.ts`'s
-`memorysyncpushdirty` but emits `jsonsyncclientedit` instead of
-`jsonsyncserverupdate`.
+`memorysyncpushdirty`; pushes full-document rows via `rxreplpushbatch` so the
+sim merges into canonical MEMORY (Strategy B).
 
-Phase 2 of the boardrunner authoritative-tick plan: after the worker runs its
-local `memorytickmain`, any meaningful MEMORY/board mutation has flipped a
-dirty bit (via the helpers instrumented in `zss/memory/*`). This module
-drains the dirty set and turns each into a clientpatch upstream:
+After the worker runs `memorytickmain`, dirty bits (from `zss/memory/*`)
+identify changed streams. This module drains them and emits one batch row per
+admitted stream:
 
-- `memory` stream: project local MEMORY (player flags, activelist, scalars)
-  and emit a clientedit so the server reverse-projects it back into the
-  canonical MEMORY.
-- `board:<id>` streams: project the local board codepage and emit a
-  clientedit for it. Only streams the worker is admitted to (i.e. has a
-  registered `jsonsyncclient` stream) participate; other dirty streams are
-  silently dropped because the worker has nothing to push to.
+- `memory` stream: `projectmemory()` snapshot.
+- `board:<id>` streams: board codepage projection from the main book.
 
-The worker's hub also receives `serverpatch`/`snapshot`/`antipatch` traffic
-for these streams; hydration of those is handled separately by
-`memoryhydrate`. Hydration runs inside `memorywithsilentwrites`, so it
-never re-fires the bits this push loop consumes.
+Only streams with a registered rxrepl client shadow participate
+(`rxreplclientreadstream`); others are re-queued until admission.
+
+Hydration of inbound traffic is separate (`memoryhydrate`); it runs inside
+`memorywithsilentwrites`, so it does not re-fire consumed dirty bits.
 */
 import { rxreplpushbatch } from 'zss/device/api'
 import {
-  jsonsyncclientdevice,
-  jsonsyncclientedit,
-  jsonsyncclientreadownplayer,
-  jsonsyncclientreadstream,
-} from 'zss/device/jsonsyncclient'
-import { zssrxrepldocumentmode } from 'zss/device/rxrepl/flags'
+  rxreplclientdevice,
+  rxreplclientreadownplayer,
+  rxreplclientreadstream,
+} from 'zss/device/rxreplclient'
 import { ispresent } from 'zss/mapping/types'
 import {
   MEMORY_STREAM_ID,
@@ -44,20 +37,16 @@ export function memoryworkerpushdirty(): void {
   const dirtyids = memoryconsumealldirty()
   for (let i = 0; i < dirtyids.length; ++i) {
     const streamid = dirtyids[i]
-    if (!ispresent(jsonsyncclientreadstream(streamid))) {
+    if (!ispresent(rxreplclientreadstream(streamid))) {
       // not admitted yet — re-queue so admission + next tick still pushes.
       memorymarkdirty(streamid)
       continue
     }
     if (streamid === MEMORY_STREAM_ID) {
       const projection = projectmemory()
-      if (zssrxrepldocumentmode()) {
-        rxreplpushbatch(jsonsyncclientdevice, jsonsyncclientreadownplayer(), {
-          rows: [{ streamid, document: projection }],
-        })
-      } else {
-        jsonsyncclientedit(streamid, () => projection)
-      }
+      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
+        rows: [{ streamid, document: projection }],
+      })
       continue
     }
     if (!streamid.startsWith('board:')) {
@@ -82,12 +71,8 @@ export function memoryworkerpushdirty(): void {
       continue
     }
     const projection = projectboardcodepage(codepage)
-    if (zssrxrepldocumentmode()) {
-      rxreplpushbatch(jsonsyncclientdevice, jsonsyncclientreadownplayer(), {
-        rows: [{ streamid, document: projection }],
-      })
-    } else {
-      jsonsyncclientedit(streamid, () => projection)
-    }
+    rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
+      rows: [{ streamid, document: projection }],
+    })
   }
 }

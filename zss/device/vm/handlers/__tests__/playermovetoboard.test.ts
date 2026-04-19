@@ -203,7 +203,7 @@ describe('handleplayermovetoboard', () => {
   })
 
   it('pushes dest board stream before memory stream to prevent zoom flip', () => {
-    // Regression: the worker hydrates each jsonsync:changed separately, and a
+    // Regression: the worker hydrates each memory/board :changed separately, and a
     // gadget sync can fire between hydrations. If memory (player.board = B)
     // arrives before board:B (player in B.objects), memoryconverttogadgetcontrollayer
     // sees no player on B and drops the CONTROL layer, flipping viewscale to MID.

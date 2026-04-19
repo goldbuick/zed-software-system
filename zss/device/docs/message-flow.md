@@ -2,7 +2,7 @@
 
 The **hub** is a pub/sub fan-out: every `emit` is delivered to every connected device. Each device filters by **topics** (broadcast) or **directed target** (e.g. `vm:operator`).
 
-**See also:** [devices-and-messaging.md](devices-and-messaging.md) — inventory of every device, three-realm topology, and cross-realm forwarding.
+**See also:** [devices-and-messaging.md](devices-and-messaging.md) — inventory of every device, three-realm topology, and cross-realm forwarding. **Gadget + memory replication:** elected **boardrunner** workers and **rxrepl** (`stream_row`, `gadget_row`, `push_batch`) — [host-vs-join-architecture.md](./host-vs-join-architecture.md).
 
 ## Mermaid diagram
 
@@ -23,7 +23,6 @@ flowchart TB
     end
 
     subgraph Display["Display pipeline"]
-        GadgetServer["gadgetserver (tock, ticktock)"]
         GadgetClient["gadgetclient"]
     end
 
@@ -38,7 +37,6 @@ flowchart TB
 
     invoke --> VM2
     invoke --> Register
-    invoke --> GadgetServer
     invoke --> GadgetClient
     invoke --> HeavyDev
 
@@ -46,10 +44,9 @@ flowchart TB
     VM2 -->|replynext ackoperator, acklogin...| Register
     VM2 -->|heavy:ttsinfo, heavy:modelprompt| HeavyDev
 
-    GadgetServer -->|gadgetclient:paint/patch| GadgetClient
-    GadgetClient -->|gadgetserver:desync| GadgetServer
+    VM2 -.->|gadgetclient paint/patch<br/>(via forward to main)| GadgetClient
 
-    Clock -->|ticktock| GadgetServer
+    Clock -->|ticktock| VM2
 ```
 
 ```
@@ -71,35 +68,10 @@ flowchart TB
            │                          │              │  vm:login, etc   │ vmcli()      │
            │ticktock                   │ replynext    │                  │ vmlogin()   │
            ▼                          │ ackoperator  │─────────────────►│ etc         │
-    ┌──────────────┐                  │ acklogin     │  register:       │              │
-    │ GADGETSERVER │                  │ ackzsswords  │  loginready       │              │
-    │tock,ticktock │                  │ acklook      │  input,savemem    │              │
-    │              │                  │              │  terminal:*,     │              │
-    │ on ticktock: │                  │              │  editor:*, etc    │              │
-    │ build gadget │                  └──────┬───────┘                  └──────┬───────┘
-    │ state       │                           │                                │
-    │ diff→patch  │                           │ vm:loader                      │ loadmem
-    │ or paint    │                           │ vm:cli,user:input               │ gadgetserver-
-    └──────┬──────┘                           │                                 │ desync
-           │                                  │                                 │
-           │ gadgetclient:paint               │                                 │
-           │ gadgetclient:patch               │                                 ▼
-           ▼                                  │                         ┌──────────────┐
-    ┌──────────────┐                          │                         │   BRIDGE    │
-    │ GADGETCLIENT │                          │                         │  (no topics) │
-    │ (no topics)  │                          │                         │              │
-    │              │                          │                         │ bridge:join  │
-    │ paint→state  │                          │                         │ bridge:fetch │
-    │ patch→state  │                          │                         │ etc          │
-    │ reply desync │──────────────────────────┘                         └──────────────┘
-    └──────────────┘
-           ▲
-           │ register:input (from userinput, loader, etc)
-           │
-    ┌──────┴──────┐
-    │  USERINPUT  │
-    │ (no topics) │  receives userinput:up, userinput:down (from UI)
-    └─────────────┘
+                            ┌─────────┴──────────────┴──────────────────────────────┐
+                            │  GADGETCLIENT (main): paint/patch from vm / peers     │
+                            │  Boardrunner + rxrepl drive gadget + memory streams    │
+                            └────────────────────────────────────────────────────────┘
 ```
 
 ## Boot sequence
@@ -139,7 +111,6 @@ flowchart TB
          │         │
          │         ▼
          │    REGISTER (match iname=register, target→'ackoperator')
-         │         │ gadgetserverdesync(register, player)
          │         │ loadmem(urlcontent) or bridgejoin()
          │         │
          │         ▼
@@ -159,7 +130,6 @@ flowchart TB
 |-----------|------------|----------------------|---------------------------------|
 | vm/stub   | all        | `ready`              | Boot signal, session capture    |
 | clock     | vm         | `ticktock`           | Game loop tick                  |
-| clock     | gadgetserver | `ticktock`       | Render/sync tick                |
 | clock     | all        | `second`             | Keepalive, agent doot            |
 | register  | vm         | `vm:operator`        | Set operator player             |
 | register  | vm         | `vm:login`           | Player login                    |
@@ -175,11 +145,9 @@ flowchart TB
 | vm        | heavy      | `heavy:ttsinfo`      | TTS info request               |
 | vm        | heavy      | `heavy:ttsrequest`   | TTS audio request               |
 | vm        | heavy      | `heavy:modelprompt`  | Serialized classify then optional full agent LLM |
-| register  | gadgetserver | `gadgetserver:desync`| Request full paint (on ackoperator) |
-| register  | gadgetclient | (via api)           | Paint/patch from gadgetserver  |
-| gadgetserver | gadgetclient | `gadgetclient:paint` | Full state (desync)            |
-| gadgetserver | gadgetclient | `gadgetclient:patch` | Incremental patch              |
-| gadgetclient | gadgetserver | `gadgetserver:desync` | Reply on patch error           |
+| sim / peers | gadgetclient | `gadgetclient:paint` / `patch` | UI gadget state (from vm path, boardrunner, or PeerJS) |
+| boardrunner / vm | rxreplserver | `rxreplserver:push_batch` | Merge memory / board / gadget rows on host sim |
+| sim       | rxreplclient | `rxreplclient:stream_row` / `gadget_row` | Full-document replication to clients |
 | agents    | vm         | `vm:doot`            | Agent keepalive                 |
 
 ## Device summary
@@ -189,8 +157,10 @@ flowchart TB
 | clock        | (none)               | —                        | Emits ticktock, second        |
 | vm           | ticktock, second     | vm:*                     | Game logic, login, CLI, loader|
 | register     | ready, second, log, chat, toast | register:* | UI state, storage, bootstrap |
-| gadgetserver | tock, ticktock       | gadgetserver:*            | Gadget state → paint/patch    |
 | gadgetclient | (none)               | gadgetclient:*            | Receives paint/patch from api |
+| rxreplclient | (none)               | rxreplclient:*            | Stream + gadget rows; emits `jsonsync:changed` |
+| rxreplserver | (none)               | push_batch                | Sim-side merge into MEMORY (sim worker) |
+| streamreplserver | (none)           | (memorysync calls)        | Authoritative memory/board streams (sim) |
 | heavy        | (none)               | heavy:*                  | TTS, LLM (lazy-loaded)        |
 | bridge       | (none)               | bridge:*                  | Multiplayer / BBS             |
 | modem        | second               | modem:*                   | CRDT sync, presence           |

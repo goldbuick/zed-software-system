@@ -390,7 +390,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ])
 
       const [codepage] = memoryensuresoftwarecodepage(
-        MEMORY_LABEL.TEMP,
+        MEMORY_LABEL.GAME,
         createsid(),
         CODE_PAGE_TYPE.BOARD,
       )

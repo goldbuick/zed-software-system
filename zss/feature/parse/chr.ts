@@ -8,7 +8,7 @@ import {
   memoryreadcodepagedata,
   memoryreadcodepagename,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook } from 'zss/memory/session'
+import { memoryensureimportbook } from 'zss/memory/books'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 export function parsechr(
@@ -16,10 +16,7 @@ export function parsechr(
   filename: string,
   content: Uint8Array,
 ) {
-  const contentbook = memoryreadfirstcontentbook()
-  if (!ispresent(contentbook)) {
-    return
-  }
+  const contentbook = memoryensureimportbook()
 
   const code = `@charset ${filename.toLowerCase().replace('.chr', '')}`
   const codepage = memorycreatecodepage(code, {})

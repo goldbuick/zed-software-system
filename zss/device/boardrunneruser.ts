@@ -1,4 +1,3 @@
-import type { DEVICE } from 'zss/device'
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
@@ -11,18 +10,7 @@ import {
   handlepilotstop,
 } from './vm/handlers/pilot'
 
-// boardrunner-worker `user` device. counterpart to server-side user.ts.
-//
-// user:input — append [input, mods] to the worker-local MEMORY's
-// flags[player].inputqueue so the next tick (run here on the worker) picks it
-// up via element firmware. `flags.inputqueue` is stripped from the memory
-// stream projection (VOLATILE_FLAG_KEYS in memoryproject.ts) so these writes
-// stay worker-local and don't round-trip through the server.
-//
-// user:pilotstart / user:pilotstop / user:pilotclear — pilot state lives on
-// this worker too; `pilottick` runs inside `runworkertick` and also pushes
-// synthesized inputs onto the local inputqueue.
-export function handleworkeruserinput(_dev: DEVICE, message: MESSAGE): void {
+export function handleworkeruserinput(message: MESSAGE): void {
   if (!memoryhasflags(message.player)) {
     return
   }
@@ -42,16 +30,16 @@ const user = createdevice('user', [], (message) => {
   }
   switch (message.target) {
     case 'input':
-      handleworkeruserinput(user, message)
+      handleworkeruserinput(message)
       break
     case 'pilotstart':
-      handlepilotstart(user, message)
+      handlepilotstart(message)
       break
     case 'pilotstop':
-      handlepilotstop(user, message)
+      handlepilotstop(message)
       break
     case 'pilotclear':
-      handlepilotclear(user, message)
+      handlepilotclear(message)
       break
     default:
       break

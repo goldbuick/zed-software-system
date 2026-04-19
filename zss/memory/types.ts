@@ -137,7 +137,7 @@ export enum CODE_PAGE_TYPE {
 
 export enum MEMORY_LABEL {
   MAIN = 'main',
-  TEMP = 'temp',
+  GAME = 'game',
   TITLE = 'title',
   PLAYER = 'player',
   GADGETSTORE = 'gadgetstore',

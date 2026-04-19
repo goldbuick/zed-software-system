@@ -19,19 +19,19 @@ Rough counts from one-line log: ~15 ci bumps, ~12 sync/merge/dot, ~6 boardrunner
 HOST (§3.1 order):
   1) sim clock -> ticktock -> vm handletick
   2) memorytickmain(halt, loadersOnly=true) — loaders; any-board access stays here
-  3) memorysyncpushdirty -> jsonsyncserver updates / patches toward clients
+  3) memorysyncpushdirty -> streamreplserverupdate -> rxreplclient:stream_row toward clients
   4) memoryscanplayers(tracking); boardrunner election; registerboardrunnerask;
       memorysyncrevokeboardrunner on churn; boardrunnerowned refresh
   5) sim forward -> main hub: ticktock, patches, boardrunner:ownedboards, ...
-  6) main -> boardrunner worker (allowticktock): ticktock, jsonsync, user, ...
+  6) main -> boardrunner worker (allowticktock): ticktock, jsonsync topic, user, rxreplclient, ...
   7) boardrunner: jsonsync:changed -> memoryhydratefromjsonsync; ticktock ->
       pilottick -> memorytickmain(full) -> boardrunnergadgetsynctick ->
-      memoryworkerpushdirty -> jsonsyncclientedit upstream
+      memoryworkerpushdirty -> rxreplpushbatch (rxreplserver:push_batch) upstream
 
 JOIN (§4.1):
-  - stubspace stub vm (operator -> ackoperator); no sim clock/jsonsyncserver
+  - stubspace stub vm (operator -> ackoperator); no sim clock/streamreplserver/rxreplserver
   - ticktock on join main hub (local), forward allowticktock into boardrunnerspace
-  - State from host: vm:* acks, jsonsyncclient:*, gadgetclient paint/patch, etc.
+  - State from host: vm:* acks, rxreplclient:* (stream_row, gadget_row), gadgetclient paint/patch, etc.
   - Peer join bridge uses shouldforwardclienttoserver + shouldnotforwardonpeerclient
 
 === 3. SHRINK / CONSTRAINTS (recorded) ===
@@ -41,7 +41,7 @@ JOIN (§4.1):
   - Fork A (later) = single authority for elected-board / non-loader work only —
     not collapsing loader tick into boardrunner.
   - Host + /join/ must remain correct.
-  - Defer forks B–D (gadget strategy, worker graph, jsonsync surface) until A scoped.
+  - Defer forks B–D (gadget strategy, worker graph, replication surface) until A scoped.
 
 === 4. NOISE / DEV TOOLING ===
   - boardrunnerspace.ts + boardrunner.ts: console.info gated with import.meta.env.DEV
@@ -51,14 +51,14 @@ JOIN (§4.1):
 === 5. ALLOWLIST AUDIT — forward.ts vs host-vs-join §6 + netterminal.ts ===
 
 shouldforwardclienttoserver (forward.ts ~138+):
-  Doc: vm, user, modem, jsonsyncserver, gadgetclient, paths sync, desync, joinack,
+  Doc: vm, user, modem, rxreplserver, gadgetclient, paths sync, desync, joinack,
        needsnapshot, ackboardrunner + literal fast paths.
   Code also: vm:* prefix, modem:* prefix, boardrunner target false (early),
-       jsonsyncserver targets, gadgetclient paint/patch literals.
+       rxreplserver targets, gadgetclient paint/patch literals.
 
 shouldforwardservertoclient (forward.ts ~91+):
   Doc: log, chat, ready, toast, second, ticktock, routed vm/user/heavy/synth/modem/
-       bridge/register/gadgetclient/jsonsyncclient/boardrunner, vm:* ack paths.
+       bridge/register/gadgetclient/rxreplclient/boardrunner, vm:* ack paths.
   Code matches; route.path cases: sync, heavy, joinack, acklook, acklogin,
        ackoperator, ackzsswords, gadgetclient.
 
@@ -70,11 +70,11 @@ shouldnotforwardonpeerserver (peerblockedleaf servertoclient):
 shouldnotforwardonpeerclient: blocks ticktock, second, ready, netterminal:cap
   (+ nested modem:second per test). Matches doc join->host blocked list.
 
-shouldforwardclienttoboardrunner: ticktock, second, ready, user, jsonsyncclient,
+shouldforwardclienttoboardrunner: ticktock, second, ready, user, rxreplclient,
   boardrunner — matches doc.
 
 shouldforwardboardrunnertoclient: jsonsync:changed false; ticktock/second leaves
-  false at worker egress; jsonsyncserver passthrough; else shouldforwardservertoclient.
+  false at worker egress; rxreplserver passthrough; else shouldforwardservertoclient.
 
 netterminal.ts: hostbridge filters shouldforwardservertoclient &&
   !shouldnotforwardonpeerserver; joinbridge filters shouldforwardclienttoserver &&
@@ -83,10 +83,10 @@ netterminal.ts: hostbridge filters shouldforwardservertoclient &&
 === 6. DELIVERABLE — authority / wire (short) ===
 
 Authority (conceptual):
-  - Canonical MEMORY + jsonsyncserver: host sim worker
+  - Canonical MEMORY + streamreplserver + rxreplserver: host sim worker
   - Loader pass + election: host sim vm tick
   - Elected board tick + pilot + gadget push: boardrunner worker
-  - Join: mirror via jsonsyncclient + forwarded gadget; stub vm for bootstrap only
+  - Join: mirror via rxreplclient + forwarded gadget; stub vm for bootstrap only
 
 Wire (PeerJS): see corrected §5 in host-vs-join-architecture.md; tests in
   zss/device/__tests__/forward.peer.test.ts are the peer-gate contract.
