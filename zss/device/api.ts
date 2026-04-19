@@ -9,6 +9,7 @@ import type {
   RXREPL_PULL_RESPONSE,
   RXREPL_PUSH_ACK,
   RXREPL_PUSH_BATCH,
+  RXREPL_PUSH_ROW,
   RXREPL_RESYNC,
   RXREPL_STREAM_DOCUMENT,
 } from 'zss/device/rxrepl/types'
@@ -19,6 +20,7 @@ import type {
   JSONSYNC_PATCH,
   JSONSYNC_SNAPSHOT,
 } from 'zss/feature/jsonsync'
+import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -186,10 +188,6 @@ export function gadgetclientpatch(
   device.emit(player, 'gadgetclient:patch', json)
 }
 
-export function boardrunnergadgetdesync(device: DEVICELIKE, player: string) {
-  device.emit(player, 'boardrunner:desync')
-}
-
 // Server VM -> elected player's boardrunner worker: the one board codepage id
 // this player is the acked runner for, or '' when none. The worker only runs
 // pilot/memorytickmain/gadgetrender + pushes jsonsync edits when that id
@@ -323,12 +321,37 @@ export function rxreplpullresponse(
   device.emit(player, 'rxreplclient:pull_response', payload)
 }
 
+function rxreplpushrowsnormalized(
+  rows: RXREPL_PUSH_ROW[],
+): { streamid: string; document: unknown; baserev?: number }[] {
+  const out: { streamid: string; document: unknown; baserev?: number }[] = []
+  for (let i = 0; i < rows.length; ++i) {
+    const row = rows[i]
+    if ('gadget' in row) {
+      const slim = exportgadgetstate(row.gadget)
+      if (!ispresent(slim)) {
+        continue
+      }
+      out.push({
+        streamid: row.streamid,
+        document: slim,
+        baserev: row.baserev,
+      })
+    } else {
+      out.push(row)
+    }
+  }
+  return out
+}
+
 export function rxreplpushbatch(
   device: DEVICELIKE,
   player: string,
   payload: RXREPL_PUSH_BATCH,
 ) {
-  device.emit(player, 'rxreplserver:push_batch', payload)
+  device.emit(player, 'rxreplserver:push_batch', {
+    rows: rxreplpushrowsnormalized(payload.rows),
+  })
 }
 
 export function rxreplpushack(

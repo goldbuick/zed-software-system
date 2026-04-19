@@ -33,8 +33,7 @@ import {
   vmclearscroll,
 } from './api'
 import {
-  boardrunnergadgetdesyncpaint,
-  boardrunnergadgetpushslimnow,
+  boardrunnergadgetpushnow,
   boardrunnergadgetsynctick,
 } from './boardrunnergadget'
 import { startboardrunnerjsonsyncrxhydrate } from './boardrunnerjsonsyncrx'
@@ -192,9 +191,6 @@ const boardrunner = createdevice(
       case 'ticktock':
         runworkertick(boardrunner)
         break
-      case 'desync':
-        boardrunnergadgetdesyncpaint(boardrunner, message.player)
-        break
       case 'ownedboard': {
         const next = isstring(message.data) ? message.data : ''
         const prev = assignedboardid
@@ -226,7 +222,7 @@ const boardrunner = createdevice(
         shared.scroll = (
           isarray(payload?.scroll) ? payload.scroll : []
         ) as PANEL_ITEM[]
-        boardrunnergadgetpushslimnow(boardrunner, player, false)
+        boardrunnergadgetpushnow(boardrunner, player, false)
         break
       }
       default:

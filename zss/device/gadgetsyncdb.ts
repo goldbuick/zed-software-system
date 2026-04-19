@@ -4,6 +4,9 @@ Worker and main each have their own DB in their JS realm.
 */
 import { type RxCollection, type RxDatabase, createRxDatabase } from 'rxdb'
 import { getRxStorageMemory } from 'rxdb/plugins/storage-memory'
+import { exportgadgetstate } from 'zss/gadget/data/compress'
+import type { GADGET_STATE } from 'zss/gadget/data/types'
+import { ispresent } from 'zss/mapping/types'
 
 const COLL = 'gadget_repl_doc'
 const DB_VERSION = 0
@@ -24,6 +27,25 @@ export type GADGETSYNC_ROW = {
   player: string
   documentjson: string
   rev: number
+}
+
+export type GADGETSYNC_ROW_INPUT =
+  | GADGETSYNC_ROW
+  | {
+      player: string
+      rev: number
+      gadget: GADGET_STATE
+      /** When set (e.g. caller already computed dedupe string), skip re-exporting. */
+      documentjson?: string
+    }
+
+/** Serialized slim for dedupe / storage; `undefined` if export fails. */
+export function gadgetdocumentjson(gadget: GADGET_STATE): string | undefined {
+  const slim = exportgadgetstate(gadget)
+  if (!ispresent(slim)) {
+    return undefined
+  }
+  return JSON.stringify(slim)
 }
 
 function jestsuffix(): string {
@@ -73,13 +95,28 @@ export function gadgetsynccollection(): RxCollection<GADGETSYNC_ROW> | null {
   return gadgetcoll
 }
 
-export function gadgetsyncpersistrow(row: GADGETSYNC_ROW): void {
+export function gadgetsyncpersistrow(row: GADGETSYNC_ROW_INPUT): void {
+  let normalized: GADGETSYNC_ROW
+  if ('gadget' in row) {
+    const documentjson =
+      row.documentjson ?? gadgetdocumentjson(row.gadget)
+    if (!ispresent(documentjson)) {
+      return
+    }
+    normalized = {
+      player: row.player,
+      rev: row.rev,
+      documentjson,
+    }
+  } else {
+    normalized = row
+  }
   enqueuegadgetpersist(async () => {
     await gadgetsyncensure()
     if (!gadgetcoll) {
       return
     }
-    await gadgetcoll.incrementalUpsert(row)
+    await gadgetcoll.incrementalUpsert(normalized)
   })
 }
 

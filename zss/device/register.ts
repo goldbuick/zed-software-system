@@ -338,8 +338,6 @@ export const register = createdevice(
         bridgehalt(register, myplayerid)
         break
       case 'ackoperator':
-        // reset display
-        boardrunnergadgetdesync(register, myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)

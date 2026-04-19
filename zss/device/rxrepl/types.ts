@@ -3,6 +3,8 @@
  * Targets use device routing: rxreplclient:* / rxreplserver:* (see api.ts).
  */
 
+import type { GADGET_STATE } from 'zss/gadget/data/types'
+
 export type RXREPL_CHECKPOINT = {
   /** Opaque server cursor; monotonic per collection. */
   cursor: string
@@ -27,11 +29,18 @@ export type RXREPL_STREAM_DOCUMENT = {
   rev: number
 }
 
-export type RXREPL_PUSH_ROW = {
-  streamid: string
-  document: unknown
-  baserev?: number
-}
+/** Wire rows use `document`; gadget streams may pass `gadget` and let `rxreplpushbatch` export. */
+export type RXREPL_PUSH_ROW =
+  | {
+      streamid: string
+      document: unknown
+      baserev?: number
+    }
+  | {
+      streamid: string
+      gadget: GADGET_STATE
+      baserev?: number
+    }
 
 export type RXREPL_PUSH_BATCH = {
   rows: RXREPL_PUSH_ROW[]

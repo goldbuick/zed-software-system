@@ -15,9 +15,9 @@ function boardrunnershouldforwardinbound(raw: unknown): boolean {
   if (!ismessage(raw)) {
     return false
   }
-  if (import.meta.env.DEV && raw.target.startsWith('jsonsync')) {
-    console.info('jsonsync message', raw)
-  }
+  // if (import.meta.env.DEV && raw.target.startsWith('jsonsync')) {
+  //   console.info('jsonsync message', raw)
+  // }
   return true
 }
 
