@@ -1,11 +1,11 @@
-import { StatsGl } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import { PERF_UI } from 'zss/config'
 
 const LOG_INTERVAL_S = 1
 
-function PerfHudInner() {
+/** PERF_UI-only console logging of renderer.info (no StatsGl / stats-gl UI). */
+function PerfHudConsoleLogger() {
   const gl = useThree((state) => state.gl)
   const acc = useRef(0)
   const lastrender = useRef(0)
@@ -38,13 +38,12 @@ function PerfHudInner() {
     )
   })
 
-  return <StatsGl horizontal={false} trackGPU={true} />
+  return null
 }
 
-/** PERF_UI-gated perf HUD: stats-gl overlay + periodic renderer.info log. */
 export function PerfHud() {
   if (!PERF_UI) {
     return null
   }
-  return <PerfHudInner />
+  return <PerfHudConsoleLogger />
 }

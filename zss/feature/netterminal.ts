@@ -17,6 +17,10 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { netformatdecode, netformatencode } from 'zss/feature/netformat'
+import {
+  recordPeerWireReceived,
+  recordPeerWireSent,
+} from 'zss/perf/peerwire'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash, createsid } from 'zss/mapping/guid'
@@ -119,6 +123,23 @@ function netterminaltopic(player: string) {
   return createinfohash(player)
 }
 
+export function netterminalwirebytelength(netmsg: unknown): number {
+  if (netmsg instanceof Uint8Array) {
+    return netmsg.byteLength
+  }
+  if (typeof ArrayBuffer !== 'undefined' && netmsg instanceof ArrayBuffer) {
+    return netmsg.byteLength
+  }
+  if (
+    typeof Buffer !== 'undefined' &&
+    typeof Buffer.isBuffer === 'function' &&
+    Buffer.isBuffer(netmsg)
+  ) {
+    return netmsg.length
+  }
+  return 0
+}
+
 function netterminalparsedata(netmsg: unknown): MESSAGE {
   if (netmsg instanceof Uint8Array) {
     return netformatdecode(netmsg)
@@ -157,6 +178,7 @@ function handledataconnection(dataconnection: DataConnection) {
       bytes = netformatencode(message)
       netterminalencodecache.set(message, bytes)
     }
+    recordPeerWireSent(bytes.byteLength)
     void dataconnection.send(bytes)
   }
 
@@ -296,6 +318,7 @@ function handledataconnection(dataconnection: DataConnection) {
     if (!ispresent(networkpeer)) {
       return
     }
+    recordPeerWireReceived(netterminalwirebytelength(netmsg))
     let message: MESSAGE
     try {
       message = netterminalparsedata(netmsg)

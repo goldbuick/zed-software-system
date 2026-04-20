@@ -31,6 +31,11 @@ import {
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { recordChatMessage } from 'zss/perf/chatmessagestats'
+import {
+  clearIvsBroadcastClient,
+  setIvsBroadcastClient,
+} from 'zss/perf/ivsbroadcaststats'
 import { NAME } from 'zss/words/types'
 
 import {
@@ -138,11 +143,13 @@ function joinurlread() {
 
 function pushchatline(
   player: string,
+  kind: CHAT_KIND,
   routekey: string,
   mode: 'message' | 'action',
   user: string,
   text: string,
 ) {
+  recordChatMessage(kind)
   const prefix = mode === 'action' ? 'chat:action' : 'chat:message'
   vmloader(
     bridge,
@@ -154,7 +161,10 @@ function pushchatline(
   )
 }
 
-function makechathandlers(player: string): TWITCH_CHAT_HANDLERS {
+function makechathandlers(
+  player: string,
+  kind: CHAT_KIND,
+): TWITCH_CHAT_HANDLERS {
   return {
     onconnect: (routekey) => {
       apilog(bridge, player, 'chat connected')
@@ -179,7 +189,7 @@ function makechathandlers(player: string): TWITCH_CHAT_HANDLERS {
       )
     },
     onmessage: (routekey, mode, user, text) =>
-      pushchatline(player, routekey, mode, user, text),
+      pushchatline(player, kind, routekey, mode, user, text),
     onerror: (msg) => apierror(bridge, player, 'bridge', msg),
   }
 }
@@ -297,7 +307,7 @@ const bridge = createdevice('bridge', [], (message) => {
           createtwitchchatconnector(
             parsed.routekey,
             channel,
-            makechathandlers(message.player),
+            makechathandlers(message.player, CHAT_KIND.TWITCH),
           ),
         )
         break
@@ -336,7 +346,7 @@ const bridge = createdevice('bridge', [], (message) => {
             routekey: parsed.routekey,
             feedurl,
             pollintervalms: pollms,
-            handlers: makechathandlers(message.player),
+            handlers: makechathandlers(message.player, CHAT_KIND.RSS),
           }),
         )
         break
@@ -369,7 +379,7 @@ const bridge = createdevice('bridge', [], (message) => {
             account,
             accesstoken: parsed.mastodontoken,
             pollintervalms: pollms,
-            handlers: makechathandlers(message.player),
+            handlers: makechathandlers(message.player, CHAT_KIND.MASTODON),
           }),
         )
         break
@@ -408,7 +418,7 @@ const bridge = createdevice('bridge', [], (message) => {
             handle,
             feeduri: feeduri !== '' ? feeduri : undefined,
             pollintervalms: pollms,
-            handlers: makechathandlers(message.player),
+            handlers: makechathandlers(message.player, CHAT_KIND.BLUESKY),
           }),
         )
         break
@@ -487,6 +497,7 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient = IVSBroadcastClient.create({
             streamConfig: streamconfig,
           })
+          setIvsBroadcastClient(broadcastclient)
 
           // event handlers
           broadcastclient.on(
@@ -509,6 +520,7 @@ const bridge = createdevice('bridge', [], (message) => {
             function (error: string) {
               apierror(bridge, message.player, 'bridge', error)
               broadcastclient = undefined
+              clearIvsBroadcastClient()
             } as Callback,
           )
 
@@ -524,6 +536,7 @@ const bridge = createdevice('bridge', [], (message) => {
               'unabled to find canvas element',
             )
             broadcastclient = undefined
+            clearIvsBroadcastClient()
             return
           }
 
@@ -539,6 +552,7 @@ const bridge = createdevice('bridge', [], (message) => {
               'unable create media audio node destination',
             )
             broadcastclient = undefined
+            clearIvsBroadcastClient()
             return
           }
 
@@ -570,6 +584,7 @@ const bridge = createdevice('bridge', [], (message) => {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()
         broadcastclient = undefined
+        clearIvsBroadcastClient()
         apilog(bridge, message.player, `stream stopped`)
       } else {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')

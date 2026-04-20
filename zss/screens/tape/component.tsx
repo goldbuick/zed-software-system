@@ -9,6 +9,8 @@ import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useShallow } from 'zustand/react/shallow'
 
+import { PerfMonitorTiles } from 'zss/perf/perfmonitortiles'
+
 import { TapeLayout } from './layout'
 
 const tapeprofileronrender: ProfilerOnRenderCallback = (
@@ -57,6 +59,7 @@ export function TapeComponent() {
 
   const body = (
     <>
+      <PerfMonitorTiles />
       {showterminal ? (
         <group
           position={[

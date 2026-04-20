@@ -98,6 +98,7 @@ export enum TAPE_DISPLAY {
 export const useTape = create<{
   layout: TAPE_DISPLAY
   inspector: boolean
+  perfmonitor: boolean
   quickterminal: boolean
   autocompleteindex: number
   toast: string
@@ -120,6 +121,7 @@ export const useTape = create<{
 }>((set) => ({
   layout: TAPE_DISPLAY.TOP,
   inspector: false,
+  perfmonitor: false,
   quickterminal: false,
   autocompleteindex: 0,
   toast: '',
@@ -140,6 +142,7 @@ export const useTape = create<{
     set({
       layout: TAPE_DISPLAY.TOP,
       inspector: false,
+      perfmonitor: false,
       quickterminal: false,
       toast: '',
       terminal: {

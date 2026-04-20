@@ -837,6 +837,14 @@ export function registerinspector(
   device.emit(player, 'register:inspector', forcevalue)
 }
 
+export function registerperfmonitor(
+  device: DEVICELIKE,
+  player: string,
+  forcevalue: MAYBE<boolean>,
+) {
+  device.emit(player, 'register:perfmonitor', forcevalue)
+}
+
 export function registerfindany(device: DEVICELIKE, player: string, pts: PT[]) {
   device.emit(player, 'register:findany', pts)
 }

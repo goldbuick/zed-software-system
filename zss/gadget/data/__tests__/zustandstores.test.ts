@@ -82,6 +82,7 @@ describe('zustandstores', () => {
       const state = useTape.getState()
       expect(state.layout).toBe(TAPE_DISPLAY.TOP)
       expect(state.inspector).toBe(false)
+      expect(state.perfmonitor).toBe(false)
       expect(state.quickterminal).toBe(false)
       expect(state.toast).toBe('')
       expect(state.terminal.open).toBe(true)
@@ -110,6 +111,7 @@ describe('zustandstores', () => {
       useTape.setState({
         layout: TAPE_DISPLAY.BOTTOM,
         inspector: true,
+        perfmonitor: true,
         quickterminal: true,
         toast: 'Test',
         terminal: {
@@ -132,6 +134,7 @@ describe('zustandstores', () => {
       const state = useTape.getState()
       expect(state.layout).toBe(TAPE_DISPLAY.TOP)
       expect(state.inspector).toBe(false)
+      expect(state.perfmonitor).toBe(false)
       expect(state.quickterminal).toBe(false)
       expect(state.toast).toBe('')
       expect(state.terminal.open).toBe(true)
