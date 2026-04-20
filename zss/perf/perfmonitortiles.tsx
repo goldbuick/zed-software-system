@@ -12,7 +12,6 @@ import {
   readIvsBroadcastStatsSnapshot,
 } from 'zss/perf/ivsbroadcaststats'
 import { readPeerWireTotals } from 'zss/perf/peerwire'
-import { FG, bgcolor } from 'zss/screens/tape/colors'
 import {
   BKG_PTRN,
   BKG_PTRN_ALT,
@@ -23,7 +22,10 @@ import {
   textformatreadedges,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { useShallow } from 'zustand/react/shallow'
+import { COLOR } from 'zss/words/types'
+
+const PERF_PLATE_BG = COLOR.DKPURPLE
+const PERF_FRAME_FG = COLOR.PURPLE
 
 const PANEL_W = 38
 const PANEL_H = 14
@@ -108,10 +110,9 @@ function PerfGlCapture({ snapRef }: { snapRef: MutableRefObject<GlSnap> }) {
 
 type PerfMonitorDrawProps = {
   glRef: MutableRefObject<GlSnap>
-  quickterminal: boolean
 }
 
-function PerfMonitorDraw({ glRef, quickterminal }: PerfMonitorDrawProps) {
+function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
   const context = useWriteText()
   const peerPrev = useRef({ sent: 0, recv: 0, t: 0 })
   const chatPrev = useRef({ total: 0, t: 0 })
@@ -121,23 +122,20 @@ function PerfMonitorDraw({ glRef, quickterminal }: PerfMonitorDrawProps) {
       kickIvsBroadcastStatsPoll()
       const W = PANEL_W
       const H = PANEL_H
-      const BG = bgcolor(quickterminal)
+      const BG = PERF_PLATE_BG
       const edge = textformatreadedges(context)
 
       for (let y = edge.top; y <= edge.bottom; ++y) {
         for (let x = edge.left; x <= edge.right; ++x) {
-          let char = 0
-          if (!quickterminal) {
-            char =
-              (x + y) % 2 === 0
-                ? Math.abs(Math.round(Math.cos(x * y * 0.01)))
-                  ? BKG_PTRN
-                  : BKG_PTRN_ALT
-                : 0
-          }
+          const char =
+            (x + y) % 2 === 0
+              ? Math.abs(Math.round(Math.cos(x * y * 0.01)))
+                ? BKG_PTRN
+                : BKG_PTRN_ALT
+              : 0
           writetile(context, W, H, x, y, {
             char,
-            color: FG,
+            color: PERF_FRAME_FG,
             bg: BG,
           })
         }
@@ -149,29 +147,54 @@ function PerfMonitorDraw({ glRef, quickterminal }: PerfMonitorDrawProps) {
       const BR = 217
       const HZ = 196
       const VT = 179
-      writetile(context, W, H, 0, 0, { char: TL, color: FG, bg: BG })
-      writetile(context, W, H, W - 1, 0, { char: TR, color: FG, bg: BG })
-      writetile(context, W, H, 0, H - 1, { char: BL, color: FG, bg: BG })
-      writetile(context, W, H, W - 1, H - 1, { char: BR, color: FG, bg: BG })
+      writetile(context, W, H, 0, 0, { char: TL, color: PERF_FRAME_FG, bg: BG })
+      writetile(context, W, H, W - 1, 0, {
+        char: TR,
+        color: PERF_FRAME_FG,
+        bg: BG,
+      })
+      writetile(context, W, H, 0, H - 1, {
+        char: BL,
+        color: PERF_FRAME_FG,
+        bg: BG,
+      })
+      writetile(context, W, H, W - 1, H - 1, {
+        char: BR,
+        color: PERF_FRAME_FG,
+        bg: BG,
+      })
       for (let x = 1; x < W - 1; ++x) {
-        writetile(context, W, H, x, 0, { char: HZ, color: FG, bg: BG })
-        writetile(context, W, H, x, H - 1, { char: HZ, color: FG, bg: BG })
+        writetile(context, W, H, x, 0, {
+          char: HZ,
+          color: PERF_FRAME_FG,
+          bg: BG,
+        })
+        writetile(context, W, H, x, H - 1, {
+          char: HZ,
+          color: PERF_FRAME_FG,
+          bg: BG,
+        })
       }
       for (let y = 1; y < H - 1; ++y) {
-        writetile(context, W, H, 0, y, { char: VT, color: FG, bg: BG })
-        writetile(context, W, H, W - 1, y, { char: VT, color: FG, bg: BG })
+        writetile(context, W, H, 0, y, {
+          char: VT,
+          color: PERF_FRAME_FG,
+          bg: BG,
+        })
+        writetile(context, W, H, W - 1, y, {
+          char: VT,
+          color: PERF_FRAME_FG,
+          bg: BG,
+        })
       }
 
-      setupeditoritem(false, false, 0, 0, context, 1, 1, 1)
-      tokenizeandwritetextformat(`$CYAN PERF$WHITE monitor`, context, true)
+      let row = 0
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(`$PURPLE PERF$WHITE monitor`, context, true)
 
       const gl = glRef.current
-      setupeditoritem(false, false, 0, 1, context, 1, 1, 1)
-      tokenizeandwritetextformat(
-        `$gray fps=$white${gl.fps} $gray c=$white${gl.calls} $gray tri=$white${gl.triangles} $gray geo=$white${gl.geometries}`,
-        context,
-        true,
-      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(`$yellow fps=$white${gl.fps}`, context, true)
 
       const now = performance.now()
       const peer = readPeerWireTotals()
@@ -187,15 +210,22 @@ function PerfMonitorDraw({ glRef, quickterminal }: PerfMonitorDrawProps) {
       }
       peerPrev.current = { sent: peer.sent, recv: peer.recv, t: now }
 
-      setupeditoritem(false, false, 0, 2, context, 1, 1, 1)
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `$gray peer $green↑$white${fmtRate(upRate)}$gray ($white${fmtTotal(peer.sent)}$gray) $green↓$white${fmtRate(dnRate)}$gray ($white${fmtTotal(peer.recv)}$gray)`,
+        `$yellow peer up $green↑$white${fmtRate(upRate)}$yellow ($white${fmtTotal(peer.sent)}$yellow)`,
+        context,
+        true,
+      )
+
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow peer down $green↓$white${fmtRate(dnRate)}$yellow ($white${fmtTotal(peer.recv)}$yellow)`,
         context,
         true,
       )
 
       const ivs = readIvsBroadcastStatsSnapshot()
-      setupeditoritem(false, false, 0, 3, context, 1, 1, 1)
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       if (ivs) {
         const canvasDim =
           ivs.canvasW != null && ivs.canvasH != null
@@ -215,18 +245,22 @@ function PerfMonitorDraw({ glRef, quickterminal }: PerfMonitorDrawProps) {
             : ''
         const pkt = ivs.packetsLost != null ? `lost=${ivs.packetsLost}` : ''
         tokenizeandwritetextformat(
-          `$gray ivs $white${ivs.connectionState}${
-            kbps ? `$gray ${kbps}` : ''
-          }${fps ? `$gray ${fps}` : ''}${
-            encDim ? `$gray ${encDim}` : ''
-          }${canvasDim ? `$gray ${canvasDim}` : ''}${
-            ivs.sessionId ? `$gray ${ivs.sessionId.slice(0, 6)}` : ''
-          }${pkt ? `$gray ${pkt}` : ''}`,
+          `$yellow broadcast $white${ivs.connectionState}${
+            kbps ? `$yellow ${kbps}` : ''
+          }${fps ? `$yellow ${fps}` : ''}${
+            encDim ? `$yellow ${encDim}` : ''
+          }${canvasDim ? `$yellow ${canvasDim}` : ''}${
+            ivs.sessionId ? `$yellow ${ivs.sessionId.slice(0, 6)}` : ''
+          }${pkt ? `$yellow ${pkt}` : ''}`,
           context,
           true,
         )
       } else {
-        tokenizeandwritetextformat(`$gray ivs $DKGRAYidle`, context, true)
+        tokenizeandwritetextformat(
+          `$yellow broadcast $blackidle`,
+          context,
+          true,
+        )
       }
 
       const chat = readChatMessageStats()
@@ -240,16 +274,15 @@ function PerfMonitorDraw({ glRef, quickterminal }: PerfMonitorDrawProps) {
       }
       chatPrev.current = { total: chat.total, t: now }
 
-      setupeditoritem(false, false, 0, 4, context, 1, 1, 1)
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `$gray chat $white${msgRate.toFixed(1)}/s$gray tot=$white${chat.total} $gray tw=${chat.byKind[CHAT_KIND.TWITCH]} rss=${chat.byKind[CHAT_KIND.RSS]} mas=${chat.byKind[CHAT_KIND.MASTODON]} bs=${chat.byKind[CHAT_KIND.BLUESKY]}`,
+        `$yellow chat $white${msgRate.toFixed(1)}/s$yellow tot=$white${chat.total}`,
         context,
         true,
       )
-
-      setupeditoritem(false, false, 0, 5, context, 1, 1, 1)
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `$gray ln=$white${gl.lines} $gray pt=$white${gl.points} $gray tex=$white${gl.textures} $gray prg=$white${gl.programs}`,
+        `  $yellowtw=$white${chat.byKind[CHAT_KIND.TWITCH]} $yellowrss=$white${chat.byKind[CHAT_KIND.RSS]} $yellowmas=$white${chat.byKind[CHAT_KIND.MASTODON]} $yellowbsky=$white${chat.byKind[CHAT_KIND.BLUESKY]}`,
         context,
         true,
       )
@@ -258,15 +291,13 @@ function PerfMonitorDraw({ glRef, quickterminal }: PerfMonitorDrawProps) {
     const id = window.setInterval(tick, REFRESH_MS)
     tick()
     return () => window.clearInterval(id)
-  }, [context, quickterminal, glRef])
+  }, [context, glRef])
 
   return null
 }
 
 export function PerfMonitorTiles() {
-  const [perfmonitor, quickterminal] = useTape(
-    useShallow((s) => [s.perfmonitor, s.quickterminal]),
-  )
+  const perfmonitor = useTape((s) => s.perfmonitor)
   const screensize = useScreenSize()
   const glRef = useRef<GlSnap>(defaultGlSnap())
 
@@ -288,14 +319,16 @@ export function PerfMonitorTiles() {
     >
       <TapeLayoutTiles
         label="perfmon"
-        quickterminal={quickterminal}
+        quickterminal={false}
         top={0}
         left={0}
         width={PANEL_W}
         height={PANEL_H}
+        tileColor={PERF_FRAME_FG}
+        tileBg={PERF_PLATE_BG}
       >
         <PerfGlCapture snapRef={glRef} />
-        <PerfMonitorDraw glRef={glRef} quickterminal={quickterminal} />
+        <PerfMonitorDraw glRef={glRef} />
       </TapeLayoutTiles>
     </group>
   )

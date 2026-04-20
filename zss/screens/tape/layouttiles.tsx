@@ -18,6 +18,10 @@ type TapeLayoutTilesProps = {
   width: number
   height: number
   children: ReactNode
+  /** When set, used for tile default fg and writetext pen instead of tape `FG`. */
+  tileColor?: number
+  /** When set, used for tile default bg instead of `bgcolor(quickterminal)`. */
+  tileBg?: number
 }
 
 export function TapeLayoutTiles({
@@ -28,15 +32,18 @@ export function TapeLayoutTiles({
   width,
   height,
   children,
+  tileColor,
+  tileBg,
 }: TapeLayoutTilesProps) {
-  const BG = bgcolor(quickterminal)
-  const store = useTiles(width, height, 0, FG, BG)
+  const pen = tileColor ?? FG
+  const BG = tileBg ?? bgcolor(quickterminal)
+  const store = useTiles(width, height, 0, pen, BG)
   const context: WRITE_TEXT_CONTEXT = useMemo(() => {
     return {
-      ...createwritetextcontext(width, height, FG, BG),
+      ...createwritetextcontext(width, height, pen, BG),
       ...store.getState(),
     }
-  }, [BG, width, height, store])
+  }, [BG, pen, width, height, store])
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>
