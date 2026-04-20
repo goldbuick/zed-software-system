@@ -3,7 +3,7 @@ import {
   shouldforwardboardrunnertoclient,
 } from 'zss/device/forward'
 
-import { setassignedplayerid } from './device/boardrunner'
+import { setassignedplayer } from './device/boardrunner'
 import { isstring } from './mapping/types'
 import './device/rxreplclient'
 import './device/gadgetmemoryprovider'
@@ -23,7 +23,7 @@ const { forward } = createforward(
 onmessage = function handleMessage(event) {
   const msg = event.data
   if (msg?.target === 'registerplayer') {
-    setassignedplayerid(isstring(msg?.data) ? msg?.data : '')
+    setassignedplayer(isstring(msg?.data) ? msg?.data : '')
     return
   }
   forward(msg)

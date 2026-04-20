@@ -11,7 +11,7 @@ import {
 import {
   memoryreadbookbysoftware,
   memoryreadoperator,
-  memorywritesimfreeze,
+  memorywritefreeze,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
@@ -21,7 +21,7 @@ export function handlepage(vm: DEVICE, message: MESSAGE): void {
   if (!ispresent(mainbook) || message.player !== operator) {
     return
   }
-  memorywritesimfreeze(true)
+  memorywritefreeze(true)
   try {
     const { code, ...content } = message.data
     const codepage = memorycreatecodepage(code, content)
@@ -31,6 +31,6 @@ export function handlepage(vm: DEVICE, message: MESSAGE): void {
     memorywritecodepage(mainbook, codepage)
     apitoast(vm, message.player, `wrote $green@${typestr} ${name} to main book`)
   } finally {
-    memorywritesimfreeze(false)
+    memorywritefreeze(false)
   }
 }

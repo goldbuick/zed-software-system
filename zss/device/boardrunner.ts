@@ -4,7 +4,7 @@ import {
   gadgetmarkdirty,
   gadgetstate,
 } from 'zss/gadget/data/api'
-import { GADGET_STATE, INPUT, PANEL_ITEM } from 'zss/gadget/data/types'
+import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadboardbyaddress,
@@ -12,7 +12,7 @@ import {
 } from 'zss/memory/boards'
 import { memoryreadbookflag } from 'zss/memory/bookoperations'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
-import { MEMORY_STREAM_ID, memorymarkmemorydirty } from 'zss/memory/memorydirty'
+import { MEMORY_STREAM_ID } from 'zss/memory/memorydirty'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
@@ -22,9 +22,9 @@ import {
 import { memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
+  memoryreadfreeze,
   memoryreadhalt,
   memoryreadoperator,
-  memoryreadsimfreeze,
 } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { BOARD, BOOK, MEMORY_LABEL } from 'zss/memory/types'
@@ -52,16 +52,16 @@ function shouldboardrunnerhandlestreamchanged(target: string): boolean {
 }
 
 // jsonsync resync + gadget baselines treat both layers as ours.
-let assignedboardid = ''
-let assignedplayerid = ''
-export function setassignedplayerid(player: string) {
-  assignedplayerid = player
+let assignedboard = ''
+let assignedplayer = ''
+export function setassignedplayer(player: string) {
+  assignedplayer = player
 }
 
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
-const ownedboardids = new Set<string>()
+const ownedboards = new Set<string>()
 
-function snapshotownedids(assigned: string): Set<string> {
+function snapshotownedboards(assigned: string): Set<string> {
   const ids = new Set<string>()
   if (!isstring(assigned) || assigned.length === 0) {
     return ids
@@ -79,14 +79,14 @@ function snapshotownedids(assigned: string): Set<string> {
 }
 
 function rebuildownedboardids() {
-  ownedboardids.clear()
-  if (!isstring(assignedboardid) || assignedboardid.length === 0) {
+  ownedboards.clear()
+  if (!isstring(assignedboard) || assignedboard.length === 0) {
     return
   }
-  snapshotownedids(assignedboardid).forEach((id) => ownedboardids.add(id))
+  snapshotownedboards(assignedboard).forEach((id) => ownedboards.add(id))
 }
 
-function playerresolvedboardid(mainbook: MAYBE<BOOK>, player: string): string {
+function playerresolvedboard(mainbook: MAYBE<BOOK>, player: string): string {
   if (!ispresent(mainbook)) {
     return ''
   }
@@ -98,8 +98,8 @@ function playerresolvedboardid(mainbook: MAYBE<BOOK>, player: string): string {
   return ispresent(resolved?.id) && resolved.id.length > 0 ? resolved.id : flag
 }
 
-function ownedplayerids(): string[] {
-  if (ownedboardids.size === 0) {
+function ownedplayers(): string[] {
+  if (ownedboards.size === 0) {
     return []
   }
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -108,16 +108,16 @@ function ownedplayerids(): string[] {
   const seen = new Set<string>()
   for (let i = 0; i < active.length; ++i) {
     const player = active[i]
-    const bid = playerresolvedboardid(mainbook, player)
-    if (bid.length > 0 && ownedboardids.has(bid)) {
+    const bid = playerresolvedboard(mainbook, player)
+    if (bid.length > 0 && ownedboards.has(bid)) {
       out.push(player)
       seen.add(player)
     }
   }
   const op = memoryreadoperator()
   if (isstring(op) && op.length > 0 && !seen.has(op)) {
-    const opbid = playerresolvedboardid(mainbook, op)
-    if (opbid.length > 0 && ownedboardids.has(opbid)) {
+    const opbid = playerresolvedboard(mainbook, op)
+    if (opbid.length > 0 && ownedboards.has(opbid)) {
       out.push(op)
     }
   }
@@ -130,6 +130,7 @@ function rendergadgetlayers(
   board: BOARD,
   layers: MEMORY_GADGET_LAYERS,
 ) {
+  const boardname = board.name?.trim() ?? ''
   const control = memoryconverttogadgetcontrollayer(player, 1000, board)
   gadget.id = layers.id
   gadget.board = layers.board
@@ -145,15 +146,33 @@ function rendergadgetlayers(
   gadget.under = layers.under
   gadget.layers = [...layers.layers, ...control]
   gadget.tickers = layers.tickers
-  gadget.boardname = board.name?.trim() ?? ''
+  gadget.boardname = boardname
+}
+
+function rendergadgetstate(players: string[]) {
+  // render the board visuals
+  const playerboard = memoryreadplayerboard(assignedplayer)
+  if (ispresent(playerboard)) {
+    // read A/V state
+    const synthstate = memoryreadsynth(playerboard.id ?? '')
+    const gadgetlayers = memoryreadgadgetlayers(assignedplayer, playerboard)
+    // build layers for each player
+    for (let i = 0; i < players.length; ++i) {
+      const player = players[i]
+      const gadget = gadgetstate(player)
+      gadget.synthstate = synthstate
+      rendergadgetlayers(gadget, player, playerboard, gadgetlayers)
+      gadgetmarkdirty(player)
+    }
+  }
 }
 
 function runworkertick(dev: ReturnType<typeof createdevice>): void {
   rebuildownedboardids()
-  if (memoryreadsimfreeze()) {
+  if (memoryreadfreeze()) {
     return
   }
-  const players = ownedplayerids()
+  const players = ownedplayers()
   if (players.length === 0) {
     return
   }
@@ -163,25 +182,9 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
   perfmeasure('boardrunner:memorytickmain', () => {
     memorytickmain(memoryreadhalt())
   })
-
-  perfmeasure('boardrunner:rendergadgetlayers', () => {
-    // render the board visuals
-    const playerboard = memoryreadplayerboard(assignedplayerid)
-    if (ispresent(playerboard)) {
-      // read A/V state
-      const synthstate = memoryreadsynth(playerboard.id ?? '')
-      const gadgetlayers = memoryreadgadgetlayers(assignedplayerid, playerboard)
-      // build layers for each player
-      for (let i = 0; i < players.length; ++i) {
-        const player = players[i]
-        const gadget = gadgetstate(player)
-        gadget.synthstate = synthstate
-        rendergadgetlayers(gadget, player, playerboard, gadgetlayers)
-        gadgetmarkdirty(player)
-      }
-    }
+  perfmeasure('boardrunner:rendergadgetstate', () => {
+    rendergadgetstate(players)
   })
-
   perfmeasure('boardrunner:memoryworkerpushdirty', () => {
     memoryworkerpushdirty()
   })
@@ -204,7 +207,7 @@ const boardrunner = createdevice(
           break
         }
         // everything else is filtered by assignedplayerid
-        if (message.player !== assignedplayerid) {
+        if (message.player !== assignedplayer) {
           if (import.meta.env.DEV) {
             console.info('filtered message', message.target, message)
           }
@@ -227,14 +230,15 @@ const boardrunner = createdevice(
         break
       case 'ownedboard': {
         const next = isstring(message.data) ? message.data : ''
-        const prev = assignedboardid
+        const prev = assignedboard
         if (prev === next) {
           break
         }
-        assignedboardid = next
+        assignedboard = next
         rebuildownedboardids()
         if (import.meta.env.DEV) {
-          console.info('updated ownedboard', assignedplayerid, assignedboardid)
+          console.info('>>', assignedplayer)
+          console.info('------------------', assignedboard)
         }
         break
       }
@@ -243,22 +247,6 @@ const boardrunner = createdevice(
         vmclearscroll(boardrunner, message.player)
         break
       }
-      // case 'gadgetscrollpush': {
-      //   // const payload = message.data as BOARDRUNNER_GADGETSCROLLPUSH | undefined
-      //   // const player = isstring(payload?.player) ? payload.player : ''
-      //   // if (!player) {
-      //   //   break
-      //   // }
-      //   // const shared = gadgetstate(player)
-      //   // shared.scrollname = isstring(payload?.scrollname)
-      //   //   ? payload.scrollname
-      //   //   : ''
-      //   // shared.scroll = (
-      //   //   isarray(payload?.scroll) ? payload.scroll : []
-      //   // ) as PANEL_ITEM[]
-      //   // boardrunnergadgetpushnow(player, false)
-      //   break
-      // }
       default:
         break
     }

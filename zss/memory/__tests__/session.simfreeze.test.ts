@@ -1,19 +1,19 @@
-import { memoryreadsimfreeze, memorywritesimfreeze } from 'zss/memory/session'
+import { memoryreadfreeze, memorywritefreeze } from 'zss/memory/session'
 
-describe('session simfreeze', () => {
+describe('session freeze', () => {
   afterEach(() => {
-    memorywritesimfreeze(false)
+    memorywritefreeze(false)
   })
 
   it('defaults to not frozen', () => {
-    memorywritesimfreeze(false)
-    expect(memoryreadsimfreeze()).toBe(false)
+    memorywritefreeze(false)
+    expect(memoryreadfreeze()).toBe(false)
   })
 
-  it('memorywritesimfreeze toggles memoryreadsimfreeze', () => {
-    memorywritesimfreeze(true)
-    expect(memoryreadsimfreeze()).toBe(true)
-    memorywritesimfreeze(false)
-    expect(memoryreadsimfreeze()).toBe(false)
+  it('memorywritefreeze toggles memoryreadfreeze', () => {
+    memorywritefreeze(true)
+    expect(memoryreadfreeze()).toBe(true)
+    memorywritefreeze(false)
+    expect(memoryreadfreeze()).toBe(false)
   })
 })

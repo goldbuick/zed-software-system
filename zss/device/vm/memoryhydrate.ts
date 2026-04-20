@@ -38,9 +38,9 @@ import {
   memoryreadbooklist,
   memoryreadroot,
   memorywritebook,
+  memorywritefreeze,
   memorywritehalt,
   memorywriteoperator,
-  memorywritesimfreeze,
   memorywritesoftwarebook,
 } from 'zss/memory/session'
 import {
@@ -76,7 +76,7 @@ export function memoryhydratefromjsonsync(
 }
 
 function hydratememory(document: Record<string, unknown>): void {
-  // scalar top-level keys (operator, halt, simfreeze). session is read-only
+  // scalar top-level keys (operator, halt, freeze). session is read-only
   // identity from the server and is not surfaced via a writer; software is
   // applied below after we ensure the referenced books exist.
   if (Object.prototype.hasOwnProperty.call(document, 'operator')) {
@@ -88,8 +88,8 @@ function hydratememory(document: Record<string, unknown>): void {
   if (Object.prototype.hasOwnProperty.call(document, 'halt')) {
     memorywritehalt(Boolean(document.halt))
   }
-  if (Object.prototype.hasOwnProperty.call(document, 'simfreeze')) {
-    memorywritesimfreeze(Boolean(document.simfreeze))
+  if (Object.prototype.hasOwnProperty.call(document, 'freeze')) {
+    memorywritefreeze(Boolean(document.freeze))
   }
 
   hydratebooks(document)

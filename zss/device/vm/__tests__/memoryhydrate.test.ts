@@ -41,8 +41,8 @@ describe('memoryhydratefromjsonsync', () => {
     memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
       operator: 'op-player',
       halt: false,
-      simfreeze: false,
-      software: { main: 'main-id', temp: '' },
+      freeze: false,
+      software: { main: 'main-id', game: '' },
       books: {
         'main-id': {
           id: 'main-id',

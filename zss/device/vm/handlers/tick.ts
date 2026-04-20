@@ -23,15 +23,15 @@ import {
 import { memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
+  memoryreadfreeze,
   memoryreadhalt,
-  memoryreadsimfreeze,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 export function handletick(vm: DEVICE, _message: MESSAGE): void {
   void _message
-  if (memoryreadsimfreeze()) {
+  if (memoryreadfreeze()) {
     return
   }
 
@@ -52,8 +52,8 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
   })
 
   // drain any per-stream dirty bits set during the tick (player flags, board
-  // mutations, simfreeze flips, etc.) and push refreshed projections to
-  // jsonsync. simfreeze guard above already short-circuits the whole tick;
+  // mutations, freeze flips, etc.) and push refreshed projections to
+  // jsonsync. freeze guard above already short-circuits the whole tick;
   // unregistered streams are silently skipped inside `memorysyncpushdirty`.
   perfmeasure('vm:memorysyncpushdirty', () => {
     memorysyncpushdirty()

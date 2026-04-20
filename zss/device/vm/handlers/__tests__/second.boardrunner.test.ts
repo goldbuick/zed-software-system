@@ -35,7 +35,7 @@ describe('handlesecond board runner ack retries', () => {
   beforeEach(() => {
     clearboardrunnerrecords()
     setflushtick(0)
-    session.memorywritesimfreeze(false)
+    session.memorywritefreeze(false)
     jest.spyOn(console, 'info').mockImplementation(() => {})
     jest
       .spyOn(playermanagement, 'memoryscanplayers')
@@ -55,7 +55,7 @@ describe('handlesecond board runner ack retries', () => {
   afterEach(() => {
     clearboardrunnerrecords()
     setflushtick(0)
-    session.memorywritesimfreeze(false)
+    session.memorywritefreeze(false)
     jest.restoreAllMocks()
   })
 
@@ -116,7 +116,7 @@ describe('handlesecond board runner ack retries', () => {
   it('skips board runner retries when sim is frozen', () => {
     boardrunners['board-x'] = 'player-a'
     failedboardrunners['board-x'] = { 'player-a': 0 }
-    session.memorywritesimfreeze(true)
+    session.memorywritefreeze(true)
 
     handlesecond(vm, message)
 

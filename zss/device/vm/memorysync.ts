@@ -232,7 +232,7 @@ function codepagefromboardstreamid(streamid: string): CODE_PAGE | undefined {
 // its current shape and call `streamreplserverupdate` (which fans out
 // stream_row to admitted peers). Streams that are dirty but unregistered are silently
 // dropped (no admitted clients to notify yet). Caller is responsible for
-// gating on `memoryreadsimfreeze()`.
+// gating on `memoryreadfreeze()`.
 //
 // Phase 2 of the boardrunner authoritative-tick plan: this also includes
 // owned-board streams. Server-side loaders can still mutate any book or
@@ -289,7 +289,7 @@ const MEMORY_SCALAR_TOPKEYS: readonly string[] = [
   'operator',
   'software',
   'halt',
-  'simfreeze',
+  'freeze',
 ]
 
 function reverseprojectmemory(document: Record<string, unknown>): void {

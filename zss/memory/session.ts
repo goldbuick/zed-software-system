@@ -12,7 +12,7 @@ import { BOOK, MEMORY_LABEL } from './types'
 const MEMORY = {
   halt: false,
   /** True while `vm:books` is async-loading; ticks should not advance sim state. */
-  simfreeze: false,
+  freeze: false,
   session: createsid(),
   operator: '',
   software: { main: '', game: '' },
@@ -69,16 +69,16 @@ export function memoryreadhalt() {
   return MEMORY.halt
 }
 
-export function memorywritesimfreeze(frozen: boolean) {
-  if (MEMORY.simfreeze === frozen) {
+export function memorywritefreeze(frozen: boolean) {
+  if (MEMORY.freeze === frozen) {
     return
   }
-  MEMORY.simfreeze = frozen
+  MEMORY.freeze = frozen
   memorymarkmemorydirty()
 }
 
-export function memoryreadsimfreeze() {
-  return MEMORY.simfreeze
+export function memoryreadfreeze() {
+  return MEMORY.freeze
 }
 
 export function memoryreadbooklist(): BOOK[] {
@@ -166,7 +166,7 @@ export type SoftwareSlot = keyof typeof MEMORY.software
 // further writer apis. do NOT mutate the returned value directly.
 export type MEMORY_ROOT = {
   halt: boolean
-  simfreeze: boolean
+  freeze: boolean
   session: string
   operator: string
   software: { main: string; game: string }

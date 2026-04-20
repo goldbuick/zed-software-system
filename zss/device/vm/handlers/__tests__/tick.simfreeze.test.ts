@@ -8,24 +8,24 @@ jest.mock('zss/memory/runtime', () => ({
   memorytickmain: jest.fn(),
 }))
 
-describe('handletick sim freeze', () => {
+describe('handletick freeze', () => {
   const vm = {} as DEVICE
   const msg = {} as MESSAGE
 
   afterEach(() => {
-    session.memorywritesimfreeze(false)
+    session.memorywritefreeze(false)
     jest.mocked(memorytickmain).mockClear()
   })
 
-  it('skips memorytickmain when simfreeze is on', () => {
-    session.memorywritesimfreeze(true)
+  it('skips memorytickmain when freeze is on', () => {
+    session.memorywritefreeze(true)
     handletick(vm, msg)
 
     expect(memorytickmain).not.toHaveBeenCalled()
   })
 
-  it('runs memorytickmain (loader-only) when simfreeze is off', () => {
-    session.memorywritesimfreeze(false)
+  it('runs memorytickmain (loader-only) when freeze is off', () => {
+    session.memorywritefreeze(false)
     jest.spyOn(session, 'memoryreadhalt').mockReturnValue(false)
 
     handletick(vm, msg)

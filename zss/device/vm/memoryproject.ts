@@ -25,7 +25,7 @@ export function boardstreamid(codepage: CODE_PAGE): string {
 // - `halt` is the dev-mode flag (#dev): when on, runners still tick player
 //   objects but skip everything else (`memorytickboard`'s playeronly path).
 //   runners must observe it locally to gate their own ticks the same way.
-// - `simfreeze` IS included: clients need to know when the sim is paused for
+// - `freeze` IS included: clients need to know when the sim is paused for
 //   async loads so they can pause their local tick.
 // - `loaders` is server-local async state; `topic` is routing metadata; both
 //   are excluded.
@@ -35,7 +35,7 @@ export const MEMORY_SYNC_TOPKEYS = [
   'software',
   'books',
   'halt',
-  'simfreeze',
+  'freeze',
 ] as const
 
 // BOARD fields every client needs to render / step the board. runtime caches

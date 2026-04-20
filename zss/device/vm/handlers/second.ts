@@ -22,14 +22,14 @@ import {
 import { doasync } from 'zss/mapping/func'
 import { ispresent } from 'zss/mapping/types'
 import { memoryscanplayers } from 'zss/memory/playermanagement'
-import { memoryreadsimfreeze } from 'zss/memory/session'
+import { memoryreadfreeze } from 'zss/memory/session'
 import { perfmeasure } from 'zss/perf/ui'
 
 export function handlesecond(vm: DEVICE, message: MESSAGE): void {
   perfmeasure('vm:second', () => {
     memoryscanplayers(tracking)
 
-    if (!memoryreadsimfreeze()) {
+    if (!memoryreadfreeze()) {
       const players = Object.keys(tracking)
       for (let i = 0; i < players.length; ++i) {
         ++tracking[players[i]]
