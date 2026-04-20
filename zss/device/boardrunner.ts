@@ -48,10 +48,7 @@ function shouldboardrunnerhandlestreamchanged(target: string): boolean {
   }
   const stream = target.slice(0, -':changed'.length)
   return (
-    ismemorystream(stream) ||
-    isboardstream(stream) ||
-    isgadgetstream(stream) ||
-    isflagsstream(stream)
+    ismemorystream(stream) || isboardstream(stream) || isflagsstream(stream)
   )
 }
 
@@ -172,7 +169,7 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['ticktock', 'memory', 'flags', 'board', 'gadget'],
+  ['ticktock', 'memory', 'flags', 'board'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
@@ -201,11 +198,7 @@ const boardrunner = createdevice(
     // handle messages
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
-      memoryhydratefromjsonsync(
-        payload.streamid,
-        payload.document,
-        import.meta.env.DEV,
-      )
+      memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
       return
     }

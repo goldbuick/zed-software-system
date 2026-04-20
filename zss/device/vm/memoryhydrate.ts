@@ -30,14 +30,14 @@ import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
 import { memorydebugassertactivelistboardinvariantifenabled } from 'zss/memory/debugactivelistinvariant'
 import {
-  boardstream,
-  flagsstream,
-  gadgetstream,
+  boardidfromboardstream,
   isboardstream,
   isflagsstream,
   isgadgetstream,
   ismemorystream,
   memorywithsilentwrites,
+  playeridfromflagsstream,
+  playeridfromgadgetstream,
 } from 'zss/memory/memorydirty'
 import {
   memoryclearbook,
@@ -79,17 +79,17 @@ export function memoryhydratefromjsonsync(
       return
     }
     if (isboardstream(stream)) {
-      const player = boardstream(stream)
-      if (player) {
+      const boardid = boardidfromboardstream(stream)
+      if (boardid) {
         if (log) {
-          console.info('hydrating board', player, document)
+          console.info('hydrating board', boardid, document)
         }
-        hydrateboard(player, document as Record<string, unknown>)
+        hydrateboard(boardid, document as Record<string, unknown>)
       }
       return
     }
     if (isgadgetstream(stream)) {
-      const player = gadgetstream(stream)
+      const player = playeridfromgadgetstream(stream)
       if (player) {
         if (log) {
           console.info('hydrating gadget', player, document)
@@ -99,7 +99,7 @@ export function memoryhydratefromjsonsync(
       return
     }
     if (isflagsstream(stream)) {
-      const player = flagsstream(stream)
+      const player = playeridfromflagsstream(stream)
       if (player) {
         if (log) {
           console.info('hydrating flags', player, document)

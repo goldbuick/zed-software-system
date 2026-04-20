@@ -8,13 +8,13 @@ import { createdevice } from 'zss/device'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
-  boardstream,
-  flagsstream,
-  gadgetstream,
+  boardidfromboardstream,
   isboardstream,
   isflagsstream,
   isgadgetstream,
   ismemorystream,
+  playeridfromflagsstream,
+  playeridfromgadgetstream,
 } from 'zss/memory/memorydirty'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
@@ -63,7 +63,7 @@ function projectfordoc(stream: string): unknown | undefined {
     return projectmemory()
   }
   if (isboardstream(stream)) {
-    const id = boardstream(stream)
+    const id = boardidfromboardstream(stream)
     if (!id) {
       return undefined
     }
@@ -71,14 +71,14 @@ function projectfordoc(stream: string): unknown | undefined {
     return ispresent(cp) ? projectboardcodepage(cp) : undefined
   }
   if (isgadgetstream(stream)) {
-    const id = gadgetstream(stream)
+    const id = playeridfromgadgetstream(stream)
     if (!id) {
       return undefined
     }
     return projectgadget(id)
   }
   if (isflagsstream(stream)) {
-    const id = flagsstream(stream)
+    const id = playeridfromflagsstream(stream)
     if (!id) {
       return undefined
     }

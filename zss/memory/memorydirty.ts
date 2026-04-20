@@ -24,6 +24,9 @@ export function memorystream(): string {
   return `memory`
 }
 
+/** Canonical id for the shared memory jsonsync stream (`memorystream()`). */
+export const MEMORY_STREAM_ID = 'memory'
+
 export function ismemorystream(stream: string): boolean {
   return stream === `memory`
 }
@@ -52,6 +55,30 @@ export function flagsstream(player: string): string {
 
 export function isflagsstream(stream: string): boolean {
   return stream.startsWith('flags:')
+}
+
+/** Recover `codepage.id` from a `board:<codepage.id>` stream id (not `boardstream()`, which adds the prefix). */
+export function boardidfromboardstream(stream: string): string {
+  if (!isboardstream(stream)) {
+    return ''
+  }
+  return stream.slice('board:'.length)
+}
+
+/** Recover player id from a `gadget:<player>` stream id. */
+export function playeridfromgadgetstream(stream: string): string {
+  if (!isgadgetstream(stream)) {
+    return ''
+  }
+  return stream.slice('gadget:'.length)
+}
+
+/** Recover player id from a `flags:<player>` stream id. */
+export function playeridfromflagsstream(stream: string): string {
+  if (!isflagsstream(stream)) {
+    return ''
+  }
+  return stream.slice('flags:'.length)
 }
 
 export function boardstreamfromboarddata(board: MAYBE<BOARD>): string {

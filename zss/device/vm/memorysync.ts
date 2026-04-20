@@ -37,7 +37,7 @@ import {
 } from 'zss/memory/bookoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
-  boardstream,
+  boardidfromboardstream,
   flagsstream,
   gadgetstream,
   isboardstream,
@@ -48,6 +48,8 @@ import {
   memorymarkdirty,
   memorystream,
   memorywithsilentwrites,
+  playeridfromflagsstream,
+  playeridfromgadgetstream,
 } from 'zss/memory/memorydirty'
 import {
   memoryclearbook,
@@ -367,7 +369,7 @@ function codepagefromboardstreamid(stream: string): CODE_PAGE | undefined {
   if (!isboardstream(stream)) {
     return undefined
   }
-  const id = boardstream(stream)
+  const id = boardidfromboardstream(stream)
   if (!id) {
     return undefined
   }
@@ -409,7 +411,7 @@ export function memorysyncpushdirty(): void {
       }
     }
     if (isgadgetstream(stream)) {
-      const pid = gadgetstream(stream)
+      const pid = playeridfromgadgetstream(stream)
       if (pid) {
         const projected = projectgadget(pid)
         streamreplserverupdate(stream, projected)
@@ -417,7 +419,7 @@ export function memorysyncpushdirty(): void {
       continue
     }
     if (isflagsstream(stream)) {
-      const pid = flagsstream(stream)
+      const pid = playeridfromflagsstream(stream)
       if (pid) {
         const projected = projectplayerflags(pid)
         streamreplserverupdate(stream, projected)
@@ -487,14 +489,14 @@ export function memorysyncreverseproject(
       return
     }
     if (isgadgetstream(stream)) {
-      const player = gadgetstream(stream)
+      const player = playeridfromgadgetstream(stream)
       if (player) {
         memorysyncreverseprojectgadget(player, document)
       }
       return
     }
     if (isflagsstream(stream)) {
-      const player = flagsstream(stream)
+      const player = playeridfromflagsstream(stream)
       if (player) {
         memorysyncreverseprojectplayerflags(player, document)
       }

@@ -16,8 +16,6 @@ export const gadgetclientdevice = createdevice(
     if (!gadgetclientdevice.session(message) || !ispresent(message.data)) {
       return
     }
-    console.info(message)
-    return
     const payload = message.data as JSONSYNC_CHANGED
     if (
       !payload.streamid?.startsWith('gadget:') ||

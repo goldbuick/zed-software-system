@@ -26,15 +26,15 @@ import {
 } from 'zss/device/rxreplclient'
 import { ispresent } from 'zss/mapping/types'
 import {
-  boardstream,
-  flagsstream,
-  gadgetstream,
+  boardidfromboardstream,
   isboardstream,
   isflagsstream,
   isgadgetstream,
   ismemorystream,
   memoryconsumealldirty,
   memorymarkdirty,
+  playeridfromflagsstream,
+  playeridfromgadgetstream,
 } from 'zss/memory/memorydirty'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
@@ -64,7 +64,7 @@ export function memoryworkerpushdirty(): void {
       continue
     }
     if (isboardstream(stream)) {
-      const boardid = boardstream(stream)
+      const boardid = boardidfromboardstream(stream)
       if (!boardid) {
         continue
       }
@@ -89,7 +89,7 @@ export function memoryworkerpushdirty(): void {
       continue
     }
     if (isgadgetstream(stream)) {
-      const player = gadgetstream(stream)
+      const player = playeridfromgadgetstream(stream)
       if (!player) {
         continue
       }
@@ -100,7 +100,7 @@ export function memoryworkerpushdirty(): void {
       continue
     }
     if (isflagsstream(stream)) {
-      const player = flagsstream(stream)
+      const player = playeridfromflagsstream(stream)
       if (!player) {
         continue
       }
