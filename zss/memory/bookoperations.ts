@@ -19,7 +19,7 @@ import {
   memoryreadcodepagestats,
   memoryreadcodepagetype,
 } from './codepageoperations'
-import { flagsstreamid, memorymarkdirty, memorymarkmemorydirty } from './memorydirty'
+import { flagsstream, memorymarkdirty, memorymarkmemorydirty } from './memorydirty'
 import {
   BOARD_ELEMENT,
   BOOK,
@@ -79,7 +79,7 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   if (ispresent(book.flags[id])) {
     delete book.flags[id]
     if (ispid(id)) {
-      memorymarkdirty(flagsstreamid(id))
+      memorymarkdirty(flagsstream(id))
     } else {
       memorymarkmemorydirty()
     }
@@ -357,7 +357,7 @@ export function memorywritebookflag(
     if (flags[name] !== value) {
       flags[name] = value
       if (ispid(id)) {
-        memorymarkdirty(flagsstreamid(id))
+        memorymarkdirty(flagsstream(id))
       } else {
         memorymarkmemorydirty()
       }

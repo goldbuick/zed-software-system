@@ -10,9 +10,9 @@ device.
 */
 import {
   MEMORY_STREAM_ID,
-  boardstreamid,
+  boardstream,
   memorydirtyclear,
-  memorydirtyhas,
+  memoryhasdirty,
 } from 'zss/memory/memorydirty'
 import {
   memoryreadbookbyaddress,
@@ -64,7 +64,7 @@ describe('memoryhydratefromjsonsync', () => {
     expect(main?.flags['op-player']).toEqual({ board: 'boardA' })
 
     // hydration runs inside memorywithsilentwrites; nothing should be flagged.
-    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+    expect(memoryhasdirty(MEMORY_STREAM_ID)).toBe(false)
   })
 
   it('hydrates a board snapshot into the main book and rebuilds runtime caches', () => {
@@ -82,7 +82,7 @@ describe('memoryhydratefromjsonsync', () => {
       },
     })
 
-    const streamid = boardstreamid('boardA')
+    const streamid = boardstream('boardA')
     memoryhydratefromjsonsync(streamid, {
       id: 'boardA',
       code: '@boardA\n',
@@ -109,7 +109,7 @@ describe('memoryhydratefromjsonsync', () => {
     // memoryinitboard rebuilt the lookup cache; it should now be defined.
     expect(codepage?.board?.lookup).toBeDefined()
     expect(codepage?.board?.named).toBeDefined()
-    expect(memorydirtyhas(streamid)).toBe(false)
+    expect(memoryhasdirty(streamid)).toBe(false)
   })
 
   it('updates an existing book without dropping local BOARD pages', () => {
@@ -126,7 +126,7 @@ describe('memoryhydratefromjsonsync', () => {
         },
       },
     })
-    memoryhydratefromjsonsync(boardstreamid('boardA'), {
+    memoryhydratefromjsonsync(boardstream('boardA'), {
       id: 'boardA',
       code: '',
       board: { id: 'boardA', name: 'boardA', terrain: [], objects: {} },
@@ -193,12 +193,12 @@ describe('memoryhydratefromjsonsync', () => {
 
     expect(memoryreadbookbyaddress('stale-id')).toBeUndefined()
     expect(memoryreadbookbyaddress('main-id')).toBeDefined()
-    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+    expect(memoryhasdirty(MEMORY_STREAM_ID)).toBe(false)
   })
 
   it('drops board snapshots arriving before main book exists', () => {
     expect(() =>
-      memoryhydratefromjsonsync(boardstreamid('orphan'), {
+      memoryhydratefromjsonsync(boardstream('orphan'), {
         id: 'orphan',
         code: '',
         board: { id: 'orphan', name: 'orphan', terrain: [], objects: {} },

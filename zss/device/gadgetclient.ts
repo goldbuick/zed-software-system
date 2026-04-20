@@ -16,8 +16,13 @@ export const gadgetclientdevice = createdevice(
     if (!gadgetclientdevice.session(message) || !ispresent(message.data)) {
       return
     }
+    console.info(message)
+    return
     const payload = message.data as JSONSYNC_CHANGED
-    if (!payload.streamid?.startsWith('gadget:') || !ispresent(payload.document)) {
+    if (
+      !payload.streamid?.startsWith('gadget:') ||
+      !ispresent(payload.document)
+    ) {
       return
     }
     const player = registerreadplayer()
@@ -56,13 +61,8 @@ export const gadgetclientdevice = createdevice(
       }
       const hasincomingscroll =
         ispresent(incoming.scroll) && incoming.scroll.length > 0
-      const hasprevscroll =
-        ispresent(prev.scroll) && prev.scroll.length > 0
-      if (
-        hasprevscroll &&
-        !hasincomingscroll &&
-        state.gadgetscrolllocal
-      ) {
+      const hasprevscroll = ispresent(prev.scroll) && prev.scroll.length > 0
+      if (hasprevscroll && !hasincomingscroll && state.gadgetscrolllocal) {
         return {
           gadget: {
             ...incoming,

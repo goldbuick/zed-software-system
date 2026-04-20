@@ -11,12 +11,12 @@ loop the silent-writes guard is designed to prevent).
 */
 import {
   MEMORY_STREAM_ID,
-  boardstreamid,
-  flagsstreamid,
-  gadgetstreamid,
+  boardstream,
+  flagsstream,
+  gadgetstream,
   memoryconsumealldirty,
   memorydirtyclear,
-  memorydirtyhas,
+  memoryhasdirty,
 } from 'zss/memory/memorydirty'
 import {
   memoryreadbookbyaddress,
@@ -116,7 +116,7 @@ describe('memorysyncreverseproject', () => {
     expect(book?.flags.player2).toEqual({ board: 'boardA' })
     expect(book?.activelist).toEqual(['player1', 'player2'])
     // silent-writes guard must keep MEMORY_STREAM_ID out of the dirty set.
-    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+    expect(memoryhasdirty(MEMORY_STREAM_ID)).toBe(false)
   })
 
   it('reverse-projects gadget stream into flags.gadgetstore', () => {
@@ -135,7 +135,7 @@ describe('memorysyncreverseproject', () => {
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     memorydirtyclear()
 
-    memorysyncreverseproject(gadgetstreamid(pidHost), {
+    memorysyncreverseproject(gadgetstream(pidHost), {
       id: 'g2',
       board: 'boardA',
       boardname: 'X',
@@ -161,7 +161,7 @@ describe('memorysyncreverseproject', () => {
     expect((gadgetstore[pidHost] as Record<string, unknown>).boardname).toBe(
       'X',
     )
-    expect(memorydirtyhas(gadgetstreamid(pidHost))).toBe(false)
+    expect(memoryhasdirty(gadgetstream(pidHost))).toBe(false)
   })
 
   it('reverse-projects flags stream into mainbook.flags[pid]', () => {
@@ -177,14 +177,14 @@ describe('memorysyncreverseproject', () => {
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     memorydirtyclear()
 
-    memorysyncreverseproject(flagsstreamid(pidHost), {
+    memorysyncreverseproject(flagsstream(pidHost), {
       board: 'boardA',
       hp: 99,
     })
 
     const book = memoryreadbookbyaddress('main-id')
     expect(book?.flags[pidHost]).toEqual({ board: 'boardA', hp: 99 })
-    expect(memorydirtyhas(flagsstreamid(pidHost))).toBe(false)
+    expect(memoryhasdirty(flagsstream(pidHost))).toBe(false)
   })
 
   it('preserves BOARD pages on the live book when memory stream re-projects', () => {
@@ -226,7 +226,7 @@ describe('memorysyncreverseproject', () => {
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     memorydirtyclear()
 
-    const streamid = boardstreamid('boardA')
+    const streamid = boardstream('boardA')
     const incomingdocument = {
       id: 'boardA',
       code: '@boardA\n',
@@ -262,7 +262,7 @@ describe('memorysyncreverseproject', () => {
       bg: 0,
     })
     // board stream silent-writes guard must keep board:<id> out of dirty.
-    expect(memorydirtyhas(streamid)).toBe(false)
+    expect(memoryhasdirty(streamid)).toBe(false)
   })
 
   it('materializes a new book when the memory stream carries an unknown id', () => {
@@ -295,7 +295,7 @@ describe('memorysyncreverseproject', () => {
     expect(extra?.name).toBe('extra')
     expect(extra?.flags.player1).toEqual({ hp: 3 })
     // silent-writes guard must keep MEMORY_STREAM_ID out of the dirty set.
-    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+    expect(memoryhasdirty(MEMORY_STREAM_ID)).toBe(false)
   })
 
   it('removes a local book when the authoritative memory stream drops it', () => {
@@ -321,7 +321,7 @@ describe('memorysyncreverseproject', () => {
 
     expect(memoryreadbookbyaddress('stale-id')).toBeUndefined()
     expect(memoryreadbookbyaddress('main-id')).toBeDefined()
-    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+    expect(memoryhasdirty(MEMORY_STREAM_ID)).toBe(false)
   })
 
   it('ignores documents for unknown streams without throwing', () => {

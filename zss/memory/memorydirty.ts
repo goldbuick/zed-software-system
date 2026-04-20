@@ -14,10 +14,7 @@ Two moving parts:
 
 Reverse-projection (server applying an accepted clientpatch back into MEMORY)
 must not falsely re-mark the just-applied stream as dirty — that would create
-a feedback loop where the server immediately re-pushes the same change. The
-`memorywithsilentwrites` guard short-circuits `memorymarkdirty` while a
-reverse-projection (or any other "this MEMORY mutation is already in-flight
-elsewhere") is in progress.
+a feedback loop where the server immediately re-pushes the same change.  
 */
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -25,36 +22,36 @@ import type { BOARD } from './types'
 
 export const MEMORY_STREAM_ID = 'memory'
 
-export function boardstreamid(boardid: string): string {
+export function boardstream(boardid: string): string {
   return `board:${boardid}`
 }
 
 /** Per-player gadget UI document (`GADGET_STATE`) replicated outside the `memory` stream. */
-export function gadgetstreamid(player: string): string {
+export function gadgetstream(player: string): string {
   return `gadget:${player}`
 }
 
 /** Per-player book.flags[pid] bag (non-volatile keys) replicated outside the `memory` stream. */
-export function flagsstreamid(player: string): string {
+export function flagsstream(player: string): string {
   return `flags:${player}`
 }
 
-export function boardstreamidfromboard(board: MAYBE<BOARD>): string {
+export function boardstreamfromboarddata(board: MAYBE<BOARD>): string {
   if (!ispresent(board) || !board.id) {
     return ''
   }
-  return boardstreamid(board.id)
+  return boardstream(board.id)
 }
 
 const dirty = new Set<string>()
 
-let silentdepth = 0
+const silentdepth = 0
 
-export function memorymarkdirty(streamid: string): void {
-  if (silentdepth > 0 || !streamid) {
+export function memorymarkdirty(stream: string): void {
+  if (silentdepth > 0 || !stream) {
     return
   }
-  dirty.add(streamid)
+  dirty.add(stream)
 }
 
 export function memorymarkmemorydirty(): void {
@@ -62,15 +59,15 @@ export function memorymarkmemorydirty(): void {
 }
 
 export function memorymarkboarddirty(board: MAYBE<BOARD>): void {
-  const streamid = boardstreamidfromboard(board)
-  if (streamid) {
-    memorymarkdirty(streamid)
+  const stream = boardstreamfromboarddata(board)
+  if (stream) {
+    memorymarkdirty(stream)
   }
 }
 
-export function memoryconsumedirty(streamid: string): boolean {
-  if (dirty.has(streamid)) {
-    dirty.delete(streamid)
+export function memoryconsumedirty(stream: string): boolean {
+  if (dirty.has(stream)) {
+    dirty.delete(stream)
     return true
   }
   return false
@@ -85,8 +82,8 @@ export function memoryconsumealldirty(): string[] {
   return ids
 }
 
-export function memorydirtyhas(streamid: string): boolean {
-  return dirty.has(streamid)
+export function memoryhasdirty(stream: string): boolean {
+  return dirty.has(stream)
 }
 
 export function memorydirtyclear(): void {

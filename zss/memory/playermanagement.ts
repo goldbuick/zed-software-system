@@ -37,7 +37,7 @@ import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memorydebugassertactivelistboardinvariantifenabled } from './debugactivelistinvariant'
 import {
-  flagsstreamid,
+  flagsstream,
   memorymarkboarddirty,
   memorymarkdirty,
   memorymarkmemorydirty,
@@ -329,7 +329,7 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
-    memorymarkdirty(flagsstreamid(player))
+    memorymarkdirty(flagsstream(player))
     return true
   }
 
@@ -402,7 +402,7 @@ export function memoryloginplayer(
     flags.entery = py
     flags.deaths = flags.deaths ?? 0
     flags.highscore = flags.highscore ?? 0
-    memorymarkdirty(flagsstreamid(player))
+    memorymarkdirty(flagsstream(player))
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
@@ -473,7 +473,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     if (isendgame) {
       const newflags = memoryreadbookflags(mainbook, remove)
       Object.assign(newflags, saveflags)
-      memorymarkdirty(flagsstreamid(remove))
+      memorymarkdirty(flagsstream(remove))
     }
   }
 }

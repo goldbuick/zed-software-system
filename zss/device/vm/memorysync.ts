@@ -37,8 +37,8 @@ import {
   memoryreadbookflags,
 } from 'zss/memory/bookoperations'
 import {
-  flagsstreamid,
-  gadgetstreamid,
+  flagsstream,
+  gadgetstream,
   MEMORY_STREAM_ID,
   memoryconsumealldirty,
   memorymarkdirty,
@@ -121,7 +121,7 @@ function collectviewportpidsforboard(boardid: string): string[] {
 
 export function memorysyncensuregadgetregistered(player: string): void {
   memorysyncensureregistered()
-  const streamid = gadgetstreamid(player)
+  const streamid = gadgetstream(player)
   const projected = projectgadget(player)
   if (!ispresent(streamreplserverreadstream(streamid))) {
     streamreplserverregister(streamid, projected)
@@ -136,10 +136,10 @@ function memorysyncadmitgadgetstreamsforboard(runner: string, boardid: string): 
     const pid = pids[i]
     memorysyncensuregadgetregistered(pid)
     if (pid === runner) {
-      streamreplserveradmitplayer(gadgetstreamid(pid), runner, true)
+      streamreplserveradmitplayer(gadgetstream(pid), runner, true)
     } else {
-      streamreplserveradmitplayer(gadgetstreamid(pid), pid, false)
-      streamreplserveradmitplayer(gadgetstreamid(pid), runner, true)
+      streamreplserveradmitplayer(gadgetstream(pid), pid, false)
+      streamreplserveradmitplayer(gadgetstream(pid), runner, true)
     }
   }
 }
@@ -147,13 +147,13 @@ function memorysyncadmitgadgetstreamsforboard(runner: string, boardid: string): 
 function memorysyncrevokegadgetwritersforboard(runner: string, boardid: string): void {
   const pids = collectviewportpidsforboard(boardid)
   for (let i = 0; i < pids.length; ++i) {
-    streamreplserverdropplayer(gadgetstreamid(pids[i]), runner)
+    streamreplserverdropplayer(gadgetstream(pids[i]), runner)
   }
 }
 
 export function memorysyncensureflagsregistered(player: string): void {
   memorysyncensureregistered()
-  const streamid = flagsstreamid(player)
+  const streamid = flagsstream(player)
   const projected = projectplayerflags(player)
   if (!ispresent(streamreplserverreadstream(streamid))) {
     streamreplserverregister(streamid, projected)
@@ -168,10 +168,10 @@ function memorysyncadmitflagsstreamsforboard(runner: string, boardid: string): v
     const pid = pids[i]
     memorysyncensureflagsregistered(pid)
     if (pid === runner) {
-      streamreplserveradmitplayer(flagsstreamid(pid), runner, true)
+      streamreplserveradmitplayer(flagsstream(pid), runner, true)
     } else {
-      streamreplserveradmitplayer(flagsstreamid(pid), pid, false)
-      streamreplserveradmitplayer(flagsstreamid(pid), runner, true)
+      streamreplserveradmitplayer(flagsstream(pid), pid, false)
+      streamreplserveradmitplayer(flagsstream(pid), runner, true)
     }
   }
 }
@@ -179,7 +179,7 @@ function memorysyncadmitflagsstreamsforboard(runner: string, boardid: string): v
 function memorysyncrevokeflagswritersforboard(runner: string, boardid: string): void {
   const pids = collectviewportpidsforboard(boardid)
   for (let i = 0; i < pids.length; ++i) {
-    streamreplserverdropplayer(flagsstreamid(pids[i]), runner)
+    streamreplserverdropplayer(flagsstream(pids[i]), runner)
   }
 }
 

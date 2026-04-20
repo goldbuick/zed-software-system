@@ -9,7 +9,7 @@ import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { initstate } from 'zss/gadget/data/api'
 import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
-import { boardstreamid as boardstreamidbyid } from 'zss/memory/memorydirty'
+import { boardstream as boardstreamidbyid } from 'zss/memory/memorydirty'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadbookbysoftware, memoryreadroot } from 'zss/memory/session'
 import {

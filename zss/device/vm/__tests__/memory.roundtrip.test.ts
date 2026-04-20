@@ -22,7 +22,7 @@ import {
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memorywritebookflag } from 'zss/memory/bookoperations'
 import {
-  flagsstreamid,
+  flagsstream,
   MEMORY_STREAM_ID,
   memorydirtyclear,
 } from 'zss/memory/memorydirty'
@@ -90,7 +90,7 @@ describe('phase 2 worker -> server round-trip', () => {
 
   it('worker flag mutation lands in MEMORY via push_batch + reverseproject', () => {
     const pid = 'pid_roundtrip_worker'
-    const fsid = flagsstreamid(pid)
+    const fsid = flagsstream(pid)
     streamreplserverregister(MEMORY_STREAM_ID, projectmemory())
     streamreplserverregister(fsid, projectplayerflags(pid))
     streamreplserveradmitplayer(MEMORY_STREAM_ID, pid, true)

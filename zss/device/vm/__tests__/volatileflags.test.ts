@@ -13,8 +13,8 @@ Gadget UI state replicates via `gadget:<pid>` streams; `projectmemory` omits
 `ispid` replicate via `flags:<pid>` and are omitted from `projectmemory`.
 */
 import {
-  flagsstreamid,
-  gadgetstreamid,
+  flagsstream,
+  gadgetstream,
   MEMORY_STREAM_ID,
   memorydirtyclear,
 } from 'zss/memory/memorydirty'
@@ -253,7 +253,7 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
     memoryresetbooks([book])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
 
-    memoryhydratefromjsonsync(flagsstreamid(pidkey), { board: 'boardA', hp: 8 })
+    memoryhydratefromjsonsync(flagsstream(pidkey), { board: 'boardA', hp: 8 })
 
     const after = memoryreadbookbyaddress('main-id')
     const row = after?.flags[pidkey] as Record<string, unknown>
@@ -282,7 +282,7 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
       scroll: [],
       sidebar: [],
     }
-    memoryhydratefromjsonsync(gadgetstreamid('p1'), doc)
+    memoryhydratefromjsonsync(gadgetstream('p1'), doc)
 
     const after = memoryreadbookbyaddress('main-id')
     const gs = after?.flags[MEMORY_LABEL.GADGETSTORE] as Record<
