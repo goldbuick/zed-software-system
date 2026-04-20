@@ -5,29 +5,31 @@ import {
   gadgetstate,
 } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
 } from 'zss/memory/boards'
-import { memoryreadbookflag } from 'zss/memory/bookoperations'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
-import { MEMORY_STREAM_ID } from 'zss/memory/memorydirty'
-import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import {
+  isboardstream,
+  isflagsstream,
+  isgadgetstream,
+  ismemorystream,
+} from 'zss/memory/memorydirty'
+import {
+  memoryreadplayerboard,
+  memoryreadplayers,
+} from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
   memoryconverttogadgetcontrollayer,
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
 import { memorytickmain } from 'zss/memory/runtime'
-import {
-  memoryreadbookbysoftware,
-  memoryreadfreeze,
-  memoryreadhalt,
-  memoryreadoperator,
-} from 'zss/memory/session'
+import { memoryreadfreeze, memoryreadhalt } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
-import { BOARD, BOOK, MEMORY_LABEL } from 'zss/memory/types'
+import { BOARD } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
@@ -41,17 +43,15 @@ import { memoryhydratefromjsonsync } from './vm/memoryhydrate'
 import { memoryworkerpushdirty } from './vm/memoryworkersync'
 
 function shouldboardrunnerhandlestreamchanged(target: string): boolean {
-  if (target === `${MEMORY_STREAM_ID}:changed`) {
-    return true
-  }
   if (!target.endsWith(':changed')) {
     return false
   }
-  const streamid = target.slice(0, -':changed'.length)
+  const stream = target.slice(0, -':changed'.length)
   return (
-    streamid.startsWith('board:') ||
-    streamid.startsWith('gadget:') ||
-    streamid.startsWith('flags:')
+    ismemorystream(stream) ||
+    isboardstream(stream) ||
+    isgadgetstream(stream) ||
+    isflagsstream(stream)
   )
 }
 
@@ -87,45 +87,21 @@ function rebuildownedboardids() {
   if (!isstring(assignedboard) || assignedboard.length === 0) {
     return
   }
-  snapshotownedboards(assignedboard).forEach((id) => ownedboards.add(id))
-}
-
-function playerresolvedboard(mainbook: MAYBE<BOOK>, player: string): string {
-  if (!ispresent(mainbook)) {
-    return ''
+  const next = [...snapshotownedboards(assignedboard)]
+  for (let i = 0; i < next.length; ++i) {
+    ownedboards.add(next[i])
   }
-  const flag = memoryreadbookflag(mainbook, player, 'board')
-  if (!isstring(flag)) {
-    return ''
-  }
-  const resolved = memoryreadboardbyaddress(flag)
-  return ispresent(resolved?.id) && resolved.id.length > 0 ? resolved.id : flag
 }
 
 function ownedplayers(): string[] {
   if (ownedboards.size === 0) {
     return []
   }
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const active = mainbook?.activelist ?? []
-  const out: string[] = []
-  const seen = new Set<string>()
-  for (let i = 0; i < active.length; ++i) {
-    const player = active[i]
-    const bid = playerresolvedboard(mainbook, player)
-    if (bid.length > 0 && ownedboards.has(bid)) {
-      out.push(player)
-      seen.add(player)
-    }
-  }
-  const op = memoryreadoperator()
-  if (isstring(op) && op.length > 0 && !seen.has(op)) {
-    const opbid = playerresolvedboard(mainbook, op)
-    if (opbid.length > 0 && ownedboards.has(opbid)) {
-      out.push(op)
-    }
-  }
-  return out
+  const players = memoryreadplayers()
+  return players.filter((player) => {
+    const playerboard = memoryreadplayerboard(player)
+    return ispresent(playerboard) && ownedboards.has(playerboard.id)
+  })
 }
 
 function rendergadgetlayers(
@@ -196,18 +172,20 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['ticktock', 'memory', 'board'],
+  ['ticktock', 'memory', 'flags', 'board', 'gadget'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
     }
 
     // filter messages by target
+    const shouldhandle = shouldboardrunnerhandlestreamchanged(message.target)
     switch (message.target) {
       case 'ticktock':
         break
       default:
-        if (shouldboardrunnerhandlestreamchanged(message.target)) {
+        // are these streams we care about?
+        if (shouldhandle) {
           break
         }
         // everything else is filtered by assignedplayerid
@@ -221,7 +199,7 @@ const boardrunner = createdevice(
     }
 
     // handle messages
-    if (shouldboardrunnerhandlestreamchanged(message.target)) {
+    if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()

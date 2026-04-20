@@ -24,7 +24,7 @@ import {
 } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 
-import { boardstreamid, projectboardcodepage } from '../memoryproject'
+import { boardstreamfromcodepage, projectboardcodepage } from '../memoryproject'
 import { memorysyncreverseproject } from '../memorysync'
 
 jest.mock('zss/config', () => ({
@@ -121,7 +121,7 @@ describe('cross-board move vs stale board reverseproject', () => {
     expect(memoryreadobject(pagea.board, 'p1')).toBeUndefined()
     expect(memoryreadobject(pageb.board, 'p1')).toBeDefined()
 
-    memorysyncreverseproject(boardstreamid(pagea), stalesource)
+    memorysyncreverseproject(boardstreamfromcodepage(pagea), stalesource)
 
     expect(memoryreadobject(pagea.board, 'p1')).toBeDefined()
     expect(memoryreadbookflag(book, 'p1', 'board')).toBe('codepage-b')
@@ -160,7 +160,7 @@ describe('cross-board move vs stale board reverseproject', () => {
       string,
       unknown
     >
-    memorysyncreverseproject(boardstreamid(pagea), freshsource)
+    memorysyncreverseproject(boardstreamfromcodepage(pagea), freshsource)
 
     expect(memoryreadobject(pagea.board, 'p1')).toBeUndefined()
     expect(memoryreadobject(pageb.board, 'p1')).toBeDefined()

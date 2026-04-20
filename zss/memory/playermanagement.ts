@@ -10,6 +10,7 @@ import { maptonumber } from 'zss/mapping/value'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
+import { memorycheckblockedboardobject } from './boardblocking'
 import { memoryboardelementisobject } from './boardelement'
 import {
   memorycreateboardobjectfromkind,
@@ -20,7 +21,6 @@ import {
   memorywriteboardnamed,
   memorywriteboardobjectlookup,
 } from './boardlookup'
-import { memorycheckblockedboardobject } from './boardblocking'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,
@@ -31,6 +31,7 @@ import {
   memoryclearbookflags,
   memoryreadbookflag,
   memoryreadbookflags,
+  memoryreadcodepage,
   memorywritebookflag,
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
@@ -144,8 +145,12 @@ function bookplayerreadboardids(book: MAYBE<BOOK>) {
   return unique(boardids)
 }
 
+export function memoryreadbookplayers(book: MAYBE<BOOK>) {
+  return book?.activelist ?? []
+}
+
 export function memoryreadbookplayeractive(book: MAYBE<BOOK>, player: string) {
-  return book?.activelist.includes(player) ?? false
+  return memoryreadbookplayers(book).includes(player) ?? false
 }
 
 export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
@@ -528,6 +533,11 @@ export function memoryscanplayers(players: Record<string, number>) {
   }
 }
 
+export function memoryreadplayers() {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  return memoryreadbookplayers(mainbook)
+}
+
 export function memoryreadplayeractive(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const isactive = memoryreadbookplayeractive(mainbook, player)
@@ -539,9 +549,6 @@ export function memoryreadplayeractive(player: string) {
 export function memoryreadplayerboard(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const address = memoryreadbookflag(mainbook, player, 'board') as string
-  const codepage = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.BOARD,
-    address,
-  )
+  const codepage = memoryreadcodepage(mainbook, address)
   return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
 }

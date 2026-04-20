@@ -7,7 +7,7 @@ introduce a cycle). The VM-level memorysync module consumes the dirty set
 from here.
 
 Two moving parts:
-- `MEMORY_STREAM_ID` / `boardstreamid(boardid)` give callers the canonical
+- `memorystream()` / `boardstream(boardid)` give callers the canonical
   stream ids without needing to import the device layer.
 - `memorymarkdirty` / `memoryconsumedirty` / `memoryconsumealldirty` track
   which streams have meaningful pending changes since the last push.
@@ -20,10 +20,20 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import type { BOARD } from './types'
 
-export const MEMORY_STREAM_ID = 'memory'
+export function memorystream(): string {
+  return `memory`
+}
+
+export function ismemorystream(stream: string): boolean {
+  return stream === `memory`
+}
 
 export function boardstream(boardid: string): string {
   return `board:${boardid}`
+}
+
+export function isboardstream(stream: string): boolean {
+  return stream.startsWith('board:')
 }
 
 /** Per-player gadget UI document (`GADGET_STATE`) replicated outside the `memory` stream. */
@@ -31,9 +41,17 @@ export function gadgetstream(player: string): string {
   return `gadget:${player}`
 }
 
+export function isgadgetstream(stream: string): boolean {
+  return stream.startsWith('gadget:')
+}
+
 /** Per-player book.flags[pid] bag (non-volatile keys) replicated outside the `memory` stream. */
 export function flagsstream(player: string): string {
   return `flags:${player}`
+}
+
+export function isflagsstream(stream: string): boolean {
+  return stream.startsWith('flags:')
 }
 
 export function boardstreamfromboarddata(board: MAYBE<BOARD>): string {
@@ -43,9 +61,8 @@ export function boardstreamfromboarddata(board: MAYBE<BOARD>): string {
   return boardstream(board.id)
 }
 
+let silentdepth = 0
 const dirty = new Set<string>()
-
-const silentdepth = 0
 
 export function memorymarkdirty(stream: string): void {
   if (silentdepth > 0 || !stream) {
@@ -55,7 +72,7 @@ export function memorymarkdirty(stream: string): void {
 }
 
 export function memorymarkmemorydirty(): void {
-  memorymarkdirty(MEMORY_STREAM_ID)
+  memorymarkdirty(memorystream())
 }
 
 export function memorymarkboarddirty(board: MAYBE<BOARD>): void {

@@ -30,35 +30,46 @@ import {
   streamreplserverupdate,
 } from 'zss/device/streamreplserver'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryreadbookflag,
   memoryreadbookflags,
 } from 'zss/memory/bookoperations'
+import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
+  boardstream,
   flagsstream,
   gadgetstream,
-  MEMORY_STREAM_ID,
+  isboardstream,
+  isflagsstream,
+  isgadgetstream,
+  ismemorystream,
   memoryconsumealldirty,
   memorymarkdirty,
+  memorystream,
   memorywithsilentwrites,
 } from 'zss/memory/memorydirty'
 import {
   memoryclearbook,
   memoryreadbookbyaddress,
-  memoryreadbooklist,
   memoryreadbookbysoftware,
+  memoryreadbooklist,
   memoryreadoperator,
   memoryreadroot,
   memorywritebook,
 } from 'zss/memory/session'
-import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import {
+  BOOK,
+  BOOK_FLAGS,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
 
 import { mergeflagspreservingvolatile } from './memoryhydrate'
 import {
   BOARD_SYNC_TOPKEYS,
-  boardstreamid,
+  boardstreamfromcodepage,
   projectboardcodepage,
   projectgadget,
   projectmemory,
@@ -66,22 +77,23 @@ import {
 } from './memoryproject'
 
 export function memorysyncensureregistered(): void {
+  const stream = memorystream()
   const projected = projectmemory()
-  if (!ispresent(streamreplserverreadstream(MEMORY_STREAM_ID))) {
-    streamreplserverregister(MEMORY_STREAM_ID, projected)
+  if (!ispresent(streamreplserverreadstream(stream))) {
+    streamreplserverregister(stream, projected)
     return
   }
-  streamreplserverupdate(MEMORY_STREAM_ID, projected)
+  streamreplserverupdate(stream, projected)
 }
 
 export function memorysyncensureboardregistered(codepage: CODE_PAGE): void {
-  const streamid = boardstreamid(codepage)
+  const stream = boardstreamfromcodepage(codepage)
   const projected = projectboardcodepage(codepage)
-  if (!ispresent(streamreplserverreadstream(streamid))) {
-    streamreplserverregister(streamid, projected)
+  if (!ispresent(streamreplserverreadstream(stream))) {
+    streamreplserverregister(stream, projected)
     return
   }
-  streamreplserverupdate(streamid, projected)
+  streamreplserverupdate(stream, projected)
 }
 
 function resolvedboardid(mainbook: BOOK, player: string): string {
@@ -130,7 +142,10 @@ export function memorysyncensuregadgetregistered(player: string): void {
   streamreplserverupdate(streamid, projected)
 }
 
-function memorysyncadmitgadgetstreamsforboard(runner: string, boardid: string): void {
+function memorysyncadmitgadgetstreamsforboard(
+  runner: string,
+  boardid: string,
+): void {
   const pids = collectviewportpidsforboard(boardid)
   for (let i = 0; i < pids.length; ++i) {
     const pid = pids[i]
@@ -144,7 +159,10 @@ function memorysyncadmitgadgetstreamsforboard(runner: string, boardid: string): 
   }
 }
 
-function memorysyncrevokegadgetwritersforboard(runner: string, boardid: string): void {
+function memorysyncrevokegadgetwritersforboard(
+  runner: string,
+  boardid: string,
+): void {
   const pids = collectviewportpidsforboard(boardid)
   for (let i = 0; i < pids.length; ++i) {
     streamreplserverdropplayer(gadgetstream(pids[i]), runner)
@@ -162,7 +180,10 @@ export function memorysyncensureflagsregistered(player: string): void {
   streamreplserverupdate(streamid, projected)
 }
 
-function memorysyncadmitflagsstreamsforboard(runner: string, boardid: string): void {
+function memorysyncadmitflagsstreamsforboard(
+  runner: string,
+  boardid: string,
+): void {
   const pids = collectviewportpidsforboard(boardid)
   for (let i = 0; i < pids.length; ++i) {
     const pid = pids[i]
@@ -176,7 +197,10 @@ function memorysyncadmitflagsstreamsforboard(runner: string, boardid: string): v
   }
 }
 
-function memorysyncrevokeflagswritersforboard(runner: string, boardid: string): void {
+function memorysyncrevokeflagswritersforboard(
+  runner: string,
+  boardid: string,
+): void {
   const pids = collectviewportpidsforboard(boardid)
   for (let i = 0; i < pids.length; ++i) {
     streamreplserverdropplayer(flagsstream(pids[i]), runner)
@@ -205,10 +229,12 @@ export function memorysyncadmitboardrunner(
   if (!ispresent(codepage)) {
     return
   }
+  const stream = memorystream()
+  const boarddatastream = boardstreamfromcodepage(codepage)
   memorysyncensureregistered()
   memorysyncensureboardregistered(codepage)
-  streamreplserveradmitplayer(MEMORY_STREAM_ID, player, true)
-  streamreplserveradmitplayer(boardstreamid(codepage), player, true)
+  streamreplserveradmitplayer(stream, player, true)
+  streamreplserveradmitplayer(boarddatastream, player, true)
   admitneighborboardstreams(player, codepage)
   memorysyncadmitgadgetstreamsforboard(player, codepage.id)
   memorysyncadmitflagsstreamsforboard(player, codepage.id)
@@ -268,14 +294,14 @@ function collectcardinalneighbors(
 
 function admitboardstream(player: string, codepage: CODE_PAGE): void {
   memorysyncensureboardregistered(codepage)
-  streamreplserveradmitplayer(boardstreamid(codepage), player, true)
+  streamreplserveradmitplayer(boardstreamfromcodepage(codepage), player, true)
 }
 
 // Inverse of memorysyncadmitboardrunner: drop the player from the target
 // board stream and all of its cardinal + two-hop neighbor streams. Used when
 // an election flips to a different player so the previous owner stops
 // receiving pokes / snapshots and loses write admission. The shared
-// MEMORY_STREAM_ID is not dropped here — players stay admitted to memory as
+// `memorystream()` is not dropped here — players stay admitted to memory as
 // long as they are logged in (see handlelogout for memory-stream removal).
 export function memorysyncrevokeboardrunner(
   player: string,
@@ -293,7 +319,7 @@ export function memorysyncrevokeboardrunner(
   }
   memorysyncrevokegadgetwritersforboard(player, codepage.id)
   memorysyncrevokeflagswritersforboard(player, codepage.id)
-  streamreplserverdropplayer(boardstreamid(codepage), player)
+  streamreplserverdropplayer(boardstreamfromcodepage(codepage), player)
   revokeneighborboardstreams(player, codepage)
 }
 
@@ -304,12 +330,12 @@ function revokeneighborboardstreams(
   const seen = new Set<string>([centercodepage.id])
   const cardinalcps = collectcardinalneighbors(centercodepage, seen)
   for (let i = 0; i < cardinalcps.length; ++i) {
-    streamreplserverdropplayer(boardstreamid(cardinalcps[i]), player)
+    streamreplserverdropplayer(boardstreamfromcodepage(cardinalcps[i]), player)
   }
   for (let i = 0; i < cardinalcps.length; ++i) {
     const outer = collectcardinalneighbors(cardinalcps[i], seen)
     for (let j = 0; j < outer.length; ++j) {
-      streamreplserverdropplayer(boardstreamid(outer[j]), player)
+      streamreplserverdropplayer(boardstreamfromcodepage(outer[j]), player)
     }
   }
 }
@@ -324,23 +350,24 @@ export function memorysyncdropplayerfromall(player: string): void {
 // VM tick hooks: callers decide when to push. The handler in vm/handlers/tick
 // invokes `memorysyncpushdirty` after `memorytickloaders` to drain the dirty set.
 export function memorysyncupdatememory(): void {
-  streamreplserverupdate(MEMORY_STREAM_ID, projectmemory())
+  const stream = memorystream()
+  const projected = projectmemory()
+  streamreplserverupdate(stream, projected)
 }
 
 export function memorysyncupdateboard(codepage: CODE_PAGE): void {
-  streamreplserverupdate(
-    boardstreamid(codepage),
-    projectboardcodepage(codepage),
-  )
+  const stream = boardstreamfromcodepage(codepage)
+  const projected = projectboardcodepage(codepage)
+  streamreplserverupdate(stream, projected)
 }
 
 // stream id form is `board:<codepage.id>` — use codepage.id (which the runtime
 // also writes onto board.id) to recover the codepage we need to project.
-function codepagefromboardstreamid(streamid: string): CODE_PAGE | undefined {
-  if (!streamid.startsWith('board:')) {
+function codepagefromboardstreamid(stream: string): CODE_PAGE | undefined {
+  if (!isboardstream(stream)) {
     return undefined
   }
-  const id = streamid.slice('board:'.length)
+  const id = boardstream(stream)
   if (!id) {
     return undefined
   }
@@ -361,33 +388,39 @@ function codepagefromboardstreamid(streamid: string): CODE_PAGE | undefined {
 export function memorysyncpushdirty(): void {
   const dirtyids = memoryconsumealldirty()
   for (let i = 0; i < dirtyids.length; ++i) {
-    const streamid = dirtyids[i]
-    if (!ispresent(streamreplserverreadstream(streamid))) {
+    const stream = dirtyids[i]
+    if (!ispresent(streamreplserverreadstream(stream))) {
       // Stream not registered yet — re-queue so a later register + tick
       // still pushes this edit.
-      memorymarkdirty(streamid)
+      memorymarkdirty(stream)
       continue
     }
-    if (streamid === MEMORY_STREAM_ID) {
-      streamreplserverupdate(streamid, projectmemory())
+    if (ismemorystream(stream)) {
+      const projected = projectmemory()
+      streamreplserverupdate(stream, projected)
       continue
     }
-    const codepage = codepagefromboardstreamid(streamid)
-    if (ispresent(codepage)) {
-      streamreplserverupdate(streamid, projectboardcodepage(codepage))
-      continue
+    if (isboardstream(stream)) {
+      const codepage = codepagefromboardstreamid(stream)
+      if (ispresent(codepage)) {
+        const projected = projectboardcodepage(codepage)
+        streamreplserverupdate(stream, projected)
+        continue
+      }
     }
-    if (streamid.startsWith('gadget:')) {
-      const pid = streamid.slice('gadget:'.length)
+    if (isgadgetstream(stream)) {
+      const pid = gadgetstream(stream)
       if (pid) {
-        streamreplserverupdate(streamid, projectgadget(pid))
+        const projected = projectgadget(pid)
+        streamreplserverupdate(stream, projected)
       }
       continue
     }
-    if (streamid.startsWith('flags:')) {
-      const pid = streamid.slice('flags:'.length)
+    if (isflagsstream(stream)) {
+      const pid = flagsstream(stream)
       if (pid) {
-        streamreplserverupdate(streamid, projectplayerflags(pid))
+        const projected = projectplayerflags(pid)
+        streamreplserverupdate(stream, projected)
       }
     }
   }
@@ -404,9 +437,13 @@ export function memorysyncreverseprojectplayerflags(
   if (!ispresent(mainbook)) {
     return
   }
-  mergeflagspreservingvolatile(mainbook.flags, {
-    [player]: document as Record<string, unknown>,
-  }, mainbook.activelist ?? [])
+  mergeflagspreservingvolatile(
+    mainbook.flags,
+    {
+      [player]: document as Record<string, unknown>,
+    },
+    mainbook.activelist ?? [],
+  )
 }
 
 export function memorysyncreverseprojectgadget(
@@ -434,32 +471,32 @@ export function memorysyncreverseprojectgadget(
 // and overlay state (kinddata/category/display*) are NOT touched here; the
 // next `memoryinitboard` (called by the tick) rebuilds them from `kind`.
 export function memorysyncreverseproject(
-  streamid: string,
+  stream: string,
   document: unknown,
 ): void {
   if (!ispresent(document) || typeof document !== 'object') {
     return
   }
   memorywithsilentwrites(() => {
-    if (streamid === MEMORY_STREAM_ID) {
+    if (ismemorystream(stream)) {
       reverseprojectmemory(document as Record<string, unknown>)
       return
     }
-    if (streamid.startsWith('board:')) {
-      reverseprojectboard(streamid, document as Record<string, unknown>)
+    if (isboardstream(stream)) {
+      reverseprojectboard(stream, document as Record<string, unknown>)
       return
     }
-    if (streamid.startsWith('gadget:')) {
-      const pid = streamid.slice('gadget:'.length)
-      if (pid) {
-        memorysyncreverseprojectgadget(pid, document)
+    if (isgadgetstream(stream)) {
+      const player = gadgetstream(stream)
+      if (player) {
+        memorysyncreverseprojectgadget(player, document)
       }
       return
     }
-    if (streamid.startsWith('flags:')) {
-      const pid = streamid.slice('flags:'.length)
-      if (pid) {
-        memorysyncreverseprojectplayerflags(pid, document)
+    if (isflagsstream(stream)) {
+      const player = flagsstream(stream)
+      if (player) {
+        memorysyncreverseprojectplayerflags(player, document)
       }
     }
   })

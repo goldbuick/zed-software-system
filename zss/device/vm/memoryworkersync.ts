@@ -26,7 +26,13 @@ import {
 } from 'zss/device/rxreplclient'
 import { ispresent } from 'zss/mapping/types'
 import {
-  MEMORY_STREAM_ID,
+  boardstream,
+  flagsstream,
+  gadgetstream,
+  isboardstream,
+  isflagsstream,
+  isgadgetstream,
+  ismemorystream,
   memoryconsumealldirty,
   memorymarkdirty,
 } from 'zss/memory/memorydirty'
@@ -42,22 +48,23 @@ import {
 
 export function memoryworkerpushdirty(): void {
   const dirtyids = memoryconsumealldirty()
+  const ownplayer = rxreplclientreadownplayer()
   for (let i = 0; i < dirtyids.length; ++i) {
-    const streamid = dirtyids[i]
-    if (!ispresent(rxreplclientreadstream(streamid))) {
+    const stream = dirtyids[i]
+    if (!ispresent(rxreplclientreadstream(stream))) {
       // not admitted yet — re-queue so admission + next tick still pushes.
-      memorymarkdirty(streamid)
+      memorymarkdirty(stream)
       continue
     }
-    if (streamid === MEMORY_STREAM_ID) {
+    if (ismemorystream(stream)) {
       const projection = projectmemory()
-      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
-        rows: [{ streamid, document: projection }],
+      rxreplpushbatch(rxreplclientdevice, ownplayer, {
+        rows: [{ streamid: stream, document: projection }],
       })
       continue
     }
-    if (streamid.startsWith('board:')) {
-      const boardid = streamid.slice('board:'.length)
+    if (isboardstream(stream)) {
+      const boardid = boardstream(stream)
       if (!boardid) {
         continue
       }
@@ -75,32 +82,33 @@ export function memoryworkerpushdirty(): void {
       if (!ispresent(codepage)) {
         continue
       }
-      const projection = projectboardcodepage(codepage)
-      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
-        rows: [{ streamid, document: projection }],
+      const document = projectboardcodepage(codepage)
+      rxreplpushbatch(rxreplclientdevice, ownplayer, {
+        rows: [{ streamid: stream, document }],
       })
       continue
     }
-    if (streamid.startsWith('gadget:')) {
-      const pid = streamid.slice('gadget:'.length)
-      if (!pid) {
+    if (isgadgetstream(stream)) {
+      const player = gadgetstream(stream)
+      if (!player) {
         continue
       }
-      const gadget = projectgadget(pid)
-      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
-        rows: [{ streamid, gadget }],
+      const gadget = projectgadget(player)
+      rxreplpushbatch(rxreplclientdevice, ownplayer, {
+        rows: [{ streamid: stream, gadget }],
       })
       continue
     }
-    if (streamid.startsWith('flags:')) {
-      const pid = streamid.slice('flags:'.length)
-      if (!pid) {
+    if (isflagsstream(stream)) {
+      const player = flagsstream(stream)
+      if (!player) {
         continue
       }
-      const document = projectplayerflags(pid)
-      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
-        rows: [{ streamid, document }],
+      const document = projectplayerflags(player)
+      rxreplpushbatch(rxreplclientdevice, ownplayer, {
+        rows: [{ streamid: stream, document }],
       })
+      continue
     }
   }
 }

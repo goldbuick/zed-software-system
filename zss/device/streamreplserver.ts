@@ -7,7 +7,15 @@ per stream, fan-out to admitted players via rxreplclient:stream_row.
 import { createdevice } from 'zss/device'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { MEMORY_STREAM_ID } from 'zss/memory/memorydirty'
+import {
+  boardstream,
+  flagsstream,
+  gadgetstream,
+  isboardstream,
+  isflagsstream,
+  isgadgetstream,
+  ismemorystream,
+} from 'zss/memory/memorydirty'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { rxreplclientstreamrow } from './api'
@@ -50,31 +58,31 @@ export function streamreplserverregister(
   })
 }
 
-function projectfordoc(streamid: string): unknown | undefined {
-  if (streamid === MEMORY_STREAM_ID) {
+function projectfordoc(stream: string): unknown | undefined {
+  if (ismemorystream(stream)) {
     return projectmemory()
   }
-  if (streamid.startsWith('board:')) {
-    const id = streamid.slice('board:'.length)
+  if (isboardstream(stream)) {
+    const id = boardstream(stream)
     if (!id) {
       return undefined
     }
     const cp = memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.BOARD, id)
     return ispresent(cp) ? projectboardcodepage(cp) : undefined
   }
-  if (streamid.startsWith('gadget:')) {
-    const pid = streamid.slice('gadget:'.length)
-    if (!pid) {
+  if (isgadgetstream(stream)) {
+    const id = gadgetstream(stream)
+    if (!id) {
       return undefined
     }
-    return projectgadget(pid)
+    return projectgadget(id)
   }
-  if (streamid.startsWith('flags:')) {
-    const pid = streamid.slice('flags:'.length)
-    if (!pid) {
+  if (isflagsstream(stream)) {
+    const id = flagsstream(stream)
+    if (!id) {
       return undefined
     }
-    return projectplayerflags(pid)
+    return projectplayerflags(id)
   }
   return undefined
 }

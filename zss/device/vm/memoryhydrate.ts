@@ -26,11 +26,17 @@ side (see phase2-worker-emit-patches).
 import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
 import { memoryinitboard } from 'zss/memory/boards'
+import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
 import { memorydebugassertactivelistboardinvariantifenabled } from 'zss/memory/debugactivelistinvariant'
-import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
-  MEMORY_STREAM_ID,
+  boardstream,
+  flagsstream,
+  gadgetstream,
+  isboardstream,
+  isflagsstream,
+  isgadgetstream,
+  ismemorystream,
   memorywithsilentwrites,
 } from 'zss/memory/memorydirty'
 import {
@@ -57,41 +63,48 @@ import {
 import { VOLATILE_FLAG_KEYS } from './memoryproject'
 
 export function memoryhydratefromjsonsync(
-  streamid: string,
+  stream: string,
   document: unknown,
 ): void {
   if (!ispresent(document) || typeof document !== 'object') {
     return
   }
   memorywithsilentwrites(() => {
-    if (streamid === MEMORY_STREAM_ID) {
+    if (ismemorystream(stream)) {
+      console.info('hydrating memory', document)
       hydratememory(document as Record<string, unknown>)
       return
     }
-    if (streamid.startsWith('board:')) {
-      const id = streamid.slice('board:'.length)
-      if (id) {
-        hydrateboard(id, document as Record<string, unknown>)
+    if (isboardstream(stream)) {
+      const player = boardstream(stream)
+      if (player) {
+        console.info('hydrating board', player, document)
+        hydrateboard(player, document as Record<string, unknown>)
       }
       return
     }
-    if (streamid.startsWith('gadget:')) {
-      const pid = streamid.slice('gadget:'.length)
-      if (pid) {
-        hydrategadget(pid, document as Record<string, unknown>)
+    if (isgadgetstream(stream)) {
+      const player = gadgetstream(stream)
+      if (player) {
+        console.info('hydrating gadget', player, document)
+        hydrategadget(player, document as Record<string, unknown>)
       }
       return
     }
-    if (streamid.startsWith('flags:')) {
-      const pid = streamid.slice('flags:'.length)
-      if (pid) {
-        hydrateplayerflags(pid, document as Record<string, unknown>)
+    if (isflagsstream(stream)) {
+      const player = flagsstream(stream)
+      if (player) {
+        console.info('hydrating flags', player, document)
+        hydrateplayerflags(player, document as Record<string, unknown>)
       }
     }
   })
 }
 
-function hydrategadget(player: string, document: Record<string, unknown>): void {
+function hydrategadget(
+  player: string,
+  document: Record<string, unknown>,
+): void {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -122,11 +135,11 @@ function hydratememory(document: Record<string, unknown>): void {
   // scalar top-level keys (operator, halt, freeze). session is read-only
   // identity from the server and is not surfaced via a writer; software is
   // applied below after we ensure the referenced books exist.
-  if (Object.prototype.hasOwnProperty.call(document, 'operator')) {
-    const operator = document.operator
-    if (typeof operator === 'string') {
-      memorywriteoperator(operator)
-    }
+  if (
+    Object.prototype.hasOwnProperty.call(document, 'operator') &&
+    typeof document.operator === 'string'
+  ) {
+    memorywriteoperator(document.operator)
   }
   if (Object.prototype.hasOwnProperty.call(document, 'halt')) {
     memorywritehalt(Boolean(document.halt))
@@ -134,7 +147,7 @@ function hydratememory(document: Record<string, unknown>): void {
   if (Object.prototype.hasOwnProperty.call(document, 'freeze')) {
     memorywritefreeze(Boolean(document.freeze))
   }
-
+  // hydrate other top-level keys
   hydratebooks(document)
   hydratesoftware(document)
   memorydebugassertactivelistboardinvariantifenabled(

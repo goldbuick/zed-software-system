@@ -5,12 +5,12 @@ objects. Lives below memorysync (server-side) and memoryworkersync
 helpers (jsonsyncserver vs jsonsyncclient). All projections are deepcopy-safe
 and never mutate live MEMORY references.
 */
-import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { initstate } from 'zss/gadget/data/api'
+import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
-import { boardstream as boardstreamidbyid } from 'zss/memory/memorydirty'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import { boardstream } from 'zss/memory/memorydirty'
 import { memoryreadbookbysoftware, memoryreadroot } from 'zss/memory/session'
 import {
   BOARD,
@@ -21,8 +21,8 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
-export function boardstreamid(codepage: CODE_PAGE): string {
-  return boardstreamidbyid(codepage.id)
+export function boardstreamfromcodepage(codepage: CODE_PAGE): string {
+  return boardstream(codepage.id)
 }
 
 // what ships in the `memory` stream.
@@ -196,10 +196,10 @@ export function projectboardcodepage(codepage: CODE_PAGE): unknown {
 // server clobber live worker state on hydrate. memoryhydrate.ts preserves
 // these same keys when replacing `book.flags` so the round-trip is safe.
 export const VOLATILE_FLAG_KEYS: readonly string[] = [
-  'inputqueue',
-  'inputcurrent',
-  'synthstate',
-  'synthplay',
+  // 'inputqueue',
+  // 'inputcurrent',
+  // 'synthstate',
+  // 'synthplay',
 ]
 
 function stripvolatileflags(
@@ -284,7 +284,7 @@ export function projectplayerflags(player: string): Record<string, unknown> {
     }
     dst[key] = raw[key]
   }
-  return deepcopy(dst) as Record<string, unknown>
+  return deepcopy(dst)
 }
 
 /** Full-document gadget stream: one player's `GADGET_STATE` from main book gadgetstore. */
@@ -298,7 +298,7 @@ export function projectgadget(player: string): GADGET_STATE {
   if (!ispresent(raw)) {
     return initstate()
   }
-  return deepcopy(raw) as GADGET_STATE
+  return deepcopy(raw)
 }
 
 // project the MEMORY root into a jsonsync-shippable plain object.
