@@ -5,6 +5,7 @@ import {
   shouldforwardclienttoboardrunner,
   shouldforwardclienttoserver,
   shouldforwardservertoclient,
+  shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 
 function msg(target: string, player = 'p1'): MESSAGE {
@@ -34,9 +35,13 @@ describe('forward rules for boardrunner gadget routes', () => {
     expect(shouldforwardservertoclient(m)).toBe(true)
   })
 
-  it('forwards rxreplclient:stream_row from server to client', () => {
-    const m = msg('rxreplclient:stream_row')
-    expect(shouldforwardservertoclient(m)).toBe(true)
+  it('forwards rxreplclient:stream_row for any envelope player (host + join gadget streams)', () => {
+    const hostrow = msg('rxreplclient:stream_row', 'host-pid')
+    const joinrow = msg('rxreplclient:stream_row', 'joiner-pid')
+    expect(shouldforwardservertoclient(hostrow)).toBe(true)
+    expect(shouldforwardservertoclient(joinrow)).toBe(true)
+    expect(shouldnotforwardonpeerserver(hostrow)).toBe(false)
+    expect(shouldnotforwardonpeerserver(joinrow)).toBe(false)
   })
 
   it('forwards gadgetclient:paint from client peer to server so a joiner-owned board can paint the host operator', () => {

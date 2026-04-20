@@ -356,7 +356,7 @@ describe('handleplayermovetoboard', () => {
 
     expect(ackboardrunners['board-b']).toBe('operator')
     expect(boardrunners['board-b']).toBe('operator')
-    expect(boardrunnersendsnapshot).not.toHaveBeenCalled()
+    expect(boardrunnersendsnapshot).toHaveBeenCalledWith('operator', 'board-b')
   })
 
   it('clears stale ack on other boards when auto-acking after sim move', () => {

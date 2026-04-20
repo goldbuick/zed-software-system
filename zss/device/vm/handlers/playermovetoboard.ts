@@ -3,6 +3,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
 import { boardrunnerowned } from 'zss/device/api'
 import { grantboardrunnerackaftersimmove } from 'zss/device/vm/handlers/ackboardrunner'
+import { boardrunnersendsnapshot } from 'zss/device/vm/helpers'
 import {
   memorysyncrevokeboardrunner,
   memorysyncupdateboard,
@@ -106,5 +107,17 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     }
   }
 
+  const priordestack = ackboardrunners[payload.board]
   grantboardrunnerackaftersimmove(vm, message.player, payload.board)
+
+  // When the destination already had an acked runner, grantboardrunnerackaftersimmove
+  // returns early without snapshot. Re-admit that runner so gadget:<pid> / flags:<pid>
+  // streams include every viewport player (collectviewportpidsforboard); otherwise
+  // joiners never receive streamrepl rows for their own gadget stream.
+  if (isstring(priordestack) && priordestack.length > 0) {
+    const destack = ackboardrunners[payload.board]
+    if (isstring(destack) && destack.length > 0) {
+      boardrunnersendsnapshot(destack, payload.board)
+    }
+  }
 }

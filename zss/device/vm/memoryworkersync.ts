@@ -12,8 +12,9 @@ admitted stream:
 - `gadget:<player>` streams: `projectgadget(player)` (`GADGET_STATE`).
 - `flags:<player>` streams: `projectplayerflags(player)` (main book flags bag).
 
-Only streams with a registered rxrepl client shadow participate
-(`rxreplclientreadstream`); others are re-queued until admission.
+Most streams require a registered rxrepl client shadow (`rxreplclientreadstream`);
+`gadget:<pid>` is pushed even without a local shadow so the elected runner can
+publish other viewport players' gadget docs (their rxrepl rows hydrate on main).
 
 Hydration of inbound traffic is separate (`memoryhydrate`); it runs inside
 `memorywithsilentwrites`, so it does not re-fire consumed dirty bits.
@@ -51,6 +52,17 @@ export function memoryworkerpushdirty(): void {
   const ownplayer = rxreplclientreadownplayer()
   for (let i = 0; i < dirtyids.length; ++i) {
     const stream = dirtyids[i]
+    if (isgadgetstream(stream)) {
+      const player = playeridfromgadgetstream(stream)
+      if (!player) {
+        continue
+      }
+      const gadget = projectgadget(player)
+      rxreplpushbatch(rxreplclientdevice, ownplayer, {
+        rows: [{ streamid: stream, gadget }],
+      })
+      continue
+    }
     if (!ispresent(rxreplclientreadstream(stream))) {
       // not admitted yet — re-queue so admission + next tick still pushes.
       memorymarkdirty(stream)
@@ -85,17 +97,6 @@ export function memoryworkerpushdirty(): void {
       const document = projectboardcodepage(codepage)
       rxreplpushbatch(rxreplclientdevice, ownplayer, {
         rows: [{ streamid: stream, document }],
-      })
-      continue
-    }
-    if (isgadgetstream(stream)) {
-      const player = playeridfromgadgetstream(stream)
-      if (!player) {
-        continue
-      }
-      const gadget = projectgadget(player)
-      rxreplpushbatch(rxreplclientdevice, ownplayer, {
-        rows: [{ streamid: stream, gadget }],
       })
       continue
     }
