@@ -242,9 +242,8 @@ function mergebookinto(book: BOOK, incoming: Record<string, unknown>): void {
   for (let i = 0; i < BOOK_SCALAR_KEYS.length; ++i) {
     const key = BOOK_SCALAR_KEYS[i]
     if (Object.prototype.hasOwnProperty.call(incoming, key)) {
-      ;(book as unknown as Record<string, unknown>)[key as string] = deepcopy(
-        incoming[key as string],
-      )
+      const bookrec = book as unknown as Record<string, unknown>
+      bookrec[key as string] = deepcopy(incoming[key as string])
     }
   }
   if (Object.prototype.hasOwnProperty.call(incoming, 'flags')) {

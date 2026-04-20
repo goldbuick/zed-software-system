@@ -242,6 +242,7 @@ function projectbook(book: BOOK): unknown {
   if (ispresent(copy.flags) && typeof copy.flags === 'object') {
     copy.flags = stripvolatileflags(copy.flags as Record<string, unknown>)
   }
+  delete copy.timestamp
   return copy
 }
 

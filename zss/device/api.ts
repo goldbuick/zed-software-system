@@ -181,12 +181,6 @@ export function boardrunnergadgetclearscroll(
   device.emit(player, 'boardrunner:clearscroll')
 }
 
-export type BOARDRUNNER_GADGETSCROLLPUSH = {
-  player: string
-  scrollname: string
-  scroll: unknown[]
-}
-
 export type JSONSYNC_CHANGED = {
   streamid: string
   reason: 'document'
