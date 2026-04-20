@@ -23,7 +23,8 @@ Worker DOES still mark dirty when its own local tick mutates state — those
 writes happen outside hydration and feed `memorysyncpushdirty` on the worker
 side (see phase2-worker-emit-patches).
 */
-import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
+import { ispid } from 'zss/mapping/guid'
+import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryinitboard } from 'zss/memory/boards'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
 import { memorydebugassertactivelistboardinvariantifenabled } from 'zss/memory/debugactivelistinvariant'
@@ -160,10 +161,57 @@ const BOOK_SCALAR_KEYS: readonly (keyof BOOK)[] = [
   'token',
 ]
 
+/**
+ * Layers from another `gadgetstore` pid: prefer same `board` when `boardHint`
+ * is set; when the hint is missing (partial client push), use the first other
+ * pid with a non-empty stack so a joiner can bootstrap from the host on MAIN.
+ * Do not copy that pid's `board` on the no-hint path — `Object.keys` order can
+ * pick a runner on another board and paint the wrong level on the joiner.
+ */
+function gadgetstoreboardmatelayers(
+  gadgetMap: Record<string, unknown>,
+  skipPid: string,
+  boardHint?: string,
+): unknown[] | undefined {
+  const pids = Object.keys(gadgetMap)
+  let fallback: unknown[] | undefined
+  const strict =
+    isstring(boardHint) && boardHint.length > 0 ? boardHint : undefined
+  for (let i = 0; i < pids.length; ++i) {
+    const pid = pids[i]
+    if (pid === skipPid) {
+      continue
+    }
+    const g = gadgetMap[pid] as Record<string, unknown> | undefined
+    if (!ispresent(g) || typeof g !== 'object') {
+      continue
+    }
+    const ly = g.layers
+    if (!Array.isArray(ly) || ly.length === 0) {
+      continue
+    }
+    if (strict !== undefined) {
+      if (g.board === strict) {
+        return ly as unknown[]
+      }
+      continue
+    }
+    if (!ispresent(fallback)) {
+      fallback = ly as unknown[]
+    }
+  }
+  return fallback
+}
+
 // merge an incoming flags projection into the worker's local flags, preserving
 // worker-owned volatile keys (inputqueue / inputcurrent / synthstate /
 // synthplay) so the server's view — which never carries these keys after
 // memoryproject.ts strips them — does not clobber live worker state on hydrate.
+//
+// Also used by `memorysync.mergebookflags` on the sim: partial client pushes
+// must merge into canonical MEMORY instead of replacing whole `book.flags`,
+// or `flags.gadgetstore[pid]` / `flags[pid_*]` rows can disappear while the
+// player is still on `activelist` (empty gadget layers / synth on join).
 //
 // IMPORTANT: this function mutates `existing` in place and keeps the same
 // object reference for every `existing[id]` that also appears in `incoming`.
@@ -171,11 +219,13 @@ const BOOK_SCALAR_KEYS: readonly (keyof BOOK)[] = [
 // at boot via memoryreadflags(mem); if we returned a fresh object each
 // hydrate, those closures would go stale on every memory sync and the chip
 // would silently write to an orphaned object.
-function mergeflagspreservingvolatile(
+export function mergeflagspreservingvolatile(
   existing: Record<string, BOOK_FLAGS>,
   incoming: Record<string, Record<string, unknown>>,
+  activelist: readonly string[],
 ): Record<string, BOOK_FLAGS> {
   const seen = new Set<string>()
+  const active = new Set(activelist)
   const incomingids = Object.keys(incoming)
   for (let i = 0; i < incomingids.length; ++i) {
     const id = incomingids[i]
@@ -208,6 +258,20 @@ function mergeflagspreservingvolatile(
         continue
       }
       if (!Object.prototype.hasOwnProperty.call(incomingentry, key)) {
+        // Canonical sim always carries `board` for on-board players, but a
+        // merged snapshot can omit the key (ordering, projection gaps, or
+        // JSON drops). Deleting it here left boardrunner workers with an empty
+        // `memoryreadbookflag(..., 'board')` while `boardrunner:ownedboard` was
+        // already set — no worker-side fallback should be required.
+        if (key === 'board') {
+          continue
+        }
+        // `flags.gadgetstore` is keyed by player id; a partial push can omit
+        // joiners while `activelist` still lists them — same class of bug as
+        // omitting `board` on a player row.
+        if (ispid(key) && active.has(key)) {
+          continue
+        }
         delete existingentry[key]
       }
     }
@@ -215,7 +279,79 @@ function mergeflagspreservingvolatile(
     const incomingkeys = Object.keys(incomingentry)
     for (let k = 0; k < incomingkeys.length; ++k) {
       const key = incomingkeys[k]
-      existingentry[key] = deepcopy(incomingentry[key])
+      const next = deepcopy(incomingentry[key])
+      // `flags.gadgetstore[pid]` is replaced wholesale each merge. A
+      // boardrunner can push `{ layers: [] }` (explicit empty array) before its
+      // board resolves while another runner (or sim) already published a full
+      // stack — reverse-merge must not wipe that (runtime: joiner gadgetclient
+      // layersLen 0). Omitting `layers` is not the same signal; do not borrow
+      // another pid's stack for non-gadget rows like `{ x: 9 }`.
+      if (
+        id === MEMORY_LABEL.GADGETSTORE &&
+        ispid(key) &&
+        active.has(key) &&
+        ispresent(next) &&
+        typeof next === 'object'
+      ) {
+        const prev = existingentry[key] as Record<string, unknown> | undefined
+        const nextrec = next as Record<string, unknown>
+        if (ispresent(prev) && typeof prev === 'object') {
+          const incLayers = nextrec.layers
+          const prevLayers = prev.layers
+          const prevHasLayers =
+            Array.isArray(prevLayers) && prevLayers.length > 0
+          const incomingLayersEmpty =
+            !Array.isArray(incLayers) || incLayers.length === 0
+          const layersExplicitlyEmpty =
+            Object.prototype.hasOwnProperty.call(nextrec, 'layers') &&
+            Array.isArray(incLayers) &&
+            incLayers.length === 0
+          if (incomingLayersEmpty) {
+            if (prevHasLayers) {
+              nextrec.layers = deepcopy(prevLayers)
+              const curBoard = nextrec.board
+              if (!isstring(curBoard) || curBoard.length === 0) {
+                const pb = prev.board
+                if (isstring(pb) && pb.length > 0) {
+                  nextrec.board = pb
+                }
+              }
+            } else if (layersExplicitlyEmpty) {
+              const boardHint =
+                isstring(nextrec.board) && nextrec.board.length > 0
+                  ? (nextrec.board as string)
+                  : undefined
+              const donor = gadgetstoreboardmatelayers(
+                existingentry,
+                key,
+                boardHint,
+              )
+              if (ispresent(donor) && donor.length > 0) {
+                nextrec.layers = deepcopy(donor)
+              }
+            }
+          }
+          const incSynth = nextrec.synthstate as
+            | Record<string, unknown>
+            | undefined
+          const prevSynth = prev.synthstate as Record<string, unknown> | undefined
+          const incVoices = incSynth?.voices as
+            | Record<string, unknown>
+            | undefined
+          const prevVoices = prevSynth?.voices as
+            | Record<string, unknown>
+            | undefined
+          if (
+            (!ispresent(incVoices) ||
+              Object.keys(incVoices).length === 0) &&
+            ispresent(prevVoices) &&
+            Object.keys(prevVoices).length > 0
+          ) {
+            nextrec.synthstate = deepcopy(prevSynth)
+          }
+        }
+      }
+      existingentry[key] = next as BOOK_FLAGS[string]
     }
     // restore volatile worker-owned values
     const volkeys = Object.keys(volatilesnapshot)
@@ -232,6 +368,16 @@ function mergeflagspreservingvolatile(
   for (let i = 0; i < existingids.length; ++i) {
     const id = existingids[i]
     if (!seen.has(id)) {
+      // A full `projectmemory()` includes every flags row, but some fan-outs
+      // can omit player ids (payload size, ordering). Dropping `flags[pid]`
+      // for a player still on `activelist` clears their `board` flag on the
+      // boardrunner worker and stalls gadget layers / synth for that client.
+      if (ispid(id) && active.has(id)) {
+        continue
+      }
+      if (id === MEMORY_LABEL.GADGETSTORE) {
+        continue
+      }
       delete existing[id]
     }
   }
@@ -252,6 +398,7 @@ function mergebookinto(book: BOOK, incoming: Record<string, unknown>): void {
       book.flags = mergeflagspreservingvolatile(
         book.flags,
         flags as Record<string, Record<string, unknown>>,
+        book.activelist ?? [],
       )
     }
   }

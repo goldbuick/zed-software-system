@@ -117,6 +117,54 @@ describe('memorysyncreverseproject', () => {
     expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
   })
 
+  it('merges gadgetstore without dropping an activelist pid missing from the incoming gadget map', () => {
+    const pidHost = 'pid_1111_hostgadget'
+    const pidJoin = 'pid_7777_joingadget'
+    const main = makebook({
+      id: 'main-id',
+      name: 'main',
+      flags: {
+        [MEMORY_LABEL.GADGETSTORE]: {
+          [pidHost]: { x: 1 },
+          [pidJoin]: { layers: [2] },
+        },
+        [pidHost]: { board: 'boardA' },
+        [pidJoin]: { board: 'boardA' },
+      } as BOOK['flags'],
+    })
+    main.activelist = [pidHost, pidJoin]
+    memoryresetbooks([main])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+    memorydirtyclear()
+
+    memorysyncreverseproject(MEMORY_STREAM_ID, {
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [pidHost, pidJoin],
+          pages: [],
+          flags: {
+            [MEMORY_LABEL.GADGETSTORE]: {
+              [pidHost]: { x: 9 },
+            },
+            [pidHost]: { board: 'boardA', hp: 3 },
+            [pidJoin]: { board: 'boardA' },
+          },
+        },
+      },
+    })
+
+    const book = memoryreadbookbyaddress('main-id')
+    const gadgetstore = book?.flags[MEMORY_LABEL.GADGETSTORE] as Record<
+      string,
+      unknown
+    >
+    expect(gadgetstore[pidHost]).toEqual({ x: 9 })
+    expect(gadgetstore[pidJoin]).toEqual({ layers: [2] })
+    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+  })
+
   it('preserves BOARD pages on the live book when memory stream re-projects', () => {
     const board = makeboardcodepage('boardA')
     const main = makebook({

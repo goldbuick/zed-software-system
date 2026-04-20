@@ -42,6 +42,7 @@ import {
 } from 'zss/memory/session'
 import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 
+import { mergeflagspreservingvolatile } from './memoryhydrate'
 import {
   BOARD_SYNC_TOPKEYS,
   boardstreamid,
@@ -402,8 +403,11 @@ function mergebookflags(book: BOOK, incoming: Record<string, unknown>): void {
   if (!ispresent(flags) || typeof flags !== 'object') {
     return
   }
-  // replace flags entirely so deletes round-trip.
-  book.flags = deepcopy(flags) as Record<string, BOOK_FLAGS>
+  book.flags = mergeflagspreservingvolatile(
+    book.flags,
+    flags as Record<string, Record<string, unknown>>,
+    book.activelist ?? [],
+  )
 }
 
 // non-BOARD pages are carried in the memory stream; BOARD pages live in their
