@@ -5,8 +5,10 @@
 
 export const SECOND_TIMEOUT = 16
 export const FLUSH_RATE = 60
+
 /** Seconds (1 `second` tick each) to wait for boardrunner ack before clearing election. */
-export const BOARDRUNNER_ACK_FAIL_COUNT = 6
+export const BOARDRUNNER_ACK_FAIL_COUNT = 2
+
 /**
  * Bias applied to a currently-acked board runner when deciding the next
  * election (see memoryreadboardrunnerchoices). A challenger must beat the
@@ -15,6 +17,7 @@ export const BOARDRUNNER_ACK_FAIL_COUNT = 6
  * with initial tracking = SECOND_TIMEOUT/2.
  */
 export const BOARDRUNNER_STICKY_BIAS = 4
+
 /** Initial tracking score assigned on handlelogin/handlelocal. Set above 0
  * so a brand-new joiner does not instantly displace an acked runner whose
  * tracking is a few seconds old. Combined with BOARDRUNNER_STICKY_BIAS this
@@ -36,8 +39,10 @@ export const lastinputtime: Record<string, number> = {}
 
 /** Latest elected board runner per `BOARD.id` (main book); replaced each `second`. */
 export const boardrunners: Record<string, string> = {}
+
 // board runners that have acknowledged their election
 export const ackboardrunners: Record<string, string> = {}
+
 /** Per-board per-player ack retry count; `BOARDRUNNER_ACK_FAIL_COUNT` means failed (skip until valid ack). */
 export const failedboardrunners: Record<string, Record<string, number>> = {}
 

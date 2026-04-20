@@ -75,7 +75,9 @@ let clientinit: Promise<void> | null = null
 let streamchangeddevice: DEVICELIKE | null = null
 
 /** Call from rxreplclient (once) so persisted streams emit `${streamid}:changed`. */
-export function streamreplregisterstreamchangeddevice(device: DEVICELIKE): void {
+export function streamreplregisterstreamchangeddevice(
+  device: DEVICELIKE,
+): void {
   streamchangeddevice = device
 }
 

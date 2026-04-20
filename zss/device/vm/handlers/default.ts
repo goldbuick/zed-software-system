@@ -7,7 +7,7 @@ import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
-import { gadgetstate } from 'zss/gadget/data/api'
+import { gadgetmarkdirty, gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
@@ -162,6 +162,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
             }
             const shared = gadgetstate(message.player)
             shared.scrollname = path
+            gadgetmarkdirty(message.player)
           })
           break
         }

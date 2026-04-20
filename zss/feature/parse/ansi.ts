@@ -9,11 +9,11 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memorywriteterrain } from 'zss/memory/boardlifecycle'
 import { memoryptwithinboard } from 'zss/memory/boardtransitions'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
+import { memoryensureimportbook } from 'zss/memory/books'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
-import { memoryensureimportbook } from 'zss/memory/books'
 import {
   BOARD,
   BOARD_HEIGHT,

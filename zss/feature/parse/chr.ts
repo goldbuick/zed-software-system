@@ -3,12 +3,12 @@ import { SOFTWARE } from 'zss/device/session'
 import { loadcharsetfrombytes } from 'zss/feature/bytes'
 import { ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
+import { memoryensureimportbook } from 'zss/memory/books'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
   memoryreadcodepagename,
 } from 'zss/memory/codepageoperations'
-import { memoryensureimportbook } from 'zss/memory/books'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 export function parsechr(

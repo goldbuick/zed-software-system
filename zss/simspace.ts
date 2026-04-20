@@ -10,7 +10,6 @@ import './device/gadgetmemoryprovider'
 import './device/streamreplserver'
 import './device/rxreplserver'
 import './device/modem'
-import './device/user'
 
 const { forward } = createforward((message) => {
   if (shouldforwardservertoclient(message)) {

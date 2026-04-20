@@ -202,6 +202,7 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
 }
 
 type GADGET_STATE_PROVIDER = (player: string) => GADGET_STATE
+type GADGET_STATE_ON_CHANGE = (player: string) => void
 
 const tempgadgetstate: Record<string, GADGET_STATE> = {}
 let GADGET_PROVIDER = (player: string) => {
@@ -212,12 +213,22 @@ let GADGET_PROVIDER = (player: string) => {
   return value
 }
 
-export function gadgetstateprovider(provider: GADGET_STATE_PROVIDER) {
+let GADGET_ON_CHANGE: GADGET_STATE_ON_CHANGE = noop
+
+export function gadgetstateprovider(
+  provider: GADGET_STATE_PROVIDER,
+  onchange: GADGET_STATE_ON_CHANGE,
+) {
   GADGET_PROVIDER = provider
+  GADGET_ON_CHANGE = onchange
 }
 
 export function gadgetstate(element: string) {
   return GADGET_PROVIDER(element)
+}
+
+export function gadgetmarkdirty(player: string) {
+  GADGET_ON_CHANGE(player)
 }
 
 function gadgetreadqueue(element: string) {
@@ -231,6 +242,7 @@ export function gadgetclearscroll(element: string) {
   const shared = gadgetstate(element)
   shared.scrollname = ''
   shared.scroll = []
+  gadgetmarkdirty(element)
 }
 
 export function gadgetcheckset(chip: CHIP, name: string, value: WORD) {
@@ -274,6 +286,7 @@ export function gadgetaddcenterpadding(queue: PANEL_ITEM[]) {
 
 export function gadgettext(element: string, text: string) {
   gadgetreadqueue(element).push(text)
+  gadgetmarkdirty(element)
 }
 
 export function gadgethyperlink(

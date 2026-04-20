@@ -4,9 +4,9 @@ import {
 } from 'zss/device/forward'
 
 import { setassignedplayerid } from './device/boardrunner'
-import './device/boardrunneruser'
-import './device/rxreplclient'
 import { isstring } from './mapping/types'
+import './device/rxreplclient'
+import './device/gadgetmemoryprovider'
 
 const { forward } = createforward(
   (message) => {

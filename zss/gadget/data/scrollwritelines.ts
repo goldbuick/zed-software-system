@@ -5,6 +5,7 @@ import { iszedlinkline } from 'zss/feature/zsstextui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
+  gadgetmarkdirty,
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
@@ -116,21 +117,23 @@ export function scrollwritelines(
     }
   }
   shared.scroll = gadgetcheckqueue(player)
-  // Mirror the freshly authored scroll onto the authoritative boardrunner's
-  // worker-local gadgetstate. Scroll-producing handlers run on sim (so
-  // hyperlink bridges stay attached to sim-local callbacks), but the runner
-  // owns the UI paint loop (`boardrunnergadgetsynctick`). Without this push
-  // the worker never sees the scroll until the next memory snapshot — and
-  // `gadgetstore` is now volatile (VOLATILE_FLAG_IDS) so snapshots skip it.
-  // When `resolverunner` returns '' (worker realm, or before first
-  // ackboardrunner), we skip the emit — in that case the write above already
-  // landed on the authoritative gadgetstore directly.
-  const runner = resolverunner(player)
-  if (runner) {
-    boardrunnergadgetscrollpush(SOFTWARE, runner, {
-      player,
-      scrollname,
-      scroll: shared.scroll as unknown[],
-    })
-  }
+  gadgetmarkdirty(player)
+
+  // // Mirror the freshly authored scroll onto the authoritative boardrunner's
+  // // worker-local gadgetstate. Scroll-producing handlers run on sim (so
+  // // hyperlink bridges stay attached to sim-local callbacks), but the runner
+  // // owns the UI paint loop (`boardrunnergadgetsynctick`). Without this push
+  // // the worker never sees the scroll until the next memory snapshot — and
+  // // `gadgetstore` is now volatile (VOLATILE_FLAG_IDS) so snapshots skip it.
+  // // When `resolverunner` returns '' (worker realm, or before first
+  // // ackboardrunner), we skip the emit — in that case the write above already
+  // // landed on the authoritative gadgetstore directly.
+  // const runner = resolverunner(player)
+  // if (runner) {
+  //   boardrunnergadgetscrollpush(SOFTWARE, runner, {
+  //     player,
+  //     scrollname,
+  //     scroll: shared.scroll as unknown[],
+  //   })
+  // }
 }

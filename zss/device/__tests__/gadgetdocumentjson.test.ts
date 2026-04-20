@@ -9,15 +9,12 @@ import {
 } from 'zss/gadget/data/types'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
 
-import {
-  gadgetdocumentjson,
-  parsegadgetdocumentjson,
-} from '../gadgetdocument'
+import { gadgetdocumentjson, parsegadgetdocumentjson } from '../gadgetdocument'
 
 function roundtrip(state: GADGET_STATE) {
   const json = gadgetdocumentjson(state)
   expect(json).toBeDefined()
-  return parsegadgetdocumentjson(json!)
+  return parsegadgetdocumentjson(json)
 }
 
 describe('gadgetdocumentjson / parsegadgetdocumentjson', () => {

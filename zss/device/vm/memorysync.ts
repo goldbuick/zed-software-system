@@ -44,27 +44,15 @@ import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import {
   BOARD_SYNC_TOPKEYS,
-  MEMORY_SYNC_TOPKEYS,
   boardstreamid,
   projectboardcodepage,
   projectmemory,
 } from './memoryproject'
 
-export {
-  BOARD_SYNC_TOPKEYS,
-  MEMORY_STREAM_ID,
-  MEMORY_SYNC_TOPKEYS,
-  boardstreamid,
-  projectboardcodepage,
-  projectmemory,
-}
-
 export function memorysyncensureregistered(): void {
   const projected = projectmemory()
   if (!ispresent(streamreplserverreadstream(MEMORY_STREAM_ID))) {
-    streamreplserverregister(MEMORY_STREAM_ID, projected, {
-      topkeys: [...MEMORY_SYNC_TOPKEYS],
-    })
+    streamreplserverregister(MEMORY_STREAM_ID, projected)
     return
   }
   streamreplserverupdate(MEMORY_STREAM_ID, projected)
@@ -221,7 +209,10 @@ export function memorysyncupdatememory(): void {
 }
 
 export function memorysyncupdateboard(codepage: CODE_PAGE): void {
-  streamreplserverupdate(boardstreamid(codepage), projectboardcodepage(codepage))
+  streamreplserverupdate(
+    boardstreamid(codepage),
+    projectboardcodepage(codepage),
+  )
 }
 
 // stream id form is `board:<codepage.id>` — use codepage.id (which the runtime

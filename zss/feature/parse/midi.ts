@@ -21,12 +21,12 @@ import { SOFTWARE } from 'zss/device/session'
 import { midiplaysnippetsbymeasure } from 'zss/feature/parse/midiplay'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
+import { memoryensureimportbook } from 'zss/memory/books'
 import {
   memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryensureimportbook } from 'zss/memory/books'
 import { NAME } from 'zss/words/types'
 
 function escapestring(value: string): string {

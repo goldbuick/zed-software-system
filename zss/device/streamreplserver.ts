@@ -34,7 +34,6 @@ export function streamreplserverclearfortests(): void {
 export function streamreplserverregister(
   streamid: string,
   document: unknown,
-  _opts?: { topkeys?: readonly string[] },
 ): void {
   if (streams.has(streamid)) {
     return
@@ -75,7 +74,10 @@ function fanout(streamid: string, document: unknown, rev: number): void {
   }
 }
 
-export function streamreplserverupdate(streamid: string, nextdoc: unknown): void {
+export function streamreplserverupdate(
+  streamid: string,
+  nextdoc: unknown,
+): void {
   const entry = streams.get(streamid)
   if (!entry) {
     return
@@ -102,7 +104,10 @@ export function streamreplserveradmitplayer(
   })
 }
 
-export function streamreplserverdropplayer(streamid: string, player: string): void {
+export function streamreplserverdropplayer(
+  streamid: string,
+  player: string,
+): void {
   const entry = streams.get(streamid)
   if (!entry) {
     return
@@ -120,7 +125,10 @@ export function streamreplserverreadstream(
   return streams.get(streamid)
 }
 
-export function streamreplplayerwritable(streamid: string, player: string): boolean {
+export function streamreplplayerwritable(
+  streamid: string,
+  player: string,
+): boolean {
   const entry = streams.get(streamid)
   if (!entry) {
     return false

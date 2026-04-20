@@ -54,10 +54,12 @@ export function useScreenChromeLayout(
     })),
   )
 
-  const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
+  const scroll = useGadgetClient(
+    useEqual((state) => state.gadget?.scroll ?? []),
+  )
   const isscrollempty = scroll.length === 0
   const sidebar = useGadgetClient(
-    useEqual((state) => state.gadget.sidebar ?? []),
+    useEqual((state) => state.gadget?.sidebar ?? []),
   )
 
   useEffect(() => {

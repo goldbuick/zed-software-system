@@ -8,11 +8,11 @@ import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 import { memorywriteterrain } from 'zss/memory/boardlifecycle'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
+import { memoryensureimportbook } from 'zss/memory/books'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
-import { memoryensureimportbook } from 'zss/memory/books'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 const PETSCII_COLS = 40

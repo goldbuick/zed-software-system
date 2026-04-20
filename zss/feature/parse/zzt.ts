@@ -22,11 +22,11 @@ import {
   memorycreatebook,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
+import { memoryensureimportbook } from 'zss/memory/books'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
-import { memoryensureimportbook } from 'zss/memory/books'
 import { memorywritebook, memorywritesoftwarebook } from 'zss/memory/session'
 import {
   BOARD,

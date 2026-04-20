@@ -1,13 +1,24 @@
 import { createdevice } from 'zss/device'
-import { gadgetclearscroll, gadgetstate } from 'zss/gadget/data/api'
-import { PANEL_ITEM } from 'zss/gadget/data/types'
+import {
+  gadgetclearscroll,
+  gadgetmarkdirty,
+  gadgetstate,
+} from 'zss/gadget/data/api'
+import { GADGET_STATE, INPUT, PANEL_ITEM } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
 } from 'zss/memory/boards'
 import { memoryreadbookflag } from 'zss/memory/bookoperations'
+import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import { MEMORY_STREAM_ID, memorymarkmemorydirty } from 'zss/memory/memorydirty'
+import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import {
+  MEMORY_GADGET_LAYERS,
+  memoryconverttogadgetcontrollayer,
+  memoryreadgadgetlayers,
+} from 'zss/memory/rendering'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
@@ -15,23 +26,19 @@ import {
   memoryreadoperator,
   memoryreadsimfreeze,
 } from 'zss/memory/session'
-import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
+import { memoryreadsynth } from 'zss/memory/synthstate'
+import { BOARD, BOOK, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
+import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
 import {
-  BOARDRUNNER_GADGETSCROLLPUSH,
-  JSONSYNC_CHANGED,
-  vmclearscroll,
-} from './api'
-import {
-  boardrunnergadgetpushnow,
-  boardrunnergadgetsynctick,
-} from './boardrunnergadget'
-import { pilottick } from './vm/handlers/pilot'
+  handlepilotclear,
+  handlepilotstart,
+  handlepilotstop,
+  pilottick,
+} from './vm/handlers/pilot'
 import { memoryhydratefromjsonsync } from './vm/memoryhydrate'
 import { memoryworkerpushdirty } from './vm/memoryworkersync'
-
-import './gadgetmemoryprovider'
 
 function shouldboardrunnerhandlestreamchanged(target: string): boolean {
   if (target === `${MEMORY_STREAM_ID}:changed`) {
@@ -46,7 +53,6 @@ function shouldboardrunnerhandlestreamchanged(target: string): boolean {
 
 // jsonsync resync + gadget baselines treat both layers as ours.
 let assignedboardid = ''
-
 let assignedplayerid = ''
 export function setassignedplayerid(player: string) {
   assignedplayerid = player
@@ -118,6 +124,30 @@ function ownedplayerids(): string[] {
   return out
 }
 
+function rendergadgetlayers(
+  gadget: GADGET_STATE,
+  player: string,
+  board: BOARD,
+  layers: MEMORY_GADGET_LAYERS,
+) {
+  const control = memoryconverttogadgetcontrollayer(player, 1000, board)
+  gadget.id = layers.id
+  gadget.board = layers.board
+  gadget.exiteast = layers.exiteast
+  gadget.exitwest = layers.exitwest
+  gadget.exitnorth = layers.exitnorth
+  gadget.exitsouth = layers.exitsouth
+  gadget.exitne = layers.exitne
+  gadget.exitnw = layers.exitnw
+  gadget.exitse = layers.exitse
+  gadget.exitsw = layers.exitsw
+  gadget.over = layers.over
+  gadget.under = layers.under
+  gadget.layers = [...layers.layers, ...control]
+  gadget.tickers = layers.tickers
+  gadget.boardname = board.name?.trim() ?? ''
+}
+
 function runworkertick(dev: ReturnType<typeof createdevice>): void {
   rebuildownedboardids()
   if (memoryreadsimfreeze()) {
@@ -133,9 +163,25 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
   perfmeasure('boardrunner:memorytickmain', () => {
     memorytickmain(memoryreadhalt())
   })
-  perfmeasure('boardrunner:gadgetrender', () => {
-    boardrunnergadgetsynctick(players)
+
+  perfmeasure('boardrunner:rendergadgetlayers', () => {
+    // render the board visuals
+    const playerboard = memoryreadplayerboard(assignedplayerid)
+    if (ispresent(playerboard)) {
+      // read A/V state
+      const synthstate = memoryreadsynth(playerboard.id ?? '')
+      const gadgetlayers = memoryreadgadgetlayers(assignedplayerid, playerboard)
+      // build layers for each player
+      for (let i = 0; i < players.length; ++i) {
+        const player = players[i]
+        const gadget = gadgetstate(player)
+        gadget.synthstate = synthstate
+        rendergadgetlayers(gadget, player, playerboard, gadgetlayers)
+        gadgetmarkdirty(player)
+      }
+    }
   })
+
   perfmeasure('boardrunner:memoryworkerpushdirty', () => {
     memoryworkerpushdirty()
   })
@@ -192,29 +238,65 @@ const boardrunner = createdevice(
         }
         break
       }
-      case 'clearscroll':
+      case 'clearscroll': {
         gadgetclearscroll(message.player)
-        memorymarkmemorydirty()
         vmclearscroll(boardrunner, message.player)
         break
-      case 'gadgetscrollpush': {
-        const payload = message.data as BOARDRUNNER_GADGETSCROLLPUSH | undefined
-        const player = isstring(payload?.player) ? payload.player : ''
-        if (!player) {
-          break
-        }
-        const shared = gadgetstate(player)
-        shared.scrollname = isstring(payload?.scrollname)
-          ? payload.scrollname
-          : ''
-        shared.scroll = (
-          isarray(payload?.scroll) ? payload.scroll : []
-        ) as PANEL_ITEM[]
-        boardrunnergadgetpushnow(player, false)
-        break
       }
+      // case 'gadgetscrollpush': {
+      //   // const payload = message.data as BOARDRUNNER_GADGETSCROLLPUSH | undefined
+      //   // const player = isstring(payload?.player) ? payload.player : ''
+      //   // if (!player) {
+      //   //   break
+      //   // }
+      //   // const shared = gadgetstate(player)
+      //   // shared.scrollname = isstring(payload?.scrollname)
+      //   //   ? payload.scrollname
+      //   //   : ''
+      //   // shared.scroll = (
+      //   //   isarray(payload?.scroll) ? payload.scroll : []
+      //   // ) as PANEL_ITEM[]
+      //   // boardrunnergadgetpushnow(player, false)
+      //   break
+      // }
       default:
         break
     }
   },
 )
+
+function handleworkeruserinput(message: MESSAGE): void {
+  if (!memoryhasflags(message.player)) {
+    return
+  }
+  const flags = memoryreadflags(message.player)
+  const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+  if (!isarray(flags.inputqueue)) {
+    flags.inputqueue = []
+  }
+  if (input !== INPUT.NONE) {
+    flags.inputqueue.push([input, mods])
+  }
+}
+
+const user = createdevice('user', [], (message) => {
+  if (!user.session(message)) {
+    return
+  }
+  switch (message.target) {
+    case 'input':
+      handleworkeruserinput(message)
+      break
+    case 'pilotstart':
+      handlepilotstart(message)
+      break
+    case 'pilotstop':
+      handlepilotstop(message)
+      break
+    case 'pilotclear':
+      handlepilotclear(message)
+      break
+    default:
+      break
+  }
+})

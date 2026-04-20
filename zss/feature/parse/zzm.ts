@@ -3,12 +3,12 @@ import { SOFTWARE } from 'zss/device/session'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
+import { memoryensureimportbook } from 'zss/memory/books'
 import {
   memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryensureimportbook } from 'zss/memory/books'
 import { NAME } from 'zss/words/types'
 
 type ZZM_SONG = {

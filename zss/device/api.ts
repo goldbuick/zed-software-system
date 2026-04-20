@@ -182,14 +182,6 @@ export function gadgetclientpatch(
   device.emit(player, 'gadgetclient:patch', json)
 }
 
-// Server VM -> elected player's boardrunner worker: the one board codepage id
-// this player is the acked runner for, or '' when none. The worker only runs
-// pilot/memorytickmain/gadgetrender + pushes jsonsync edits when that id
-// matches an active player's `board` flag.
-// Sent on election change (handleackboardrunner), on ack failure removal
-// (handlesecond), on peer departure (handlepeergone), and on logout
-// (handlelogout). Routed via shouldforwardservertoclient (boardrunner:* is
-// whitelisted) then shouldforwardclienttoboardrunner into the worker.
 export function boardrunnerowned(
   device: DEVICELIKE,
   player: string,
@@ -198,17 +190,6 @@ export function boardrunnerowned(
   device.emit(player, 'boardrunner:ownedboard', boardid)
 }
 
-// Sim VM -> elected runner's boardrunner worker: push a freshly authored scroll
-// (`scrollname` + `scroll` content) onto the runner's worker-local gadgetstate.
-// Scroll-producing vm handlers (inspect / refscroll / batch / …) continue to
-// run on the sim because they need stable READ_CONTEXT and can register
-// hyperlink bridges in sim. The sim writes to its own gadgetstore, then emits
-// this message so the authoritative runner — which owns the UI paint loop via
-// `boardrunnergadgetsynctick` — can include the scroll in its next diff.
-// `gadgetstore` is kept worker-local (see VOLATILE_FLAG_KEYS); this push is
-// the only path by which sim-authored scroll content reaches the runner.
-// Routed via shouldforwardservertoclient (boardrunner:* whitelist) then
-// shouldforwardclienttoboardrunner into the worker.
 export type BOARDRUNNER_GADGETSCROLLPUSH = {
   player: string
   scrollname: string
@@ -222,8 +203,6 @@ export function boardrunnergadgetscrollpush(
   device.emit(runnerplayer, 'boardrunner:gadgetscrollpush', payload)
 }
 
-// --- stream replication (memory / board:*) ---------------------------------
-
 export type JSONSYNC_CHANGED = {
   streamid: string
   reason: 'document'
@@ -231,8 +210,10 @@ export type JSONSYNC_CHANGED = {
   document: unknown
 }
 
-/** Local broadcast when a client stream document updates (target `${streamid}:changed`). */
-export function streamsyncchanged(device: DEVICELIKE, payload: JSONSYNC_CHANGED) {
+export function streamsyncchanged(
+  device: DEVICELIKE,
+  payload: JSONSYNC_CHANGED,
+) {
   device.emit('', `${payload.streamid}:changed`, payload)
 }
 

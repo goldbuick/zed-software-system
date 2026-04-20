@@ -137,49 +137,37 @@ export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
 // create client -> server forward
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   const t = message.target
-  if (t === 'ticktock') {
-    return false
-  }
   // Hot paths: avoid parsetarget alloc on common multiplayer messages.
   switch (t) {
     case 'user:input':
     case 'user:pilotstart':
     case 'user:pilotstop':
     case 'user:pilotclear':
-    case 'gadgetclient:paint':
-    case 'gadgetclient:patch':
     case 'rxreplserver:push_batch':
     case 'rxreplserver:pull_request':
       return true
+    case 'ticktock':
+      return false
     default:
       break
   }
-  if (t.startsWith('vm:')) {
+  if (t.startsWith('vm:') || t.startsWith('modem:')) {
     return true
   }
-  if (t.startsWith('modem:')) {
-    return true
-  }
-  const route = parsetarget(t)
-  if (route.target === 'boardrunner') {
+  if (t.startsWith('boardrunner:')) {
     return false
   }
-  // Legacy gadgetclient:* fan-out must reach every peer hub. Rendered gadget
-  // snapshots ship in the `memory` stream (`gadgetrender` flag); keep
-  // gadgetclient routes for straggler tooling/tests.
+  const route = parsetarget(t)
   switch (route.target) {
     case 'vm':
     case 'user':
     case 'modem':
-    case 'gadgetclient':
     case 'rxreplserver':
       return true
   }
   switch (route.path) {
     case 'sync':
-    case 'desync':
     case 'joinack':
-    case 'needsnapshot':
     case 'ackboardrunner':
       return true
   }

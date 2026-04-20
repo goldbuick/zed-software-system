@@ -6,8 +6,8 @@ import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import {
   memoryreadbookbysoftware,
   memoryresetbooks,
-  memorywritesoftwarebook,
   memorywriteoperator,
+  memorywritesoftwarebook,
 } from 'zss/memory/session'
 import { BOOK, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
