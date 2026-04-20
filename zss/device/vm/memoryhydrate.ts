@@ -52,7 +52,7 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
-import { VOLATILE_FLAG_IDS, VOLATILE_FLAG_KEYS } from './memoryproject'
+import { VOLATILE_FLAG_KEYS } from './memoryproject'
 
 export function memoryhydratefromjsonsync(
   streamid: string,
@@ -176,20 +176,9 @@ function mergeflagspreservingvolatile(
   incoming: Record<string, Record<string, unknown>>,
 ): Record<string, BOOK_FLAGS> {
   const seen = new Set<string>()
-  // VOLATILE_FLAG_IDS (e.g. `gadgetstore`) are worker-local and never flow
-  // through the memory stream. Mark them "seen" so the trailing removal pass
-  // cannot delete the worker's copy when the sim's projection omits them.
-  for (let i = 0; i < VOLATILE_FLAG_IDS.length; ++i) {
-    seen.add(VOLATILE_FLAG_IDS[i])
-  }
   const incomingids = Object.keys(incoming)
   for (let i = 0; i < incomingids.length; ++i) {
     const id = incomingids[i]
-    if (VOLATILE_FLAG_IDS.includes(id)) {
-      // Belt-and-braces: even if a stale projection still carried this id,
-      // the worker's copy is authoritative — skip the merge entirely.
-      continue
-    }
     const incomingentry = incoming[id]
     if (!ispresent(incomingentry) || typeof incomingentry !== 'object') {
       continue

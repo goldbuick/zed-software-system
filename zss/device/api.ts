@@ -166,41 +166,25 @@ export function bridgehalt(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:halt', undefined)
 }
 
-export function gadgetclientpaint(
-  device: DEVICELIKE,
-  player: string,
-  json: any,
-) {
-  device.emit(player, 'gadgetclient:paint', json)
-}
-
-export function gadgetclientpatch(
-  device: DEVICELIKE,
-  player: string,
-  json: any,
-) {
-  device.emit(player, 'gadgetclient:patch', json)
-}
-
 export function boardrunnerowned(
   device: DEVICELIKE,
   player: string,
-  boardid: string,
+  board: string,
 ) {
-  device.emit(player, 'boardrunner:ownedboard', boardid)
+  device.emit(player, 'boardrunner:ownedboard', board)
+}
+
+export function boardrunnergadgetclearscroll(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'boardrunner:clearscroll')
 }
 
 export type BOARDRUNNER_GADGETSCROLLPUSH = {
   player: string
   scrollname: string
   scroll: unknown[]
-}
-export function boardrunnergadgetscrollpush(
-  device: DEVICELIKE,
-  runnerplayer: string,
-  payload: BOARDRUNNER_GADGETSCROLLPUSH,
-) {
-  device.emit(runnerplayer, 'boardrunner:gadgetscrollpush', payload)
 }
 
 export type JSONSYNC_CHANGED = {
@@ -303,13 +287,6 @@ export function rxreplnotify(
   payload: RXREPL_NOTIFY,
 ) {
   device.emit(player, 'rxreplclient:notify', payload)
-}
-
-export function boardrunnergadgetclearscroll(
-  device: DEVICELIKE,
-  player: string,
-) {
-  device.emit(player, 'boardrunner:clearscroll')
 }
 
 export function heavyttsinfo(

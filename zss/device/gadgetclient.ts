@@ -25,8 +25,6 @@ export const gadgetclientdevice = createdevice(
     const gadgetstore = mainbook?.flags[MEMORY_LABEL.GADGETSTORE] ?? {}
     const gadget = gadgetstore[player] as MAYBE<GADGET_STATE>
 
-    console.info('gadgetclientmessage', gadgetstore, player, gadget)
-
     // update the gadget client state
     if (ispresent(gadget)) {
       useGadgetClient.setState((state) => ({

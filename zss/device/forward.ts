@@ -107,9 +107,9 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'modem':
         case 'bridge':
         case 'register':
+        case 'boardrunner':
         case 'gadgetclient':
         case 'rxreplclient':
-        case 'boardrunner':
           return true
       }
       switch (route.path) {
@@ -257,17 +257,11 @@ export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
   if (message.target.endsWith(':changed')) {
     return false
   }
-  const r = parsetarget(message.target)
-  const leaf =
-    r.path.length > 0 ? r.path.slice(r.path.lastIndexOf(':') + 1) : r.target
-  if (leaf === 'ticktock' || leaf === 'second') {
-    return false
-  }
   // The boardrunner worker is authoritative for elected boards and pushes
   // mutations back up via `memoryworkerpushdirty` -> `rxreplpushbatch`.
   // Passthrough to the main hub so the sim's rxreplserver can merge into
   // canonical MEMORY and fan out stream_row to peers.
-  if (r.target === 'rxreplserver') {
+  if (message.target.startsWith('rxreplserver:')) {
     return true
   }
   return shouldforwardservertoclient(message)
