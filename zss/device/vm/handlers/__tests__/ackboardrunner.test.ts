@@ -4,7 +4,7 @@ import * as api from 'zss/device/api'
 import { handleackboardrunner } from 'zss/device/vm/handlers/ackboardrunner'
 import * as helpers from 'zss/device/vm/helpers'
 import * as memorysync from 'zss/device/vm/memorysync'
-import { ackboardrunners, boardrunners } from 'zss/device/vm/state'
+import { ackboardrunners, boardrunners, failedboardrunners } from 'zss/device/vm/state'
 import * as bookoperations from 'zss/memory/bookoperations'
 import * as session from 'zss/memory/session'
 
@@ -14,6 +14,9 @@ function clearboardrunnerstate() {
   }
   for (const k of Object.keys(ackboardrunners)) {
     delete ackboardrunners[k]
+  }
+  for (const k of Object.keys(failedboardrunners)) {
+    delete failedboardrunners[k]
   }
 }
 
@@ -143,6 +146,19 @@ describe('handleackboardrunner', () => {
     expect(ackboardrunners['board-b']).toBeUndefined()
     expect(revoke).toHaveBeenCalledWith('player-1', 'board-b')
     expect(ackboardrunners['board-a']).toBe('player-1')
+  })
+
+  it('clears failedboardrunners retry state on successful ack', () => {
+    boardrunners['board-a'] = 'player-1'
+    failedboardrunners['board-a'] = { 'player-1': 1 }
+    const message = {
+      data: 'board-a',
+      player: 'player-1',
+    } as MESSAGE
+
+    handleackboardrunner(vm, message)
+
+    expect(failedboardrunners['board-a']).toBeUndefined()
   })
 
   it('ignores ack when player board flag does not match asked board', () => {

@@ -1,10 +1,7 @@
 import { createchipid } from 'zss/chip'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  BOARDRUNNER_ACK_FAIL_COUNT,
-  BOARDRUNNER_STICKY_BIAS,
-} from 'zss/device/vm/state'
+import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
 import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
@@ -41,11 +38,7 @@ import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memorydebugassertactivelistboardinvariantifenabled } from './debugactivelistinvariant'
 import { memorymarkboarddirty, memorymarkmemorydirty } from './memorydirty'
 import { memoryhaltchip } from './runtime'
-import {
-  memoryisoperator,
-  memoryreadbookbysoftware,
-  memoryreadoperator,
-} from './session'
+import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -208,12 +201,8 @@ export function memoryreadboardrunnerchoices(
   // list of current scores for the current choices
   const runnerscore: Record<string, number> = {}
 
-  // Stickiness: if a board already has an acked runner who is still on the
-  // board, seed the election with that player at
-  // score(acked) - BOARDRUNNER_STICKY_BIAS. A challenger must have a
-  // meaningfully lower score to flip the election. This prevents fresh
-  // joiners (initial tracking = INITIAL_TRACKING) from instantly stealing
-  // the title board from the operator between ticks.
+  // Hard lock: an acked runner still on the board (and not ack-timeout
+  // blocked) is the only choice — tracking cannot displace them.
   if (ispresent(currentacked)) {
     const ackedboards = Object.keys(currentacked)
     for (let i = 0; i < ackedboards.length; ++i) {
@@ -229,33 +218,8 @@ export function memoryreadboardrunnerchoices(
       if (!onboard.includes(acked)) {
         continue
       }
-      const ackedscore = tracking[acked] ?? 1000
-      runnerscore[board] = ackedscore - BOARDRUNNER_STICKY_BIAS
-      runnerchoices[board] = acked
-    }
-  }
-
-  // Host / session operator must stay the boardrunner on any board they occupy
-  // while a joiner is present: joiner tracking starts at INITIAL_TRACKING but
-  // the operator often has a much higher score from solo play, and this
-  // function otherwise picks the *lowest* score — which always steals the
-  // election from the host and stops their boardrunner worker (no movement).
-  const sessionop = memoryreadoperator()
-  if (isstring(sessionop) && sessionop.length > 0) {
-    const boardids = Object.keys(playeridsbyboard)
-    for (let i = 0; i < boardids.length; ++i) {
-      const board = boardids[i]
-      const onboard = playeridsbyboard[board] ?? []
-      if (!onboard.includes(sessionop)) {
-        continue
-      }
-      if (
-        boardrunnerfailed?.[board]?.[sessionop] === BOARDRUNNER_ACK_FAIL_COUNT
-      ) {
-        continue
-      }
-      runnerchoices[board] = sessionop
       runnerscore[board] = Number.NEGATIVE_INFINITY
+      runnerchoices[board] = acked
     }
   }
 
@@ -269,6 +233,26 @@ export function memoryreadboardrunnerchoices(
 
     if (boardrunnerfailed?.[board]?.[player] === BOARDRUNNER_ACK_FAIL_COUNT) {
       continue
+    }
+
+    // One acked board per worker path: skip players already acked on a
+    // different board so we do not stack conflicting authoritative runners.
+    if (ispresent(currentacked)) {
+      const obids = Object.keys(currentacked)
+      let ackedElsewhere = false
+      for (let j = 0; j < obids.length; ++j) {
+        const ob = obids[j]
+        if (ob === board) {
+          continue
+        }
+        if (currentacked[ob] === player) {
+          ackedElsewhere = true
+          break
+        }
+      }
+      if (ackedElsewhere) {
+        continue
+      }
     }
 
     // track scores for the current choices

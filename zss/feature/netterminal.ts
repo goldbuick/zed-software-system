@@ -3,7 +3,6 @@ import {
   MESSAGE,
   apierror,
   apilog,
-  ismessage,
   vmpeergone,
   vmsearch,
   vmtopic,
@@ -17,12 +16,7 @@ import {
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  netformatdebugsendlegacy,
-  netformatdecode,
-  netformatencode,
-  netserializable,
-} from 'zss/feature/netformat'
+import { netformatdecode, netformatencode } from 'zss/feature/netformat'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash, createsid } from 'zss/mapping/guid'
@@ -139,10 +133,7 @@ function netterminalparsedata(netmsg: unknown): MESSAGE {
   ) {
     return netformatdecode(new Uint8Array(netmsg))
   }
-  if (!ismessage(netmsg)) {
-    throw new Error('netterminalparsedata: expected MESSAGE object')
-  }
-  return netmsg
+  throw new Error('netterminalparsedata: expected CBOR wire (binary frame)')
 }
 
 const netterminalencodecache = new WeakMap<MESSAGE, Uint8Array>()
@@ -157,25 +148,16 @@ function handledataconnection(dataconnection: DataConnection) {
   let remotepeerplayer = ''
   /** Joiner: host player id from `netterminal:cap` (reliable vmpeergone target). */
   let joinhostplayer = ''
-  let peersendnetformat = false
   const pendingpeerhost: MESSAGE[] = []
   let pendingpeerhostdroplogged = false
 
-  function sendpeerlegacy(message: MESSAGE) {
-    void dataconnection.send(netserializable(message))
-  }
-
   function sendpeermessage(message: MESSAGE) {
-    if (peersendnetformat && !netformatdebugsendlegacy()) {
-      let bytes = netterminalencodecache.get(message)
-      if (!bytes) {
-        bytes = netformatencode(message)
-        netterminalencodecache.set(message, bytes)
-      }
-      void dataconnection.send(bytes)
-    } else {
-      sendpeerlegacy(message)
+    let bytes = netterminalencodecache.get(message)
+    if (!bytes) {
+      bytes = netformatencode(message)
+      netterminalencodecache.set(message, bytes)
     }
+    void dataconnection.send(bytes)
   }
 
   function flushpendingpeerhost() {
@@ -272,27 +254,19 @@ function handledataconnection(dataconnection: DataConnection) {
     apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
     if (ishost()) {
       hostbridge()
-      const meta = (
-        dataconnection as DataConnection & {
-          metadata?: Record<string, unknown>
-        }
-      ).metadata
-      if (meta?.[NETFORMAT_META_SUPPORTS_V1] === true) {
-        sendpeerlegacy({
-          session: SOFTWARE.session(),
-          player,
-          id: createsid(),
-          sender: 'netterminal',
-          target: NETFORMAT_CAP_TARGET,
-          data: { v: 1, host: player },
-        })
-        peersendnetformat = true
-        apilog(
-          SOFTWARE,
-          player,
-          `peer ${dataconnection.peer}: CBOR wire (netformat v1) enabled host→joiner`,
-        )
-      }
+      sendpeermessage({
+        session: SOFTWARE.session(),
+        player,
+        id: createsid(),
+        sender: 'netterminal',
+        target: NETFORMAT_CAP_TARGET,
+        data: { v: 1, host: player },
+      })
+      apilog(
+        SOFTWARE,
+        player,
+        `peer ${dataconnection.peer}: sent netformat v1 cap (CBOR)`,
+      )
     } else {
       joinbridge()
     }
@@ -336,7 +310,6 @@ function handledataconnection(dataconnection: DataConnection) {
     }
     if (message.target === NETFORMAT_CAP_TARGET) {
       if (!ishost()) {
-        peersendnetformat = true
         const cap = message.data as { v?: number; host?: string } | undefined
         if (isstring(cap?.host) && cap.host.length > 0) {
           joinhostplayer = cap.host
@@ -344,7 +317,7 @@ function handledataconnection(dataconnection: DataConnection) {
         apilog(
           SOFTWARE,
           player,
-          `peer ${dataconnection.peer}: CBOR wire (netformat v1) enabled joiner→host`,
+          `peer ${dataconnection.peer}: received netformat v1 cap (CBOR)`,
         )
       }
       return

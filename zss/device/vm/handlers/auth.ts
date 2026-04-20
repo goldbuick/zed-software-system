@@ -64,6 +64,12 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
     } else if (ackboardrunners[boardid] === message.player) {
       memorysyncrevokeboardrunner(message.player, boardid)
       delete ackboardrunners[boardid]
+      if (failedboardrunners[boardid]) {
+        delete failedboardrunners[boardid][message.player]
+        if (Object.keys(failedboardrunners[boardid]).length === 0) {
+          delete failedboardrunners[boardid]
+        }
+      }
     }
   }
   boardrunnerowned(vm, message.player, '')

@@ -6,7 +6,8 @@ import { memorysyncrevokeboardrunner } from 'zss/device/vm/memorysync'
 import {
   ackboardrunners,
   boardrunners,
-  playerownedboard,
+  failedboardrunners,
+  playerboardrunnerowntarget,
 } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbookflag } from 'zss/memory/bookoperations'
@@ -62,13 +63,20 @@ export function handleackboardrunner(vm: DEVICE, message: MESSAGE): void {
 
   ackboardrunners[boardid] = message.player
 
+  if (failedboardrunners[boardid]?.[message.player] !== undefined) {
+    delete failedboardrunners[boardid][message.player]
+    if (Object.keys(failedboardrunners[boardid]).length === 0) {
+      delete failedboardrunners[boardid]
+    }
+  }
+
   const refresh = new Set<string>()
   if (flipped && isstring(previous) && previous.length > 0) {
     refresh.add(previous)
   }
   refresh.add(message.player)
   refresh.forEach((pid) => {
-    boardrunnerowned(vm, pid, playerownedboard(pid))
+    boardrunnerowned(vm, pid, playerboardrunnerowntarget(pid))
   })
 
   boardrunnersendsnapshot(message.player, boardid)

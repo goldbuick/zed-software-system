@@ -73,7 +73,9 @@ describe('handlesecond board runner ack retries', () => {
     handlesecond(vm, message)
 
     expect(registerask).toHaveBeenCalledTimes(BOARDRUNNER_ACK_FAIL_COUNT)
-    expect(failedboardrunners['board-x']).toBeUndefined()
+    expect(failedboardrunners['board-x']?.['player-a']).toBe(
+      BOARDRUNNER_ACK_FAIL_COUNT,
+    )
     expect(boardrunners['board-x']).toBeUndefined()
     expect(ackboardrunners['board-x']).toBeUndefined()
     expect(revoke).not.toHaveBeenCalled()
@@ -94,7 +96,9 @@ describe('handlesecond board runner ack retries', () => {
     }
 
     handlesecond(vm, message)
-    expect(failedboardrunners['board-x']).toBeUndefined()
+    expect(failedboardrunners['board-x']?.['joiner']).toBe(
+      BOARDRUNNER_ACK_FAIL_COUNT,
+    )
     expect(boardrunners['board-x']).toBeUndefined()
     expect(ackboardrunners['board-x']).toBeUndefined()
     expect(revoke).toHaveBeenCalledWith('operator', 'board-x')

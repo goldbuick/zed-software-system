@@ -15,7 +15,7 @@ import {
   boardrunners,
   failedboardrunners,
   incflushtick,
-  playerownedboard,
+  playerboardrunnerowntarget,
   setflushtick,
   tracking,
 } from 'zss/device/vm/state'
@@ -71,23 +71,16 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
           }
           delete boardrunners[boardid]
           delete ackboardrunners[boardid]
-          // Clear retry state for this (board, player) pair so election can
-          // pick the same peer again after a slow network / join race. Without
-          // this, failedboardrunners stays at FAIL_COUNT forever and
-          // memoryreadboardrunnerchoices permanently excludes the player
-          // (observed as join client stuck with empty boardrunner:ownedboard).
-          if (failedboardrunners[boardid]) {
-            delete failedboardrunners[boardid][playerid]
-            if (Object.keys(failedboardrunners[boardid]).length === 0) {
-              delete failedboardrunners[boardid]
-            }
-          }
+          // Block this (board, player) pair from re-election until peergone,
+          // logout, successful ack, or board move clears it.
+          failedboardrunners[boardid] ??= {}
+          failedboardrunners[boardid][playerid] = BOARDRUNNER_ACK_FAIL_COUNT
           ownershipdirty.add(playerid)
         }
       }
 
       ownershipdirty.forEach((player) => {
-        boardrunnerowned(vm, player, playerownedboard(player))
+        boardrunnerowned(vm, player, playerboardrunnerowntarget(player))
       })
     }
 

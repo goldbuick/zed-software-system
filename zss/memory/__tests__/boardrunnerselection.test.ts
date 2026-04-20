@@ -1,7 +1,6 @@
 import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
 import * as boards from 'zss/memory/boards'
 import { memoryreadboardrunnerchoices } from 'zss/memory/playermanagement'
-import * as session from 'zss/memory/session'
 import type { BOARD, BOOK } from 'zss/memory/types'
 
 function stubbook(
@@ -38,10 +37,8 @@ const boardb: BOARD = {
 
 describe('memoryreadboardrunnerbyboard', () => {
   let spy: jest.SpiedFunction<typeof boards.memoryreadboardbyaddress>
-  let opSpy: jest.SpiedFunction<typeof session.memoryreadoperator>
 
   beforeEach(() => {
-    opSpy = jest.spyOn(session, 'memoryreadoperator').mockReturnValue('')
     spy = jest
       .spyOn(boards, 'memoryreadboardbyaddress')
       .mockImplementation((addr: string) => {
@@ -57,7 +54,6 @@ describe('memoryreadboardrunnerbyboard', () => {
 
   afterEach(() => {
     spy.mockRestore()
-    opSpy.mockRestore()
   })
 
   it('picks lower tracking on same board', () => {
@@ -97,18 +93,12 @@ describe('memoryreadboardrunnerbyboard', () => {
     })
   })
 
-  it("keeps current acked runner when a fresh joiner's score only marginally beats theirs (sticky bias)", () => {
+  it('hard-locks acked runner even when joiner has much lower tracking', () => {
     const book = stubbook(['op', 'joiner'], {
       op: 'addr-a',
       joiner: 'addr-a',
     })
-    // op was just acked last second (score 2), joiner logged in this second
-    // with INITIAL_TRACKING = 8. Without stickiness, op (lower) still wins
-    // so widen the scenario: simulate op tracking climbing to 6 before
-    // joiner lands at 8. Without bias joiner (8) > op (6) so op wins. Use
-    // a case where op's score is higher than joiner's by less than the
-    // sticky bias (4).
-    const t = { op: 10, joiner: 8 }
+    const t = { op: 100, joiner: 1 }
     const acked = { 'addr-a': 'op' }
     expect(memoryreadboardrunnerchoices(book, t, undefined, acked)).toEqual({
       runnerchoices: { 'addr-a': 'op' },
@@ -116,31 +106,15 @@ describe('memoryreadboardrunnerbyboard', () => {
     })
   })
 
-  it('prefers session operator on a shared board even when joiner has much lower tracking', () => {
-    const book = stubbook(['op', 'joiner'], {
-      op: 'addr-a',
-      joiner: 'addr-a',
-    })
-    const t = { op: 100, joiner: 8 }
-    opSpy.mockReturnValue('op')
-    expect(memoryreadboardrunnerchoices(book, t)).toEqual({
-      runnerchoices: { 'addr-a': 'op' },
-      playeridsbyboard: { 'addr-a': ['op', 'joiner'] },
-    })
-  })
-
-  it('allows election flip when challenger beats acked runner by more than the sticky bias', () => {
-    const book = stubbook(['op', 'joiner'], {
-      op: 'addr-a',
-      joiner: 'addr-a',
-    })
-    // op is idle (high tracking), joiner just became active (low). Gap of
-    // 10 easily exceeds BOARDRUNNER_STICKY_BIAS so the election flips.
-    const t = { op: 15, joiner: 1 }
-    const acked = { 'addr-a': 'op' }
+  it('picks lowest tracking among players not acked on another board', () => {
+    // p2 is still listed as acked for addr-b (e.g. stale) while their book
+    // flag says addr-a — they must not be chosen for addr-a.
+    const book = stubbook(['p1', 'p2'], { p1: 'addr-a', p2: 'addr-a' })
+    const t = { p1: 5, p2: 1 }
+    const acked = { 'addr-b': 'p2' }
     expect(memoryreadboardrunnerchoices(book, t, undefined, acked)).toEqual({
-      runnerchoices: { 'addr-a': 'joiner' },
-      playeridsbyboard: { 'addr-a': ['op', 'joiner'] },
+      runnerchoices: { 'addr-a': 'p1' },
+      playeridsbyboard: { 'addr-a': ['p1', 'p2'] },
     })
   })
 

@@ -9,13 +9,14 @@ import {
   memorysyncrevokeboardrunner,
 } from 'zss/device/vm/memorysync'
 import {
+  BOARDRUNNER_ACK_FAIL_COUNT,
   ackboardrunners,
   boardrunners,
   failedboardrunners,
-  playerownedboard,
+  playerboardrunnerowntarget,
   tracking,
 } from 'zss/device/vm/state'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadboardrunnerchoices,
   memoryscanplayers,
@@ -65,15 +66,57 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
     mainbook,
     tracking,
     failedboardrunners,
-    // Passing the current ack map in turns the election sticky: a fresh
-    // joiner with initial tracking = INITIAL_TRACKING can't instantly
-    // displace an acked runner whose score is only slightly higher.
     ackboardrunners,
   )
 
   // players whose ownership set changed this tick, so we only emit one
   // refresh per player at the end.
   const ownershipdirty = new Set<string>()
+
+  // Keep `boardrunners` aligned with a valid ack: election never displaces an
+  // acked runner by tracking, but pending `boardrunners` can lag after races.
+  const ackboards = Object.keys(ackboardrunners)
+  for (let ai = 0; ai < ackboards.length; ++ai) {
+    const boardid = ackboards[ai]
+    const ack = ackboardrunners[boardid]
+    if (!isstring(ack) || !ack.length) {
+      continue
+    }
+    if (failedboardrunners[boardid]?.[ack] === BOARDRUNNER_ACK_FAIL_COUNT) {
+      continue
+    }
+    const onboard = playeridsbyboard[boardid] ?? []
+    if (!onboard.includes(ack)) {
+      continue
+    }
+    const prev = boardrunners[boardid]
+    if (prev === ack) {
+      if (failedboardrunners[boardid]?.[ack] !== undefined) {
+        delete failedboardrunners[boardid][ack]
+        if (Object.keys(failedboardrunners[boardid]).length === 0) {
+          delete failedboardrunners[boardid]
+        }
+      }
+      continue
+    }
+    if (ispresent(prev) && isstring(prev) && prev.length > 0) {
+      ownershipdirty.add(prev)
+      if (failedboardrunners[boardid]?.[prev] !== undefined) {
+        delete failedboardrunners[boardid][prev]
+        if (Object.keys(failedboardrunners[boardid]).length === 0) {
+          delete failedboardrunners[boardid]
+        }
+      }
+    }
+    boardrunners[boardid] = ack
+    ownershipdirty.add(ack)
+    if (failedboardrunners[boardid]?.[ack] !== undefined) {
+      delete failedboardrunners[boardid][ack]
+      if (Object.keys(failedboardrunners[boardid]).length === 0) {
+        delete failedboardrunners[boardid]
+      }
+    }
+  }
 
   // iterate through active boards
   const choiceboards = Object.keys(runnerchoices)
@@ -117,6 +160,7 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
       delete ackboardrunners[boardid]
       failedboardrunners[boardid] ??= {}
       failedboardrunners[boardid][elected] = 0
+      ownershipdirty.add(elected)
       registerboardrunnerask(vm, elected, boardid)
     }
   }
@@ -138,8 +182,8 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
     }
   }
 
-  // emit refreshed owned-board id for any player whose acked boards changed
+  // emit refreshed owned-board id for any player whose runner assignment changed
   ownershipdirty.forEach((player) => {
-    boardrunnerowned(vm, player, playerownedboard(player))
+    boardrunnerowned(vm, player, playerboardrunnerowntarget(player))
   })
 }

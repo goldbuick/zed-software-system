@@ -11,7 +11,7 @@ import {
   ackboardrunners,
   boardrunners,
   failedboardrunners,
-  playerownedboard,
+  playerboardrunnerowntarget,
 } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
@@ -74,7 +74,11 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     delete ackboardrunners[fromboardid]
     delete failedboardrunners[fromboardid]
     memorysyncrevokeboardrunner(message.player, fromboardid)
-    boardrunnerowned(vm, message.player, playerownedboard(message.player))
+    boardrunnerowned(
+      vm,
+      message.player,
+      playerboardrunnerowntarget(message.player),
+    )
   }
 
   // Push dest board BEFORE the memory stream so the worker sees the player

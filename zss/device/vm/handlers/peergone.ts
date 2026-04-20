@@ -39,6 +39,9 @@ export function handlepeergone(vm: DEVICE, message: MESSAGE): void {
     }
     if (failedboardrunners[boardid]) {
       delete failedboardrunners[boardid][player]
+      if (Object.keys(failedboardrunners[boardid]).length === 0) {
+        delete failedboardrunners[boardid]
+      }
     }
   }
   // Drop the departed player from the shared memory stream too. If we don't,

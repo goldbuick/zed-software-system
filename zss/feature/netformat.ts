@@ -42,7 +42,3 @@ export function netformatdecode(frame: Uint8Array | ArrayBuffer): MESSAGE {
   }
   return decoded
 }
-
-export function netformatdebugsendlegacy(): boolean {
-  return process.env.ZSS_NETFORMAT_DEBUG === '1'
-}
