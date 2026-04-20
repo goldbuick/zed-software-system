@@ -2,7 +2,7 @@ import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
-import { memorymarkmemorydirty } from 'zss/memory/memorydirty'
+import { gadgetstreamid, memorymarkdirty } from 'zss/memory/memorydirty'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
@@ -19,12 +19,12 @@ gadgetstateprovider(
       let value = gadgetstore[player]
       if (!ispresent(value)) {
         gadgetstore[player] = value = initstate()
-        memorymarkmemorydirty()
+        memorymarkdirty(gadgetstreamid(player))
       }
       return value
     }
 
     return initstate()
   },
-  () => memorymarkmemorydirty(),
+  (player) => memorymarkdirty(gadgetstreamid(player)),
 )

@@ -1,18 +1,14 @@
 /*
-user:input routing split coverage (boardrunner authoritative-tick plan).
+user:input routing (boardrunner authoritative-tick plan).
 
 Server-side `handleuserinput` is a pure bookkeeping hook (vmlocal bootstrap
 for fresh local-* players + lastinputtime). It must NOT push anything onto
-flags.inputqueue anymore — that's the boardrunner worker's responsibility.
-
-Worker-side `handleworkeruserinput` is the counterpart: it appends
-`[input, mods]` to the local MEMORY's flags[player].inputqueue, which the
-firmware consumes each tick.
+flags.inputqueue anymore — that is the boardrunner worker's responsibility
+(see `zss/device/boardrunner.ts`).
 */
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
-import { handleworkeruserinput } from 'zss/device/boardrunneruser'
 import { handleuserinput } from 'zss/device/vm/handlers/input'
 import { lastinputtime } from 'zss/device/vm/state'
 import { INPUT } from 'zss/gadget/data/types'
@@ -82,52 +78,5 @@ describe('user:input handlers', () => {
     // first input for a local-* player goes through the bootstrap branch only;
     // no lastinputtime stamp yet (flags don't exist), and no inputqueue push.
     expect(memoryhasflags('local-1')).toBe(false)
-  })
-
-  it('worker handleworkeruserinput appends [input, mods] to flags.inputqueue', () => {
-    const msg: MESSAGE = {
-      session: '',
-      player: 'p1',
-      id: 'w1',
-      sender: 'user',
-      target: 'input',
-      data: [INPUT.MOVE_LEFT, 1],
-    }
-    handleworkeruserinput(vm, msg)
-
-    const flags = memoryreadflags('p1') as Record<string, unknown> & {
-      inputqueue?: [INPUT, number][]
-    }
-    expect(flags.inputqueue).toEqual([[INPUT.MOVE_LEFT, 1]])
-  })
-
-  it('worker handleworkeruserinput is a no-op on INPUT.NONE', () => {
-    const msg: MESSAGE = {
-      session: '',
-      player: 'p1',
-      id: 'w2',
-      sender: 'user',
-      target: 'input',
-      data: [INPUT.NONE, 0],
-    }
-    handleworkeruserinput(vm, msg)
-
-    const flags = memoryreadflags('p1') as Record<string, unknown> & {
-      inputqueue?: [INPUT, number][]
-    }
-    // either undefined or empty — never a queued INPUT.NONE entry.
-    expect(flags.inputqueue ?? []).toEqual([])
-  })
-
-  it('worker handleworkeruserinput skips players without flags', () => {
-    const msg: MESSAGE = {
-      session: '',
-      player: 'unknown',
-      id: 'w3',
-      sender: 'user',
-      target: 'input',
-      data: [INPUT.OK_BUTTON, 0],
-    }
-    expect(() => handleworkeruserinput(vm, msg)).not.toThrow()
   })
 })

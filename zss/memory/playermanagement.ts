@@ -36,7 +36,12 @@ import {
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memorydebugassertactivelistboardinvariantifenabled } from './debugactivelistinvariant'
-import { memorymarkboarddirty, memorymarkmemorydirty } from './memorydirty'
+import {
+  flagsstreamid,
+  memorymarkboarddirty,
+  memorymarkdirty,
+  memorymarkmemorydirty,
+} from './memorydirty'
 import { memoryhaltchip } from './runtime'
 import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
@@ -68,7 +73,7 @@ export function memorymoveplayertoboard(
   // (category) are populated on currentboard. On the server side the
   // reverse-projection replaces board.objects with copies that lack
   // `category` (BOARD_ELEMENT_SYNC_TOPKEYS excludes it) and the server
-  // runs loadersonly ticks so memoryinitboard is never otherwise called.
+  // sim runs `memorytickloaders` (no board tick) so memoryinitboard is never otherwise called.
   // Without this, memoryboardelementisobject() below rejects the element
   // and the server's fallback transfer path silently aborts.
   memoryinitboard(currentboard)
@@ -324,7 +329,7 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
-    memorymarkmemorydirty()
+    memorymarkdirty(flagsstreamid(player))
     return true
   }
 
@@ -397,7 +402,7 @@ export function memoryloginplayer(
     flags.entery = py
     flags.deaths = flags.deaths ?? 0
     flags.highscore = flags.highscore ?? 0
-    memorymarkmemorydirty()
+    memorymarkdirty(flagsstreamid(player))
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
@@ -451,7 +456,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     memoryhaltchip(remove)
 
     // Also delete the chip's flag entry directly. After the authoritative-tick
-    // refactor the sim runs in loadersonly mode, so os.halt(pid) is a no-op
+    // sim runs `memorytickloaders` only, so os.halt(pid) is a no-op
     // here (the chip only exists in the elected boardrunner's OS, never in
     // sim.os.chips). Without this explicit delete, mainbook.flags[<pid>_chip]
     // persists on the sim, the chip-halted deletion never reaches the worker
@@ -468,7 +473,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     if (isendgame) {
       const newflags = memoryreadbookflags(mainbook, remove)
       Object.assign(newflags, saveflags)
-      memorymarkmemorydirty()
+      memorymarkdirty(flagsstreamid(remove))
     }
   }
 }

@@ -29,6 +29,16 @@ export function boardstreamid(boardid: string): string {
   return `board:${boardid}`
 }
 
+/** Per-player gadget UI document (`GADGET_STATE`) replicated outside the `memory` stream. */
+export function gadgetstreamid(player: string): string {
+  return `gadget:${player}`
+}
+
+/** Per-player book.flags[pid] bag (non-volatile keys) replicated outside the `memory` stream. */
+export function flagsstreamid(player: string): string {
+  return `flags:${player}`
+}
+
 export function boardstreamidfromboard(board: MAYBE<BOARD>): string {
   if (!ispresent(board) || !board.id) {
     return ''

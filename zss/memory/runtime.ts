@@ -95,13 +95,15 @@ export function memoryrepeatclilast(player: string) {
 
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
 
-export function memorytickmain(playeronly = false, loadersonly = false) {
+// Sim VM only: loader chips and frame clock. Boards are ticked by elected
+// boardrunner workers via `memorytickmain`. Loader code may still mutate any
+// book/board; dirty bits drain on `memorysyncpushdirty` next frame.
+export function memorytickloaders() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
 
-  // inc timestamp
   const timestamp = mainbook.timestamp + 1
 
   perfmeasure('memorytick:loaders', () => {
@@ -142,19 +144,22 @@ export function memorytickmain(playeronly = false, loadersonly = false) {
     })
   })
 
-  // track tick
   mainbook.timestamp = timestamp
   READ_CONTEXT.timestamp = timestamp
+}
 
-  // Phase 2 of the boardrunner authoritative-tick plan: the server runs
-  // loader-only ticks. Boards are owned by their elected boardrunner workers
-  // which run their own `memorytickmain` and emit clientpatches upstream.
-  // Server-side loader writes can still mutate boards (loader code can edit
-  // any book/board); those mutations flip dirty bits and `memorysyncpushdirty`
-  // catches them on the next tick.
-  if (loadersonly) {
+// Boardrunner workers: frame clock + board/chip tick. No loader chips (those
+// run only in sim via `memorytickloaders`).
+export function memorytickmain(playeronly = false) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
     return
   }
+
+  const timestamp = mainbook.timestamp + 1
+
+  mainbook.timestamp = timestamp
+  READ_CONTEXT.timestamp = timestamp
 
   perfmeasure('memorytick:boards', () => {
     // update boards / build code / run chips

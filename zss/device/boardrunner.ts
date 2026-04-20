@@ -48,7 +48,11 @@ function shouldboardrunnerhandlestreamchanged(target: string): boolean {
     return false
   }
   const streamid = target.slice(0, -':changed'.length)
-  return streamid.startsWith('board:')
+  return (
+    streamid.startsWith('board:') ||
+    streamid.startsWith('gadget:') ||
+    streamid.startsWith('flags:')
+  )
 }
 
 // jsonsync resync + gadget baselines treat both layers as ours.

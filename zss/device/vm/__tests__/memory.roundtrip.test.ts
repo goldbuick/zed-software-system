@@ -21,7 +21,11 @@ import {
 } from 'zss/device/streamreplserver'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memorywritebookflag } from 'zss/memory/bookoperations'
-import { MEMORY_STREAM_ID, memorydirtyclear } from 'zss/memory/memorydirty'
+import {
+  flagsstreamid,
+  MEMORY_STREAM_ID,
+  memorydirtyclear,
+} from 'zss/memory/memorydirty'
 import {
   memoryreadbookbyaddress,
   memoryresetbooks,
@@ -29,18 +33,19 @@ import {
 } from 'zss/memory/session'
 import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
-import { MEMORY_SYNC_TOPKEYS, projectmemory } from '../memoryproject'
+import { projectmemory, projectplayerflags } from '../memoryproject'
 import { memorysyncreverseproject } from '../memorysync'
 import { memoryworkerpushdirty } from '../memoryworkersync'
 
 function makebook(): BOOK {
+  const pid = 'pid_roundtrip_worker'
   return {
     id: 'main-id',
     name: 'main',
     timestamp: 0,
-    activelist: ['p1'],
+    activelist: [pid],
     pages: [],
-    flags: { p1: { board: 'boardA' } },
+    flags: { [pid]: { board: 'boardA' } },
   }
 }
 
@@ -59,7 +64,7 @@ describe('phase 2 worker -> server round-trip', () => {
     pushbatchspy = jest
       .spyOn(apimod, 'rxreplpushbatch')
       .mockImplementation((_dev, player, batch) => {
-        expect(player).toBe('p1')
+        expect(player).toBe('pid_roundtrip_worker')
         for (let i = 0; i < batch.rows.length; ++i) {
           const row = batch.rows[i]
           const doc =
@@ -84,13 +89,19 @@ describe('phase 2 worker -> server round-trip', () => {
   })
 
   it('worker flag mutation lands in MEMORY via push_batch + reverseproject', () => {
-    streamreplserverregister(MEMORY_STREAM_ID, projectmemory(), {
-      topkeys: [...MEMORY_SYNC_TOPKEYS],
-    })
-    streamreplserveradmitplayer(MEMORY_STREAM_ID, 'p1', true)
-    rxreplclientsetownplayerfortests('p1')
+    const pid = 'pid_roundtrip_worker'
+    const fsid = flagsstreamid(pid)
+    streamreplserverregister(MEMORY_STREAM_ID, projectmemory())
+    streamreplserverregister(fsid, projectplayerflags(pid))
+    streamreplserveradmitplayer(MEMORY_STREAM_ID, pid, true)
+    streamreplserveradmitplayer(fsid, pid, true)
+    rxreplclientsetownplayerfortests(pid)
     rxreplclientreadstreams().set(MEMORY_STREAM_ID, {
       document: deepcopy(projectmemory()),
+      rev: 0,
+    })
+    rxreplclientreadstreams().set(fsid, {
+      document: deepcopy(projectplayerflags(pid)),
       rev: 0,
     })
 
@@ -99,12 +110,12 @@ describe('phase 2 worker -> server round-trip', () => {
     if (!ispresent(book)) {
       return
     }
-    memorywritebookflag(book, 'p1', 'hp', 7)
+    memorywritebookflag(book, pid, 'hp', 7)
 
     memoryworkerpushdirty()
     expect(pushbatchspy).toHaveBeenCalled()
 
     const finalbook = memoryreadbookbyaddress('main-id')
-    expect(finalbook?.flags.p1).toEqual({ board: 'boardA', hp: 7 })
+    expect(finalbook?.flags[pid]).toEqual({ board: 'boardA', hp: 7 })
   })
 })

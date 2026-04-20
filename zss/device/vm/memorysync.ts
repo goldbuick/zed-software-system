@@ -4,16 +4,19 @@ memorysync: VM-layer bridge between MEMORY and the streamrepl server (sim).
 Owns the projections that carve MEMORY into what boardrunners actually need:
 - one shared `memory` stream with top-level keys allowlisted, books Map
   converted to a record, and each book's board-type codepages peeled out of
-  `pages` into their own streams
+  `pages` into their own streams (main-book `ispid` flag bags are omitted;
+  they use `flags:${player}` streams)
 - one `board:${codepage.id}` stream per board codepage, with the embedded
   BOARD trimmed of runtime-only caches (draw fingerprints, distmaps, etc.)
+- one `flags:${player}` stream per viewport player for `mainbook.flags[pid]`
+  (volatile keys stripped), admitted alongside `gadget:${player}`
 
 Each boardrunner is admitted to the shared `memory` stream and only to the
 board codepage streams it actually runs.
 
 Push cadence is dirty-flag driven (see memory/memorydirty.ts). Memory writes
 mark the relevant stream(s) dirty; the VM tick handler calls
-`memorysyncpushdirty` after `memorytickmain` to drain the dirty set and call
+`memorysyncpushdirty` after `memorytickloaders` (sim) to drain the dirty set and call
 `streamreplserverupdate` for each registered + dirty stream. Reverse-projection
 of client push_batch merges goes through `memorywithsilentwrites` to avoid
 re-pushing the same change in a feedback loop.
@@ -21,13 +24,21 @@ re-pushing the same change in a feedback loop.
 import {
   streamreplserveradmitplayer,
   streamreplserverdropplayer,
+  streamreplserverdropplayerfromallstreams,
   streamreplserverreadstream,
   streamreplserverregister,
   streamreplserverupdate,
 } from 'zss/device/streamreplserver'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
+  memoryreadbookflag,
+  memoryreadbookflags,
+} from 'zss/memory/bookoperations'
+import {
+  flagsstreamid,
+  gadgetstreamid,
   MEMORY_STREAM_ID,
   memoryconsumealldirty,
   memorymarkdirty,
@@ -37,17 +48,21 @@ import {
   memoryclearbook,
   memoryreadbookbyaddress,
   memoryreadbooklist,
+  memoryreadbookbysoftware,
+  memoryreadoperator,
   memoryreadroot,
   memorywritebook,
 } from 'zss/memory/session'
-import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 import { mergeflagspreservingvolatile } from './memoryhydrate'
 import {
   BOARD_SYNC_TOPKEYS,
   boardstreamid,
   projectboardcodepage,
+  projectgadget,
   projectmemory,
+  projectplayerflags,
 } from './memoryproject'
 
 export function memorysyncensureregistered(): void {
@@ -67,6 +82,105 @@ export function memorysyncensureboardregistered(codepage: CODE_PAGE): void {
     return
   }
   streamreplserverupdate(streamid, projected)
+}
+
+function resolvedboardid(mainbook: BOOK, player: string): string {
+  const flag = memoryreadbookflag(mainbook, player, 'board')
+  if (!isstring(flag) || !flag) {
+    return ''
+  }
+  const resolved = memoryreadboardbyaddress(flag)
+  return ispresent(resolved?.id) && resolved.id.length > 0 ? resolved.id : flag
+}
+
+function collectviewportpidsforboard(boardid: string): string[] {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return []
+  }
+  const out: string[] = []
+  const seen = new Set<string>()
+  const active = mainbook.activelist ?? []
+  for (let i = 0; i < active.length; ++i) {
+    const p = active[i]
+    const bid = resolvedboardid(mainbook, p)
+    if (bid === boardid) {
+      out.push(p)
+      seen.add(p)
+    }
+  }
+  const op = memoryreadoperator()
+  if (isstring(op) && op.length > 0 && !seen.has(op)) {
+    const opbid = resolvedboardid(mainbook, op)
+    if (opbid === boardid) {
+      out.push(op)
+    }
+  }
+  return out
+}
+
+export function memorysyncensuregadgetregistered(player: string): void {
+  memorysyncensureregistered()
+  const streamid = gadgetstreamid(player)
+  const projected = projectgadget(player)
+  if (!ispresent(streamreplserverreadstream(streamid))) {
+    streamreplserverregister(streamid, projected)
+    return
+  }
+  streamreplserverupdate(streamid, projected)
+}
+
+function memorysyncadmitgadgetstreamsforboard(runner: string, boardid: string): void {
+  const pids = collectviewportpidsforboard(boardid)
+  for (let i = 0; i < pids.length; ++i) {
+    const pid = pids[i]
+    memorysyncensuregadgetregistered(pid)
+    if (pid === runner) {
+      streamreplserveradmitplayer(gadgetstreamid(pid), runner, true)
+    } else {
+      streamreplserveradmitplayer(gadgetstreamid(pid), pid, false)
+      streamreplserveradmitplayer(gadgetstreamid(pid), runner, true)
+    }
+  }
+}
+
+function memorysyncrevokegadgetwritersforboard(runner: string, boardid: string): void {
+  const pids = collectviewportpidsforboard(boardid)
+  for (let i = 0; i < pids.length; ++i) {
+    streamreplserverdropplayer(gadgetstreamid(pids[i]), runner)
+  }
+}
+
+export function memorysyncensureflagsregistered(player: string): void {
+  memorysyncensureregistered()
+  const streamid = flagsstreamid(player)
+  const projected = projectplayerflags(player)
+  if (!ispresent(streamreplserverreadstream(streamid))) {
+    streamreplserverregister(streamid, projected)
+    return
+  }
+  streamreplserverupdate(streamid, projected)
+}
+
+function memorysyncadmitflagsstreamsforboard(runner: string, boardid: string): void {
+  const pids = collectviewportpidsforboard(boardid)
+  for (let i = 0; i < pids.length; ++i) {
+    const pid = pids[i]
+    memorysyncensureflagsregistered(pid)
+    if (pid === runner) {
+      streamreplserveradmitplayer(flagsstreamid(pid), runner, true)
+    } else {
+      streamreplserveradmitplayer(flagsstreamid(pid), pid, false)
+      streamreplserveradmitplayer(flagsstreamid(pid), runner, true)
+    }
+  }
+}
+
+function memorysyncrevokeflagswritersforboard(runner: string, boardid: string): void {
+  const pids = collectviewportpidsforboard(boardid)
+  for (let i = 0; i < pids.length; ++i) {
+    streamreplserverdropplayer(flagsstreamid(pids[i]), runner)
+  }
 }
 
 // admit a boardrunner player: refresh the memory stream, register-or-refresh
@@ -96,6 +210,8 @@ export function memorysyncadmitboardrunner(
   streamreplserveradmitplayer(MEMORY_STREAM_ID, player, true)
   streamreplserveradmitplayer(boardstreamid(codepage), player, true)
   admitneighborboardstreams(player, codepage)
+  memorysyncadmitgadgetstreamsforboard(player, codepage.id)
+  memorysyncadmitflagsstreamsforboard(player, codepage.id)
 }
 
 // Admit the runner to its 4 cardinal neighbor streams and to each
@@ -175,6 +291,8 @@ export function memorysyncrevokeboardrunner(
   if (!ispresent(codepage)) {
     return
   }
+  memorysyncrevokegadgetwritersforboard(player, codepage.id)
+  memorysyncrevokeflagswritersforboard(player, codepage.id)
   streamreplserverdropplayer(boardstreamid(codepage), player)
   revokeneighborboardstreams(player, codepage)
 }
@@ -200,11 +318,11 @@ function revokeneighborboardstreams(
 // shared memory stream. Called from handlelogout after memorylogoutplayer
 // has cleared the player's flags.
 export function memorysyncdropplayerfromall(player: string): void {
-  streamreplserverdropplayer(MEMORY_STREAM_ID, player)
+  streamreplserverdropplayerfromallstreams(player)
 }
 
 // VM tick hooks: callers decide when to push. The handler in vm/handlers/tick
-// invokes `memorysyncpushdirty` after `memorytickmain` to drain the dirty set.
+// invokes `memorysyncpushdirty` after `memorytickloaders` to drain the dirty set.
 export function memorysyncupdatememory(): void {
   streamreplserverupdate(MEMORY_STREAM_ID, projectmemory())
 }
@@ -257,8 +375,56 @@ export function memorysyncpushdirty(): void {
     const codepage = codepagefromboardstreamid(streamid)
     if (ispresent(codepage)) {
       streamreplserverupdate(streamid, projectboardcodepage(codepage))
+      continue
+    }
+    if (streamid.startsWith('gadget:')) {
+      const pid = streamid.slice('gadget:'.length)
+      if (pid) {
+        streamreplserverupdate(streamid, projectgadget(pid))
+      }
+      continue
+    }
+    if (streamid.startsWith('flags:')) {
+      const pid = streamid.slice('flags:'.length)
+      if (pid) {
+        streamreplserverupdate(streamid, projectplayerflags(pid))
+      }
     }
   }
+}
+
+export function memorysyncreverseprojectplayerflags(
+  player: string,
+  document: unknown,
+): void {
+  if (!ispresent(document) || typeof document !== 'object') {
+    return
+  }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  mergeflagspreservingvolatile(mainbook.flags, {
+    [player]: document as Record<string, unknown>,
+  }, mainbook.activelist ?? [])
+}
+
+export function memorysyncreverseprojectgadget(
+  player: string,
+  document: unknown,
+): void {
+  if (!ispresent(document) || typeof document !== 'object') {
+    return
+  }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  const gadgetstore = memoryreadbookflags(
+    mainbook,
+    MEMORY_LABEL.GADGETSTORE,
+  ) as Record<string, unknown>
+  gadgetstore[player] = deepcopy(document) as BOOK_FLAGS[string]
 }
 
 // merge a stream's just-accepted document back into MEMORY. Wrapped in
@@ -281,6 +447,20 @@ export function memorysyncreverseproject(
     }
     if (streamid.startsWith('board:')) {
       reverseprojectboard(streamid, document as Record<string, unknown>)
+      return
+    }
+    if (streamid.startsWith('gadget:')) {
+      const pid = streamid.slice('gadget:'.length)
+      if (pid) {
+        memorysyncreverseprojectgadget(pid, document)
+      }
+      return
+    }
+    if (streamid.startsWith('flags:')) {
+      const pid = streamid.slice('flags:'.length)
+      if (pid) {
+        memorysyncreverseprojectplayerflags(pid, document)
+      }
     }
   })
 }

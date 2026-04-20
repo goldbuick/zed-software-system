@@ -23,6 +23,8 @@ describe('zustandstores', () => {
       expect(state.zsswords.flags).toEqual([])
       expect(state.zsswords.commandargmeta).toEqual({})
       expect(state.layercachemap.size).toBe(0)
+      expect(state.gadgetsyncrev).toBe(-1)
+      expect(state.gadgetscrolllocal).toBe(false)
     })
 
     it('should update gadget state', () => {

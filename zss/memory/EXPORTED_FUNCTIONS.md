@@ -90,7 +90,8 @@
 - **memoryrestartallchipsandflags()** - Halts all chips and clears flags
 - **memoryruncli(player, cli, tracking?)** - Executes CLI command for a player
 - **memoryruncodepage(address, label)** - Runs a code page once with given label
-- **memorytickmain(playeronly?)** - Main game tick function, updates all boards and runs code
+- **memorytickloaders()** - Sim tick: loader chips and frame clock (no board tick)
+- **memorytickmain(playeronly?)** - Boardrunner tick: frame clock, boards, and chips (no loaders)
 - **memorytickobject(book, board, object, code)** - Ticks a single object's code
 - **memoryunlockscroll(id, player)** - Unlocks scroll for a player
 

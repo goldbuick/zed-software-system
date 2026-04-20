@@ -29,6 +29,10 @@ export function applylayercacheupdate(
 
 export const useGadgetClient = create<{
   gadget: GADGET_STATE
+  /** Last applied jsonsync rev for `gadget:<player>`; avoids stale snapshots wiping local scroll. */
+  gadgetsyncrev: number
+  /** True after we applied a non-empty scroll from sync; stale higher-rev empties merge until user closes. */
+  gadgetscrolllocal: boolean
   layercachemap: Map<string, LAYER[]>
   zsswords: GADGET_ZSS_WORDS
 }>(() => ({
@@ -75,6 +79,8 @@ export const useGadgetClient = create<{
     scroll: [],
     sidebar: [],
   },
+  gadgetsyncrev: -1,
+  gadgetscrolllocal: false,
   layercachemap: new Map(),
 }))
 

@@ -3,12 +3,14 @@ memoryworkersync: worker-side push loop. Counterpart to `memorysync.ts`'s
 `memorysyncpushdirty`; pushes full-document rows via `rxreplpushbatch` so the
 sim merges into canonical MEMORY (Strategy B).
 
-After the worker runs `memorytickmain`, dirty bits (from `zss/memory/*`)
+After the worker runs `memorytickmain` (boards only; sim runs `memorytickloaders`), dirty bits (from `zss/memory/*`)
 identify changed streams. This module drains them and emits one batch row per
 admitted stream:
 
 - `memory` stream: `projectmemory()` snapshot.
 - `board:<id>` streams: board codepage projection from the main book.
+- `gadget:<player>` streams: `projectgadget(player)` (`GADGET_STATE`).
+- `flags:<player>` streams: `projectplayerflags(player)` (main book flags bag).
 
 Only streams with a registered rxrepl client shadow participate
 (`rxreplclientreadstream`); others are re-queued until admission.
@@ -31,7 +33,12 @@ import {
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
-import { projectboardcodepage, projectmemory } from './memoryproject'
+import {
+  projectboardcodepage,
+  projectgadget,
+  projectmemory,
+  projectplayerflags,
+} from './memoryproject'
 
 export function memoryworkerpushdirty(): void {
   const dirtyids = memoryconsumealldirty()
@@ -49,30 +56,51 @@ export function memoryworkerpushdirty(): void {
       })
       continue
     }
-    if (!streamid.startsWith('board:')) {
+    if (streamid.startsWith('board:')) {
+      const boardid = streamid.slice('board:'.length)
+      if (!boardid) {
+        continue
+      }
+      // worker hydrates incoming boards into the main book (see
+      // `memoryhydrate.hydrateboard`). To project back out, look the board
+      // codepage up by id within the main book.
+      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      if (!ispresent(mainbook)) {
+        continue
+      }
+      const codepage = mainbook.pages.find(
+        (page) =>
+          page.id === boardid && page.stats?.type === CODE_PAGE_TYPE.BOARD,
+      )
+      if (!ispresent(codepage)) {
+        continue
+      }
+      const projection = projectboardcodepage(codepage)
+      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
+        rows: [{ streamid, document: projection }],
+      })
       continue
     }
-    const boardid = streamid.slice('board:'.length)
-    if (!boardid) {
+    if (streamid.startsWith('gadget:')) {
+      const pid = streamid.slice('gadget:'.length)
+      if (!pid) {
+        continue
+      }
+      const gadget = projectgadget(pid)
+      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
+        rows: [{ streamid, gadget }],
+      })
       continue
     }
-    // worker hydrates incoming boards into the main book (see
-    // `memoryhydrate.hydrateboard`). To project back out, look the board
-    // codepage up by id within the main book.
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    if (!ispresent(mainbook)) {
-      continue
+    if (streamid.startsWith('flags:')) {
+      const pid = streamid.slice('flags:'.length)
+      if (!pid) {
+        continue
+      }
+      const document = projectplayerflags(pid)
+      rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
+        rows: [{ streamid, document }],
+      })
     }
-    const codepage = mainbook.pages.find(
-      (page) =>
-        page.id === boardid && page.stats?.type === CODE_PAGE_TYPE.BOARD,
-    )
-    if (!ispresent(codepage)) {
-      continue
-    }
-    const projection = projectboardcodepage(codepage)
-    rxreplpushbatch(rxreplclientdevice, rxreplclientreadownplayer(), {
-      rows: [{ streamid, document: projection }],
-    })
   }
 }

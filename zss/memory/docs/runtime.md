@@ -22,7 +22,7 @@
 |----------|---------|
 | Chip | memorygc, memoryhaltchip, memoryrestartallchipsandflags, memorymessagechip |
 | CLI | memoryrepeatclilast, memoryruncli |
-| Tick | memorytickmain (loaders, boards, chips), memorytickobject |
+| Tick | memorytickloaders (sim loaders), memorytickmain (boards/chips on workers), memorytickobject |
 | Run | memoryruncodepage(address, label) |
 | Synth | memoryapplyboardsynthstats |
 | UI | memoryunlockscroll |

@@ -1,11 +1,11 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { handletick } from 'zss/device/vm/handlers/tick'
-import { memorytickmain } from 'zss/memory/runtime'
+import { memorytickloaders } from 'zss/memory/runtime'
 import * as session from 'zss/memory/session'
 
 jest.mock('zss/memory/runtime', () => ({
-  memorytickmain: jest.fn(),
+  memorytickloaders: jest.fn(),
 }))
 
 describe('handletick freeze', () => {
@@ -14,25 +14,23 @@ describe('handletick freeze', () => {
 
   afterEach(() => {
     session.memorywritefreeze(false)
-    jest.mocked(memorytickmain).mockClear()
+    jest.mocked(memorytickloaders).mockClear()
   })
 
-  it('skips memorytickmain when freeze is on', () => {
+  it('skips memorytickloaders when freeze is on', () => {
     session.memorywritefreeze(true)
     handletick(vm, msg)
 
-    expect(memorytickmain).not.toHaveBeenCalled()
+    expect(memorytickloaders).not.toHaveBeenCalled()
   })
 
-  it('runs memorytickmain (loader-only) when freeze is off', () => {
+  it('runs memorytickloaders when freeze is off', () => {
     session.memorywritefreeze(false)
-    jest.spyOn(session, 'memoryreadhalt').mockReturnValue(false)
 
     handletick(vm, msg)
 
-    // Phase 2: server tick runs loader-only (second arg `loadersonly = true`).
-    // Boards are now ticked by the elected boardrunner worker. Pilot also
-    // moved there (user:pilot* targets go to boardrunneruser.ts).
-    expect(memorytickmain).toHaveBeenCalledWith(false, true)
+    // Sim tick runs loaders + frame clock only; boards tick on boardrunner
+    // workers via `memorytickmain`.
+    expect(memorytickloaders).toHaveBeenCalled()
   })
 })

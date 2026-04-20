@@ -5,9 +5,13 @@ objects. Lives below memorysync (server-side) and memoryworkersync
 helpers (jsonsyncserver vs jsonsyncclient). All projections are deepcopy-safe
 and never mutate live MEMORY references.
 */
+import type { GADGET_STATE } from 'zss/gadget/data/types'
+import { initstate } from 'zss/gadget/data/api'
+import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
 import { boardstreamid as boardstreamidbyid } from 'zss/memory/memorydirty'
-import { memoryreadroot } from 'zss/memory/session'
+import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import { memoryreadbookbysoftware, memoryreadroot } from 'zss/memory/session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -241,9 +245,60 @@ function projectbook(book: BOOK): unknown {
   }
   if (ispresent(copy.flags) && typeof copy.flags === 'object') {
     copy.flags = stripvolatileflags(copy.flags as Record<string, unknown>)
+    delete (copy.flags as Record<string, unknown>)[MEMORY_LABEL.GADGETSTORE]
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    if (ispresent(mainbook) && book.id === mainbook.id) {
+      const projectedflags = copy.flags as Record<string, unknown>
+      const flagkeys = Object.keys(projectedflags)
+      for (let i = 0; i < flagkeys.length; ++i) {
+        const fk = flagkeys[i]
+        if (ispid(fk)) {
+          delete projectedflags[fk]
+        }
+      }
+    }
   }
   delete copy.timestamp
   return copy
+}
+
+/** Full-document flags stream: one player's flag bag from main book, volatile keys stripped. */
+export function projectplayerflags(player: string): Record<string, unknown> {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return {}
+  }
+  const raw = memoryreadbookflags(mainbook, player) as unknown as Record<
+    string,
+    unknown
+  >
+  if (!ispresent(raw) || typeof raw !== 'object') {
+    return {}
+  }
+  const dst: Record<string, unknown> = {}
+  const keys = Object.keys(raw)
+  for (let i = 0; i < keys.length; ++i) {
+    const key = keys[i]
+    if (VOLATILE_FLAG_KEYS.includes(key)) {
+      continue
+    }
+    dst[key] = raw[key]
+  }
+  return deepcopy(dst) as Record<string, unknown>
+}
+
+/** Full-document gadget stream: one player's `GADGET_STATE` from main book gadgetstore. */
+export function projectgadget(player: string): GADGET_STATE {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const gadgetstore = memoryreadbookflags(
+    mainbook,
+    MEMORY_LABEL.GADGETSTORE,
+  ) as unknown as Record<string, GADGET_STATE>
+  const raw = gadgetstore[player]
+  if (!ispresent(raw)) {
+    return initstate()
+  }
+  return deepcopy(raw) as GADGET_STATE
 }
 
 // project the MEMORY root into a jsonsync-shippable plain object.

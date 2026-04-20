@@ -4,40 +4,90 @@ import {
   applylayercacheupdate,
   useGadgetClient,
 } from 'zss/gadget/data/zustandstores'
-import { MAYBE, ispresent } from 'zss/mapping/types'
-import { MEMORY_LABEL } from 'zss/memory/types'
+import { ispresent } from 'zss/mapping/types'
 
+import { JSONSYNC_CHANGED } from './api'
 import { registerreadplayer } from './register'
 
 export const gadgetclientdevice = createdevice(
   'gadgetclient',
-  ['memory'],
+  ['gadget'],
   (message) => {
-    if (
-      !gadgetclientdevice.session(message) ||
-      !ispresent(message.data?.document)
-    ) {
+    if (!gadgetclientdevice.session(message) || !ispresent(message.data)) {
       return
     }
-    // read the player from the register
+    const payload = message.data as JSONSYNC_CHANGED
+    if (!payload.streamid?.startsWith('gadget:') || !ispresent(payload.document)) {
+      return
+    }
     const player = registerreadplayer()
-
-    // read the gadget state from the document
-    const document = message.data.document
-    const mainbook = document.books[document.software.main]
-    const gadgetstore = mainbook?.flags[MEMORY_LABEL.GADGETSTORE] ?? {}
-    const gadget = gadgetstore[player] as MAYBE<GADGET_STATE>
-
-    // update the gadget client state
-    if (ispresent(gadget)) {
-      useGadgetClient.setState((state) => ({
-        gadget,
+    const pid = payload.streamid.slice('gadget:'.length)
+    if (pid !== player) {
+      return
+    }
+    const incoming = payload.document as GADGET_STATE
+    const rev = payload.rev
+    useGadgetClient.setState((state) => {
+      const prev = state.gadget
+      if (rev < state.gadgetsyncrev) {
+        return state
+      }
+      if (rev === state.gadgetsyncrev) {
+        if (
+          (!incoming.scroll || incoming.scroll.length === 0) &&
+          prev.scroll &&
+          prev.scroll.length > 0
+        ) {
+          return {
+            ...state,
+            gadget: {
+              ...incoming,
+              scroll: prev.scroll,
+              scrollname: prev.scrollname ?? incoming.scrollname ?? '',
+            },
+            layercachemap: applylayercacheupdate(
+              state.layercachemap,
+              incoming.board,
+              incoming.layers ?? [],
+            ),
+          }
+        }
+        return state
+      }
+      const hasincomingscroll =
+        ispresent(incoming.scroll) && incoming.scroll.length > 0
+      const hasprevscroll =
+        ispresent(prev.scroll) && prev.scroll.length > 0
+      if (
+        hasprevscroll &&
+        !hasincomingscroll &&
+        state.gadgetscrolllocal
+      ) {
+        return {
+          gadget: {
+            ...incoming,
+            scroll: prev.scroll,
+            scrollname: prev.scrollname ?? incoming.scrollname ?? '',
+          },
+          gadgetsyncrev: rev,
+          gadgetscrolllocal: true,
+          layercachemap: applylayercacheupdate(
+            state.layercachemap,
+            incoming.board,
+            incoming.layers ?? [],
+          ),
+        }
+      }
+      return {
+        gadget: incoming,
+        gadgetsyncrev: rev,
+        gadgetscrolllocal: hasincomingscroll,
         layercachemap: applylayercacheupdate(
           state.layercachemap,
-          gadget.board,
-          gadget.layers ?? [],
+          incoming.board,
+          incoming.layers ?? [],
         ),
-      }))
-    }
+      }
+    })
   },
 )

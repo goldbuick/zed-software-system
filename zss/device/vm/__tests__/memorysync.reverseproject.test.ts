@@ -12,6 +12,8 @@ loop the silent-writes guard is designed to prevent).
 import {
   MEMORY_STREAM_ID,
   boardstreamid,
+  flagsstreamid,
+  gadgetstreamid,
   memoryconsumealldirty,
   memorydirtyclear,
   memorydirtyhas,
@@ -117,42 +119,37 @@ describe('memorysyncreverseproject', () => {
     expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
   })
 
-  it('merges gadgetstore without dropping an activelist pid missing from the incoming gadget map', () => {
+  it('reverse-projects gadget stream into flags.gadgetstore', () => {
     const pidHost = 'pid_1111_hostgadget'
-    const pidJoin = 'pid_7777_joingadget'
     const main = makebook({
       id: 'main-id',
       name: 'main',
       flags: {
         [MEMORY_LABEL.GADGETSTORE]: {
-          [pidHost]: { x: 1 },
-          [pidJoin]: { layers: [2] },
+          [pidHost]: { id: 'a', board: '', boardname: '' },
         },
         [pidHost]: { board: 'boardA' },
-        [pidJoin]: { board: 'boardA' },
-      } as BOOK['flags'],
+      } as unknown as BOOK['flags'],
     })
-    main.activelist = [pidHost, pidJoin]
     memoryresetbooks([main])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     memorydirtyclear()
 
-    memorysyncreverseproject(MEMORY_STREAM_ID, {
-      books: {
-        'main-id': {
-          id: 'main-id',
-          name: 'main',
-          activelist: [pidHost, pidJoin],
-          pages: [],
-          flags: {
-            [MEMORY_LABEL.GADGETSTORE]: {
-              [pidHost]: { x: 9 },
-            },
-            [pidHost]: { board: 'boardA', hp: 3 },
-            [pidJoin]: { board: 'boardA' },
-          },
-        },
-      },
+    memorysyncreverseproject(gadgetstreamid(pidHost), {
+      id: 'g2',
+      board: 'boardA',
+      boardname: 'X',
+      layers: [{ id: 'L' }],
+      exiteast: '',
+      exitwest: '',
+      exitnorth: '',
+      exitsouth: '',
+      exitne: '',
+      exitnw: '',
+      exitse: '',
+      exitsw: '',
+      scroll: [],
+      sidebar: [],
     })
 
     const book = memoryreadbookbyaddress('main-id')
@@ -160,9 +157,34 @@ describe('memorysyncreverseproject', () => {
       string,
       unknown
     >
-    expect(gadgetstore[pidHost]).toEqual({ x: 9 })
-    expect(gadgetstore[pidJoin]).toEqual({ layers: [2] })
-    expect(memorydirtyhas(MEMORY_STREAM_ID)).toBe(false)
+    expect((gadgetstore[pidHost] as Record<string, unknown>).id).toBe('g2')
+    expect((gadgetstore[pidHost] as Record<string, unknown>).boardname).toBe(
+      'X',
+    )
+    expect(memorydirtyhas(gadgetstreamid(pidHost))).toBe(false)
+  })
+
+  it('reverse-projects flags stream into mainbook.flags[pid]', () => {
+    const pidHost = 'pid_2222_hostflags'
+    const main = makebook({
+      id: 'main-id',
+      name: 'main',
+      flags: {
+        [pidHost]: { board: 'boardA', hp: 1 },
+      } as unknown as BOOK['flags'],
+    })
+    memoryresetbooks([main])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+    memorydirtyclear()
+
+    memorysyncreverseproject(flagsstreamid(pidHost), {
+      board: 'boardA',
+      hp: 99,
+    })
+
+    const book = memoryreadbookbyaddress('main-id')
+    expect(book?.flags[pidHost]).toEqual({ board: 'boardA', hp: 99 })
+    expect(memorydirtyhas(flagsstreamid(pidHost))).toBe(false)
   })
 
   it('preserves BOARD pages on the live book when memory stream re-projects', () => {

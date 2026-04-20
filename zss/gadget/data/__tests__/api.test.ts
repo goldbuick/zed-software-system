@@ -62,12 +62,15 @@ describe('api', () => {
     playerStates.player1 = initstate()
     playerStates.player2 = initstate()
     // Reset the state provider to return consistent state objects
-    gadgetstateprovider((player: string) => {
-      if (!playerStates[player]) {
-        playerStates[player] = initstate()
-      }
-      return playerStates[player]
-    })
+    gadgetstateprovider(
+      (player: string) => {
+        if (!playerStates[player]) {
+          playerStates[player] = initstate()
+        }
+        return playerStates[player]
+      },
+      noop,
+    )
   })
 
   describe('initstate', () => {
@@ -110,7 +113,7 @@ describe('api', () => {
         sidebar: [],
       }
 
-      gadgetstateprovider(() => customState)
+      gadgetstateprovider(() => customState, noop)
       const state = gadgetstate('player1')
       expect(state).toBe(customState)
     })

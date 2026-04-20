@@ -21,11 +21,10 @@ import {
   memoryreadboardrunnerchoices,
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
-import { memorytickmain } from 'zss/memory/runtime'
+import { memorytickloaders } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
   memoryreadfreeze,
-  memoryreadhalt,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
@@ -44,12 +43,11 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
   // second's scan.
   memoryscanplayers(tracking)
 
-  perfmeasure('vm:memorytickmain', () => {
-    // Phase 2 of the boardrunner authoritative-tick plan: server runs only
-    // the loader half of the tick. Per-board chip code runs in elected
-    // boardrunner workers, which push their results via jsonsyncclientedit.
-    // Pilot ticks also moved to the worker (see boardrunneruser.ts).
-    memorytickmain(memoryreadhalt(), true)
+  perfmeasure('vm:memorytickloaders', () => {
+    // Server runs loader chips + frame clock only. Per-board chip code runs in
+    // elected boardrunner workers (`memorytickmain`). Pilot ticks also moved
+    // to the worker (see boardrunneruser.ts).
+    memorytickloaders()
   })
 
   // drain any per-stream dirty bits set during the tick (player flags, board

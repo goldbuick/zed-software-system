@@ -51,7 +51,7 @@ describe('worker pilottick', () => {
     session.memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     // Module-level `pilots` state in pilot.ts persists across tests — clear
     // any lingering pilot for p1 before each run.
-    handlepilotstop(dev, {
+    handlepilotstop({
       session: '',
       player: 'p1',
       id: 'reset',
@@ -61,7 +61,7 @@ describe('worker pilottick', () => {
   })
 
   afterEach(() => {
-    handlepilotstop(dev, {
+    handlepilotstop({
       session: '',
       player: 'p1',
       id: 'reset',
@@ -90,7 +90,7 @@ describe('worker pilottick', () => {
       target: 'pilotstart',
       data: { x: 4, y: 2 },
     }
-    handlepilotstart(dev, startmsg)
+    handlepilotstart(startmsg)
 
     // PILOT_TICK_INTERVAL = 2, so the first pilottick is a warm-up (no work).
     pilottick(dev)
@@ -115,7 +115,7 @@ describe('worker pilottick', () => {
         >,
       )
 
-    handlepilotstart(dev, {
+    handlepilotstart({
       session: '',
       player: 'p1',
       id: 'start',
@@ -123,7 +123,7 @@ describe('worker pilottick', () => {
       target: 'pilotstart',
       data: { x: 10, y: 10 },
     })
-    handlepilotstop(dev, {
+    handlepilotstop({
       session: '',
       player: 'p1',
       id: 'stop',

@@ -59,7 +59,7 @@ Loaded in [`zss/simspace.ts`](../../simspace.ts); `createplatform(false, …)` s
 | `vm` | [`zss/device/vm.ts`](../vm.ts) 8–18 | Dispatches `message.target` through `vmhandlers` / default ([`zss/device/vm/handlers/registry.ts`](../vm/handlers/registry.ts)). |
 | `clock` | [`zss/device/clock.ts`](../clock.ts) 4–43 | Emits `ticktock` (frame) and `second` (1 Hz) with `player ''` (24–31). |
 | `streamreplserver` | [`zss/device/streamreplserver.ts`](../streamreplserver.ts) | Authoritative **`memory`** / **`board:*`** stream documents + monotonic **rev**; admits / drops players; fans out **`rxreplclient:stream_row`** after updates. Called from [`memorysync.ts`](../vm/memorysync.ts). |
-| `rxreplserver` | [`zss/device/rxreplserver.ts`](../rxreplserver.ts) | Handles **`rxreplserver:push_batch`**: merges non-`gadget:` rows into canonical MEMORY via `memorysyncreverseproject`, then `streamreplpublishfrommemory` (bump rev, fan out). Gadget rows fan out as `rxreplclient:gadget_row`. |
+| `rxreplserver` | [`zss/device/rxreplserver.ts`](../rxreplserver.ts) | Handles **`rxreplserver:push_batch`**: merges accepted rows into canonical MEMORY via `memorysyncreverseproject` (`memory`, `board:*`, `flags:*`, `gadget:*`), then `streamreplpublishfrommemory` (bump rev, fan out). Gadget rows may also fan out as `rxreplclient:gadget_row`. |
 | `user` | [`zss/device/user.ts`](../user.ts) 10–20 | Server-side `user:input` only (`handleuserinput`). |
 | `modem` (worker copy) | [`zss/device/modem.ts`](../modem.ts) | Second instance of the Yjs protocol in the sim worker. |
 | `gadgetmemoryprovider` | [`zss/device/gadgetmemoryprovider.ts`](../gadgetmemoryprovider.ts) | Backs `gadgetstate()` from `mainbook.flags[GADGETSTORE]` on sim. |
@@ -226,10 +226,10 @@ flowchart LR
 Authoritative ordering for one sim frame (see also [`zss/device/vm/handlers/tick.ts`](../vm/handlers/tick.ts), [`zss/device/boardrunner.ts`](../boardrunner.ts)):
 
 1. **Sim `clock`** emits `ticktock` into the sim worker hub.
-2. **`vm` tick handler** runs `memorytickmain(…, loadersonly=true)` then **`memorysyncpushdirty`** so **`streamreplserver`** updates fan out **`rxreplclient:stream_row`** to admitted peers for loader-side mutations.
+2. **`vm` tick handler** runs **`memorytickloaders`** then **`memorysyncpushdirty`** so **`streamreplserver`** updates fan out **`rxreplclient:stream_row`** to admitted peers for loader-side mutations.
 3. **Board election** updates `boardrunners` / asks / revokes (same tick handler); **`boardrunner:ownedboards`** should reach the main hub and boardrunner worker **before** that worker’s next `ticktock` applies an authoritative `memorytickmain` for newly owned boards.
 4. **Main hub** forwards `ticktock` / patches / ownership to the boardrunner worker (`allowticktock`) and to **PeerJS** per [`shouldforwardservertoclient`](../forward.ts) minus peer blocks.
-5. **Boardrunner worker** on `ticktock`: pilot → full `memorytickmain` → gadget sync → `memoryworkerpushdirty` (**`rxreplserver:push_batch`** upstream for memory / boards; gadget rows use the same batch API).
+5. **Boardrunner worker** on `ticktock`: pilot → `memorytickmain` (boards only; sim runs `memorytickloaders`) → gadget sync → `memoryworkerpushdirty` (**`rxreplserver:push_batch`** upstream for memory / boards; gadget rows use the same batch API).
 
 **Barrier:** a worker should not treat a board as authoritative until it has received **`boardrunner:ownedboards`** for that board *and* a **`rxreplclient:stream_row`** (or equivalent hydrate from RxDB / `jsonsync:changed`) for the corresponding `board:*` stream; otherwise skip authoritative tick work for that board (handled via ownership set + hydrate in [`boardrunner.ts`](../boardrunner.ts)).
 
@@ -246,7 +246,7 @@ sequenceDiagram
   participant PEER as PeerJS
 
   CLK->>VM: ticktock
-  VM->>VM: memorytickmain_loadersOnly
+  VM->>VM: memorytickloaders
   VM->>STR: memorysyncpushdirty_streamreplserverupdate
   STR-->>FWD: rxreplclient_stream_row
   VM->>VM: boardrunner_election
@@ -398,7 +398,7 @@ From `shouldforwardclienttoserver` ([`zss/device/forward.ts`](../forward.ts) 109
 | VM input | `vm:operator`, `vm:login`, `vm:cli`, etc. |
 | User | `user:input`, `user:pilotstart/stop/clear` |
 | Modem | `modem:join`, `modem:sync`, `modem:awareness` |
-| Authoritative sync | `rxreplserver:push_batch` (memory / `board:*` / `gadget:*` rows from elected workers) |
+| Authoritative sync | `rxreplserver:push_batch` (memory / `board:*` / `flags:*` / `gadget:*` rows from elected workers) |
 | Gadget echoes | `gadgetclient:paint`, `gadgetclient:patch` (elected boardrunner reporting up) |
 | Board ack | `sync`, `desync`, `joinack`, `ackboardrunner` |
 

@@ -11,7 +11,12 @@ import { MEMORY_STREAM_ID } from 'zss/memory/memorydirty'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { rxreplclientstreamrow } from './api'
-import { projectboardcodepage, projectmemory } from './vm/memoryproject'
+import {
+  projectboardcodepage,
+  projectgadget,
+  projectmemory,
+  projectplayerflags,
+} from './vm/memoryproject'
 
 export type STREAMREPL_SERVER_ENTRY = {
   document: unknown
@@ -56,6 +61,20 @@ function projectfordoc(streamid: string): unknown | undefined {
     }
     const cp = memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.BOARD, id)
     return ispresent(cp) ? projectboardcodepage(cp) : undefined
+  }
+  if (streamid.startsWith('gadget:')) {
+    const pid = streamid.slice('gadget:'.length)
+    if (!pid) {
+      return undefined
+    }
+    return projectgadget(pid)
+  }
+  if (streamid.startsWith('flags:')) {
+    const pid = streamid.slice('flags:'.length)
+    if (!pid) {
+      return undefined
+    }
+    return projectplayerflags(pid)
   }
   return undefined
 }
@@ -117,6 +136,13 @@ export function streamreplserverdropplayer(
 
 export function streamreplserverclose(streamid: string): void {
   streams.delete(streamid)
+}
+
+/** Remove a player from every stream (e.g. logout). */
+export function streamreplserverdropplayerfromallstreams(player: string): void {
+  for (const entry of streams.values()) {
+    entry.players.delete(player)
+  }
 }
 
 export function streamreplserverreadstream(

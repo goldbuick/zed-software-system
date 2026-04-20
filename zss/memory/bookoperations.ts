@@ -1,5 +1,10 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
-import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
+import {
+  createnameid,
+  createshortnameid,
+  createsid,
+  ispid,
+} from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
@@ -14,7 +19,7 @@ import {
   memoryreadcodepagestats,
   memoryreadcodepagetype,
 } from './codepageoperations'
-import { memorymarkmemorydirty } from './memorydirty'
+import { flagsstreamid, memorymarkdirty, memorymarkmemorydirty } from './memorydirty'
 import {
   BOARD_ELEMENT,
   BOOK,
@@ -73,7 +78,11 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   }
   if (ispresent(book.flags[id])) {
     delete book.flags[id]
-    memorymarkmemorydirty()
+    if (ispid(id)) {
+      memorymarkdirty(flagsstreamid(id))
+    } else {
+      memorymarkmemorydirty()
+    }
   }
 }
 
@@ -347,7 +356,11 @@ export function memorywritebookflag(
   if (flags) {
     if (flags[name] !== value) {
       flags[name] = value
-      memorymarkmemorydirty()
+      if (ispid(id)) {
+        memorymarkdirty(flagsstreamid(id))
+      } else {
+        memorymarkmemorydirty()
+      }
     }
   }
   return value

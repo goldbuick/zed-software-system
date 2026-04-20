@@ -10,13 +10,13 @@ import {
   tracking,
 } from 'zss/device/vm/state'
 import * as playermanagement from 'zss/memory/playermanagement'
-import { memorytickmain } from 'zss/memory/runtime'
+import { memorytickloaders } from 'zss/memory/runtime'
 import * as session from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import type { BOOK } from 'zss/memory/types'
 
 jest.mock('zss/memory/runtime', () => ({
-  memorytickmain: jest.fn(),
+  memorytickloaders: jest.fn(),
 }))
 
 function clearboardrunnerstate() {
@@ -42,7 +42,6 @@ describe('handletick boardrunner election', () => {
   beforeEach(() => {
     clearboardrunnerstate()
     session.memorywritefreeze(false)
-    jest.spyOn(session, 'memoryreadhalt').mockReturnValue(false)
     jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
     jest.spyOn(api, 'boardrunnerowned').mockImplementation(() => {})
     jest.spyOn(api, 'registerboardrunnerask').mockImplementation(() => {})
@@ -72,7 +71,7 @@ describe('handletick boardrunner election', () => {
     clearboardrunnerstate()
     session.memorywritefreeze(false)
     jest.restoreAllMocks()
-    jest.mocked(memorytickmain).mockClear()
+    jest.mocked(memorytickloaders).mockClear()
   })
 
   it('syncs boardrunners to acked player when pending slot disagrees', () => {

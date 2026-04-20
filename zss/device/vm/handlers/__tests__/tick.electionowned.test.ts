@@ -9,14 +9,14 @@ import {
   failedboardrunners,
   tracking,
 } from 'zss/device/vm/state'
-import { memorytickmain } from 'zss/memory/runtime'
+import { memorytickloaders } from 'zss/memory/runtime'
 import * as playermanagement from 'zss/memory/playermanagement'
 import * as session from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import type { BOOK } from 'zss/memory/types'
 
 jest.mock('zss/memory/runtime', () => ({
-  memorytickmain: jest.fn(),
+  memorytickloaders: jest.fn(),
 }))
 
 function clearvmrunner() {
@@ -42,7 +42,6 @@ describe('handletick boardrunnerowned on new election', () => {
   beforeEach(() => {
     clearvmrunner()
     session.memorywritefreeze(false)
-    jest.spyOn(session, 'memoryreadhalt').mockReturnValue(false)
     jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
     jest.spyOn(memorysync, 'memorysyncrevokeboardrunner').mockImplementation(() => {})
     jest
@@ -70,7 +69,7 @@ describe('handletick boardrunnerowned on new election', () => {
     clearvmrunner()
     session.memorywritefreeze(false)
     jest.restoreAllMocks()
-    jest.mocked(memorytickmain).mockClear()
+    jest.mocked(memorytickloaders).mockClear()
   })
 
   it('emits boardrunner:ownedboard for newly elected runner', () => {

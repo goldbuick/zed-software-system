@@ -41,9 +41,6 @@ export const rxreplserverdevice = createdevice(
         const accepted: { streamid: string; rev: number }[] = []
         for (let i = 0; i < batch.rows.length; ++i) {
           const row = batch.rows[i]
-          if (row.streamid.startsWith('gadget:')) {
-            continue
-          }
           const entry = streamreplserverreadstream(row.streamid)
           if (
             !entry ||

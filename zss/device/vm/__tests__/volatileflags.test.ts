@@ -7,8 +7,17 @@ must NOT ride in the
 memory stream projection (otherwise we burn diff cycles and let the server
 round-trip clobber live worker state on hydrate). memoryproject strips them
 at projection time; memoryhydrate preserves them on incoming merges.
+
+Gadget UI state replicates via `gadget:<pid>` streams; `projectmemory` omits
+`flags.gadgetstore` from the wire snapshot. Player bags for ids matching
+`ispid` replicate via `flags:<pid>` and are omitted from `projectmemory`.
 */
-import { MEMORY_STREAM_ID, memorydirtyclear } from 'zss/memory/memorydirty'
+import {
+  flagsstreamid,
+  gadgetstreamid,
+  MEMORY_STREAM_ID,
+  memorydirtyclear,
+} from 'zss/memory/memorydirty'
 import {
   memoryreadbookbyaddress,
   memoryreadroot,
@@ -21,7 +30,11 @@ import {
   memoryhydratefromjsonsync,
   mergeflagspreservingvolatile,
 } from '../memoryhydrate'
-import { VOLATILE_FLAG_KEYS, projectmemory } from '../memoryproject'
+import {
+  VOLATILE_FLAG_KEYS,
+  projectmemory,
+  projectplayerflags,
+} from '../memoryproject'
 
 function makemainbook(): BOOK {
   const flags = {
@@ -85,6 +98,40 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
     expect(flags.boardA.custom).toBe('keep-me')
     expect(flags.boardA.synthstate).toBeUndefined()
     expect(flags.boardA.synthplay).toBeUndefined()
+  })
+
+  it('projectmemory omits ispid player rows from main book flags', () => {
+    const pidkey = 'pid_projmem_omit'
+    const book = makemainbook()
+    ;(book.flags as Record<string, BOOK_FLAGS>)[pidkey] = {
+      board: 'boardA',
+      hp: 3,
+    } as unknown as BOOK_FLAGS
+    book.activelist = [...(book.activelist ?? []), pidkey]
+    memoryresetbooks([book])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+
+    const projected = projectmemory() as {
+      books: Record<string, { flags: Record<string, unknown> }>
+    }
+    expect(projected.books['main-id'].flags[pidkey]).toBeUndefined()
+    expect(projectplayerflags(pidkey).hp).toBe(3)
+  })
+
+  it('projectmemory omits gadgetstore from main book flags', () => {
+    const book = makemainbook()
+    ;(book.flags as Record<string, unknown>)[MEMORY_LABEL.GADGETSTORE] = {
+      p1: { id: 'g', board: 'x', boardname: '' },
+    }
+    memoryresetbooks([book])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+
+    const projected = projectmemory() as {
+      books: Record<string, { flags: Record<string, unknown> }>
+    }
+    expect(projected.books['main-id'].flags[MEMORY_LABEL.GADGETSTORE]).toBe(
+      undefined,
+    )
   })
 
   it('memoryhydratefromjsonsync preserves local volatile keys when merging', () => {
@@ -194,7 +241,58 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
     expect(joiner.hp).toBe(2)
   })
 
-  it('hydrate keeps gadgetstore pid when incoming.gadgetstore omits that activelist pid', () => {
+  it('memoryhydratefromjsonsync flags stream merges player row preserving volatile', () => {
+    const pidkey = 'pid_hydrate_flags'
+    const book = makemainbook()
+    ;(book.flags as Record<string, BOOK_FLAGS>)[pidkey] = {
+      board: 'boardA',
+      hp: 1,
+      inputqueue: [[9, 0]],
+    } as unknown as BOOK_FLAGS
+    book.activelist = [...(book.activelist ?? []), pidkey]
+    memoryresetbooks([book])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+
+    memoryhydratefromjsonsync(flagsstreamid(pidkey), { board: 'boardA', hp: 8 })
+
+    const after = memoryreadbookbyaddress('main-id')
+    const row = after?.flags[pidkey] as Record<string, unknown>
+    expect(row.hp).toBe(8)
+    expect(row.inputqueue).toEqual([[9, 0]])
+  })
+
+  it('memoryhydratefromjsonsync gadget stream writes gadgetstore row', () => {
+    const book = makemainbook()
+    memoryresetbooks([book])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+
+    const doc = {
+      id: 'gadget-doc',
+      board: 'boardA',
+      boardname: 'Room',
+      layers: [{ id: 'L1' }],
+      exiteast: '',
+      exitwest: '',
+      exitnorth: '',
+      exitsouth: '',
+      exitne: '',
+      exitnw: '',
+      exitse: '',
+      exitsw: '',
+      scroll: [],
+      sidebar: [],
+    }
+    memoryhydratefromjsonsync(gadgetstreamid('p1'), doc)
+
+    const after = memoryreadbookbyaddress('main-id')
+    const gs = after?.flags[MEMORY_LABEL.GADGETSTORE] as Record<
+      string,
+      unknown
+    >
+    expect(gs.p1).toEqual(doc)
+  })
+
+  it('hydrate keeps local gadgetstore when memory snapshot omits gadgetstore', () => {
     const pidJoin = 'pid_8888_gadgetstorehydrate'
     const book = makemainbook()
     ;(book.flags as Record<string, unknown>)[MEMORY_LABEL.GADGETSTORE] = {
@@ -210,14 +308,6 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
 
     const stripped = projectmemory() as Record<string, unknown>
-    const main = (stripped.books as Record<string, unknown>)['main-id'] as {
-      flags: Record<string, unknown>
-      activelist: string[]
-    }
-    const gs = main.flags[MEMORY_LABEL.GADGETSTORE] as Record<string, unknown>
-    main.flags[MEMORY_LABEL.GADGETSTORE] = {
-      p1: gs.p1,
-    }
 
     memoryhydratefromjsonsync(MEMORY_STREAM_ID, stripped)
 
@@ -228,154 +318,28 @@ describe('VOLATILE_FLAG_KEYS projection + hydration', () => {
     >
     expect(afterGs[pidJoin]).toEqual({ layers: [{ id: 'layer-a' }] })
   })
+})
 
-  it('merge preserves gadgetstore layers when incoming pid row has empty layers', () => {
-    const pidJoin = 'pid_4444_gadgetlayermerge'
+describe('mergeflagspreservingvolatile', () => {
+  it('preserves volatile keys on player flag rows', () => {
     const existing: Record<string, BOOK_FLAGS> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pidJoin]: { board: 'b1', layers: [{ id: 'L1' }] },
+      p1: {
+        board: 'b',
+        inputqueue: [
+          [1, 0],
+          [2, 0],
+        ],
       } as unknown as BOOK_FLAGS,
     }
     const incoming: Record<string, Record<string, unknown>> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pidJoin]: { board: 'b1', layers: [] },
-      },
+      p1: { board: 'b', hp: 3 },
     }
-    const out = mergeflagspreservingvolatile(existing, incoming, [pidJoin])
-    const gs = out[MEMORY_LABEL.GADGETSTORE] as Record<
-      string,
-      { layers?: unknown[] }
-    >
-    expect(gs[pidJoin].layers).toEqual([{ id: 'L1' }])
-  })
-
-  it('merge preserves gadgetstore layers when incoming omits or nulls layers', () => {
-    const pidJoin = 'pid_6666_gadgetlayersomit'
-    const existing: Record<string, BOOK_FLAGS> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pidJoin]: { board: 'b1', layers: [{ id: 'L1' }] },
-      } as unknown as BOOK_FLAGS,
-    }
-    const incoming: Record<string, Record<string, unknown>> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pidJoin]: { board: 'b1', layers: undefined as unknown as [] },
-      },
-    }
-    const out = mergeflagspreservingvolatile(existing, incoming, [pidJoin])
-    const gs = out[MEMORY_LABEL.GADGETSTORE] as Record<
-      string,
-      { layers?: unknown[] }
-    >
-    expect(gs[pidJoin].layers).toEqual([{ id: 'L1' }])
-  })
-
-  it('merge seeds joiner gadgetstore layers from boardmate when incoming omits board', () => {
-    const host = 'pid_1001_hostnoboardhint'
-    const join = 'pid_2001_joinnoboardhint'
-    const b = 'board_sid_nohint'
-    const existing: Record<string, BOOK_FLAGS> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [host]: { board: b, layers: [{ id: 'fromhost' }] },
-        [join]: { layers: [] },
-      } as unknown as BOOK_FLAGS,
-    }
-    const incoming: Record<string, Record<string, unknown>> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [join]: { layers: [] },
-      },
-    }
-    const out = mergeflagspreservingvolatile(existing, incoming, [host, join])
-    const gs = out[MEMORY_LABEL.GADGETSTORE] as Record<
-      string,
-      { layers?: unknown[] }
-    >
-    expect(gs[join].layers).toEqual([{ id: 'fromhost' }])
-  })
-
-  it('merge fills gadgetstore board from prev when incoming clears board but keeps layers via preserve', () => {
-    const pid = 'pid_3333_boardfromprev'
-    const existing: Record<string, BOOK_FLAGS> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pid]: { board: 'bx', layers: [{ id: 'L' }] },
-      } as unknown as BOOK_FLAGS,
-    }
-    const incoming: Record<string, Record<string, unknown>> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pid]: { board: '', layers: [] },
-      },
-    }
-    const out = mergeflagspreservingvolatile(existing, incoming, [pid])
-    const gs = out[MEMORY_LABEL.GADGETSTORE] as Record<
-      string,
-      { layers?: unknown[]; board?: string }
-    >
-    expect(gs[pid].layers).toEqual([{ id: 'L' }])
-    expect(gs[pid].board).toBe('bx')
-  })
-
-  it('merge does not seed from a boardmate on a different board when board hint is set', () => {
-    const host = 'pid_1002_hostotherboard'
-    const join = 'pid_2002_joinotherboard'
-    const existing: Record<string, BOOK_FLAGS> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [host]: { board: 'board_host_only', layers: [{ id: 'hostonly' }] },
-        [join]: { board: 'board_join', layers: [] },
-      } as unknown as BOOK_FLAGS,
-    }
-    const incoming: Record<string, Record<string, unknown>> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [join]: { board: 'board_join', layers: [] },
-      },
-    }
-    const out = mergeflagspreservingvolatile(existing, incoming, [host, join])
-    const gs = out[MEMORY_LABEL.GADGETSTORE] as Record<
-      string,
-      { layers?: unknown[] }
-    >
-    expect(gs[join].layers).toEqual([])
-  })
-
-  it('merge seeds joiner gadgetstore layers from a boardmate with the same board id', () => {
-    const host = 'pid_1000_hostseed'
-    const join = 'pid_2000_joinseed'
-    const b = 'board_sid_seed'
-    const existing: Record<string, BOOK_FLAGS> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [host]: { board: b, layers: [{ id: 'fromhost' }] },
-        [join]: { board: b, layers: [] },
-      } as unknown as BOOK_FLAGS,
-    }
-    const incoming: Record<string, Record<string, unknown>> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [join]: { board: b, layers: [] },
-      },
-    }
-    const out = mergeflagspreservingvolatile(existing, incoming, [host, join])
-    const gs = out[MEMORY_LABEL.GADGETSTORE] as Record<
-      string,
-      { layers?: unknown[] }
-    >
-    expect(gs[join].layers).toEqual([{ id: 'fromhost' }])
-    expect(gs[host].layers).toEqual([{ id: 'fromhost' }])
-  })
-
-  it('merge replaces gadgetstore layers when incoming carries a non-empty stack', () => {
-    const pidJoin = 'pid_5555_gadgetlayerupdate'
-    const existing: Record<string, BOOK_FLAGS> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pidJoin]: { board: 'b1', layers: [{ id: 'A' }] },
-      } as unknown as BOOK_FLAGS,
-    }
-    const incoming: Record<string, Record<string, unknown>> = {
-      [MEMORY_LABEL.GADGETSTORE]: {
-        [pidJoin]: { board: 'b1', layers: [{ id: 'B' }, { id: 'C' }] },
-      },
-    }
-    const out = mergeflagspreservingvolatile(existing, incoming, [pidJoin])
-    const gs = out[MEMORY_LABEL.GADGETSTORE] as Record<
-      string,
-      { layers?: unknown[] }
-    >
-    expect(gs[pidJoin].layers).toEqual([{ id: 'B' }, { id: 'C' }])
+    const out = mergeflagspreservingvolatile(existing, incoming, ['p1'])
+    const p1 = out.p1 as Record<string, unknown>
+    expect(p1.hp).toBe(3)
+    expect(p1.inputqueue).toEqual([
+      [1, 0],
+      [2, 0],
+    ])
   })
 })
