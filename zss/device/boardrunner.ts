@@ -201,7 +201,11 @@ const boardrunner = createdevice(
     // handle messages
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
-      memoryhydratefromjsonsync(payload.streamid, payload.document)
+      memoryhydratefromjsonsync(
+        payload.streamid,
+        payload.document,
+        import.meta.env.DEV,
+      )
       rebuildownedboardids()
       return
     }

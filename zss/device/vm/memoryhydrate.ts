@@ -65,20 +65,25 @@ import { VOLATILE_FLAG_KEYS } from './memoryproject'
 export function memoryhydratefromjsonsync(
   stream: string,
   document: unknown,
+  log = false,
 ): void {
   if (!ispresent(document) || typeof document !== 'object') {
     return
   }
   memorywithsilentwrites(() => {
     if (ismemorystream(stream)) {
-      console.info('hydrating memory', document)
+      if (log) {
+        console.info('hydrating memory', document)
+      }
       hydratememory(document as Record<string, unknown>)
       return
     }
     if (isboardstream(stream)) {
       const player = boardstream(stream)
       if (player) {
-        console.info('hydrating board', player, document)
+        if (log) {
+          console.info('hydrating board', player, document)
+        }
         hydrateboard(player, document as Record<string, unknown>)
       }
       return
@@ -86,7 +91,9 @@ export function memoryhydratefromjsonsync(
     if (isgadgetstream(stream)) {
       const player = gadgetstream(stream)
       if (player) {
-        console.info('hydrating gadget', player, document)
+        if (log) {
+          console.info('hydrating gadget', player, document)
+        }
         hydrategadget(player, document as Record<string, unknown>)
       }
       return
@@ -94,7 +101,9 @@ export function memoryhydratefromjsonsync(
     if (isflagsstream(stream)) {
       const player = flagsstream(stream)
       if (player) {
-        console.info('hydrating flags', player, document)
+        if (log) {
+          console.info('hydrating flags', player, document)
+        }
         hydrateplayerflags(player, document as Record<string, unknown>)
       }
     }
