@@ -21,7 +21,7 @@ import {
   useGadgetClient,
   useTape,
   useTerminal,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { Scrollable } from 'zss/gadget/scrollable'
 import {

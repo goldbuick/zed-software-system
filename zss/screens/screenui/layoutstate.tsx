@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo } from 'react'
-import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
+import { useEqual, useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'
 import { useScreenSize } from 'zss/gadget/userscreen'

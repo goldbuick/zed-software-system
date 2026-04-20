@@ -1,12 +1,10 @@
+import { zsszedlinklinechip } from 'zss/feature/zsstextui'
 import {
   gadgetstate,
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
-import {
-  scrollwritelines,
-  zsszedlinklinechip,
-} from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 
 jest.mock('zss/device/modem', () => ({
@@ -43,12 +41,15 @@ describe('scrollwritelines', () => {
 
   beforeEach(() => {
     playerstates.p1 = initstate()
-    gadgetstateprovider((player: string) => {
-      if (!playerstates[player]) {
-        playerstates[player] = initstate()
-      }
-      return playerstates[player]
-    })
+    gadgetstateprovider(
+      (player: string) => {
+        if (!playerstates[player]) {
+          playerstates[player] = initstate()
+        }
+        return playerstates[player]
+      },
+      () => {},
+    )
   })
 
   it('applies plain lines and scrollname', () => {

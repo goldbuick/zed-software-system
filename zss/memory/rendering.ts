@@ -607,5 +607,3 @@ export function memoryreadgadgetlayers(
   }
   return result
 }
-
-export { memorycreatecachedsprite } from './renderinglayercache'

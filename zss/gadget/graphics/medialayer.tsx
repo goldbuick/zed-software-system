@@ -3,7 +3,7 @@ import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { createbitmapfromarray } from 'zss/gadget/data/bitmap'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,

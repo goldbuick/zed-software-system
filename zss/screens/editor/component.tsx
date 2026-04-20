@@ -9,7 +9,7 @@ import {
   useEqual,
   useGadgetClient,
   useTape,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'

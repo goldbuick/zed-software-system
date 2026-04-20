@@ -11,7 +11,7 @@ import {
   ttsqueue,
 } from 'zss/feature/tts'
 import { write } from 'zss/feature/writeui'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { DEFAULT_BPM, waitfor } from 'zss/mapping/tick'

@@ -23,7 +23,7 @@ import {
   memorywriteboardnamed,
   memorywriteboardobjectlookup,
 } from './boardlookup'
-import { memorycheckblockedboardobject } from './boardmovement'
+import { memorycheckblockedboardobject } from './boardblocking'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

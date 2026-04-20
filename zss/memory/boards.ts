@@ -1,5 +1,5 @@
 /**
- * Board and element read/write, board navigation. Uses codepages, boardelement, boardlookup, boardoperations, codepageoperations.
+ * Board and element read/write, board navigation. Uses codepages, boardelement, boardlookup, boardmovement, codepageoperations.
  */
 import { pttoindex } from 'zss/mapping/2d'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'

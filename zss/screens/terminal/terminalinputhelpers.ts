@@ -1,5 +1,5 @@
 import type { IToken } from 'chevrotain'
-import { useTerminal } from 'zss/gadget/data/state'
+import { useTerminal } from 'zss/gadget/data/zustandstores'
 import { tokenize } from 'zss/lang/lexer'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {

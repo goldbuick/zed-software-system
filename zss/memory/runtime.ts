@@ -229,8 +229,6 @@ export function memorytickmain(playeronly = false, loadersonly = false) {
   })
 }
 
-export { memoryinvalidatedraw } from './boarddrawdirty'
-
 export function memorytickobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,

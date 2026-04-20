@@ -7,7 +7,7 @@ import {
 import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
-import { useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import type { PT } from 'zss/words/types'
 
 export type ZssE2eScrollSnapshot = {

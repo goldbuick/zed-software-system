@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
 import { boardrunnerowned } from 'zss/device/api'
+import { LOG_DEBUG } from 'zss/config'
 import {
   memorysyncrevokeboardrunner,
   memorysyncupdateboard,
@@ -49,6 +50,16 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     payload.board,
     payload.dest,
   )
+  if (LOG_DEBUG) {
+    // Ordered vs `[sim] rxreplserver:push_batch board streams` in devtools.
+    console.debug('[sim] vm:playermovetoboard', {
+      player: message.player,
+      board: payload.board,
+      dest: payload.dest,
+      fromboardid,
+      moved,
+    })
+  }
   if (!moved) {
     // TODO: send message so boardrunner can THUD the player
     return

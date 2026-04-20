@@ -10,7 +10,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import {
   INPUT,
   INPUT_ALT,

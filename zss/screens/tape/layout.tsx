@@ -1,4 +1,4 @@
-import { useTape, useTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { EditorComponent } from 'zss/screens/editor/component'
 import { TerminalComponent } from 'zss/screens/terminal/component'
 

@@ -15,14 +15,12 @@ import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
+import { memorycheckblockedboardobject } from 'zss/memory/boardblocking'
 import {
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
-import {
-  memorycheckblockedboardobject,
-  memorymoveobject,
-} from 'zss/memory/boardmovement'
+import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,

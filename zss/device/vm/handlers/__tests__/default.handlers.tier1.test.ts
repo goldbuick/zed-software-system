@@ -55,6 +55,7 @@ jest.mock('zss/gadget/data/api', () => ({
 jest.mock('zss/device/api', () => ({
   registercopy: jest.fn(),
   apitoast: jest.fn(),
+  apierror: jest.fn(),
   vmcli: jest.fn(),
   vmloader: jest.fn(),
 }))
@@ -71,7 +72,10 @@ jest.mock('zss/memory/codepageoperations', () => ({
   memoryreadcodepagename: jest.fn(),
 }))
 
-jest.mock('zss/memory/boardoperations', () => ({
+jest.mock('zss/memory/boardaccess', () => ({
+  ...jest.requireActual<typeof import('zss/memory/boardaccess')>(
+    'zss/memory/boardaccess',
+  ),
   memoryreadobject: jest.fn(),
 }))
 

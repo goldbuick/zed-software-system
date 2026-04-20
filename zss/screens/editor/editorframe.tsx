@@ -1,4 +1,4 @@
-import { useTape } from 'zss/gadget/data/state'
+import { useTape } from 'zss/gadget/data/zustandstores'
 import { writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
 import { bgcolor } from 'zss/screens/tape/colors'

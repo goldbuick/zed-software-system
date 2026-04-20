@@ -1,6 +1,7 @@
 /*
 Strategy B: sim-side rxrepl. push_batch merges documents into canonical MEMORY.
 */
+import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 
 import { rxreplpushack, rxreplrowdocument } from './api'
@@ -25,6 +26,17 @@ export const rxreplserverdevice = createdevice(
         if (!batch?.rows?.length) {
           rxreplpushack(rxreplserverdevice, message.player, { accepted: [] })
           break
+        }
+        if (LOG_DEBUG) {
+          const boardrows = batch.rows.filter((row) =>
+            row.streamid.startsWith('board:'),
+          )
+          if (boardrows.length > 0) {
+            console.debug('[sim] rxreplserver:push_batch board streams', {
+              player: message.player,
+              streamids: boardrows.map((row) => row.streamid),
+            })
+          }
         }
         const accepted: { streamid: string; rev: number }[] = []
         for (let i = 0; i < batch.rows.length; ++i) {

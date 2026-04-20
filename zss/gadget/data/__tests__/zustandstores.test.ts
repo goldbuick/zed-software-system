@@ -6,9 +6,9 @@ import {
   useInspector,
   useTape,
   useTerminal,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 
-describe('state', () => {
+describe('zustandstores', () => {
   // Note: useEqual is a React hook that uses useRef and cannot be tested
   // in a Node.js environment without React Testing Library. It should be
   // tested in integration tests with React components.

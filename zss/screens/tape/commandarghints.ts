@@ -1,5 +1,6 @@
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { romhintfrommarkdown, romread } from 'zss/rom'
+import { romread } from 'zss/rom'
+import { romhintfrommarkdown } from 'zss/rom/romhint'
 
 const COMMAND_ROM_HINT_CACHE = new Map<string, string>()
 

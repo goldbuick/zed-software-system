@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { useTiles } from 'zss/gadget/tiles'

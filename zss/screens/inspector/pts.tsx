@@ -1,4 +1,4 @@
-import { useInspector } from 'zss/gadget/data/state'
+import { useInspector } from 'zss/gadget/data/zustandstores'
 import { resettiles, useTiles, writetile } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'

@@ -10,7 +10,7 @@ import {
 import { createwritetextcontext } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { useTape } from './data/state'
+import { useTape } from './data/zustandstores'
 import { ShadeBoxDither } from './graphics/dither'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'

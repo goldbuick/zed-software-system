@@ -1,6 +1,8 @@
+import { vmplayermovetoboard } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { dirfrompts, ptapplydir } from 'zss/words/dir'
 import { COLLISION, PT } from 'zss/words/types'
 
@@ -9,16 +11,16 @@ import {
   memoryreadobject,
   memoryreadterrain,
 } from './boardaccess'
+import { memorycheckblockedboardobject } from './boardblocking'
 import { memoryboardelementisobject } from './boardelement'
 import { memorydeleteboardobject } from './boardlifecycle'
 import { memorycheckelementpushable, memoryreadelementstat } from './boards'
-import {
-  memoryplayerblockedbyedge,
-  memoryplayerwaszapped,
-} from './boardtransitions'
+import { memoryreadbookflag } from './bookoperations'
+import { memoryresolveboardedgeexit } from './boardtransitions'
 import { memorysendtoelement } from './gamesend'
 import { memorymarkboarddirty } from './memorydirty'
 import { memorycheckcollision } from './spatialqueries'
+import { memorymoveplayertoboard } from './playermanagement'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -28,61 +30,17 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
-export function memorycheckblockedboardobject(
+export function memoryplayerwaszapped(
+  book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
-  collision: MAYBE<COLLISION>,
-  dest: PT,
-  isplayer = false,
-): MAYBE<BOARD_ELEMENT> {
-  // first pass clipping
-  if (
-    !ispresent(board) ||
-    !ispresent(board.lookup) ||
-    dest.x < 0 ||
-    dest.x >= BOARD_WIDTH ||
-    dest.y < 0 ||
-    dest.y >= BOARD_HEIGHT
-  ) {
-    // for sending interaction messages
-    return {
-      name: 'edge',
-      kind: 'edge',
-      collision: COLLISION.ISSOLID,
-      x: dest.x,
-      y: dest.y,
-    }
+  element: MAYBE<BOARD_ELEMENT>,
+  player: string,
+) {
+  const enterx = memoryreadbookflag(book, player, 'enterx')
+  const entery = memoryreadbookflag(book, player, 'entery')
+  if (isnumber(enterx) && isnumber(entery) && ispresent(element)) {
+    memorymoveboardobject(board, element, { x: enterx, y: entery })
   }
-
-  // gather meta for move
-  const targetidx = dest.x + dest.y * BOARD_WIDTH
-
-  // blocked by an object
-  const maybeobject = memoryreadobject(board, board.lookup[targetidx] ?? '404')
-  if (ispresent(maybeobject)) {
-    if (isplayer) {
-      // players do not block players
-      if (ispid(maybeobject.id)) {
-        return undefined
-      }
-    }
-    // for sending interaction messages
-    return maybeobject
-  }
-
-  // blocked by terrain
-  const maybeterrain = board.terrain[targetidx]
-  if (
-    ispresent(maybeterrain) &&
-    memorycheckcollision(
-      collision,
-      memoryreadelementstat(maybeterrain, 'collision'),
-    )
-  ) {
-    return maybeterrain
-  }
-
-  // no interaction
-  return undefined
 }
 
 export function memorycheckmoveboardobject(
@@ -295,7 +253,20 @@ export function memorymoveobject(
     const blockedisedge = blocked.kind === 'edge'
     if (elementisplayer) {
       if (blockedisedge) {
-        if (!memoryplayerblockedbyedge(book, board, element, dest)) {
+        const edgeexit = memoryresolveboardedgeexit(board, dest)
+        const pid = element.id ?? ''
+        if (
+          ispresent(edgeexit) &&
+          ispresent(book) &&
+          isstring(pid) &&
+          pid.length > 0 &&
+          memorymoveplayertoboard(book, pid, edgeexit.exitboard, edgeexit.dest)
+        ) {
+          vmplayermovetoboard(SOFTWARE, pid, {
+            board: edgeexit.exitboard,
+            dest: edgeexit.dest,
+          })
+        } else {
           memorysendtoelement(blocked, element, 'thud')
         }
       } else if (blockedisbullet) {

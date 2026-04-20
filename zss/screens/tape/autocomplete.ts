@@ -5,7 +5,8 @@ import type {
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import * as lexer from 'zss/lang/lexer'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { romhintfrommarkdown, romread } from 'zss/rom'
+import { romread } from 'zss/rom'
+import { romhintfrommarkdown } from 'zss/rom/romhint'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,

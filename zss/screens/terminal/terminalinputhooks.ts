@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useTerminal } from 'zss/gadget/data/state'
+import { useTerminal } from 'zss/gadget/data/zustandstores'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
 

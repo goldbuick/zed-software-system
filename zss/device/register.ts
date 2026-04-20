@@ -56,7 +56,7 @@ import {
   useInspector,
   useTape,
   useTerminal,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'

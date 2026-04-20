@@ -91,7 +91,7 @@ jest.mock('zss/memory/boards', () => {
   }
 })
 
-jest.mock('zss/memory/boardoperations', () => ({
+jest.mock('zss/memory/boardaccess', () => ({
   memoryboardelementindex(
     board: { terrain?: unknown[] } | undefined,
     pt: { x: number; y: number },
@@ -117,6 +117,9 @@ jest.mock('zss/memory/boardoperations', () => ({
       | import('zss/memory/types').BOARD_ELEMENT
       | undefined
   },
+}))
+
+jest.mock('zss/memory/boarddirection', () => ({
   memoryevaldir() {
     return { destpt: { x: 0, y: 0 } }
   },

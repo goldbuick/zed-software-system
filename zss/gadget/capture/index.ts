@@ -3,7 +3,7 @@
  * Uses useGadgetClient to get the current board and renders it to a PNG image.
  */
 import { RUNTIME } from 'zss/config'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
   CHARS_PER_ROW,
   CHAR_HEIGHT,

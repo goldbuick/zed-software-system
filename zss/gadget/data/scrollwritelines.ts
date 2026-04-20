@@ -8,12 +8,6 @@ import {
 } from 'zss/gadget/data/api'
 import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
-export { scrolllinkunescapefrag } from 'zss/mapping/string'
-export { scrolllinkescapefrag } from 'zss/mapping/string'
-
-/** Re-export for callers that build scroll tape next to gadget APIs. */
-export { zsszedlinklinechip } from 'zss/feature/zsstextui'
-
 /**
  * Whitespace-separated tokens for `gadgethyperlink` command parts; stays here with
  * scroll dispatch (not `zsstextui`, which is layout-only).

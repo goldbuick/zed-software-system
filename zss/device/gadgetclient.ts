@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { applylayercacheupdate, useGadgetClient } from 'zss/gadget/data/state'
+import { applylayercacheupdate, useGadgetClient } from 'zss/gadget/data/zustandstores'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { MEMORY_LABEL } from 'zss/memory/types'

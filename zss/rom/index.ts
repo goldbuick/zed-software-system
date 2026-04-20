@@ -143,5 +143,3 @@ export function romintolookup(content: MAYBE<string>): ROM_LOOKUP {
   })
   return lookup
 }
-
-export { romhintfrommarkdown } from './romhint'

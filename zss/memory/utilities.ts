@@ -12,11 +12,9 @@ import {
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
-import {
-  scrolllinkescapefrag,
-  scrollwritelines,
-} from 'zss/gadget/data/scrollwritelines'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { qrlines } from 'zss/mapping/qr'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
