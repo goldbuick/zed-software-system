@@ -1,7 +1,8 @@
+import { LOG_DEBUG } from 'zss/config'
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
 import { boardrunnerowned } from 'zss/device/api'
-import { LOG_DEBUG } from 'zss/config'
+import { grantboardrunnerackaftersimmove } from 'zss/device/vm/handlers/ackboardrunner'
 import {
   memorysyncrevokeboardrunner,
   memorysyncupdateboard,
@@ -104,4 +105,6 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
       memorysyncupdateboard(sourcecodepage)
     }
   }
+
+  grantboardrunnerackaftersimmove(vm, message.player, payload.board)
 }

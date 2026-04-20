@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
 import { boardrunnerowned } from 'zss/device/api'
 import { handleplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
+import { boardrunnersendsnapshot } from 'zss/device/vm/helpers'
 import {
   memorysyncrevokeboardrunner,
   memorysyncupdateboard,
@@ -12,12 +13,21 @@ import {
   boardrunners,
   failedboardrunners,
 } from 'zss/device/vm/state'
+import { memoryreadbookflag } from 'zss/memory/bookoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
   memorymoveplayertoboard,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
+
+jest.mock('zss/device/vm/helpers', () => ({
+  boardrunnersendsnapshot: jest.fn(),
+}))
+
+jest.mock('zss/memory/bookoperations', () => ({
+  memoryreadbookflag: jest.fn(),
+}))
 
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
@@ -80,6 +90,10 @@ describe('handleplayermovetoboard', () => {
     clearrunners()
     jest.clearAllMocks()
     ;(memorymoveplayertoboard as jest.Mock).mockReturnValue(true)
+    ;(memoryreadbookflag as jest.Mock).mockImplementation(
+      (_book: unknown, _player: string, flag: string) =>
+        flag === 'board' ? 'board-b' : undefined,
+    )
   })
 
   afterEach(() => {
@@ -199,7 +213,7 @@ describe('handleplayermovetoboard', () => {
       'player-1',
       'board-a',
     )
-    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', '')
+    expect(boardrunnerowned).toHaveBeenLastCalledWith(vm, 'player-1', 'board-b')
   })
 
   it('pushes dest board stream before memory stream to prevent zoom flip', () => {
@@ -279,6 +293,140 @@ describe('handleplayermovetoboard', () => {
       'player-1',
       'board-a',
     )
-    expect(boardrunnerowned).toHaveBeenCalledWith(vm, 'player-1', '')
+    expect(boardrunnerowned).toHaveBeenLastCalledWith(vm, 'player-1', 'board-b')
+  })
+
+  it('auto-acks moved player when destination has no acked runner', () => {
+    const book = {}
+    ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(book)
+    ;(memoryreadplayerboard as jest.Mock).mockReturnValue({ id: 'board-a' })
+    const destpage = { id: 'board-b' }
+    const sourcepage = { id: 'board-a' }
+    ;(memorypickcodepagewithtypeandstat as jest.Mock).mockImplementation(
+      (_type: unknown, id: string) => {
+        if (id === 'board-b') {
+          return destpage
+        }
+        if (id === 'board-a') {
+          return sourcepage
+        }
+        return undefined
+      },
+    )
+
+    const message = {
+      player: 'player-1',
+      data: makepayload(),
+    } as unknown as MESSAGE
+
+    handleplayermovetoboard(vm, message)
+
+    expect(ackboardrunners['board-b']).toBe('player-1')
+    expect(boardrunners['board-b']).toBe('player-1')
+    expect(boardrunnersendsnapshot).toHaveBeenCalledWith('player-1', 'board-b')
+  })
+
+  it('does not override destination ack when another player is already acked', () => {
+    const book = {}
+    ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(book)
+    ;(memoryreadplayerboard as jest.Mock).mockReturnValue({ id: 'board-a' })
+    ackboardrunners['board-b'] = 'operator'
+    boardrunners['board-b'] = 'operator'
+
+    const destpage = { id: 'board-b' }
+    const sourcepage = { id: 'board-a' }
+    ;(memorypickcodepagewithtypeandstat as jest.Mock).mockImplementation(
+      (_type: unknown, id: string) => {
+        if (id === 'board-b') {
+          return destpage
+        }
+        if (id === 'board-a') {
+          return sourcepage
+        }
+        return undefined
+      },
+    )
+
+    const message = {
+      player: 'player-1',
+      data: makepayload(),
+    } as unknown as MESSAGE
+
+    handleplayermovetoboard(vm, message)
+
+    expect(ackboardrunners['board-b']).toBe('operator')
+    expect(boardrunners['board-b']).toBe('operator')
+    expect(boardrunnersendsnapshot).not.toHaveBeenCalled()
+  })
+
+  it('clears stale ack on other boards when auto-acking after sim move', () => {
+    const book = {}
+    ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(book)
+    ;(memoryreadplayerboard as jest.Mock).mockReturnValue({ id: 'board-a' })
+    ackboardrunners['board-x'] = 'player-1'
+
+    const destpage = { id: 'board-b' }
+    const sourcepage = { id: 'board-a' }
+    ;(memorypickcodepagewithtypeandstat as jest.Mock).mockImplementation(
+      (_type: unknown, id: string) => {
+        if (id === 'board-b') {
+          return destpage
+        }
+        if (id === 'board-a') {
+          return sourcepage
+        }
+        return undefined
+      },
+    )
+
+    const message = {
+      player: 'player-1',
+      data: makepayload(),
+    } as unknown as MESSAGE
+
+    handleplayermovetoboard(vm, message)
+
+    expect(ackboardrunners['board-x']).toBeUndefined()
+    expect(memorysyncrevokeboardrunner).toHaveBeenCalledWith(
+      'player-1',
+      'board-x',
+    )
+    expect(ackboardrunners['board-b']).toBe('player-1')
+    expect(boardrunners['board-b']).toBe('player-1')
+  })
+
+  it('revokes pending elected runner on dest when different from moved player', () => {
+    const book = {}
+    ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(book)
+    ;(memoryreadplayerboard as jest.Mock).mockReturnValue({ id: 'board-a' })
+    boardrunners['board-b'] = 'pending-peer'
+
+    const destpage = { id: 'board-b' }
+    const sourcepage = { id: 'board-a' }
+    ;(memorypickcodepagewithtypeandstat as jest.Mock).mockImplementation(
+      (_type: unknown, id: string) => {
+        if (id === 'board-b') {
+          return destpage
+        }
+        if (id === 'board-a') {
+          return sourcepage
+        }
+        return undefined
+      },
+    )
+
+    const message = {
+      player: 'player-1',
+      data: makepayload(),
+    } as unknown as MESSAGE
+
+    handleplayermovetoboard(vm, message)
+
+    expect(memorysyncrevokeboardrunner).toHaveBeenCalledWith(
+      'pending-peer',
+      'board-b',
+    )
+    expect(ackboardrunners['board-b']).toBe('player-1')
+    expect(boardrunners['board-b']).toBe('player-1')
   })
 })
