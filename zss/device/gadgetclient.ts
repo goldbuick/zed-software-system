@@ -5,7 +5,10 @@ import {
   useGadgetClient,
 } from 'zss/gadget/data/zustandstores'
 import { ispresent } from 'zss/mapping/types'
-import { playeridfromgadgetstream } from 'zss/memory/memorydirty'
+import {
+  isgadgetstream,
+  playeridfromgadgetstream,
+} from 'zss/memory/memorydirty'
 
 import { JSONSYNC_CHANGED } from './api'
 import { registerreadplayer } from './register'
@@ -14,13 +17,13 @@ export const gadgetclientdevice = createdevice(
   'gadgetclient',
   ['gadget'],
   (message) => {
-    if (!gadgetclientdevice.session(message) || !ispresent(message.data)) {
+    if (!gadgetclientdevice.session(message)) {
       return
     }
     const payload = message.data as JSONSYNC_CHANGED
     if (
-      !payload.streamid?.startsWith('gadget:') ||
-      !ispresent(payload.document)
+      !isgadgetstream(payload?.streamid ?? '') ||
+      !ispresent(payload?.document)
     ) {
       return
     }
@@ -36,18 +39,29 @@ export const gadgetclientdevice = createdevice(
       if (rev < state.gadgetsyncrev) {
         return state
       }
+      // my guess is that when we find the reason host player gets CONSTANT gadget state
+      // updates. AND a join player gets infrequent updates to the gadget state.
       if (rev === state.gadgetsyncrev) {
-        if (
+        const keepScroll =
           (!incoming.scroll || incoming.scroll.length === 0) &&
-          prev.scroll &&
+          ispresent(prev.scroll) &&
           prev.scroll.length > 0
-        ) {
+        const keepSidebar =
+          (!incoming.sidebar || incoming.sidebar.length === 0) &&
+          ispresent(prev.sidebar) &&
+          prev.sidebar.length > 0
+        if (keepScroll || keepSidebar) {
           return {
             ...state,
             gadget: {
               ...incoming,
-              scroll: prev.scroll,
-              scrollname: prev.scrollname ?? incoming.scrollname ?? '',
+              ...(keepScroll
+                ? {
+                    scroll: prev.scroll,
+                    scrollname: prev.scrollname ?? incoming.scrollname ?? '',
+                  }
+                : {}),
+              ...(keepSidebar ? { sidebar: prev.sidebar } : {}),
             },
             layercachemap: applylayercacheupdate(
               state.layercachemap,
@@ -62,14 +76,39 @@ export const gadgetclientdevice = createdevice(
         ispresent(incoming.scroll) && incoming.scroll.length > 0
       const hasprevscroll = ispresent(prev.scroll) && prev.scroll.length > 0
       if (hasprevscroll && !hasincomingscroll && state.gadgetscrolllocal) {
+        const hasprevsidebar =
+          ispresent(prev.sidebar) && prev.sidebar.length > 0
+        const hasincomingsidebar =
+          ispresent(incoming.sidebar) && incoming.sidebar.length > 0
+        const keepSidebar = hasprevsidebar && !hasincomingsidebar
         return {
           gadget: {
             ...incoming,
             scroll: prev.scroll,
             scrollname: prev.scrollname ?? incoming.scrollname ?? '',
+            ...(keepSidebar ? { sidebar: prev.sidebar } : {}),
           },
           gadgetsyncrev: rev,
           gadgetscrolllocal: true,
+          layercachemap: applylayercacheupdate(
+            state.layercachemap,
+            incoming.board,
+            incoming.layers ?? [],
+          ),
+        }
+      }
+      const hasprevsidebar = ispresent(prev.sidebar) && prev.sidebar.length > 0
+      const hasincomingsidebar =
+        ispresent(incoming.sidebar) && incoming.sidebar.length > 0
+      const layerpaint = (incoming.layers?.length ?? 0) > 0
+      if (hasprevsidebar && !hasincomingsidebar && layerpaint) {
+        return {
+          gadget: {
+            ...incoming,
+            sidebar: prev.sidebar,
+          },
+          gadgetsyncrev: rev,
+          gadgetscrolllocal: hasincomingscroll,
           layercachemap: applylayercacheupdate(
             state.layercachemap,
             incoming.board,
