@@ -78,7 +78,8 @@ function processrxreplclientmessage(message: MESSAGE): void {
 
   switch (message.target) {
     case 'stream_row': {
-      applystreamrow(message.data as RXREPL_STREAM_DOCUMENT)
+      const row = message.data as RXREPL_STREAM_DOCUMENT
+      applystreamrow(row)
       break
     }
     case 'push_ack': {

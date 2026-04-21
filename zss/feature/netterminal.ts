@@ -17,14 +17,12 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { netformatdecode, netformatencode } from 'zss/feature/netformat'
-import {
-  recordPeerWireReceived,
-  recordPeerWireSent,
-} from 'zss/perf/peerwire'
+import { streamrowreplicatespeergadgetorflags } from 'zss/feature/netterminalstreamrowpeer'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash, createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { recordPeerWireReceived, recordPeerWireSent } from 'zss/perf/peerwire'
 
 async function readpeerid(): Promise<string | undefined> {
   return await storagereadnetid()
@@ -191,7 +189,8 @@ function handledataconnection(dataconnection: DataConnection) {
       if (
         m.player.length > 0 &&
         remotepeerplayer.length > 0 &&
-        m.player !== remotepeerplayer
+        m.player !== remotepeerplayer &&
+        !streamrowreplicatespeergadgetorflags(m, remotepeerplayer)
       ) {
         continue
       }
@@ -221,7 +220,8 @@ function handledataconnection(dataconnection: DataConnection) {
         if (
           message.player.length > 0 &&
           remotepeerplayer.length > 0 &&
-          message.player !== remotepeerplayer
+          message.player !== remotepeerplayer &&
+          !streamrowreplicatespeergadgetorflags(message, remotepeerplayer)
         ) {
           return
         }

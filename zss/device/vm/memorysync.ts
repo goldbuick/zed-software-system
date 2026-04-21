@@ -25,10 +25,12 @@ import {
   streamreplserveradmitplayer,
   streamreplserverdropplayer,
   streamreplserverdropplayerfromallstreams,
+  streamreplserverensureplayeradmitted,
   streamreplserverreadstream,
   streamreplserverregister,
   streamreplserverupdate,
 } from 'zss/device/streamreplserver'
+import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
@@ -68,6 +70,7 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
+import { ackboardrunners } from './state'
 import { mergeflagspreservingvolatile } from './memoryhydrate'
 import {
   BOARD_SYNC_TOPKEYS,
@@ -128,6 +131,20 @@ function collectviewportpidsforboard(boardid: string): string[] {
     const opbid = resolvedboardid(mainbook, op)
     if (opbid === boardid) {
       out.push(op)
+    }
+  }
+  // Joiners (and others) can have `flags.board` on this board before they are
+  // promoted into `activelist`; still need gadget/flags streamrepl admission.
+  const flagids = Object.keys(mainbook.flags ?? {})
+  for (let i = 0; i < flagids.length; ++i) {
+    const p = flagids[i]
+    if (!ispid(p) || p.endsWith('_chip') || seen.has(p)) {
+      continue
+    }
+    const bid = resolvedboardid(mainbook, p)
+    if (bid === boardid) {
+      out.push(p)
+      seen.add(p)
     }
   }
   return out
@@ -196,6 +213,40 @@ function memorysyncadmitflagsstreamsforboard(
       streamreplserveradmitplayer(flagsstream(pid), pid, false)
       streamreplserveradmitplayer(flagsstream(pid), runner, true)
     }
+  }
+}
+
+/** Pick up new viewport pids (e.g. joiner `flags.board`) without duplicate stream_row. */
+function memorysyncensuremissinggadgetflagsadmissionsforboard(
+  runner: string,
+  boardid: string,
+): void {
+  const pids = collectviewportpidsforboard(boardid)
+  for (let i = 0; i < pids.length; ++i) {
+    const pid = pids[i]
+    memorysyncensuregadgetregistered(pid)
+    memorysyncensureflagsregistered(pid)
+    const gst = gadgetstream(pid)
+    const fst = flagsstream(pid)
+    if (pid === runner) {
+      streamreplserverensureplayeradmitted(gst, runner, true)
+      streamreplserverensureplayeradmitted(fst, runner, true)
+    } else {
+      streamreplserverensureplayeradmitted(gst, pid, false)
+      streamreplserverensureplayeradmitted(gst, runner, true)
+      streamreplserverensureplayeradmitted(fst, pid, false)
+      streamreplserverensureplayeradmitted(fst, runner, true)
+    }
+  }
+}
+
+function memorysyncensuremissinggadgetflagsadmissionsforackedboards(): void {
+  for (const boardid of Object.keys(ackboardrunners)) {
+    const runner = ackboardrunners[boardid]
+    if (!isstring(runner) || !runner) {
+      continue
+    }
+    memorysyncensuremissinggadgetflagsadmissionsforboard(runner, boardid)
   }
 }
 
@@ -400,6 +451,7 @@ export function memorysyncpushdirty(): void {
     if (ismemorystream(stream)) {
       const projected = projectmemory()
       streamreplserverupdate(stream, projected)
+      memorysyncensuremissinggadgetflagsadmissionsforackedboards()
       continue
     }
     if (isboardstream(stream)) {

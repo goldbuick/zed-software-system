@@ -5,6 +5,7 @@ import {
   useGadgetClient,
 } from 'zss/gadget/data/zustandstores'
 import { ispresent } from 'zss/mapping/types'
+import { playeridfromgadgetstream } from 'zss/memory/memorydirty'
 
 import { JSONSYNC_CHANGED } from './api'
 import { registerreadplayer } from './register'
@@ -24,8 +25,8 @@ export const gadgetclientdevice = createdevice(
       return
     }
     const player = registerreadplayer()
-    const pid = payload.streamid.slice('gadget:'.length)
-    if (pid !== player) {
+    const streampid = playeridfromgadgetstream(payload.streamid)
+    if (streampid !== player) {
       return
     }
     const incoming = payload.document as GADGET_STATE

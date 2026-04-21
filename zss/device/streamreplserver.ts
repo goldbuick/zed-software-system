@@ -131,6 +131,19 @@ export function streamreplserveradmitplayer(
   })
 }
 
+/** Admit `player` to `streamid` only if not already present (avoids duplicate `stream_row`). */
+export function streamreplserverensureplayeradmitted(
+  streamid: string,
+  player: string,
+  writable: boolean,
+): void {
+  const entry = streams.get(streamid)
+  if (!entry || entry.players.has(player)) {
+    return
+  }
+  streamreplserveradmitplayer(streamid, player, writable)
+}
+
 export function streamreplserverdropplayer(
   streamid: string,
   player: string,

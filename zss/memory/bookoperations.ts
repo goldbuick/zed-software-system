@@ -358,6 +358,9 @@ export function memorywritebookflag(
       flags[name] = value
       if (ispid(id)) {
         memorymarkdirty(flagsstream(id))
+        if (name === 'board') {
+          memorymarkmemorydirty()
+        }
       } else {
         memorymarkmemorydirty()
       }
