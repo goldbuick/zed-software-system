@@ -22,10 +22,7 @@ import {
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
-import {
-  memoryreadbookbysoftware,
-  memoryreadfreeze,
-} from 'zss/memory/session'
+import { memoryreadbookbysoftware, memoryreadfreeze } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
