@@ -23,7 +23,8 @@ const { forward } = createforward(
 onmessage = function handleMessage(event) {
   const msg = event.data
   if (msg?.target === 'registerplayer') {
-    setassignedplayer(isstring(msg?.data) ? msg?.data : '')
+    const pid = isstring(msg?.data) ? msg?.data : ''
+    setassignedplayer(pid)
     return
   }
   forward(msg)
