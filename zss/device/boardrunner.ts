@@ -65,7 +65,6 @@ function shouldboardrunnerhandlestreamchanged(target: string): boolean {
 // jsonsync resync + gadget baselines treat both layers as ours.
 let assignedboard = ''
 let assignedplayer = ''
-let assignedisjoinplayer = false
 let pullthrottleboard = ''
 let pullthrottletime = 0
 
@@ -99,9 +98,8 @@ function maybeboardstreampullrequest(): void {
   })
 }
 
-export function setassignedplayer(player: string, isjoinplayer: boolean) {
+export function setassignedplayer(player: string) {
   assignedplayer = player
-  assignedisjoinplayer = isjoinplayer
 }
 
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
@@ -295,18 +293,18 @@ registerRxreplBoardRowAppliedCallback(() => {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['ticktock', 'memory', 'flags', 'board'],
+  ['memory', 'flags', 'board'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
     }
-    // console.info('<', message)
 
     // filter messages by target
     const shouldhandle = shouldboardrunnerhandlestreamchanged(message.target)
+
     switch (message.target) {
-      case 'ticktock':
-        break
+      // case 'ticktock':
+      //   break
       default:
         // are these streams we care about?
         if (shouldhandle) {
@@ -314,9 +312,6 @@ const boardrunner = createdevice(
         }
         // everything else is filtered by assignedplayerid
         if (message.player !== assignedplayer) {
-          if (import.meta.env.DEV) {
-            console.info('filtered message', message.target, message)
-          }
           return
         }
         break
@@ -326,21 +321,17 @@ const boardrunner = createdevice(
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
       // `streamid:changed` from jsonsyncdb uses `streamsyncchanged` → emit(..., '', target)
-      // so `message.player` is always ''. Hydrate all memory/board/flags streams the
-      // worker mirror holds (including neighbor boards); see host-vs-join-architecture.md.
-      memoryhydratefromjsonsync(
-        payload.streamid,
-        payload.document,
-        assignedisjoinplayer,
-      )
+      // so `message.player` is always ''. Hydrate memory/board/flags streams the worker
+      // mirror holds (principally the current board); see host-vs-join-architecture.md.
+      memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
       return
     }
 
     switch (message.target) {
-      case 'ticktock':
-        runworkertick(boardrunner)
-        break
+      // case 'ticktock':
+      //   runworkertick(boardrunner)
+      //   break
       case 'ownedboard': {
         const next = isstring(message.data) ? message.data : ''
         const prev = assignedboard
@@ -349,13 +340,9 @@ const boardrunner = createdevice(
         }
         assignedboard = next
         rebuildownedboardids()
-        if (next.length > 0) {
-          maybeboardstreampullrequest()
-        }
-        if (import.meta.env.DEV) {
-          console.info('>>', assignedplayer)
-          console.info('------------------', assignedboard)
-        }
+        // if (next.length > 0) {
+        //   maybeboardstreampullrequest()
+        // }
         break
       }
       case 'clearscroll': {

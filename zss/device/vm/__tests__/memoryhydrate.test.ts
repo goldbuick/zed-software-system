@@ -25,6 +25,7 @@ import {
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 import { memoryhydratefromjsonsync } from '../memoryhydrate'
+import { projectmemory } from '../memoryproject'
 
 describe('memoryhydratefromjsonsync', () => {
   beforeEach(() => {
@@ -132,8 +133,8 @@ describe('memoryhydratefromjsonsync', () => {
       board: { id: 'boardA', name: 'boardA', terrain: [], objects: {} },
     })
 
-    // a second memory patch arrives with new flags but no boards in pages —
-    // the local BOARD page must survive.
+    // a second memory patch arrives with new flags; BOARD shells stay listed
+    // in `pages` so the hydrated body from board:<id> is not dropped.
     memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
       software: { main: 'main-id', temp: '' },
       books: {
@@ -141,7 +142,13 @@ describe('memoryhydratefromjsonsync', () => {
           id: 'main-id',
           name: 'main',
           activelist: ['p1'],
-          pages: [],
+          pages: [
+            {
+              id: 'boardA',
+              code: '',
+              stats: { type: CODE_PAGE_TYPE.BOARD },
+            },
+          ],
           flags: { p1: { hp: 5 } },
         },
       },
@@ -194,6 +201,78 @@ describe('memoryhydratefromjsonsync', () => {
     expect(memoryreadbookbyaddress('stale-id')).toBeUndefined()
     expect(memoryreadbookbyaddress('main-id')).toBeDefined()
     expect(memoryhasdirty(MEMORY_STREAM_ID)).toBe(false)
+  })
+
+  it('projectmemory lists BOARD pages as shells without board payload', () => {
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      software: { main: 'main-id', temp: '' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+    memoryhydratefromjsonsync(boardstream('boardA'), {
+      id: 'boardA',
+      code: '@board test\n',
+      board: { id: 'boardA', name: 'boardA', terrain: [], objects: {} },
+    })
+
+    const projected = projectmemory() as Record<string, unknown>
+    const books = projected.books as Record<string, Record<string, unknown>>
+    const main = books['main-id']
+    const pages = main.pages as Record<string, unknown>[]
+    expect(pages.length).toBe(1)
+    expect(pages[0].id).toBe('boardA')
+    expect(pages[0].stats).toEqual({ type: CODE_PAGE_TYPE.BOARD })
+    expect(pages[0].board).toBeUndefined()
+  })
+
+  it('drops BOARD page when authoritative memory pages omit its shell', () => {
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      software: { main: 'main-id', temp: '' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [
+            {
+              id: 'boardA',
+              code: '',
+              stats: { type: CODE_PAGE_TYPE.BOARD },
+            },
+          ],
+          flags: {},
+        },
+      },
+    })
+    memoryhydratefromjsonsync(boardstream('boardA'), {
+      id: 'boardA',
+      code: '',
+      board: { id: 'boardA', name: 'boardA', terrain: [], objects: {} },
+    })
+    let main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    expect(main?.pages.some((p) => p.id === 'boardA')).toBe(true)
+
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      software: { main: 'main-id', temp: '' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+    main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    expect(main?.pages.some((p) => p.id === 'boardA')).toBe(false)
   })
 
   it('drops board snapshots arriving before main book exists', () => {

@@ -11,10 +11,10 @@ MEMORY singleton, creating books/pages on the fly.
 Differences vs server-side reverseproject:
 - The worker may receive a snapshot for a book it has never seen before;
   hydrate must create it (memorywritebook) instead of skipping.
-- Likewise, a `board:<id>` snapshot can arrive before the matching book has
-  any record of that board; hydrate appends a fresh CODE_PAGE_TYPE.BOARD
-  page to the main book and runs `memoryinitboard` to rebuild runtime caches
-  (lookup/named/distmaps) the local tick will rely on.
+- The `memory` stream lists every codepage; BOARD rows are **shells** (id,
+  code, stats.type). A `board:<id>` snapshot carries the playable BOARD body;
+  it can arrive before or after the shell and uses `hydrateboard` to attach
+  terrain/objects and run `memoryinitboard` for runtime caches.
 - All writes are wrapped in `memorywithsilentwrites` so server-driven
   hydration never re-marks the just-applied stream dirty (which would loop
   the change right back upstream).
@@ -324,7 +324,7 @@ export function mergeflagspreservingvolatile(
       if (ispid(id) && active.has(id)) {
         continue
       }
-      if (id === MEMORY_LABEL.GADGETSTORE) {
+      if (id === (MEMORY_LABEL.GADGETSTORE as string)) {
         continue
       }
       delete existing[id]
@@ -352,36 +352,57 @@ function mergebookinto(book: BOOK, incoming: Record<string, unknown>): void {
     }
   }
   if (Object.prototype.hasOwnProperty.call(incoming, 'pages')) {
-    mergenonboardpagesinto(book, incoming.pages)
+    mergebookpagesfrommemoryprojection(book, incoming.pages)
   }
 }
 
-// preserve any locally-known BOARD pages (they hydrate via the board:<id>
-// stream, never via the memory stream's pages list) and replace non-BOARD
-// pages from incoming.
-function mergenonboardpagesinto(book: BOOK, incomingpages: unknown): void {
+/** `books[].pages` from the `memory` stream: full ordered list; BOARD rows are shells only. */
+export function mergebookpagesfrommemoryprojection(
+  book: BOOK,
+  incomingpages: unknown,
+): void {
   if (!isarray(incomingpages)) {
     return
-  }
-  const nextpages: CODE_PAGE[] = []
-  for (let i = 0; i < book.pages.length; ++i) {
-    const page = book.pages[i]
-    if (page.stats?.type === CODE_PAGE_TYPE.BOARD) {
-      nextpages.push(page)
-    }
   }
   const localbyid = new Map<string, CODE_PAGE>()
   for (let i = 0; i < book.pages.length; ++i) {
     localbyid.set(book.pages[i].id, book.pages[i])
   }
   const pages = incomingpages as CODE_PAGE[]
+  const nextpages: CODE_PAGE[] = []
   for (let i = 0; i < pages.length; ++i) {
     const incomingpage = pages[i]
     if (!ispresent(incomingpage) || typeof incomingpage !== 'object') {
       continue
     }
     if (incomingpage.stats?.type === CODE_PAGE_TYPE.BOARD) {
-      // memory stream projection strips board pages; defensive skip.
+      const local = localbyid.get(incomingpage.id)
+      const incCode =
+        typeof incomingpage.code === 'string' ? incomingpage.code : ''
+      if (ispresent(local)) {
+        if (local.code !== incCode) {
+          local.code = incCode
+          local.stats = undefined
+        }
+        local.id = incomingpage.id
+        const stats = memoryreadcodepagestats(local)
+        if (stats.type !== CODE_PAGE_TYPE.BOARD) {
+          stats.type = CODE_PAGE_TYPE.BOARD
+        }
+        nextpages.push(local)
+      } else {
+        const shell: CODE_PAGE = {
+          id: incomingpage.id,
+          code: incCode,
+          board: undefined,
+          stats: undefined,
+        }
+        const st = memoryreadcodepagestats(shell)
+        if (st.type !== CODE_PAGE_TYPE.BOARD) {
+          st.type = CODE_PAGE_TYPE.BOARD
+        }
+        nextpages.push(shell)
+      }
       continue
     }
     const local = localbyid.get(incomingpage.id)
@@ -425,6 +446,17 @@ function buildbookfromincoming(
         continue
       }
       if (incomingpage.stats?.type === CODE_PAGE_TYPE.BOARD) {
+        const shell: CODE_PAGE = {
+          id: incomingpage.id,
+          code: typeof incomingpage.code === 'string' ? incomingpage.code : '',
+          board: undefined,
+          stats: undefined,
+        }
+        const st = memoryreadcodepagestats(shell)
+        if (st.type !== CODE_PAGE_TYPE.BOARD) {
+          st.type = CODE_PAGE_TYPE.BOARD
+        }
+        book.pages.push(shell)
         continue
       }
       book.pages.push(deepcopy(incomingpage))

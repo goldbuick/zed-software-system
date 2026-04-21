@@ -36,11 +36,12 @@ export const gadgetclientdevice = createdevice(
     const rev = payload.rev
     useGadgetClient.setState((state) => {
       const prev = state.gadget
+      const hasincomingscroll =
+        ispresent(incoming.scroll) && incoming.scroll.length > 0
       if (rev < state.gadgetsyncrev) {
         return state
       }
-      // my guess is that when we find the reason host player gets CONSTANT gadget state
-      // updates. AND a join player gets infrequent updates to the gadget state.
+      const nextwiretick = state.gadgetwiretick + 1
       if (rev === state.gadgetsyncrev) {
         const keepScroll =
           (!incoming.scroll || incoming.scroll.length === 0) &&
@@ -53,6 +54,7 @@ export const gadgetclientdevice = createdevice(
         if (keepScroll || keepSidebar) {
           return {
             ...state,
+            gadgetwiretick: nextwiretick,
             gadget: {
               ...incoming,
               ...(keepScroll
@@ -70,10 +72,19 @@ export const gadgetclientdevice = createdevice(
             ),
           }
         }
-        return state
+        return {
+          ...state,
+          gadgetwiretick: nextwiretick,
+          gadget: incoming,
+          gadgetsyncrev: rev,
+          gadgetscrolllocal: hasincomingscroll,
+          layercachemap: applylayercacheupdate(
+            state.layercachemap,
+            incoming.board,
+            incoming.layers ?? [],
+          ),
+        }
       }
-      const hasincomingscroll =
-        ispresent(incoming.scroll) && incoming.scroll.length > 0
       const hasprevscroll = ispresent(prev.scroll) && prev.scroll.length > 0
       if (hasprevscroll && !hasincomingscroll && state.gadgetscrolllocal) {
         const hasprevsidebar =
@@ -82,6 +93,7 @@ export const gadgetclientdevice = createdevice(
           ispresent(incoming.sidebar) && incoming.sidebar.length > 0
         const keepSidebar = hasprevsidebar && !hasincomingsidebar
         return {
+          gadgetwiretick: nextwiretick,
           gadget: {
             ...incoming,
             scroll: prev.scroll,
@@ -103,6 +115,7 @@ export const gadgetclientdevice = createdevice(
       const layerpaint = (incoming.layers?.length ?? 0) > 0
       if (hasprevsidebar && !hasincomingsidebar && layerpaint) {
         return {
+          gadgetwiretick: nextwiretick,
           gadget: {
             ...incoming,
             sidebar: prev.sidebar,
@@ -117,6 +130,7 @@ export const gadgetclientdevice = createdevice(
         }
       }
       return {
+        gadgetwiretick: nextwiretick,
         gadget: incoming,
         gadgetsyncrev: rev,
         gadgetscrolllocal: hasincomingscroll,

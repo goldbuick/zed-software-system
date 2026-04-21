@@ -55,6 +55,8 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const player = registerreadplayer()
   const inspector = useTape((state) => state.inspector)
 
+  useGadgetClient((state) => state.gadgetwiretick)
+
   // handle graphics modes
   const graphics = useGadgetClient((state) => {
     const control = layersreadcontrol(state.gadget.layers ?? [])

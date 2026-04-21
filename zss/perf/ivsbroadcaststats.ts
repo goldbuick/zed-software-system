@@ -18,9 +18,9 @@ let lastVideoKbps: number | undefined
 let prevBytesSent = 0
 let prevBytesPollMs = 0
 let statsInflight = false
-let lastKickMs = 0
+let lastMs = 0
 
-const KICK_INTERVAL_MS = 450
+const POLL_INTERVAL_MS = 450
 
 export function setIvsBroadcastClient(c: IvsBroadcastClientRef | undefined) {
   client = c
@@ -33,7 +33,7 @@ export function clearIvsBroadcastClient() {
   prevBytesSent = 0
   prevBytesPollMs = 0
   statsInflight = false
-  lastKickMs = 0
+  lastMs = 0
 }
 
 export type IvsBroadcastStatsSnapshot = {
@@ -99,16 +99,16 @@ function updateKbpsFromBytes(bytesSent: number) {
  * Fire-and-forget poll of IVS client stats (not in public .d.ts for 1.33, but
  * present at runtime). Call from the perf overlay tick; internally throttled.
  */
-export function kickIvsBroadcastStatsPoll() {
+export function ivsBroadcastStatsPoll() {
   const c = client
   if (!c || statsInflight) {
     return
   }
   const now = performance.now()
-  if (now - lastKickMs < KICK_INTERVAL_MS) {
+  if (now - lastMs < POLL_INTERVAL_MS) {
     return
   }
-  lastKickMs = now
+  lastMs = now
 
   const anyc = c as unknown as {
     getStats?: () => unknown | Promise<unknown>

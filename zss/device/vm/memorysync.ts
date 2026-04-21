@@ -3,11 +3,11 @@ memorysync: VM-layer bridge between MEMORY and the streamrepl server (sim).
 
 Owns the projections that carve MEMORY into what boardrunners actually need:
 - one shared `memory` stream with top-level keys allowlisted, books Map
-  converted to a record, and each book's board-type codepages peeled out of
-  `pages` into their own streams (main-book `ispid` flag bags are omitted;
-  they use `flags:${player}` streams)
-- one `board:${codepage.id}` stream per board codepage, with the embedded
-  BOARD trimmed of runtime-only caches (draw fingerprints, distmaps, etc.)
+  converted to a record, and each book's BOARD codepages on the wire as
+  **shells** in `pages` (id, code, stats.type only; main-book `ispid` flag
+  bags are omitted — they use `flags:${player}` streams)
+- one `board:${codepage.id}` stream per board codepage with the full trimmed
+  BOARD (runtime-only caches like draw fingerprints, distmaps, etc. stripped)
 - one `flags:${player}` stream per viewport player for `mainbook.flags[pid]`
   (volatile keys stripped), admitted alongside `gadget:${player}`
 
@@ -69,7 +69,10 @@ import {
   collectviewportpidsforboard,
   gadgetseedsidebarfromviewportpeers,
 } from './memorygadgetseed'
-import { mergeflagspreservingvolatile } from './memoryhydrate'
+import {
+  mergebookpagesfrommemoryprojection,
+  mergeflagspreservingvolatile,
+} from './memoryhydrate'
 import {
   BOARD_SYNC_TOPKEYS,
   boardstreamfromcodepage,
@@ -146,6 +149,17 @@ export function memorysyncensureflagsregistered(player: string): void {
     return
   }
   streamreplserverupdate(streamid, projected)
+}
+
+/** After login: register gadget + flags streams and admit the player read-only (before boardrunner ack). */
+export function memorysyncensureloginreplstreams(player: string): void {
+  memorysyncensureregistered()
+  memorysyncensuregadgetregistered(player)
+  memorysyncensureflagsregistered(player)
+  const gst = gadgetstream(player)
+  const fst = flagsstream(player)
+  streamreplserverensureplayeradmitted(gst, player, false)
+  streamreplserverensureplayeradmitted(fst, player, false)
 }
 
 function memorysyncadmitflagsstreamsforboard(
@@ -547,10 +561,8 @@ function reverseprojectmemory(document: Record<string, unknown>): void {
     const localbook = memoryreadbookbyaddress(bookid)
     if (!ispresent(localbook)) {
       // Phase 4 book add: materialize a new BOOK from the incoming record.
-      // Books in the memory stream projection omit BOARD-type codepages
-      // (they travel via their own `board:<id>` streams); the created book
-      // starts with the non-BOARD pages it carries. BOARD pages arrive on
-      // their admission cycle and are attached by memoryhydrate.
+      // Memory stream `pages` include BOARD shells; bodies replicate on
+      // `board:<id>` streams and reverse-project separately.
       const created = createbookfromincoming(bookid, incomingbook)
       if (ispresent(created)) {
         memorywritebook(created)
@@ -559,7 +571,7 @@ function reverseprojectmemory(document: Record<string, unknown>): void {
     }
     mergebookscalars(localbook, incomingbook)
     mergebookflags(localbook, incomingbook)
-    mergebooknonboardpages(localbook, incomingbook)
+    mergebookpagesfrommemoryprojection(localbook, incomingbook.pages)
   }
   // Phase 4 book remove: any local book id not mentioned by the incoming
   // document dropped out of the authoritative projection and must be
@@ -628,56 +640,6 @@ function mergebookflags(book: BOOK, incoming: Record<string, unknown>): void {
     flags as Record<string, Record<string, unknown>>,
     book.activelist ?? [],
   )
-}
-
-// non-BOARD pages are carried in the memory stream; BOARD pages live in their
-// own board:<id> stream. Preserve the local BOARD pages, replace everything
-// else from the incoming list (matched by id where possible to avoid losing
-// the live runtime references on shared codepages).
-function mergebooknonboardpages(
-  book: BOOK,
-  incoming: Record<string, unknown>,
-): void {
-  if (!Object.prototype.hasOwnProperty.call(incoming, 'pages')) {
-    return
-  }
-  const pages = incoming.pages
-  if (!isarray(pages)) {
-    return
-  }
-  const nextpages: CODE_PAGE[] = []
-  // keep all local BOARD pages
-  for (let i = 0; i < book.pages.length; ++i) {
-    const page = book.pages[i]
-    if (page.stats?.type === CODE_PAGE_TYPE.BOARD) {
-      nextpages.push(page)
-    }
-  }
-  // append non-BOARD pages from incoming, preferring the live local copy by
-  // id when it exists (so any runtime caches on shared codepages survive).
-  const localbyid = new Map<string, CODE_PAGE>()
-  for (let i = 0; i < book.pages.length; ++i) {
-    localbyid.set(book.pages[i].id, book.pages[i])
-  }
-  for (let i = 0; i < (pages as CODE_PAGE[]).length; ++i) {
-    const incomingpage = (pages as CODE_PAGE[])[i]
-    if (!ispresent(incomingpage) || typeof incomingpage !== 'object') {
-      continue
-    }
-    if (incomingpage.stats?.type === CODE_PAGE_TYPE.BOARD) {
-      // shouldn't appear (projection strips them) but defensively skip.
-      continue
-    }
-    const local = localbyid.get(incomingpage.id)
-    if (ispresent(local)) {
-      // overwrite scalar fields on the live page reference
-      Object.assign(local, incomingpage)
-      nextpages.push(local)
-    } else {
-      nextpages.push(incomingpage)
-    }
-  }
-  book.pages = nextpages
 }
 
 function reverseprojectboard(

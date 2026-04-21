@@ -10,6 +10,7 @@ import {
 } from 'zss/device/api'
 import {
   memorysyncdropplayerfromall,
+  memorysyncensureloginreplstreams,
   memorysyncrevokeboardrunner,
 } from 'zss/device/vm/memorysync'
 import {
@@ -125,6 +126,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   }
 
   if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
+    memorysyncensureloginreplstreams(message.player)
     tracking[message.player] = INITIAL_TRACKING
     lastinputtime[message.player] = Date.now()
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
@@ -142,6 +144,7 @@ export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {
 
 export function handlelocal(vm: DEVICE, message: MESSAGE): void {
   if (memoryloginplayer(message.player, {})) {
+    memorysyncensureloginreplstreams(message.player)
     tracking[message.player] = INITIAL_TRACKING
     lastinputtime[message.player] = Date.now()
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)

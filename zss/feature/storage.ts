@@ -258,7 +258,6 @@ export function storagewatchcontent(player: string) {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
       if (currenturlhash !== urlhash) {
-        console.info('hashchange', urlhash)
         currenturlhash = urlhash
         const urlcontent = await storagereadcontent(player)
         // init vm with content

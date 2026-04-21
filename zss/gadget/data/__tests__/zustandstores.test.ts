@@ -24,6 +24,7 @@ describe('zustandstores', () => {
       expect(state.zsswords.commandargmeta).toEqual({})
       expect(state.layercachemap.size).toBe(0)
       expect(state.gadgetsyncrev).toBe(-1)
+      expect(state.gadgetwiretick).toBe(0)
       expect(state.gadgetscrolllocal).toBe(false)
     })
 

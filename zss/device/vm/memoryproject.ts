@@ -173,6 +173,21 @@ function projectboard(board: BOARD): unknown {
   return trimmed
 }
 
+function isboardcodepageforprojection(page: CODE_PAGE): boolean {
+  return page.stats?.type === CODE_PAGE_TYPE.BOARD || ispresent(page.board)
+}
+
+/** BOARD row on the `memory` stream: id, code, and `stats.type` only (no `board` body). */
+export function projectboardcodepageformemoryshell(
+  codepage: CODE_PAGE,
+): Record<string, unknown> {
+  return {
+    id: codepage.id,
+    code: typeof codepage.code === 'string' ? codepage.code : '',
+    stats: { type: CODE_PAGE_TYPE.BOARD },
+  }
+}
+
 // return a new CODE_PAGE copy safe to sync: deepcopy, trim the embedded BOARD
 // (if any) to the runtime-free top keys, and drop `stats` since clients
 // re-parse it locally from `code`. non-board fields (object, terrain, charset,
@@ -229,8 +244,8 @@ function stripvolatileflags(
   return out
 }
 
-// convert a BOOK for the `memory` stream: deepcopy, strip board-type codepages
-// from `pages` (they travel via their own board:${id} streams), drop
+// convert a BOOK for the `memory` stream: deepcopy, project BOARD pages as
+// shells (id/code/stats.type); full bodies use `board:${id}` streams. drop
 // `timestamp` (server-local clock metadata; clients re-derive cadence from
 // `ticktock`), and strip VOLATILE_FLAG_KEYS from every flags[id] record so
 // worker-local queues never round-trip through the server.
@@ -238,10 +253,11 @@ function projectbook(book: BOOK): unknown {
   const copy = deepcopy(book) as unknown as Record<string, unknown>
   const pages = copy.pages as CODE_PAGE[] | undefined
   if (ispresent(pages)) {
-    copy.pages = pages.filter((page) => {
-      const t = page.stats?.type
-      return t !== CODE_PAGE_TYPE.BOARD
-    })
+    copy.pages = pages.map((page) =>
+      isboardcodepageforprojection(page)
+        ? projectboardcodepageformemoryshell(page)
+        : page,
+    )
   }
   if (ispresent(copy.flags) && typeof copy.flags === 'object') {
     copy.flags = stripvolatileflags(copy.flags as Record<string, unknown>)
@@ -303,7 +319,7 @@ export function projectgadget(player: string): GADGET_STATE {
 
 // project the MEMORY root into a jsonsync-shippable plain object.
 // - top-level keys filtered to MEMORY_SYNC_TOPKEYS
-// - books Map -> Record<bookid, BOOK>, each BOOK filtered via projectbook
+// - books Map -> Record<bookid, BOOK>, each BOOK via projectbook (BOARD shells)
 // - loaders (excluded by allowlist) and topic/halt never appear
 export function projectmemory(): unknown {
   const root = memoryreadroot() as unknown as Record<string, unknown>

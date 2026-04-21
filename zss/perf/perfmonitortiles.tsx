@@ -8,7 +8,7 @@ import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { readChatMessageStats } from 'zss/perf/chatmessagestats'
 import {
-  kickIvsBroadcastStatsPoll,
+  ivsBroadcastStatsPoll,
   readIvsBroadcastStatsSnapshot,
 } from 'zss/perf/ivsbroadcaststats'
 import { readPeerWireTotals } from 'zss/perf/peerwire'
@@ -119,7 +119,7 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
 
   useEffect(() => {
     const tick = () => {
-      kickIvsBroadcastStatsPoll()
+      ivsBroadcastStatsPoll()
       const W = PANEL_W
       const H = PANEL_H
       const BG = PERF_PLATE_BG

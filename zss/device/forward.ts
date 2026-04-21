@@ -21,125 +21,7 @@ import { MESSAGE, ismessage } from './api'
 /** Cap dedupe set so long sessions do not grow `syncids` without bound. */
 const FORWARD_SYNCIDS_CAP = 4096
 
-/** Bare `message.target` values allowed host → client (sim → main thread) and for peer host → join. */
-const FORWARD_STC_EXACT = new Set<string>([
-  'log',
-  'chat',
-  'ready',
-  'toast',
-  'second',
-  'ticktock',
-])
-
-/** First segment (`foo` in `foo:…`) allowed for host → client after exact-match misses. */
-const FORWARD_STC_ROUTE_TARGET = new Set<string>([
-  'vm',
-  'user',
-  'heavy',
-  'synth',
-  'modem',
-  'bridge',
-  'register',
-  'boardrunner',
-  'gadgetclient',
-  'rxreplclient',
-])
-
-/**
- * Path segment after first colon, when the **remainder** is one of these alone or matched as a label
- * (see `shouldforwardservertoclient` original behavior).
- */
-const FORWARD_STC_ROUTE_PATH = new Set<string>([
-  'sync',
-  'heavy',
-  'joinack',
-  'acklook',
-  'acklogin',
-  'ackoperator',
-  'ackzsswords',
-  'gadgetclient',
-])
-
-const FORWARD_CTS_ROUTE_TARGET = new Set<string>([
-  'vm',
-  'user',
-  'modem',
-  'rxreplserver',
-])
-const FORWARD_CTS_ROUTE_PATH = new Set<string>([
-  'sync',
-  'joinack',
-  'ackboardrunner',
-])
-
-const FORWARD_CTB_ROUTE_TARGET = new Set<string>([
-  'user',
-  'boardrunner',
-  'rxreplclient',
-])
-
-/** Leaf names blocked for joiner → host (PeerJS); see `targetlastleaf`. */
-const PEER_BLOCKED_LEAF_CLIENT_TO_SERVER = new Set<string>([
-  'ticktock',
-  'second',
-  'ready',
-])
-
-/** Leaf names blocked for host → joiner (PeerJS). */
-const PEER_BLOCKED_LEAF_SERVER_TO_CLIENT = new Set<string>(['ready'])
-
-/** Last `:` segment of `target` for nested routes (e.g. `modem:second` → `second`). */
-function targetlastleaf(target: string): string {
-  const r = parsetarget(target)
-  if (r.path.length > 0) {
-    return r.path.slice(r.path.lastIndexOf(':') + 1)
-  }
-  return r.target
-}
-
-function peerblockednetterminalcap(target: string): boolean {
-  const r = parsetarget(target)
-  return r.target === 'netterminal' && r.path === 'cap'
-}
-
-/** Joiner → host (PeerJS): drop leaf noisy targets; `netterminal:cap` always dropped. */
-function peerblockedjoinertohost(message: MESSAGE): boolean {
-  if (peerblockednetterminalcap(message.target)) {
-    return true
-  }
-  return PEER_BLOCKED_LEAF_CLIENT_TO_SERVER.has(targetlastleaf(message.target))
-}
-
-/** Host → joiner (PeerJS): drop selected leaves; `netterminal:cap` always dropped. */
-function peerblockedhosttojoin(message: MESSAGE): boolean {
-  if (peerblockednetterminalcap(message.target)) {
-    return true
-  }
-  return PEER_BLOCKED_LEAF_SERVER_TO_CLIENT.has(targetlastleaf(message.target))
-}
-
-/** Shared by client↔heavy bridge; identical rules both directions. */
-function heavyworkerbridgeallowed(target: string): boolean {
-  switch (target) {
-    case 'ticktock':
-      return false
-    case 'second':
-    case 'ready':
-      return true
-    default: {
-      const route = parsetarget(target)
-      if (route.target === 'heavy') {
-        return true
-      }
-      return route.path === 'acklook'
-    }
-  }
-}
-
-export function createforward(
-  handler: (message: MESSAGE) => void,
-  options: { allowticktock?: boolean } = {},
-) {
+export function createforward(handler: (message: MESSAGE) => void) {
   const syncids = new Set<string>()
   const syncidorder: string[] = []
 
@@ -154,13 +36,11 @@ export function createforward(
     }
   }
 
-  const allowticktock = options.allowticktock === true
-
   function forward(message: any) {
     if (
       !ismessage(message) ||
       syncids.has(message.id) ||
-      (!allowticktock && message.target === 'ticktock')
+      message.target === 'ticktock'
     ) {
       return
     }
@@ -182,79 +62,9 @@ export function createforward(
   return { forward, disconnect }
 }
 
-/** True = drop on PeerJS **host → joiner** (after `shouldforwardservertoclient`). */
-export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
-  return peerblockedhosttojoin(message)
-}
+// peerjs message gates
 
-/** True = allow host → client in main bridge and for PeerJS host → joiner. */
-export function shouldforwardservertoclient(message: MESSAGE): boolean {
-  const target = message.target
-  if (FORWARD_STC_EXACT.has(target)) {
-    return true
-  }
-  const route = parsetarget(target)
-  if (FORWARD_STC_ROUTE_TARGET.has(route.target)) {
-    return true
-  }
-  return FORWARD_STC_ROUTE_PATH.has(route.path)
-}
-
-/** True = drop on PeerJS **joiner → host** (after `shouldforwardclienttoserver`). */
-export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
-  return peerblockedjoinertohost(message)
-}
-
-/**
- * True = forward client → sim worker ([`platform.ts`](../platform.ts)). `boardrunner:*` is false so those
- * messages use `shouldforwardclienttoboardrunner` only.
- */
-export function shouldforwardclienttoserver(message: MESSAGE): boolean {
-  const t = message.target
-  switch (t) {
-    case 'user:input':
-    case 'user:pilotstart':
-    case 'user:pilotstop':
-    case 'user:pilotclear':
-    case 'rxreplserver:push_batch':
-    case 'rxreplserver:pull_request':
-      return true
-    case 'ticktock':
-      return false
-    default:
-      break
-  }
-  if (t.startsWith('vm:') || t.startsWith('modem:')) {
-    return true
-  }
-  if (t.startsWith('boardrunner:')) {
-    return false
-  }
-  if (t.startsWith('gadgetclient:')) {
-    return true
-  }
-  const route = parsetarget(t)
-  if (FORWARD_CTS_ROUTE_TARGET.has(route.target)) {
-    return true
-  }
-  return FORWARD_CTS_ROUTE_PATH.has(route.path)
-}
-
-/** True = forward main thread → heavy worker ([`platform.ts`](../platform.ts)). */
-export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
-  return heavyworkerbridgeallowed(message.target)
-}
-
-/** True = forward heavy worker → main thread ([`platform.ts`](../platform.ts)). */
-export function shouldforwardheavytoclient(message: MESSAGE): boolean {
-  return heavyworkerbridgeallowed(message.target)
-}
-
-/**
- * True = forward main → boardrunner worker ([`boardrunnerspace`](../boardrunnerspace.ts)); receives `ticktock`
- * when [`createforward`](../boardrunnerspace.ts) uses `allowticktock: true`.
- */
-export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
+export function shouldnotforwardonpeer(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ticktock':
     case 'second':
@@ -262,21 +72,123 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
       return true
     default: {
       const route = parsetarget(message.target)
-      return FORWARD_CTB_ROUTE_TARGET.has(route.target)
+      switch (route.target) {
+        // list of devices that should not be forwarded on peerjs
+        case 'heavy':
+          return true
+        default:
+          break
+      }
+      switch (route.path) {
+        case 'acklook':
+          return true
+        default:
+          break
+      }
+      break
     }
   }
+  return false
 }
 
-/**
- * True = forward boardrunner worker → main ([`boardrunnerspace`](../boardrunnerspace.ts)); drops `*:changed`
- * jsonsync notifications; always allows `rxreplserver:*` upstream.
- */
-export function shouldforwardboardrunnertoclient(message: MESSAGE): boolean {
-  if (message.target.endsWith(':changed')) {
-    return false
+// sim space message gates
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function shouldforwardservertoclient(_message: MESSAGE): boolean {
+  // send all for now, until we run into a problem
+  return true
+}
+
+// client message gates
+
+export function shouldforwardclienttoserver(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        // list of devices that should forwarded to sim space
+        case 'rxreplserver':
+          return true
+        default:
+          break
+      }
+      break
+    }
   }
-  if (message.target.startsWith('rxreplserver:')) {
-    return true
+  return false
+}
+
+// heavy worker message gates
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
+  switch (message.target) {
+    // clock messages
+    case 'second':
+    case 'ready':
+      return true
+    case 'ticktock':
+      return false
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        // list of devices that should forwarded to heavy space
+        case 'heavy':
+          return true
+        default:
+          break
+      }
+      switch (route.path) {
+        // list of paths that should be forwarded to heavy space
+        case 'acklook':
+          return true
+        default:
+          break
+      }
+      break
+    }
   }
-  return shouldforwardservertoclient(message)
+  return false
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function shouldforwardheavytoclient(_message: MESSAGE): boolean {
+  return true
+}
+
+// boardrunner worker message gates
+
+export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        // list of devices that should forwarded to boardrunner space
+        case 'user':
+        case 'boardrunner':
+        case 'rxreplclient':
+          return true
+        default:
+          break
+      }
+      break
+    }
+  }
+  return false
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function shouldforwardboardrunnertoclient(_message: MESSAGE): boolean {
+  // send all for now, until we run into a problem
+  return true
 }

@@ -8,7 +8,6 @@ import {
 } from './device/forward'
 import { registerreadplayer } from './device/register'
 import { SOFTWARE } from './device/session'
-import { isjoin } from './feature/url'
 import heavyspace from './heavyspace??worker'
 import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
@@ -34,7 +33,6 @@ export function createplatform(isstub = false, climode = false) {
     target: 'registerplayer',
     data: {
       player: registerreadplayer(),
-      isjoinplayer: isjoin(),
     },
   })
 

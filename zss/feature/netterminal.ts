@@ -11,8 +11,8 @@ import {
   createforward,
   shouldforwardclienttoserver,
   shouldforwardservertoclient,
+  shouldnotforwardonpeer,
   shouldnotforwardonpeerclient,
-  shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -196,7 +196,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
       if (
         shouldforwardservertoclient(m) &&
-        shouldnotforwardonpeerserver(m) === false
+        shouldnotforwardonpeer(m) === false
       ) {
         sendpeermessage(m)
       }
@@ -211,7 +211,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
       if (
         shouldforwardservertoclient(message) &&
-        shouldnotforwardonpeerserver(message) === false
+        shouldnotforwardonpeer(message) === false
       ) {
         // envelope-level fan-out filter: if this message targets a specific
         // player (non-empty message.player) and we know this peer's player id,
@@ -247,20 +247,17 @@ function handledataconnection(dataconnection: DataConnection) {
 
   function joinbridge() {
     // open bridge between peers
-    topicbridge = createforward(
-      (message) => {
-        if (!ispresent(networkpeer)) {
-          return
-        }
-        if (
-          shouldforwardclienttoserver(message) &&
-          shouldnotforwardonpeerclient(message) === false
-        ) {
-          sendpeermessage(message)
-        }
-      },
-      { allowticktock: true },
-    )
+    topicbridge = createforward((message) => {
+      if (!ispresent(networkpeer)) {
+        return
+      }
+      if (
+        shouldforwardclienttoserver(message) &&
+        shouldnotforwardonpeerclient(message) === false
+      ) {
+        sendpeermessage(message)
+      }
+    })
     // signal ready to login
     vmsearch(SOFTWARE, player)
   }

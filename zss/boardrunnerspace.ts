@@ -22,7 +22,7 @@ const { forward } = createforward(
 onmessage = function handleMessage(event) {
   const msg = event.data
   if (msg?.target === 'registerplayer') {
-    setassignedplayer(msg.data.player, msg.data.isjoinplayer)
+    setassignedplayer(msg.data.player)
     return
   }
   forward(msg)

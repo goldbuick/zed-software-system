@@ -101,7 +101,9 @@ Loaded in [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts); core device [`
 2. Worker [`rxreplclient`](../rxreplclient.ts) applies the row into `streamreplclientstreammap`. Each `Map.set` triggers [`streamreplpersistclientstream`](../jsonsyncdb.ts) → RxDB upsert → **`streamsyncchanged(rxreplclientdevice, payload)`** ([`api.ts`](../api.ts) `streamsyncchanged`).
 3. `streamsyncchanged` emits **`device.emit('', \`${streamid}:changed\`, payload)`** — the routed target is literally `memory:changed`, `board:<id>:changed`, or `flags:<pid>:changed`. The **`player` field is always `''`**; it is **not** the sim peer id and cannot be used to detect “wrong user” bleed for this path.
 4. [`boardrunner`](../boardrunner.ts) subscribes to topics `memory`, `board`, `flags`, so it receives all such notifications on the **worker** hub. [`shouldboardrunnerhandlestreamchanged`](../boardrunner.ts) limits handling to `memory`, `board:*`, and `flags:*` (not `gadget:*`).
-5. **Cross-board `board:*` updates are intentional:** the sim admits the runner to multiple board streams for neighbor context ([`memorysync.ts`](../vm/memorysync.ts)); the worker hydrates each snapshot into local MEMORY. **Optional future tightening** (hydrate only owned + known-neighbor ids) requires an explicit product rule — do not gate ad hoc without one.
+5. **`board:*` hydration:** the sim admits the runner to the **current** board stream ([`memorysync.ts`](../vm/memorysync.ts) `memorysyncadmitboardrunner`); the worker applies each `board:<id>:changed` snapshot into local MEMORY for streams it is admitted to, alongside `memory` and `flags`.
+
+6. **`memory` vs `board:*` split (lockstep):** the `memory` stream’s `books[*].pages` list includes **every** codepage. BOARD rows are **shells** only (`id`, `code`, `stats.type === BOARD`)—no terrain/objects. Playable board state replicates only on `board:<id>` ([`memoryproject.ts`](../vm/memoryproject.ts) `projectboardcodepage` + [`memoryhydrate.ts`](../vm/memoryhydrate.ts) `hydrateboard`). Deploy sim + clients together; mixed versions are unsupported for this contract.
 
 ---
 

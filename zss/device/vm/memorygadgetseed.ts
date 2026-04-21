@@ -119,29 +119,92 @@ function resolveackboardkeyforplayer(mainbook: BOOK, player: string): string {
   return ''
 }
 
-/** Joiners (and fresh gadget rows) often have an empty `sidebar` while the host
- * already built board chrome in the acked runner's gadget; seed so repl matches UI. */
+function gadgetneedsreplseed(projected: GADGET_STATE): boolean {
+  const layersok =
+    Array.isArray(projected.layers) && projected.layers.length > 0
+  const sidebarok =
+    Array.isArray(projected.sidebar) && projected.sidebar.length > 0
+  return !layersok || !sidebarok
+}
+
+/** Copy sidebar and/or board chrome from `donor` when `projected` is still empty there. */
+function mergepeergadgetchrome(
+  projected: GADGET_STATE,
+  donor: GADGET_STATE,
+): GADGET_STATE {
+  let out = projected
+  const needSidebar =
+    !Array.isArray(out.sidebar) || out.sidebar.length === 0
+  const needLayers =
+    !Array.isArray(out.layers) || out.layers.length === 0
+  if (
+    needSidebar &&
+    Array.isArray(donor.sidebar) &&
+    donor.sidebar.length > 0
+  ) {
+    out = {
+      ...out,
+      sidebar: deepcopy(donor.sidebar) as GADGET_STATE['sidebar'],
+    }
+  }
+  if (needLayers && Array.isArray(donor.layers) && donor.layers.length > 0) {
+    out = {
+      ...out,
+      layers: deepcopy(donor.layers) as GADGET_STATE['layers'],
+      tickers: Array.isArray(donor.tickers)
+        ? (deepcopy(donor.tickers) as GADGET_STATE['tickers'])
+        : out.tickers,
+      board: donor.board,
+      boardname: donor.boardname,
+      exiteast: donor.exiteast,
+      exitwest: donor.exitwest,
+      exitnorth: donor.exitnorth,
+      exitsouth: donor.exitsouth,
+      exitne: donor.exitne,
+      exitnw: donor.exitnw,
+      exitse: donor.exitse,
+      exitsw: donor.exitsw,
+      ...(donor.over ? { over: deepcopy(donor.over) } : {}),
+      ...(donor.under ? { under: deepcopy(donor.under) } : {}),
+      ...(donor.synthstate
+        ? { synthstate: deepcopy(donor.synthstate) }
+        : {}),
+    }
+  }
+  return out
+}
+
+/** Joiners (and fresh gadget rows) often have empty `sidebar` / `layers` while the host
+ * already built chrome in MEMORY; seed so repl matches UI before an acked runner
+ * pushes `gadget:<joiner>` rows. */
 export function gadgetseedsidebarfromviewportpeers(
   player: string,
   projected: GADGET_STATE,
 ): GADGET_STATE {
-  if (Array.isArray(projected.sidebar) && projected.sidebar.length > 0) {
-    return projected
+  let out = projected
+  if (!gadgetneedsreplseed(out)) {
+    return out
   }
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
-    return projected
+    return out
   }
+
+  const op = memoryreadoperator()
+  if (isstring(op) && op.length > 0 && op !== player) {
+    out = mergepeergadgetchrome(out, projectgadget(op))
+    if (!gadgetneedsreplseed(out)) {
+      return out
+    }
+  }
+
   const boardid = resolveackboardkeyforplayer(mainbook, player)
   if (isstring(boardid) && boardid.length > 0) {
     const runner = ackboardrunners[boardid] ?? boardrunners[boardid]
     if (isstring(runner) && runner.length > 0 && runner !== player) {
-      const rungadget = projectgadget(runner)
-      if (Array.isArray(rungadget.sidebar) && rungadget.sidebar.length > 0) {
-        return {
-          ...projected,
-          sidebar: deepcopy(rungadget.sidebar) as GADGET_STATE['sidebar'],
-        }
+      out = mergepeergadgetchrome(out, projectgadget(runner))
+      if (!gadgetneedsreplseed(out)) {
+        return out
       }
     }
     const peers = collectviewportpidsforboard(boardid)
@@ -150,15 +213,13 @@ export function gadgetseedsidebarfromviewportpeers(
       if (peer === player) {
         continue
       }
-      const g = projectgadget(peer)
-      if (Array.isArray(g.sidebar) && g.sidebar.length > 0) {
-        return {
-          ...projected,
-          sidebar: deepcopy(g.sidebar) as GADGET_STATE['sidebar'],
-        }
+      out = mergepeergadgetchrome(out, projectgadget(peer))
+      if (!gadgetneedsreplseed(out)) {
+        return out
       }
     }
   }
+
   const gadgetstore = memoryreadbookflags(
     mainbook,
     MEMORY_LABEL.GADGETSTORE,
@@ -173,13 +234,10 @@ export function gadgetseedsidebarfromviewportpeers(
     if (!ispresent(raw) || typeof raw !== 'object') {
       continue
     }
-    const g = raw as GADGET_STATE
-    if (Array.isArray(g.sidebar) && g.sidebar.length > 0) {
-      return {
-        ...projected,
-        sidebar: deepcopy(g.sidebar) as GADGET_STATE['sidebar'],
-      }
+    out = mergepeergadgetchrome(out, raw as GADGET_STATE)
+    if (!gadgetneedsreplseed(out)) {
+      return out
     }
   }
-  return projected
+  return out
 }

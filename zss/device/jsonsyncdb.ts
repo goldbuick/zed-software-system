@@ -5,6 +5,7 @@ After each persisted upsert, emits `${streamid}:changed` on the registered devic
 */
 import { type RxCollection, type RxDatabase, createRxDatabase } from 'rxdb'
 import { getRxStorageMemory } from 'rxdb/plugins/storage-memory'
+import { isgadgetstream } from 'zss/memory/memorydirty'
 
 import {
   type DEVICELIKE,
@@ -147,6 +148,7 @@ export function streamreplpersistclientstream(
   streamid: string,
   stream: STREAMREPL_CLIENT_STREAM,
 ): void {
+  const skipgadgetemit = isgadgetstream(streamid)
   enqueueclientpersist(async () => {
     await streamreplensureclientdb()
     if (!clientcoll) {
@@ -154,7 +156,9 @@ export function streamreplpersistclientstream(
     }
     const row = streamtorow(streamid, stream)
     await clientcoll.incrementalUpsert(row)
-    emitstreamchangedafterrow(row)
+    if (!skipgadgetemit) {
+      emitstreamchangedafterrow(row)
+    }
   })
 }
 
@@ -211,6 +215,14 @@ export function streamreplreadclientstreamobservable(streamid: string) {
 class StreamreplClientStreamMap extends Map<string, STREAMREPL_CLIENT_STREAM> {
   override set(streamid: string, stream: STREAMREPL_CLIENT_STREAM) {
     super.set(streamid, stream)
+    if (isgadgetstream(streamid) && streamchangeddevice) {
+      streamsyncchanged(streamchangeddevice, {
+        streamid,
+        reason: 'document',
+        rev: stream.rev,
+        document: stream.document,
+      })
+    }
     streamreplpersistclientstream(streamid, stream)
     return this
   }

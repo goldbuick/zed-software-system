@@ -31,6 +31,8 @@ export const useGadgetClient = create<{
   gadget: GADGET_STATE
   /** Last applied jsonsync rev for `gadget:<player>`; avoids stale snapshots wiping local scroll. */
   gadgetsyncrev: number
+  /** Bumps on every applied gadget wire snapshot so UI can subscribe past stable `layers.length` / rev. */
+  gadgetwiretick: number
   /** True after we applied a non-empty scroll from sync; stale higher-rev empties merge until user closes. */
   gadgetscrolllocal: boolean
   layercachemap: Map<string, LAYER[]>
@@ -80,6 +82,7 @@ export const useGadgetClient = create<{
     sidebar: [],
   },
   gadgetsyncrev: -1,
+  gadgetwiretick: 0,
   gadgetscrolllocal: false,
   layercachemap: new Map(),
 }))

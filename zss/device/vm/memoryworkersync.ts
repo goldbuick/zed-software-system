@@ -80,7 +80,7 @@ export function memoryworkerpushdirty(): void {
       if (!boardid) {
         continue
       }
-      // worker hydrates incoming boards into the main book (see
+      // worker hydrates `board:<id>` bodies into the main book (see
       // `memoryhydrate.hydrateboard`). To project back out, look the board
       // codepage up by id within the main book.
       const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)

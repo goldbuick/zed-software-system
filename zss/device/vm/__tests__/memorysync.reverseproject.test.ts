@@ -100,7 +100,13 @@ describe('memorysyncreverseproject', () => {
           id: 'main-id',
           name: 'main',
           activelist: ['player1', 'player2'],
-          pages: [],
+          pages: [
+            {
+              id: 'boardA',
+              code: '',
+              stats: { type: CODE_PAGE_TYPE.BOARD },
+            },
+          ],
           flags: {
             player1: { board: 'boardA', hp: 10 },
             player2: { board: 'boardA' },
@@ -187,7 +193,7 @@ describe('memorysyncreverseproject', () => {
     expect(memoryhasdirty(flagsstream(pidHost))).toBe(false)
   })
 
-  it('preserves BOARD pages on the live book when memory stream re-projects', () => {
+  it('preserves BOARD bodies when memory stream carries BOARD shells only', () => {
     const board = makeboardcodepage('boardA')
     const main = makebook({
       id: 'main-id',
@@ -198,16 +204,21 @@ describe('memorysyncreverseproject', () => {
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     memorydirtyclear()
 
-    // projection strips BOARD pages out of the memory stream, so an accepted
-    // memory document won't carry boardA. reverse-projection must keep the
-    // local BOARD page intact, otherwise we'd lose the board on every patch.
+    // Memory stream lists boardA as a shell; reverse-project must merge shells
+    // without wiping terrain/objects from the live codepage.
     memorysyncreverseproject(MEMORY_STREAM_ID, {
       books: {
         'main-id': {
           id: 'main-id',
           name: 'main',
           activelist: [],
-          pages: [],
+          pages: [
+            {
+              id: 'boardA',
+              code: '',
+              stats: { type: CODE_PAGE_TYPE.BOARD },
+            },
+          ],
           flags: {},
         },
       },

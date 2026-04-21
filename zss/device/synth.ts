@@ -11,8 +11,8 @@ import {
   ttsqueue,
 } from 'zss/feature/tts'
 import { write } from 'zss/feature/writeui'
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { doasync } from 'zss/mapping/func'
 import { DEFAULT_BPM, waitfor } from 'zss/mapping/tick'
 import {
@@ -121,8 +121,14 @@ export function enableaudio() {
           // lets rolling
           locked = false
           enabled = true
-          synthaudioenabled(synthdevice, registerreadplayer())
-          console.info('using sample rate', getContext().sampleRate)
+          const player = registerreadplayer()
+          synthaudioenabled(synthdevice, player)
+          apilog(
+            synthdevice,
+            player,
+            'using sample rate$white',
+            getContext().sampleRate,
+          )
         })
       }
     })

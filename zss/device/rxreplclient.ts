@@ -15,7 +15,6 @@ import {
 } from './jsonsyncdb'
 import type {
   RXREPL_PULL_RESPONSE,
-  RXREPL_PUSH_ACK,
   RXREPL_STREAM_DOCUMENT,
 } from './rxrepl/types'
 
@@ -137,21 +136,8 @@ function processrxreplclientmessage(message: MESSAGE): void {
   captureownplayer(message.player)
 
   switch (localtarget) {
-    case 'push_ack': {
-      const ack = message.data as RXREPL_PUSH_ACK
-      if (!ack?.accepted?.length) {
-        break
-      }
-      for (let i = 0; i < ack.accepted.length; ++i) {
-        const a = ack.accepted[i]
-        const cur = streams.get(a.streamid)
-        if (ispresent(cur) && a.rev > cur.rev) {
-          cur.rev = a.rev
-          streams.set(a.streamid, cur)
-        }
-      }
+    case 'push_ack':
       break
-    }
     default:
       break
   }
@@ -160,14 +146,8 @@ function processrxreplclientmessage(message: MESSAGE): void {
 const rxreplclientdevice = createdevice('rxreplclient', [], (message) => {
   const localtarget = rxrepllocalmessagetarget(message.target)
   if (!clientready) {
-    // Boardrunner (and other consumers) read `streamreplclientstreammap` before
-    // `streamreplensureclientdb()` resolves; without this, `rxreplclient:stream_row`
-    // was queued but the Map stayed empty until init finished — first ticks saw no
-    // `board:*` / `memory` shadow (debug H-G: hasRxRow false while rows were pending).
-    // Do not gate on `session(message)` here: before the first `ready`, the
-    // device session is still '' while `message.session` is already set, so
-    // `session(message)` returns '' and we would skip repl rows that beat
-    // `ready` on the wire (join boardrunner still saw H-G hasRxRow:false).
+    // Apply repl rows before `clientready`: session gating can still be false while
+    // `message.session` is set, so do not skip early `stream_row` / `pull_response`.
     if (localtarget === 'stream_row' && ispresent(message.data)) {
       captureownplayer(message.player)
       applystreamrow(message.data as RXREPL_STREAM_DOCUMENT)
