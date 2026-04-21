@@ -4,7 +4,6 @@ import {
 } from 'zss/device/forward'
 
 import { setassignedplayer } from './device/boardrunner'
-import { isstring } from './mapping/types'
 import './device/rxreplclient'
 import './device/gadgetmemoryprovider'
 
@@ -23,8 +22,7 @@ const { forward } = createforward(
 onmessage = function handleMessage(event) {
   const msg = event.data
   if (msg?.target === 'registerplayer') {
-    const pid = isstring(msg?.data) ? msg?.data : ''
-    setassignedplayer(pid)
+    setassignedplayer(msg.data.player, msg.data.isjoinplayer)
     return
   }
   forward(msg)
