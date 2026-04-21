@@ -10,7 +10,6 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import {
   INPUT,
   INPUT_ALT,
@@ -18,6 +17,7 @@ import {
   INPUT_SHIFT,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
+import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import { FlatGraphics } from 'zss/gadget/graphics/flat'
 import { FPVGraphics } from 'zss/gadget/graphics/fpv'
 import { IsoGraphics } from 'zss/gadget/graphics/iso'

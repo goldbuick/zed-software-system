@@ -110,7 +110,7 @@ function processrxreplclientmessage(message: MESSAGE): void {
       let anyboard = false
       for (let i = 0; i < docs.length; ++i) {
         if (
-          applystreamrow(docs[i] as RXREPL_STREAM_DOCUMENT, {
+          applystreamrow(docs[i], {
             deferBoardNotify: true,
           })
         ) {
@@ -159,7 +159,7 @@ const rxreplclientdevice = createdevice('rxreplclient', [], (message) => {
         let anyboard = false
         for (let i = 0; i < docs.length; ++i) {
           if (
-            applystreamrow(docs[i] as RXREPL_STREAM_DOCUMENT, {
+            applystreamrow(docs[i], {
               deferBoardNotify: true,
             })
           ) {

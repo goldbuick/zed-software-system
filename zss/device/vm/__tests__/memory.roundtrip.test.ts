@@ -22,8 +22,8 @@ import {
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memorywritebookflag } from 'zss/memory/bookoperations'
 import {
-  flagsstream,
   MEMORY_STREAM_ID,
+  flagsstream,
   memorydirtyclear,
 } from 'zss/memory/memorydirty'
 import {

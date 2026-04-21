@@ -166,6 +166,14 @@ export function bridgehalt(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:halt', undefined)
 }
 
+export function boardrunnertick(
+  device: DEVICELIKE,
+  player: string,
+  timestamp: number,
+) {
+  device.emit(player, 'boardrunner:tick', timestamp)
+}
+
 export function boardrunnerowned(
   device: DEVICELIKE,
   player: string,

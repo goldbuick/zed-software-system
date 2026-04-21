@@ -8,6 +8,7 @@ import {
 import {
   ackboardrunners,
   boardrunners,
+  clearboardrunnerlastacktick,
   failedboardrunners,
 } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
@@ -29,6 +30,7 @@ export function handlepeergone(vm: DEVICE, message: MESSAGE): void {
     if (boardrunners[boardid] === player) {
       memorysyncrevokeboardrunner(player, boardid)
       delete boardrunners[boardid]
+      clearboardrunnerlastacktick(boardid)
       ++cleared
     }
     if (ackboardrunners[boardid] === player) {
@@ -36,6 +38,7 @@ export function handlepeergone(vm: DEVICE, message: MESSAGE): void {
       // pending ask but the acked owner is the departed player.
       memorysyncrevokeboardrunner(player, boardid)
       delete ackboardrunners[boardid]
+      clearboardrunnerlastacktick(boardid)
     }
     if (failedboardrunners[boardid]) {
       delete failedboardrunners[boardid][player]

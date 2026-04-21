@@ -4,8 +4,10 @@ import * as api from 'zss/device/api'
 import { handletick } from 'zss/device/vm/handlers/tick'
 import * as memorysync from 'zss/device/vm/memorysync'
 import {
+  BOARDRUNNER_ACKTICK_STALE_MS,
   ackboardrunners,
   boardrunners,
+  boardrunnerlastacktickat,
   failedboardrunners,
   tracking,
 } from 'zss/device/vm/state'
@@ -32,6 +34,9 @@ function clearboardrunnerstate() {
   for (const k of Object.keys(tracking)) {
     delete tracking[k]
   }
+  for (const k of Object.keys(boardrunnerlastacktickat)) {
+    delete boardrunnerlastacktickat[k]
+  }
 }
 
 describe('handletick boardrunner election', () => {
@@ -44,8 +49,11 @@ describe('handletick boardrunner election', () => {
     session.memorywritefreeze(false)
     jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
     jest.spyOn(api, 'boardrunnerowned').mockImplementation(() => {})
+    jest.spyOn(api, 'boardrunnertick').mockImplementation(() => {})
     jest.spyOn(api, 'registerboardrunnerask').mockImplementation(() => {})
-    jest.spyOn(memorysync, 'memorysyncrevokeboardrunner').mockImplementation(() => {})
+    jest
+      .spyOn(memorysync, 'memorysyncrevokeboardrunner')
+      .mockImplementation(() => {})
     jest
       .spyOn(playermanagement, 'memoryscanplayers')
       .mockImplementation(() => {})
@@ -60,9 +68,11 @@ describe('handletick boardrunner election', () => {
         p2: { board: 'addr-a' },
       },
     } as BOOK
-    jest.spyOn(session, 'memoryreadbookbysoftware').mockImplementation((label) => {
-      return label === MEMORY_LABEL.MAIN ? mainbook : undefined
-    })
+    jest
+      .spyOn(session, 'memoryreadbookbysoftware')
+      .mockImplementation((label) => {
+        return label === MEMORY_LABEL.MAIN ? mainbook : undefined
+      })
     tracking.p1 = 0
     tracking.p2 = 0
   })
@@ -91,5 +101,22 @@ describe('handletick boardrunner election', () => {
     handletick(vm, msg)
 
     expect(api.registerboardrunnerask).not.toHaveBeenCalled()
+  })
+
+  it('evicts tick-confirmed runner when last acktick is stale', () => {
+    ackboardrunners['addr-a'] = 'p1'
+    boardrunners['addr-a'] = 'p1'
+    boardrunnerlastacktickat['addr-a'] = 0
+    const nowspy = jest
+      .spyOn(Date, 'now')
+      .mockReturnValue(BOARDRUNNER_ACKTICK_STALE_MS + 5000)
+
+    handletick(vm, msg)
+
+    expect(memorysync.memorysyncrevokeboardrunner).toHaveBeenCalledWith(
+      'p1',
+      'addr-a',
+    )
+    nowspy.mockRestore()
   })
 })

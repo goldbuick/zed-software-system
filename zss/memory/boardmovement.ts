@@ -15,12 +15,12 @@ import { memorycheckblockedboardobject } from './boardblocking'
 import { memoryboardelementisobject } from './boardelement'
 import { memorydeleteboardobject } from './boardlifecycle'
 import { memorycheckelementpushable, memoryreadelementstat } from './boards'
-import { memoryreadbookflag } from './bookoperations'
 import { memoryresolveboardedgeexit } from './boardtransitions'
+import { memoryreadbookflag } from './bookoperations'
 import { memorysendtoelement } from './gamesend'
 import { memorymarkboarddirty } from './memorydirty'
-import { memorycheckcollision } from './spatialqueries'
 import { memorymoveplayertoboard } from './playermanagement'
+import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,

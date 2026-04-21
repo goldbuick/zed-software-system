@@ -15,6 +15,7 @@ import {
   boardrunners,
   failedboardrunners,
   incflushtick,
+  clearboardrunnerlastacktick,
   playerboardrunnerowntarget,
   setflushtick,
   tracking,
@@ -71,6 +72,7 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
           }
           delete boardrunners[boardid]
           delete ackboardrunners[boardid]
+          clearboardrunnerlastacktick(boardid)
           // Block this (board, player) pair from re-election until peergone,
           // logout, successful ack, or board move clears it.
           failedboardrunners[boardid] ??= {}

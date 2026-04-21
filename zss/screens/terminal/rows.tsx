@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
-import { useEqual, useTape, useTerminal } from 'zss/gadget/data/zustandstores'
+import { useEqual } from 'zss/gadget/data/useequal'
+import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'

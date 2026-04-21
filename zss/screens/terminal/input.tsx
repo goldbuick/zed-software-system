@@ -16,8 +16,8 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
+import { useEqual } from 'zss/gadget/data/useequal'
 import {
-  useEqual,
   useGadgetClient,
   useTape,
   useTerminal,

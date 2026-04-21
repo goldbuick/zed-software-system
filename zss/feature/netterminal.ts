@@ -12,7 +12,6 @@ import {
   shouldforwardclienttoserver,
   shouldforwardservertoclient,
   shouldnotforwardonpeer,
-  shouldnotforwardonpeerclient,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -253,7 +252,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
       if (
         shouldforwardclienttoserver(message) &&
-        shouldnotforwardonpeerclient(message) === false
+        shouldnotforwardonpeer(message) === false
       ) {
         sendpeermessage(message)
       }

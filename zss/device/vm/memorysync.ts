@@ -64,7 +64,6 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
-import { ackboardrunners } from './state'
 import {
   collectviewportpidsforboard,
   gadgetseedsidebarfromviewportpeers,
@@ -81,6 +80,7 @@ import {
   projectmemory,
   projectplayerflags,
 } from './memoryproject'
+import { ackboardrunners } from './state'
 
 export function memorysyncensureregistered(): void {
   const stream = memorystream()
@@ -105,7 +105,10 @@ export function memorysyncensureboardregistered(codepage: CODE_PAGE): void {
 export function memorysyncensuregadgetregistered(player: string): void {
   memorysyncensureregistered()
   const streamid = gadgetstream(player)
-  const projected = gadgetseedsidebarfromviewportpeers(player, projectgadget(player))
+  const projected = gadgetseedsidebarfromviewportpeers(
+    player,
+    projectgadget(player),
+  )
   if (!ispresent(streamreplserverreadstream(streamid))) {
     streamreplserverregister(streamid, projected)
     return
@@ -428,7 +431,10 @@ export function memorysyncpushdirty(): void {
     if (isgadgetstream(stream)) {
       const pid = playeridfromgadgetstream(stream)
       if (pid) {
-        const projected = gadgetseedsidebarfromviewportpeers(pid, projectgadget(pid))
+        const projected = gadgetseedsidebarfromviewportpeers(
+          pid,
+          projectgadget(pid),
+        )
         streamreplserverupdate(stream, projected)
       }
       continue

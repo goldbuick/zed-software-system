@@ -11,11 +11,11 @@ import {
   memoryreadobject,
   memoryreadobjects,
 } from 'zss/memory/boardaccess'
+import { memorycheckblockedboardobject } from 'zss/memory/boardblocking'
 import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
-import { memorycheckblockedboardobject } from 'zss/memory/boardblocking'
 import {
   memorysafedeleteelement,
   memorywriteterrain,

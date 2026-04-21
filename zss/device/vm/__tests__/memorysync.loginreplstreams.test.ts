@@ -1,12 +1,9 @@
-import { flagsstream, gadgetstream } from 'zss/memory/memorydirty'
 import {
   streamreplserverclearfortests,
   streamreplserverreadstream,
 } from 'zss/device/streamreplserver'
-import {
-  memoryresetbooks,
-  memorywritesoftwarebook,
-} from 'zss/memory/session'
+import { flagsstream, gadgetstream } from 'zss/memory/memorydirty'
+import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
 import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
 import { memorysyncensureloginreplstreams } from '../memorysync'

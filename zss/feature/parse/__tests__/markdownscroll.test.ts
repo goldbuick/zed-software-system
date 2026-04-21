@@ -43,15 +43,12 @@ describe('parsemarkdownforscroll', () => {
 
   beforeEach(() => {
     playerstates.p1 = initstate()
-    gadgetstateprovider(
-      (player: string) => {
-        if (!playerstates[player]) {
-          playerstates[player] = initstate()
-        }
-        return playerstates[player]
-      },
-      noop,
-    )
+    gadgetstateprovider((player: string) => {
+      if (!playerstates[player]) {
+        playerstates[player] = initstate()
+      }
+      return playerstates[player]
+    }, noop)
   })
 
   it('emits bang rows so multi-word href becomes multiple hyperlink words', () => {
@@ -149,15 +146,12 @@ describe('scrollwritelines zed body', () => {
 
   beforeEach(() => {
     playerstates.p1 = initstate()
-    gadgetstateprovider(
-      (player: string) => {
-        if (!playerstates[player]) {
-          playerstates[player] = initstate()
-        }
-        return playerstates[player]
-      },
-      noop,
-    )
+    gadgetstateprovider((player: string) => {
+      if (!playerstates[player]) {
+        playerstates[player] = initstate()
+      }
+      return playerstates[player]
+    }, noop)
   })
 
   it('refscroll menu: !command;label lines become hyperlink rows', () => {

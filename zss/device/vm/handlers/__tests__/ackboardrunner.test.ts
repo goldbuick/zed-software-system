@@ -1,10 +1,18 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
-import { handleackboardrunner } from 'zss/device/vm/handlers/ackboardrunner'
+import {
+  handleackboardrunner,
+  grantboardrunnerackaftersimmove,
+} from 'zss/device/vm/handlers/ackboardrunner'
+import { handleacktick } from 'zss/device/vm/handlers/acktick'
 import * as helpers from 'zss/device/vm/helpers'
 import * as memorysync from 'zss/device/vm/memorysync'
-import { ackboardrunners, boardrunners, failedboardrunners } from 'zss/device/vm/state'
+import {
+  ackboardrunners,
+  boardrunners,
+  failedboardrunners,
+} from 'zss/device/vm/state'
 import * as bookoperations from 'zss/memory/bookoperations'
 import * as session from 'zss/memory/session'
 
@@ -20,7 +28,7 @@ function clearboardrunnerstate() {
   }
 }
 
-describe('handleackboardrunner', () => {
+describe('handleacktick (tick-confirmed board runner)', () => {
   const vm = {} as DEVICE
   let sendsnapshot: jest.SpyInstance
   let revoke: jest.SpyInstance
@@ -64,7 +72,7 @@ describe('handleackboardrunner', () => {
       player: 'player-1',
     } as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(ackboardrunners['board-a']).toBe('player-1')
     expect(sendsnapshot).toHaveBeenCalledWith('player-1', 'board-a')
@@ -80,12 +88,10 @@ describe('handleackboardrunner', () => {
       player: 'player-2',
     } as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(revoke).toHaveBeenCalledWith('player-1', 'board-a')
-    // Old owner gets an empty ownership set now that they lost the board.
     expect(owned).toHaveBeenCalledWith(vm, 'player-1', '')
-    // New owner gets the board they just acked.
     expect(owned).toHaveBeenCalledWith(vm, 'player-2', 'board-a')
     expect(ackboardrunners['board-a']).toBe('player-2')
   })
@@ -97,7 +103,7 @@ describe('handleackboardrunner', () => {
       player: 'other',
     } as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(ackboardrunners['board-a']).toBeUndefined()
     expect(sendsnapshot).not.toHaveBeenCalled()
@@ -112,13 +118,13 @@ describe('handleackboardrunner', () => {
       player: 'player-1',
     } as unknown as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(sendsnapshot).not.toHaveBeenCalled()
     expect(owned).not.toHaveBeenCalled()
   })
 
-  it('does not revoke when re-acking the same player (idempotent)', () => {
+  it('does not re-send snapshot when already tick-confirmed (idempotent)', () => {
     boardrunners['board-a'] = 'player-1'
     ackboardrunners['board-a'] = 'player-1'
     const message = {
@@ -126,11 +132,12 @@ describe('handleackboardrunner', () => {
       player: 'player-1',
     } as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(revoke).not.toHaveBeenCalled()
     expect(ackboardrunners['board-a']).toBe('player-1')
-    expect(owned).toHaveBeenCalledWith(vm, 'player-1', 'board-a')
+    expect(sendsnapshot).not.toHaveBeenCalled()
+    expect(owned).not.toHaveBeenCalled()
   })
 
   it('clears other ack slots for the same player before recording this ack', () => {
@@ -141,7 +148,7 @@ describe('handleackboardrunner', () => {
       player: 'player-1',
     } as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(ackboardrunners['board-b']).toBeUndefined()
     expect(revoke).toHaveBeenCalledWith('player-1', 'board-b')
@@ -156,7 +163,7 @@ describe('handleackboardrunner', () => {
       player: 'player-1',
     } as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(failedboardrunners['board-a']).toBeUndefined()
   })
@@ -177,10 +184,64 @@ describe('handleackboardrunner', () => {
       player: 'player-1',
     } as MESSAGE
 
-    handleackboardrunner(vm, message)
+    handleacktick(vm, message)
 
     expect(ackboardrunners['board-a']).toBeUndefined()
     expect(sendsnapshot).not.toHaveBeenCalled()
     expect(owned).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleackboardrunner', () => {
+  const vm = {} as DEVICE
+
+  beforeEach(() => {
+    for (const k of Object.keys(boardrunners)) {
+      delete boardrunners[k]
+    }
+    for (const k of Object.keys(ackboardrunners)) {
+      delete ackboardrunners[k]
+    }
+  })
+
+  it('is a no-op (assignment ack superseded by vm:acktick)', () => {
+    boardrunners['board-a'] = 'player-1'
+    const message = {
+      data: 'board-a',
+      player: 'player-1',
+    } as MESSAGE
+    handleackboardrunner(vm, message)
+    expect(ackboardrunners['board-a']).toBeUndefined()
+  })
+})
+
+describe('grantboardrunnerackaftersimmove', () => {
+  const vm = {} as DEVICE
+
+  beforeEach(() => {
+    for (const k of Object.keys(boardrunners)) {
+      delete boardrunners[k]
+    }
+    for (const k of Object.keys(ackboardrunners)) {
+      delete ackboardrunners[k]
+    }
+    jest.spyOn(helpers, 'boardrunnersendsnapshot').mockImplementation(() => {})
+    jest.spyOn(api, 'boardrunnerowned').mockImplementation(() => {})
+    jest
+      .spyOn(session, 'memoryreadbookbysoftware')
+      .mockReturnValue({ flags: {} } as any)
+    jest.spyOn(bookoperations, 'memoryreadbookflag').mockImplementation((_b, _p, key) => {
+      return key === 'board' ? 'board-x' : undefined
+    })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it('sets ackboardrunners and boardrunners for sim move', () => {
+    grantboardrunnerackaftersimmove(vm, 'player-1', 'board-x')
+    expect(ackboardrunners['board-x']).toBe('player-1')
+    expect(boardrunners['board-x']).toBe('player-1')
   })
 })

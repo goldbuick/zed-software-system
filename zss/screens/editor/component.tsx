@@ -4,9 +4,9 @@ import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { useEqual } from 'zss/gadget/data/useequal'
 import {
   useEditor,
-  useEqual,
   useGadgetClient,
   useTape,
 } from 'zss/gadget/data/zustandstores'

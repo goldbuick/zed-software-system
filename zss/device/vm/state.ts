@@ -6,8 +6,11 @@
 export const SECOND_TIMEOUT = 16
 export const FLUSH_RATE = 60
 
-/** Seconds (1 `second` tick each) to wait for boardrunner ack before clearing election. */
+/** Seconds (1 `second` tick each) to wait for tick confirmation before clearing election. */
 export const BOARDRUNNER_ACK_FAIL_COUNT = 2
+
+/** Wall-clock ms without `vm:acktick` before evicting a tick-confirmed runner. */
+export const BOARDRUNNER_ACKTICK_STALE_MS = 10_000
 
 /** Initial tracking score assigned on handlelogin/handlelocal. Set above 0
  * so a brand-new joiner is not treated as the most-active candidate the
@@ -30,14 +33,20 @@ export const lastinputtime: Record<string, number> = {}
 /** Latest elected board runner per `BOARD.id` (main book); replaced each `second`. */
 export const boardrunners: Record<string, string> = {}
 
-// board runners that have acknowledged their election
+// board runners confirmed by `vm:acktick` (worker ran `boardrunner:tick` for this board)
 export const ackboardrunners: Record<string, string> = {}
 
+/** Last `Date.now()` we saw `vm:acktick` for this board (tick-proven runner only). */
+export const boardrunnerlastacktickat: Record<string, number> = {}
+
+export function clearboardrunnerlastacktick(boardid: string): void {
+  delete boardrunnerlastacktickat[boardid]
+}
+
 /**
- * Per-board per-player ack retry count while awaiting `vm:ackboardrunner`.
- * Value `BOARDRUNNER_ACK_FAIL_COUNT` means the player failed to ack in time
- * and is excluded from that board’s election until peergone, logout, board
- * move, or a successful ack clears the entry (`handleackboardrunner`).
+ * Per-board per-player retry count while elected but not yet tick-confirmed.
+ * Value `BOARDRUNNER_ACK_FAIL_COUNT` means exclusion until peergone, logout,
+ * board move, or successful `vm:acktick` clears the entry.
  */
 export const failedboardrunners: Record<string, Record<string, number>> = {}
 

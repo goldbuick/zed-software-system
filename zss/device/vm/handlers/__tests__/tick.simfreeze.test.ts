@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import * as api from 'zss/device/api'
 import { handletick } from 'zss/device/vm/handlers/tick'
 import { memorytickloaders } from 'zss/memory/runtime'
 import * as session from 'zss/memory/session'
@@ -15,6 +16,7 @@ describe('handletick freeze', () => {
   afterEach(() => {
     session.memorywritefreeze(false)
     jest.mocked(memorytickloaders).mockClear()
+    jest.restoreAllMocks()
   })
 
   it('skips memorytickloaders when freeze is on', () => {
@@ -26,6 +28,7 @@ describe('handletick freeze', () => {
 
   it('runs memorytickloaders when freeze is off', () => {
     session.memorywritefreeze(false)
+    jest.spyOn(api, 'boardrunnertick').mockImplementation(() => {})
 
     handletick(vm, msg)
 

@@ -3,10 +3,10 @@ Strategy B: sim-side rxrepl. push_batch merges documents into canonical MEMORY.
 */
 import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
+import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { boardidfromboardstream, isboardstream } from 'zss/memory/memorydirty'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { rxreplpullresponse, rxreplpushack, rxreplrowdocument } from './api'
 import type {
@@ -107,7 +107,7 @@ export const rxreplserverdevice = createdevice(
             streamreplserveradmitplayer(streamid, player, true)
             entry = streamreplserverreadstream(streamid)
           }
-          if (!entry || !entry.players.has(player)) {
+          if (!entry?.players.has(player)) {
             continue
           }
           documents.push({

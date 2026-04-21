@@ -101,7 +101,7 @@ const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
 export function memorytickloaders() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
-    return
+    return 0
   }
 
   const timestamp = mainbook.timestamp + 1
@@ -146,18 +146,16 @@ export function memorytickloaders() {
 
   mainbook.timestamp = timestamp
   READ_CONTEXT.timestamp = timestamp
+  return timestamp
 }
 
 // Boardrunner workers: frame clock + board/chip tick. No loader chips (those
 // run only in sim via `memorytickloaders`).
-export function memorytickmain(playeronly = false) {
+export function memorytickmain(timestamp: number, playeronly = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
-
-  const timestamp = mainbook.timestamp + 1
-
   mainbook.timestamp = timestamp
   READ_CONTEXT.timestamp = timestamp
 

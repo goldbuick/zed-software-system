@@ -17,6 +17,7 @@ import {
   INITIAL_TRACKING,
   ackboardrunners,
   boardrunners,
+  clearboardrunnerlastacktick,
   failedboardrunners,
   lastinputtime,
   tracking,
@@ -61,10 +62,12 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
       memorysyncrevokeboardrunner(message.player, boardid)
       delete boardrunners[boardid]
       delete ackboardrunners[boardid]
+      clearboardrunnerlastacktick(boardid)
       delete failedboardrunners[boardid]
     } else if (ackboardrunners[boardid] === message.player) {
       memorysyncrevokeboardrunner(message.player, boardid)
       delete ackboardrunners[boardid]
+      clearboardrunnerlastacktick(boardid)
       if (failedboardrunners[boardid]) {
         delete failedboardrunners[boardid][message.player]
         if (Object.keys(failedboardrunners[boardid]).length === 0) {

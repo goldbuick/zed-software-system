@@ -117,6 +117,10 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
         default:
           break
       }
+      // Boardrunner worker → main: `vm:<id>:acktick` must reach sim `vm` (not a topic match).
+      if (route.path === 'acktick') {
+        return true
+      }
       break
     }
   }
@@ -125,7 +129,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
 
 // heavy worker message gates
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
     // clock messages

@@ -19,7 +19,11 @@ import {
   memoryreadcodepagestats,
   memoryreadcodepagetype,
 } from './codepageoperations'
-import { flagsstream, memorymarkdirty, memorymarkmemorydirty } from './memorydirty'
+import {
+  flagsstream,
+  memorymarkdirty,
+  memorymarkmemorydirty,
+} from './memorydirty'
 import {
   BOARD_ELEMENT,
   BOOK,

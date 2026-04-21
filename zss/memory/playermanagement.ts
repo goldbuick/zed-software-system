@@ -181,6 +181,23 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
   return mainboards
 }
 
+/** Shared eligibility for a board’s acked runner (hard-lock in elections and tick ack-sync). */
+export function boardrunnerackeligible(
+  boardid: string,
+  ackedplayer: string,
+  playeridsbyboard: Record<string, string[]>,
+  boardrunnerfailed: Record<string, Record<string, number>> | undefined,
+): boolean {
+  if (!isstring(ackedplayer) || !ackedplayer.length) {
+    return false
+  }
+  if (boardrunnerfailed?.[boardid]?.[ackedplayer] === BOARDRUNNER_ACK_FAIL_COUNT) {
+    return false
+  }
+  const onboard = playeridsbyboard[boardid] ?? []
+  return onboard.includes(ackedplayer)
+}
+
 export function memoryreadboardrunnerchoices(
   book: MAYBE<BOOK>,
   tracking: Record<string, number>,
@@ -218,14 +235,14 @@ export function memoryreadboardrunnerchoices(
     for (let i = 0; i < ackedboards.length; ++i) {
       const board = ackedboards[i]
       const acked = currentacked[board]
-      if (!isstring(acked) || !acked) {
-        continue
-      }
-      if (boardrunnerfailed?.[board]?.[acked] === BOARDRUNNER_ACK_FAIL_COUNT) {
-        continue
-      }
-      const onboard = playeridsbyboard[board] ?? []
-      if (!onboard.includes(acked)) {
+      if (
+        !boardrunnerackeligible(
+          board,
+          acked,
+          playeridsbyboard,
+          boardrunnerfailed,
+        )
+      ) {
         continue
       }
       runnerscore[board] = Number.NEGATIVE_INFINITY

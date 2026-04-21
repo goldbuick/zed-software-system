@@ -17,13 +17,13 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useTape } from 'zss/gadget/data/zustandstores'
 import {
   INPUT,
   INPUT_ALT,
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
+import { useTape } from 'zss/gadget/data/zustandstores'
 import { UserInputContext, user } from 'zss/gadget/userinputcontext'
 import type { UserInputMods } from 'zss/gadget/userinputtypes'
 import { isnumber, ispresent } from 'zss/mapping/types'
@@ -33,8 +33,8 @@ import { ismac } from 'zss/words/system'
 import { DIR, NAME } from 'zss/words/types'
 
 import {
-  type Mobiletextfield,
   type MobiletextInputCallback,
+  type Mobiletextfield,
   getmobiletextelement,
   mobiletextfocus,
   onmobiletextinput,

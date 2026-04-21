@@ -3,9 +3,9 @@ Elected runner marks gadget:<joinPid> dirty; worker often has no rxrepl shadow
 for that stream id (rows hydrate on clients). Push must still run.
 */
 import * as apimod from 'zss/device/api'
+import { rxreplclientsetownplayerfortests } from 'zss/device/rxreplclient'
 import { initstate } from 'zss/gadget/data/api'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
-import { rxreplclientsetownplayerfortests } from 'zss/device/rxreplclient'
 import {
   gadgetstream,
   memorydirtyclear,
@@ -47,13 +47,17 @@ describe('memoryworkerpushdirty gadget streams', () => {
     rxreplclientsetownplayerfortests(runner)
     memorymarkdirty(gadgetstream(joiner))
 
-    const spy = jest.spyOn(apimod, 'rxreplpushbatch').mockImplementation(() => {})
+    const spy = jest
+      .spyOn(apimod, 'rxreplpushbatch')
+      .mockImplementation(() => {})
     memoryworkerpushdirty()
 
     expect(spy).toHaveBeenCalledTimes(1)
     const call = spy.mock.calls[0]
     expect(call[1]).toBe(runner)
-    const batch = call[2] as { rows: { streamid: string; gadget?: { layers?: unknown[] } }[] }
+    const batch = call[2] as {
+      rows: { streamid: string; gadget?: { layers?: unknown[] } }[]
+    }
     expect(batch.rows[0].streamid).toBe(gadgetstream(joiner))
     expect(batch.rows[0].gadget?.layers?.length).toBe(1)
     spy.mockRestore()

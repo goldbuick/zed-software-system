@@ -2,15 +2,15 @@
  * Viewport gadget admission must include players with flags.board on the board
  * even when they are not yet on mainbook.activelist (e.g. join-in-progress).
  */
-import { initstate } from 'zss/gadget/data/api'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
-import { gadgetstream, memorystream } from 'zss/memory/memorydirty'
-import { memorywritebookflag } from 'zss/memory/bookoperations'
 import {
   streamreplserverclearfortests,
   streamreplserverreadstream,
   streamreplserverregister,
 } from 'zss/device/streamreplserver'
+import { initstate } from 'zss/gadget/data/api'
+import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { memorywritebookflag } from 'zss/memory/bookoperations'
+import { gadgetstream, memorystream } from 'zss/memory/memorydirty'
 import {
   memoryreadbookbysoftware,
   memoryresetbooks,
@@ -124,7 +124,7 @@ describe('memorysync viewport gadget admission', () => {
 
     const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     expect(main).toBeDefined()
-    memorywritebookflag(main!, joiner, 'board', boardId)
+    memorywritebookflag(main, joiner, 'board', boardId)
     memorysyncpushdirty()
 
     gjoin = streamreplserverreadstream(gadgetstream(joiner))

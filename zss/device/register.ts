@@ -48,6 +48,7 @@ import {
   zsstextline,
 } from 'zss/feature/zsstextui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
+import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
@@ -57,7 +58,6 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/zustandstores'
-import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
@@ -419,7 +419,7 @@ export const register = createdevice(
         break
       }
       case 'boardrunnerask':
-        register.reply(message, 'ackboardrunner', message.data)
+        // Election is confirmed by `vm:acktick` on the sim VM, not a register reply.
         break
       case 'bookmarkscroll':
         doasync(register, message.player, async () => {
@@ -872,9 +872,7 @@ export const register = createdevice(
       }
       case 'perfmonitor': {
         const prevperf = useTape.getState().perfmonitor
-        const enabled = ispresent(message.data)
-          ? !!message.data
-          : !prevperf
+        const enabled = ispresent(message.data) ? !!message.data : !prevperf
         const line1 = `perf monitor ${enabled ? '$greenon' : '$redoff'}`
         terminalwritelines(register, message.player, line1)
         useTape.setState({ perfmonitor: enabled })

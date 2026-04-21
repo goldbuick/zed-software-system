@@ -62,15 +62,12 @@ describe('api', () => {
     playerStates.player1 = initstate()
     playerStates.player2 = initstate()
     // Reset the state provider to return consistent state objects
-    gadgetstateprovider(
-      (player: string) => {
-        if (!playerStates[player]) {
-          playerStates[player] = initstate()
-        }
-        return playerStates[player]
-      },
-      noop,
-    )
+    gadgetstateprovider((player: string) => {
+      if (!playerStates[player]) {
+        playerStates[player] = initstate()
+      }
+      return playerStates[player]
+    }, noop)
   })
 
   describe('initstate', () => {

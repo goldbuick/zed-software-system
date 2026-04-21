@@ -152,9 +152,9 @@ describe('cross-board move vs stale board reverseproject', () => {
       return
     }
 
-    expect(
-      memorymoveplayertoboard(book, 'p1', 'boardB', { x: 1, y: 1 }),
-    ).toBe(true)
+    expect(memorymoveplayertoboard(book, 'p1', 'boardB', { x: 1, y: 1 })).toBe(
+      true,
+    )
 
     const freshsource = deepcopy(projectboardcodepage(pagea)) as Record<
       string,

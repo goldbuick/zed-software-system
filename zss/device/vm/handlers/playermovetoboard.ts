@@ -12,6 +12,7 @@ import {
 import {
   ackboardrunners,
   boardrunners,
+  clearboardrunnerlastacktick,
   failedboardrunners,
   playerboardrunnerowntarget,
 } from 'zss/device/vm/state'
@@ -74,6 +75,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   ) {
     delete boardrunners[fromboardid]
     delete ackboardrunners[fromboardid]
+    clearboardrunnerlastacktick(fromboardid)
     delete failedboardrunners[fromboardid]
     memorysyncrevokeboardrunner(message.player, fromboardid)
     boardrunnerowned(

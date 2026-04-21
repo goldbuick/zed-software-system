@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 
 import { handleackboardrunner } from './ackboardrunner'
+import { handleacktick } from './acktick'
 import { handleadmin } from './admin'
 import {
   handlelocal,
@@ -65,6 +66,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,
   halt: handlehalt,
+  acktick: handleacktick,
   ticktock: handletick,
   second: handlesecond,
   ackboardrunner: handleackboardrunner,

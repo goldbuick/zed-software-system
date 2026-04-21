@@ -96,7 +96,7 @@ describe('handlesecond board runner ack retries', () => {
     }
 
     handlesecond(vm, message)
-    expect(failedboardrunners['board-x']?.['joiner']).toBe(
+    expect(failedboardrunners['board-x']?.joiner).toBe(
       BOARDRUNNER_ACK_FAIL_COUNT,
     )
     expect(boardrunners['board-x']).toBeUndefined()

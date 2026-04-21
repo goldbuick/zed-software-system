@@ -1,5 +1,4 @@
-import { useRef } from 'react'
-import { MAYBE, isequal } from 'zss/mapping/types'
+import { MAYBE } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
 
@@ -265,17 +264,3 @@ export const useInspector = create<{
     })
   },
 }))
-
-export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
-  const prev = useRef<U>(null as U)
-  return (state) => {
-    const next = selector(state)
-    return (
-      prev.current === undefined || next === undefined
-        ? prev.current === next
-        : isequal(prev.current, next)
-    )
-      ? prev.current
-      : (prev.current = next)
-  }
-}

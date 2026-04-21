@@ -3,7 +3,6 @@
  * Uses useGadgetClient to get the current board and renders it to a PNG image.
  */
 import { RUNTIME } from 'zss/config'
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
   CHARS_PER_ROW,
   CHAR_HEIGHT,
@@ -14,6 +13,7 @@ import {
   LAYER_TYPE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'

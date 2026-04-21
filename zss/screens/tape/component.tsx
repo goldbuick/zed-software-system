@@ -7,9 +7,8 @@ import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
-import { useShallow } from 'zustand/react/shallow'
-
 import { PerfMonitorTiles } from 'zss/perf/perfmonitortiles'
+import { useShallow } from 'zustand/react/shallow'
 
 import { TapeLayout } from './layout'
 

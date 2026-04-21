@@ -67,15 +67,14 @@ function canonicalboardref(addrOrId: string): string {
     return ''
   }
   const resolved = memoryreadboardbyaddress(addrOrId)
-  return ispresent(resolved?.id) && resolved.id.length > 0 ? resolved.id : addrOrId
+  return ispresent(resolved?.id) && resolved.id.length > 0
+    ? resolved.id
+    : addrOrId
 }
 
 function resolveackboardkeyforplayer(mainbook: BOOK, player: string): string {
   const keys = [
-    ...new Set([
-      ...Object.keys(ackboardrunners),
-      ...Object.keys(boardrunners),
-    ]),
+    ...new Set([...Object.keys(ackboardrunners), ...Object.keys(boardrunners)]),
   ]
   const raw = memoryreadbookflag(mainbook, player, 'board')
   const resolvedPlayer = resolvedboardid(mainbook, player)
@@ -133,15 +132,9 @@ function mergepeergadgetchrome(
   donor: GADGET_STATE,
 ): GADGET_STATE {
   let out = projected
-  const needSidebar =
-    !Array.isArray(out.sidebar) || out.sidebar.length === 0
-  const needLayers =
-    !Array.isArray(out.layers) || out.layers.length === 0
-  if (
-    needSidebar &&
-    Array.isArray(donor.sidebar) &&
-    donor.sidebar.length > 0
-  ) {
+  const needSidebar = !Array.isArray(out.sidebar) || out.sidebar.length === 0
+  const needLayers = !Array.isArray(out.layers) || out.layers.length === 0
+  if (needSidebar && Array.isArray(donor.sidebar) && donor.sidebar.length > 0) {
     out = {
       ...out,
       sidebar: deepcopy(donor.sidebar) as GADGET_STATE['sidebar'],
@@ -166,9 +159,7 @@ function mergepeergadgetchrome(
       exitsw: donor.exitsw,
       ...(donor.over ? { over: deepcopy(donor.over) } : {}),
       ...(donor.under ? { under: deepcopy(donor.under) } : {}),
-      ...(donor.synthstate
-        ? { synthstate: deepcopy(donor.synthstate) }
-        : {}),
+      ...(donor.synthstate ? { synthstate: deepcopy(donor.synthstate) } : {}),
     }
   }
   return out
