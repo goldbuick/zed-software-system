@@ -8,6 +8,7 @@ import {
 } from './device/forward'
 import { registerreadplayer } from './device/register'
 import { SOFTWARE } from './device/session'
+import { isjoin } from './feature/url'
 import heavyspace from './heavyspace??worker'
 import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
@@ -31,7 +32,10 @@ export function createplatform(isstub = false, climode = false) {
   boardrunner = new boardrunnerspace()
   boardrunner.postMessage({
     target: 'registerplayer',
-    data: registerreadplayer(),
+    data: {
+      player: registerreadplayer(),
+      isjoinplayer: isjoin(),
+    },
   })
 
   // create backend
