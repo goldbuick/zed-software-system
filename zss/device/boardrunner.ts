@@ -12,9 +12,9 @@ import {
 } from 'zss/memory/boards'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import {
+  boardstream,
   isboardstream,
   isflagsstream,
-  isgadgetstream,
   ismemorystream,
 } from 'zss/memory/memorydirty'
 import {
@@ -32,7 +32,17 @@ import { memoryreadsynth } from 'zss/memory/synthstate'
 import { BOARD } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
-import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
+import {
+  JSONSYNC_CHANGED,
+  MESSAGE,
+  rxreplpullrequest,
+  vmclearscroll,
+} from './api'
+import {
+  registerRxreplBoardRowAppliedCallback,
+  rxreplclientdevice,
+  rxreplclientreadstream,
+} from './rxreplclient'
 import {
   handlepilotclear,
   handlepilotstart,
@@ -55,8 +65,43 @@ function shouldboardrunnerhandlestreamchanged(target: string): boolean {
 // jsonsync resync + gadget baselines treat both layers as ours.
 let assignedboard = ''
 let assignedplayer = ''
-export function setassignedplayer(player: string) {
+let assignedisjoinplayer = false
+let pullthrottleboard = ''
+let pullthrottletime = 0
+
+/** Sim may admit `board:<id>` before the first `stream_row` reaches this worker. */
+function maybeboardstreampullrequest(): void {
+  if (!isstring(assignedboard) || assignedboard.length === 0) {
+    pullthrottleboard = ''
+    return
+  }
+  const sid = boardstream(assignedboard)
+  if (ispresent(rxreplclientreadstream(sid))) {
+    pullthrottleboard = ''
+    return
+  }
+  if (runnerboardforrenderandsource().source !== 'none') {
+    pullthrottleboard = ''
+    return
+  }
+  if (!isstring(assignedplayer) || assignedplayer.length === 0) {
+    return
+  }
+  const now = Date.now()
+  if (pullthrottleboard === assignedboard && now - pullthrottletime < 500) {
+    return
+  }
+  pullthrottleboard = assignedboard
+  pullthrottletime = now
+  rxreplpullrequest(rxreplclientdevice, assignedplayer, {
+    checkpoint: null,
+    streamids: [sid],
+  })
+}
+
+export function setassignedplayer(player: string, isjoinplayer: boolean) {
   assignedplayer = player
+  assignedisjoinplayer = isjoinplayer
 }
 
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
@@ -90,15 +135,74 @@ function rebuildownedboardids() {
   }
 }
 
+function runnerboardfromrxrepl(boardid: string): BOARD | undefined {
+  const row = rxreplclientreadstream(boardstream(boardid))
+  if (!row?.document || typeof row.document !== 'object') {
+    return undefined
+  }
+  const incomingboard = (row.document as Record<string, unknown>).board
+  if (!ispresent(incomingboard) || typeof incomingboard !== 'object') {
+    return undefined
+  }
+  return incomingboard as BOARD
+}
+
+type RunnerBoardSource = 'flags' | 'memory' | 'rxrepl' | 'none'
+
+/** Board for the elected worker: flags, then MEMORY, then rxrepl raw `.board`. */
+function runnerboardforrenderandsource(): {
+  board: BOARD | undefined
+  source: RunnerBoardSource
+} {
+  const fromflags = memoryreadplayerboard(assignedplayer)
+  if (ispresent(fromflags)) {
+    return { board: fromflags, source: 'flags' }
+  }
+  if (isstring(assignedboard) && assignedboard.length > 0) {
+    const stream = boardstream(assignedboard)
+    let frommem = memoryreadboardbyaddress(assignedboard)
+    if (!ispresent(frommem)) {
+      const row = rxreplclientreadstream(stream)
+      if (row?.document && typeof row.document === 'object') {
+        // Worker rxrepl can have `board:<id>` before `board:<id>:changed` hydrates
+        // MEMORY (hub ordering). Merge the shadow row into MEMORY and re-read.
+        memoryhydratefromjsonsync(stream, row.document)
+        frommem = memoryreadboardbyaddress(assignedboard)
+      }
+    }
+    if (ispresent(frommem)) {
+      return { board: frommem, source: 'memory' }
+    }
+    const fromrx = runnerboardfromrxrepl(assignedboard)
+    if (ispresent(fromrx)) {
+      return { board: fromrx, source: 'rxrepl' }
+    }
+  }
+  return { board: undefined, source: 'none' }
+}
+
 function ownedplayers(): string[] {
   if (ownedboards.size === 0) {
     return []
   }
   const players = memoryreadplayers()
-  return players.filter((player) => {
+  const out = players.filter((player) => {
     const playerboard = memoryreadplayerboard(player)
     return ispresent(playerboard) && ownedboards.has(playerboard.id)
   })
+  // Join (or any) client can become runner before `flags:<pid>` hydrates the
+  // worker shadow; `memoryreadplayerboard` is empty so the filter would drop
+  // everyone including the runner. Always admit the assigned worker pid when
+  // we already own a resolved board id in `ownedboards`.
+  if (
+    isstring(assignedplayer) &&
+    assignedplayer.length > 0 &&
+    !out.includes(assignedplayer) &&
+    ownedboards.size > 0
+  ) {
+    out.push(assignedplayer)
+  }
+  return out
 }
 
 function rendergadgetlayers(
@@ -127,8 +231,7 @@ function rendergadgetlayers(
 }
 
 function rendergadgetstate(players: string[]) {
-  // render the board visuals
-  const playerboard = memoryreadplayerboard(assignedplayer)
+  const { board: playerboard } = runnerboardforrenderandsource()
   if (ispresent(playerboard)) {
     // read A/V state
     const synthstate = memoryreadsynth(playerboard.id ?? '')
@@ -146,6 +249,7 @@ function rendergadgetstate(players: string[]) {
 
 function runworkertick(dev: ReturnType<typeof createdevice>): void {
   rebuildownedboardids()
+  maybeboardstreampullrequest()
   if (memoryreadfreeze()) {
     return
   }
@@ -167,6 +271,28 @@ function runworkertick(dev: ReturnType<typeof createdevice>): void {
   })
 }
 
+let rxreplboardnotifydepth = 0
+registerRxreplBoardRowAppliedCallback(() => {
+  if (rxreplboardnotifydepth > 0) {
+    return
+  }
+  rxreplboardnotifydepth++
+  try {
+    rebuildownedboardids()
+    if (memoryreadfreeze()) {
+      return
+    }
+    const players = ownedplayers()
+    if (players.length === 0) {
+      return
+    }
+    rendergadgetstate(players)
+    memoryworkerpushdirty()
+  } finally {
+    rxreplboardnotifydepth--
+  }
+})
+
 const boardrunner = createdevice(
   'boardrunner',
   ['ticktock', 'memory', 'flags', 'board'],
@@ -174,6 +300,7 @@ const boardrunner = createdevice(
     if (!boardrunner.session(message)) {
       return
     }
+    // console.info('<', message)
 
     // filter messages by target
     const shouldhandle = shouldboardrunnerhandlestreamchanged(message.target)
@@ -198,7 +325,14 @@ const boardrunner = createdevice(
     // handle messages
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
-      memoryhydratefromjsonsync(payload.streamid, payload.document)
+      // `streamid:changed` from jsonsyncdb uses `streamsyncchanged` → emit(..., '', target)
+      // so `message.player` is always ''. Hydrate all memory/board/flags streams the
+      // worker mirror holds (including neighbor boards); see host-vs-join-architecture.md.
+      memoryhydratefromjsonsync(
+        payload.streamid,
+        payload.document,
+        assignedisjoinplayer,
+      )
       rebuildownedboardids()
       return
     }
@@ -215,6 +349,9 @@ const boardrunner = createdevice(
         }
         assignedboard = next
         rebuildownedboardids()
+        if (next.length > 0) {
+          maybeboardstreampullrequest()
+        }
         if (import.meta.env.DEV) {
           console.info('>>', assignedplayer)
           console.info('------------------', assignedboard)

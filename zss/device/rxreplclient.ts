@@ -2,8 +2,8 @@
 Strategy B: client-side rxrepl. memory/board stream_row, push_ack, pull_response,
 notify, resync. Persisted streams emit `${streamid}:changed` from jsonsyncdb.
 */
-import { createdevice } from 'zss/device'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { createdevice, parsetarget } from 'zss/device'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { type MESSAGE } from './api'
 import {
@@ -13,9 +13,24 @@ import {
   streamreplensureclientdb,
   streamreplregisterstreamchangeddevice,
 } from './jsonsyncdb'
-import type { RXREPL_PUSH_ACK, RXREPL_STREAM_DOCUMENT } from './rxrepl/types'
+import type {
+  RXREPL_PULL_RESPONSE,
+  RXREPL_PUSH_ACK,
+  RXREPL_STREAM_DOCUMENT,
+} from './rxrepl/types'
 
 const streams = streamreplclientstreammap
+
+/** Boardrunner registers once; avoids rxreplclient importing boardrunner. */
+let rxreplboardrowapplied: (() => void) | undefined
+
+export function registerRxreplBoardRowAppliedCallback(cb: () => void): void {
+  rxreplboardrowapplied = cb
+}
+
+function notifyRxreplBoardRowApplied(): void {
+  rxreplboardrowapplied?.()
+}
 
 let ownplayerid = ''
 
@@ -50,38 +65,78 @@ export function rxreplclientreadstreams(): Map<
   return streams
 }
 
-function applystreamrow(payload: RXREPL_STREAM_DOCUMENT): void {
+function applystreamrow(
+  payload: RXREPL_STREAM_DOCUMENT,
+  options?: { deferBoardNotify?: boolean },
+): boolean {
   if (!ispresent(payload) || !isstring(payload.streamid)) {
-    return
+    return false
   }
   const prev = streams.get(payload.streamid)
   const rev = payload.rev
   if (ispresent(prev) && rev < prev.rev) {
-    return
+    return false
   }
   const next: STREAMREPL_CLIENT_STREAM = {
     document: payload.document,
     rev,
   }
   streams.set(payload.streamid, next)
+  const isboard = payload.streamid.startsWith('board:')
+  if (isboard && !options?.deferBoardNotify) {
+    notifyRxreplBoardRowApplied()
+  }
+  return isboard
 }
 
 let clientready = false
 const pendingclientmessages: MESSAGE[] = []
 
+/** Pending-queue replay calls this without `createdevice.handle` path folding. */
+function rxrepllocalmessagetarget(target: string): string {
+  const r = parsetarget(target)
+  return r.target === 'rxreplclient' && r.path.length > 0 ? r.path : target
+}
+
 function processrxreplclientmessage(message: MESSAGE): void {
+  const localtarget = rxrepllocalmessagetarget(message.target)
+  // Replication payloads must not wait on `session(message)` (often still false on
+  // the boardrunner worker when sim `admit` + `pull_response`/`stream_row` land in
+  // the same tick as the first `ticktock` — H-G had hasRxRow:false after H-P).
+  if (localtarget === 'pull_response' && ispresent(message.data)) {
+    const body = message.data as RXREPL_PULL_RESPONSE
+    const docs = body.documents
+    if (isarray(docs)) {
+      captureownplayer(message.player)
+      let anyboard = false
+      for (let i = 0; i < docs.length; ++i) {
+        if (
+          applystreamrow(docs[i] as RXREPL_STREAM_DOCUMENT, {
+            deferBoardNotify: true,
+          })
+        ) {
+          anyboard = true
+        }
+      }
+      if (anyboard) {
+        notifyRxreplBoardRowApplied()
+      }
+    }
+    return
+  }
+  if (localtarget === 'stream_row' && ispresent(message.data)) {
+    captureownplayer(message.player)
+    applystreamrow(message.data as RXREPL_STREAM_DOCUMENT)
+    return
+  }
+
   if (!rxreplclientdevice.session(message)) {
     return
   }
 
   captureownplayer(message.player)
 
-  switch (message.target) {
-    case 'stream_row': {
-      const row = message.data as RXREPL_STREAM_DOCUMENT
-      applystreamrow(row)
-      break
-    }
+  switch (localtarget) {
     case 'push_ack': {
       const ack = message.data as RXREPL_PUSH_ACK
       if (!ack?.accepted?.length) {
@@ -103,7 +158,39 @@ function processrxreplclientmessage(message: MESSAGE): void {
 }
 
 const rxreplclientdevice = createdevice('rxreplclient', [], (message) => {
+  const localtarget = rxrepllocalmessagetarget(message.target)
   if (!clientready) {
+    // Boardrunner (and other consumers) read `streamreplclientstreammap` before
+    // `streamreplensureclientdb()` resolves; without this, `rxreplclient:stream_row`
+    // was queued but the Map stayed empty until init finished — first ticks saw no
+    // `board:*` / `memory` shadow (debug H-G: hasRxRow false while rows were pending).
+    // Do not gate on `session(message)` here: before the first `ready`, the
+    // device session is still '' while `message.session` is already set, so
+    // `session(message)` returns '' and we would skip repl rows that beat
+    // `ready` on the wire (join boardrunner still saw H-G hasRxRow:false).
+    if (localtarget === 'stream_row' && ispresent(message.data)) {
+      captureownplayer(message.player)
+      applystreamrow(message.data as RXREPL_STREAM_DOCUMENT)
+    }
+    if (localtarget === 'pull_response' && ispresent(message.data)) {
+      const body = message.data as RXREPL_PULL_RESPONSE
+      const docs = body.documents
+      if (isarray(docs)) {
+        let anyboard = false
+        for (let i = 0; i < docs.length; ++i) {
+          if (
+            applystreamrow(docs[i] as RXREPL_STREAM_DOCUMENT, {
+              deferBoardNotify: true,
+            })
+          ) {
+            anyboard = true
+          }
+        }
+        if (anyboard) {
+          notifyRxreplBoardRowApplied()
+        }
+      }
+    }
     pendingclientmessages.push(message)
     return
   }

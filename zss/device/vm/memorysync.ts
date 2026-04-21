@@ -30,13 +30,8 @@ import {
   streamreplserverregister,
   streamreplserverupdate,
 } from 'zss/device/streamreplserver'
-import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import {
-  memoryreadbookflag,
-  memoryreadbookflags,
-} from 'zss/memory/bookoperations'
+import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import {
   boardidfromboardstream,
@@ -58,7 +53,6 @@ import {
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
-  memoryreadoperator,
   memoryreadroot,
   memorywritebook,
 } from 'zss/memory/session'
@@ -71,6 +65,10 @@ import {
 } from 'zss/memory/types'
 
 import { ackboardrunners } from './state'
+import {
+  collectviewportpidsforboard,
+  gadgetseedsidebarfromviewportpeers,
+} from './memorygadgetseed'
 import { mergeflagspreservingvolatile } from './memoryhydrate'
 import {
   BOARD_SYNC_TOPKEYS,
@@ -101,59 +99,10 @@ export function memorysyncensureboardregistered(codepage: CODE_PAGE): void {
   streamreplserverupdate(stream, projected)
 }
 
-function resolvedboardid(mainbook: BOOK, player: string): string {
-  const flag = memoryreadbookflag(mainbook, player, 'board')
-  if (!isstring(flag) || !flag) {
-    return ''
-  }
-  const resolved = memoryreadboardbyaddress(flag)
-  return ispresent(resolved?.id) && resolved.id.length > 0 ? resolved.id : flag
-}
-
-function collectviewportpidsforboard(boardid: string): string[] {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return []
-  }
-  const out: string[] = []
-  const seen = new Set<string>()
-  const active = mainbook.activelist ?? []
-  for (let i = 0; i < active.length; ++i) {
-    const p = active[i]
-    const bid = resolvedboardid(mainbook, p)
-    if (bid === boardid) {
-      out.push(p)
-      seen.add(p)
-    }
-  }
-  const op = memoryreadoperator()
-  if (isstring(op) && op.length > 0 && !seen.has(op)) {
-    const opbid = resolvedboardid(mainbook, op)
-    if (opbid === boardid) {
-      out.push(op)
-    }
-  }
-  // Joiners (and others) can have `flags.board` on this board before they are
-  // promoted into `activelist`; still need gadget/flags streamrepl admission.
-  const flagids = Object.keys(mainbook.flags ?? {})
-  for (let i = 0; i < flagids.length; ++i) {
-    const p = flagids[i]
-    if (!ispid(p) || p.endsWith('_chip') || seen.has(p)) {
-      continue
-    }
-    const bid = resolvedboardid(mainbook, p)
-    if (bid === boardid) {
-      out.push(p)
-      seen.add(p)
-    }
-  }
-  return out
-}
-
 export function memorysyncensuregadgetregistered(player: string): void {
   memorysyncensureregistered()
   const streamid = gadgetstream(player)
-  const projected = projectgadget(player)
+  const projected = gadgetseedsidebarfromviewportpeers(player, projectgadget(player))
   if (!ispresent(streamreplserverreadstream(streamid))) {
     streamreplserverregister(streamid, projected)
     return
@@ -465,7 +414,7 @@ export function memorysyncpushdirty(): void {
     if (isgadgetstream(stream)) {
       const pid = playeridfromgadgetstream(stream)
       if (pid) {
-        const projected = projectgadget(pid)
+        const projected = gadgetseedsidebarfromviewportpeers(pid, projectgadget(pid))
         streamreplserverupdate(stream, projected)
       }
       continue

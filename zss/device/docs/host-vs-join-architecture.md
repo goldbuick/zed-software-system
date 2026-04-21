@@ -89,11 +89,19 @@ Loaded in [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts); core device [`
 
 | Routing name | File | Role |
 |---|---|---|
-| `boardrunner` | [`zss/device/boardrunner.ts`](../boardrunner.ts) | Authoritative tick for **owned** boards: `jsonsync:changed` → hydrate; `ticktock` → `runworkertick` (pilot + `memorytickmain` + gadget sync + `memoryworkerpushdirty`); `ownedboards`; `desync`; `clearscroll`. |
+| `boardrunner` | [`zss/device/boardrunner.ts`](../boardrunner.ts) | Authoritative tick for **owned** boards: per-stream **`memory:changed` / `board:*:changed` / `flags:*:changed`** (from RxDB persist hook) → hydrate; `ticktock` → `runworkertick` (pilot + `memorytickmain` + gadget sync + `memoryworkerpushdirty`); `ownedboards`; `desync`; `clearscroll`. |
 | `user` | [`zss/device/boardrunneruser.ts`](../boardrunneruser.ts) 39–58 | Worker `user:input`, `user:pilotstart/stop/clear`. |
 | `rxreplclient` | [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts) | Same **`rxreplclient`** as main (side-effect import). |
 | `gadgetmemoryprovider` | [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts) 8 | Worker gadget store + dirty marking ([`boardrunner.ts`](../boardrunner.ts) 34–57). |
 | `forward` | [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts) 11–21 | `allowticktock: true` so `ticktock` is not dropped at worker boundary ([`forward.ts`](../forward.ts) 17–26). |
+
+#### Worker `streamid:changed` → boardrunner hydrate (no wrong-tab “player bleed”)
+
+1. Sim (or host path) delivers **`rxreplclient:stream_row`** to the **main** hub; [`shouldforwardclienttoboardrunner`](../forward.ts) forwards the same `MESSAGE` into the **boardrunner worker** ([`platform.ts`](../../platform.ts)).
+2. Worker [`rxreplclient`](../rxreplclient.ts) applies the row into `streamreplclientstreammap`. Each `Map.set` triggers [`streamreplpersistclientstream`](../jsonsyncdb.ts) → RxDB upsert → **`streamsyncchanged(rxreplclientdevice, payload)`** ([`api.ts`](../api.ts) `streamsyncchanged`).
+3. `streamsyncchanged` emits **`device.emit('', \`${streamid}:changed\`, payload)`** — the routed target is literally `memory:changed`, `board:<id>:changed`, or `flags:<pid>:changed`. The **`player` field is always `''`**; it is **not** the sim peer id and cannot be used to detect “wrong user” bleed for this path.
+4. [`boardrunner`](../boardrunner.ts) subscribes to topics `memory`, `board`, `flags`, so it receives all such notifications on the **worker** hub. [`shouldboardrunnerhandlestreamchanged`](../boardrunner.ts) limits handling to `memory`, `board:*`, and `flags:*` (not `gadget:*`).
+5. **Cross-board `board:*` updates are intentional:** the sim admits the runner to multiple board streams for neighbor context ([`memorysync.ts`](../vm/memorysync.ts)); the worker hydrates each snapshot into local MEMORY. **Optional future tightening** (hydrate only owned + known-neighbor ids) requires an explicit product rule — do not gate ad hoc without one.
 
 ---
 
