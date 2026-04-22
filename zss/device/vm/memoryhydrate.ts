@@ -288,8 +288,7 @@ export function mergeflagspreservingvolatile(
   }
   // remove entries not present in incoming — this is how endgame/halt reaches
   // the worker: the sim deletes flags[chipid] (or flags[pid]) and the missing
-  // entry propagates here. chip.isstale() + os.boot will pick up the orphaned
-  // chip closure on the next tick.
+  // entry propagates here.
   const existingids = Object.keys(existing)
   for (let i = 0; i < existingids.length; ++i) {
     const id = existingids[i]

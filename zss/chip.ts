@@ -40,15 +40,6 @@ export type CHIP = {
   halt: () => void
 
   /**
-   * Returns true when this chip's closed-over flags reference no longer matches
-   * mainbook.flags[chipid] — which happens when another worker (sim) halted
-   * or replaced the chip's memory entry and the change reached us via jsonsync.
-   * A stale chip should be dropped so a fresh instance re-runs @firstpulse.
-   * @returns true if the chip's memory entry was externally reset
-   */
-  isstale: () => boolean
-
-  /**
    * Returns the unique identifier of this chip.
    * @returns The chip's ID string
    */
@@ -581,14 +572,6 @@ export function createchip(
     halt() {
       memoryclearflags(mem)
     },
-    isstale() {
-      // if mainbook.flags[mem] !== our closed-over flags, our entry was
-      // deleted/replaced externally (e.g. sim-side memoryhaltchip followed by
-      // jsonsync hydrate). memoryreadflags creates a fresh entry on miss, so
-      // the strict-inequality check both covers deletion and replacement.
-      return memoryreadflags(mem) !== flags
-    },
-    // id
     id() {
       return id
     },
