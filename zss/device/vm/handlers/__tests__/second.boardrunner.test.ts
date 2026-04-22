@@ -2,7 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
 import { handlesecond } from 'zss/device/vm/handlers/second'
-import * as memorysync from 'zss/device/vm/memorysync'
+import * as memorysync from 'zss/device/vm/memorysimsync'
 import {
   BOARDRUNNER_ACK_FAIL_COUNT,
   ackboardrunners,

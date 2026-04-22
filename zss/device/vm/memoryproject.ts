@@ -1,29 +1,62 @@
 /*
 memoryproject: pure projections from MEMORY into jsonsync-shippable plain
-objects. Lives below memorysync (server-side) and memoryworkersync
-(worker-side) so neither side has to depend on the other's transport-only
-helpers (jsonsyncserver vs jsonsyncclient). All projections are deepcopy-safe
-and never mutate live MEMORY references.
+objects, plus sim-side unproject (merge accepted rxrepl rows back into the
+canonical MEMORY singleton). Lives below memorysync (server-side) and
+memoryworkersync (worker-side) so neither side depends on the other's
+transport-only helpers. Projections are deepcopy-safe and never mutate live
+MEMORY references; unproject mutates MEMORY under `memorywithsilentwrites`.
 */
 import { initstate } from 'zss/gadget/data/api'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
-import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
+import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
-import { boardstream } from 'zss/memory/memorydirty'
-import { memoryreadbookbysoftware, memoryreadroot } from 'zss/memory/session'
+import { memoryreadcodepagebyid } from 'zss/memory/codepages'
+import {
+  boardfromboardstream,
+  boardstream,
+  isboardstream,
+  isflagsstream,
+  isgadgetstream,
+  ismemorystream,
+  memorywithsilentwrites,
+  playerfromflagsstream,
+  playerfromgadgetstream,
+} from 'zss/memory/memorydirty'
+import {
+  memoryclearbook,
+  memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
+  memoryreadbooklist,
+  memoryreadroot,
+  memorywritebook,
+} from 'zss/memory/session'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOOK,
+  BOOK_FLAGS,
   CODE_PAGE,
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
+import {
+  mergebookpagesfrommemoryprojection,
+  mergeflagspreservingvolatile,
+} from './memoryhydrate'
+
+// ---------------------------------------------------------------------------
+// stream ids
+// ---------------------------------------------------------------------------
+
 export function boardstreamfromcodepage(codepage: CODE_PAGE): string {
   return boardstream(codepage.id)
 }
+
+// ---------------------------------------------------------------------------
+// shared projection contracts (constants)
+// ---------------------------------------------------------------------------
 
 // what ships in the `memory` stream.
 // - `halt` is the dev-mode flag (#dev): when on, runners still tick player
@@ -41,6 +74,15 @@ export const MEMORY_SYNC_TOPKEYS = [
   'halt',
   'freeze',
 ] as const
+
+// Root scalars applied on sim unproject (books handled separately).
+const MEMORY_UNPROJECT_SCALAR_KEYS: readonly string[] = [
+  'freeze',
+  'halt',
+  'operator',
+  'session',
+  'software',
+]
 
 // BOARD fields every client needs to render / step the board. runtime caches
 // (draw fingerprints, distmaps, named/lookup indexes) are excluded because
@@ -130,6 +172,16 @@ export const BOARD_ELEMENT_SYNC_TOPKEYS: readonly string[] = [
   'shooty',
 ]
 
+const BOOK_UNPROJECT_SCALAR_KEYS: readonly string[] = [
+  'name',
+  'activelist',
+  'token',
+]
+
+// ---------------------------------------------------------------------------
+// MEMORY stream — project / unproject
+// ---------------------------------------------------------------------------
+
 function picktopkeys(
   source: Record<string, unknown>,
   keys: readonly string[],
@@ -177,6 +229,173 @@ function isboardcodepageforprojection(page: CODE_PAGE): boolean {
   return page.stats?.type === CODE_PAGE_TYPE.BOARD || ispresent(page.board)
 }
 
+// convert a BOOK for the `memory` stream: deepcopy, project BOARD pages as
+// shells (id/code/stats.type); full bodies use `board:${id}` streams. drop
+// `timestamp` (server-local clock metadata; clients re-derive cadence from
+// `ticktock`). flags are taken from the deepcopy as-is (gadgetstore and per-
+// player ids on the main book are still removed below).
+function projectbook(book: BOOK): unknown {
+  const copy = deepcopy(book) as unknown as Record<string, unknown>
+  const pages = copy.pages as CODE_PAGE[] | undefined
+  if (ispresent(pages)) {
+    copy.pages = pages.map((page) =>
+      isboardcodepageforprojection(page)
+        ? projectboardcodepageformemoryshell(page)
+        : page,
+    )
+  }
+  if (ispresent(copy.flags) && typeof copy.flags === 'object') {
+    delete (copy.flags as Record<string, unknown>)[MEMORY_LABEL.GADGETSTORE]
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    if (ispresent(mainbook) && book.id === mainbook.id) {
+      const projectedflags = copy.flags as Record<string, unknown>
+      const flagkeys = Object.keys(projectedflags)
+      for (let i = 0; i < flagkeys.length; ++i) {
+        const fk = flagkeys[i]
+        if (ispid(fk)) {
+          delete projectedflags[fk]
+        }
+      }
+    }
+  }
+  delete copy.timestamp
+  return copy
+}
+
+// project the MEMORY root into a jsonsync-shippable plain object.
+// - top-level keys filtered to MEMORY_SYNC_TOPKEYS
+// - books Map -> Record<bookid, BOOK>, each BOOK via projectbook (BOARD shells)
+// - loaders (excluded by allowlist) and topic/halt never appear
+export function projectmemory(): unknown {
+  const root = memoryreadroot() as unknown as Record<string, unknown>
+  const picked = picktopkeys(root, MEMORY_SYNC_TOPKEYS as readonly string[])
+  if (picked.books instanceof Map) {
+    const record: Record<string, unknown> = {}
+    for (const [id, book] of picked.books.entries()) {
+      record[id] = projectbook(book as BOOK)
+    }
+    picked.books = record
+  }
+  return picked
+}
+
+function createbookfromincoming(
+  bookid: string,
+  incomingbook: Record<string, unknown>,
+): BOOK | undefined {
+  const name = isstring(incomingbook.name) ? incomingbook.name : ''
+  const book: BOOK = {
+    id: bookid,
+    name,
+    timestamp: 0,
+    activelist: isarray(incomingbook.activelist)
+      ? (deepcopy(incomingbook.activelist) as string[])
+      : [],
+    pages: isarray(incomingbook.pages)
+      ? (deepcopy(incomingbook.pages) as CODE_PAGE[])
+      : [],
+    flags:
+      ispresent(incomingbook.flags) && typeof incomingbook.flags === 'object'
+        ? (deepcopy(incomingbook.flags) as Record<string, BOOK_FLAGS>)
+        : {},
+  }
+  if (isstring(incomingbook.token)) {
+    ;(book as unknown as Record<string, unknown>).token = incomingbook.token
+  }
+  return book
+}
+
+function mergebookscalars(book: BOOK, incoming: Record<string, unknown>): void {
+  for (let i = 0; i < BOOK_UNPROJECT_SCALAR_KEYS.length; ++i) {
+    const key = BOOK_UNPROJECT_SCALAR_KEYS[i]
+    if (Object.prototype.hasOwnProperty.call(incoming, key)) {
+      // book.timestamp is intentionally NOT in the projection; runners never
+      // see it, so we never overwrite it here either.
+      ;(book as unknown as Record<string, unknown>)[key] = incoming[key]
+    }
+  }
+}
+
+function mergebookflags(book: BOOK, incoming: Record<string, unknown>): void {
+  if (!Object.prototype.hasOwnProperty.call(incoming, 'flags')) {
+    return
+  }
+  const flags = incoming.flags
+  if (!ispresent(flags) || typeof flags !== 'object') {
+    return
+  }
+  book.flags = mergeflagspreservingvolatile(
+    book.flags,
+    flags as Record<string, Record<string, unknown>>,
+    book.activelist ?? [],
+  )
+}
+
+export function unprojectmemory(document: Record<string, unknown>): void {
+  const root = memoryreadroot() as unknown as Record<string, unknown>
+  for (let i = 0; i < MEMORY_UNPROJECT_SCALAR_KEYS.length; ++i) {
+    const key = MEMORY_UNPROJECT_SCALAR_KEYS[i]
+    if (Object.prototype.hasOwnProperty.call(document, key)) {
+      const value = document[key]
+      if (key === 'software' && ispresent(value) && typeof value === 'object') {
+        // shallow merge so we don't replace the live `software` object
+        // reference observed elsewhere in MEMORY readers.
+        Object.assign(
+          root.software as Record<string, unknown>,
+          value as Record<string, unknown>,
+        )
+      } else {
+        root[key] = value as never
+      }
+    }
+  }
+  const incoming = document.books as Record<string, unknown> | undefined
+  if (!ispresent(incoming) || typeof incoming !== 'object') {
+    return
+  }
+  const incomingids = Object.keys(incoming)
+  const seen = new Set<string>()
+  for (let i = 0; i < incomingids.length; ++i) {
+    const bookid = incomingids[i]
+    const incomingbook = incoming[bookid] as Record<string, unknown>
+    if (!ispresent(incomingbook)) {
+      continue
+    }
+    seen.add(bookid)
+    const localbook = memoryreadbookbyaddress(bookid)
+    if (!ispresent(localbook)) {
+      // Phase 4 book add: materialize a new BOOK from the incoming record.
+      // Memory stream `pages` include BOARD shells; bodies replicate on
+      // `board:<id>` streams and unproject separately.
+      const created = createbookfromincoming(bookid, incomingbook)
+      if (ispresent(created)) {
+        memorywritebook(created)
+      }
+      continue
+    }
+    mergebookscalars(localbook, incomingbook)
+    mergebookflags(localbook, incomingbook)
+    mergebookpagesfrommemoryprojection(localbook, incomingbook.pages)
+  }
+  // Phase 4 book remove: any local book id not mentioned by the incoming
+  // document dropped out of the authoritative projection and must be
+  // deleted locally. We only act on the SERVER side of reverse-projection
+  // (where the stream document IS the authority). The memory stream's
+  // projection always includes every MEMORY.books entry, so absence is a
+  // real delete signal and not a partial view.
+  const locals = memoryreadbooklist()
+  for (let i = 0; i < locals.length; ++i) {
+    const local = locals[i]
+    if (!seen.has(local.id)) {
+      memoryclearbook(local.id)
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// BOARD stream — project / unproject
+// ---------------------------------------------------------------------------
+
 /** BOARD row on the `memory` stream: id, code, and `stats.type` only (no `board` body). */
 export function projectboardcodepageformemoryshell(
   codepage: CODE_PAGE,
@@ -201,107 +420,48 @@ export function projectboardcodepage(codepage: CODE_PAGE): unknown {
   return copy
 }
 
-// flag sub-keys the boardrunner worker owns exclusively. they live on
-// book.flags[id][name] and mutate every tick (inputqueue is consumed by the
-// firmware; inputcurrent is tick-local and cleared in memorytickobject, which
-// the server does not run for boards under Phase 2 — so it would go stale on
-// the canonical doc and hydrate back onto the worker blocking readinput).
-// synthstate/synthplay are owned by the synth device. shipping these over the
-// memory stream would (a) burn diff cycles for no reason and (b) let the
-// server clobber live worker state on hydrate. memoryhydrate.ts preserves
-// these same keys when replacing `book.flags` so the round-trip is safe.
-export const VOLATILE_FLAG_KEYS: readonly string[] = [
-  // 'inputqueue',
-  // 'inputcurrent',
-  // 'synthstate',
-  // 'synthplay',
-]
-
-function stripvolatileflags(
-  flags: Record<string, unknown>,
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  const ids = Object.keys(flags)
-  for (let i = 0; i < ids.length; ++i) {
-    const id = ids[i]
-    const entry = flags[id]
-    if (!ispresent(entry) || typeof entry !== 'object') {
-      out[id] = entry
-      continue
-    }
-    const src = entry as Record<string, unknown>
-    const dst: Record<string, unknown> = {}
-    const keys = Object.keys(src)
-    for (let j = 0; j < keys.length; ++j) {
-      const key = keys[j]
-      if (VOLATILE_FLAG_KEYS.includes(key)) {
-        continue
-      }
-      dst[key] = src[key]
-    }
-    out[id] = dst
+/** Resolve a `board:<id>` stream id to the live codepage (if any). */
+export function codepagefromboardstream(stream: string): CODE_PAGE | undefined {
+  if (!isboardstream(stream)) {
+    return undefined
   }
-  return out
+  const id = boardfromboardstream(stream)
+  if (!id) {
+    return undefined
+  }
+  return memoryreadcodepagebyid(id)
 }
 
-// convert a BOOK for the `memory` stream: deepcopy, project BOARD pages as
-// shells (id/code/stats.type); full bodies use `board:${id}` streams. drop
-// `timestamp` (server-local clock metadata; clients re-derive cadence from
-// `ticktock`), and strip VOLATILE_FLAG_KEYS from every flags[id] record so
-// worker-local queues never round-trip through the server.
-function projectbook(book: BOOK): unknown {
-  const copy = deepcopy(book) as unknown as Record<string, unknown>
-  const pages = copy.pages as CODE_PAGE[] | undefined
-  if (ispresent(pages)) {
-    copy.pages = pages.map((page) =>
-      isboardcodepageforprojection(page)
-        ? projectboardcodepageformemoryshell(page)
-        : page,
-    )
+export function unprojectboardstream(
+  streamid: string,
+  document: Record<string, unknown>,
+): void {
+  const codepage = codepagefromboardstream(streamid)
+  if (!ispresent(codepage) || !ispresent(codepage.board)) {
+    return
   }
-  if (ispresent(copy.flags) && typeof copy.flags === 'object') {
-    copy.flags = stripvolatileflags(copy.flags as Record<string, unknown>)
-    delete (copy.flags as Record<string, unknown>)[MEMORY_LABEL.GADGETSTORE]
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    if (ispresent(mainbook) && book.id === mainbook.id) {
-      const projectedflags = copy.flags as Record<string, unknown>
-      const flagkeys = Object.keys(projectedflags)
-      for (let i = 0; i < flagkeys.length; ++i) {
-        const fk = flagkeys[i]
-        if (ispid(fk)) {
-          delete projectedflags[fk]
-        }
-      }
+  // overlay the BOARD_SYNC_TOPKEYS fields from the incoming document.board
+  const incomingboard = document.board as Record<string, unknown> | undefined
+  if (!ispresent(incomingboard) || typeof incomingboard !== 'object') {
+    return
+  }
+  const target = codepage.board as unknown as Record<string, unknown>
+  for (let i = 0; i < BOARD_SYNC_TOPKEYS.length; ++i) {
+    const key = BOARD_SYNC_TOPKEYS[i]
+    if (Object.prototype.hasOwnProperty.call(incomingboard, key)) {
+      target[key] = incomingboard[key]
     }
   }
-  delete copy.timestamp
-  return copy
+  // any non-board codepage scalars (e.g. `code`) come along too
+  const codepageasrecord = codepage as unknown as Record<string, unknown>
+  if (Object.prototype.hasOwnProperty.call(document, 'code')) {
+    codepageasrecord.code = document.code
+  }
 }
 
-/** Full-document flags stream: one player's flag bag from main book, volatile keys stripped. */
-export function projectplayerflags(player: string): Record<string, unknown> {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return {}
-  }
-  const raw = memoryreadbookflags(mainbook, player) as unknown as Record<
-    string,
-    unknown
-  >
-  if (!ispresent(raw) || typeof raw !== 'object') {
-    return {}
-  }
-  const dst: Record<string, unknown> = {}
-  const keys = Object.keys(raw)
-  for (let i = 0; i < keys.length; ++i) {
-    const key = keys[i]
-    if (VOLATILE_FLAG_KEYS.includes(key)) {
-      continue
-    }
-    dst[key] = raw[key]
-  }
-  return deepcopy(dst)
-}
+// ---------------------------------------------------------------------------
+// GADGET stream — project / unproject
+// ---------------------------------------------------------------------------
 
 /** Full-document gadget stream: one player's `GADGET_STATE` from main book gadgetstore. */
 export function projectgadget(player: string): GADGET_STATE {
@@ -317,19 +477,87 @@ export function projectgadget(player: string): GADGET_STATE {
   return deepcopy(raw)
 }
 
-// project the MEMORY root into a jsonsync-shippable plain object.
-// - top-level keys filtered to MEMORY_SYNC_TOPKEYS
-// - books Map -> Record<bookid, BOOK>, each BOOK via projectbook (BOARD shells)
-// - loaders (excluded by allowlist) and topic/halt never appear
-export function projectmemory(): unknown {
-  const root = memoryreadroot() as unknown as Record<string, unknown>
-  const picked = picktopkeys(root, MEMORY_SYNC_TOPKEYS as readonly string[])
-  if (picked.books instanceof Map) {
-    const record: Record<string, unknown> = {}
-    for (const [id, book] of picked.books.entries()) {
-      record[id] = projectbook(book as BOOK)
-    }
-    picked.books = record
+export function unprojectgadget(player: string, document: unknown): void {
+  if (!ispresent(document) || typeof document !== 'object') {
+    return
   }
-  return picked
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  const gadgetstore = memoryreadbookflags(
+    mainbook,
+    MEMORY_LABEL.GADGETSTORE,
+  ) as Record<string, unknown>
+  gadgetstore[player] = deepcopy(document) as BOOK_FLAGS[string]
+}
+
+// ---------------------------------------------------------------------------
+// FLAGS stream — project / unproject
+// ---------------------------------------------------------------------------
+
+/** Full-document flags stream: one player's flag bag from the main book. */
+export function projectplayerflags(player: string): Record<string, unknown> {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return {}
+  }
+  const raw = memoryreadbookflags(mainbook, player) as unknown as Record<
+    string,
+    unknown
+  >
+  if (!ispresent(raw) || typeof raw !== 'object') {
+    return {}
+  }
+  return deepcopy(raw)
+}
+
+export function unprojectplayerflags(player: string, document: unknown): void {
+  if (!ispresent(document) || typeof document !== 'object') {
+    return
+  }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  mergeflagspreservingvolatile(
+    mainbook.flags,
+    {
+      [player]: document as Record<string, unknown>,
+    },
+    mainbook.activelist ?? [],
+  )
+}
+
+// ---------------------------------------------------------------------------
+// dispatch (sim rxrepl merge)
+// ---------------------------------------------------------------------------
+
+export function unprojectstream(stream: string, document: unknown): void {
+  if (!ispresent(document) || typeof document !== 'object') {
+    return
+  }
+  memorywithsilentwrites(() => {
+    if (ismemorystream(stream)) {
+      unprojectmemory(document as Record<string, unknown>)
+      return
+    }
+    if (isboardstream(stream)) {
+      unprojectboardstream(stream, document as Record<string, unknown>)
+      return
+    }
+    if (isgadgetstream(stream)) {
+      const player = playerfromgadgetstream(stream)
+      if (player) {
+        unprojectgadget(player, document)
+      }
+      return
+    }
+    if (isflagsstream(stream)) {
+      const player = playerfromflagsstream(stream)
+      if (player) {
+        unprojectplayerflags(player, document)
+      }
+    }
+  })
 }

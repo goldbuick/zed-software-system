@@ -5,7 +5,7 @@ import { platformready } from './api'
 import { handledefault as vmdefaulthandler } from './vm/handlers/default'
 import { handleuserinput } from './vm/handlers/input'
 import { vmhandlers } from './vm/handlers/registry'
-import { memorysyncensureregistered } from './vm/memorysync'
+import { memorysyncensureregistered } from './vm/memorysimsync'
 
 const vm = createdevice(
   'vm',

@@ -10,7 +10,7 @@ export const FLUSH_RATE = 60
 export const BOARDRUNNER_ACK_FAIL_COUNT = 2
 
 /** Wall-clock ms without `vm:acktick` before evicting a tick-confirmed runner. */
-export const BOARDRUNNER_ACKTICK_STALE_MS = 10_000
+export const BOARDRUNNER_ACKTICK_STALE_MS = 2_000
 
 /** Initial tracking score assigned on handlelogin/handlelocal. Set above 0
  * so a brand-new joiner is not treated as the most-active candidate the
@@ -26,59 +26,27 @@ export const INITIAL_TRACKING = 8
  */
 export const IDLE_LOGOUT_TRACKING = SECOND_TIMEOUT * 3
 
-export const tracking: Record<string, number> = {}
-export const trackinglastlog: Record<string, number> = {}
+// this tracks the last time a player input was received
 export const lastinputtime: Record<string, number> = {}
 
+// this tracks the keep alive ping from the player
+// player -> keep alive ping
+export const tracking: Record<string, number> = {}
+
+// this signals active player ids
+// player -> last log time
+export const trackinglastlog: Record<string, number> = {}
+
 /** Latest elected board runner per `BOARD.id` (main book); replaced each `second`. */
+// board -> player
 export const boardrunners: Record<string, string> = {}
 
-// board runners confirmed by `vm:acktick` (worker ran `boardrunner:tick` for this board)
-export const ackboardrunners: Record<string, string> = {}
+// board runners that have been confirmed by `vm:acktick` (worker ran `boardrunner:tick` for this board)
+// board -> last ack time
+export const ackboardrunners: Record<string, number> = {}
 
-/** Last `Date.now()` we saw `vm:acktick` for this board (tick-proven runner only). */
-export const boardrunnerlastacktickat: Record<string, number> = {}
-
-export function clearboardrunnerlastacktick(boardid: string): void {
-  delete boardrunnerlastacktickat[boardid]
-}
-
-/**
- * Per-board per-player retry count while elected but not yet tick-confirmed.
- * Value `BOARDRUNNER_ACK_FAIL_COUNT` means exclusion until peergone, logout,
- * board move, or successful `vm:acktick` clears the entry.
- */
-export const failedboardrunners: Record<string, Record<string, number>> = {}
-
-/** Single acked board id for this player (sorted for stable pick if multiple). */
-export function playerownedboard(player: string): string {
-  const ids = Object.keys(ackboardrunners)
-    .filter((bid) => ackboardrunners[bid] === player)
-    .sort()
-  return ids.length > 0 ? ids[0] : ''
-}
-
-/**
- * Board id for `boardrunner:ownedboard` on the worker: any board where this
- * player is the elected runner (possibly awaiting ack) or the acked runner.
- * Pending-only ownership must still hydrate the worker; `playerownedboard`
- * is ack-only and would leave `assignedboard` empty until ack.
- */
-export function playerboardrunnerowntarget(player: string): string {
-  const ids = new Set<string>()
-  for (const bid of Object.keys(boardrunners)) {
-    if (boardrunners[bid] === player) {
-      ids.add(bid)
-    }
-  }
-  for (const bid of Object.keys(ackboardrunners)) {
-    if (ackboardrunners[bid] === player) {
-      ids.add(bid)
-    }
-  }
-  const sorted = [...ids].sort()
-  return sorted.length > 0 ? sorted[0] : ''
-}
+// player -> skip flag
+export const skipboardrunners: Record<string, boolean> = {}
 
 let flushtick = 0
 export function getflushtick(): number {

@@ -32,7 +32,7 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
-import { memorysyncreverseproject } from '../memorysync'
+import { memorysyncreverseproject } from '../memorysimsync'
 
 function makeboard(id: string): BOARD {
   return {

@@ -1,12 +1,7 @@
-/*
-Strategy B: sim-side rxrepl. push_batch merges documents into canonical MEMORY.
-*/
 import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { boardidfromboardstream, isboardstream } from 'zss/memory/memorydirty'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { boardfromboardstream, isboardstream } from 'zss/memory/memorydirty'
 
 import { rxreplpullresponse, rxreplpushack, rxreplrowdocument } from './api'
 import type {
@@ -23,7 +18,7 @@ import {
 import {
   memorysyncensureboardregistered,
   memorysyncreverseproject,
-} from './vm/memorysync'
+} from './vm/memorysimsync'
 
 export const rxreplserverdevice = createdevice(
   'rxreplserver',
@@ -44,7 +39,7 @@ export const rxreplserverdevice = createdevice(
             row.streamid.startsWith('board:'),
           )
           if (boardrows.length > 0) {
-            console.debug('[sim] rxreplserver:push_batch board streams', {
+            console.info('[sim] rxreplserver:push_batch board streams', {
               player: message.player,
               streamids: boardrows.map((row) => row.streamid),
             })
@@ -84,14 +79,10 @@ export const rxreplserverdevice = createdevice(
           }
           let entry = streamreplserverreadstream(streamid)
           if (!entry && isboardstream(streamid)) {
-            const bid = boardidfromboardstream(streamid)
+            const bid = boardfromboardstream(streamid)
             if (isstring(bid) && bid.length > 0) {
-              const cp = memorypickcodepagewithtypeandstat(
-                CODE_PAGE_TYPE.BOARD,
-                bid,
-              )
-              if (ispresent(cp)) {
-                memorysyncensureboardregistered(cp)
+              if (ispresent(bid)) {
+                memorysyncensureboardregistered(bid)
                 streamreplserveradmitplayer(streamid, player, true)
                 entry = streamreplserverreadstream(streamid)
               }

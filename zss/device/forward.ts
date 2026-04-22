@@ -1,16 +1,6 @@
 /**
  * Message routing at worker and peer boundaries.
  *
- * - **`createforward`** ([`platform.ts`](../platform.ts), [`boardrunnerspace`](../boardrunnerspace.ts)): bridge between
- *   hubs — dedupes by `message.id` and can drop bare `ticktock` unless `allowticktock: true`.
- * - **`shouldforward*`** predicates: used by [`platform.ts`](../platform.ts) to decide which workers receive
- *   which messages (client → sim / heavy / boardrunner), and by [`netterminal.ts`](../feature/netterminal.ts)
- *   for PeerJS fan-out (combined with `shouldnotforwardonpeer*`).
- * - **Peer leaf guards** (`peerblockedjoinertohost` / `peerblockedhosttojoin`): extra filters on PeerJS so clock/handshake noise is not echoed
- *   the wrong way; nested targets use `targetlastleaf` (see [`forward.peer.test.ts`](__tests__/forward.peer.test.ts)).
- *
- * Inventory coverage: [`forward.inventory.test.ts`](__tests__/forward.inventory.test.ts) (targets drawn from
- * [`api.ts`](api.ts) `device.emit` families).
  */
 
 import { createdevice, parsetarget } from 'zss/device'
@@ -85,6 +75,7 @@ export function shouldnotforwardonpeer(message: MESSAGE): boolean {
         default:
           break
       }
+      console.info('blocked shouldnotforwardonpeer', route.target, route.path)
       break
     }
   }
@@ -102,28 +93,21 @@ export function shouldforwardservertoclient(_message: MESSAGE): boolean {
 // client message gates
 
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ticktock':
-      return false
-    case 'second':
-    case 'ready':
+  const route = parsetarget(message.target)
+  switch (route.target) {
+    case 'vm':
+    case 'modem':
+    case 'rxreplserver':
       return true
-    default: {
-      const route = parsetarget(message.target)
-      switch (route.target) {
-        // list of devices that should forwarded to sim space
-        case 'rxreplserver':
-          return true
-        default:
-          break
-      }
-      // Boardrunner worker → main: `vm:<id>:acktick` must reach sim `vm` (not a topic match).
-      if (route.path === 'acktick') {
-        return true
-      }
-      break
-    }
   }
+  switch (route.path) {
+    case 'sync':
+    case 'desync':
+    case 'joinack':
+    case 'acktick':
+      return true
+  }
+  // console.info('blocked shouldforwardclienttoserver', route.target, route.path)
   return false
 }
 
@@ -153,6 +137,11 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
         default:
           break
       }
+      // console.info(
+      //   'blocked shouldforwardclienttoheavy',
+      //   route.target,
+      //   route.path,
+      // )
       break
     }
   }
@@ -182,6 +171,7 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
         case 'rxreplclient':
           return true
         default:
+          // console.info('blocked clienttoboardrunner', message.target)
           break
       }
       break

@@ -19,7 +19,7 @@ import {
 import { BOOK, CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 import { projectmemory } from '../memoryproject'
-import { memorysyncadmitboardrunner, memorysyncpushdirty } from '../memorysync'
+import { memorysyncadmitboardrunner, memorysyncpushdirty } from '../memorysimsync'
 import { ackboardrunners } from '../state'
 
 describe('memorysync viewport gadget admission', () => {

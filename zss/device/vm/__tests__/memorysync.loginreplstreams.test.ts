@@ -6,7 +6,7 @@ import { flagsstream, gadgetstream } from 'zss/memory/memorydirty'
 import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
 import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
-import { memorysyncensureloginreplstreams } from '../memorysync'
+import { memorysyncensureloginreplstreams } from '../memorysimsync'
 
 describe('memorysyncensureloginreplstreams', () => {
   afterEach(() => {

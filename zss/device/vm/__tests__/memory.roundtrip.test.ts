@@ -34,7 +34,7 @@ import {
 import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
 import { projectmemory, projectplayerflags } from '../memoryproject'
-import { memorysyncreverseproject } from '../memorysync'
+import { memorysyncreverseproject } from '../memorysimsync'
 import { memoryworkerpushdirty } from '../memoryworkersync'
 
 function makebook(): BOOK {

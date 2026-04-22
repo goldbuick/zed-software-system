@@ -30,14 +30,14 @@ import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
 import { memorydebugassertactivelistboardinvariantifenabled } from 'zss/memory/debugactivelistinvariant'
 import {
-  boardidfromboardstream,
+  boardfromboardstream,
   isboardstream,
   isflagsstream,
   isgadgetstream,
   ismemorystream,
   memorywithsilentwrites,
-  playeridfromflagsstream,
-  playeridfromgadgetstream,
+  playerfromflagsstream,
+  playerfromgadgetstream,
 } from 'zss/memory/memorydirty'
 import {
   memoryclearbook,
@@ -60,8 +60,6 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 
-import { VOLATILE_FLAG_KEYS } from './memoryproject'
-
 export function memoryhydratefromjsonsync(
   stream: string,
   document: unknown,
@@ -79,7 +77,7 @@ export function memoryhydratefromjsonsync(
       return
     }
     if (isboardstream(stream)) {
-      const boardid = boardidfromboardstream(stream)
+      const boardid = boardfromboardstream(stream)
       if (boardid) {
         if (log) {
           console.info('hydrating board', boardid, document)
@@ -89,7 +87,7 @@ export function memoryhydratefromjsonsync(
       return
     }
     if (isgadgetstream(stream)) {
-      const player = playeridfromgadgetstream(stream)
+      const player = playerfromgadgetstream(stream)
       if (player) {
         if (log) {
           console.info('hydrating gadget', player, document)
@@ -99,7 +97,7 @@ export function memoryhydratefromjsonsync(
       return
     }
     if (isflagsstream(stream)) {
-      const player = playeridfromflagsstream(stream)
+      const player = playerfromflagsstream(stream)
       if (player) {
         if (log) {
           console.info('hydrating flags', player, document)
@@ -225,12 +223,9 @@ const BOOK_SCALAR_KEYS: readonly (keyof BOOK)[] = [
   'token',
 ]
 
-// merge an incoming flags projection into the worker's local flags, preserving
-// worker-owned volatile keys (inputqueue / inputcurrent / synthstate /
-// synthplay) so the server's view — which never carries these keys after
-// memoryproject.ts strips them — does not clobber live worker state on hydrate.
+// merge an incoming flags projection into the worker's local flags in place.
 //
-// Also used by `memorysync.mergebookflags` on the sim: partial client pushes
+// Also used by sim-side `memoryproject` unproject merges: partial client pushes
 // must merge into canonical MEMORY instead of replacing whole `book.flags`,
 // or `flags[pid_*]` rows can disappear while the player is still on
 // `activelist`. Gadget UI state replicates via `gadget:<pid>` streams, not
@@ -263,23 +258,11 @@ export function mergeflagspreservingvolatile(
       existing[id] = deepcopy(incomingentry) as BOOK_FLAGS
       continue
     }
-    // mutate existingentry in place: snapshot volatile worker-owned keys,
-    // apply incoming values, then restore volatile keys on top.
-    const volatilesnapshot: Record<string, unknown> = {}
-    for (let j = 0; j < VOLATILE_FLAG_KEYS.length; ++j) {
-      const key = VOLATILE_FLAG_KEYS[j]
-      if (Object.prototype.hasOwnProperty.call(existingentry, key)) {
-        volatilesnapshot[key] = existingentry[key]
-      }
-    }
-    // drop any existing keys not in incoming (except volatile, which the
-    // server never projects anyway).
+
+    // drop any existing keys not in incoming
     const existingkeys = Object.keys(existingentry)
     for (let k = 0; k < existingkeys.length; ++k) {
       const key = existingkeys[k]
-      if (VOLATILE_FLAG_KEYS.includes(key)) {
-        continue
-      }
       if (!Object.prototype.hasOwnProperty.call(incomingentry, key)) {
         // Canonical sim always carries `board` for on-board players, but a
         // merged snapshot can omit the key (ordering, projection gaps, or
@@ -301,12 +284,6 @@ export function mergeflagspreservingvolatile(
       const key = incomingkeys[k]
       const next = deepcopy(incomingentry[key])
       existingentry[key] = next as BOOK_FLAGS[string]
-    }
-    // restore volatile worker-owned values
-    const volkeys = Object.keys(volatilesnapshot)
-    for (let k = 0; k < volkeys.length; ++k) {
-      const key = volkeys[k]
-      existingentry[key] = volatilesnapshot[key]
     }
   }
   // remove entries not present in incoming — this is how endgame/halt reaches

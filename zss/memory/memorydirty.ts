@@ -48,7 +48,7 @@ export function isgadgetstream(stream: string): boolean {
   return stream.startsWith('gadget:')
 }
 
-/** Per-player book.flags[pid] bag (non-volatile keys) replicated outside the `memory` stream. */
+/** Per-player book.flags[pid] bag replicated outside the `memory` stream. */
 export function flagsstream(player: string): string {
   return `flags:${player}`
 }
@@ -57,24 +57,21 @@ export function isflagsstream(stream: string): boolean {
   return stream.startsWith('flags:')
 }
 
-/** Recover `codepage.id` from a `board:<codepage.id>` stream id (not `boardstream()`, which adds the prefix). */
-export function boardidfromboardstream(stream: string): string {
+export function boardfromboardstream(stream: string): string {
   if (!isboardstream(stream)) {
     return ''
   }
   return stream.slice('board:'.length)
 }
 
-/** Recover player id from a `gadget:<player>` stream id. */
-export function playeridfromgadgetstream(stream: string): string {
+export function playerfromgadgetstream(stream: string): string {
   if (!isgadgetstream(stream)) {
     return ''
   }
   return stream.slice('gadget:'.length)
 }
 
-/** Recover player id from a `flags:<player>` stream id. */
-export function playeridfromflagsstream(stream: string): string {
+export function playerfromflagsstream(stream: string): string {
   if (!isflagsstream(stream)) {
     return ''
   }

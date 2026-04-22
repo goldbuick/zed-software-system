@@ -2,7 +2,6 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
-  boardrunnerowned,
   bridgehalt,
   registerinspector,
   registerloginready,
@@ -11,16 +10,12 @@ import {
 import {
   memorysyncdropplayerfromall,
   memorysyncensureloginreplstreams,
-  memorysyncrevokeboardrunner,
-} from 'zss/device/vm/memorysync'
+} from 'zss/device/vm/memorysimsync'
 import {
   INITIAL_TRACKING,
-  ackboardrunners,
-  boardrunners,
-  clearboardrunnerlastacktick,
-  failedboardrunners,
   lastinputtime,
   tracking,
+  trackinglastlog,
 } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 import {
@@ -49,41 +44,25 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   vmclearscroll(vm, message.player)
-  // Before the player's flags are cleared, revoke their admissions to any
-  // board streams they owned as an elected runner, drop any runner slots
-  // that still reference them, and tell their worker ownership is empty.
-  // Without this the departing player's worker would keep its jsonsync
-  // admissions (getting pokes / writes through) and keep emitting paints
-  // from a stale baseline after they log back in.
-  const ownedboards = Object.keys(boardrunners)
-  for (let i = 0; i < ownedboards.length; ++i) {
-    const boardid = ownedboards[i]
-    if (boardrunners[boardid] === message.player) {
-      memorysyncrevokeboardrunner(message.player, boardid)
-      delete boardrunners[boardid]
-      delete ackboardrunners[boardid]
-      clearboardrunnerlastacktick(boardid)
-      delete failedboardrunners[boardid]
-    } else if (ackboardrunners[boardid] === message.player) {
-      memorysyncrevokeboardrunner(message.player, boardid)
-      delete ackboardrunners[boardid]
-      clearboardrunnerlastacktick(boardid)
-      if (failedboardrunners[boardid]) {
-        delete failedboardrunners[boardid][message.player]
-        if (Object.keys(failedboardrunners[boardid]).length === 0) {
-          delete failedboardrunners[boardid]
-        }
-      }
-    }
-  }
-  boardrunnerowned(vm, message.player, '')
-  memorylogoutplayer(message.player, !!message.data)
+
+  // drop the player from all streams
   memorysyncdropplayerfromall(message.player)
-  delete tracking[message.player]
-  delete lastinputtime[message.player]
-  apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
+
+  // logout and halt the bridge
+  memorylogoutplayer(message.player, !!message.data)
   bridgehalt(vm, message.player)
-  registerloginready(vm, message.player)
+
+  // clear the tracking
+  delete tracking[message.player]
+  delete trackinglastlog[message.player]
+
+  // show logout message
+  apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
+
+  // signal for re-login
+  setTimeout(() => {
+    registerloginready(vm, message.player)
+  }, 1000)
 }
 
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {

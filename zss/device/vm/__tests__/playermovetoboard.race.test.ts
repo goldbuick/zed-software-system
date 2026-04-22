@@ -25,7 +25,7 @@ import {
 import { COLLISION } from 'zss/words/types'
 
 import { boardstreamfromcodepage, projectboardcodepage } from '../memoryproject'
-import { memorysyncreverseproject } from '../memorysync'
+import { memorysyncreverseproject } from '../memorysimsync'
 
 jest.mock('zss/config', () => ({
   LANG_DEV: false,

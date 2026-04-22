@@ -7,7 +7,7 @@ import {
   memorysyncrevokeboardrunner,
   memorysyncupdateboard,
   memorysyncupdatememory,
-} from 'zss/device/vm/memorysync'
+} from 'zss/device/vm/memorysimsync'
 import {
   ackboardrunners,
   boardrunners,
@@ -42,7 +42,7 @@ jest.mock('zss/device/api', () => ({
   boardrunnerowned: jest.fn(),
 }))
 
-jest.mock('zss/device/vm/memorysync', () => ({
+jest.mock('zss/device/vm/memorysimsync', () => ({
   memorysyncupdateboard: jest.fn(),
   memorysyncupdatememory: jest.fn(),
   memorysyncrevokeboardrunner: jest.fn(),

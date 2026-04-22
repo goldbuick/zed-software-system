@@ -18,7 +18,7 @@ import {
 } from './boardlighting'
 import {
   memoryinitboard,
-  memoryreadboardbyaddressstable,
+  memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
   memoryreadoverboard,
@@ -425,10 +425,12 @@ export function memoryconverttogadgetlayers(
 }
 
 function memorygadgetexitboardid(addr: string | undefined): string {
-  if (!isstring(addr) || addr.trim() === '') {
+  const withaddr = addr ?? ''
+  const maybeboard = memoryreadboardbyaddress(withaddr)
+  if (!ispresent(maybeboard)) {
     return EXIT_PREVIEW_UNKNOWN
   }
-  return memoryreadboardbyaddressstable(addr)?.id ?? ''
+  return withaddr
 }
 
 export type MEMORY_GADGET_LAYERS = {

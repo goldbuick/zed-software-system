@@ -1,24 +1,3 @@
-/*
-memoryworkersync: worker-side push loop. Counterpart to `memorysync.ts`'s
-`memorysyncpushdirty`; pushes full-document rows via `rxreplpushbatch` so the
-sim merges into canonical MEMORY (Strategy B).
-
-After the worker runs `memorytickmain` (boards only; sim runs `memorytickloaders`), dirty bits (from `zss/memory/*`)
-identify changed streams. This module drains them and emits one batch row per
-admitted stream:
-
-- `memory` stream: `projectmemory()` snapshot.
-- `board:<id>` streams: board codepage projection from the main book.
-- `gadget:<player>` streams: `projectgadget(player)` (`GADGET_STATE`).
-- `flags:<player>` streams: `projectplayerflags(player)` (main book flags bag).
-
-Most streams require a registered rxrepl client shadow (`rxreplclientreadstream`);
-`gadget:<pid>` is pushed even without a local shadow so the elected runner can
-publish other viewport players' gadget docs (their rxrepl rows hydrate on main).
-
-Hydration of inbound traffic is separate (`memoryhydrate`); it runs inside
-`memorywithsilentwrites`, so it does not re-fire consumed dirty bits.
-*/
 import { rxreplpushbatch } from 'zss/device/api'
 import {
   rxreplclientdevice,
@@ -27,15 +6,15 @@ import {
 } from 'zss/device/rxreplclient'
 import { ispresent } from 'zss/mapping/types'
 import {
-  boardidfromboardstream,
+  boardfromboardstream,
   isboardstream,
   isflagsstream,
   isgadgetstream,
   ismemorystream,
   memoryconsumealldirty,
   memorymarkdirty,
-  playeridfromflagsstream,
-  playeridfromgadgetstream,
+  playerfromflagsstream,
+  playerfromgadgetstream,
 } from 'zss/memory/memorydirty'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
@@ -53,7 +32,7 @@ export function memoryworkerpushdirty(): void {
   for (let i = 0; i < dirtyids.length; ++i) {
     const stream = dirtyids[i]
     if (isgadgetstream(stream)) {
-      const player = playeridfromgadgetstream(stream)
+      const player = playerfromgadgetstream(stream)
       if (!player) {
         continue
       }
@@ -76,7 +55,7 @@ export function memoryworkerpushdirty(): void {
       continue
     }
     if (isboardstream(stream)) {
-      const boardid = boardidfromboardstream(stream)
+      const boardid = boardfromboardstream(stream)
       if (!boardid) {
         continue
       }
@@ -101,7 +80,7 @@ export function memoryworkerpushdirty(): void {
       continue
     }
     if (isflagsstream(stream)) {
-      const player = playeridfromflagsstream(stream)
+      const player = playerfromflagsstream(stream)
       if (!player) {
         continue
       }

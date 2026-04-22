@@ -12,9 +12,11 @@ import {
 } from 'zss/memory/boards'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import {
+  flagsstream,
   isboardstream,
   isflagsstream,
   ismemorystream,
+  memorymarkdirty,
 } from 'zss/memory/memorydirty'
 import {
   memoryreadplayerboard,
@@ -165,9 +167,24 @@ function runworkertick(timestamp: number): void {
   })
 }
 
+function handleworkeruserinput(message: MESSAGE): void {
+  if (!memoryhasflags(message.player)) {
+    return
+  }
+  const flags = memoryreadflags(message.player)
+  const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+  if (!isarray(flags.inputqueue)) {
+    flags.inputqueue = []
+  }
+  if (input !== INPUT.NONE) {
+    flags.inputqueue.push([input, mods])
+  }
+  memorymarkdirty(flagsstream(message.player))
+}
+
 const boardrunner = createdevice(
   'boardrunner',
-  ['memory', 'flags', 'board'],
+  ['user', 'memory', 'flags', 'board'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
@@ -193,10 +210,23 @@ const boardrunner = createdevice(
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
+      console.info('jsonsync', payload.streamid, payload.document)
       return
     }
 
     switch (message.target) {
+      case 'user:input':
+        handleworkeruserinput(message)
+        break
+      case 'user:pilotstart':
+        handlepilotstart(message)
+        break
+      case 'user:pilotstop':
+        handlepilotstop(message)
+        break
+      case 'user:pilotclear':
+        handlepilotclear(message)
+        break
       case 'tick':
         if (isnumber(message.data) && assignedboard) {
           runworkertick(message.data)
@@ -205,6 +235,7 @@ const boardrunner = createdevice(
         break
       case 'ownedboard': {
         if (isstring(message.data) && assignedboard !== message.data) {
+          console.info('ownedboard', message.data)
           assignedboard = message.data
           rebuildownedboardids()
         }
@@ -220,39 +251,3 @@ const boardrunner = createdevice(
     }
   },
 )
-
-function handleworkeruserinput(message: MESSAGE): void {
-  if (!memoryhasflags(message.player)) {
-    return
-  }
-  const flags = memoryreadflags(message.player)
-  const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
-  if (!isarray(flags.inputqueue)) {
-    flags.inputqueue = []
-  }
-  if (input !== INPUT.NONE) {
-    flags.inputqueue.push([input, mods])
-  }
-}
-
-const user = createdevice('user', [], (message) => {
-  if (!user.session(message)) {
-    return
-  }
-  switch (message.target) {
-    case 'input':
-      handleworkeruserinput(message)
-      break
-    case 'pilotstart':
-      handlepilotstart(message)
-      break
-    case 'pilotstop':
-      handlepilotstop(message)
-      break
-    case 'pilotclear':
-      handlepilotclear(message)
-      break
-    default:
-      break
-  }
-})

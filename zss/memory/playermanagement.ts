@@ -1,7 +1,10 @@
 import { createchipid } from 'zss/chip'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { BOARDRUNNER_ACK_FAIL_COUNT } from 'zss/device/vm/state'
+import {
+  BOARDRUNNER_ACK_FAIL_COUNT,
+  skipboardrunners,
+} from 'zss/device/vm/state'
 import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
@@ -191,106 +194,13 @@ export function boardrunnerackeligible(
   if (!isstring(ackedplayer) || !ackedplayer.length) {
     return false
   }
-  if (boardrunnerfailed?.[boardid]?.[ackedplayer] === BOARDRUNNER_ACK_FAIL_COUNT) {
+  if (
+    boardrunnerfailed?.[boardid]?.[ackedplayer] === BOARDRUNNER_ACK_FAIL_COUNT
+  ) {
     return false
   }
   const onboard = playeridsbyboard[boardid] ?? []
   return onboard.includes(ackedplayer)
-}
-
-export function memoryreadboardrunnerchoices(
-  book: MAYBE<BOOK>,
-  tracking: Record<string, number>,
-  boardrunnerfailed?: Record<string, Record<string, number>>,
-  currentacked?: Record<string, string>,
-) {
-  // list of current good choices for board runners
-  const runnerchoices: Record<string, string> = {}
-  // list of active players grouped by board
-  const playeridsbyboard: Record<string, string[]> = {}
-  if (!ispresent(book?.activelist)) {
-    return { runnerchoices, playeridsbyboard }
-  }
-
-  // First pass: collect players per board (needed to validate any
-  // `currentacked` seed — an acked player who has since left the board
-  // must not influence the election).
-  for (let i = 0; i < book.activelist.length; ++i) {
-    const player = book.activelist[i]
-    const board = memoryreadbookflag(book, player, 'board') as string
-    if (!isstring(board) || !board) {
-      continue
-    }
-    playeridsbyboard[board] ??= []
-    playeridsbyboard[board].push(player)
-  }
-
-  // list of current scores for the current choices
-  const runnerscore: Record<string, number> = {}
-
-  // Hard lock: an acked runner still on the board (and not ack-timeout
-  // blocked) is the only choice — tracking cannot displace them.
-  if (ispresent(currentacked)) {
-    const ackedboards = Object.keys(currentacked)
-    for (let i = 0; i < ackedboards.length; ++i) {
-      const board = ackedboards[i]
-      const acked = currentacked[board]
-      if (
-        !boardrunnerackeligible(
-          board,
-          acked,
-          playeridsbyboard,
-          boardrunnerfailed,
-        )
-      ) {
-        continue
-      }
-      runnerscore[board] = Number.NEGATIVE_INFINITY
-      runnerchoices[board] = acked
-    }
-  }
-
-  // Second pass: for each player, challenge the current choice.
-  for (let i = 0; i < book.activelist.length; ++i) {
-    const player = book.activelist[i]
-    const board = memoryreadbookflag(book, player, 'board') as string
-    if (!isstring(board) || !board) {
-      continue
-    }
-
-    if (boardrunnerfailed?.[board]?.[player] === BOARDRUNNER_ACK_FAIL_COUNT) {
-      continue
-    }
-
-    // One acked board per worker path: skip players already acked on a
-    // different board so we do not stack conflicting authoritative runners.
-    if (ispresent(currentacked)) {
-      const obids = Object.keys(currentacked)
-      let ackedElsewhere = false
-      for (let j = 0; j < obids.length; ++j) {
-        const ob = obids[j]
-        if (ob === board) {
-          continue
-        }
-        if (currentacked[ob] === player) {
-          ackedElsewhere = true
-          break
-        }
-      }
-      if (ackedElsewhere) {
-        continue
-      }
-    }
-
-    // track scores for the current choices
-    const score = tracking[player] ?? 1000
-    if (score < (runnerscore[board] ?? 999)) {
-      runnerscore[board] = score
-      runnerchoices[board] = player
-    }
-  }
-
-  return { runnerchoices, playeridsbyboard }
 }
 
 export function memorywritebookplayerboard(
@@ -334,6 +244,10 @@ export function memoryloginplayer(
     )
   }
 
+  // clear the skip flag
+  delete skipboardrunners[player]
+
+  // check for main
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return apierror(
@@ -550,6 +464,11 @@ export function memoryscanplayers(players: Record<string, number>) {
   }
 }
 
+export function memoryreadplayersfromboard(board: string): string[] {
+  const maybeboard = memoryreadboardbyaddress(board)
+  return Object.keys(maybeboard?.objects ?? {}).filter((id) => ispid(id))
+}
+
 export function memoryreadplayers() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   return memoryreadbookplayers(mainbook)
@@ -566,6 +485,5 @@ export function memoryreadplayeractive(player: string) {
 export function memoryreadplayerboard(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const address = memoryreadbookflag(mainbook, player, 'board') as string
-  const codepage = memoryreadcodepage(mainbook, address)
-  return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
+  return memoryreadboardbyaddress(address)
 }

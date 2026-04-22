@@ -1,28 +1,22 @@
 import type { DEVICE } from 'zss/device'
+import { type MESSAGE, boardrunnerowned, boardrunnertick } from 'zss/device/api'
 import {
-  type MESSAGE,
-  boardrunnerowned,
-  boardrunnertick,
-  registerboardrunnerask,
-} from 'zss/device/api'
-import {
+  memorysyncadmitboardrunner,
   memorysyncpushdirty,
   memorysyncrevokeboardrunner,
-} from 'zss/device/vm/memorysync'
+} from 'zss/device/vm/memorysimsync'
 import {
   BOARDRUNNER_ACKTICK_STALE_MS,
   ackboardrunners,
-  boardrunnerlastacktickat,
   boardrunners,
-  clearboardrunnerlastacktick,
-  failedboardrunners,
-  playerboardrunnerowntarget,
+  skipboardrunners,
   tracking,
 } from 'zss/device/vm/state'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import {
-  boardrunnerackeligible,
-  memoryreadboardrunnerchoices,
+  memoryreadplayerboard,
+  memoryreadplayers,
+  memoryreadplayersfromboard,
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
@@ -36,200 +30,80 @@ import { perfmeasure } from 'zss/perf/ui'
 
 export function handletick(vm: DEVICE, _message: MESSAGE): void {
   void _message
-  if (memoryreadfreeze()) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (memoryreadfreeze() || !ispresent(mainbook)) {
     return
   }
 
   memoryscanplayers(tracking)
 
   perfmeasure('vm:memorytickloaders', () => {
-    const player = memoryreadoperator()
-    const timestamp = memorytickloaders()
-    boardrunnertick(vm, player, timestamp)
+    boardrunnertick(vm, memoryreadoperator(), memorytickloaders())
   })
 
   perfmeasure('vm:memorysyncpushdirty', () => {
     memorysyncpushdirty()
   })
 
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const { runnerchoices, playeridsbyboard } = memoryreadboardrunnerchoices(
-    mainbook,
-    tracking,
-    failedboardrunners,
-    ackboardrunners,
-  )
+  // determine boardrunner ownership
+  const players = memoryreadplayers()
 
-  const ownershipdirty = new Set<string>()
+  // collect active boards
+  const activeboards = new Set<string>()
+  for (let i = 0; i < players.length; ++i) {
+    const player = players[i]
+    const board = memoryreadplayerboard(player)
+    if (ispresent(board)) {
+      activeboards.add(board.id)
+    }
+  }
 
-  evictstaleboardrunnersfromacktick(playeridsbyboard, ownershipdirty)
-  syncboardrunnerstoacks(playeridsbyboard, ownershipdirty)
-  applyrunnerchoices(vm, runnerchoices, playeridsbyboard, ownershipdirty)
-  droprunnerswithnoplayers(playeridsbyboard, ownershipdirty)
+  // validate state of boardrunners
 
-  ownershipdirty.forEach((player) => {
-    boardrunnerowned(vm, player, playerboardrunnerowntarget(player))
+  // first pass check last ack tick
+  const timestamp = Date.now()
+  activeboards.forEach((board) => {
+    const lastacktick = ackboardrunners[board]
+    if (ispresent(lastacktick)) {
+      // track the last ack tick
+      const delta = timestamp - ackboardrunners[board]
+      if (delta > BOARDRUNNER_ACKTICK_STALE_MS) {
+        // mark the player for skipping
+        const player = boardrunners[board]
+        skipboardrunners[player] = true
+        // evict the boardrunner
+        delete ackboardrunners[board]
+        console.info('vm:tick evicting boardrunner', board, player)
+      }
+    }
   })
-}
 
-function evictstaleboardrunnersfromacktick(
-  playeridsbyboard: Record<string, string[]>,
-  ownershipdirty: Set<string>,
-): void {
-  const now = Date.now()
-  const boards = Object.keys(boardrunners)
-  for (let i = 0; i < boards.length; ++i) {
-    const boardid = boards[i]
-    const elected = boardrunners[boardid]
-    const acked = ackboardrunners[boardid]
-    if (
-      !isstring(elected) ||
-      !elected.length ||
-      acked !== elected ||
-      !boardrunnerackeligible(
-        boardid,
-        elected,
-        playeridsbyboard,
-        failedboardrunners,
-      )
-    ) {
-      continue
-    }
-    const last = boardrunnerlastacktickat[boardid]
-    if (last === undefined) {
-      boardrunnerlastacktickat[boardid] = now
-      continue
-    }
-    if (now - last <= BOARDRUNNER_ACKTICK_STALE_MS) {
-      continue
-    }
-    const prevack = ackboardrunners[boardid]
-    if (typeof prevack === 'string' && prevack.length > 0) {
-      memorysyncrevokeboardrunner(prevack, boardid)
-      ownershipdirty.add(prevack)
-    }
-    delete boardrunners[boardid]
-    delete ackboardrunners[boardid]
-    clearboardrunnerlastacktick(boardid)
-    delete failedboardrunners[boardid]
-    ownershipdirty.add(elected)
-  }
-}
-
-function syncboardrunnerstoacks(
-  playeridsbyboard: Record<string, string[]>,
-  ownershipdirty: Set<string>,
-): void {
-  const ackboards = Object.keys(ackboardrunners)
-  for (let ai = 0; ai < ackboards.length; ++ai) {
-    const boardid = ackboards[ai]
-    const ack = ackboardrunners[boardid]
-    if (
-      !boardrunnerackeligible(
-        boardid,
-        ack,
-        playeridsbyboard,
-        failedboardrunners,
-      )
-    ) {
-      continue
-    }
-    const prev = boardrunners[boardid]
-    if (prev === ack) {
-      if (failedboardrunners[boardid]?.[ack] !== undefined) {
-        delete failedboardrunners[boardid][ack]
-        if (Object.keys(failedboardrunners[boardid]).length === 0) {
-          delete failedboardrunners[boardid]
+  // elect a new boardrunner if needed
+  activeboards.forEach((board) => {
+    const lastacktick = ackboardrunners[board]
+    if (!ispresent(lastacktick)) {
+      // elect a new boardrunner
+      const players = memoryreadplayersfromboard(board)
+      // filter players by skip then sort players by tracking score
+      const [winner] = players
+        .filter((player) => !skipboardrunners[player])
+        .sort((a, b) => tracking[b] - tracking[a])
+      // set the boardrunner
+      if (ispresent(winner)) {
+        // revoke the previous boardrunner
+        const previous = boardrunners[board]
+        if (ispresent(previous)) {
+          memorysyncrevokeboardrunner(previous, board)
+          // signal the previous boardrunner
+          boardrunnerowned(vm, previous, '')
         }
-      }
-      continue
-    }
-    if (ispresent(prev) && isstring(prev) && prev.length > 0) {
-      ownershipdirty.add(prev)
-      if (failedboardrunners[boardid]?.[prev] !== undefined) {
-        delete failedboardrunners[boardid][prev]
-        if (Object.keys(failedboardrunners[boardid]).length === 0) {
-          delete failedboardrunners[boardid]
-        }
+        // admit the new boardrunner
+        boardrunners[board] = winner
+        ackboardrunners[board] = timestamp
+        memorysyncadmitboardrunner(winner, board)
+        // signal the boardrunner
+        boardrunnerowned(vm, winner, board)
       }
     }
-    boardrunners[boardid] = ack
-    ownershipdirty.add(ack)
-    if (failedboardrunners[boardid]?.[ack] !== undefined) {
-      delete failedboardrunners[boardid][ack]
-      if (Object.keys(failedboardrunners[boardid]).length === 0) {
-        delete failedboardrunners[boardid]
-      }
-    }
-  }
-}
-
-function applyrunnerchoices(
-  vm: DEVICE,
-  runnerchoices: Record<string, string>,
-  playeridsbyboard: Record<string, string[]>,
-  ownershipdirty: Set<string>,
-): void {
-  const choiceboards = Object.keys(runnerchoices)
-  for (let i = 0; i < choiceboards.length; ++i) {
-    const boardid = choiceboards[i]
-    const maybeplayer = boardrunners[boardid]
-    const playerids = playeridsbyboard[boardid] ?? []
-    if (ispresent(maybeplayer)) {
-      if (playerids.includes(maybeplayer)) {
-        // keep it
-      } else {
-        const prevack = ackboardrunners[boardid]
-        if (typeof prevack === 'string' && prevack.length > 0) {
-          memorysyncrevokeboardrunner(prevack, boardid)
-          ownershipdirty.add(prevack)
-        }
-        delete boardrunners[boardid]
-        delete ackboardrunners[boardid]
-        clearboardrunnerlastacktick(boardid)
-        delete failedboardrunners[boardid]
-      }
-    }
-    if (!ispresent(boardrunners[boardid])) {
-      const elected = runnerchoices[boardid]
-      boardrunners[boardid] = elected
-      const prevack = ackboardrunners[boardid]
-      if (
-        typeof prevack === 'string' &&
-        prevack.length > 0 &&
-        prevack !== elected
-      ) {
-        memorysyncrevokeboardrunner(prevack, boardid)
-        ownershipdirty.add(prevack)
-      }
-      delete ackboardrunners[boardid]
-      clearboardrunnerlastacktick(boardid)
-      failedboardrunners[boardid] ??= {}
-      failedboardrunners[boardid][elected] = 0
-      ownershipdirty.add(elected)
-      registerboardrunnerask(vm, elected, boardid)
-    }
-  }
-}
-
-function droprunnerswithnoplayers(
-  playeridsbyboard: Record<string, string[]>,
-  ownershipdirty: Set<string>,
-): void {
-  const activeboards = Object.keys(boardrunners)
-  for (let i = 0; i < activeboards.length; ++i) {
-    const boardid = activeboards[i]
-    const playerids = playeridsbyboard[boardid] ?? []
-    if (playerids.length === 0) {
-      const prevack = ackboardrunners[boardid]
-      if (typeof prevack === 'string' && prevack.length > 0) {
-        memorysyncrevokeboardrunner(prevack, boardid)
-        ownershipdirty.add(prevack)
-      }
-      delete boardrunners[boardid]
-      delete ackboardrunners[boardid]
-      clearboardrunnerlastacktick(boardid)
-      delete failedboardrunners[boardid]
-    }
-  }
+  })
 }

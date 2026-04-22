@@ -2,12 +2,12 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
 import {
-  handleackboardrunner,
   grantboardrunnerackaftersimmove,
+  handleackboardrunner,
 } from 'zss/device/vm/handlers/ackboardrunner'
 import { handleacktick } from 'zss/device/vm/handlers/acktick'
 import * as helpers from 'zss/device/vm/helpers'
-import * as memorysync from 'zss/device/vm/memorysync'
+import * as memorysync from 'zss/device/vm/memorysimsync'
 import {
   ackboardrunners,
   boardrunners,
@@ -230,9 +230,11 @@ describe('grantboardrunnerackaftersimmove', () => {
     jest
       .spyOn(session, 'memoryreadbookbysoftware')
       .mockReturnValue({ flags: {} } as any)
-    jest.spyOn(bookoperations, 'memoryreadbookflag').mockImplementation((_b, _p, key) => {
-      return key === 'board' ? 'board-x' : undefined
-    })
+    jest
+      .spyOn(bookoperations, 'memoryreadbookflag')
+      .mockImplementation((_b, _p, key) => {
+        return key === 'board' ? 'board-x' : undefined
+      })
   })
 
   afterEach(() => {

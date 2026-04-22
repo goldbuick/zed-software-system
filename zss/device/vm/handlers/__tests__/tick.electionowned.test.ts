@@ -2,11 +2,11 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
 import { handletick } from 'zss/device/vm/handlers/tick'
-import * as memorysync from 'zss/device/vm/memorysync'
+import * as memorysync from 'zss/device/vm/memorysimsync'
 import {
   ackboardrunners,
-  boardrunners,
   boardrunnerlastacktickat,
+  boardrunners,
   failedboardrunners,
   tracking,
 } from 'zss/device/vm/state'

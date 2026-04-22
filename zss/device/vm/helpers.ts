@@ -12,7 +12,7 @@ import {
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { memorycompressbooks } from 'zss/memory/utilities'
 
-import { memorysyncadmitboardrunner } from './memorysync'
+import { memorysyncadmitboardrunner } from './memorysimsync'
 
 export const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
 

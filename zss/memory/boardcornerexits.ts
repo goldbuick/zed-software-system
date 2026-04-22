@@ -1,25 +1,20 @@
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { memoryreadboardbyaddressstable } from './boards'
+import { memoryreadboardbyaddress } from './boards'
 import { type BOARD, CORNER_EXIT_DISPUTED } from './types'
 
 type CardinalExit = 'exitnorth' | 'exitsouth' | 'exitwest' | 'exiteast'
-
-function boardidfromaddr(addr: string): string {
-  return memoryreadboardbyaddressstable(addr ?? '')?.id ?? ''
-}
 
 function cornerfrom(
   board: BOARD,
   first: CardinalExit,
   second: CardinalExit,
 ): string {
-  const mid: MAYBE<BOARD> = memoryreadboardbyaddressstable(board[first] ?? '')
+  const mid: MAYBE<BOARD> = memoryreadboardbyaddress(board[first] ?? '')
   if (!ispresent(mid)) {
     return ''
   }
-  const secondaddr = mid[second]
-  return boardidfromaddr(secondaddr ?? '')
+  return mid[second] ?? ''
 }
 
 function reconcilecorner(ida: string, idb: string): string {
