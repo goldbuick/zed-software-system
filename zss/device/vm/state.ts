@@ -6,9 +6,6 @@
 export const SECOND_TIMEOUT = 16
 export const FLUSH_RATE = 60
 
-/** Seconds (1 `second` tick each) to wait for tick confirmation before clearing election. */
-export const BOARDRUNNER_ACK_FAIL_COUNT = 2
-
 /** Wall-clock ms without `vm:acktick` before evicting a tick-confirmed runner. */
 export const BOARDRUNNER_ACKTICK_STALE_MS = 2_000
 

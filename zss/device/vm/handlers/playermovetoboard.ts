@@ -2,7 +2,6 @@ import { LOG_DEBUG } from 'zss/config'
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
 import { boardrunnerowned } from 'zss/device/api'
-import { boardrunnersendsnapshot } from 'zss/device/vm/helpers'
 import {
   memorysyncrevokeboardrunner,
   memorysyncupdateboard,

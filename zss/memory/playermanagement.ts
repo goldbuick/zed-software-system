@@ -1,10 +1,7 @@
 import { createchipid } from 'zss/chip'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  BOARDRUNNER_ACK_FAIL_COUNT,
-  skipboardrunners,
-} from 'zss/device/vm/state'
+import { skipboardrunners } from 'zss/device/vm/state'
 import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
@@ -34,7 +31,6 @@ import {
   memoryclearbookflags,
   memoryreadbookflag,
   memoryreadbookflags,
-  memoryreadcodepage,
   memorywritebookflag,
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
@@ -182,25 +178,6 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
     }
   }
   return mainboards
-}
-
-/** Shared eligibility for a board’s acked runner (hard-lock in elections and tick ack-sync). */
-export function boardrunnerackeligible(
-  boardid: string,
-  ackedplayer: string,
-  playeridsbyboard: Record<string, string[]>,
-  boardrunnerfailed: Record<string, Record<string, number>> | undefined,
-): boolean {
-  if (!isstring(ackedplayer) || !ackedplayer.length) {
-    return false
-  }
-  if (
-    boardrunnerfailed?.[boardid]?.[ackedplayer] === BOARDRUNNER_ACK_FAIL_COUNT
-  ) {
-    return false
-  }
-  const onboard = playeridsbyboard[boardid] ?? []
-  return onboard.includes(ackedplayer)
 }
 
 export function memorywritebookplayerboard(

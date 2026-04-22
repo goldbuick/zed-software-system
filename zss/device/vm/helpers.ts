@@ -12,16 +12,7 @@ import {
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { memorycompressbooks } from 'zss/memory/utilities'
 
-import { memorysyncadmitboardrunner } from './memorysimsync'
-
 export const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
-
-export function boardrunnersendsnapshot(
-  player: string,
-  boardaddress: string,
-): void {
-  memorysyncadmitboardrunner(player, boardaddress)
-}
 
 export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   const books = memoryreadbooklist()

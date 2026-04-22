@@ -75,7 +75,6 @@ export function shouldnotforwardonpeer(message: MESSAGE): boolean {
         default:
           break
       }
-      console.info('blocked shouldnotforwardonpeer', route.target, route.path)
       break
     }
   }
