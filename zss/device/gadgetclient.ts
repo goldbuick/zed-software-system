@@ -1,9 +1,6 @@
 import { createdevice } from 'zss/device'
-import type { GADGET_STATE } from 'zss/gadget/data/types'
-import {
-  applylayercacheupdate,
-  useGadgetClient,
-} from 'zss/gadget/data/zustandstores'
+import { type GADGET_STATE } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { isequal, ispresent } from 'zss/mapping/types'
 import { isgadgetstream, playerfromgadgetstream } from 'zss/memory/memorydirty'
 

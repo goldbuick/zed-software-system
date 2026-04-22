@@ -28,11 +28,7 @@ import {
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
 import { memorytickmain } from 'zss/memory/runtime'
-import {
-  memoryreadfreeze,
-  memoryreadhalt,
-  memoryreadroot,
-} from 'zss/memory/session'
+import { memoryreadfreeze, memoryreadhalt } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { BOARD } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
@@ -234,7 +230,6 @@ const boardrunner = createdevice(
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
-      console.info('boardrunner', message.target, payload.streamid)
       return
     }
 
