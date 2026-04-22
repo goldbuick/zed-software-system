@@ -4,6 +4,7 @@ import {
 } from 'zss/device/forward'
 
 import { setassignedplayer } from './device/boardrunner'
+import './device/modem'
 import './device/rxreplclient'
 import './device/gadgetmemoryprovider'
 

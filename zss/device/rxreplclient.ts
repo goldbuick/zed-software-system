@@ -9,6 +9,7 @@ import {
   streamreplensureclientdb,
   streamreplmirrorputlocal,
   streamreplmirrorsetnonotify,
+  streamreplnotifymirrorstreamrowrepl,
   streamreplregisterreplicationboardnotify,
   streamreplregisterstreamchangeddevice,
 } from './netsim'
@@ -92,6 +93,7 @@ function applystreamrow(
   if (streamreplreplicationisactive()) {
     streamreplreplicationfeedstreamrow(payload)
     streamreplmirrorsetnonotify(payload.streamid, next)
+    streamreplnotifymirrorstreamrowrepl(payload.streamid, next)
   } else {
     streamreplmirrorputlocal(payload.streamid, next)
   }
