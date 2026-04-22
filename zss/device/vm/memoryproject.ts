@@ -5,6 +5,43 @@ canonical MEMORY singleton). Lives below memorysync (server-side) and
 memoryworkersync (worker-side) so neither side depends on the other's
 transport-only helpers. Projections are deepcopy-safe and never mutate live
 MEMORY references; unproject mutates MEMORY under `memorywithsilentwrites`.
+
+--- Wire contract (read before changing sync key lists) ---
+
+Streams (see `routememoryjsonsyncdocument`):
+- `memory` — Root allowlist: MEMORY_SYNC_TOPKEYS. Excludes `loaders`, `topic`
+  (server-only / routing; see `MEMORY_ROOT` in `zss/memory/session.ts`). Books
+  are projected with BOARD codepages as **shells only**; full board bodies
+  replicate on `board:<id>`. Main-book flags omit per-player ids and
+  `gadgetstore` (those use `flags:<pid>` / `gadget:<pid>`).
+- `board:<id>` — BOARD field allowlist: BOARD_SYNC_TOPKEYS; elements use
+  BOARD_ELEMENT_SYNC_TOPKEYS (aligned with `memoryexportboardelement`).
+- `flags:<pid>`, `gadget:<pid>` — full bags / gadget doc via `projectplayerflags` /
+  `projectgadget`.
+
+**Authoritative `memory.books`:** `hydratememory` and `unprojectmemory` both
+remove local books whose id is **absent** from the incoming `books` object. Every
+`projectmemory()` must therefore include the full set of book ids; partial book
+lists are undefined behavior and can delete worker/sim state (see
+`memoryhydrate` tests: “removes worker-local books…”, “drops BOARD page when…”).
+
+**Client notify path (board streams):** After `applystreamrow` with replication
+on, the Rx mirror is updated in `streamreplmirrorsetnonotify` and
+`streamreplreplicationfeedstreamrow`; if Rx `received$` does not run for a no-op
+rev, `streamreplnotifymirrorstreamrowrepl` in `zss/device/netsim.ts` still emits
+`streamid:changed` so `memoryhydratefromjsonsync` runs on the boardrunner
+worker. Seed `lastreplicationnotifyrev` so `streamreplmirroronreplicationdown`
+dedupes if `received$` later fires for the same rev.
+
+--- Adding persisted fields that must cross the wire ---
+
+1. Add to the appropriate `*_SYNC_TOPKEYS` (and keep `unprojectboardstream`
+   overlay in sync for sim-side patches, or ensure hydrate replaces the field).
+2. `BOARD` / `BOARD_ELEMENT` in `zss/memory/types.ts` may include **runtime**
+   fields intentionally **not** listed here (e.g. `named`, `lookup`, `distmaps`,
+   `drawlastfp` on BOARD; `displaychar`, `kinddata`, `sender`, `removed` on
+   elements). Clients rebuild those after `memoryinitboard` / tick — they are
+   not shipped on `board:<id>`.
 */
 import { initstate } from 'zss/gadget/data/api'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
@@ -82,6 +119,8 @@ export const MEMORY_SYNC_TOPKEYS = [
   'freeze',
 ] as const
 
+// Not in MEMORY_SYNC_TOPKEYS (intentional): `loaders`, `topic` on `MEMORY_ROOT`.
+
 // Root scalars applied on sim unproject (books handled separately).
 const MEMORY_UNPROJECT_SCALAR_KEYS: readonly string[] = [
   'freeze',
@@ -130,9 +169,11 @@ export const BOARD_SYNC_TOPKEYS: readonly string[] = [
   'objects',
   'overboard',
   'underboard',
-  'charsetpage',
-  'palettepage',
 ]
+
+// Intentionally omitted from BOARD (see `BOARD` in `zss/memory/types.ts`):
+// runtime caches — `named`, `lookup`, `distmaps`, `drawlastfp`, `drawlastxy`,
+// `drawallowids`, `drawneedfull` — rebuilt locally after `memoryinitboard` / tick.
 
 // BOARD_ELEMENT fields that travel over the wire. mirrors the keep-list of
 // memoryexportboardelement in zss/memory/boardelement.ts: persisted identity,
@@ -178,6 +219,11 @@ export const BOARD_ELEMENT_SYNC_TOPKEYS: readonly string[] = [
   'shootx',
   'shooty',
 ]
+
+// Omitted (runtime or message ephemera on `BOARD_ELEMENT`): `displaychar`,
+// `displaycolor`, `displaybg`, `displayname`, `sender`, `arg`, `didfail`,
+// `category`, `kinddata`, `removed`, `bucket`, `stopped` — see type + comments
+// in `zss/memory/types.ts` and `zss/memory/boardelement.ts` export path.
 
 // ---------------------------------------------------------------------------
 // MEMORY stream — project / unproject

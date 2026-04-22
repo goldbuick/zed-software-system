@@ -28,7 +28,11 @@ import {
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
 import { memorytickmain } from 'zss/memory/runtime'
-import { memoryreadfreeze, memoryreadhalt } from 'zss/memory/session'
+import {
+  memoryreadfreeze,
+  memoryreadhalt,
+  memoryreadroot,
+} from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { BOARD } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
@@ -228,10 +232,11 @@ const boardrunner = createdevice(
     // handle messages
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
-      // tomorrow we need to debug why we don't get board, flag, or gadget changes
-      console.info('jsonsync', payload.streamid, payload.document)
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
+      if (payload.streamid === 'memory') {
+        console.info('####', memoryreadroot())
+      }
       return
     }
 

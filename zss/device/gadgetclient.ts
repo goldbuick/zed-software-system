@@ -24,6 +24,7 @@ export const gadgetclientdevice = createdevice(
     ) {
       return
     }
+    console.info('gadgetclient', payload.streamid, payload.document)
     const player = registerreadplayer()
     const streampid = playerfromgadgetstream(payload.streamid)
     if (streampid !== player) {
@@ -38,7 +39,6 @@ export const gadgetclientdevice = createdevice(
       if (rev < state.gadgetsyncrev) {
         return state
       }
-      const nextwiretick = state.gadgetwiretick + 1
       if (rev === state.gadgetsyncrev) {
         const keepScroll =
           (!incoming.scroll || incoming.scroll.length === 0) &&
@@ -51,7 +51,6 @@ export const gadgetclientdevice = createdevice(
         if (keepScroll || keepSidebar) {
           return {
             ...state,
-            gadgetwiretick: nextwiretick,
             gadget: {
               ...incoming,
               ...(keepScroll
@@ -71,7 +70,6 @@ export const gadgetclientdevice = createdevice(
         }
         return {
           ...state,
-          gadgetwiretick: nextwiretick,
           gadget: incoming,
           gadgetsyncrev: rev,
           gadgetscrolllocal: hasincomingscroll,
@@ -90,7 +88,6 @@ export const gadgetclientdevice = createdevice(
           ispresent(incoming.sidebar) && incoming.sidebar.length > 0
         const keepSidebar = hasprevsidebar && !hasincomingsidebar
         return {
-          gadgetwiretick: nextwiretick,
           gadget: {
             ...incoming,
             scroll: prev.scroll,
@@ -112,7 +109,6 @@ export const gadgetclientdevice = createdevice(
       const layerpaint = (incoming.layers?.length ?? 0) > 0
       if (hasprevsidebar && !hasincomingsidebar && layerpaint) {
         return {
-          gadgetwiretick: nextwiretick,
           gadget: {
             ...incoming,
             sidebar: prev.sidebar,
@@ -127,7 +123,6 @@ export const gadgetclientdevice = createdevice(
         }
       }
       return {
-        gadgetwiretick: nextwiretick,
         gadget: incoming,
         gadgetsyncrev: rev,
         gadgetscrolllocal: hasincomingscroll,

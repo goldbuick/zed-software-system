@@ -69,7 +69,7 @@ Entry: [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts).
 | Device | Source file | Notes |
 |--------|-------------|--------|
 | `boardrunner` | [`zss/device/boardrunner.ts`](../../device/boardrunner.ts) | Owned-board tick; hydrates `memory` / `board:*` / `flags:*` changes; **topic** `user` so it receives `user:*` (not a separate `user` device). |
-| `rxreplclient` | [`zss/device/rxreplclient.ts`](../../device/rxreplclient.ts) | Stream mirror + replication; **boardrunner worker only** (imported from [`boardrunnerspace.ts`](../../boardrunnerspace.ts)). |
+| `rxreplclient` | [`zss/device/rxreplclient.ts`](../../device/rxreplclient.ts) | Stream mirror + replication; **boardrunner worker only** (imported from [`boardrunnerspace.ts`](../../boardrunnerspace.ts)). After `stream_row` applies, [`streamreplnotifymirrorstreamrowrepl`](../../device/netsim.ts) can emit `board:<id>:changed` (and `memory` / `flags`) when Rx replication’s `received$` elides a duplicate rev, so [`memoryhydratefromjsonsync`](../../device/vm/memoryhydrate.ts) still runs; see module header in [`memoryproject.ts`](../vm/memoryproject.ts). |
 | `modem` | [`zss/device/modem.ts`](../../device/modem.ts) | Worker Yjs instance (imported from [`boardrunnerspace.ts`](../../boardrunnerspace.ts)). |
 | *(hook)* `gadgetmemoryprovider` | [`zss/device/gadgetmemoryprovider.ts`](../../device/gadgetmemoryprovider.ts) | Worker gadget store + dirty marking; **not** a `createdevice`. |
 | `forward` | [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts) | To main when `shouldforwardboardrunnertoclient`. |

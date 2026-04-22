@@ -252,8 +252,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     underref.current.scale.setScalar(rscale)
   })
 
-  // re-render when board or layer counts change (board change must trigger re-render)
-  useGadgetClient((state) => state.gadgetwiretick)
+  // re-render on new gadget snapshot (reference); fine-grained hooks below narrow invalidation
+  useGadgetClient((state) => state.gadget)
   useGadgetClient((state) => state.gadget.board)
   useGadgetClient((state) => state.gadget.over?.length ?? 0)
   useGadgetClient((state) => state.gadget.under?.length ?? 0)

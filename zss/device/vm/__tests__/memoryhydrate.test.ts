@@ -286,4 +286,76 @@ describe('memoryhydratefromjsonsync', () => {
     // nothing was created, nothing was marked dirty
     expect(memoryreadroot().books.size).toBe(0)
   })
+
+  it('projectmemory includes every local book id (full-authority books list)', () => {
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      software: { main: 'main-id', temp: 'other-id' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+        'other-id': {
+          id: 'other-id',
+          name: 'other',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+    const projected = projectmemory() as Record<string, unknown>
+    const books = projected.books as Record<string, unknown>
+    expect(Object.keys(books).sort()).toEqual(['main-id', 'other-id'])
+  })
+
+  it('replaces board body when a second full board stream snapshot is applied to the same id', () => {
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      software: { main: 'main-id', temp: '' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+    const streamid = boardstream('boardA')
+    memoryhydratefromjsonsync(streamid, {
+      id: 'boardA',
+      code: '@boardA\n',
+      board: {
+        id: 'boardA',
+        name: 'boardA',
+        terrain: [],
+        objects: {
+          'obj-1': { id: 'obj-1', kind: 'object', x: 0, y: 0 },
+        },
+      },
+    })
+    let main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    let codepage = main?.pages.find((p) => p.id === 'boardA')
+    expect(Object.keys(codepage?.board?.objects ?? {})).toEqual(['obj-1'])
+
+    memoryhydratefromjsonsync(streamid, {
+      id: 'boardA',
+      code: '@boardA\n',
+      board: {
+        id: 'boardA',
+        name: 'boardA',
+        terrain: [],
+        objects: {
+          'obj-2': { id: 'obj-2', kind: 'object', x: 1, y: 1 },
+        },
+      },
+    })
+    main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    codepage = main?.pages.find((p) => p.id === 'boardA')
+    expect(Object.keys(codepage?.board?.objects ?? {})).toEqual(['obj-2'])
+  })
 })
