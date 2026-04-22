@@ -10,6 +10,7 @@ import {
 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { useGadgetClientChanged } from 'zss/gadget/data/usegadgetclientchanged'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import {
@@ -31,7 +32,6 @@ import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
-import { useShallow } from 'zustand/react/shallow'
 
 type GraphicsProps = {
   width: number
@@ -252,24 +252,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     underref.current.scale.setScalar(rscale)
   })
 
-  // re-render on new gadget snapshot (reference); fine-grained hooks below narrow invalidation
-  useGadgetClient((state) => state.gadget)
-  useGadgetClient((state) => state.gadget.board)
-  useGadgetClient((state) => state.gadget.over?.length ?? 0)
-  useGadgetClient((state) => state.gadget.under?.length ?? 0)
-  useGadgetClient((state) => state.gadget.layers?.length ?? 0)
-  useGadgetClient(
-    useShallow((state) => ({
-      exiteast: state.gadget.exiteast,
-      exitwest: state.gadget.exitwest,
-      exitnorth: state.gadget.exitnorth,
-      exitsouth: state.gadget.exitsouth,
-      exitne: state.gadget.exitne,
-      exitnw: state.gadget.exitnw,
-      exitse: state.gadget.exitse,
-      exitsw: state.gadget.exitsw,
-    })),
-  )
+  const gadgetsyncrev = useGadgetClientChanged()
+  console.info('mode7', gadgetsyncrev)
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget

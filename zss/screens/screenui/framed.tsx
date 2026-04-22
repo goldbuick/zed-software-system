@@ -56,7 +56,7 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const inspector = useTape((state) => state.inspector)
 
   // re-render on new gadget snapshot (reference)
-  useGadgetClient((state) => state.gadget)
+  const gadgetsyncrev = useGadgetClient((state) => state.gadgetsyncrev)
 
   // handle graphics modes
   const graphics = useGadgetClient((state) => {
@@ -72,6 +72,8 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
       synthupdate(SOFTWARE, player, board, synthstate)
     }
   }, [player, board])
+
+  console.info('framed', gadgetsyncrev, graphics, board)
 
   return (
     <>

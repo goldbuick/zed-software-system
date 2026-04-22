@@ -8,6 +8,7 @@ import {
 } from 'three'
 import { FLAT_CAMERA_ORTHO_ASSERT, RUNTIME } from 'zss/config'
 import { layersreadcontrol } from 'zss/gadget/data/types'
+import { useGadgetClientChanged } from 'zss/gadget/data/usegadgetclientchanged'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
@@ -25,7 +26,6 @@ import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
-import { useShallow } from 'zustand/react/shallow'
 
 import { RenderLayer } from './renderlayer'
 
@@ -146,24 +146,7 @@ export const FlatGraphics = memo(function FlatGraphics({
     cam.updateMatrixWorld()
   })
 
-  // re-render on new gadget snapshot (reference); fine-grained hooks below narrow invalidation
-  useGadgetClient((state) => state.gadget)
-  useGadgetClient((state) => state.gadget.board)
-  useGadgetClient((state) => state.gadget.over?.length ?? 0)
-  useGadgetClient((state) => state.gadget.under?.length ?? 0)
-  useGadgetClient((state) => state.gadget.layers?.length ?? 0)
-  useGadgetClient(
-    useShallow((state) => ({
-      exiteast: state.gadget.exiteast,
-      exitwest: state.gadget.exitwest,
-      exitnorth: state.gadget.exitnorth,
-      exitsouth: state.gadget.exitsouth,
-      exitne: state.gadget.exitne,
-      exitnw: state.gadget.exitnw,
-      exitse: state.gadget.exitse,
-      exitsw: state.gadget.exitsw,
-    })),
-  )
+  const gadgetsyncrev = useGadgetClientChanged()
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
@@ -173,6 +156,13 @@ export const FlatGraphics = memo(function FlatGraphics({
     drawwidth,
     drawheight,
   )
+
+  console.info('flat', gadgetsyncrev, {
+    over,
+    under,
+    layers,
+    exitpreviewgroups,
+  })
 
   // z of the topmost board layer (must stay in sync with FlatLayer z props below)
   const topoverz =
