@@ -142,8 +142,8 @@ function emitstreamchanged(streamid: string, stream: STREAMREPL_CLIENT_STREAM) {
  * Sim `rxreplclient:stream_row` updates the mirror via `streamreplmirrorsetnonotify`
  * and feeds scoped Rx replication, but Rx `received$` may not run when the row rev
  * matches the checkpoint already materialized in the mirror — so nothing emits
- * `${streamid}:changed` and boardrunner never hydrates. Call after feed + nonotify
- * for memory / flags / board; seed `lastreplicationnotifyrev` so a later `received$`
+ * `${streamid}:changed` and boardrunner / gadgetclient never hydrate. Call after feed + nonotify
+ * for memory / flags / board / gadget; seed `lastreplicationnotifyrev` so a later `received$`
  * duplicate rev skips in `streamreplmirroronreplicationdown`.
  */
 export function streamreplnotifymirrorstreamrowrepl(
@@ -153,7 +153,8 @@ export function streamreplnotifymirrorstreamrowrepl(
   if (
     !ismemorystream(streamid) &&
     !isflagsstream(streamid) &&
-    !isboardstream(streamid)
+    !isboardstream(streamid) &&
+    !isgadgetstream(streamid)
   ) {
     return
   }

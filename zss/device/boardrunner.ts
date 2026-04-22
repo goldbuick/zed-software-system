@@ -164,7 +164,6 @@ function rendergadgetstate(players: string[]) {
       gadget.synthstate = synthstate
       rendergadgetlayers(gadget, player, board, gadgetlayers)
       gadgetmarkdirty(player)
-      console.info('rendergadgetstate', player)
     }
   }
 }
@@ -209,7 +208,7 @@ function handleworkeruserinput(message: MESSAGE): void {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['user', 'memory', 'flags', 'board', 'gadget'],
+  ['user', 'memory', 'flags', 'board'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
