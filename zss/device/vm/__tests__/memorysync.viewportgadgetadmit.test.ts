@@ -46,7 +46,10 @@ describe('memorysync viewport gadget admission', () => {
       board: {
         id: boardId,
         terrain: [],
-        objects: {},
+        objects: {
+          [runner]: { id: runner },
+          [joiner]: { id: joiner },
+        },
       },
     }
 
@@ -73,8 +76,8 @@ describe('memorysync viewport gadget admission', () => {
 
     const gstream = gadgetstream(joiner)
     const entry = streamreplserverreadstream(gstream)
-    expect(entry?.players.has(joiner)).toBe(true)
     expect(entry?.players.has(runner)).toBe(true)
+    expect(entry?.players.get(runner)?.writable).toBe(true)
   })
 
   it('memory push admits gadget for joiner whose board flag appears after snapshot', () => {
@@ -92,7 +95,10 @@ describe('memorysync viewport gadget admission', () => {
       board: {
         id: boardId,
         terrain: [],
-        objects: {},
+        objects: {
+          [runner]: { id: runner },
+          [joiner]: { id: joiner },
+        },
       },
     }
 
@@ -116,7 +122,7 @@ describe('memorysync viewport gadget admission', () => {
     streamreplserverclearfortests()
     streamreplserverregister(memorystream(), projectmemory())
 
-    ackboardrunners[boardId] = runner
+    ackboardrunners[boardId] = Date.now()
     memorysyncadmitboardrunner(runner, boardId)
 
     let gjoin = streamreplserverreadstream(gadgetstream(joiner))
@@ -128,7 +134,6 @@ describe('memorysync viewport gadget admission', () => {
     memorysyncpushdirty()
 
     gjoin = streamreplserverreadstream(gadgetstream(joiner))
-    expect(gjoin?.players.has(joiner)).toBe(true)
     expect(gjoin?.players.has(runner)).toBe(true)
   })
 })

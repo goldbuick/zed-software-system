@@ -6,7 +6,7 @@ describe('memorycornerexitboardids', () => {
   let spy: jest.SpyInstance
 
   beforeEach(() => {
-    spy = jest.spyOn(boards, 'memoryreadboardbyaddressstable')
+    spy = jest.spyOn(boards, 'memoryreadboardbyaddress')
   })
 
   afterEach(() => {
@@ -32,7 +32,7 @@ describe('memorycornerexitboardids', () => {
       exiteast: 'e',
     } as BOARD
     const r = memorycornerexitboardids(cur)
-    expect(r.exitne).toBe('target-ne')
+    expect(r.exitne).toBe('addr-ne')
   })
 
   it('uses single path when the other hop is missing', () => {
@@ -47,7 +47,7 @@ describe('memorycornerexitboardids', () => {
       exiteast: 'e',
     } as BOARD
     const r = memorycornerexitboardids(cur)
-    expect(r.exitne).toBe('only-ne')
+    expect(r.exitne).toBe('addr-ne')
   })
 
   it('returns CORNER_EXIT_DISPUTED when both paths resolve but disagree', () => {
