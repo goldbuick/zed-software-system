@@ -164,6 +164,7 @@ function rendergadgetstate(players: string[]) {
       gadget.synthstate = synthstate
       rendergadgetlayers(gadget, player, board, gadgetlayers)
       gadgetmarkdirty(player)
+      console.info('rendergadgetstate', player)
     }
   }
 }
@@ -208,7 +209,7 @@ function handleworkeruserinput(message: MESSAGE): void {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['user', 'memory', 'flags', 'board'],
+  ['user', 'memory', 'flags', 'board', 'gadget'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
@@ -234,9 +235,7 @@ const boardrunner = createdevice(
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
-      if (payload.streamid === 'memory') {
-        console.info('####', memoryreadroot())
-      }
+      console.info('boardrunner', message.target, payload.streamid)
       return
     }
 

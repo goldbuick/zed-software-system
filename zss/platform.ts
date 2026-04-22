@@ -67,9 +67,6 @@ export function createplatform(isstub = false, climode = false) {
   // handle messages from boardrunner
   function boardrunnermessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (message.target.includes('gadget')) {
-      console.info('boardrunnermessages', message)
-    }
     // handles message from boardrunner -> server
     if (shouldforwardclienttoserver(message) && ispresent(platform)) {
       platform.postMessage(message)

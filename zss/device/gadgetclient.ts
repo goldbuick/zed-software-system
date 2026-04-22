@@ -17,6 +17,7 @@ export const gadgetclientdevice = createdevice(
     if (!gadgetclientdevice.session(message)) {
       return
     }
+    console.info('gadgetclient', message.target, message.data)
     const payload = message.data as JSONSYNC_CHANGED
     if (
       !isgadgetstream(payload?.streamid ?? '') ||
@@ -24,7 +25,6 @@ export const gadgetclientdevice = createdevice(
     ) {
       return
     }
-    console.info('gadgetclient', payload.streamid, payload.document)
     const player = registerreadplayer()
     const streampid = playerfromgadgetstream(payload.streamid)
     if (streampid !== player) {
