@@ -9,7 +9,6 @@ flags.inputqueue anymore — that is the boardrunner worker's responsibility
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
-import { handleuserinput } from 'zss/device/vm/handlers/input'
 import { lastinputtime } from 'zss/device/vm/state'
 import { INPUT } from 'zss/gadget/data/types'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'

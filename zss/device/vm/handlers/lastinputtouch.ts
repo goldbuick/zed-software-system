@@ -1,10 +1,13 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import { type MESSAGE, vmlocal } from 'zss/device/api'
 import { lastinputtime } from 'zss/device/vm/state'
-import { isstring } from 'zss/mapping/types'
+import { memoryhasflags } from 'zss/memory/flags'
 
-export function handlelastinputtouch(_vm: DEVICE, message: MESSAGE): void {
-  if (isstring(message.data)) {
-    lastinputtime[message.data] = Date.now()
+export function handlelastinputtouch(vm: DEVICE, message: MESSAGE): void {
+  if (message.player.includes('local') && !memoryhasflags(message.player)) {
+    vmlocal(vm, message.player)
+  }
+  if (!message.player.includes('local') || memoryhasflags(message.player)) {
+    lastinputtime[message.player] = Date.now()
   }
 }

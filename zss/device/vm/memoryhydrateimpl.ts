@@ -34,6 +34,24 @@ import {
   mergeflagspreservingvolatile,
 } from './memorywiremerge'
 
+/** Board stream rows can arrive before `memory` sets `software.main`; keep latest doc per id until flush. */
+const pendingboardhydratedocuments = new Map<string, Record<string, unknown>>()
+
+function flushpendingboardhydrates(): void {
+  if (!ispresent(memoryreadbookbysoftware(MEMORY_LABEL.MAIN))) {
+    return
+  }
+  if (pendingboardhydratedocuments.size === 0) {
+    return
+  }
+  const entries = [...pendingboardhydratedocuments.entries()]
+  pendingboardhydratedocuments.clear()
+  for (let i = 0; i < entries.length; ++i) {
+    const [boardid, document] = entries[i]
+    hydrateboard(boardid, document)
+  }
+}
+
 export function hydrategadget(
   player: string,
   document: Record<string, unknown>,
@@ -83,6 +101,7 @@ export function hydratememory(document: Record<string, unknown>): void {
   // hydrate other top-level keys
   hydratebooks(document)
   hydratesoftware(document)
+  flushpendingboardhydrates()
 }
 
 function hydratebooks(document: Record<string, unknown>): void {
@@ -221,10 +240,10 @@ export function hydrateboard(
 ): void {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
-    // no main book yet — memory snapshot hasn't arrived. drop on the floor;
-    // a follow-up board patch (or the next snapshot) will retry.
+    pendingboardhydratedocuments.set(boardid, deepcopy(document))
     return
   }
+  pendingboardhydratedocuments.delete(boardid)
   let codepage = mainbook.pages.find((p) => p.id === boardid)
   if (!ispresent(codepage)) {
     codepage = {

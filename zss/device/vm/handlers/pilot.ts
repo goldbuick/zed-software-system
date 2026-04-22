@@ -3,9 +3,14 @@ import type { MESSAGE } from 'zss/device/api'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
-import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
-import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import { memoryreadflags } from 'zss/memory/flags'
+import {
+  memoryplayerflagsready,
+  memoryreadplayerboard,
+} from 'zss/memory/playermanagement'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { memoryreadboardpath } from 'zss/memory/spatialqueries'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 
 const PILOT_TICK_INTERVAL = 2
@@ -138,7 +143,8 @@ export function pilottick(vm: DEVICE): void {
       continue
     }
 
-    if (!memoryhasflags(playerid)) {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    if (!ispresent(mainbook) || !memoryplayerflagsready(mainbook, playerid)) {
       continue
     }
 

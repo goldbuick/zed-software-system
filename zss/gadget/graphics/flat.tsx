@@ -146,7 +146,7 @@ export const FlatGraphics = memo(function FlatGraphics({
     cam.updateMatrixWorld()
   })
 
-  const gadgetsyncrev = useGadgetClientChanged()
+  useGadgetClientChanged()
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
@@ -156,13 +156,6 @@ export const FlatGraphics = memo(function FlatGraphics({
     drawwidth,
     drawheight,
   )
-
-  console.info('flat', gadgetsyncrev, {
-    over,
-    under,
-    layers,
-    exitpreviewgroups,
-  })
 
   // z of the topmost board layer (must stay in sync with FlatLayer z props below)
   const topoverz =

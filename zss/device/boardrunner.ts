@@ -10,7 +10,7 @@ import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
 } from 'zss/memory/boards'
-import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
+import { memoryreadflags } from 'zss/memory/flags'
 import {
   flagsstream,
   isboardstream,
@@ -19,6 +19,7 @@ import {
   memorymarkdirty,
 } from 'zss/memory/memorydirty'
 import {
+  memoryplayerflagsready,
   memoryreadplayerboard,
   memoryreadplayers,
 } from 'zss/memory/playermanagement'
@@ -28,9 +29,13 @@ import {
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
 import { memorytickmain } from 'zss/memory/runtime'
-import { memoryreadfreeze, memoryreadhalt } from 'zss/memory/session'
+import {
+  memoryreadbookbysoftware,
+  memoryreadfreeze,
+  memoryreadhalt,
+} from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
-import { BOARD } from 'zss/memory/types'
+import { BOARD, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
@@ -188,7 +193,11 @@ function runworkertick(timestamp: number): void {
 }
 
 function handleworkeruserinput(message: MESSAGE): void {
-  if (!memoryhasflags(message.player)) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (
+    !ispresent(mainbook) ||
+    !memoryplayerflagsready(mainbook, message.player)
+  ) {
     return
   }
   const flags = memoryreadflags(message.player)
@@ -200,6 +209,7 @@ function handleworkeruserinput(message: MESSAGE): void {
     flags.inputqueue.push([input, mods])
   }
   memorymarkdirty(flagsstream(message.player))
+  console.info('flags.inputqueue', flags.inputqueue)
 }
 
 const boardrunner = createdevice(
@@ -228,6 +238,7 @@ const boardrunner = createdevice(
     // handle messages
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
+      // console.info('boardrunner', message.target, payload.document)
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
       return
@@ -248,6 +259,7 @@ const boardrunner = createdevice(
         break
       case 'tick':
         if (isnumber(message.data) && assignedboard) {
+          // console.info('boardrunner tick', message.data)
           runworkertick(message.data)
           boardrunner.reply(message, 'acktick', assignedboard)
         }

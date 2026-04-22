@@ -29,6 +29,7 @@ import {
 import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryclearbookflags,
+  memorypeekbookflag,
   memoryreadbookflag,
   memoryreadbookflags,
   memorywritebookflag,
@@ -136,10 +137,16 @@ export function memorymoveplayertoboard(
 function bookplayerreadboardids(book: MAYBE<BOOK>) {
   const activelist = book?.activelist ?? []
   const boardids = activelist.map((player) => {
-    const value = memoryreadbookflag(book, player, 'board')
+    const value = memorypeekbookflag(book, player, 'board')
     return isstring(value) ? value : ''
   })
   return unique(boardids)
+}
+
+/** True when `flags[pid]` exists on the book and has an authoritative `board` (no auto-create reads). */
+export function memoryplayerflagsready(book: MAYBE<BOOK>, playerId: string) {
+  const b = memorypeekbookflag(book, playerId, 'board')
+  return isstring(b) && b.length > 0
 }
 
 export function memoryreadbookplayers(book: MAYBE<BOOK>) {

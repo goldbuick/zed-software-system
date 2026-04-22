@@ -252,8 +252,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     underref.current.scale.setScalar(rscale)
   })
 
-  const gadgetsyncrev = useGadgetClientChanged()
-  console.info('mode7', gadgetsyncrev)
+  useGadgetClientChanged()
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget

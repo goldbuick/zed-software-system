@@ -274,8 +274,7 @@ export const FPVGraphics = memo(function FPVGraphics({
     }
   })
 
-  const gadgetsyncrev = useGadgetClientChanged()
-  console.info('fpv', gadgetsyncrev)
+  useGadgetClientChanged()
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget

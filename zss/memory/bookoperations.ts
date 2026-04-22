@@ -285,6 +285,22 @@ export function memoryreadcodepagewithtype(
   return codepage
 }
 
+/** Read a flag value without creating `book.flags[id]` (enumeration / readiness only). */
+export function memorypeekbookflag(
+  book: MAYBE<BOOK>,
+  id: string,
+  name: string,
+): unknown {
+  if (!ispresent(book)) {
+    return undefined
+  }
+  const row = book.flags[id] as Record<string, unknown> | undefined
+  if (!ispresent(row) || typeof row !== 'object') {
+    return undefined
+  }
+  return row[name]
+}
+
 export function memoryreadbookflag(
   book: MAYBE<BOOK>,
   id: string,

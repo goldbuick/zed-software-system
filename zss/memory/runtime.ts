@@ -28,6 +28,7 @@ import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
 import {
+  memoryplayerflagsready,
   memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from './playermanagement'
@@ -183,14 +184,14 @@ export function memorytickmain(timestamp: number, playeronly = false) {
         for (let i = 0; i < run.length; ++i) {
           const { type, code, object, terrain, pass, label, id } = run[i]
           if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
-            memorytickonce(
-              mainbook,
-              board,
-              object ?? terrain,
-              code,
-              id,
-              label ?? '',
-            )
+            const el = object ?? terrain
+            if (
+              ispid(el?.id ?? '') &&
+              !memoryplayerflagsready(mainbook, el?.id ?? '')
+            ) {
+              continue
+            }
+            memorytickonce(mainbook, board, el, code, id, label ?? '')
           }
         }
       }
@@ -239,6 +240,11 @@ export function memorytickobject(
   code: string,
 ) {
   if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
+    return
+  }
+
+  const objectid = object.id ?? ''
+  if (ispid(objectid) && !memoryplayerflagsready(book, objectid)) {
     return
   }
 

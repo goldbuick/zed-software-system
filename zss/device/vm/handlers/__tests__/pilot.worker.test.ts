@@ -106,6 +106,48 @@ describe('worker pilottick', () => {
     expect(playerflags.inputqueue).toEqual([[INPUT.MOVE_RIGHT, 0]])
   })
 
+  it('does not enqueue input when flags row has no authoritative board', () => {
+    session.memoryresetbooks([
+      {
+        id: 'main-id',
+        name: 'main',
+        timestamp: 0,
+        activelist: ['p1'],
+        pages: [],
+        flags: { p1: { user: 'x' } as BOOK['flags'][string] },
+      },
+    ])
+    session.memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
+
+    const board = makefakeboard()
+    jest.spyOn(playermanagement, 'memoryreadplayerboard').mockReturnValue(board)
+    jest
+      .spyOn(boardaccess, 'memoryreadobject')
+      .mockReturnValue(board.objects.p1)
+    jest
+      .spyOn(spatialqueries, 'memoryreadboardpath')
+      .mockReturnValue({ x: 3, y: 2 })
+
+    handlepilotstart({
+      session: '',
+      player: 'p1',
+      id: 'start',
+      sender: 'user',
+      target: 'pilotstart',
+      data: { x: 4, y: 2 },
+    })
+    pilottick(dev)
+    pilottick(dev)
+
+    const playerflags = flags.memoryreadflags('p1') as Record<
+      string,
+      unknown
+    > & {
+      inputqueue?: [INPUT, number][]
+    }
+    expect(playerflags.inputqueue ?? []).toEqual([])
+  })
+
   it('stop clears pilot state so no further inputs are queued', () => {
     jest
       .spyOn(playermanagement, 'memoryreadplayerboard')

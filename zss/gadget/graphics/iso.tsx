@@ -206,8 +206,7 @@ export const IsoGraphics = memo(function IsoGraphics({
     underref.current.scale.setScalar(rscale)
   })
 
-  const gadgetsyncrev = useGadgetClientChanged()
-  console.info('iso', gadgetsyncrev)
+  useGadgetClientChanged()
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget

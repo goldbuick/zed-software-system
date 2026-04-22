@@ -113,6 +113,47 @@ describe('memoryhydratefromjsonsync', () => {
     expect(memoryhasdirty(streamid)).toBe(false)
   })
 
+  it('applies board stream received before memory establishes software.main', () => {
+    const streamid = boardstream('boardA')
+    memoryhydratefromjsonsync(streamid, {
+      id: 'boardA',
+      code: '@boardA\n',
+      board: {
+        id: 'boardA',
+        name: 'boardA',
+        terrain: [],
+        objects: {
+          'obj-1': {
+            id: 'obj-1',
+            kind: 'player',
+            x: 3,
+            y: 4,
+          },
+        },
+      },
+    })
+
+    memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
+      operator: '',
+      software: { main: 'main-id', temp: '' },
+      books: {
+        'main-id': {
+          id: 'main-id',
+          name: 'main',
+          activelist: [],
+          pages: [],
+          flags: {},
+        },
+      },
+    })
+
+    const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const codepage = main?.pages.find((p) => p.id === 'boardA')
+    expect(codepage?.board?.objects['obj-1']).toBeDefined()
+    expect(codepage?.board?.lookup).toBeDefined()
+    expect(memoryhasdirty(streamid)).toBe(false)
+  })
+
   it('updates an existing book without dropping local BOARD pages', () => {
     // first hydrate creates main book + boardA
     memoryhydratefromjsonsync(MEMORY_STREAM_ID, {
@@ -275,7 +316,7 @@ describe('memoryhydratefromjsonsync', () => {
     expect(main?.pages.some((p) => p.id === 'boardA')).toBe(false)
   })
 
-  it('drops board snapshots arriving before main book exists', () => {
+  it('queues board snapshots when main book is missing (no books until memory arrives)', () => {
     expect(() =>
       memoryhydratefromjsonsync(boardstream('orphan'), {
         id: 'orphan',
@@ -283,7 +324,7 @@ describe('memoryhydratefromjsonsync', () => {
         board: { id: 'orphan', name: 'orphan', terrain: [], objects: {} },
       }),
     ).not.toThrow()
-    // nothing was created, nothing was marked dirty
+    // worker has not created books yet; body is held until software.main exists
     expect(memoryreadroot().books.size).toBe(0)
   })
 
