@@ -8,11 +8,9 @@ import {
   streamreplawaitclientpersistqueue,
   streamreplclientstreammap,
   streamreplflushclientdbfortests,
+  streamreplmirrorputlocal,
 } from 'zss/device/jsonsyncdb'
-import {
-  rxreplclientreadstreams,
-  rxreplclientsetownplayerfortests,
-} from 'zss/device/rxreplclient'
+import { rxreplclientsetownplayerfortests } from 'zss/device/rxreplclient'
 import {
   streamreplpublishfrommemory,
   streamreplserveradmitplayer,
@@ -92,11 +90,11 @@ describe('phase 2 worker -> server round-trip', () => {
     streamreplserveradmitplayer(MEMORY_STREAM_ID, pid, true)
     streamreplserveradmitplayer(fsid, pid, true)
     rxreplclientsetownplayerfortests(pid)
-    rxreplclientreadstreams().set(MEMORY_STREAM_ID, {
+    streamreplmirrorputlocal(MEMORY_STREAM_ID, {
       document: deepcopy(projectmemory()),
       rev: 0,
     })
-    rxreplclientreadstreams().set(fsid, {
+    streamreplmirrorputlocal(fsid, {
       document: deepcopy(projectplayerflags(pid)),
       rev: 0,
     })

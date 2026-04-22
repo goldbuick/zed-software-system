@@ -54,3 +54,6 @@ export type RXREPL_RESYNC = {
 export type RXREPL_NOTIFY = {
   streamids?: string[]
 }
+
+/** Client-side RxDB replication checkpoint (maps to / from `RXREPL_CHECKPOINT` in adapters). */
+export type { StreamReplRxCheckpoint } from './collectionschemas'

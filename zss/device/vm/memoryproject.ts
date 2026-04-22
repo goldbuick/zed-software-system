@@ -42,9 +42,16 @@ import {
 } from 'zss/memory/types'
 
 import {
+  hydrateboard,
+  hydrategadget,
+  hydratememory,
+  hydrateplayerflags,
+} from './memoryhydrateimpl'
+import {
+  BOOK_WIRE_SCALAR_KEYS,
   mergebookpagesfrommemoryprojection,
   mergeflagspreservingvolatile,
-} from './memoryhydrate'
+} from './memorywiremerge'
 
 // ---------------------------------------------------------------------------
 // stream ids
@@ -170,12 +177,6 @@ export const BOARD_ELEMENT_SYNC_TOPKEYS: readonly string[] = [
   'stepy',
   'shootx',
   'shooty',
-]
-
-const BOOK_UNPROJECT_SCALAR_KEYS: readonly string[] = [
-  'name',
-  'activelist',
-  'token',
 ]
 
 // ---------------------------------------------------------------------------
@@ -306,8 +307,8 @@ function createbookfromincoming(
 }
 
 function mergebookscalars(book: BOOK, incoming: Record<string, unknown>): void {
-  for (let i = 0; i < BOOK_UNPROJECT_SCALAR_KEYS.length; ++i) {
-    const key = BOOK_UNPROJECT_SCALAR_KEYS[i]
+  for (let i = 0; i < BOOK_WIRE_SCALAR_KEYS.length; ++i) {
+    const key = BOOK_WIRE_SCALAR_KEYS[i]
     if (Object.prototype.hasOwnProperty.call(incoming, key)) {
       // book.timestamp is intentionally NOT in the projection; runners never
       // see it, so we never overwrite it here either.
@@ -530,6 +531,94 @@ export function unprojectplayerflags(player: string, document: unknown): void {
 }
 
 // ---------------------------------------------------------------------------
+// jsonsync stream dispatch (hydrate + unproject)
+// ---------------------------------------------------------------------------
+
+/** How `routememoryjsonsyncdocument` applies a row body to MEMORY. */
+export type MemoryJsonSyncMode = 'hydrate' | 'unproject'
+
+/** Inbound jsonsync document for a single stream row (parsed JSON body). */
+export type MemoryJsonWireDocument = Record<string, unknown>
+
+export type RoutememoryJsonSyncOpts = {
+  mode: MemoryJsonSyncMode
+  /** When mode is hydrate, log memory / board / gadget / flags applies. */
+  log?: boolean
+}
+
+/**
+ * Single stream-id dispatch for jsonsync MEMORY writes.
+ *
+ * | Stream        | hydrate (worker) | unproject (sim) |
+ * |---------------|------------------|-----------------|
+ * | memory        | session writers + create books + merge pages/flags; may delete unknown books | root scalar assign + software shallow-merge + same book merge + delete absent books |
+ * | board:<id>    | create page if needed, memoryinitboard, stats from code | overlay BOARD_SYNC_TOPKEYS onto existing board only (no initboard) |
+ * | gadget:<pid>  | replace gadgetstore[player] | same |
+ * | flags:<pid>   | mergeflagspreservingvolatile | mergeflagspreservingvolatile |
+ *
+ * Caller wraps `memorywithsilentwrites` where appropriate.
+ */
+export function routememoryjsonsyncdocument(
+  stream: string,
+  document: MemoryJsonWireDocument,
+  opts: RoutememoryJsonSyncOpts,
+): void {
+  const { mode, log = false } = opts
+  if (ismemorystream(stream)) {
+    if (log && mode === 'hydrate') {
+      console.info('hydrating memory', document)
+    }
+    if (mode === 'hydrate') {
+      hydratememory(document)
+    } else {
+      unprojectmemory(document)
+    }
+    return
+  }
+  if (isboardstream(stream)) {
+    const boardid = boardfromboardstream(stream)
+    if (boardid) {
+      if (log && mode === 'hydrate') {
+        console.info('hydrating board', boardid, document)
+      }
+      if (mode === 'hydrate') {
+        hydrateboard(boardid, document)
+      } else {
+        unprojectboardstream(stream, document)
+      }
+    }
+    return
+  }
+  if (isgadgetstream(stream)) {
+    const player = playerfromgadgetstream(stream)
+    if (player) {
+      if (log && mode === 'hydrate') {
+        console.info('hydrating gadget', player, document)
+      }
+      if (mode === 'hydrate') {
+        hydrategadget(player, document)
+      } else {
+        unprojectgadget(player, document)
+      }
+    }
+    return
+  }
+  if (isflagsstream(stream)) {
+    const player = playerfromflagsstream(stream)
+    if (player) {
+      if (log && mode === 'hydrate') {
+        console.info('hydrating flags', player, document)
+      }
+      if (mode === 'hydrate') {
+        hydrateplayerflags(player, document)
+      } else {
+        unprojectplayerflags(player, document)
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // dispatch (sim rxrepl merge)
 // ---------------------------------------------------------------------------
 
@@ -538,26 +627,8 @@ export function unprojectstream(stream: string, document: unknown): void {
     return
   }
   memorywithsilentwrites(() => {
-    if (ismemorystream(stream)) {
-      unprojectmemory(document as Record<string, unknown>)
-      return
-    }
-    if (isboardstream(stream)) {
-      unprojectboardstream(stream, document as Record<string, unknown>)
-      return
-    }
-    if (isgadgetstream(stream)) {
-      const player = playerfromgadgetstream(stream)
-      if (player) {
-        unprojectgadget(player, document)
-      }
-      return
-    }
-    if (isflagsstream(stream)) {
-      const player = playerfromflagsstream(stream)
-      if (player) {
-        unprojectplayerflags(player, document)
-      }
-    }
+    routememoryjsonsyncdocument(stream, document as MemoryJsonWireDocument, {
+      mode: 'unproject',
+    })
   })
 }

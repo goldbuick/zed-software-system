@@ -215,6 +215,7 @@ export function rxreplclientstreamrow(
 
 // --- rxrepl document replication over device bus --------------
 
+/** Client → sim: request snapshot rows; sim answers with `rxreplclient:pull_response` (see `streamreplpullawaitnotify`). */
 export function rxreplpullrequest(
   device: DEVICELIKE,
   player: string,
@@ -270,6 +271,7 @@ export function rxreplpushack(
   device.emit(player, 'rxreplclient:push_ack', payload)
 }
 
+/** Hint clients to run replication `reSync()` (handled in `rxreplclient`). */
 export function rxreplresync(
   device: DEVICELIKE,
   player: string,
@@ -278,6 +280,7 @@ export function rxreplresync(
   device.emit(player, 'rxreplclient:resync', payload)
 }
 
+/** Reserved for incremental invalidation hooks (`rxreplclient` currently no-ops). */
 export function rxreplnotify(
   device: DEVICELIKE,
   player: string,

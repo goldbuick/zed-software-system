@@ -35,6 +35,10 @@ import { perfmeasure } from 'zss/perf/ui'
 
 import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
 import {
+  streamreplpartialscopesOnGadgetFlagsPeersChange,
+  streamreplpartialscopesOnOwnedBoardsChange,
+} from './rxrepl/partialscopes'
+import {
   handlepilotclear,
   handlepilotstart,
   handlepilotstop,
@@ -83,12 +87,28 @@ function snapshotownedboards(assigned: string): Set<string> {
 function rebuildownedboardids() {
   ownedboards.clear()
   if (!isstring(assignedboard) || assignedboard.length === 0) {
+    streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
+    const peers = new Set<string>()
+    if (isstring(assignedplayer) && assignedplayer.length > 0) {
+      peers.add(assignedplayer)
+    }
+    streamreplpartialscopesOnGadgetFlagsPeersChange(peers)
     return
   }
   const next = [...snapshotownedboards(assignedboard)]
   for (let i = 0; i < next.length; ++i) {
     ownedboards.add(next[i])
   }
+  streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
+  const peers = new Set<string>()
+  if (isstring(assignedplayer) && assignedplayer.length > 0) {
+    peers.add(assignedplayer)
+  }
+  const onowned = ownedplayers()
+  for (let i = 0; i < onowned.length; ++i) {
+    peers.add(onowned[i])
+  }
+  streamreplpartialscopesOnGadgetFlagsPeersChange(peers)
 }
 
 function ownedplayers(): string[] {
@@ -208,9 +228,10 @@ const boardrunner = createdevice(
     // handle messages
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
+      // tomorrow we need to debug why we don't get board, flag, or gadget changes
+      console.info('jsonsync', payload.streamid, payload.document)
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
-      console.info('jsonsync', payload.streamid, payload.document)
       return
     }
 
