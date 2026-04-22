@@ -56,10 +56,10 @@ describe('memoryworkerpushdirty gadget streams', () => {
     const call = spy.mock.calls[0]
     expect(call[1]).toBe(runner)
     const batch = call[2] as {
-      rows: { streamid: string; gadget?: { layers?: unknown[] } }[]
+      rows: { streamid: string; document?: { layers?: unknown[] } }[]
     }
     expect(batch.rows[0].streamid).toBe(gadgetstream(joiner))
-    expect(batch.rows[0].gadget?.layers?.length).toBe(1)
+    expect(batch.rows[0].document?.layers?.length).toBe(1)
     spy.mockRestore()
   })
 })

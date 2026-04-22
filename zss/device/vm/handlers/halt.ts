@@ -11,8 +11,7 @@ import {
 import { memorywriteconfig } from 'zss/memory/utilities'
 
 export function handlehalt(vm: DEVICE, message: MESSAGE): void {
-  const operator = memoryreadoperator()
-  if (message.player !== operator) {
+  if (message.player !== memoryreadoperator()) {
     return
   }
   const halt = memoryreadhalt() ? false : true

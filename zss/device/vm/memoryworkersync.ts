@@ -38,7 +38,7 @@ export function memoryworkerpushdirty(): void {
       }
       const gadget = projectgadget(player)
       rxreplpushbatch(rxreplclientdevice, ownplayer, {
-        rows: [{ streamid: stream, gadget }],
+        rows: [{ streamid: stream, document: gadget }],
       })
       continue
     }

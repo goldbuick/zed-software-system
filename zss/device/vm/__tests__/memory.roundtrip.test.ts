@@ -67,11 +67,7 @@ describe('phase 2 worker -> server round-trip', () => {
         expect(player).toBe('pid_roundtrip_worker')
         for (let i = 0; i < batch.rows.length; ++i) {
           const row = batch.rows[i]
-          const doc =
-            'gadget' in row
-              ? row.gadget
-              : (row as { document: unknown }).document
-          memorysyncreverseproject(row.streamid, doc)
+          memorysyncreverseproject(row.streamid, row.document)
           streamreplpublishfrommemory(row.streamid)
         }
       })

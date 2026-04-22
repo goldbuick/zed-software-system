@@ -17,6 +17,7 @@ import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { isgadgetstream } from 'zss/memory/memorydirty'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
@@ -212,7 +213,7 @@ export function rxreplclientstreamrow(
   device.emit(player, 'rxreplclient:stream_row', payload)
 }
 
-// --- rxrepl (Strategy B: document replication over device bus) --------------
+// --- rxrepl document replication over device bus --------------
 
 export function rxreplpullrequest(
   device: DEVICELIKE,
@@ -230,29 +231,23 @@ export function rxreplpullresponse(
   device.emit(player, 'rxreplclient:pull_response', payload)
 }
 
-/** Wire `document` for a push row (`gadget` is cloned to a plain JSON snapshot). */
+/** Plain `document` for apply/persist; `gadget:*` rows are deep-cloned to a JSON snapshot. */
 export function rxreplrowdocument(row: RXREPL_PUSH_ROW): unknown {
-  if ('gadget' in row) {
-    return JSON.parse(JSON.stringify(row.gadget))
+  if (isgadgetstream(row.streamid)) {
+    return JSON.parse(JSON.stringify(row.document))
   }
   return row.document
 }
 
-function rxreplpushrowsnormalized(
-  rows: RXREPL_PUSH_ROW[],
-): { streamid: string; document: unknown; baserev?: number }[] {
-  const out: { streamid: string; document: unknown; baserev?: number }[] = []
+function rxreplpushrowsnormalized(rows: RXREPL_PUSH_ROW[]): RXREPL_PUSH_ROW[] {
+  const out: RXREPL_PUSH_ROW[] = []
   for (let i = 0; i < rows.length; ++i) {
     const row = rows[i]
-    if ('gadget' in row) {
-      out.push({
-        streamid: row.streamid,
-        document: rxreplrowdocument(row),
-        baserev: row.baserev,
-      })
-    } else {
-      out.push(row)
-    }
+    out.push({
+      streamid: row.streamid,
+      document: rxreplrowdocument(row),
+      baserev: row.baserev,
+    })
   }
   return out
 }

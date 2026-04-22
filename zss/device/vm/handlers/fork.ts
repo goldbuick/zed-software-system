@@ -5,8 +5,7 @@ import { doasync } from 'zss/mapping/func'
 import { memoryreadoperator } from 'zss/memory/session'
 
 export function handlefork(vm: DEVICE, message: MESSAGE): void {
-  const operator = memoryreadoperator()
-  if (message.player !== operator) {
+  if (message.player !== memoryreadoperator()) {
     return
   }
   doasync(vm, message.player, async () => {
