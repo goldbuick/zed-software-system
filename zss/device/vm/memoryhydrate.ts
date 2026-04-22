@@ -28,7 +28,6 @@ import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
 import { memoryinitboard } from 'zss/memory/boards'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
-import { memorydebugassertactivelistboardinvariantifenabled } from 'zss/memory/debugactivelistinvariant'
 import {
   boardfromboardstream,
   isboardstream,
@@ -157,9 +156,6 @@ function hydratememory(document: Record<string, unknown>): void {
   // hydrate other top-level keys
   hydratebooks(document)
   hydratesoftware(document)
-  memorydebugassertactivelistboardinvariantifenabled(
-    memoryreadbookbysoftware(MEMORY_LABEL.MAIN),
-  )
 }
 
 function hydratebooks(document: Record<string, unknown>): void {

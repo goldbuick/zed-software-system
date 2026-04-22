@@ -35,7 +35,6 @@ import {
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memorydebugassertactivelistboardinvariantifenabled } from './debugactivelistinvariant'
 import {
   flagsstream,
   memorymarkboarddirty,
@@ -129,7 +128,6 @@ export function memorymoveplayertoboard(
   memorywritebookflag(book, player, 'enterx', dest.x)
   memorywritebookflag(book, player, 'entery', dest.y)
   memorywritebookplayerboard(book, player, destboard.id)
-  memorydebugassertactivelistboardinvariantifenabled(book)
 
   // we did move
   return true
@@ -319,7 +317,6 @@ export function memoryloginplayer(
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
-    memorydebugassertactivelistboardinvariantifenabled(mainbook)
     return true
   }
 
