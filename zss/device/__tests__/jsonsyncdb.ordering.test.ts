@@ -28,5 +28,4 @@ describe('streamrepldb client persistence', () => {
     expect(st.document).toEqual({ a: 1 })
     expect(st.rev).toBe(3)
   })
-
 })

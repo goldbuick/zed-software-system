@@ -32,16 +32,8 @@ import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
 import { DIR, NAME } from 'zss/words/types'
 
-import {
-  type MobiletextInputCallback,
-  type Mobiletextfield,
-  getmobiletextelement,
-  mobiletextfocus,
-  onmobiletextinput,
-} from './mobiletext'
-
-export { getmobiletextelement, mobiletextfocus, onmobiletextinput }
-export type { MobiletextInputCallback }
+import { type Mobiletextfield, getmobiletextelement } from './mobiletext'
+import { UserInput } from './userinput.bridge'
 
 // user input
 
@@ -53,7 +45,6 @@ export type {
   UserInputHandler,
   KeyboardInputHandler,
 } from 'zss/gadget/userinputtypes'
-import { UserInput } from './userinput.bridge'
 
 export { UserInput }
 

@@ -52,7 +52,7 @@ describe('handletick boardrunner election', () => {
     jest
       .spyOn(memorysync, 'memorysyncadmitboardrunner')
       .mockImplementation(() => {})
-    jest.spyOn(session, 'memoryreadoperator').mockReturnValue(undefined)
+    jest.spyOn(session, 'memoryreadoperator').mockReturnValue('')
     jest
       .spyOn(playermanagement, 'memoryscanplayers')
       .mockImplementation(() => {})
@@ -70,13 +70,13 @@ describe('handletick boardrunner election', () => {
     jest
       .spyOn(session, 'memoryreadbookbysoftware')
       .mockImplementation((label) => {
-        return label === MEMORY_LABEL.MAIN ? mainbook : undefined
+        return label === (MEMORY_LABEL.MAIN as string) ? mainbook : undefined
       })
     jest.spyOn(playermanagement, 'memoryreadplayers').mockReturnValue(['p1'])
     jest
       .spyOn(playermanagement, 'memoryreadplayerboard')
       .mockImplementation(
-        (player: string) =>
+        () =>
           ({ id: 'addr-a' }) as BOARD as ReturnType<
             typeof playermanagement.memoryreadplayerboard
           >,

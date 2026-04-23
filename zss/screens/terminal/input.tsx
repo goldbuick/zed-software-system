@@ -23,14 +23,13 @@ import {
   useTerminal,
 } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
-import { Scrollable } from 'zss/gadget/scrollable'
 import {
-  UserInput,
   getmobiletextelement,
   mobiletextfocus,
-  modsfromevent,
   onmobiletextinput,
-} from 'zss/gadget/userinput'
+} from 'zss/gadget/mobiletext'
+import { Scrollable } from 'zss/gadget/scrollable'
+import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'

@@ -84,7 +84,8 @@ describe('cross-board move vs stale board reverseproject', () => {
   it('documents that stale source-board overlay can undo a move (guard for worker ordering)', () => {
     const pagea = makeboardcodepage('codepage-a', 'boardA')
     const pageb = makeboardcodepage('codepage-b', 'boardB')
-    pagea.board.objects.p1 = {
+    const boarda = pagea.board!
+    boarda.objects.p1 = {
       id: 'p1',
       x: 0,
       y: 0,
@@ -118,19 +119,20 @@ describe('cross-board move vs stale board reverseproject', () => {
     })
     expect(moved).toBe(true)
     expect(memoryreadbookflag(book, 'p1', 'board')).toBe('codepage-b')
-    expect(memoryreadobject(pagea.board, 'p1')).toBeUndefined()
+    expect(memoryreadobject(boarda, 'p1')).toBeUndefined()
     expect(memoryreadobject(pageb.board, 'p1')).toBeDefined()
 
     memorysyncreverseproject(boardstreamfromcodepage(pagea), stalesource)
 
-    expect(memoryreadobject(pagea.board, 'p1')).toBeDefined()
+    expect(memoryreadobject(boarda, 'p1')).toBeDefined()
     expect(memoryreadbookflag(book, 'p1', 'board')).toBe('codepage-b')
   })
 
   it('fresh source-board projection after move omits player so reverseproject stays consistent', () => {
     const pagea = makeboardcodepage('codepage-a', 'boardA')
     const pageb = makeboardcodepage('codepage-b', 'boardB')
-    pagea.board.objects.p1 = {
+    const boarda2 = pagea.board!
+    boarda2.objects.p1 = {
       id: 'p1',
       x: 0,
       y: 0,
@@ -162,7 +164,7 @@ describe('cross-board move vs stale board reverseproject', () => {
     >
     memorysyncreverseproject(boardstreamfromcodepage(pagea), freshsource)
 
-    expect(memoryreadobject(pagea.board, 'p1')).toBeUndefined()
+    expect(memoryreadobject(boarda2, 'p1')).toBeUndefined()
     expect(memoryreadobject(pageb.board, 'p1')).toBeDefined()
     expect(memoryreadbookflag(book, 'p1', 'board')).toBe('codepage-b')
   })

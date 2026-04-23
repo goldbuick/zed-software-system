@@ -48,6 +48,7 @@ describe('memorysync viewport gadget admission', () => {
       stats: { type: CODE_PAGE_TYPE.BOARD },
       board: {
         id: boardId,
+        name: boardId,
         terrain: [],
         objects: {
           [runner]: { id: runner },
@@ -97,6 +98,7 @@ describe('memorysync viewport gadget admission', () => {
       stats: { type: CODE_PAGE_TYPE.BOARD },
       board: {
         id: boardId,
+        name: boardId,
         terrain: [],
         objects: {
           [runner]: { id: runner },

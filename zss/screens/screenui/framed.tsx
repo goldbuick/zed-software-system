@@ -70,7 +70,6 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
     }
   }, [player, board])
 
-
   return (
     <>
       <UserInput

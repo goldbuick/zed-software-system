@@ -43,7 +43,7 @@ describe('handletick freeze', () => {
     jest
       .spyOn(session, 'memoryreadbookbysoftware')
       .mockImplementation((label) =>
-        label === MEMORY_LABEL.MAIN ? mainbook : undefined,
+        label === (MEMORY_LABEL.MAIN as string) ? mainbook : undefined,
       )
     session.memorywritefreeze(false)
     jest.spyOn(api, 'boardrunnertick').mockImplementation(() => {})

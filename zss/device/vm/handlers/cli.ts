@@ -1,8 +1,12 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { isstring } from 'zss/mapping/types'
 import { memoryrepeatclilast, memoryruncli } from 'zss/memory/runtime'
 
 export function handlecli(_vm: DEVICE, message: MESSAGE): void {
+  if (!isstring(message.player) || !isstring(message.data)) {
+    return
+  }
   memoryruncli(message.player, message.data)
 }
 

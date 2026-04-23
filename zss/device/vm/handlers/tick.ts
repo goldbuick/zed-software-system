@@ -1,10 +1,10 @@
 import type { DEVICE } from 'zss/device'
-import { type MESSAGE, boardrunnerowned, boardrunnertick } from 'zss/device/api'
+import { type MESSAGE, boardrunnertick } from 'zss/device/api'
 import {
-  memorysyncadmitboardrunner,
-  memorysyncpushdirty,
-  memorysyncrevokeboardrunner,
-} from 'zss/device/vm/memorysimsync'
+  installboardrunner,
+  pickboardrunnerwinner,
+} from 'zss/device/vm/boardrunnerelection'
+import { memorysyncpushdirty } from 'zss/device/vm/memorysimsync'
 import {
   BOARDRUNNER_ACKTICK_STALE_MS,
   ackboardrunners,
@@ -16,7 +16,6 @@ import { ispresent } from 'zss/mapping/types'
 import {
   memoryreadplayerboard,
   memoryreadplayers,
-  memoryreadplayersfromboard,
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
@@ -82,27 +81,9 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
   activeboards.forEach((board) => {
     const lastacktick = ackboardrunners[board]
     if (!ispresent(lastacktick)) {
-      // elect a new boardrunner
-      const players = memoryreadplayersfromboard(board)
-      // filter players by skip then sort players by tracking score
-      const [winner] = players
-        .filter((player) => !skipboardrunners[player])
-        .sort((a, b) => tracking[b] - tracking[a])
-      // set the boardrunner
+      const winner = pickboardrunnerwinner(board)
       if (ispresent(winner)) {
-        // revoke the previous boardrunner
-        const previous = boardrunners[board]
-        if (ispresent(previous)) {
-          memorysyncrevokeboardrunner(previous, board)
-          // signal the previous boardrunner
-          boardrunnerowned(vm, previous, '')
-        }
-        // admit the new boardrunner
-        boardrunners[board] = winner
-        ackboardrunners[board] = timestamp
-        memorysyncadmitboardrunner(winner, board)
-        // signal the boardrunner
-        boardrunnerowned(vm, winner, board)
+        installboardrunner(vm, board, winner, timestamp)
       }
     }
   })

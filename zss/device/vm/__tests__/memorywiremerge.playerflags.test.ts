@@ -1,8 +1,10 @@
+import { BOOK_FLAGS } from 'zss/memory/types'
+
 import { mergeplayerflagsstreamhydrate } from '../memorywiremerge'
 
 describe('mergeplayerflagsstreamhydrate', () => {
   it('overlays wire keys without dropping local-only keys', () => {
-    const bookflags: Record<string, Record<string, unknown>> = {
+    const bookflags: Record<string, BOOK_FLAGS> = {
       pid1: {
         board: 'b1',
         health: 100,
@@ -22,7 +24,7 @@ describe('mergeplayerflagsstreamhydrate', () => {
   })
 
   it('creates row when missing', () => {
-    const bookflags: Record<string, Record<string, unknown>> = {}
+    const bookflags: Record<string, BOOK_FLAGS> = {}
     mergeplayerflagsstreamhydrate(bookflags, 'pid1', { board: 'x' })
     expect(bookflags.pid1).toEqual({ board: 'x' })
   })

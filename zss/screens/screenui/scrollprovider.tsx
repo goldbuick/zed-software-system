@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { boardrunnergadgetclearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { ScrollContext } from 'zss/screens/panel/common'
 
 import { ScreenUILayoutContext, useScreenChromeLayout } from './layoutstate'
@@ -24,7 +23,6 @@ export function ScreenUIScrollProvider({
         SOFTWARE.emit(player, target, data)
       },
       sendclose() {
-        useGadgetClient.setState({ gadgetscrolllocal: false })
         boardrunnergadgetclearscroll(SOFTWARE, player)
       },
       didclose() {

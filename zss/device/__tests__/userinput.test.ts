@@ -1,7 +1,7 @@
 /*
 user:input routing (boardrunner authoritative-tick plan).
 
-Server-side `handleuserinput` is a pure bookkeeping hook (vmlocal bootstrap
+Server-side `handlelastinputtouch` is a pure bookkeeping hook (vmlocal bootstrap
 for fresh local-* players + lastinputtime). It must NOT push anything onto
 flags.inputqueue anymore — that is the boardrunner worker's responsibility
 (see `zss/device/boardrunner.ts`).
@@ -9,6 +9,7 @@ flags.inputqueue anymore — that is the boardrunner worker's responsibility
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
+import { handlelastinputtouch } from 'zss/device/vm/handlers/lastinputtouch'
 import { lastinputtime } from 'zss/device/vm/state'
 import { INPUT } from 'zss/gadget/data/types'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
@@ -42,7 +43,7 @@ describe('user:input handlers', () => {
     jest.restoreAllMocks()
   })
 
-  it('server handleuserinput does NOT push to flags.inputqueue', () => {
+  it('server handlelastinputtouch does NOT push to flags.inputqueue', () => {
     const message: MESSAGE = {
       session: '',
       player: 'p1',
@@ -51,14 +52,14 @@ describe('user:input handlers', () => {
       target: 'input',
       data: [INPUT.MOVE_UP, 0],
     }
-    handleuserinput(vm, message)
+    handlelastinputtouch(vm, message)
 
     const flags = memoryreadflags('p1') as Record<string, unknown>
     expect(flags.inputqueue).toBeUndefined()
     expect(lastinputtime.p1).toBeDefined()
   })
 
-  it('server handleuserinput triggers vmlocal for a fresh local-* player', () => {
+  it('server handlelastinputtouch triggers vmlocal for a fresh local-* player', () => {
     const localspy = jest
       .spyOn(api, 'vmlocal')
       .mockImplementation(() => undefined)
@@ -71,7 +72,7 @@ describe('user:input handlers', () => {
       target: 'input',
       data: [INPUT.OK_BUTTON, 0],
     }
-    handleuserinput(vm, message)
+    handlelastinputtouch(vm, message)
 
     expect(localspy).toHaveBeenCalledWith(vm, 'local-1')
     // first input for a local-* player goes through the bootstrap branch only;
