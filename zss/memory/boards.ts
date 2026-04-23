@@ -27,10 +27,7 @@ import {
   memoryreadcodepagedata,
   memoryreadcodepagestat,
 } from './codepageoperations'
-import {
-  memorylistcodepagesmatchingaddress,
-  memorypickcodepagewithtypeandstat,
-} from './codepages'
+import { memorypickcodepagewithtypeandstat } from './codepages'
 import {
   BOARD,
   BOARD_ELEMENT,

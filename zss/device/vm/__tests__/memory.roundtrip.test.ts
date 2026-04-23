@@ -9,7 +9,7 @@ import {
   streamreplclientstreammap,
   streamreplflushclientdbfortests,
   streamreplmirrorputlocal,
-} from 'zss/device/jsonsyncdb'
+} from 'zss/device/netsim'
 import { rxreplclientsetownplayerfortests } from 'zss/device/rxreplclient'
 import {
   streamreplpublishfrommemory,

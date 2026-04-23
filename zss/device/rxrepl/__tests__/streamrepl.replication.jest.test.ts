@@ -11,7 +11,7 @@ import {
   streamreplensureclientdb,
   streamreplflushclientdbfortests,
   streamreplmemorycollection,
-} from 'zss/device/jsonsyncdb'
+} from 'zss/device/netsim'
 import { MEMORY_STREAM_ID } from 'zss/memory/memorydirty'
 
 import { streamreplpushawaitnotify } from '../streamreplpushawait'

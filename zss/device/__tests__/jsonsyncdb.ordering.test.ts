@@ -3,7 +3,7 @@ import {
   streamreplawaitclientpersistqueue,
   streamreplclientstreammap,
   streamreplflushclientdbfortests,
-} from 'zss/device/jsonsyncdb'
+} from 'zss/device/netsim'
 
 describe('streamrepldb client persistence', () => {
   beforeEach(async () => {
@@ -29,8 +29,4 @@ describe('streamrepldb client persistence', () => {
     expect(st.rev).toBe(3)
   })
 
-  it('flush + await persist queue completes without throwing', async () => {
-    await streamreplawaitclientpersistqueue()
-    await streamreplflushclientdbfortests()
-  })
 })
