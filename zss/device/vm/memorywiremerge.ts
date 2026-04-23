@@ -15,25 +15,13 @@ import {
 
 /** Top-level book fields merged from the wire `books[id]` record (hydrate + unproject). */
 export const BOOK_WIRE_SCALAR_KEYS = [
+  'id',
   'name',
-  'activelist',
   'token',
+  'activelist',
 ] as const satisfies readonly (keyof BOOK)[]
 
 // merge an incoming flags projection into the worker's local flags in place.
-//
-// Also used by sim-side `memoryproject` unproject merges: partial client pushes
-// must merge into canonical MEMORY instead of replacing whole `book.flags`,
-// or `flags[pid_*]` rows can disappear while the player is still on
-// `activelist`. Gadget UI state replicates via `gadget:<pid>` streams, not
-// the `memory` projection.
-//
-// IMPORTANT: this function mutates `existing` in place and keeps the same
-// object reference for every `existing[id]` that also appears in `incoming`.
-// chips (and other long-lived consumers) close over `mainbook.flags[chipid]`
-// at boot via memoryreadflags(mem); if we returned a fresh object each
-// hydrate, those closures would go stale on every memory sync and the chip
-// would silently write to an orphaned object.
 export function mergeflagspreservingvolatile(
   existing: Record<string, BOOK_FLAGS>,
   incoming: Record<string, Record<string, unknown>>,
@@ -104,6 +92,32 @@ export function mergeflagspreservingvolatile(
     }
   }
   return existing
+}
+
+/**
+ * Worker `flags:<pid>` hydrate: apply wire fields onto the existing player bag
+ * without deleting local keys missing from the document.
+ *
+ * Authoritative rows can carry a stable subset
+ * (e.g. login/board bookkeeping) while the boardrunner tick adds gameplay keys
+ * locally; destructive merge would strip those on every replicate.
+ */
+export function mergeplayerflagsstreamhydrate(
+  bookflags: Record<string, BOOK_FLAGS>,
+  player: string,
+  document: Record<string, unknown>,
+): void {
+  const incoming = document
+  const existingentry = bookflags[player] as Record<string, unknown> | undefined
+  if (!ispresent(existingentry) || typeof existingentry !== 'object') {
+    bookflags[player] = deepcopy(incoming) as BOOK_FLAGS
+    return
+  }
+  const incomingkeys = Object.keys(incoming)
+  for (let i = 0; i < incomingkeys.length; ++i) {
+    const key = incomingkeys[i]
+    existingentry[key] = deepcopy(incoming[key]) as BOOK_FLAGS[string]
+  }
 }
 
 /** `books[].pages` from the `memory` stream: full ordered list; BOARD rows are shells only. */

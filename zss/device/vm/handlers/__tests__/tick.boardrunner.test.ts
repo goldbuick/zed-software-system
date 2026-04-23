@@ -110,7 +110,9 @@ describe('handletick boardrunner election', () => {
     const stale = 1_000
     ackboardrunners['addr-a'] = stale
     boardrunners['addr-a'] = 'p1'
-    jest.spyOn(Date, 'now').mockReturnValue(stale + BOARDRUNNER_ACKTICK_STALE_MS + 1)
+    jest
+      .spyOn(Date, 'now')
+      .mockReturnValue(stale + BOARDRUNNER_ACKTICK_STALE_MS + 1)
 
     handletick(vm, msg)
 

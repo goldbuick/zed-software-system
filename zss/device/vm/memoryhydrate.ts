@@ -26,17 +26,14 @@ side (see phase2-worker-emit-patches).
 Stream dispatch is shared with sim reverse-projection via
 `routememoryjsonsyncdocument` in `memoryproject.ts` (hydrate vs unproject).
 */
-import {
-  memorywithsilentwrites,
-} from 'zss/memory/memorydirty'
 import { ispresent } from 'zss/mapping/types'
+import { memorywithsilentwrites } from 'zss/memory/memorydirty'
 
 import { routememoryjsonsyncdocument } from './memoryproject'
 
 export {
   BOOK_WIRE_SCALAR_KEYS,
   mergebookpagesfrommemoryprojection,
-  mergeflagspreservingvolatile,
 } from './memorywiremerge'
 
 export {

@@ -24,7 +24,9 @@ export function streamreplpushawaitclear(): void {
 }
 
 /** One in-flight `push_batch` + `push_ack` pair at a time (multi-family repl may push concurrently). */
-export function streamreplpushawaitserializedop<T>(op: () => Promise<T>): Promise<T> {
+export function streamreplpushawaitserializedop<T>(
+  op: () => Promise<T>,
+): Promise<T> {
   const run = pushserializedtail.then(op)
   pushserializedtail = run.then(
     () => undefined,

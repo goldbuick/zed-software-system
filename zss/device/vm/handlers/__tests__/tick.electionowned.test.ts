@@ -67,13 +67,16 @@ describe('handletick boardrunnerowned on new election', () => {
       .mockImplementation((label) => {
         return label === MEMORY_LABEL.MAIN ? mainbook : undefined
       })
-    jest.spyOn(playermanagement, 'memoryreadplayers').mockReturnValue(['joiner'])
+    jest
+      .spyOn(playermanagement, 'memoryreadplayers')
+      .mockReturnValue(['joiner'])
     jest
       .spyOn(playermanagement, 'memoryreadplayerboard')
       .mockImplementation(
-        () => ({ id: 'board-z' }) as BOARD as ReturnType<
-          typeof playermanagement.memoryreadplayerboard
-        >,
+        () =>
+          ({ id: 'board-z' }) as BOARD as ReturnType<
+            typeof playermanagement.memoryreadplayerboard
+          >,
       )
     jest
       .spyOn(playermanagement, 'memoryreadplayersfromboard')

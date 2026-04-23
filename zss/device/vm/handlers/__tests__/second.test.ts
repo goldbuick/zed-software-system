@@ -10,7 +10,9 @@ describe('handlesecond', () => {
 
   beforeEach(() => {
     session.memorywritefreeze(false)
-    jest.spyOn(playermanagement, 'memoryscanplayers').mockImplementation(() => {})
+    jest
+      .spyOn(playermanagement, 'memoryscanplayers')
+      .mockImplementation(() => {})
   })
 
   afterEach(() => {

@@ -32,6 +32,7 @@ import {
   BOOK_WIRE_SCALAR_KEYS,
   mergebookpagesfrommemoryprojection,
   mergeflagspreservingvolatile,
+  mergeplayerflagsstreamhydrate,
 } from './memorywiremerge'
 
 /** Board stream rows can arrive before `memory` sets `software.main`; keep latest doc per id until flush. */
@@ -75,11 +76,7 @@ export function hydrateplayerflags(
   if (!ispresent(mainbook)) {
     return
   }
-  mergeflagspreservingvolatile(
-    mainbook.flags,
-    { [player]: document },
-    mainbook.activelist ?? [],
-  )
+  mergeplayerflagsstreamhydrate(mainbook.flags, player, document)
 }
 
 export function hydratememory(document: Record<string, unknown>): void {

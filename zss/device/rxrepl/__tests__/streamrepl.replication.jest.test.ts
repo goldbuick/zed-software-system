@@ -14,13 +14,13 @@ import {
 } from 'zss/device/jsonsyncdb'
 import { MEMORY_STREAM_ID } from 'zss/memory/memorydirty'
 
+import { streamreplpushawaitnotify } from '../streamreplpushawait'
 import {
   initStreamReplRxReplications,
   streamreplreplicationfeedpullresponse,
   streamreplreplicationmemory,
   streamreplreplicationteardownfortests,
 } from '../streamreplreplicationinit'
-import { streamreplpushawaitnotify } from '../streamreplpushawait'
 
 describe('streamrepl replication + pull-await (Jest)', () => {
   beforeEach(async () => {
@@ -46,9 +46,7 @@ describe('streamrepl replication + pull-await (Jest)', () => {
             documents: streamids.map((streamid) => ({
               streamid,
               document:
-                streamid === MEMORY_STREAM_ID
-                  ? { __rxreplTest: true }
-                  : {},
+                streamid === MEMORY_STREAM_ID ? { __rxreplTest: true } : {},
               rev: streamid === MEMORY_STREAM_ID ? 7 : 0,
             })),
           })

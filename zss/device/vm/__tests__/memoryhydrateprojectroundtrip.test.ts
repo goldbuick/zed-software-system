@@ -3,10 +3,7 @@ Regression: wire documents produced by `projectmemory` survive a second pass
 through hydrate or unproject without silently drifting shape or book data.
 */
 import { deepcopy } from 'zss/mapping/types'
-import {
-  MEMORY_STREAM_ID,
-  memorydirtyclear,
-} from 'zss/memory/memorydirty'
+import { MEMORY_STREAM_ID, memorydirtyclear } from 'zss/memory/memorydirty'
 import { memoryresetbooks } from 'zss/memory/session'
 
 import { memoryhydratefromjsonsync } from '../memoryhydrate'

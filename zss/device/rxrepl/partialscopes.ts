@@ -15,7 +15,9 @@ function boardsetkey(ids: Set<string>): string {
 }
 
 /** Call when `ownedboards` (board ids) changes — e.g. from boardrunner `rebuildownedboardids`. */
-export function streamreplpartialscopesOnOwnedBoardsChange(ownedBoardIds: Set<string>): void {
+export function streamreplpartialscopesOnOwnedBoardsChange(
+  ownedBoardIds: Set<string>,
+): void {
   const k = boardsetkey(ownedBoardIds)
   if (lastownedboardskey !== null && k === lastownedboardskey) {
     return
@@ -25,7 +27,9 @@ export function streamreplpartialscopesOnOwnedBoardsChange(ownedBoardIds: Set<st
 }
 
 /** Call when gadget/flags peer set changes (self + joiners on owned boards). */
-export function streamreplpartialscopesOnGadgetFlagsPeersChange(peerPlayerIds: Set<string>): void {
+export function streamreplpartialscopesOnGadgetFlagsPeersChange(
+  peerPlayerIds: Set<string>,
+): void {
   void streamreplscopedsyncflagsplayers(peerPlayerIds)
   void streamreplscopedsyncgadgetplayers(peerPlayerIds)
 }

@@ -600,7 +600,7 @@ export type RoutememoryJsonSyncOpts = {
  * | memory        | session writers + create books + merge pages/flags; may delete unknown books | root scalar assign + software shallow-merge + same book merge + delete absent books |
  * | board:<id>    | create page if needed, memoryinitboard, stats from code | overlay BOARD_SYNC_TOPKEYS onto existing board only (no initboard) |
  * | gadget:<pid>  | replace gadgetstore[player] | same |
- * | flags:<pid>   | mergeflagspreservingvolatile | mergeflagspreservingvolatile |
+ * | flags:<pid>   | mergeplayerflagsstreamhydrate (overlay) | mergeflagspreservingvolatile |
  *
  * Caller wraps `memorywithsilentwrites` where appropriate.
  */

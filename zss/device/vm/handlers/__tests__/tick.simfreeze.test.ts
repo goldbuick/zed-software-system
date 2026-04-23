@@ -30,9 +30,7 @@ describe('handletick freeze', () => {
   })
 
   it('skips memorytickloaders when freeze is on', () => {
-    jest
-      .spyOn(session, 'memoryreadbookbysoftware')
-      .mockReturnValue(mainbook)
+    jest.spyOn(session, 'memoryreadbookbysoftware').mockReturnValue(mainbook)
     session.memorywritefreeze(true)
     jest.spyOn(api, 'boardrunnertick').mockImplementation(() => {})
 
