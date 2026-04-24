@@ -7,6 +7,10 @@ import {
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
+  memorycollectchipmemidsforboard,
+  memorytrackingflagsbagid,
+} from 'zss/memory/boardchipflags'
+import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
 } from 'zss/memory/boards'
@@ -38,11 +42,8 @@ import { memoryreadsynth } from 'zss/memory/synthstate'
 import { BOARD, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
+import { boardrunnerscopedcatchupwithtimeout } from './boardrunnerreplcatchup'
 import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
-import {
-  streamreplpartialscopesOnGadgetFlagsPeersChange,
-  streamreplpartialscopesOnOwnedBoardsChange,
-} from './rxrepl/partialscopes'
 import {
   handlepilotclear,
   handlepilotstart,
@@ -72,6 +73,36 @@ export function setassignedplayer(player: string) {
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
 const ownedboards = new Set<string>()
 
+function boardsetkey(ids: Set<string>): string {
+  return [...ids].sort().join(',')
+}
+
+let lastboardrunnerscopekey = ''
+let boardrunnerreplcatchupgen = 0
+let boardrunnerreplready = true
+
+function boardrunnerkickreplcatchup(
+  ownedsnap: Set<string>,
+  flagsfullsnap: Set<string>,
+  gadgethumansnap: Set<string>,
+) {
+  boardrunnerreplready = false
+  const mygen = ++boardrunnerreplcatchupgen
+  void boardrunnerscopedcatchupwithtimeout(
+    ownedsnap,
+    flagsfullsnap,
+    gadgethumansnap,
+  )
+    .catch((err: unknown) => {
+      console.warn('[boardrunner] scoped repl catch-up failed', err)
+    })
+    .finally(() => {
+      if (boardrunnerreplcatchupgen === mygen) {
+        boardrunnerreplready = true
+      }
+    })
+}
+
 function snapshotownedboards(assigned: string): Set<string> {
   const ids = new Set<string>()
   if (!isstring(assigned) || assigned.length === 0) {
@@ -91,29 +122,50 @@ function snapshotownedboards(assigned: string): Set<string> {
 
 function rebuildownedboardids() {
   ownedboards.clear()
+  const gadgetpeers = new Set<string>()
+  if (isstring(assignedplayer) && assignedplayer.length > 0) {
+    gadgetpeers.add(assignedplayer)
+  }
   if (!isstring(assignedboard) || assignedboard.length === 0) {
-    streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
-    const peers = new Set<string>()
-    if (isstring(assignedplayer) && assignedplayer.length > 0) {
-      peers.add(assignedplayer)
+    const flagpeersfull = new Set(gadgetpeers)
+    const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersfull)}|g:${boardsetkey(gadgetpeers)}`
+    if (scopekey !== lastboardrunnerscopekey) {
+      lastboardrunnerscopekey = scopekey
+      boardrunnerkickreplcatchup(
+        new Set(ownedboards),
+        new Set(flagpeersfull),
+        new Set(gadgetpeers),
+      )
     }
-    streamreplpartialscopesOnGadgetFlagsPeersChange(peers)
     return
   }
   const next = [...snapshotownedboards(assignedboard)]
   for (let i = 0; i < next.length; ++i) {
     ownedboards.add(next[i])
   }
-  streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
-  const peers = new Set<string>()
-  if (isstring(assignedplayer) && assignedplayer.length > 0) {
-    peers.add(assignedplayer)
-  }
   const onowned = ownedplayers()
   for (let i = 0; i < onowned.length; ++i) {
-    peers.add(onowned[i])
+    gadgetpeers.add(onowned[i])
   }
-  streamreplpartialscopesOnGadgetFlagsPeersChange(peers)
+  const flagpeersfull = new Set(gadgetpeers)
+  const boardidsforchips = [...ownedboards]
+  for (let b = 0; b < boardidsforchips.length; ++b) {
+    const bid = boardidsforchips[b]
+    const chips = memorycollectchipmemidsforboard(bid)
+    for (let c = 0; c < chips.length; ++c) {
+      flagpeersfull.add(chips[c])
+    }
+    flagpeersfull.add(memorytrackingflagsbagid(bid))
+  }
+  const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersfull)}|g:${boardsetkey(gadgetpeers)}`
+  if (scopekey !== lastboardrunnerscopekey) {
+    lastboardrunnerscopekey = scopekey
+    boardrunnerkickreplcatchup(
+      new Set(ownedboards),
+      new Set(flagpeersfull),
+      new Set(gadgetpeers),
+    )
+  }
 }
 
 function ownedplayers(): string[] {
@@ -181,6 +233,9 @@ function runworkertick(timestamp: number): void {
   perfmeasure('boardrunner:pilottick', () => {
     pilottick(boardrunner)
   })
+  if (!boardrunnerreplready) {
+    return
+  }
   perfmeasure('boardrunner:memorytickmain', () => {
     memorytickmain(timestamp, memoryreadhalt())
   })
