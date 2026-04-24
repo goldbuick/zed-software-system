@@ -27,6 +27,7 @@ jest.mock('zss/config', () => ({
 
 jest.mock('zss/memory/session', () => ({
   memoryreadbookbysoftware: jest.fn(),
+  memoryreadoperator: jest.fn(() => 'player-1'),
 }))
 
 jest.mock('zss/memory/playermanagement', () => ({
@@ -111,6 +112,9 @@ describe('handleplayermovetoboard', () => {
     const book = { id: 'main' }
     ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(book)
     ;(memoryreadplayerboard as jest.Mock).mockReturnValue({ id: 'board-a' })
+    ;(memoryreadplayersfromboard as jest.Mock).mockImplementation(
+      (board: string) => (board === 'board-b' ? ['player-1'] : []),
+    )
 
     const message = {
       player: 'player-1',
@@ -254,6 +258,9 @@ describe('handleplayermovetoboard', () => {
     const book = { id: 'main' }
     ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(book)
     ;(memoryreadplayerboard as jest.Mock).mockReturnValue({ id: 'board-a' })
+    ;(memoryreadplayersfromboard as jest.Mock).mockImplementation(
+      (board: string) => (board === 'board-b' ? ['player-1'] : []),
+    )
     skipboardrunners['player-1'] = true
 
     const message = {

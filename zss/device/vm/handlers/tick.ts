@@ -1,8 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import { type MESSAGE, boardrunnertick } from 'zss/device/api'
 import {
-  installboardrunner,
-  pickboardrunnerwinner,
+  ensureboardrunnerelected,
+  revokeboardrunnerassignment,
 } from 'zss/device/vm/boardrunnerelection'
 import { memorysyncpushdirty } from 'zss/device/vm/memorysimsync'
 import {
@@ -12,10 +12,11 @@ import {
   skipboardrunners,
   tracking,
 } from 'zss/device/vm/state'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadplayerboard,
   memoryreadplayers,
+  memoryreadplayersfromboard,
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
@@ -57,34 +58,31 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
     }
   }
 
-  // validate state of boardrunners
-
-  // first pass check last ack tick
   const timestamp = Date.now()
+  // const onboard = (board: string, runner: string) =>
+  //   memoryreadplayersfromboard(board).includes(runner)
+
   activeboards.forEach((board) => {
+    // const runner = boardrunners[board]
+    // if (isstring(runner) && runner && !onboard(board, runner)) {
+    //   revokeboardrunnerassignment(vm, board)
+    //   ensureboardrunnerelected(vm, board, timestamp)
+    //   return
+    // }
     const lastacktick = ackboardrunners[board]
     if (ispresent(lastacktick)) {
-      // track the last ack tick
-      const delta = timestamp - ackboardrunners[board]
+      const delta = timestamp - lastacktick
       if (delta > BOARDRUNNER_ACKTICK_STALE_MS) {
-        // mark the player for skipping
-        const player = boardrunners[board]
-        skipboardrunners[player] = true
-        // evict the boardrunner
-        delete ackboardrunners[board]
-        console.info('vm:tick evicting boardrunner', board, player)
+        const staleplayer = boardrunners[board]
+        if (isstring(staleplayer) && staleplayer) {
+          skipboardrunners[staleplayer] = true
+        }
+        revokeboardrunnerassignment(vm, board)
       }
     }
   })
 
-  // elect a new boardrunner if needed
   activeboards.forEach((board) => {
-    const lastacktick = ackboardrunners[board]
-    if (!ispresent(lastacktick)) {
-      const winner = pickboardrunnerwinner(board)
-      if (ispresent(winner)) {
-        installboardrunner(vm, board, winner, timestamp)
-      }
-    }
+    ensureboardrunnerelected(vm, board, timestamp)
   })
 }

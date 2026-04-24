@@ -30,12 +30,14 @@ export const gadgetclientdevice = createdevice(
       return
     }
 
-    // update the gadget state from incoming document
     const incoming = payload.document as GADGET_STATE
+
+    // update the gadget state from incoming document
     useGadgetClient.setState((state) => {
       if (isequal(state.gadget, incoming)) {
         return state
       }
+      // console.info('gadgetclient', message.target)
       return {
         ...state,
         gadget: incoming,

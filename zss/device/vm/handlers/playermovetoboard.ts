@@ -1,20 +1,17 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
-import { boardrunnerowned } from 'zss/device/api'
 import {
   boardhasvalidrunner,
-  installboardrunner,
-  pickboardrunnerwinner,
+  ensureboardrunnerelected,
+  revokeboardrunnerassignment,
 } from 'zss/device/vm/boardrunnerelection'
-import {
-  memorysyncpushdirty,
-  memorysyncrevokeboardrunner,
-} from 'zss/device/vm/memorysimsync'
-import { ackboardrunners, boardrunners } from 'zss/device/vm/state'
+import { memorysyncpushdirty } from 'zss/device/vm/memorysimsync'
+import { boardrunners, skipboardrunners } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorymoveplayertoboard,
   memoryreadplayerboard,
+  memoryreadplayersfromboard,
 } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
@@ -62,19 +59,17 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     fromboardid !== dest &&
     boardrunners[fromboardid] === player
   ) {
-    memorysyncrevokeboardrunner(player, fromboardid)
-    boardrunnerowned(vm, player, '')
-    delete boardrunners[fromboardid]
-    delete ackboardrunners[fromboardid]
+    revokeboardrunnerassignment(vm, fromboardid)
     didsync = true
-    const replacement = pickboardrunnerwinner(fromboardid)
-    if (ispresent(replacement)) {
-      installboardrunner(vm, fromboardid, replacement, ts)
-    }
+    ensureboardrunnerelected(vm, fromboardid, ts)
   }
 
   if (!boardhasvalidrunner(dest)) {
-    installboardrunner(vm, dest, player, ts)
+    if (memoryreadplayersfromboard(dest).includes(player)) {
+      delete skipboardrunners[player]
+    }
+    revokeboardrunnerassignment(vm, dest)
+    ensureboardrunnerelected(vm, dest, ts)
     didsync = true
   }
 

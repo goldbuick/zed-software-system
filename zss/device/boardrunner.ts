@@ -209,7 +209,6 @@ function handleworkeruserinput(message: MESSAGE): void {
     flags.inputqueue.push([input, mods])
   }
   memorymarkdirty(flagsstream(message.player))
-  console.info('flags.inputqueue', flags.inputqueue)
 }
 
 const boardrunner = createdevice(
@@ -229,7 +228,7 @@ const boardrunner = createdevice(
       default:
         // everything else is filtered by assignedplayerid
         if (!shouldhandle && message.player !== assignedplayer) {
-          console.info('dropped', assignedplayer, message.target)
+          // console.info('dropped', assignedplayer, message.target)
           return
         }
         break
@@ -238,10 +237,14 @@ const boardrunner = createdevice(
     // handle messages
     if (shouldhandle) {
       const payload = message.data as JSONSYNC_CHANGED
-      // console.info('boardrunner', message.target, payload.document)
+      console.info('boardrunner', message.target)
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
       return
+    }
+
+    if (message.target !== 'tick') {
+      console.info('boardrunner', message.target, message.data)
     }
 
     switch (message.target) {
@@ -259,14 +262,18 @@ const boardrunner = createdevice(
         break
       case 'tick':
         if (isnumber(message.data) && assignedboard) {
-          // console.info('boardrunner tick', message.data)
+          console.info(
+            'boardrunner',
+            message.target,
+            message.data,
+            assignedboard,
+          )
           runworkertick(message.data)
           boardrunner.reply(message, 'acktick', assignedboard)
         }
         break
       case 'ownedboard': {
         if (isstring(message.data) && assignedboard !== message.data) {
-          console.info('ownedboard', message.data)
           assignedboard = message.data
           rebuildownedboardids()
         }

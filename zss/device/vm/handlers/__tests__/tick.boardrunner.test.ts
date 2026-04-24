@@ -52,7 +52,7 @@ describe('handletick boardrunner election', () => {
     jest
       .spyOn(memorysync, 'memorysyncadmitboardrunner')
       .mockImplementation(() => {})
-    jest.spyOn(session, 'memoryreadoperator').mockReturnValue('')
+    jest.spyOn(session, 'memoryreadoperator').mockReturnValue('p1')
     jest
       .spyOn(playermanagement, 'memoryscanplayers')
       .mockImplementation(() => {})
@@ -118,5 +118,28 @@ describe('handletick boardrunner election', () => {
 
     expect(skipboardrunners.p1).toBe(true)
     expect(ackboardrunners['addr-a']).toBeUndefined()
+    expect(boardrunners['addr-a']).toBeUndefined()
+  })
+
+  it('revokes and re-elects when recorded runner is not on the board', () => {
+    boardrunners['addr-a'] = 'ghost'
+    ackboardrunners['addr-a'] = Date.now()
+    jest.spyOn(playermanagement, 'memoryreadplayers').mockReturnValue(['p1'])
+    jest
+      .spyOn(playermanagement, 'memoryreadplayersfromboard')
+      .mockReturnValue(['p1'])
+
+    handletick(vm, msg)
+
+    expect(boardrunners['addr-a']).toBe('p1')
+    expect(typeof ackboardrunners['addr-a']).toBe('number')
+    expect(memorysync.memorysyncrevokeboardrunner).toHaveBeenCalledWith(
+      'ghost',
+      'addr-a',
+    )
+    expect(memorysync.memorysyncadmitboardrunner).toHaveBeenCalledWith(
+      'p1',
+      'addr-a',
+    )
   })
 })

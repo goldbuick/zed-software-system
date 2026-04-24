@@ -15,7 +15,6 @@ import { createrecordhandler } from './recordhandler'
 import { addsidechainmodule } from './sidechainworkletnode'
 import { SOURCE_TYPE } from './source'
 import { createsourcefxsetup } from './sourcefxsetup'
-import { durationnotation, durationseconds } from './synthtime'
 import {
   type PLAYBACK_STATE,
   type RECORDING_STATE,
@@ -83,14 +82,7 @@ export function createsynth() {
     withendofpattern = true,
   ) {
     let endtime = starttime
-    const pattern = invokeplay(
-      idx,
-      starttime,
-      invoke,
-      withendofpattern,
-      durationnotation,
-      durationseconds,
-    )
+    const pattern = invokeplay(idx, starttime, invoke, withendofpattern)
     const last = pattern[pattern.length - 1]
     if (ispresent(last)) {
       endtime = Math.max(endtime, last[0])

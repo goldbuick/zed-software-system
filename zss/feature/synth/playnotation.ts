@@ -1,5 +1,7 @@
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
+import { durationnotation, durationseconds } from './synthtime'
+
 export const SYNTH_SFX_RESET = 4
 
 export enum SYNTH_OP {
@@ -95,8 +97,6 @@ export function invokeplay(
   starttime: number,
   play: SYNTH_OP[] | string,
   withendofpattern: boolean,
-  makenotation: (duration: number) => string,
-  calcseconds: (duration: number) => number,
 ) {
   // translate ops into time, note pairs
   let time = starttime
@@ -109,11 +109,11 @@ export function invokeplay(
   function resetnote() {
     note = ''
     accidental = ''
-    time += calcseconds(duration)
+    time += durationseconds(duration)
   }
 
   function writenote() {
-    const notation = makenotation(duration)
+    const notation = durationnotation(duration)
     if (note === null) {
       pattern.push([time, [synth, notation, note]])
       resetnote()

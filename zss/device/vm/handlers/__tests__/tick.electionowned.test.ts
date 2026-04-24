@@ -49,7 +49,7 @@ describe('handletick boardrunnerowned on new election', () => {
     jest
       .spyOn(memorysync, 'memorysyncadmitboardrunner')
       .mockImplementation(() => {})
-    jest.spyOn(session, 'memoryreadoperator').mockReturnValue('')
+    jest.spyOn(session, 'memoryreadoperator').mockReturnValue('joiner')
     jest
       .spyOn(playermanagement, 'memoryscanplayers')
       .mockImplementation(() => {})
@@ -91,7 +91,7 @@ describe('handletick boardrunnerowned on new election', () => {
     jest.mocked(memorytickloaders).mockClear()
   })
 
-  it('emits boardrunner:ownedboard for newly elected runner', () => {
+  it('emits boardrunner:ownedboard to operator sim host (same peer as boardrunnertick)', () => {
     const owned = jest
       .spyOn(api, 'boardrunnerowned')
       .mockImplementation(() => {})

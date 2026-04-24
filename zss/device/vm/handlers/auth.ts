@@ -8,8 +8,13 @@ import {
   vmclearscroll,
 } from 'zss/device/api'
 import {
+  ensureboardrunnerelected,
+  revokeboardrunnerassignmentsforplayer,
+} from 'zss/device/vm/boardrunnerelection'
+import {
   memorysyncdropplayerfromall,
   memorysyncensureloginreplstreams,
+  memorysyncpushdirty,
 } from 'zss/device/vm/memorysimsync'
 import {
   INITIAL_TRACKING,
@@ -17,7 +22,7 @@ import {
   tracking,
   trackinglastlog,
 } from 'zss/device/vm/state'
-import { isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
   memorysetcommandpermissions,
@@ -27,6 +32,7 @@ import {
   memoryloginplayer,
   memorylogoutplayer,
   memoryreadplayeractive,
+  memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
   memoryisoperator,
@@ -50,6 +56,21 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
 
   // logout and halt the bridge
   memorylogoutplayer(message.player, !!message.data)
+
+  // revoke boardrunner assignments
+  const affectedboards = revokeboardrunnerassignmentsforplayer(
+    vm,
+    message.player,
+  )
+  const ts = Date.now()
+  for (let i = 0; i < affectedboards.length; ++i) {
+    ensureboardrunnerelected(vm, affectedboards[i], ts)
+  }
+  if (affectedboards.length > 0) {
+    memorysyncpushdirty()
+  }
+
+  // halt the bridge
   bridgehalt(vm, message.player)
 
   // clear the tracking
@@ -108,9 +129,21 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   }
 
   if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
+    const ts = Date.now()
+    // ensure the player is getting streams
     memorysyncensureloginreplstreams(message.player)
+
+    // start tracking
     tracking[message.player] = INITIAL_TRACKING
-    lastinputtime[message.player] = Date.now()
+    lastinputtime[message.player] = ts
+
+    // ensure boardrunner is elected
+    const board = memoryreadplayerboard(message.player)
+    if (ispresent(board)) {
+      ensureboardrunnerelected(vm, board.id, ts)
+    }
+
+    // signal success !!!
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
   } else {
@@ -126,7 +159,6 @@ export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {
 
 export function handlelocal(vm: DEVICE, message: MESSAGE): void {
   if (memoryloginplayer(message.player, {})) {
-    memorysyncensureloginreplstreams(message.player)
     tracking[message.player] = INITIAL_TRACKING
     lastinputtime[message.player] = Date.now()
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
