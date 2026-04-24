@@ -46,7 +46,6 @@ export {
 export function memoryhydratefromjsonsync(
   stream: string,
   document: unknown,
-  log = false,
 ): void {
   if (!ispresent(document) || typeof document !== 'object') {
     return
@@ -54,7 +53,6 @@ export function memoryhydratefromjsonsync(
   memorywithsilentwrites(() => {
     routememoryjsonsyncdocument(stream, document as Record<string, unknown>, {
       mode: 'hydrate',
-      log,
     })
   })
 }

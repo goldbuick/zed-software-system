@@ -221,7 +221,6 @@ const boardrunner = createdevice(
 
     // handle stream changed messages
     if (shouldboardrunnerhandlestreamchanged(message.target)) {
-      // console.info('boardrunner', message.target)
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
@@ -230,13 +229,6 @@ const boardrunner = createdevice(
 
     // filter messages by assignedplayer
     if (message.player !== assignedplayer) {
-      console.info(
-        assignedplayer,
-        'dropped',
-        message.player,
-        message.target,
-        message.data,
-      )
       return
     }
 
@@ -261,7 +253,6 @@ const boardrunner = createdevice(
         break
       case 'ownedboard': {
         if (isstring(message.data) && assignedboard !== message.data) {
-          console.info('boardrunnerownedboard', assignedplayer, message.data)
           assignedboard = message.data
           rebuildownedboardids()
         }

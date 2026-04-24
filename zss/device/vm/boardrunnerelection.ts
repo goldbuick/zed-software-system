@@ -68,7 +68,6 @@ export function pickboardrunnerwinner(board: string): string | undefined {
     .filter((player) => !skipboardrunners[player])
     .sort((a, b) => tracking[b] - tracking[a])
 
-  console.info('pickboardrunnerwinner', board, winner)
   return ispresent(winner) ? winner : undefined
 }
 
@@ -86,8 +85,6 @@ export function installboardrunner(
   winner: string,
   timestamp: number,
 ): void {
-  console.info('installboardrunner', board, winner)
-
   // start tracking the winner
   boardrunners[board] = winner
   ackboardrunners[board] = timestamp

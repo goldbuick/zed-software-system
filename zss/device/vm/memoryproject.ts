@@ -588,8 +588,6 @@ export type MemoryJsonWireDocument = Record<string, unknown>
 
 export type RoutememoryJsonSyncOpts = {
   mode: MemoryJsonSyncMode
-  /** When mode is hydrate, log memory / board / gadget / flags applies. */
-  log?: boolean
 }
 
 /**
@@ -609,11 +607,8 @@ export function routememoryjsonsyncdocument(
   document: MemoryJsonWireDocument,
   opts: RoutememoryJsonSyncOpts,
 ): void {
-  const { mode, log = false } = opts
+  const { mode } = opts
   if (ismemorystream(stream)) {
-    if (log && mode === 'hydrate') {
-      console.info('hydrating memory', document)
-    }
     if (mode === 'hydrate') {
       hydratememory(document)
     } else {
@@ -624,9 +619,6 @@ export function routememoryjsonsyncdocument(
   if (isboardstream(stream)) {
     const boardid = boardfromboardstream(stream)
     if (boardid) {
-      if (log && mode === 'hydrate') {
-        console.info('hydrating board', boardid, document)
-      }
       if (mode === 'hydrate') {
         hydrateboard(boardid, document)
       } else {
@@ -638,9 +630,6 @@ export function routememoryjsonsyncdocument(
   if (isgadgetstream(stream)) {
     const player = playerfromgadgetstream(stream)
     if (player) {
-      if (log && mode === 'hydrate') {
-        console.info('hydrating gadget', player, document)
-      }
       if (mode === 'hydrate') {
         hydrategadget(player, document)
       } else {
@@ -652,9 +641,6 @@ export function routememoryjsonsyncdocument(
   if (isflagsstream(stream)) {
     const player = playerfromflagsstream(stream)
     if (player) {
-      if (log && mode === 'hydrate') {
-        console.info('hydrating flags', player, document)
-      }
       if (mode === 'hydrate') {
         hydrateplayerflags(player, document)
       } else {
