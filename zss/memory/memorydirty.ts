@@ -78,6 +78,15 @@ export function playerfromflagsstream(stream: string): string {
   return stream.slice('flags:'.length)
 }
 
+/** Repl stream for `mainbook.flags[createchipid(elementId)]` (suffix ends `_chip`). */
+export function ischipflagsstream(stream: string): boolean {
+  if (!isflagsstream(stream)) {
+    return false
+  }
+  const suffix = playerfromflagsstream(stream)
+  return suffix.length > 0 && suffix.endsWith('_chip')
+}
+
 export function boardstreamfromboarddata(board: MAYBE<BOARD>): string {
   if (!ispresent(board) || !board.id) {
     return ''

@@ -18,6 +18,14 @@ Streams (see `routememoryjsonsyncdocument`):
   BOARD_ELEMENT_SYNC_TOPKEYS (aligned with `memoryexportboardelement`).
 - `flags:<pid>`, `gadget:<pid>` — full bags / gadget doc via `projectplayerflags` /
   `projectgadget`.
+- `flags:<elementId>_chip` — same projection path as player `flags:` rows: one
+  stream per runtime chip bag (`mainbook.flags[createchipid(elementId)]`).
+  Boardrunner marks the stream dirty when `os.tick` runs; sim may lazy-register
+  the stream on first `push_batch` / `pull_request` (see `memorysynclazyensurechipflagsstreamforpusher`).
+  Runner admit/revoke for these streams is tied to `memorysyncadmitboardrunner` /
+  `memorysyncrevokeboardrunner`: union of on-board element ids (`*_chip`) plus any
+  persisted `mainbook.flags` `*_chip` keys whose stem id is still on that board,
+  and `tracking_<boardId>` (see [`memorysimsync`](./memorysimsync.ts)).
 
 **Authoritative `memory.books`:** `hydratememory` and `unprojectmemory` both
 remove local books whose id is **absent** from the incoming `books` object. Every

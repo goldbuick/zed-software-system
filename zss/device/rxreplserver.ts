@@ -1,6 +1,10 @@
 import { createdevice } from 'zss/device'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { boardfromboardstream, isboardstream } from 'zss/memory/memorydirty'
+import {
+  boardfromboardstream,
+  isboardstream,
+  isflagsstream,
+} from 'zss/memory/memorydirty'
 
 import { rxreplpullresponse, rxreplpushack, rxreplrowdocument } from './api'
 import type {
@@ -15,6 +19,7 @@ import {
   streamreplserverreadstream,
 } from './streamreplserver'
 import {
+  memorysynclazyensurechipflagsstreamforpusher,
   memorysyncensureboardregistered,
   memorysyncreverseproject,
 } from './vm/memorysimsync'
@@ -36,7 +41,16 @@ export const rxreplserverdevice = createdevice(
         const accepted: { streamid: string; rev: number }[] = []
         for (let i = 0; i < batch.rows.length; ++i) {
           const row = batch.rows[i]
-          const entry = streamreplserverreadstream(row.streamid)
+          let entry = streamreplserverreadstream(row.streamid)
+          if (
+            !entry &&
+            memorysynclazyensurechipflagsstreamforpusher(
+              row.streamid,
+              message.player,
+            )
+          ) {
+            entry = streamreplserverreadstream(row.streamid)
+          }
           if (
             !entry ||
             !streamreplplayerwritable(row.streamid, message.player)
@@ -76,13 +90,22 @@ export const rxreplserverdevice = createdevice(
               }
             }
           }
+          if (
+            !entry &&
+            memorysynclazyensurechipflagsstreamforpusher(streamid, player)
+          ) {
+            entry = streamreplserverreadstream(streamid)
+          }
           if (!entry) {
             continue
           }
           // `memorysyncadmitboardrunner` can race the client's pull; if the stream
           // exists but this player is not in `entry.players` yet, admit now so the
           // snapshot matches normal replication (join boardrunner blank logs).
-          if (!entry.players.has(player) && isboardstream(streamid)) {
+          if (
+            !entry.players.has(player) &&
+            (isboardstream(streamid) || isflagsstream(streamid))
+          ) {
             streamreplserveradmitplayer(streamid, player, true)
             entry = streamreplserverreadstream(streamid)
           }

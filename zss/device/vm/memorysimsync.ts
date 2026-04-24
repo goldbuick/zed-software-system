@@ -6,13 +6,15 @@ import {
   streamreplserverregister,
   streamreplserverupdate,
 } from 'zss/device/streamreplserver'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import {
   boardstream,
   flagsstream,
   gadgetstream,
   isboardstream,
+  ischipflagsstream,
   isflagsstream,
   isgadgetstream,
   ismemorystream,
@@ -23,7 +25,8 @@ import {
   playerfromgadgetstream,
 } from 'zss/memory/memorydirty'
 import { memoryreadplayersfromboard } from 'zss/memory/playermanagement'
-import { CODE_PAGE } from 'zss/memory/types'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { BOARD_ELEMENT, CODE_PAGE, MEMORY_LABEL } from 'zss/memory/types'
 
 import {
   boardstreamfromcodepage,
@@ -122,6 +125,128 @@ export function memorysyncensureflagsregistered(player: string): void {
   streamreplserverupdate(stream, projected)
 }
 
+/** Lazily register `flags:*_chip` and admit the pusher as writer (first push / pull). */
+export function memorysynclazyensurechipflagsstreamforpusher(
+  streamid: string,
+  pusherplayer: string,
+): boolean {
+  if (!ischipflagsstream(streamid)) {
+    return false
+  }
+  const bagid = playerfromflagsstream(streamid)
+  if (!isstring(bagid) || !bagid) {
+    return false
+  }
+  memorysyncensureflagsregistered(bagid)
+  streamreplserverensureplayeradmitted(streamid, pusherplayer, true)
+  return ispresent(streamreplserverreadstream(streamid))
+}
+
+function chipmemidfromelementid(elementid: string): string {
+  return `${elementid}_chip`
+}
+
+const CHIP_MEM_SUFFIX = '_chip'
+
+function chipmemidstem(chipmemid: string): string {
+  if (!chipmemid.endsWith(CHIP_MEM_SUFFIX)) {
+    return ''
+  }
+  return chipmemid.slice(0, -CHIP_MEM_SUFFIX.length)
+}
+
+function memorysynccollectboardelementids(boardaddress: string): Set<string> {
+  const ids = new Set<string>()
+  memorysyncforeachboardelement(boardaddress, (element) => {
+    const eid = element.id ?? ''
+    if (isstring(eid) && eid) {
+      ids.add(eid)
+    }
+  })
+  return ids
+}
+
+function memorysynccollectchipmemidsforboard(boardaddress: string): string[] {
+  const elementids = memorysynccollectboardelementids(boardaddress)
+  const chipmemids = new Set<string>()
+  for (const id of elementids) {
+    chipmemids.add(chipmemidfromelementid(id))
+  }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (ispresent(mainbook?.flags) && typeof mainbook.flags === 'object') {
+    const keys = Object.keys(mainbook.flags)
+    for (let i = 0; i < keys.length; ++i) {
+      const k = keys[i]
+      if (!k.endsWith(CHIP_MEM_SUFFIX)) {
+        continue
+      }
+      const stem = chipmemidstem(k)
+      if (stem && elementids.has(stem)) {
+        chipmemids.add(k)
+      }
+    }
+  }
+  return [...chipmemids]
+}
+
+function trackingflagsbagid(boardaddress: string): string {
+  return `tracking_${boardaddress}`
+}
+
+function memorysyncforeachboardelement(
+  boardaddress: string,
+  fn: (element: BOARD_ELEMENT) => void,
+): void {
+  const board = memoryreadboardbyaddress(boardaddress)
+  if (!ispresent(board)) {
+    return
+  }
+  const objects = board.objects
+  if (ispresent(objects) && typeof objects === 'object') {
+    const keys = Object.keys(objects)
+    for (let i = 0; i < keys.length; ++i) {
+      const el = objects[keys[i]]
+      if (ispresent(el) && isstring(el.id) && el.id) {
+        fn(el)
+      }
+    }
+  }
+  if (isarray(board.terrain)) {
+    for (let t = 0; t < board.terrain.length; ++t) {
+      const el = board.terrain[t]
+      if (ispresent(el) && isstring(el.id) && el.id) {
+        fn(el)
+      }
+    }
+  }
+}
+
+function memorysyncadmitchipflagsstreamsforboard(
+  runner: string,
+  boardaddress: string,
+): void {
+  const chipmemids = memorysynccollectchipmemidsforboard(boardaddress)
+  for (let i = 0; i < chipmemids.length; ++i) {
+    const bagid = chipmemids[i]
+    memorysyncensureflagsregistered(bagid)
+    streamreplserverensureplayeradmitted(flagsstream(bagid), runner, true)
+  }
+  const trackingbag = trackingflagsbagid(boardaddress)
+  memorysyncensureflagsregistered(trackingbag)
+  streamreplserverensureplayeradmitted(flagsstream(trackingbag), runner, true)
+}
+
+function memorysyncrevokechipflagsstreamsforboard(
+  runner: string,
+  boardaddress: string,
+): void {
+  const chipmemids = memorysynccollectchipmemidsforboard(boardaddress)
+  for (let i = 0; i < chipmemids.length; ++i) {
+    streamreplserverdropplayer(flagsstream(chipmemids[i]), runner)
+  }
+  streamreplserverdropplayer(flagsstream(trackingflagsbagid(boardaddress)), runner)
+}
+
 function memorysyncadmitflagsstreamsforboard(
   runner: string,
   players: string[],
@@ -151,6 +276,7 @@ export function memorysyncadmitboardrunner(
   const players = memoryreadplayersfromboard(boardaddress)
   memorysyncadmitboardstream(runner, boardaddress)
   memorysyncadmitflagsstreamsforboard(runner, players)
+  memorysyncadmitchipflagsstreamsforboard(runner, boardaddress)
   memorysyncadmitgadgetstreamsforboard(runner, players)
 }
 
@@ -161,6 +287,7 @@ export function memorysyncrevokeboardrunner(
   const players = memoryreadplayersfromboard(boardaddress)
   memorysyncrevokeboardstream(runner, boardaddress)
   memorysyncrevokeflagswritersforboard(runner, players)
+  memorysyncrevokechipflagsstreamsforboard(runner, boardaddress)
   memorysyncrevokegadgetwritersforboard(runner, players)
 }
 

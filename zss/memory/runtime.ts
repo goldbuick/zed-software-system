@@ -1,4 +1,5 @@
 import { objectKeys } from 'ts-extras'
+import { createchipid } from 'zss/chip'
 import { MESSAGE, synthplay } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
@@ -18,11 +19,6 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
-import {
-  flagsstream,
-  memorymarkboarddirty,
-  memorymarkdirty,
-} from './memorydirty'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
@@ -32,6 +28,11 @@ import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
+import {
+  flagsstream,
+  memorymarkboarddirty,
+  memorymarkdirty,
+} from './memorydirty'
 import {
   memoryplayerflagsready,
   memoryreadbookplayerboards,
@@ -275,7 +276,9 @@ export function memorytickobject(
   // run chip code
   const id = object.id ?? ''
   const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
-  os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
+  if (os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)) {
+    memorymarkdirty(flagsstream(createchipid(id)))
+  }
 
   // clear ticker
   if (isnumber(object?.tickertime)) {
@@ -350,8 +353,8 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.board = memoryreadplayerboard(player)
   READ_CONTEXT.element = memoryreadobject(READ_CONTEXT.board, player)
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
-  READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
+  READ_CONTEXT.elementisplayer = true
 
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')

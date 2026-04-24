@@ -1,4 +1,4 @@
-import { CHIP } from 'zss/chip'
+import { CHIP, createchipid } from 'zss/chip'
 import {
   apitoast,
   heavyagentsyncuserdisplay,
@@ -39,6 +39,7 @@ import {
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtolog } from 'zss/memory/gamesend'
+import { flagsstream, memorymarkdirty } from 'zss/memory/memorydirty'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'
 import {
@@ -238,6 +239,9 @@ function readinput(
     const [check] = item as [INPUT, number]
     return check !== INPUT.NONE && check !== input
   })
+
+  // need to mark as dirty
+  memorymarkdirty(flagsstream(createchipid(player)))
 
   return flags
 }
