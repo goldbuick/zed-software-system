@@ -16,7 +16,6 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadplayerboard,
   memoryreadplayers,
-  memoryreadplayersfromboard,
   memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
@@ -79,4 +78,9 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
   activeboards.forEach((board) => {
     ensureboardrunnerelected(vm, board, timestamp)
   })
+
+  // Flush again after stale revoke + election: the first `memorysyncpushdirty`
+  // above ran before `installboardrunner` / `memorysyncadmitboardrunner`, so
+  // repl rows for the new winner can otherwise lag a full tick (ghost→winner).
+  memorysyncpushdirty()
 }

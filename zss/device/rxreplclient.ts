@@ -53,9 +53,14 @@ export function rxreplclientreadownplayer(): string {
   return ownplayerid
 }
 
-/** Test hook: pretend the device already captured `player` from inbound traffic. */
-export function rxreplclientsetownplayerfortests(player: string): void {
+/** Force the repl “own player” used for `rxreplpushbatch` (boardrunner worker). */
+export function rxreplclientsetownplayer(player: string): void {
   ownplayerid = player
+}
+
+/** Test hook; same as {@link rxreplclientsetownplayer}. */
+export function rxreplclientsetownplayerfortests(player: string): void {
+  rxreplclientsetownplayer(player)
 }
 
 export function rxreplclientreadstream(

@@ -180,6 +180,11 @@ export function memorysyncdropplayerfromall(player: string): void {
   streamreplserverdropplayerfromallstreams(player)
 }
 
+/** Repl stream roster / membership can change without mutating books; still queue a memory push so clients resync. */
+export function memorysyncmarkmemorydirty(): void {
+  memorymarkdirty(memorystream())
+}
+
 // VM tick hooks: callers decide when to push. The handler in vm/handlers/tick
 // invokes `memorysyncpushdirty` after `memorytickloaders` to drain the dirty set.
 export function memorysyncupdatememory(): void {

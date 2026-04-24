@@ -10,7 +10,7 @@ import {
   revokeboardrunnerassignment,
 } from 'zss/device/vm/boardrunnerelection'
 import { memorysyncpushdirty } from 'zss/device/vm/memorysimsync'
-import { boardrunners } from 'zss/device/vm/state'
+import { boardrunners, skipboardrunners } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorymoveplayertoboard,
@@ -67,6 +67,9 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
 
   // we have arrived at a new board, so we need to ensure a runner is elected
   if (!boardhasvalidrunner(dest)) {
+    // Arriving on a board should allow this player to be elected even if they
+    // were skip-flagged for stale ack elsewhere; otherwise pick has no winner.
+    delete skipboardrunners[player]
     ensureboardrunnerelected(vm, dest, ts)
     didsync = true
   }

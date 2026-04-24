@@ -19,6 +19,7 @@ import {
 import {
   INITIAL_TRACKING,
   lastinputtime,
+  skipboardrunners,
   tracking,
   trackinglastlog,
 } from 'zss/device/vm/state'
@@ -137,8 +138,11 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     // ensure boardrunner is elected
     const board = memoryreadplayerboard(message.player)
     if (ispresent(board)) {
+      delete skipboardrunners[message.player]
       ensureboardrunnerelected(vm, board.id, ts)
     }
+    // Flush repl immediately after login + possible runner install. Without
+    memorysyncpushdirty()
 
     // signal success !!!
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)

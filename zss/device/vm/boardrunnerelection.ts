@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import { boardrunnerowned } from 'zss/device/api'
 import {
   memorysyncadmitboardrunner,
+  memorysyncmarkmemorydirty,
   memorysyncrevokeboardrunner,
 } from 'zss/device/vm/memorysimsync'
 import {
@@ -20,6 +21,7 @@ export function revokeboardrunnerassignment(board: string): void {
     return
   }
   memorysyncrevokeboardrunner(runner, board)
+  memorysyncmarkmemorydirty()
   delete ackboardrunners[board]
   delete boardrunners[board]
 }
@@ -95,6 +97,7 @@ export function installboardrunner(
 
   // admit the winner as the boardrunner streams
   memorysyncadmitboardrunner(winner, board)
+  memorysyncmarkmemorydirty()
 
   // signal the winner is now running the board
   boardrunnerowned(vm, winner, board)
