@@ -58,10 +58,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   memorylogoutplayer(message.player, !!message.data)
 
   // revoke boardrunner assignments
-  const affectedboards = revokeboardrunnerassignmentsforplayer(
-    vm,
-    message.player,
-  )
+  const affectedboards = revokeboardrunnerassignmentsforplayer(message.player)
   const ts = Date.now()
   for (let i = 0; i < affectedboards.length; ++i) {
     ensureboardrunnerelected(vm, affectedboards[i], ts)

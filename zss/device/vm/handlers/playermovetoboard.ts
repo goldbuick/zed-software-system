@@ -1,5 +1,9 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
+import {
+  type MESSAGE,
+  type VM_PLAYERMOVETOBOARD,
+  boardrunnerowned,
+} from 'zss/device/api'
 import {
   boardhasvalidrunner,
   ensureboardrunnerelected,
@@ -18,8 +22,10 @@ import { ispt } from 'zss/words/dir'
 
 export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   const payload = message.data as VM_PLAYERMOVETOBOARD | undefined
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (
     !ispresent(payload) ||
+    !ispresent(mainbook) ||
     !ispt(payload.dest) ||
     !isstring(payload.board) ||
     payload.board.length === 0 ||
@@ -29,13 +35,12 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     return
   }
 
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
   const fromboard = memoryreadplayerboard(message.player)
   const fromboardid = fromboard?.id ?? ''
+  if (fromboardid === payload.board) {
+    // we're already on the board, so we don't need to do anything
+    return
+  }
 
   const moved = memorymoveplayertoboard(
     mainbook,
@@ -48,14 +53,14 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     return
   }
 
-  const dest = payload.board
-  const player = message.player
   let didsync = false
   const ts = Date.now()
+  const dest = payload.board
+  const player = message.player
 
   // we have left this board, so we need to revoke the runner if its us
-  if (fromboardid !== dest && boardrunners[fromboardid] === player) {
-    revokeboardrunnerassignment(vm, fromboardid)
+  if (player === boardrunners[fromboardid]) {
+    revokeboardrunnerassignment(fromboardid)
     ensureboardrunnerelected(vm, fromboardid, ts)
     didsync = true
   }
@@ -69,5 +74,11 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   // sync the dirty state
   if (didsync) {
     memorysyncpushdirty()
+  }
+
+  if (player !== boardrunners[dest]) {
+    // if we are not the new runner we need to
+    // signal that we are no longer running the previous board
+    boardrunnerowned(vm, player, '')
   }
 }

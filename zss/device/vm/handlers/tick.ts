@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { type MESSAGE, boardrunnertick } from 'zss/device/api'
+import { type MESSAGE, boardrunnerowned, boardrunnertick } from 'zss/device/api'
 import {
   ensureboardrunnerelected,
   revokeboardrunnerassignment,
@@ -65,10 +65,13 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
       const delta = timestamp - lastacktick
       if (delta > BOARDRUNNER_ACKTICK_STALE_MS) {
         const staleplayer = boardrunners[board]
-        if (isstring(staleplayer) && staleplayer) {
+        if (isstring(staleplayer)) {
           skipboardrunners[staleplayer] = true
+          // revoke the boardrunner assignment
+          revokeboardrunnerassignment(board)
+          // signal that we are no longer running the board
+          boardrunnerowned(vm, staleplayer, '')
         }
-        revokeboardrunnerassignment(vm, board)
       }
     }
   })

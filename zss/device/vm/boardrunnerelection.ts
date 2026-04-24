@@ -14,20 +14,18 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersfromboard } from 'zss/memory/playermanagement'
 
 /** Clears elected runner state for a board; does not install a replacement. */
-export function revokeboardrunnerassignment(vm: DEVICE, board: string): void {
+export function revokeboardrunnerassignment(board: string): void {
   const runner = boardrunners[board]
   if (!ispresent(runner)) {
     return
   }
   memorysyncrevokeboardrunner(runner, board)
-  boardrunnerowned(vm, runner, '')
   delete ackboardrunners[board]
   delete boardrunners[board]
 }
 
 /** Revokes every board this player is recorded as running; returns affected board ids. */
 export function revokeboardrunnerassignmentsforplayer(
-  vm: DEVICE,
   player: string,
 ): string[] {
   if (!isstring(player) || !player) {
@@ -40,7 +38,7 @@ export function revokeboardrunnerassignmentsforplayer(
     }
   }
   for (let i = 0; i < boards.length; ++i) {
-    revokeboardrunnerassignment(vm, boards[i])
+    revokeboardrunnerassignment(boards[i])
   }
   return boards
 }
@@ -95,7 +93,9 @@ export function installboardrunner(
   // unskip the winner
   delete skipboardrunners[winner]
 
-  // signal the winner is now running the board
+  // admit the winner as the boardrunner streams
   memorysyncadmitboardrunner(winner, board)
+
+  // signal the winner is now running the board
   boardrunnerowned(vm, winner, board)
 }

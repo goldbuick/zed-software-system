@@ -5,7 +5,13 @@ import {
   gadgetstate,
 } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
-import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  deepcopy,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
@@ -33,6 +39,7 @@ import {
   memoryreadbookbysoftware,
   memoryreadfreeze,
   memoryreadhalt,
+  memoryreadroot,
 } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { BOARD, MEMORY_LABEL } from 'zss/memory/types'
@@ -225,6 +232,7 @@ const boardrunner = createdevice(
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
+      console.info('boardrunner', message.target, deepcopy(memoryreadroot()))
       return
     }
 
