@@ -18,6 +18,11 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
+import {
+  flagsstream,
+  memorymarkboarddirty,
+  memorymarkdirty,
+} from './memorydirty'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
@@ -350,6 +355,12 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
 
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')
+
+  const board = memoryreadplayerboard(player)
+  if (ispresent(board)) {
+    memorymarkboarddirty(board)
+  }
+  memorymarkdirty(flagsstream(player))
 
   // track invoke
   if (tracking) {
