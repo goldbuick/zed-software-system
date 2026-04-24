@@ -219,32 +219,25 @@ const boardrunner = createdevice(
       return
     }
 
-    // filter messages by target
-    const shouldhandle = shouldboardrunnerhandlestreamchanged(message.target)
-    switch (message.target) {
-      case 'tick':
-        // pass always
-        break
-      default:
-        // everything else is filtered by assignedplayerid
-        if (!shouldhandle && message.player !== assignedplayer) {
-          // console.info('dropped', assignedplayer, message.target)
-          return
-        }
-        break
-    }
-
-    // handle messages
-    if (shouldhandle) {
+    // handle stream changed messages
+    if (shouldboardrunnerhandlestreamchanged(message.target)) {
+      // console.info('boardrunner', message.target)
       const payload = message.data as JSONSYNC_CHANGED
-      console.info('boardrunner', message.target)
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       rebuildownedboardids()
       return
     }
 
-    if (message.target !== 'tick') {
-      console.info('boardrunner', message.target, message.data)
+    // filter messages by assignedplayer
+    if (message.player !== assignedplayer) {
+      console.info(
+        assignedplayer,
+        'dropped',
+        message.player,
+        message.target,
+        message.data,
+      )
+      return
     }
 
     switch (message.target) {
@@ -262,18 +255,13 @@ const boardrunner = createdevice(
         break
       case 'tick':
         if (isnumber(message.data) && assignedboard) {
-          console.info(
-            'boardrunner',
-            message.target,
-            message.data,
-            assignedboard,
-          )
           runworkertick(message.data)
           boardrunner.reply(message, 'acktick', assignedboard)
         }
         break
       case 'ownedboard': {
         if (isstring(message.data) && assignedboard !== message.data) {
+          console.info('boardrunnerownedboard', assignedplayer, message.data)
           assignedboard = message.data
           rebuildownedboardids()
         }

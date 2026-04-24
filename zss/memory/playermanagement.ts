@@ -438,6 +438,7 @@ export function memoryscanplayers(players: Record<string, number>) {
 }
 
 export function memoryreadplayersfromboard(board: string): string[] {
+  // note we could use named lookup to get the players from the board
   const maybeboard = memoryreadboardbyaddress(board)
   return Object.keys(maybeboard?.objects ?? {}).filter((id) => ispid(id))
 }

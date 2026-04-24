@@ -6,12 +6,11 @@ import {
   revokeboardrunnerassignment,
 } from 'zss/device/vm/boardrunnerelection'
 import { memorysyncpushdirty } from 'zss/device/vm/memorysimsync'
-import { boardrunners, skipboardrunners } from 'zss/device/vm/state'
+import { boardrunners } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorymoveplayertoboard,
   memoryreadplayerboard,
-  memoryreadplayersfromboard,
 } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
@@ -54,25 +53,20 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   let didsync = false
   const ts = Date.now()
 
-  if (
-    fromboardid.length > 0 &&
-    fromboardid !== dest &&
-    boardrunners[fromboardid] === player
-  ) {
+  // we have left this board, so we need to revoke the runner if its us
+  if (fromboardid !== dest && boardrunners[fromboardid] === player) {
     revokeboardrunnerassignment(vm, fromboardid)
-    didsync = true
     ensureboardrunnerelected(vm, fromboardid, ts)
+    didsync = true
   }
 
+  // we have arrived at a new board, so we need to ensure a runner is elected
   if (!boardhasvalidrunner(dest)) {
-    if (memoryreadplayersfromboard(dest).includes(player)) {
-      delete skipboardrunners[player]
-    }
-    revokeboardrunnerassignment(vm, dest)
     ensureboardrunnerelected(vm, dest, ts)
     didsync = true
   }
 
+  // sync the dirty state
   if (didsync) {
     memorysyncpushdirty()
   }

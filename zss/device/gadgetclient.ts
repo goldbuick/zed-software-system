@@ -37,7 +37,7 @@ export const gadgetclientdevice = createdevice(
       if (isequal(state.gadget, incoming)) {
         return state
       }
-      // console.info('gadgetclient', message.target)
+      console.info('gadgetclient', message.target, incoming)
       return {
         ...state,
         gadget: incoming,

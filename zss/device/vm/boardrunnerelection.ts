@@ -12,22 +12,17 @@ import {
 } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersfromboard } from 'zss/memory/playermanagement'
-import { memoryreadoperator } from 'zss/memory/session'
 
 /** Clears elected runner state for a board; does not install a replacement. */
 export function revokeboardrunnerassignment(vm: DEVICE, board: string): void {
-  if (!isstring(board) || !board) {
-    return
-  }
   const runner = boardrunners[board]
-  if (isstring(runner) && runner) {
-    memorysyncrevokeboardrunner(runner, board)
-    boardrunnerowned(vm, memoryreadoperator(), '')
-    delete boardrunners[board]
-    delete ackboardrunners[board]
+  if (!ispresent(runner)) {
     return
   }
+  memorysyncrevokeboardrunner(runner, board)
+  boardrunnerowned(vm, runner, '')
   delete ackboardrunners[board]
+  delete boardrunners[board]
 }
 
 /** Revokes every board this player is recorded as running; returns affected board ids. */
@@ -56,11 +51,10 @@ export function ensureboardrunnerelected(
   board: string,
   timestamp: number,
 ): void {
-  if (!isstring(board) || !board) {
-    return
-  }
-  const lastacktick = ackboardrunners[board]
-  if (!ispresent(lastacktick)) {
+  if (
+    !ispresent(ackboardrunners[board]) ||
+    boardhasvalidrunner(board) === false
+  ) {
     const winner = pickboardrunnerwinner(board)
     if (ispresent(winner)) {
       installboardrunner(vm, board, winner, timestamp)
@@ -73,6 +67,8 @@ export function pickboardrunnerwinner(board: string): string | undefined {
   const [winner] = players
     .filter((player) => !skipboardrunners[player])
     .sort((a, b) => tracking[b] - tracking[a])
+
+  console.info('pickboardrunnerwinner', board, winner)
   return ispresent(winner) ? winner : undefined
 }
 
@@ -90,19 +86,15 @@ export function installboardrunner(
   winner: string,
   timestamp: number,
 ): void {
-  // revoke the previous runner
-  const previous = boardrunners[board]
-  if (previous === winner) {
-    return
-  }
-  if (ispresent(previous)) {
-    memorysyncrevokeboardrunner(previous, board)
-    boardrunnerowned(vm, previous, '')
-  }
+  console.info('installboardrunner', board, winner)
+
   // start tracking the winner
   boardrunners[board] = winner
   ackboardrunners[board] = timestamp
+
+  // unskip the winner
   delete skipboardrunners[winner]
+
   // signal the winner is now running the board
   memorysyncadmitboardrunner(winner, board)
   boardrunnerowned(vm, winner, board)

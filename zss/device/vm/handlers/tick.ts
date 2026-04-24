@@ -59,16 +59,7 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
   }
 
   const timestamp = Date.now()
-  // const onboard = (board: string, runner: string) =>
-  //   memoryreadplayersfromboard(board).includes(runner)
-
   activeboards.forEach((board) => {
-    // const runner = boardrunners[board]
-    // if (isstring(runner) && runner && !onboard(board, runner)) {
-    //   revokeboardrunnerassignment(vm, board)
-    //   ensureboardrunnerelected(vm, board, timestamp)
-    //   return
-    // }
     const lastacktick = ackboardrunners[board]
     if (ispresent(lastacktick)) {
       const delta = timestamp - lastacktick
