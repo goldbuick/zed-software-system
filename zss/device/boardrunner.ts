@@ -6,18 +6,22 @@ import {
 } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memorytrackingflagsbagid } from 'zss/memory/boardchipflags'
+import {
+  memorycollectchipmemidsforboard,
+  memorytrackingflagsbagid,
+} from 'zss/memory/boardchipflags'
 import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
 } from 'zss/memory/boards'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import {
   flagsstream,
   isboardstream,
   isflagsstream,
   ismemorystream,
   memorymarkdirty,
+  playerfromflagsstream,
 } from 'zss/memory/memorydirty'
 import {
   memoryplayerflagsready,
@@ -72,6 +76,8 @@ export function setassignedplayer(player: string) {
 
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
 const ownedboards = new Set<string>()
+const requiredflagstreams = new Set<string>()
+const hydratedflagstreams = new Set<string>()
 
 function snapshotownedboards(assigned: string): Set<string> {
   const ids = new Set<string>()
@@ -93,6 +99,8 @@ function snapshotownedboards(assigned: string): Set<string> {
 function rebuildownedboardids() {
   ownedboards.clear()
   if (!isstring(assignedboard) || assignedboard.length === 0) {
+    requiredflagstreams.clear()
+    hydratedflagstreams.clear()
     streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
     const peers = new Set<string>()
     if (isstring(assignedplayer) && assignedplayer.length > 0) {
@@ -105,6 +113,7 @@ function rebuildownedboardids() {
   for (let i = 0; i < next.length; ++i) {
     ownedboards.add(next[i])
   }
+  requiredflagstreams.clear()
   streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
   const peers = new Set<string>()
   if (isstring(assignedplayer) && assignedplayer.length > 0) {
@@ -113,11 +122,43 @@ function rebuildownedboardids() {
   const onowned = ownedplayers()
   for (let i = 0; i < onowned.length; ++i) {
     peers.add(onowned[i])
+    requiredflagstreams.add(flagsstream(onowned[i]))
   }
   for (const bid of ownedboards) {
+    const chipmemids = memorycollectchipmemidsforboard(bid)
+    for (let i = 0; i < chipmemids.length; ++i) {
+      requiredflagstreams.add(flagsstream(chipmemids[i]))
+    }
     peers.add(memorytrackingflagsbagid(bid))
+    requiredflagstreams.add(flagsstream(memorytrackingflagsbagid(bid)))
+  }
+  for (const streamid of [...hydratedflagstreams]) {
+    if (!requiredflagstreams.has(streamid)) {
+      hydratedflagstreams.delete(streamid)
+    }
+  }
+  for (const streamid of requiredflagstreams) {
+    if (!isflagsstream(streamid)) {
+      continue
+    }
+    const bagid = playerfromflagsstream(streamid)
+    if (isstring(bagid) && bagid.length > 0 && memoryhasflags(bagid)) {
+      hydratedflagstreams.add(streamid)
+    }
   }
   streamreplpartialscopesOnGadgetFlagsPeersChange(peers)
+}
+
+function boardrunnerisflagshydrated(): boolean {
+  if (requiredflagstreams.size === 0) {
+    return true
+  }
+  for (const streamid of requiredflagstreams) {
+    if (!hydratedflagstreams.has(streamid)) {
+      return false
+    }
+  }
+  return true
 }
 
 function ownedplayers(): string[] {
@@ -180,6 +221,9 @@ function runworkertick(timestamp: number): void {
   }
   const players = ownedplayers()
   if (players.length === 0) {
+    return
+  }
+  if (!boardrunnerisflagshydrated()) {
     return
   }
   perfmeasure('boardrunner:pilottick', () => {
