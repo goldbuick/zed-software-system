@@ -206,6 +206,33 @@ export function memorysyncadmitboardrunner(
   memorysyncadmitgadgetstreamsforboard(runner, players)
 }
 
+/**
+ * Repl stream ids a boardrunner is admitted to for `boardaddress` — same roster as
+ * {@link memorysyncadmitboardrunner}. See zss/device/docs/rxdb-syncs-and-streams.md.
+ */
+export function memorysyncreplstreamidsforboardrunner(
+  boardaddress: string,
+): string[] {
+  if (!isstring(boardaddress) || !boardaddress) {
+    return []
+  }
+  const out: string[] = []
+  out.push(boardstream(boardaddress))
+  const players = memoryreadplayersfromboard(boardaddress)
+  for (let i = 0; i < players.length; ++i) {
+    out.push(flagsstream(players[i]))
+  }
+  const chipmemids = memorycollectchipmemidsforboard(boardaddress)
+  for (let i = 0; i < chipmemids.length; ++i) {
+    out.push(flagsstream(chipmemids[i]))
+  }
+  out.push(flagsstream(memorytrackingflagsbagid(boardaddress)))
+  for (let i = 0; i < players.length; ++i) {
+    out.push(gadgetstream(players[i]))
+  }
+  return out
+}
+
 export function memorysyncrevokeboardrunner(
   runner: string,
   boardaddress: string,

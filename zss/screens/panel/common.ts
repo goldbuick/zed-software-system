@@ -42,6 +42,22 @@ export function chiptarget(chip: string, target: string) {
   return `vm:${chip}:${target}`
 }
 
+/** Parallel to `chiptarget` for the boardrunner worker route. */
+export function chiptargetboardrunner(chip: string, target: string) {
+  return `boardrunner:${chip}:${target}`
+}
+
+/** Dual-emit panel chip messages: `vm:` first, then `boardrunner:`. */
+export function sendpanelchipmessages(
+  sendmessage: (target: string, data: unknown[]) => void,
+  chip: string,
+  target: string,
+  data: unknown[],
+) {
+  sendmessage(chiptarget(chip, target), data)
+  sendmessage(chiptargetboardrunner(chip, target), data)
+}
+
 export function strsplice(
   source: string,
   index: number,

@@ -380,16 +380,16 @@ const heavy = createdevice('heavy', [], (message) => {
       case 'llmpreset': {
         let preset: HEAVY_LLM_PRESET | undefined
         let showtoast = true
-        if (isstring(message.data)) {
-          preset = normalizeheavylmpreset(message.data)
-        } else if (isarray(message.data) && message.data.length >= 1) {
+        if (isarray(message.data) && message.data.length >= 1) {
           const raw = message.data[0]
           if (isstring(raw)) {
             preset = normalizeheavylmpreset(raw)
           }
-          if (message.data[1] === false) {
+          if (message.data.length >= 2 && message.data[1] === false) {
             showtoast = false
           }
+        } else if (isstring(message.data)) {
+          preset = normalizeheavylmpreset(message.data)
         }
         if (!preset) {
           break

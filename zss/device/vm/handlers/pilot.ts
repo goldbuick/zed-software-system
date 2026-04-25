@@ -30,13 +30,18 @@ type PILOT_STATE = {
 const pilots: Record<string, PILOT_STATE> = {}
 
 export function handlepilotstart(message: MESSAGE): void {
-  const data = message.data as { x?: number; y?: number } | undefined
-  if (!ispresent(data) || !isnumber(data.x) || !isnumber(data.y)) {
+  const data = message.data
+  if (
+    !isarray(data) ||
+    data.length < 2 ||
+    !isnumber(data[0]) ||
+    !isnumber(data[1])
+  ) {
     return
   }
   pilots[message.player] = {
-    targetx: data.x,
-    targety: data.y,
+    targetx: data[0],
+    targety: data[1],
     lastx: -1,
     lasty: -1,
     stuckticks: 0,
@@ -59,7 +64,7 @@ export function handlepilotclear(message: MESSAGE): void {
 }
 
 function pilotnotify(vm: DEVICE, playerid: string, text: string): void {
-  vm.emit(playerid, 'heavy:pilotnotify', { agentid: playerid, message: text })
+  vm.emit(playerid, 'heavy:pilotnotify', [playerid, text])
 }
 
 export function pilottick(vm: DEVICE): void {

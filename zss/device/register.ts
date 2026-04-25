@@ -567,45 +567,45 @@ export const register = createdevice(
         break
       case 'pullvar':
         doasync(register, message.player, async () => {
-          const payload = message.data as {
-            id?: string
-            key?: string
-            channel?: string
-          }
+          const raw = message.data
           const player = message.player
           if (
-            !payload ||
-            !isstring(payload.id) ||
-            !isstring(payload.key) ||
-            (payload.channel !== 'vm' && payload.channel !== 'heavy')
+            !isarray(raw) ||
+            raw.length < 3 ||
+            !isstring(raw[0]) ||
+            !isstring(raw[1]) ||
+            (raw[2] !== 'vm' && raw[2] !== 'heavy')
           ) {
             return
           }
+          const id = raw[0]
+          const key = raw[1]
+          const channel = raw[2] as 'vm' | 'heavy'
           try {
             const vars = await storagereadvars()
-            const value = vars[payload.key]
-            if (payload.channel === 'vm') {
+            const value = vars[key]
+            if (channel === 'vm') {
               vmpullvarresult(register, player, {
-                id: payload.id,
+                id,
                 value,
               })
             } else {
               heavypullvarresult(register, player, {
-                id: payload.id,
+                id,
                 value,
               })
             }
           } catch (err) {
             const msg =
               err instanceof Error ? err.message : 'storagereadvars_failed'
-            if (payload.channel === 'vm') {
+            if (channel === 'vm') {
               vmpullvarresult(register, player, {
-                id: payload.id,
+                id,
                 error: msg,
               })
             } else {
               heavypullvarresult(register, player, {
-                id: payload.id,
+                id,
                 error: msg,
               })
             }

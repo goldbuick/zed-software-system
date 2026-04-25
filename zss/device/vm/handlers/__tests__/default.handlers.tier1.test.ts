@@ -122,12 +122,8 @@ jest.mock('zss/rom', () => ({
   romread: jest.fn(() => undefined),
 }))
 
-jest.mock('zss/device/vm/handlers/bookmarkscroll', () => ({
-  handlebookmarkscrollpanel: jest.fn(),
-}))
-
-jest.mock('zss/device/vm/handlers/editorbookmarkscroll', () => ({
-  handleeditorbookmarkscrollpanel: jest.fn(),
+jest.mock('zss/device/vm/handlers/panelchipdispatch', () => ({
+  dispatchpanelchipmessage: jest.fn(),
 }))
 
 jest.mock('zss/device/vm/handlers/zzt', () => ({

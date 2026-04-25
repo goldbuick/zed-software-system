@@ -61,6 +61,10 @@ function makepayload(
   }
 }
 
+function datafrompayload(p: VM_PLAYERMOVETOBOARD): [string, { x: number; y: number }] {
+  return [p.board, p.dest]
+}
+
 describe('handleplayermovetoboard', () => {
   const vm = {} as DEVICE
 
@@ -88,7 +92,7 @@ describe('handleplayermovetoboard', () => {
     ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue({})
     const message = {
       player: 'player-1',
-      data: { board: '', dest: { x: 0, y: 0 } },
+      data: datafrompayload({ board: '', dest: { x: 0, y: 0 } }),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)
@@ -100,7 +104,7 @@ describe('handleplayermovetoboard', () => {
     ;(memoryreadbookbysoftware as jest.Mock).mockReturnValue(undefined)
     const message = {
       player: 'player-1',
-      data: makepayload(),
+      data: datafrompayload(makepayload()),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)
@@ -118,7 +122,7 @@ describe('handleplayermovetoboard', () => {
 
     const message = {
       player: 'player-1',
-      data: makepayload(),
+      data: datafrompayload(makepayload()),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)
@@ -143,7 +147,7 @@ describe('handleplayermovetoboard', () => {
 
     const message = {
       player: 'player-1',
-      data: makepayload(),
+      data: datafrompayload(makepayload()),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)
@@ -174,7 +178,7 @@ describe('handleplayermovetoboard', () => {
 
     const message = {
       player: 'player-1',
-      data: makepayload(),
+      data: datafrompayload(makepayload()),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)
@@ -213,7 +217,7 @@ describe('handleplayermovetoboard', () => {
 
     const message = {
       player: 'player-1',
-      data: makepayload(),
+      data: datafrompayload(makepayload()),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)
@@ -238,7 +242,7 @@ describe('handleplayermovetoboard', () => {
 
     const message = {
       player: 'player-1',
-      data: makepayload(),
+      data: datafrompayload(makepayload()),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)
@@ -261,7 +265,7 @@ describe('handleplayermovetoboard', () => {
 
     const message = {
       player: 'player-1',
-      data: makepayload(),
+      data: datafrompayload(makepayload()),
     } as unknown as MESSAGE
 
     handleplayermovetoboard(vm, message)

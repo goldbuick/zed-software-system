@@ -16,6 +16,7 @@ import type {
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
+import { memorysyncreplstreamidsforboardrunner } from 'zss/device/vm/memorysimsync'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { isgadgetstream } from 'zss/memory/memorydirty'
 import { BOOK } from 'zss/memory/types'
@@ -27,6 +28,7 @@ export type DEVICELIKE = {
   emit: (player: string, target: string, data?: any) => void
 }
 
+/** Bus payloads: one logical value as-is; several parameters as a positional array (see helpers’ comments for order). */
 export type MESSAGE = {
   session: string
   player: string
@@ -35,6 +37,9 @@ export type MESSAGE = {
   target: string
   data?: any
 }
+
+/** `data` payload on sidebar panel chip messages (`vm:` / `boardrunner:`). */
+export type PANEL_CHIP_MESSAGE_DATA = unknown[]
 
 export function ismessage(value: any): value is MESSAGE {
   return (
@@ -175,12 +180,23 @@ export function boardrunnertick(
   device.emit(player, 'boardrunner:tick', timestamp)
 }
 
+/** Emitted on `boardrunner:ownedboard` — `streams` matches sim admit roster for `board`. */
+export type BOARDRUNNER_OWNEDBOARD = {
+  board: string
+  streams: string[]
+}
+
 export function boardrunnerowned(
   device: DEVICELIKE,
   player: string,
   board: string,
 ) {
-  device.emit(player, 'boardrunner:ownedboard', board)
+  const streams =
+    isstring(board) && board.length > 0
+      ? memorysyncreplstreamidsforboardrunner(board)
+      : []
+  const payload: BOARDRUNNER_OWNEDBOARD = { board, streams }
+  device.emit(player, 'boardrunner:ownedboard', payload)
 }
 
 export function boardrunnergadgetclearscroll(
@@ -422,7 +438,7 @@ export function heavyllmpreset(
   options?: { toast?: boolean },
 ) {
   const wantstoast = options?.toast !== false
-  device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
+  device.emit(player, 'heavy:llmpreset', [preset, wantstoast])
 }
 
 /** Main-thread register: start/stop per-agent vm:doot from client `second` ticks (heavy worker → client). */
@@ -1004,12 +1020,13 @@ export type VM_PLAYERMOVETOBOARD = {
   dest: PT
 }
 
+/** Bus `data` is `[boardId, destPt]`. */
 export function vmplayermovetoboard(
   device: DEVICELIKE,
   player: string,
   payload: VM_PLAYERMOVETOBOARD,
 ) {
-  device.emit(player, 'vm:playermovetoboard', payload)
+  device.emit(player, 'vm:playermovetoboard', [payload.board, payload.dest])
 }
 
 // Phase 3 of the boardrunner authoritative-tick plan: emitted by
@@ -1030,13 +1047,14 @@ export function userinput(
   device.emit(player, 'user:input', [input, mods])
 }
 
+/** Bus `data` is `[x, y]`. */
 export function userpilotstart(
   device: DEVICELIKE,
   player: string,
   x: number,
   y: number,
 ) {
-  device.emit(player, 'user:pilotstart', { x, y })
+  device.emit(player, 'user:pilotstart', [x, y])
 }
 
 export function userpilotstop(device: DEVICELIKE, player: string) {

@@ -88,7 +88,7 @@ describe('worker pilottick', () => {
       id: 'start',
       sender: 'user',
       target: 'pilotstart',
-      data: { x: 4, y: 2 },
+      data: [4, 2],
     }
     handlepilotstart(startmsg)
 
@@ -134,7 +134,7 @@ describe('worker pilottick', () => {
       id: 'start',
       sender: 'user',
       target: 'pilotstart',
-      data: { x: 4, y: 2 },
+      data: [4, 2],
     })
     pilottick(dev)
     pilottick(dev)
@@ -163,7 +163,7 @@ describe('worker pilottick', () => {
       id: 'start',
       sender: 'user',
       target: 'pilotstart',
-      data: { x: 10, y: 10 },
+      data: [10, 10],
     })
     handlepilotstop({
       session: '',

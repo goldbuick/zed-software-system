@@ -49,6 +49,10 @@ import {
   streamreplpartialscopesOnOwnedBoardsChange,
 } from './rxrepl/partialscopes'
 import {
+  dispatchpanelchipmessage,
+  parsetargetaspanelchiproute,
+} from './vm/handlers/panelchipdispatch'
+import {
   handlepilotclear,
   handlepilotstart,
   handlepilotstop,
@@ -172,6 +176,11 @@ function ownedplayers(): string[] {
   })
 }
 
+function boardrunnerownssenderscurrentboard(player: string): boolean {
+  const playerboard = memoryreadplayerboard(player)
+  return ispresent(playerboard) && ownedboards.has(playerboard.id)
+}
+
 function rendergadgetlayers(
   gadget: GADGET_STATE,
   player: string,
@@ -280,6 +289,15 @@ const boardrunner = createdevice(
       return
     }
 
+    const panelroute = parsetargetaspanelchiproute(message.target)
+    if (ispresent(panelroute)) {
+      if (!boardrunnerownssenderscurrentboard(message.player)) {
+        return
+      }
+      dispatchpanelchipmessage(boardrunner, message, panelroute)
+      return
+    }
+
     switch (message.target) {
       case 'user:input':
         handleworkeruserinput(message)
@@ -300,8 +318,19 @@ const boardrunner = createdevice(
         }
         break
       case 'ownedboard': {
-        if (isstring(message.data) && assignedboard !== message.data) {
-          assignedboard = message.data
+        const raw = message.data
+        let board = ''
+        if (isstring(raw)) {
+          board = raw
+        } else if (
+          ispresent(raw) &&
+          typeof raw === 'object' &&
+          isstring((raw as { board?: unknown }).board)
+        ) {
+          board = (raw as { board: string }).board
+        }
+        if (isstring(board) && assignedboard !== board) {
+          assignedboard = board
           rebuildownedboardids()
         }
         break

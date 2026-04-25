@@ -1,6 +1,6 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { createsid } from 'zss/mapping/guid'
-import { isstring } from 'zss/mapping/types'
+import { isarray, isstring } from 'zss/mapping/types'
 
 export type STORAGE_PULL_CHANNEL = 'vm' | 'heavy'
 
@@ -19,13 +19,16 @@ export function pullstoragevarfrommain(
   const id = createsid()
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
-    device.emit(player, 'register:pullvar', { id, key, channel })
+    device.emit(player, 'register:pullvar', [id, key, channel])
   })
 }
 
 /** VM or heavy device handler: complete a pending `pullstoragevarfrommain` promise. */
 export function resolvestoragepullmessage(data: unknown): void {
   if (!data || typeof data !== 'object') {
+    return
+  }
+  if (isarray(data)) {
     return
   }
   const o = data as { id?: string; value?: unknown; error?: string }
