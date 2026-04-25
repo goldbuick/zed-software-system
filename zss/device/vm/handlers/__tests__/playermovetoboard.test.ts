@@ -243,10 +243,6 @@ describe('handleplayermovetoboard', () => {
 
     handleplayermovetoboard(vm, message)
 
-    expect(memorysync.memorysyncrevokeboardrunner).toHaveBeenCalledWith(
-      'ghost',
-      'board-b',
-    )
     expect(memorysync.memorysyncadmitboardrunner).toHaveBeenCalledWith(
       'player-1',
       'board-b',

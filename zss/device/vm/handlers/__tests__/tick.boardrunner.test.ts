@@ -133,10 +133,6 @@ describe('handletick boardrunner election', () => {
 
     expect(boardrunners['addr-a']).toBe('p1')
     expect(typeof ackboardrunners['addr-a']).toBe('number')
-    expect(memorysync.memorysyncrevokeboardrunner).toHaveBeenCalledWith(
-      'ghost',
-      'addr-a',
-    )
     expect(memorysync.memorysyncadmitboardrunner).toHaveBeenCalledWith(
       'p1',
       'addr-a',

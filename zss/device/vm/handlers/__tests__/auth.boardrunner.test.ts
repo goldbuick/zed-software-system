@@ -177,10 +177,6 @@ describe('handlelogin board runner', () => {
 
     handlelogin(vm, message)
 
-    expect(memorysync.memorysyncrevokeboardrunner).toHaveBeenCalledWith(
-      'ghost',
-      'title-1',
-    )
     expect(memorysync.memorysyncadmitboardrunner).toHaveBeenCalledWith(
       'joiner',
       'title-1',

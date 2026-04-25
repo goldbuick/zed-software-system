@@ -25,6 +25,24 @@ describe('streamreplpartialscopesOnGadgetFlagsPeersChange', () => {
     expect(flags).toHaveBeenCalledTimes(1)
     expect(gadget).toHaveBeenCalledTimes(1)
   })
+
+  it('re-runs flags sync when flags set grows but gadget set is unchanged', () => {
+    const flags = jest
+      .spyOn(scoped, 'streamreplscopedsyncflagsplayers')
+      .mockResolvedValue(undefined)
+    const gadget = jest
+      .spyOn(scoped, 'streamreplscopedsyncgadgetplayers')
+      .mockResolvedValue(undefined)
+
+    const g = new Set(['p1'])
+    const f1 = new Set(['p1', 'b1_tracking'])
+    streamreplpartialscopesOnGadgetFlagsPeersChange(g, f1)
+    const f2 = new Set(['p1', 'b1_tracking', 'el1_chip'])
+    streamreplpartialscopesOnGadgetFlagsPeersChange(g, f2)
+
+    expect(flags).toHaveBeenCalledTimes(2)
+    expect(gadget).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('streamreplpartialscopesOnOwnedBoardsChange', () => {
