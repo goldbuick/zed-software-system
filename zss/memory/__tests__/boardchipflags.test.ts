@@ -31,7 +31,7 @@ describe('boardchipflags', () => {
   })
 
   it('memorytrackingflagsbagid matches admit path', () => {
-    expect(memorytrackingflagsbagid('boardA')).toBe('tracking_boardA')
+    expect(memorytrackingflagsbagid('boardA')).toBe('boardA_tracking')
   })
 
   it('memorycollectchipmemidsforboard unions elements and persisted *_chip keys', () => {

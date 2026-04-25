@@ -55,7 +55,7 @@ function memorycollectboardelementids(boardaddress: string): Set<string> {
 
 /** Flags bag id for board-direction tracking state (`memoryreadflags`). */
 export function memorytrackingflagsbagid(boardaddress: string): string {
-  return `tracking_${boardaddress}`
+  return `${boardaddress}_tracking`
 }
 
 /**

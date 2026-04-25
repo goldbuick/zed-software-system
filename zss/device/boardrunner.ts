@@ -40,7 +40,10 @@ import { BOARD, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
-import { boardrunnerscopedcatchupwithtimeout } from './boardrunnerreplcatchup'
+import {
+  streamreplpartialscopesOnGadgetFlagsPeersChange,
+  streamreplpartialscopesOnOwnedBoardsChange,
+} from './rxrepl/partialscopes'
 import {
   handlepilotclear,
   handlepilotstart,
@@ -70,32 +73,6 @@ export function setassignedplayer(player: string) {
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
 const ownedboards = new Set<string>()
 
-function boardsetkey(ids: Set<string>): string {
-  return [...ids].sort().join(',')
-}
-
-let lastboardrunnerscopekey = ''
-
-/**
- * Fire-and-forget scoped repl catch-up. Human `flags:` peers and per-board
- * `tracking_<board>` bags only — element `*_chip` streams are started lazily
- * via `streamreplscopedfeedstreamrow` and sim-side admit, not awaited here
- * (avoids re-scoping on every element churn and blocking the worker tick).
- */
-function boardrunnerkickreplcatchup(
-  ownedsnap: Set<string>,
-  flagpeersforscope: Set<string>,
-  gadgethumansnap: Set<string>,
-) {
-  void boardrunnerscopedcatchupwithtimeout(
-    ownedsnap,
-    flagpeersforscope,
-    gadgethumansnap,
-  ).catch((err: unknown) => {
-    console.warn('[boardrunner] scoped repl catch-up failed', err)
-  })
-}
-
 function snapshotownedboards(assigned: string): Set<string> {
   const ids = new Set<string>()
   if (!isstring(assigned) || assigned.length === 0) {
@@ -115,44 +92,32 @@ function snapshotownedboards(assigned: string): Set<string> {
 
 function rebuildownedboardids() {
   ownedboards.clear()
-  const gadgetpeers = new Set<string>()
-  if (isstring(assignedplayer) && assignedplayer.length > 0) {
-    gadgetpeers.add(assignedplayer)
-  }
   if (!isstring(assignedboard) || assignedboard.length === 0) {
-    const flagpeersforscope = new Set(gadgetpeers)
-    const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersforscope)}|g:${boardsetkey(gadgetpeers)}`
-    if (scopekey !== lastboardrunnerscopekey) {
-      lastboardrunnerscopekey = scopekey
-      boardrunnerkickreplcatchup(
-        new Set(ownedboards),
-        new Set(flagpeersforscope),
-        new Set(gadgetpeers),
-      )
+    streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
+    const peers = new Set<string>()
+    if (isstring(assignedplayer) && assignedplayer.length > 0) {
+      peers.add(assignedplayer)
     }
+    streamreplpartialscopesOnGadgetFlagsPeersChange(peers)
     return
   }
   const next = [...snapshotownedboards(assignedboard)]
   for (let i = 0; i < next.length; ++i) {
     ownedboards.add(next[i])
   }
+  streamreplpartialscopesOnOwnedBoardsChange(ownedboards)
+  const peers = new Set<string>()
+  if (isstring(assignedplayer) && assignedplayer.length > 0) {
+    peers.add(assignedplayer)
+  }
   const onowned = ownedplayers()
   for (let i = 0; i < onowned.length; ++i) {
-    gadgetpeers.add(onowned[i])
+    peers.add(onowned[i])
   }
-  const flagpeersforscope = new Set(gadgetpeers)
   for (const bid of ownedboards) {
-    flagpeersforscope.add(memorytrackingflagsbagid(bid))
+    peers.add(memorytrackingflagsbagid(bid))
   }
-  const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersforscope)}|g:${boardsetkey(gadgetpeers)}`
-  if (scopekey !== lastboardrunnerscopekey) {
-    lastboardrunnerscopekey = scopekey
-    boardrunnerkickreplcatchup(
-      new Set(ownedboards),
-      new Set(flagpeersforscope),
-      new Set(gadgetpeers),
-    )
-  }
+  streamreplpartialscopesOnGadgetFlagsPeersChange(peers)
 }
 
 function ownedplayers(): string[] {

@@ -1,9 +1,9 @@
 /**
  * Per-board and per-player `replicateRxCollection` instances on the shared RxDB
- * mirror collections (`replicationIdentifier` unique per scope). Scope is
- * updated from the boardrunner worker via awaited `streamreplscopedsync*` plus
- * `streamreplscopedawaitinitialsyncforowned` (see `boardrunnerreplcatchup.ts`);
- * `partialscopes.ts` helpers remain for optional deduped callers.
+ * mirror collections (`replicationIdentifier` unique per scope). The boardrunner
+ * worker updates scope from [`partialscopes`](./partialscopes.ts) (void
+ * `streamreplscopedsync*`), and rows can still start replications lazily via
+ * [`streamreplscopedfeedstreamrow`].
  */
 import {
   type RxReplicationState,
@@ -595,52 +595,6 @@ export async function streamreplscopedsyncgadgetplayers(
       startgadgetscoped(id)
     }
   }
-}
-
-type Replwithinitial = {
-  awaitInitialReplication?: () => Promise<void>
-}
-
-async function awaitreplinitialsync(repl: unknown): Promise<void> {
-  if (!repl) {
-    return
-  }
-  const r = repl as Replwithinitial
-  if (typeof r.awaitInitialReplication !== 'function') {
-    return
-  }
-  await r.awaitInitialReplication()
-}
-
-/**
- * After `streamreplscopedsyncboards` / `streamreplscopedsyncflagsplayers` have
- * started instances for these ids, await each repl's first pull round-trip.
- */
-export async function streamreplscopedawaitinitialsyncforowned(
-  ownedBoardIds: Set<string>,
-  flagPlayerIds: Set<string>,
-): Promise<void> {
-  await streamreplensureclientdb()
-  const tasks: Promise<void>[] = []
-  for (const id of ownedBoardIds) {
-    if (!isstring(id) || id.length === 0) {
-      continue
-    }
-    const s = boardsreplbyid.get(id)
-    if (s) {
-      tasks.push(awaitreplinitialsync(s.repl))
-    }
-  }
-  for (const id of flagPlayerIds) {
-    if (!isstring(id) || id.length === 0) {
-      continue
-    }
-    const s = flagsreplbyplayer.get(id)
-    if (s) {
-      tasks.push(awaitreplinitialsync(s.repl))
-    }
-  }
-  await Promise.all(tasks)
 }
 
 export function streamreplscopedfeedstreamrow(

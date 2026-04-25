@@ -25,7 +25,7 @@ Streams (see `routememoryjsonsyncdocument`):
   Runner admit/revoke for these streams is tied to `memorysyncadmitboardrunner` /
   `memorysyncrevokeboardrunner`: union of on-board element ids (`*_chip`) plus any
   persisted `mainbook.flags` `*_chip` keys whose stem id is still on that board,
-  and `tracking_<boardId>` (see [`memorysimsync`](./memorysimsync.ts)).
+  and `<boardId>_tracking` (see [`memorysimsync`](./memorysimsync.ts)).
 
 **Authoritative `memory.books`:** `hydratememory` and `unprojectmemory` both
 remove local books whose id is **absent** from the incoming `books` object. Every

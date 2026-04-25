@@ -4,6 +4,7 @@ import {
   streamreplserverregister,
 } from 'zss/device/streamreplserver'
 import { ispresent } from 'zss/mapping/types'
+import { memorytrackingflagsbagid } from 'zss/memory/boardchipflags'
 import { memoryinitboard } from 'zss/memory/boards'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
@@ -21,7 +22,7 @@ import {
 } from 'zss/memory/session'
 import { BOOK, CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
-import { projectmemory, projectplayerflags } from '../memoryproject'
+import { projectmemory } from '../memoryproject'
 import {
   memorysyncadmitboardrunner,
   memorysynclazyensurechipflagsstreamforpusher,
@@ -77,7 +78,7 @@ describe('chip flags streams flags:*_chip', () => {
     expect(entry?.players.get(runner)?.writable).toBe(true)
   })
 
-  it('memorysyncreverseproject merges chip bag from flags row', () => {
+  it('memorysyncreverseproject merges chip and tracking bags from flags rows', () => {
     const bagid = 'el1_chip'
     memorysyncreverseproject(flagsstream(bagid), { ec: 2, ys: 0 })
     const main = memoryreadbookbyaddress('main-chipflags')
@@ -87,6 +88,15 @@ describe('chip flags streams flags:*_chip', () => {
     }
     const bag = memoryreadbookflags(main, bagid) as Record<string, unknown>
     expect(bag.ec).toBe(2)
+
+    const boardid = 'boardchip'
+    const trackingbagid = memorytrackingflagsbagid(boardid)
+    memorysyncreverseproject(flagsstream(trackingbagid), { tick: 3 })
+    const trackingbag = memoryreadbookflags(
+      main,
+      trackingbagid,
+    ) as Record<string, unknown>
+    expect(trackingbag.tick).toBe(3)
   })
 })
 
@@ -108,13 +118,11 @@ describe('memorytickobject chip flags dirty', () => {
       pages: [
         {
           id: boardid,
-          name: boardid,
           code: `@board ${boardid}\n`,
           stats: { type: CODE_PAGE_TYPE.BOARD },
           board: {
             id: boardid,
-            width: 10,
-            height: 10,
+            name: boardid,
             terrain: [],
             objects: {
               [elid]: {
@@ -151,28 +159,38 @@ describe('memorytickobject chip flags dirty', () => {
   })
 })
 
-describe('memorysyncadmitboardrunner persisted chip + tracking flags', () => {
+describe('memorysyncadmitboardrunner player + chip + tracking flags', () => {
   afterEach(() => {
     streamreplserverclearfortests()
     memoryresetbooks([])
     memorydirtyclear()
   })
 
-  it('registers flags streams for on-board *_chip bags, tracking_<board>, not orphan *_chip', () => {
+  it('registers flags streams for on-board player/chip bags and <board>_tracking, not orphan *_chip', () => {
     const runner = 'run_persist_chip'
     const boardid = 'brd_persist_chip'
+    const onboardplayer = 'pid_persist_player'
     const elon = 'el_persist_onboard'
     const codepage: CODE_PAGE = {
       id: boardid,
-      name: boardid,
       code: `@board ${boardid}\n`,
       stats: { type: CODE_PAGE_TYPE.BOARD },
       board: {
         id: boardid,
-        width: 8,
-        height: 8,
+        name: boardid,
         terrain: [],
         objects: {
+          [onboardplayer]: {
+            id: onboardplayer,
+            x: 1,
+            y: 1,
+            kind: '',
+            code: '',
+            char: 2,
+            color: 2,
+            bg: 0,
+            cycle: 1,
+          },
           [elon]: {
             id: elon,
             x: 0,
@@ -195,9 +213,10 @@ describe('memorysyncadmitboardrunner persisted chip + tracking flags', () => {
       pages: [codepage],
       flags: {
         [runner]: { board: boardid },
+        [onboardplayer]: { board: boardid, hp: 5 },
         [`${elon}_chip`]: { ec: 7 },
         stale_chip: { ec: 1 },
-        [`tracking_${boardid}`]: { tick: 1 },
+        [memorytrackingflagsbagid(boardid)]: { tick: 1 },
       },
     }
     memoryresetbooks([book])
@@ -209,9 +228,11 @@ describe('memorysyncadmitboardrunner persisted chip + tracking flags', () => {
 
     const elstream = streamreplserverreadstream(flagsstream(`${elon}_chip`))
     expect(elstream?.players.get(runner)?.writable).toBe(true)
+    const playerstream = streamreplserverreadstream(flagsstream(onboardplayer))
+    expect(playerstream?.players.get(runner)?.writable).toBe(true)
 
     const trackingstream = streamreplserverreadstream(
-      flagsstream(`tracking_${boardid}`),
+      flagsstream(memorytrackingflagsbagid(boardid)),
     )
     expect(trackingstream?.players.get(runner)?.writable).toBe(true)
 
@@ -226,8 +247,11 @@ describe('memorysyncadmitboardrunner persisted chip + tracking flags', () => {
       ),
     ).toBe(false)
     expect(
+      streamreplserverreadstream(flagsstream(onboardplayer))?.players.has(runner),
+    ).toBe(false)
+    expect(
       streamreplserverreadstream(
-        flagsstream(`tracking_${boardid}`),
+        flagsstream(memorytrackingflagsbagid(boardid)),
       )?.players.has(runner),
     ).toBe(false)
   })
