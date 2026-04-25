@@ -3,7 +3,7 @@ Shared wire merge helpers for `memory` stream books/flags: used by worker
 hydration (`memoryhydrateimpl`) and sim reverse-projection (`memoryproject`).
 */
 import { ispid } from 'zss/mapping/guid'
-import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
+import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
 import {
   BOOK,
@@ -12,6 +12,8 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from 'zss/memory/types'
+
+const CHIP_FLAGS_SUFFIX = '_chip'
 
 /** Top-level book fields merged from the wire `books[id]` record (hydrate + unproject). */
 export const BOOK_WIRE_SCALAR_KEYS = [
@@ -83,6 +85,18 @@ export function mergeflagspreservingvolatile(
       // for a player still on `activelist` clears their `board` flag on the
       // boardrunner worker and stalls gadget layers / synth for that client.
       if (ispid(id) && active.has(id)) {
+        continue
+      }
+      // `flags[pid_*_chip]` is replicated on separate jsonsync streams; the
+      // memory book projection often omits `*_chip` keys. `ispid(pid_chip)` is
+      // true, but `activelist` only has the stem id, so do not delete chip
+      // bags for active players (same stem rule as boardrunner chip streams).
+      if (
+        isstring(id) &&
+        id.endsWith(CHIP_FLAGS_SUFFIX) &&
+        ispid(id.slice(0, -CHIP_FLAGS_SUFFIX.length)) &&
+        active.has(id.slice(0, -CHIP_FLAGS_SUFFIX.length))
+      ) {
         continue
       }
       if (id === (MEMORY_LABEL.GADGETSTORE as string)) {

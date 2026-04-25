@@ -9,7 +9,8 @@ import {
 } from './streamreplscopedreplication'
 
 let lastownedboardskey: string | null = null
-let lastgadgetflagspeerskey: string | null = null
+let lastgadgetpeerkey: string | null = null
+let lastflagspeerkey: string | null = null
 
 function boardsetkey(ids: Set<string>): string {
   return [...ids].sort().join(',')
@@ -28,20 +29,31 @@ export function streamreplpartialscopesOnOwnedBoardsChange(
 }
 
 /**
- * Call when gadget/flags peer set changes (self + joiners on owned boards, plus
- * any extra `flags:` bag ids such as `<board>_tracking`).
- * Deduped like owned boards: avoid re-running scoped sync every tick — each run
- * cancels flags repls not in the set (including lazily-started `*_chip`), which
- * races replication and breaks updates (e.g. sim `vm:cli` / `#set` → boardrunner).
+ * Call when gadget/flags peer sets change. `gadgetPeerIds` are real gadget
+ * owners (player ids). `flagsPeerIds` defaults to the same set and should be a
+ * superset when the boardrunner also replicates `flags:*_chip` and
+ * `flags:<board>_tracking` — those bag ids must stay in the flags sync set so
+ * `streamreplscopedsyncflagsplayers` does not cancel lazily-started chip repls,
+ * but they must not be passed to gadget sync (`gadget:<id>` is only for players).
  */
 export function streamreplpartialscopesOnGadgetFlagsPeersChange(
-  peerPlayerIds: Set<string>,
+  gadgetPeerIds: Set<string>,
+  flagsPeerIds?: Set<string>,
 ): void {
-  const k = boardsetkey(peerPlayerIds)
-  if (lastgadgetflagspeerskey !== null && k === lastgadgetflagspeerskey) {
+  const flagPeers = flagsPeerIds ?? gadgetPeerIds
+  const gk = boardsetkey(gadgetPeerIds)
+  const fk = boardsetkey(flagPeers)
+  const gadgetUnchanged = lastgadgetpeerkey !== null && gk === lastgadgetpeerkey
+  const flagsUnchanged = lastflagspeerkey !== null && fk === lastflagspeerkey
+  if (gadgetUnchanged && flagsUnchanged) {
     return
   }
-  lastgadgetflagspeerskey = k
-  void streamreplscopedsyncflagsplayers(peerPlayerIds)
-  void streamreplscopedsyncgadgetplayers(peerPlayerIds)
+  if (!flagsUnchanged) {
+    lastflagspeerkey = fk
+    void streamreplscopedsyncflagsplayers(flagPeers)
+  }
+  if (!gadgetUnchanged) {
+    lastgadgetpeerkey = gk
+    void streamreplscopedsyncgadgetplayers(gadgetPeerIds)
+  }
 }
