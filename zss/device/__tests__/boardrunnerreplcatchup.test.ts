@@ -17,15 +17,21 @@ describe('boardrunnerscopedcatchup', () => {
         order.push('memory')
       }),
     } as unknown as ReturnType<typeof init.streamreplreplicationmemory>)
-    jest.spyOn(scoped, 'streamreplscopedsyncboards').mockImplementation(async () => {
-      order.push('boards')
-    })
-    jest.spyOn(scoped, 'streamreplscopedsyncflagsplayers').mockImplementation(async () => {
-      order.push('flags')
-    })
-    jest.spyOn(scoped, 'streamreplscopedsyncgadgetplayers').mockImplementation(async () => {
-      order.push('gadget')
-    })
+    jest
+      .spyOn(scoped, 'streamreplscopedsyncboards')
+      .mockImplementation(async () => {
+        order.push('boards')
+      })
+    jest
+      .spyOn(scoped, 'streamreplscopedsyncflagsplayers')
+      .mockImplementation(async () => {
+        order.push('flags')
+      })
+    jest
+      .spyOn(scoped, 'streamreplscopedsyncgadgetplayers')
+      .mockImplementation(async () => {
+        order.push('gadget')
+      })
     jest
       .spyOn(scoped, 'streamreplscopedawaitinitialsyncforowned')
       .mockImplementation(async () => {
@@ -38,8 +44,16 @@ describe('boardrunnerscopedcatchup', () => {
       new Set(['p1']),
     )
 
-    expect(order).toEqual(['memory', 'boards', 'flags', 'gadget', 'awaitscoped'])
-    expect(scoped.streamreplscopedawaitinitialsyncforowned).toHaveBeenCalledWith(
+    expect(order).toEqual([
+      'memory',
+      'boards',
+      'flags',
+      'gadget',
+      'awaitscoped',
+    ])
+    expect(
+      scoped.streamreplscopedawaitinitialsyncforowned,
+    ).toHaveBeenCalledWith(
       new Set(['b1']),
       new Set(['p1', 'el1_chip', 'tracking_b1']),
     )
@@ -48,11 +62,17 @@ describe('boardrunnerscopedcatchup', () => {
   it('skips memory await when streamreplreplicationmemory is null', async () => {
     const order: string[] = []
     jest.spyOn(init, 'streamreplreplicationmemory').mockReturnValue(null)
-    jest.spyOn(scoped, 'streamreplscopedsyncboards').mockImplementation(async () => {
-      order.push('boards')
-    })
-    jest.spyOn(scoped, 'streamreplscopedsyncflagsplayers').mockResolvedValue(undefined)
-    jest.spyOn(scoped, 'streamreplscopedsyncgadgetplayers').mockResolvedValue(undefined)
+    jest
+      .spyOn(scoped, 'streamreplscopedsyncboards')
+      .mockImplementation(async () => {
+        order.push('boards')
+      })
+    jest
+      .spyOn(scoped, 'streamreplscopedsyncflagsplayers')
+      .mockResolvedValue(undefined)
+    jest
+      .spyOn(scoped, 'streamreplscopedsyncgadgetplayers')
+      .mockResolvedValue(undefined)
     jest
       .spyOn(scoped, 'streamreplscopedawaitinitialsyncforowned')
       .mockResolvedValue(undefined)
@@ -62,4 +82,3 @@ describe('boardrunnerscopedcatchup', () => {
     expect(order).toEqual(['boards'])
   })
 })
-

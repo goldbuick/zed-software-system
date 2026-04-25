@@ -1,8 +1,8 @@
-import * as boards from 'zss/memory/boards'
 import {
   memorycollectchipmemidsforboard,
   memorytrackingflagsbagid,
 } from 'zss/memory/boardchipflags'
+import * as boards from 'zss/memory/boards'
 import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
 import { BOARD, BOOK, MEMORY_LABEL } from 'zss/memory/types'
 

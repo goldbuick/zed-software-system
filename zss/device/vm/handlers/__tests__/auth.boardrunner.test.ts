@@ -137,9 +137,9 @@ describe('handlelogin board runner', () => {
     clearvmrunner()
     jest.clearAllMocks()
     jest.spyOn(api, 'apilog').mockImplementation(() => {})
-    jest.spyOn(memorysync, 'memorysyncensureloginreplstreams').mockImplementation(
-      () => {},
-    )
+    jest
+      .spyOn(memorysync, 'memorysyncensureloginreplstreams')
+      .mockImplementation(() => {})
     jest
       .spyOn(memorysync, 'memorysyncadmitboardrunner')
       .mockImplementation(() => {})

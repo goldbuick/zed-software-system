@@ -19,8 +19,8 @@ import {
   streamreplserverreadstream,
 } from './streamreplserver'
 import {
-  memorysynclazyensurechipflagsstreamforpusher,
   memorysyncensureboardregistered,
+  memorysynclazyensurechipflagsstreamforpusher,
   memorysyncreverseproject,
 } from './vm/memorysimsync'
 

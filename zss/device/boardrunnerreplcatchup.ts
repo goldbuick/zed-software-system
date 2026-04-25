@@ -1,9 +1,9 @@
 import { streamreplreplicationmemory } from 'zss/device/rxrepl/streamreplreplicationinit'
 import {
+  streamreplscopedawaitinitialsyncforowned,
   streamreplscopedsyncboards,
   streamreplscopedsyncflagsplayers,
   streamreplscopedsyncgadgetplayers,
-  streamreplscopedawaitinitialsyncforowned,
 } from 'zss/device/rxrepl/streamreplscopedreplication'
 
 export const BOARDRUNNER_REPL_CATCHUP_TIMEOUT_MS = 15_000

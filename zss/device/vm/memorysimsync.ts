@@ -7,6 +7,10 @@ import {
   streamreplserverupdate,
 } from 'zss/device/streamreplserver'
 import { ispresent, isstring } from 'zss/mapping/types'
+import {
+  memorycollectchipmemidsforboard,
+  memorytrackingflagsbagid,
+} from 'zss/memory/boardchipflags'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import {
   boardstream,
@@ -23,10 +27,6 @@ import {
   playerfromflagsstream,
   playerfromgadgetstream,
 } from 'zss/memory/memorydirty'
-import {
-  memorycollectchipmemidsforboard,
-  memorytrackingflagsbagid,
-} from 'zss/memory/boardchipflags'
 import { memoryreadplayersfromboard } from 'zss/memory/playermanagement'
 import { CODE_PAGE } from 'zss/memory/types'
 

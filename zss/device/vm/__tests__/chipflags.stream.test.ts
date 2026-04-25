@@ -1,33 +1,33 @@
 import {
+  streamreplserverclearfortests,
+  streamreplserverreadstream,
+  streamreplserverregister,
+} from 'zss/device/streamreplserver'
+import { ispresent } from 'zss/mapping/types'
+import { memoryinitboard } from 'zss/memory/boards'
+import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import {
   flagsstream,
   ischipflagsstream,
   memorydirtyclear,
   memoryhasdirty,
   memorystream,
 } from 'zss/memory/memorydirty'
-import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import { memorytickobject } from 'zss/memory/runtime'
 import {
   memoryreadbookbyaddress,
   memoryresetbooks,
   memorywritesoftwarebook,
 } from 'zss/memory/session'
 import { BOOK, CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
-import {
-  streamreplserverclearfortests,
-  streamreplserverreadstream,
-  streamreplserverregister,
-} from 'zss/device/streamreplserver'
 
 import { projectmemory, projectplayerflags } from '../memoryproject'
 import {
-  memorysynclazyensurechipflagsstreamforpusher,
   memorysyncadmitboardrunner,
+  memorysynclazyensurechipflagsstreamforpusher,
   memorysyncreverseproject,
   memorysyncrevokeboardrunner,
 } from '../memorysimsync'
-import { memoryinitboard } from 'zss/memory/boards'
-import { memorytickobject } from 'zss/memory/runtime'
-import { ispresent } from 'zss/mapping/types'
 
 function makemainbook(): BOOK {
   const pid = 'pid_chipflags'
@@ -215,7 +215,9 @@ describe('memorysyncadmitboardrunner persisted chip + tracking flags', () => {
     )
     expect(trackingstream?.players.get(runner)?.writable).toBe(true)
 
-    expect(streamreplserverreadstream(flagsstream('stale_chip'))).toBeUndefined()
+    expect(
+      streamreplserverreadstream(flagsstream('stale_chip')),
+    ).toBeUndefined()
 
     memorysyncrevokeboardrunner(runner, boardid)
     expect(

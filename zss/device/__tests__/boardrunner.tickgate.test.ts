@@ -1,11 +1,12 @@
 /**
- * Boardrunner defers `memorytickmain` until scoped repl catch-up completes
- * (`boardrunnerscopedcatchupwithtimeout`).
+ * Scoped repl catch-up runs in the background; the worker must still run
+ * `memorytickmain` every tick (regression: do not gate on catch-up).
  */
 jest.mock('zss/memory/runtime', () => {
-  const actual = jest.requireActual<typeof import('zss/memory/runtime')>(
-    'zss/memory/runtime',
-  )
+  const actual =
+    jest.requireActual<typeof import('zss/memory/runtime')>(
+      'zss/memory/runtime',
+    )
   return {
     ...actual,
     memorytickmain: jest.fn(),
@@ -13,16 +14,11 @@ jest.mock('zss/memory/runtime', () => {
 })
 
 jest.mock('../boardrunnerreplcatchup', () => {
-  const resolvestore: { current?: () => void } = {}
   return {
     BOARDRUNNER_REPL_CATCHUP_TIMEOUT_MS: 15_000,
     boardrunnerscopedcatchupwithtimeout: jest.fn(
-      () =>
-        new Promise<void>((resolve) => {
-          resolvestore.current = resolve
-        }),
+      () => new Promise<void>(() => {}),
     ),
-    __testresolveboardrunnercatchup: () => resolvestore.current?.(),
   }
 })
 
@@ -35,11 +31,9 @@ import { BOARD, BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
 import { setassignedplayer } from '../boardrunner'
 
-const catchupmod = jest.requireMock('../boardrunnerreplcatchup') as {
-  __testresolveboardrunnercatchup: () => void
-}
+const catchupmod = jest.requireMock('../boardrunnerreplcatchup')
 
-describe('boardrunner tick gate', () => {
+describe('boardrunner tick vs repl catch-up', () => {
   const boardaddr = 'addr_tickgate'
 
   function makemainbook(): BOOK {
@@ -69,33 +63,35 @@ describe('boardrunner tick gate', () => {
     jest.restoreAllMocks()
   })
 
-  it('does not run memorytickmain until repl catch-up promise resolves', async () => {
-    hub.invoke(
-      createmessage('ses_br_tickgate', 'p1', 'vm', 'ready', undefined),
-    )
+  it('runs memorytickmain on every tick even while scoped repl catch-up never completes', () => {
+    hub.invoke(createmessage('ses_br_tickreg', 'p1', 'vm', 'ready', undefined))
     hub.invoke(
       createmessage(
-        'ses_br_tickgate',
+        'ses_br_tickreg',
         'p1',
         'vm',
         'boardrunner:ownedboard',
         boardaddr,
       ),
     )
+    expect(catchupmod.boardrunnerscopedcatchupwithtimeout).toHaveBeenCalled()
 
     hub.invoke(
-      createmessage('ses_br_tickgate', 'p1', 'vm', 'boardrunner:tick', 1),
-    )
-    expect(jest.mocked(runtime.memorytickmain)).not.toHaveBeenCalled()
-
-    catchupmod.__testresolveboardrunnercatchup()
-    await new Promise<void>((resolve) => {
-      setImmediate(resolve)
-    })
-
-    hub.invoke(
-      createmessage('ses_br_tickgate', 'p1', 'vm', 'boardrunner:tick', 2),
+      createmessage('ses_br_tickreg', 'p1', 'vm', 'boardrunner:tick', 1),
     )
     expect(jest.mocked(runtime.memorytickmain)).toHaveBeenCalledTimes(1)
+    expect(jest.mocked(runtime.memorytickmain)).toHaveBeenCalledWith(
+      1,
+      expect.anything(),
+    )
+
+    hub.invoke(
+      createmessage('ses_br_tickreg', 'p1', 'vm', 'boardrunner:tick', 2),
+    )
+    expect(jest.mocked(runtime.memorytickmain)).toHaveBeenCalledTimes(2)
+    expect(jest.mocked(runtime.memorytickmain)).toHaveBeenLastCalledWith(
+      2,
+      expect.anything(),
+    )
   })
 })

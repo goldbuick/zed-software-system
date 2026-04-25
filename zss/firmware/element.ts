@@ -729,6 +729,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           break
         }
       }
+      memorymarkdirty(flagsstream(player))
       return [true, value]
     }
 

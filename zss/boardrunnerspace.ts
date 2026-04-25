@@ -7,7 +7,6 @@ import { setassignedplayer } from './device/boardrunner'
 import './device/gadgetmemoryprovider'
 import './device/modem'
 import { rxreplclientsetownplayer } from './device/rxreplclient'
-
 import { isstring } from './mapping/types'
 
 const { forward } = createforward((message) => {

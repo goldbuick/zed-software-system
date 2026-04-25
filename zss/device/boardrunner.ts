@@ -6,10 +6,7 @@ import {
 } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import {
-  memorycollectchipmemidsforboard,
-  memorytrackingflagsbagid,
-} from 'zss/memory/boardchipflags'
+import { memorytrackingflagsbagid } from 'zss/memory/boardchipflags'
 import {
   memoryreadboardbyaddress,
   memoryreadoverboard,
@@ -42,8 +39,8 @@ import { memoryreadsynth } from 'zss/memory/synthstate'
 import { BOARD, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
-import { boardrunnerscopedcatchupwithtimeout } from './boardrunnerreplcatchup'
 import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
+import { boardrunnerscopedcatchupwithtimeout } from './boardrunnerreplcatchup'
 import {
   handlepilotclear,
   handlepilotstart,
@@ -78,29 +75,25 @@ function boardsetkey(ids: Set<string>): string {
 }
 
 let lastboardrunnerscopekey = ''
-let boardrunnerreplcatchupgen = 0
-let boardrunnerreplready = true
 
+/**
+ * Fire-and-forget scoped repl catch-up. Human `flags:` peers and per-board
+ * `tracking_<board>` bags only — element `*_chip` streams are started lazily
+ * via `streamreplscopedfeedstreamrow` and sim-side admit, not awaited here
+ * (avoids re-scoping on every element churn and blocking the worker tick).
+ */
 function boardrunnerkickreplcatchup(
   ownedsnap: Set<string>,
-  flagsfullsnap: Set<string>,
+  flagpeersforscope: Set<string>,
   gadgethumansnap: Set<string>,
 ) {
-  boardrunnerreplready = false
-  const mygen = ++boardrunnerreplcatchupgen
   void boardrunnerscopedcatchupwithtimeout(
     ownedsnap,
-    flagsfullsnap,
+    flagpeersforscope,
     gadgethumansnap,
-  )
-    .catch((err: unknown) => {
-      console.warn('[boardrunner] scoped repl catch-up failed', err)
-    })
-    .finally(() => {
-      if (boardrunnerreplcatchupgen === mygen) {
-        boardrunnerreplready = true
-      }
-    })
+  ).catch((err: unknown) => {
+    console.warn('[boardrunner] scoped repl catch-up failed', err)
+  })
 }
 
 function snapshotownedboards(assigned: string): Set<string> {
@@ -127,13 +120,13 @@ function rebuildownedboardids() {
     gadgetpeers.add(assignedplayer)
   }
   if (!isstring(assignedboard) || assignedboard.length === 0) {
-    const flagpeersfull = new Set(gadgetpeers)
-    const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersfull)}|g:${boardsetkey(gadgetpeers)}`
+    const flagpeersforscope = new Set(gadgetpeers)
+    const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersforscope)}|g:${boardsetkey(gadgetpeers)}`
     if (scopekey !== lastboardrunnerscopekey) {
       lastboardrunnerscopekey = scopekey
       boardrunnerkickreplcatchup(
         new Set(ownedboards),
-        new Set(flagpeersfull),
+        new Set(flagpeersforscope),
         new Set(gadgetpeers),
       )
     }
@@ -147,22 +140,16 @@ function rebuildownedboardids() {
   for (let i = 0; i < onowned.length; ++i) {
     gadgetpeers.add(onowned[i])
   }
-  const flagpeersfull = new Set(gadgetpeers)
-  const boardidsforchips = [...ownedboards]
-  for (let b = 0; b < boardidsforchips.length; ++b) {
-    const bid = boardidsforchips[b]
-    const chips = memorycollectchipmemidsforboard(bid)
-    for (let c = 0; c < chips.length; ++c) {
-      flagpeersfull.add(chips[c])
-    }
-    flagpeersfull.add(memorytrackingflagsbagid(bid))
+  const flagpeersforscope = new Set(gadgetpeers)
+  for (const bid of ownedboards) {
+    flagpeersforscope.add(memorytrackingflagsbagid(bid))
   }
-  const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersfull)}|g:${boardsetkey(gadgetpeers)}`
+  const scopekey = `${boardsetkey(ownedboards)}|f:${boardsetkey(flagpeersforscope)}|g:${boardsetkey(gadgetpeers)}`
   if (scopekey !== lastboardrunnerscopekey) {
     lastboardrunnerscopekey = scopekey
     boardrunnerkickreplcatchup(
       new Set(ownedboards),
-      new Set(flagpeersfull),
+      new Set(flagpeersforscope),
       new Set(gadgetpeers),
     )
   }
@@ -233,9 +220,6 @@ function runworkertick(timestamp: number): void {
   perfmeasure('boardrunner:pilottick', () => {
     pilottick(boardrunner)
   })
-  if (!boardrunnerreplready) {
-    return
-  }
   perfmeasure('boardrunner:memorytickmain', () => {
     memorytickmain(timestamp, memoryreadhalt())
   })
