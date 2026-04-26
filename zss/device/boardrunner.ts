@@ -212,7 +212,8 @@ function rendergadgetstate(players: string[]) {
     // read A/V state
     const synthstate = memoryreadsynth(board.id ?? '')
     const gadgetlayers = memoryreadgadgetlayers(assignedplayer, board)
-    // build layers for each player
+    // One gadget document per player: shared layers from this board, per-player
+    // control overlay + scroll/sidebar untouched except via this player's own path.
     for (let i = 0; i < players.length; ++i) {
       const player = players[i]
       const gadget = gadgetstate(player)

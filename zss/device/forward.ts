@@ -54,31 +54,31 @@ export function createforward(handler: (message: MESSAGE) => void) {
 
 // peerjs message gates
 
-export function shouldnotforwardonpeer(message: MESSAGE): boolean {
+export function shouldforwardonpeer(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ticktock':
     case 'second':
     case 'ready':
-      return true
+      return false
     default: {
       const route = parsetarget(message.target)
       switch (route.target) {
         // list of devices that should not be forwarded on peerjs
         case 'heavy':
-          return true
+          return false
         default:
           break
       }
       switch (route.path) {
         case 'acklook':
-          return true
+          return false
         default:
           break
       }
       break
     }
   }
-  return false
+  return true
 }
 
 // sim space message gates

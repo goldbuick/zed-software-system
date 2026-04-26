@@ -10,8 +10,8 @@ import {
 import {
   createforward,
   shouldforwardclienttoserver,
+  shouldforwardonpeer,
   shouldforwardservertoclient,
-  shouldnotforwardonpeer,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -193,10 +193,7 @@ function handledataconnection(dataconnection: DataConnection) {
       ) {
         continue
       }
-      if (
-        shouldforwardservertoclient(m) &&
-        shouldnotforwardonpeer(m) === false
-      ) {
+      if (shouldforwardservertoclient(m) && shouldforwardonpeer(m)) {
         sendpeermessage(m)
       }
     }
@@ -210,7 +207,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
       if (
         shouldforwardservertoclient(message) &&
-        shouldnotforwardonpeer(message) === false
+        shouldforwardonpeer(message)
       ) {
         // envelope-level fan-out filter: if this message targets a specific
         // player (non-empty message.player) and we know this peer's player id,
@@ -252,7 +249,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
       if (
         shouldforwardclienttoserver(message) &&
-        shouldnotforwardonpeer(message) === false
+        shouldforwardonpeer(message)
       ) {
         sendpeermessage(message)
       }
