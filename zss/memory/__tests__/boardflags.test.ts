@@ -1,7 +1,7 @@
 import {
   memorycollectchipmemidsforboard,
   memorytrackingflagsbagid,
-} from 'zss/memory/boardchipflags'
+} from 'zss/memory/boardflags'
 import * as boards from 'zss/memory/boards'
 import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
 import { BOARD, BOOK, MEMORY_LABEL } from 'zss/memory/types'
@@ -19,7 +19,7 @@ function makemainbook(): BOOK {
   }
 }
 
-describe('boardchipflags', () => {
+describe('boardflags', () => {
   beforeEach(() => {
     memoryresetbooks([makemainbook()])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-bc')

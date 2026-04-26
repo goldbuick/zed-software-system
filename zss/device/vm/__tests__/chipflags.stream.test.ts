@@ -4,7 +4,7 @@ import {
   rxstreamreplserverregister,
 } from 'zss/device/rxstreamreplserver'
 import { ispresent } from 'zss/mapping/types'
-import { memorytrackingflagsbagid } from 'zss/memory/boardchipflags'
+import { memorytrackingflagsbagid } from 'zss/memory/boardflags'
 import { memoryinitboard } from 'zss/memory/boards'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {

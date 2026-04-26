@@ -23,11 +23,11 @@ The boardrunner worker still accepts a legacy **string** `message.data` or the o
 
 ### Three `flags:` stream categories (wire ids)
 
-The transport uses a single namespace `flags:<suffix>`. The suffix distinguishes three *semantic* families (see [`memoryproject` wire contract](../../device/vm/memoryproject.ts) and [`boardchipflags`](../../memory/boardchipflags.ts)):
+The transport uses a single namespace `flags:<suffix>`. The suffix distinguishes three *semantic* families (see [`memoryproject` wire contract](../../device/vm/memoryproject.ts) and [`boardflags`](../../memory/boardflags.ts)):
 
 1. **Player main bag** — `flags:<playerId>` — the normal per-player `mainbook.flags[pid]`-style document via [`flagsstream`](../../memory/memorydirty.ts) / [`projectplayerflags`](../../device/vm/memoryproject.ts).
 2. **Chip memory bag** — `flags:<chipid>_chip` — one stream per `mainbook.flags[createchipid(elementId)]` (the map key and the part between `flags:` and `_chip` is the chipid); detected by [`ischipflagsstream`](../../memory/memorydirty.ts) (suffix ends with `_chip`).
-3. **Board tracking bag** — `flags:<boardId>_tracking` — from [`memorytrackingflagsbagid(boardaddress)`](../../memory/boardchipflags.ts) → `` `${boardaddress}_tracking` ``.
+3. **Board tracking bag** — `flags:<boardId>_tracking` — from [`memorytrackingflagsbagid(boardaddress)`](../../memory/boardflags.ts) → `` `${boardaddress}_tracking` ``.
 
 **RxDB / scoping note:** the client `m_flags` mirror row primary key is the string after `flags:` (treated as `player` in [`FlagsMirrorRow`](../../device/rxrepl/collectionschemas.ts)), so chip and tracking streams are **not** the same replication instance as `flags:<ownPid>`—each suffix gets its own row and may need a **separate** scoped `zss-repl-flags-*` instance when replicated. The boardrunner [`partialscopes` flags superset](../../device/rxrepl/partialscopes.ts) exists so `streamreplscopedsyncflagsplayers` does not cancel **lazily started** `*_chip` / `*_tracking` replications that are not in the “gadget peer” set.
 

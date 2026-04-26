@@ -3,6 +3,7 @@ import { boardrunnerowned } from 'zss/device/api'
 import {
   memorysyncadmitboardrunner,
   memorysyncmarkmemorydirty,
+  memorysyncreplstreamidsforboardrunner,
   memorysyncrevokeboardrunner,
 } from 'zss/device/vm/memorysimsync'
 import {
@@ -101,5 +102,6 @@ export function installboardrunner(
   memorysyncmarkmemorydirty()
 
   // signal the winner is now running the board
-  boardrunnerowned(vm, winner, board)
+  const streams = memorysyncreplstreamidsforboardrunner(board)
+  boardrunnerowned(vm, winner, board, streams)
 }

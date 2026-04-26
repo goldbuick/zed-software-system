@@ -64,7 +64,7 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
           revokeboardrunnerassignment(board)
           // signal that we are no longer running the board
           memorypushsimsyncdirty()
-          boardrunnerowned(vm, staleplayer, '')
+          boardrunnerowned(vm, staleplayer, '', [])
         }
       }
     }

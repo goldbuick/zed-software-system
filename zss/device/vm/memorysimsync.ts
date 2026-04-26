@@ -10,7 +10,7 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorycollectchipmemidsforboard,
   memorytrackingflagsbagid,
-} from 'zss/memory/boardchipflags'
+} from 'zss/memory/boardflags'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import {
   boardstream,

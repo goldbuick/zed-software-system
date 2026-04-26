@@ -5,7 +5,10 @@ import {
   ensureboardrunnerelected,
   revokeboardrunnerassignment,
 } from 'zss/device/vm/boardrunnerelection'
-import { memorypushsimsyncdirty } from 'zss/device/vm/memorysimsync'
+import {
+  memorypushsimsyncdirty,
+  memorysyncreplstreamidsforboardrunner,
+} from 'zss/device/vm/memorysimsync'
 import { boardrunners, skipboardrunners } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -83,6 +86,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   if (player !== boardrunners[destboard]) {
     // if we are not the new runner we need to
     // signal that we are no longer running the previous board
-    boardrunnerowned(vm, player, '')
+    const streams = memorysyncreplstreamidsforboardrunner(destboard)
+    boardrunnerowned(vm, player, destboard, streams)
   }
 }

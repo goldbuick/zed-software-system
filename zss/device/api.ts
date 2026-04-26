@@ -180,23 +180,13 @@ export function boardrunnertick(
   device.emit(player, 'boardrunner:tick', timestamp)
 }
 
-/** Emitted on `boardrunner:ownedboard` — `streams` matches sim admit roster for `board`. */
-export type BOARDRUNNER_OWNEDBOARD = {
-  board: string
-  streams: string[]
-}
-
 export function boardrunnerowned(
   device: DEVICELIKE,
   player: string,
   board: string,
+  streams: string[],
 ) {
-  const streams =
-    isstring(board) && board.length > 0
-      ? memorysyncreplstreamidsforboardrunner(board)
-      : []
-  const payload: BOARDRUNNER_OWNEDBOARD = { board, streams }
-  device.emit(player, 'boardrunner:ownedboard', payload)
+  device.emit(player, 'boardrunner:ownedboard', [board, streams])
 }
 
 export function boardrunnergadgetclearscroll(

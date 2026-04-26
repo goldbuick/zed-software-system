@@ -22,7 +22,7 @@ import {
   memoryreadobjectbypt,
   memoryreadterrain,
 } from './boardaccess'
-import { memorytrackingflagsbagid } from './boardchipflags'
+import { memorytrackingflagsbagid } from './boardflags'
 import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadflags } from './flags'
