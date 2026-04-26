@@ -12,11 +12,11 @@ import {
 } from 'zss/device/netsim'
 import { rxreplclientsetownplayerfortests } from 'zss/device/rxreplclient'
 import {
-  streamreplpublishfrommemory,
-  streamreplserveradmitplayer,
-  streamreplserverclearfortests,
-  streamreplserverregister,
-} from 'zss/device/streamreplserver'
+  rxstreamreplpublishfrommemory,
+  rxstreamreplserveradmitplayer,
+  rxstreamreplserverclearfortests,
+  rxstreamreplserverregister,
+} from 'zss/device/rxstreamreplserver'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memorywritebookflag } from 'zss/memory/bookoperations'
 import {
@@ -54,7 +54,7 @@ describe('phase 2 worker -> server round-trip', () => {
     memoryresetbooks([makebook()])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-id')
     memorydirtyclear()
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
     rxreplclientsetownplayerfortests('')
     streamreplclientstreammap.clear()
     await streamreplawaitclientpersistqueue()
@@ -66,7 +66,7 @@ describe('phase 2 worker -> server round-trip', () => {
         for (let i = 0; i < batch.rows.length; ++i) {
           const row = batch.rows[i]
           memorysyncreverseproject(row.streamid, row.document)
-          streamreplpublishfrommemory(row.streamid)
+          rxstreamreplpublishfrommemory(row.streamid)
         }
       })
   })
@@ -75,7 +75,7 @@ describe('phase 2 worker -> server round-trip', () => {
     pushbatchspy.mockRestore()
     memoryresetbooks([])
     memorydirtyclear()
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
     rxreplclientsetownplayerfortests('')
     streamreplclientstreammap.clear()
     await streamreplawaitclientpersistqueue()
@@ -85,10 +85,10 @@ describe('phase 2 worker -> server round-trip', () => {
   it('worker flag mutation lands in MEMORY via push_batch + reverseproject', () => {
     const pid = 'pid_roundtrip_worker'
     const fsid = flagsstream(pid)
-    streamreplserverregister(MEMORY_STREAM_ID, projectmemory())
-    streamreplserverregister(fsid, projectplayerflags(pid))
-    streamreplserveradmitplayer(MEMORY_STREAM_ID, pid, true)
-    streamreplserveradmitplayer(fsid, pid, true)
+    rxstreamreplserverregister(MEMORY_STREAM_ID, projectmemory())
+    rxstreamreplserverregister(fsid, projectplayerflags(pid))
+    rxstreamreplserveradmitplayer(MEMORY_STREAM_ID, pid, true)
+    rxstreamreplserveradmitplayer(fsid, pid, true)
     rxreplclientsetownplayerfortests(pid)
     streamreplmirrorputlocal(MEMORY_STREAM_ID, {
       document: deepcopy(projectmemory()),

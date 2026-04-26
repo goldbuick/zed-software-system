@@ -58,8 +58,8 @@ Loaded in [`zss/simspace.ts`](../../simspace.ts); `createplatform(false, …)` s
 |---|---|---|
 | `vm` | [`zss/device/vm.ts`](../vm.ts) 8–18 | Dispatches `message.target` through `vmhandlers` / default ([`zss/device/vm/handlers/registry.ts`](../vm/handlers/registry.ts)). |
 | `clock` | [`zss/device/clock.ts`](../clock.ts) 4–43 | Emits `ticktock` (frame) and `second` (1 Hz) with `player ''` (24–31). |
-| `streamreplserver` | [`zss/device/streamreplserver.ts`](../streamreplserver.ts) | Authoritative **`memory`** / **`board:*`** stream documents + monotonic **rev**; admits / drops players; fans out **`rxreplclient:stream_row`** after updates. Called from [`memorysync.ts`](../vm/memorysync.ts). |
-| `rxreplserver` | [`zss/device/rxreplserver.ts`](../rxreplserver.ts) | Handles **`rxreplserver:push_batch`**: merges accepted rows into canonical MEMORY via `memorysyncreverseproject` (`memory`, `board:*`, `flags:*`, `gadget:*`), then `streamreplpublishfrommemory` (bump rev, fan out). Gadget rows may also fan out as `rxreplclient:gadget_row`. |
+| `rxstreamreplserver` | [`zss/device/rxstreamreplserver.ts`](../rxstreamreplserver.ts) | Authoritative **`memory`** / **`board:*`** stream documents + monotonic **rev**; admits / drops players; fans out **`rxreplclient:stream_row`** after updates. Called from [`memorysync.ts`](../vm/memorysync.ts). |
+| `rxreplserver` | [`zss/device/rxreplserver.ts`](../rxreplserver.ts) | Handles **`rxreplserver:push_batch`**: merges accepted rows into canonical MEMORY via `memorysyncreverseproject` (`memory`, `board:*`, `flags:*`, `gadget:*`), then `rxstreamreplpublishfrommemory` (bump rev, fan out). Gadget rows may also fan out as `rxreplclient:gadget_row`. |
 | `user` | [`zss/device/user.ts`](../user.ts) 10–20 | Server-side `user:input` only (`handleuserinput`). |
 | `modem` (worker copy) | [`zss/device/modem.ts`](../modem.ts) | Second instance of the Yjs protocol in the sim worker. |
 | `gadgetmemoryprovider` | [`zss/device/gadgetmemoryprovider.ts`](../gadgetmemoryprovider.ts) | Backs `gadgetstate()` from `mainbook.flags[GADGETSTORE]` on sim. |
@@ -71,7 +71,7 @@ Loaded in [`zss/stubspace.ts`](../../stubspace.ts); `createplatform(true, …)` 
 
 | Routing name | File | Role |
 |---|---|---|
-| `vm` | [`zss/device/stub.ts`](../stub.ts) 9–26 | Minimal VM: only `operator` → `ackoperator` (16–22). **No** `clock`, **`streamreplserver`**, **`rxreplserver`**, `user`, or full game VM. |
+| `vm` | [`zss/device/stub.ts`](../stub.ts) 9–26 | Minimal VM: only `operator` → `ackoperator` (16–22). **No** `clock`, **`rxstreamreplserver`**, **`rxreplserver`**, `user`, or full game VM. |
 | `forward` | [`zss/stubspace.ts`](../../stubspace.ts) 6–8 | Forwards **all** messages to parent `postMessage` (no `shouldforwardservertoclient` filter). |
 
 ### Heavy worker (`heavyspace`)
@@ -122,7 +122,7 @@ Loaded in [`zss/boardrunnerspace.ts`](../../boardrunnerspace.ts); core device [`
 | `vm` (full) | | ✓ | | | | | | |
 | `vm` (stub) | | | | | | ✓ | | |
 | `clock` | | ✓ | | | | | | |
-| `streamreplserver` | | ✓ | | | | | | |
+| `rxstreamreplserver` | | ✓ | | | | | | |
 | `rxreplserver` | | ✓ | | | | | | |
 | `user` (sim) | | ✓ | | | | | | |
 | `modem` (worker) | | ✓ | | | | | | |
@@ -160,7 +160,7 @@ flowchart LR
     direction TB
     S_VM[vm<br/>dispatches vm:*]:::sim
     S_CLK[clock<br/>emits ticktock / second]:::sim
-    S_STR[streamreplserver]:::sim
+    S_STR[rxstreamreplserver]:::sim
     S_RXS[rxreplserver]:::sim
     S_USR[user]:::sim
     S_MDM[modem]:::sim
@@ -228,7 +228,7 @@ flowchart LR
 
 ### Host-only facts
 - `clock` lives only on sim ([`zss/device/clock.ts`](../clock.ts) 4–43). All `ticktock` originates here.
-- **`streamreplserver` + `rxreplserver`** run only on the host sim ([`streamreplserver.ts`](../streamreplserver.ts), [`rxreplserver.ts`](../rxreplserver.ts)).
+- **`rxstreamreplserver` + `rxreplserver`** run only on the host sim ([`rxstreamreplserver.ts`](../rxstreamreplserver.ts), [`rxreplserver.ts`](../rxreplserver.ts)).
 - Host bridge fans messages out **per remote player** if `message.player` is set ([`zss/feature/netterminal.ts`](../../feature/netterminal.ts)); player-targeted host→join traffic is **queued** until the host learns the joiner’s `message.player` from the first inbound message (avoids mis-delivery before handshake).
 
 ### 3.1 Per-frame order of operations (host)
@@ -236,7 +236,7 @@ flowchart LR
 Authoritative ordering for one sim frame (see also [`zss/device/vm/handlers/tick.ts`](../vm/handlers/tick.ts), [`zss/device/boardrunner.ts`](../boardrunner.ts)):
 
 1. **Sim `clock`** emits `ticktock` into the sim worker hub.
-2. **`vm` tick handler** runs **`memorytickloaders`** then **`memorysyncpushdirty`** so **`streamreplserver`** updates fan out **`rxreplclient:stream_row`** to admitted peers for loader-side mutations.
+2. **`vm` tick handler** runs **`memorytickloaders`** then **`memorysyncpushdirty`** so **`rxstreamreplserver`** updates fan out **`rxreplclient:stream_row`** to admitted peers for loader-side mutations.
 3. **Board election** updates `boardrunners` / asks / revokes (same tick handler); **`boardrunner:ownedboards`** should reach the main hub and boardrunner worker **before** that worker’s next `ticktock` applies an authoritative `memorytickmain` for newly owned boards.
 4. **Main hub** forwards `ticktock` / patches / ownership to the boardrunner worker (`allowticktock`) and to **PeerJS** per [`shouldforwardservertoclient`](../forward.ts) minus peer blocks.
 5. **Boardrunner worker** on `ticktock`: pilot → `memorytickmain` (boards only; sim runs `memorytickloaders`) → gadget sync → `memoryworkerpushdirty` (**`rxreplserver:push_batch`** upstream for memory / boards; gadget rows use the same batch API).
@@ -248,7 +248,7 @@ sequenceDiagram
   autonumber
   participant CLK as clock_sim
   participant VM as vm_sim
-  participant STR as streamreplserver
+  participant STR as rxstreamreplserver
   participant RXS as rxreplserver
   participant FWD as forward_simToMain
   participant MAIN as mainHub
@@ -257,7 +257,7 @@ sequenceDiagram
 
   CLK->>VM: ticktock
   VM->>VM: memorytickloaders
-  VM->>STR: memorysyncpushdirty_streamreplserverupdate
+  VM->>STR: memorysyncpushdirty_rxstreamreplserverupdate
   STR-->>FWD: rxreplclient_stream_row
   VM->>VM: boardrunner_election
   VM-->>FWD: boardrunner_ownedboards
@@ -337,7 +337,7 @@ flowchart LR
 ```
 
 ### Join-only facts
-- Join replaces `simspace` with **`stubspace`** ([`zss/device/stub.ts`](../stub.ts) 9–26, [`zss/stubspace.ts`](../../stubspace.ts) 6–8). No `clock`, no **`streamreplserver`** / **`rxreplserver`**, no sim `user`/`modem`, no full `vm` handlers.
+- Join replaces `simspace` with **`stubspace`** ([`zss/device/stub.ts`](../stub.ts) 9–26, [`zss/stubspace.ts`](../../stubspace.ts) 6–8). No `clock`, no **`rxstreamreplserver`** / **`rxreplserver`**, no sim `user`/`modem`, no full `vm` handlers.
 - Join's `forward` has `allowticktock: true` so ticks can still reach the boardrunner. Host→join PeerJS does **not** block `ticktock` / `second` in `shouldnotforwardonpeerserver` (only `ready` and `netterminal:cap`); join still originates its own main-thread `ticktock` for local workers ([`boardrunnerspace.ts`](../../boardrunnerspace.ts)).
 - Heavy + boardrunner workers still exist per-browser; a join player can be **elected** to run boards via `boardrunner:ownedboards` from the host VM.
 
@@ -461,10 +461,10 @@ Default fallback: [`zss/device/vm/handlers/default.ts`](../vm/handlers/default.t
 
 | Concern | Host | Join |
 |---|---|---|
-| Platform worker | `simspace` (full VM + clock + **streamreplserver** + **rxreplserver**) | `stubspace` (stub `vm` only) |
+| Platform worker | `simspace` (full VM + clock + **rxstreamreplserver** + **rxreplserver**) | `stubspace` (stub `vm` only) |
 | `ticktock` source | `clock` in sim worker | Local main-thread tick into boardrunner; host→join policy also **allows** peer `ticktock` (not blocked by `shouldnotforwardonpeerserver`) |
 | `second` source | `clock` in sim worker, fans out to peers | Blocked from join → host over PeerJS |
-| Authoritative state | Yes — **`streamreplserver`** / **`rxreplserver`** + full `memory` on sim | No — mirrors host via **`rxreplclient`** (`stream_row` / `gadget_row`) and local `jsonsync:changed` hydrate |
+| Authoritative state | Yes — **`rxstreamreplserver`** / **`rxreplserver`** + full `memory` on sim | No — mirrors host via **`rxreplclient`** (`stream_row` / `gadget_row`) and local `jsonsync:changed` hydrate |
 | `register` boot | Loads local storage / books | On `ackoperator` calls `bridgejoin(SOFTWARE, myplayerid, urlcontent)` ([`register.ts`](../register.ts) 342–349) |
 | Multiplayer CLI | `#joincode` / `bridge:start` / `bridge:join` ([`firmware/cli/commands/multiplayer.ts`](../../firmware/cli/commands/multiplayer.ts), [`register.ts`](../register.ts) 375–376) | N/A (already joining via URL) |
 | PeerJS role | `netterminalhost()` with sticky peer id + host topic ([`netterminal.ts`](../../feature/netterminal.ts) 516–534, 121–123) | `netterminaljoin(topic)` with own peer id ([`netterminal.ts`](../../feature/netterminal.ts) 537–546, 413–423) |

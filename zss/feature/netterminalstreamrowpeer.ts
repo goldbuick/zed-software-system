@@ -3,7 +3,7 @@ import { isstring } from 'zss/mapping/types'
 
 /**
  * Host → join PeerJS filter normally forwards only rows where `message.player`
- * matches the joiner's id. `streamreplserver` fan-out emits one `rxreplclient:stream_row`
+ * matches the joiner's id. `rxstreamreplserver` fan-out emits one `rxreplclient:stream_row`
  * per admitted player; the joiner must still hydrate when the only copy on the wire
  * uses the boardrunner's envelope (`message.player` = host) while `streamid` targets
  * the joiner's `gadget:` / `flags:` document.

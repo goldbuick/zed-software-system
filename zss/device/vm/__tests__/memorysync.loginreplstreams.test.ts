@@ -1,7 +1,7 @@
 import {
-  streamreplserverclearfortests,
-  streamreplserverreadstream,
-} from 'zss/device/streamreplserver'
+  rxstreamreplserverclearfortests,
+  rxstreamreplserverreadstream,
+} from 'zss/device/rxstreamreplserver'
 import { flagsstream, gadgetstream, memorystream } from 'zss/memory/memorydirty'
 import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
 import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
@@ -10,7 +10,7 @@ import { memorysyncensureloginreplstreams } from '../memorysimsync'
 
 describe('memorysyncensureloginreplstreams', () => {
   afterEach(() => {
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
     memoryresetbooks([])
   })
 
@@ -29,9 +29,9 @@ describe('memorysyncensureloginreplstreams', () => {
 
     memorysyncensureloginreplstreams(joiner)
 
-    const m = streamreplserverreadstream(memorystream())
-    const g = streamreplserverreadstream(gadgetstream(joiner))
-    const f = streamreplserverreadstream(flagsstream(joiner))
+    const m = rxstreamreplserverreadstream(memorystream())
+    const g = rxstreamreplserverreadstream(gadgetstream(joiner))
+    const f = rxstreamreplserverreadstream(flagsstream(joiner))
     expect(m?.players.has(joiner)).toBe(true)
     expect(g).toBeDefined()
     expect(f).toBeDefined()

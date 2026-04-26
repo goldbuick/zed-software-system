@@ -160,7 +160,7 @@ flowchart TB
 | gadgetclient | (none)               | gadgetclient:*            | Receives paint/patch from api |
 | rxreplclient | (none)               | rxreplclient:*            | Stream + gadget rows; emits `jsonsync:changed` |
 | rxreplserver | (none)               | push_batch                | Sim-side merge into MEMORY (sim worker) |
-| streamreplserver | (none)           | (memorysync calls)        | Authoritative memory/board streams (sim) |
+| rxstreamreplserver | (none)           | (memorysync calls)        | Authoritative memory/board streams (sim) |
 | heavy        | (none)               | heavy:*                  | TTS, LLM (lazy-loaded)        |
 | bridge       | (none)               | bridge:*                  | Multiplayer / BBS             |
 | modem        | second               | modem:*                   | CRDT sync, presence           |

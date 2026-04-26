@@ -9,7 +9,7 @@ Each **JavaScript realm** (browser main thread or a Web Worker bundle) loads its
 | Main | `zss/userspace.ts` | `register`, `gadgetclient`, `modem`, `bridge`, `synth` |
 | Main | `zss/platform.ts` → `createforward` | `forward` (dedupe + `postMessage` routing) |
 | Main | first import of `zss/device/session.ts` | `SOFTWARE` |
-| Sim worker | `zss/simspace.ts` | `vm`, `clock`, `modem`, `rxreplserver`, `streamreplserver`, `forward` |
+| Sim worker | `zss/simspace.ts` | `vm`, `clock`, `modem`, `rxreplserver`, `rxstreamreplserver`, `forward` |
 | Sim worker | side imports from `simspace.ts` | `gadgetmemoryprovider` (**not** a device — hooks gadget state into memory) |
 | Stub worker | `zss/stubspace.ts` | stub `vm` (`zss/device/stub.ts`), `forward` |
 | Heavy worker | `zss/heavyspace.ts` | `heavy`, `forward` |
@@ -46,7 +46,7 @@ flowchart TB
       CLK["clock"]
       MDM_S["modem"]
       RXS["rxreplserver"]
-      SRS["streamreplserver"]
+      SRS["rxstreamreplserver"]
       FWD_S["forward"]
     end
     GMP_S["gadgetmemoryprovider (hook, not a device)"]

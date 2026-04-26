@@ -1,5 +1,5 @@
 /*
-streamreplserver: sim-side full-document replication for memory / board:* streams.
+rxstreamreplserver: sim-side full-document replication for memory / board:* streams.
 
 Replaces the differential jsonsync server loop: one authoritative document + rev
 per stream, fan-out to admitted players via rxreplclient:stream_row.
@@ -26,25 +26,25 @@ import {
   projectplayerflags,
 } from './vm/memoryproject'
 
-export type STREAMREPL_SERVER_ENTRY = {
+export type RXSTREAMREPL_SERVER_ENTRY = {
   document: unknown
   rev: number
   players: Map<string, { writable: boolean }>
 }
 
-const streams = new Map<string, STREAMREPL_SERVER_ENTRY>()
+const streams = new Map<string, RXSTREAMREPL_SERVER_ENTRY>()
 
-export const streamreplserverdevice = createdevice(
-  'streamreplserver',
+export const rxstreamreplserverdevice = createdevice(
+  'rxstreamreplserver',
   [],
   () => {},
 )
 
-export function streamreplserverclearfortests(): void {
+export function rxstreamreplserverclearfortests(): void {
   streams.clear()
 }
 
-export function streamreplserverregister(
+export function rxstreamreplserverregister(
   streamid: string,
   document: unknown,
 ): void {
@@ -93,7 +93,7 @@ function fanout(streamid: string, document: unknown, rev: number): void {
     return
   }
   for (const player of entry.players.keys()) {
-    rxreplclientstreamrow(streamreplserverdevice, player, {
+    rxreplclientstreamrow(rxstreamreplserverdevice, player, {
       streamid,
       document: deepcopy(document),
       rev,
@@ -101,7 +101,7 @@ function fanout(streamid: string, document: unknown, rev: number): void {
   }
 }
 
-export function streamreplserverupdate(
+export function rxstreamreplserverupdate(
   streamid: string,
   nextdoc: unknown,
 ): void {
@@ -114,7 +114,7 @@ export function streamreplserverupdate(
   fanout(streamid, entry.document, entry.rev)
 }
 
-export function streamreplserveradmitplayer(
+export function rxstreamreplserveradmitplayer(
   streamid: string,
   player: string,
   writable: boolean,
@@ -124,7 +124,7 @@ export function streamreplserveradmitplayer(
     return
   }
   entry.players.set(player, { writable })
-  rxreplclientstreamrow(streamreplserverdevice, player, {
+  rxreplclientstreamrow(rxstreamreplserverdevice, player, {
     streamid,
     document: deepcopy(entry.document),
     rev: entry.rev,
@@ -132,7 +132,7 @@ export function streamreplserveradmitplayer(
 }
 
 /** Admit `player` to `streamid` only if not already present (avoids duplicate `stream_row`). */
-export function streamreplserverensureplayeradmitted(
+export function rxstreamreplserverensureplayeradmitted(
   streamid: string,
   player: string,
   writable: boolean,
@@ -141,10 +141,10 @@ export function streamreplserverensureplayeradmitted(
   if (!entry || entry.players.has(player)) {
     return
   }
-  streamreplserveradmitplayer(streamid, player, writable)
+  rxstreamreplserveradmitplayer(streamid, player, writable)
 }
 
-export function streamreplserverdropplayer(
+export function rxstreamreplserverdropplayer(
   streamid: string,
   player: string,
 ): void {
@@ -155,24 +155,26 @@ export function streamreplserverdropplayer(
   entry.players.delete(player)
 }
 
-export function streamreplserverclose(streamid: string): void {
+export function rxstreamreplserverclose(streamid: string): void {
   streams.delete(streamid)
 }
 
 /** Remove a player from every stream (e.g. logout). */
-export function streamreplserverdropplayerfromallstreams(player: string): void {
+export function rxstreamreplserverdropplayerfromallstreams(
+  player: string,
+): void {
   for (const entry of streams.values()) {
     entry.players.delete(player)
   }
 }
 
-export function streamreplserverreadstream(
+export function rxstreamreplserverreadstream(
   streamid: string,
-): STREAMREPL_SERVER_ENTRY | undefined {
+): RXSTREAMREPL_SERVER_ENTRY | undefined {
   return streams.get(streamid)
 }
 
-export function streamreplplayerwritable(
+export function rxstreamreplplayerwritable(
   streamid: string,
   player: string,
 ): boolean {
@@ -185,7 +187,7 @@ export function streamreplplayerwritable(
 }
 
 /** After rxrepl push_batch merges into MEMORY, refresh projection, bump rev, fan out. */
-export function streamreplpublishfrommemory(streamid: string): void {
+export function rxstreamreplpublishfrommemory(streamid: string): void {
   const entry = streams.get(streamid)
   if (!entry) {
     return

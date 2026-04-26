@@ -9,7 +9,7 @@ This document inventories what would land on `main` if `dev` were merged, based 
 - **Runtime dependencies**: `dev` adds `@jsonjoy.com/json-pack`, `rxdb@15`, and `rxjs@7`, plus devDependency `tslib`. `@twurple/auth` and `@twurple/chat` move from `^8.0.3` to `^8.1.3`. Expect a large `yarn.lock` churn and any policy review that applies to DB/replication stacks.
 - **Hub tick delivery**: [`zss/hub.ts`](../zss/hub.ts) no longer batches delivery for tick-like targets through [`runtickbatched`](../zss/gadget/runtickbatched.ts); that helper file is **removed**. All hub deliveries run synchronously.
 - **Message target parsing**: [`parsetarget`](../zss/device.ts) now splits on the **first** colon only; targets with colons in the path segment behave differently than on `main`.
-- **Removed device server module**: [`zss/device/gadgetserver.ts`](../zss/device/gadgetserver.ts) is **deleted**. Replacement is the stream replication / provider stack (e.g. [`zss/device/streamreplserver.ts`](../zss/device/streamreplserver.ts), [`zss/device/gadgetmemoryprovider.ts`](../zss/device/gadgetmemoryprovider.ts)), wired from [`zss/simspace.ts`](../zss/simspace.ts).
+- **Removed device server module**: [`zss/device/gadgetserver.ts`](../zss/device/gadgetserver.ts) is **deleted**. Replacement is the stream replication / provider stack (e.g. [`zss/device/rxstreamreplserver.ts`](../zss/device/rxstreamreplserver.ts), [`zss/device/gadgetmemoryprovider.ts`](../zss/device/gadgetmemoryprovider.ts)), wired from [`zss/simspace.ts`](../zss/simspace.ts).
 - **VM input handler removed**: [`zss/device/vm/handlers/input.ts`](../zss/device/vm/handlers/input.ts) is **deleted**; `input` is no longer registered in [`zss/device/vm/handlers/registry.ts`](../zss/device/vm/handlers/registry.ts). Local-player gating moved toward [`lastinputtouch.ts`](../zss/device/vm/handlers/lastinputtouch.ts); `flags.inputqueue` handling for locals is owned by the **boardrunner** worker ([`zss/device/boardrunner.ts`](../zss/device/boardrunner.ts)) and related paths (see [`zss/device/__tests__/userinput.test.ts`](../zss/device/__tests__/userinput.test.ts)).
 - **Memory: `boardoperations` removed**: [`zss/memory/boardoperations.ts`](../zss/memory/boardoperations.ts) is **deleted**. Book/board helpers are consolidated and extended in [`bookoperations.ts`](../zss/memory/bookoperations.ts) and other board modules (`boards`, `boardmovement`, `boardlifecycle`, `boardtransitions`, etc.).
 - **Gadget compression helper removed**: [`zss/gadget/data/compress.ts`](../zss/gadget/data/compress.ts) and its test are **deleted**; call sites should not expect that API.
@@ -63,7 +63,7 @@ git diff main...dev --name-status
 
 | Removed on `dev` | Where the responsibility went (high level) |
 |------------------|--------------------------------------------|
-| `zss/device/gadgetserver.ts` | Stream replication + gadget memory provider path: [`streamreplserver.ts`](../zss/device/streamreplserver.ts), [`gadgetmemoryprovider.ts`](../zss/device/gadgetmemoryprovider.ts), `rxrepl*` modules; [`simspace.ts`](../zss/simspace.ts) imports the new devices. |
+| `zss/device/gadgetserver.ts` | Stream replication + gadget memory provider path: [`rxstreamreplserver.ts`](../zss/device/rxstreamreplserver.ts), [`gadgetmemoryprovider.ts`](../zss/device/gadgetmemoryprovider.ts), `rxrepl*` modules; [`simspace.ts`](../zss/simspace.ts) imports the new devices. |
 | `zss/device/vm/handlers/input.ts` | No `input` key in [`registry.ts`](../zss/device/vm/handlers/registry.ts). Local/flags gate in [`lastinputtouch.ts`](../zss/device/vm/handlers/lastinputtouch.ts). `flags.inputqueue` for local players: [`boardrunner.ts`](../zss/device/boardrunner.ts); see [`userinput.test.ts`](../zss/device/__tests__/userinput.test.ts). |
 | `zss/gadget/data/compress.ts` (+ test) | Removed; no in-repo replacement—verify no external callers. |
 | `zss/gadget/runtickbatched.ts` | Tick batching removed from [`hub.ts`](../zss/hub.ts); hub always calls `deliver()` directly. |
@@ -98,7 +98,7 @@ git diff main...dev --name-status
 
 - **Docs**: [`device-architecture-by-worker.md`](../zss/device/docs/device-architecture-by-worker.md), [`host-vs-join-architecture.md`](../zss/device/docs/host-vs-join-architecture.md), [`workers-and-devices.md`](../zss/device/docs/workers-and-devices.md).
 - **Board runner**: [`boardrunnerspace.ts`](../zss/boardrunnerspace.ts), [`boardrunner.ts`](../zss/device/boardrunner.ts), [`platform.ts`](../zss/platform.ts) worker wiring; VM handlers/tests (`playermovetoboard`, `acktick`, tick/boardrunner/election tests).
-- **Replication**: `zss/device/rxrepl/*`, [`rxreplclient.ts`](../zss/device/rxreplclient.ts), [`rxreplserver.ts`](../zss/device/rxreplserver.ts), [`streamreplserver.ts`](../zss/device/streamreplserver.ts), [`netsim.ts`](../zss/device/netsim.ts).
+- **Replication**: `zss/device/rxrepl/*`, [`rxreplclient.ts`](../zss/device/rxreplclient.ts), [`rxreplserver.ts`](../zss/device/rxreplserver.ts), [`rxstreamreplserver.ts`](../zss/device/rxstreamreplserver.ts), [`netsim.ts`](../zss/device/netsim.ts).
 - **VM memory pipeline**: [`memoryhydrate.ts`](../zss/device/vm/memoryhydrate.ts), [`memoryhydrateimpl.ts`](../zss/device/vm/memoryhydrateimpl.ts), [`memoryproject.ts`](../zss/device/vm/memoryproject.ts), [`memorysimsync.ts`](../zss/device/vm/memorysimsync.ts), [`memorywiremerge.ts`](../zss/device/vm/memorywiremerge.ts), [`memoryworkersync.ts`](../zss/device/vm/memoryworkersync.ts), with broad test coverage under `zss/device/vm/__tests__/`.
 - **Handlers**: new [`peergone.ts`](../zss/device/vm/handlers/peergone.ts), [`playermovetoboard.ts`](../zss/device/vm/handlers/playermovetoboard.ts), [`acktick.ts`](../zss/device/vm/handlers/acktick.ts); updates across auth, tick, pilot, scroll, etc.
 
@@ -217,7 +217,7 @@ Statuses: **A** added, **M** modified, **D** deleted, **R093/R095** rename simil
 - `A` — `zss/device/rxrepl/types.ts`
 - `A` — `zss/device/rxreplclient.ts`
 - `A` — `zss/device/rxreplserver.ts`
-- `A` — `zss/device/streamreplserver.ts`
+- `A` — `zss/device/rxstreamreplserver.ts`
 - `M` — `zss/device/synth.ts`
 - `M` — `zss/device/vm.ts`
 - `A` — `zss/device/vm/__tests__/memory.roundtrip.test.ts`

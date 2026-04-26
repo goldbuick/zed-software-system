@@ -13,11 +13,11 @@ import type {
   RXREPL_STREAM_DOCUMENT,
 } from './rxrepl/types'
 import {
-  streamreplplayerwritable,
-  streamreplpublishfrommemory,
-  streamreplserveradmitplayer,
-  streamreplserverreadstream,
-} from './streamreplserver'
+  rxstreamreplplayerwritable,
+  rxstreamreplpublishfrommemory,
+  rxstreamreplserveradmitplayer,
+  rxstreamreplserverreadstream,
+} from './rxstreamreplserver'
 import {
   memorysyncensureboardregistered,
   memorysynclazyensurechipflagsstreamforpusher,
@@ -41,7 +41,7 @@ export const rxreplserverdevice = createdevice(
         const accepted: { streamid: string; rev: number }[] = []
         for (let i = 0; i < batch.rows.length; ++i) {
           const row = batch.rows[i]
-          let entry = streamreplserverreadstream(row.streamid)
+          let entry = rxstreamreplserverreadstream(row.streamid)
           if (
             !entry &&
             memorysynclazyensurechipflagsstreamforpusher(
@@ -49,17 +49,17 @@ export const rxreplserverdevice = createdevice(
               message.player,
             )
           ) {
-            entry = streamreplserverreadstream(row.streamid)
+            entry = rxstreamreplserverreadstream(row.streamid)
           }
           if (
             !entry ||
-            !streamreplplayerwritable(row.streamid, message.player)
+            !rxstreamreplplayerwritable(row.streamid, message.player)
           ) {
             continue
           }
           memorysyncreverseproject(row.streamid, rxreplrowdocument(row))
-          streamreplpublishfrommemory(row.streamid)
-          const after = streamreplserverreadstream(row.streamid)
+          rxstreamreplpublishfrommemory(row.streamid)
+          const after = rxstreamreplserverreadstream(row.streamid)
           const rev = after?.rev ?? 0
           accepted.push({ streamid: row.streamid, rev })
         }
@@ -79,14 +79,14 @@ export const rxreplserverdevice = createdevice(
           if (!isstring(streamid)) {
             continue
           }
-          let entry = streamreplserverreadstream(streamid)
+          let entry = rxstreamreplserverreadstream(streamid)
           if (!entry && isboardstream(streamid)) {
             const bid = boardfromboardstream(streamid)
             if (isstring(bid) && bid.length > 0) {
               if (ispresent(bid)) {
                 memorysyncensureboardregistered(bid)
-                streamreplserveradmitplayer(streamid, player, true)
-                entry = streamreplserverreadstream(streamid)
+                rxstreamreplserveradmitplayer(streamid, player, true)
+                entry = rxstreamreplserverreadstream(streamid)
               }
             }
           }
@@ -94,7 +94,7 @@ export const rxreplserverdevice = createdevice(
             !entry &&
             memorysynclazyensurechipflagsstreamforpusher(streamid, player)
           ) {
-            entry = streamreplserverreadstream(streamid)
+            entry = rxstreamreplserverreadstream(streamid)
           }
           if (!entry) {
             continue
@@ -106,8 +106,8 @@ export const rxreplserverdevice = createdevice(
             !entry.players.has(player) &&
             (isboardstream(streamid) || isflagsstream(streamid))
           ) {
-            streamreplserveradmitplayer(streamid, player, true)
-            entry = streamreplserverreadstream(streamid)
+            rxstreamreplserveradmitplayer(streamid, player, true)
+            entry = rxstreamreplserverreadstream(streamid)
           }
           if (!entry?.players.has(player)) {
             continue

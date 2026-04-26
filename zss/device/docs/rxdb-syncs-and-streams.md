@@ -1,6 +1,6 @@
 # RxDB syncs and stream replication
 
-This codebase uses **not** a single global RxDB replication to a remote CouchDB, but a **custom replication plugin** path: the client runs **`replicateRxCollection`** against **local in-memory RxDB** ([`zss_streamrepl_client_v2`](../../device/netsim.ts)), while the “remote” is the **sim** exposed through the **device bus** ([`zss/device/api.ts`](../../device/api.ts)). Authoritative per-stream state on the sim lives in [`streamreplserver`](../../device/streamreplserver.ts) (`Map<streamid, { document, rev, players }>`), updated via projection from MEMORY and fanned out with **`rxreplclient:stream_row`**.
+This codebase uses **not** a single global RxDB replication to a remote CouchDB, but a **custom replication plugin** path: the client runs **`replicateRxCollection`** against **local in-memory RxDB** ([`zss_streamrepl_client_v2`](../../device/netsim.ts)), while the “remote” is the **sim** exposed through the **device bus** ([`zss/device/api.ts`](../../device/api.ts)). Authoritative per-stream state on the sim lives in [`rxstreamreplserver`](../../device/rxstreamreplserver.ts) (`Map<streamid, { document, rev, players }>`), updated via projection from MEMORY and fanned out with **`rxreplclient:stream_row`**.
 
 **See also:** [message-flow.md](./message-flow.md), [host-vs-join-architecture.md](./host-vs-join-architecture.md), and [workers-and-devices.md](./workers-and-devices.md) (rxrepl / streamrepl entries).
 
@@ -56,15 +56,15 @@ The transport uses a single namespace `flags:<suffix>`. The suffix distinguishes
 - **Live pull stream (`pull.stream$`)** — Each repl has a **`Subject`** that emits `RESYNC` or `{ documents, checkpoint }`. Injected rows come from:
   - **Memory** — [`memoryPull$`](../../device/rxrepl/streamreplreplicationinit.ts) via [`streamreplreplicationfeedstreamrow`](../../device/rxrepl/streamreplreplicationinit.ts) when the sim pushes `stream_row` for `memory`.
   - **Scoped** — per board/flags/gadget [`pull$`](../../device/rxrepl/streamreplscopedreplication.ts) via [`streamreplscopedfeedstreamrow`](../../device/rxrepl/streamreplscopedreplication.ts) (may **lazy-start** a scoped repl).
-- **Batch pull (`pull.handler`)** — Awaits one wire round-trip: [`streamreplpullawaitregister`](../../device/rxrepl/pullawait.ts) + [`rxreplpullrequest`](../../device/api.ts) → sim [`rxreplserver:pull_request`](../../device/rxreplserver.ts) reads [`streamreplserverreadstream`](../../device/streamreplserver.ts) → [`rxreplpullresponse` / `rxreplclient:pull_response`](../../device/api.ts) → [`streamreplreplicationfeedpullresponse`](../../device/rxrepl/streamreplreplicationinit.ts) resolves the waiter (handler return applies docs; avoids double-apply with `stream$`).
-- **Push (`push.handler`)** — Serializes with [`streamreplpushawaitserializedop`](../../device/rxrepl/streamreplpushawait.ts), sends [`rxreplpushbatch`](../../device/api.ts) → [`rxreplserver:push_batch`](../../device/rxreplserver.ts) → `memorysyncreverseproject` + [`streamreplpublishfrommemory`](../../device/streamreplserver.ts) → server fan-out; [`push_ack`](../../device/api.ts) unblocks.
+- **Batch pull (`pull.handler`)** — Awaits one wire round-trip: [`streamreplpullawaitregister`](../../device/rxrepl/pullawait.ts) + [`rxreplpullrequest`](../../device/api.ts) → sim [`rxreplserver:pull_request`](../../device/rxreplserver.ts) reads [`rxstreamreplserverreadstream`](../../device/rxstreamreplserver.ts) → [`rxreplpullresponse` / `rxreplclient:pull_response`](../../device/api.ts) → [`streamreplreplicationfeedpullresponse`](../../device/rxrepl/streamreplreplicationinit.ts) resolves the waiter (handler return applies docs; avoids double-apply with `stream$`).
+- **Push (`push.handler`)** — Serializes with [`streamreplpushawaitserializedop`](../../device/rxrepl/streamreplpushawait.ts), sends [`rxreplpushbatch`](../../device/api.ts) → [`rxreplserver:push_batch`](../../device/rxreplserver.ts) → `memorysyncreverseproject` + [`rxstreamreplpublishfrommemory`](../../device/rxstreamreplserver.ts) → server fan-out; [`push_ack`](../../device/api.ts) unblocks.
 - **Downstream apply** — Each repl subscribes to **`received$`** and calls [`streamreplmirroronreplicationdown`](../../device/netsim.ts) for `memory` / `flags` / `boards` / `gadget` to sync the sync map and emit change events (with rev deduping and [`streamreplnotifymirrorstreamrowrepl`](../../device/netsim.ts) for the “same rev as checkpoint” case).
 
 ---
 
 ## 4. Sim push path: `stream_row` (out of band from RxDB pull return)
 
-- [`streamreplserver`](../../device/streamreplserver.ts) bumps rev and uses [`rxreplclientstreamrow`](../../device/api.ts) to every **admitted** player.
+- [`rxstreamreplserver`](../../device/rxstreamreplserver.ts) bumps rev and uses [`rxreplclientstreamrow`](../../device/api.ts) to every **admitted** player.
 - Client [`rxreplclient`](../../device/rxreplclient.ts) handles `stream_row` in [`applystreamrow`](../../device/rxreplclient.ts): if repl active, feeds `streamreplreplicationfeedstreamrow` + mirror **without** duplicating notification paths incorrectly (see comment chain with `streamreplmirrorsetnonotify` / `streamreplnotifymirrorstreamrowrepl` in [`netsim.ts`](../../device/netsim.ts)).
 
 ---
@@ -80,7 +80,7 @@ The transport uses a single namespace `flags:<suffix>`. The suffix distinguishes
 ```mermaid
 flowchart TB
   subgraph simSide [Sim authoritative state]
-    STMAP["streamreplserver Map streamid to doc rev players"]
+    STMAP["rxstreamreplserver Map streamid to doc rev players"]
     PROJ["memoryproject / memorysimsync projections"]
     RSS["rxreplserver device pull_request push_batch"]
     STMAP --> PROJ

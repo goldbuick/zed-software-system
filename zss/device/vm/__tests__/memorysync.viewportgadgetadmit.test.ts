@@ -3,10 +3,10 @@
  * even when they are not yet on mainbook.activelist (e.g. join-in-progress).
  */
 import {
-  streamreplserverclearfortests,
-  streamreplserverreadstream,
-  streamreplserverregister,
-} from 'zss/device/streamreplserver'
+  rxstreamreplserverclearfortests,
+  rxstreamreplserverreadstream,
+  rxstreamreplserverregister,
+} from 'zss/device/rxstreamreplserver'
 import { initstate } from 'zss/gadget/data/api'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { memorywritebookflag } from 'zss/memory/bookoperations'
@@ -30,7 +30,7 @@ describe('memorysync viewport gadget admission', () => {
     for (const k of Object.keys(ackboardrunners)) {
       delete ackboardrunners[k]
     }
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
     memoryresetbooks([])
   })
 
@@ -74,12 +74,12 @@ describe('memorysync viewport gadget admission', () => {
 
     memoryresetbooks([book])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-vpga')
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
 
     memorysyncadmitboardrunner(runner, boardId)
 
     const gstream = gadgetstream(joiner)
-    const entry = streamreplserverreadstream(gstream)
+    const entry = rxstreamreplserverreadstream(gstream)
     expect(entry?.players.has(runner)).toBe(true)
     expect(entry?.players.get(runner)?.writable).toBe(true)
   })
@@ -124,13 +124,13 @@ describe('memorysync viewport gadget admission', () => {
 
     memoryresetbooks([book])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-vpga2')
-    streamreplserverclearfortests()
-    streamreplserverregister(memorystream(), projectmemory())
+    rxstreamreplserverclearfortests()
+    rxstreamreplserverregister(memorystream(), projectmemory())
 
     ackboardrunners[boardId] = Date.now()
     memorysyncadmitboardrunner(runner, boardId)
 
-    let gjoin = streamreplserverreadstream(gadgetstream(joiner))
+    let gjoin = rxstreamreplserverreadstream(gadgetstream(joiner))
     expect(gjoin?.players.has(joiner) ?? false).toBe(false)
 
     const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -138,7 +138,7 @@ describe('memorysync viewport gadget admission', () => {
     memorywritebookflag(main, joiner, 'board', boardId)
     memorysyncpushdirty()
 
-    gjoin = streamreplserverreadstream(gadgetstream(joiner))
+    gjoin = rxstreamreplserverreadstream(gadgetstream(joiner))
     expect(gjoin?.players.has(runner)).toBe(true)
   })
 })

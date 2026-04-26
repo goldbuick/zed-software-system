@@ -1,8 +1,8 @@
 import {
-  streamreplserverclearfortests,
-  streamreplserverreadstream,
-  streamreplserverregister,
-} from 'zss/device/streamreplserver'
+  rxstreamreplserverclearfortests,
+  rxstreamreplserverreadstream,
+  rxstreamreplserverregister,
+} from 'zss/device/rxstreamreplserver'
 import { ispresent } from 'zss/mapping/types'
 import { memorytrackingflagsbagid } from 'zss/memory/boardchipflags'
 import { memoryinitboard } from 'zss/memory/boards'
@@ -50,13 +50,13 @@ describe('chip flags streams flags:*_chip', () => {
     memoryresetbooks([makemainbook()])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-chipflags')
     memorydirtyclear()
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
   })
 
   afterEach(() => {
     memoryresetbooks([])
     memorydirtyclear()
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
   })
 
   it('ischipflagsstream matches suffix _chip only', () => {
@@ -68,12 +68,12 @@ describe('chip flags streams flags:*_chip', () => {
   it('memorysynclazyensurechipflagsstreamforpusher registers and admits', () => {
     const streamid = flagsstream('el1_chip')
     const runner = 'runner_board'
-    streamreplserverregister('memory', projectmemory())
-    expect(streamreplserverreadstream(streamid)).toBeUndefined()
+    rxstreamreplserverregister('memory', projectmemory())
+    expect(rxstreamreplserverreadstream(streamid)).toBeUndefined()
     expect(memorysynclazyensurechipflagsstreamforpusher(streamid, runner)).toBe(
       true,
     )
-    const entry = streamreplserverreadstream(streamid)
+    const entry = rxstreamreplserverreadstream(streamid)
     expect(entry).toBeDefined()
     expect(entry?.players.get(runner)?.writable).toBe(true)
   })
@@ -161,7 +161,7 @@ describe('memorytickobject chip flags dirty', () => {
 
 describe('memorysyncadmitboardrunner player + chip + tracking flags', () => {
   afterEach(() => {
-    streamreplserverclearfortests()
+    rxstreamreplserverclearfortests()
     memoryresetbooks([])
     memorydirtyclear()
   })
@@ -221,36 +221,36 @@ describe('memorysyncadmitboardrunner player + chip + tracking flags', () => {
     }
     memoryresetbooks([book])
     memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-persist-chip')
-    streamreplserverclearfortests()
-    streamreplserverregister(memorystream(), projectmemory())
+    rxstreamreplserverclearfortests()
+    rxstreamreplserverregister(memorystream(), projectmemory())
 
     memorysyncadmitboardrunner(runner, boardid)
 
-    const elstream = streamreplserverreadstream(flagsstream(`${elon}_chip`))
+    const elstream = rxstreamreplserverreadstream(flagsstream(`${elon}_chip`))
     expect(elstream?.players.get(runner)?.writable).toBe(true)
-    const playerstream = streamreplserverreadstream(flagsstream(onboardplayer))
+    const playerstream = rxstreamreplserverreadstream(flagsstream(onboardplayer))
     expect(playerstream?.players.get(runner)?.writable).toBe(true)
 
-    const trackingstream = streamreplserverreadstream(
+    const trackingstream = rxstreamreplserverreadstream(
       flagsstream(memorytrackingflagsbagid(boardid)),
     )
     expect(trackingstream?.players.get(runner)?.writable).toBe(true)
 
     expect(
-      streamreplserverreadstream(flagsstream('stale_chip')),
+      rxstreamreplserverreadstream(flagsstream('stale_chip')),
     ).toBeUndefined()
 
     memorysyncrevokeboardrunner(runner, boardid)
     expect(
-      streamreplserverreadstream(flagsstream(`${elon}_chip`))?.players.has(
+      rxstreamreplserverreadstream(flagsstream(`${elon}_chip`))?.players.has(
         runner,
       ),
     ).toBe(false)
     expect(
-      streamreplserverreadstream(flagsstream(onboardplayer))?.players.has(runner),
+      rxstreamreplserverreadstream(flagsstream(onboardplayer))?.players.has(runner),
     ).toBe(false)
     expect(
-      streamreplserverreadstream(
+      rxstreamreplserverreadstream(
         flagsstream(memorytrackingflagsbagid(boardid)),
       )?.players.has(runner),
     ).toBe(false)

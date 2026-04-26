@@ -32,7 +32,7 @@ Side-effect imports register these devices on the worker hub:
 |--------|-------------|--------|
 | `vm` | [`zss/device/vm.ts`](../../device/vm.ts) | Full VM; `ticktock` / `second` + handler registry. |
 | `clock` | [`zss/device/clock.ts`](../../device/clock.ts) | `ticktock` / `second`. |
-| `streamreplserver` | [`zss/device/streamreplserver.ts`](../../device/streamreplserver.ts) | Authoritative `memory` / `board:*` streams. |
+| `rxstreamreplserver` | [`zss/device/rxstreamreplserver.ts`](../../device/rxstreamreplserver.ts) | Authoritative `memory` / `board:*` streams. |
 | `rxreplserver` | [`zss/device/rxreplserver.ts`](../../device/rxreplserver.ts) | `push_batch` → `memorysyncreverseproject`. |
 | `modem` | [`zss/device/modem.ts`](../../device/modem.ts) | Worker copy of Yjs protocol. |
 | *(hook)* `gadgetmemoryprovider` | [`zss/device/gadgetmemoryprovider.ts`](../../device/gadgetmemoryprovider.ts) | Registers gadget state provider; **not** a `createdevice`. |

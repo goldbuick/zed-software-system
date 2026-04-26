@@ -51,7 +51,7 @@ ZSS does not spawn OS threads; it uses the **browser main thread** and **dedicat
 | **Instantiation** | [`platform.ts`](../../platform.ts): `platform = isstub ? new stubspace() : new simspace()`. |
 | **`isstub` (1st arg to `createplatform`)** | **`isjoin()`** ([`feature/url.ts`](../../feature/url.ts)): if the page URL contains **`/join/`**, the **stub** worker is used; otherwise the full **sim** worker. |
 | **Bundler** | Vite worker entry: `./simspace??worker` or `./stubspace??worker` → [`simspace.ts`](../../simspace.ts) / [`stubspace.ts`](../../stubspace.ts). |
-| **Boot inside worker** | **simspace** imports `clock`, `gadgetmemoryprovider`, **`streamreplserver`**, **`rxreplserver`**, `modem`, `user`, [`forward`](../forward.ts), and (via `started`) the real **`vm`**. **stubspace** imports only **`stub`** + `forward` (minimal `vm`-named device). Both assign `onmessage` → `forward(event.data)` into the **worker-local** hub. |
+| **Boot inside worker** | **simspace** imports `clock`, `gadgetmemoryprovider`, **`rxstreamreplserver`**, **`rxreplserver`**, `modem`, `user`, [`forward`](../forward.ts), and (via `started`) the real **`vm`**. **stubspace** imports only **`stub`** + `forward` (minimal `vm`-named device). Both assign `onmessage` → `forward(event.data)` into the **worker-local** hub. |
 | **Post-start config** | Main sends `platform.postMessage({ target: 'config', data: climode })`. **simspace** handles it and calls [`setclimode`](../../feature/detect.ts) with the 2nd arg to `createplatform`. **stubspace** does not special-case `config` (message is forwarded into the stub hub). |
 
 ### Heavy worker (`heavyspace`)
@@ -95,7 +95,7 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 | `vm` | sim worker (real sim) | `ticktock`, `second` | Game VM, handlers under `vm/handlers/` |
 | `stub` (`name` **`vm`**) | stub worker only | — | Minimal stand-in for `vm` when using stubspace ([`stub.ts`](../stub.ts)) |
 | `gadgetmemoryprovider` | sim worker + boardrunner worker | — | Backs `gadgetstate()` from MEMORY `gadgetstore` flags ([`gadgetmemoryprovider.ts`](../gadgetmemoryprovider.ts)); replaces the old sim **`gadgetserver`** device |
-| `streamreplserver` | sim worker only | — | Authoritative **`memory`** / **`board:*`** documents + rev; fans out `rxreplclient:stream_row` ([`streamreplserver.ts`](../streamreplserver.ts)) |
+| `rxstreamreplserver` | sim worker only | — | Authoritative **`memory`** / **`board:*`** documents + rev; fans out `rxreplclient:stream_row` ([`rxstreamreplserver.ts`](../rxstreamreplserver.ts)) |
 | `rxreplserver` | sim worker only | — | Merges `rxreplserver:push_batch` into MEMORY + gadget rows ([`rxreplserver.ts`](../rxreplserver.ts)) |
 | `rxreplclient` | main thread + boardrunner worker | — | Client rxrepl + stream mirror + `jsonsync:changed` ([`rxreplclient.ts`](../rxreplclient.ts), [`userspace.ts`](../../userspace.ts), [`boardrunnerspace.ts`](../../boardrunnerspace.ts)) |
 | `modem` | **both** hubs (imported in sim + userspace) | `second` | Sync / presence (per-realm instance) |
@@ -109,9 +109,9 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 | `SOFTWARE` | whichever hub loaded it | — | Session holder + `emit` helper |
 | **Ephemeral** `createdevice` | varies | — | e.g. one-off TTS in [`feature/tts.ts`](../../feature/tts.ts) |
 
-**stubspace** ([`stubspace.ts`](../../stubspace.ts)) only boots **stub** + **forward** (no clock / streamrepl / rxrepl / modem / user there). **simspace** ([`simspace.ts`](../../simspace.ts)) boots clock, gadgetmemoryprovider, streamreplserver, rxreplserver, modem, user, vm (via `started`), and forward.
+**stubspace** ([`stubspace.ts`](../../stubspace.ts)) only boots **stub** + **forward** (no clock / streamrepl / rxrepl / modem / user there). **simspace** ([`simspace.ts`](../../simspace.ts)) boots clock, gadgetmemoryprovider, rxstreamreplserver, rxreplserver, modem, user, vm (via `started`), and forward.
 
-> **Join / stub mode** — When the URL matches [`isjoin()`](../../feature/url.ts) (`/join/`), **`stubspace`** runs instead of **`simspace`**: there is **no** `clock`, **`streamreplserver`**, **`rxreplserver`**, or sim **`modem`**. The threaded diagrams below are **sim-first**; in stub mode rely on this table and [what creates each thread or worker](#what-creates-each-thread-or-worker).
+> **Join / stub mode** — When the URL matches [`isjoin()`](../../feature/url.ts) (`/join/`), **`stubspace`** runs instead of **`simspace`**: there is **no** `clock`, **`rxstreamreplserver`**, **`rxreplserver`**, or sim **`modem`**. The threaded diagrams below are **sim-first**; in stub mode rely on this table and [what creates each thread or worker](#what-creates-each-thread-or-worker).
 
 ---
 
@@ -247,7 +247,7 @@ flowchart TB
 
 **Readout**
 
-- **Sim worker** — `clock`, `vm`, **`gadgetmemoryprovider`**, **`streamreplserver`**, **`rxreplserver`**, one **`modem`** instance ([`simspace.ts`](../../simspace.ts)).
+- **Sim worker** — `clock`, `vm`, **`gadgetmemoryprovider`**, **`rxstreamreplserver`**, **`rxreplserver`**, one **`modem`** instance ([`simspace.ts`](../../simspace.ts)).
 - **Main thread** — `register`, `gadgetclient`, **`rxreplclient`**, `userinput`, `bridge`, `synth`, second **`modem`** instance ([`userspace.ts`](../../userspace.ts)), and `api`-driven emits (**`apihelpers`**); chips/UI often use **`SOFTWARE`** on whichever hub loaded them (sim for game logic).
 - **Heavy worker** — `heavy` plus dynamic **`agent_*`** devices ([`heavyspace.ts`](../../heavyspace.ts), [`feature/heavy/agent.ts`](../../feature/heavy/agent.ts)).
 - **`second`** — `clock` runs on sim; **`register`**, **main `modem`**, and **`heavy`/`agent_*`** receive **`second`** after **sim → main** forward (and main → heavy where applicable), same tick as sim-local `vm` / `modemSim`.
