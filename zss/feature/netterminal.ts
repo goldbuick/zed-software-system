@@ -188,8 +188,7 @@ function handledataconnection(dataconnection: DataConnection) {
       if (
         m.player.length > 0 &&
         remotepeerplayer.length > 0 &&
-        m.player !== remotepeerplayer &&
-        !streamrowreplicatespeergadgetorflags(m, remotepeerplayer)
+        m.player !== remotepeerplayer
       ) {
         continue
       }
@@ -216,8 +215,7 @@ function handledataconnection(dataconnection: DataConnection) {
         if (
           message.player.length > 0 &&
           remotepeerplayer.length > 0 &&
-          message.player !== remotepeerplayer &&
-          !streamrowreplicatespeergadgetorflags(message, remotepeerplayer)
+          message.player !== remotepeerplayer
         ) {
           return
         }
