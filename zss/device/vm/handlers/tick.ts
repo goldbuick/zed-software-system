@@ -4,19 +4,17 @@ import {
   ensureboardrunnerelected,
   revokeboardrunnerassignment,
 } from 'zss/device/vm/boardrunnerelection'
-import { memorysyncpushdirty } from 'zss/device/vm/memorysimsync'
+import { memorypushsimsyncdirty } from 'zss/device/vm/memorysimsync'
 import {
   BOARDRUNNER_ACKTICK_STALE_MS,
   ackboardrunners,
   boardrunners,
   skipboardrunners,
-  tracking,
 } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadplayerboard,
   memoryreadplayers,
-  memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
 import {
@@ -29,19 +27,14 @@ import { perfmeasure } from 'zss/perf/ui'
 
 export function handletick(vm: DEVICE, _message: MESSAGE): void {
   void _message
+  // bail if the main book is not frozen or not present
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (memoryreadfreeze() || !ispresent(mainbook)) {
     return
   }
 
-  memoryscanplayers(tracking)
-
   perfmeasure('vm:memorytickloaders', () => {
     boardrunnertick(vm, memoryreadoperator(), memorytickloaders())
-  })
-
-  perfmeasure('vm:memorysyncpushdirty', () => {
-    memorysyncpushdirty()
   })
 
   // determine boardrunner ownership
@@ -65,10 +58,12 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
       if (delta > BOARDRUNNER_ACKTICK_STALE_MS) {
         const staleplayer = boardrunners[board]
         if (isstring(staleplayer)) {
+          // block from being elected again
           skipboardrunners[staleplayer] = true
           // revoke the boardrunner assignment
           revokeboardrunnerassignment(board)
           // signal that we are no longer running the board
+          memorypushsimsyncdirty()
           boardrunnerowned(vm, staleplayer, '')
         }
       }
@@ -79,8 +74,8 @@ export function handletick(vm: DEVICE, _message: MESSAGE): void {
     ensureboardrunnerelected(vm, board, timestamp)
   })
 
-  // Flush again after stale revoke + election: the first `memorysyncpushdirty`
-  // above ran before `installboardrunner` / `memorysyncadmitboardrunner`, so
-  // repl rows for the new winner can otherwise lag a full tick (ghost→winner).
-  memorysyncpushdirty()
+  // flush the dirty state to rxdb
+  perfmeasure('vm:memorysyncpushdirty', () => {
+    memorypushsimsyncdirty()
+  })
 }

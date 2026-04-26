@@ -249,8 +249,6 @@ export function memorysyncrevokeboardrunner(
 export function memorysyncensureloginreplstreams(player: string): void {
   // admit the memory stream
   memorysyncadmitstream(player)
-  memorysyncensuregadgetregistered(player)
-  memorysyncensureflagsregistered(player)
 }
 
 // Full logout cleanup: drop the player from every stream, including the
@@ -279,7 +277,7 @@ export function memorysyncupdateboard(codepage: CODE_PAGE): void {
   rxstreamreplserverupdate(stream, projected)
 }
 
-export function memorysyncpushdirty(): void {
+export function memorypushsimsyncdirty(): void {
   const dirtyids = memoryconsumealldirty()
   for (let i = 0; i < dirtyids.length; ++i) {
     const stream = dirtyids[i]

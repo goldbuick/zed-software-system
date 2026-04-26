@@ -12,6 +12,7 @@ import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadbookflag, memorywritebookflag } from './bookoperations'
+import { flagsstream, memorymarkdirty } from './memorydirty'
 import { memoryreadbookbysoftware } from './session'
 import { MEMORY_LABEL } from './types'
 
@@ -179,6 +180,7 @@ export function memoryqueuesynthplay(board: string, play: string) {
     const queue = readsynthplayinternal(board)
     queue.length = 0
     synthplay(SOFTWARE, '', board, '')
+    memorymarkdirty(flagsstream(SYNTH_PLAY_FLAG))
     return
   }
 
@@ -192,4 +194,5 @@ export function memoryqueuesynthplay(board: string, play: string) {
 
   const queue = readsynthplayinternal(board)
   queue.push([play, endtime])
+  memorymarkdirty(flagsstream(SYNTH_PLAY_FLAG))
 }

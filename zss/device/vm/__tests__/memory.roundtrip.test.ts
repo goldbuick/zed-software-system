@@ -33,7 +33,7 @@ import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
 import { projectmemory, projectplayerflags } from '../memoryproject'
 import { memorysyncreverseproject } from '../memorysimsync'
-import { memoryworkerpushdirty } from '../memoryworkersync'
+import { memorypushworkersyncpdirty } from '../memoryworkersync'
 
 function makebook(): BOOK {
   const pid = 'pid_roundtrip_worker'
@@ -106,7 +106,7 @@ describe('phase 2 worker -> server round-trip', () => {
     }
     memorywritebookflag(book, pid, 'hp', 7)
 
-    memoryworkerpushdirty()
+    memorypushworkersyncpdirty()
     expect(pushbatchspy).toHaveBeenCalled()
 
     const finalbook = memoryreadbookbyaddress('main-id')

@@ -126,7 +126,7 @@ describe('handlelogout board runner', () => {
     )
     expect(boardrunners['board-x']).toBe('stayer')
     expect(boardrunners['board-y']).toBe('stayer')
-    expect(memorysync.memorysyncpushdirty).toHaveBeenCalled()
+    expect(memorysync.memorypushsimsyncdirty).toHaveBeenCalled()
   })
 })
 
@@ -182,7 +182,7 @@ describe('handlelogin board runner', () => {
       'title-1',
     )
     expect(boardrunners['title-1']).toBe('joiner')
-    expect(memorysync.memorysyncpushdirty).toHaveBeenCalled()
+    expect(memorysync.memorypushsimsyncdirty).toHaveBeenCalled()
     expect(reply).toHaveBeenCalledWith(message, 'acklogin', true)
   })
 })

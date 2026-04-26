@@ -13,6 +13,7 @@ import {
 } from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersfromboard } from 'zss/memory/playermanagement'
+import { memoryreadoperator } from 'zss/memory/session'
 
 /** Clears elected runner state for a board; does not install a replacement. */
 export function revokeboardrunnerassignment(board: string): void {
@@ -64,11 +65,14 @@ export function ensureboardrunnerelected(
 
 export function pickboardrunnerwinner(board: string): string | undefined {
   const players = memoryreadplayersfromboard(board)
+  const operator = memoryreadoperator()
+  if (players.includes(operator)) {
+    return operator
+  }
   const [winner] = players
     .filter((player) => !skipboardrunners[player])
     .sort((a, b) => tracking[b] - tracking[a])
-
-  return ispresent(winner) ? winner : undefined
+  return winner
 }
 
 export function boardhasvalidrunner(board: string): boolean {

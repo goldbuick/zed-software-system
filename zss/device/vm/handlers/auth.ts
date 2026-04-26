@@ -12,9 +12,9 @@ import {
   revokeboardrunnerassignmentsforplayer,
 } from 'zss/device/vm/boardrunnerelection'
 import {
+  memorypushsimsyncdirty,
   memorysyncdropplayerfromall,
   memorysyncensureloginreplstreams,
-  memorysyncpushdirty,
 } from 'zss/device/vm/memorysimsync'
 import {
   INITIAL_TRACKING,
@@ -34,6 +34,7 @@ import {
   memorylogoutplayer,
   memoryreadplayeractive,
   memoryreadplayerboard,
+  memoryscanplayers,
 } from 'zss/memory/playermanagement'
 import {
   memoryisoperator,
@@ -65,7 +66,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
     ensureboardrunnerelected(vm, affectedboards[i], ts)
   }
   if (affectedboards.length > 0) {
-    memorysyncpushdirty()
+    memorypushsimsyncdirty()
   }
 
   // halt the bridge
@@ -79,12 +80,14 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
 
   // signal for re-login
-  setTimeout(() => {
-    registerloginready(vm, message.player)
-  }, 1000)
+  registerloginready(vm, message.player)
 }
 
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {
+  // scan players to ensure we have the latest tracking
+  // instead of running this every tick
+  memoryscanplayers(tracking)
+
   const {
     bannedtokens,
     rolebytoken,
@@ -140,9 +143,8 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     if (ispresent(board)) {
       delete skipboardrunners[message.player]
       ensureboardrunnerelected(vm, board.id, ts)
+      memorypushsimsyncdirty()
     }
-    // Flush repl immediately after login + possible runner install. Without
-    memorysyncpushdirty()
 
     // signal success !!!
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
@@ -159,12 +161,13 @@ export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlelocal(vm: DEVICE, message: MESSAGE): void {
-  if (memoryloginplayer(message.player, {})) {
-    tracking[message.player] = INITIAL_TRACKING
-    lastinputtime[message.player] = Date.now()
-    apilog(vm, memoryreadoperator(), `login from ${message.player}`)
-    vm.replynext(message, 'acklogin', true)
-  } else {
-    vm.replynext(message, 'acklogin', false)
-  }
+  // TODO: leave this alone for now
+  // if (memoryloginplayer(message.player, {})) {
+  //   tracking[message.player] = INITIAL_TRACKING
+  //   lastinputtime[message.player] = Date.now()
+  //   apilog(vm, memoryreadoperator(), `login from ${message.player}`)
+  //   vm.replynext(message, 'acklogin', true)
+  // } else {
+  //   vm.replynext(message, 'acklogin', false)
+  // }
 }

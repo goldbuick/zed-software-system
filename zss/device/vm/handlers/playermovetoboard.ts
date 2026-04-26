@@ -5,7 +5,7 @@ import {
   ensureboardrunnerelected,
   revokeboardrunnerassignment,
 } from 'zss/device/vm/boardrunnerelection'
-import { memorysyncpushdirty } from 'zss/device/vm/memorysimsync'
+import { memorypushsimsyncdirty } from 'zss/device/vm/memorysimsync'
 import { boardrunners, skipboardrunners } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -77,7 +77,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
 
   // sync the dirty state
   if (didsync) {
-    memorysyncpushdirty()
+    memorypushsimsyncdirty()
   }
 
   if (player !== boardrunners[destboard]) {

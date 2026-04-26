@@ -59,7 +59,7 @@ import {
   pilottick,
 } from './vm/handlers/pilot'
 import { memoryhydratefromjsonsync } from './vm/memoryhydrate'
-import { memoryworkerpushdirty } from './vm/memoryworkersync'
+import { memorypushworkersyncpdirty } from './vm/memoryworkersync'
 
 function shouldboardrunnerhandlestreamchanged(target: string): boolean {
   if (!target.endsWith(':changed')) {
@@ -246,7 +246,7 @@ function runworkertick(timestamp: number): void {
     rendergadgetstate(players)
   })
   perfmeasure('boardrunner:memoryworkerpushdirty', () => {
-    memoryworkerpushdirty()
+    memorypushworkersyncpdirty()
   })
 }
 

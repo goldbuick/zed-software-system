@@ -483,31 +483,6 @@ export function streamreplgadgetcollection(): RxCollection<GadgetMirrorRow> | nu
   return gadgetcoll
 }
 
-export function streamreplreadclientstreamobservable(streamid: string) {
-  if (ismemorystream(streamid) && memorycoll) {
-    return memorycoll.findOne(MEMORY_STREAM_ID).$
-  }
-  if (isflagsstream(streamid) && flagscoll) {
-    const player = playerfromflagsstream(streamid)
-    if (player) {
-      return flagscoll.findOne(player).$
-    }
-  }
-  if (isboardstream(streamid) && boardscoll) {
-    const boardId = boardfromboardstream(streamid)
-    if (boardId) {
-      return boardscoll.findOne(boardId).$
-    }
-  }
-  if (isgadgetstream(streamid) && gadgetcoll) {
-    const player = playerfromgadgetstream(streamid)
-    if (player) {
-      return gadgetcoll.findOne(player).$
-    }
-  }
-  return null
-}
-
 /**
  * Test / legacy entry points mirroring a `Map`; prefer `streamreplmirrorputlocal`
  * for local writes. `set` persists to RxDB; replication-driven rows update the

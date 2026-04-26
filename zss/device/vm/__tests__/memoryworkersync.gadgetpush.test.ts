@@ -14,7 +14,7 @@ import {
 import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
 import { BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
-import { memoryworkerpushdirty } from '../memoryworkersync'
+import { memorypushworkersyncpdirty } from '../memoryworkersync'
 
 describe('memoryworkerpushdirty gadget streams', () => {
   afterEach(() => {
@@ -50,7 +50,7 @@ describe('memoryworkerpushdirty gadget streams', () => {
     const spy = jest
       .spyOn(apimod, 'rxreplpushbatch')
       .mockImplementation(() => {})
-    memoryworkerpushdirty()
+    memorypushworkersyncpdirty()
 
     expect(spy).toHaveBeenCalledTimes(1)
     const call = spy.mock.calls[0]

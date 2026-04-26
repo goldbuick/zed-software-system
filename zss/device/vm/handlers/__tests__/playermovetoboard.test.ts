@@ -139,7 +139,7 @@ describe('handleplayermovetoboard', () => {
       'player-1',
       'board-b',
     )
-    expect(memorysync.memorysyncpushdirty).toHaveBeenCalled()
+    expect(memorysync.memorypushsimsyncdirty).toHaveBeenCalled()
   })
 
   it('does nothing after move when memorymoveplayertoboard returns false', () => {
@@ -199,7 +199,7 @@ describe('handleplayermovetoboard', () => {
     )
     expect(boardrunners['board-a']).toBe('p2')
     expect(boardrunners['board-b']).toBe('player-1')
-    expect(memorysync.memorysyncpushdirty).toHaveBeenCalled()
+    expect(memorysync.memorypushsimsyncdirty).toHaveBeenCalled()
   })
 
   it('does not admit on dest when another valid runner is already registered', () => {
@@ -225,7 +225,7 @@ describe('handleplayermovetoboard', () => {
     handleplayermovetoboard(vm, message)
 
     expect(memorysync.memorysyncadmitboardrunner).not.toHaveBeenCalled()
-    expect(memorysync.memorysyncpushdirty).not.toHaveBeenCalled()
+    expect(memorysync.memorypushsimsyncdirty).not.toHaveBeenCalled()
   })
 
   it('replaces stale dest runner not on board with mover', () => {

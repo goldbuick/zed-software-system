@@ -26,22 +26,11 @@ import {
   projectplayerflags,
 } from './memoryproject'
 
-export function memoryworkerpushdirty(): void {
+export function memorypushworkersyncpdirty(): void {
   const dirtyids = memoryconsumealldirty()
   const ownplayer = rxreplclientreadownplayer()
   for (let i = 0; i < dirtyids.length; ++i) {
     const stream = dirtyids[i]
-    if (isgadgetstream(stream)) {
-      const player = playerfromgadgetstream(stream)
-      if (!player) {
-        continue
-      }
-      const gadget = projectgadget(player)
-      rxreplpushbatch(rxreplclientdevice, ownplayer, {
-        rows: [{ streamid: stream, document: gadget }],
-      })
-      continue
-    }
     if (!ispresent(rxreplclientreadstream(stream))) {
       // not admitted yet — re-queue so admission + next tick still pushes.
       memorymarkdirty(stream)
@@ -87,6 +76,17 @@ export function memoryworkerpushdirty(): void {
       const document = projectplayerflags(player)
       rxreplpushbatch(rxreplclientdevice, ownplayer, {
         rows: [{ streamid: stream, document }],
+      })
+      continue
+    }
+    if (isgadgetstream(stream)) {
+      const player = playerfromgadgetstream(stream)
+      if (!player) {
+        continue
+      }
+      const gadget = projectgadget(player)
+      rxreplpushbatch(rxreplclientdevice, ownplayer, {
+        rows: [{ streamid: stream, document: gadget }],
       })
       continue
     }
