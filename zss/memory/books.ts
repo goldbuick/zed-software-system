@@ -81,5 +81,5 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
 
 /** Destination book for file imports (drop/paste, parsewebfile, etc.). */
 export function memoryensureimportbook() {
-  return memoryensuresoftwarebook(MEMORY_LABEL.GAME, 'game')
+  return memoryensuresoftwarebook(MEMORY_LABEL.GAME)
 }
