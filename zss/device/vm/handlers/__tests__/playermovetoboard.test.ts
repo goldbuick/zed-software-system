@@ -61,7 +61,9 @@ function makepayload(
   }
 }
 
-function datafrompayload(p: VM_PLAYERMOVETOBOARD): [string, { x: number; y: number }] {
+function datafrompayload(
+  p: VM_PLAYERMOVETOBOARD,
+): [string, { x: number; y: number }] {
   return [p.board, p.dest]
 }
 

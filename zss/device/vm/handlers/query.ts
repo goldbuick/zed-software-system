@@ -10,7 +10,12 @@ export type CODEPAGE_RESULT = { codepage: { id: string; code: string } } | null
 
 export function handlequery(vm: DEVICE, message: MESSAGE): void {
   const raw = message.data
-  if (!isarray(raw) || raw.length < 2 || !isstring(raw[0]) || !isstring(raw[1])) {
+  if (
+    !isarray(raw) ||
+    raw.length < 2 ||
+    !isstring(raw[0]) ||
+    !isstring(raw[1])
+  ) {
     return
   }
   const id = raw[0]

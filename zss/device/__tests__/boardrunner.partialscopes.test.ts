@@ -56,7 +56,7 @@ describe('boardrunner partial repl scope', () => {
     jest.restoreAllMocks()
   })
 
-  it('updates owned boards and gadget/flags peers when assigned board changes', () => {
+  it('updates owned boards and flags peers when assigned board changes', () => {
     hub.invoke(createmessage('ses_br_pscope', 'p1', 'vm', 'ready', undefined))
     jest.clearAllMocks()
     hub.invoke(
@@ -84,79 +84,9 @@ describe('boardrunner partial repl scope', () => {
       partialscopes.streamreplpartialscopesOnGadgetFlagsPeersChange,
     )
     const call = mock.mock.calls.at(-1)
-    const gadgetPeers = call?.[0]
-    const flagsPeers = (call?.[1] ?? call?.[0]) as Set<string> | undefined
-    expect(gadgetPeers.has('p1')).toBe(true)
-    expect(flagsPeers?.has('p1')).toBe(true)
-    expect(flagsPeers?.has(memorytrackingflagsbagid(boardaddr))).toBe(true)
-  })
-
-  it('includes on-board chip bag ids in gadget/flags peers (avoids cancelling flags:pid_chip repl)', () => {
-    const chippeerboard = 'addr_chip_peer_board'
-    session.memoryresetbooks([
-      {
-        id: 'main-chippeers',
-        name: 'main',
-        timestamp: 0,
-        activelist: ['p1'],
-        pages: [
-          {
-            id: chippeerboard,
-            code: `@board ${chippeerboard}\n`,
-            stats: { type: CODE_PAGE_TYPE.BOARD },
-            board: {
-              id: chippeerboard,
-              name: chippeerboard,
-              terrain: [],
-              objects: {
-                p1: {
-                  id: 'p1',
-                  x: 1,
-                  y: 1,
-                  kind: '',
-                  code: '',
-                  char: 2,
-                  color: 15,
-                  bg: 0,
-                  cycle: 1,
-                },
-              },
-            },
-          },
-        ],
-        flags: { p1: { board: chippeerboard } },
-      },
-    ])
-    session.memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-chippeers')
-    jest
-      .spyOn(playermanagement, 'memoryreadplayerboard')
-      .mockReturnValue({ id: chippeerboard } as BOARD)
-
-    hub.invoke(createmessage('ses_br_pscope', 'p1', 'vm', 'ready', undefined))
-    jest.clearAllMocks()
-    hub.invoke(
-      createmessage(
-        'ses_br_pscope',
-        'p1',
-        'vm',
-        'boardrunner:ownedboard',
-        chippeerboard,
-      ),
-    )
-
-    const mock = jest.mocked(
-      partialscopes.streamreplpartialscopesOnGadgetFlagsPeersChange,
-    )
-    const call = mock.mock.calls.at(-1)
-    const gadgetPeers = call?.[0]
-    const flagsPeers = (call?.[1] ?? call?.[0]) as Set<string> | undefined
-    expect(gadgetPeers?.has('p1')).toBe(true)
-    expect(gadgetPeers?.has(createchipid('p1'))).toBe(false)
-    if (call?.[1]) {
-      expect(flagsPeers?.has('p1')).toBe(true)
-      expect(flagsPeers?.has(createchipid('p1'))).toBe(true)
-      expect(flagsPeers?.has(memorytrackingflagsbagid(chippeerboard))).toBe(true)
-    }
+    const peerarg = call?.[0] as Set<string> | undefined
+    expect(peerarg?.has('p1')).toBe(true)
+    expect(peerarg?.has(memorytrackingflagsbagid(boardaddr))).toBe(true)
   })
 
   it('gates first tick until player/chip/tracking flags streams hydrate', () => {

@@ -1,7 +1,7 @@
 jest.mock('zss/device/vm/handlers/panelchipdispatch', () => ({
-  ...jest.requireActual<typeof import('zss/device/vm/handlers/panelchipdispatch')>(
-    'zss/device/vm/handlers/panelchipdispatch',
-  ),
+  ...jest.requireActual<
+    typeof import('zss/device/vm/handlers/panelchipdispatch')
+  >('zss/device/vm/handlers/panelchipdispatch'),
   dispatchpanelchipmessage: jest.fn(),
 }))
 
@@ -13,7 +13,6 @@ import * as session from 'zss/memory/session'
 import { BOARD, BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
 import { setassignedplayer } from '../boardrunner'
-import '../boardrunner'
 
 describe('boardrunner panel chip messages', () => {
   const boardaddr = 'addr_panel_br'
@@ -54,9 +53,13 @@ describe('boardrunner panel chip messages', () => {
 
   it('dispatches bookmarkscroll when sender is on an owned board', () => {
     hub.invoke(
-      createmessage(sessionid, 'p1', 'vm', 'boardrunner:bookmarkscroll:bookmarkurl', [
-        'https://x.example',
-      ]),
+      createmessage(
+        sessionid,
+        'p1',
+        'vm',
+        'boardrunner:bookmarkscroll:bookmarkurl',
+        ['https://x.example'],
+      ),
     )
     expect(panelchip.dispatchpanelchipmessage).toHaveBeenCalledTimes(1)
     expect(panelchip.dispatchpanelchipmessage).toHaveBeenCalledWith(
@@ -75,7 +78,13 @@ describe('boardrunner panel chip messages', () => {
       .spyOn(playermanagement, 'memoryreadplayerboard')
       .mockReturnValue({ id: 'other-board' } as BOARD)
     hub.invoke(
-      createmessage(sessionid, 'p1', 'vm', 'boardrunner:bookmarkscroll:bookmarkurl', []),
+      createmessage(
+        sessionid,
+        'p1',
+        'vm',
+        'boardrunner:bookmarkscroll:bookmarkurl',
+        [],
+      ),
     )
     expect(panelchip.dispatchpanelchipmessage).not.toHaveBeenCalled()
   })

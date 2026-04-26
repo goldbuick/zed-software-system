@@ -9,12 +9,12 @@ describe('parsetargetaspanelchiproute', () => {
   })
 
   it('parses editorbookmarkscroll routes', () => {
-    expect(parsetargetaspanelchiproute('editorbookmarkscroll:snapshotcurrent')).toEqual(
-      {
-        target: 'editorbookmarkscroll',
-        path: 'snapshotcurrent',
-      },
-    )
+    expect(
+      parsetargetaspanelchiproute('editorbookmarkscroll:snapshotcurrent'),
+    ).toEqual({
+      target: 'editorbookmarkscroll',
+      path: 'snapshotcurrent',
+    })
   })
 
   it('returns undefined for unrelated targets', () => {

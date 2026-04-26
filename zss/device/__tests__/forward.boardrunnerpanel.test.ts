@@ -11,9 +11,9 @@ describe('forward gates - panel boardrunner targets', () => {
   }
 
   it('forwards boardrunner:chip:path to boardrunner worker', () => {
-    expect(shouldforwardclienttoboardrunner(msg('boardrunner:bookmarkscroll:x'))).toBe(
-      true,
-    )
+    expect(
+      shouldforwardclienttoboardrunner(msg('boardrunner:bookmarkscroll:x')),
+    ).toBe(true)
   })
 
   it('still forwards vm:bookmarkscroll to sim server', () => {
@@ -21,8 +21,8 @@ describe('forward gates - panel boardrunner targets', () => {
   })
 
   it('does not send boardrunner: targets to sim server', () => {
-    expect(shouldforwardclienttoserver(msg('boardrunner:bookmarkscroll:x'))).toBe(
-      false,
-    )
+    expect(
+      shouldforwardclienttoserver(msg('boardrunner:bookmarkscroll:x')),
+    ).toBe(false)
   })
 })

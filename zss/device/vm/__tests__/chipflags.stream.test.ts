@@ -92,10 +92,10 @@ describe('chip flags streams flags:*_chip', () => {
     const boardid = 'boardchip'
     const trackingbagid = memorytrackingflagsbagid(boardid)
     memorysyncreverseproject(flagsstream(trackingbagid), { tick: 3 })
-    const trackingbag = memoryreadbookflags(
-      main,
-      trackingbagid,
-    ) as Record<string, unknown>
+    const trackingbag = memoryreadbookflags(main, trackingbagid) as Record<
+      string,
+      unknown
+    >
     expect(trackingbag.tick).toBe(3)
   })
 })
@@ -228,7 +228,9 @@ describe('memorysyncadmitboardrunner player + chip + tracking flags', () => {
 
     const elstream = rxstreamreplserverreadstream(flagsstream(`${elon}_chip`))
     expect(elstream?.players.get(runner)?.writable).toBe(true)
-    const playerstream = rxstreamreplserverreadstream(flagsstream(onboardplayer))
+    const playerstream = rxstreamreplserverreadstream(
+      flagsstream(onboardplayer),
+    )
     expect(playerstream?.players.get(runner)?.writable).toBe(true)
 
     const trackingstream = rxstreamreplserverreadstream(
@@ -247,7 +249,9 @@ describe('memorysyncadmitboardrunner player + chip + tracking flags', () => {
       ),
     ).toBe(false)
     expect(
-      rxstreamreplserverreadstream(flagsstream(onboardplayer))?.players.has(runner),
+      rxstreamreplserverreadstream(flagsstream(onboardplayer))?.players.has(
+        runner,
+      ),
     ).toBe(false)
     expect(
       rxstreamreplserverreadstream(

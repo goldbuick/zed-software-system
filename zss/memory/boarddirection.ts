@@ -22,8 +22,8 @@ import {
   memoryreadobjectbypt,
   memoryreadterrain,
 } from './boardaccess'
-import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
 import { memorytrackingflagsbagid } from './boardchipflags'
+import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadflags } from './flags'
 import { flagsstream, memorymarkdirty } from './memorydirty'
