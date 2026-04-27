@@ -287,7 +287,6 @@ export async function storagesharecontent(player: string) {
   writecopyit(SOFTWARE, player, url, url)
 }
 
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function storagenukecontent(_player: string) {
   if (isclimode()) {
     const g = globalThis as { __nodeStorageNukeContent?: () => void }

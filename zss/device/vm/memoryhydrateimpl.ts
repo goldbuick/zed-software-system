@@ -5,8 +5,9 @@ circular import back into `memoryhydrate`.
 */
 import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
 import { memoryinitboard } from 'zss/memory/boards'
-import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
+import { creategadgetmemid } from 'zss/memory/flagmemids'
+import { memoryreadmergesynthpreserveboard } from 'zss/memory/mergecontext'
 import {
   memoryclearbook,
   memoryreadbookbyaddress,
@@ -61,11 +62,7 @@ export function hydrategadget(
   if (!ispresent(mainbook)) {
     return
   }
-  const gadgetstore = memoryreadbookflags(
-    mainbook,
-    MEMORY_LABEL.GADGETSTORE,
-  ) as Record<string, unknown>
-  gadgetstore[player] = deepcopy(document)
+  mainbook.flags[creategadgetmemid(player)] = deepcopy(document) as BOOK_FLAGS
 }
 
 export function hydrateplayerflags(
@@ -171,6 +168,10 @@ function mergebookinto(book: BOOK, incoming: Record<string, unknown>): void {
         book.flags,
         flags as Record<string, Record<string, unknown>>,
         book.activelist ?? [],
+        {
+          kind: 'worker',
+          preservesynthforboard: memoryreadmergesynthpreserveboard(),
+        },
       )
     }
   }

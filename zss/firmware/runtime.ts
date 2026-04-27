@@ -6,7 +6,6 @@ import {
   gadgetcheckqueue,
   gadgetcheckset,
   gadgethyperlink,
-  gadgetmarkdirty,
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
@@ -34,7 +33,6 @@ export const RUNTIME_FIRMWARE = createfirmware({
           // player updating sidebar
           const shared = gadgetstate(READ_CONTEXT.elementid)
           shared.sidebar = []
-          gadgetmarkdirty(READ_CONTEXT.elementid)
         } else {
           READ_CONTEXT.element.tickertext = ticker
           READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
@@ -47,7 +45,6 @@ export const RUNTIME_FIRMWARE = createfirmware({
         // player updating sidebar
         const shared = gadgetstate(READ_CONTEXT.elementid)
         shared.sidebar = gadgetaddcenterpadding(queue)
-        gadgetmarkdirty(READ_CONTEXT.elementid)
       } else {
         // element scroll locks until we get scrollclear
         const player = READ_CONTEXT.elementfocus
@@ -61,7 +58,6 @@ export const RUNTIME_FIRMWARE = createfirmware({
           READ_CONTEXT.element?.kinddata?.name ??
           ''
         shared.scroll = gadgetaddcenterpadding(queue)
-        gadgetmarkdirty(player)
       }
     }
   },

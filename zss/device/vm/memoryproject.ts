@@ -13,7 +13,7 @@ Streams (see `routememoryjsonsyncdocument`):
   (server-only / routing; see `MEMORY_ROOT` in `zss/memory/session.ts`). Books
   are projected with BOARD codepages as **shells only**; full board bodies
   replicate on `board:<id>`. Main-book flags omit per-player ids and
-  `gadgetstore` (those use `flags:<pid>` / `gadget:<pid>`).
+  `${id}_gadget` / `${id}_synth` (those use `gadget:<pid>` / `flags:<board>_synth`).
 - `board:<id>` — BOARD field allowlist: BOARD_SYNC_TOPKEYS; elements use
   BOARD_ELEMENT_SYNC_TOPKEYS (aligned with `memoryexportboardelement`).
 - `flags:<pid>`, `gadget:<pid>` — full bags / gadget doc via `projectplayerflags` /
@@ -53,10 +53,10 @@ dedupes if `received$` later fires for the same rev.
 */
 import { initstate } from 'zss/gadget/data/api'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
-import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
+import { creategadgetmemid } from 'zss/memory/flagmemids'
 import {
   boardfromboardstream,
   boardstream,
@@ -287,8 +287,8 @@ function isboardcodepageforprojection(page: CODE_PAGE): boolean {
 // convert a BOOK for the `memory` stream: deepcopy, project BOARD pages as
 // shells (id/code/stats.type); full bodies use `board:${id}` streams. drop
 // `timestamp` (server-local clock metadata; clients re-derive cadence from
-// `ticktock`). flags are taken from the deepcopy as-is (gadgetstore and per-
-// player ids on the main book are still removed below).
+// `ticktock`). flags: strip `*_gadget`, `*_synth`, and per-player pid rows
+// (replicate on `gadget:` / `flags:*_synth` / `flags:<pid>`).
 function projectbook(book: BOOK): unknown {
   const copy = deepcopy(book) as unknown as Record<string, unknown>
   const pages = copy.pages as CODE_PAGE[] | undefined
@@ -300,17 +300,9 @@ function projectbook(book: BOOK): unknown {
     )
   }
   if (ispresent(copy.flags) && typeof copy.flags === 'object') {
-    delete (copy.flags as Record<string, unknown>)[MEMORY_LABEL.GADGETSTORE]
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     if (ispresent(mainbook) && book.id === mainbook.id) {
-      const projectedflags = copy.flags as Record<string, unknown>
-      const flagkeys = Object.keys(projectedflags)
-      for (let i = 0; i < flagkeys.length; ++i) {
-        const fk = flagkeys[i]
-        if (ispid(fk)) {
-          delete projectedflags[fk]
-        }
-      }
+      delete copy.flags
     }
   }
   delete copy.timestamp
@@ -383,6 +375,7 @@ function mergebookflags(book: BOOK, incoming: Record<string, unknown>): void {
     book.flags,
     flags as Record<string, Record<string, unknown>>,
     book.activelist ?? [],
+    { kind: 'authoritative' },
   )
 }
 
@@ -518,15 +511,14 @@ export function unprojectboardstream(
 // GADGET stream — project / unproject
 // ---------------------------------------------------------------------------
 
-/** Full-document gadget stream: one player's `GADGET_STATE` from main book gadgetstore. */
+/** Full-document gadget stream: one player's `GADGET_STATE` at `flags[${player}_gadget]`. */
 export function projectgadget(player: string): GADGET_STATE {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const gadgetstore = memoryreadbookflags(
+  const raw = memoryreadbookflags(
     mainbook,
-    MEMORY_LABEL.GADGETSTORE,
-  ) as unknown as Record<string, GADGET_STATE>
-  const raw = gadgetstore[player]
-  if (!ispresent(raw)) {
+    creategadgetmemid(player),
+  ) as unknown as GADGET_STATE
+  if (!ispresent(raw) || typeof raw !== 'object' || !raw.id) {
     return initstate()
   }
   return deepcopy(raw)
@@ -540,11 +532,9 @@ export function unprojectgadget(player: string, document: unknown): void {
   if (!ispresent(mainbook)) {
     return
   }
-  const gadgetstore = memoryreadbookflags(
-    mainbook,
-    MEMORY_LABEL.GADGETSTORE,
-  ) as Record<string, unknown>
-  gadgetstore[player] = deepcopy(document) as BOOK_FLAGS[string]
+  mainbook.flags[creategadgetmemid(player)] = deepcopy(
+    document,
+  ) as unknown as BOOK_FLAGS
 }
 
 // ---------------------------------------------------------------------------
@@ -581,6 +571,7 @@ export function unprojectplayerflags(player: string, document: unknown): void {
       [player]: document as Record<string, unknown>,
     },
     mainbook.activelist ?? [],
+    { kind: 'authoritative' },
   )
 }
 
@@ -605,7 +596,7 @@ export type RoutememoryJsonSyncOpts = {
  * |---------------|------------------|-----------------|
  * | memory        | session writers + create books + merge pages/flags; may delete unknown books | root scalar assign + software shallow-merge + same book merge + delete absent books |
  * | board:<id>    | create page if needed, memoryinitboard, stats from code | overlay BOARD_SYNC_TOPKEYS onto existing board only (no initboard) |
- * | gadget:<pid>  | replace gadgetstore[player] | same |
+ * | gadget:<pid>  | replace `flags[${pid}_gadget]` | same |
  * | flags:<pid>   | mergeplayerflagsstreamhydrate (overlay) | mergeflagspreservingvolatile |
  *
  * Caller wraps `memorywithsilentwrites` where appropriate.

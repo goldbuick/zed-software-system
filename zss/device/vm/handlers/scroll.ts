@@ -2,7 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadbookflag,
   memorywritebookflag,
@@ -51,33 +51,30 @@ export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlegadgetscroll(vm: DEVICE, message: MESSAGE): void {
-  const d = message.data as
-    | { scrollname?: unknown; content?: unknown; chip?: unknown }
-    | undefined
-  if (!d || typeof d !== 'object') {
+  const raw = message.data
+  if (!isarray(raw) || raw.length < 2 || raw.length > 3) {
     apitoast(vm, message.player, 'gadget scroll: invalid payload')
     return
   }
-  if (!isstring(d.scrollname) || !d.scrollname.trim()) {
+  const scrollname = raw[0]
+  const content = raw[1]
+  const chipraw = raw.length >= 3 ? raw[2] : undefined
+  if (!isstring(scrollname) || !scrollname.trim()) {
     apitoast(vm, message.player, 'gadget scroll: need title')
     return
   }
-  if (!isstring(d.content) || !d.content.trim()) {
+  if (!isstring(content) || !content.trim()) {
     apitoast(vm, message.player, 'gadget scroll: need content')
     return
   }
-  if (d.chip !== undefined && !isstring(d.chip)) {
+  if (chipraw !== undefined && !isstring(chipraw)) {
     apitoast(vm, message.player, 'gadget scroll: invalid chip')
     return
   }
-  const chip = isstring(d.chip) && d.chip.trim() ? d.chip.trim() : 'refscroll'
+  const chip =
+    isstring(chipraw) && chipraw.trim() ? chipraw.trim() : 'refscroll'
   try {
-    scrollwritelines(
-      message.player,
-      d.scrollname.trim(),
-      d.content.trim(),
-      chip,
-    )
+    scrollwritelines(message.player, scrollname.trim(), content.trim(), chip)
   } catch {
     apitoast(vm, message.player, 'gadget scroll failed')
   }

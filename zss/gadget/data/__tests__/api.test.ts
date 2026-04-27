@@ -67,7 +67,7 @@ describe('api', () => {
         playerStates[player] = initstate()
       }
       return playerStates[player]
-    }, noop)
+    })
   })
 
   describe('initstate', () => {
@@ -110,7 +110,7 @@ describe('api', () => {
         sidebar: [],
       }
 
-      gadgetstateprovider(() => customState, noop)
+      gadgetstateprovider(() => customState)
       const state = gadgetstate('player1')
       expect(state).toBe(customState)
     })

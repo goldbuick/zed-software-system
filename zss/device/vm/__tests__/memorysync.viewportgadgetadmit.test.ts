@@ -10,6 +10,7 @@ import {
 import { initstate } from 'zss/gadget/data/api'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { memorywritebookflag } from 'zss/memory/bookoperations'
+import { creategadgetmemid } from 'zss/memory/flagmemids'
 import { gadgetstream, memorystream } from 'zss/memory/memorydirty'
 import {
   memoryreadbookbysoftware,
@@ -66,10 +67,8 @@ describe('memorysync viewport gadget admission', () => {
       flags: {
         [runner]: { board: boardId },
         [joiner]: { board: boardId },
-        [MEMORY_LABEL.GADGETSTORE]: {
-          [joiner]: g,
-        } as unknown as Record<string, never>,
-      },
+        [creategadgetmemid(joiner)]: g,
+      } as BOOK['flags'],
     }
 
     memoryresetbooks([book])
@@ -116,10 +115,8 @@ describe('memorysync viewport gadget admission', () => {
       flags: {
         [runner]: { board: boardId },
         [joiner]: {},
-        [MEMORY_LABEL.GADGETSTORE]: {
-          [joiner]: gj,
-        } as unknown as Record<string, never>,
-      },
+        [creategadgetmemid(joiner)]: gj,
+      } as BOOK['flags'],
     }
 
     memoryresetbooks([book])

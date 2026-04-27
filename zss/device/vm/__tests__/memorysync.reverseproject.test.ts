@@ -9,6 +9,7 @@ correctly-shaped accepted document for either a `memory` stream or a
 do not re-fire the per-stream dirty bits (which would create the feedback
 loop the silent-writes guard is designed to prevent).
 */
+import { creategadgetmemid } from 'zss/memory/flagmemids'
 import {
   MEMORY_STREAM_ID,
   boardstream,
@@ -125,14 +126,16 @@ describe('memorysyncreverseproject', () => {
     expect(memoryhasdirty(MEMORY_STREAM_ID)).toBe(false)
   })
 
-  it('reverse-projects gadget stream into flags.gadgetstore', () => {
+  it('reverse-projects gadget stream into flags[pid_gadget]', () => {
     const pidHost = 'pid_1111_hostgadget'
     const main = makebook({
       id: 'main-id',
       name: 'main',
       flags: {
-        [MEMORY_LABEL.GADGETSTORE]: {
-          [pidHost]: { id: 'a', board: '', boardname: '' },
+        [creategadgetmemid(pidHost)]: {
+          id: 'a',
+          board: '',
+          boardname: '',
         },
         [pidHost]: { board: 'boardA' },
       } as unknown as BOOK['flags'],
@@ -159,14 +162,12 @@ describe('memorysyncreverseproject', () => {
     })
 
     const book = memoryreadbookbyaddress('main-id')
-    const gadgetstore = book?.flags[MEMORY_LABEL.GADGETSTORE] as Record<
+    const row = book?.flags[creategadgetmemid(pidHost)] as Record<
       string,
       unknown
     >
-    expect((gadgetstore[pidHost] as Record<string, unknown>).id).toBe('g2')
-    expect((gadgetstore[pidHost] as Record<string, unknown>).boardname).toBe(
-      'X',
-    )
+    expect(row.id).toBe('g2')
+    expect(row.boardname).toBe('X')
     expect(memoryhasdirty(gadgetstream(pidHost))).toBe(false)
   })
 

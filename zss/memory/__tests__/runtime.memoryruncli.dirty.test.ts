@@ -38,10 +38,6 @@ jest.mock('tone', () => ({
   Time: class TimeMock {},
 }))
 
-jest.mock('zss/lang/generator', () => ({
-  compile: () => ({ labels: {} }),
-}))
-
 function makeboard(id: string): BOARD {
   return {
     id,
@@ -78,7 +74,7 @@ function makebook(opts: {
 }
 
 describe('memoryruncli jsonsync dirty streams', () => {
-  const pid = 'p_cli_dirty'
+  const pid = 'pid_0001_cli000000000000'
   const pageid = 'cp_board_cli'
 
   function setupPlayerOnBoard() {
@@ -109,27 +105,23 @@ describe('memoryruncli jsonsync dirty streams', () => {
     memorydirtyclear()
   })
 
-  it('marks board and flags streams after #set for custom player flag', () => {
+  it('marks player flags stream after #set for custom player flag', () => {
     setupPlayerOnBoard()
     memorydirtyclear()
 
     memoryruncli(pid, '#set mycustom 42', false)
 
     const dirty = memoryconsumealldirty()
-    expect(dirty).toEqual(
-      expect.arrayContaining([flagsstream(pid), boardstream(pageid)]),
-    )
+    expect(dirty).toEqual(expect.arrayContaining([flagsstream(pid)]))
   })
 
-  it('marks board and flags streams after #color (element mutation)', () => {
+  it('marks board stream after #color (element mutation)', () => {
     setupPlayerOnBoard()
     memorydirtyclear()
 
     memoryruncli(pid, '#color red', false)
 
     const dirty = memoryconsumealldirty()
-    expect(dirty).toEqual(
-      expect.arrayContaining([flagsstream(pid), boardstream(pageid)]),
-    )
+    expect(dirty).toEqual(expect.arrayContaining([boardstream(pageid)]))
   })
 })

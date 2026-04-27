@@ -137,15 +137,17 @@ function routechattoagents(
     const withlastinputtime = lastinputtime[agentid] ?? defaulttime
     const withpromptlogging = memoryreadconfig('promptlogging')
 
-    heavymodelprompt(vm, message.player, {
+    heavymodelprompt(
+      vm,
+      message.player,
       prompt,
       agentid,
       agentname,
+      withlastinputtime,
       nearestrefid,
       nearestrefname,
-      lastinputtime: withlastinputtime,
-      promptlogging: withpromptlogging,
-    })
+      withpromptlogging,
+    )
   }
 }
 

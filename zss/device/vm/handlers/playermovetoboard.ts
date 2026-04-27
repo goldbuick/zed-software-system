@@ -87,6 +87,6 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     // if we are not the new runner we need to
     // signal that we are no longer running the previous board
     const streams = memorysyncreplstreamidsforboardrunner(destboard)
-    boardrunnerowned(vm, player, destboard, streams)
+    boardrunnerowned(vm, player, [destboard, streams])
   }
 }

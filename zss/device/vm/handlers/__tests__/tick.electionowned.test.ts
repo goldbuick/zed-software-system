@@ -100,11 +100,9 @@ describe('handletick boardrunnerowned on new election', () => {
 
     handletick(vm, msg)
 
-    expect(owned).toHaveBeenCalledWith(
-      vm,
-      'joiner',
+    expect(owned).toHaveBeenCalledWith(vm, 'joiner', [
       'board-z',
       memorysync.memorysyncreplstreamidsforboardrunner('board-z'),
-    )
+    ])
   })
 })

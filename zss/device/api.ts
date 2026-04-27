@@ -17,7 +17,6 @@ import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { isgadgetstream } from 'zss/memory/memorydirty'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
@@ -179,13 +178,13 @@ export function boardrunnertick(
   device.emit(player, 'boardrunner:tick', timestamp)
 }
 
+/** Bus `boardrunner:ownedboard` `data` is `[boardId, streamIds]`. */
 export function boardrunnerowned(
   device: DEVICELIKE,
   player: string,
-  board: string,
-  streams: string[],
+  owned: readonly [string, string[]],
 ) {
-  device.emit(player, 'boardrunner:ownedboard', [board, streams])
+  device.emit(player, 'boardrunner:ownedboard', [...owned])
 }
 
 export function boardrunnergadgetclearscroll(
@@ -237,12 +236,13 @@ export function rxreplpullresponse(
   device.emit(player, 'rxreplclient:pull_response', payload)
 }
 
-/** Plain `document` for apply/persist; `gadget:*` rows are deep-cloned to a JSON snapshot. */
+/** Plain JSON snapshot for apply/persist and worker `postMessage` (structured clone). */
 export function rxreplrowdocument(row: RXREPL_PUSH_ROW): unknown {
-  if (isgadgetstream(row.streamid)) {
-    return JSON.parse(JSON.stringify(row.document))
+  const doc = row.document
+  if (doc === undefined) {
+    return undefined
   }
-  return row.document
+  return JSON.parse(JSON.stringify(doc)) as unknown
 }
 
 function rxreplpushrowsnormalized(rows: RXREPL_PUSH_ROW[]): RXREPL_PUSH_ROW[] {
@@ -314,28 +314,17 @@ export function heavyttsrequest(
   device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
 }
 
-type MODEL_PROMPT_ARGS = {
-  prompt: string
-  agentid: string
-  agentname: string
-  lastinputtime: number
-  nearestrefid: string
-  nearestrefname: string
-  promptlogging: string
-}
-
+/** Bus `heavy:modelprompt` `data` is `[prompt, agentid, agentname, lastinputtime, nearestrefid, nearestrefname, promptlogging]`. */
 export function heavymodelprompt(
   device: DEVICELIKE,
   player: string,
-  {
-    prompt,
-    agentid,
-    agentname,
-    lastinputtime,
-    nearestrefid,
-    nearestrefname,
-    promptlogging,
-  }: MODEL_PROMPT_ARGS,
+  prompt: string,
+  agentid: string,
+  agentname: string,
+  lastinputtime: number,
+  nearestrefid: string,
+  nearestrefname: string,
+  promptlogging: string,
 ) {
   device.emit(player, 'heavy:modelprompt', [
     prompt,
@@ -419,14 +408,13 @@ export function heavyrestoreagents(
   device.emit(player, 'heavy:restoreagents', roster)
 }
 
-/** Worker applies preset (dispose main generator). Use `{ toast: false }` after login restore. */
+/** Worker applies preset (dispose main generator). Pass `wantstoast: false` after login restore. */
 export function heavyllmpreset(
   device: DEVICELIKE,
   player: string,
   preset: HEAVY_LLM_PRESET,
-  options?: { toast?: boolean },
+  wantstoast = true,
 ) {
-  const wantstoast = options?.toast !== false
   device.emit(player, 'heavy:llmpreset', [preset, wantstoast])
 }
 
@@ -710,20 +698,34 @@ export function registerstore(
   device.emit(player, 'register:store', [name, value])
 }
 
+/** Bus `vm:pullvarresult` `data` is `[id, value]` or `[id, value, error]` (string `error` rejects the pending pull). */
 export function vmpullvarresult(
   device: DEVICELIKE,
   player: string,
-  data: { id: string; value?: unknown; error?: string },
+  id: string,
+  value: unknown,
+  error?: string,
 ) {
-  device.emit(player, 'vm:pullvarresult', data)
+  device.emit(
+    player,
+    'vm:pullvarresult',
+    error !== undefined ? [id, value, error] : [id, value],
+  )
 }
 
+/** Bus `heavy:pullvarresult` — same tuple shape as {@link vmpullvarresult}. */
 export function heavypullvarresult(
   device: DEVICELIKE,
   player: string,
-  data: { id: string; value?: unknown; error?: string },
+  id: string,
+  value: unknown,
+  error?: string,
 ) {
-  device.emit(player, 'heavy:pullvarresult', data)
+  device.emit(
+    player,
+    'heavy:pullvarresult',
+    error !== undefined ? [id, value, error] : [id, value],
+  )
 }
 
 export function registerbookmarkscroll(
@@ -786,12 +788,6 @@ export function registerbookmarkdelete(
   id: string,
 ) {
   device.emit(player, 'register:bookmark:delete', id)
-}
-
-export type GADGET_SCROLL_LINES = {
-  scrollname: string
-  content: string
-  chip?: string
 }
 
 export function vmbookmarkscroll(
@@ -1003,19 +999,14 @@ export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
 }
 
-/** Edge-triggered cross-board player move; handled on the authoritative VM. */
-export type VM_PLAYERMOVETOBOARD = {
-  board: string
-  dest: PT
-}
-
 /** Bus `data` is `[boardId, destPt]`. */
 export function vmplayermovetoboard(
   device: DEVICELIKE,
   player: string,
-  payload: VM_PLAYERMOVETOBOARD,
+  board: string,
+  dest: PT,
 ) {
-  device.emit(player, 'vm:playermovetoboard', [payload.board, payload.dest])
+  device.emit(player, 'vm:playermovetoboard', [board, dest])
 }
 
 // Phase 3 of the boardrunner authoritative-tick plan: emitted by
@@ -1062,12 +1053,20 @@ export function vmrefscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
 }
 
+/** Bus `vm:gadgetscroll` `data` is `[scrollname, content]` or `[scrollname, content, chip]`. */
 export function vmgadgetscroll(
   device: DEVICELIKE,
   player: string,
-  payload: GADGET_SCROLL_LINES,
+  scrollname: string,
+  content: string,
+  chip?: string,
 ) {
-  device.emit(player, 'vm:gadgetscroll', payload)
+  const trimmed = chip?.trim()
+  device.emit(
+    player,
+    'vm:gadgetscroll',
+    trimmed ? [scrollname, content, trimmed] : [scrollname, content],
+  )
 }
 
 export function vmreadzipfilelist(device: DEVICELIKE, player: string) {

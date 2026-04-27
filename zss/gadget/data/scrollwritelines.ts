@@ -2,7 +2,6 @@ import { iszedlinkline } from 'zss/feature/zsstextui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
-  gadgetmarkdirty,
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
@@ -109,5 +108,4 @@ export function scrollwritelines(
     }
   }
   shared.scroll = gadgetcheckqueue(player)
-  gadgetmarkdirty(player)
 }

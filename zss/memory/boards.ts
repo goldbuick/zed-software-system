@@ -28,6 +28,7 @@ import {
   memoryreadcodepagestat,
 } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
+import { memorymarkboarddirty } from './memorydirty'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -210,6 +211,7 @@ export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   }
   if (!isstring(board.over)) {
     delete board.overboard
+    memorymarkboarddirty(board)
     return undefined
   }
   if (isstring(board.overboard)) {
@@ -218,11 +220,13 @@ export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
       return maybeover
     }
     delete board.overboard
+    memorymarkboarddirty(board)
     return undefined
   }
   const maybeover = memoryreadboardbyaddress(board.over)
   if (ispresent(maybeover)) {
     board.overboard = maybeover.id
+    memorymarkboarddirty(board)
     return maybeover
   }
   return undefined
@@ -234,6 +238,7 @@ export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   }
   if (!isstring(board.under)) {
     delete board.underboard
+    memorymarkboarddirty(board)
     return undefined
   }
   if (isstring(board.underboard)) {
@@ -242,11 +247,13 @@ export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
       return maybeunder
     }
     delete board.underboard
+    memorymarkboarddirty(board)
     return undefined
   }
   const maybeunder = memoryreadboardbyaddress(board.under)
   if (ispresent(maybeunder)) {
     board.underboard = maybeunder.id
+    memorymarkboarddirty(board)
     return maybeunder
   }
   return undefined

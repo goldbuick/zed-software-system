@@ -1,5 +1,4 @@
 import { objectKeys } from 'ts-extras'
-import { createchipid } from 'zss/chip'
 import { MESSAGE, synthplay } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
@@ -22,13 +21,12 @@ import { memoryreadobject } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
-import { memoryreadcodepage } from './bookoperations'
+import { memoryreadcodepage, memorywritebookflag } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
-import { flagsstream, memorymarkdirty } from './memorydirty'
 import {
   memoryplayerflagsready,
   memoryreadbookplayerboards,
@@ -272,9 +270,7 @@ export function memorytickobject(
   // run chip code
   const id = object.id ?? ''
   const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
-  if (os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)) {
-    memorymarkdirty(flagsstream(createchipid(id)))
-  }
+  os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
 
   // clear ticker
   if (isnumber(object?.tickertime)) {
@@ -355,15 +351,9 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')
 
-  // Ensure `flags:${player}` is marked: flag-bag Proxy only maps ispid() ids to
-  // flags streams; display names / test ids still need this for gadget/repl.
-  memorymarkdirty(flagsstream(player))
-
   // track invoke
   if (tracking) {
-    const flags = memoryreadflags(player)
-    // track value of invoke
-    flags.playbuffer = cli
+    memorywritebookflag(mainbook, player, 'playbuffer', cli)
   }
 }
 

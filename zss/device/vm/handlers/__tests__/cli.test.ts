@@ -16,7 +16,7 @@ describe('handlecli', () => {
       .spyOn(runtime, 'memoryrepeatclilast')
       .mockImplementation(() => {})
     pushdirty = jest
-      .spyOn(memorysync, 'memorysyncpushdirty')
+      .spyOn(memorysync, 'memorypushsimsyncdirty')
       .mockImplementation(() => {})
   })
 

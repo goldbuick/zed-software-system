@@ -67,7 +67,7 @@ export function ensureboardrunnerelected(
 export function pickboardrunnerwinner(board: string): string | undefined {
   const players = memoryreadplayersfromboard(board)
   const operator = memoryreadoperator()
-  if (players.includes(operator)) {
+  if (players.includes(operator) && !skipboardrunners[operator]) {
     return operator
   }
   const [winner] = players
@@ -103,5 +103,5 @@ export function installboardrunner(
 
   // signal the winner is now running the board
   const streams = memorysyncreplstreamidsforboardrunner(board)
-  boardrunnerowned(vm, winner, board, streams)
+  boardrunnerowned(vm, winner, [board, streams])
 }

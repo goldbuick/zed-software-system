@@ -26,7 +26,6 @@ import { memorytrackingflagsbagid } from './boardflags'
 import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadflags } from './flags'
-import { flagsstream, memorymarkdirty } from './memorydirty'
 import {
   memorylistboardelementsbykind,
   memorypickboardnearestpt,
@@ -544,7 +543,6 @@ export function memoryevaldir(
           const elements = memorylistboardelementsbykind(board, kind)
           const trackingbagid = memorytrackingflagsbagid(board.id)
           const tracking = memoryreadflags(trackingbagid)
-          let didmutatetracking = false
           const [kindname, kindcolor] = kind
           const kindflag = [...(kindcolor ?? []), kindname].join('_')
           switch (selectmode) {
@@ -555,33 +553,25 @@ export function memoryevaldir(
                   const bindex = memoryboardelementindex(board, b)
                   return aindex - bindex
                 }).map(memoryreadidorindex)
-                didmutatetracking = true
               }
               break
             }
             case 'shuffle': {
               if (!ispresent(tracking[kindflag])) {
                 tracking[kindflag] = shuffle(elements).map(memoryreadidorindex)
-                didmutatetracking = true
               }
               break
             }
             case 'random': {
               tracking[kindflag] = [memoryreadidorindex(pick(elements))]
-              didmutatetracking = true
               break
             }
           }
           if (isarray(tracking[kindflag])) {
             const target = tracking[kindflag].shift() as string
-            didmutatetracking = true
             const element = memoryreadelementbyidorindex(board, target)
             if (tracking[kindflag].length < 1) {
               delete tracking[kindflag]
-              didmutatetracking = true
-            }
-            if (didmutatetracking) {
-              memorymarkdirty(flagsstream(trackingbagid))
             }
             return {
               dir,

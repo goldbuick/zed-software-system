@@ -2,29 +2,20 @@ import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
-import { gadgetstream, memorymarkdirty } from 'zss/memory/memorydirty'
+import { creategadgetmemid } from 'zss/memory/flagmemids'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
-// we store the gadget state in the main book flag
-// mainbook.flags[GADGETSTORE]
-gadgetstateprovider(
-  (player) => {
-    if (ispid(player)) {
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-      const gadgetstore = memoryreadbookflags(
-        mainbook,
-        MEMORY_LABEL.GADGETSTORE,
-      ) as any
-      let value = gadgetstore[player]
-      if (!ispresent(value)) {
-        gadgetstore[player] = value = initstate()
-        memorymarkdirty(gadgetstream(player))
-      }
-      return value
+// main book row `flags[${player}_gadget]` holds full GADGET_STATE
+gadgetstateprovider((player) => {
+  if (ispid(player)) {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const row = memoryreadbookflags(mainbook, creategadgetmemid(player)) as any
+    if (!ispresent(row.id)) {
+      Object.assign(row, initstate())
     }
+    return row
+  }
 
-    return initstate()
-  },
-  (player) => memorymarkdirty(gadgetstream(player)),
-)
+  return initstate()
+})

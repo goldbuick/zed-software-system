@@ -23,7 +23,7 @@ export async function runbookmarkcopytogame(
     return
   }
   // get code & content from codepage
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const { code, stats, ...content } = entry.codepage
   // create new codepage
   apitoast(

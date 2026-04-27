@@ -8,6 +8,7 @@ import {
   memoryapplyelementstats,
   memoryreadcodepagestatsfromtext,
 } from './codepageoperations'
+import { memorymarkboarddirty } from './memorydirty'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 // quick lookup utils
@@ -28,6 +29,7 @@ export function memorywriteboardnamed(
   }
   // object.id or terrain index
   board.named[name].add(element?.id ?? index ?? '')
+  memorymarkboarddirty(board)
 }
 
 export function memorywriteboardobjectlookup(
@@ -47,6 +49,7 @@ export function memorywriteboardobjectlookup(
     const y = object.y ?? 0
     board.lookup[x + y * BOARD_WIDTH] = object.id
   }
+  memorymarkboarddirty(board)
 }
 
 export function memorydeleteboardobjectnamedlookup(
@@ -80,6 +83,7 @@ export function memoryresetboardlookups(board: MAYBE<BOARD>) {
 
   // make sure lookup is created
   memoryinitboardlookup(board)
+  memorymarkboarddirty(board)
 }
 
 export function memoryinitboardlookup(board: MAYBE<BOARD>) {

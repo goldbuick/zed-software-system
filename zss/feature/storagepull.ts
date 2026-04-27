@@ -25,21 +25,15 @@ export function pullstoragevarfrommain(
 
 /** VM or heavy device handler: complete a pending `pullstoragevarfrommain` promise. */
 export function resolvestoragepullmessage(data: unknown): void {
-  if (!data || typeof data !== 'object') {
+  if (!isarray(data) || !isstring(data[0]) || !pending.has(data[0])) {
     return
   }
-  if (isarray(data)) {
-    return
-  }
-  const o = data as { id?: string; value?: unknown; error?: string }
-  if (!isstring(o.id) || !pending.has(o.id)) {
-    return
-  }
-  const entry = pending.get(o.id)!
-  pending.delete(o.id)
-  if (isstring(o.error)) {
-    entry.reject(new Error(o.error))
+  const id = data[0]
+  const entry = pending.get(id)!
+  pending.delete(id)
+  if (data.length >= 3 && isstring(data[2])) {
+    entry.reject(new Error(data[2]))
   } else {
-    entry.resolve(o.value)
+    entry.resolve(data.length >= 2 ? data[1] : undefined)
   }
 }

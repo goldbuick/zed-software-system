@@ -36,6 +36,11 @@ import {
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
+import {
+  memorymarkboarddirty,
+  memorymarkflagsrecorddirty,
+  memorymarkmemorydirty,
+} from './memorydirty'
 import { memoryhaltchip } from './runtime'
 import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
@@ -122,6 +127,9 @@ export function memorymoveplayertoboard(
   memorywritebookflag(book, player, 'entery', dest.y)
   memorywritebookplayerboard(book, player, destboard.id)
 
+  memorymarkboarddirty(currentboard)
+  memorymarkboarddirty(destboard)
+
   // we did move
   return true
 }
@@ -199,6 +207,7 @@ export function memorywritebookplayerboard(
     // ensure player is not listed as active
     book.activelist = book.activelist.filter((id) => id !== player)
   }
+  memorymarkmemorydirty()
 }
 
 export function memoryloginplayer(
@@ -235,6 +244,7 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
+    memorymarkflagsrecorddirty(player)
     return true
   }
 
@@ -310,6 +320,7 @@ export function memoryloginplayer(
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
+    memorymarkflagsrecorddirty(player)
     return true
   }
 
@@ -368,6 +379,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     if (isendgame) {
       const newflags = memoryreadbookflags(mainbook, remove)
       Object.assign(newflags, saveflags)
+      memorymarkflagsrecorddirty(remove)
     }
   }
 }

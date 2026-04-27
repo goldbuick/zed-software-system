@@ -43,7 +43,6 @@ describe('handletick boardrunner election', () => {
   beforeEach(() => {
     clearboardrunnerstate()
     session.memorywritefreeze(false)
-    jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
     jest.spyOn(api, 'boardrunnerowned').mockImplementation(() => {})
     jest.spyOn(api, 'boardrunnertick').mockImplementation(() => {})
     jest
@@ -103,7 +102,10 @@ describe('handletick boardrunner election', () => {
       'p1',
       'addr-a',
     )
-    expect(api.boardrunnerowned).toHaveBeenCalledWith(vm, 'p1', 'addr-a')
+    expect(api.boardrunnerowned).toHaveBeenCalledWith(vm, 'p1', [
+      'addr-a',
+      expect.any(Array),
+    ])
   })
 
   it('marks skip when the last ack timestamp is stale', () => {

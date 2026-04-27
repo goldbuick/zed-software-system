@@ -1,3 +1,4 @@
+import { creategadgetmemid, createsynthmemid } from 'zss/memory/flagmemids'
 import { BOOK_FLAGS } from 'zss/memory/types'
 
 import {
@@ -63,5 +64,60 @@ describe('mergeflagspreservingvolatile', () => {
       [],
     )
     expect(next[chipid]).toBeUndefined()
+  })
+
+  it('preserves pid_*_gadget when memory flags omit it but player is on activelist', () => {
+    const pid = 'pid_1_gg'
+    const gid = creategadgetmemid(pid)
+    const existing: Record<string, BOOK_FLAGS> = {
+      [pid]: { board: 'b1' },
+      [gid]: { id: 'g', board: 'b1', boardname: 'x' } as unknown as BOOK_FLAGS,
+    }
+    const next = mergeflagspreservingvolatile(
+      existing,
+      { [pid]: { board: 'b2' } },
+      [pid],
+    )
+    expect((next[gid] as unknown as { id: string }).id).toBe('g')
+  })
+
+  it('authoritative merge drops board_synth when omitted from incoming', () => {
+    const brd = 'brd_1_synthm'
+    const pid = 'pid_1_synthm'
+    const sid = createsynthmemid(brd)
+    const existing: Record<string, BOOK_FLAGS> = {
+      [pid]: { board: brd } as unknown as BOOK_FLAGS,
+      [sid]: { play: [] } as unknown as BOOK_FLAGS,
+    }
+    const next = mergeflagspreservingvolatile(
+      existing,
+      { [pid]: { board: brd, hp: 1 } } as Record<
+        string,
+        Record<string, unknown>
+      >,
+      [pid],
+      { kind: 'authoritative' },
+    )
+    expect(next[sid]).toBeUndefined()
+  })
+
+  it('worker merge keeps board_synth when assigned board matches and incoming omits it', () => {
+    const brd = 'brd_2_synthm'
+    const pid = 'pid_2_synthm'
+    const sid = createsynthmemid(brd)
+    const existing: Record<string, BOOK_FLAGS> = {
+      [pid]: { board: brd } as unknown as BOOK_FLAGS,
+      [sid]: { play: [['x', 1]] } as unknown as BOOK_FLAGS,
+    }
+    const next = mergeflagspreservingvolatile(
+      existing,
+      { [pid]: { board: brd, hp: 2 } } as Record<
+        string,
+        Record<string, unknown>
+      >,
+      [pid],
+      { kind: 'worker', preservesynthforboard: brd },
+    )
+    expect((next[sid] as unknown as { play: unknown }).play).toEqual([['x', 1]])
   })
 })

@@ -83,7 +83,6 @@ export function shouldforwardonpeer(message: MESSAGE): boolean {
 
 // sim space message gates
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function shouldforwardservertoclient(_message: MESSAGE): boolean {
   // send all for now, until we run into a problem
   return true
@@ -147,7 +146,6 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   return false
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function shouldforwardheavytoclient(_message: MESSAGE): boolean {
   return true
 }
@@ -179,7 +177,6 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
   return false
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function shouldforwardboardrunnertoclient(_message: MESSAGE): boolean {
   // send all for now, until we run into a problem
   return true

@@ -140,7 +140,6 @@ export enum MEMORY_LABEL {
   GAME = 'game',
   TITLE = 'title',
   PLAYER = 'player',
-  GADGETSTORE = 'gadgetstore',
 }
 
 // types

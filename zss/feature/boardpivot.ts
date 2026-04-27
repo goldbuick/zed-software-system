@@ -21,6 +21,7 @@ import {
   memoryreadelementstat,
 } from 'zss/memory/boards'
 import { memoryptwithinboard } from 'zss/memory/boardtransitions'
+import { memorymarkboarddirty } from 'zss/memory/memorydirty'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import {
   type BOARD,
@@ -508,6 +509,7 @@ export function boardpivotgroup(
   }
 
   memoryinitboard(targetboard)
+  memorymarkboarddirty(targetboard)
   return true
 }
 
@@ -561,6 +563,7 @@ export function boardpivot(
     )
   }
 
+  memorymarkboarddirty(targetboard)
   return true
 }
 

@@ -1,11 +1,9 @@
-import { createchipid } from 'zss/chip'
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadflags } from 'zss/memory/flags'
-import { flagsstream, memorymarkdirty } from 'zss/memory/memorydirty'
 import {
   memoryplayerflagsready,
   memoryreadplayerboard,
@@ -160,7 +158,5 @@ export function pilottick(vm: DEVICE): void {
       flags.inputqueue = []
     }
     flags.inputqueue.push([input, 0])
-    // need to mark as dirty
-    memorymarkdirty(flagsstream(createchipid(playerid)))
   }
 }

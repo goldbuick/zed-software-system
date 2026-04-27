@@ -62,7 +62,7 @@ Loaded in [`zss/simspace.ts`](../../simspace.ts); `createplatform(false, …)` s
 | `rxreplserver` | [`zss/device/rxreplserver.ts`](../rxreplserver.ts) | Handles **`rxreplserver:push_batch`**: merges accepted rows into canonical MEMORY via `memorysyncreverseproject` (`memory`, `board:*`, `flags:*`, `gadget:*`), then `rxstreamreplpublishfrommemory` (bump rev, fan out). Gadget rows may also fan out as `rxreplclient:gadget_row`. |
 | `user` | [`zss/device/user.ts`](../user.ts) 10–20 | Server-side `user:input` only (`handleuserinput`). |
 | `modem` (worker copy) | [`zss/device/modem.ts`](../modem.ts) | Second instance of the Yjs protocol in the sim worker. |
-| `gadgetmemoryprovider` | [`zss/device/gadgetmemoryprovider.ts`](../gadgetmemoryprovider.ts) | Backs `gadgetstate()` from `mainbook.flags[GADGETSTORE]` on sim. |
+| `gadgetmemoryprovider` | [`zss/device/gadgetmemoryprovider.ts`](../gadgetmemoryprovider.ts) | Backs `gadgetstate()` from `mainbook.flags[${playerId}_gadget]` on sim. |
 | `forward` | [`zss/simspace.ts`](../../simspace.ts) 14–17 | Forwards `shouldforwardservertoclient` to parent `postMessage`. |
 
 ### Stub worker (`stubspace`) — join only

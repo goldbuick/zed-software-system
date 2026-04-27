@@ -6,14 +6,17 @@ import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadcodepagestats } from 'zss/memory/codepageoperations'
 import {
-  BOOK,
-  BOOK_FLAGS,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-  MEMORY_LABEL,
-} from 'zss/memory/types'
+  GADGET_FLAGS_SUFFIX,
+  SYNTH_FLAGS_SUFFIX,
+  synthmemidstem,
+} from 'zss/memory/flagmemids'
+import { BOOK, BOOK_FLAGS, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 
 const CHIP_FLAGS_SUFFIX = '_chip'
+
+export type Mergesnapshotkind =
+  | { kind: 'authoritative' }
+  | { kind: 'worker'; preservesynthforboard: string | undefined }
 
 /** Top-level book fields merged from the wire `books[id]` record (hydrate + unproject). */
 export const BOOK_WIRE_SCALAR_KEYS = [
@@ -28,6 +31,7 @@ export function mergeflagspreservingvolatile(
   existing: Record<string, BOOK_FLAGS>,
   incoming: Record<string, Record<string, unknown>>,
   activelist: readonly string[],
+  mergekind: Mergesnapshotkind = { kind: 'authoritative' },
 ): Record<string, BOOK_FLAGS> {
   const seen = new Set<string>()
   const active = new Set(activelist)
@@ -99,7 +103,21 @@ export function mergeflagspreservingvolatile(
       ) {
         continue
       }
-      if (id === (MEMORY_LABEL.GADGETSTORE as string)) {
+      if (
+        isstring(id) &&
+        id.endsWith(GADGET_FLAGS_SUFFIX) &&
+        ispid(id.slice(0, -GADGET_FLAGS_SUFFIX.length)) &&
+        active.has(id.slice(0, -GADGET_FLAGS_SUFFIX.length))
+      ) {
+        continue
+      }
+      if (
+        mergekind.kind === 'worker' &&
+        isstring(id) &&
+        id.endsWith(SYNTH_FLAGS_SUFFIX) &&
+        mergekind.preservesynthforboard &&
+        synthmemidstem(id) === mergekind.preservesynthforboard
+      ) {
         continue
       }
       delete existing[id]

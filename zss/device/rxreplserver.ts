@@ -21,6 +21,7 @@ import {
 import {
   memorysyncensureboardregistered,
   memorysynclazyensurechipflagsstreamforpusher,
+  memorysynclazyensuresynthflagsstreamforpusher,
   memorysyncreverseproject,
 } from './vm/memorysimsync'
 
@@ -45,6 +46,15 @@ export const rxreplserverdevice = createdevice(
           if (
             !entry &&
             memorysynclazyensurechipflagsstreamforpusher(
+              row.streamid,
+              message.player,
+            )
+          ) {
+            entry = rxstreamreplserverreadstream(row.streamid)
+          }
+          if (
+            !entry &&
+            memorysynclazyensuresynthflagsstreamforpusher(
               row.streamid,
               message.player,
             )
@@ -93,6 +103,12 @@ export const rxreplserverdevice = createdevice(
           if (
             !entry &&
             memorysynclazyensurechipflagsstreamforpusher(streamid, player)
+          ) {
+            entry = rxstreamreplserverreadstream(streamid)
+          }
+          if (
+            !entry &&
+            memorysynclazyensuresynthflagsstreamforpusher(streamid, player)
           ) {
             entry = rxstreamreplserverreadstream(streamid)
           }

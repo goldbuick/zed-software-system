@@ -351,7 +351,7 @@ export const register = createdevice(
       case 'loginready':
         doasync(register, message.player, async () => {
           const storage = await storagereadvars()
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } =
             storage
           const config = await storagereadconfigall()
@@ -386,9 +386,7 @@ export const register = createdevice(
                 ? normalizeheavylmpreset(llmraw)
                 : undefined
             if (llmpresetstored) {
-              heavyllmpreset(register, myplayerid, llmpresetstored, {
-                toast: false,
-              })
+              heavyllmpreset(register, myplayerid, llmpresetstored, false)
             }
           })
         } else {
@@ -585,29 +583,17 @@ export const register = createdevice(
             const vars = await storagereadvars()
             const value = vars[key]
             if (channel === 'vm') {
-              vmpullvarresult(register, player, {
-                id,
-                value,
-              })
+              vmpullvarresult(register, player, id, value)
             } else {
-              heavypullvarresult(register, player, {
-                id,
-                value,
-              })
+              heavypullvarresult(register, player, id, value)
             }
           } catch (err) {
             const msg =
               err instanceof Error ? err.message : 'storagereadvars_failed'
             if (channel === 'vm') {
-              vmpullvarresult(register, player, {
-                id,
-                error: msg,
-              })
+              vmpullvarresult(register, player, id, undefined, msg)
             } else {
-              heavypullvarresult(register, player, {
-                id,
-                error: msg,
-              })
+              heavypullvarresult(register, player, id, undefined, msg)
             }
           }
         })

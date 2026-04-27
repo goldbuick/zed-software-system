@@ -94,7 +94,7 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 | `clock` | sim worker only | — | Emits `ticktock`, `second` |
 | `vm` | sim worker (real sim) | `ticktock`, `second` | Game VM, handlers under `vm/handlers/` |
 | `stub` (`name` **`vm`**) | stub worker only | — | Minimal stand-in for `vm` when using stubspace ([`stub.ts`](../stub.ts)) |
-| `gadgetmemoryprovider` | sim worker + boardrunner worker | — | Backs `gadgetstate()` from MEMORY `gadgetstore` flags ([`gadgetmemoryprovider.ts`](../gadgetmemoryprovider.ts)); replaces the old sim **`gadgetserver`** device |
+| `gadgetmemoryprovider` | sim worker + boardrunner worker | — | Backs `gadgetstate()` from MEMORY `${playerId}_gadget` flag rows ([`gadgetmemoryprovider.ts`](../gadgetmemoryprovider.ts)); replaces the old sim **`gadgetserver`** device |
 | `rxstreamreplserver` | sim worker only | — | Authoritative **`memory`** / **`board:*`** documents + rev; fans out `rxreplclient:stream_row` ([`rxstreamreplserver.ts`](../rxstreamreplserver.ts)) |
 | `rxreplserver` | sim worker only | — | Merges `rxreplserver:push_batch` into MEMORY + gadget rows ([`rxreplserver.ts`](../rxreplserver.ts)) |
 | `rxreplclient` | main thread + boardrunner worker | — | Client rxrepl + stream mirror + `jsonsync:changed` ([`rxreplclient.ts`](../rxreplclient.ts), [`userspace.ts`](../../userspace.ts), [`boardrunnerspace.ts`](../../boardrunnerspace.ts)) |

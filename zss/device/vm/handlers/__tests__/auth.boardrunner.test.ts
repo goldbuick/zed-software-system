@@ -62,8 +62,8 @@ describe('handlelogout board runner', () => {
     jest.useFakeTimers()
     jest.spyOn(api, 'vmclearscroll').mockImplementation(() => {})
     jest.spyOn(api, 'bridgehalt').mockImplementation(() => {})
-    jest.spyOn(api, 'apilog').mockImplementation(() => {})
-    jest.spyOn(api, 'registerloginready').mockImplementation(() => {})
+    jest.spyOn(api, 'apilog').mockImplementation(() => true)
+    jest.spyOn(api, 'registerloginready').mockImplementation(() => true)
     jest
       .spyOn(memorysync, 'memorysyncdropplayerfromall')
       .mockImplementation(() => {})
@@ -76,7 +76,12 @@ describe('handlelogout board runner', () => {
     jest
       .spyOn(memorysync, 'memorysyncrevokeboardrunner')
       .mockImplementation(() => {})
-    jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
+    jest
+      .spyOn(memorysync, 'memorypushsimsyncdirty')
+      .mockImplementation(() => {})
+    jest
+      .spyOn(memorysync, 'memorysyncreplstreamidsforboardrunner')
+      .mockReturnValue([])
     jest.spyOn(api, 'boardrunnerowned').mockImplementation(() => {})
   })
 
@@ -136,7 +141,10 @@ describe('handlelogin board runner', () => {
   beforeEach(() => {
     clearvmrunner()
     jest.clearAllMocks()
-    jest.spyOn(api, 'apilog').mockImplementation(() => {})
+    jest
+      .spyOn(playermanagement, 'memoryscanplayers')
+      .mockImplementation(() => {})
+    jest.spyOn(api, 'apilog').mockImplementation(() => true)
     jest
       .spyOn(memorysync, 'memorysyncensureloginreplstreams')
       .mockImplementation(() => {})
@@ -146,7 +154,12 @@ describe('handlelogin board runner', () => {
     jest
       .spyOn(memorysync, 'memorysyncrevokeboardrunner')
       .mockImplementation(() => {})
-    jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
+    jest
+      .spyOn(memorysync, 'memorypushsimsyncdirty')
+      .mockImplementation(() => {})
+    jest
+      .spyOn(memorysync, 'memorysyncreplstreamidsforboardrunner')
+      .mockReturnValue([])
     jest.spyOn(api, 'boardrunnerowned').mockImplementation(() => {})
     jest.spyOn(permissions, 'memoryistokenbanned').mockReturnValue(false)
   })

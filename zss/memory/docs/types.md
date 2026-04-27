@@ -28,7 +28,7 @@
 | BOOK_KEYS | id, name, timestamp, activelist, pages, flags |
 | CODE_PAGE_KEYS | id, code, board, object, terrain, charset, palette |
 | CODE_PAGE_TYPE | ERROR, LOADER, BOARD, OBJECT, TERRAIN, CHARSET, PALETTE |
-| MEMORY_LABEL | main, temp, title, player, gadgetstore |
+| MEMORY_LABEL | main, temp, title, player |
 
 ## Types
 

@@ -89,14 +89,8 @@ export function installe2ebridge(): void {
       vmcli(register, registerreadplayer(), line)
     },
     writetestscroll(name: string, content: string, chip?: string) {
-      const payload: { scrollname: string; content: string; chip?: string } = {
-        scrollname: name,
-        content,
-      }
-      if (chip?.trim()) {
-        payload.chip = chip.trim()
-      }
-      vmgadgetscroll(SOFTWARE, registerreadplayer(), payload)
+      const trimmed = chip?.trim()
+      vmgadgetscroll(SOFTWARE, registerreadplayer(), name, content, trimmed)
     },
     runinspect(p1: PT, p2: PT) {
       vminspect(SOFTWARE, registerreadplayer(), p1, p2)

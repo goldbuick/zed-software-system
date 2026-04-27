@@ -41,15 +41,12 @@ describe('scrollwritelines', () => {
 
   beforeEach(() => {
     playerstates.p1 = initstate()
-    gadgetstateprovider(
-      (player: string) => {
-        if (!playerstates[player]) {
-          playerstates[player] = initstate()
-        }
-        return playerstates[player]
-      },
-      () => {},
-    )
+    gadgetstateprovider((player: string) => {
+      if (!playerstates[player]) {
+        playerstates[player] = initstate()
+      }
+      return playerstates[player]
+    })
   })
 
   it('applies plain lines and scrollname', () => {

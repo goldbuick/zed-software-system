@@ -8,19 +8,33 @@ import {
 import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isarray,
+  isnumber,
+  ispresent,
+} from 'zss/mapping/types'
+import { createsynthmemid } from 'zss/memory/flagmemids'
 import { NAME } from 'zss/words/types'
 
-import { memoryreadbookflag, memorywritebookflag } from './bookoperations'
-import { flagsstream, memorymarkdirty } from './memorydirty'
+import { memoryreadbookflags } from './bookoperations'
 import { memoryreadbookbysoftware } from './session'
 import { MEMORY_LABEL } from './types'
 
-const SYNTH_STATE_FLAG = 'synthstate'
+export type SYNTH_PLAY = [string, number]
+
+/** Per-board `mainbook.flags[${board}_synth]` payload. */
+export type SYNTH_MEM_BAG = SYNTH_STATE & {
+  play: SYNTH_PLAY[]
+}
+
 const SYNTH_STATE_DEFAULT: SYNTH_STATE = {
   voices: {},
   voicefx: {},
 }
+
+const SYNTH_PLAY_DEFAULT: SYNTH_PLAY[] = []
 
 function mergevoicefxlayer(
   a: MAYBE<Record<string, Record<string, MAYBE<number | string>>>>,
@@ -58,26 +72,33 @@ function memorymigratelegacyvoicefx(cache: SYNTH_STATE) {
   cache.voicefx = next
 }
 
-function readsynthcacheinternal(board: string): SYNTH_STATE {
+function readsynthbaginternal(board: string): SYNTH_MEM_BAG {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const cache = memoryreadbookflag(
-    main,
-    SYNTH_STATE_FLAG,
-    board,
-  ) as MAYBE<SYNTH_STATE>
-  // use the cached synth state
-  if (ispresent(cache)) {
-    memorymigratelegacyvoicefx(cache)
-    return cache
+  const memid = createsynthmemid(board)
+  const bag = memoryreadbookflags(main, memid) as unknown as SYNTH_MEM_BAG
+  if (!ispresent(bag.voices) || typeof bag.voices !== 'object') {
+    bag.voices = deepcopy(SYNTH_STATE_DEFAULT.voices)
   }
-  // create a new synth state
-  const synthstate = deepcopy(SYNTH_STATE_DEFAULT)
-  memorywritebookflag(main, SYNTH_STATE_FLAG, board, synthstate as any)
-  return synthstate
+  if (!ispresent(bag.voicefx) || typeof bag.voicefx !== 'object') {
+    bag.voicefx = deepcopy(SYNTH_STATE_DEFAULT.voicefx)
+  }
+  if (!isarray(bag.play)) {
+    bag.play = deepcopy(SYNTH_PLAY_DEFAULT)
+  }
+  memorymigratelegacyvoicefx(bag)
+  return bag
+}
+
+function readsynthstateview(board: string): SYNTH_STATE {
+  const bag = readsynthbaginternal(board)
+  return {
+    voices: bag.voices,
+    voicefx: bag.voicefx,
+  }
 }
 
 export function memoryreadsynth(board: string): MAYBE<SYNTH_STATE> {
-  return readsynthcacheinternal(board)
+  return readsynthstateview(board)
 }
 
 export function memorymergesynthvoice(
@@ -86,7 +107,7 @@ export function memorymergesynthvoice(
   config: string,
   value: MAYBE<number | string>,
 ) {
-  const cache = readsynthcacheinternal(board)
+  const cache = readsynthbaginternal(board)
   if (NAME(config) === 'restart') {
     cache.voices = {}
     cache.voicefx = {}
@@ -105,7 +126,7 @@ export function memorymergesynthvoicefx(
   config: number | string,
   value: MAYBE<number | string>,
 ) {
-  const cache = readsynthcacheinternal(board)
+  const cache = readsynthbaginternal(board)
   const groupidx = String(canonicalvoicefxgroupindex(idx))
   if (!ispresent(cache.voicefx[groupidx])) {
     cache.voicefx[groupidx] = {}
@@ -130,24 +151,9 @@ export function memorymergesynthvoicefx(
   }
 }
 
-export type SYNTH_PLAY = [string, number]
-
-const SYNTH_PLAY_FLAG = 'synthplay'
-const SYNTH_PLAY_DEFAULT: SYNTH_PLAY[] = []
-
 function readsynthplayinternal(board: string): SYNTH_PLAY[] {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const queue = memoryreadbookflag(main, SYNTH_PLAY_FLAG, board) as MAYBE<
-    SYNTH_PLAY[]
-  >
-  // use queue state
-  if (ispresent(queue)) {
-    return queue
-  }
-  // create a new synth play queue
-  const synthplay = deepcopy(SYNTH_PLAY_DEFAULT)
-  memorywritebookflag(main, SYNTH_PLAY_FLAG, board, synthplay as any)
-  return synthplay
+  const bag = readsynthbaginternal(board)
+  return bag.play
 }
 
 export function memoryreadsynthplay(board: string): SYNTH_PLAY[] {
@@ -180,7 +186,6 @@ export function memoryqueuesynthplay(board: string, play: string) {
     const queue = readsynthplayinternal(board)
     queue.length = 0
     synthplay(SOFTWARE, '', board, '')
-    memorymarkdirty(flagsstream(SYNTH_PLAY_FLAG))
     return
   }
 
@@ -194,5 +199,4 @@ export function memoryqueuesynthplay(board: string, play: string) {
 
   const queue = readsynthplayinternal(board)
   queue.push([play, endtime])
-  memorymarkdirty(flagsstream(SYNTH_PLAY_FLAG))
 }

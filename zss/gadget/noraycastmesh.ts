@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Intersection, Raycaster } from 'three'
 
 /** Mesh/InstancedMesh raycast that registers no hits (pointer passes through to meshes behind). */

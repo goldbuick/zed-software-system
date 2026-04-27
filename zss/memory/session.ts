@@ -6,10 +6,21 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { memoryobserverootsession } from './memoryobserve'
+import { memorymarkmemorydirty } from './memorydirty'
 import { BOOK, MEMORY_LABEL } from './types'
 
-const MEMORY = memoryobserverootsession({
+export type MEMORY_ROOT = {
+  halt: boolean
+  freeze: boolean
+  session: string
+  operator: string
+  software: { main: string; game: string }
+  books: Map<string, BOOK>
+  loaders: Map<string, string>
+  topic: string
+}
+
+const MEMORY: MEMORY_ROOT = {
   halt: false,
   /** True while `vm:books` is async-loading; ticks should not advance sim state. */
   freeze: false,
@@ -19,7 +30,7 @@ const MEMORY = memoryobserverootsession({
   books: new Map<string, BOOK>(),
   loaders: new Map<string, string>(),
   topic: '',
-})
+}
 
 export function memoryreadloaders() {
   return MEMORY.loaders
@@ -46,6 +57,7 @@ export function memorywriteoperator(operator: string) {
     return
   }
   MEMORY.operator = operator
+  memorymarkmemorydirty()
 }
 
 export function memoryreadtopic() {
@@ -61,6 +73,7 @@ export function memorywritehalt(halt: boolean) {
     return
   }
   MEMORY.halt = halt
+  memorymarkmemorydirty()
 }
 
 export function memoryreadhalt() {
@@ -72,6 +85,7 @@ export function memorywritefreeze(frozen: boolean) {
     return
   }
   MEMORY.freeze = frozen
+  memorymarkmemorydirty()
 }
 
 export function memoryreadfreeze() {
@@ -106,6 +120,7 @@ export function memorywritesoftwarebook(
     return
   }
   MEMORY.software[slot] = book
+  memorymarkmemorydirty()
 }
 
 export function memoryreadbookbysoftware(
@@ -131,10 +146,12 @@ export function memoryresetbooks(books: BOOK[]) {
       MEMORY.software.main = first.value.id
     }
   }
+  memorymarkmemorydirty()
 }
 
 export function memorywritebook(book: BOOK) {
   MEMORY.books.set(book.id, book)
+  memorymarkmemorydirty()
   return book.id
 }
 
@@ -142,6 +159,7 @@ export function memoryclearbook(address: string) {
   const book = memoryreadbookbyaddress(address)
   if (book) {
     MEMORY.books.delete(book.id)
+    memorymarkmemorydirty()
   }
 }
 
@@ -157,17 +175,6 @@ export type SoftwareSlot = keyof typeof MEMORY.software
 // readonly accessor for the sync layer. returns the live MEMORY reference so
 // callers can deepcopy / project without circumventing the module boundary via
 // further writer apis. do NOT mutate the returned value directly.
-export type MEMORY_ROOT = {
-  halt: boolean
-  freeze: boolean
-  session: string
-  operator: string
-  software: { main: string; game: string }
-  books: Map<string, BOOK>
-  loaders: Map<string, string>
-  topic: string
-}
-
 export function memoryreadroot(): MEMORY_ROOT {
   return MEMORY
 }

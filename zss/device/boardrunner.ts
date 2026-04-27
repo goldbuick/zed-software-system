@@ -1,9 +1,5 @@
 import { createdevice } from 'zss/device'
-import {
-  gadgetclearscroll,
-  gadgetmarkdirty,
-  gadgetstate,
-} from 'zss/gadget/data/api'
+import { gadgetclearscroll, gadgetstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -12,13 +8,12 @@ import {
 } from 'zss/memory/boards'
 import { memoryreadflags } from 'zss/memory/flags'
 import {
-  flagsstream,
   isboardstream,
   isflagsstream,
   isgadgetstream,
   ismemorystream,
-  memorymarkdirty,
 } from 'zss/memory/memorydirty'
+import { memorysetmergesynthpreserveboard } from 'zss/memory/mergecontext'
 import {
   memoryplayerflagsready,
   memoryreadplayerboard,
@@ -40,6 +35,7 @@ import { BOARD, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { JSONSYNC_CHANGED, MESSAGE, vmclearscroll } from './api'
+import { rxreplclientreadstream } from './rxreplclient'
 import {
   dispatchpanelchipmessage,
   parsetargetaspanelchiproute,
@@ -98,12 +94,26 @@ function snapshotownedboards(assigned: string): Set<string> {
 function rebuildownedboardids() {
   ownedboards.clear()
   if (!assignedboard) {
+    memorysetmergesynthpreserveboard(undefined)
     return
   }
+  memorysetmergesynthpreserveboard(assignedboard)
   // flat list of board ids
   const next = [...snapshotownedboards(assignedboard)]
   for (let i = 0; i < next.length; ++i) {
     ownedboards.add(next[i])
+  }
+}
+
+/** After `ownedboard`, align the gate with rows already in the repl mirror (e.g. `:changed` ran before required streams were known). */
+function boardrunnerseedhydratedownedfromreplmirror(): void {
+  for (const streamid of requiredownedstreams) {
+    const row = rxreplclientreadstream(streamid)
+    if (!ispresent(row)) {
+      continue
+    }
+    memoryhydratefromjsonsync(streamid, row.document)
+    hydratedownedstreams.add(streamid)
   }
 }
 
@@ -174,7 +184,6 @@ function rendergadgetstate(players: string[]) {
       const gadget = gadgetstate(player)
       gadget.synthstate = synthstate
       rendergadgetlayers(gadget, player, board, gadgetlayers)
-      gadgetmarkdirty(player)
     }
   }
 }
@@ -221,7 +230,6 @@ function handleworkeruserinput(message: MESSAGE): void {
   if (input !== INPUT.NONE) {
     flags.inputqueue.push([input, mods])
   }
-  memorymarkdirty(flagsstream(message.player))
 }
 
 const boardrunner = createdevice(
@@ -234,6 +242,7 @@ const boardrunner = createdevice(
 
     // handle stream changed messages
     if (shouldboardrunnerhandlestreamchanged(message.target)) {
+      console.info('boardrunner:streamchanged', message.target)
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
       if (requiredownedstreams.has(payload.streamid)) {
@@ -286,6 +295,7 @@ const boardrunner = createdevice(
           }
           assignedboard = typeof board === 'string' ? board : String(board)
           rebuildownedboardids()
+          boardrunnerseedhydratedownedfromreplmirror()
         }
         break
       case 'clearscroll': {

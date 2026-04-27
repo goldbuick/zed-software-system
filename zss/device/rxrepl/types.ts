@@ -28,8 +28,8 @@ export type RXREPL_STREAM_DOCUMENT = {
 }
 
 /**
- * Push batch row. `document` is stream-specific (memory/board/flags payloads,
- * or `GADGET_STATE` for `gadget:*` streams — `rxreplrowdocument` snapshots those).
+ * Push batch row. `document` is stream-specific (memory/board/flags/gadget).
+ * {@link rxreplrowdocument} JSON-snapshots every row for replication and worker postMessage.
  */
 export type RXREPL_PUSH_ROW = {
   streamid: string

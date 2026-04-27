@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE, VM_PLAYERMOVETOBOARD } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
 import { handleplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
 import * as memorysync from 'zss/device/vm/memorysimsync'
@@ -15,6 +15,7 @@ import {
   memoryreadplayersfromboard,
 } from 'zss/memory/playermanagement'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
+import type { PT } from 'zss/words/types'
 
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
@@ -51,9 +52,11 @@ function clearvmrunner() {
   }
 }
 
+type playermovetoboardtestdata = { board: string; dest: PT }
+
 function makepayload(
-  overrides: Partial<VM_PLAYERMOVETOBOARD> = {},
-): VM_PLAYERMOVETOBOARD {
+  overrides: Partial<playermovetoboardtestdata> = {},
+): playermovetoboardtestdata {
   return {
     board: 'board-b',
     dest: { x: 10, y: 20 },
@@ -62,7 +65,7 @@ function makepayload(
 }
 
 function datafrompayload(
-  p: VM_PLAYERMOVETOBOARD,
+  p: playermovetoboardtestdata,
 ): [string, { x: number; y: number }] {
   return [p.board, p.dest]
 }
@@ -81,7 +84,12 @@ describe('handleplayermovetoboard', () => {
     jest
       .spyOn(memorysync, 'memorysyncrevokeboardrunner')
       .mockImplementation(() => {})
-    jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
+    jest
+      .spyOn(memorysync, 'memorysyncreplstreamidsforboardrunner')
+      .mockReturnValue([])
+    jest
+      .spyOn(memorysync, 'memorypushsimsyncdirty')
+      .mockImplementation(() => {})
     jest.spyOn(api, 'boardrunnerowned').mockImplementation(() => {})
   })
 

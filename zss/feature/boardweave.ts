@@ -11,6 +11,7 @@ import {
   memoryreadelementstat,
 } from 'zss/memory/boards'
 import { memoryptwithinboard } from 'zss/memory/boardtransitions'
+import { memorymarkboarddirty } from 'zss/memory/memorydirty'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { type BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -170,6 +171,7 @@ export function boardweave(
   // reset all lookups
   memoryinitboard(targetboard)
 
+  memorymarkboarddirty(targetboard)
   return true
 }
 
@@ -445,5 +447,6 @@ export function boardweavegroup(
 
   memoryinitboard(targetboard)
 
+  memorymarkboarddirty(targetboard)
   return true
 }

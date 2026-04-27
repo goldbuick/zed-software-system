@@ -12,6 +12,7 @@ import {
   memorytrackingflagsbagid,
 } from 'zss/memory/boardflags'
 import { memoryreadcodepagebyid } from 'zss/memory/codepages'
+import { createsynthmemid } from 'zss/memory/flagmemids'
 import {
   boardstream,
   flagsstream,
@@ -21,6 +22,7 @@ import {
   isflagsstream,
   isgadgetstream,
   ismemorystream,
+  issynthflagsstream,
   memoryconsumealldirty,
   memorymarkdirty,
   memorystream,
@@ -144,6 +146,23 @@ export function memorysynclazyensurechipflagsstreamforpusher(
   return ispresent(rxstreamreplserverreadstream(streamid))
 }
 
+/** Lazily register `flags:*_synth` and admit the pusher as writer (first push / pull). */
+export function memorysynclazyensuresynthflagsstreamforpusher(
+  streamid: string,
+  pusherplayer: string,
+): boolean {
+  if (!issynthflagsstream(streamid)) {
+    return false
+  }
+  const bagid = playerfromflagsstream(streamid)
+  if (!isstring(bagid) || !bagid) {
+    return false
+  }
+  memorysyncensureflagsregistered(bagid)
+  rxstreamreplserverensureplayeradmitted(streamid, pusherplayer, true)
+  return ispresent(rxstreamreplserverreadstream(streamid))
+}
+
 function memorysyncadmitchipflagsstreamsforboard(
   runner: string,
   boardaddress: string,
@@ -169,6 +188,25 @@ function memorysyncrevokechipflagsstreamsforboard(
   }
   rxstreamreplserverdropplayer(
     flagsstream(memorytrackingflagsbagid(boardaddress)),
+    runner,
+  )
+}
+
+function memorysyncadmitsynthflagsforboard(
+  runner: string,
+  boardaddress: string,
+) {
+  const bagid = createsynthmemid(boardaddress)
+  memorysyncensureflagsregistered(bagid)
+  rxstreamreplserverensureplayeradmitted(flagsstream(bagid), runner, true)
+}
+
+function memorysyncrevokesynthflagsforboard(
+  runner: string,
+  boardaddress: string,
+) {
+  rxstreamreplserverdropplayer(
+    flagsstream(createsynthmemid(boardaddress)),
     runner,
   )
 }
@@ -203,6 +241,7 @@ export function memorysyncadmitboardrunner(
   memorysyncadmitboardstream(runner, boardaddress)
   memorysyncadmitflagsstreamsforboard(runner, players)
   memorysyncadmitchipflagsstreamsforboard(runner, boardaddress)
+  memorysyncadmitsynthflagsforboard(runner, boardaddress)
   memorysyncadmitgadgetstreamsforboard(runner, players)
 }
 
@@ -227,6 +266,7 @@ export function memorysyncreplstreamidsforboardrunner(
     out.push(flagsstream(chipmemids[i]))
   }
   out.push(flagsstream(memorytrackingflagsbagid(boardaddress)))
+  out.push(flagsstream(createsynthmemid(boardaddress)))
   for (let i = 0; i < players.length; ++i) {
     out.push(gadgetstream(players[i]))
   }
@@ -241,14 +281,18 @@ export function memorysyncrevokeboardrunner(
   memorysyncrevokeboardstream(runner, boardaddress)
   memorysyncrevokeflagswritersforboard(runner, players)
   memorysyncrevokechipflagsstreamsforboard(runner, boardaddress)
+  memorysyncrevokesynthflagsforboard(runner, boardaddress)
   memorysyncrevokegadgetwritersforboard(runner, players)
 }
 
 // OTHER
 
 export function memorysyncensureloginreplstreams(player: string): void {
-  // admit the memory stream
   memorysyncadmitstream(player)
+  memorysyncensureflagsregistered(player)
+  memorysyncensuregadgetregistered(player)
+  rxstreamreplserverensureplayeradmitted(flagsstream(player), player, true)
+  rxstreamreplserverensureplayeradmitted(gadgetstream(player), player, true)
 }
 
 // Full logout cleanup: drop the player from every stream, including the

@@ -261,10 +261,7 @@ export function memorymoveobject(
           pid.length > 0 &&
           memorymoveplayertoboard(book, pid, edgeexit.exitboard, edgeexit.dest)
         ) {
-          vmplayermovetoboard(SOFTWARE, pid, {
-            board: edgeexit.exitboard,
-            dest: edgeexit.dest,
-          })
+          vmplayermovetoboard(SOFTWARE, pid, edgeexit.exitboard, edgeexit.dest)
         } else {
           memorysendtoelement(blocked, element, 'thud')
         }

@@ -16,8 +16,15 @@ Reverse-projection (server applying an accepted clientpatch back into MEMORY)
 must not falsely re-mark the just-applied stream as dirty — that would create
 a feedback loop where the server immediately re-pushes the same change.  
  */
+import { ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import {
+  CHIP_FLAGS_SUFFIX,
+  GADGET_FLAGS_SUFFIX,
+  SYNTH_FLAGS_SUFFIX,
+  TRACKING_FLAGS_SUFFIX,
+} from './flagmemids'
 import type { BOARD } from './types'
 
 export function memorystream(): string {
@@ -87,6 +94,15 @@ export function ischipflagsstream(stream: string): boolean {
   return suffix.length > 0 && suffix.endsWith('_chip')
 }
 
+/** Repl stream for `mainbook.flags[${boardId}_synth]` (see `createsynthmemid`). */
+export function issynthflagsstream(stream: string): boolean {
+  if (!isflagsstream(stream)) {
+    return false
+  }
+  const suffix = playerfromflagsstream(stream)
+  return suffix.length > 0 && suffix.endsWith(SYNTH_FLAGS_SUFFIX)
+}
+
 export function boardstreamfromboarddata(board: MAYBE<BOARD>): string {
   if (!ispresent(board) || !board.id) {
     return ''
@@ -112,6 +128,60 @@ export function memorymarkboarddirty(board: MAYBE<BOARD>): void {
   const stream = boardstreamfromboarddata(board)
   if (stream) {
     memorymarkdirty(stream)
+  }
+}
+
+/** Repl: mark `board:<id>` after board graph mutations. */
+export function memorymarkboardiddirty(boardid: string): void {
+  if (boardid) {
+    memorymarkdirty(boardstream(boardid))
+  }
+}
+
+/**
+ * Repl: mark the correct stream after `mainbook.flags[flagkey]` top-level add/replace/remove
+ * (bag id is `flagkey`: pid, *_gadget, *_synth, *_chip, *_tracking, etc.).
+ */
+export function memorymarkflagsrecorddirty(flagkey: PropertyKey): void {
+  const ks = String(flagkey)
+  if (ks.endsWith(GADGET_FLAGS_SUFFIX)) {
+    const stem = ks.slice(0, -GADGET_FLAGS_SUFFIX.length)
+    if (ispid(stem)) {
+      memorymarkdirty(gadgetstream(stem))
+    } else {
+      memorymarkmemorydirty()
+    }
+    return
+  }
+  if (ks.endsWith(SYNTH_FLAGS_SUFFIX)) {
+    memorymarkdirty(flagsstream(ks))
+    return
+  }
+  if (ks.endsWith(CHIP_FLAGS_SUFFIX)) {
+    memorymarkdirty(flagsstream(ks))
+    return
+  }
+  if (ks.endsWith(TRACKING_FLAGS_SUFFIX)) {
+    memorymarkdirty(flagsstream(ks))
+    return
+  }
+  if (ispid(ks)) {
+    memorymarkdirty(flagsstream(ks))
+  } else {
+    memorymarkmemorydirty()
+  }
+}
+
+/**
+ * After mutating `book.flags[outerkey][prop]` — marks flags stream(s); player `board` field also bumps `memory`.
+ */
+export function memorymarkbookflagcelldirty(
+  outerkey: string,
+  prop: PropertyKey,
+): void {
+  memorymarkflagsrecorddirty(outerkey)
+  if (ispid(String(outerkey)) && String(prop) === 'board') {
+    memorymarkmemorydirty()
   }
 }
 

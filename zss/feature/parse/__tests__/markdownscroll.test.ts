@@ -6,7 +6,6 @@ import {
 } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { GADGET_STATE } from 'zss/gadget/data/types'
-import { noop } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
 jest.mock('zss/device/modem', () => ({
@@ -48,7 +47,7 @@ describe('parsemarkdownforscroll', () => {
         playerstates[player] = initstate()
       }
       return playerstates[player]
-    }, noop)
+    })
   })
 
   it('emits bang rows so multi-word href becomes multiple hyperlink words', () => {
@@ -151,7 +150,7 @@ describe('scrollwritelines zed body', () => {
         playerstates[player] = initstate()
       }
       return playerstates[player]
-    }, noop)
+    })
   })
 
   it('refscroll menu: !command;label lines become hyperlink rows', () => {

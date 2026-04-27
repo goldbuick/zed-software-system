@@ -1,4 +1,4 @@
-import { CHIP, createchipid } from 'zss/chip'
+import { CHIP } from 'zss/chip'
 import {
   apitoast,
   heavyagentsyncuserdisplay,
@@ -36,10 +36,13 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
+import {
+  memoryreadelementdisplay,
+  memorywritebookflag,
+} from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtolog } from 'zss/memory/gamesend'
-import { flagsstream, memorymarkdirty } from 'zss/memory/memorydirty'
+import { memorymarkboarddirty } from 'zss/memory/memorydirty'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'
 import {
@@ -239,9 +242,6 @@ function readinput(
     const [check] = item as [INPUT, number]
     return check !== INPUT.NONE && check !== input
   })
-
-  // need to mark as dirty
-  memorymarkdirty(flagsstream(createchipid(player)))
 
   return flags
 }
@@ -636,6 +636,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         if (ispresent(READ_CONTEXT.element)) {
           // yes this means you can write #set senderid <something>
           READ_CONTEXT.element.sender = value
+          memorymarkboarddirty(READ_CONTEXT.board)
         }
         return [true, value]
       case 'senderx':
@@ -705,6 +706,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
                 READ_CONTEXT.element[statname as keyof BOARD_ELEMENT] = value
                 break
             }
+            memorymarkboarddirty(READ_CONTEXT.board)
           }
           return [true, value]
         }
@@ -713,9 +715,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // fallback to player flags
-    const flags = memoryreadflags(player)
-    if (ispresent(flags)) {
-      flags[name] = value
+    if (ispresent(READ_CONTEXT.book)) {
+      memorywritebookflag(READ_CONTEXT.book, player, name, value as WORD)
       // sticky flags
       switch (name) {
         case 'user': {
@@ -729,7 +730,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
           break
         }
       }
-      memorymarkdirty(flagsstream(player))
       return [true, value]
     }
 
@@ -912,6 +912,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
             const element = memoryreadelement(board, target)
             if (ispresent(element)) {
               memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
+              memorymarkboarddirty(board)
             } else {
               anyfailed = true
             }
@@ -924,6 +925,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         const element = memoryreadelement(board, dest.destpt)
         if (ispresent(element)) {
           memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
+          memorymarkboarddirty(board)
           chip.set('didfail', 0)
         } else {
           chip.set('didfail', 1)
@@ -933,6 +935,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         const [colorvalue] = readargs(words, 0, [ARG_TYPE.COLOR])
         if (ispresent(READ_CONTEXT.element) && ispresent(colorvalue)) {
           memoryapplyboardelementcolor(READ_CONTEXT.element, colorvalue)
+          memorymarkboarddirty(READ_CONTEXT.board)
           chip.set('didfail', 0)
         } else {
           chip.set('didfail', 1)

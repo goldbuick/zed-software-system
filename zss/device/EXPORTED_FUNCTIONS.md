@@ -229,7 +229,7 @@ Functions for managing gadget (UI) state: elected **boardrunner** workers diff g
 
 ### Boardrunner gadget operations
 - `boardrunnergadgetdesync(device, player)` - Force full gadget paint from the boardrunner
-- `boardrunnergadgetclearscroll(device, player)` - Clear scroll (boardrunner worker mutates gadgetstore + `vm:clearscroll`)
+- `boardrunnergadgetclearscroll(device, player)` - Clear scroll (boardrunner worker mutates `${playerId}_gadget` + `vm:clearscroll`)
 
 ### Client Operations
 - `gadgetclientpaint(device, player, json)` - Paint full gadget state (desync)

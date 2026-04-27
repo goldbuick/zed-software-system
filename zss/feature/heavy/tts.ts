@@ -145,7 +145,7 @@ export async function requestaudiobytes(
               streamer as AsyncIterable<string>,
               { voice: supertonicvoice },
             )
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
             for await (const _ of stream) {
               apitoast(device, player, 'supertonic reading...')
             }
@@ -197,7 +197,7 @@ export async function requestaudiobytes(
             const stream = pipertts!.stream(streamer, {
               speakerId: parseFloat(voice),
             })
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
             for await (const _ of stream) {
               apitoast(device, player, `${engine} reading...`)
             }
