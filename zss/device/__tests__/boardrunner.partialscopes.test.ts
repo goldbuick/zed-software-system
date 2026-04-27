@@ -267,4 +267,100 @@ describe('boardrunner ownedboard tuple and hydration gate', () => {
     expect(jest.mocked(runtime.memorytickmain)).toHaveBeenCalledTimes(1)
     expect(jest.mocked(pilot.pilottick)).toHaveBeenCalledTimes(1)
   })
+
+  it('hydration gate passes after rxreplclient:hydrated when mirror has rows but no :changed', () => {
+    const trackingbagid = memorytrackingflagsbagid(boardaddr)
+    const boardpage = {
+      id: boardaddr,
+      code: `@board ${boardaddr}\n`,
+      stats: { type: CODE_PAGE_TYPE.BOARD },
+      board: {
+        id: boardaddr,
+        name: boardaddr,
+        terrain: [],
+        objects: {
+          p1: {
+            id: 'p1',
+            x: 1,
+            y: 1,
+            kind: '',
+            code: '',
+            char: 2,
+            color: 15,
+            bg: 0,
+            cycle: 1,
+          },
+        },
+      },
+    }
+    session.memoryresetbooks([
+      {
+        id: 'main-gate-hydrated',
+        name: 'main',
+        timestamp: 0,
+        activelist: ['p1'],
+        pages: [boardpage],
+        flags: {
+          p1: { board: boardaddr },
+        },
+      },
+    ])
+    session.memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-gate-hydrated')
+
+    const streamsroster = memorysyncreplstreamidsforboardrunner(boardaddr)
+
+    hub.invoke(createmessage('ses_br_pscope', 'p1', 'vm', 'ready', undefined))
+    hub.invoke(
+      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:ownedboard', [
+        boardaddr,
+        streamsroster,
+      ]),
+    )
+
+    hub.invoke(
+      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:tick', 1),
+    )
+    expect(jest.mocked(runtime.memorytickmain)).not.toHaveBeenCalled()
+    expect(jest.mocked(pilot.pilottick)).not.toHaveBeenCalled()
+
+    for (let i = 0; i < streamsroster.length; ++i) {
+      const sid = streamsroster[i]
+      let document: Record<string, unknown>
+      if (isboardstream(sid)) {
+        document = {
+          code: boardpage.code,
+          board: boardpage.board as Record<string, unknown>,
+        }
+      } else if (isflagsstream(sid)) {
+        if (sid === flagsstream('p1')) {
+          document = { board: boardaddr }
+        } else if (sid === flagsstream(trackingbagid)) {
+          document = { tick: 1 }
+        } else {
+          document = { ec: 77, lb: [] }
+        }
+      } else if (isgadgetstream(sid)) {
+        document = initstate() as unknown as Record<string, unknown>
+      } else {
+        continue
+      }
+      streamreplmirrorsetnonotify(sid, { document, rev: 1 })
+    }
+
+    hub.invoke(
+      createmessage(
+        'ses_br_pscope',
+        '',
+        'vm',
+        'boardrunner:rxreplclient:hydrated',
+        undefined,
+      ),
+    )
+
+    hub.invoke(
+      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:tick', 2),
+    )
+    expect(jest.mocked(runtime.memorytickmain)).toHaveBeenCalledTimes(1)
+    expect(jest.mocked(pilot.pilottick)).toHaveBeenCalledTimes(1)
+  })
 })

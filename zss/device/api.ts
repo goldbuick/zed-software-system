@@ -208,6 +208,15 @@ export function streamsyncchanged(
   device.emit('', `${payload.streamid}:changed`, payload)
 }
 
+/**
+ * After `streamreplclienthydratemapmissing` fills the hot mirror map from RxDB,
+ * boardrunner may still be waiting on owned streams that never emit `:changed`.
+ * Delivers `rxreplclient:hydrated` to the boardrunner device (path after `boardrunner:`).
+ */
+export function rxreplclienthydratednotify(device: DEVICELIKE) {
+  device.emit('', 'boardrunner:rxreplclient:hydrated', undefined)
+}
+
 /** Sim → client: full memory or board stream document + rev. */
 export function rxreplclientstreamrow(
   device: DEVICELIKE,

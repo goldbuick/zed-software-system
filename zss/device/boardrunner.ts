@@ -252,6 +252,12 @@ const boardrunner = createdevice(
       return
     }
 
+    if (message.target === 'rxreplclient:hydrated') {
+      boardrunnerseedhydratedownedfromreplmirror()
+      rebuildownedboardids()
+      return
+    }
+
     // filter messages by assignedplayer
     if (message.player !== assignedplayer) {
       return

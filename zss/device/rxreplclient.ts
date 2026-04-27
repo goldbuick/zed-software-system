@@ -1,7 +1,7 @@
 import { createdevice, parsetarget } from 'zss/device'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
-import { type MESSAGE } from './api'
+import { type MESSAGE, rxreplclienthydratednotify } from './api'
 import {
   type STREAMREPL_CLIENT_STREAM,
   streamreplclienthydratemapmissing,
@@ -229,6 +229,7 @@ streamreplregisterreplicationboardnotify(notifyRxreplBoardRowApplied)
 
 void streamreplensureclientdb().then(async () => {
   await streamreplclienthydratemapmissing()
+  rxreplclienthydratednotify(rxreplclientdevice)
   // `replicateRxCollection` leaves Rx subscriptions open; skip in Jest unless opted in.
   if (
     typeof process === 'undefined' ||
