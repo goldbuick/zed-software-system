@@ -1,10 +1,5 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
-import {
-  createnameid,
-  createshortnameid,
-  createsid,
-  ispid,
-} from 'zss/mapping/guid'
+import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
@@ -19,11 +14,6 @@ import {
   memoryreadcodepagestats,
   memoryreadcodepagetype,
 } from './codepageoperations'
-import {
-  flagsstream,
-  memorymarkdirty,
-  memorymarkmemorydirty,
-} from './memorydirty'
 import {
   BOARD_ELEMENT,
   BOOK,
@@ -71,7 +61,6 @@ export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
         item.id !== address && laddress !== memoryreadcodepagename(item),
     )
     memoryupdatebooktoken(book)
-    memorymarkmemorydirty()
     return codepage
   }
 }
@@ -82,11 +71,6 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   }
   if (ispresent(book.flags[id])) {
     delete book.flags[id]
-    if (ispid(id)) {
-      memorymarkdirty(flagsstream(id))
-    } else {
-      memorymarkmemorydirty()
-    }
   }
 }
 
@@ -336,14 +320,12 @@ export function memorylistcodepagessorted(book: MAYBE<BOOK>) {
 export function memoryupdatebookname(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.name = createnameid()
-    memorymarkmemorydirty()
   }
 }
 
 export function memoryupdatebooktoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.token = `${createshortnameid()}${randominteger(1111, 9999)}`
-    memorymarkmemorydirty()
   }
 }
 
@@ -376,14 +358,6 @@ export function memorywritebookflag(
   if (flags) {
     if (flags[name] !== value) {
       flags[name] = value
-      if (ispid(id)) {
-        memorymarkdirty(flagsstream(id))
-        if (name === 'board') {
-          memorymarkmemorydirty()
-        }
-      } else {
-        memorymarkmemorydirty()
-      }
     }
   }
   return value

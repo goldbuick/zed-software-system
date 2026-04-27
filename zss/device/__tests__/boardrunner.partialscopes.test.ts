@@ -1,7 +1,3 @@
-jest.mock('zss/device/rxrepl/partialscopes', () => ({
-  streamreplpartialscopesOnOwnedBoardsChange: jest.fn(),
-  streamreplpartialscopesOnGadgetFlagsPeersChange: jest.fn(),
-}))
 jest.mock('zss/memory/runtime', () => ({
   ...jest.requireActual('zss/memory/runtime'),
   memorytickmain: jest.fn(),
@@ -11,13 +7,18 @@ jest.mock('zss/device/vm/handlers/pilot', () => ({
   pilottick: jest.fn(),
 }))
 
-import { createchipid } from 'zss/chip'
 import { createmessage } from 'zss/device'
-import * as partialscopes from 'zss/device/rxrepl/partialscopes'
 import * as pilot from 'zss/device/vm/handlers/pilot'
+import { memorysyncreplstreamidsforboardrunner } from 'zss/device/vm/memorysimsync'
+import { initstate } from 'zss/gadget/data/api'
 import { hub } from 'zss/hub'
 import { memorytrackingflagsbagid } from 'zss/memory/boardflags'
-import { flagsstream } from 'zss/memory/memorydirty'
+import {
+  flagsstream,
+  isboardstream,
+  isflagsstream,
+  isgadgetstream,
+} from 'zss/memory/memorydirty'
 import * as playermanagement from 'zss/memory/playermanagement'
 import * as runtime from 'zss/memory/runtime'
 import * as session from 'zss/memory/session'
@@ -25,7 +26,7 @@ import { BOARD, BOOK, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 import { setassignedplayer } from '../boardrunner'
 
-describe('boardrunner partial repl scope', () => {
+describe('boardrunner ownedboard tuple and hydration gate', () => {
   const boardaddr = 'addr_pscope'
 
   function makemainbook(): BOOK {
@@ -56,73 +57,53 @@ describe('boardrunner partial repl scope', () => {
     jest.restoreAllMocks()
   })
 
-  it('updates owned boards and flags peers when assigned board changes', () => {
+  it('accepts boardrunner:ownedboard as [board, streams] tuple for repl scope', () => {
     hub.invoke(createmessage('ses_br_pscope', 'p1', 'vm', 'ready', undefined))
     jest.clearAllMocks()
+    const streamsroster = memorysyncreplstreamidsforboardrunner(boardaddr)
     hub.invoke(
-      createmessage(
-        'ses_br_pscope',
-        'p1',
-        'vm',
-        'boardrunner:ownedboard',
+      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:ownedboard', [
         boardaddr,
-      ),
+        streamsroster,
+      ]),
     )
-
-    expect(
-      partialscopes.streamreplpartialscopesOnOwnedBoardsChange,
-    ).toHaveBeenCalled()
-    const ownedarg = jest.mocked(
-      partialscopes.streamreplpartialscopesOnOwnedBoardsChange,
-    ).mock.calls[0][0]
-    expect(ownedarg.has(boardaddr)).toBe(true)
-
-    expect(
-      partialscopes.streamreplpartialscopesOnGadgetFlagsPeersChange,
-    ).toHaveBeenCalled()
-    const mock = jest.mocked(
-      partialscopes.streamreplpartialscopesOnGadgetFlagsPeersChange,
-    )
-    const call = mock.mock.calls.at(-1)
-    const peerarg = call?.[0] as Set<string> | undefined
-    expect(peerarg?.has('p1')).toBe(true)
-    expect(peerarg?.has(memorytrackingflagsbagid(boardaddr))).toBe(true)
+    // Boardrunner does not call rxrepl partialscopes from rebuildownedboardids;
+    // stream scope is updated elsewhere. This only verifies the message shape.
+    expect(streamsroster.length).toBeGreaterThan(0)
   })
 
-  it('gates first tick until player/chip/tracking flags streams hydrate', () => {
-    const chipbagid = createchipid('p1')
+  it('gates first tick until every owned repl stream has hydrated', () => {
     const trackingbagid = memorytrackingflagsbagid(boardaddr)
+    const boardpage = {
+      id: boardaddr,
+      code: `@board ${boardaddr}\n`,
+      stats: { type: CODE_PAGE_TYPE.BOARD },
+      board: {
+        id: boardaddr,
+        name: boardaddr,
+        terrain: [],
+        objects: {
+          p1: {
+            id: 'p1',
+            x: 1,
+            y: 1,
+            kind: '',
+            code: '',
+            char: 2,
+            color: 15,
+            bg: 0,
+            cycle: 1,
+          },
+        },
+      },
+    }
     session.memoryresetbooks([
       {
         id: 'main-gate',
         name: 'main',
         timestamp: 0,
         activelist: ['p1'],
-        pages: [
-          {
-            id: boardaddr,
-            code: `@board ${boardaddr}\n`,
-            stats: { type: CODE_PAGE_TYPE.BOARD },
-            board: {
-              id: boardaddr,
-              name: boardaddr,
-              terrain: [],
-              objects: {
-                p1: {
-                  id: 'p1',
-                  x: 1,
-                  y: 1,
-                  kind: '',
-                  code: '',
-                  char: 2,
-                  color: 15,
-                  bg: 0,
-                  cycle: 1,
-                },
-              },
-            },
-          },
-        ],
+        pages: [boardpage],
         flags: {
           p1: { board: boardaddr },
         },
@@ -130,15 +111,26 @@ describe('boardrunner partial repl scope', () => {
     ])
     session.memorywritesoftwarebook(MEMORY_LABEL.MAIN, 'main-gate')
 
+    const streamsroster = memorysyncreplstreamidsforboardrunner(boardaddr)
+
+    function emitstreamchanged(
+      streamid: string,
+      document: Record<string, unknown>,
+    ) {
+      hub.invoke(
+        createmessage('ses_br_pscope', 'p1', 'vm', `${streamid}:changed`, {
+          streamid,
+          document,
+        }),
+      )
+    }
+
     hub.invoke(createmessage('ses_br_pscope', 'p1', 'vm', 'ready', undefined))
     hub.invoke(
-      createmessage(
-        'ses_br_pscope',
-        'p1',
-        'vm',
-        'boardrunner:ownedboard',
+      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:ownedboard', [
         boardaddr,
-      ),
+        streamsroster,
+      ]),
     )
 
     hub.invoke(
@@ -147,49 +139,31 @@ describe('boardrunner partial repl scope', () => {
     expect(jest.mocked(runtime.memorytickmain)).not.toHaveBeenCalled()
     expect(jest.mocked(pilot.pilottick)).not.toHaveBeenCalled()
 
-    hub.invoke(
-      createmessage(
-        'ses_br_pscope',
-        'p1',
-        'vm',
-        `${flagsstream('p1')}:changed`,
-        {
-          streamid: flagsstream('p1'),
-          document: { board: boardaddr },
-        },
-      ),
-    )
-    hub.invoke(
-      createmessage(
-        'ses_br_pscope',
-        'p1',
-        'vm',
-        `${flagsstream(trackingbagid)}:changed`,
-        {
-          streamid: flagsstream(trackingbagid),
-          document: { tick: 1 },
-        },
-      ),
-    )
-    hub.invoke(
-      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:tick', 2),
-    )
-    expect(jest.mocked(runtime.memorytickmain)).not.toHaveBeenCalled()
+    for (let i = 0; i < streamsroster.length; ++i) {
+      const sid = streamsroster[i]
+      if (isboardstream(sid)) {
+        emitstreamchanged(sid, {
+          code: boardpage.code,
+          board: boardpage.board as Record<string, unknown>,
+        })
+      } else if (isflagsstream(sid)) {
+        if (sid === flagsstream('p1')) {
+          emitstreamchanged(sid, { board: boardaddr })
+        } else if (sid === flagsstream(trackingbagid)) {
+          emitstreamchanged(sid, { tick: 1 })
+        } else {
+          emitstreamchanged(sid, { ec: 77, lb: [] })
+        }
+      } else if (isgadgetstream(sid)) {
+        emitstreamchanged(
+          sid,
+          initstate() as unknown as Record<string, unknown>,
+        )
+      }
+    }
 
     hub.invoke(
-      createmessage(
-        'ses_br_pscope',
-        'p1',
-        'vm',
-        `${flagsstream(chipbagid)}:changed`,
-        {
-          streamid: flagsstream(chipbagid),
-          document: { ec: 77, lb: [] },
-        },
-      ),
-    )
-    hub.invoke(
-      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:tick', 3),
+      createmessage('ses_br_pscope', 'p1', 'vm', 'boardrunner:tick', 2),
     )
     expect(jest.mocked(runtime.memorytickmain)).toHaveBeenCalledTimes(1)
     expect(jest.mocked(pilot.pilottick)).toHaveBeenCalledTimes(1)

@@ -13,7 +13,6 @@ import type {
   RXREPL_RESYNC,
   RXREPL_STREAM_DOCUMENT,
 } from 'zss/device/rxrepl/types'
-import { memorysyncreplstreamidsforboardrunner } from 'zss/device/vm/memorysimsync'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'

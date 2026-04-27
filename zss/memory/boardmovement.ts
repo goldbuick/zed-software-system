@@ -133,7 +133,6 @@ export function memorymoveboardobject(
     // update object location
     movingelement.x = dest.x
     movingelement.y = dest.y
-    memorymarkboarddirty(board)
     return undefined
   }
 

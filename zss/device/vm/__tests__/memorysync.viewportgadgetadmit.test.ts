@@ -20,8 +20,8 @@ import { BOOK, CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 import { projectmemory } from '../memoryproject'
 import {
-  memorysyncadmitboardrunner,
   memorypushsimsyncdirty,
+  memorysyncadmitboardrunner,
 } from '../memorysimsync'
 import { ackboardrunners } from '../state'
 

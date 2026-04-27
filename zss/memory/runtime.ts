@@ -28,11 +28,7 @@ import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
-import {
-  flagsstream,
-  memorymarkboarddirty,
-  memorymarkdirty,
-} from './memorydirty'
+import { flagsstream, memorymarkdirty } from './memorydirty'
 import {
   memoryplayerflagsready,
   memoryreadbookplayerboards,
@@ -359,10 +355,8 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')
 
-  const board = memoryreadplayerboard(player)
-  if (ispresent(board)) {
-    memorymarkboarddirty(board)
-  }
+  // Ensure `flags:${player}` is marked: flag-bag Proxy only maps ispid() ids to
+  // flags streams; display names / test ids still need this for gadget/repl.
   memorymarkdirty(flagsstream(player))
 
   // track invoke

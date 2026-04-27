@@ -42,7 +42,9 @@ describe('handletick boardrunnerowned on new election', () => {
   beforeEach(() => {
     clearvmrunner()
     session.memorywritefreeze(false)
-    jest.spyOn(memorysync, 'memorysyncpushdirty').mockImplementation(() => {})
+    jest
+      .spyOn(memorysync, 'memorypushsimsyncdirty')
+      .mockImplementation(() => {})
     jest
       .spyOn(memorysync, 'memorysyncrevokeboardrunner')
       .mockImplementation(() => {})
@@ -98,6 +100,11 @@ describe('handletick boardrunnerowned on new election', () => {
 
     handletick(vm, msg)
 
-    expect(owned).toHaveBeenCalledWith(vm, 'joiner', 'board-z')
+    expect(owned).toHaveBeenCalledWith(
+      vm,
+      'joiner',
+      'board-z',
+      memorysync.memorysyncreplstreamidsforboardrunner('board-z'),
+    )
   })
 })

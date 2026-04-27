@@ -7,6 +7,7 @@ jest.mock('zss/device/vm/handlers/panelchipdispatch', () => ({
 
 import { createmessage } from 'zss/device'
 import * as panelchip from 'zss/device/vm/handlers/panelchipdispatch'
+import { memorysyncreplstreamidsforboardrunner } from 'zss/device/vm/memorysimsync'
 import { hub } from 'zss/hub'
 import * as playermanagement from 'zss/memory/playermanagement'
 import * as session from 'zss/memory/session'
@@ -41,7 +42,10 @@ describe('boardrunner panel chip messages', () => {
     jest.clearAllMocks()
     hub.invoke(createmessage(sessionid, 'p1', 'vm', 'ready', undefined))
     hub.invoke(
-      createmessage(sessionid, 'p1', 'vm', 'boardrunner:ownedboard', boardaddr),
+      createmessage(sessionid, 'p1', 'vm', 'boardrunner:ownedboard', [
+        boardaddr,
+        memorysyncreplstreamidsforboardrunner(boardaddr),
+      ]),
     )
     jest.mocked(panelchip.dispatchpanelchipmessage).mockClear()
   })

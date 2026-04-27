@@ -16,7 +16,6 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { netformatdecode, netformatencode } from 'zss/feature/netformat'
-import { streamrowreplicatespeergadgetorflags } from 'zss/feature/netterminalstreamrowpeer'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash, createsid } from 'zss/mapping/guid'

@@ -15,6 +15,7 @@ import {
   flagsstream,
   isboardstream,
   isflagsstream,
+  isgadgetstream,
   ismemorystream,
   memorymarkdirty,
 } from 'zss/memory/memorydirty'
@@ -58,7 +59,10 @@ function shouldboardrunnerhandlestreamchanged(target: string): boolean {
   }
   const stream = target.slice(0, -':changed'.length)
   return (
-    ismemorystream(stream) || isboardstream(stream) || isflagsstream(stream)
+    ismemorystream(stream) ||
+    isboardstream(stream) ||
+    isflagsstream(stream) ||
+    isgadgetstream(stream)
   )
 }
 
@@ -71,8 +75,8 @@ export function setassignedplayer(player: string) {
 
 /** Mid + optional over board id derived from `assignedboardid` + MEMORY. */
 const ownedboards = new Set<string>()
-const requiredflagstreams = new Set<string>()
-const hydratedflagstreams = new Set<string>()
+const requiredownedstreams = new Set<string>()
+const hydratedownedstreams = new Set<string>()
 
 function snapshotownedboards(assigned: string): Set<string> {
   const ids = new Set<string>()
@@ -103,13 +107,13 @@ function rebuildownedboardids() {
   }
 }
 
-function boardrunnerisflagshydrated(): boolean {
-  if (requiredflagstreams.size === 0) {
+function boardrunnerisownedstreamshydrated(): boolean {
+  if (requiredownedstreams.size === 0) {
     return true
   }
-  for (const streamid of requiredflagstreams) {
-    if (!hydratedflagstreams.has(streamid)) {
-      console.info('boardrunner:flagsnothydrated', streamid)
+  for (const streamid of requiredownedstreams) {
+    if (!hydratedownedstreams.has(streamid)) {
+      console.info('boardrunner:ownedstreamsnothydrated', streamid)
       return false
     }
   }
@@ -184,7 +188,7 @@ function runworkertick(timestamp: number): void {
   if (players.length === 0) {
     return
   }
-  if (!boardrunnerisflagshydrated()) {
+  if (!boardrunnerisownedstreamshydrated()) {
     return
   }
   perfmeasure('boardrunner:pilottick', () => {
@@ -222,7 +226,7 @@ function handleworkeruserinput(message: MESSAGE): void {
 
 const boardrunner = createdevice(
   'boardrunner',
-  ['user', 'memory', 'flags', 'board'],
+  ['user', 'memory', 'flags', 'board', 'gadget'],
   (message) => {
     if (!boardrunner.session(message)) {
       return
@@ -232,6 +236,9 @@ const boardrunner = createdevice(
     if (shouldboardrunnerhandlestreamchanged(message.target)) {
       const payload = message.data as JSONSYNC_CHANGED
       memoryhydratefromjsonsync(payload.streamid, payload.document)
+      if (requiredownedstreams.has(payload.streamid)) {
+        hydratedownedstreams.add(payload.streamid)
+      }
       rebuildownedboardids()
       return
     }
@@ -272,13 +279,12 @@ const boardrunner = createdevice(
       case 'ownedboard':
         if (isarray(message.data)) {
           const [board, streams] = message.data
-          // need to ensure the streams are hydrated
-          requiredflagstreams.clear()
+          hydratedownedstreams.clear()
+          requiredownedstreams.clear()
           for (let i = 0; i < streams.length; ++i) {
-            requiredflagstreams.add(streams[i])
+            requiredownedstreams.add(streams[i] as string)
           }
-          // assign the board and rebuild the owned boards
-          assignedboard = board
+          assignedboard = typeof board === 'string' ? board : String(board)
           rebuildownedboardids()
         }
         break

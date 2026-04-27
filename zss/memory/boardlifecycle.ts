@@ -19,7 +19,6 @@ import {
 } from './boardlookup'
 import { memoryreadelementstat } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
-import { memorymarkboarddirty } from './memorydirty'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -37,7 +36,6 @@ function createempty() {
 export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
   if (ispresent(board?.objects[id])) {
     delete board.objects[id]
-    memorymarkboarddirty(board)
     return true
   }
   return false
@@ -95,7 +93,6 @@ export function memorycreateboardobject(
   const object = deepcopy(from)
   object.id = object.id ?? createsid()
   board.objects[object.id] = object
-  memorymarkboarddirty(board)
   return board.objects[object.id]
 }
 
@@ -196,7 +193,6 @@ export function memorywriteterrain(
   const index = from.x + from.y * BOARD_WIDTH
   board.terrain[index] = terrain
   delete board.distmaps
-  memorymarkboarddirty(board)
   return board.terrain[index]
 }
 

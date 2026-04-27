@@ -15,7 +15,7 @@ Two moving parts:
 Reverse-projection (server applying an accepted clientpatch back into MEMORY)
 must not falsely re-mark the just-applied stream as dirty — that would create
 a feedback loop where the server immediately re-pushes the same change.  
-*/
+ */
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import type { BOARD } from './types'

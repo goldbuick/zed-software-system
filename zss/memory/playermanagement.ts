@@ -36,12 +36,6 @@ import {
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
-import {
-  flagsstream,
-  memorymarkboarddirty,
-  memorymarkdirty,
-  memorymarkmemorydirty,
-} from './memorydirty'
 import { memoryhaltchip } from './runtime'
 import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
@@ -113,13 +107,11 @@ export function memorymoveplayertoboard(
   memorydeleteboardobjectnamedlookup(currentboard, element)
   // hard remove player element
   delete currentboard.objects[element.id]
-  memorymarkboarddirty(currentboard)
 
   // add to dest board
   element.x = dest.x
   element.y = dest.y
   destboard.objects[element.id] = element
-  memorymarkboarddirty(destboard)
 
   // add to dest board lookups
   memorywriteboardnamed(destboard, element)
@@ -198,7 +190,6 @@ export function memorywritebookplayerboard(
 
   // determine if player is on a board
   const maybeboard = memoryreadboardbyaddress(board)
-  const before = book.activelist.length
   if (ispresent(maybeboard)) {
     // ensure player is listed as active
     if (!book.activelist.includes(player)) {
@@ -207,9 +198,6 @@ export function memorywritebookplayerboard(
   } else {
     // ensure player is not listed as active
     book.activelist = book.activelist.filter((id) => id !== player)
-  }
-  if (before !== book.activelist.length) {
-    memorymarkmemorydirty()
   }
 }
 
@@ -247,7 +235,6 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
-    memorymarkdirty(flagsstream(player))
     return true
   }
 
@@ -320,7 +307,6 @@ export function memoryloginplayer(
     flags.entery = py
     flags.deaths = flags.deaths ?? 0
     flags.highscore = flags.highscore ?? 0
-    memorymarkdirty(flagsstream(player))
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
@@ -382,7 +368,6 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     if (isendgame) {
       const newflags = memoryreadbookflags(mainbook, remove)
       Object.assign(newflags, saveflags)
-      memorymarkdirty(flagsstream(remove))
     }
   }
 }
