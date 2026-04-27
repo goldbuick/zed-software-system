@@ -160,9 +160,7 @@ export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handlelocal(vm: DEVICE, message: MESSAGE): void {
-  void vm
-  void message
+export function handlelocal(_vm: DEVICE, _message: MESSAGE): void {
   // TODO: leave this alone for now
   // if (memoryloginplayer(message.player, {})) {
   //   tracking[message.player] = INITIAL_TRACKING

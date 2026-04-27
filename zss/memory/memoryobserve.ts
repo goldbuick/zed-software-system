@@ -113,8 +113,7 @@ function wrapboardobjects(
     objs[k] = wrapelement(objs[k], boardid)
   }
   return new Proxy(objs, {
-    set(t, prop, val, recv) {
-      void recv
+    set(t, prop, val, _recv) {
       const v =
         val && typeof val === 'object'
           ? wrapelement(val as BOARD_ELEMENT, boardid)
@@ -347,8 +346,7 @@ function wrapbookflags(
     }
   }
   return new Proxy(flags, {
-    set(t, prop, value, recv) {
-      void recv
+    set(t, prop, value, _recv) {
       const pk = String(prop)
       const wrapped =
         value && typeof value === 'object'
@@ -407,8 +405,7 @@ function wrapsoftware(
   sw: SESSION_OBSERVE_ROOT['software'],
 ): SESSION_OBSERVE_ROOT['software'] {
   return new Proxy(sw, {
-    set(t, prop, val, recv) {
-      void recv
+    set(t, prop, val, _recv) {
       Reflect.set(t, prop, val, t)
       memorymarkmemorydirty()
       return true
