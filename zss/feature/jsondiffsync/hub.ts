@@ -37,6 +37,12 @@ export function hubprocessleafinbound(
 
   const row = hub.leaves.get(leaf)!
 
+  if (message.kind === 'requestsnapshot') {
+    throw new Error(
+      'jsondiffsync: requestsnapshot must be handled in jsondiffsyncleafapply',
+    )
+  }
+
   if (message.kind === 'fullsnapshot') {
     hub.working = deepcopy(message.document)
     hub.documentversion = message.resultdocumentversion
@@ -159,6 +165,14 @@ export function jsondiffsyncleafapply(
   leaf: string,
   incoming: SYNC_MESSAGE,
 ): SYNC_MESSAGE[] {
+  if (incoming.kind === 'requestsnapshot') {
+    hubensureleaf(hub, leaf)
+    const seq = hub.nexthubseq++
+    hub.unackedbyleaf.set(leaf, seq)
+    const lastleaf = hub.lastleafack.get(leaf) ?? 0
+    return [hubmakefullsnapshot(hub, leaf, seq, lastleaf)]
+  }
+
   const inbound = hubprocessleafinbound(hub, leaf, incoming)
 
   if (!inbound.ok) {

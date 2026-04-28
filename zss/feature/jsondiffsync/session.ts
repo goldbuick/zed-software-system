@@ -18,6 +18,7 @@ export function createleafsession(
     unackedpreparecount: 0,
     lastpeerseqacked: 0,
     lastackpiggybackedtohub: 0,
+    awaitingsnapshot: false,
   }
 }
 

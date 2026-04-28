@@ -14,9 +14,8 @@ export function leafprepareoutbound(
   session: LEAF_SESSION,
 ): PREPARE_OUTBOUND_RESULT {
   const ops = compare(session.shadow as object, session.working as object)
-  const need_hub_ack =
-    session.lastpeerseqacked > session.lastackpiggybackedtohub
-  if (ops.length === 0 && !need_hub_ack) {
+  const needhuback = session.lastpeerseqacked > session.lastackpiggybackedtohub
+  if (ops.length === 0 && !needhuback) {
     return { message: undefined, reason: 'noop' }
   }
   let is_retransmit = false
@@ -43,7 +42,7 @@ export function leafprepareoutbound(
     resultdocumentversion: session.basisversion,
     operations: ops,
   }
-  if (need_hub_ack) {
+  if (needhuback) {
     session.lastackpiggybackedtohub = session.lastpeerseqacked
   }
   return { message, isretransmit: is_retransmit }
@@ -76,8 +75,15 @@ export function leafapplyinbound(
     session.backupshadow = undefined
     session.unackedpreparecount = 0
     session.lastpeerseqacked = message.seq
+    session.awaitingsnapshot = false
     leafackoutbound(session, message.ackpeerseq)
     return { ok: true, changed: true }
+  }
+  if (message.kind === 'requestsnapshot') {
+    return { ok: true, changed: false }
+  }
+  if (session.awaitingsnapshot) {
+    return { ok: true, changed: false }
   }
   if (message.kind === 'delta' && message.operations.length === 0) {
     if (message.basisversion !== session.basisversion) {
@@ -123,5 +129,6 @@ export function leafapplyfullsnapshot(
   session.backupshadow = undefined
   session.unackedpreparecount = 0
   session.lastackpiggybackedtohub = 0
+  session.awaitingsnapshot = false
   return session
 }

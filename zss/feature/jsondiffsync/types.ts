@@ -31,6 +31,12 @@ export type SYNC_MESSAGE =
       document: JSON_DOCUMENT
       resultdocumentversion: number
     }
+  | {
+      kind: 'requestsnapshot'
+      senderpeer: string
+      seq: number
+      ackpeerseq: number
+    }
 
 export type INBOUND_RESULT =
   | {
@@ -68,6 +74,8 @@ export type LEAF_SESSION = {
   lastpeerseqacked: number
   /** Highest hub seq reflected in leaf→hub `ack_peer_seq` (for ack-only sends). */
   lastackpiggybackedtohub: number
+  /** True after requesting a hub fullsnapshot until one is applied. */
+  awaitingsnapshot: boolean
 }
 
 export type HUB_LEAF_RECORD = {
@@ -91,7 +99,11 @@ export function issyncmessage(value: unknown): value is SYNC_MESSAGE {
     return false
   }
   const o = value as Record<string, unknown>
-  if (o.kind !== 'delta' && o.kind !== 'fullsnapshot') {
+  if (
+    o.kind !== 'delta' &&
+    o.kind !== 'fullsnapshot' &&
+    o.kind !== 'requestsnapshot'
+  ) {
     return false
   }
   if (!isstring(o.senderpeer)) {
@@ -99,6 +111,9 @@ export function issyncmessage(value: unknown): value is SYNC_MESSAGE {
   }
   if (typeof o.seq !== 'number' || typeof o.ackpeerseq !== 'number') {
     return false
+  }
+  if (o.kind === 'requestsnapshot') {
+    return true
   }
   if (o.kind === 'delta') {
     return (

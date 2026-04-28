@@ -7,11 +7,15 @@ import { issyncmessage } from 'zss/feature/jsondiffsync/types'
 import { ispresent } from 'zss/mapping/types'
 
 export function handlejsondiffsync(vm: DEVICE, message: MESSAGE): void {
-  const data = message.data
-  if (!issyncmessage(data)) {
+  console.info('vm:jsondiffsync', message.player, message.data)
+  if (!issyncmessage(message.data)) {
     return
   }
-  const [outbound] = jsondiffsyncleafapply(jsondiffsync, message.player, data)
+  const [outbound] = jsondiffsyncleafapply(
+    jsondiffsync,
+    message.player,
+    message.data,
+  )
   if (ispresent(outbound)) {
     boardrunnerjsondiffsync(vm, message.player, outbound)
   }

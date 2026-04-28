@@ -1,14 +1,15 @@
 import { compare } from 'fast-json-patch'
 import {
-  leafapplyinbound,
-  leafprepareoutbound,
-  rebaseapply,
-} from 'zss/feature/jsondiffsync/engine'
-import {
   hubmakefullsnapshot,
   hubprepareoutboundforleaf,
   hubprocessleafinbound,
+  jsondiffsyncleafapply,
 } from 'zss/feature/jsondiffsync/hub'
+import {
+  leafapplyinbound,
+  leafprepareoutbound,
+} from 'zss/feature/jsondiffsync/leaf'
+import { rebaseapply } from 'zss/feature/jsondiffsync/sync'
 import {
   createhubsession,
   createleafsession,
@@ -166,5 +167,45 @@ describe('jsondiffsync leaf hub', () => {
     expect(
       (prep.message as { operations: unknown[] }).operations.length,
     ).toBeGreaterThan(0)
+  })
+
+  it('recovers via leaf requestsnapshot when leafapplyinbound fails', () => {
+    const hub = createhubsession({ k: 0 })
+    hub.working = { k: 42 }
+    hub.documentversion = 5
+    hubensureleaf(hub, 'L1')
+    const leaf = createleafsession('L1', { k: 0 })
+    const baddelta1: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'hub',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 99,
+      resultdocumentversion: 5,
+      operations: [{ op: 'replace', path: '/k', value: 42 }],
+    }
+    const r1 = leafapplyinbound(leaf, baddelta1)
+    expect(r1.ok).toBe(false)
+    leaf.awaitingsnapshot = true
+    const r2 = leafapplyinbound(leaf, baddelta1)
+    expect(r2).toEqual({ ok: true, changed: false })
+
+    const outarr = jsondiffsyncleafapply(hub, 'L1', {
+      kind: 'requestsnapshot',
+      senderpeer: 'L1',
+      seq: 0,
+      ackpeerseq: 0,
+    })
+    expect(outarr.length).toBe(1)
+    const snap = outarr[0]
+    expect(snap.kind).toBe('fullsnapshot')
+    if (snap.kind !== 'fullsnapshot') {
+      return
+    }
+    const r3 = leafapplyinbound(leaf, snap)
+    expect(r3.ok).toBe(true)
+    expect(leaf.working).toEqual({ k: 42 })
+    expect(leaf.basisversion).toBe(5)
+    expect(leaf.awaitingsnapshot).toBe(false)
   })
 })
