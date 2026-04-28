@@ -1,5 +1,5 @@
 import boardrunnerspace from './boardrunnerspace??worker'
-import { MESSAGE, boardrunnerboot, sessionreset } from './device/api'
+import { MESSAGE, sessionreset } from './device/api'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
