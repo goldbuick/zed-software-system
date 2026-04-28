@@ -86,11 +86,11 @@ describe('jsondiffsync leaf hub', () => {
     leaf1.working = { n: 1 }
     const m1 = leafprepareoutbound(leaf1)
     expect(m1.message).toBeDefined()
-    hubprocessleafinbound(hub, 'L1', m1.message)
+    hubprocessleafinbound(hub, 'L1', m1.message!)
 
     const h2 = hubprepareoutboundforleaf(hub, 'L2')
     expect(h2.message).toBeDefined()
-    const r2 = leafapplyinbound(leaf2, h2.message)
+    const r2 = leafapplyinbound(leaf2, h2.message!)
     expect(r2.ok).toBe(true)
     expect(leaf2.working).toEqual({ n: 1 })
     expect(hub.working).toEqual({ n: 1 })
@@ -151,7 +151,7 @@ describe('jsondiffsync leaf hub', () => {
     hubprocessleafinbound(hub, 'L1', second.message)
     const ho = hubprepareoutboundforleaf(hub, 'L1')
     expect(ho.message).toBeDefined()
-    leafapplyinbound(leaf, ho.message)
+    leafapplyinbound(leaf, ho.message!)
     expect(leaf.unackedseq).toBeUndefined()
   })
 

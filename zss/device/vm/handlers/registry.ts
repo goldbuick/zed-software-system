@@ -19,6 +19,7 @@ import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handleinput } from './input'
+import { handlejsondiffsync } from './jsondiffsync'
 import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
@@ -36,7 +37,7 @@ import {
   handlerefscroll,
 } from './scroll'
 import { handlesecond } from './second'
-import { handletick } from './tick'
+import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
@@ -68,7 +69,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,
   halt: handlehalt,
-  ticktock: handletick,
+  ticktock: handleticktock,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,
@@ -87,4 +88,5 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   inspect: handleinspect,
   findany: handlefindany,
   loader: handleloader,
+  jsondiffsync: handlejsondiffsync,
 }

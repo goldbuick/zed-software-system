@@ -34,7 +34,11 @@ import {
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhaltchip } from './runtime'
-import { memoryisoperator, memoryreadbookbysoftware } from './session'
+import {
+  memoryisoperator,
+  memoryreadbookbysoftware,
+  memoryreadoperator,
+} from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -47,6 +51,14 @@ import {
 } from './types'
 
 // Player Management Functions
+
+// get list of active players
+export function memoryreadactivelist() {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
+  activelistvalues.add(memoryreadoperator())
+  return [...activelistvalues]
+}
 
 export function memorymoveplayertoboard(
   book: MAYBE<BOOK>,

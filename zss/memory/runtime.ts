@@ -79,6 +79,7 @@ export function memoryrestartallchipsandflags() {
 export function memorymessagechip(message: MESSAGE) {
   os.message(message)
 }
+
 // CLI Operations
 
 export function memoryrepeatclilast(player: string) {

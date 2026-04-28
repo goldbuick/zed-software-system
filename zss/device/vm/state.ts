@@ -1,7 +1,5 @@
-/**
- * Shared mutable state used by VM message handlers.
- * Used by vm.ts and by handlers in vm/handlers/.
- */
+import { createhubsession } from 'zss/feature/jsondiffsync/session'
+import { JSONDIFF_INITIAL_DOCUMENT } from 'zss/feature/jsondiffsync/sync'
 
 export const SECOND_TIMEOUT = 16
 export const FLUSH_RATE = 60
@@ -9,6 +7,8 @@ export const FLUSH_RATE = 60
 export const tracking: Record<string, number> = {}
 export const trackinglastlog: Record<string, number> = {}
 export const lastinputtime: Record<string, number> = {}
+
+export const jsondiffsync = createhubsession(JSONDIFF_INITIAL_DOCUMENT)
 
 let flushtick = 0
 export function getflushtick(): number {

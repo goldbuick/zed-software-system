@@ -60,6 +60,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'modem':
         case 'bridge':
         case 'register':
+        case 'boardrunner':
         case 'gadgetclient':
           return true
       }
@@ -96,6 +97,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   switch (route.target) {
     case 'vm':
     case 'modem':
+    case 'boardrunner':
     case 'gadgetserver':
       return true
   }
@@ -149,6 +151,7 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
     case 'ready':
       return true
     default:
+      // console.info('shouldforwardclienttoboardrunner', message.target)
       return true
   }
 }

@@ -1,9 +1,10 @@
 import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 
-import { rebaseapply } from './engine'
-import { type HUB_SESSION, hubensureleaf } from './session'
+import { hubensureleaf } from './session'
+import { rebaseapply } from './sync'
 import type {
+  HUB_SESSION,
   INBOUND_RESULT,
   JSON_DOCUMENT,
   PREPARE_OUTBOUND_RESULT,
@@ -11,20 +12,6 @@ import type {
 } from './types'
 
 /** Star hub: authoritative `working`, per-leaf shadow rows advanced after leaf acks hub messages. */
-
-/** Apply authoritative source into `hub.working`; bumps version when diff non-empty. */
-export function hubapplyauthoritativeworking(
-  hub: HUB_SESSION,
-  newdoc: JSON_DOCUMENT,
-) {
-  const ops = compare(hub.working as object, newdoc as object)
-  if (ops.length === 0) {
-    return false
-  }
-  hub.working = deepcopy(newdoc)
-  hub.documentversion++
-  return true
-}
 
 function hubtryconsumeleafack(
   hub: HUB_SESSION,
@@ -150,4 +137,43 @@ export function hubmakefullsnapshot(
     document: deepcopy(hub.working),
     resultdocumentversion: hub.documentversion,
   }
+}
+
+/** Apply authoritative source into `hub.working`; bumps version when diff non-empty. */
+export function jsondiffsynchubapply(hub: HUB_SESSION, newdoc: JSON_DOCUMENT) {
+  const ops = compare(hub.working as object, newdoc as object)
+  if (ops.length === 0) {
+    return false
+  }
+  hub.working = deepcopy(newdoc)
+  hub.documentversion++
+  return true
+}
+
+/**
+ * Applies one inbound leaf message on the authoritative hub and returns outbound message(s) for that leaf
+ * (delta or full snapshot on resync). Empty array means no emit.
+ */
+export function jsondiffsyncleafapply(
+  hub: HUB_SESSION,
+  leaf: string,
+  incoming: SYNC_MESSAGE,
+): SYNC_MESSAGE[] {
+  const inbound = hubprocessleafinbound(hub, leaf, incoming)
+
+  if (!inbound.ok) {
+    if (!inbound.needsresync) {
+      return []
+    }
+    const seq = hub.nexthubseq++
+    hub.unackedbyleaf.set(leaf, seq)
+    const lastleaf = hub.lastleafack.get(leaf) ?? 0
+    return [hubmakefullsnapshot(hub, leaf, seq, lastleaf)]
+  }
+
+  const prep = hubprepareoutboundforleaf(hub, leaf)
+  if (prep.message === undefined) {
+    return []
+  }
+  return [prep.message]
 }
