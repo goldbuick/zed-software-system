@@ -4,12 +4,13 @@ import {
   hubprepareoutboundforleaf,
   hubprocessleafinbound,
   jsondiffsyncleafapply,
+  jsondiffsynchubapply,
 } from 'zss/feature/jsondiffsync/hub'
 import {
   leafapplyinbound,
   leafprepareoutbound,
 } from 'zss/feature/jsondiffsync/leaf'
-import { rebaseapply } from 'zss/feature/jsondiffsync/sync'
+import { assignintoworking, rebaseapply } from 'zss/feature/jsondiffsync/sync'
 import {
   createhubsession,
   createleafsession,
@@ -67,10 +68,12 @@ describe('jsondiffsync rebaseapply', () => {
 
 describe('jsondiffsync leaf hub', () => {
   it('round-trips a single leaf edit through the hub', () => {
-    const hub = createhubsession({ v: 0 })
-    const leaf = createleafsession('L1', { v: 0 })
+    const hubseed = { v: 0 }
+    const hub = createhubsession(hubseed)
+    const leafseed = { v: 0 }
+    const leaf = createleafsession('L1', leafseed)
     hubensureleaf(hub, leaf.peer)
-    leaf.working = { v: 1 }
+    leaf.working.v = 1
     synconeleafround(hub, leaf)
     expect(hub.working).toEqual({ v: 1 })
     expect(leaf.working).toEqual({ v: 1 })
@@ -84,7 +87,7 @@ describe('jsondiffsync leaf hub', () => {
     hubensureleaf(hub, leaf1.peer)
     hubensureleaf(hub, leaf2.peer)
 
-    leaf1.working = { n: 1 }
+    leaf1.working.n = 1
     const m1 = leafprepareoutbound(leaf1)
     expect(m1.message).toBeDefined()
     hubprocessleafinbound(hub, 'L1', m1.message!)
@@ -121,8 +124,9 @@ describe('jsondiffsync leaf hub', () => {
     const hub = createhubsession({ k: 0 })
     const leaf = createleafsession('L1', { k: 0 })
     hubensureleaf(hub, leaf.peer)
-    hub.working = { k: 42 }
+    assignintoworking(hub.working, { k: 42 })
     hub.documentversion = 5
+    hub.versionshadow = deepcopy(hub.working)
     const snap = hubmakefullsnapshot(hub, leaf.peer, 99, 0)
     const r = leafapplyinbound(leaf, snap)
     expect(r.ok).toBe(true)
@@ -134,7 +138,7 @@ describe('jsondiffsync leaf hub', () => {
     const hub = createhubsession({ x: 1 })
     const leaf = createleafsession('L1', { x: 1 })
     hubensureleaf(hub, leaf.peer)
-    leaf.working = { x: 2 }
+    leaf.working.x = 2
     const first = leafprepareoutbound(leaf)
     expect(hasoutboundmessage(first)).toBe(true)
     if (!hasoutboundmessage(first)) {
@@ -161,7 +165,7 @@ describe('jsondiffsync leaf hub', () => {
     const doc = { tiles: { char } }
     const base = createleafsession('solo', deepcopy(doc))
     char[0] = 7
-    base.working = doc
+    assignintoworking(base.working, doc)
     const prep = leafprepareoutbound(base)
     expect(prep.message).toBeDefined()
     expect(
@@ -171,8 +175,9 @@ describe('jsondiffsync leaf hub', () => {
 
   it('recovers via leaf requestsnapshot when leafapplyinbound fails', () => {
     const hub = createhubsession({ k: 0 })
-    hub.working = { k: 42 }
+    assignintoworking(hub.working, { k: 42 })
     hub.documentversion = 5
+    hub.versionshadow = deepcopy(hub.working)
     hubensureleaf(hub, 'L1')
     const leaf = createleafsession('L1', { k: 0 })
     const baddelta1: SYNC_MESSAGE = {
@@ -207,5 +212,45 @@ describe('jsondiffsync leaf hub', () => {
     expect(leaf.working).toEqual({ k: 42 })
     expect(leaf.basisversion).toBe(5)
     expect(leaf.awaitingsnapshot).toBe(false)
+  })
+
+  it('preserves leaf working object identity across inbound applies', () => {
+    const seed = { v: 0 }
+    const leaf = createleafsession('L1', seed)
+    expect(leaf.working).toBe(seed)
+    const snap: SYNC_MESSAGE = {
+      kind: 'fullsnapshot',
+      senderpeer: 'hub',
+      seq: 1,
+      ackpeerseq: 0,
+      document: { v: 9 },
+      resultdocumentversion: 3,
+    }
+    leafapplyinbound(leaf, snap)
+    expect(leaf.working).toBe(seed)
+    expect(seed).toEqual({ v: 9 })
+    const delta: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'hub',
+      seq: 2,
+      ackpeerseq: 0,
+      basisversion: 3,
+      resultdocumentversion: 4,
+      operations: [{ op: 'replace', path: '/v', value: 10 }],
+    }
+    leafapplyinbound(leaf, delta)
+    expect(leaf.working).toBe(seed)
+    expect(seed).toEqual({ v: 10 })
+  })
+
+  it('preserves hub working object identity when MEMORY changes and jsondiffsynchubapply runs', () => {
+    const seed = { k: 0 }
+    const hub = createhubsession(seed)
+    expect(hub.working).toBe(seed)
+    seed.k = 1
+    expect(jsondiffsynchubapply(hub)).toBe(true)
+    expect(hub.working).toBe(seed)
+    expect(hub.documentversion).toBe(1)
+    expect(jsondiffsynchubapply(hub)).toBe(false)
   })
 })

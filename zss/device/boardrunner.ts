@@ -4,7 +4,6 @@ import {
   leafprepareoutbound,
 } from 'zss/feature/jsondiffsync/leaf'
 import { createleafsession } from 'zss/feature/jsondiffsync/session'
-import { JSONDIFF_INITIAL_DOCUMENT } from 'zss/feature/jsondiffsync/sync'
 import {
   LEAF_SESSION,
   SYNC_MESSAGE,
@@ -17,7 +16,7 @@ import { vmjsondiffsync } from './api'
 
 let leafsession: MAYBE<LEAF_SESSION>
 export function createboardrunnerleafsession(player: string) {
-  leafsession = createleafsession(player, JSONDIFF_INITIAL_DOCUMENT)
+  leafsession = createleafsession(player, memoryreadroot())
   requestsnapshot(player)
 }
 

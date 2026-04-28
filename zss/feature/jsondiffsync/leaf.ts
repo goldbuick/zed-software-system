@@ -1,7 +1,7 @@
 import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 
-import { rebaseapply } from './sync'
+import { assignintoworking, rebaseapply } from './sync'
 import type {
   INBOUND_RESULT,
   JSON_DOCUMENT,
@@ -68,7 +68,7 @@ export function leafapplyinbound(
   message: SYNC_MESSAGE,
 ): INBOUND_RESULT {
   if (message.kind === 'fullsnapshot') {
-    session.working = deepcopy(message.document)
+    assignintoworking(session.working, message.document)
     session.shadow = deepcopy(message.document)
     session.basisversion = message.resultdocumentversion
     session.unackedseq = undefined
@@ -108,7 +108,7 @@ export function leafapplyinbound(
   if (!r.ok) {
     return { ok: false, needsresync: true, error: r.error }
   }
-  session.working = r.merged
+  assignintoworking(session.working, r.merged)
   session.shadow = deepcopy(r.merged)
   session.basisversion = message.resultdocumentversion
   session.lastpeerseqacked = message.seq
@@ -121,9 +121,8 @@ export function leafapplyfullsnapshot(
   doc: JSON_DOCUMENT,
   document_version: number,
 ): LEAF_SESSION {
-  const snap = deepcopy(doc)
-  session.working = snap
-  session.shadow = deepcopy(snap)
+  assignintoworking(session.working, doc)
+  session.shadow = deepcopy(doc)
   session.basisversion = document_version
   session.unackedseq = undefined
   session.backupshadow = undefined

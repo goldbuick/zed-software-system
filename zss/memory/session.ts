@@ -14,8 +14,8 @@ const MEMORY = {
   session: createsid(),
   operator: '',
   software: { main: '', temp: '' },
-  books: new Map<string, BOOK>(),
-  loaders: new Map<string, string>(),
+  books: {} as Record<string, BOOK>,
+  loaders: {} as Record<string, string>,
   topic: '',
 }
 
@@ -28,7 +28,7 @@ export function memoryreadloaders() {
 }
 
 export function memorystartloader(id: string, code: string) {
-  MEMORY.loaders.set(id, code)
+  MEMORY.loaders[id] = code
 }
 
 export function memoryreadsession() {
@@ -72,18 +72,18 @@ export function memoryreadsimfreeze() {
 }
 
 export function memoryreadbooklist(): BOOK[] {
-  return [...MEMORY.books.values()]
+  return Object.values(MEMORY.books)
 }
 
 export function memoryreadfirstbook(): MAYBE<BOOK> {
-  const [first] = MEMORY.books.values()
-  return first
+  const values = Object.values(MEMORY.books)
+  return values[0]
 }
 
 export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = NAME(address)
   return (
-    MEMORY.books.get(address) ??
+    MEMORY.books[address] ??
     memoryreadbooklist().find((item) => item.name === laddress)
   )
 }
@@ -104,30 +104,33 @@ export function memoryreadbookbysoftware(
 }
 
 export function memoryresetbooks(books: BOOK[]) {
-  MEMORY.books.clear()
+  for (const k of Object.keys(MEMORY.books)) {
+    delete MEMORY.books[k]
+  }
   books.forEach((book) => {
-    MEMORY.books.set(book.id, book)
+    MEMORY.books[book.id] = book
     if (book.name === 'main') {
       MEMORY.software.main = book.id
     }
   })
   if (!MEMORY.software.main) {
-    const first = MEMORY.books.values().next()
-    if (first.value) {
-      MEMORY.software.main = first.value.id
+    const values = Object.values(MEMORY.books)
+    const first = values[0]
+    if (first) {
+      MEMORY.software.main = first.id
     }
   }
 }
 
 export function memorywritebook(book: BOOK) {
-  MEMORY.books.set(book.id, book)
+  MEMORY.books[book.id] = book
   return book.id
 }
 
 export function memoryclearbook(address: string) {
   const book = memoryreadbookbyaddress(address)
   if (book) {
-    MEMORY.books.delete(book.id)
+    delete MEMORY.books[book.id]
   }
 }
 

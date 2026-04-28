@@ -6,11 +6,10 @@ export function createleafsession(
   peerid: string,
   initial: JSON_DOCUMENT,
 ): LEAF_SESSION {
-  const snap = deepcopy(initial)
   return {
     peer: peerid,
-    working: snap,
-    shadow: deepcopy(snap),
+    working: initial,
+    shadow: deepcopy(initial),
     backupshadow: undefined,
     basisversion: 0,
     nextseq: 1,
@@ -23,9 +22,9 @@ export function createleafsession(
 }
 
 export function createhubsession(initial: JSON_DOCUMENT): HUB_SESSION {
-  const snap = deepcopy(initial)
   return {
-    working: deepcopy(snap),
+    working: initial,
+    versionshadow: deepcopy(initial),
     documentversion: 0,
     leaves: new Map(),
     nexthubseq: 1,

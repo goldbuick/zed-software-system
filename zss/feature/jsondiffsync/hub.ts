@@ -2,11 +2,10 @@ import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 
 import { hubensureleaf } from './session'
-import { rebaseapply } from './sync'
+import { assignintoworking, rebaseapply } from './sync'
 import type {
   HUB_SESSION,
   INBOUND_RESULT,
-  JSON_DOCUMENT,
   PREPARE_OUTBOUND_RESULT,
   SYNC_MESSAGE,
 } from './types'
@@ -44,7 +43,8 @@ export function hubprocessleafinbound(
   }
 
   if (message.kind === 'fullsnapshot') {
-    hub.working = deepcopy(message.document)
+    assignintoworking(hub.working, message.document)
+    hub.versionshadow = deepcopy(hub.working)
     hub.documentversion = message.resultdocumentversion
     for (const rid of hub.leaves.keys()) {
       const r = hub.leaves.get(rid)!
@@ -83,7 +83,8 @@ export function hubprocessleafinbound(
     return { ok: false, needsresync: true, error: merged.error }
   }
 
-  hub.working = merged.merged
+  assignintoworking(hub.working, merged.merged)
+  hub.versionshadow = deepcopy(hub.working)
   hub.documentversion++
   hub.lastleafack.set(leaf, message.seq)
   hubtryconsumeleafack(hub, leaf, message.ackpeerseq)
@@ -145,13 +146,13 @@ export function hubmakefullsnapshot(
   }
 }
 
-/** Apply authoritative source into `hub.working`; bumps version when diff non-empty. */
-export function jsondiffsynchubapply(hub: HUB_SESSION, newdoc: JSON_DOCUMENT) {
-  const ops = compare(hub.working as object, newdoc as object)
+/** Bump `documentversion` when `hub.working` (e.g. MEMORY) changed since last bump. */
+export function jsondiffsynchubapply(hub: HUB_SESSION) {
+  const ops = compare(hub.versionshadow as object, hub.working as object)
   if (ops.length === 0) {
     return false
   }
-  hub.working = deepcopy(newdoc)
+  hub.versionshadow = deepcopy(hub.working)
   hub.documentversion++
   return true
 }

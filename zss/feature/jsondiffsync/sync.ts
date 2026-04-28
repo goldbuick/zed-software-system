@@ -6,6 +6,29 @@ import type { JSON_DOCUMENT } from './types'
 /** Bootstrap document; hub and leaf must start from the same snapshot. */
 export const JSONDIFF_INITIAL_DOCUMENT: JSON_DOCUMENT = {}
 
+/** Copy `source` onto `target` in place so `target` keeps the same object identity. */
+export function assignintoworking(
+  target: JSON_DOCUMENT,
+  source: JSON_DOCUMENT,
+): void {
+  if (typeof target !== 'object' || target === null) {
+    return
+  }
+  if (typeof source !== 'object' || source === null) {
+    return
+  }
+  const t = target as Record<string, unknown>
+  const s = source as Record<string, unknown>
+  for (const k of Object.keys(t)) {
+    if (!(k in s)) {
+      delete t[k]
+    }
+  }
+  for (const k of Object.keys(s)) {
+    t[k] = s[k]
+  }
+}
+
 /**
  * Leaf-side differential sync (shadow + retransmit-until-ack). `rebaseapply` merges a remote
  * patch from mutual `base` onto local `working` (remote-first, then local `compare`); fails when

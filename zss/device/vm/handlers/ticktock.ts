@@ -7,11 +7,7 @@ import {
 } from 'zss/feature/jsondiffsync/hub'
 import { memoryreadactivelist } from 'zss/memory/playermanagement'
 import { memorytickmain } from 'zss/memory/runtime'
-import {
-  memoryreadhalt,
-  memoryreadroot,
-  memoryreadsimfreeze,
-} from 'zss/memory/session'
+import { memoryreadhalt, memoryreadsimfreeze } from 'zss/memory/session'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { pilottick } from './pilot'
@@ -29,7 +25,7 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   })
   perfmeasure('vm:jsondiffsync', () => {
     // build the outbound sync message
-    if (jsondiffsynchubapply(jsondiffsync, memoryreadroot())) {
+    if (jsondiffsynchubapply(jsondiffsync)) {
       // send outbound sync message to all active players
       const activelist = memoryreadactivelist()
       for (let i = 0; i < activelist.length; ++i) {

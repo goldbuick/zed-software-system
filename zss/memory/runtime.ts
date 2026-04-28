@@ -107,7 +107,8 @@ export function memorytickmain(playeronly = false) {
 
   perfmeasure('memorytick:loaders', () => {
     const loaders = memoryreadloaders()
-    loaders.forEach((code, id) => {
+    for (const id of Object.keys(loaders)) {
+      const code = loaders[id]
       // cache context
       const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
@@ -132,7 +133,7 @@ export function memorytickmain(playeronly = false) {
       // teardown on ended
       if (os.isended(id)) {
         os.halt(id)
-        loaders.delete(id)
+        delete loaders[id]
       }
 
       // restore context
@@ -140,7 +141,7 @@ export function memorytickmain(playeronly = false) {
         // @ts-expect-error dont bother me
         READ_CONTEXT[key] = OLD_CONTEXT[key]
       })
-    })
+    }
   })
 
   // track tick

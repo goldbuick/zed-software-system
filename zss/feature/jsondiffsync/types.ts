@@ -85,6 +85,8 @@ export type HUB_LEAF_RECORD = {
 
 export type HUB_SESSION = {
   working: JSON_DOCUMENT
+  /** Snapshot at last `documentversion` bump; used to detect in-place MEMORY changes. */
+  versionshadow: JSON_DOCUMENT
   documentversion: number
   leaves: Map<string, HUB_LEAF_RECORD>
   nexthubseq: number
