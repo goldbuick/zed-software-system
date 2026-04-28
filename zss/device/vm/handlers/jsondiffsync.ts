@@ -7,7 +7,6 @@ import { issyncmessage } from 'zss/feature/jsondiffsync/types'
 import { ispresent } from 'zss/mapping/types'
 
 export function handlejsondiffsync(vm: DEVICE, message: MESSAGE): void {
-  console.info('vm:jsondiffsync', message.player, message.data)
   if (!issyncmessage(message.data)) {
     return
   }

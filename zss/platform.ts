@@ -1,12 +1,11 @@
 import boardrunnerspace from './boardrunnerspace??worker'
-import { MESSAGE, sessionreset } from './device/api'
+import { MESSAGE, boardrunnerboot, sessionreset } from './device/api'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
   shouldforwardclienttoheavy,
   shouldforwardclienttoserver,
 } from './device/forward'
-import { registerreadplayer } from './device/register'
 import { SOFTWARE } from './device/session'
 import heavyspace from './heavyspace??worker'
 import { MAYBE, ispresent } from './mapping/types'
@@ -30,10 +29,6 @@ export function createplatform(isstub = false, climode = false) {
 
   // create boardrunner worker
   boardrunner = new boardrunnerspace()
-  boardrunner.postMessage({
-    target: 'runnerplayer',
-    player: registerreadplayer(),
-  })
 
   // create backend
   platform = isstub ? new stubspace() : new simspace()

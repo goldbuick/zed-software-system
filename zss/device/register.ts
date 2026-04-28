@@ -79,6 +79,7 @@ import {
   apierror,
   apilog,
   apitoast,
+  boardrunnerboot,
   bridgejoin,
   gadgetserverdesync,
   heavyllmpreset,
@@ -329,6 +330,7 @@ export const register = createdevice(
           await waitfor(256)
           apilog(register, myplayerid, `myplayerid ${myplayerid}`)
           vmoperator(register, myplayerid)
+          boardrunnerboot(register, myplayerid)
         })
         break
       }

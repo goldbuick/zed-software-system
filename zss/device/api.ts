@@ -101,6 +101,10 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
+export function boardrunnerboot(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:boot')
+}
+
 export function boardrunnerjsondiffsync(
   device: DEVICELIKE,
   player: string,

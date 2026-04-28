@@ -54,7 +54,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
     default: {
       const route = parsetarget(message.target)
       switch (route.target) {
-        case 'vm':
         case 'heavy':
         case 'synth':
         case 'modem':
@@ -97,7 +96,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   switch (route.target) {
     case 'vm':
     case 'modem':
-    case 'boardrunner':
     case 'gadgetserver':
       return true
   }
@@ -115,8 +113,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
 // create client -> heavy forward
 export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'ticktock':
-      return false
     case 'second':
     case 'ready':
       return true
@@ -130,9 +126,9 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
         case 'acklook':
           return true
       }
-      return false
     }
   }
+  return false
 }
 
 // create heavy -> client forward
@@ -145,15 +141,18 @@ export function shouldforwardheavytoclient(): boolean {
 // create client -> boardrunner forward
 export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'ticktock':
-      return false
-    case 'second':
     case 'ready':
+    case 'second':
       return true
-    default:
-      // console.info('shouldforwardclienttoboardrunner', message.target)
-      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'boardrunner':
+          return true
+      }
+    }
   }
+  return false
 }
 
 // create boardrunner -> client forward
