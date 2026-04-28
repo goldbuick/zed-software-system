@@ -3,9 +3,9 @@ import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,
+  shouldforwardonpeerclient,
+  shouldforwardonpeerserver,
   shouldforwardservertoclient,
-  shouldnotforwardonpeerclient,
-  shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -146,7 +146,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
       if (
         shouldforwardservertoclient(message) &&
-        shouldnotforwardonpeerserver(message) === false
+        shouldforwardonpeerserver(message)
       ) {
         sendpeer(dataconnection, message)
       }
@@ -161,7 +161,7 @@ function handledataconnection(dataconnection: DataConnection) {
       }
       if (
         shouldforwardclienttoserver(message) &&
-        shouldnotforwardonpeerclient(message) === false
+        shouldforwardonpeerclient(message)
       ) {
         sendpeer(dataconnection, message)
       }

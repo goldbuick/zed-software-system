@@ -1,48 +1,48 @@
 import type { Operation } from 'fast-json-patch'
 
 /** Arbitrary JSON-serializable document (RFC 6902 apply/compare). */
-export type JsonDocument = any
+export type JSON_DOCUMENT = any
 
-export type SyncMessage =
+export type SYNC_MESSAGE =
   | {
       kind: 'delta'
-      sender_peer: string
+      senderpeer: string
       /** Monotonic per-sender sequence; payload is retransmitted until acked. */
       seq: number
-      ack_peer_seq: number
+      ackpeerseq: number
       /**
        * Mutual-edge baseline: receiver's stored basis for this peer must match for strict patch.
        * Hub uses per-leaf row; leaf uses shadow basis aligned with hub.document_version.
        */
-      basis_version: number
+      basisversion: number
       /**
        * Document generation after this delta is applied on the receiver (rebasing included).
        * Filled by hub when sending to leaves; leaf copies into session on success.
        */
-      resulting_document_version: number
+      resultdocumentversion: number
       operations: Operation[]
     }
   | {
       kind: 'fullsnapshot'
-      sender_peer: string
+      senderpeer: string
       seq: number
-      ack_peer_seq: number
-      document: JsonDocument
-      resulting_document_version: number
+      ackpeerseq: number
+      document: JSON_DOCUMENT
+      resultdocumentversion: number
     }
 
-export type InboundResult =
+export type INBOUND_RESULT =
   | {
       ok: true
       /** True when caller should broadcast refreshed state to peers (hub may have merged / snapshot). */
-      document_changed: boolean
+      changed: boolean
     }
-  | { ok: false; needs_full_resync: true; error: unknown }
+  | { ok: false; needsresync: true; error: unknown }
 
-export type PrepareOutboundResult =
+export type PREPARE_OUTBOUND_RESULT =
   | {
-      message: SyncMessage
+      message: SYNC_MESSAGE
       /** Set true when this is a repeat of an unacked delta (retransmit). */
-      is_retransmit: boolean
+      isretransmit: boolean
     }
   | { message: undefined; reason: 'noop' }

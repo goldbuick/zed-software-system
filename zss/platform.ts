@@ -1,6 +1,8 @@
+import boardrunnerspace from './boardrunnerspace??worker'
 import { MESSAGE, sessionreset } from './device/api'
 import {
   createforward,
+  shouldforwardclienttoboardrunner,
   shouldforwardclienttoheavy,
   shouldforwardclienttoserver,
 } from './device/forward'
@@ -12,6 +14,7 @@ import stubspace from './stubspace??worker'
 
 let heavy: MAYBE<Worker>
 let platform: MAYBE<Worker>
+let boardrunner: MAYBE<Worker>
 let platformhalt: MAYBE<() => void>
 
 export function createplatform(isstub = false, climode = false) {
@@ -20,8 +23,12 @@ export function createplatform(isstub = false, climode = false) {
   }
   // reset session
   sessionreset(SOFTWARE)
+
   // create heavy worker
   heavy = new heavyspace()
+
+  // create boardrunner worker
+  boardrunner = new boardrunnerspace()
 
   // create backend
   platform = isstub ? new stubspace() : new simspace()
@@ -35,39 +42,41 @@ export function createplatform(isstub = false, climode = false) {
     if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
       heavy.postMessage(message)
     }
+    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
+      boardrunner.postMessage(message)
+    }
   })
 
+  // handle messages from all workers
+  function handlemessages(event: MessageEvent<any>) {
+    const message = event.data as MESSAGE
+    return forward(message)
+  }
+
   // handle messages from heavy
-  function heavymessages(event: MessageEvent<any>) {
-    const message = event.data as MESSAGE
-    // handles messages from heavy -> server
-    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
-      platform.postMessage(message)
-    }
-    return forward(message)
-  }
-  heavy.addEventListener('message', heavymessages)
+  heavy.addEventListener('message', handlemessages)
 
-  // handle messages from  platform
-  function platformmessages(event: MessageEvent<any>) {
-    const message = event.data as MESSAGE
-    // handles routing messages from server -> heavy
-    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
-      heavy.postMessage(message)
-    }
-    return forward(message)
-  }
-  platform.addEventListener('message', platformmessages)
+  // handle messages from boardrunner
+  boardrunner.addEventListener('message', handlemessages)
 
+  // handle messages from platform
+  platform.addEventListener('message', handlemessages)
+
+  // define platform halt function
   platformhalt = () => {
     disconnect()
     if (ispresent(heavy)) {
-      heavy.removeEventListener('message', heavymessages)
+      heavy.removeEventListener('message', handlemessages)
       heavy.terminate()
     }
     heavy = undefined
+    if (ispresent(boardrunner)) {
+      boardrunner.removeEventListener('message', handlemessages)
+      boardrunner.terminate()
+    }
+    boardrunner = undefined
     if (ispresent(platform)) {
-      platform.removeEventListener('message', platformmessages)
+      platform.removeEventListener('message', handlemessages)
       platform.terminate()
     }
     platform = undefined

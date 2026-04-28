@@ -2,12 +2,12 @@ import { applyPatch, compare } from 'fast-json-patch'
 import type { Operation } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 
-import type { LeafSession } from './session'
+import type { LEAF_SESSION } from './session'
 import type {
-  InboundResult,
-  JsonDocument,
-  PrepareOutboundResult,
-  SyncMessage,
+  INBOUND_RESULT,
+  JSON_DOCUMENT,
+  PREPARE_OUTBOUND_RESULT,
+  SYNC_MESSAGE,
 } from './types'
 
 /**
@@ -16,10 +16,10 @@ import type {
  * JSON Patch steps do not apply.
  */
 export function rebaseapply(
-  base: JsonDocument,
-  working: JsonDocument,
+  base: JSON_DOCUMENT,
+  working: JSON_DOCUMENT,
   inbound: Operation[],
-): { ok: true; merged: JsonDocument } | { ok: false; error: unknown } {
+): { ok: true; merged: JSON_DOCUMENT } | { ok: false; error: unknown } {
   try {
     const afterremote = applyPatch(
       deepcopy(base) as object,
@@ -44,117 +44,117 @@ export function rebaseapply(
 }
 
 export function leafprepareoutbound(
-  session: LeafSession,
-): PrepareOutboundResult {
+  session: LEAF_SESSION,
+): PREPARE_OUTBOUND_RESULT {
   const ops = compare(session.shadow as object, session.working as object)
   const need_hub_ack =
-    session.last_peer_seq_acked > session.last_ack_piggybacked_to_hub
+    session.lastpeerseqacked > session.lastackpiggybackedtohub
   if (ops.length === 0 && !need_hub_ack) {
     return { message: undefined, reason: 'noop' }
   }
   let is_retransmit = false
   if (ops.length > 0) {
-    if (session.unacked_seq === undefined) {
-      session.unacked_seq = session.next_seq
-      session.next_seq++
+    if (session.unackedseq === undefined) {
+      session.unackedseq = session.nextseq
+      session.nextseq++
       session.backupshadow = deepcopy(session.shadow)
-      session.unacked_prepare_count = 1
+      session.unackedpreparecount = 1
     } else {
-      session.unacked_prepare_count++
-      is_retransmit = session.unacked_prepare_count > 1
+      session.unackedpreparecount++
+      is_retransmit = session.unackedpreparecount > 1
     }
   }
 
-  const seq = ops.length > 0 ? session.unacked_seq! : session.next_seq++
+  const seq = ops.length > 0 ? session.unackedseq! : session.nextseq++
 
-  const message: SyncMessage = {
+  const message: SYNC_MESSAGE = {
     kind: 'delta',
-    sender_peer: session.peerid,
+    senderpeer: session.peer,
     seq,
-    ack_peer_seq: session.last_peer_seq_acked,
-    basis_version: session.basis_version,
-    resulting_document_version: session.basis_version,
+    ackpeerseq: session.lastpeerseqacked,
+    basisversion: session.basisversion,
+    resultdocumentversion: session.basisversion,
     operations: ops,
   }
   if (need_hub_ack) {
-    session.last_ack_piggybacked_to_hub = session.last_peer_seq_acked
+    session.lastackpiggybackedtohub = session.lastpeerseqacked
   }
-  return { message, is_retransmit }
+  return { message, isretransmit: is_retransmit }
 }
 
 export function leafackoutbound(
-  session: LeafSession,
+  session: LEAF_SESSION,
   hub_ack_peer_seq: number,
 ) {
   if (
-    session.unacked_seq !== undefined &&
-    hub_ack_peer_seq >= session.unacked_seq
+    session.unackedseq !== undefined &&
+    hub_ack_peer_seq >= session.unackedseq
   ) {
     session.shadow = deepcopy(session.working)
-    session.unacked_seq = undefined
+    session.unackedseq = undefined
     session.backupshadow = undefined
-    session.unacked_prepare_count = 0
+    session.unackedpreparecount = 0
   }
 }
 
 export function leafapplyinbound(
-  session: LeafSession,
-  message: SyncMessage,
-): InboundResult {
+  session: LEAF_SESSION,
+  message: SYNC_MESSAGE,
+): INBOUND_RESULT {
   if (message.kind === 'fullsnapshot') {
     session.working = deepcopy(message.document)
     session.shadow = deepcopy(message.document)
-    session.basis_version = message.resulting_document_version
-    session.unacked_seq = undefined
+    session.basisversion = message.resultdocumentversion
+    session.unackedseq = undefined
     session.backupshadow = undefined
-    session.unacked_prepare_count = 0
-    session.last_peer_seq_acked = message.seq
-    leafackoutbound(session, message.ack_peer_seq)
-    return { ok: true, document_changed: true }
+    session.unackedpreparecount = 0
+    session.lastpeerseqacked = message.seq
+    leafackoutbound(session, message.ackpeerseq)
+    return { ok: true, changed: true }
   }
   if (message.kind === 'delta' && message.operations.length === 0) {
-    if (message.basis_version !== session.basis_version) {
+    if (message.basisversion !== session.basisversion) {
       return {
         ok: false,
-        needs_full_resync: true,
+        needsresync: true,
         error: new Error('jsondiffsync: inbound basis_version mismatch'),
       }
     }
-    session.last_peer_seq_acked = message.seq
-    leafackoutbound(session, message.ack_peer_seq)
-    return { ok: true, document_changed: false }
+    session.lastpeerseqacked = message.seq
+    leafackoutbound(session, message.ackpeerseq)
+    return { ok: true, changed: false }
   }
-  if (message.basis_version !== session.basis_version) {
+  if (message.basisversion !== session.basisversion) {
     return {
       ok: false,
-      needs_full_resync: true,
+      needsresync: true,
       error: new Error('jsondiffsync: inbound basis_version mismatch'),
     }
   }
   const r = rebaseapply(session.shadow, session.working, message.operations)
   if (!r.ok) {
-    return { ok: false, needs_full_resync: true, error: r.error }
+    return { ok: false, needsresync: true, error: r.error }
   }
   session.working = r.merged
   session.shadow = deepcopy(r.merged)
-  session.basis_version = message.resulting_document_version
-  session.last_peer_seq_acked = message.seq
-  leafackoutbound(session, message.ack_peer_seq)
-  return { ok: true, document_changed: true }
+  session.basisversion = message.resultdocumentversion
+  session.lastpeerseqacked = message.seq
+  leafackoutbound(session, message.ackpeerseq)
+  return { ok: true, changed: true }
 }
 
 export function leafapplyfullsnapshot(
-  session: LeafSession,
-  doc: JsonDocument,
+  session: LEAF_SESSION,
+  doc: JSON_DOCUMENT,
   document_version: number,
-): LeafSession {
+): LEAF_SESSION {
   const snap = deepcopy(doc)
   session.working = snap
   session.shadow = deepcopy(snap)
-  session.basis_version = document_version
-  session.unacked_seq = undefined
+  session.basisversion = document_version
+  session.unackedseq = undefined
   session.backupshadow = undefined
-  session.unacked_prepare_count = 0
-  session.last_ack_piggybacked_to_hub = 0
+  session.unackedpreparecount = 0
+  session.lastackpiggybackedtohub = 0
   return session
 }
