@@ -1,21 +1,22 @@
 import { compare } from 'fast-json-patch'
+import type { Operation } from 'fast-json-patch'
 import {
   hubmakefullsnapshot,
   hubprepareoutboundforleaf,
   hubprocessleafinbound,
-  jsondiffsyncleafapply,
   jsondiffsynchubapply,
+  jsondiffsyncleafapply,
 } from 'zss/feature/jsondiffsync/hub'
 import {
   leafapplyinbound,
   leafprepareoutbound,
 } from 'zss/feature/jsondiffsync/leaf'
-import { assignintoworking, rebaseapply } from 'zss/feature/jsondiffsync/sync'
 import {
   createhubsession,
   createleafsession,
   hubensureleaf,
 } from 'zss/feature/jsondiffsync/session'
+import { assignintoworking, rebaseapply } from 'zss/feature/jsondiffsync/sync'
 import type {
   PREPARE_OUTBOUND_RESULT,
   SYNC_MESSAGE,
@@ -64,9 +65,63 @@ describe('jsondiffsync rebaseapply', () => {
     ])
     expect(r.ok).toBe(false)
   })
+
+  it('drops inbound kinddata ops but keeps local kinddata from full local compare', () => {
+    const base = { el: { y: 0, kinddata: { n: 1 } } }
+    const working = { el: { y: 0, kinddata: { n: 99 } } }
+    const remote = { el: { y: 1, kinddata: { n: 2 } } }
+    const inbound = compare(base as object, remote as object)
+    expect(inbound.some((o) => o.path.includes('kinddata'))).toBe(true)
+    const r = rebaseapply(base, working, inbound)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.merged).toEqual({
+        el: { y: 1, kinddata: { n: 99 } },
+      })
+    }
+  })
 })
 
 describe('jsondiffsync leaf hub', () => {
+  it('omits kinddata-only edits from leaf outbound compare', () => {
+    const doc = { board: { terrain: [{ x: 0, kinddata: { id: 'a' } }] } }
+    const leaf = createleafsession('L1', deepcopy(doc))
+    leaf.working.board.terrain[0].kinddata = { id: 'b' }
+    const prep = leafprepareoutbound(leaf)
+    expect(prep.message).toBeUndefined()
+    if (prep.message === undefined) {
+      expect(prep.reason).toBe('noop')
+    }
+  })
+
+  it('sends non-kinddata ops and omits kinddata paths when mixed', () => {
+    const doc = { el: { y: 0, kinddata: { n: 1 } } }
+    const leaf = createleafsession('L1', deepcopy(doc))
+    leaf.working.el.y = 3
+    leaf.working.el.kinddata = { n: 99 }
+    const prep = leafprepareoutbound(leaf)
+    expect(hasoutboundmessage(prep)).toBe(true)
+    if (!hasoutboundmessage(prep)) {
+      return
+    }
+    const msg = prep.message
+    expect(msg.kind).toBe('delta')
+    if (msg.kind !== 'delta') {
+      return
+    }
+    const ops: Operation[] = msg.operations
+    expect(ops.some((o) => o.path.includes('kinddata'))).toBe(false)
+    expect(ops.length).toBeGreaterThan(0)
+  })
+
+  it('hub outbound omits kinddata-only diff vs leaf shadow', () => {
+    const hub = createhubsession({ el: { y: 0, kinddata: { n: 1 } } })
+    hubensureleaf(hub, 'L1')
+    assignintoworking(hub.working, { el: { y: 0, kinddata: { n: 9 } } })
+    const prep = hubprepareoutboundforleaf(hub, 'L1')
+    expect(prep.message).toBeUndefined()
+  })
+
   it('round-trips a single leaf edit through the hub', () => {
     const hubseed = { v: 0 }
     const hub = createhubsession(hubseed)
@@ -241,6 +296,15 @@ describe('jsondiffsync leaf hub', () => {
     leafapplyinbound(leaf, delta)
     expect(leaf.working).toBe(seed)
     expect(seed).toEqual({ v: 10 })
+  })
+
+  it('jsondiffsynchubapply ignores kinddata-only memory edits', () => {
+    const seed = { el: { y: 0, kinddata: { n: 1 } } }
+    const hub = createhubsession(seed)
+    hub.versionshadow = deepcopy(hub.working)
+    seed.el.kinddata = { n: 99 }
+    expect(jsondiffsynchubapply(hub)).toBe(false)
+    expect(hub.documentversion).toBe(0)
   })
 
   it('preserves hub working object identity when MEMORY changes and jsondiffsynchubapply runs', () => {

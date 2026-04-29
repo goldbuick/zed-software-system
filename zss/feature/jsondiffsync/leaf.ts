@@ -2,6 +2,7 @@ import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 
+import { filterjsonpatchforsync } from './patchfilter'
 import { assignintoworking, rebaseapply } from './sync'
 import type {
   INBOUND_RESULT,
@@ -15,7 +16,9 @@ export function leafprepareoutbound(
   session: LEAF_SESSION,
 ): PREPARE_OUTBOUND_RESULT {
   const ops = perfmeasure('jds:leaf:prepare:compare', () =>
-    compare(session.shadow as object, session.working as object),
+    filterjsonpatchforsync(
+      compare(session.shadow as object, session.working as object),
+    ),
   )
   const needhuback = session.lastpeerseqacked > session.lastackpiggybackedtohub
   if (ops.length === 0 && !needhuback) {

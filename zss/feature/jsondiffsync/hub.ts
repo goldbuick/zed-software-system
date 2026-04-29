@@ -2,6 +2,7 @@ import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 
+import { filterjsonpatchforsync } from './patchfilter'
 import { hubensureleaf } from './session'
 import { assignintoworking, rebaseapply } from './sync'
 import type {
@@ -103,7 +104,9 @@ export function hubprepareoutboundforleaf(
   hubensureleaf(hub, leaf)
   const row = hub.leaves.get(leaf)!
   const ops = perfmeasure('jds:hub:prepare:compare', () =>
-    compare(row.shadow as object, hub.working as object),
+    filterjsonpatchforsync(
+      compare(row.shadow as object, hub.working as object),
+    ),
   )
   const last_proc = hub.lastleafack.get(leaf) ?? 0
   const ack_sent = hub.lasthubackpiggybackedtoleaf.get(leaf) ?? 0
@@ -156,7 +159,9 @@ export function hubmakefullsnapshot(
 /** Bump `documentversion` when `hub.working` (e.g. MEMORY) changed since last bump. */
 export function jsondiffsynchubapply(hub: HUB_SESSION) {
   const ops = perfmeasure('jds:hub:apply:compare', () =>
-    compare(hub.versionshadow as object, hub.working as object),
+    filterjsonpatchforsync(
+      compare(hub.versionshadow as object, hub.working as object),
+    ),
   )
   if (ops.length === 0) {
     return false

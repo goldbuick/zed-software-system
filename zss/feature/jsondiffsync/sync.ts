@@ -2,6 +2,7 @@ import { Operation, applyPatch, compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 
+import { filterjsonpatchforsync } from './patchfilter'
 import type { JSON_DOCUMENT } from './types'
 
 /** Bootstrap document; hub and leaf must start from the same snapshot. */
@@ -41,10 +42,12 @@ export function rebaseapply(
   inbound: Operation[],
 ): { ok: true; merged: JSON_DOCUMENT } | { ok: false; error: unknown } {
   try {
+    const inboundfiltered = filterjsonpatchforsync(inbound)
     const afterremote = perfmeasure(
       'jds:sync:rebase:remote',
       () =>
-        applyPatch(deepcopy(base) as object, inbound, true, false).newDocument,
+        applyPatch(deepcopy(base) as object, inboundfiltered, true, false)
+          .newDocument,
     )
     const localdelta = perfmeasure('jds:sync:rebase:localcompare', () =>
       compare(base as object, working as object),
