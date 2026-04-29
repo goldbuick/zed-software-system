@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 
+import { handleacktick } from './acktick'
 import { handleadmin } from './admin'
 import {
   handlelocal,
@@ -46,6 +47,7 @@ import { handlezztrandom, handlezztsearch } from './zzt'
 export type VM_HANDLER = (vm: DEVICE, message: MESSAGE) => void
 
 export const vmhandlers: Record<string, VM_HANDLER> = {
+  acktick: handleacktick,
   admin: handleadmin,
   bookmarkscroll: handlebookmarkscroll,
   books: handlebooks,

@@ -2,7 +2,7 @@ import { createdevice } from 'zss/device'
 import { memoryreadsession } from 'zss/memory/session'
 
 import { platformready } from './api'
-import { handledefault as vmdefaulthandler } from './vm/handlers/default'
+import { handledefault } from './vm/handlers/default'
 import { vmhandlers } from './vm/handlers/registry'
 
 const vm = createdevice(
@@ -12,7 +12,7 @@ const vm = createdevice(
     if (!vm.session(message)) {
       return
     }
-    const handler = vmhandlers[message.target] ?? vmdefaulthandler
+    const handler = vmhandlers[message.target] ?? handledefault
     handler(vm, message)
   },
   memoryreadsession(),

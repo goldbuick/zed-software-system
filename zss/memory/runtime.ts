@@ -19,7 +19,11 @@ import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
-import { memoryinitboard, memoryreadelementstat } from './boards'
+import {
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadelementstat,
+} from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
@@ -27,10 +31,7 @@ import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
-import {
-  memoryreadbookplayerboards,
-  memoryreadplayerboard,
-} from './playermanagement'
+import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryreadbookbysoftware,
   memoryreadloaders,
@@ -96,7 +97,7 @@ export function memoryrepeatclilast(player: string) {
 
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
 
-export function memorytickmain(playeronly = false) {
+export function memorytickloaders() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -147,82 +148,92 @@ export function memorytickmain(playeronly = false) {
   // track tick
   mainbook.timestamp = timestamp
   READ_CONTEXT.timestamp = timestamp
-
-  perfmeasure('memorytick:boards', () => {
-    // update boards / build code / run chips
-    const boards = memoryreadbookplayerboards(mainbook)
-    for (let b = 0; b < boards.length; ++b) {
-      const board = boards[b]
-
-      // init kinds
-      memoryinitboard(board)
-      if (timestamp % APPLY_SYNTH_RATE === 0) {
-        memoryapplyboardsynthstats(board)
-      }
-
-      const drawallowforqueue = board.drawneedfull
-        ? undefined
-        : board.drawallowids
-      const rundraw =
-        drawallowforqueue === undefined || drawallowforqueue.size > 0
-      const run = memorytickboard(board, timestamp, rundraw, drawallowforqueue)
-
-      // draw pass
-      if (rundraw) {
-        for (let i = 0; i < run.length; ++i) {
-          const { type, code, object, terrain, pass, label, id } = run[i]
-          if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
-            memorytickonce(
-              mainbook,
-              board,
-              object ?? terrain,
-              code,
-              id,
-              label ?? '',
-            )
-          }
-        }
-      }
-
-      // update pass
-      for (let i = 0; i < run.length; ++i) {
-        const { id, type, code, object, pass } = run[i]
-        if (pass === 'draw') {
-          continue
-        }
-        if (type === CODE_PAGE_TYPE.ERROR) {
-          // handle dead code
-          os.halt(id)
-          // in dev, we only run player objects
-        } else if (!playeronly || ispid(object?.id ?? '')) {
-          // handle active code
-          memorytickobject(mainbook, board, object, code)
-        }
-      }
-
-      // process synth play queue
-      const queue = memoryreadsynthplay(board.id)
-      if (queue.length > 0) {
-        const [play, endtime] = queue[0]
-        const dec = endtime - 1
-        if (play) {
-          // dispatch play
-          synthplay(SOFTWARE, '', board.id, play)
-          console.info('play queue', board.id, play)
-        }
-        if (dec > 0) {
-          queue[0] = ['', dec]
-        } else {
-          queue.shift()
-        }
-      }
-
-      memoryupdatedrawdirty(board, timestamp)
-    }
-  })
 }
 
-export { memoryinvalidatedraw } from './boarddrawdirty'
+export function memorytickmain(updateboard: string, playeronly = false) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  // update board / build code / run chips
+  perfmeasure('memorytick:board', () => {
+    const board = memoryreadboardbyaddress(updateboard)
+    if (!ispresent(board)) {
+      return
+    }
+
+    // init kinds
+    memoryinitboard(board)
+    if (mainbook.timestamp % APPLY_SYNTH_RATE === 0) {
+      memoryapplyboardsynthstats(board)
+    }
+
+    const drawallowforqueue = board.drawneedfull
+      ? undefined
+      : board.drawallowids
+    const rundraw =
+      drawallowforqueue === undefined || drawallowforqueue.size > 0
+    const run = memorytickboard(
+      board,
+      mainbook.timestamp,
+      rundraw,
+      drawallowforqueue,
+    )
+
+    // draw pass
+    if (rundraw) {
+      for (let i = 0; i < run.length; ++i) {
+        const { type, code, object, terrain, pass, label, id } = run[i]
+        if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
+          memorytickonce(
+            mainbook,
+            board,
+            object ?? terrain,
+            code,
+            id,
+            label ?? '',
+          )
+        }
+      }
+    }
+
+    // update pass
+    for (let i = 0; i < run.length; ++i) {
+      const { id, type, code, object, pass } = run[i]
+      if (pass === 'draw') {
+        continue
+      }
+      if (type === CODE_PAGE_TYPE.ERROR) {
+        // handle dead code
+        os.halt(id)
+        // in dev, we only run player objects
+      } else if (!playeronly || ispid(object?.id ?? '')) {
+        // handle active code
+        memorytickobject(mainbook, board, object, code)
+      }
+    }
+
+    // process synth play queue
+    const queue = memoryreadsynthplay(board.id)
+    if (queue.length > 0) {
+      const [play, endtime] = queue[0]
+      const dec = endtime - 1
+      if (play) {
+        // dispatch play
+        synthplay(SOFTWARE, '', board.id, play)
+        console.info('play queue', board.id, play)
+      }
+      if (dec > 0) {
+        queue[0] = ['', dec]
+      } else {
+        queue.shift()
+      }
+    }
+
+    memoryupdatedrawdirty(board, mainbook.timestamp)
+  })
+}
 
 export function memorytickobject(
   book: MAYBE<BOOK>,

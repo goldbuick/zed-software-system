@@ -1,6 +1,6 @@
 /**
  * Incremental `:drawdisplay`: fingerprints, cell dirtiness with 8-neighbor expansion,
- * and next-tick allow-lists. Non-local draw logic must call `memoryinvalidatedraw`.
+ * and next-tick allow-lists.
  */
 import { compile } from 'zss/lang/generator'
 import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
@@ -63,16 +63,6 @@ function memoryelementdrawfingerprint(element: BOARD_ELEMENT) {
     element.kind ?? '',
     element.code ?? '',
   ].join('|')
-}
-
-export function memoryinvalidatedraw(board: MAYBE<BOARD>) {
-  if (!ispresent(board)) {
-    return
-  }
-  board.drawneedfull = true
-  delete board.drawlastfp
-  delete board.drawlastxy
-  delete board.drawallowids
 }
 
 function expandneighborcells(seed: Set<number>) {

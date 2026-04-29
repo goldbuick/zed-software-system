@@ -10,6 +10,13 @@ export const lastinputtime: Record<string, number> = {}
 
 export const jsondiffsync = createhubsession(memoryreadroot())
 
+// board -> player running it
+export const boardrunners: Record<string, string> = {}
+// player -> last acktick from boardrunner
+export const boardrunneracks: Record<string, number> = {}
+// blocked players that failed to ack
+export const boardrunnerblocked: Record<string, boolean> = {}
+
 let flushtick = 0
 export function getflushtick(): number {
   return flushtick

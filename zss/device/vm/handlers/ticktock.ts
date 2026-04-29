@@ -1,13 +1,32 @@
 import type { DEVICE } from 'zss/device'
-import { type MESSAGE, boardrunnerjsondiffsync } from 'zss/device/api'
-import { jsondiffsync } from 'zss/device/vm/state'
+import {
+  type MESSAGE,
+  boardrunnerjsondiffsync,
+  boardrunnertick,
+} from 'zss/device/api'
+import {
+  boardrunneracks,
+  boardrunnerblocked,
+  boardrunners,
+  jsondiffsync,
+} from 'zss/device/vm/state'
 import {
   hubprepareoutboundforleaf,
   jsondiffsynchubapply,
 } from 'zss/feature/jsondiffsync/hub'
-import { memoryreadactivelist } from 'zss/memory/playermanagement'
-import { memorytickmain } from 'zss/memory/runtime'
-import { memoryreadhalt, memoryreadsimfreeze } from 'zss/memory/session'
+import { pick } from 'zss/mapping/array'
+import { ispid } from 'zss/mapping/guid'
+import { TICK_FPS } from 'zss/mapping/tick'
+import { ispresent } from 'zss/mapping/types'
+import {
+  memoryreadactivelist,
+  memoryreadbookplayerboards,
+} from 'zss/memory/playermanagement'
+import {
+  memoryreadbookbysoftware,
+  memoryreadsimfreeze,
+} from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { pilottick } from './pilot'
@@ -17,23 +36,73 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   if (memoryreadsimfreeze()) {
     return
   }
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
   perfmeasure('vm:pilottick', () => {
     pilottick(vm)
   })
   perfmeasure('vm:memorytickmain', () => {
-    memorytickmain(memoryreadhalt())
+    // memorytickmain(ishalted)
   })
   perfmeasure('vm:jsondiffsync', () => {
-    // build the outbound sync message
-    if (jsondiffsynchubapply(jsondiffsync)) {
-      // send outbound sync message to all active players
-      const activelist = memoryreadactivelist()
-      for (let i = 0; i < activelist.length; ++i) {
-        const player = activelist[i]
-        const prep = hubprepareoutboundforleaf(jsondiffsync, player)
-        if (prep.message !== undefined) {
-          boardrunnerjsondiffsync(vm, player, prep.message)
+    const hubapply = perfmeasure('vm:jds:hubapply', () =>
+      jsondiffsynchubapply(jsondiffsync),
+    )
+    if (hubapply) {
+      perfmeasure('vm:jds:fanout', () => {
+        const activelist = memoryreadactivelist()
+        for (let i = 0; i < activelist.length; ++i) {
+          const player = activelist[i]
+          const prep = hubprepareoutboundforleaf(jsondiffsync, player)
+          if (prep.message !== undefined) {
+            boardrunnerjsondiffsync(vm, player, prep.message)
+          }
         }
+      })
+    }
+  })
+  // get all active boards
+  const activeboards = memoryreadbookplayerboards(mainbook)
+  perfmeasure('vm:manageboardrunners', () => {
+    // process each active board
+    for (let i = 0; i < activeboards.length; ++i) {
+      // get the boardrunner player
+      const board = activeboards[i]
+      // if the boardrunner player is present
+      if (ispresent(boardrunners[board.id])) {
+        // decrement the boardrunner ack
+        const runnerplayer = boardrunners[board.id]
+        boardrunneracks[runnerplayer]--
+        // add the player to boardrunnerblocks
+        if (boardrunneracks[runnerplayer] < 1) {
+          // drop failed ack runner
+          delete boardrunners[board.id]
+          delete boardrunneracks[board.id]
+          boardrunnerblocked[runnerplayer] = true
+        }
+      }
+      // if the boardrunner player is not present
+      // try to assign a new boardrunner player
+      if (!ispresent(boardrunners[board.id])) {
+        // try to assign a new boardrunner player
+        const playersonboard = Object.keys(board.objects)
+          .filter(ispid)
+          .filter((player) => !boardrunnerblocked[player])
+        const elected = pick(playersonboard)
+        // assign the new boardrunner player
+        boardrunners[board.id] = elected
+        boardrunneracks[elected] = Math.ceil(TICK_FPS)
+      }
+      // send a boardrunner tick message to the boardrunner player
+      if (ispresent(boardrunners[board.id])) {
+        boardrunnertick(
+          vm,
+          boardrunners[board.id],
+          board.id,
+          mainbook.timestamp,
+        )
       }
     }
   })

@@ -1,5 +1,6 @@
 import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 
 import { hubensureleaf } from './session'
 import { assignintoworking, rebaseapply } from './sync'
@@ -43,17 +44,19 @@ export function hubprocessleafinbound(
   }
 
   if (message.kind === 'fullsnapshot') {
-    assignintoworking(hub.working, message.document)
-    hub.versionshadow = deepcopy(hub.working)
-    hub.documentversion = message.resultdocumentversion
-    for (const rid of hub.leaves.keys()) {
-      const r = hub.leaves.get(rid)!
-      r.shadow = deepcopy(hub.working)
-      r.basisversion = hub.documentversion
-      hub.lasthubackpiggybackedtoleaf.set(rid, 0)
-    }
-    hub.lastleafack.set(leaf, message.seq)
-    hubtryconsumeleafack(hub, leaf, message.ackpeerseq)
+    perfmeasure('jds:hub:inbound:fullsnapshot', () => {
+      assignintoworking(hub.working, message.document)
+      hub.versionshadow = deepcopy(hub.working)
+      hub.documentversion = message.resultdocumentversion
+      for (const rid of hub.leaves.keys()) {
+        const r = hub.leaves.get(rid)!
+        r.shadow = deepcopy(hub.working)
+        r.basisversion = hub.documentversion
+        hub.lasthubackpiggybackedtoleaf.set(rid, 0)
+      }
+      hub.lastleafack.set(leaf, message.seq)
+      hubtryconsumeleafack(hub, leaf, message.ackpeerseq)
+    })
     return { ok: true, changed: true }
   }
 
@@ -83,8 +86,10 @@ export function hubprocessleafinbound(
     return { ok: false, needsresync: true, error: merged.error }
   }
 
-  assignintoworking(hub.working, merged.merged)
-  hub.versionshadow = deepcopy(hub.working)
+  perfmeasure('jds:hub:inbound:applymerged', () => {
+    assignintoworking(hub.working, merged.merged)
+    hub.versionshadow = deepcopy(hub.working)
+  })
   hub.documentversion++
   hub.lastleafack.set(leaf, message.seq)
   hubtryconsumeleafack(hub, leaf, message.ackpeerseq)
@@ -97,7 +102,9 @@ export function hubprepareoutboundforleaf(
 ): PREPARE_OUTBOUND_RESULT {
   hubensureleaf(hub, leaf)
   const row = hub.leaves.get(leaf)!
-  const ops = compare(row.shadow as object, hub.working as object)
+  const ops = perfmeasure('jds:hub:prepare:compare', () =>
+    compare(row.shadow as object, hub.working as object),
+  )
   const last_proc = hub.lastleafack.get(leaf) ?? 0
   const ack_sent = hub.lasthubackpiggybackedtoleaf.get(leaf) ?? 0
   const owe_leaf_ack = last_proc > ack_sent
@@ -148,11 +155,15 @@ export function hubmakefullsnapshot(
 
 /** Bump `documentversion` when `hub.working` (e.g. MEMORY) changed since last bump. */
 export function jsondiffsynchubapply(hub: HUB_SESSION) {
-  const ops = compare(hub.versionshadow as object, hub.working as object)
+  const ops = perfmeasure('jds:hub:apply:compare', () =>
+    compare(hub.versionshadow as object, hub.working as object),
+  )
   if (ops.length === 0) {
     return false
   }
-  hub.versionshadow = deepcopy(hub.working)
+  perfmeasure('jds:hub:apply:shadowcopy', () => {
+    hub.versionshadow = deepcopy(hub.working)
+  })
   hub.documentversion++
   return true
 }

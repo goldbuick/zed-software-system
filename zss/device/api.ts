@@ -105,6 +105,24 @@ export function boardrunnerboot(device: DEVICELIKE, player: string) {
   device.emit(player, 'boardrunner:boot')
 }
 
+export function boardrunnertick(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+  timestamp: number,
+) {
+  device.emit(player, 'boardrunner:tick', [board, timestamp])
+}
+
+export function boardrunnerinput(
+  device: DEVICELIKE,
+  player: string,
+  input: INPUT,
+  mods: number,
+) {
+  device.emit(player, 'boardrunner:input', [input, mods])
+}
+
 export function boardrunnerjsondiffsync(
   device: DEVICELIKE,
   player: string,
@@ -880,17 +898,12 @@ export function vmhalt(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:halt')
 }
 
-export function vminput(
-  device: DEVICELIKE,
-  player: string,
-  input: INPUT,
-  mods: number,
-) {
-  device.emit(player, 'vm:input', [input, mods])
-}
-
 export function vminspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
   device.emit(player, 'vm:inspect', [p1, p2])
+}
+
+export function vmacktick(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:acktick')
 }
 
 export function vmjsondiffsync(

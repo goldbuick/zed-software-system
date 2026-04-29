@@ -5,15 +5,14 @@ import { jsondiffsync } from 'zss/device/vm/state'
 import { jsondiffsyncleafapply } from 'zss/feature/jsondiffsync/hub'
 import { issyncmessage } from 'zss/feature/jsondiffsync/types'
 import { ispresent } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 
 export function handlejsondiffsync(vm: DEVICE, message: MESSAGE): void {
   if (!issyncmessage(message.data)) {
     return
   }
-  const [outbound] = jsondiffsyncleafapply(
-    jsondiffsync,
-    message.player,
-    message.data,
+  const [outbound] = perfmeasure('jds:vm:hub:leafapply', () =>
+    jsondiffsyncleafapply(jsondiffsync, message.player, message.data),
   )
   if (ispresent(outbound)) {
     boardrunnerjsondiffsync(vm, message.player, outbound)

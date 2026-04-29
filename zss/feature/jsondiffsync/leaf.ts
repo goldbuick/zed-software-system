@@ -1,5 +1,6 @@
 import { compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
+import { perfmeasure } from 'zss/perf/ui'
 
 import { assignintoworking, rebaseapply } from './sync'
 import type {
@@ -13,7 +14,9 @@ import type {
 export function leafprepareoutbound(
   session: LEAF_SESSION,
 ): PREPARE_OUTBOUND_RESULT {
-  const ops = compare(session.shadow as object, session.working as object)
+  const ops = perfmeasure('jds:leaf:prepare:compare', () =>
+    compare(session.shadow as object, session.working as object),
+  )
   const needhuback = session.lastpeerseqacked > session.lastackpiggybackedtohub
   if (ops.length === 0 && !needhuback) {
     return { message: undefined, reason: 'noop' }
@@ -68,15 +71,17 @@ export function leafapplyinbound(
   message: SYNC_MESSAGE,
 ): INBOUND_RESULT {
   if (message.kind === 'fullsnapshot') {
-    assignintoworking(session.working, message.document)
-    session.shadow = deepcopy(message.document)
-    session.basisversion = message.resultdocumentversion
-    session.unackedseq = undefined
-    session.backupshadow = undefined
-    session.unackedpreparecount = 0
-    session.lastpeerseqacked = message.seq
-    session.awaitingsnapshot = false
-    leafackoutbound(session, message.ackpeerseq)
+    perfmeasure('jds:leaf:inbound:fullsnapshot', () => {
+      assignintoworking(session.working, message.document)
+      session.shadow = deepcopy(message.document)
+      session.basisversion = message.resultdocumentversion
+      session.unackedseq = undefined
+      session.backupshadow = undefined
+      session.unackedpreparecount = 0
+      session.lastpeerseqacked = message.seq
+      session.awaitingsnapshot = false
+      leafackoutbound(session, message.ackpeerseq)
+    })
     return { ok: true, changed: true }
   }
   if (message.kind === 'requestsnapshot') {
@@ -108,11 +113,13 @@ export function leafapplyinbound(
   if (!r.ok) {
     return { ok: false, needsresync: true, error: r.error }
   }
-  assignintoworking(session.working, r.merged)
-  session.shadow = deepcopy(r.merged)
-  session.basisversion = message.resultdocumentversion
-  session.lastpeerseqacked = message.seq
-  leafackoutbound(session, message.ackpeerseq)
+  perfmeasure('jds:leaf:inbound:applymerged', () => {
+    assignintoworking(session.working, r.merged)
+    session.shadow = deepcopy(r.merged)
+    session.basisversion = message.resultdocumentversion
+    session.lastpeerseqacked = message.seq
+    leafackoutbound(session, message.ackpeerseq)
+  })
   return { ok: true, changed: true }
 }
 
