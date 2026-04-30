@@ -11,9 +11,11 @@ import {
   jsondiffsync,
 } from 'zss/device/vm/state'
 import {
+  hubclearpendinghubbroadcast,
   hubprepareoutboundforleaf,
   jsondiffsynchubapply,
 } from 'zss/feature/jsondiffsync/hub'
+import { logjsondiffsyncoutbound } from 'zss/feature/jsondiffsync/syncdebug'
 import { pick } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -48,9 +50,11 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       const player = activelist[i]
       const prep = hubprepareoutboundforleaf(jsondiffsync, player)
       if (prep.message !== undefined) {
+        logjsondiffsyncoutbound(player, 'ticktock', prep.message)
         boardrunnerjsondiffsync(vm, player, prep.message)
       }
     }
+    hubclearpendinghubbroadcast(jsondiffsync)
   }
   // get all active boards
   const activeboards = memoryreadbookplayerboards(mainbook)

@@ -3,6 +3,7 @@ import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerjsondiffsync } from 'zss/device/api'
 import { jsondiffsync } from 'zss/device/vm/state'
 import { jsondiffsyncleafapply } from 'zss/feature/jsondiffsync/hub'
+import { logjsondiffsyncoutbound } from 'zss/feature/jsondiffsync/syncdebug'
 import { issyncmessage } from 'zss/feature/jsondiffsync/types'
 import { ispresent } from 'zss/mapping/types'
 
@@ -21,8 +22,7 @@ export function handlejsondiffsync(vm: DEVICE, message: MESSAGE): void {
     message.data,
   )
   if (ispresent(outbound)) {
+    logjsondiffsyncoutbound(message.player, 'vm:jsondiffsync', outbound)
     boardrunnerjsondiffsync(vm, message.player, outbound)
-    // console.info('vm sync message', outbound)
-    // if we need this in the future, we should only log if the message is a snapshot, or if it a delta with operations > 0
   }
 }

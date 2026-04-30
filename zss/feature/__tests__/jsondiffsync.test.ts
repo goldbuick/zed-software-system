@@ -1,6 +1,7 @@
 import { compare } from 'fast-json-patch'
 import type { Operation } from 'fast-json-patch'
 import {
+  hubclearpendinghubbroadcast,
   hubmakefullsnapshot,
   hubprepareoutboundforleaf,
   hubprocessleafinbound,
@@ -12,11 +13,6 @@ import {
   leafprepareoutbound,
 } from 'zss/feature/jsondiffsync/leaf'
 import {
-  createhubsession,
-  createleafsession,
-  hubensureleaf,
-} from 'zss/feature/jsondiffsync/session'
-import {
   JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
   filterjsonpatchforsync,
   hasrelevantsyncdiff,
@@ -24,6 +20,11 @@ import {
   pointermatchesignorepair,
   semanticparentandleafforsegments,
 } from 'zss/feature/jsondiffsync/patchfilter'
+import {
+  createhubsession,
+  createleafsession,
+  hubensureleaf,
+} from 'zss/feature/jsondiffsync/session'
 import { assignintoworking, rebaseapply } from 'zss/feature/jsondiffsync/sync'
 import type {
   PREPARE_OUTBOUND_RESULT,
@@ -70,12 +71,7 @@ describe('semanticparentandleafforsegments', () => {
 
   it('resolves board terrain index kinddata to parent terrain', () => {
     expect(
-      semanticparentandleafforsegments([
-        'board',
-        'terrain',
-        '42',
-        'kinddata',
-      ]),
+      semanticparentandleafforsegments(['board', 'terrain', '42', 'kinddata']),
     ).toEqual({ semanticparent: 'terrain', leaf: 'kinddata' })
   })
 
@@ -139,9 +135,9 @@ describe('semanticparentandleafforsegments', () => {
     expect(
       pointermatchesignorepair('/books/B/pages/43/board/lookup/1445'),
     ).toBe(true)
-    expect(
-      pointermatchesignorepair('/books/B/pages/0/board/named/foo'),
-    ).toBe(true)
+    expect(pointermatchesignorepair('/books/B/pages/0/board/named/foo')).toBe(
+      true,
+    )
   })
 
   it('matches ignore rules for books timestamp pointer', () => {
@@ -385,7 +381,7 @@ describe('jsondiffsync leaf hub', () => {
       return
     }
 
-    const mergedmsgs = jsondiffsyncleafapply(hub, leaf.peer, prepleaf.message!)
+    const mergedmsgs = jsondiffsyncleafapply(hub, leaf.peer, prepleaf.message)
     expect(mergedmsgs.length).toBe(1)
     const hubmsg = mergedmsgs[0]
     expect(hubmsg.kind).toBe('delta')
@@ -518,10 +514,10 @@ describe('jsondiffsync leaf hub', () => {
       return
     }
 
-    jsondiffsyncleafapply(hub, leaf.peer, prep.message!)
+    jsondiffsyncleafapply(hub, leaf.peer, prep.message)
     const dvafterfirst = hub.documentversion
 
-    jsondiffsyncleafapply(hub, leaf.peer, prep.message!)
+    jsondiffsyncleafapply(hub, leaf.peer, prep.message)
     expect(hub.documentversion).toBe(dvafterfirst)
   })
 
@@ -751,9 +747,7 @@ describe('jsondiffsync leaf hub', () => {
     }
     const hub = createhubsession(seed)
     hub.versionshadow = deepcopy(hub.working)
-    ;(
-      seed.books.bk.flags.gadgetstore.p1 as { scroll: string[] }
-    ).scroll = ['x']
+    ;(seed.books.bk.flags.gadgetstore.p1 as { scroll: string[] }).scroll = ['x']
     expect(jsondiffsynchubapply(hub)).toBe(false)
     expect(hub.documentversion).toBe(0)
   })
@@ -870,5 +864,22 @@ describe('jsondiffsync leaf hub', () => {
     expect(hub.working).toBe(seed)
     expect(hub.documentversion).toBe(1)
     expect(jsondiffsynchubapply(hub)).toBe(false)
+  })
+
+  it('multi-leaf caught-up rows reuse jsondiffsynchubapply ops in hubprepareoutbound', () => {
+    const initial = { v: 0 }
+    const hub = createhubsession(deepcopy(initial))
+    hubensureleaf(hub, 'p1')
+    hubensureleaf(hub, 'p2')
+    hub.working.v = 1
+    expect(jsondiffsynchubapply(hub)).toBe(true)
+    const prep1 = hubprepareoutboundforleaf(hub, 'p1')
+    const prep2 = hubprepareoutboundforleaf(hub, 'p2')
+    hubclearpendinghubbroadcast(hub)
+    expect(hasoutboundmessage(prep1)).toBe(true)
+    expect(hasoutboundmessage(prep2)).toBe(true)
+    if (prep1.message?.kind === 'delta' && prep2.message?.kind === 'delta') {
+      expect(prep1.message.operations).toEqual(prep2.message.operations)
+    }
   })
 })

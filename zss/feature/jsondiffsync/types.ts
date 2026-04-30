@@ -99,6 +99,16 @@ export type HUB_SESSION = {
   lastleafack: Map<string, number>
   /** Last `ack_peer_seq` sent to each leaf on a hub→leaf message. */
   lasthubackpiggybackedtoleaf: Map<string, number>
+  /**
+   * Populated by `jsondiffsynchubapply` when local MEMORY edits bump DV; leaves whose
+   * `basisversion` still equals `prebum_documentversion` may reuse `operations` instead of
+   * recomputing `jsondiffsyncdiff(shadow, working)`. Cleared after tick fan-out or when the hub
+   * doc advances by other means.
+   */
+  pendinghubbroadcast?: {
+    prebum_documentversion: number
+    operations: Operation[]
+  }
 }
 
 export function issyncmessage(value: unknown): value is SYNC_MESSAGE {

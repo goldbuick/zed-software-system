@@ -1,3 +1,4 @@
+import type { Operation } from 'fast-json-patch'
 import { jsondocumentcopy } from 'zss/mapping/types'
 
 import { jsondiffsyncdiff } from './patchfilter'
@@ -11,6 +12,10 @@ import type {
 } from './types'
 
 /** Star hub: authoritative `working`, per-leaf shadow rows advanced after leaf acks hub messages. */
+
+export function hubclearpendinghubbroadcast(hub: HUB_SESSION): void {
+  hub.pendinghubbroadcast = undefined
+}
 
 function hubtryconsumeleafack(
   hub: HUB_SESSION,
@@ -52,6 +57,7 @@ export function hubprocessleafinbound(
   }
 
   if (message.kind === 'fullsnapshot') {
+    hub.pendinghubbroadcast = undefined
     assignintoworking(hub.working, message.document)
     hub.versionshadow = jsondocumentcopy(hub.working)
     hub.documentversion = message.resultdocumentversion
@@ -112,6 +118,7 @@ export function hubprocessleafinbound(
     return { ok: false, needsresync: true, error: merged.error }
   }
 
+  hub.pendinghubbroadcast = undefined
   assignintoworking(hub.working, merged.merged)
   hub.versionshadow = jsondocumentcopy(hub.working)
   hub.documentversion++
@@ -125,7 +132,16 @@ export function hubprepareoutboundforleaf(
 ): PREPARE_OUTBOUND_RESULT {
   hubensureleaf(hub, leaf)
   const row = hub.leaves.get(leaf)!
-  const ops = jsondiffsyncdiff(row.shadow as object, hub.working as object)
+  const pending = hub.pendinghubbroadcast
+  let ops: Operation[]
+  if (
+    row.basisversion === pending?.prebum_documentversion &&
+    row.basisforhuboutbound === undefined
+  ) {
+    ops = pending.operations
+  } else {
+    ops = jsondiffsyncdiff(row.shadow as object, hub.working as object)
+  }
   const last_proc = hub.lastleafack.get(leaf) ?? 0
   const ack_sent = hub.lasthubackpiggybackedtoleaf.get(leaf) ?? 0
   const owe_leaf_ack = last_proc > ack_sent
@@ -153,7 +169,7 @@ export function hubprepareoutboundforleaf(
     ackpeerseq: last_ack,
     basisversion: basisforleafmessage,
     resultdocumentversion: hub.documentversion,
-    operations: ops,
+    operations: jsondocumentcopy(ops),
   }
   hub.lasthubackpiggybackedtoleaf.set(leaf, last_ack)
   return { message, isretransmit: is_retransmit }
@@ -215,12 +231,18 @@ export function hubsyncleafrowafterhuboutbound(
 
 /** Bump `documentversion` when `hub.working` (e.g. MEMORY) changed since last bump. */
 export function jsondiffsynchubapply(hub: HUB_SESSION) {
+  hub.pendinghubbroadcast = undefined
   const ops = jsondiffsyncdiff(
     hub.versionshadow as object,
     hub.working as object,
   )
   if (ops.length === 0) {
     return false
+  }
+  const prebum = hub.documentversion
+  hub.pendinghubbroadcast = {
+    prebum_documentversion: prebum,
+    operations: jsondocumentcopy(ops),
   }
   hub.versionshadow = jsondocumentcopy(hub.working)
   hub.documentversion++
@@ -237,6 +259,7 @@ export function jsondiffsyncleafapply(
   incoming: SYNC_MESSAGE,
 ): SYNC_MESSAGE[] {
   if (incoming.kind === 'requestsnapshot') {
+    hub.pendinghubbroadcast = undefined
     hubensureleaf(hub, leaf)
     const seq = hub.nexthubseq++
     hub.unackedbyleaf.set(leaf, seq)
@@ -256,6 +279,7 @@ export function jsondiffsyncleafapply(
       hub.leaves.get(leaf)!.basisforhuboutbound = undefined
       return []
     }
+    hub.pendinghubbroadcast = undefined
     hubensureleaf(hub, leaf)
     const seq = hub.nexthubseq++
     hub.unackedbyleaf.set(leaf, seq)

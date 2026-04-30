@@ -4,6 +4,7 @@ import {
   leafprepareoutbound,
 } from 'zss/feature/jsondiffsync/leaf'
 import { createleafsession } from 'zss/feature/jsondiffsync/session'
+import { logjsondiffsyncdebouncedrequest } from 'zss/feature/jsondiffsync/syncdebug'
 import {
   LEAF_SESSION,
   SYNC_MESSAGE,
@@ -68,6 +69,10 @@ function buildacktickgadgetpayload(
 
 function requestsnapshot(player: string) {
   if (!ispresent(leafsession)) {
+    return
+  }
+  if (leafsession.awaitingsnapshot) {
+    logjsondiffsyncdebouncedrequest(player)
     return
   }
   const message: SYNC_MESSAGE = {
