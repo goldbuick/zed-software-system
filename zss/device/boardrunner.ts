@@ -12,7 +12,6 @@ import {
 import { gadgetstate } from 'zss/gadget/data/api'
 import { INPUT } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memorytickmain } from 'zss/memory/runtime'
@@ -24,34 +23,6 @@ import {
 import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { type ACKTICK_GADGET_PAYLOAD, vmacktick, vmjsondiffsync } from './api'
-import { movementevidencelog } from './movementevidencelog'
-
-function boardrunnermovementprobe(
-  player: string,
-  boardid: string,
-  phase: string,
-) {
-  const pb = memoryreadplayerboard(player)
-  let x: number | undefined
-  let y: number | undefined
-  if (ispresent(pb) && pb.id === boardid) {
-    const obj = memoryreadobject(pb, player)
-    if (ispresent(obj)) {
-      x = obj.x
-      y = obj.y
-    }
-  }
-  let inputqlen: number | undefined
-  if (memoryhasflags(player)) {
-    const flags = memoryreadflags(player)
-    inputqlen = isarray(flags.inputqueue) ? flags.inputqueue.length : 0
-  }
-  movementevidencelog(
-    'boardrunner_tick_xy_probe',
-    { phase, player, boardid, x, y, inputqlen },
-    'movement-xy',
-  )
-}
 
 let leafsession: MAYBE<LEAF_SESSION>
 export function createboardrunnerleafsession(player: string) {
@@ -129,18 +100,8 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
     case 'tick':
       if (ispresent(leafsession) && isarray(message.data)) {
         const [board, timestamp] = message.data as [string, number]
-        // #region agent log
-        movementevidencelog(
-          'boardrunner_tick_enter',
-          { player: message.player, board, timestamp },
-          'movement-order',
-        )
-        boardrunnermovementprobe(message.player, board, 'before_memorytickmain')
-        // #endregion
+        // console.info('tick', board, timestamp)
         memorytickmain(board, timestamp, memoryreadhalt())
-        // #region agent log
-        boardrunnermovementprobe(message.player, board, 'after_memorytickmain')
-        // #endregion
         vmacktick(boardrunner, message.player, buildacktickgadgetpayload(board))
         const prep = leafprepareoutbound(leafsession)
         if (prep.message !== undefined) {
@@ -170,50 +131,7 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       ) {
         break
       }
-      const sync = message.data
-      // #region agent log
-      movementevidencelog(
-        'leaf_inbound_enter',
-        {
-          player: message.player,
-          kind: sync.kind,
-          seq: sync.seq,
-          opcount: sync.kind === 'delta' ? sync.operations.length : undefined,
-          leafbasisversion: leafsession.basisversion,
-          hubbasisversion:
-            sync.kind === 'delta' ? sync.basisversion : undefined,
-        },
-        'movement-resync',
-      )
-      // #endregion
-      const inbound = leafapplyinbound(leafsession, sync)
-      // #region agent log
-      if (!inbound.ok) {
-        movementevidencelog(
-          'leaf_inbound_needsresync',
-          {
-            player: message.player,
-            kind: sync.kind,
-            err:
-              inbound.error instanceof Error
-                ? inbound.error.message
-                : String(inbound.error),
-          },
-          'movement-resync',
-        )
-      } else {
-        movementevidencelog(
-          'leaf_inbound_ok',
-          {
-            player: message.player,
-            kind: sync.kind,
-            changed: inbound.changed,
-            newbasis: leafsession.basisversion,
-          },
-          'movement-resync',
-        )
-      }
-      // #endregion
+      const inbound = leafapplyinbound(leafsession, message.data)
       if (!inbound.ok) {
         requestsnapshot(message.player)
       } else if (inbound.changed) {
