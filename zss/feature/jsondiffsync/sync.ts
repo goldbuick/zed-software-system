@@ -1,7 +1,13 @@
 import { Operation, applyPatch, compare } from 'fast-json-patch'
 import { jsondocumentcopy } from 'zss/mapping/types'
 
-import { filterjsonpatchforsync, filterjsonpatchmergeleg } from './patchfilter'
+import {
+  filterjsonpatchbystreamingore,
+  filterjsonpatchforsync,
+  filterjsonpatchmergeleg,
+  JSONDIFFSYNC_IGNORE_PARENT_CHILD,
+  JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+} from './patchfilter'
 import type { JSON_DOCUMENT } from './types'
 
 /** Bootstrap document; hub and leaf must start from the same snapshot. */
@@ -39,14 +45,23 @@ export function rebaseapply(
   base: JSON_DOCUMENT,
   working: JSON_DOCUMENT,
   inbound: Operation[],
+  streamingorepathprefixes: readonly string[] = [],
+  rules: readonly [string, string][] = JSONDIFFSYNC_IGNORE_PARENT_CHILD,
+  subtreesegment: ReadonlySet<string> = JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
 ): { ok: true; merged: JSON_DOCUMENT } | { ok: false; error: unknown } {
   try {
-    const inboundfiltered = filterjsonpatchforsync(inbound)
+    const inboundfiltered = filterjsonpatchbystreamingore(
+      filterjsonpatchforsync(inbound, rules, subtreesegment),
+      streamingorepathprefixes,
+    )
     const mergeddoc = jsondocumentcopy(base) as object
     applyPatch(mergeddoc, inboundfiltered, true, true)
     /** Compare local shadow vs working; strip FORMAT_SKIP board paths and tick input buffers (merge leg keeps kinddata). */
-    const localdelta = filterjsonpatchmergeleg(
-      compare(base as object, working as object),
+    const localdelta = filterjsonpatchbystreamingore(
+      filterjsonpatchmergeleg(
+        compare(base as object, working as object),
+      ),
+      streamingorepathprefixes,
     )
     if (localdelta.length === 0) {
       return { ok: true, merged: mergeddoc as JSON_DOCUMENT }

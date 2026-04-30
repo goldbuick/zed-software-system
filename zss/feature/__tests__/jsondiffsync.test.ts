@@ -30,6 +30,7 @@ import type {
   PREPARE_OUTBOUND_RESULT,
   SYNC_MESSAGE,
 } from 'zss/feature/jsondiffsync/types'
+import { JSONDIFFSYNC_STREAM_MEMORY, JSONDIFFSYNC_STREAM_FLAGS } from 'zss/feature/jsondiffsync/types'
 import { deepcopy } from 'zss/mapping/types'
 
 function hasoutboundmessage(
@@ -282,6 +283,9 @@ describe('jsondiffsync rebaseapply', () => {
     working.books.B.pages[0].board.tiles = 2
     const r = rebaseapply(base, working, [])
     expect(r.ok).toBe(true)
+    if (!r.ok) {
+      throw new Error('expected rebase ok')
+    }
     expect(r.merged.books.B.pages[0].board.tiles).toBe(2)
     expect(r.merged.books.B.pages[0].board.drawlastxy.p.x).toBe(0)
   })
@@ -418,6 +422,7 @@ describe('jsondiffsync leaf hub', () => {
 
     const noopleafdelta: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: leaf.peer,
       seq: 1,
       ackpeerseq: 0,
@@ -435,6 +440,7 @@ describe('jsondiffsync leaf hub', () => {
     leaf.basisversion = 3
     const ackonly: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 2,
       ackpeerseq: 0,
@@ -456,6 +462,7 @@ describe('jsondiffsync leaf hub', () => {
     row.basisversion = 3
     const emptyfromleaf: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'L1',
       seq: 1,
       ackpeerseq: 0,
@@ -476,6 +483,7 @@ describe('jsondiffsync leaf hub', () => {
     row.basisversion = 3
     const emptyfromleaf: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'L1',
       seq: 1,
       ackpeerseq: 0,
@@ -499,6 +507,7 @@ describe('jsondiffsync leaf hub', () => {
     row.basisversion = 10
     const deltafromleaf: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'L1',
       seq: 1,
       ackpeerseq: 0,
@@ -524,6 +533,7 @@ describe('jsondiffsync leaf hub', () => {
     row.basisversion = 10
     const deltafromleaf: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'L1',
       seq: 1,
       ackpeerseq: 0,
@@ -544,6 +554,7 @@ describe('jsondiffsync leaf hub', () => {
     leaf.awaitingsnapshot = true
     const delta: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 1,
       ackpeerseq: 0,
@@ -568,6 +579,7 @@ describe('jsondiffsync leaf hub', () => {
     leaf.awaitingsnapshot = true
     const ackonly: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 3,
       ackpeerseq: 0,
@@ -587,6 +599,7 @@ describe('jsondiffsync leaf hub', () => {
     leaf.awaitingsnapshot = true
     const ackonly: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 2,
       ackpeerseq: 0,
@@ -650,6 +663,7 @@ describe('jsondiffsync leaf hub', () => {
     hubensureleaf(hub, leaf.peer)
     const bad: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'L1',
       seq: 1,
       ackpeerseq: 0,
@@ -725,6 +739,7 @@ describe('jsondiffsync leaf hub', () => {
     const leaf = createleafsession('L1', { k: 0 })
     const baddelta1: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 1,
       ackpeerseq: 0,
@@ -744,6 +759,7 @@ describe('jsondiffsync leaf hub', () => {
 
     const outarr = jsondiffsyncleafapply(hub, 'L1', {
       kind: 'requestsnapshot',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'L1',
       seq: 0,
       ackpeerseq: 0,
@@ -767,6 +783,7 @@ describe('jsondiffsync leaf hub', () => {
     expect(leaf.working).toBe(seed)
     const snap: SYNC_MESSAGE = {
       kind: 'fullsnapshot',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 1,
       ackpeerseq: 0,
@@ -778,6 +795,7 @@ describe('jsondiffsync leaf hub', () => {
     expect(seed).toEqual({ v: 9 })
     const delta: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 2,
       ackpeerseq: 0,
@@ -797,6 +815,7 @@ describe('jsondiffsync leaf hub', () => {
     expect(leaf.shadow).toEqual({ p: { y: 10 } })
     const snap: SYNC_MESSAGE = {
       kind: 'fullsnapshot',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: 'hub',
       seq: 1,
       ackpeerseq: 0,
@@ -824,7 +843,9 @@ describe('jsondiffsync leaf hub', () => {
     }
     const hub = createhubsession(seed)
     hub.versionshadow = deepcopy(hub.working)
-    seed.cp.stats = { type: 3, name: 'renamed' }
+    seed.cp.stats = { type: 3, name: 'renamed' } as (typeof seed.cp.stats & {
+      name?: string
+    })
     expect(jsondiffsynchubapply(hub)).toBe(false)
     expect(hub.documentversion).toBe(0)
   })
@@ -929,6 +950,7 @@ describe('jsondiffsync leaf hub', () => {
     expect(leaf.working).toBe(hub.working)
     const delta: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: leaf.peer,
       seq: 1,
       ackpeerseq: 0,
@@ -968,6 +990,7 @@ describe('jsondiffsync leaf hub', () => {
 
     const emptyfromleaf: SYNC_MESSAGE = {
       kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_MEMORY,
       senderpeer: leaf.peer,
       seq: 8,
       ackpeerseq: 1,
@@ -1024,5 +1047,62 @@ describe('jsondiffsync leaf hub', () => {
     if (prep1.message?.kind === 'delta' && prep2.message?.kind === 'delta') {
       expect(prep1.message.operations).toEqual(prep2.message.operations)
     }
+  })
+})
+
+describe('jsondiffsync multistream', () => {
+  it('memory hub omits delegated flags subtree from hub apply when prefix set', () => {
+    const bookid = 'Bmain'
+    const seed = {
+      books: { [bookid]: { flags: { p1: { n: 0 } } } },
+      meta: 0,
+    }
+    const hub = createhubsession(seed)
+    hub.streamingorepathprefixes = [`books/${bookid}/flags`]
+    hub.versionshadow = deepcopy(hub.working)
+    seed.books[bookid].flags.p1.n = 1
+    expect(jsondiffsynchubapply(hub)).toBe(false)
+    seed.meta = 1
+    expect(jsondiffsynchubapply(hub)).toBe(true)
+  })
+
+  it('flags subdocument hub bumps DV on plain flag-map edits', () => {
+    const seed = { p1: { n: 0 } }
+    const hub = createhubsession(seed, JSONDIFFSYNC_STREAM_FLAGS, [])
+    hub.versionshadow = deepcopy(hub.working)
+    seed.p1.n = 3
+    expect(jsondiffsynchubapply(hub)).toBe(true)
+  })
+
+  it('jsondiffsyncleafapply returns empty when inbound stream id mismatches hub', () => {
+    const hub = createhubsession({ v: 0 })
+    hubensureleaf(hub, 'L1')
+    const mismatched: SYNC_MESSAGE = {
+      kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_FLAGS,
+      senderpeer: 'L1',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 0,
+      resultdocumentversion: 1,
+      operations: [{ op: 'replace', path: '/v', value: 1 }],
+    }
+    expect(jsondiffsyncleafapply(hub, 'L1', mismatched)).toEqual([])
+  })
+
+  it('leafapply rejects stream id mismatch with resync', () => {
+    const leaf = createleafsession('L1', { v: 0 })
+    const inbound: SYNC_MESSAGE = {
+      kind: 'delta',
+      streamid: JSONDIFFSYNC_STREAM_FLAGS,
+      senderpeer: 'hub',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 0,
+      resultdocumentversion: 1,
+      operations: [],
+    }
+    const r = leafapplyinbound(leaf, inbound)
+    expect(r.ok).toBe(false)
   })
 })

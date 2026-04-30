@@ -1,17 +1,51 @@
 import type { Operation } from 'fast-json-patch'
 import { jsondocumentcopy } from 'zss/mapping/types'
 
-import { jsondiffsyncdiff } from './patchfilter'
+import {
+  JSONDIFFSYNC_IGNORE_NONE,
+  JSONDIFFSYNC_IGNORE_PARENT_CHILD,
+  JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+  JSONDIFFSYNC_SUBDOC_SUBTREE_SEGMENT,
+  jsondiffsyncdiff,
+} from './patchfilter'
 import { hubensureleaf } from './session'
 import { assignintoworking, rebaseapply } from './sync'
-import type {
-  HUB_SESSION,
-  INBOUND_RESULT,
-  PREPARE_OUTBOUND_RESULT,
-  SYNC_MESSAGE,
+import {
+  JSONDIFFSYNC_STREAM_BOARD,
+  JSONDIFFSYNC_STREAM_MEMORY,
+  type HUB_SESSION,
+  type INBOUND_RESULT,
+  type PREPARE_OUTBOUND_RESULT,
+  type SYNC_MESSAGE,
 } from './types'
 
-/** Star hub: authoritative `working`, per-leaf shadow rows advanced after leaf acks hub messages. */
+function hubsyncdiffrulesforauthority(hub: HUB_SESSION) {
+  const rootsubdocauthority = hub.streamid !== JSONDIFFSYNC_STREAM_MEMORY
+  return rootsubdocauthority
+    ? {
+        rules: JSONDIFFSYNC_IGNORE_NONE,
+        subtreesegment: JSONDIFFSYNC_SUBDOC_SUBTREE_SEGMENT,
+        rootsubdocauthority,
+      }
+    : {
+        rules: JSONDIFFSYNC_IGNORE_PARENT_CHILD,
+        subtreesegment: JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+        rootsubdocauthority,
+      }
+}
+
+/** Common wire fields duplicated on outbound hub messages (board stream keys by board address). */
+function hubsyncroutingfromhub(
+  hub: HUB_SESSION,
+): { streamid: string; boardsynctarget?: string } {
+  const o: { streamid: string; boardsynctarget?: string } = {
+    streamid: hub.streamid,
+  }
+  if (hub.boardsynctarget !== undefined) {
+    o.boardsynctarget = hub.boardsynctarget
+  }
+  return o
+}
 
 export function hubclearpendinghubbroadcast(hub: HUB_SESSION): void {
   hub.pendinghubbroadcast = undefined
@@ -49,6 +83,24 @@ export function hubprocessleafinbound(
   hubensureleaf(hub, leaf)
 
   const row = hub.leaves.get(leaf)!
+  if (hub.streamid !== message.streamid) {
+    return {
+      ok: false,
+      needsresync: true,
+      error: new Error('jsondiffsync: stream id mismatch'),
+    }
+  }
+  if (
+    hub.streamid === JSONDIFFSYNC_STREAM_BOARD &&
+    hub.boardsynctarget !== undefined &&
+    message.boardsynctarget !== hub.boardsynctarget
+  ) {
+    return {
+      ok: false,
+      needsresync: true,
+      error: new Error('jsondiffsync: board sync target mismatch'),
+    }
+  }
 
   if (message.kind === 'requestsnapshot') {
     throw new Error(
@@ -121,7 +173,15 @@ export function hubprocessleafinbound(
   /** Piggybacked `ackpeerseq` must run before merge so `row.shadow` matches leaf shadow when rebasing. */
   hubtryconsumeleafack(hub, leaf, message.ackpeerseq)
 
-  const merged = rebaseapply(row.shadow, hub.working, message.operations)
+  const diffrules = hubsyncdiffrulesforauthority(hub)
+  const merged = rebaseapply(
+    row.shadow,
+    hub.working,
+    message.operations,
+    hub.streamingorepathprefixes,
+    diffrules.rules,
+    diffrules.subtreesegment,
+  )
   if (!merged.ok) {
     return { ok: false, needsresync: true, error: merged.error }
   }
@@ -148,7 +208,15 @@ export function hubprepareoutboundforleaf(
   ) {
     ops = pending.operations
   } else {
-    ops = jsondiffsyncdiff(row.shadow as object, hub.working as object)
+    const d = hubsyncdiffrulesforauthority(hub)
+    ops = jsondiffsyncdiff(
+      row.shadow as object,
+      hub.working as object,
+      d.rules,
+      d.subtreesegment,
+      hub.streamingorepathprefixes,
+      d.rootsubdocauthority,
+    )
   }
   const last_proc = hub.lastleafack.get(leaf) ?? 0
   const ack_sent = hub.lasthubackpiggybackedtoleaf.get(leaf) ?? 0
@@ -171,6 +239,7 @@ export function hubprepareoutboundforleaf(
   const basisforleafmessage = row.basisforhuboutbound ?? row.basisversion
   row.basisforhuboutbound = undefined
   const message: SYNC_MESSAGE = {
+    ...hubsyncroutingfromhub(hub),
     kind: 'delta',
     senderpeer: 'hub',
     seq,
@@ -191,6 +260,7 @@ export function hubmakefullsnapshot(
 ): SYNC_MESSAGE {
   hubensureleaf(hub, leaf)
   return {
+    ...hubsyncroutingfromhub(hub),
     kind: 'fullsnapshot',
     senderpeer: 'hub',
     seq,
@@ -214,6 +284,7 @@ function hubmakebasisbumpdelta(
   const last_ack = hub.lastleafack.get(leaf) ?? 0
   hub.lasthubackpiggybackedtoleaf.set(leaf, last_ack)
   return {
+    ...hubsyncroutingfromhub(hub),
     kind: 'delta',
     senderpeer: 'hub',
     seq,
@@ -240,9 +311,14 @@ export function hubsyncleafrowafterhuboutbound(
 /** Bump `documentversion` when `hub.working` (e.g. MEMORY) changed since last bump. */
 export function jsondiffsynchubapply(hub: HUB_SESSION) {
   hub.pendinghubbroadcast = undefined
+  const d = hubsyncdiffrulesforauthority(hub)
   const ops = jsondiffsyncdiff(
     hub.versionshadow as object,
     hub.working as object,
+    d.rules,
+    d.subtreesegment,
+    hub.streamingorepathprefixes,
+    d.rootsubdocauthority,
   )
   if (ops.length === 0) {
     return false
@@ -266,6 +342,16 @@ export function jsondiffsyncleafapply(
   leaf: string,
   incoming: SYNC_MESSAGE,
 ): SYNC_MESSAGE[] {
+  if (hub.streamid !== incoming.streamid) {
+    return []
+  }
+  if (
+    hub.streamid === JSONDIFFSYNC_STREAM_BOARD &&
+    hub.boardsynctarget !== undefined &&
+    incoming.boardsynctarget !== hub.boardsynctarget
+  ) {
+    return []
+  }
   if (incoming.kind === 'requestsnapshot') {
     hub.pendinghubbroadcast = undefined
     hubensureleaf(hub, leaf)

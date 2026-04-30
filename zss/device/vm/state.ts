@@ -1,4 +1,7 @@
 import { createhubsession } from 'zss/feature/jsondiffsync/session'
+import { JSONDIFFSYNC_STREAM_MEMORY } from 'zss/feature/jsondiffsync/types'
+
+import { refreshmemoryhubstreamingore } from './jsondiffsyncstreams'
 import { memoryreadroot } from 'zss/memory/session'
 
 export const SECOND_TIMEOUT = 16
@@ -8,7 +11,13 @@ export const tracking: Record<string, number> = {}
 export const trackinglastlog: Record<string, number> = {}
 export const lastinputtime: Record<string, number> = {}
 
-export const jsondiffsync = createhubsession(memoryreadroot())
+export const jsondiffsync = createhubsession(
+  memoryreadroot(),
+  JSONDIFFSYNC_STREAM_MEMORY,
+  [],
+)
+
+refreshmemoryhubstreamingore(jsondiffsync)
 
 // board -> player running it
 export const boardrunners: Record<string, string> = {}

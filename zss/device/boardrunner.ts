@@ -6,6 +6,9 @@ import {
 import { createleafsession } from 'zss/feature/jsondiffsync/session'
 import { logjsondiffsyncdebouncedrequest } from 'zss/feature/jsondiffsync/syncdebug'
 import {
+  JSONDIFFSYNC_STREAM_BOARD,
+  JSONDIFFSYNC_STREAM_FLAGS,
+  JSONDIFFSYNC_STREAM_MEMORY,
   LEAF_SESSION,
   SYNC_MESSAGE,
   issyncmessage,
@@ -33,13 +36,111 @@ import {
   vmhubsyncleaf,
   vmjsondiffsync,
 } from './api'
+import { refreshmemoryleafstreamingore } from './vm/jsondiffsyncstreams'
 
-let leafsession: MAYBE<LEAF_SESSION>
+/** Per-stream leaf sessions (multiplexed hub↔runner jsondiffsync). */
+const leafsessions = new Map<string, LEAF_SESSION>()
 
 export function createboardrunnerleafsession(player: string) {
   gadgetstate(player)
-  leafsession = createleafsession(player, memoryreadroot())
-  requestsnapshot(player)
+  leafsessions.clear()
+  const memleaf = createleafsession(
+    player,
+    memoryreadroot(),
+    JSONDIFFSYNC_STREAM_MEMORY,
+    [],
+  )
+  refreshmemoryleafstreamingore(memleaf)
+  leafsessions.set(JSONDIFFSYNC_STREAM_MEMORY, memleaf)
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (ispresent(mainbook)) {
+    const flagleaf = createleafsession(
+      player,
+      mainbook.flags,
+      JSONDIFFSYNC_STREAM_FLAGS,
+      [],
+    )
+    leafsessions.set(JSONDIFFSYNC_STREAM_FLAGS, flagleaf)
+    requeststreamsnapshot(player, JSONDIFFSYNC_STREAM_FLAGS)
+  }
+  requeststreamsnapshot(player, JSONDIFFSYNC_STREAM_MEMORY)
+}
+
+function leafforsyncmessage(sync: SYNC_MESSAGE): MAYBE<LEAF_SESSION> {
+  if (sync.streamid === JSONDIFFSYNC_STREAM_BOARD) {
+    const leaf = leafsessions.get(JSONDIFFSYNC_STREAM_BOARD)
+    if (!ispresent(leaf)) {
+      return undefined
+    }
+    if (
+      typeof sync.boardsynctarget === 'string' &&
+      sync.boardsynctarget !== leaf.boardsynctarget
+    ) {
+      return undefined
+    }
+    return leaf
+  }
+  return leafsessions.get(sync.streamid)
+}
+
+function requeststreamsnapshot(
+  player: string,
+  streamid: string,
+  boardsynctarget?: string,
+  force = false,
+): void {
+  const leaf = leafsessions.get(streamid)
+  if (!ispresent(leaf)) {
+    return
+  }
+  if (
+    streamid === JSONDIFFSYNC_STREAM_BOARD &&
+    typeof boardsynctarget === 'string' &&
+    boardsynctarget !== leaf.boardsynctarget
+  ) {
+    return
+  }
+  if (leaf.awaitingsnapshot && !force) {
+    logjsondiffsyncdebouncedrequest(player)
+    return
+  }
+  const message: SYNC_MESSAGE = {
+    kind: 'requestsnapshot',
+    streamid,
+    senderpeer: player,
+    seq: 0,
+    ackpeerseq: 0,
+    ...(boardsynctarget !== undefined ? { boardsynctarget } : {}),
+  }
+  leaf.awaitingsnapshot = true
+  vmjsondiffsync(boardrunner, player, message)
+}
+
+function ensureboardstreamleaf(player: string, boardaddress: string): void {
+  const boarddoc = memoryreadboardbyaddress(boardaddress)
+  if (!ispresent(boarddoc)) {
+    leafsessions.delete(JSONDIFFSYNC_STREAM_BOARD)
+    return
+  }
+  const cur = leafsessions.get(JSONDIFFSYNC_STREAM_BOARD)
+  if (
+    ispresent(cur) &&
+    cur.boardsynctarget === boardaddress &&
+    cur.working === boarddoc
+  ) {
+    return
+  }
+  leafsessions.set(
+    JSONDIFFSYNC_STREAM_BOARD,
+    createleafsession(
+      player,
+      boarddoc,
+      JSONDIFFSYNC_STREAM_BOARD,
+      [],
+      boardaddress,
+    ),
+  )
+  requeststreamsnapshot(player, JSONDIFFSYNC_STREAM_BOARD, boardaddress, true)
 }
 
 function buildacktickgadgetpayload(
@@ -71,33 +172,17 @@ function buildacktickgadgetpayload(
   return { boardid, entries }
 }
 
-function requestsnapshot(player: string, force = false) {
-  if (!ispresent(leafsession)) {
-    return
-  }
-  if (leafsession.awaitingsnapshot && !force) {
-    logjsondiffsyncdebouncedrequest(player)
-    return
-  }
-  const message: SYNC_MESSAGE = {
-    kind: 'requestsnapshot',
-    senderpeer: player,
-    seq: 0,
-    ackpeerseq: 0,
-  }
-  leafsession.awaitingsnapshot = true
-  vmjsondiffsync(boardrunner, player, message)
-}
-
 const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
   if (!boardrunner.session(message)) {
     return
   }
 
+  const memoryleaf = leafsessions.get(JSONDIFFSYNC_STREAM_MEMORY)
+
   // filtering messages
   switch (message.target) {
     case 'tick':
-      if (message.player !== leafsession?.peer) {
+      if (message.player !== memoryleaf?.peer) {
         return
       }
       break
@@ -108,15 +193,15 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
   // processing messages
   switch (message.target) {
     case 'boot':
-      if (!ispresent(leafsession)) {
+      if (leafsessions.size === 0) {
         createboardrunnerleafsession(message.player)
       }
       break
     case 'tick':
       if (
-        ispresent(leafsession) &&
+        ispresent(memoryleaf) &&
         isarray(message.data) &&
-        !leafsession.awaitingsnapshot
+        !memoryleaf.awaitingsnapshot
       ) {
         const [board, timestamp] = message.data as [string, number]
         memorytickmain(board, timestamp, memoryreadhalt())
@@ -134,10 +219,25 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
             delete store[board]
           }
         }
+        ensureboardstreamleaf(message.player, board)
         vmacktick(boardrunner, message.player, buildacktickgadgetpayload(board))
-        const prep = leafprepareoutbound(leafsession)
-        if (prep.message !== undefined) {
-          vmjsondiffsync(boardrunner, message.player, prep.message)
+        refreshmemoryleafstreamingore(memoryleaf)
+        /** Push local edits to the VM hub in deterministic stream order. */
+        const streamorder = [
+          JSONDIFFSYNC_STREAM_MEMORY,
+          JSONDIFFSYNC_STREAM_FLAGS,
+          JSONDIFFSYNC_STREAM_BOARD,
+        ]
+        for (let s = 0; s < streamorder.length; ++s) {
+          const sid = streamorder[s]
+          const sess = leafsessions.get(sid)
+          if (!ispresent(sess) || sess.awaitingsnapshot) {
+            continue
+          }
+          const prep = leafprepareoutbound(sess)
+          if (prep.message !== undefined) {
+            vmjsondiffsync(boardrunner, message.player, prep.message)
+          }
         }
       }
       break
@@ -155,18 +255,31 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       break
     }
     case 'jsondiffsync': {
-      if (
-        !ispresent(leafsession) ||
-        !issyncmessage(message.data) ||
-        leafsession.peer !== message.player
-      ) {
+      if (!issyncmessage(message.data) || message.player !== memoryleaf?.peer) {
         break
       }
       const sync = message.data
-      const wasawaitingsnapshot = leafsession.awaitingsnapshot
-      const inbound = leafapplyinbound(leafsession, sync)
+      const sess = leafforsyncmessage(sync)
+      if (!ispresent(sess)) {
+        if (sync.streamid === JSONDIFFSYNC_STREAM_BOARD) {
+          requeststreamsnapshot(
+            message.player,
+            JSONDIFFSYNC_STREAM_BOARD,
+            sync.boardsynctarget,
+            true,
+          )
+        }
+        break
+      }
+      const wasawaitingsnapshot = sess.awaitingsnapshot
+      const inbound = leafapplyinbound(sess, sync)
       if (!inbound.ok) {
-        requestsnapshot(message.player, leafsession.awaitingsnapshot)
+        requeststreamsnapshot(
+          message.player,
+          sync.streamid,
+          sync.boardsynctarget,
+          sess.awaitingsnapshot,
+        )
       } else {
         const emptyleafhuback =
           sync.kind === 'delta' && sync.operations.length === 0
@@ -176,10 +289,15 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
           inbound.changed === false &&
           !emptyleafhuback
         if (!skiphubsyncleaf) {
-          vmhubsyncleaf(boardrunner, message.player)
+          vmhubsyncleaf(
+            boardrunner,
+            message.player,
+            sync.streamid,
+            sync.boardsynctarget,
+          )
         }
         if (inbound.changed) {
-          const prep = leafprepareoutbound(leafsession)
+          const prep = leafprepareoutbound(sess)
           if (prep.message !== undefined) {
             vmjsondiffsync(boardrunner, message.player, prep.message)
           }

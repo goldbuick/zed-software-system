@@ -1,15 +1,51 @@
 import { compare } from 'fast-json-patch'
 import { jsondocumentcopy } from 'zss/mapping/types'
 
-import { jsondiffsyncdiff } from './patchfilter'
+import {
+  JSONDIFFSYNC_IGNORE_NONE,
+  JSONDIFFSYNC_IGNORE_PARENT_CHILD,
+  JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+  JSONDIFFSYNC_SUBDOC_SUBTREE_SEGMENT,
+  jsondiffsyncdiff,
+} from './patchfilter'
 import { assignintoworking, rebaseapply } from './sync'
-import type {
-  INBOUND_RESULT,
-  JSON_DOCUMENT,
-  LEAF_SESSION,
-  PREPARE_OUTBOUND_RESULT,
-  SYNC_MESSAGE,
+import {
+  JSONDIFFSYNC_STREAM_BOARD,
+  JSONDIFFSYNC_STREAM_MEMORY,
+  type INBOUND_RESULT,
+  type JSON_DOCUMENT,
+  type LEAF_SESSION,
+  type PREPARE_OUTBOUND_RESULT,
+  type SYNC_MESSAGE,
 } from './types'
+
+function leafsyncdiffrulesforauthority(session: LEAF_SESSION) {
+  const rootsubdocauthority = session.streamid !== JSONDIFFSYNC_STREAM_MEMORY
+  return rootsubdocauthority
+    ? {
+        rules: JSONDIFFSYNC_IGNORE_NONE,
+        subtreesegment: JSONDIFFSYNC_SUBDOC_SUBTREE_SEGMENT,
+        rootsubdocauthority,
+      }
+    : {
+        rules: JSONDIFFSYNC_IGNORE_PARENT_CHILD,
+        subtreesegment: JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+        rootsubdocauthority,
+      }
+}
+
+function leafroutingfrom(session: LEAF_SESSION): {
+  streamid: string
+  boardsynctarget?: string
+} {
+  const o: { streamid: string; boardsynctarget?: string } = {
+    streamid: session.streamid,
+  }
+  if (session.boardsynctarget !== undefined) {
+    o.boardsynctarget = session.boardsynctarget
+  }
+  return o
+}
 
 export function leafprepareoutbound(
   session: LEAF_SESSION,
@@ -17,9 +53,14 @@ export function leafprepareoutbound(
   if (session.awaitingsnapshot) {
     return { message: undefined, reason: 'noop' }
   }
+  const dfr = leafsyncdiffrulesforauthority(session)
   const ops = jsondiffsyncdiff(
     session.shadow as object,
     session.working as object,
+    dfr.rules,
+    dfr.subtreesegment,
+    session.streamingorepathprefixes,
+    dfr.rootsubdocauthority,
   )
   const needhuback = session.lastpeerseqacked > session.lastackpiggybackedtohub
   if (ops.length === 0 && !needhuback) {
@@ -41,6 +82,7 @@ export function leafprepareoutbound(
   const seq = ops.length > 0 ? session.unackedseq! : session.nextseq++
 
   const message: SYNC_MESSAGE = {
+    ...leafroutingfrom(session),
     kind: 'delta',
     senderpeer: session.peer,
     seq,
@@ -74,9 +116,35 @@ export function leafapplyinbound(
   session: LEAF_SESSION,
   message: SYNC_MESSAGE,
 ): INBOUND_RESULT {
+  if (session.streamid !== message.streamid) {
+    return {
+      ok: false,
+      needsresync: true,
+      error: new Error('jsondiffsync: stream id mismatch'),
+    }
+  }
+  if (
+    session.streamid === JSONDIFFSYNC_STREAM_BOARD &&
+    session.boardsynctarget !== undefined &&
+    message.boardsynctarget !== session.boardsynctarget
+  ) {
+    return {
+      ok: false,
+      needsresync: true,
+      error: new Error('jsondiffsync: board sync target mismatch'),
+    }
+  }
   if (message.kind === 'fullsnapshot') {
     const hubops = compare(session.shadow as object, message.document as object)
-    const rebased = rebaseapply(session.shadow, session.working, hubops)
+    const lr = leafsyncdiffrulesforauthority(session)
+    const rebased = rebaseapply(
+      session.shadow,
+      session.working,
+      hubops,
+      session.streamingorepathprefixes,
+      lr.rules,
+      lr.subtreesegment,
+    )
     if (rebased.ok) {
       assignintoworking(session.working, rebased.merged)
     } else {
@@ -135,7 +203,15 @@ export function leafapplyinbound(
       error: new Error('jsondiffsync: inbound basis_version mismatch'),
     }
   }
-  const r = rebaseapply(session.shadow, session.working, message.operations)
+  const lr = leafsyncdiffrulesforauthority(session)
+  const r = rebaseapply(
+    session.shadow,
+    session.working,
+    message.operations,
+    session.streamingorepathprefixes,
+    lr.rules,
+    lr.subtreesegment,
+  )
   if (!r.ok) {
     return { ok: false, needsresync: true, error: r.error }
   }
@@ -153,7 +229,15 @@ export function leafapplyfullsnapshot(
   document_version: number,
 ): LEAF_SESSION {
   const hubops = compare(session.shadow as object, doc as object)
-  const rebased = rebaseapply(session.shadow, session.working, hubops)
+  const lr = leafsyncdiffrulesforauthority(session)
+  const rebased = rebaseapply(
+    session.shadow,
+    session.working,
+    hubops,
+    session.streamingorepathprefixes,
+    lr.rules,
+    lr.subtreesegment,
+  )
   if (rebased.ok) {
     assignintoworking(session.working, rebased.merged)
   } else {

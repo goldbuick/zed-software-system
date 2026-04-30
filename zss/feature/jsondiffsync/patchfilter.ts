@@ -41,6 +41,14 @@ const BOARD_TERRAIN_ELEMENT_RUNTIME_KEYS = [
 
 const BOARD_OBJECT_ELEMENT_RUNTIME_KEYS = ['category', 'kinddata'] as const
 
+/** Subdoc hubs (`flags`, `board`) use neither MEMORY parent/leaffilters nor MEMORY subtree skips. */
+export const JSONDIFFSYNC_IGNORE_NONE: readonly [
+  parent: string,
+  child: string,
+][] = []
+
+export const JSONDIFFSYNC_SUBDOC_SUBTREE_SEGMENT = new Set<string>()
+
 /** Top-level `BOOK` fields driven by runtime/tick, not wire deltas (see `books/<id>/timestamp`). */
 const BOOK_RUNTIME_KEYS = ['timestamp'] as const
 
@@ -90,6 +98,46 @@ export const JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT = new Set<string>([
   'inputqueue',
   'inputmove',
 ])
+
+/** True when RFC 6902 path is exactly `p` or under `p/`; prefixes omit leading slashes. */
+export function jsonpatchpathmatchingstreamingore(
+  patchpath: string | undefined,
+  prefixes: readonly string[],
+): boolean {
+  if (patchpath === undefined || prefixes.length === 0) {
+    return false
+  }
+  const body = patchpath.startsWith('/') ? patchpath.slice(1) : patchpath
+  for (let i = 0; i < prefixes.length; ++i) {
+    const p = prefixes[i]
+    if (body === p || body.startsWith(`${p}/`)) {
+      return true
+    }
+  }
+  return false
+}
+
+/** Drop JSON Patch ops touching paths delegated to sibling jsondiffsync hubs. */
+export function filterjsonpatchbystreamingore(
+  ops: Operation[],
+  prefixes: readonly string[],
+): Operation[] {
+  if (prefixes.length === 0) {
+    return ops
+  }
+  return ops.filter((op) => {
+    if (jsonpatchpathmatchingstreamingore(op.path, prefixes)) {
+      return false
+    }
+    if (
+      (op.op === 'move' || op.op === 'copy') &&
+      jsonpatchpathmatchingstreamingore(op.from, prefixes)
+    ) {
+      return false
+    }
+    return true
+  })
+}
 
 function pointersegments(pointer: string): string[] {
   if (pointer === '') {
@@ -379,12 +427,20 @@ export function jsondiffsyncdiff(
   to: object,
   rules: readonly [string, string][] = JSONDIFFSYNC_IGNORE_PARENT_CHILD,
   subtreesegment: ReadonlySet<string> = JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+  streamingorepathprefixes: readonly string[] = [],
+  rootsubdocauthority: boolean = false,
 ): Operation[] {
   if (Object.is(from, to)) {
     return []
   }
-  if (!hasrelevantsyncdiff(from, to, rules, subtreesegment)) {
+  const skipshortcuts =
+    streamingorepathprefixes.length > 0 || rootsubdocauthority
+  if (!skipshortcuts && !hasrelevantsyncdiff(from, to, rules, subtreesegment)) {
     return []
   }
-  return filterjsonpatchforsync(compare(from, to), rules, subtreesegment)
+  let ops = filterjsonpatchforsync(compare(from, to), rules, subtreesegment)
+  if (streamingorepathprefixes.length > 0) {
+    ops = filterjsonpatchbystreamingore(ops, streamingorepathprefixes)
+  }
+  return ops
 }

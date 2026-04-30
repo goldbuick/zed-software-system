@@ -19,7 +19,7 @@ export function logjsondiffsyncoutbound(
   }
   // eslint-disable-next-line no-console
   console.info(
-    `[jsondiffsync] ${source} → ${player} kind=${message.kind} ops=${opcount} approxJsonBytes=${approxbytes}`,
+    `[jsondiffsync] stream=${message.streamid}${message.boardsynctarget !== undefined ? ` board=${message.boardsynctarget}` : ''} ${source} → ${player} kind=${message.kind} ops=${opcount} approxJsonBytes=${approxbytes}`,
   )
 }
 

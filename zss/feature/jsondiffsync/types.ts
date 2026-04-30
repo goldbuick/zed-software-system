@@ -4,9 +4,14 @@ import { isstring } from 'zss/mapping/types'
 /** Arbitrary JSON-serializable document (RFC 6902 apply/compare). */
 export type JSON_DOCUMENT = any
 
+export const JSONDIFFSYNC_STREAM_MEMORY = 'memory'
+export const JSONDIFFSYNC_STREAM_FLAGS = 'flags'
+export const JSONDIFFSYNC_STREAM_BOARD = 'board'
+
 export type SYNC_MESSAGE =
   | {
       kind: 'delta'
+      streamid: string
       senderpeer: string
       /** Monotonic per-sender sequence; payload is retransmitted until acked. */
       seq: number
@@ -22,20 +27,26 @@ export type SYNC_MESSAGE =
        */
       resultdocumentversion: number
       operations: Operation[]
+      /** When streamid === `JSONDIFFSYNC_STREAM_BOARD`, board address this hub binds to. */
+      boardsynctarget?: string
     }
   | {
       kind: 'fullsnapshot'
+      streamid: string
       senderpeer: string
       seq: number
       ackpeerseq: number
       document: JSON_DOCUMENT
       resultdocumentversion: number
+      boardsynctarget?: string
     }
   | {
       kind: 'requestsnapshot'
+      streamid: string
       senderpeer: string
       seq: number
       ackpeerseq: number
+      boardsynctarget?: string
     }
 
 export type INBOUND_RESULT =
@@ -61,6 +72,10 @@ export type PREPARE_OUTBOUND_RESULT =
  * seq; until then we retransmit a cumulative delta (Fraser guaranteed delivery).
  */
 export type LEAF_SESSION = {
+  streamid: string
+  streamingorepathprefixes: string[]
+  /** Set when syncing a single BOARD document (streamid `board`). */
+  boardsynctarget?: string
   peer: string
   working: JSON_DOCUMENT
   shadow: JSON_DOCUMENT
@@ -89,6 +104,15 @@ export type HUB_LEAF_RECORD = {
 }
 
 export type HUB_SESSION = {
+  /** Multiplex VM↔runner jsondiffsync; must match SYNC_MESSAGE.streamid */
+  streamid: string
+  /**
+   * For `JSONDIFFSYNC_STREAM_MEMORY` only: RFC 6902 path bodies (no leading `/`) delegated to
+   * other streams — strip matching ops when diffing/merging the memory root doc.
+   */
+  streamingorepathprefixes: string[]
+  /** Board address when streamid === `JSONDIFFSYNC_STREAM_BOARD`. */
+  boardsynctarget?: string
   working: JSON_DOCUMENT
   /** Snapshot at last `documentversion` bump; used to detect in-place MEMORY changes. */
   versionshadow: JSON_DOCUMENT
@@ -127,6 +151,12 @@ export function issyncmessage(value: unknown): value is SYNC_MESSAGE {
     return false
   }
   if (typeof o.seq !== 'number' || typeof o.ackpeerseq !== 'number') {
+    return false
+  }
+  if (!isstring(o.streamid)) {
+    return false
+  }
+  if (o.boardsynctarget !== undefined && !isstring(o.boardsynctarget)) {
     return false
   }
   if (o.kind === 'requestsnapshot') {

@@ -954,8 +954,17 @@ export function vmjsondiffsync(
   device.emit(player, 'vm:jsondiffsync', sync)
 }
 
-export function vmhubsyncleaf(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:hubsyncleaf')
+/** After the leaf applies a hub→leaf message, advance hub row alignment for that multiplexed stream. */
+export function vmhubsyncleaf(
+  device: DEVICELIKE,
+  player: string,
+  streamid: string,
+  boardsynctarget?: string,
+) {
+  device.emit(player, 'vm:hubsyncleaf', {
+    streamid,
+    ...(boardsynctarget !== undefined ? { boardsynctarget } : {}),
+  })
 }
 
 export function vmlastinputtouch(

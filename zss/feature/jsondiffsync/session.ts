@@ -1,12 +1,19 @@
 import { jsondocumentcopy } from 'zss/mapping/types'
 
+import { JSONDIFFSYNC_STREAM_MEMORY } from './types'
 import type { HUB_SESSION, JSON_DOCUMENT, LEAF_SESSION } from './types'
 
 export function createleafsession(
   peerid: string,
   initial: JSON_DOCUMENT,
+  streamid: string = JSONDIFFSYNC_STREAM_MEMORY,
+  streamingorepathprefixes: string[] = [],
+  boardsynctarget?: string,
 ): LEAF_SESSION {
   return {
+    streamid,
+    streamingorepathprefixes: [...streamingorepathprefixes],
+    boardsynctarget,
     peer: peerid,
     working: initial,
     shadow: jsondocumentcopy(initial),
@@ -21,8 +28,16 @@ export function createleafsession(
   }
 }
 
-export function createhubsession(initial: JSON_DOCUMENT): HUB_SESSION {
+export function createhubsession(
+  initial: JSON_DOCUMENT,
+  streamid: string = JSONDIFFSYNC_STREAM_MEMORY,
+  streamingorepathprefixes: string[] = [],
+  boardsynctarget?: string,
+): HUB_SESSION {
   return {
+    streamid,
+    streamingorepathprefixes: [...streamingorepathprefixes],
+    boardsynctarget,
     working: initial,
     versionshadow: jsondocumentcopy(initial),
     documentversion: 0,

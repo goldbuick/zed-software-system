@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerjsondiffsync } from 'zss/device/api'
-import { jsondiffsync } from 'zss/device/vm/state'
+import { resolvejsonsynhub } from 'zss/device/vm/jsondiffsynroutes'
 import { jsondiffsyncleafapply } from 'zss/feature/jsondiffsync/hub'
 import { logjsondiffsyncoutbound } from 'zss/feature/jsondiffsync/syncdebug'
 import { issyncmessage } from 'zss/feature/jsondiffsync/types'
@@ -16,11 +16,12 @@ export function handlejsondiffsync(vm: DEVICE, message: MESSAGE): void {
   if (!issyncmessage(message.data)) {
     return
   }
-  const [outbound] = jsondiffsyncleafapply(
-    jsondiffsync,
-    message.player,
-    message.data,
-  )
+  const data = message.data
+  const hub = resolvejsonsynhub(data.streamid, data.boardsynctarget)
+  if (!ispresent(hub)) {
+    return
+  }
+  const [outbound] = jsondiffsyncleafapply(hub, message.player, data)
   if (ispresent(outbound)) {
     logjsondiffsyncoutbound(message.player, 'vm:jsondiffsync', outbound)
     boardrunnerjsondiffsync(vm, message.player, outbound)
