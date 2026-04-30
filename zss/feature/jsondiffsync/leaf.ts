@@ -103,6 +103,16 @@ export function leafapplyinbound(
       leafackoutbound(session, message.ackpeerseq)
       return { ok: true, changed: false }
     }
+    /** Non-empty hub deltas while waiting for a full snapshot must not be silently dropped — that desyncs hub row vs leaf and causes resync storms (hub rejects leaf deltas with basis_version mismatch). */
+    if (message.kind === 'delta' && message.operations.length > 0) {
+      return {
+        ok: false,
+        needsresync: true,
+        error: new Error(
+          'jsondiffsync: non-empty hub delta while awaiting full snapshot',
+        ),
+      }
+    }
     return { ok: true, changed: false }
   }
   if (message.kind === 'delta' && message.operations.length === 0) {

@@ -50,6 +50,7 @@ const BOOK_RUNTIME_KEYS = ['timestamp'] as const
  * semanticparentandleafforsegments and runtime-ignores.md.
  *
  * Nested edits under kinddata/stats/lookup/named/gadgetstate/gadgetstore are covered by JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT.
+ * **`book.flags.gadgetlayers`** ( **`MEMORY_LABEL.GADGETLAYERS`** row ) syncs canonical board gadget layers (**not** ignored).
  */
 export const JSONDIFFSYNC_IGNORE_PARENT_CHILD: readonly [
   parent: string,
@@ -72,9 +73,10 @@ export const JSONDIFFSYNC_IGNORE_PARENT_CHILD: readonly [
  * Segment names: ignore the subtree rooted at any of these (nested RFC 6902 paths).
  * `lookup` / `named` are board runtime indexes (see memoryexportboard FORMAT_SKIP); array paths use
  * numeric segments under `lookup`, so parent/leaf pairing on `lookup` alone is insufficient.
- * `gadgetstate` is gadget/UI runtime on the sync root when present; **`gadgetstore`** is
- * `book.flags.gadgetstore` (per-player gadget blob, see gadgetstatebookprovider / gadgetserver).
- * Text UI is also pushed VM-side via **`vm:acktick`** from the boardrunner; subtree ignore avoids wire churn.
+ * `gadgetstate` is gadget/UI runtime on the sync root when present (**not synced** via RFC 6902).
+ * `gadgetstore` (`book.flags.gadgetstore`) is excluded from deltas; synced **`gadgetlayers`** live under
+ * **`book.flags.gadgetlayers`** ( **`MEMORY_LABEL.GADGETLAYERS`** row ), board id → layers sans control, and **do** sync.
+ * Text UI is also pushed VM-side via **`vm:acktick`** from the boardrunner; subtree ignore avoids wire churn for `gadgetstate`/store.
  * Board FORMAT_SKIP keys (`drawlastxy`, `drawlastfp`, …) live under `…/pages/<i>/board/<key>/…`; subtree segments
  * catch them when `(board, key)` pairing misses due to semantic parent falling through to a dynamic id.
  * **`inputqueue`** / **`inputmove`** under book flags are tick-local and must not force hub resync.

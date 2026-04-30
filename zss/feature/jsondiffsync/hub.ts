@@ -90,7 +90,10 @@ export function hubprocessleafinbound(
   }
 
   if (message.kind === 'delta' && message.operations.length === 0) {
-    if (message.basisversion !== row.basisversion) {
+    /** Leaf can lag `row.basisversion` when the row was advanced (e.g. `hubtryconsumeleafack` sets row to
+     * current `hub.documentversion`) while a higher DV came from `jsondiffsynchubapply` before the leaf
+     * received the matching hub→leaf basis bumps. Empty ack-only deltas must not force full resync. */
+    if (message.basisversion > row.basisversion) {
       return {
         ok: false,
         needsresync: true,
@@ -102,7 +105,12 @@ export function hubprocessleafinbound(
     return { ok: true, changed: false }
   }
 
-  if (message.basisversion !== row.basisversion) {
+  /**
+   * Same edge as empty leaf deltas: `row.basisversion` can advance before the leaf receives hub→leaf
+   * basis bumps, so `message.basisversion` may lag. Only leaf *ahead* of the hub row is inconsistent.
+   * Lagging merges either succeed via `rebaseapply` or fail and return needsresync.
+   */
+  if (message.basisversion > row.basisversion) {
     return {
       ok: false,
       needsresync: true,
@@ -285,7 +293,8 @@ export function jsondiffsyncleafapply(
     hub.unackedbyleaf.set(leaf, seq)
     const lastleaf = hub.lastleafack.get(leaf) ?? 0
     hubsyncleaftohubdoc(hub, leaf)
-    return [hubmakefullsnapshot(hub, leaf, seq, lastleaf)]
+    const snap = hubmakefullsnapshot(hub, leaf, seq, lastleaf)
+    return [snap]
   }
 
   const prep = hubprepareoutboundforleaf(hub, leaf)

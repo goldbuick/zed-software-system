@@ -148,6 +148,14 @@ describe('semanticparentandleafforsegments', () => {
     expect(pointermatchesignorepair('/gadgetstate/scroll/0')).toBe(true)
   })
 
+  it('does not ignore gadgetlayers under book.flags pointers', () => {
+    expect(
+      pointermatchesignorepair(
+        '/books/B/flags/gadgetlayers/b1/tickers/0',
+      ),
+    ).toBe(false)
+  })
+
   it('matches ignore rules for book flags.gadgetstore pointers', () => {
     expect(
       pointermatchesignorepair('/books/B/flags/gadgetstore/p1/scroll/0'),
@@ -439,7 +447,98 @@ describe('jsondiffsync leaf hub', () => {
     expect(leaf.basisversion).toBe(9)
   })
 
-  it('ignores inbound delta while awaitingsnapshot without mutating working or basis', () => {
+  it('accepts empty leaf ack when leaf basis lags hub row', () => {
+    const hub = createhubsession({ v: 0 })
+    hubensureleaf(hub, 'L1')
+    const row = hub.leaves.get('L1')!
+    row.shadow = deepcopy(hub.working)
+    hub.documentversion = 3
+    row.basisversion = 3
+    const emptyfromleaf: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'L1',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 2,
+      resultdocumentversion: 2,
+      operations: [],
+    }
+    const r = hubprocessleafinbound(hub, 'L1', emptyfromleaf)
+    expect(r.ok).toBe(true)
+  })
+
+  it('rejects empty leaf ack when leaf basis is ahead of hub row', () => {
+    const hub = createhubsession({ v: 0 })
+    hubensureleaf(hub, 'L1')
+    const row = hub.leaves.get('L1')!
+    row.shadow = deepcopy(hub.working)
+    hub.documentversion = 3
+    row.basisversion = 3
+    const emptyfromleaf: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'L1',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 4,
+      resultdocumentversion: 4,
+      operations: [],
+    }
+    const r = hubprocessleafinbound(hub, 'L1', emptyfromleaf)
+    expect(r.ok).toBe(false)
+    if (!r.ok) {
+      expect(r.needsresync).toBe(true)
+    }
+  })
+
+  it('accepts non-empty leaf delta when leaf basis lags hub row', () => {
+    const hub = createhubsession({ v: 5 })
+    hubensureleaf(hub, 'L1')
+    const row = hub.leaves.get('L1')!
+    row.shadow = deepcopy(hub.working)
+    hub.documentversion = 10
+    row.basisversion = 10
+    const deltafromleaf: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'L1',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 9,
+      resultdocumentversion: 9,
+      operations: [{ op: 'replace', path: '/v', value: 6 }],
+    }
+    const r = hubprocessleafinbound(hub, 'L1', deltafromleaf)
+    expect(r.ok).toBe(true)
+    if (!r.ok) {
+      return
+    }
+    expect(r.changed).toBe(true)
+    expect(hub.working.v).toBe(6)
+  })
+
+  it('rejects non-empty leaf delta when leaf basis is ahead of hub row', () => {
+    const hub = createhubsession({ v: 5 })
+    hubensureleaf(hub, 'L1')
+    const row = hub.leaves.get('L1')!
+    row.shadow = deepcopy(hub.working)
+    hub.documentversion = 10
+    row.basisversion = 10
+    const deltafromleaf: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'L1',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 11,
+      resultdocumentversion: 11,
+      operations: [{ op: 'replace', path: '/v', value: 6 }],
+    }
+    const r = hubprocessleafinbound(hub, 'L1', deltafromleaf)
+    expect(r.ok).toBe(false)
+    if (!r.ok) {
+      expect(r.needsresync).toBe(true)
+    }
+  })
+
+  it('rejects non-empty inbound hub delta while awaitingsnapshot (needs resync)', () => {
     const leaf = createleafsession('L1', { v: 0 })
     leaf.basisversion = 2
     leaf.awaitingsnapshot = true
@@ -453,7 +552,11 @@ describe('jsondiffsync leaf hub', () => {
       operations: [{ op: 'replace', path: '/v', value: 99 }],
     }
     const r = leafapplyinbound(leaf, delta)
-    expect(r).toEqual({ ok: true, changed: false })
+    expect(r.ok).toBe(false)
+    if (r.ok) {
+      return
+    }
+    expect(r.needsresync).toBe(true)
     expect(leaf.working.v).toBe(0)
     expect(leaf.basisversion).toBe(2)
     expect(leaf.awaitingsnapshot).toBe(true)
@@ -633,7 +736,11 @@ describe('jsondiffsync leaf hub', () => {
     expect(r1.ok).toBe(false)
     leaf.awaitingsnapshot = true
     const r2 = leafapplyinbound(leaf, baddelta1)
-    expect(r2).toEqual({ ok: true, changed: false })
+    expect(r2.ok).toBe(false)
+    if (r2.ok) {
+      return
+    }
+    expect(r2.needsresync).toBe(true)
 
     const outarr = jsondiffsyncleafapply(hub, 'L1', {
       kind: 'requestsnapshot',
@@ -731,6 +838,42 @@ describe('jsondiffsync leaf hub', () => {
     seed.gadgetstate.scroll = ['line']
     expect(jsondiffsynchubapply(hub)).toBe(false)
     expect(hub.documentversion).toBe(0)
+  })
+
+  it('jsondiffsynchubapply detects gadgetlayers-only memory edits', () => {
+    const emptygadgetlayer = {
+      id: '',
+      board: '',
+      exiteast: '',
+      exitwest: '',
+      exitnorth: '',
+      exitsouth: '',
+      exitne: '',
+      exitnw: '',
+      exitse: '',
+      exitsw: '',
+      over: [] as unknown[],
+      under: [] as unknown[],
+      layers: [] as unknown[],
+      tickers: [] as string[],
+    }
+    const seed = {
+      books: {
+        bk: {
+          flags: {
+            gadgetlayers: {
+              b1: { ...emptygadgetlayer, id: 'op|b1', board: 'b1' },
+            },
+          },
+        },
+      },
+    }
+    const hub = createhubsession(seed)
+    hub.versionshadow = deepcopy(hub.working)
+    const gl = seed.books.bk.flags.gadgetlayers.b1.tickers as string[]
+    gl.push('tick')
+    expect(jsondiffsynchubapply(hub)).toBe(true)
+    expect(hub.documentversion).toBe(1)
   })
 
   it('jsondiffsynchubapply ignores gadgetstore-only memory edits', () => {

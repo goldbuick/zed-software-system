@@ -23,6 +23,7 @@ import { ispresent } from 'zss/mapping/types'
 import {
   memoryreadactivelist,
   memoryreadbookplayerboards,
+  memoryreadplayerboardaddress,
 } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
 import {
@@ -63,15 +64,23 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     const board = activeboards[i]
     // if the boardrunner player is present
     if (ispresent(boardrunners[board.id])) {
-      // decrement the boardrunner ack
+      // get player in charge of the board
       const runnerplayer = boardrunners[board.id]
-      boardrunneracks[runnerplayer]--
-      // add the player to boardrunnerblocks
-      if (boardrunneracks[runnerplayer] < 1) {
-        // drop failed ack runner
+      // validate player is present
+      if (memoryreadplayerboardaddress(runnerplayer) !== board.id) {
+        // drop the board runner that has left the board
         delete boardrunners[board.id]
         delete boardrunneracks[board.id]
-        boardrunnerblocked[runnerplayer] = true
+      } else {
+        // decrement the boardrunner ack
+        boardrunneracks[runnerplayer]--
+        // add the player to boardrunnerblocks
+        if (boardrunneracks[runnerplayer] < 1) {
+          // drop failed ack runner
+          delete boardrunners[board.id]
+          delete boardrunneracks[board.id]
+          boardrunnerblocked[runnerplayer] = true
+        }
       }
     }
     // if the boardrunner player is not present

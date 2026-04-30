@@ -4,6 +4,7 @@ import { FORMAT_OBJECT } from 'zss/feature/format'
 import { gadgetclearscroll, gadgetstate } from 'zss/gadget/data/api'
 import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { memoryreadbookgadgetlayersmap } from 'zss/memory/gadgetlayersflags'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
@@ -43,21 +44,31 @@ const gadgetserver = createdevice(
       case 'tock':
       case 'ticktock':
         if (memoryreadoperator()) {
-          const layercache = new Map<string, MEMORY_GADGET_LAYERS>()
+          const syncedlayers = ispresent(mainbook)
+            ? memoryreadbookgadgetlayersmap(mainbook)
+            : undefined
+          const fallbackcache = new Map<string, MEMORY_GADGET_LAYERS>()
           for (let i = 0; i < activelist.length; ++i) {
             const player = activelist[i]
             const playerboard = memoryreadplayerboard(player)
             const boardid = playerboard?.id ?? ''
-            const layercachekey = `${boardid}|${player}`
+            const synccanonical = syncedlayers?.[boardid]
 
-            // per-player view: same board, different players may use different graphics
-            let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS> =
-              layercache.get(layercachekey)
-
-            // create layers if needed (memoryreadgadgetlayers builds fresh objects)
-            if (ispresent(playerboard) && !ispresent(gadgetlayers)) {
-              gadgetlayers = memoryreadgadgetlayers(player, playerboard)
-              layercache.set(layercachekey, gadgetlayers)
+            // canonical board layers synced from leaf (sans control); else per-player fallback
+            let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
+            if (
+              ispresent(playerboard) &&
+              ispresent(synccanonical) &&
+              synccanonical.board === boardid
+            ) {
+              gadgetlayers = synccanonical
+            } else if (ispresent(playerboard)) {
+              const fallbackkey = `${boardid}|${player}`
+              gadgetlayers = fallbackcache.get(fallbackkey)
+              if (!ispresent(gadgetlayers)) {
+                gadgetlayers = memoryreadgadgetlayers(player, playerboard)
+                fallbackcache.set(fallbackkey, gadgetlayers)
+              }
             }
 
             // get current state

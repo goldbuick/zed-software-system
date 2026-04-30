@@ -395,9 +395,13 @@ export function memoryreadplayeractive(player: string) {
   return isactive && ispresent(playerelement)
 }
 
-export function memoryreadplayerboard(player: string) {
+export function memoryreadplayerboardaddress(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const address = memoryreadbookflag(mainbook, player, 'board') as string
+  return memoryreadbookflag(mainbook, player, 'board') as string
+}
+
+export function memoryreadplayerboard(player: string) {
+  const address = memoryreadplayerboardaddress(player)
   const codepage = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.BOARD,
     address,

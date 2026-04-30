@@ -13,12 +13,16 @@ import {
 import { gadgetstate } from 'zss/gadget/data/api'
 import { INPUT } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
+import { memoryreadbookgadgetlayersmap } from 'zss/memory/gadgetlayersflags'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import { memoryreadgadgetlayers } from 'zss/memory/rendering'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
   memoryreadhalt,
+  memoryreadoperator,
   memoryreadroot,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
@@ -67,11 +71,11 @@ function buildacktickgadgetpayload(
   return { boardid, entries }
 }
 
-function requestsnapshot(player: string) {
+function requestsnapshot(player: string, force = false) {
   if (!ispresent(leafsession)) {
     return
   }
-  if (leafsession.awaitingsnapshot) {
+  if (leafsession.awaitingsnapshot && !force) {
     logjsondiffsyncdebouncedrequest(player)
     return
   }
@@ -116,6 +120,20 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       ) {
         const [board, timestamp] = message.data as [string, number]
         memorytickmain(board, timestamp, memoryreadhalt())
+        const boardrecord = memoryreadboardbyaddress(board)
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        if (ispresent(mainbook)) {
+          const store = memoryreadbookgadgetlayersmap(mainbook)
+          if (ispresent(boardrecord)) {
+            const renderplayer = memoryreadoperator() || message.player
+            store[boardrecord.id] = memoryreadgadgetlayers(
+              renderplayer,
+              boardrecord,
+            )
+          } else {
+            delete store[board]
+          }
+        }
         vmacktick(boardrunner, message.player, buildacktickgadgetpayload(board))
         const prep = leafprepareoutbound(leafsession)
         if (prep.message !== undefined) {
@@ -148,7 +166,7 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       const wasawaitingsnapshot = leafsession.awaitingsnapshot
       const inbound = leafapplyinbound(leafsession, sync)
       if (!inbound.ok) {
-        requestsnapshot(message.player)
+        requestsnapshot(message.player, leafsession.awaitingsnapshot)
       } else {
         const emptyleafhuback =
           sync.kind === 'delta' && sync.operations.length === 0
