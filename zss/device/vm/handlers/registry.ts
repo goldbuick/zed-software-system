@@ -17,6 +17,7 @@ import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
+import { handlegunsync } from './gunsync'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handleinput } from './input'
@@ -60,6 +61,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   findany: handlefindany,
   flush: handleflush,
   fork: handlefork,
+  gunsync: handlegunsync,
   gadgetscroll: handlegadgetscroll,
   halt: handlehalt,
   input: handleinput,

@@ -1,8 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { type MESSAGE, isacktickgadgetpayload } from 'zss/device/api'
-import { TICK_FPS } from 'zss/mapping/tick'
 
-import { boardrunneracks } from '../../state'
 import { handleacktick } from '../acktick'
 
 const mockgadgetstate = jest.fn()
@@ -26,12 +24,10 @@ describe('handleacktick', () => {
 
   beforeEach(() => {
     mockgadgetstate.mockReset()
-    delete boardrunneracks.runner1
   })
 
-  it('refreshes boardrunneracks when message has no gadget payload', () => {
+  it('does nothing when message has no gadget payload', () => {
     handleacktick(vm, basemessage())
-    expect(boardrunneracks.runner1).toBe(Math.ceil(TICK_FPS))
     expect(mockgadgetstate).not.toHaveBeenCalled()
   })
 
@@ -58,7 +54,6 @@ describe('handleacktick', () => {
         },
       }),
     )
-    expect(boardrunneracks.runner1).toBe(Math.ceil(TICK_FPS))
     expect(mockgadgetstate).toHaveBeenCalledWith('p1')
     expect(stub.scrollname).toBe('Title')
     expect(stub.scroll).toEqual(['line'])

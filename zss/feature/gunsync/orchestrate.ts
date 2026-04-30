@@ -1,45 +1,23 @@
 import type { DEVICE } from 'zss/device'
-import {
-  boardrunnergunsyncapply,
-  gunsyncrelay,
-} from 'zss/device/api'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE } from 'zss/mapping/types'
 
 import {
-  type GunsyncPayload,
-  gunsyncapplyfromwire,
-  gunsyncbumpversion,
-  gunsynccapture,
-  gunsyncpayloadfromreplica,
-} from './replica'
-import { gunmeshmirrorreplica } from './roommirror'
+  gunsyncensureboardrunnerrelay,
+} from './hubgunwire'
+import { gunsyncreplicatograph } from './replicagraph'
+import type { GunsyncPayload } from './replica'
+import { gunsyncapplyfromwire, gunsynccapture } from './replica'
 
 export function boardrunneraftertickcapturerelay(
   device: DEVICE,
   player: string,
 ): void {
-  const replica = gunsynccapture()
-  const v = gunsyncbumpversion()
-  const payload = gunsyncpayloadfromreplica(replica, v, 'boardrunner')
-  gunmeshmirrorreplica(payload)
-  gunsyncrelay(device, player, payload)
+  gunsyncensureboardrunnerrelay(device, player)
+  gunsyncreplicatograph(gunsynccapture())
 }
 
-export function boardrunnerongunsyncmessage(data: MAYBE<GunsyncPayload>): void {
-  gunsyncapplyfromwire(data)
-}
-
-export function gunmeshonmemory(
-  vmdevice: DEVICE,
-  player: string,
-  data: GunsyncPayload,
+export function boardrunnerongunsyncmessage(
+  data: MAYBE<GunsyncPayload>,
 ): void {
-  if (!ispresent(data)) {
-    return
-  }
-  gunmeshmirrorreplica(data)
-  const changed = gunsyncapplyfromwire(data)
-  if (changed) {
-    boardrunnergunsyncapply(vmdevice, player, data)
-  }
+  gunsyncapplyfromwire(data)
 }

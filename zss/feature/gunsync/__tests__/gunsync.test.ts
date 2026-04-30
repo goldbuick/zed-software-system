@@ -64,6 +64,8 @@ describe('gunsync', () => {
       operator: '',
       topic: '',
       session: '',
+      halt: false,
+      simfreeze: false,
       books: {},
     }
     const payload = gunsyncpayloadfromreplica(
@@ -85,6 +87,8 @@ describe('gunsync', () => {
       operator: '',
       topic: '',
       session: '',
+      halt: false,
+      simfreeze: false,
       books: {},
     }
     const payload = gunsyncpayloadfromreplica(

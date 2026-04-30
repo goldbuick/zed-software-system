@@ -137,18 +137,16 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-export function boardrunnerboot(device: DEVICELIKE, player: string) {
-  device.emit(player, 'boardrunner:boot')
-}
+/** v1: boardrunner worker removed — no-op (Gun mesh bootstrap deferred to v2). */
+export function boardrunnerboot(_device: DEVICELIKE, _player: string) {}
 
+/** v1: ticks run in VM `ticktock` — no-op. */
 export function boardrunnertick(
-  device: DEVICELIKE,
-  player: string,
-  board: string,
-  timestamp: number,
-) {
-  device.emit(player, 'boardrunner:tick', [board, timestamp])
-}
+  _device: DEVICELIKE,
+  _player: string,
+  _board: string,
+  _timestamp: number,
+) {}
 
 export function boardrunnerinput(
   device: DEVICELIKE,
@@ -156,7 +154,7 @@ export function boardrunnerinput(
   input: INPUT,
   mods: number,
 ) {
-  device.emit(player, 'boardrunner:input', [input, mods])
+  device.emit(player, 'vm:input', [input, mods])
 }
 
 export function boardrunnergunsyncapply(
@@ -164,16 +162,12 @@ export function boardrunnergunsyncapply(
   player: string,
   blob: GunsyncPayload,
 ) {
-  device.emit(player, 'boardrunner:gunsync', blob)
+  device.emit(player, 'vm:gunsync', blob)
 }
 
-/** Push MEMORY replica from boardrunner hub toward sim (+ peers via MESSAGE forward). */
-export function gunsyncrelay(
-  device: DEVICELIKE,
-  player: string,
-  blob: GunsyncPayload,
-) {
-  device.emit(player, 'gunmesh:memory', blob)
+/** Push opaque Gun.Mesh wire frames from boardrunner toward sim (+ peers via MESSAGE forward). */
+export function gunsyncrelay(device: DEVICELIKE, player: string, wireframe: string) {
+  device.emit(player, 'gunmesh:memory', wireframe)
 }
 
 export function bridgechatstart(

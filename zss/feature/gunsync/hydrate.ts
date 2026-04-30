@@ -1,18 +1,18 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnergunsyncapply } from 'zss/device/api'
 
 import {
+  gunsyncapplyfromwire,
   gunsyncbumpversion,
   gunsyncpayloadfromreplica,
   gunsynccapture,
 } from './replica'
 
-/** Push sim MEMORY snapshot to boardrunner after books load (no Gun / room mirror). */
+/** After books load on sim VM: bump version and apply snapshot locally (single memory arena). */
 export function afterbooksloadsynchydrate(
-  vmdevice: DEVICE,
-  player: string,
+  _vmdevice: DEVICE,
+  _player: string,
 ): void {
   const wirev = gunsyncbumpversion()
   const blob = gunsyncpayloadfromreplica(gunsynccapture(), wirev, 'sim')
-  boardrunnergunsyncapply(vmdevice, player, blob)
+  gunsyncapplyfromwire(blob)
 }

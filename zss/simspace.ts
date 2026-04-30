@@ -1,5 +1,6 @@
 import 'zss/rom/vitepopulate'
 import { setclimode } from 'zss/feature/detect'
+import { memorylocalguninit } from 'zss/memory/gundocument'
 
 import { createforward, shouldforwardservertoclient } from './device/forward'
 import { started } from './device/vm'
@@ -7,7 +8,6 @@ import { started } from './device/vm'
 // these are all back-end devices that operate within the web worker
 import './device/clock'
 import './device/gadgetserver'
-import './device/gunmeshsim'
 import './device/modem'
 
 const { forward } = createforward((message) => {
@@ -27,5 +27,7 @@ onmessage = function handleMessage(
   forward(event.data)
 }
 
-// begin simspace
-setTimeout(started, 100)
+// v1: local Gun loads persisted memory document, then VM boots
+memorylocalguninit(() => {
+  setTimeout(started, 100)
+})

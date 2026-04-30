@@ -140,20 +140,8 @@ export function shouldforwardheavytoclient(): boolean {
 
 // boardrunner worker messages
 
-// create client -> boardrunner forward
-export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ready':
-    case 'second':
-      return true
-    default: {
-      const route = parsetarget(message.target)
-      switch (route.target) {
-        case 'boardrunner':
-          return true
-      }
-    }
-  }
+// boardrunner worker removed — messages stay on client → sim worker via vm / other routes
+export function shouldforwardclienttoboardrunner(_message: MESSAGE): boolean {
   return false
 }
 

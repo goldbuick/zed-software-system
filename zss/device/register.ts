@@ -79,7 +79,6 @@ import {
   apierror,
   apilog,
   apitoast,
-  boardrunnerboot,
   bridgejoin,
   gadgetserverdesync,
   heavyllmpreset,
@@ -315,7 +314,6 @@ export const register = createdevice(
         doasync(register, message.player, async () => {
           /** Hub operator + boardrunner before waits so sim ticks see a pilot id (was ~256ms late). */
           vmoperator(register, myplayerid)
-          boardrunnerboot(register, myplayerid)
 
           // setup content watcher
           storagewatchcontent(myplayerid)

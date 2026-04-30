@@ -1,9 +1,13 @@
-/** Sim-hub gunmesh: apply Gunsync wire + optionally push same payload to boardrunner worker. */
+/** Sim-hub gunmesh: opaque Gun.Mesh wire frames → local graph; MEMORY derives from subscriber. */
 import { createdevice } from 'zss/device'
 import { vm } from 'zss/device/vm'
-import { gunmeshonmemory } from 'zss/feature/gunsync'
-import type { GunsyncPayload } from 'zss/feature/gunsync/replica'
-import { ispresent } from 'zss/mapping/types'
+import {
+  gunsyncparsesimmeshwire,
+  gunsyncsimmeshhearwireframe,
+  gunsyncstarsimsubscriber,
+} from 'zss/feature/gunsync/replicasubscriber'
+
+let subscribed = false
 
 const gunmeshsim = createdevice('gunmesh', ['all'], (message) => {
   if (!gunmeshsim.session(message)) {
@@ -12,11 +16,15 @@ const gunmeshsim = createdevice('gunmesh', ['all'], (message) => {
   if (message.target !== 'memory') {
     return
   }
-  const data = message.data as GunsyncPayload | undefined
-  if (!ispresent(data)) {
+  if (!subscribed) {
+    subscribed = true
+    gunsyncstarsimsubscriber(vm)
+  }
+  const raw = gunsyncparsesimmeshwire(message.data)
+  if (!(typeof raw === 'string' && raw.length > 0)) {
     return
   }
-  gunmeshonmemory(vm, message.player, data)
+  gunsyncsimmeshhearwireframe(vm, message.player, raw)
 })
 
 void gunmeshsim

@@ -1,12 +1,8 @@
 import { DEVICE } from 'zss/device'
 import { MESSAGE, isacktickgadgetpayload } from 'zss/device/api'
 import { gadgetstate } from 'zss/gadget/data/api'
-import { TICK_FPS } from 'zss/mapping/tick'
-
-import { boardrunneracks } from '../state'
 
 export function handleacktick(_vm: DEVICE, message: MESSAGE) {
-  boardrunneracks[message.player] = Math.ceil(TICK_FPS)
   if (!isacktickgadgetpayload(message.data)) {
     return
   }

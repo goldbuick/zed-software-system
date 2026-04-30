@@ -1,21 +1,23 @@
 /**
- * Gunsync — single-document MEMORY replica over hub MESSAGE (topic + boardrunner).
- * gun.js graph lives in [`roommirror`](./roommirror); this module is capture/apply of the JSON replica.
+ * Gunsync — single-document MEMORY replica; hub mesh carries Gun wire frames (`hubgunwire`); graph shape under [`roommirror`](./roommirror) `replica` subtree.
  */
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { BOOK } from 'zss/memory/types'
 import {
   memoryreadroot,
   memoryreadsession,
   memoryreadtopic,
   memoryresetbooks,
+  memorysnapshotroot,
 } from 'zss/memory/session'
+import { BOOK } from 'zss/memory/types'
 
 export type GunsyncReplica = {
   software: { main: string; temp: string }
   operator: string
   topic: string
   session: string
+  halt: boolean
+  simfreeze: boolean
   books: Record<string, BOOK>
 }
 
@@ -24,6 +26,22 @@ export type GunsyncPayload = {
   json: string
   /** boardrunner emits with source-of-truth stamp; avoids sim→br bounce on host. */
   source: 'boardrunner' | 'peer' | 'sim'
+}
+
+let applying_from_gun = false
+
+/** True while flushing Gun graph deltas into MEMORY (skip graph echo bridges). */
+export function gunsyncisapplyingfromgun(): boolean {
+  return applying_from_gun
+}
+
+export function gunsyncwithapplyingfromgun(run: () => void): void {
+  applying_from_gun = true
+  try {
+    run()
+  } finally {
+    applying_from_gun = false
+  }
 }
 
 let gunsynclocalversion = 0
@@ -53,19 +71,16 @@ export function gunsyncsetversion(forced: number): void {
   }
 }
 
-function capturebooks(): Record<string, BOOK> {
-  const root = memoryreadroot()
-  return JSON.parse(JSON.stringify(root.books)) as Record<string, BOOK>
-}
-
 export function gunsynccapture(): GunsyncReplica {
-  const root = memoryreadroot()
+  const snap = memorysnapshotroot()
   return {
-    software: { ...root.software },
-    operator: root.operator,
-    topic: root.topic,
-    session: root.session,
-    books: capturebooks(),
+    software: { ...snap.software },
+    operator: snap.operator,
+    topic: snap.topic,
+    session: snap.session,
+    halt: snap.halt,
+    simfreeze: snap.simfreeze,
+    books: snap.books,
   }
 }
 
@@ -81,7 +96,7 @@ export function gunsyncpayloadfromreplica(
   }
 }
 
-function gunsyncreplicaisempty(replica: GunsyncReplica): boolean {
+export function gunsyncreplicaisempty(replica: GunsyncReplica): boolean {
   return (
     replica.operator === '' &&
     replica.software.main === '' &&
@@ -95,25 +110,27 @@ function gunsynclocalhasbookcontent(): boolean {
 }
 
 /** Hub already bootstrapped (operator or books)—do not let empty BR snapshots wipe pilot id before loadmem. */
-function gunsynclocalhashubcontent(): boolean {
+export function gunsynclocalhashubcontent(): boolean {
   const root = memoryreadroot()
   return root.operator !== '' || gunsynclocalhasbookcontent()
 }
 
-/** Apply replica into local MEMORY, preserving loaders / halt / simfreeze. */
+/** Apply replica into local MEMORY; preserves **loaders** only. `halt` / `simfreeze` follow replica (and Gun graph). */
 export function gunsyncapplyreplica(replica: GunsyncReplica): void {
   const root = memoryreadroot()
   const loaders = root.loaders
-  const halt = root.halt
-  const simfreeze = root.simfreeze
   root.operator = replica.operator
   root.topic = replica.topic
   root.session = replica.session
   root.software = { ...replica.software }
+  if (typeof replica.halt === 'boolean') {
+    root.halt = replica.halt
+  }
+  if (typeof replica.simfreeze === 'boolean') {
+    root.simfreeze = replica.simfreeze
+  }
   memoryresetbooks(Object.values(replica.books))
   root.loaders = loaders
-  root.halt = halt
-  root.simfreeze = simfreeze
 }
 
 export function gunsyncapplyfromwire(data: MAYBE<GunsyncPayload>): boolean {
@@ -127,6 +144,19 @@ export function gunsyncapplyfromwire(data: MAYBE<GunsyncPayload>): boolean {
   let replica: GunsyncReplica
   try {
     replica = JSON.parse(data.json) as GunsyncReplica
+    const root = memoryreadroot()
+    if (typeof replica.halt !== 'boolean') {
+      replica.halt = root.halt
+    }
+    if (typeof replica.simfreeze !== 'boolean') {
+      replica.simfreeze = root.simfreeze
+    }
+    if (!replica.books || typeof replica.books !== 'object') {
+      replica.books = {}
+    }
+    if (!replica.software) {
+      replica.software = { main: '', temp: '' }
+    }
   } catch {
     return false
   }
