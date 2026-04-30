@@ -40,7 +40,6 @@ import {
 } from 'zss/feature/heavy/vmquery'
 import { resolvestoragepullmessage } from 'zss/feature/storagepull'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { perfmeasure } from 'zss/perf/ui'
 
 import { apierror, apilog, apitoast, vmlastinputtouch } from './api'
 
@@ -303,142 +302,140 @@ const heavy = createdevice('heavy', [], (message) => {
   if (!heavy.session(message)) {
     return
   }
-  perfmeasure(`heavy:${message.target}`, () => {
-    switch (message.target) {
-      case 'ttsinfo':
-        enqueueheavyjob(heavy, message.player, async () => {
-          if (isarray(message.data)) {
-            const [engine, info] = message.data as [
-              engine: 'piper' | 'supertonic',
-              info: string,
-            ]
-            const data = await requestinfo(heavy, message.player, engine, info)
-            heavy.reply(message, 'heavy:ttsinfo', ispresent(data) ? data : [])
-          }
-        })
-        break
-      case 'ttsrequest':
-        enqueueheavyjob(heavy, message.player, async () => {
-          if (isarray(message.data)) {
-            const [engine, config, voice, phrase] = message.data as [
-              engine: 'piper' | 'supertonic',
-              config: string,
-              voice: string,
-              phrase: string,
-            ]
-            const audiobytes = await requestaudiobytes(
-              heavy,
-              message.player,
-              engine,
-              config,
-              voice,
-              phrase,
-            )
-            heavy.reply(
-              message,
-              'heavy:ttsrequest',
-              ispresent(audiobytes) ? audiobytes : undefined,
-            )
-          }
-        })
-        break
-      case 'modelprompt':
-        enqueueheavyjob(heavy, message.player, async () => {
-          if (!isarray(message.data) || message.data.length < 7) {
-            return
-          }
-          const d = message.data
-          const prompt = d[0]
-          const agentid = d[1]
-          const agentname = d[2]
-          const nearestrefid = isstring(d[4]) ? d[4] : ''
-          const nearestrefname = isstring(d[5]) ? d[5] : ''
-          const promptlogging = isstring(d[6]) ? d[6] : ''
-          if (!isstring(prompt) || !isstring(agentid) || !isstring(agentname)) {
-            return
-          }
-          apitoast(heavy, message.player, `${agentname} is thinking...`)
-          await classifythenmaybeagentprompt(
+  switch (message.target) {
+    case 'ttsinfo':
+      enqueueheavyjob(heavy, message.player, async () => {
+        if (isarray(message.data)) {
+          const [engine, info] = message.data as [
+            engine: 'piper' | 'supertonic',
+            info: string,
+          ]
+          const data = await requestinfo(heavy, message.player, engine, info)
+          heavy.reply(message, 'heavy:ttsinfo', ispresent(data) ? data : [])
+        }
+      })
+      break
+    case 'ttsrequest':
+      enqueueheavyjob(heavy, message.player, async () => {
+        if (isarray(message.data)) {
+          const [engine, config, voice, phrase] = message.data as [
+            engine: 'piper' | 'supertonic',
+            config: string,
+            voice: string,
+            phrase: string,
+          ]
+          const audiobytes = await requestaudiobytes(
+            heavy,
             message.player,
-            prompt,
-            agentid,
-            agentname,
-            nearestrefid,
-            nearestrefname,
-            promptlogging,
+            engine,
+            config,
+            voice,
+            phrase,
           )
-        })
-        break
-      case 'modelstop':
-        if (isstring(message.data)) {
-          activeagents.delete(message.data)
-          if (activeagents.size === 0) {
-            destroysharedmodel()
-          }
+          heavy.reply(
+            message,
+            'heavy:ttsrequest',
+            ispresent(audiobytes) ? audiobytes : undefined,
+          )
         }
-        break
-      case 'llmpreset': {
-        let preset: HEAVY_LLM_PRESET | undefined
-        let showtoast = true
-        if (isstring(message.data)) {
-          preset = normalizeheavylmpreset(message.data)
-        } else if (isarray(message.data) && message.data.length >= 1) {
-          const raw = message.data[0]
-          if (isstring(raw)) {
-            preset = normalizeheavylmpreset(raw)
-          }
-          if (message.data[1] === false) {
-            showtoast = false
-          }
+      })
+      break
+    case 'modelprompt':
+      enqueueheavyjob(heavy, message.player, async () => {
+        if (!isarray(message.data) || message.data.length < 7) {
+          return
         }
-        if (!preset) {
-          break
+        const d = message.data
+        const prompt = d[0]
+        const agentid = d[1]
+        const agentname = d[2]
+        const nearestrefid = isstring(d[4]) ? d[4] : ''
+        const nearestrefname = isstring(d[5]) ? d[5] : ''
+        const promptlogging = isstring(d[6]) ? d[6] : ''
+        if (!isstring(prompt) || !isstring(agentid) || !isstring(agentname)) {
+          return
         }
-        const applied = preset
-        const toast = showtoast
-        enqueueheavyjob(heavy, message.player, () => {
-          applyheavylmpreset(applied)
-          if (toast) {
-            apitoast(heavy, message.player, `heavy llm: ${applied}`)
-          }
-          return Promise.resolve()
-        })
+        apitoast(heavy, message.player, `${agentname} is thinking...`)
+        await classifythenmaybeagentprompt(
+          message.player,
+          prompt,
+          agentid,
+          agentname,
+          nearestrefid,
+          nearestrefname,
+          promptlogging,
+        )
+      })
+      break
+    case 'modelstop':
+      if (isstring(message.data)) {
+        activeagents.delete(message.data)
+        if (activeagents.size === 0) {
+          destroysharedmodel()
+        }
+      }
+      break
+    case 'llmpreset': {
+      let preset: HEAVY_LLM_PRESET | undefined
+      let showtoast = true
+      if (isstring(message.data)) {
+        preset = normalizeheavylmpreset(message.data)
+      } else if (isarray(message.data) && message.data.length >= 1) {
+        const raw = message.data[0]
+        if (isstring(raw)) {
+          preset = normalizeheavylmpreset(raw)
+        }
+        if (message.data[1] === false) {
+          showtoast = false
+        }
+      }
+      if (!preset) {
         break
       }
-      case 'pilotnotify':
-        break
-      case 'queryresult':
-        memoryqueryresolvemessage(message)
-        break
-      case 'pullvarresult':
-        resolvestoragepullmessage(message.data)
-        break
-      case 'agentstart':
-        heavyrunagentstart(heavy, message)
-        break
-      case 'agentstop':
-        heavyrunagentstop(heavy, message)
-        break
-      case 'agentlist':
-        heavyrunagentlist(heavy, message)
-        break
-      case 'agentname':
-        heavyrunagentname(heavy, message)
-        break
-      case 'syncuserdisplay':
-        heavyrunsyncuserdisplay(heavy, message)
-        break
-      case 'restoreagents':
-        heavyrunrestoreagents(heavy, message)
-        break
-      default:
-        apierror(
-          heavy,
-          message.player,
-          'heavy',
-          `unknown message ${message.target}`,
-        )
-        break
+      const applied = preset
+      const toast = showtoast
+      enqueueheavyjob(heavy, message.player, () => {
+        applyheavylmpreset(applied)
+        if (toast) {
+          apitoast(heavy, message.player, `heavy llm: ${applied}`)
+        }
+        return Promise.resolve()
+      })
+      break
     }
-  })
+    case 'pilotnotify':
+      break
+    case 'queryresult':
+      memoryqueryresolvemessage(message)
+      break
+    case 'pullvarresult':
+      resolvestoragepullmessage(message.data)
+      break
+    case 'agentstart':
+      heavyrunagentstart(heavy, message)
+      break
+    case 'agentstop':
+      heavyrunagentstop(heavy, message)
+      break
+    case 'agentlist':
+      heavyrunagentlist(heavy, message)
+      break
+    case 'agentname':
+      heavyrunagentname(heavy, message)
+      break
+    case 'syncuserdisplay':
+      heavyrunsyncuserdisplay(heavy, message)
+      break
+    case 'restoreagents':
+      heavyrunrestoreagents(heavy, message)
+      break
+    default:
+      apierror(
+        heavy,
+        message.player,
+        'heavy',
+        `unknown message ${message.target}`,
+      )
+      break
+  }
 })

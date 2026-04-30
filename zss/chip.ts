@@ -24,6 +24,7 @@ import {
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory/flags'
 import { memorycanruncommand } from './memory/permissions'
+import { memoryreadroot } from './memory/session'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
@@ -510,7 +511,6 @@ export function createchip(
 ) {
   // chip memory
   const mem = createchipid(id)
-  const flags = memoryreadflags(mem)
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
@@ -519,26 +519,31 @@ export function createchip(
   // create labels
   const labels = deepcopy(Object.entries(build.labels ?? {}))
 
-  // init
-  if (!isarray(flags.lb) || flags.lb.length !== labels.length) {
-    // entry point state
-    flags.lb = labels
-    // lock states
-    flags.lk = ''
-    // scroll lock, gets cleared when player closes the scroll
-    flags.sk = ''
-    // we leave message unset
-    flags.mg = undefined
-    // we track where we are in execution
-    flags.ec = 1
-    // prevent infinite loop lockup
-    flags.lc = 0
-    // pause until next tick
-    flags.ys = 0
-    // execution frequency
-    flags.ps = 0
-    // chip is in ended state awaiting any messages
-    flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
+  // helper function to read flags
+  function readflags() {
+    const checkflags = memoryreadflags(mem)
+    // init only when needed
+    if (!isarray(checkflags.lb) || checkflags.lb.length !== labels.length) {
+      // entry point state
+      checkflags.lb = labels
+      // lock states
+      checkflags.lk = ''
+      // scroll lock, gets cleared when player closes the scroll
+      checkflags.sk = ''
+      // we leave message unset
+      checkflags.mg = undefined
+      // we track where we are in execution
+      checkflags.ec = 1
+      // prevent infinite loop lockup
+      checkflags.lc = 0
+      // pause until next tick
+      checkflags.ys = 0
+      // execution frequency
+      checkflags.ps = 0
+      // chip is in ended state awaiting any messages
+      checkflags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
+    }
+    return checkflags
   }
 
   /**
@@ -597,6 +602,7 @@ export function createchip(
     // lifecycle api
     once() {
       // reset state
+      const flags = readflags()
       flags.lc = 0
       flags.ys = 0
 
@@ -616,9 +622,10 @@ export function createchip(
     },
     tick(cycle) {
       // update execution frequency
+      const flags = readflags()
       const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
-      flags.ps = pulse + 1
+      flags.ps = activecycle ? 1 : pulse + 1
 
       // execution frequency
       if (activecycle === false) {
@@ -639,21 +646,26 @@ export function createchip(
       return shouldtick
     },
     isended() {
+      const flags = readflags()
       return flags.es === 1
     },
     isfirstpulse() {
+      const flags = readflags()
       return flags.ps === 1
     },
     shouldtick() {
+      const flags = readflags()
       return !flags.sk && (flags.es === 0 || chip.hm() !== 0)
     },
     checkcount() {
+      const flags = readflags()
       if (isnumber(flags.lc)) {
         return ++flags.lc > RUNTIME.YIELD_AT_COUNT
       }
       return true
     },
     haslabel(label) {
+      const flags = readflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -669,6 +681,7 @@ export function createchip(
       return false
     },
     hm() {
+      const flags = readflags()
       if (isarray(flags.mg) && isarray(flags.lb)) {
         const [target] = flags.mg as [string] // unpack message
         if (ispresent(target)) {
@@ -685,32 +698,40 @@ export function createchip(
       return 0
     },
     yield() {
+      const flags = readflags()
       flags.ys = 1
     },
     jump(line) {
+      const flags = readflags()
       flags.ec = line
     },
     sy() {
+      const flags = readflags()
       return !!flags.ys || chip.checkcount()
     },
     send(player, chipid, message, data) {
       SOFTWARE.emit(player, `${senderid(chipid)}:${message}`, data)
     },
     lock(allowed) {
+      const flags = readflags()
       flags.lk = allowed
     },
     unlock() {
+      const flags = readflags()
       flags.lk = ''
     },
     scrolllock(player) {
+      const flags = readflags()
       flags.sk = player
     },
     scrollunlock(player) {
+      const flags = readflags()
       if (flags.sk === player) {
         flags.sk = ''
       }
     },
     message(incoming) {
+      const flags = readflags()
       // internal messages while locked are allowed
       if (
         (flags.sk && incoming.player !== flags.sk) ||
@@ -727,6 +748,7 @@ export function createchip(
       }
     },
     zap(label) {
+      const flags = readflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -744,6 +766,7 @@ export function createchip(
       }
     },
     restore(label) {
+      const flags = readflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -760,6 +783,7 @@ export function createchip(
     },
     getcase() {
       // ensure execution cursor
+      const flags = readflags()
       flags.ec = isnumber(flags.ec) ? flags.ec : 1
 
       // check for pending messages
@@ -806,6 +830,7 @@ export function createchip(
     },
     nextcase() {
       // get execution cursor state
+      const flags = readflags()
       const cursor = isnumber(flags.ec) ? flags.ec : 1
       // inc it
       flags.ec = cursor + 1
@@ -814,9 +839,11 @@ export function createchip(
     },
     endofprogram() {
       chip.yield()
+      const flags = readflags()
       flags.es = 1
     },
     stacktrace(error) {
+      console.error('crash trace', chip.id(), error, deepcopy(memoryreadroot()))
       const stack = ErrorStackParser.parse(error)
       const [entry] = stack.filter(
         (item) => item.fileName === GENERATED_FILENAME,
@@ -961,6 +988,7 @@ export function createchip(
       return chip.command('duplicate', ...words)
     },
     repeatstart(index, ...words) {
+      const flags = readflags()
       const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])
       const repeatcount = `repeatcount${index}`
       const repeatwords = `repeatwords${index}`
@@ -968,6 +996,7 @@ export function createchip(
       flags[repeatwords] = ii < words.length ? words.slice(ii) : undefined
     },
     repeat(index) {
+      const flags = readflags()
       const repeatcount = `repeatcount${index}`
       const repeatwords = `repeatwords${index}`
       if (!isnumber(flags[repeatcount])) {

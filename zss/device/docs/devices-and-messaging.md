@@ -299,6 +299,8 @@ Nested paths (`register:terminal:open`, `gadgetclient:paint`) still belong to th
 
 Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **`heavy:*`**, **`gadgetclient:*`**, **`gadgetserver:*`** are the string literals passed to `device.emit` in [`device/api.ts`](../api.ts). `vm` subtargets are dispatched in [`vm/handlers/registry.ts`](../vm/handlers/registry.ts).
 
+**`vm:acktick`** — Sent from the [boardrunner](../boardrunner.ts) device after each tick ([`vmacktick`](../api.ts)). Refreshes boardrunner ack state on the VM. Optional `message.data` is an [`ACKTICK_GADGET_PAYLOAD`](../api.ts) (per-player `scrollname` / `scroll` / `sidebar` for players on that board); merged in [`handleacktick`](../vm/handlers/acktick.ts) into VM [`gadgetstate`](../../gadget/data/api.ts) (`book.flags.gadgetstore`).
+
 ---
 
 ## Client → worker forwarding (reference)

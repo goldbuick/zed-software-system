@@ -16,6 +16,14 @@ import {
   createleafsession,
   hubensureleaf,
 } from 'zss/feature/jsondiffsync/session'
+import {
+  JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+  filterjsonpatchforsync,
+  hasrelevantsyncdiff,
+  jsondiffsyncdiff,
+  pointermatchesignorepair,
+  semanticparentandleafforsegments,
+} from 'zss/feature/jsondiffsync/patchfilter'
 import { assignintoworking, rebaseapply } from 'zss/feature/jsondiffsync/sync'
 import type {
   PREPARE_OUTBOUND_RESULT,
@@ -38,12 +46,149 @@ function synconeleafround(
   if (out.message?.kind !== 'delta') {
     return
   }
-  hubprocessleafinbound(hub, leaf.peer, out.message)
-  const hubout = hubprepareoutboundforleaf(hub, leaf.peer)
-  if (hubout.message) {
-    leafapplyinbound(leaf, hubout.message)
+  const hubmsgs = jsondiffsyncleafapply(hub, leaf.peer, out.message)
+  for (const m of hubmsgs) {
+    leafapplyinbound(leaf, m)
   }
 }
+
+describe('semanticparentandleafforsegments', () => {
+  it('resolves board.objects id kinddata to parent objects', () => {
+    expect(
+      semanticparentandleafforsegments([
+        'books',
+        'B',
+        'pages',
+        '0',
+        'board',
+        'objects',
+        'foo',
+        'kinddata',
+      ]),
+    ).toEqual({ semanticparent: 'objects', leaf: 'kinddata' })
+  })
+
+  it('resolves board terrain index kinddata to parent terrain', () => {
+    expect(
+      semanticparentandleafforsegments([
+        'board',
+        'terrain',
+        '42',
+        'kinddata',
+      ]),
+    ).toEqual({ semanticparent: 'terrain', leaf: 'kinddata' })
+  })
+
+  it('resolves book pages row stats to parent pages', () => {
+    expect(
+      semanticparentandleafforsegments(['books', 'B', 'pages', '0', 'stats']),
+    ).toEqual({ semanticparent: 'pages', leaf: 'stats' })
+  })
+
+  it('resolves books id timestamp to parent books', () => {
+    expect(
+      semanticparentandleafforsegments(['books', 'B', 'timestamp']),
+    ).toEqual({ semanticparent: 'books', leaf: 'timestamp' })
+  })
+
+  it('matches ignore rules for object kinddata pointers', () => {
+    expect(
+      pointermatchesignorepair(
+        '/books/B/pages/0/board/objects/player1/kinddata',
+      ),
+    ).toBe(true)
+  })
+
+  it('matches ignore rules for sparse board.lookup numeric slots', () => {
+    expect(
+      pointermatchesignorepair('/books/B/pages/43/board/lookup/1445'),
+    ).toBe(true)
+    expect(
+      pointermatchesignorepair('/books/B/pages/0/board/named/foo'),
+    ).toBe(true)
+  })
+
+  it('matches ignore rules for books timestamp pointer', () => {
+    expect(pointermatchesignorepair('/books/B/timestamp')).toBe(true)
+  })
+
+  it('matches ignore rules for gadgetstate subtree pointers', () => {
+    expect(pointermatchesignorepair('/gadgetstate/scroll/0')).toBe(true)
+  })
+
+  it('matches ignore rules for book flags.gadgetstore pointers', () => {
+    expect(
+      pointermatchesignorepair('/books/B/flags/gadgetstore/p1/scroll/0'),
+    ).toBe(true)
+  })
+})
+
+describe('hasrelevantsyncdiff', () => {
+  it('returns false when only ignored stats subtrees differ', () => {
+    const a = { page: { stats: { type: 1, name: 'a' } } }
+    const b = { page: { stats: { type: 1, name: 'b' } } }
+    expect(hasrelevantsyncdiff(a, b)).toBe(false)
+  })
+
+  it('returns true when a non-ignored field differs together with stats', () => {
+    const a = { page: { title: 'x', stats: { type: 1 } } }
+    const b = { page: { title: 'y', stats: { type: 2 } } }
+    expect(hasrelevantsyncdiff(a, b)).toBe(true)
+  })
+})
+
+describe('parent-aware ignore rules', () => {
+  const parentrules: [string, string][] = [['parenta', 'leafx']]
+  const emptysubtree = new Set<string>()
+
+  it('ignores a leaf key only under the configured parent', () => {
+    expect(
+      hasrelevantsyncdiff(
+        { parenta: { leafx: 1 } },
+        { parenta: { leafx: 2 } },
+        parentrules,
+        emptysubtree,
+      ),
+    ).toBe(false)
+    expect(
+      hasrelevantsyncdiff(
+        { parentb: { leafx: 1 } },
+        { parentb: { leafx: 2 } },
+        parentrules,
+        emptysubtree,
+      ),
+    ).toBe(true)
+  })
+
+  it('filters move when path or from matches parent rule', () => {
+    expect(
+      filterjsonpatchforsync(
+        [{ op: 'move', path: '/parenta/leafx', from: '/other' }],
+        parentrules,
+        emptysubtree,
+      ),
+    ).toHaveLength(0)
+    expect(
+      filterjsonpatchforsync(
+        [{ op: 'move', path: '/other', from: '/parenta/leafx' }],
+        parentrules,
+        emptysubtree,
+      ),
+    ).toHaveLength(0)
+  })
+
+  it('wildcard parent still suppresses kinddata-only diff', () => {
+    const wildcardrules: [string, string][] = [['*', 'kinddata']]
+    expect(
+      jsondiffsyncdiff(
+        { z: { kinddata: { n: 1 } } },
+        { z: { kinddata: { n: 9 } } },
+        wildcardrules,
+        JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
+      ),
+    ).toHaveLength(0)
+  })
+})
 
 describe('jsondiffsync rebaseapply', () => {
   it('merges remote-first then local delta when paths are independent', () => {
@@ -135,6 +280,18 @@ describe('jsondiffsync leaf hub', () => {
     expect(leaf.basisversion).toBe(hub.documentversion)
   })
 
+  it('second hub leaf round-trip applies without basis mismatch', () => {
+    const hub = createhubsession({ v: 0 })
+    const leaf = createleafsession('L1', { v: 0 })
+    hubensureleaf(hub, leaf.peer)
+    leaf.working.v = 1
+    synconeleafround(hub, leaf)
+    leaf.working.v = 2
+    synconeleafround(hub, leaf)
+    expect(hub.working).toEqual({ v: 2 })
+    expect(leaf.basisversion).toBe(hub.documentversion)
+  })
+
   it('propagates one leaf edit to a second leaf via hub fanout', () => {
     const hub = createhubsession({ n: 0 })
     const leaf1 = createleafsession('L1', { n: 0 })
@@ -145,7 +302,7 @@ describe('jsondiffsync leaf hub', () => {
     leaf1.working.n = 1
     const m1 = leafprepareoutbound(leaf1)
     expect(m1.message).toBeDefined()
-    hubprocessleafinbound(hub, 'L1', m1.message!)
+    jsondiffsyncleafapply(hub, 'L1', m1.message!)
 
     const h2 = hubprepareoutboundforleaf(hub, 'L2')
     expect(h2.message).toBeDefined()
@@ -208,10 +365,9 @@ describe('jsondiffsync leaf hub', () => {
     expect(second.isretransmit).toBe(true)
     expect(second.message.seq).toBe(first.message.seq)
 
-    hubprocessleafinbound(hub, 'L1', second.message)
-    const ho = hubprepareoutboundforleaf(hub, 'L1')
-    expect(ho.message).toBeDefined()
-    leafapplyinbound(leaf, ho.message!)
+    const hubmsgs = jsondiffsyncleafapply(hub, 'L1', second.message)
+    expect(hubmsgs.length).toBe(1)
+    leafapplyinbound(leaf, hubmsgs[0])
     expect(leaf.unackedseq).toBeUndefined()
   })
 
@@ -305,6 +461,71 @@ describe('jsondiffsync leaf hub', () => {
     seed.el.kinddata = { n: 99 }
     expect(jsondiffsynchubapply(hub)).toBe(false)
     expect(hub.documentversion).toBe(0)
+  })
+
+  it('jsondiffsynchubapply ignores stats-only codepage edits', () => {
+    const seed = {
+      cp: { id: 'p1', code: '@board test\n', stats: { type: 3 as number } },
+    }
+    const hub = createhubsession(seed)
+    hub.versionshadow = deepcopy(hub.working)
+    seed.cp.stats = { type: 3, name: 'renamed' }
+    expect(jsondiffsynchubapply(hub)).toBe(false)
+    expect(hub.documentversion).toBe(0)
+  })
+
+  it('jsondiffsynchubapply ignores gadgetstate-only memory edits', () => {
+    const seed = {
+      gadgetstate: { scrollname: '', scroll: [] as string[] },
+    }
+    const hub = createhubsession(seed)
+    hub.versionshadow = deepcopy(hub.working)
+    seed.gadgetstate.scroll = ['line']
+    expect(jsondiffsynchubapply(hub)).toBe(false)
+    expect(hub.documentversion).toBe(0)
+  })
+
+  it('jsondiffsynchubapply ignores gadgetstore-only memory edits', () => {
+    const seed = {
+      books: {
+        bk: {
+          flags: {
+            gadgetstore: {
+              p1: { scrollname: 't', scroll: [] as string[], sidebar: [] },
+            },
+          },
+        },
+      },
+    }
+    const hub = createhubsession(seed)
+    hub.versionshadow = deepcopy(hub.working)
+    ;(
+      seed.books.bk.flags.gadgetstore.p1 as { scroll: string[] }
+    ).scroll = ['x']
+    expect(jsondiffsynchubapply(hub)).toBe(false)
+    expect(hub.documentversion).toBe(0)
+  })
+
+  it('hub outbound ignores drawlastfp-only board edits vs leaf shadow', () => {
+    const hub = createhubsession({
+      board: {
+        terrain: [],
+        objects: {},
+        drawlastfp: 0,
+      },
+    })
+    hubensureleaf(hub, 'L1')
+    hub.working.board.drawlastfp = 99
+    const prep = hubprepareoutboundforleaf(hub, 'L1')
+    expect(prep.message).toBeUndefined()
+  })
+
+  it('still sends deltas when element category changes', () => {
+    const doc = { el: { category: 1, y: 0 } }
+    const leaf = createleafsession('L1', deepcopy(doc))
+    leaf.working.el.category = 2
+    const prep = leafprepareoutbound(leaf)
+    expect(hasoutboundmessage(prep)).toBe(true)
   })
 
   it('preserves hub working object identity when MEMORY changes and jsondiffsynchubapply runs', () => {

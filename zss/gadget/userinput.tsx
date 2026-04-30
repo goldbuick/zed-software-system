@@ -8,10 +8,10 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   apilog,
+  boardrunnerinput,
   registerbookmarkclirun,
   vmcli,
   vmdoot,
-  boardrunnerinput,
   vmlocal,
   vmrefscroll,
 } from 'zss/device/api'
@@ -27,7 +27,6 @@ import {
 import { UserInputContext, user } from 'zss/gadget/userinputcontext'
 import type { UserInputMods } from 'zss/gadget/userinputtypes'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { perfmeasure } from 'zss/perf/ui'
 import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
 import { DIR, NAME } from 'zss/words/types'
@@ -178,26 +177,24 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
 }
 
 function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
-  perfmeasure('input:userinputinvoke', () => {
-    if (index === 0) {
-      // primary input
-      user.root.emit(INPUT[input], mods)
-    } else {
-      // local multiplayer input
-      let bits = 0
-      const player = playerlocal(index)
-      if (mods.alt) {
-        bits |= INPUT_ALT
-      }
-      if (mods.ctrl) {
-        bits |= INPUT_CTRL
-      }
-      if (mods.shift) {
-        bits |= INPUT_SHIFT
-      }
-      boardrunnerinput(SOFTWARE, player, input, bits)
+  if (index === 0) {
+    // primary input
+    user.root.emit(INPUT[input], mods)
+  } else {
+    // local multiplayer input
+    let bits = 0
+    const player = playerlocal(index)
+    if (mods.alt) {
+      bits |= INPUT_ALT
     }
-  })
+    if (mods.ctrl) {
+      bits |= INPUT_CTRL
+    }
+    if (mods.shift) {
+      bits |= INPUT_SHIFT
+    }
+    boardrunnerinput(SOFTWARE, player, input, bits)
+  }
 }
 
 function handlekeydown(event: KeyboardEvent) {

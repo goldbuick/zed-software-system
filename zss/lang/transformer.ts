@@ -283,7 +283,6 @@ function transformnode(ast: CodeNode): SourceNode {
         `api.nextcase();\n`,
         `} // end of logic\n`,
         `} catch (e) {\n`,
-        `console.error(e);\n`,
         `const source = api.stacktrace(e);\n`,
         `const err = new Error(e.message);\n`,
         `err.name = 'GameError';\n`,

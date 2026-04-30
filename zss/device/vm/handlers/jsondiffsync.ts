@@ -5,16 +5,24 @@ import { jsondiffsync } from 'zss/device/vm/state'
 import { jsondiffsyncleafapply } from 'zss/feature/jsondiffsync/hub'
 import { issyncmessage } from 'zss/feature/jsondiffsync/types'
 import { ispresent } from 'zss/mapping/types'
-import { perfmeasure } from 'zss/perf/ui'
 
+/**
+ * Merge leaf deltas into the authoritative hub (`jsondiffsync.working` === shared MEMORY root)
+ * inside `jsondiffsyncleafapply` before any outbound is built. Outbound messages exist so the
+ * boardrunner leaf can ACK and align its shadow — they are not a second application step on VM memory.
+ */
 export function handlejsondiffsync(vm: DEVICE, message: MESSAGE): void {
   if (!issyncmessage(message.data)) {
     return
   }
-  const [outbound] = perfmeasure('jds:vm:hub:leafapply', () =>
-    jsondiffsyncleafapply(jsondiffsync, message.player, message.data),
+  const [outbound] = jsondiffsyncleafapply(
+    jsondiffsync,
+    message.player,
+    message.data,
   )
   if (ispresent(outbound)) {
     boardrunnerjsondiffsync(vm, message.player, outbound)
+    // console.info('vm sync message', outbound)
+    // if we need this in the future, we should only log if the message is a snapshot, or if it a delta with operations > 0
   }
 }

@@ -9,19 +9,84 @@ import {
   SYNC_MESSAGE,
   issyncmessage,
 } from 'zss/feature/jsondiffsync/types'
+import { gadgetstate } from 'zss/gadget/data/api'
 import { INPUT } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
+import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memorytickmain } from 'zss/memory/runtime'
-import { memoryreadhalt, memoryreadroot } from 'zss/memory/session'
-import { perfmeasure } from 'zss/perf/ui'
+import {
+  memoryreadbookbysoftware,
+  memoryreadhalt,
+  memoryreadroot,
+} from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 
-import { vmacktick, vmjsondiffsync } from './api'
+import { type ACKTICK_GADGET_PAYLOAD, vmacktick, vmjsondiffsync } from './api'
+import { movementevidencelog } from './movementevidencelog'
+
+function boardrunnermovementprobe(
+  player: string,
+  boardid: string,
+  phase: string,
+) {
+  const pb = memoryreadplayerboard(player)
+  let x: number | undefined
+  let y: number | undefined
+  if (ispresent(pb) && pb.id === boardid) {
+    const obj = memoryreadobject(pb, player)
+    if (ispresent(obj)) {
+      x = obj.x
+      y = obj.y
+    }
+  }
+  let inputqlen: number | undefined
+  if (memoryhasflags(player)) {
+    const flags = memoryreadflags(player)
+    inputqlen = isarray(flags.inputqueue) ? flags.inputqueue.length : 0
+  }
+  movementevidencelog(
+    'boardrunner_tick_xy_probe',
+    { phase, player, boardid, x, y, inputqlen },
+    'movement-xy',
+  )
+}
 
 let leafsession: MAYBE<LEAF_SESSION>
 export function createboardrunnerleafsession(player: string) {
+  gadgetstate(player)
   leafsession = createleafsession(player, memoryreadroot())
   requestsnapshot(player)
+}
+
+function buildacktickgadgetpayload(
+  boardid: string,
+): MAYBE<ACKTICK_GADGET_PAYLOAD> {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return undefined
+  }
+  const entries: ACKTICK_GADGET_PAYLOAD['entries'] = []
+  const activelist = mainbook.activelist ?? []
+  for (let i = 0; i < activelist.length; ++i) {
+    const pid = activelist[i]
+    const pb = memoryreadplayerboard(pid)
+    if (!ispresent(pb) || pb.id !== boardid) {
+      continue
+    }
+    const g = gadgetstate(pid)
+    entries.push({
+      player: pid,
+      scrollname: g.scrollname,
+      scroll: g.scroll,
+      sidebar: g.sidebar,
+    })
+  }
+  if (entries.length === 0) {
+    return undefined
+  }
+  return { boardid, entries }
 }
 
 function requestsnapshot(player: string) {
@@ -63,12 +128,22 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       break
     case 'tick':
       if (ispresent(leafsession) && isarray(message.data)) {
-        const [board] = message.data as [string, number]
-        memorytickmain(board, memoryreadhalt())
-        vmacktick(boardrunner, message.player)
+        const [board, timestamp] = message.data as [string, number]
+        // #region agent log
+        movementevidencelog(
+          'boardrunner_tick_enter',
+          { player: message.player, board, timestamp },
+          'movement-order',
+        )
+        boardrunnermovementprobe(message.player, board, 'before_memorytickmain')
+        // #endregion
+        memorytickmain(board, timestamp, memoryreadhalt())
+        // #region agent log
+        boardrunnermovementprobe(message.player, board, 'after_memorytickmain')
+        // #endregion
+        vmacktick(boardrunner, message.player, buildacktickgadgetpayload(board))
         const prep = leafprepareoutbound(leafsession)
         if (prep.message !== undefined) {
-          console.info('boardrunner:tick', prep.message)
           vmjsondiffsync(boardrunner, message.player, prep.message)
         }
       }
@@ -82,8 +157,8 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
         }
         if (input !== INPUT.NONE) {
           flags.inputqueue.push([input, mods])
-          console.info('boardrunner:input', flags.inputqueue)
         }
+        // console.info('input', flags.inputqueue)
       }
       break
     }
@@ -95,9 +170,57 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       ) {
         break
       }
-      const inbound = leafapplyinbound(leafsession, message.data)
+      const sync = message.data
+      // #region agent log
+      movementevidencelog(
+        'leaf_inbound_enter',
+        {
+          player: message.player,
+          kind: sync.kind,
+          seq: sync.seq,
+          opcount: sync.kind === 'delta' ? sync.operations.length : undefined,
+          leafbasisversion: leafsession.basisversion,
+          hubbasisversion:
+            sync.kind === 'delta' ? sync.basisversion : undefined,
+        },
+        'movement-resync',
+      )
+      // #endregion
+      const inbound = leafapplyinbound(leafsession, sync)
+      // #region agent log
+      if (!inbound.ok) {
+        movementevidencelog(
+          'leaf_inbound_needsresync',
+          {
+            player: message.player,
+            kind: sync.kind,
+            err:
+              inbound.error instanceof Error
+                ? inbound.error.message
+                : String(inbound.error),
+          },
+          'movement-resync',
+        )
+      } else {
+        movementevidencelog(
+          'leaf_inbound_ok',
+          {
+            player: message.player,
+            kind: sync.kind,
+            changed: inbound.changed,
+            newbasis: leafsession.basisversion,
+          },
+          'movement-resync',
+        )
+      }
+      // #endregion
       if (!inbound.ok) {
         requestsnapshot(message.player)
+      } else if (inbound.changed) {
+        const prep = leafprepareoutbound(leafsession)
+        if (prep.message !== undefined) {
+          vmjsondiffsync(boardrunner, message.player, prep.message)
+        }
       }
       break
     }

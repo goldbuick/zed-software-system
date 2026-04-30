@@ -1,16 +1,9 @@
 import { compare } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
 import { FORMAT_OBJECT } from 'zss/feature/format'
-import {
-  gadgetclearscroll,
-  gadgetstate,
-  gadgetstateprovider,
-  initstate,
-} from 'zss/gadget/data/api'
+import { gadgetclearscroll, gadgetstate } from 'zss/gadget/data/api'
 import { exportgadgetstate } from 'zss/gadget/data/compress'
-import { ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
@@ -25,25 +18,9 @@ import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
+import { registermemorygadgetstateprovider } from './gadgetstatebookprovider'
 
-gadgetstateprovider((element) => {
-  if (ispid(element)) {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    // cheating here as data is non-WORD compliant
-    const gadgetstore = memoryreadbookflags(
-      mainbook,
-      MEMORY_LABEL.GADGETSTORE,
-    ) as any
-    // group by element
-    let value = gadgetstore[element]
-    // make sure to init state
-    if (!ispresent(value)) {
-      gadgetstore[element] = value = initstate()
-    }
-    return value
-  }
-  return initstate()
-})
+registermemorygadgetstateprovider()
 
 // we don't store sync state
 const gadgetsync = new Map<string, FORMAT_OBJECT>()

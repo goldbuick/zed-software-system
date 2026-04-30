@@ -3,7 +3,6 @@ import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
-import { perfmeasure } from 'zss/perf/ui'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -71,17 +70,15 @@ export function PanelComponent({
     <TilesData store={store}>
       <TilesRender label="panel" width={width} height={height} />
       <WriteTextContext.Provider value={context}>
-        {perfmeasure('panel:items', () =>
-          text.map((item, index) => (
-            <PanelItem
-              key={index}
-              row={inline ? undefined : index + ymargin}
-              item={item}
-              active={index === selected}
-              sidebar={xmargin !== 0}
-            />
-          )),
-        )}
+        {text.map((item, index) => (
+          <PanelItem
+            key={index}
+            row={inline ? undefined : index + ymargin}
+            item={item}
+            active={index === selected}
+            sidebar={xmargin !== 0}
+          />
+        ))}
         <PanelEndPass
           defaultcolor={color}
           defaultbg={bg}

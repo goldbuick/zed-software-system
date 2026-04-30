@@ -5,7 +5,6 @@ const config: Config = {
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
-    '^zss/perf/ui$': '<rootDir>/zss/__mocks__/perfui.ts',
     '^zss/(.*)$': '<rootDir>/zss/$1',
     '^uint8-util$': '<rootDir>/zss/__mocks__/uint8-util.ts',
     '^@chevrotain/utils$':

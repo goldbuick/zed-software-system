@@ -6,7 +6,7 @@ import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import type { SYNC_MESSAGE } from 'zss/feature/jsondiffsync/types'
-import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
+import { INPUT, PANEL_ITEM, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
@@ -36,6 +36,42 @@ export type GADGET_SCROLL_LINES = {
   scrollname: string
   content: string
   chip?: string
+}
+
+/** Optional scroll/sidebar text bundled with `vm:acktick` from boardrunner. */
+export type ACKTICK_GADGET_ENTRY = {
+  player: string
+  scrollname?: string
+  scroll?: PANEL_ITEM[]
+  sidebar?: PANEL_ITEM[]
+}
+
+export type ACKTICK_GADGET_PAYLOAD = {
+  boardid: string
+  entries: ACKTICK_GADGET_ENTRY[]
+}
+
+export function isacktickgadgetpayload(
+  v: unknown,
+): v is ACKTICK_GADGET_PAYLOAD {
+  if (typeof v !== 'object' || v === null) {
+    return false
+  }
+  const o = v as Record<string, unknown>
+  if (typeof o.boardid !== 'string' || !Array.isArray(o.entries)) {
+    return false
+  }
+  const entries = o.entries as unknown[]
+  for (let i = 0; i < entries.length; ++i) {
+    const e = entries[i]
+    if (typeof e !== 'object' || e === null) {
+      return false
+    }
+    if (typeof (e as Record<string, unknown>).player !== 'string') {
+      return false
+    }
+  }
+  return true
 }
 
 export type JSON_READER = {
@@ -128,6 +164,92 @@ export function boardrunnerjsondiffsync(
   player: string,
   sync: SYNC_MESSAGE,
 ) {
+  // #region agent log
+  function pathprefix(p: string): string {
+    const t = p.startsWith('/') ? p.slice(1) : p
+    const i = t.indexOf('/')
+    const h = i === -1 ? t : t.slice(0, i)
+    return h === '' ? '/' : h
+  }
+  function vmoutboundbreakdown(): Record<string, unknown> {
+    /** Avoid oversized ingest payloads when a delta carries extreme op counts. */
+    const PATCHPATH_LOG_CAP = 400
+    const serializedlength = JSON.stringify(sync).length
+    const base: Record<string, unknown> = {
+      kind: sync.kind,
+      serializedlength,
+      seq: sync.seq,
+      ackpeerseq: sync.ackpeerseq,
+      player,
+    }
+    if (sync.kind === 'delta') {
+      const opbykind: Record<string, number> = {}
+      const pathprefixcounts: Record<string, number> = {}
+      const patchpaths: { op: string; path?: string; from?: string }[] = []
+      const ops = sync.operations
+      for (let i = 0; i < ops.length; ++i) {
+        const op = ops[i] as { op: string; path?: string; from?: string }
+        opbykind[op.op] = (opbykind[op.op] ?? 0) + 1
+        const seg = typeof op.path === 'string' ? pathprefix(op.path) : '?'
+        pathprefixcounts[seg] = (pathprefixcounts[seg] ?? 0) + 1
+        const row: { op: string; path?: string; from?: string } = {
+          op: op.op,
+        }
+        if (typeof op.path === 'string') {
+          row.path = op.path
+        }
+        if (typeof op.from === 'string') {
+          row.from = op.from
+        }
+        patchpaths.push(row)
+      }
+      const capped = patchpaths.length > PATCHPATH_LOG_CAP
+      base.delta = {
+        opcount: ops.length,
+        opbykind,
+        pathprefixcounts,
+        patchpaths: capped
+          ? patchpaths.slice(0, PATCHPATH_LOG_CAP)
+          : patchpaths,
+        ...(capped
+          ? { patchpathscapped: true, patchpathstotal: patchpaths.length }
+          : {}),
+        basisversion: sync.basisversion,
+        resultdocumentversion: sync.resultdocumentversion,
+      }
+      return base
+    }
+    if (sync.kind === 'fullsnapshot') {
+      const doc = sync.document as Record<string, unknown> | null | undefined
+      const documenttoplevelkeys =
+        doc !== null && doc !== undefined && typeof doc === 'object'
+          ? Object.keys(doc).length
+          : 0
+      base.snapshot = {
+        resultdocumentversion: sync.resultdocumentversion,
+        documentserializedlength: JSON.stringify(sync.document).length,
+        documenttoplevelkeys,
+      }
+      return base
+    }
+    return base
+  }
+  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Debug-Session-Id': '72d212',
+    },
+    body: JSON.stringify({
+      sessionId: '72d212',
+      location: 'zss/device/api.ts:boardrunnerjsondiffsync',
+      message: 'vm_outbound_jsondiffsync',
+      data: vmoutboundbreakdown(),
+      timestamp: Date.now(),
+      hypothesisId: 'vm-outbound-sync',
+    }),
+  }).catch(() => {})
+  // #endregion
   device.emit(player, 'boardrunner:jsondiffsync', sync)
 }
 
@@ -902,8 +1024,12 @@ export function vminspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
   device.emit(player, 'vm:inspect', [p1, p2])
 }
 
-export function vmacktick(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:acktick')
+export function vmacktick(
+  device: DEVICELIKE,
+  player: string,
+  data?: ACKTICK_GADGET_PAYLOAD,
+) {
+  device.emit(player, 'vm:acktick', data)
 }
 
 export function vmjsondiffsync(

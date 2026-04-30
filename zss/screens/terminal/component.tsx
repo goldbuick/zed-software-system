@@ -8,7 +8,6 @@ import { useWriteText } from 'zss/gadget/writetext'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
-import { perfmeasure } from 'zss/perf/ui'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import { measurerowcached } from 'zss/screens/terminal/measurerowcache'
@@ -52,8 +51,8 @@ export function TerminalComponent() {
   const logsrowmaxwidth = context.width - 1
   const logsrowheights: number[] = useMemo(() => {
     const logs = terminallogs ?? []
-    return perfmeasure('terminal:measurerows', () =>
-      logs.map((item) => measurerowcached(item, logsrowmaxwidth, edge.height)),
+    return logs.map((item) =>
+      measurerowcached(item, logsrowmaxwidth, edge.height),
     )
   }, [edge.height, logsrowmaxwidth, terminallogs])
 

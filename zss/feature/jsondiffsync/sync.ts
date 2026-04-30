@@ -1,6 +1,5 @@
 import { Operation, applyPatch, compare } from 'fast-json-patch'
 import { deepcopy } from 'zss/mapping/types'
-import { perfmeasure } from 'zss/perf/ui'
 
 import { filterjsonpatchforsync } from './patchfilter'
 import type { JSON_DOCUMENT } from './types'
@@ -43,23 +42,23 @@ export function rebaseapply(
 ): { ok: true; merged: JSON_DOCUMENT } | { ok: false; error: unknown } {
   try {
     const inboundfiltered = filterjsonpatchforsync(inbound)
-    const afterremote = perfmeasure(
-      'jds:sync:rebase:remote',
-      () =>
-        applyPatch(deepcopy(base) as object, inboundfiltered, true, false)
-          .newDocument,
-    )
-    const localdelta = perfmeasure('jds:sync:rebase:localcompare', () =>
-      compare(base as object, working as object),
-    )
+    const afterremote = applyPatch(
+      deepcopy(base) as object,
+      inboundfiltered,
+      true,
+      false,
+    ).newDocument
+    /** Full compare: local ops must include paths excluded from wire deltas (e.g. kinddata merge). */
+    const localdelta = compare(base as object, working as object)
     if (localdelta.length === 0) {
       return { ok: true, merged: afterremote }
     }
-    const merged = perfmeasure(
-      'jds:sync:rebase:localpatch',
-      () =>
-        applyPatch(deepcopy(afterremote), localdelta, true, false).newDocument,
-    )
+    const merged = applyPatch(
+      deepcopy(afterremote),
+      localdelta,
+      true,
+      false,
+    ).newDocument
     return { ok: true, merged }
   } catch (err) {
     return { ok: false, error: err }

@@ -13,7 +13,6 @@ import {
 } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { createos } from 'zss/os'
-import { perfmeasure } from 'zss/perf/ui'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
@@ -106,133 +105,135 @@ export function memorytickloaders() {
   // inc timestamp
   const timestamp = mainbook.timestamp + 1
 
-  perfmeasure('memorytick:loaders', () => {
-    const loaders = memoryreadloaders()
-    for (const id of Object.keys(loaders)) {
-      const code = loaders[id]
-      // cache context
-      const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+  const loaders = memoryreadloaders()
+  for (const id of Object.keys(loaders)) {
+    const code = loaders[id]
+    // cache context
+    const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
-      // write context, all blank except for book and timestamp
-      READ_CONTEXT.timestamp = mainbook.timestamp
-      READ_CONTEXT.book = mainbook
-      READ_CONTEXT.board = undefined
-      READ_CONTEXT.element = undefined
-      READ_CONTEXT.elementid = ''
-      READ_CONTEXT.elementisplayer = false
-      READ_CONTEXT.elementfocus = memoryreadoperator()
+    // write context, all blank except for book and timestamp
+    READ_CONTEXT.timestamp = mainbook.timestamp
+    READ_CONTEXT.book = mainbook
+    READ_CONTEXT.board = undefined
+    READ_CONTEXT.element = undefined
+    READ_CONTEXT.elementid = ''
+    READ_CONTEXT.elementisplayer = false
+    READ_CONTEXT.elementfocus = memoryreadoperator()
 
-      // set chip
-      const maybearg = memoryloaderarg(id)
-      if (ispresent(maybearg)) {
-        os.arg(id, maybearg)
-      }
-
-      // run code
-      os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
-
-      // teardown on ended
-      if (os.isended(id)) {
-        os.halt(id)
-        delete loaders[id]
-      }
-
-      // restore context
-      objectKeys(OLD_CONTEXT).forEach((key) => {
-        // @ts-expect-error dont bother me
-        READ_CONTEXT[key] = OLD_CONTEXT[key]
-      })
+    // set chip
+    const maybearg = memoryloaderarg(id)
+    if (ispresent(maybearg)) {
+      os.arg(id, maybearg)
     }
-  })
+
+    // run code
+    os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
+
+    // teardown on ended
+    if (os.isended(id)) {
+      os.halt(id)
+      delete loaders[id]
+    }
+
+    // restore context
+    objectKeys(OLD_CONTEXT).forEach((key) => {
+      // @ts-expect-error dont bother me
+      READ_CONTEXT[key] = OLD_CONTEXT[key]
+    })
+  }
 
   // track tick
   mainbook.timestamp = timestamp
   READ_CONTEXT.timestamp = timestamp
 }
 
-export function memorytickmain(updateboard: string, playeronly = false) {
+export function memorytickmain(
+  updateboard: string,
+  timestamp: number,
+  playeronly = false,
+) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
 
   // update board / build code / run chips
-  perfmeasure('memorytick:board', () => {
-    const board = memoryreadboardbyaddress(updateboard)
-    if (!ispresent(board)) {
-      return
-    }
+  const board = memoryreadboardbyaddress(updateboard)
+  if (!ispresent(board)) {
+    return
+  }
 
-    // init kinds
-    memoryinitboard(board)
-    if (mainbook.timestamp % APPLY_SYNTH_RATE === 0) {
-      memoryapplyboardsynthstats(board)
-    }
+  // update timestamp
+  mainbook.timestamp = timestamp
 
-    const drawallowforqueue = board.drawneedfull
-      ? undefined
-      : board.drawallowids
-    const rundraw =
-      drawallowforqueue === undefined || drawallowforqueue.size > 0
-    const run = memorytickboard(
-      board,
-      mainbook.timestamp,
-      rundraw,
-      drawallowforqueue,
-    )
+  // init kinds
+  memoryinitboard(board)
 
-    // draw pass
-    if (rundraw) {
-      for (let i = 0; i < run.length; ++i) {
-        const { type, code, object, terrain, pass, label, id } = run[i]
-        if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
-          memorytickonce(
-            mainbook,
-            board,
-            object ?? terrain,
-            code,
-            id,
-            label ?? '',
-          )
-        }
-      }
-    }
+  // don't hammer config changes
+  if (mainbook.timestamp % APPLY_SYNTH_RATE === 0) {
+    memoryapplyboardsynthstats(board)
+  }
 
-    // update pass
+  const drawallowforqueue = board.drawneedfull ? undefined : board.drawallowids
+  const rundraw = drawallowforqueue === undefined || drawallowforqueue.size > 0
+  const run = memorytickboard(
+    board,
+    mainbook.timestamp,
+    rundraw,
+    drawallowforqueue,
+  )
+
+  // draw pass
+  if (rundraw) {
     for (let i = 0; i < run.length; ++i) {
-      const { id, type, code, object, pass } = run[i]
-      if (pass === 'draw') {
-        continue
-      }
-      if (type === CODE_PAGE_TYPE.ERROR) {
-        // handle dead code
-        os.halt(id)
-        // in dev, we only run player objects
-      } else if (!playeronly || ispid(object?.id ?? '')) {
-        // handle active code
-        memorytickobject(mainbook, board, object, code)
-      }
-    }
-
-    // process synth play queue
-    const queue = memoryreadsynthplay(board.id)
-    if (queue.length > 0) {
-      const [play, endtime] = queue[0]
-      const dec = endtime - 1
-      if (play) {
-        // dispatch play
-        synthplay(SOFTWARE, '', board.id, play)
-        console.info('play queue', board.id, play)
-      }
-      if (dec > 0) {
-        queue[0] = ['', dec]
-      } else {
-        queue.shift()
+      const { type, code, object, terrain, pass, label, id } = run[i]
+      if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
+        memorytickonce(
+          mainbook,
+          board,
+          object ?? terrain,
+          code,
+          id,
+          label ?? '',
+        )
       }
     }
+  }
 
-    memoryupdatedrawdirty(board, mainbook.timestamp)
-  })
+  // update pass
+  for (let i = 0; i < run.length; ++i) {
+    const { id, type, code, object, pass } = run[i]
+    if (pass === 'draw') {
+      continue
+    }
+    if (type === CODE_PAGE_TYPE.ERROR) {
+      // handle dead code
+      os.halt(id)
+      // in dev, we only run player objects
+    } else if (!playeronly || ispid(object?.id ?? '')) {
+      // handle active code
+      memorytickobject(mainbook, board, object, code)
+    }
+  }
+
+  // process synth play queue
+  const queue = memoryreadsynthplay(board.id)
+  if (queue.length > 0) {
+    const [play, endtime] = queue[0]
+    const dec = endtime - 1
+    if (play) {
+      // dispatch play
+      synthplay(SOFTWARE, '', board.id, play)
+      console.info('play queue', board.id, play)
+    }
+    if (dec > 0) {
+      queue[0] = ['', dec]
+    } else {
+      queue.shift()
+    }
+  }
+
+  memoryupdatedrawdirty(board, mainbook.timestamp)
 }
 
 export function memorytickobject(

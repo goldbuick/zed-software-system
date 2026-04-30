@@ -35,7 +35,6 @@ export function memoryexportboardelement(
       category: FORMAT_SKIP,
       kinddata: FORMAT_SKIP,
       stopped: FORMAT_SKIP,
-      removed: FORMAT_SKIP,
       bucket: FORMAT_SKIP,
     })
   }
@@ -50,7 +49,6 @@ export function memoryexportboardelement(
     category: FORMAT_SKIP,
     kinddata: FORMAT_SKIP,
     stopped: FORMAT_SKIP,
-    removed: FORMAT_SKIP,
     bucket: FORMAT_SKIP,
   })
 }
