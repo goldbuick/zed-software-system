@@ -81,6 +81,11 @@ export type LEAF_SESSION = {
 export type HUB_LEAF_RECORD = {
   basisversion: number
   shadow: JSON_DOCUMENT
+  /**
+   * Leaf `basisversion` from the last inbound delta — hub→leaf `basisversion` must match this until
+   * the leaf applies the outbound (may lag `row.basisversion` after `hubtryconsumeleafack`).
+   */
+  basisforhuboutbound?: number
 }
 
 export type HUB_SESSION = {

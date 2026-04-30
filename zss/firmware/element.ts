@@ -239,10 +239,6 @@ function readinput(
     return check !== INPUT.NONE && check !== input
   })
 
-  if (input !== INPUT.NONE) {
-    console.info('read input', input)
-  }
-
   return flags
 }
 

@@ -1,4 +1,5 @@
-import { deepcopy } from 'zss/mapping/types'
+import { compare } from 'fast-json-patch'
+import { jsondocumentcopy } from 'zss/mapping/types'
 
 import { jsondiffsyncdiff } from './patchfilter'
 import { assignintoworking, rebaseapply } from './sync'
@@ -13,6 +14,9 @@ import type {
 export function leafprepareoutbound(
   session: LEAF_SESSION,
 ): PREPARE_OUTBOUND_RESULT {
+  if (session.awaitingsnapshot) {
+    return { message: undefined, reason: 'noop' }
+  }
   const ops = jsondiffsyncdiff(
     session.shadow as object,
     session.working as object,
@@ -26,7 +30,7 @@ export function leafprepareoutbound(
     if (session.unackedseq === undefined) {
       session.unackedseq = session.nextseq
       session.nextseq++
-      session.backupshadow = deepcopy(session.shadow)
+      session.backupshadow = jsondocumentcopy(session.shadow)
       session.unackedpreparecount = 1
     } else {
       session.unackedpreparecount++
@@ -59,7 +63,7 @@ export function leafackoutbound(
     session.unackedseq !== undefined &&
     hub_ack_peer_seq >= session.unackedseq
   ) {
-    session.shadow = deepcopy(session.working)
+    session.shadow = jsondocumentcopy(session.working)
     session.unackedseq = undefined
     session.backupshadow = undefined
     session.unackedpreparecount = 0
@@ -71,8 +75,14 @@ export function leafapplyinbound(
   message: SYNC_MESSAGE,
 ): INBOUND_RESULT {
   if (message.kind === 'fullsnapshot') {
-    assignintoworking(session.working, message.document)
-    session.shadow = deepcopy(message.document)
+    const hubops = compare(session.shadow as object, message.document as object)
+    const rebased = rebaseapply(session.shadow, session.working, hubops)
+    if (rebased.ok) {
+      assignintoworking(session.working, rebased.merged)
+    } else {
+      assignintoworking(session.working, message.document)
+    }
+    session.shadow = jsondocumentcopy(message.document)
     session.basisversion = message.resultdocumentversion
     session.unackedseq = undefined
     session.backupshadow = undefined
@@ -86,6 +96,13 @@ export function leafapplyinbound(
     return { ok: true, changed: false }
   }
   if (session.awaitingsnapshot) {
+    /** Empty hub ack/basis bumps carry no doc ops; advance DV + seq even if `basisversion` lags (avoids stale leaf basis vs hub row). */
+    if (message.kind === 'delta' && message.operations.length === 0) {
+      session.basisversion = message.resultdocumentversion
+      session.lastpeerseqacked = message.seq
+      leafackoutbound(session, message.ackpeerseq)
+      return { ok: true, changed: false }
+    }
     return { ok: true, changed: false }
   }
   if (message.kind === 'delta' && message.operations.length === 0) {
@@ -96,6 +113,7 @@ export function leafapplyinbound(
         error: new Error('jsondiffsync: inbound basis_version mismatch'),
       }
     }
+    session.basisversion = message.resultdocumentversion
     session.lastpeerseqacked = message.seq
     leafackoutbound(session, message.ackpeerseq)
     return { ok: true, changed: false }
@@ -112,7 +130,7 @@ export function leafapplyinbound(
     return { ok: false, needsresync: true, error: r.error }
   }
   assignintoworking(session.working, r.merged)
-  session.shadow = deepcopy(r.merged)
+  session.shadow = jsondocumentcopy(r.merged)
   session.basisversion = message.resultdocumentversion
   session.lastpeerseqacked = message.seq
   leafackoutbound(session, message.ackpeerseq)
@@ -124,8 +142,14 @@ export function leafapplyfullsnapshot(
   doc: JSON_DOCUMENT,
   document_version: number,
 ): LEAF_SESSION {
-  assignintoworking(session.working, doc)
-  session.shadow = deepcopy(doc)
+  const hubops = compare(session.shadow as object, doc as object)
+  const rebased = rebaseapply(session.shadow, session.working, hubops)
+  if (rebased.ok) {
+    assignintoworking(session.working, rebased.merged)
+  } else {
+    assignintoworking(session.working, doc)
+  }
+  session.shadow = jsondocumentcopy(doc)
   session.basisversion = document_version
   session.unackedseq = undefined
   session.backupshadow = undefined

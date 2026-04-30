@@ -10,6 +10,21 @@ export function deepcopy<T>(word: T): T {
   return deepClone(word) as T
 }
 
+/**
+ * Clone plain JSON documents (sync/MEMORY-shaped data). Prefer `structuredClone` for speed; fall
+ * back to fast-json-patch `deepClone` when the value is not structured-cloneable.
+ */
+export function jsondocumentcopy<T>(word: T): T {
+  if (word === null || typeof word !== 'object') {
+    return word
+  }
+  try {
+    return structuredClone(word) as T
+  } catch {
+    return deepClone(word) as T
+  }
+}
+
 export function isboolean(word: any): word is boolean {
   return typeof word === 'boolean'
 }

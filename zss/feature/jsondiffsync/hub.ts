@@ -1,4 +1,4 @@
-import { deepcopy } from 'zss/mapping/types'
+import { jsondocumentcopy } from 'zss/mapping/types'
 
 import { jsondiffsyncdiff } from './patchfilter'
 import { hubensureleaf } from './session'
@@ -22,7 +22,7 @@ function hubtryconsumeleafack(
     hub.unackedbyleaf.set(leaf, undefined)
     hubensureleaf(hub, leaf)
     const row = hub.leaves.get(leaf)!
-    row.shadow = deepcopy(hub.working)
+    row.shadow = jsondocumentcopy(hub.working)
     row.basisversion = hub.documentversion
   }
 }
@@ -31,8 +31,9 @@ function hubtryconsumeleafack(
 function hubsyncleaftohubdoc(hub: HUB_SESSION, leaf: string) {
   hubensureleaf(hub, leaf)
   const row = hub.leaves.get(leaf)!
-  row.shadow = deepcopy(hub.working)
+  row.shadow = jsondocumentcopy(hub.working)
   row.basisversion = hub.documentversion
+  row.basisforhuboutbound = undefined
 }
 
 export function hubprocessleafinbound(
@@ -52,17 +53,34 @@ export function hubprocessleafinbound(
 
   if (message.kind === 'fullsnapshot') {
     assignintoworking(hub.working, message.document)
-    hub.versionshadow = deepcopy(hub.working)
+    hub.versionshadow = jsondocumentcopy(hub.working)
     hub.documentversion = message.resultdocumentversion
     for (const rid of hub.leaves.keys()) {
       const r = hub.leaves.get(rid)!
-      r.shadow = deepcopy(hub.working)
+      r.shadow = jsondocumentcopy(hub.working)
       r.basisversion = hub.documentversion
+      r.basisforhuboutbound = undefined
       hub.lasthubackpiggybackedtoleaf.set(rid, 0)
     }
     hub.lastleafack.set(leaf, message.seq)
     hubtryconsumeleafack(hub, leaf, message.ackpeerseq)
     return { ok: true, changed: true }
+  }
+
+  if (message.kind === 'delta') {
+    const lastleafproc = hub.lastleafack.get(leaf) ?? 0
+    if (message.seq < lastleafproc) {
+      return {
+        ok: false,
+        needsresync: true,
+        error: new Error('jsondiffsync: stale leaf seq'),
+      }
+    }
+    if (message.seq === lastleafproc && lastleafproc > 0) {
+      hubtryconsumeleafack(hub, leaf, message.ackpeerseq)
+      return { ok: true, changed: false }
+    }
+    row.basisforhuboutbound = message.basisversion
   }
 
   if (message.kind === 'delta' && message.operations.length === 0) {
@@ -95,7 +113,7 @@ export function hubprocessleafinbound(
   }
 
   assignintoworking(hub.working, merged.merged)
-  hub.versionshadow = deepcopy(hub.working)
+  hub.versionshadow = jsondocumentcopy(hub.working)
   hub.documentversion++
   hub.lastleafack.set(leaf, message.seq)
   return { ok: true, changed: true }
@@ -126,12 +144,14 @@ export function hubprepareoutboundforleaf(
   const seq = hub.unackedbyleaf.get(leaf)!
 
   const last_ack = hub.lastleafack.get(leaf) ?? 0
+  const basisforleafmessage = row.basisforhuboutbound ?? row.basisversion
+  row.basisforhuboutbound = undefined
   const message: SYNC_MESSAGE = {
     kind: 'delta',
     senderpeer: 'hub',
     seq,
     ackpeerseq: last_ack,
-    basisversion: row.basisversion,
+    basisversion: basisforleafmessage,
     resultdocumentversion: hub.documentversion,
     operations: ops,
   }
@@ -151,9 +171,46 @@ export function hubmakefullsnapshot(
     senderpeer: 'hub',
     seq,
     ackpeerseq,
-    document: deepcopy(hub.working),
+    document: jsondocumentcopy(hub.working),
     resultdocumentversion: hub.documentversion,
   }
+}
+
+/** Empty hub→leaf delta so the leaf can copy `resultdocumentversion` (matches leaf basis `rowbasisatleafsend`). */
+function hubmakebasisbumpdelta(
+  hub: HUB_SESSION,
+  leaf: string,
+  rowbasisatleafsend: number,
+): SYNC_MESSAGE {
+  if (hub.unackedbyleaf.get(leaf) === undefined) {
+    hub.unackedbyleaf.set(leaf, hub.nexthubseq)
+    hub.nexthubseq++
+  }
+  const seq = hub.unackedbyleaf.get(leaf)!
+  const last_ack = hub.lastleafack.get(leaf) ?? 0
+  hub.lasthubackpiggybackedtoleaf.set(leaf, last_ack)
+  return {
+    kind: 'delta',
+    senderpeer: 'hub',
+    seq,
+    ackpeerseq: last_ack,
+    basisversion: rowbasisatleafsend,
+    resultdocumentversion: hub.documentversion,
+    operations: [],
+  }
+}
+
+/** After the boardrunner leaf successfully applies an inbound hub sync on shared MEMORY, advance hub row shadow/basis
+ * (`vm:hubsyncleaf`) so the next leaf delta's `basisversion` matches `hubprocessleafinbound`. */
+export function hubsyncleafrowafterhuboutbound(
+  hub: HUB_SESSION,
+  leaf: string,
+): void {
+  hubensureleaf(hub, leaf)
+  const row = hub.leaves.get(leaf)!
+  row.shadow = jsondocumentcopy(hub.working)
+  row.basisversion = hub.documentversion
+  row.basisforhuboutbound = undefined
 }
 
 /** Bump `documentversion` when `hub.working` (e.g. MEMORY) changed since last bump. */
@@ -165,7 +222,7 @@ export function jsondiffsynchubapply(hub: HUB_SESSION) {
   if (ops.length === 0) {
     return false
   }
-  hub.versionshadow = deepcopy(hub.working)
+  hub.versionshadow = jsondocumentcopy(hub.working)
   hub.documentversion++
   return true
 }
@@ -185,15 +242,21 @@ export function jsondiffsyncleafapply(
     hub.unackedbyleaf.set(leaf, seq)
     const lastleaf = hub.lastleafack.get(leaf) ?? 0
     hubsyncleaftohubdoc(hub, leaf)
-    return [hubmakefullsnapshot(hub, leaf, seq, lastleaf)]
+    const snap = hubmakefullsnapshot(hub, leaf, seq, lastleaf)
+    return [snap]
   }
 
+  hubensureleaf(hub, leaf)
+  const rowbasisatleafsend = hub.leaves.get(leaf)!.basisversion
   const inbound = hubprocessleafinbound(hub, leaf, incoming)
 
   if (!inbound.ok) {
     if (!inbound.needsresync) {
+      hubensureleaf(hub, leaf)
+      hub.leaves.get(leaf)!.basisforhuboutbound = undefined
       return []
     }
+    hubensureleaf(hub, leaf)
     const seq = hub.nexthubseq++
     hub.unackedbyleaf.set(leaf, seq)
     const lastleaf = hub.lastleafack.get(leaf) ?? 0
@@ -205,9 +268,28 @@ export function jsondiffsyncleafapply(
   /** Leaf advances `basisversion` from hub outbound; hub row must match before the next inbound delta. */
   if (inbound.changed) {
     hubensureleaf(hub, leaf)
-    hub.leaves.get(leaf)!.basisversion = hub.documentversion
+    const row = hub.leaves.get(leaf)!
+    row.basisversion = hub.documentversion
+    if (prep.message === undefined) {
+      /** Merge bumped DV but filtered diff + ack state yielded prepare noop — leaf still has old basisversion. */
+      row.basisforhuboutbound = undefined
+      return [hubmakebasisbumpdelta(hub, leaf, rowbasisatleafsend)]
+    }
+    return [prep.message]
+  }
+  hubensureleaf(hub, leaf)
+  const rowafterprocess = hub.leaves.get(leaf)!
+  if (
+    prep.message === undefined &&
+    rowafterprocess.basisversion > rowbasisatleafsend
+  ) {
+    /** e.g. leaf ack consumed (`hubtryconsumeleafack`) without merge — row basis advanced; leaf basis unchanged. */
+    rowafterprocess.basisforhuboutbound = undefined
+    return [hubmakebasisbumpdelta(hub, leaf, rowbasisatleafsend)]
   }
   if (prep.message === undefined) {
+    /** Avoid letting a stale `basisforhuboutbound` skew the next tick's hub→leaf `basisversion`. */
+    hub.leaves.get(leaf)!.basisforhuboutbound = undefined
     return []
   }
   return [prep.message]

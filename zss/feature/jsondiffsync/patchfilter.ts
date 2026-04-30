@@ -20,6 +20,13 @@ const BOARD_RUNTIME_KEYS = [
   'underboard',
 ] as const
 
+/** Stripped from hub merge local leg (`compare(base, working)`) — FORMAT_SKIP board keys + tick input buffers (not `kinddata`). */
+const JSONDIFFSYNC_MERGELEG_RUNTIME_SEGMENTS = new Set<string>([
+  ...BOARD_RUNTIME_KEYS,
+  'inputqueue',
+  'inputmove',
+])
+
 /** Board element runtime-only keys skipped by memoryexportboardelement (FORMAT_SKIP). */
 const BOARD_TERRAIN_ELEMENT_RUNTIME_KEYS = [
   'id',
@@ -67,15 +74,19 @@ export const JSONDIFFSYNC_IGNORE_PARENT_CHILD: readonly [
  * numeric segments under `lookup`, so parent/leaf pairing on `lookup` alone is insufficient.
  * `gadgetstate` is gadget/UI runtime on the sync root when present; **`gadgetstore`** is
  * `book.flags.gadgetstore` (per-player gadget blob, see gadgetstatebookprovider / gadgetserver).
- * Text UI is also pushed VM-side via `vm:acktick` from the boardrunner; subtree ignore avoids wire churn.
+ * Text UI is also pushed VM-side via **`vm:acktick`** from the boardrunner; subtree ignore avoids wire churn.
+ * Board FORMAT_SKIP keys (`drawlastxy`, `drawlastfp`, …) live under `…/pages/<i>/board/<key>/…`; subtree segments
+ * catch them when `(board, key)` pairing misses due to semantic parent falling through to a dynamic id.
+ * **`inputqueue`** / **`inputmove`** under book flags are tick-local and must not force hub resync.
  */
 export const JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT = new Set<string>([
   'gadgetstate',
   'gadgetstore',
   'kinddata',
-  'lookup',
-  'named',
   'stats',
+  ...BOARD_RUNTIME_KEYS,
+  'inputqueue',
+  'inputmove',
 ])
 
 function pointersegments(pointer: string): string[] {
@@ -148,6 +159,13 @@ export function semanticparentandleafforsegments(segments: string[]): {
   if (booksidx >= 0 && segments.length === booksidx + 3) {
     return { semanticparent: 'books', leaf }
   }
+  const boardidx = segments.lastIndexOf('board')
+  if (boardidx >= 0 && boardidx + 1 < segments.length) {
+    const boardchild = segments[boardidx + 1] ?? ''
+    if ((BOARD_RUNTIME_KEYS as readonly string[]).includes(boardchild)) {
+      return { semanticparent: 'board', leaf: boardchild }
+    }
+  }
   const logical = logicalparentandleafforsegments(segments)
   return {
     semanticparent: logical.logicalparent,
@@ -218,6 +236,31 @@ export function filterjsonpatchforsync(
   })
 }
 
+function patchusesmergelegruntimesegment(path: string): boolean {
+  for (const seg of pointersegments(path)) {
+    if (JSONDIFFSYNC_MERGELEG_RUNTIME_SEGMENTS.has(seg)) {
+      return true
+    }
+  }
+  return false
+}
+
+/** Drops FORMAT_SKIP board paths and tick input buffers from the merge local leg (keeps kinddata ops). */
+export function filterjsonpatchmergeleg(ops: Operation[]): Operation[] {
+  return ops.filter((op) => {
+    if (patchusesmergelegruntimesegment(op.path)) {
+      return false
+    }
+    if (
+      (op.op === 'move' || op.op === 'copy') &&
+      patchusesmergelegruntimesegment(op.from)
+    ) {
+      return false
+    }
+    return true
+  })
+}
+
 /** True if a and b differ outside ignored (parent, leaf) subtrees; mirrors filterjsonpatchforsync. */
 export function hasrelevantsyncdiff(
   a: unknown,
@@ -225,13 +268,14 @@ export function hasrelevantsyncdiff(
   rules: readonly [string, string][] = JSONDIFFSYNC_IGNORE_PARENT_CHILD,
   subtreesegment: ReadonlySet<string> = JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
 ): boolean {
-  return walkrelevantsyncdiff(a, b, [], rules, subtreesegment)
+  const pathstack: string[] = []
+  return walkrelevantsyncdiff(a, b, pathstack, rules, subtreesegment)
 }
 
 function walkrelevantsyncdiff(
   a: unknown,
   b: unknown,
-  pathsegments: string[],
+  pathstack: string[],
   rules: readonly [string, string][],
   subtreesegment: ReadonlySet<string>,
 ): boolean {
@@ -251,14 +295,18 @@ function walkrelevantsyncdiff(
       return true
     }
     for (let i = 0; i < a.length; ++i) {
-      const pathwithindex = [...pathsegments, String(i)]
-      if (pathsegmentsmatchesignore(pathwithindex, rules, subtreesegment)) {
-        continue
-      }
-      if (
-        walkrelevantsyncdiff(a[i], b[i], pathwithindex, rules, subtreesegment)
-      ) {
-        return true
+      pathstack.push(String(i))
+      try {
+        if (pathsegmentsmatchesignore(pathstack, rules, subtreesegment)) {
+          continue
+        }
+        if (
+          walkrelevantsyncdiff(a[i], b[i], pathstack, rules, subtreesegment)
+        ) {
+          return true
+        }
+      } finally {
+        pathstack.pop()
       }
     }
     return false
@@ -270,36 +318,40 @@ function walkrelevantsyncdiff(
   const ob = b as Record<string, unknown>
   const keys = new Set([...Object.keys(oa), ...Object.keys(ob)])
   for (const k of keys) {
-    const pathwithkey = [...pathsegments, k]
-    const ignoresubtree = pathsegmentsmatchesignore(
-      pathwithkey,
-      rules,
-      subtreesegment,
-    )
-    const hasa = Object.prototype.hasOwnProperty.call(oa, k)
-    const hasb = Object.prototype.hasOwnProperty.call(ob, k)
-    if (!hasa && !hasb) {
-      continue
-    }
-    if (ignoresubtree) {
-      continue
-    }
-    if (!hasa) {
-      if (ob[k] !== undefined) {
+    pathstack.push(k)
+    try {
+      const ignoresubtree = pathsegmentsmatchesignore(
+        pathstack,
+        rules,
+        subtreesegment,
+      )
+      const hasa = Object.prototype.hasOwnProperty.call(oa, k)
+      const hasb = Object.prototype.hasOwnProperty.call(ob, k)
+      if (!hasa && !hasb) {
+        continue
+      }
+      if (ignoresubtree) {
+        continue
+      }
+      if (!hasa) {
+        if (ob[k] !== undefined) {
+          return true
+        }
+        continue
+      }
+      if (!hasb) {
+        if (oa[k] !== undefined) {
+          return true
+        }
+        continue
+      }
+      if (
+        walkrelevantsyncdiff(oa[k], ob[k], pathstack, rules, subtreesegment)
+      ) {
         return true
       }
-      continue
-    }
-    if (!hasb) {
-      if (oa[k] !== undefined) {
-        return true
-      }
-      continue
-    }
-    if (
-      walkrelevantsyncdiff(oa[k], ob[k], pathwithkey, rules, subtreesegment)
-    ) {
-      return true
+    } finally {
+      pathstack.pop()
     }
   }
   return false
@@ -326,6 +378,9 @@ export function jsondiffsyncdiff(
   rules: readonly [string, string][] = JSONDIFFSYNC_IGNORE_PARENT_CHILD,
   subtreesegment: ReadonlySet<string> = JSONDIFFSYNC_IGNORE_SUBTREE_SEGMENT,
 ): Operation[] {
+  if (Object.is(from, to)) {
+    return []
+  }
   if (!hasrelevantsyncdiff(from, to, rules, subtreesegment)) {
     return []
   }

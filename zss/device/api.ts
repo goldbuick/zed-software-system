@@ -954,6 +954,10 @@ export function vmjsondiffsync(
   device.emit(player, 'vm:jsondiffsync', sync)
 }
 
+export function vmhubsyncleaf(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:hubsyncleaf')
+}
+
 export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,

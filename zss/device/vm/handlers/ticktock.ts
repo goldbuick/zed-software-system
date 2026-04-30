@@ -33,15 +33,14 @@ import { pilottick } from './pilot'
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
-  if (memoryreadsimfreeze()) {
-    return
-  }
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
+  if (memoryreadsimfreeze() || !ispresent(mainbook)) {
     return
   }
+  // update pilots & loaders
   pilottick(vm)
   memorytickloaders()
+  // apply hub edits to leaves
   const hubapply = jsondiffsynchubapply(jsondiffsync)
   if (hubapply) {
     const activelist = memoryreadactivelist()

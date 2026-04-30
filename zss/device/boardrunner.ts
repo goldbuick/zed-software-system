@@ -22,9 +22,15 @@ import {
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
-import { type ACKTICK_GADGET_PAYLOAD, vmacktick, vmjsondiffsync } from './api'
+import {
+  type ACKTICK_GADGET_PAYLOAD,
+  vmacktick,
+  vmhubsyncleaf,
+  vmjsondiffsync,
+} from './api'
 
 let leafsession: MAYBE<LEAF_SESSION>
+
 export function createboardrunnerleafsession(player: string) {
   gadgetstate(player)
   leafsession = createleafsession(player, memoryreadroot())
@@ -98,9 +104,12 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       }
       break
     case 'tick':
-      if (ispresent(leafsession) && isarray(message.data)) {
+      if (
+        ispresent(leafsession) &&
+        isarray(message.data) &&
+        !leafsession.awaitingsnapshot
+      ) {
         const [board, timestamp] = message.data as [string, number]
-        // console.info('tick', board, timestamp)
         memorytickmain(board, timestamp, memoryreadhalt())
         vmacktick(boardrunner, message.player, buildacktickgadgetpayload(board))
         const prep = leafprepareoutbound(leafsession)
@@ -119,7 +128,6 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
         if (input !== INPUT.NONE) {
           flags.inputqueue.push([input, mods])
         }
-        // console.info('input', flags.inputqueue)
       }
       break
     }
@@ -131,13 +139,27 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       ) {
         break
       }
-      const inbound = leafapplyinbound(leafsession, message.data)
+      const sync = message.data
+      const wasawaitingsnapshot = leafsession.awaitingsnapshot
+      const inbound = leafapplyinbound(leafsession, sync)
       if (!inbound.ok) {
         requestsnapshot(message.player)
-      } else if (inbound.changed) {
-        const prep = leafprepareoutbound(leafsession)
-        if (prep.message !== undefined) {
-          vmjsondiffsync(boardrunner, message.player, prep.message)
+      } else {
+        const emptyleafhuback =
+          sync.kind === 'delta' && sync.operations.length === 0
+        const skiphubsyncleaf =
+          wasawaitingsnapshot &&
+          sync.kind !== 'fullsnapshot' &&
+          inbound.changed === false &&
+          !emptyleafhuback
+        if (!skiphubsyncleaf) {
+          vmhubsyncleaf(boardrunner, message.player)
+        }
+        if (inbound.changed) {
+          const prep = leafprepareoutbound(leafsession)
+          if (prep.message !== undefined) {
+            vmjsondiffsync(boardrunner, message.player, prep.message)
+          }
         }
       }
       break

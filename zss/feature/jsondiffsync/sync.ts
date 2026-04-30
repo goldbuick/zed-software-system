@@ -1,7 +1,7 @@
 import { Operation, applyPatch, compare } from 'fast-json-patch'
-import { deepcopy } from 'zss/mapping/types'
+import { jsondocumentcopy } from 'zss/mapping/types'
 
-import { filterjsonpatchforsync } from './patchfilter'
+import { filterjsonpatchforsync, filterjsonpatchmergeleg } from './patchfilter'
 import type { JSON_DOCUMENT } from './types'
 
 /** Bootstrap document; hub and leaf must start from the same snapshot. */
@@ -42,24 +42,17 @@ export function rebaseapply(
 ): { ok: true; merged: JSON_DOCUMENT } | { ok: false; error: unknown } {
   try {
     const inboundfiltered = filterjsonpatchforsync(inbound)
-    const afterremote = applyPatch(
-      deepcopy(base) as object,
-      inboundfiltered,
-      true,
-      false,
-    ).newDocument
-    /** Full compare: local ops must include paths excluded from wire deltas (e.g. kinddata merge). */
-    const localdelta = compare(base as object, working as object)
+    const mergeddoc = jsondocumentcopy(base) as object
+    applyPatch(mergeddoc, inboundfiltered, true, true)
+    /** Compare local shadow vs working; strip FORMAT_SKIP board paths and tick input buffers (merge leg keeps kinddata). */
+    const localdelta = filterjsonpatchmergeleg(
+      compare(base as object, working as object),
+    )
     if (localdelta.length === 0) {
-      return { ok: true, merged: afterremote }
+      return { ok: true, merged: mergeddoc as JSON_DOCUMENT }
     }
-    const merged = applyPatch(
-      deepcopy(afterremote),
-      localdelta,
-      true,
-      false,
-    ).newDocument
-    return { ok: true, merged }
+    applyPatch(mergeddoc, localdelta, true, true)
+    return { ok: true, merged: mergeddoc as JSON_DOCUMENT }
   } catch (err) {
     return { ok: false, error: err }
   }

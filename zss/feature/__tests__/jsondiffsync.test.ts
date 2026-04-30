@@ -91,6 +91,42 @@ describe('semanticparentandleafforsegments', () => {
     ).toEqual({ semanticparent: 'books', leaf: 'timestamp' })
   })
 
+  it('resolves nested page board runtime keys to parent board (drawlastxy)', () => {
+    expect(
+      semanticparentandleafforsegments([
+        'books',
+        'B',
+        'pages',
+        '43',
+        'board',
+        'drawlastxy',
+        'p1',
+        'x',
+      ]),
+    ).toEqual({ semanticparent: 'board', leaf: 'drawlastxy' })
+  })
+
+  it('matches ignore rules for nested board.drawlastxy player coordinate patches', () => {
+    expect(
+      pointermatchesignorepair(
+        '/books/B/pages/43/board/drawlastxy/pid_7447_dtq632bus6d1tx20/x',
+      ),
+    ).toBe(true)
+  })
+
+  it('matches ignore rules for per-player inputqueue under book.flags', () => {
+    expect(
+      pointermatchesignorepair(
+        '/books/B/flags/pid_7447_dtq632bus6d1tx20/inputqueue/0',
+      ),
+    ).toBe(true)
+    expect(
+      pointermatchesignorepair(
+        '/books/B/flags/pid_7447_dtq632bus6d1tx20/inputmove/1',
+      ),
+    ).toBe(true)
+  })
+
   it('matches ignore rules for object kinddata pointers', () => {
     expect(
       pointermatchesignorepair(
@@ -124,6 +160,24 @@ describe('semanticparentandleafforsegments', () => {
 })
 
 describe('hasrelevantsyncdiff', () => {
+  it('returns false when only nested board.drawlastxy differs', () => {
+    const a = {
+      books: {
+        B: {
+          pages: [{ board: { drawlastxy: { p1: { x: 1, y: 2 } }, n: 0 } }],
+        },
+      },
+    }
+    const b = {
+      books: {
+        B: {
+          pages: [{ board: { drawlastxy: { p1: { x: 9, y: 2 } }, n: 0 } }],
+        },
+      },
+    }
+    expect(hasrelevantsyncdiff(a, b)).toBe(false)
+  })
+
   it('returns false when only ignored stats subtrees differ', () => {
     const a = { page: { stats: { type: 1, name: 'a' } } }
     const b = { page: { stats: { type: 1, name: 'b' } } }
@@ -211,6 +265,23 @@ describe('jsondiffsync rebaseapply', () => {
     expect(r.ok).toBe(false)
   })
 
+  it('merge leg ignores local drawlastxy-only drift (no OPERATION_PATH failures)', () => {
+    const base = {
+      books: {
+        B: {
+          pages: [{ board: { drawlastxy: { p: { x: 0, y: 0 } }, tiles: 1 } }],
+        },
+      },
+    }
+    const working = deepcopy(base)
+    working.books.B.pages[0].board.drawlastxy.p.x = 31
+    working.books.B.pages[0].board.tiles = 2
+    const r = rebaseapply(base, working, [])
+    expect(r.ok).toBe(true)
+    expect(r.merged.books.B.pages[0].board.tiles).toBe(2)
+    expect(r.merged.books.B.pages[0].board.drawlastxy.p.x).toBe(0)
+  })
+
   it('drops inbound kinddata ops but keeps local kinddata from full local compare', () => {
     const base = { el: { y: 0, kinddata: { n: 1 } } }
     const working = { el: { y: 0, kinddata: { n: 99 } } }
@@ -290,6 +361,168 @@ describe('jsondiffsync leaf hub', () => {
     synconeleafround(hub, leaf)
     expect(hub.working).toEqual({ v: 2 })
     expect(leaf.basisversion).toBe(hub.documentversion)
+  })
+
+  it('hub→leaf delta basis matches leaf send basis when ack consume bumps row before merge', () => {
+    const seed = { v: 0 }
+    const hub = createhubsession(seed)
+    const leaf = createleafsession('L1', seed)
+    hubensureleaf(hub, leaf.peer)
+    const row = hub.leaves.get(leaf.peer)!
+    row.shadow = deepcopy(hub.working)
+    hub.documentversion = 10
+    row.basisversion = 9
+    leaf.shadow = deepcopy(leaf.working)
+    leaf.basisversion = 9
+
+    hub.unackedbyleaf.set(leaf.peer, 1)
+    leaf.lastpeerseqacked = 1
+
+    leaf.working.v = 1
+    const prepleaf = leafprepareoutbound(leaf)
+    expect(hasoutboundmessage(prepleaf)).toBe(true)
+    if (!hasoutboundmessage(prepleaf)) {
+      return
+    }
+
+    const mergedmsgs = jsondiffsyncleafapply(hub, leaf.peer, prepleaf.message!)
+    expect(mergedmsgs.length).toBe(1)
+    const hubmsg = mergedmsgs[0]
+    expect(hubmsg.kind).toBe('delta')
+    if (hubmsg.kind !== 'delta') {
+      return
+    }
+    expect(hubmsg.basisversion).toBe(9)
+    expect(hubmsg.resultdocumentversion).toBe(hub.documentversion)
+
+    leafapplyinbound(leaf, hubmsg)
+    expect(leaf.basisversion).toBe(hub.documentversion)
+  })
+
+  it('clears basisforhuboutbound when leaf inbound produces no hub→leaf emit', () => {
+    const seed = { v: 0 }
+    const hub = createhubsession(seed)
+    const leaf = createleafsession('L1', seed)
+    hubensureleaf(hub, leaf.peer)
+    const row = hub.leaves.get(leaf.peer)!
+    row.shadow = deepcopy(hub.working)
+    leaf.shadow = deepcopy(leaf.working)
+    hub.documentversion = 5
+    row.basisversion = 5
+    leaf.basisversion = 5
+    hub.lasthubackpiggybackedtoleaf.set(leaf.peer, 1)
+
+    const noopleafdelta: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: leaf.peer,
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 5,
+      resultdocumentversion: 5,
+      operations: [],
+    }
+    const out = jsondiffsyncleafapply(hub, leaf.peer, noopleafdelta)
+    expect(out.length).toBe(0)
+    expect(row.basisforhuboutbound).toBeUndefined()
+  })
+
+  it('inbound empty hub delta advances leaf basisversion to resultdocumentversion', () => {
+    const leaf = createleafsession('L1', { v: 0 })
+    leaf.basisversion = 3
+    const ackonly: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'hub',
+      seq: 2,
+      ackpeerseq: 0,
+      basisversion: 3,
+      resultdocumentversion: 9,
+      operations: [],
+    }
+    const r = leafapplyinbound(leaf, ackonly)
+    expect(r.ok).toBe(true)
+    expect(leaf.basisversion).toBe(9)
+  })
+
+  it('ignores inbound delta while awaitingsnapshot without mutating working or basis', () => {
+    const leaf = createleafsession('L1', { v: 0 })
+    leaf.basisversion = 2
+    leaf.awaitingsnapshot = true
+    const delta: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'hub',
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: 2,
+      resultdocumentversion: 5,
+      operations: [{ op: 'replace', path: '/v', value: 99 }],
+    }
+    const r = leafapplyinbound(leaf, delta)
+    expect(r).toEqual({ ok: true, changed: false })
+    expect(leaf.working.v).toBe(0)
+    expect(leaf.basisversion).toBe(2)
+    expect(leaf.awaitingsnapshot).toBe(true)
+  })
+
+  it('empty inbound hub delta while awaitingsnapshot still advances basisversion', () => {
+    const leaf = createleafsession('L1', { v: 0 })
+    leaf.basisversion = 4
+    leaf.awaitingsnapshot = true
+    const ackonly: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'hub',
+      seq: 3,
+      ackpeerseq: 0,
+      basisversion: 4,
+      resultdocumentversion: 7,
+      operations: [],
+    }
+    const r = leafapplyinbound(leaf, ackonly)
+    expect(r.ok).toBe(true)
+    expect(leaf.basisversion).toBe(7)
+    expect(leaf.awaitingsnapshot).toBe(true)
+  })
+
+  it('empty inbound hub delta while awaitingsnapshot advances basis even when basis field mismatches', () => {
+    const leaf = createleafsession('L1', { v: 0 })
+    leaf.basisversion = 3
+    leaf.awaitingsnapshot = true
+    const ackonly: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: 'hub',
+      seq: 2,
+      ackpeerseq: 0,
+      basisversion: 4,
+      resultdocumentversion: 6,
+      operations: [],
+    }
+    const r = leafapplyinbound(leaf, ackonly)
+    expect(r.ok).toBe(true)
+    expect(leaf.basisversion).toBe(6)
+    expect(leaf.awaitingsnapshot).toBe(true)
+  })
+
+  it('duplicate leaf delta seq is idempotent on hub', () => {
+    const seed = { v: 0 }
+    const hub = createhubsession(seed)
+    const leaf = createleafsession('L1', seed)
+    hubensureleaf(hub, leaf.peer)
+    const row = hub.leaves.get(leaf.peer)!
+    row.shadow = deepcopy(hub.working)
+    row.basisversion = hub.documentversion
+    leaf.shadow = deepcopy(leaf.working)
+
+    leaf.working.v = 1
+    const prep = leafprepareoutbound(leaf)
+    expect(hasoutboundmessage(prep)).toBe(true)
+    if (!hasoutboundmessage(prep)) {
+      return
+    }
+
+    jsondiffsyncleafapply(hub, leaf.peer, prep.message!)
+    const dvafterfirst = hub.documentversion
+
+    jsondiffsyncleafapply(hub, leaf.peer, prep.message!)
+    expect(hub.documentversion).toBe(dvafterfirst)
   })
 
   it('propagates one leaf edit to a second leaf via hub fanout', () => {
@@ -454,6 +687,25 @@ describe('jsondiffsync leaf hub', () => {
     expect(seed).toEqual({ v: 10 })
   })
 
+  it('fullsnapshot keeps simulation ahead of shadow when hub doc matches stale shadow', () => {
+    const doc = { p: { y: 10 } }
+    const leaf = createleafsession('L1', doc)
+    assignintoworking(leaf.working, { p: { y: 9 } })
+    expect(leaf.shadow).toEqual({ p: { y: 10 } })
+    const snap: SYNC_MESSAGE = {
+      kind: 'fullsnapshot',
+      senderpeer: 'hub',
+      seq: 1,
+      ackpeerseq: 0,
+      document: { p: { y: 10 } },
+      resultdocumentversion: 2,
+    }
+    leafapplyinbound(leaf, snap)
+    expect(leaf.working).toEqual({ p: { y: 9 } })
+    expect(leaf.shadow).toEqual({ p: { y: 10 } })
+    expect(leaf.basisversion).toBe(2)
+  })
+
   it('jsondiffsynchubapply ignores kinddata-only memory edits', () => {
     const seed = { el: { y: 0, kinddata: { n: 1 } } }
     const hub = createhubsession(seed)
@@ -518,6 +770,87 @@ describe('jsondiffsync leaf hub', () => {
     hub.working.board.drawlastfp = 99
     const prep = hubprepareoutboundforleaf(hub, 'L1')
     expect(prep.message).toBeUndefined()
+  })
+
+  it('jsondiffsyncleafapply emits empty hub delta when merge bumps DV but diff-vs-leaf is filtered noop', () => {
+    const seed = {
+      board: {
+        terrain: [] as unknown[],
+        objects: {},
+        drawlastfp: 0,
+      },
+    }
+    const hub = createhubsession(seed)
+    const leaf = createleafsession('L1', seed)
+    hubensureleaf(hub, leaf.peer)
+    const row = hub.leaves.get(leaf.peer)!
+    row.shadow = deepcopy(hub.working)
+    row.basisversion = hub.documentversion
+    leaf.shadow = deepcopy(leaf.working)
+    leaf.basisversion = hub.documentversion
+
+    expect(leaf.working).toBe(hub.working)
+    const delta: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: leaf.peer,
+      seq: 1,
+      ackpeerseq: 0,
+      basisversion: leaf.basisversion,
+      resultdocumentversion: leaf.basisversion,
+      operations: [{ op: 'replace', path: '/board/drawlastfp', value: 42 }],
+    }
+    const hubmsgs = jsondiffsyncleafapply(hub, leaf.peer, delta)
+    expect(hubmsgs.length).toBe(1)
+    const m = hubmsgs[0]
+    expect(m.kind).toBe('delta')
+    if (m.kind !== 'delta') {
+      return
+    }
+    expect(m.operations.length).toBe(0)
+    expect(m.resultdocumentversion).toBe(hub.documentversion)
+
+    leafapplyinbound(leaf, m)
+    expect(leaf.basisversion).toBe(hub.documentversion)
+  })
+
+  it('jsondiffsyncleafapply emits basis bump when leaf empty delta consumes ack and prepare is noop', () => {
+    const seed = { v: 0 }
+    const hub = createhubsession(seed)
+    const leaf = createleafsession('L1', seed)
+    hubensureleaf(hub, leaf.peer)
+    const row = hub.leaves.get(leaf.peer)!
+    row.shadow = deepcopy(hub.working)
+    hub.documentversion = 10
+    row.basisversion = 9
+    leaf.shadow = deepcopy(leaf.working)
+    leaf.basisversion = 9
+
+    hub.unackedbyleaf.set(leaf.peer, 1)
+    hub.lastleafack.set(leaf.peer, 7)
+    hub.lasthubackpiggybackedtoleaf.set(leaf.peer, 8)
+
+    const emptyfromleaf: SYNC_MESSAGE = {
+      kind: 'delta',
+      senderpeer: leaf.peer,
+      seq: 8,
+      ackpeerseq: 1,
+      basisversion: 9,
+      resultdocumentversion: 9,
+      operations: [],
+    }
+    const hubmsgs = jsondiffsyncleafapply(hub, leaf.peer, emptyfromleaf)
+    expect(hubmsgs.length).toBe(1)
+    const m = hubmsgs[0]
+    expect(m.kind).toBe('delta')
+    if (m.kind !== 'delta') {
+      return
+    }
+    expect(m.operations.length).toBe(0)
+    expect(m.basisversion).toBe(9)
+    expect(m.resultdocumentversion).toBe(10)
+
+    leafapplyinbound(leaf, m)
+    expect(leaf.basisversion).toBe(10)
   })
 
   it('still sends deltas when element category changes', () => {

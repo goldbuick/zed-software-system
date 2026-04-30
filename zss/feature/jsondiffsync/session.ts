@@ -1,4 +1,4 @@
-import { deepcopy } from 'zss/mapping/types'
+import { jsondocumentcopy } from 'zss/mapping/types'
 
 import type { HUB_SESSION, JSON_DOCUMENT, LEAF_SESSION } from './types'
 
@@ -9,7 +9,7 @@ export function createleafsession(
   return {
     peer: peerid,
     working: initial,
-    shadow: deepcopy(initial),
+    shadow: jsondocumentcopy(initial),
     backupshadow: undefined,
     basisversion: 0,
     nextseq: 1,
@@ -24,7 +24,7 @@ export function createleafsession(
 export function createhubsession(initial: JSON_DOCUMENT): HUB_SESSION {
   return {
     working: initial,
-    versionshadow: deepcopy(initial),
+    versionshadow: jsondocumentcopy(initial),
     documentversion: 0,
     leaves: new Map(),
     nexthubseq: 1,
@@ -43,7 +43,7 @@ export function hubensureleaf(
   if (hub.leaves.has(leaf)) {
     return
   }
-  const base = deepcopy(
+  const base = jsondocumentcopy(
     emptyshadow ? (initialshadow ?? {}) : (initialshadow ?? hub.working),
   )
   hub.leaves.set(leaf, {
@@ -58,6 +58,6 @@ export function hubensureleaf(
 export function resethubleaffromdoc(hub: HUB_SESSION, leaf: string) {
   hubensureleaf(hub, leaf)
   const row = hub.leaves.get(leaf)!
-  row.shadow = deepcopy(hub.working)
+  row.shadow = jsondocumentcopy(hub.working)
   row.basisversion = hub.documentversion
 }
