@@ -1,5 +1,5 @@
 import { DEVICE } from 'zss/device'
-import { MESSAGE, apilog, registerloginready } from 'zss/device/api'
+import { MESSAGE, apilog, boardrunnergunsyncapply, registerloginready } from 'zss/device/api'
 import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
 import * as session from 'zss/memory/session'
@@ -12,6 +12,7 @@ jest.mock('zss/memory/utilities', () => ({
 
 jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
+  boardrunnergunsyncapply: jest.fn(),
   registerloginready: jest.fn(),
   apierror: jest.fn(),
 }))
@@ -35,6 +36,7 @@ describe('handlebooks sim freeze', () => {
 
   beforeEach(() => {
     jest.useFakeTimers()
+    jest.mocked(boardrunnergunsyncapply).mockClear()
     session.memorywriteoperator(player)
     session.memorywritesimfreeze(false)
     tracking[player] = 99
@@ -80,6 +82,7 @@ describe('handlebooks sim freeze', () => {
 
     expect(session.memoryreadsimfreeze()).toBe(false)
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
+    expect(boardrunnergunsyncapply).toHaveBeenCalled()
     expect(apilog).toHaveBeenCalled()
     expect(session.memoryresetbooks).toHaveBeenCalledWith([minimalbook])
   })
@@ -110,6 +113,7 @@ describe('handlebooks sim freeze', () => {
       expect(session.memoryreadsimfreeze()).toBe(false)
     } finally {
       consoleerror.mockRestore()
+      expect(boardrunnergunsyncapply).not.toHaveBeenCalled()
     }
   })
 })

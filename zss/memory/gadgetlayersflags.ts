@@ -6,13 +6,13 @@ import { MAYBE } from 'zss/mapping/types'
 
 import { memoryreadbookflags } from './bookoperations'
 import type { MEMORY_GADGET_LAYERS } from './rendering'
-import { MEMORY_LABEL, type BOOK } from './types'
+import { type BOOK, MEMORY_LABEL } from './types'
 
 export function memoryreadbookgadgetlayersmap(
   book: MAYBE<BOOK>,
 ): Record<string, MEMORY_GADGET_LAYERS> {
-  return memoryreadbookflags(book, MEMORY_LABEL.GADGETLAYERS) as Record<
-    string,
-    MEMORY_GADGET_LAYERS
-  >
+  return memoryreadbookflags(
+    book,
+    MEMORY_LABEL.GADGETLAYERS,
+  ) as unknown as Record<string, MEMORY_GADGET_LAYERS>
 }

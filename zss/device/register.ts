@@ -313,6 +313,10 @@ export const register = createdevice(
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
+          /** Hub operator + boardrunner before waits so sim ticks see a pilot id (was ~256ms late). */
+          vmoperator(register, myplayerid)
+          boardrunnerboot(register, myplayerid)
+
           // setup content watcher
           storagewatchcontent(myplayerid)
           // setup history buffer
@@ -326,11 +330,8 @@ export const register = createdevice(
             })
           }
           await syncterminalbookmarkpins()
-          // signal init
           await waitfor(256)
           apilog(register, myplayerid, `myplayerid ${myplayerid}`)
-          vmoperator(register, myplayerid)
-          boardrunnerboot(register, myplayerid)
         })
         break
       }

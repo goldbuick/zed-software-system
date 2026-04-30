@@ -13,7 +13,7 @@ export function registermemorygadgetstateprovider() {
       const gadgetstore = memoryreadbookflags(
         mainbook,
         MEMORY_LABEL.GADGETSTORE,
-      ) as Record<string, ReturnType<typeof initstate>>
+      ) as unknown as Record<string, ReturnType<typeof initstate>>
       let value = gadgetstore[element]
       if (!ispresent(value)) {
         gadgetstore[element] = value = initstate()

@@ -34,22 +34,30 @@ const gadgetserver = createdevice(
       return
     }
 
-    // get list of active players
+    // get list of active players (omit empty-operator placeholder)
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
-    activelistvalues.add(memoryreadoperator())
-    const activelist = [...activelistvalues]
+    const operator = memoryreadoperator()
+    if (operator) {
+      activelistvalues.add(operator)
+    }
+    const activelist = [...activelistvalues].filter(
+      (p) => typeof p === 'string' && p.length > 0,
+    )
 
     switch (message.target) {
       case 'tock':
       case 'ticktock':
-        if (memoryreadoperator()) {
+        {
           const syncedlayers = ispresent(mainbook)
             ? memoryreadbookgadgetlayersmap(mainbook)
             : undefined
           const fallbackcache = new Map<string, MEMORY_GADGET_LAYERS>()
           for (let i = 0; i < activelist.length; ++i) {
             const player = activelist[i]
+            if (!player) {
+              continue
+            }
             const playerboard = memoryreadplayerboard(player)
             const boardid = playerboard?.id ?? ''
             const synccanonical = syncedlayers?.[boardid]
@@ -124,17 +132,28 @@ const gadgetserver = createdevice(
               continue
             }
 
-            // write patch
+            /** Gadgetclient ignores messages unless `player` is `registerreadplayer()` (= hub operator id). */
+            if (!operator || player !== operator) {
+              continue
+            }
+
+            if (!gadgetsync.has(player)) {
+              const canbaseline =
+                ispresent(mainbook) &&
+                ispresent(playerboard) &&
+                boardid.length > 0 &&
+                ispresent(gadgetlayers)
+              if (!canbaseline) {
+                continue
+              }
+              gadgetsync.set(player, deepcopy(slim))
+              gadgetclientpaint(gadgetserver, player, slim)
+              continue
+            }
+
             const previous = gadgetsync.get(player) ?? []
-
-            // this should be the compressed json
             const patch = compare(previous, slim)
-
-            // Deep snapshot: export embeds refs into LAYER_CACHE tile buffers; without a
-            // copy, `previous` would alias live arrays and compare would see no diff.
             gadgetsync.set(player, deepcopy(slim))
-
-            // only send when we have changes
             if (patch.length) {
               gadgetclientpatch(gadgetserver, player, patch)
             }

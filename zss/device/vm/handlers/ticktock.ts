@@ -1,33 +1,15 @@
 import type { DEVICE } from 'zss/device'
-import {
-  type MESSAGE,
-  boardrunnerjsondiffsync,
-  boardrunnertick,
-} from 'zss/device/api'
-import {
-  boardsynensurehub,
-  ensurejsondiffsynflagshub,
-  refreshmemoryhubstreamingore,
-} from 'zss/device/vm/jsondiffsyncstreams'
+import type { MESSAGE } from 'zss/device/api'
 import {
   boardrunneracks,
   boardrunnerblocked,
   boardrunners,
-  jsondiffsync,
 } from 'zss/device/vm/state'
-import {
-  hubclearpendinghubbroadcast,
-  hubprepareoutboundforleaf,
-  jsondiffsynchubapply,
-} from 'zss/feature/jsondiffsync/hub'
-import { logjsondiffsyncoutbound } from 'zss/feature/jsondiffsync/syncdebug'
-import type { HUB_SESSION } from 'zss/feature/jsondiffsync/types'
 import { pick } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 import {
-  memoryreadactivelist,
   memoryreadbookplayerboards,
   memoryreadplayerboardaddress,
 } from 'zss/memory/playermanagement'
@@ -38,19 +20,9 @@ import {
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
-import { pilottick } from './pilot'
+import { boardrunnertick } from '../../api'
 
-function jsondiffsyncfanouttoactivelist(vm: DEVICE, hub: HUB_SESSION): void {
-  const activelist = memoryreadactivelist()
-  for (let i = 0; i < activelist.length; ++i) {
-    const player = activelist[i]
-    const prep = hubprepareoutboundforleaf(hub, player)
-    if (prep.message !== undefined) {
-      logjsondiffsyncoutbound(player, 'ticktock', prep.message)
-      boardrunnerjsondiffsync(vm, player, prep.message)
-    }
-  }
-}
+import { pilottick } from './pilot'
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
@@ -58,69 +30,34 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   if (memoryreadsimfreeze() || !ispresent(mainbook)) {
     return
   }
-  // update pilots & loaders
   pilottick(vm)
   memorytickloaders()
-  refreshmemoryhubstreamingore(jsondiffsync)
-  if (jsondiffsynchubapply(jsondiffsync)) {
-    jsondiffsyncfanouttoactivelist(vm, jsondiffsync)
-    hubclearpendinghubbroadcast(jsondiffsync)
-  }
-  const flagshub = ensurejsondiffsynflagshub()
-  if (ispresent(flagshub) && jsondiffsynchubapply(flagshub)) {
-    jsondiffsyncfanouttoactivelist(vm, flagshub)
-    hubclearpendinghubbroadcast(flagshub)
-  }
-  // get all active boards
   const activeboards = memoryreadbookplayerboards(mainbook)
   for (let i = 0; i < activeboards.length; ++i) {
-    // get the boardrunner player
     const board = activeboards[i]
-    // if the boardrunner player is present
     if (ispresent(boardrunners[board.id])) {
-      // get player in charge of the board
       const runnerplayer = boardrunners[board.id]
-      // validate player is present
       if (memoryreadplayerboardaddress(runnerplayer) !== board.id) {
-        // drop the board runner that has left the board
         delete boardrunners[board.id]
         delete boardrunneracks[board.id]
       } else {
-        // decrement the boardrunner ack
         boardrunneracks[runnerplayer]--
-        // add the player to boardrunnerblocks
         if (boardrunneracks[runnerplayer] < 1) {
-          // drop failed ack runner
           delete boardrunners[board.id]
           delete boardrunneracks[board.id]
           boardrunnerblocked[runnerplayer] = true
         }
       }
     }
-    // if the boardrunner player is not present
-    // try to assign a new boardrunner player
     if (!ispresent(boardrunners[board.id])) {
-      // try to assign a new boardrunner player
       const playersonboard = Object.keys(board.objects)
         .filter(ispid)
         .filter((player) => !boardrunnerblocked[player])
       const elected = pick(playersonboard)
-      // assign the new boardrunner player
       boardrunners[board.id] = elected
       boardrunneracks[elected] = Math.ceil(TICK_FPS)
     }
-    // send a boardrunner tick message to the boardrunner player
     if (ispresent(boardrunners[board.id])) {
-      const boardhub = boardsynensurehub(board.id)
-      if (ispresent(boardhub) && jsondiffsynchubapply(boardhub)) {
-        const runnerplayer = boardrunners[board.id]
-        const prep = hubprepareoutboundforleaf(boardhub, runnerplayer)
-        if (prep.message !== undefined) {
-          logjsondiffsyncoutbound(runnerplayer, 'ticktock', prep.message)
-          boardrunnerjsondiffsync(vm, runnerplayer, prep.message)
-        }
-        hubclearpendinghubbroadcast(boardhub)
-      }
       boardrunnertick(vm, boardrunners[board.id], board.id, mainbook.timestamp)
     }
   }

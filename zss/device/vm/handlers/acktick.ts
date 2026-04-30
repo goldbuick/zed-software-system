@@ -1,5 +1,5 @@
 import { DEVICE } from 'zss/device'
-import { isacktickgadgetpayload, MESSAGE } from 'zss/device/api'
+import { MESSAGE, isacktickgadgetpayload } from 'zss/device/api'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { TICK_FPS } from 'zss/mapping/tick'
 

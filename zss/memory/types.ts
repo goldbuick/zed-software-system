@@ -138,7 +138,7 @@ export enum MEMORY_LABEL {
   TITLE = 'title',
   PLAYER = 'player',
   GADGETSTORE = 'gadgetstore',
-  /** Main book flags row: board id → gadget layer payload (sans control), jsondiffsync. */
+  /** Main book flags row: board id → gadget layer payload (sans control); Gunsync replica. */
   GADGETLAYERS = 'gadgetlayers',
 }
 

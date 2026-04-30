@@ -5,9 +5,9 @@ without having to include device code
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
-import type { SYNC_MESSAGE } from 'zss/feature/jsondiffsync/types'
 import { INPUT, PANEL_ITEM, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import type { GunsyncPayload } from 'zss/feature/gunsync/replica'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
@@ -159,12 +159,21 @@ export function boardrunnerinput(
   device.emit(player, 'boardrunner:input', [input, mods])
 }
 
-export function boardrunnerjsondiffsync(
+export function boardrunnergunsyncapply(
   device: DEVICELIKE,
   player: string,
-  sync: SYNC_MESSAGE,
+  blob: GunsyncPayload,
 ) {
-  device.emit(player, 'boardrunner:jsondiffsync', sync)
+  device.emit(player, 'boardrunner:gunsync', blob)
+}
+
+/** Push MEMORY replica from boardrunner hub toward sim (+ peers via MESSAGE forward). */
+export function gunsyncrelay(
+  device: DEVICELIKE,
+  player: string,
+  blob: GunsyncPayload,
+) {
+  device.emit(player, 'gunmesh:memory', blob)
 }
 
 export function bridgechatstart(
@@ -944,27 +953,6 @@ export function vmacktick(
   data?: ACKTICK_GADGET_PAYLOAD,
 ) {
   device.emit(player, 'vm:acktick', data)
-}
-
-export function vmjsondiffsync(
-  device: DEVICELIKE,
-  player: string,
-  sync: SYNC_MESSAGE,
-) {
-  device.emit(player, 'vm:jsondiffsync', sync)
-}
-
-/** After the leaf applies a hub→leaf message, advance hub row alignment for that multiplexed stream. */
-export function vmhubsyncleaf(
-  device: DEVICELIKE,
-  player: string,
-  streamid: string,
-  boardsynctarget?: string,
-) {
-  device.emit(player, 'vm:hubsyncleaf', {
-    streamid,
-    ...(boardsynctarget !== undefined ? { boardsynctarget } : {}),
-  })
 }
 
 export function vmlastinputtouch(

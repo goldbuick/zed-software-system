@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
 import {
+  boardrunnerinput,
   registerbookmarkscroll,
   registerterminalopen,
   registerterminalquickopen,
   synthupdate,
   vmclirepeatlast,
   vmfindany,
-  boardrunnerinput,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -41,9 +41,10 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   if (mods.shift) {
     bits |= INPUT_SHIFT
   }
-  if (ispid(player)) {
-    boardrunnerinput(SOFTWARE, player, input, bits)
+  if (!ispid(player)) {
+    return
   }
+  boardrunnerinput(SOFTWARE, player, input, bits)
 }
 
 type ScreenUIFramedProps = {

@@ -18,11 +18,9 @@ import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
-import { handlehubsyncleaf } from './hubsyncleaf'
 import { handlehalt } from './halt'
 import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
-import { handlejsondiffsync } from './jsondiffsync'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
 import { handleoperator } from './operator'
@@ -64,10 +62,8 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   fork: handlefork,
   gadgetscroll: handlegadgetscroll,
   halt: handlehalt,
-  hubsyncleaf: handlehubsyncleaf,
   input: handleinput,
   inspect: handleinspect,
-  jsondiffsync: handlejsondiffsync,
   lastinputtouch: handlelastinputtouch,
   loader: handleloader,
   local: handlelocal,

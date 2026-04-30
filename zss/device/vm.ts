@@ -5,7 +5,7 @@ import { platformready } from './api'
 import { handledefault } from './vm/handlers/default'
 import { vmhandlers } from './vm/handlers/registry'
 
-const vm = createdevice(
+export const vm = createdevice(
   'vm',
   ['ticktock', 'second'],
   (message) => {

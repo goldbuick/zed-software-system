@@ -4,6 +4,7 @@ import {
 } from 'zss/device/forward'
 
 import './device/boardrunner-gadget'
+import 'zss/feature/gunsync/roommirror'
 import './device/boardrunner'
 
 const { forward } = createforward((message) => {

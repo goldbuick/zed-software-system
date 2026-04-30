@@ -61,6 +61,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':
+        case 'gunmesh':
           return true
       }
       switch (route.path) {
@@ -97,6 +98,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'vm':
     case 'modem':
     case 'gadgetserver':
+    case 'gunmesh':
       return true
   }
   switch (route.path) {

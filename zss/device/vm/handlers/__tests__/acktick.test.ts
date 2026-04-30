@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
-import { isacktickgadgetpayload, type MESSAGE } from 'zss/device/api'
+import { type MESSAGE, isacktickgadgetpayload } from 'zss/device/api'
 import { TICK_FPS } from 'zss/mapping/tick'
 
-import { handleacktick } from '../acktick'
 import { boardrunneracks } from '../../state'
+import { handleacktick } from '../acktick'
 
 const mockgadgetstate = jest.fn()
 jest.mock('zss/gadget/data/api', () => ({
@@ -86,8 +86,6 @@ describe('isacktickgadgetpayload', () => {
 
   it('rejects non-objects and missing player on entries', () => {
     expect(isacktickgadgetpayload(null)).toBe(false)
-    expect(isacktickgadgetpayload({ boardid: 'b', entries: [{}] })).toBe(
-      false,
-    )
+    expect(isacktickgadgetpayload({ boardid: 'b', entries: [{}] })).toBe(false)
   })
 })
