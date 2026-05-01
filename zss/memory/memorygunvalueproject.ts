@@ -1,3 +1,5 @@
+import { isplainobject as ismappingplainobject } from 'zss/mapping/types'
+
 /**
  * Pure value ↔ Gun-wire tree: arrays become `{ $0, $1, … }` (never bare `"0"` keys).
  * `omitkey(path, key)` drops keys from the wire (e.g. `board.lookup` / `board.named` — runtime-only in projection).
@@ -14,12 +16,7 @@ export const MEMORY_GUN_PROJECT_MAX_DEPTH = 96
 
 function isplainobject(v: unknown): v is Record<string, unknown> {
   return (
-    typeof v === 'object' &&
-    v !== null &&
-    !Array.isArray(v) &&
-    !(v instanceof Set) &&
-    !(v instanceof Uint8Array) &&
-    typeof (v as { then?: unknown }).then !== 'function'
+    ismappingplainobject(v) && !(v instanceof Set) && !(v instanceof Uint8Array)
   )
 }
 

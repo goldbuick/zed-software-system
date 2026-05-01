@@ -1,16 +1,9 @@
+import { isplainobject } from 'zss/mapping/types'
+
 /** Minimal Gun chain surface for writing projected trees (no `gun` package import). */
 export type MemoryGunChain = {
   get: (k: string) => MemoryGunChain
   put: (v: unknown) => unknown
-}
-
-function isplainobject(v: unknown): v is Record<string, unknown> {
-  return (
-    typeof v === 'object' &&
-    v !== null &&
-    !Array.isArray(v) &&
-    typeof (v as { then?: unknown }).then !== 'function'
-  )
 }
 
 type PutFrame = {

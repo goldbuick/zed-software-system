@@ -148,11 +148,10 @@ export function memorytickloaders() {
 }
 
 export function memorytickmain(
+  mainbook: MAYBE<BOOK>,
   updateboard: string,
-  timestamp: number,
   playeronly = false,
 ) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
@@ -162,9 +161,6 @@ export function memorytickmain(
   if (!ispresent(board)) {
     return
   }
-
-  // update timestamp
-  mainbook.timestamp = timestamp
 
   // init kinds
   memoryinitboard(board)

@@ -10,7 +10,6 @@ import {
   isnumber,
   ispresent,
   isstring,
-  jsondocumentcopy,
   noop,
 } from 'zss/mapping/types'
 
@@ -74,21 +73,6 @@ describe('types', () => {
       expect(copied).toEqual(original)
       expect(copied).not.toBe(original)
       expect(copied[2]).not.toBe(original[2])
-    })
-  })
-
-  describe('jsondocumentcopy', () => {
-    it('should mirror deepcopy for plain JSON', () => {
-      const original = { a: 1, b: { c: [2, 3] } }
-      const copied = jsondocumentcopy(original)
-      expect(copied).toEqual(original)
-      expect(copied).not.toBe(original)
-      expect(copied.b).not.toBe(original.b)
-    })
-
-    it('should return primitives as-is', () => {
-      expect(jsondocumentcopy(1)).toBe(1)
-      expect(jsondocumentcopy(null)).toBe(null)
     })
   })
 

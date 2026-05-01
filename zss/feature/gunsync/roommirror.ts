@@ -4,18 +4,15 @@ import Gun from 'gun'
 // @ts-expect-error gun/src/mesh is CJS without package typings
 import GunMesh from 'gun/src/mesh.js'
 
+import {
+  type Gunrootatom,
+  gunoptnormalizepeers,
+} from '../../memory/gunoptpeers'
+
 type Gunmesh = {
   hi: (peer: unknown) => void
   bye: (peer: unknown) => void
   hear: (raw: string | object, peer: unknown) => void
-}
-
-/** Internal root atom shape used by Gun.Mesh(root). */
-type Gunrootatom = {
-  root?: Gunrootatom
-  opt: { mesh?: Gunmesh; peers?: unknown }
-  dup: unknown
-  on: unknown
 }
 
 export const roomgun = Gun({
@@ -27,21 +24,13 @@ export const roomgun = Gun({
 
 const atom = roomgun._ as unknown as Gunrootatom
 const root = atom.root ?? atom
-if (!atom.opt) {
-  atom.opt = { peers: {} } as Gunrootatom['opt']
-}
-if (
-  atom.opt.peers === undefined ||
-  Array.isArray(atom.opt.peers) ||
-  typeof atom.opt.peers !== 'object'
-) {
-  atom.opt.peers = {}
-}
+gunoptnormalizepeers(atom)
+const existingmesh = atom.opt.mesh as Gunmesh | undefined
 if (
   !(
-    atom.opt.mesh &&
-    typeof atom.opt.mesh.hear === 'function' &&
-    typeof atom.opt.mesh.hi === 'function'
+    existingmesh &&
+    typeof existingmesh.hear === 'function' &&
+    typeof existingmesh.hi === 'function'
   )
 ) {
   atom.opt.mesh = GunMesh(root) as Gunmesh

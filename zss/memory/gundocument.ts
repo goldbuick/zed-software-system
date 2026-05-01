@@ -9,7 +9,7 @@ export function memorylocalgunresetpersistchainfortests(): void {
   memorygunresetfortests()
 }
 
-/** Load persisted root graph from Gun; projection updates from merged `localmemory` listener. */
+/** Load persisted root graph from Gun; projection updates from merged `memory` listener. */
 export function memorylocalguninit(done?: () => void): void {
   memoryguninit(function onmerged(data: unknown) {
     if (memoryishydratablegunroot(data)) {
@@ -17,6 +17,3 @@ export function memorylocalguninit(done?: () => void): void {
     }
   }, done)
 }
-
-/** No-op: session writes go directly to Gun (`memorygunroot`). Kept for ticktock call site stability. */
-export function memorylocalgunpersist(): void {}

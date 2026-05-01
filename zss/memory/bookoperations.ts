@@ -277,7 +277,7 @@ export function memoryreadbookflag(
 }
 
 export function memoryreadbookflags(book: MAYBE<BOOK>, id: string) {
-  if (!book) {
+  if (!ispresent(book)) {
     return {}
   }
   book.flags[id] = book.flags[id] ?? {}

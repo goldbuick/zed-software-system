@@ -9,7 +9,7 @@ import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
   memoryconverttogadgetcontrollayer,
-  memoryreadgadgetlayers,
+  memoryreadgraphics,
 } from 'zss/memory/rendering'
 import {
   memoryreadbookbysoftware,
@@ -17,6 +17,7 @@ import {
 } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
+import { NAME } from 'zss/words/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
 import { registermemorygadgetstateprovider } from './gadgetstatebookprovider'
@@ -46,37 +47,19 @@ const gadgetserver = createdevice(
     )
 
     switch (message.target) {
-      case 'tock':
       case 'ticktock':
         {
-          const syncedlayers = ispresent(mainbook)
-            ? memoryreadbookgadgetlayersmap(mainbook)
-            : undefined
-          const fallbackcache = new Map<string, MEMORY_GADGET_LAYERS>()
+          const rendercache = memoryreadbookgadgetlayersmap(mainbook)
           for (let i = 0; i < activelist.length; ++i) {
             const player = activelist[i]
-            if (!player) {
-              continue
-            }
-            const playerboard = memoryreadplayerboard(player)
-            const boardid = playerboard?.id ?? ''
-            const synccanonical = syncedlayers?.[boardid]
-
-            // canonical board layers synced from leaf (sans control); else per-player fallback
+            const board = memoryreadplayerboard(player)
+            const boardid = board?.id ?? ''
+            // const synccanonical = syncedlayers?.[boardid]
             let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
-            if (
-              ispresent(playerboard) &&
-              ispresent(synccanonical) &&
-              synccanonical.board === boardid
-            ) {
-              gadgetlayers = synccanonical
-            } else if (ispresent(playerboard)) {
-              const fallbackkey = `${boardid}|${player}`
-              gadgetlayers = fallbackcache.get(fallbackkey)
-              if (!ispresent(gadgetlayers)) {
-                gadgetlayers = memoryreadgadgetlayers(player, playerboard)
-                fallbackcache.set(fallbackkey, gadgetlayers)
-              }
+            if (ispresent(board)) {
+              const graphics = memoryreadgraphics(player, board)
+              const mode = NAME(graphics.graphics)
+              gadgetlayers = rendercache[`${mode}:${boardid}`]
             }
 
             // get current state
@@ -87,7 +70,7 @@ const gadgetserver = createdevice(
               const control = memoryconverttogadgetcontrollayer(
                 player,
                 1000,
-                playerboard,
+                board,
               )
               gadget.id = gadgetlayers.id
               gadget.board = gadgetlayers.board
@@ -103,7 +86,7 @@ const gadgetserver = createdevice(
               gadget.under = gadgetlayers.under
               gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
               gadget.tickers = gadgetlayers.tickers
-              gadget.boardname = playerboard?.name?.trim() ?? ''
+              gadget.boardname = board?.name?.trim() ?? ''
             } else {
               gadget.id = ''
               gadget.board = ''
@@ -138,14 +121,6 @@ const gadgetserver = createdevice(
             }
 
             if (!gadgetsync.has(player)) {
-              const canbaseline =
-                ispresent(mainbook) &&
-                ispresent(playerboard) &&
-                boardid.length > 0 &&
-                ispresent(gadgetlayers)
-              if (!canbaseline) {
-                continue
-              }
               gadgetsync.set(player, deepcopy(slim))
               gadgetclientpaint(gadgetserver, player, slim)
               continue

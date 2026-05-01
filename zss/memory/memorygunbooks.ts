@@ -2,6 +2,8 @@
  * BOOK wire under `books/<id>`: `pages` as `$0…` array of `{ codepage }`, `activelist/<player>` → boolean.
  * `board.lookup` / `board.named` omitted on wire (runtime-only); callers run `memoryinitboardlookup` after hydrate.
  */
+import { isplainobject } from 'zss/mapping/types'
+
 import {
   type MemoryGunChain,
   memorygunputprojectedtochain,
@@ -12,15 +14,6 @@ import {
   memorygununprojectvalue,
 } from './memorygunvalueproject'
 import type { BOOK, CODE_PAGE } from './types'
-
-function isplainobject(v: unknown): v is Record<string, unknown> {
-  return (
-    typeof v === 'object' &&
-    v !== null &&
-    !Array.isArray(v) &&
-    typeof (v as { then?: unknown }).then !== 'function'
-  )
-}
 
 export type MemoryBookGunWireOptions = {
   /** Diff tombstones for removed `activelist/*` keys; replaces `pages` subtree when set. */

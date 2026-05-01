@@ -10,21 +10,6 @@ export function deepcopy<T>(word: T): T {
   return deepClone(word) as T
 }
 
-/**
- * Clone plain JSON documents (sync/MEMORY-shaped data). Prefer `structuredClone` for speed; fall
- * back to fast-json-patch `deepClone` when the value is not structured-cloneable.
- */
-export function jsondocumentcopy<T>(word: T): T {
-  if (word === null || typeof word !== 'object') {
-    return word
-  }
-  try {
-    return structuredClone(word) as T
-  } catch {
-    return deepClone(word) as T
-  }
-}
-
 export function isboolean(word: any): word is boolean {
   return typeof word === 'boolean'
 }
@@ -47,6 +32,16 @@ export function ismaybestring(word: any): word is MAYBE<string> {
 
 export function isarray(word: any): word is any[] {
   return Array.isArray(word)
+}
+
+/** Non-null object, not an array, not a thenable (`Promise`-like). */
+export function isplainobject(word: unknown): word is Record<string, unknown> {
+  return (
+    typeof word === 'object' &&
+    word !== null &&
+    !Array.isArray(word) &&
+    typeof (word as { then?: unknown }).then !== 'function'
+  )
 }
 
 export function ismaybearray(word: any): word is MAYBE<any[]> {

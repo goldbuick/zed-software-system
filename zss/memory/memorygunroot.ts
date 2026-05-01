@@ -1,8 +1,10 @@
 /**
- * Single Gun instance and `zss/localmemory` chain for sim worker session persistence.
+ * Single Gun instance and `memory` chain for sim worker session persistence.
  * Session mutates the graph via `memorygunlocalmemory()`; [`gundocument`](./gundocument.ts) wires init.
  */
-import Gun from 'gun'
+import Gun from 'gun/gun'
+
+import { memorygunattachisolatedmesh } from './memorygunmeshisolate'
 
 export type GunMemoryChain = {
   get: (
@@ -44,14 +46,19 @@ export function memoryguninit(
     done?.()
     return
   }
+  // create instance
   const g = Gun({
     peers: [],
     axe: false,
     radisk: false,
     multicast: false,
     localStorage: false,
-  }) as unknown as { get: (k: string) => GunMemoryChain }
-  gunmemory = g.get('zss').get('localmemory')
+    WebSocket: false,
+  }) as unknown as { _: unknown; get: (k: string) => GunMemoryChain }
+
+  memorygunattachisolatedmesh(g)
+
+  gunmemory = g.get('memory')
   gunmemory.get(
     function onmerged(data: unknown) {
       if (memorygunlocalskipactive()) {

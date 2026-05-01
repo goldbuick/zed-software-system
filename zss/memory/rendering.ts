@@ -145,7 +145,7 @@ export function memoryconverttogadgetcontrollayer(
   control.focusy = maybeobject.y ?? 0
 
   // player flags, then board flags
-  const { graphics, camera, facing } = readgraphics(player, board)
+  const { graphics, camera, facing } = memoryreadgraphics(player, board)
   if (isstring(graphics)) {
     const withgraphics = NAME(graphics)
     switch (graphics) {
@@ -183,7 +183,7 @@ export function memoryconverttogadgetcontrollayer(
 }
 
 export function memoryconverttogadgetlayers(
-  player: string,
+  graphics: string,
   index: number,
   board: MAYBE<BOARD>,
   tickers: string[],
@@ -204,12 +204,12 @@ export function memoryconverttogadgetlayers(
   // update resolve caches
   memoryupdateboardvisuals(board)
 
-  const withgraphics = NAME(readgraphics(player, board).graphics)
+  const withgraphics = NAME(graphics)
   const layers: LAYER[] = []
 
   let iiii = index
   const boardid = board.id
-  const cacheowner = `${player}:${boardid}`
+  const cacheowner = `${withgraphics}:${boardid}`
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const tiles = createcachedtiles(
@@ -430,7 +430,7 @@ export type MEMORY_GADGET_LAYERS = {
   tickers: string[]
 }
 
-function readgraphics(player: string, board: BOARD) {
+export function memoryreadgraphics(player: string, board: BOARD) {
   // player flags, then board flags
   const { graphics, camera, facing } = memoryreadflags(player)
   const withgraphics = graphics ?? board.graphics ?? ''
@@ -492,7 +492,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
 }
 
 export function memoryreadgadgetlayers(
-  player: string,
+  graphics: string,
   board: MAYBE<BOARD>,
 ): MEMORY_GADGET_LAYERS {
   const over: LAYER[] = []
@@ -518,8 +518,8 @@ export function memoryreadgadgetlayers(
     }
   }
 
-  // composite id (include player so per-player graphics produce distinct gadget ids)
-  const id4all: string[] = [player, `${board.id}`]
+  // composite id
+  const id4all: string[] = [`${board.id}`]
 
   // read over / under
   const overboard = memoryreadoverboard(board)
@@ -534,12 +534,12 @@ export function memoryreadgadgetlayers(
 
   // compose layers
   under.push(
-    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, DIR.UNDER),
+    ...memoryconverttogadgetlayers(graphics, 0, underboard, tickers, DIR.UNDER),
   )
   const multi = ispresent(overboard)
   layers.push(
     ...memoryconverttogadgetlayers(
-      player,
+      graphics,
       under.length,
       board,
       tickers,
@@ -549,7 +549,7 @@ export function memoryreadgadgetlayers(
   )
   over.push(
     ...memoryconverttogadgetlayers(
-      player,
+      graphics,
       under.length + layers.length,
       overboard,
       tickers,
