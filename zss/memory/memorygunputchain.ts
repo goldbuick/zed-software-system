@@ -13,8 +13,16 @@ function isplainobject(v: unknown): v is Record<string, unknown> {
   )
 }
 
-/** Write a pre-projected wire tree (objects / scalars / null) onto a Gun chain. */
-export function memorygunputprojectedtochain(
+type PutFrame = {
+  node: MemoryGunChain
+  keys: string[]
+  keyindex: number
+  obj: Record<string, unknown>
+  depth: number
+}
+
+function memorygunputseedstack(
+  stack: PutFrame[],
   node: MemoryGunChain,
   projected: unknown,
   depth: number,
@@ -40,32 +48,46 @@ export function memorygunputprojectedtochain(
   if (!isplainobject(projected)) {
     return
   }
-  const o = projected as Record<string, unknown>
-  const keys = Object.keys(o)
-  for (let i = 0; i < keys.length; ++i) {
-    const k = keys[i]!
+  const keys = Object.keys(projected)
+  stack.push({ node, keys, keyindex: 0, obj: projected, depth })
+}
+
+/**
+ * Write a pre-projected wire tree (objects / scalars / null) onto a Gun chain.
+ * Iterative (no deep recursion) so JS stack stays bounded; stays synchronous so `memorygunlocalskip` wraps full write.
+ */
+export function memorygunputprojectedtochain(
+  node: MemoryGunChain,
+  projected: unknown,
+  depth: number,
+): void {
+  const stack: PutFrame[] = []
+  memorygunputseedstack(stack, node, projected, depth)
+  while (stack.length > 0) {
+    const top = stack[stack.length - 1]
+    if (top.keyindex >= top.keys.length) {
+      stack.pop()
+      continue
+    }
+    const k = top.keys[top.keyindex++]
     if (k.length === 0) {
       continue
     }
-    const v = o[k]
+    const v = top.obj[k]
     if (v === undefined) {
       continue
     }
-    const child = node.get(k)
+    const child = top.node.get(k)
     if (v === null) {
       child.put(null)
-      continue
-    }
-    if (
+    } else if (
       typeof v === 'string' ||
       typeof v === 'number' ||
       typeof v === 'boolean'
     ) {
       child.put(v)
-      continue
-    }
-    if (isplainobject(v)) {
-      memorygunputprojectedtochain(child, v, depth + 1)
+    } else if (isplainobject(v)) {
+      memorygunputseedstack(stack, child, v, top.depth + 1)
     }
   }
 }

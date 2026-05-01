@@ -1,13 +1,16 @@
 /**
  * Pure value ↔ Gun-wire tree: arrays become `{ $0, $1, … }` (never bare `"0"` keys).
- * `omitkey(parentpath, key)` drops keys from the wire (e.g. `board.lookup` / `board.named` — runtime-only in projection).
- * Empty JS arrays use a single-slot sentinel so `{}` stays a plain object (see `MEMORY_GUN_EMPTY_ARRAY_MARKER`).
+ * `omitkey(path, key)` drops keys from the wire (e.g. `board.lookup` / `board.named` — runtime-only in projection).
+ * Empty JS arrays use `{ $0: null }` on wire; legacy sentinel `MEMORY_GUN_EMPTY_ARRAY_MARKER` still unprojects to `[]`.
+ * `Uint8Array` uses a single reserved key + base64 payload (see `MEMORY_GUN_UINT8ARRAY_WIRE`).
  */
 export const MEMORY_GUN_EMPTY_ARRAY_MARKER = '\uE000__gun_empty_array__'
 
-export type MemoryGunProjectOptions = {
-  omitkey?: (path: readonly string[], key: string) => boolean
-}
+/** Reserved object key for wire encoding of `Uint8Array` (must not be stripped as Gun `._`). */
+export const MEMORY_GUN_UINT8ARRAY_WIRE = '\uE001__zed_uint8'
+
+/** Max nesting depth for projection (guards runaway recursion / pathological graphs). */
+export const MEMORY_GUN_PROJECT_MAX_DEPTH = 96
 
 function isplainobject(v: unknown): v is Record<string, unknown> {
   return (
@@ -15,6 +18,7 @@ function isplainobject(v: unknown): v is Record<string, unknown> {
     v !== null &&
     !Array.isArray(v) &&
     !(v instanceof Set) &&
+    !(v instanceof Uint8Array) &&
     typeof (v as { then?: unknown }).then !== 'function'
   )
 }
@@ -23,8 +27,39 @@ function isfinite_number(n: number): boolean {
   return Number.isFinite(n)
 }
 
+function memorygunencodeuint8base64(bytes: Uint8Array): string {
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(
+      bytes.buffer,
+      bytes.byteOffset,
+      bytes.byteLength,
+    ).toString('base64')
+  }
+  let binary = ''
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(
+      null,
+      bytes.subarray(i, i + chunk) as unknown as number[],
+    )
+  }
+  return btoa(binary)
+}
+
+function memorygundecodeuint8base64(text: string): Uint8Array {
+  if (typeof Buffer !== 'undefined') {
+    return new Uint8Array(Buffer.from(text, 'base64'))
+  }
+  const bin = atob(text)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) {
+    out[i] = bin.charCodeAt(i)
+  }
+  return out
+}
+
 /** Default: omit `lookup` and `named` under a `board` object (path parent’s last segment is `board`). */
-export function memorygunomitboardruntimekey(
+export function memorygunskipruntime(
   path: readonly string[],
   key: string,
 ): boolean {
@@ -34,30 +69,54 @@ export function memorygunomitboardruntimekey(
   return key === 'lookup' || key === 'named'
 }
 
+/** Book/replica wire: only `id` and `code` on a `CODE_PAGE` root; delegates under `board` to `memorygunskipruntime`. */
+export function memorygunskipcodepagewire(
+  path: readonly string[],
+  key: string,
+): boolean {
+  if (path.length === 0) {
+    return key !== 'id' && key !== 'code'
+  }
+  return memorygunskipruntime(path, key)
+}
+
 function iswirearrayshaped(o: Record<string, unknown>): boolean {
   const keys = Object.keys(o)
   if (keys.length === 0) {
     return false
   }
   for (let i = 0; i < keys.length; ++i) {
-    if (!/^\$\d+$/.test(keys[i]!)) {
+    if (!/^\$\d+$/.test(keys[i])) {
       return false
     }
   }
   return true
 }
 
+function isuint8wiretag(o: Record<string, unknown>): boolean {
+  const keys = Object.keys(o)
+  return (
+    keys.length === 1 &&
+    keys[0] === MEMORY_GUN_UINT8ARRAY_WIRE &&
+    typeof o[MEMORY_GUN_UINT8ARRAY_WIRE] === 'string'
+  )
+}
+
 /**
  * JSON-like value → wire tree (no JS arrays; optional key omission).
  * Prunes: undefined, function, symbol, non-finite numbers, non-plain objects.
+ * Breaks reference cycles on objects/arrays; caps depth at {@link MEMORY_GUN_PROJECT_MAX_DEPTH}.
  */
 export function memorygunprojectvalue(
   input: unknown,
-  options?: MemoryGunProjectOptions,
   pathparent: readonly string[] = [],
+  omitkey?: (path: readonly string[], key: string) => boolean,
+  depth = 0,
+  visiting?: WeakSet<object>,
 ): unknown {
-  const omitkey = options?.omitkey ?? memorygunomitboardruntimekey
-
+  if (depth > MEMORY_GUN_PROJECT_MAX_DEPTH) {
+    return undefined
+  }
   if (input === null) {
     return null
   }
@@ -73,47 +132,81 @@ export function memorygunprojectvalue(
   if (typeof input === 'function' || typeof input === 'symbol') {
     return undefined
   }
+  if (input instanceof Uint8Array) {
+    return {
+      [MEMORY_GUN_UINT8ARRAY_WIRE]: memorygunencodeuint8base64(input),
+    }
+  }
   if (input instanceof Set) {
-    return memorygunprojectvalue([...input], options, pathparent)
+    return memorygunprojectvalue(
+      [...input],
+      pathparent,
+      omitkey,
+      depth,
+      visiting,
+    )
   }
   if (Array.isArray(input)) {
-    if (input.length === 0) {
-      return { $0: MEMORY_GUN_EMPTY_ARRAY_MARKER }
+    const vis = visiting ?? new WeakSet<object>()
+    if (vis.has(input)) {
+      return undefined
     }
-    const out: Record<string, unknown> = {}
-    for (let i = 0; i < input.length; ++i) {
-      const slot = '$' + String(i)
-      const projected = memorygunprojectvalue(input[i], options, [
-        ...pathparent,
-        slot,
-      ])
-      if (projected !== undefined) {
-        out[slot] = projected
+    vis.add(input)
+    try {
+      if (input.length === 0) {
+        return { $0: null }
       }
+      const out: Record<string, unknown> = {}
+      for (let i = 0; i < input.length; ++i) {
+        const slot = '$' + String(i)
+        const projected = memorygunprojectvalue(
+          input[i],
+          [...pathparent, slot] as readonly string[],
+          omitkey,
+          depth + 1,
+          vis,
+        )
+        if (projected !== undefined) {
+          out[slot] = projected
+        }
+      }
+      return out
+    } finally {
+      vis.delete(input)
     }
-    return out
   }
   if (!isplainobject(input)) {
     return undefined
   }
-  const out: Record<string, unknown> = {}
-  for (const k of Object.keys(input)) {
-    if (k.length === 0) {
-      continue
-    }
-    if (omitkey(pathparent, k)) {
-      continue
-    }
-    const projected = memorygunprojectvalue(
-      (input as Record<string, unknown>)[k],
-      options,
-      [...pathparent, k],
-    )
-    if (projected !== undefined) {
-      out[k] = projected
-    }
+  const vis = visiting ?? new WeakSet<object>()
+  if (vis.has(input)) {
+    return undefined
   }
-  return out
+  vis.add(input)
+  try {
+    const out: Record<string, unknown> = {}
+    for (const k of Object.keys(input)) {
+      if (k.length === 0) {
+        continue
+      }
+      if (omitkey?.(pathparent, k)) {
+        continue
+      }
+      const projected = memorygunprojectvalue(
+        input[k],
+        [...pathparent, k],
+        omitkey,
+        depth + 1,
+        vis,
+      )
+      if (projected !== undefined) {
+        out[k] = projected
+      }
+    }
+    return out
+  } finally {
+    vis.delete(input)
+  }
 }
 
 /** Wire tree → JSON-like value (rebuild arrays from `$n` keys only). */
@@ -131,18 +224,21 @@ export function memorygununprojectvalue(wire: unknown): unknown {
   if (!isplainobject(wire)) {
     return undefined
   }
-  const o = wire as Record<string, unknown>
-  if (
-    Object.keys(o).length === 1 &&
-    o.$0 === MEMORY_GUN_EMPTY_ARRAY_MARKER
-  ) {
+  const o = wire
+  if (isuint8wiretag(o)) {
+    return memorygundecodeuint8base64(o[MEMORY_GUN_UINT8ARRAY_WIRE] as string)
+  }
+  if (Object.keys(o).length === 1 && o.$0 === MEMORY_GUN_EMPTY_ARRAY_MARKER) {
+    return []
+  }
+  if (Object.keys(o).length === 1 && o.$0 === null) {
     return []
   }
   if (iswirearrayshaped(o)) {
     const keys = Object.keys(o)
     let max = -1
     for (let i = 0; i < keys.length; ++i) {
-      const n = parseInt(keys[i]!.slice(1), 10)
+      const n = parseInt(keys[i].slice(1), 10)
       if (n > max) {
         max = n
       }
@@ -164,33 +260,6 @@ export function memorygununprojectvalue(wire: unknown): unknown {
       continue
     }
     out[k] = memorygununprojectvalue(o[k])
-  }
-  return out
-}
-
-/** Strip Gun `._` meta; recurse plain objects (matches gunsync stripgunmeta behavior for BOOK decode). */
-export function memorygunstripmeta(v: unknown): unknown {
-  if (v === null || v === undefined) {
-    return v
-  }
-  if (typeof v !== 'object') {
-    return v
-  }
-  if (v instanceof Set) {
-    return [...v].map(memorygunstripmeta)
-  }
-  if (Array.isArray(v)) {
-    return v.map(memorygunstripmeta)
-  }
-  const o = v as Record<string, unknown>
-  const out: Record<string, unknown> = {}
-  const keys = Object.keys(o)
-  for (let i = 0; i < keys.length; ++i) {
-    const k = keys[i]!
-    if (k === '_' || k.length === 0) {
-      continue
-    }
-    out[k] = memorygunstripmeta(o[k])
   }
   return out
 }

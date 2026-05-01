@@ -1,4 +1,11 @@
-import { memorybookwiretree } from '../memorygunbookproject'
+import {
+  memorylocalguninit,
+  memorylocalgunresetpersistchainfortests,
+} from '../gundocument'
+import {
+  memorygunprojectvalue,
+  memorygunskipcodepagewire,
+} from '../memorygunvalueproject'
 import {
   memorygunflushfull,
   memorygunputpayload,
@@ -11,12 +18,10 @@ import {
 } from '../session'
 import type { MEMORY_ROOT_SNAPSHOT } from '../session'
 import type { BOOK } from '../types'
-import {
-  memorylocalguninit,
-  memorylocalgunresetpersistchainfortests,
-} from '../gundocument'
 
-function emptysnapshot(over: Partial<MEMORY_ROOT_SNAPSHOT> = {}): MEMORY_ROOT_SNAPSHOT {
+function emptysnapshot(
+  over: Partial<MEMORY_ROOT_SNAPSHOT> = {},
+): MEMORY_ROOT_SNAPSHOT {
   return {
     halt: false,
     simfreeze: false,
@@ -28,6 +33,31 @@ function emptysnapshot(over: Partial<MEMORY_ROOT_SNAPSHOT> = {}): MEMORY_ROOT_SN
     topic: '',
     ...over,
   }
+}
+
+/** Wire snapshot for one book (same shape as Gun subtree under `books/<id>`). */
+function memorybookwireshape(book: BOOK): Record<string, unknown> {
+  const top = memorygunprojectvalue(
+    {
+      name: book.name,
+      timestamp: book.timestamp,
+      flags: book.flags,
+      ...(book.token !== undefined ? { token: book.token } : {}),
+    },
+    [],
+  ) as Record<string, unknown>
+  const pageentries = book.pages.map((page) => ({
+    codepage: memorygunprojectvalue(page, [], memorygunskipcodepagewire),
+  }))
+  const pageswire = memorygunprojectvalue(pageentries, []) as Record<
+    string,
+    unknown
+  >
+  const activelist: Record<string, unknown> = {}
+  for (let i = 0; i < book.activelist.length; ++i) {
+    activelist[book.activelist[i]] = true
+  }
+  return { ...top, activelist, pages: pageswire }
 }
 
 function minimalbook(id: string, name: string): BOOK {
@@ -102,7 +132,7 @@ describe('local Gun root graph put', () => {
     memorylocalgunresetpersistchainfortests()
   })
 
-  it('memorygunputpayload omits books (per-book graph via memorybookprojecttogun)', () => {
+  it('memorygunputpayload omits books (per-book graph via memorybookflushwire)', () => {
     memoryhydraterootfromsnapshot(
       emptysnapshot({
         session: 's1',
@@ -112,9 +142,14 @@ describe('local Gun root graph put', () => {
     const p = memorygunputpayload()
     expect(p).not.toHaveProperty('books')
     expect(p.session).toBe('s1')
-    const wire = memorybookwiretree(minimalbook('b1', 'main'))
+    const wire = memorybookwireshape(minimalbook('b1', 'main'))
     expect(wire.name).toBe('main')
-    expect((wire.pageorder as Record<string, unknown>).$0).toBe('p1')
+    expect(wire).not.toHaveProperty('pageorder')
+    const pages = wire.pages as Record<string, unknown>
+    const row0 = pages.$0 as Record<string, unknown>
+    const cp = row0.codepage as Record<string, unknown>
+    expect(cp.id).toBe('p1')
+    expect(cp.code).toBe('alpha')
   })
 
   it('memorylocalguninit then memorygunflushfull writes Gun graph from projection', () => {

@@ -1,17 +1,15 @@
 /**
  * Session state and book storage: synchronous **projection** of the Gun graph at `zss/localmemory`.
  * Writes go to Gun first (`memorygunroot`); reads use `memoryrootprojection` only.
- * Books under `books/<id>` use `memorybookprojecttogun` / `memorybookunprojectfromgun` (`pageorder` `$n`,
- * `pages/<id>/codepage`, `activelist/<player>`); `board.lookup` / `board.named` are runtime-only (rebuilt via `boardlookup` after hydrate).
+ * Books under `books/<id>` use `memorybookflushwire` / `memorybookfromwire` (`pages` as `$n` array of `{ codepage }`,
+ * `activelist/<player>`); `board.lookup` / `board.named` are runtime-only (rebuilt via `boardlookup` after hydrate).
  */
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import {
-  memorybookprojecttogun,
-  memorybookunprojectfromgun,
-} from './memorygunbookproject'
+import { memoryinitboardlookup } from './boardlookup'
+import { memorybookflushwire, memorybookfromwire } from './memorygunbooks'
 import type { MemoryGunChain } from './memorygunputchain'
 import {
   memorygunlocalmemory,
@@ -21,14 +19,15 @@ import {
 } from './memorygunroot'
 import { BOOK, MEMORY_LABEL } from './types'
 
-function memorybooksgunchain(lm: { get: (k: string) => unknown }): MemoryGunChain {
+function memorybooksgunchain(lm: {
+  get: (k: string) => unknown
+}): MemoryGunChain {
   return lm.get('books') as MemoryGunChain
 }
 
 function memorybookrehydrateboardsinbook(book: BOOK): void {
-  const { memoryinitboardlookup } = require('./boardlookup') as typeof import('./boardlookup')
   for (let i = 0; i < book.pages.length; ++i) {
-    const p = book.pages[i]!
+    const p = book.pages[i]
     if (p.board) {
       memoryinitboardlookup(p.board)
     }
@@ -39,24 +38,24 @@ function memorybookrehydrateboardsinbook(book: BOOK): void {
 export type MEMORY_ROOT_SNAPSHOT = {
   halt: boolean
   simfreeze: boolean
+  topic: string
   session: string
   operator: string
   software: { main: string; temp: string }
   books: Record<string, BOOK>
   loaders: Record<string, string>
-  topic: string
 }
 
 /** In-memory read model; Gun under `zss/localmemory` is authoritative. */
 const memoryrootprojection: MEMORY_ROOT_SNAPSHOT = {
   halt: false,
   simfreeze: false,
+  topic: '',
   session: createsid(),
   operator: '',
   software: { main: '', temp: '' },
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
-  topic: '',
 }
 
 function memorydeepcloneprojection(): MEMORY_ROOT_SNAPSHOT {
@@ -67,7 +66,9 @@ function memorydeepcloneprojection(): MEMORY_ROOT_SNAPSHOT {
       // fall through
     }
   }
-  return JSON.parse(JSON.stringify(memoryrootprojection)) as MEMORY_ROOT_SNAPSHOT
+  return JSON.parse(
+    JSON.stringify(memoryrootprojection),
+  ) as MEMORY_ROOT_SNAPSHOT
 }
 
 /** Deep clone of projection for wire / debug (never aliases live projection). */
@@ -75,10 +76,11 @@ export function memorysnapshotroot(): MEMORY_ROOT_SNAPSHOT {
   return memorydeepcloneprojection()
 }
 
-/** Root fields only; books are written via `memorybookprojecttogun` per id (see `memorygunflushfull`). */
+/** Root fields only; books are written via `memorybookflushwire` per id (see `memorygunflushfull`). */
 export function memorygunputpayload(): Omit<MEMORY_ROOT_SNAPSHOT, 'books'> {
   const snap = memorysnapshotroot()
-  const { books: _, ...rest } = snap
+  const { books, ...rest } = snap
+  void books
   return rest
 }
 
@@ -102,7 +104,7 @@ export function memorygunflushfull(): void {
     })
     const bc = memorybooksgunchain(lm)
     for (const book of Object.values(snap.books)) {
-      memorybookprojecttogun(bc, book, { clearbooknodefirst: true })
+      memorybookflushwire(bc, book, { clearbooknodefirst: true })
     }
   } finally {
     memorygunlocalskipexit()
@@ -118,7 +120,7 @@ function memorybooksfromgunraw(raw: unknown): Record<string, BOOK> {
     if (k.length === 0) {
       continue
     }
-    const book = memorybookunprojectfromgun(v, k)
+    const book = memorybookfromwire(v, k)
     if (book !== undefined) {
       memorybookrehydrateboardsinbook(book)
       out[k] = book
@@ -135,7 +137,7 @@ function memorybooksfieldvalidforgun(raw: unknown): boolean {
     if (k.length === 0) {
       return false
     }
-    if (memorybookunprojectfromgun(v, k) === undefined) {
+    if (memorybookfromwire(v, k) === undefined) {
       return false
     }
   }
@@ -187,7 +189,9 @@ export function memoryhydratefromgunroot(value: unknown): void {
 }
 
 /** Replace projection from a snapshot only (no Gun write). */
-export function memoryhydraterootfromsnapshot(snap: MEMORY_ROOT_SNAPSHOT): void {
+export function memoryhydraterootfromsnapshot(
+  snap: MEMORY_ROOT_SNAPSHOT,
+): void {
   memoryrootprojection.halt = snap.halt
   memoryrootprojection.simfreeze = snap.simfreeze
   memoryrootprojection.session = snap.session
@@ -372,7 +376,7 @@ export function memoryresetbooks(books: BOOK[]) {
       }
       const bc = memorybooksgunchain(lm)
       for (const book of books) {
-        memorybookprojecttogun(bc, book, { prev: prevbyid[book.id] })
+        memorybookflushwire(bc, book, { prev: prevbyid[book.id] })
       }
     } finally {
       memorygunlocalskipexit()
@@ -412,7 +416,7 @@ export function memorywritebook(book: BOOK) {
   if (lm !== undefined) {
     memorygunlocalskipenter()
     try {
-      memorybookprojecttogun(memorybooksgunchain(lm), book, { prev })
+      memorybookflushwire(memorybooksgunchain(lm), book, { prev })
     } finally {
       memorygunlocalskipexit()
     }
