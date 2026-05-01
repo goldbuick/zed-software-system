@@ -1,5 +1,11 @@
-/** Deep put / read helpers for Gun `replica` tree (no JSON string leaves for structured data). */
+/** Deep put / read helpers for Gun `replica` tree (structured graph; arrays as `$0`, `$1`, …). */
 import type { BOOK } from 'zss/memory/types'
+import { memorybookunprojectfromgun, memorybookprojecttogun } from 'zss/memory/memorygunbookproject'
+import {
+  memorygunomitboardruntimekey,
+  memorygunprojectvalue,
+} from 'zss/memory/memorygunvalueproject'
+import { memorygunputprojectedtochain } from 'zss/memory/memorygunputchain'
 
 /** Gun rejects `.get('')` with `0 length key!` — skip empty path segments. */
 
@@ -19,7 +25,7 @@ function isdeepobject(v: unknown): v is Record<string, unknown> {
   )
 }
 
-/** Recursively write JSON-shaped values as Gun keys (arrays → numeric string indices; plain objects recurse). */
+/** Recursively write JSON-shaped values as Gun keys (arrays → `$0`, `$1`, …; plain objects recurse). */
 export function gunsyncputobjecttograph(
   node: Gunsyncgunchain,
   obj: Record<string, unknown>,
@@ -28,83 +34,13 @@ export function gunsyncputobjecttograph(
   if (depth > 60) {
     return
   }
-  const keys = Object.keys(obj)
-  for (let i = 0; i < keys.length; ++i) {
-    const k = keys[i]!
-    if (k.length === 0) {
-      continue
-    }
-    const v = obj[k]
-    if (v === undefined) {
-      continue
-    }
-    const child = node.get(k)
-    if (v === null) {
-      child.put(null)
-      continue
-    }
-    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-      child.put(v)
-      continue
-    }
-    if (v instanceof Set) {
-      const arr = [...v]
-      for (let j = 0; j < arr.length; ++j) {
-        gunsyncputvalueat(child.get(String(j)), arr[j], depth + 1)
-      }
-      continue
-    }
-    if (Array.isArray(v)) {
-      for (let j = 0; j < v.length; ++j) {
-        gunsyncputvalueat(child.get(String(j)), v[j], depth + 1)
-      }
-      continue
-    }
-    if (isdeepobject(v)) {
-      gunsyncputobjecttograph(child, v, depth + 1)
-    }
-  }
-}
-
-function gunsyncputvalueat(
-  node: Gunsyncgunchain,
-  v: unknown,
-  depth: number,
-): void {
-  if (depth > 60) {
+  if (!isdeepobject(obj)) {
     return
   }
-  if (v === undefined) {
-    return
-  }
-  if (v === null) {
-    node.put(null)
-    return
-  }
-  if (
-    typeof v === 'string' ||
-    typeof v === 'number' ||
-    typeof v === 'boolean'
-  ) {
-    node.put(v)
-    return
-  }
-  if (v instanceof Set) {
-    const arr = [...v]
-    for (let j = 0; j < arr.length; ++j) {
-      gunsyncputvalueat(node.get(String(j)), arr[j], depth + 1)
-    }
-    return
-  }
-  if (Array.isArray(v)) {
-    for (let j = 0; j < v.length; ++j) {
-      gunsyncputvalueat(node.get(String(j)), v[j], depth + 1)
-    }
-    return
-  }
-  if (isdeepobject(v)) {
-    gunsyncputobjecttograph(node, v, depth + 1)
-  }
+  const projected = memorygunprojectvalue(obj, {
+    omitkey: memorygunomitboardruntimekey,
+  })
+  memorygunputprojectedtochain(node, projected, depth)
 }
 
 export function gunsyncputbooktograph(
@@ -115,11 +51,10 @@ export function gunsyncputbooktograph(
   if (bookid.length === 0) {
     return
   }
-  const booknode = bookschain.get(bookid)
-  gunsyncputobjecttograph(
-    booknode,
-    book as unknown as Record<string, unknown>,
-    0,
+  memorybookprojecttogun(
+    bookschain,
+    { ...book, id: bookid },
+    { clearbooknodefirst: true },
   )
 }
 
@@ -155,27 +90,5 @@ export function gunsyncbookfromgraphvalue(
   data: unknown,
   bookid: string,
 ): BOOK | undefined {
-  if (data === null || data === undefined) {
-    return undefined
-  }
-  const stripped = gunsyncstripgunmeta(data)
-  if (!isdeepobject(stripped)) {
-    return undefined
-  }
-  const b = stripped as Partial<BOOK>
-  if (!Array.isArray(b.pages)) {
-    return undefined
-  }
-  if (b.flags === null || b.flags === undefined || typeof b.flags !== 'object') {
-    return undefined
-  }
-  return {
-    id: bookid,
-    name: typeof b.name === 'string' ? b.name : '',
-    timestamp: typeof b.timestamp === 'number' ? b.timestamp : 0,
-    activelist: Array.isArray(b.activelist) ? (b.activelist as string[]) : [],
-    pages: b.pages,
-    flags: b.flags as BOOK['flags'],
-    token: typeof b.token === 'string' ? b.token : undefined,
-  }
+  return memorybookunprojectfromgun(data, bookid)
 }

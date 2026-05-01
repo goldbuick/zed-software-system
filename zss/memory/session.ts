@@ -1,14 +1,41 @@
 /**
- * Session state and book storage: live document for operator/topic/halt/loaders and book map.
- * v1: Persisted via local Gun (`gundocument.ts`); no separate MEMORY singleton export.
+ * Session state and book storage: synchronous **projection** of the Gun graph at `zss/localmemory`.
+ * Writes go to Gun first (`memorygunroot`); reads use `memoryrootprojection` only.
+ * Books under `books/<id>` use `memorybookprojecttogun` / `memorybookunprojectfromgun` (`pageorder` `$n`,
+ * `pages/<id>/codepage`, `activelist/<player>`); `board.lookup` / `board.named` are runtime-only (rebuilt via `boardlookup` after hydrate).
  */
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import {
+  memorybookprojecttogun,
+  memorybookunprojectfromgun,
+} from './memorygunbookproject'
+import type { MemoryGunChain } from './memorygunputchain'
+import {
+  memorygunlocalmemory,
+  memorygunlocalskipactive,
+  memorygunlocalskipenter,
+  memorygunlocalskipexit,
+} from './memorygunroot'
 import { BOOK, MEMORY_LABEL } from './types'
 
-/** Plain snapshot for JSON persistence (matches root shape). */
+function memorybooksgunchain(lm: { get: (k: string) => unknown }): MemoryGunChain {
+  return lm.get('books') as MemoryGunChain
+}
+
+function memorybookrehydrateboardsinbook(book: BOOK): void {
+  const { memoryinitboardlookup } = require('./boardlookup') as typeof import('./boardlookup')
+  for (let i = 0; i < book.pages.length; ++i) {
+    const p = book.pages[i]!
+    if (p.board) {
+      memoryinitboardlookup(p.board)
+    }
+  }
+}
+
+/** Plain snapshot shape (wire / hydrate); live store is Gun + projection. */
 export type MEMORY_ROOT_SNAPSHOT = {
   halt: boolean
   simfreeze: boolean
@@ -20,7 +47,8 @@ export type MEMORY_ROOT_SNAPSHOT = {
   topic: string
 }
 
-const rootdocument: MEMORY_ROOT_SNAPSHOT = {
+/** In-memory read model; Gun under `zss/localmemory` is authoritative. */
+const memoryrootprojection: MEMORY_ROOT_SNAPSHOT = {
   halt: false,
   simfreeze: false,
   session: createsid(),
@@ -31,36 +59,53 @@ const rootdocument: MEMORY_ROOT_SNAPSHOT = {
   topic: '',
 }
 
-function memorydeepclonerootdocument(): MEMORY_ROOT_SNAPSHOT {
+function memorydeepcloneprojection(): MEMORY_ROOT_SNAPSHOT {
   if (typeof structuredClone === 'function') {
     try {
-      return structuredClone(rootdocument)
+      return structuredClone(memoryrootprojection)
     } catch {
-      // structuredClone throws on some values; fall back
+      // fall through
     }
   }
-  return JSON.parse(JSON.stringify(rootdocument)) as MEMORY_ROOT_SNAPSHOT
+  return JSON.parse(JSON.stringify(memoryrootprojection)) as MEMORY_ROOT_SNAPSHOT
 }
 
-/** Plain tree for Gun `.put` / wire — deep clone so Gun and callers never alias live `rootdocument`. */
+/** Deep clone of projection for wire / debug (never aliases live projection). */
 export function memorysnapshotroot(): MEMORY_ROOT_SNAPSHOT {
-  return memorydeepclonerootdocument()
+  return memorydeepcloneprojection()
 }
 
-/**
- * Gun rejects arrays inside nested `.put` graphs; each book is stored as a JSON string at `books.<id>`.
- * Scalar fields remain plain properties on `localmemory`.
- */
-export function memorygunputpayload(): Omit<MEMORY_ROOT_SNAPSHOT, 'books'> & {
-  books: Record<string, string>
-} {
+/** Root fields only; books are written via `memorybookprojecttogun` per id (see `memorygunflushfull`). */
+export function memorygunputpayload(): Omit<MEMORY_ROOT_SNAPSHOT, 'books'> {
   const snap = memorysnapshotroot()
-  const { books, ...rest } = snap
-  return {
-    ...rest,
-    books: Object.fromEntries(
-      Object.entries(books).map(([id, book]) => [id, JSON.stringify(book)]),
-    ),
+  const { books: _, ...rest } = snap
+  return rest
+}
+
+/** Full graph flush to Gun (e.g. after gunsync replica apply). */
+export function memorygunflushfull(): void {
+  const lm = memorygunlocalmemory()
+  if (lm === undefined) {
+    return
+  }
+  const snap = memorysnapshotroot()
+  memorygunlocalskipenter()
+  try {
+    lm.put({
+      halt: snap.halt,
+      simfreeze: snap.simfreeze,
+      session: snap.session,
+      operator: snap.operator,
+      software: { ...snap.software },
+      loaders: { ...snap.loaders },
+      topic: snap.topic,
+    })
+    const bc = memorybooksgunchain(lm)
+    for (const book of Object.values(snap.books)) {
+      memorybookprojecttogun(bc, book, { clearbooknodefirst: true })
+    }
+  } finally {
+    memorygunlocalskipexit()
   }
 }
 
@@ -70,18 +115,13 @@ function memorybooksfromgunraw(raw: unknown): Record<string, BOOK> {
   }
   const out: Record<string, BOOK> = {}
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-    if (typeof v === 'string') {
-      try {
-        out[k] = JSON.parse(v) as BOOK
-      } catch {
-        continue
-      }
-    } else if (
-      v !== null &&
-      typeof v === 'object' &&
-      typeof (v as { id?: unknown }).id === 'string'
-    ) {
-      out[k] = v as BOOK
+    if (k.length === 0) {
+      continue
+    }
+    const book = memorybookunprojectfromgun(v, k)
+    if (book !== undefined) {
+      memorybookrehydrateboardsinbook(book)
+      out[k] = book
     }
   }
   return out
@@ -91,23 +131,18 @@ function memorybooksfieldvalidforgun(raw: unknown): boolean {
   if (raw === null || typeof raw !== 'object') {
     return false
   }
-  for (const v of Object.values(raw as Record<string, unknown>)) {
-    if (typeof v === 'string') {
-      continue
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (k.length === 0) {
+      return false
     }
-    if (
-      v !== null &&
-      typeof v === 'object' &&
-      typeof (v as { id?: unknown }).id === 'string'
-    ) {
-      continue
+    if (memorybookunprojectfromgun(v, k) === undefined) {
+      return false
     }
-    return false
   }
   return true
 }
 
-/** True when `value` looks like a persisted local-memory root from Gun (graph + stringified books). */
+/** True when `value` looks like a persisted local-memory root from Gun (graph or stringified books). */
 export function memoryishydratablegunroot(
   value: unknown,
 ): value is MEMORY_ROOT_SNAPSHOT {
@@ -132,6 +167,9 @@ export function memoryishydratablegunroot(
 }
 
 export function memoryhydratefromgunroot(value: unknown): void {
+  if (memorygunlocalskipactive()) {
+    return
+  }
   if (!memoryishydratablegunroot(value)) {
     return
   }
@@ -148,132 +186,253 @@ export function memoryhydratefromgunroot(value: unknown): void {
   })
 }
 
-export function memoryhydraterootfromsnapshot(
-  snap: MEMORY_ROOT_SNAPSHOT,
-): void {
-  rootdocument.halt = snap.halt
-  rootdocument.simfreeze = snap.simfreeze
-  rootdocument.session = snap.session
-  rootdocument.operator = snap.operator
-  rootdocument.software = { ...snap.software }
-  rootdocument.topic = snap.topic
-  rootdocument.loaders = { ...snap.loaders }
-  memoryresetbooks(Object.values(snap.books))
+/** Replace projection from a snapshot only (no Gun write). */
+export function memoryhydraterootfromsnapshot(snap: MEMORY_ROOT_SNAPSHOT): void {
+  memoryrootprojection.halt = snap.halt
+  memoryrootprojection.simfreeze = snap.simfreeze
+  memoryrootprojection.session = snap.session
+  memoryrootprojection.operator = snap.operator
+  memoryrootprojection.software = { ...snap.software }
+  memoryrootprojection.topic = snap.topic
+  memoryrootprojection.loaders = { ...snap.loaders }
+  memoryresetbooksprojectiononly(Object.values(snap.books))
 }
 
-/** Live mutable root (same object gunsync/replica mutates). */
+/** Internal: reset books table on projection without Gun I/O (hydrate path). */
+function memoryresetbooksprojectiononly(books: BOOK[]): void {
+  for (const k of Object.keys(memoryrootprojection.books)) {
+    delete memoryrootprojection.books[k]
+  }
+  books.forEach((book) => {
+    memoryrootprojection.books[book.id] = book
+    memorybookrehydrateboardsinbook(book)
+    if (book.name === 'main') {
+      memoryrootprojection.software.main = book.id
+    }
+  })
+  if (!memoryrootprojection.software.main) {
+    const values = Object.values(memoryrootprojection.books)
+    const first = values[0]
+    if (first) {
+      memoryrootprojection.software.main = first.id
+    }
+  }
+}
+
+/** Live projection (same object replica/gunsync may read; prefer session writers for mutations). */
 export function memoryreadroot(): MEMORY_ROOT_SNAPSHOT {
-  return rootdocument
+  return memoryrootprojection
 }
 
 export function memoryreadloaders() {
-  return rootdocument.loaders
+  return memoryrootprojection.loaders
 }
 
 export function memorystartloader(id: string, code: string) {
-  rootdocument.loaders[id] = code
+  memoryrootprojection.loaders[id] = code
+  const lm = memorygunlocalmemory()
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      lm.put({ loaders: { ...memoryrootprojection.loaders } })
+    } finally {
+      memorygunlocalskipexit()
+    }
+  }
 }
 
 export function memoryreadsession() {
-  return rootdocument.session
+  return memoryrootprojection.session
 }
 
 export function memoryreadoperator() {
-  return rootdocument.operator
+  return memoryrootprojection.operator
 }
 
 export function memoryisoperator(player: string) {
-  return rootdocument.operator === player
+  return memoryrootprojection.operator === player
 }
 
 export function memorywriteoperator(operator: string) {
-  rootdocument.operator = operator
+  memoryrootprojection.operator = operator
+  const lm = memorygunlocalmemory()
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      lm.put({ operator })
+    } finally {
+      memorygunlocalskipexit()
+    }
+  }
 }
 
 export function memoryreadtopic() {
-  return rootdocument.topic
+  return memoryrootprojection.topic
 }
 
 export function memorywritetopic(topic: string) {
-  rootdocument.topic = topic
+  memoryrootprojection.topic = topic
+  const lm = memorygunlocalmemory()
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      lm.put({ topic })
+    } finally {
+      memorygunlocalskipexit()
+    }
+  }
 }
 
 export function memorywritehalt(halt: boolean) {
-  rootdocument.halt = halt
+  memoryrootprojection.halt = halt
+  const lm = memorygunlocalmemory()
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      lm.put({ halt })
+    } finally {
+      memorygunlocalskipexit()
+    }
+  }
 }
 
 export function memoryreadhalt() {
-  return rootdocument.halt
+  return memoryrootprojection.halt
 }
 
 export function memorywritesimfreeze(frozen: boolean) {
-  rootdocument.simfreeze = frozen
+  memoryrootprojection.simfreeze = frozen
+  const lm = memorygunlocalmemory()
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      lm.put({ simfreeze: frozen })
+    } finally {
+      memorygunlocalskipexit()
+    }
+  }
 }
 
 export function memoryreadsimfreeze() {
-  return rootdocument.simfreeze
+  return memoryrootprojection.simfreeze
 }
 
 export function memoryreadbooklist(): BOOK[] {
-  return Object.values(rootdocument.books)
+  return Object.values(memoryrootprojection.books)
 }
 
 export function memoryreadfirstbook(): MAYBE<BOOK> {
-  const values = Object.values(rootdocument.books)
+  const values = Object.values(memoryrootprojection.books)
   return values[0]
 }
 
 export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = NAME(address)
   return (
-    rootdocument.books[address] ??
+    memoryrootprojection.books[address] ??
     memoryreadbooklist().find((item) => item.name === laddress)
   )
 }
 
 export function memorywritesoftwarebook(
-  slot: keyof typeof rootdocument.software,
+  slot: keyof typeof memoryrootprojection.software,
   book: string,
 ) {
   if (ispresent(memoryreadbookbyaddress(book))) {
-    rootdocument.software[slot] = book
+    memoryrootprojection.software[slot] = book
+    const lm = memorygunlocalmemory()
+    if (lm !== undefined) {
+      memorygunlocalskipenter()
+      try {
+        lm.put({ software: { ...memoryrootprojection.software } })
+      } finally {
+        memorygunlocalskipexit()
+      }
+    }
   }
 }
 
 export function memoryreadbookbysoftware(
-  slot: keyof typeof rootdocument.software,
+  slot: keyof typeof memoryrootprojection.software,
 ): MAYBE<BOOK> {
-  return memoryreadbookbyaddress(rootdocument.software[slot])
+  return memoryreadbookbyaddress(memoryrootprojection.software[slot])
 }
 
 export function memoryresetbooks(books: BOOK[]) {
-  for (const k of Object.keys(rootdocument.books)) {
-    delete rootdocument.books[k]
+  const lm = memorygunlocalmemory()
+  const newids = new Set(books.map((b) => b.id))
+  const prevbyid = { ...memoryrootprojection.books }
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      for (const k of Object.keys(memoryrootprojection.books)) {
+        if (!newids.has(k)) {
+          lm.get('books').get(k).put('')
+        }
+      }
+      const bc = memorybooksgunchain(lm)
+      for (const book of books) {
+        memorybookprojecttogun(bc, book, { prev: prevbyid[book.id] })
+      }
+    } finally {
+      memorygunlocalskipexit()
+    }
+  }
+  for (const k of Object.keys(memoryrootprojection.books)) {
+    delete memoryrootprojection.books[k]
   }
   books.forEach((book) => {
-    rootdocument.books[book.id] = book
+    memoryrootprojection.books[book.id] = book
     if (book.name === 'main') {
-      rootdocument.software.main = book.id
+      memoryrootprojection.software.main = book.id
     }
   })
-  if (!rootdocument.software.main) {
-    const values = Object.values(rootdocument.books)
+  if (!memoryrootprojection.software.main) {
+    const values = Object.values(memoryrootprojection.books)
     const first = values[0]
     if (first) {
-      rootdocument.software.main = first.id
+      memoryrootprojection.software.main = first.id
+    }
+  }
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      lm.put({ software: { ...memoryrootprojection.software } })
+    } finally {
+      memorygunlocalskipexit()
     }
   }
 }
 
 export function memorywritebook(book: BOOK) {
-  rootdocument.books[book.id] = book
+  const prev = memoryrootprojection.books[book.id]
+  memoryrootprojection.books[book.id] = book
+  memorybookrehydrateboardsinbook(book)
+  const lm = memorygunlocalmemory()
+  if (lm !== undefined) {
+    memorygunlocalskipenter()
+    try {
+      memorybookprojecttogun(memorybooksgunchain(lm), book, { prev })
+    } finally {
+      memorygunlocalskipexit()
+    }
+  }
   return book.id
 }
 
 export function memoryclearbook(address: string) {
   const book = memoryreadbookbyaddress(address)
   if (book) {
-    delete rootdocument.books[book.id]
+    delete memoryrootprojection.books[book.id]
+    const lm = memorygunlocalmemory()
+    if (lm !== undefined) {
+      memorygunlocalskipenter()
+      try {
+        lm.get('books').get(book.id).put('')
+      } finally {
+        memorygunlocalskipexit()
+      }
+    }
   }
 }
 
@@ -284,4 +443,4 @@ export function memoryreadfirstcontentbook(): MAYBE<BOOK> {
   return first ?? mainbook
 }
 
-export type SoftwareSlot = keyof typeof rootdocument.software
+export type SoftwareSlot = keyof typeof memoryrootprojection.software

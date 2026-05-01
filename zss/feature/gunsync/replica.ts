@@ -3,10 +3,11 @@
  */
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
+  memorygunflushfull,
+  memoryhydraterootfromsnapshot,
   memoryreadroot,
   memoryreadsession,
   memoryreadtopic,
-  memoryresetbooks,
   memorysnapshotroot,
 } from 'zss/memory/session'
 import { BOOK } from 'zss/memory/types'
@@ -115,22 +116,22 @@ export function gunsynclocalhashubcontent(): boolean {
   return root.operator !== '' || gunsynclocalhasbookcontent()
 }
 
-/** Apply replica into local MEMORY; preserves **loaders** only. `halt` / `simfreeze` follow replica (and Gun graph). */
+/** Apply replica into local projection + flush to Gun; preserves **loaders** only. */
 export function gunsyncapplyreplica(replica: GunsyncReplica): void {
   const root = memoryreadroot()
   const loaders = root.loaders
-  root.operator = replica.operator
-  root.topic = replica.topic
-  root.session = replica.session
-  root.software = { ...replica.software }
-  if (typeof replica.halt === 'boolean') {
-    root.halt = replica.halt
-  }
-  if (typeof replica.simfreeze === 'boolean') {
-    root.simfreeze = replica.simfreeze
-  }
-  memoryresetbooks(Object.values(replica.books))
-  root.loaders = loaders
+  memoryhydraterootfromsnapshot({
+    halt: typeof replica.halt === 'boolean' ? replica.halt : root.halt,
+    simfreeze:
+      typeof replica.simfreeze === 'boolean' ? replica.simfreeze : root.simfreeze,
+    session: replica.session,
+    operator: replica.operator,
+    topic: replica.topic,
+    software: { ...replica.software },
+    loaders: { ...loaders },
+    books: replica.books,
+  })
+  memorygunflushfull()
 }
 
 export function gunsyncapplyfromwire(data: MAYBE<GunsyncPayload>): boolean {

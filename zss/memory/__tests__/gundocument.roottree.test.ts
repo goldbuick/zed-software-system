@@ -1,4 +1,6 @@
+import { memorybookwiretree } from '../memorygunbookproject'
 import {
+  memorygunflushfull,
   memorygunputpayload,
   memoryhydratefromgunroot,
   memoryhydraterootfromsnapshot,
@@ -11,7 +13,6 @@ import type { MEMORY_ROOT_SNAPSHOT } from '../session'
 import type { BOOK } from '../types'
 import {
   memorylocalguninit,
-  memorylocalgunpersist,
   memorylocalgunresetpersistchainfortests,
 } from '../gundocument'
 
@@ -45,7 +46,7 @@ describe('memorysnapshotroot structuredClone', () => {
     memoryhydraterootfromsnapshot(emptysnapshot())
   })
 
-  it('deep copy so mutating snapshot does not mutate live rootdocument', () => {
+  it('deep copy so mutating snapshot does not mutate live projection', () => {
     memoryresetbooks([minimalbook('b1', 'main')])
     const snap = memorysnapshotroot()
     snap.books.b1.pages[0].code = 'mutated'
@@ -101,7 +102,7 @@ describe('local Gun root graph put', () => {
     memorylocalgunresetpersistchainfortests()
   })
 
-  it('memorygunputpayload stores each book as a JSON string leaf', () => {
+  it('memorygunputpayload omits books (per-book graph via memorybookprojecttogun)', () => {
     memoryhydraterootfromsnapshot(
       emptysnapshot({
         session: 's1',
@@ -109,21 +110,23 @@ describe('local Gun root graph put', () => {
       }),
     )
     const p = memorygunputpayload()
-    expect(typeof p.books.b1).toBe('string')
-    expect((JSON.parse(p.books.b1) as BOOK).id).toBe('b1')
-    expect((JSON.parse(p.books.b1) as BOOK).pages[0].code).toBe('alpha')
+    expect(p).not.toHaveProperty('books')
+    expect(p.session).toBe('s1')
+    const wire = memorybookwiretree(minimalbook('b1', 'main'))
+    expect(wire.name).toBe('main')
+    expect((wire.pageorder as Record<string, unknown>).$0).toBe('p1')
   })
 
-  it('memorylocalguninit listener receives graph from memorylocalgunpersist', async () => {
+  it('memorylocalguninit then memorygunflushfull writes Gun graph from projection', () => {
+    memoryhydraterootfromsnapshot(emptysnapshot())
+    memorylocalguninit(() => {})
     memoryhydraterootfromsnapshot(
       emptysnapshot({
         session: 'persist-round',
         books: { b1: minimalbook('b1', 'main') },
       }),
     )
-    memorylocalguninit(() => {})
-    memorylocalgunpersist()
-    await new Promise((r) => setTimeout(r, 200))
+    expect(() => memorygunflushfull()).not.toThrow()
     expect(memoryreadroot().session).toBe('persist-round')
     expect(memoryreadroot().books.b1?.id).toBe('b1')
   })
