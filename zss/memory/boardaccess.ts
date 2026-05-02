@@ -1,4 +1,5 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
+import { ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
 import { PT } from 'zss/words/types'
@@ -133,4 +134,11 @@ export function memoryfindboardplayer(
     target,
     memorylistboardnamedelements(board, 'player'),
   )
+}
+
+export function memoryreadplayersonboard(board: MAYBE<BOARD>): string[] {
+  if (!ispresent(board)) {
+    return []
+  }
+  return Object.keys(board.objects).filter(ispid)
 }

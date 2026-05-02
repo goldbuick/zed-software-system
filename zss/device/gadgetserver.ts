@@ -11,11 +11,12 @@ import { exportgadgetstate } from 'zss/gadget/data/compress'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import { memoryreadbookgadgetlayersmap } from 'zss/memory/gadgetlayersflags'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
   memoryconverttogadgetcontrollayer,
-  memoryreadgadgetlayers,
+  memoryreadgraphics,
 } from 'zss/memory/rendering'
 import {
   memoryreadbookbysoftware,
@@ -23,6 +24,7 @@ import {
 } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
+import { NAME } from 'zss/words/types'
 
 import { gadgetclientpaint, gadgetclientpatch, vmclearscroll } from './api'
 
@@ -50,7 +52,7 @@ const gadgetsync = new Map<string, FORMAT_OBJECT>()
 
 const gadgetserver = createdevice(
   'gadgetserver',
-  ['tock', 'ticktock'],
+  ['ticktock'],
   (message) => {
     if (!gadgetserver.session(message)) {
       return
@@ -63,24 +65,18 @@ const gadgetserver = createdevice(
     const activelist = [...activelistvalues]
 
     switch (message.target) {
-      case 'tock':
       case 'ticktock':
         if (memoryreadoperator()) {
-          const layercache = new Map<string, MEMORY_GADGET_LAYERS>()
+          const rendercache = memoryreadbookgadgetlayersmap(mainbook)
           for (let i = 0; i < activelist.length; ++i) {
             const player = activelist[i]
-            const playerboard = memoryreadplayerboard(player)
-            const boardid = playerboard?.id ?? ''
-            const layercachekey = `${boardid}|${player}`
-
-            // per-player view: same board, different players may use different graphics
-            let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS> =
-              layercache.get(layercachekey)
-
-            // create layers if needed (memoryreadgadgetlayers builds fresh objects)
-            if (ispresent(playerboard) && !ispresent(gadgetlayers)) {
-              gadgetlayers = memoryreadgadgetlayers(player, playerboard)
-              layercache.set(layercachekey, gadgetlayers)
+            const board = memoryreadplayerboard(player)
+            const boardid = board?.id ?? ''
+            let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
+            if (ispresent(board)) {
+              const graphics = memoryreadgraphics(player, board)
+              const mode = NAME(graphics.graphics)
+              gadgetlayers = rendercache[`${mode}:${boardid}`]
             }
 
             // get current state
@@ -91,7 +87,7 @@ const gadgetserver = createdevice(
               const control = memoryconverttogadgetcontrollayer(
                 player,
                 1000,
-                playerboard,
+                board,
               )
               gadget.id = gadgetlayers.id
               gadget.board = gadgetlayers.board
@@ -107,7 +103,7 @@ const gadgetserver = createdevice(
               gadget.under = gadgetlayers.under
               gadget.layers = [...gadgetlayers.layers, ...control] // merged unique per player control layer
               gadget.tickers = gadgetlayers.tickers
-              gadget.boardname = playerboard?.name?.trim() ?? ''
+              gadget.boardname = board?.name?.trim() ?? ''
             } else {
               gadget.id = ''
               gadget.board = ''
