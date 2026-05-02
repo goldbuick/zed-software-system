@@ -868,6 +868,14 @@ export const register = createdevice(
         }
         break
       }
+      case 'perfmonitor': {
+        const prevperf = useTape.getState().perfmonitor
+        const enabled = ispresent(message.data) ? !!message.data : !prevperf
+        const line1 = `perf monitor ${enabled ? '$greenon' : '$redoff'}`
+        terminalwritelines(register, message.player, line1)
+        useTape.setState({ perfmonitor: enabled })
+        break
+      }
       case 'findany':
         if (isarray(message.data)) {
           useInspector.setState({ pts: message.data })

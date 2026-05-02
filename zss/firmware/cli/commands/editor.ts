@@ -1,4 +1,8 @@
-import { registerfindany, registerinspector } from 'zss/device/api'
+import {
+  registerfindany,
+  registerinspector,
+  registerperfmonitor,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -10,6 +14,10 @@ export function registereditorcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('gadget', ['built-in inspector'], () => {
       registerinspector(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
+      return 0
+    })
+    .command('perf', ['performance monitor overlay'], () => {
+      registerperfmonitor(SOFTWARE, READ_CONTEXT.elementfocus, undefined)
       return 0
     })
     .command('findany', [ARG_TYPE.ANY, 'matched elements'], (_, words) => {

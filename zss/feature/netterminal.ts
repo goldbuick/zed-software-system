@@ -13,6 +13,10 @@ import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import {
+  recordPeerWireReceived,
+  recordPeerWireSent,
+} from 'zss/perf/peerwire'
 
 async function readpeerid(): Promise<string | undefined> {
   return await storagereadnetid()
@@ -105,6 +109,17 @@ function netterminaltopic(player: string) {
   return createinfohash(player)
 }
 
+function peerwirebytelength(payload: unknown): number {
+  try {
+    if (typeof payload === 'string') {
+      return new TextEncoder().encode(payload).length
+    }
+    return new TextEncoder().encode(JSON.stringify(payload)).length
+  } catch {
+    return 0
+  }
+}
+
 /** Convert only Set & Map so PeerJS binary pack does not hit "Type Set not yet supported". Leaves Uint8Array etc. alone. */
 function serializable<T>(value: T): T {
   if (value instanceof Set) {
@@ -131,7 +146,9 @@ function serializable<T>(value: T): T {
 }
 
 function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
-  void dataconnection.send(serializable(message))
+  const payload = serializable(message)
+  recordPeerWireSent(peerwirebytelength(payload))
+  void dataconnection.send(payload)
 }
 
 function handledataconnection(dataconnection: DataConnection) {
@@ -195,6 +212,7 @@ function handledataconnection(dataconnection: DataConnection) {
     if (!ispresent(networkpeer)) {
       return
     }
+    recordPeerWireReceived(peerwirebytelength(netmsg))
     // Server may send gadgetclient:paint/patch as JSON string (avoids binarypack stack overflow)
     const message = (
       typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg

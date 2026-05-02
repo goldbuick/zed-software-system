@@ -63,6 +63,7 @@ describe('runterminalbookmarkclibyid', () => {
     jest.mocked(useTape.getState).mockReturnValue({
       layout: 0,
       inspector: false,
+      perfmonitor: false,
       quickterminal: visible,
       autocompleteindex: 0,
       toast: '',
