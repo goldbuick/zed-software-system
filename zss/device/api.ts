@@ -7,7 +7,6 @@ import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import { INPUT, PANEL_ITEM, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import type { GunsyncPayload } from 'zss/feature/gunsync/replica'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
@@ -137,16 +136,24 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-/** v1: boardrunner worker removed — no-op (Gun mesh bootstrap deferred to v2). */
-export function boardrunnerboot(_device: DEVICELIKE, _player: string) {}
+/** v1: boardrunner worker removed — no-op. */
+export function boardrunnerboot(device: DEVICELIKE, player: string) {
+  void device
+  void player
+}
 
 /** v1: ticks run in VM `ticktock` — no-op. */
 export function boardrunnertick(
-  _device: DEVICELIKE,
-  _player: string,
-  _board: string,
-  _timestamp: number,
-) {}
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+  timestamp: number,
+) {
+  void device
+  void player
+  void board
+  void timestamp
+}
 
 export function boardrunnerinput(
   device: DEVICELIKE,
@@ -155,19 +162,6 @@ export function boardrunnerinput(
   mods: number,
 ) {
   device.emit(player, 'vm:input', [input, mods])
-}
-
-export function boardrunnergunsyncapply(
-  device: DEVICELIKE,
-  player: string,
-  blob: GunsyncPayload,
-) {
-  device.emit(player, 'vm:gunsync', blob)
-}
-
-/** Push opaque Gun.Mesh wire frames from boardrunner toward sim (+ peers via MESSAGE forward). */
-export function gunsyncrelay(device: DEVICELIKE, player: string, wireframe: string) {
-  device.emit(player, 'gunmesh:memory', wireframe)
 }
 
 export function bridgechatstart(

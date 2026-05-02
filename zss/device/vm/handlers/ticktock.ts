@@ -45,6 +45,4 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       store[cachename] = memoryreadgadgetlayers(mode, board)
     }
   }
-
-  // TODO: here we project the memory to the gun
 }

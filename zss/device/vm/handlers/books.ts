@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apilog, registerloginready } from 'zss/device/api'
-import { afterbooksloadsynchydrate } from 'zss/feature/gunsync/hydrate'
 import { tracking } from 'zss/device/vm/state'
 import { doasync } from 'zss/mapping/func'
 import { isarray, isstring } from 'zss/mapping/types'
@@ -15,7 +14,6 @@ import { memorydecompressbooks } from 'zss/memory/utilities'
 
 export function handlebooks(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
-  /** Before `vm:operator`, `operator` is ''; allow initial `vm:books` bootstrap for this player. */
   if (operator && message.player !== operator) {
     return
   }
@@ -25,7 +23,6 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
     for (let i = 0; i < trackingkeys.length; ++i) {
       tracking[trackingkeys[i]] = 0
     }
-    let bookssynced = false
     try {
       let books: BOOK[] = []
       if (isarray(message.data)) {
@@ -39,17 +36,9 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
       const booknames = books.map((item) => item.name)
       apilog(vm, message.player, `loading ${booknames.join(', ')}`)
       memoryresetbooks(books)
-      bookssynced = true
       registerloginready(vm, message.player)
     } finally {
       memorywritesimfreeze(false)
-    }
-    if (bookssynced) {
-      try {
-        afterbooksloadsynchydrate(vm, message.player)
-      } catch (err) {
-        console.error(err)
-      }
     }
   })
 }

@@ -24,7 +24,7 @@ export function createplatform(isstub = false, climode = false) {
   // create heavy worker
   heavy = new heavyspace()
 
-  // create backend (sim worker: VM tick + local Gun memory document)
+  // create backend (sim worker: VM tick + MEMORY projection)
   platform = isstub ? new stubspace() : new simspace()
   platform.postMessage({ target: 'config', data: climode })
 

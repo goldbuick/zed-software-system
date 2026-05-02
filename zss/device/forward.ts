@@ -61,7 +61,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':
-        case 'gunmesh':
           return true
       }
       switch (route.path) {
@@ -98,7 +97,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'vm':
     case 'modem':
     case 'gadgetserver':
-    case 'gunmesh':
       return true
   }
   switch (route.path) {
@@ -141,7 +139,8 @@ export function shouldforwardheavytoclient(): boolean {
 // boardrunner worker messages
 
 // boardrunner worker removed — messages stay on client → sim worker via vm / other routes
-export function shouldforwardclienttoboardrunner(_message: MESSAGE): boolean {
+export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
+  void message
   return false
 }
 

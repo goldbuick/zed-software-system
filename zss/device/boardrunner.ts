@@ -1,9 +1,4 @@
 import { createdevice } from 'zss/device'
-import {
-  boardrunneraftertickcapturerelay,
-  boardrunnerongunsyncmessage,
-} from 'zss/feature/gunsync'
-import { gunsyncbootstrapboardrunnerhubpeer } from 'zss/feature/gunsync/hubgunwire'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { INPUT } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
@@ -77,14 +72,14 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
   switch (message.target) {
     case 'boot':
       syncboardrunnerplayer(message.player)
-      gunsyncbootstrapboardrunnerhubpeer(boardrunner, message.player)
       break
     case 'tick':
       if (isarray(message.data)) {
         const [board, timestamp] = message.data as [string, number]
-        memorytickmain(board, timestamp, memoryreadhalt())
-        const boardrecord = memoryreadboardbyaddress(board)
+        void timestamp
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        memorytickmain(mainbook, board, memoryreadhalt())
+        const boardrecord = memoryreadboardbyaddress(board)
         if (ispresent(mainbook)) {
           const store = memoryreadbookgadgetlayersmap(mainbook)
           if (ispresent(boardrecord)) {
@@ -98,7 +93,6 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
           // Deleting here blanked canonical layers mid-tick → gadget flashes/wrong zoom.
         }
         vmacktick(boardrunner, message.player, buildacktickgadgetpayload(board))
-        boardrunneraftertickcapturerelay(boardrunner, message.player)
       }
       break
     case 'input': {
@@ -110,10 +104,6 @@ const boardrunner = createdevice('boardrunner', ['ready'], (message) => {
       if (input !== INPUT.NONE) {
         flags.inputqueue.push([input, mods])
       }
-      break
-    }
-    case 'gunsync': {
-      boardrunnerongunsyncmessage(message.data)
       break
     }
     default:

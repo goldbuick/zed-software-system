@@ -1,19 +1,11 @@
 /**
- * v1: Sim worker wires local Gun (`memorygunroot`) for session persistence.
+ * Sim worker MEMORY projection bootstrap (no external graph).
  */
-import { memoryguninit, memorygunresetfortests } from './memorygunroot'
-import { memoryhydratefromgunroot, memoryishydratablegunroot } from './session'
 
-/** @deprecated Use `memorygunresetfortests` — kept for existing test imports. */
-export function memorylocalgunresetpersistchainfortests(): void {
-  memorygunresetfortests()
-}
+/** @deprecated No-op — kept for existing test imports. */
+export function memorylocalgunresetpersistchainfortests(): void {}
 
-/** Load persisted root graph from Gun; projection updates from merged `memory` listener. */
+/** Projection-only memory; invoke callback when ready. */
 export function memorylocalguninit(done?: () => void): void {
-  memoryguninit(function onmerged(data: unknown) {
-    if (memoryishydratablegunroot(data)) {
-      memoryhydratefromgunroot(data)
-    }
-  }, done)
+  done?.()
 }

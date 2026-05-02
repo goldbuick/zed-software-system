@@ -2,7 +2,6 @@ import { DEVICE } from 'zss/device'
 import { MESSAGE, apilog, registerloginready } from 'zss/device/api'
 import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
-import * as replica from 'zss/feature/gunsync/replica'
 import * as session from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { memorydecompressbooks } from 'zss/memory/utilities'
@@ -36,7 +35,6 @@ describe('handlebooks sim freeze', () => {
 
   beforeEach(() => {
     jest.useFakeTimers()
-    jest.spyOn(replica, 'gunsyncapplyfromwire').mockReturnValue(true)
     session.memorywriteoperator(player)
     session.memorywritesimfreeze(false)
     tracking[player] = 99
@@ -82,7 +80,6 @@ describe('handlebooks sim freeze', () => {
 
     expect(session.memoryreadsimfreeze()).toBe(false)
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
-    expect(replica.gunsyncapplyfromwire).toHaveBeenCalled()
     expect(apilog).toHaveBeenCalled()
     expect(session.memoryresetbooks).toHaveBeenCalledWith([minimalbook])
   })
@@ -113,7 +110,6 @@ describe('handlebooks sim freeze', () => {
       expect(session.memoryreadsimfreeze()).toBe(false)
     } finally {
       consoleerror.mockRestore()
-      expect(replica.gunsyncapplyfromwire).not.toHaveBeenCalled()
     }
   })
 })

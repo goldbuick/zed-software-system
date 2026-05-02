@@ -27,7 +27,7 @@ onmessage = function handleMessage(
   forward(event.data)
 }
 
-// v1: local Gun loads persisted memory document, then VM boots
+// MEMORY projection bootstrap, then VM boots
 memorylocalguninit(() => {
   setTimeout(started, 100)
 })
