@@ -4,7 +4,7 @@ import {
   applypatchtoreplica,
   createjsonpipe,
   filterpatch,
-} from 'zss/feature/jsonpipe/jsonpipe'
+} from 'zss/feature/jsonpipe/observe'
 
 describe('filterpatch', () => {
   it('drops ops whose path fails predicate', () => {
