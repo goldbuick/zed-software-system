@@ -1,10 +1,19 @@
-import { applyPatch as applypatch } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
-import { importgadgetstate } from 'zss/gadget/data/compress'
-import { applylayercacheupdate, useGadgetClient } from 'zss/gadget/data/state'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
+import {
+  applylayercacheupdate,
+  emptygadgetstate,
+  useGadgetClient,
+} from 'zss/gadget/data/state'
+import type { GADGET_STATE } from 'zss/gadget/data/types'
+import { ispresent } from 'zss/mapping/types'
 
 import { registerreadplayer } from './register'
+
+const gadgetjsonpipe = createjsonpipe<GADGET_STATE>(
+  emptygadgetstate(),
+  () => true,
+)
 
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   if (!gadgetclientdevice.session(message)) {
@@ -16,68 +25,46 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
     return
   }
 
-  const { desync } = useGadgetClient.getState()
   switch (message.target) {
     case 'paint': {
-      const gadget = importgadgetstate(message.data)
-      // expect compressed json
       useGadgetClient.setState((state) => {
+        // apply full snapshot
+        const gadget = gadgetjsonpipe.applyfullsync(message.data)
         const layercachemap = applylayercacheupdate(
           state.layercachemap,
           gadget?.board ?? '',
           gadget?.layers ?? [],
         )
         return {
-          desync: false,
           gadget,
-          slim: message.data,
           layercachemap,
         }
       })
       break
     }
     case 'patch':
-      if (!desync) {
-        useGadgetClient.setState((state) => {
-          let didnotpass: any
-          try {
-            // message.data is an RFC 6902 patch array
-            const applied = applypatch(
-              deepcopy(state.slim),
-              message.data,
-              true,
-              true,
-            )
-
-            // unpack into gadget state
-            const gadget = importgadgetstate(applied.newDocument)
-            const layercachemap = applylayercacheupdate(
-              state.layercachemap,
-              gadget?.board ?? '',
-              gadget?.layers ?? [],
-            )
-            return {
-              ...state,
-              gadget,
-              layercachemap,
-              slim: applied.newDocument,
-            }
-          } catch (err) {
-            didnotpass = err
-          }
-
-          if (ispresent(didnotpass)) {
-            // we are out of sync and need to request a refresh
-            gadgetclientdevice.reply(message, 'desync')
-            return {
-              ...state,
-              desync: true,
-            }
-          }
-
-          return state
-        })
+      if (gadgetjsonpipe.isdesynced()) {
+        return
       }
+      useGadgetClient.setState((state) => {
+        const gadget = gadgetjsonpipe.applyremote(state.gadget, message.data)
+        if (ispresent(gadget)) {
+          // update layer cache and gadget state
+          const layercachemap = applylayercacheupdate(
+            state.layercachemap,
+            gadget?.board ?? '',
+            gadget?.layers ?? [],
+          )
+          return {
+            ...state,
+            gadget,
+            layercachemap,
+          }
+        }
+        // signal desync
+        gadgetclientdevice.reply(message, 'desync')
+        return state
+      })
       break
   }
 })

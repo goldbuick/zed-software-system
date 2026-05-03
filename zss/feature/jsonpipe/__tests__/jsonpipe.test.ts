@@ -5,6 +5,7 @@ import {
   createjsonpipe,
   filterpatch,
 } from 'zss/feature/jsonpipe/observe'
+import { deepcopy } from 'zss/mapping/types'
 
 describe('filterpatch', () => {
   it('drops ops whose path fails predicate', () => {
@@ -136,7 +137,7 @@ describe('snapshot isolation vs compare (nested ref)', () => {
   it('compare baseline pattern still detects nested mutation when previous deep snapshot', () => {
     const char = [1, 2, 3]
     const doc = { tiles: { char } }
-    const previous = structuredClone(doc)
+    const previous = deepcopy(doc)
     char[0] = 7
     const patch = compare(previous, doc)
     expect(patch.length).toBeGreaterThan(0)

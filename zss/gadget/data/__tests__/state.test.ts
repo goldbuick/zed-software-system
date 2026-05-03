@@ -16,7 +16,6 @@ describe('state', () => {
   describe('useGadgetClient', () => {
     it('should have initial state', () => {
       const state = useGadgetClient.getState()
-      expect(state.desync).toBe(false)
       expect(state.gadget.id).toBe('')
       expect(state.gadget.board).toBe('')
       expect(state.gadget.boardname).toBe('')
@@ -24,15 +23,7 @@ describe('state', () => {
       expect(state.zsswords.flags).toEqual([])
       expect(state.zsswords.commandargmeta).toEqual({})
       expect(state.layercachemap.size).toBe(0)
-      expect(state.slim).toEqual([])
-    })
-
-    it('should update state', () => {
-      useGadgetClient.setState({ desync: true })
-      expect(useGadgetClient.getState().desync).toBe(true)
-
-      // Reset
-      useGadgetClient.setState({ desync: false })
+      expect(state.gadget.layers).toEqual([])
     })
 
     it('should update gadget state', () => {

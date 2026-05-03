@@ -118,34 +118,34 @@ function peerwirebytelength(payload: unknown): number {
 }
 
 /** Convert only Set & Map so PeerJS binary pack does not hit "Type Set not yet supported". Leaves Uint8Array etc. alone. */
-function serializable<T>(value: T): T {
-  if (value instanceof Set) {
-    return [...value] as T
-  }
-  if (value instanceof Map) {
-    return Object.fromEntries(value) as T
-  }
-  if (Array.isArray(value)) {
-    return value.map(serializable) as T
-  }
-  if (
-    value !== null &&
-    typeof value === 'object' &&
-    (value as object).constructor === Object
-  ) {
-    const out: Record<string, unknown> = {}
-    for (const k of Object.keys(value as object)) {
-      out[k] = serializable((value as Record<string, unknown>)[k])
-    }
-    return out as T
-  }
-  return value
-}
+// function serializable<T>(value: T): T {
+//   if (value instanceof Set) {
+//     return [...value] as T
+//   }
+//   if (value instanceof Map) {
+//     return Object.fromEntries(value) as T
+//   }
+//   if (Array.isArray(value)) {
+//     return value.map(serializable) as T
+//   }
+//   if (
+//     value !== null &&
+//     typeof value === 'object' &&
+//     (value as object).constructor === Object
+//   ) {
+//     const out: Record<string, unknown> = {}
+//     for (const k of Object.keys(value as object)) {
+//       out[k] = serializable((value as Record<string, unknown>)[k])
+//     }
+//     return out as T
+//   }
+//   return value
+// }
 
 function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
-  const payload = serializable(message)
-  recordPeerWireSent(peerwirebytelength(payload))
-  void dataconnection.send(payload)
+  // const payload = serializable(message)
+  recordPeerWireSent(peerwirebytelength(message))
+  void dataconnection.send(message)
 }
 
 function handledataconnection(dataconnection: DataConnection) {
@@ -210,10 +210,11 @@ function handledataconnection(dataconnection: DataConnection) {
       return
     }
     recordPeerWireReceived(peerwirebytelength(netmsg))
-    // Server may send gadgetclient:paint/patch as JSON string (avoids binarypack stack overflow)
-    const message = (
-      typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
-    ) as MESSAGE
+    const message = netmsg as MESSAGE
+    // // Server may send gadgetclient:paint/patch as JSON string (avoids binarypack stack overflow)
+    // const message = (
+    //   typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
+    // ) as MESSAGE
     topicbridge?.forward({
       ...message,
       session: SOFTWARE.session(),

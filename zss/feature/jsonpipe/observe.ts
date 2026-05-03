@@ -1,12 +1,5 @@
-import {
-  type Observer,
-  type Operation,
-  applyPatch,
-  generate,
-  observe,
-  unobserve,
-} from 'fast-json-patch'
-import { deepcopy } from 'zss/mapping/types'
+import { type Operation, applyPatch, compare } from 'fast-json-patch'
+import { MAYBE, deepcopy } from 'zss/mapping/types'
 
 export type { Operation }
 
@@ -34,16 +27,11 @@ export function filterpatch(
   return out
 }
 
-export type JsonPipeOptions = {
-  shouldemitpath: (path: string) => boolean
-}
-
 export type JsonPipeHandle<T> = {
-  getroot: () => T
-  emitdiff: () => Operation[]
-  applyremote: (patch: readonly Operation[], validate?: boolean) => void
-  applyfullsync: (doc: T) => void
-  dispose: () => void
+  emitdiff: (root: T) => Operation[]
+  isdesynced: () => boolean
+  applyremote: (root: T, patch: Operation[]) => MAYBE<T>
+  applyfullsync: (doc: T) => T
 }
 
 /**
@@ -51,77 +39,49 @@ export type JsonPipeHandle<T> = {
  * `applyremote` (applyPatch + generate, discard) per jsonpipe v1.
  */
 export function createjsonpipe<T extends object | unknown[]>(
-  initial: T,
-  options: JsonPipeOptions,
+  init: T,
+  shouldemitpath: (path: string) => boolean,
 ): JsonPipeHandle<T> {
-  const { shouldemitpath } = options
-  let root: T = deepcopy(initial)
-  let observer = observe(root as object)
-  let disposed = false
-
-  function guard() {
-    if (disposed) {
-      throw new Error('jsonpipe: handle disposed')
-    }
-  }
+  let desync = false
+  let shadow = deepcopy(init)
 
   return {
-    getroot: () => {
-      guard()
-      return observer.object as T
+    emitdiff: (root: T) => {
+      const operations = compare(shadow, root)
+      if (operations.length > 0) {
+        shadow = deepcopy(root)
+      }
+      return filterpatch(operations, shouldemitpath)
     },
 
-    emitdiff: () => {
-      guard()
-      const raw = generate(observer as Observer<object>)
-      return filterpatch(raw, shouldemitpath)
+    isdesynced: () => {
+      return desync
     },
 
-    applyremote: (patch, validate = true) => {
-      guard()
-      const filtered = filterpatch(patch as Operation[], shouldemitpath)
-      applyPatch(observer.object as object, filtered, validate, true)
-      generate(observer as Observer<object>)
+    applyremote: (root: T, patch: Operation[]) => {
+      // skip when waiting for a fullsync
+      if (desync) {
+        return undefined
+      }
+      const filtered = filterpatch(patch, shouldemitpath)
+      if (filtered.length === 0) {
+        return root
+      }
+      try {
+        //  an RFC 6902 patch array
+        const { newDocument } = applyPatch(root, filtered, true, false)
+        return newDocument
+      } catch (error: any) {
+        void error
+        return undefined
+      }
     },
 
     applyfullsync: (doc: T) => {
-      guard()
-      unobserve(observer.object as object, observer)
-      root = deepcopy(doc)
-      observer = observe(root as object)
+      // flip desync flag for recovery
+      desync = false
+      shadow = deepcopy(doc)
+      return doc
     },
-
-    dispose: () => {
-      if (disposed) {
-        return
-      }
-      disposed = true
-      unobserve(observer.object as object, observer)
-    },
-  }
-}
-
-export type ApplyPatchToReplicaResult<T> =
-  | { ok: true; newdocument: T }
-  | { ok: false; error: unknown }
-
-/** Consumer without an observer: filter + apply onto a deepcopy (gadgetclient-style). */
-export function applypatchtoreplica<T>(
-  doc: T,
-  patch: readonly Operation[],
-  shouldemitpath: (path: string) => boolean,
-  validate?: boolean,
-): ApplyPatchToReplicaResult<T> {
-  const filtered = filterpatch(patch as Operation[], shouldemitpath)
-  try {
-    const applied = applyPatch(
-      deepcopy(doc) as object,
-      filtered,
-      validate ?? true,
-      true,
-    )
-    return { ok: true, newdocument: applied.newDocument as T }
-  } catch (error) {
-    return { ok: false, error }
   }
 }

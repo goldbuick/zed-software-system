@@ -1,15 +1,17 @@
-import { compare } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
-import { FORMAT_OBJECT } from 'zss/feature/format'
+import {
+  type JsonPipeHandle,
+  createjsonpipe,
+} from 'zss/feature/jsonpipe/observe'
 import {
   gadgetclearscroll,
   gadgetstate,
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
-import { exportgadgetstate } from 'zss/gadget/data/compress'
+import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
-import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import { memoryreadbookgadgetlayersmap } from 'zss/memory/gadgetlayersflags'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
@@ -47,8 +49,16 @@ gadgetstateprovider((element) => {
   return initstate()
 })
 
-// we don't store sync state
-const gadgetsync = new Map<string, FORMAT_OBJECT>()
+const gadgetjsonpipes = new Map<string, JsonPipeHandle<GADGET_STATE>>()
+
+function readgadgetjsonpipe(player: string) {
+  if (gadgetjsonpipes.has(player)) {
+    return gadgetjsonpipes.get(player)!
+  }
+  const pipe = createjsonpipe<GADGET_STATE>(gadgetstate(player), () => true)
+  gadgetjsonpipes.set(player, pipe)
+  return pipe
+}
 
 const gadgetserver = createdevice('gadgetserver', ['ticktock'], (message) => {
   if (!gadgetserver.session(message)) {
@@ -57,14 +67,21 @@ const gadgetserver = createdevice('gadgetserver', ['ticktock'], (message) => {
 
   // get list of active players
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
-  activelistvalues.add(memoryreadoperator())
+  const activelistvalues = new Set<string>([
+    memoryreadoperator(),
+    ...(mainbook?.activelist ?? []),
+  ])
   const activelist = [...activelistvalues]
 
   switch (message.target) {
     case 'ticktock':
       if (memoryreadoperator()) {
         const rendercache = memoryreadbookgadgetlayersmap(mainbook)
+        for (const pid of [...gadgetjsonpipes.keys()]) {
+          if (!activelist.includes(pid)) {
+            gadgetjsonpipes.delete(pid)
+          }
+        }
         for (let i = 0; i < activelist.length; ++i) {
           const player = activelist[i]
           const board = memoryreadplayerboard(player)
@@ -75,6 +92,9 @@ const gadgetserver = createdevice('gadgetserver', ['ticktock'], (message) => {
             const mode = NAME(graphics.graphics)
             gadgetlayers = rendercache[`${mode}:${boardid}`]
           }
+
+          // read gadget json pipe
+          const pipe = readgadgetjsonpipe(player)
 
           // get current state
           const gadget = gadgetstate(player)
@@ -123,23 +143,8 @@ const gadgetserver = createdevice('gadgetserver', ['ticktock'], (message) => {
           // read synth state
           gadget.synthstate = memoryreadsynth(boardid)
 
-          // create compressed json from gadget
-          const slim = exportgadgetstate(gadget)
-          if (!ispresent(slim)) {
-            continue
-          }
-
-          // write patch
-          const previous = gadgetsync.get(player) ?? []
-
-          // this should be the compressed json
-          const patch = compare(previous, slim)
-
-          // Deep snapshot: export embeds refs into LAYER_CACHE tile buffers; without a
-          // copy, `previous` would alias live arrays and compare would see no diff.
-          gadgetsync.set(player, deepcopy(slim))
-
-          // only send when we have changes
+          // emit diff to client
+          const patch = pipe.emitdiff(gadget)
           if (patch.length) {
             gadgetclientpatch(gadgetserver, player, patch)
           }
@@ -147,16 +152,9 @@ const gadgetserver = createdevice('gadgetserver', ['ticktock'], (message) => {
       }
       break
     case 'desync': {
-      // get current state
+      // send full sync
       const gadget = gadgetstate(message.player)
-      // create compressed json from gadget
-      const slim = exportgadgetstate(gadget)
-      if (!ispresent(slim)) {
-        break
-      }
-      gadgetsync.set(message.player, deepcopy(slim))
-      // this should be the compressed json
-      gadgetclientpaint(gadgetserver, message.player, slim)
+      gadgetclientpaint(gadgetserver, message.player, gadget)
       break
     }
     case 'clearscroll':

@@ -52,6 +52,8 @@ export const useGadgetClient = create<{
   layercachemap: Map<string, LAYER[]>
   zsswords: GADGET_ZSS_WORDS
 }>(() => ({
+  gadget: emptygadgetstate(),
+  layercachemap: new Map(),
   zsswords: {
     langcommands: {},
     clicommands: {},
@@ -77,8 +79,6 @@ export const useGadgetClient = create<{
     exprs: [],
     commandargmeta: {},
   },
-  gadget: emptygadgetstate(),
-  layercachemap: new Map(),
 }))
 
 export type TAPE_ROW = [string, string, ...any[]]
