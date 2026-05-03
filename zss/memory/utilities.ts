@@ -1,4 +1,5 @@
-import { compress, decompress, init } from '@bokuweb/zstd-wasm'
+import { compress, decompress } from '@bokuweb/zstd-wasm'
+import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import JSZip, { JSZipObject } from 'jszip'
 import { registerinspector, registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -143,14 +144,6 @@ registerhyperlinksharedbridge(
     }
   },
 )
-
-let zstdenabled = false
-async function getzstdlib(): Promise<void> {
-  if (!zstdenabled) {
-    await init()
-    zstdenabled = true
-  }
-}
 
 // data encoding for urls
 function base64urltobase64(base64UrlString: string) {
@@ -304,7 +297,7 @@ export async function memorycompressbooks(books: BOOK[]) {
   if (getclimode()) {
     return memoryexportbooksasjson(books)
   }
-  await getzstdlib()
+  await ensurezstdwasm()
 
   console.info('saved', books)
   const zip = new JSZip()
@@ -335,7 +328,7 @@ export async function memorydecompressbooks(base64bytes: string) {
   if (trimmed.startsWith('[')) {
     return memoryimportbooksfromjson(base64bytes)
   }
-  await getzstdlib()
+  await ensurezstdwasm()
 
   const books: BOOK[] = []
   const content = base64urltobase64(base64bytes)
