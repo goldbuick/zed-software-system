@@ -13,10 +13,7 @@ import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import {
-  recordPeerWireReceived,
-  recordPeerWireSent,
-} from 'zss/perf/peerwire'
+import { recordPeerWireReceived, recordPeerWireSent } from 'zss/perf/peerwire'
 
 async function readpeerid(): Promise<string | undefined> {
   return await storagereadnetid()

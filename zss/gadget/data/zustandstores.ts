@@ -1,9 +1,29 @@
-import { FORMAT_OBJECT } from 'zss/feature/format'
-import { MAYBE } from 'zss/mapping/types'
+import { MAYBE, deepcopy } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
 
 import { GADGET_STATE, GADGET_ZSS_WORDS, LAYER } from './types'
+
+export function emptygadgetstate(): GADGET_STATE {
+  return deepcopy({
+    id: '',
+    board: '',
+    boardname: '',
+    exiteast: '',
+    exitwest: '',
+    exitnorth: '',
+    exitsouth: '',
+    exitne: '',
+    exitnw: '',
+    exitse: '',
+    exitsw: '',
+    layers: [],
+    tickers: [],
+    scrollname: '',
+    scroll: [],
+    sidebar: [],
+  })
+}
 
 /** Max board ids kept for exit previews; oldest insertion evicted first. */
 export const LAYERCACHE_MAX_ENTRIES = 64
@@ -28,13 +48,10 @@ export function applylayercacheupdate(
 }
 
 export const useGadgetClient = create<{
-  desync: boolean
   gadget: GADGET_STATE
   layercachemap: Map<string, LAYER[]>
-  slim: FORMAT_OBJECT
   zsswords: GADGET_ZSS_WORDS
 }>(() => ({
-  desync: false,
   zsswords: {
     langcommands: {},
     clicommands: {},
@@ -60,26 +77,8 @@ export const useGadgetClient = create<{
     exprs: [],
     commandargmeta: {},
   },
-  gadget: {
-    id: '',
-    board: '',
-    boardname: '',
-    exiteast: '',
-    exitwest: '',
-    exitnorth: '',
-    exitsouth: '',
-    exitne: '',
-    exitnw: '',
-    exitse: '',
-    exitsw: '',
-    layers: [],
-    tickers: [],
-    scrollname: '',
-    scroll: [],
-    sidebar: [],
-  },
+  gadget: emptygadgetstate(),
   layercachemap: new Map(),
-  slim: [],
 }))
 
 export type TAPE_ROW = [string, string, ...any[]]

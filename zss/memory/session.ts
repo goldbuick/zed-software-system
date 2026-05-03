@@ -10,14 +10,13 @@ import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
   halt: false,
-  /** True while `vm:books` is async-loading; ticks should not advance sim state. */
-  simfreeze: false,
+  topic: '',
   session: createsid(),
   operator: '',
+  simfreeze: false,
   software: { main: '', temp: '' },
   books: new Map<string, BOOK>(),
   loaders: new Map<string, string>(),
-  topic: '',
 }
 
 export function memoryreadloaders() {

@@ -14,8 +14,8 @@ import { useDeviceData } from 'zss/gadget/device'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { EffectComposerMain } from 'zss/gadget/graphics/effectcomposer'
 import { doasync } from 'zss/mapping/func'
-import { createplatform, haltplatform } from 'zss/platform'
 import { PerfHud } from 'zss/perf/hud'
+import { createplatform, haltplatform } from 'zss/platform'
 import {
   ScreenUILayout,
   ScreenUIScrollLayer,
