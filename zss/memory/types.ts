@@ -268,10 +268,10 @@ export type BOOK = {
   name: string
   timestamp: number
   activelist: string[]
-  // content list
-  pages: CODE_PAGE[]
-  // global flags by id
-  flags: Record<string, BOOK_FLAGS>
+  /** Boundary ids in order; each id maps to a `CODE_PAGE` in session boundaries. */
+  pages: string[]
+  /** Single boundary id for the whole `Record<string, BOOK_FLAGS>` map. */
+  flags: string
   // unique token
   token?: string
 }

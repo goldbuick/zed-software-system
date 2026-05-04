@@ -1,11 +1,13 @@
 /**
  * Session state and book storage: MEMORY singleton, operator/topic/halt/loaders, and book map.
- * Other memory modules (books, codepages, etc.) depend on this for MEMORY.books and MEMORY.software.
+ * Other memory modules (books, codepages, etc.) depend on this for `MEMORY.books` / `MEMORY.loaders` and `MEMORY.software`.
  */
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import { memorynormalizebookforstorage } from './bookoperations'
+import { memoryboundariesclear, memoryboundarydelete } from './boundaries'
 import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
@@ -15,8 +17,8 @@ const MEMORY = {
   operator: '',
   simfreeze: false,
   software: { main: '', temp: '' },
-  books: new Map<string, BOOK>(),
-  loaders: new Map<string, string>(),
+  books: {} as Record<string, BOOK>,
+  loaders: {} as Record<string, string>,
 }
 
 export function memoryreadloaders() {
@@ -24,7 +26,7 @@ export function memoryreadloaders() {
 }
 
 export function memorystartloader(id: string, code: string) {
-  MEMORY.loaders.set(id, code)
+  MEMORY.loaders[id] = code
 }
 
 export function memoryreadsession() {
@@ -68,18 +70,18 @@ export function memoryreadsimfreeze() {
 }
 
 export function memoryreadbooklist(): BOOK[] {
-  return [...MEMORY.books.values()]
+  return Object.values(MEMORY.books)
 }
 
 export function memoryreadfirstbook(): MAYBE<BOOK> {
-  const [first] = MEMORY.books.values()
-  return first
+  const ids = Object.keys(MEMORY.books)
+  return ids.length > 0 ? MEMORY.books[ids[0]] : undefined
 }
 
 export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = NAME(address)
   return (
-    MEMORY.books.get(address) ??
+    MEMORY.books[address] ??
     memoryreadbooklist().find((item) => item.name === laddress)
   )
 }
@@ -99,31 +101,50 @@ export function memoryreadbookbysoftware(
   return memoryreadbookbyaddress(MEMORY.software[slot])
 }
 
-export function memoryresetbooks(books: BOOK[]) {
-  MEMORY.books.clear()
-  books.forEach((book) => {
-    MEMORY.books.set(book.id, book)
+export function memoryresetbooks(books: unknown[]) {
+  memoryboundariesclear()
+  MEMORY.books = {}
+  books.forEach((raw) => {
+    const book = memorynormalizebookforstorage(raw)
+    if (!ispresent(book)) {
+      return
+    }
+    MEMORY.books[book.id] = book
     if (book.name === 'main') {
       MEMORY.software.main = book.id
     }
   })
-  if (!MEMORY.software.main) {
-    const first = MEMORY.books.values().next()
-    if (first.value) {
-      MEMORY.software.main = first.value.id
+  const bookids = Object.keys(MEMORY.books)
+  if (bookids.length === 0) {
+    MEMORY.software.main = ''
+    MEMORY.software.temp = ''
+    return
+  }
+  if (
+    !MEMORY.software.main ||
+    !Object.prototype.hasOwnProperty.call(MEMORY.books, MEMORY.software.main)
+  ) {
+    const firstid = bookids[0]
+    const firstbook = MEMORY.books[firstid]
+    if (firstbook) {
+      MEMORY.software.main = firstbook.id
     }
   }
 }
 
 export function memorywritebook(book: BOOK) {
-  MEMORY.books.set(book.id, book)
+  MEMORY.books[book.id] = book
   return book.id
 }
 
 export function memoryclearbook(address: string) {
   const book = memoryreadbookbyaddress(address)
   if (book) {
-    MEMORY.books.delete(book.id)
+    for (let i = 0; i < book.pages.length; ++i) {
+      memoryboundarydelete(book.pages[i])
+    }
+    memoryboundarydelete(book.flags)
+    delete MEMORY.books[book.id]
   }
 }
 

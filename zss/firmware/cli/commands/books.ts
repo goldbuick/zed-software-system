@@ -556,7 +556,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           READ_CONTEXT.elementfocus,
           zsstextline(`pages in open ${book.name} book`),
         )
-        book.pages.forEach((page) => {
+        memorylistcodepagessorted(book).forEach((page) => {
           const name = memoryreadcodepagename(page)
           const type = memoryreadcodepagetypeasstring(page)
           const prefix = memorycodepagetoprefix(page)

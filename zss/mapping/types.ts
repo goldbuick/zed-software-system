@@ -49,7 +49,8 @@ export function isbook(value: any) {
     isstring(value.id) &&
     isstring(value.name) &&
     isarray(value.pages) &&
+    value.pages.every((p: unknown) => isstring(p)) &&
     isarray(value.activelist) &&
-    typeof value.flags === 'object'
+    isstring(value.flags)
   )
 }

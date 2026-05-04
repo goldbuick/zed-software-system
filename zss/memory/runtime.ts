@@ -23,6 +23,7 @@ import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
+import { memoryboundaryalloc, memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
@@ -72,8 +73,9 @@ export function memoryrestartallchipsandflags() {
     return
   }
 
-  // drop all flags from mainbook
-  mainbook.flags = {}
+  const oldflags = mainbook.flags
+  memoryboundarydelete(oldflags)
+  mainbook.flags = memoryboundaryalloc({})
 }
 
 export function memorymessagechip(message: MESSAGE) {
@@ -106,7 +108,10 @@ export function memorytickmain(playeronly = false) {
 
   perfmeasure('memorytick:loaders', () => {
     const loaders = memoryreadloaders()
-    loaders.forEach((code, id) => {
+    const loaderids = Object.keys(loaders)
+    for (let li = 0; li < loaderids.length; ++li) {
+      const id = loaderids[li]
+      const code = loaders[id]
       // cache context
       const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
@@ -131,7 +136,7 @@ export function memorytickmain(playeronly = false) {
       // teardown on ended
       if (os.isended(id)) {
         os.halt(id)
-        loaders.delete(id)
+        delete loaders[id]
       }
 
       // restore context
@@ -139,7 +144,7 @@ export function memorytickmain(playeronly = false) {
         // @ts-expect-error dont bother me
         READ_CONTEXT[key] = OLD_CONTEXT[key]
       })
-    })
+    }
   })
 
   // track tick

@@ -1,5 +1,5 @@
 /**
- * Gadget layer snapshots per board on `book.flags[gadgetlayers]`.
+ * Gadget layer snapshots per board on the flags boundary payload at key `gadgetlayers`.
  * Separate module avoids importing `rendering` from `bookoperations` (would cycle).
  */
 import { MAYBE } from 'zss/mapping/types'
