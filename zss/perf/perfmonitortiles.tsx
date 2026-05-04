@@ -28,8 +28,28 @@ const PERF_PLATE_BG = COLOR.DKPURPLE
 const PERF_FRAME_FG = COLOR.PURPLE
 
 const PANEL_W = 38
-const PANEL_H = 14
+const PANEL_H = 16
 const REFRESH_MS = 320
+/** Rolling mean window for peer instant rate samples (~6.4s at REFRESH_MS). */
+const PEER_RATE_SAMPLE_WINDOW = 20
+
+function pushringmaxlen(arr: number[], v: number, maxlen: number) {
+  arr.push(v)
+  while (arr.length > maxlen) {
+    arr.shift()
+  }
+}
+
+function meanrate(samples: number[]): number {
+  if (samples.length === 0) {
+    return 0
+  }
+  let sum = 0
+  for (let i = 0; i < samples.length; ++i) {
+    sum += samples[i]
+  }
+  return sum / samples.length
+}
 
 type GlSnap = {
   fps: number
@@ -112,9 +132,22 @@ type PerfMonitorDrawProps = {
   glRef: MutableRefObject<GlSnap>
 }
 
+type PeerPeakAvg = {
+  peakup: number
+  peakdn: number
+  upsamples: number[]
+  dnsamples: number[]
+}
+
 function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
   const context = useWriteText()
   const peerPrev = useRef({ sent: 0, recv: 0, t: 0 })
+  const peerPeakAvg = useRef<PeerPeakAvg>({
+    peakup: 0,
+    peakdn: 0,
+    upsamples: [],
+    dnsamples: [],
+  })
   const chatPrev = useRef({ total: 0, t: 0 })
 
   useEffect(() => {
@@ -201,25 +234,44 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       let upRate = 0
       let dnRate = 0
       const pt = peerPrev.current
+      const pk = peerPeakAvg.current
       if (pt.t > 0) {
         const dt = (now - pt.t) / 1000
         if (dt > 0.04) {
           upRate = (peer.sent - pt.sent) / dt
           dnRate = (peer.recv - pt.recv) / dt
+          pk.peakup = Math.max(pk.peakup, upRate)
+          pk.peakdn = Math.max(pk.peakdn, dnRate)
+          pushringmaxlen(pk.upsamples, upRate, PEER_RATE_SAMPLE_WINDOW)
+          pushringmaxlen(pk.dnsamples, dnRate, PEER_RATE_SAMPLE_WINDOW)
         }
       }
       peerPrev.current = { sent: peer.sent, recv: peer.recv, t: now }
+      const avgup = meanrate(pk.upsamples)
+      const avgdn = meanrate(pk.dnsamples)
 
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `$yellow peer up $green↑$white${fmtRate(upRate)}$yellow ($white${fmtTotal(peer.sent)}$yellow)`,
+        `$yellow peer up $green$24 $white${fmtRate(upRate)}$yellow ($white${fmtTotal(peer.sent)}$yellow)`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `  $yellowpk $white${fmtRate(pk.peakup)} $yellowav $white${fmtRate(avgup)}`,
         context,
         true,
       )
 
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `$yellow peer down $green↓$white${fmtRate(dnRate)}$yellow ($white${fmtTotal(peer.recv)}$yellow)`,
+        `$yellow peer down $green$25 $white${fmtRate(dnRate)}$yellow ($white${fmtTotal(peer.recv)}$yellow)`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `  $yellowpk $white${fmtRate(pk.peakdn)} $yellowav $white${fmtRate(avgdn)}`,
         context,
         true,
       )
