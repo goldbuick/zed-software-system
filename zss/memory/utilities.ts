@@ -1,5 +1,4 @@
 import { compress, decompress } from '@bokuweb/zstd-wasm'
-import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import JSZip, { JSZipObject } from 'jszip'
 import { registerinspector, registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -12,6 +11,7 @@ import {
 } from 'zss/feature/format'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
+import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import {
   scrolllinkescapefrag,
@@ -308,6 +308,8 @@ export async function memorycompressbooks(books: BOOK[]) {
       // convert to bin
       const bin = packformat(exportedbook)
       if (ispresent(bin)) {
+        // NOTE: NOT using dictionary here, it's not worth the extra complexity
+        // AND it did not make a significant difference in size
         // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
         const binsquash = compress(bin, 15)
         zip.file(book.id, binsquash, { date: FIXED_DATE })
