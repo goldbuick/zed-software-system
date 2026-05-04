@@ -8,11 +8,9 @@ export async function ensurezstdwasm(): Promise<void> {
   if (zstdready) {
     return
   }
-  if (!zstdinflight) {
-    zstdinflight = (async () => {
-      await init()
-      zstdready = true
-    })()
-  }
+  zstdinflight ??= (async () => {
+    await init()
+    zstdready = true
+  })()
   await zstdinflight
 }

@@ -6,7 +6,7 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { memoryboundariesclear, memoryboundarydelete } from './boundaries'
+import { memoryboundarydelete } from './boundaries'
 import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {

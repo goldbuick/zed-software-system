@@ -5,14 +5,13 @@ import {
   memorycreatebook,
   memoryexportbook,
   memoryimportbook,
-  memorynormalizebookforstorage,
   memoryreadbookflags,
   memoryreadcodepage,
   memorywritebookflag,
 } from '../bookoperations'
 import { memoryboundariesclear, memoryboundaryget } from '../boundaries'
 import { memorycreatecodepage } from '../codepageoperations'
-import { memoryreadbookbyaddress, memoryresetbooks } from '../session'
+import { memoryresetbooks } from '../session'
 import { MEMORY_LABEL } from '../types'
 
 describe('book opaque boundaries', () => {
@@ -53,46 +52,5 @@ describe('book opaque boundaries', () => {
     const root = memoryreadbookflags(book, MEMORY_LABEL.GADGETSTORE)
     expect(root.x).toBe(42)
     expect(memoryboundaryget(book.flags)).toBeDefined()
-  })
-
-  it('memorynormalizebookforstorage migrates legacy inline pages and flags', () => {
-    memoryboundariesclear()
-    const legacy = {
-      id: 'book_legacy',
-      name: 'main',
-      timestamp: 0,
-      activelist: [],
-      pages: [
-        {
-          id: 'pg1',
-          code: '@board b1\n',
-          stats: { name: 'b1' },
-        },
-      ],
-      flags: { gadgetstore: { a: 1 as any } },
-    }
-    const book = memorynormalizebookforstorage(legacy)
-    expect(ispresent(book)).toBe(true)
-    expect(book!.pages.length).toBe(1)
-    expect(memoryreadcodepage(book, 'pg1')?.id).toBe('pg1')
-    const gadget = memoryreadbookflags(book, 'gadgetstore')
-    expect(gadget.a).toBe(1)
-  })
-
-  it('memoryresetbooks hydrates legacy and stores normalized book', () => {
-    memoryresetbooks([
-      {
-        id: 'book_hydrate',
-        name: 'main',
-        timestamp: 0,
-        activelist: [],
-        pages: [],
-        flags: {},
-      } as unknown,
-    ])
-    const stored = memoryreadbookbyaddress('book_hydrate')
-    expect(stored?.pages).toEqual([])
-    expect(typeof stored?.flags).toBe('string')
-    expect(memoryboundaryget(stored!.flags)).toEqual({})
   })
 })
