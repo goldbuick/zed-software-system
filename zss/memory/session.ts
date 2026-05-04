@@ -6,7 +6,6 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { memorynormalizebookforstorage } from './bookoperations'
 import { memoryboundariesclear, memoryboundarydelete } from './boundaries'
 import { BOOK, MEMORY_LABEL } from './types'
 
@@ -101,33 +100,18 @@ export function memoryreadbookbysoftware(
   return memoryreadbookbyaddress(MEMORY.software[slot])
 }
 
-export function memoryresetbooks(books: unknown[]) {
-  memoryboundariesclear()
+export function memoryresetbooks(books: BOOK[]) {
   MEMORY.books = {}
-  books.forEach((raw) => {
-    const book = memorynormalizebookforstorage(raw)
-    if (!ispresent(book)) {
-      return
-    }
+  books.forEach((book) => {
     MEMORY.books[book.id] = book
     if (book.name === 'main') {
       MEMORY.software.main = book.id
     }
   })
-  const bookids = Object.keys(MEMORY.books)
-  if (bookids.length === 0) {
-    MEMORY.software.main = ''
-    MEMORY.software.temp = ''
-    return
-  }
-  if (
-    !MEMORY.software.main ||
-    !Object.prototype.hasOwnProperty.call(MEMORY.books, MEMORY.software.main)
-  ) {
-    const firstid = bookids[0]
-    const firstbook = MEMORY.books[firstid]
-    if (firstbook) {
-      MEMORY.software.main = firstbook.id
+  if (!MEMORY.software.main) {
+    const first = books[0]
+    if (first) {
+      MEMORY.software.main = first.id
     }
   }
 }
@@ -137,13 +121,20 @@ export function memorywritebook(book: BOOK) {
   return book.id
 }
 
+export function memoryfreebook(book: MAYBE<BOOK>) {
+  if (!ispresent(book)) {
+    return
+  }
+  for (let i = 0; i < book.pages.length; ++i) {
+    memoryboundarydelete(book.pages[i])
+  }
+  memoryboundarydelete(book.flags)
+}
+
 export function memoryclearbook(address: string) {
   const book = memoryreadbookbyaddress(address)
-  if (book) {
-    for (let i = 0; i < book.pages.length; ++i) {
-      memoryboundarydelete(book.pages[i])
-    }
-    memoryboundarydelete(book.flags)
+  if (ispresent(book)) {
+    memoryfreebook(book)
     delete MEMORY.books[book.id]
   }
 }

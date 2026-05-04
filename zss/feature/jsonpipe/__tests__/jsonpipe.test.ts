@@ -1,5 +1,9 @@
 import { compare } from 'fast-json-patch'
-import { type Operation, createjsonpipe, filterpatch } from 'zss/feature/jsonpipe/observe'
+import {
+  type Operation,
+  createjsonpipe,
+  filterpatch,
+} from 'zss/feature/jsonpipe/observe'
 import { deepcopy } from 'zss/mapping/types'
 
 describe('filterpatch', () => {

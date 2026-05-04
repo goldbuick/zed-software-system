@@ -19,12 +19,11 @@ import {
   memorycreateboardobject,
 } from 'zss/memory/boardlifecycle'
 import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memoryresetbooks } from 'zss/memory/session'
+import { memoryreadbookbyaddress, memoryresetbooks } from 'zss/memory/session'
 import {
   BOARD_HEIGHT,
   BOARD_SIZE,
   BOARD_WIDTH,
-  BOOK,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -36,7 +35,7 @@ function installbookwithboard(
 ) {
   board.id = boardid
   board.name = boardid
-  const book: BOOK = {
+  const legacy = {
     id: 'book_boardpivot_test',
     name: 'main',
     timestamp: 0,
@@ -51,9 +50,10 @@ function installbookwithboard(
     ],
     flags: {},
   }
-  memoryresetbooks([book])
-  READ_CONTEXT.book = book
-  return book
+  memoryresetbooks([legacy as unknown])
+  const stored = memoryreadbookbyaddress('book_boardpivot_test')!
+  READ_CONTEXT.book = stored
+  return stored
 }
 
 function terrainat(

@@ -1,9 +1,10 @@
 import { createsid } from 'zss/mapping/guid'
+import { MAYBE } from 'zss/mapping/types'
 
 const boundaries = new Map<string, unknown>()
 
-export function memoryboundaryget(id: string): unknown {
-  return boundaries.get(id)
+export function memoryboundaryget<T>(id: string): MAYBE<T> {
+  return boundaries.get(id) as T
 }
 
 export function memoryboundaryset(id: string, payload: unknown) {
