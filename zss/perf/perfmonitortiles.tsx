@@ -11,6 +11,7 @@ import {
   ivsBroadcastStatsPoll,
   readIvsBroadcastStatsSnapshot,
 } from 'zss/perf/ivsbroadcaststats'
+import { readjsonpipeapplyremotestats } from 'zss/perf/jsonpipeapplystats'
 import { readPeerWireTotals } from 'zss/perf/peerwire'
 import {
   BKG_PTRN,
@@ -134,6 +135,7 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
   })
   const peerWireHistory = useRef<PeerWireSnapshot[]>([])
   const chatPrev = useRef({ total: 0, t: 0 })
+  const jsonpipePrev = useRef({ total: 0, t: 0 })
 
   useEffect(() => {
     const tick = () => {
@@ -333,6 +335,24 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
         `  $yellowtw=$white${chat.byKind[CHAT_KIND.TWITCH]} $yellowrss=$white${chat.byKind[CHAT_KIND.RSS]} $yellowmas=$white${chat.byKind[CHAT_KIND.MASTODON]} $yellowbsky=$white${chat.byKind[CHAT_KIND.BLUESKY]}`,
+        context,
+        true,
+      )
+
+      const jsonpipe = readjsonpipeapplyremotestats()
+      let jsonpipeRate = 0
+      const jt = jsonpipePrev.current
+      if (jt.t > 0) {
+        const dt = (now - jt.t) / 1000
+        if (dt > 0.04) {
+          jsonpipeRate = (jsonpipe.total - jt.total) / dt
+        }
+      }
+      jsonpipePrev.current = { total: jsonpipe.total, t: now }
+
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow jsonpipe ops $white${jsonpipeRate.toFixed(1)}/s$yellow total=$white${jsonpipe.total}`,
         context,
         true,
       )

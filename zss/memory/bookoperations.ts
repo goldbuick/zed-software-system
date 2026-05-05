@@ -21,6 +21,7 @@ import {
 } from './codepageoperations'
 import {
   BOARD_ELEMENT,
+  BOARD,
   BOOK,
   BOOK_FLAGS,
   BOOK_KEYS,
@@ -28,7 +29,11 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
-import { memoryreadboardelementruntime } from './runtimeboundary'
+import {
+  memorydeleteboardelementruntime,
+  memorydeleteboardruntime,
+  memoryreadboardelementruntime,
+} from './runtimeboundary'
 
 function memoryreadflagsroot(book: MAYBE<BOOK>): Record<string, BOOK_FLAGS> {
   if (!ispresent(book)) {
@@ -82,6 +87,7 @@ export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
     const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
     if (ispresent(page)) {
       if (page.id === address || laddress === memoryreadcodepagename(page)) {
+        memoryfreecodepage(page)
         memoryboundarydelete(book.pages[i])
         memoryupdatebooktoken(book)
         return page
@@ -90,6 +96,31 @@ export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
   }
 
   return undefined
+}
+
+function memoryfreeboardelementsruntime(board: MAYBE<BOARD>) {
+  if (!ispresent(board)) {
+    return
+  }
+  for (let i = 0; i < board.terrain.length; ++i) {
+    memorydeleteboardelementruntime(board.terrain[i])
+  }
+  const ids = Object.keys(board.objects)
+  for (let i = 0; i < ids.length; ++i) {
+    memorydeleteboardelementruntime(board.objects[ids[i]])
+  }
+}
+
+export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {
+  if (!ispresent(codepage)) {
+    return
+  }
+  if (ispresent(codepage.board)) {
+    memorydeleteboardruntime(codepage.board)
+    memoryfreeboardelementsruntime(codepage.board)
+  }
+  memorydeleteboardelementruntime(codepage.object)
+  memorydeleteboardelementruntime(codepage.terrain)
 }
 
 export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {

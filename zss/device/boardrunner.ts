@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { deepcopy, isarray, ispresent } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { type MEMORY_ROOT, memoryreadroot } from 'zss/memory/session'
@@ -41,12 +41,20 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
 
   switch (message.target) {
     case 'tick':
+      if (message.player !== assignedplayer) {
+        return
+      }
+      break
     case 'paint':
       if (message.player !== assignedplayer) {
         return
       }
       break
     case 'patch':
+      if (message.player !== assignedplayer && isstring(message.data)) {
+        return
+      }
+      break
     default:
       break
   }
@@ -62,7 +70,7 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
         const [board, timestamp] = message.data as [string, number]
         if (assignedboard !== board) {
           assignedboard = board
-          console.info('boardrunner', 'switched to board', assignedboard)
+          // console.info('boardrunner', 'switched to board', assignedboard)
         }
         // todo: run memorytickmain with the given board(s) derived from assignedboard and timestamp
         vmboardrunnerack(boardrunner, assignedplayer)
@@ -106,12 +114,12 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
           const doc = memorysyncpipe.applyremote(memoryreadroot(), patch)
           if (ispresent(doc)) {
             Object.assign(memoryreadroot(), doc)
-            console.info(
-              'boardrunner',
-              'patched',
-              'memory',
-              deepcopy(memoryreadroot()),
-            )
+            // console.info(
+            //   'boardrunner',
+            //   'patched',
+            //   'memory',
+            //   deepcopy(memoryreadroot()),
+            // )
           } else {
             boardrunner.reply(message, 'desync')
           }

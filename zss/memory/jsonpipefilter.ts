@@ -1,7 +1,7 @@
-/** Path has a JSON pointer segment `timestamp`, `loaders`, or `runtime` (omit from wire). */
-const EMIT_SKIP_SEGMENT = /(?:^|\/)(?:timestamp|loaders|runtime)(?:\/|$)/
+/** Path has a JSON pointer segment `stats`, `loaders`, `runtime`, or `timestamp` (omit from wire). */
+const EMIT_SKIP_SEGMENT = /(?:^|\/)(?:stats|loaders|runtime|timestamp)(?:\/|$)/
 
-/** Return false for paths that include a `timestamp`, `loaders`, or `runtime` segment. */
+/** Return false for paths that include a `stats`, `loaders`, `runtime`, or `timestamp` segment. */
 export function memoryrootshouldemitpath(path: string): boolean {
   return EMIT_SKIP_SEGMENT.test(path) === false
 }

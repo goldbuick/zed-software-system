@@ -2,6 +2,7 @@ import { packformat, unpackformat } from 'zss/feature/format'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import {
+  memoryclearbookcodepage,
   memorycreatebook,
   memoryexportbook,
   memoryimportbook,
@@ -9,7 +10,11 @@ import {
   memoryreadcodepage,
   memorywritebookflag,
 } from '../bookoperations'
-import { memoryboundariesclear, memoryboundaryget } from '../boundaries'
+import {
+  memoryboundariesclear,
+  memoryboundaryalloc,
+  memoryboundaryget,
+} from '../boundaries'
 import { memorycreatecodepage } from '../codepageoperations'
 import { memoryresetbooks } from '../session'
 import { MEMORY_LABEL } from '../types'
@@ -55,5 +60,79 @@ describe('book opaque boundaries', () => {
     expect(
       memoryboundaryget(book.flags[MEMORY_LABEL.GADGETSTORE]),
     ).toBeDefined()
+  })
+
+  it('frees nested runtime boundaries when freeing a whole book', () => {
+    const boardruntime = 'board-runtime'
+    const terrainruntime = 'terrain-runtime'
+    const objectruntime = 'object-runtime'
+    const pageobjectruntime = 'page-object-runtime'
+    const pageterrainruntime = 'page-terrain-runtime'
+    memoryboundaryalloc({}, boardruntime)
+    memoryboundaryalloc({}, terrainruntime)
+    memoryboundaryalloc({}, objectruntime)
+    memoryboundaryalloc({}, pageobjectruntime)
+    memoryboundaryalloc({}, pageterrainruntime)
+
+    const cp = memorycreatecodepage('@board testboard\n', {
+      board: {
+        id: 'b',
+        name: 'board',
+        terrain: [{ runtime: terrainruntime }],
+        objects: { oid: { id: 'oid', runtime: objectruntime } },
+        runtime: boardruntime,
+      },
+      object: { id: 'obj', runtime: pageobjectruntime },
+      terrain: { runtime: pageterrainruntime },
+    })
+    const book = memorycreatebook([cp])
+
+    expect(memoryboundaryget(book.pages[0])).toBeDefined()
+    expect(memoryboundaryget(boardruntime)).toBeDefined()
+    expect(memoryboundaryget(terrainruntime)).toBeDefined()
+    expect(memoryboundaryget(objectruntime)).toBeDefined()
+    expect(memoryboundaryget(pageobjectruntime)).toBeDefined()
+    expect(memoryboundaryget(pageterrainruntime)).toBeDefined()
+
+    const { memoryfreebook } = jest.requireActual<typeof import('../session')>(
+      '../session',
+    )
+    memoryfreebook(book)
+
+    expect(memoryboundaryget(book.pages[0])).toBeUndefined()
+    expect(memoryboundaryget(boardruntime)).toBeUndefined()
+    expect(memoryboundaryget(terrainruntime)).toBeUndefined()
+    expect(memoryboundaryget(objectruntime)).toBeUndefined()
+    expect(memoryboundaryget(pageobjectruntime)).toBeUndefined()
+    expect(memoryboundaryget(pageterrainruntime)).toBeUndefined()
+  })
+
+  it('frees nested runtime boundaries when clearing one codepage', () => {
+    const boardruntime = 'board-runtime-clear'
+    const objectruntime = 'object-runtime-clear'
+    memoryboundaryalloc({}, boardruntime)
+    memoryboundaryalloc({}, objectruntime)
+
+    const cp = memorycreatecodepage('@board clearme\n', {
+      board: {
+        id: 'b2',
+        name: 'board2',
+        terrain: [],
+        objects: {},
+        runtime: boardruntime,
+      },
+      object: { id: 'obj2', runtime: objectruntime },
+    })
+    const book = memorycreatebook([cp])
+
+    expect(memoryboundaryget(book.pages[0])).toBeDefined()
+    expect(memoryboundaryget(boardruntime)).toBeDefined()
+    expect(memoryboundaryget(objectruntime)).toBeDefined()
+
+    const removed = memoryclearbookcodepage(book, cp.id)
+    expect(removed?.id).toBe(cp.id)
+    expect(memoryboundaryget(book.pages[0])).toBeUndefined()
+    expect(memoryboundaryget(boardruntime)).toBeUndefined()
+    expect(memoryboundaryget(objectruntime)).toBeUndefined()
   })
 })

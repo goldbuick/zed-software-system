@@ -1,5 +1,6 @@
 import { type Operation, applyPatch, compare } from 'fast-json-patch'
 import { MAYBE, deepcopy } from 'zss/mapping/types'
+import { recordjsonpipeapplyremoteops } from 'zss/perf/jsonpipeapplystats'
 
 export type { Operation }
 
@@ -67,6 +68,7 @@ export function createjsonpipe<T extends object | unknown[]>(
       if (filtered.length === 0) {
         return root
       }
+      recordjsonpipeapplyremoteops(filtered.length)
       try {
         //  an RFC 6902 patch array
         const { newDocument } = applyPatch(root, filtered, true, false)

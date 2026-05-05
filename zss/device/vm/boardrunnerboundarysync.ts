@@ -60,23 +60,20 @@ export function boardrunnerboundarymemorysync(vm: DEVICE) {
   }
 
   // build pipes for boardrunners
-  // const boards = Object.keys(boardrunners)
-  // for (const board of boards) {
-  //   // read boundary doc
-  //   const boundary = memoryboundaryget(board) ?? ({} as BOUNDARY_DOC)
-  //   // create boundary jsonpipe
-  //   if (!boundaryjsonpipes.has(board)) {
-  //     const pipe = createpipe(boundary)
-  //     boundaryjsonpipes.set(board, pipe)
-  //   }
-  //   // generate patch
-  //   const pipe = boundaryjsonpipes.get(board)!
-  //   const patch = pipe.emitdiff(boundary)
-  //   if (patch.length === 0) {
-  //     continue
-  //   }
-  //   // emit diff
-  //   const player = boardrunners[board]
-  //   boardrunnerpatch(vm, player, patch, board)
-  // }
+  const boards = Object.keys(boardrunners)
+  for (const board of boards) {
+    // start with board codepage boundary
+    const boundary = memoryboundaryget(board) ?? ({} as BOUNDARY_DOC)
+    // create boundary jsonpipe
+    if (!boundaryjsonpipes.has(board)) {
+      const pipe = createpipe(boundary)
+      boundaryjsonpipes.set(board, pipe)
+    }
+    // generate patch
+    const pipe = boundaryjsonpipes.get(board)!
+    const patch = pipe.emitdiff(boundary)
+    if (patch.length > 0) {
+      boardrunnerpatch(vm, boardrunners[board], patch, board)
+    }
+  }
 }

@@ -3,7 +3,7 @@ import { pack, unpack } from 'msgpackr'
 import type { MESSAGE } from 'zss/device/api'
 
 /** Interactive peer wire; books use 15 in memorycompressbooks. */
-const PEER_WIRE_ZSTD_LEVEL = 8
+const PEER_WIRE_ZSTD_LEVEL = 6
 
 /** Requires prior `await ensurezstdwasm()` (e.g. DataConnection open). */
 export function encodepeerwire(message: MESSAGE): Uint8Array {
