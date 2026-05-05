@@ -7,7 +7,7 @@ import {
 } from 'zss/feature/synth/playnotation'
 import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
-import { DEFAULT_BPM, TICK_FPS } from 'zss/mapping/tick'
+import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -153,10 +153,6 @@ export function memoryreadsynthplay(board: string): SYNTH_PLAY[] {
   return readsynthplayinternal(board)
 }
 
-function durationsecondsatdefaultbpm(duration: number) {
-  return (duration * 60) / (16 * DEFAULT_BPM)
-}
-
 /** Added after converting pattern end time (seconds) to board ticks; tune if `#play` advances too early/late. */
 const SYNTH_PLAY_QUEUE_TICK_PAD = -2
 
@@ -190,14 +186,7 @@ export function memoryqueuesynthplay(board: string, play: string) {
   let endtime = 0
   for (let i = 0; i < invokes.length; ++i) {
     const invoke = invokes[i]
-    const pattern = invokeplay(
-      i,
-      0,
-      invoke,
-      true,
-      (duration) => `${duration}n` as any,
-      durationsecondsatdefaultbpm,
-    )
+    const pattern = invokeplay(i, 0, invoke, true)
     endtime = Math.max(endtime, synthplaypatterntickwait(pattern))
   }
 

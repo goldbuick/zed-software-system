@@ -1,4 +1,4 @@
-import { Time } from 'tone'
+import { DEFAULT_BPM } from 'zss/mapping/tick'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 export const SYNTH_SFX_RESET = 4
@@ -91,14 +91,93 @@ export type SYNTH_NOTE = null | string | number
 export type SYNTH_NOTE_ON = [number, string, SYNTH_NOTE]
 export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
 
-const BASE_NOTE = '64n'
+/** Matches Tone default transport time signature when comparing `toNotation()` candidates. */
+const DEFAULT_TIME_SIGNATURE = 4
 
-function durationnotation(duration: number) {
-  return Time({ [BASE_NOTE]: duration }).toNotation()
+function beatstoseconds(beats: number, bpm: number): number {
+  return (60 / bpm) * beats
 }
 
-function durationseconds(duration: number) {
-  return Time({ [BASE_NOTE]: duration }).toSeconds()
+/**
+ * Seconds length of a single Tone notation string at `bpm` / `timesignature`,
+ * mirroring `TimeBase` (`m`, `n`/`n.`, `t`, bare number as seconds).
+ */
+function notationtoseconds(
+  notation: string,
+  bpm: number,
+  timesignature: number,
+): number {
+  const trimmed = notation.trim()
+  const mm = /^(\d+)m$/i.exec(trimmed)
+  if (mm) {
+    const measures = parseInt(mm[1], 10)
+    return beatstoseconds(measures * timesignature, bpm)
+  }
+  const nn = /^(\d+)n(\.?)$/i.exec(trimmed)
+  if (nn) {
+    const k = parseInt(nn[1], 10)
+    const dot = nn[2] === '.'
+    const scalar = dot ? 1.5 : 1
+    if (k === 1) {
+      return beatstoseconds(timesignature * scalar, bpm)
+    }
+    return beatstoseconds((4 / k) * scalar, bpm)
+  }
+  const tt = /^(\d+)t$/i.exec(trimmed)
+  if (tt) {
+    const k = Math.floor(parseInt(tt[1], 10))
+    return beatstoseconds(8 / (k * 3), bpm)
+  }
+  if (/^(\d+(?:\.\d+)?)$/.test(trimmed)) {
+    return parseFloat(trimmed)
+  }
+  throw new Error(`unhandled notation: ${notation}`)
+}
+
+/** Candidate order matches Tone `Time.prototype.toNotation()` (`Time.js`). */
+export function tonenotationcandidates(): string[] {
+  const list: string[] = ['1m']
+  for (let power = 1; power < 9; power++) {
+    const subdiv = Math.pow(2, power)
+    list.push(`${subdiv}n.`)
+    list.push(`${subdiv}n`)
+    list.push(`${subdiv}t`)
+  }
+  list.push('0')
+  return list
+}
+
+/** Seconds for one notation token at `DEFAULT_BPM` / 4-4, mirroring Tone `TimeBase`. */
+export function tonenotationseconds(notation: string): number {
+  return notationtoseconds(notation, DEFAULT_BPM, DEFAULT_TIME_SIGNATURE)
+}
+
+/**
+ * Closest notation string for `{ '64n': duration }`, matching Tone `Time.toNotation()`.
+ */
+export function durationnotation(duration: number): string {
+  const time = durationseconds(duration)
+  const testnotations = tonenotationcandidates()
+  const head = testnotations[0]
+  if (head === undefined) {
+    throw new Error('empty notation candidates')
+  }
+
+  let closest = head
+  let closestseconds = tonenotationseconds(closest)
+  testnotations.forEach((notation) => {
+    const notationsec = tonenotationseconds(notation)
+    if (Math.abs(notationsec - time) < Math.abs(closestseconds - time)) {
+      closest = notation
+      closestseconds = notationsec
+    }
+  })
+  return closest
+}
+
+/** Seconds for `{ '64n': duration }` at `DEFAULT_BPM`, matching Tone `Time.toSeconds()`. */
+export function durationseconds(duration: number): number {
+  return (duration * 60) / (16 * DEFAULT_BPM)
 }
 
 export function invokeplay(
@@ -106,8 +185,6 @@ export function invokeplay(
   starttime: number,
   play: SYNTH_OP[] | string,
   withendofpattern = true,
-  makenotation = durationnotation,
-  calcseconds = durationseconds,
 ) {
   // translate ops into time, note pairs
   let time = starttime
@@ -120,11 +197,11 @@ export function invokeplay(
   function resetnote() {
     note = ''
     accidental = ''
-    time += calcseconds(duration)
+    time += durationseconds(duration)
   }
 
   function writenote() {
-    const notation = makenotation(duration)
+    const notation = durationnotation(duration)
     if (note === null) {
       pattern.push([time, [synth, notation, note]])
       resetnote()
