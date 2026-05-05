@@ -1,5 +1,5 @@
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE } from 'zss/mapping/types'
+import { MAYBE, isstring } from 'zss/mapping/types'
 
 const boundaries = new Map<string, unknown>()
 
@@ -15,7 +15,18 @@ export function memoryboundarydelete(id: string) {
   boundaries.delete(id)
 }
 
-export function memoryboundaryalloc(payload: unknown): string {
+/**
+ * Store `payload` and return its boundary id. If `maybeid` is a non-empty string
+ * and no entry exists yet, that key is used; otherwise a new id is generated.
+ */
+export function memoryboundaryalloc(
+  payload: unknown,
+  maybeid?: string,
+): string {
+  if (isstring(maybeid) && maybeid !== '' && !boundaries.has(maybeid)) {
+    boundaries.set(maybeid, payload)
+    return maybeid
+  }
   const id = createsid()
   boundaries.set(id, payload)
   return id

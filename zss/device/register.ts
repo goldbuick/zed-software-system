@@ -313,6 +313,8 @@ export const register = createdevice(
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
+          // start boardrunner
+          boardrunnerstart(register, myplayerid)
           // setup content watcher
           storagewatchcontent(myplayerid)
           // setup history buffer
@@ -368,8 +370,6 @@ export const register = createdevice(
         break
       case 'acklogin':
         if (message.data) {
-          // start boardrunner
-          boardrunnerstart(register, myplayerid)
           // hide terminal
           registerterminalclose(register, myplayerid)
           // signal sim loaded

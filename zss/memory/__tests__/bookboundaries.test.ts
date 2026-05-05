@@ -23,6 +23,7 @@ describe('book opaque boundaries', () => {
     const cp = memorycreatecodepage('@board testboard\n', {})
     const book = memorycreatebook([cp])
     expect(book.pages.length).toBe(1)
+    expect(book.pages[0]).toBe(cp.id)
     expect(typeof book.flags).toBe('string')
     const stored = memoryboundaryget(book.pages[0])
     expect(stored).toBeDefined()

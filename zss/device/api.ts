@@ -266,6 +266,10 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
+export function vmboardrunnerack(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:boardrunnerack')
+}
+
 export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,

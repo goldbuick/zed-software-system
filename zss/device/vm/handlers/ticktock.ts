@@ -1,5 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { boardrunnertick } from 'zss/device/api'
+import { pick } from 'zss/mapping/array'
+import { TICK_FPS } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import { memoryreadbookgadgetlayersmap } from 'zss/memory/gadgetlayersflags'
@@ -18,11 +21,16 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { NAME } from 'zss/words/types'
 
+import { boardrunneracks, boardrunnerblocked, boardrunners } from '../state'
+
 import { pilottick } from './pilot'
+
+const TICK_BUDGET = Math.ceil(TICK_FPS)
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
-  if (memoryreadsimfreeze()) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook) || memoryreadsimfreeze()) {
     return
   }
   perfmeasure('vm:pilottick', () => {
@@ -32,10 +40,6 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     memorytickmain(memoryreadhalt())
   })
   perfmeasure('vm:gadgetlayerscache', () => {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    if (!ispresent(mainbook)) {
-      return
-    }
     const store = memoryreadbookgadgetlayersmap(mainbook)
     const boards = memoryreadbookplayerboards(mainbook)
     const didrender: Record<string, boolean> = {}
@@ -55,6 +59,39 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     }
   })
   perfmeasure('vm:boardrunner', () => {
-    // todo, port over boardrunner election logic here
+    const activeboards = memoryreadbookplayerboards(mainbook)
+    for (let i = 0; i < activeboards.length; ++i) {
+      const board = activeboards[i]
+      const players = memoryreadplayersonboard(board)
+      const eligible = players.filter((player) => !boardrunnerblocked[player])
+
+      const priorrunner = boardrunners[board.id]
+      if (ispresent(priorrunner) && !players.includes(priorrunner)) {
+        delete boardrunners[board.id]
+        delete boardrunneracks[priorrunner]
+      }
+
+      const currentrunner = boardrunners[board.id]
+      if (ispresent(currentrunner)) {
+        boardrunneracks[currentrunner] ??= TICK_BUDGET
+        --boardrunneracks[currentrunner]
+        if (boardrunneracks[currentrunner] < 1) {
+          delete boardrunners[board.id]
+          delete boardrunneracks[currentrunner]
+          boardrunnerblocked[currentrunner] = true
+        }
+      }
+
+      if (!ispresent(boardrunners[board.id]) && eligible.length > 0) {
+        const elected = pick(...eligible)
+        boardrunners[board.id] = elected
+        boardrunneracks[elected] = TICK_BUDGET
+      }
+
+      const runner = boardrunners[board.id]
+      if (ispresent(runner)) {
+        boardrunnertick(vm, runner, board.id)
+      }
+    }
   })
 }

@@ -210,7 +210,7 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   }
 
   // map to boundary ids
-  const pages = staged.pages.map((page) => memoryboundaryalloc(page))
+  const pages = staged.pages.map((page) => memoryboundaryalloc(page, page.id))
   const flags = memoryboundaryalloc(staged.flags)
 
   // return book
@@ -418,7 +418,7 @@ export function memorywritecodepage(
   if (ispresent(existing)) {
     return false
   }
-  book.pages.push(memoryboundaryalloc(codepage))
+  book.pages.push(memoryboundaryalloc(codepage, codepage.id))
   memoryupdatebooktoken(book)
   return true
 }
@@ -437,7 +437,7 @@ export function memorywritebookflag(
 }
 
 export function memorycreatebook(pages: CODE_PAGE[]): BOOK {
-  const pageids = pages.map((p) => memoryboundaryalloc(p))
+  const pageids = pages.map((p) => memoryboundaryalloc(p, p.id))
   return {
     id: createsid(),
     name: createnameid(),
