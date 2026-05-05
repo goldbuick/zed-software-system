@@ -54,4 +54,7 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       }
     }
   })
+  perfmeasure('vm:boardrunner', () => {
+    // todo, port over boardrunner election logic here
+  })
 }

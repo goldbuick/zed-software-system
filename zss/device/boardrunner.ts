@@ -7,7 +7,11 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
     return
   }
 
-  console.info('boardrunner', message.target, message.data)
+  switch (message.target) {
+    default:
+      // todo: add filtering here
+      break
+  }
 
   switch (message.target) {
     case 'start':

@@ -79,16 +79,33 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-export function boardrunnerstart(device: DEVICELIKE, player: string) {
-  device.emit(player, 'boardrunner:start')
-}
-
 export function boardrunnerassign(
   device: DEVICELIKE,
   player: string,
   board: string,
 ) {
   device.emit(player, 'boardrunner:assign', board)
+}
+
+export function boardrunnerinput(
+  device: DEVICELIKE,
+  player: string,
+  input: INPUT,
+  mods: number,
+) {
+  device.emit(player, 'boardrunner:input', [input, mods])
+}
+
+export function boardrunnerstart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:start')
+}
+
+export function boardrunnertick(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+) {
+  device.emit(player, 'boardrunner:tick', board)
 }
 
 export function bridgestreamstart(
