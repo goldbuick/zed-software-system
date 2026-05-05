@@ -20,7 +20,7 @@ import { NAME } from 'zss/words/types'
 
 import { pilottick } from './pilot'
 
-export function handletick(vm: DEVICE, _message: MESSAGE): void {
+export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
   if (memoryreadsimfreeze()) {
     return

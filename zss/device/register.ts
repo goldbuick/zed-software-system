@@ -79,6 +79,7 @@ import {
   apierror,
   apilog,
   apitoast,
+  boardrunnerstart,
   bridgejoin,
   gadgetserverdesync,
   heavyllmpreset,
@@ -367,6 +368,8 @@ export const register = createdevice(
         break
       case 'acklogin':
         if (message.data) {
+          // start boardrunner
+          boardrunnerstart(register, myplayerid)
           // hide terminal
           registerterminalclose(register, myplayerid)
           // signal sim loaded

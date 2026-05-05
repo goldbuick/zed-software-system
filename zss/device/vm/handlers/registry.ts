@@ -36,7 +36,7 @@ import {
   handlerefscroll,
 } from './scroll'
 import { handlesecond } from './second'
-import { handletick } from './tick'
+import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
@@ -68,7 +68,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,
   halt: handlehalt,
-  ticktock: handletick,
+  ticktock: handleticktock,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,

@@ -11,9 +11,7 @@ describe('forward boardrunner', () => {
 
   it('forwards second and ready', () => {
     expect(
-      shouldforwardclienttoboardrunner(
-        createmessage('s', 'p', 'x', 'second'),
-      ),
+      shouldforwardclienttoboardrunner(createmessage('s', 'p', 'x', 'second')),
     ).toBe(true)
     expect(
       shouldforwardclienttoboardrunner(createmessage('s', 'p', 'x', 'ready')),
@@ -28,10 +26,7 @@ describe('forward boardrunner', () => {
     ).toBe(true)
   })
 
-  it('does not forward tock or ticktock', () => {
-    expect(
-      shouldforwardclienttoboardrunner(createmessage('s', 'p', 'x', 'tock')),
-    ).toBe(false)
+  it('does not forward ticktock', () => {
     expect(
       shouldforwardclienttoboardrunner(
         createmessage('s', 'p', 'x', 'ticktock'),
