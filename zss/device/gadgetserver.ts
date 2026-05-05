@@ -1,6 +1,6 @@
 import { createdevice } from 'zss/device'
 import {
-  type JsonPipeHandle,
+  type JSON_PIPE_HANDLE,
   createjsonpipe,
 } from 'zss/feature/jsonpipe/observe'
 import {
@@ -49,7 +49,7 @@ gadgetstateprovider((element) => {
   return initstate()
 })
 
-const gadgetjsonpipes = new Map<string, JsonPipeHandle<GADGET_STATE>>()
+const gadgetjsonpipes = new Map<string, JSON_PIPE_HANDLE<GADGET_STATE>>()
 
 function readgadgetjsonpipe(player: string) {
   if (gadgetjsonpipes.has(player)) {

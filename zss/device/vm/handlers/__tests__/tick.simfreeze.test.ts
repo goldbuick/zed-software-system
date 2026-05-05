@@ -15,7 +15,7 @@ jest.mock('zss/device/vm/handlers/pilot', () => ({
 }))
 
 jest.mock('zss/device/vm/boardrunnersync', () => ({
-  boardrunnermemorysync: jest.fn(),
+  boardrunnerfullmemorysync: jest.fn(),
 }))
 
 const stubmainbook: BOOK = {

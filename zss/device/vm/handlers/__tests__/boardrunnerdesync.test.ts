@@ -16,9 +16,36 @@ describe('handleboardrunnerdesync', () => {
     const live = session.memoryreadroot()
     handleboardrunnerdesync(vm, message)
 
-    expect(paint).toHaveBeenCalledWith(vm, 'player-a', expect.any(Object))
-    const payload = paint.mock.calls[0][2]
-    expect(payload).not.toBe(live)
+    expect(paint).toHaveBeenCalledWith(vm, 'player-a', {
+      doc: expect.any(Object),
+    })
+    const payload = paint.mock.calls[0][2] as { doc: unknown }
+    expect(payload.doc).not.toBe(live)
+    expect(payload).not.toHaveProperty('boundaryid')
+
+    paint.mockRestore()
+  })
+
+  it('calls boardrunnerpaint with boundary doc when desync data has boundaryid', () => {
+    const vm = { emit: jest.fn() } as unknown as DEVICE
+    const message = {
+      player: 'p2',
+      data: { boundaryid: 'b-edge' },
+    } as unknown as MESSAGE
+    const paint = jest
+      .spyOn(api, 'boardrunnerpaint')
+      .mockImplementation(jest.fn())
+
+    handleboardrunnerdesync(vm, message)
+
+    expect(paint).toHaveBeenCalledWith(
+      vm,
+      'p2',
+      expect.objectContaining({
+        boundaryid: 'b-edge',
+        doc: expect.any(Object),
+      }),
+    )
 
     paint.mockRestore()
   })

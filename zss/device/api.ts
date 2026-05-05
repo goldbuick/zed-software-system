@@ -8,7 +8,6 @@ import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import type { Operation } from 'zss/feature/jsonpipe/observe'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import type { MEMORY_ROOT } from 'zss/memory/session'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
@@ -106,29 +105,28 @@ export function boardrunnertick(
   device: DEVICELIKE,
   player: string,
   board: string,
+  timestamp: number,
 ) {
-  device.emit(player, 'boardrunner:tick', board)
+  device.emit(player, 'boardrunner:tick', [board, timestamp])
 }
 
 export function boardrunnerpaint(
   device: DEVICELIKE,
   player: string,
-  memorydoc: MEMORY_ROOT,
+  doc: any,
+  boundary?: string,
 ) {
-  device.emit(player, 'boardrunner:paint', memorydoc)
+  device.emit(player, 'boardrunner:paint', [doc, boundary])
 }
 
 export function boardrunnerpatch(
   device: DEVICELIKE,
   player: string,
   patch: Operation[],
+  boundary?: string,
 ) {
-  device.emit(player, 'boardrunner:patch', patch)
+  device.emit(player, 'boardrunner:patch', [patch, boundary])
 }
-
-// export function boardrunnerdesync(device: DEVICELIKE, player: string) {
-//   device.emit(player, 'boardrunner:desync')
-// }
 
 export function bridgestreamstart(
   device: DEVICELIKE,

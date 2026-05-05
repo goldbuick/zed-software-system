@@ -11,23 +11,26 @@ import {
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
-// since we send this to ALL boardrunners we only need ONE pipe
+// one root MEMORY jsonpipe; fan out wrapped patches to activelist + operator
 const boardrunnermemorypipe = createjsonpipe<MEMORY_ROOT>(
   memoryreadroot(),
   memoryrootshouldemitpath,
 )
 
-/** Push MEMORY snapshot deltas to boardrunner workers (activelist), jsonpipe v1. */
+/** Push root MEMORY snapshot deltas to boardrunner workers, jsonpipe v1. */
 export function boardrunnermemorysync(vm: DEVICE) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
-
   const patch = boardrunnermemorypipe.emitdiff(memoryreadroot())
   if (patch.length > 0) {
-    boardrunnerpatch(vm, memoryreadoperator(), patch)
+    const activelist = new Set<string>([
+      memoryreadoperator(),
+      ...(mainbook.activelist ?? []),
+    ])
+    for (const player of activelist) {
+      boardrunnerpatch(vm, player, patch)
+    }
   }
 }
-
-// boundary jsonpipes will go here

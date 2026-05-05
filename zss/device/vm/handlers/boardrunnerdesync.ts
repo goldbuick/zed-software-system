@@ -1,10 +1,18 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerpaint } from 'zss/device/api'
-import { deepcopy } from 'zss/mapping/types'
+import { isstring } from 'zss/mapping/types'
+import { memoryboundaryget } from 'zss/memory/boundaries'
 import { memoryreadroot } from 'zss/memory/session'
 
-/** Boardrunner worker asked for full MEMORY resync after patch/paint failure (jsonpipe desync). */
+type BOUNDARY_DOC = Record<string, any>
+
+/** Boardrunner worker asked for resync after patch/paint failure (jsonpipe desync). */
 export function handleboardrunnerdesync(vm: DEVICE, message: MESSAGE): void {
-  boardrunnerpaint(vm, message.player, deepcopy(memoryreadroot()))
+  if (isstring(message.data)) {
+    const doc = memoryboundaryget(message.data) ?? ({} as BOUNDARY_DOC)
+    boardrunnerpaint(vm, message.player, doc, message.data)
+  } else {
+    boardrunnerpaint(vm, message.player, memoryreadroot())
+  }
 }

@@ -97,15 +97,16 @@ export function memoryrepeatclilast(player: string) {
 
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
 
-export function memorytickmain(playeronly = false) {
+export function memorytickloaders() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
 
   // inc timestamp
-  const timestamp = mainbook.timestamp + 1
+  ++mainbook.timestamp
 
+  // run the loaders
   perfmeasure('memorytick:loaders', () => {
     const loaders = memoryreadloaders()
     const loaderids = Object.keys(loaders)
@@ -146,14 +147,25 @@ export function memorytickmain(playeronly = false) {
       })
     }
   })
+}
+
+export function memorytickmain(
+  timestamp: number,
+  boards: BOARD[],
+  playeronly = false,
+) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
 
   // track tick
-  mainbook.timestamp = timestamp
-  READ_CONTEXT.timestamp = timestamp
+  READ_CONTEXT.timestamp = mainbook.timestamp = timestamp
 
+  // run the given boards
   perfmeasure('memorytick:boards', () => {
     // update boards / build code / run chips
-    const boards = memoryreadbookplayerboards(mainbook)
+    // const boards = memoryreadbookplayerboards(mainbook)
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
 
@@ -224,8 +236,6 @@ export function memorytickmain(playeronly = false) {
     }
   })
 }
-
-export { memoryinvalidatedraw } from './boarddrawdirty'
 
 export function memorytickobject(
   book: MAYBE<BOOK>,

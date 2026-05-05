@@ -27,7 +27,7 @@ export function filterpatch(
   return out
 }
 
-export type JsonPipeHandle<T> = {
+export type JSON_PIPE_HANDLE<T> = {
   emitdiff: (root: T) => Operation[]
   isdesynced: () => boolean
   applyremote: (root: T, patch: Operation[]) => MAYBE<T>
@@ -41,7 +41,7 @@ export type JsonPipeHandle<T> = {
 export function createjsonpipe<T extends object | unknown[]>(
   init: T,
   shouldemitpath: (path: string) => boolean,
-): JsonPipeHandle<T> {
+): JSON_PIPE_HANDLE<T> {
   let desync = false
   let shadow = deepcopy(init)
 

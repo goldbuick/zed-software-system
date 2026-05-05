@@ -1,7 +1,13 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { boardrunnertick } from 'zss/device/api'
+import { boardrunnerboundarymemorysync } from 'zss/device/vm/boardrunnerboundarysync'
 import { boardrunnermemorysync } from 'zss/device/vm/boardrunnersync'
+import {
+  boardrunneracks,
+  boardrunnerblocked,
+  boardrunners,
+} from 'zss/device/vm/state'
 import { pick } from 'zss/mapping/array'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
@@ -12,17 +18,14 @@ import {
   memoryreadgadgetlayers,
   memoryreadgraphics,
 } from 'zss/memory/rendering'
-import { memorytickmain } from 'zss/memory/runtime'
+import { memorytickloaders } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
-  memoryreadhalt,
   memoryreadsimfreeze,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { NAME } from 'zss/words/types'
-
-import { boardrunneracks, boardrunnerblocked, boardrunners } from '../state'
 
 import { pilottick } from './pilot'
 
@@ -37,8 +40,8 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   perfmeasure('vm:pilottick', () => {
     pilottick(vm)
   })
-  perfmeasure('vm:memorytickmain', () => {
-    memorytickmain(memoryreadhalt())
+  perfmeasure('vm:memorytickloaders', () => {
+    memorytickloaders()
   })
   perfmeasure('vm:gadgetlayerscache', () => {
     const store = memoryreadbookgadgetlayersmap(mainbook)
@@ -91,11 +94,12 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
 
       const runner = boardrunners[board.id]
       if (ispresent(runner)) {
-        boardrunnertick(vm, runner, board.id)
+        boardrunnertick(vm, runner, board.id, mainbook.timestamp)
       }
     }
   })
   perfmeasure('vm:boardrunnermemorysync', () => {
     boardrunnermemorysync(vm)
+    boardrunnerboundarymemorysync(vm)
   })
 }
