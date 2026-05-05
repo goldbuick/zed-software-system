@@ -4,6 +4,7 @@ import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
 import * as boardmovement from 'zss/memory/boardmovement'
+import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import {
   memorycheckelementpushable,
   memoryinitboard,
@@ -433,7 +434,10 @@ export function boardweavegroup(
   }
 
   targetboard.terrain = newterrain
-  delete targetboard.distmaps
+  const boardruntime = memoryreadboardruntime(targetboard)
+  if (boardruntime) {
+    delete boardruntime.distmaps
+  }
 
   for (let i = 0; i < objectelements.length; ++i) {
     const fromelement = objectelements[i]

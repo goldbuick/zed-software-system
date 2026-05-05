@@ -54,6 +54,7 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
+import { memoryensureboardelementruntime } from './runtimeboundary'
 
 /** Parses `#rgb` / `#rrggbb` / `rgb(r,g,b)` into linear 0–1 components (worker-safe). */
 function parsecsscolortonormalizedrgb(
@@ -349,7 +350,8 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
       codepage.object.id = codepage.id
       codepage.object.code = codepage.code
       codepage.object.name = memoryreadcodepagename(codepage)
-      codepage.object.category = CATEGORY.ISOBJECT
+      memoryensureboardelementruntime(codepage.object).category =
+        CATEGORY.ISOBJECT
       memoryapplyelementstats(
         memoryreadcodepagestatdefaults(codepage),
         codepage.object,
@@ -364,7 +366,8 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
       codepage.terrain.id = codepage.id
       codepage.terrain.code = codepage.code
       codepage.terrain.name = memoryreadcodepagename(codepage)
-      codepage.terrain.category = CATEGORY.ISTERRAIN
+      memoryensureboardelementruntime(codepage.terrain).category =
+        CATEGORY.ISTERRAIN
       memoryapplyelementstats(
         memoryreadcodepagestatdefaults(codepage),
         codepage.terrain,

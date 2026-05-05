@@ -185,17 +185,7 @@ export type BOARD = {
   // runtime only
   id: string
   name: string
-  named?: Record<string, Set<string | number>>
-  lookup?: MAYBE<string>[]
-  distmaps?: Record<string, number[]>
-  overboard?: string
-  underboard?: string
-  charsetpage?: string
-  palettepage?: string
-  drawlastfp?: Record<string, string> // post-tick draw fingerprints; keys match `memoryelementdrawreadid`
-  drawlastxy?: Record<string, { x: number; y: number }> // last known cells for objects (ids); used when objects are removed
-  drawallowids?: Set<string> // ids allowed for `:drawdisplay` next tick; undefined means full draw pass
-  drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
+  runtime?: string
 }
 
 export type BOARD_ELEMENT = {
@@ -253,8 +243,7 @@ export type BOARD_ELEMENT = {
   // cleanup
   removed?: number
   // runtime only
-  category?: CATEGORY
-  kinddata?: BOARD_ELEMENT
+  runtime?: string
 }
 
 export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
@@ -302,3 +291,22 @@ export type CODE_PAGE_TYPE_MAP = {
 }
 
 export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
+
+export type BOARD_RUNTIME = {
+  named?: Record<string, Set<string | number>>
+  lookup?: MAYBE<string>[]
+  distmaps?: Record<string, number[]>
+  overboard?: string
+  underboard?: string
+  charsetpage?: string
+  palettepage?: string
+  drawlastfp?: Record<string, string> // post-tick draw fingerprints; keys match `memoryelementdrawreadid`
+  drawlastxy?: Record<string, { x: number; y: number }> // last known cells for objects (ids); used when objects are removed
+  drawallowids?: Set<string> // ids allowed for `:drawdisplay` next tick; undefined means full draw pass
+  drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
+}
+
+export type BOARD_ELEMENT_RUNTIME = {
+  category?: CATEGORY
+  kinddata?: BOARD_ELEMENT
+}

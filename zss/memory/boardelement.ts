@@ -10,6 +10,10 @@ import { STR_COLOR, isstrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { CATEGORY } from 'zss/words/types'
 
 import { BOARD_ELEMENT, BOARD_ELEMENT_KEYS } from './types'
+import {
+  memoryensureboardelementruntime,
+  memoryreadboardelementruntime,
+} from './runtimeboundary'
 
 export function memoryapplyboardelementcolor(
   element: MAYBE<BOARD_ELEMENT>,
@@ -32,8 +36,7 @@ export function memoryexportboardelement(
 ): MAYBE<FORMAT_OBJECT> {
   if (ispresent(boardelement?.id)) {
     return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
-      category: FORMAT_SKIP,
-      kinddata: FORMAT_SKIP,
+      runtime: FORMAT_SKIP,
       stopped: FORMAT_SKIP,
       removed: FORMAT_SKIP,
       bucket: FORMAT_SKIP,
@@ -47,8 +50,7 @@ export function memoryexportboardelement(
     lx: FORMAT_SKIP,
     ly: FORMAT_SKIP,
     code: FORMAT_SKIP,
-    category: FORMAT_SKIP,
-    kinddata: FORMAT_SKIP,
+      runtime: FORMAT_SKIP,
     stopped: FORMAT_SKIP,
     removed: FORMAT_SKIP,
     bucket: FORMAT_SKIP,
@@ -58,18 +60,27 @@ export function memoryexportboardelement(
 export function memoryimportboardelement(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
-  return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)
+  const element = unformatobject<BOARD_ELEMENT>(boardelemententry, BOARD_ELEMENT_KEYS)
+  if (!ispresent(element)) {
+    return undefined
+  }
+  memoryensureboardelementruntime(element)
+  return element
 }
 
 export function memoryboardelementisobject(
   element: MAYBE<BOARD_ELEMENT>,
 ): boolean {
-  return element?.category === CATEGORY.ISOBJECT
+  return (
+    memoryreadboardelementruntime(element)?.category === CATEGORY.ISOBJECT
+  )
 }
 
 export function memorycreateboardelement() {
   const boardelement: BOARD_ELEMENT = {
     id: createsid(),
+    runtime: '',
   }
+  memoryensureboardelementruntime(boardelement)
   return boardelement
 }

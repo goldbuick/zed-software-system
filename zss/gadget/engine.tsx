@@ -132,9 +132,9 @@ export function Engine() {
               />
               <CRTShape
                 viewheight={viewheight}
-                curvebase={0.0005}
-                curveamp={0.08}
-                curvespeed={0.5}
+                curvebase={0.005}
+                curveamp={0.001}
+                curvespeed={5}
               />
             </>
           )}

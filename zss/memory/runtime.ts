@@ -29,7 +29,6 @@ import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
 import {
-  memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from './playermanagement'
 import {
@@ -49,6 +48,10 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
+import {
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+} from './runtimeboundary'
 
 // manages chips
 const os = createos()
@@ -177,9 +180,10 @@ export function memorytickmain(
         memoryapplyboardsynthstats(board)
       }
 
-      const drawallowforqueue = board.drawneedfull
+      const boardruntime = memoryreadboardruntime(board)
+      const drawallowforqueue = boardruntime?.drawneedfull
         ? undefined
-        : board.drawallowids
+        : boardruntime?.drawallowids
       const rundraw =
         drawallowforqueue === undefined || drawallowforqueue.size > 0
       const run = memorytickboard(board, timestamp, rundraw, drawallowforqueue)
@@ -270,7 +274,9 @@ export function memorytickobject(
 
   // run chip code
   const id = object.id ?? ''
-  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
+  const itemname = NAME(
+    object.name ?? memoryreadboardelementruntime(object)?.kinddata?.name ?? '',
+  )
   os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
 
   // clear ticker
@@ -322,7 +328,9 @@ export function memorytickonce(
 
   READ_CONTEXT.usedisplaystats = true
 
-  const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
+  const itemname = NAME(
+    element.name ?? memoryreadboardelementruntime(element)?.kinddata?.name ?? '',
+  )
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
 
   objectKeys(OLD_CONTEXT).forEach((key) => {
@@ -372,8 +380,9 @@ export function memoryruncodepage(address: string, label: string) {
   const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
   const id = `${address}_run`
-  const itemname =
-    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
+  const itemname = READ_CONTEXT.element?.name ??
+    memoryreadboardelementruntime(READ_CONTEXT.element)?.kinddata?.name ??
+    ''
   const itemcode = codepage?.code ?? ''
 
   // set arg to value on chip with id = id

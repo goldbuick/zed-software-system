@@ -35,12 +35,20 @@ import {
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
 } from './types'
+import {
+  memoryensureboardelementruntime,
+  memoryensureboardruntime,
+  memoryreadboardelementruntime,
+} from './runtimeboundary'
 
 export function memoryreadelementkind(
   element: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
-  if (ispresent(element?.kinddata)) {
-    return element.kinddata
+  const runtimedata = ispresent(element)
+    ? memoryensureboardelementruntime(element)
+    : undefined
+  if (ispresent(runtimedata?.kinddata)) {
+    return runtimedata.kinddata
   }
   if (!isstring(element?.kind) || !element.kind) {
     return undefined
@@ -50,18 +58,16 @@ export function memoryreadelementkind(
     element.kind,
   )
   if (ispresent(maybeobject)) {
-    element.kinddata =
-      memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
-    return element.kinddata
+    runtimedata!.kinddata = memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
+    return runtimedata!.kinddata
   }
   const maybeterrain = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.TERRAIN,
     element.kind,
   )
   if (ispresent(maybeterrain)) {
-    element.kinddata =
-      memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
-    return element.kinddata
+    runtimedata!.kinddata = memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
+    return runtimedata!.kinddata
   }
   return undefined
 }
@@ -70,7 +76,7 @@ export function memoryreadelementstat(
   element: MAYBE<BOARD_ELEMENT>,
   stat: BOARD_ELEMENT_STAT | 'sky',
 ) {
-  const kind = element?.kinddata
+  const kind = memoryreadboardelementruntime(element)?.kinddata
   const kindid = kind?.id ?? ''
   const elementstat = element?.[stat as keyof BOARD_ELEMENT]
   if (ispresent(elementstat)) {
@@ -208,21 +214,22 @@ export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   if (!ispresent(board)) {
     return
   }
+  const boardruntime = memoryensureboardruntime(board)
   if (!isstring(board.over)) {
-    delete board.overboard
+    delete boardruntime.overboard
     return undefined
   }
-  if (isstring(board.overboard)) {
-    const maybeover = memoryreadboardbyaddress(board.overboard)
+  if (isstring(boardruntime.overboard)) {
+    const maybeover = memoryreadboardbyaddress(boardruntime.overboard)
     if (ispresent(maybeover)) {
       return maybeover
     }
-    delete board.overboard
+    delete boardruntime.overboard
     return undefined
   }
   const maybeover = memoryreadboardbyaddress(board.over)
   if (ispresent(maybeover)) {
-    board.overboard = maybeover.id
+    boardruntime.overboard = maybeover.id
     return maybeover
   }
   return undefined
@@ -232,21 +239,22 @@ export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   if (!ispresent(board)) {
     return
   }
+  const boardruntime = memoryensureboardruntime(board)
   if (!isstring(board.under)) {
-    delete board.underboard
+    delete boardruntime.underboard
     return undefined
   }
-  if (isstring(board.underboard)) {
-    const maybeunder = memoryreadboardbyaddress(board.underboard)
+  if (isstring(boardruntime.underboard)) {
+    const maybeunder = memoryreadboardbyaddress(boardruntime.underboard)
     if (ispresent(maybeunder)) {
       return maybeunder
     }
-    delete board.underboard
+    delete boardruntime.underboard
     return undefined
   }
   const maybeunder = memoryreadboardbyaddress(board.under)
   if (ispresent(maybeunder)) {
-    board.underboard = maybeunder.id
+    boardruntime.underboard = maybeunder.id
     return maybeunder
   }
   return undefined

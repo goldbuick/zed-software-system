@@ -49,6 +49,11 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
+import {
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+  memorywriteboardelementruntime,
+} from './runtimeboundary'
 
 /**
  * Gadget rendering: board → layer stacks, display prefixes, and a small LRU
@@ -121,8 +126,11 @@ export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
     const name = memoryreadcodepagename(codepage)
     const stub: BOARD_ELEMENT = {
       kind: name,
-      kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
+      runtime: '',
     }
+    memorywriteboardelementruntime(stub, {
+      kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
+    })
     return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
   }
   return ''
@@ -356,6 +364,7 @@ export function memoryconverttogadgetlayers(
 
   // layers for display media
   if (whichlayer === DIR.MID) {
+    const boardruntime = memoryreadboardruntime(board)
     // set mood
     layers.push(
       createcachedmedia(
@@ -367,10 +376,10 @@ export function memoryconverttogadgetlayers(
     )
 
     // check for palette
-    if (isstring(board.palettepage)) {
+    if (isstring(boardruntime?.palettepage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
-        board.palettepage,
+        boardruntime.palettepage,
       )
       const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette?.bits)) {
@@ -379,16 +388,16 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/palette',
-            cachedmediabits(board.palettepage, palette.bits),
+            cachedmediabits(boardruntime.palettepage, palette.bits),
           ),
         )
       }
     }
     // check for charset
-    if (isstring(board.charsetpage)) {
+    if (isstring(boardruntime?.charsetpage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
-        board.charsetpage,
+        boardruntime.charsetpage,
       )
       const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset?.bits)) {
@@ -397,7 +406,7 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/charset',
-            cachedmediabits(board.charsetpage, charset.bits),
+            cachedmediabits(boardruntime.charsetpage, charset.bits),
           ),
         )
       }
@@ -477,7 +486,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
     withname = isstring(user) ? user : 'player'
   } else {
     memoryreadelementkind(element)
-    const kind = element.kinddata
+    const kind = memoryreadboardelementruntime(element)?.kinddata
     const fromdisplay = element.displayname ?? kind?.displayname
     const trimmed =
       isstring(fromdisplay) && fromdisplay.trim().length > 0

@@ -1,6 +1,10 @@
 import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import { memorytickboard } from 'zss/memory/boardtick'
 import {
+  memoryreadboardruntime,
+  memorywriteboardelementruntime,
+} from 'zss/memory/runtimeboundary'
+import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_SIZE,
@@ -48,16 +52,21 @@ function makeboard(
     name: 'board test',
     objects,
     terrain,
+    runtime: '',
   } as BOARD
 }
 
 function maketerrain(x: number, y: number, code: string): BOARD_ELEMENT {
-  return {
+  const terrain: BOARD_ELEMENT = {
     x,
     y,
     kind: 'terrain_kind',
-    kinddata: { id: 'terrain_kind', code },
+    runtime: '',
   }
+  memorywriteboardelementruntime(terrain, {
+    kinddata: { id: 'terrain_kind', code, runtime: '' },
+  })
+  return terrain
 }
 
 function makeobject(
@@ -65,14 +74,18 @@ function makeobject(
   code: string,
   collision: COLLISION = COLLISION.ISWALK,
 ): BOARD_ELEMENT {
-  return {
+  const object: BOARD_ELEMENT = {
     id,
     x: 1,
     y: 1,
     collision,
     kind: 'object_kind',
-    kinddata: { id: 'object_kind', code },
+    runtime: '',
   }
+  memorywriteboardelementruntime(object, {
+    kinddata: { id: 'object_kind', code, runtime: '' },
+  })
+  return object
 }
 
 describe('memorytickboard draw pass', () => {
@@ -194,16 +207,22 @@ describe('memorytickboard draw pass', () => {
     const board = makeboard({ [mover.id ?? '']: mover }, terrain)
 
     memoryupdatedrawdirty(board, 1)
-    expect((board.drawallowids?.size ?? 0) > 0).toBe(true)
+    expect((memoryreadboardruntime(board)?.drawallowids?.size ?? 0) > 0).toBe(
+      true,
+    )
 
     memoryupdatedrawdirty(board, 2)
-    expect(board.drawallowids?.size ?? 0).toBe(0)
+    expect(memoryreadboardruntime(board)?.drawallowids?.size ?? 0).toBe(0)
 
     mover.x = 6
     mover.y = 6
     memoryupdatedrawdirty(board, 3)
 
-    expect(board.drawallowids?.has(`${tidx}`)).toBe(true)
-    expect(board.drawallowids?.has('sid_move')).toBe(true)
+    expect(memoryreadboardruntime(board)?.drawallowids?.has(`${tidx}`)).toBe(
+      true,
+    )
+    expect(memoryreadboardruntime(board)?.drawallowids?.has('sid_move')).toBe(
+      true,
+    )
   })
 })

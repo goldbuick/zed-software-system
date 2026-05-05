@@ -76,8 +76,12 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   n += 0.025 * snoise(uv.st * 800.0);
 
   vec2 xn = 2.0 * (uv.st - 0.5);
-  float fz = max(0.0, curvebase + sin(time * curvespeed) * curveamp);
-  vec2 edge = bendy(xn, fz * n, -fz * n);
+  // Spatial noise must not be scaled by the full animated curve amount, or UVs
+  // shimmer (reads as fuzz). Clamp noise coupling; breathe the lens uniformly.
+  float warpn = clamp(curvebase, 0.001, 0.012);
+  // 0..1 lerp factor from sin, then scale by curveamp (no negative breathe)
+  float breathe = (sin(time * curvespeed) * 0.5 + 0.5) * curveamp;
+  vec2 edge = bendy(xn, warpn * n + breathe, -warpn * n - breathe);
   vec2 bent = edge.xy * 0.5 + 0.5;
 
   float edgetime = time * 0.3;

@@ -8,6 +8,11 @@ import {
   memoryapplyelementstats,
   memoryreadcodepagestatsfromtext,
 } from './codepageoperations'
+import {
+  memoryensureboardelementruntime,
+  memoryensureboardruntime,
+  memoryreadboardruntime,
+} from './runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 // quick lookup utils
@@ -18,16 +23,21 @@ export function memorywriteboardnamed(
   index?: number,
 ) {
   // invalid data
-  if (!ispresent(board) || !ispresent(board.named) || !ispresent(element)) {
+  if (!ispresent(board) || !ispresent(element)) {
+    return
+  }
+  const boardruntime = memoryensureboardruntime(board)
+  if (!ispresent(boardruntime.named)) {
     return
   }
   // update named
-  const name = NAME(element.name ?? element.kinddata?.name ?? '')
-  if (!board.named[name]) {
-    board.named[name] = new Set<string>()
+  const kindname = memoryensureboardelementruntime(element).kinddata?.name
+  const name = NAME(element.name ?? kindname ?? '')
+  if (!boardruntime.named[name]) {
+    boardruntime.named[name] = new Set<string>()
   }
   // object.id or terrain index
-  board.named[name].add(element?.id ?? index ?? '')
+  boardruntime.named[name].add(element?.id ?? index ?? '')
 }
 
 export function memorywriteboardobjectlookup(
@@ -35,7 +45,11 @@ export function memorywriteboardobjectlookup(
   object: MAYBE<BOARD_ELEMENT>,
 ) {
   // invalid data
-  if (!ispresent(board) || !ispresent(board.lookup) || !ispresent(object?.id)) {
+  if (!ispresent(board) || !ispresent(object?.id)) {
+    return
+  }
+  const boardruntime = memoryensureboardruntime(board)
+  if (!ispresent(boardruntime.lookup)) {
     return
   }
   // update object lookup
@@ -45,7 +59,7 @@ export function memorywriteboardobjectlookup(
   ) {
     const x = object.x ?? 0
     const y = object.y ?? 0
-    board.lookup[x + y * BOARD_WIDTH] = object.id
+    boardruntime.lookup[x + y * BOARD_WIDTH] = object.id
   }
 }
 
@@ -54,17 +68,22 @@ export function memorydeleteboardobjectnamedlookup(
   object: MAYBE<BOARD_ELEMENT>,
 ) {
   if (ispresent(board) && ispresent(object?.id)) {
+    const boardruntime = memoryreadboardruntime(board)
     // remove from lookup
-    if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
+    if (
+      ispresent(boardruntime?.lookup) &&
+      ispresent(object.x) &&
+      ispresent(object.y)
+    ) {
       const index = object.x + object.y * BOARD_WIDTH
-      if (board.lookup[index] === object.id) {
-        board.lookup[index] = undefined
+      if (boardruntime.lookup[index] === object.id) {
+        boardruntime.lookup[index] = undefined
       }
     }
     // remove from named
     const display = memoryreadelementdisplay(object)
-    if (ispresent(board.named?.[display.name]) && ispresent(object.id)) {
-      board.named[display.name].delete(object.id)
+    if (ispresent(boardruntime?.named?.[display.name]) && ispresent(object.id)) {
+      boardruntime.named[display.name].delete(object.id)
     }
   }
 }
@@ -75,8 +94,9 @@ export function memoryresetboardlookups(board: MAYBE<BOARD>) {
   }
 
   // reset all lookups
-  delete board.named
-  delete board.lookup
+  const boardruntime = memoryensureboardruntime(board)
+  delete boardruntime.named
+  delete boardruntime.lookup
 
   // make sure lookup is created
   memoryinitboardlookup(board)
@@ -89,7 +109,8 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
   }
 
   // already cached
-  if (ispresent(board.lookup) && ispresent(board.named)) {
+  const boardruntime = memoryensureboardruntime(board)
+  if (ispresent(boardruntime.lookup) && ispresent(boardruntime.named)) {
     return
   }
 
@@ -108,7 +129,7 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
       !ispresent(object.removed)
     ) {
       // add category
-      object.category = CATEGORY.ISOBJECT
+      memoryensureboardelementruntime(object).category = CATEGORY.ISOBJECT
 
       // update lookup
       if (memoryreadelementstat(object, 'collision') !== COLLISION.ISGHOST) {
@@ -141,7 +162,7 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
       // add coords
       terrain.x = x
       terrain.y = y
-      terrain.category = CATEGORY.ISTERRAIN
+      memoryensureboardelementruntime(terrain).category = CATEGORY.ISTERRAIN
 
       // update named lookup
       const display = memoryreadelementdisplay(memoryreadelementkind(terrain))
@@ -157,8 +178,8 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
     }
   }
 
-  board.lookup = lookup
-  board.named = named
+  boardruntime.lookup = lookup
+  boardruntime.named = named
 }
 
 export function memorydeleteboardterrainnamed(
@@ -166,11 +187,12 @@ export function memorydeleteboardterrainnamed(
   terrain: MAYBE<BOARD_ELEMENT>,
 ) {
   if (ispresent(board) && ispresent(terrain?.x) && ispresent(terrain.y)) {
+    const boardruntime = memoryreadboardruntime(board)
     // remove from named
     const display = memoryreadelementdisplay(terrain)
     const index = memoryboardelementindex(board, terrain)
-    if (ispresent(board.named?.[display.name])) {
-      board.named[display.name].delete(index)
+    if (ispresent(boardruntime?.named?.[display.name])) {
+      boardruntime.named[display.name].delete(index)
     }
   }
 }

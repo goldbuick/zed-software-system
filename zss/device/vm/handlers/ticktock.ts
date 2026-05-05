@@ -18,7 +18,7 @@ import {
   memoryreadgadgetlayers,
   memoryreadgraphics,
 } from 'zss/memory/rendering'
-import { memorytickloaders } from 'zss/memory/runtime'
+import { memorytickloaders, memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
   memoryreadsimfreeze,
@@ -42,6 +42,7 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   })
   perfmeasure('vm:memorytickloaders', () => {
     memorytickloaders()
+    memorytickmain(mainbook.timestamp, memoryreadbookplayerboards(mainbook))
   })
   perfmeasure('vm:gadgetlayerscache', () => {
     const store = memoryreadbookgadgetlayersmap(mainbook)

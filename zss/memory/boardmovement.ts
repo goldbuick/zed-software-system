@@ -18,6 +18,7 @@ import {
 } from './boardtransitions'
 import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
+import { memoryreadboardruntime } from './runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -33,10 +34,11 @@ export function memorycheckblockedboardobject(
   dest: PT,
   isplayer = false,
 ): MAYBE<BOARD_ELEMENT> {
+  const lookup = memoryreadboardruntime(board)?.lookup
   // first pass clipping
   if (
     !ispresent(board) ||
-    !ispresent(board.lookup) ||
+    !ispresent(lookup) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
     dest.y < 0 ||
@@ -49,6 +51,7 @@ export function memorycheckblockedboardobject(
       collision: COLLISION.ISSOLID,
       x: dest.x,
       y: dest.y,
+      runtime: '',
     }
   }
 
@@ -56,7 +59,7 @@ export function memorycheckblockedboardobject(
   const targetidx = dest.x + dest.y * BOARD_WIDTH
 
   // blocked by an object
-  const maybeobject = memoryreadobject(board, board.lookup[targetidx] ?? '404')
+  const maybeobject = memoryreadobject(board, lookup[targetidx] ?? '404')
   if (ispresent(maybeobject)) {
     if (isplayer) {
       // players do not block players
@@ -132,6 +135,7 @@ export function memorymoveboardobject(
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
   const movingelement = memoryreadobject(board, elementtomove?.id ?? '')
+  const lookup = memoryreadboardruntime(board)?.lookup
 
   // first pass clipping
   if (
@@ -139,7 +143,7 @@ export function memorymoveboardobject(
     !ispresent(movingelement) ||
     !ispresent(movingelement.x) ||
     !ispresent(movingelement.y) ||
-    !ispresent(board.lookup) ||
+    !ispresent(lookup) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
     dest.y < 0 ||
@@ -152,6 +156,7 @@ export function memorymoveboardobject(
       collision: COLLISION.ISSOLID,
       x: dest.x,
       y: dest.y,
+      runtime: '',
     }
   }
 
@@ -180,7 +185,7 @@ export function memorymoveboardobject(
   const movingelementisplayer = ispid(movingelement?.id)
 
   // blocked by an object
-  const maybeobject = memoryreadobject(board, board.lookup[destidx] ?? '')
+  const maybeobject = memoryreadobject(board, lookup[destidx] ?? '')
   if (memoryreadelementstat(maybeobject, 'collision') === COLLISION.ISGHOST) {
     // skip ghost
     return undefined
@@ -214,9 +219,9 @@ export function memorymoveboardobject(
   // if not removed, update lookup
   if (!ispresent(movingelement.removed)) {
     // blank current lookup
-    board.lookup[startidx] = undefined
+    lookup[startidx] = undefined
     // update lookup at dest
-    board.lookup[destidx] = movingelement.id ?? ''
+    lookup[destidx] = movingelement.id ?? ''
   }
 
   // no interaction

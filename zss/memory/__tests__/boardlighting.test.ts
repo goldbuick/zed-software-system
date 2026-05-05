@@ -4,6 +4,9 @@ import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from 'zss/memory/boardlighting'
+import {
+  memorywriteboardruntime,
+} from 'zss/memory/runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 
@@ -123,7 +126,7 @@ jest.mock('zss/memory/boardoperations', () => ({
 }))
 
 function emptyterrain(): BOARD_ELEMENT[] {
-  return Array.from({ length: BOARD_SIZE }, () => ({}))
+  return Array.from({ length: BOARD_SIZE }, () => ({ runtime: '' }))
 }
 
 function makeboard(patch?: (terrain: BOARD_ELEMENT[]) => void): BOARD {
@@ -134,6 +137,7 @@ function makeboard(patch?: (terrain: BOARD_ELEMENT[]) => void): BOARD {
     name: 'test',
     terrain,
     objects: {},
+    runtime: '',
   }
 }
 
@@ -212,9 +216,15 @@ describe('boardlighting', () => {
 
       const boardplain = makeboard()
       const boardwithobj = makeboard()
-      boardwithobj.objects[blockerid] = { id: blockerid, x: bx, y: by }
-      boardwithobj.lookup = new Array<string>(BOARD_SIZE).fill('')
-      boardwithobj.lookup[bidx] = blockerid
+      boardwithobj.objects[blockerid] = {
+        id: blockerid,
+        x: bx,
+        y: by,
+        runtime: '',
+      }
+      const boardruntime = { lookup: new Array<string>(BOARD_SIZE).fill('') }
+      boardruntime.lookup[bidx] = blockerid
+      memorywriteboardruntime(boardwithobj, boardruntime)
 
       const sprite = testsprite(15, 10)
       const light = 7
@@ -243,12 +253,13 @@ describe('boardlighting', () => {
 
       function runwithblockers(ids: { id: string; x: number }[]) {
         const board = makeboard()
-        board.lookup = new Array<string>(BOARD_SIZE).fill('')
+        const boardruntime = { lookup: new Array<string>(BOARD_SIZE).fill('') }
         for (let i = 0; i < ids.length; i++) {
           const { id, x } = ids[i]
-          board.objects[id] = { id, x, y }
-          board.lookup[x + y * BOARD_WIDTH] = id
+          board.objects[id] = { id, x, y, runtime: '' }
+          boardruntime.lookup[x + y * BOARD_WIDTH] = id
         }
+        memorywriteboardruntime(board, boardruntime)
         const alphas = new Array<number>(BOARD_SIZE).fill(1)
         memoryboardlightingapplyobject(board, alphas, {}, sprite, light)
         return alphas[east]

@@ -28,6 +28,7 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
+import { memoryreadboardelementruntime } from './runtimeboundary'
 
 function memoryreadflagsroot(book: MAYBE<BOOK>): Record<string, BOOK_FLAGS> {
   if (!ispresent(book)) {
@@ -108,7 +109,7 @@ export function memoryreadelementdisplay(
   defaultcolor = COLOR.WHITE,
   defaultbg = COLOR.BLACK,
 ): { name: string; char: number; color: COLOR; bg: COLOR; light: number } {
-  const kind = element?.kinddata
+  const kind = memoryreadboardelementruntime(element)?.kinddata
   return {
     name: NAME(element?.name ?? kind?.name),
     char:

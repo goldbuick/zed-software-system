@@ -9,6 +9,7 @@ import {
   memorylistboardnamedelements,
   memorypickboardnearestpt,
 } from './spatialqueries'
+import { memoryreadboardruntime } from './runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 export function memoryreadidorindex(element: BOARD_ELEMENT) {
@@ -60,10 +61,11 @@ export function memoryreadobjectbypt(
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
   const index = memoryboardelementindex(board, pt)
-  if (index < 0 || !ispresent(board?.lookup)) {
+  const lookup = memoryreadboardruntime(board)?.lookup
+  if (index < 0 || !ispresent(lookup)) {
     return undefined
   }
-  const object = memoryreadobject(board, board.lookup[index] ?? '')
+  const object = memoryreadobject(board, lookup[index] ?? '')
   if (ispresent(object)) {
     return object
   }
@@ -85,8 +87,11 @@ export function memoryreadelement(
     object = Object.values(board.objects).find(
       (el) => el.x === pt.x && el.y === pt.y && !el.removed,
     )
-  } else if (ispresent(board.lookup)) {
-    object = memoryreadobject(board, board.lookup[index] ?? '')
+  } else {
+    const lookup = memoryreadboardruntime(board)?.lookup
+    if (ispresent(lookup)) {
+      object = memoryreadobject(board, lookup[index] ?? '')
+    }
   }
 
   if (ispresent(object)) {

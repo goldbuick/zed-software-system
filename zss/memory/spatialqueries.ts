@@ -16,6 +16,7 @@ import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import { memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadelementdisplay } from './bookoperations'
+import { memoryensureboardruntime, memoryreadboardruntime } from './runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -164,7 +165,7 @@ export function memorylistboardelementsbyidnameorpts(
         idnameorpt.y < BOARD_HEIGHT
       ) {
         const idx = idnameorpt.x + idnameorpt.y * BOARD_WIDTH
-        const maybeid = board.lookup?.[idx]
+        const maybeid = memoryreadboardruntime(board)?.lookup?.[idx]
         // check lookup first, then fallback to terrain
         return ispresent(maybeid) ? board.objects[maybeid] : board.terrain[idx]
       }
@@ -188,14 +189,15 @@ function memoryboardreaddistmap(
   }
 
   // make sure cache exists
-  if (!ispresent(board.distmaps)) {
-    board.distmaps = {}
+  const boardruntime = memoryensureboardruntime(board)
+  if (!ispresent(boardruntime.distmaps)) {
+    boardruntime.distmaps = {}
   }
 
   // check cache
   const index = `${forcollision}.${frompt.x}.${frompt.y}.${topt.x}.${topt.y}`
 
-  let distmap = board.distmaps[index]
+  let distmap = boardruntime.distmaps[index]
   if (!ispresent(distmap)) {
     // create distmap
     distmap = new Array(BOARD_SIZE).fill(-2)
@@ -235,7 +237,7 @@ function memoryboardreaddistmap(
     }
 
     // save result
-    board.distmaps[index] = distmap
+    boardruntime.distmaps[index] = distmap
   }
 
   return distmap
@@ -266,7 +268,7 @@ export function memorylistboardnamedelements(
   board: MAYBE<BOARD>,
   name: string,
 ): BOARD_ELEMENT[] {
-  const maybeset = board?.named?.[name]
+  const maybeset = memoryreadboardruntime(board)?.named?.[name]
   if (!ispresent(maybeset)) {
     return []
   }
