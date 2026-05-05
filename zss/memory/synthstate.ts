@@ -69,16 +69,12 @@ function memorymigratelegacyvoicefx(cache: SYNTH_STATE) {
 function readsynthcacheinternal(board: string): SYNTH_STATE {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const owner = createsynthid(board)
-  let voices = memoryreadbookflag(
-    main,
-    owner,
-    SYNTH_VOICES_KEY,
-  ) as MAYBE<SYNTH_STATE['voices']>
-  let voicefx = memoryreadbookflag(
-    main,
-    owner,
-    SYNTH_VOICEFX_KEY,
-  ) as MAYBE<SYNTH_STATE['voicefx']>
+  let voices = memoryreadbookflag(main, owner, SYNTH_VOICES_KEY) as MAYBE<
+    SYNTH_STATE['voices']
+  >
+  let voicefx = memoryreadbookflag(main, owner, SYNTH_VOICEFX_KEY) as MAYBE<
+    SYNTH_STATE['voicefx']
+  >
   if (!ispresent(voices)) {
     voices = deepcopy(SYNTH_STATE_DEFAULT.voices)
     memorywritebookflag(main, owner, SYNTH_VOICES_KEY, voices as any)
@@ -158,22 +154,21 @@ export function memorymergesynthvoicefx(
 
 export type SYNTH_PLAY = [string, number]
 
-const SYNTH_PLAY_FLAG = 'synthplay'
+const SYNTH_PLAYQUEUE_KEY = 'playqueue'
 const SYNTH_PLAY_DEFAULT: SYNTH_PLAY[] = []
 
 function readsynthplayinternal(board: string): SYNTH_PLAY[] {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const queue = memoryreadbookflag(main, SYNTH_PLAY_FLAG, board) as MAYBE<
+  const owner = createsynthid(board)
+  const queue = memoryreadbookflag(main, owner, SYNTH_PLAYQUEUE_KEY) as MAYBE<
     SYNTH_PLAY[]
   >
-  // use queue state
   if (ispresent(queue)) {
     return queue
   }
-  // create a new synth play queue
-  const synthplay = deepcopy(SYNTH_PLAY_DEFAULT)
-  memorywritebookflag(main, SYNTH_PLAY_FLAG, board, synthplay as any)
-  return synthplay
+  const nextqueue = deepcopy(SYNTH_PLAY_DEFAULT)
+  memorywritebookflag(main, owner, SYNTH_PLAYQUEUE_KEY, nextqueue as any)
+  return nextqueue
 }
 
 export function memoryreadsynthplay(board: string): SYNTH_PLAY[] {
