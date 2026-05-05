@@ -192,14 +192,10 @@ export type BOARD = {
   underboard?: string
   charsetpage?: string
   palettepage?: string
-  /** post-tick draw fingerprints; keys match `memoryelementdrawreadid` */
-  drawlastfp?: Record<string, string>
-  /** last known cells for objects (ids); used when objects are removed */
-  drawlastxy?: Record<string, { x: number; y: number }>
-  /** ids allowed for `:drawdisplay` next tick; undefined means full draw pass */
-  drawallowids?: Set<string>
-  /** force full draw next tick (e.g. palette swap); cleared after dirty update */
-  drawneedfull?: boolean
+  drawlastfp?: Record<string, string> // post-tick draw fingerprints; keys match `memoryelementdrawreadid`
+  drawlastxy?: Record<string, { x: number; y: number }> // last known cells for objects (ids); used when objects are removed
+  drawallowids?: Set<string> // ids allowed for `:drawdisplay` next tick; undefined means full draw pass
+  drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
 }
 
 export type BOARD_ELEMENT = {
@@ -254,11 +250,11 @@ export type BOARD_ELEMENT = {
   // messages
   sender?: string
   arg?: any
-  // runtime
-  category?: CATEGORY
-  kinddata?: BOARD_ELEMENT
   // cleanup
   removed?: number
+  // runtime only
+  category?: CATEGORY
+  kinddata?: BOARD_ELEMENT
 }
 
 export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
@@ -266,14 +262,11 @@ export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
 export type BOOK = {
   id: string
   name: string
+  token?: string // unique token
   timestamp: number
   activelist: string[]
-  /** Boundary ids in order; each id maps to a `CODE_PAGE` in session boundaries. */
-  pages: string[]
-  /** Per-owner boundary ids; each owner id maps to a boundary-backed `BOOK_FLAGS` record. */
-  flags: Record<string, string>
-  // unique token
-  token?: string
+  pages: string[] // Boundary ids in order; each id maps to a `CODE_PAGE` in session boundaries.
+  flags: Record<string, string> // Per-owner boundary ids; each owner id maps to a boundary-backed `BOOK_FLAGS` record.
 }
 
 export type BOOK_FLAGS = Record<string, WORD>

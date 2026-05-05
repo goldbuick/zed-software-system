@@ -31,6 +31,9 @@ void mainSupport(const in vec2 uv) {
 
 const crtshapefragshader = `
 uniform float viewheight;
+uniform float curvebase;
+uniform float curveamp;
+uniform float curvespeed;
 uniform sampler2D splat;
 
 ${blendutilshader}
@@ -73,7 +76,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   n += 0.025 * snoise(uv.st * 800.0);
 
   vec2 xn = 2.0 * (uv.st - 0.5);
-  float fz = 0.005;
+  float fz = max(0.0, curvebase + sin(time * curvespeed) * curveamp);
   vec2 edge = bendy(xn, fz * n, -fz * n);
   vec2 bent = edge.xy * 0.5 + 0.5;
 
@@ -160,10 +163,19 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 type CRTShapeOpts = {
   splat?: Texture
   viewheight?: number
+  curvebase?: number
+  curveamp?: number
+  curvespeed?: number
 }
 
 class CRTShapeEffect extends Effect {
-  constructor({ splat, viewheight }: CRTShapeOpts = {}) {
+  constructor({
+    splat,
+    viewheight,
+    curvebase,
+    curveamp,
+    curvespeed,
+  }: CRTShapeOpts = {}) {
     super('CRTShapeEffect', crtshapefragshader, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.CONVOLUTION,
@@ -174,6 +186,9 @@ class CRTShapeEffect extends Effect {
       uniforms: new Map<string, Uniform>([
         ['splat', new Uniform(splat)],
         ['viewheight', new Uniform(viewheight ?? 128)],
+        ['curvebase', new Uniform(curvebase ?? 0.005)],
+        ['curveamp', new Uniform(curveamp ?? 0)],
+        ['curvespeed', new Uniform(curvespeed ?? 0.4)],
       ]),
     })
   }
