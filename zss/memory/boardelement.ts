@@ -9,11 +9,11 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { STR_COLOR, isstrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { CATEGORY } from 'zss/words/types'
 
-import { BOARD_ELEMENT, BOARD_ELEMENT_KEYS } from './types'
 import {
   memoryensureboardelementruntime,
   memoryreadboardelementruntime,
 } from './runtimeboundary'
+import { BOARD_ELEMENT, BOARD_ELEMENT_KEYS } from './types'
 
 export function memoryapplyboardelementcolor(
   element: MAYBE<BOARD_ELEMENT>,
@@ -50,7 +50,7 @@ export function memoryexportboardelement(
     lx: FORMAT_SKIP,
     ly: FORMAT_SKIP,
     code: FORMAT_SKIP,
-      runtime: FORMAT_SKIP,
+    runtime: FORMAT_SKIP,
     stopped: FORMAT_SKIP,
     removed: FORMAT_SKIP,
     bucket: FORMAT_SKIP,
@@ -60,7 +60,10 @@ export function memoryexportboardelement(
 export function memoryimportboardelement(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
-  const element = unformatobject<BOARD_ELEMENT>(boardelemententry, BOARD_ELEMENT_KEYS)
+  const element = unformatobject<BOARD_ELEMENT>(
+    boardelemententry,
+    BOARD_ELEMENT_KEYS,
+  )
   if (!ispresent(element)) {
     return undefined
   }
@@ -71,9 +74,7 @@ export function memoryimportboardelement(
 export function memoryboardelementisobject(
   element: MAYBE<BOARD_ELEMENT>,
 ): boolean {
-  return (
-    memoryreadboardelementruntime(element)?.category === CATEGORY.ISOBJECT
-  )
+  return memoryreadboardelementruntime(element)?.category === CATEGORY.ISOBJECT
 }
 
 export function memorycreateboardelement() {

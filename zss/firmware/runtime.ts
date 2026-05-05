@@ -52,7 +52,9 @@ export const RUNTIME_FIRMWARE = createfirmware({
         chip.scrolllock(player)
         // element sending a scroll to a player
         const shared = gadgetstate(player)
-        const kinddata = memoryreadboardelementruntime(READ_CONTEXT.element)?.kinddata
+        const kinddata = memoryreadboardelementruntime(
+          READ_CONTEXT.element,
+        )?.kinddata
         shared.scrollname =
           READ_CONTEXT.element?.displayname ??
           kinddata?.displayname ??

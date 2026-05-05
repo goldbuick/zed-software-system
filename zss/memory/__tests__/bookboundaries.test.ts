@@ -94,9 +94,8 @@ describe('book opaque boundaries', () => {
     expect(memoryboundaryget(pageobjectruntime)).toBeDefined()
     expect(memoryboundaryget(pageterrainruntime)).toBeDefined()
 
-    const { memoryfreebook } = jest.requireActual<typeof import('../session')>(
-      '../session',
-    )
+    const { memoryfreebook } =
+      jest.requireActual<typeof import('../session')>('../session')
     memoryfreebook(book)
 
     expect(memoryboundaryget(book.pages[0])).toBeUndefined()

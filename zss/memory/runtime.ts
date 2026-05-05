@@ -28,9 +28,11 @@ import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
+import { memoryreadplayerboard } from './playermanagement'
 import {
-  memoryreadplayerboard,
-} from './playermanagement'
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+} from './runtimeboundary'
 import {
   memoryreadbookbysoftware,
   memoryreadloaders,
@@ -48,10 +50,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-import {
-  memoryreadboardelementruntime,
-  memoryreadboardruntime,
-} from './runtimeboundary'
 
 // manages chips
 const os = createos()
@@ -329,7 +327,9 @@ export function memorytickonce(
   READ_CONTEXT.usedisplaystats = true
 
   const itemname = NAME(
-    element.name ?? memoryreadboardelementruntime(element)?.kinddata?.name ?? '',
+    element.name ??
+      memoryreadboardelementruntime(element)?.kinddata?.name ??
+      '',
   )
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
 
@@ -380,7 +380,8 @@ export function memoryruncodepage(address: string, label: string) {
   const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
   const id = `${address}_run`
-  const itemname = READ_CONTEXT.element?.name ??
+  const itemname =
+    READ_CONTEXT.element?.name ??
     memoryreadboardelementruntime(READ_CONTEXT.element)?.kinddata?.name ??
     ''
   const itemcode = codepage?.code ?? ''

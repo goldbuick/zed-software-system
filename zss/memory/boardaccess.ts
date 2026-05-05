@@ -5,11 +5,11 @@ import { ispt } from 'zss/words/dir'
 import { PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
+import { memoryreadboardruntime } from './runtimeboundary'
 import {
   memorylistboardnamedelements,
   memorypickboardnearestpt,
 } from './spatialqueries'
-import { memoryreadboardruntime } from './runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 export function memoryreadidorindex(element: BOARD_ELEMENT) {

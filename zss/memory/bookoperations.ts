@@ -20,8 +20,13 @@ import {
   memoryreadcodepagetype,
 } from './codepageoperations'
 import {
-  BOARD_ELEMENT,
+  memorydeleteboardelementruntime,
+  memorydeleteboardruntime,
+  memoryreadboardelementruntime,
+} from './runtimeboundary'
+import {
   BOARD,
+  BOARD_ELEMENT,
   BOOK,
   BOOK_FLAGS,
   BOOK_KEYS,
@@ -29,11 +34,6 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
-import {
-  memorydeleteboardelementruntime,
-  memorydeleteboardruntime,
-  memoryreadboardelementruntime,
-} from './runtimeboundary'
 
 function memoryreadflagsroot(book: MAYBE<BOOK>): Record<string, BOOK_FLAGS> {
   if (!ispresent(book)) {

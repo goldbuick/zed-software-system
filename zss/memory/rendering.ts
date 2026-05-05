@@ -42,6 +42,11 @@ import {
   memorycreatecachedsprites,
 } from './renderinglayercache'
 import {
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+  memorywriteboardelementruntime,
+} from './runtimeboundary'
+import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
@@ -49,11 +54,6 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-import {
-  memoryreadboardelementruntime,
-  memoryreadboardruntime,
-  memorywriteboardelementruntime,
-} from './runtimeboundary'
 
 /**
  * Gadget rendering: board → layer stacks, display prefixes, and a small LRU

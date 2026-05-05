@@ -17,8 +17,8 @@ import {
   memoryplayerwaszapped,
 } from './boardtransitions'
 import { memorysendtoelement } from './gamesend'
-import { memorycheckcollision } from './spatialqueries'
 import { memoryreadboardruntime } from './runtimeboundary'
+import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,

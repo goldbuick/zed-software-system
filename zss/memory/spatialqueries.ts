@@ -16,7 +16,10 @@ import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import { memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadelementdisplay } from './bookoperations'
-import { memoryensureboardruntime, memoryreadboardruntime } from './runtimeboundary'
+import {
+  memoryensureboardruntime,
+  memoryreadboardruntime,
+} from './runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,

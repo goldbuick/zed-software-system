@@ -53,6 +53,7 @@ import {
   memorycodepagetoprefix,
   memoryelementtodisplayprefix,
 } from './rendering'
+import { memoryreadboardelementruntime } from './runtimeboundary'
 import { memoryreadbookbysoftware, memoryreadoperator } from './session'
 import {
   BOARD,
@@ -61,7 +62,6 @@ import {
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
 } from './types'
-import { memoryreadboardelementruntime } from './runtimeboundary'
 
 function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
   const id = element?.id ?? memoryboardelementindex(board, element)
@@ -758,7 +758,9 @@ export function memoryinspectelement(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['char', 'hk', 'a', ' A ', 'next']),
       `char: ${
-        element.char ?? memoryreadboardelementruntime(element)?.kinddata?.char ?? 1
+        element.char ??
+        memoryreadboardelementruntime(element)?.kinddata?.char ??
+        1
       }`,
     ),
   )

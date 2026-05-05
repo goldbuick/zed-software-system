@@ -82,7 +82,10 @@ export function memorydeleteboardobjectnamedlookup(
     }
     // remove from named
     const display = memoryreadelementdisplay(object)
-    if (ispresent(boardruntime?.named?.[display.name]) && ispresent(object.id)) {
+    if (
+      ispresent(boardruntime?.named?.[display.name]) &&
+      ispresent(object.id)
+    ) {
       boardruntime.named[display.name].delete(object.id)
     }
   }

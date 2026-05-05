@@ -13,8 +13,8 @@ import {
   lightingmixmaxrange,
   memorylightingaddrangetoblocked,
 } from './lightinggeometry'
-import { memorycheckcollision } from './spatialqueries'
 import { memoryreadboardruntime } from './runtimeboundary'
+import { memorycheckcollision } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT } from './types'
 
 const LIGHTING_OBJECT_OCCLUSION = 0.27

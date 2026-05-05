@@ -45,6 +45,7 @@ import {
   memoryexportboard,
   memoryimportboard,
 } from './boardlifecycle'
+import { memoryensureboardelementruntime } from './runtimeboundary'
 import {
   BITMAP_KEYS,
   BOARD_ELEMENT,
@@ -54,7 +55,6 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
-import { memoryensureboardelementruntime } from './runtimeboundary'
 
 /** Parses `#rgb` / `#rrggbb` / `rgb(r,g,b)` into linear 0–1 components (worker-safe). */
 function parsecsscolortonormalizedrgb(

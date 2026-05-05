@@ -4,9 +4,7 @@ import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from 'zss/memory/boardlighting'
-import {
-  memorywriteboardruntime,
-} from 'zss/memory/runtimeboundary'
+import { memorywriteboardruntime } from 'zss/memory/runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 

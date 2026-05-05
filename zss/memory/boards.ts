@@ -29,17 +29,17 @@ import {
 } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import {
+  memoryensureboardelementruntime,
+  memoryensureboardruntime,
+  memoryreadboardelementruntime,
+} from './runtimeboundary'
+import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_ELEMENT_STAT,
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
 } from './types'
-import {
-  memoryensureboardelementruntime,
-  memoryensureboardruntime,
-  memoryreadboardelementruntime,
-} from './runtimeboundary'
 
 export function memoryreadelementkind(
   element: MAYBE<BOARD_ELEMENT>,
@@ -58,7 +58,8 @@ export function memoryreadelementkind(
     element.kind,
   )
   if (ispresent(maybeobject)) {
-    runtimedata!.kinddata = memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
+    runtimedata!.kinddata =
+      memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
     return runtimedata!.kinddata
   }
   const maybeterrain = memorypickcodepagewithtypeandstat(
@@ -66,7 +67,8 @@ export function memoryreadelementkind(
     element.kind,
   )
   if (ispresent(maybeterrain)) {
-    runtimedata!.kinddata = memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
+    runtimedata!.kinddata =
+      memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
     return runtimedata!.kinddata
   }
   return undefined

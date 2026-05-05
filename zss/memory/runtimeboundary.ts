@@ -1,5 +1,14 @@
-import { memoryboundaryalloc, memoryboundarydelete, memoryboundaryget } from './boundaries'
-import { BOARD, BOARD_ELEMENT, BOARD_ELEMENT_RUNTIME, BOARD_RUNTIME } from './types'
+import {
+  memoryboundaryalloc,
+  memoryboundarydelete,
+  memoryboundaryget,
+} from './boundaries'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_ELEMENT_RUNTIME,
+  BOARD_RUNTIME,
+} from './types'
 
 function createboardruntime(): BOARD_RUNTIME {
   return {}
@@ -10,9 +19,7 @@ function createboardelementruntime(): BOARD_ELEMENT_RUNTIME {
 }
 
 export function memoryensureboardruntime(board: BOARD): BOARD_RUNTIME {
-  if (!board.runtime) {
-    board.runtime = memoryboundaryalloc(createboardruntime())
-  }
+  board.runtime ??= memoryboundaryalloc(createboardruntime())
   const runtime = memoryboundaryget<BOARD_RUNTIME>(board.runtime)
   if (runtime) {
     return runtime
@@ -22,14 +29,19 @@ export function memoryensureboardruntime(board: BOARD): BOARD_RUNTIME {
   return nextruntime
 }
 
-export function memoryreadboardruntime(board: BOARD | undefined): BOARD_RUNTIME | undefined {
+export function memoryreadboardruntime(
+  board: BOARD | undefined,
+): BOARD_RUNTIME | undefined {
   if (!board?.runtime) {
     return undefined
   }
   return memoryboundaryget<BOARD_RUNTIME>(board.runtime)
 }
 
-export function memorywriteboardruntime(board: BOARD, runtime: BOARD_RUNTIME): BOARD_RUNTIME {
+export function memorywriteboardruntime(
+  board: BOARD,
+  runtime: BOARD_RUNTIME,
+): BOARD_RUNTIME {
   board.runtime = memoryboundaryalloc(runtime, board.runtime)
   return runtime
 }
@@ -44,9 +56,7 @@ export function memorydeleteboardruntime(board: BOARD | undefined): void {
 export function memoryensureboardelementruntime(
   element: BOARD_ELEMENT,
 ): BOARD_ELEMENT_RUNTIME {
-  if (!element.runtime) {
-    element.runtime = memoryboundaryalloc(createboardelementruntime())
-  }
+  element.runtime ??= memoryboundaryalloc(createboardelementruntime())
   const runtime = memoryboundaryget<BOARD_ELEMENT_RUNTIME>(element.runtime)
   if (runtime) {
     return runtime
@@ -73,7 +83,9 @@ export function memorywriteboardelementruntime(
   return runtime
 }
 
-export function memorydeleteboardelementruntime(element: BOARD_ELEMENT | undefined): void {
+export function memorydeleteboardelementruntime(
+  element: BOARD_ELEMENT | undefined,
+): void {
   if (!element?.runtime) {
     return
   }
