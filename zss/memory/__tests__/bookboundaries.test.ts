@@ -24,7 +24,7 @@ describe('book opaque boundaries', () => {
     const book = memorycreatebook([cp])
     expect(book.pages.length).toBe(1)
     expect(book.pages[0]).toBe(cp.id)
-    expect(typeof book.flags).toBe('string')
+    expect(book.flags).toEqual({})
     const stored = memoryboundaryget(book.pages[0])
     expect(stored).toBeDefined()
     expect((stored as { id: string }).id).toBe(cp.id)
@@ -52,6 +52,8 @@ describe('book opaque boundaries', () => {
     memorywritebookflag(book, MEMORY_LABEL.GADGETSTORE, 'x', 42 as any)
     const root = memoryreadbookflags(book, MEMORY_LABEL.GADGETSTORE)
     expect(root.x).toBe(42)
-    expect(memoryboundaryget(book.flags)).toBeDefined()
+    expect(
+      memoryboundaryget(book.flags[MEMORY_LABEL.GADGETSTORE]),
+    ).toBeDefined()
   })
 })

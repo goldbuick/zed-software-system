@@ -270,8 +270,8 @@ export type BOOK = {
   activelist: string[]
   /** Boundary ids in order; each id maps to a `CODE_PAGE` in session boundaries. */
   pages: string[]
-  /** Single boundary id for the whole `Record<string, BOOK_FLAGS>` map. */
-  flags: string
+  /** Per-owner boundary ids; each owner id maps to a boundary-backed `BOOK_FLAGS` record. */
+  flags: Record<string, string>
   // unique token
   token?: string
 }

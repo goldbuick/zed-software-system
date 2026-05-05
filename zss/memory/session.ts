@@ -128,7 +128,10 @@ export function memoryfreebook(book: MAYBE<BOOK>) {
   for (let i = 0; i < book.pages.length; ++i) {
     memoryboundarydelete(book.pages[i])
   }
-  memoryboundarydelete(book.flags)
+  const ids = Object.keys(book.flags)
+  for (let i = 0; i < ids.length; ++i) {
+    memoryboundarydelete(book.flags[ids[i]])
+  }
 }
 
 export function memoryclearbook(address: string) {

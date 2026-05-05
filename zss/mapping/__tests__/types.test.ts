@@ -203,7 +203,7 @@ describe('types', () => {
       const validbook = {
         id: 'test-id',
         name: 'test-name',
-        flags: 'sid_flags_test',
+        flags: {},
         pages: [] as string[],
         activelist: [],
       }
@@ -214,7 +214,8 @@ describe('types', () => {
       expect(isbook({})).toBe(false)
       expect(isbook({ id: 'test' })).toBe(false)
       expect(isbook({ id: 'test', name: 'test' })).toBe(false)
-      expect(isbook({ id: 'test', name: 'test', flags: {} })).toBe(false) // object flags invalid
+      expect(isbook({ id: 'test', name: 'test', flags: 'sid_f' })).toBe(false) // string flags invalid
+      expect(isbook({ id: 'test', name: 'test', flags: { a: 1 } })).toBe(false) // non-string map value invalid
     })
 
     it('should reject non-objects', () => {
@@ -229,7 +230,7 @@ describe('types', () => {
         isbook({
           id: 123,
           name: 'test',
-          flags: 'sid_f',
+          flags: {},
           players: {},
           pages: [],
         }),
@@ -238,7 +239,7 @@ describe('types', () => {
         isbook({
           id: 'test',
           name: 123,
-          flags: 'sid_f',
+          flags: {},
           players: {},
           pages: [],
         }),
@@ -250,7 +251,7 @@ describe('types', () => {
         isbook({
           id: 'test',
           name: 'test',
-          flags: 'sid_f',
+          flags: {},
           players: {},
           pages: {},
         }),

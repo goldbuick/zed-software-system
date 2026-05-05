@@ -24,7 +24,7 @@ const stubmainbook: BOOK = {
   timestamp: 0,
   activelist: [],
   pages: [],
-  flags: 'stub-flags',
+  flags: {},
 }
 
 describe('handletick sim freeze', () => {

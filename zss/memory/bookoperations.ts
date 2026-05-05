@@ -30,7 +30,20 @@ import {
 } from './types'
 
 function memoryreadflagsroot(book: MAYBE<BOOK>): Record<string, BOOK_FLAGS> {
-  return memoryboundaryget<Record<string, BOOK_FLAGS>>(book?.flags ?? '') ?? {}
+  if (!ispresent(book)) {
+    return {}
+  }
+  const root: Record<string, BOOK_FLAGS> = {}
+  const ids = Object.keys(book.flags)
+  for (let i = 0; i < ids.length; ++i) {
+    const id = ids[i]
+    const boundaryid = book.flags[id]
+    const flags = memoryboundaryget<BOOK_FLAGS>(boundaryid)
+    if (ispresent(flags)) {
+      root[id] = flags
+    }
+  }
+  return root
 }
 
 export function memoryreadelementcodepage(
@@ -82,8 +95,11 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   if (!ispresent(book)) {
     return
   }
-  const root = memoryreadflagsroot(book)
-  delete root[id]
+  const boundaryid = book.flags[id]
+  if (ispresent(boundaryid)) {
+    memoryboundarydelete(boundaryid)
+  }
+  delete book.flags[id]
 }
 
 export function memoryreadelementdisplay(
@@ -179,8 +195,10 @@ export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
 }
 
 export function memoryhasbookflags(book: MAYBE<BOOK>, id: string) {
-  const root = memoryreadflagsroot(book)
-  return !!root[id]
+  if (!ispresent(book)) {
+    return false
+  }
+  return ispresent(book.flags[id])
 }
 
 export function memoryhasbookmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
@@ -211,7 +229,12 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
 
   // map to boundary ids
   const pages = staged.pages.map((page) => memoryboundaryalloc(page, page.id))
-  const flags = memoryboundaryalloc(staged.flags)
+  const flags: Record<string, string> = {}
+  const flagids = Object.keys(staged.flags ?? {})
+  for (let i = 0; i < flagids.length; ++i) {
+    const id = flagids[i]
+    flags[id] = memoryboundaryalloc(staged.flags[id])
+  }
 
   // return book
   return {
@@ -365,12 +388,21 @@ export function memoryreadbookflag(
 }
 
 export function memoryreadbookflags(book: MAYBE<BOOK>, id: string) {
-  if (!book) {
+  if (!ispresent(book)) {
     return {}
   }
-  const root = memoryreadflagsroot(book)
-  root[id] = root[id] ?? {}
-  return root[id]
+  let boundaryid = book.flags[id]
+  if (!ispresent(boundaryid)) {
+    boundaryid = memoryboundaryalloc({})
+    book.flags[id] = boundaryid
+  }
+  const flags = memoryboundaryget<BOOK_FLAGS>(boundaryid)
+  if (ispresent(flags)) {
+    return flags
+  }
+  const nextflags: BOOK_FLAGS = {}
+  book.flags[id] = memoryboundaryalloc(nextflags, boundaryid)
+  return nextflags
 }
 
 export function memorylistcodepagessorted(book: MAYBE<BOOK>) {
@@ -444,6 +476,6 @@ export function memorycreatebook(pages: CODE_PAGE[]): BOOK {
     timestamp: 0,
     activelist: [],
     pages: pageids,
-    flags: memoryboundaryalloc({}),
+    flags: {},
   }
 }

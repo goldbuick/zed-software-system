@@ -41,7 +41,7 @@ describe('memoryreadrootsync jsonpipe parity', () => {
       timestamp: 1,
       activelist: [],
       pages: [],
-      flags: 'flags1',
+      flags: {},
     }
     const a = makeroot({ books: { b1: book } })
     const b = makeroot({

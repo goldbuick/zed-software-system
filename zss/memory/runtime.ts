@@ -23,7 +23,7 @@ import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
-import { memoryboundaryalloc, memoryboundarydelete } from './boundaries'
+import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
@@ -73,9 +73,11 @@ export function memoryrestartallchipsandflags() {
     return
   }
 
-  const oldflags = mainbook.flags
-  memoryboundarydelete(oldflags)
-  mainbook.flags = memoryboundaryalloc({})
+  const flagids = Object.keys(mainbook.flags)
+  for (let i = 0; i < flagids.length; ++i) {
+    memoryboundarydelete(mainbook.flags[flagids[i]])
+  }
+  mainbook.flags = {}
 }
 
 export function memorymessagechip(message: MESSAGE) {

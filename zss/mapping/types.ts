@@ -43,6 +43,10 @@ export function noop<T>(item: T) {
 }
 
 export function isbook(value: any) {
+  const flagsvalid =
+    value?.flags !== null &&
+    typeof value?.flags === 'object' &&
+    Object.values(value.flags).every((flagid) => isstring(flagid))
   return (
     value !== null &&
     typeof value === 'object' &&
@@ -51,6 +55,6 @@ export function isbook(value: any) {
     isarray(value.pages) &&
     value.pages.every((p: unknown) => isstring(p)) &&
     isarray(value.activelist) &&
-    isstring(value.flags)
+    flagsvalid
   )
 }
