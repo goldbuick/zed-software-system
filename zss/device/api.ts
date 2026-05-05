@@ -5,8 +5,10 @@ without having to include device code
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
+import type { Operation } from 'zss/feature/jsonpipe/observe'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import type { MEMORY_ROOT } from 'zss/memory/session'
 import { BOOK } from 'zss/memory/types'
 import { PT } from 'zss/words/types'
 
@@ -108,6 +110,22 @@ export function boardrunnertick(
   device.emit(player, 'boardrunner:tick', board)
 }
 
+export function boardrunnerpaint(
+  device: DEVICELIKE,
+  player: string,
+  json: MEMORY_ROOT,
+) {
+  device.emit(player, 'boardrunner:paint', json)
+}
+
+export function boardrunnerpatch(
+  device: DEVICELIKE,
+  player: string,
+  patch: Operation[],
+) {
+  device.emit(player, 'boardrunner:patch', patch)
+}
+
 export function bridgestreamstart(
   device: DEVICELIKE,
   player: string,
@@ -191,9 +209,9 @@ export function gadgetclientpaint(
 export function gadgetclientpatch(
   device: DEVICELIKE,
   player: string,
-  json: any,
+  patch: Operation[],
 ) {
-  device.emit(player, 'gadgetclient:patch', json)
+  device.emit(player, 'gadgetclient:patch', patch)
 }
 
 export function gadgetserverdesync(device: DEVICELIKE, player: string) {

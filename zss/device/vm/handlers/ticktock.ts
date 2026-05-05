@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { boardrunnertick } from 'zss/device/api'
+import { boardrunnermemorysync } from 'zss/device/vm/boardrunnersync'
 import { pick } from 'zss/mapping/array'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
@@ -93,5 +94,8 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
         boardrunnertick(vm, runner, board.id)
       }
     }
+  })
+  perfmeasure('vm:boardrunnermemorysync', () => {
+    boardrunnermemorysync(vm)
   })
 }

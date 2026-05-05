@@ -73,6 +73,7 @@ export function createjsonpipe<T extends object | unknown[]>(
         return newDocument
       } catch (error: any) {
         void error
+        desync = true
         return undefined
       }
     },

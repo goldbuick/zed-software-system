@@ -24,6 +24,16 @@ describe('forward boardrunner', () => {
         createmessage('s', 'p', 'x', 'boardrunner:ping'),
       ),
     ).toBe(true)
+    expect(
+      shouldforwardclienttoboardrunner(
+        createmessage('s', 'p', 'x', 'boardrunner:paint'),
+      ),
+    ).toBe(true)
+    expect(
+      shouldforwardclienttoboardrunner(
+        createmessage('s', 'p', 'x', 'boardrunner:patch'),
+      ),
+    ).toBe(true)
   })
 
   it('does not forward ticktock', () => {

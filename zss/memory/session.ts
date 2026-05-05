@@ -146,4 +146,10 @@ export function memoryreadfirstcontentbook(): MAYBE<BOOK> {
   return first ?? mainbook
 }
 
-export type SoftwareSlot = keyof typeof MEMORY.software
+export type SOFTWARE_SLOT = keyof typeof MEMORY.software
+
+export type MEMORY_ROOT = typeof MEMORY
+
+export function memoryreadroot(): MEMORY_ROOT {
+  return MEMORY
+}
