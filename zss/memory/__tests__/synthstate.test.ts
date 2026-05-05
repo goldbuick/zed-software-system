@@ -1,7 +1,4 @@
-import {
-  memorycreatebook,
-  memoryreadbookflags,
-} from '../bookoperations'
+import { memorycreatebook, memoryreadbookflags } from '../bookoperations'
 import { memoryresetbooks } from '../session'
 import {
   createsynthid,

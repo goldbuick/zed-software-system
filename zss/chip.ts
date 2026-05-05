@@ -13,6 +13,7 @@ import {
 } from './firmware/runner'
 import { GeneratorBuild, GeneratorFunc } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
+import { createchipid } from './mapping/guid'
 import {
   MAYBE,
   deepcopy,
@@ -473,15 +474,6 @@ function maptoresult(value: WORD): WORD {
     return value.length > 0 ? 1 : 0
   }
   return value ?? 0
-}
-
-/**
- * Creates a chip memory identifier by appending '_chip' to the given ID.
- * @param id - The base chip identifier
- * @returns The formatted chip memory identifier
- */
-export function createchipid(id: string) {
-  return `${id}_chip`
 }
 
 /**

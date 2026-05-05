@@ -1,4 +1,5 @@
 import { packformat, unpackformat } from 'zss/feature/format'
+import { creategadgetid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import {
@@ -17,7 +18,6 @@ import {
 } from '../boundaries'
 import { memorycreatecodepage } from '../codepageoperations'
 import { memoryresetbooks } from '../session'
-import { MEMORY_LABEL } from '../types'
 
 describe('book opaque boundaries', () => {
   afterEach(() => {
@@ -54,12 +54,11 @@ describe('book opaque boundaries', () => {
 
   it('mutates flags through boundary-backed record', () => {
     const book = memorycreatebook([])
-    memorywritebookflag(book, MEMORY_LABEL.GADGETSTORE, 'x', 42 as any)
-    const root = memoryreadbookflags(book, MEMORY_LABEL.GADGETSTORE)
+    const gadgetowner = creategadgetid('testplayer')
+    memorywritebookflag(book, gadgetowner, 'x', 42 as any)
+    const root = memoryreadbookflags(book, gadgetowner)
     expect(root.x).toBe(42)
-    expect(
-      memoryboundaryget(book.flags[MEMORY_LABEL.GADGETSTORE]),
-    ).toBeDefined()
+    expect(memoryboundaryget(book.flags[gadgetowner])).toBeDefined()
   })
 
   it('frees nested runtime boundaries when freeing a whole book', () => {

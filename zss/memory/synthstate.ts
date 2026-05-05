@@ -7,6 +7,7 @@ import {
 } from 'zss/feature/synth/playnotation'
 import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
+import { createsynthid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
@@ -21,13 +22,6 @@ const SYNTH_VOICEFX_KEY = 'voicefx'
 const SYNTH_STATE_DEFAULT: SYNTH_STATE = {
   voices: {},
   voicefx: {},
-}
-
-/**
- * Synth flag owner id for a board, parallel to createchipid (`${id}_chip`).
- */
-export function createsynthid(id: string) {
-  return `${id}_synth`
 }
 
 function mergevoicefxlayer(

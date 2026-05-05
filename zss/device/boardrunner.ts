@@ -103,7 +103,6 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
           )
           if (ispresent(doc)) {
             memoryboundaryset(boundary, doc)
-            // console.info('boardrunner', 'patched', boundary, deepcopy(doc))
           } else {
             boardrunner.reply(message, 'desync', boundary)
           }
@@ -114,12 +113,6 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
           const doc = memorysyncpipe.applyremote(memoryreadroot(), patch)
           if (ispresent(doc)) {
             Object.assign(memoryreadroot(), doc)
-            // console.info(
-            //   'boardrunner',
-            //   'patched',
-            //   'memory',
-            //   deepcopy(memoryreadroot()),
-            // )
           } else {
             boardrunner.reply(message, 'desync')
           }

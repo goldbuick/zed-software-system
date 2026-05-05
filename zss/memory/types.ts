@@ -137,8 +137,6 @@ export enum MEMORY_LABEL {
   TEMP = 'temp',
   TITLE = 'title',
   PLAYER = 'player',
-  GADGETSTORE = 'gadgetstore',
-  GADGETLAYERS = 'gadgetlayers',
 }
 
 // types

@@ -19,7 +19,10 @@ type BOUNDARY_DOC = Record<string, any>
 type BOUNDARY_JSONPIPE = JSON_PIPE_HANDLE<BOUNDARY_DOC>
 const boundaryjsonpipes = new Map<string, BOUNDARY_JSONPIPE>()
 
-function createpipe(boundary: BOUNDARY_DOC) {
+function readboundarypipe(id: string, boundary: BOUNDARY_DOC) {
+  if (boundaryjsonpipes.has(id)) {
+    return boundaryjsonpipes.get(id)!
+  }
   return createjsonpipe<BOUNDARY_DOC>(boundary, memoryrootshouldemitpath)
 }
 
@@ -41,13 +44,9 @@ export function boardrunnerboundarymemorysync(vm: DEVICE) {
       if (memoryreadcodepagetype(boundary) === CODE_PAGE_TYPE.BOARD) {
         continue
       }
-      // create boundary jsonpipe
-      if (!boundaryjsonpipes.has(page)) {
-        const pipe = createpipe(boundary)
-        boundaryjsonpipes.set(page, pipe)
-      }
+      // create boundary jsonpipe if needed
+      const pipe = readboundarypipe(page, boundary)
       // generate patch
-      const pipe = boundaryjsonpipes.get(page)!
       const patch = pipe.emitdiff(boundary)
       if (patch.length === 0) {
         continue
@@ -62,18 +61,21 @@ export function boardrunnerboundarymemorysync(vm: DEVICE) {
   // build pipes for boardrunners
   const boards = Object.keys(boardrunners)
   for (const board of boards) {
-    // start with board codepage boundary
-    const boundary = memoryboundaryget(board) ?? ({} as BOUNDARY_DOC)
-    // create boundary jsonpipe
-    if (!boundaryjsonpipes.has(board)) {
-      const pipe = createpipe(boundary)
-      boundaryjsonpipes.set(board, pipe)
-    }
+    // read the runner
+    const player = boardrunners[board]
+    // add the board codepage boundary
+    const boardboundary = memoryboundaryget(board) ?? ({} as BOUNDARY_DOC)
+    // create boundary jsonpipe if needed
+    const boardpipe = readboundarypipe(board, boardboundary)
     // generate patch
-    const pipe = boundaryjsonpipes.get(board)!
-    const patch = pipe.emitdiff(boundary)
+    const patch = boardpipe.emitdiff(boardboundary)
     if (patch.length > 0) {
-      boardrunnerpatch(vm, boardrunners[board], patch, board)
+      boardrunnerpatch(vm, player, patch, board)
     }
+    /* We need to sync
+     * 1. flags for players on the board
+     * 2. synth and playqueues for the board
+     * 3. tracking flags for the board
+     */
   }
 }

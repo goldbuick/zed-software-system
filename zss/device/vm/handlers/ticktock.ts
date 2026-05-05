@@ -12,7 +12,7 @@ import { pick } from 'zss/mapping/array'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
-import { memoryreadbookgadgetlayersmap } from 'zss/memory/gadgetlayersflags'
+import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import {
   memoryreadgadgetlayers,
@@ -44,20 +44,19 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     memorytickloaders()
   })
   perfmeasure('vm:gadgetlayerscache', () => {
-    const store = memoryreadbookgadgetlayersmap(mainbook)
     const boards = memoryreadbookplayerboards(mainbook)
-    const didrender: Record<string, boolean> = {}
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
+      const store = memoryreadbookgadgetlayersforboard(mainbook, board.id)
+      const didrender: Record<string, boolean> = {}
       const players = memoryreadplayersonboard(board)
       for (let p = 0; p < players.length; ++p) {
         const player = players[p]
         const graphics = memoryreadgraphics(player, board)
         const mode = NAME(graphics.graphics)
-        const cachename = `${mode}:${board.id}`
-        if (!ispresent(didrender[cachename])) {
-          didrender[cachename] = true
-          store[cachename] = memoryreadgadgetlayers(mode, board)
+        if (!ispresent(didrender[mode])) {
+          didrender[mode] = true
+          store[mode] = memoryreadgadgetlayers(mode, board)
         }
       }
     }

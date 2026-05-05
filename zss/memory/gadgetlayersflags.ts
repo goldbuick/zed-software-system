@@ -1,18 +1,21 @@
 /**
- * Gadget layer snapshots per board on the flags boundary payload at key `gadgetlayers`.
- * Separate module avoids importing `rendering` from `bookoperations` (would cycle).
+ * Gadget layer snapshots per board: owner `createlayersid(boardId)` with inner keys
+ * = graphics mode (`NAME(graphics.graphics)`). Avoids importing `rendering` from
+ * `bookoperations` (would cycle).
  */
+import { createlayersid } from 'zss/mapping/guid'
 import { MAYBE } from 'zss/mapping/types'
 
 import { memoryreadbookflags } from './bookoperations'
 import type { MEMORY_GADGET_LAYERS } from './rendering'
-import { type BOOK, MEMORY_LABEL } from './types'
+import type { BOOK } from './types'
 
-export function memoryreadbookgadgetlayersmap(
+export function memoryreadbookgadgetlayersforboard(
   book: MAYBE<BOOK>,
+  boardid: string,
 ): Record<string, MEMORY_GADGET_LAYERS> {
   return memoryreadbookflags(
     book,
-    MEMORY_LABEL.GADGETLAYERS,
+    createlayersid(boardid),
   ) as unknown as Record<string, MEMORY_GADGET_LAYERS>
 }
