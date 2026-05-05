@@ -113,9 +113,9 @@ export function boardrunnertick(
 export function boardrunnerpaint(
   device: DEVICELIKE,
   player: string,
-  json: MEMORY_ROOT,
+  memorydoc: MEMORY_ROOT,
 ) {
-  device.emit(player, 'boardrunner:paint', json)
+  device.emit(player, 'boardrunner:paint', memorydoc)
 }
 
 export function boardrunnerpatch(
@@ -125,6 +125,10 @@ export function boardrunnerpatch(
 ) {
   device.emit(player, 'boardrunner:patch', patch)
 }
+
+// export function boardrunnerdesync(device: DEVICELIKE, player: string) {
+//   device.emit(player, 'boardrunner:desync')
+// }
 
 export function bridgestreamstart(
   device: DEVICELIKE,

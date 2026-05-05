@@ -1,6 +1,6 @@
 import { createdevice } from 'zss/device'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { type MEMORY_ROOT, memoryreadroot } from 'zss/memory/session'
 
@@ -63,6 +63,8 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
       )
       if (ispresent(memorydoc)) {
         Object.assign(memoryreadroot(), memorydoc)
+      } else {
+        boardrunner.reply(message, 'desync')
       }
       break
     }

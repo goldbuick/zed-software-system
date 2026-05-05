@@ -66,6 +66,12 @@ describe('memoryreadrootsync jsonpipe parity', () => {
     expect(producer.emitdiff(b)).toEqual([])
   })
 
+  it('memoryrootshouldemitpath skips runtime segment paths', () => {
+    expect(memoryrootshouldemitpath('/runtime')).toBe(false)
+    expect(memoryrootshouldemitpath('/books/b1/runtime')).toBe(false)
+    expect(memoryrootshouldemitpath('/operator')).toBe(true)
+  })
+
   it('chains two ticks', () => {
     const r0 = makeroot({ session: 's0' })
     const r1 = makeroot({ session: 's1' })

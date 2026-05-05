@@ -30,25 +30,13 @@ const PERF_FRAME_FG = COLOR.PURPLE
 const PANEL_W = 38
 const PANEL_H = 16
 const REFRESH_MS = 320
-/** Rolling mean window for peer instant rate samples (~6.4s at REFRESH_MS). */
-const PEER_RATE_SAMPLE_WINDOW = 20
+/** Rolling window for peer byte volume (past minute). */
+const PEER_VOLUME_WINDOW_MS = 60_000
 
-function pushringmaxlen(arr: number[], v: number, maxlen: number) {
-  arr.push(v)
-  while (arr.length > maxlen) {
-    arr.shift()
-  }
-}
-
-function meanrate(samples: number[]): number {
-  if (samples.length === 0) {
-    return 0
-  }
-  let sum = 0
-  for (let i = 0; i < samples.length; ++i) {
-    sum += samples[i]
-  }
-  return sum / samples.length
+type PeerWireSnapshot = {
+  t: number
+  sent: number
+  recv: number
 }
 
 type GlSnap = {
@@ -132,22 +120,19 @@ type PerfMonitorDrawProps = {
   glRef: MutableRefObject<GlSnap>
 }
 
-type PeerPeakAvg = {
+type PeerPeak = {
   peakup: number
   peakdn: number
-  upsamples: number[]
-  dnsamples: number[]
 }
 
 function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
   const context = useWriteText()
   const peerPrev = useRef({ sent: 0, recv: 0, t: 0 })
-  const peerPeakAvg = useRef<PeerPeakAvg>({
+  const peerPeak = useRef<PeerPeak>({
     peakup: 0,
     peakdn: 0,
-    upsamples: [],
-    dnsamples: [],
   })
+  const peerWireHistory = useRef<PeerWireSnapshot[]>([])
   const chatPrev = useRef({ total: 0, t: 0 })
 
   useEffect(() => {
@@ -234,7 +219,7 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       let upRate = 0
       let dnRate = 0
       const pt = peerPrev.current
-      const pk = peerPeakAvg.current
+      const pk = peerPeak.current
       if (pt.t > 0) {
         const dt = (now - pt.t) / 1000
         if (dt > 0.04) {
@@ -242,13 +227,26 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
           dnRate = (peer.recv - pt.recv) / dt
           pk.peakup = Math.max(pk.peakup, upRate)
           pk.peakdn = Math.max(pk.peakdn, dnRate)
-          pushringmaxlen(pk.upsamples, upRate, PEER_RATE_SAMPLE_WINDOW)
-          pushringmaxlen(pk.dnsamples, dnRate, PEER_RATE_SAMPLE_WINDOW)
         }
       }
       peerPrev.current = { sent: peer.sent, recv: peer.recv, t: now }
-      const avgup = meanrate(pk.upsamples)
-      const avgdn = meanrate(pk.dnsamples)
+
+      const hist = peerWireHistory.current
+      const lastsnap = hist.length > 0 ? hist[hist.length - 1] : undefined
+      if (
+        lastsnap !== undefined &&
+        (peer.sent < lastsnap.sent || peer.recv < lastsnap.recv)
+      ) {
+        hist.length = 0
+      }
+      hist.push({ t: now, sent: peer.sent, recv: peer.recv })
+      const cutoff = now - PEER_VOLUME_WINDOW_MS
+      while (hist.length > 1 && hist[0].t < cutoff) {
+        hist.shift()
+      }
+      const baseline = hist[0]
+      const up1m = Math.max(0, peer.sent - baseline.sent)
+      const dn1m = Math.max(0, peer.recv - baseline.recv)
 
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
@@ -258,7 +256,7 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       )
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `  $yellowpk $white${fmtRate(pk.peakup)} $yellowav $white${fmtRate(avgup)}`,
+        `  $yellowpk $white${fmtRate(pk.peakup)} $yellow1m $white${fmtTotal(up1m)}`,
         context,
         true,
       )
@@ -271,7 +269,7 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       )
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `  $yellowpk $white${fmtRate(pk.peakdn)} $yellowav $white${fmtRate(avgdn)}`,
+        `  $yellowpk $white${fmtRate(pk.peakdn)} $yellow1m $white${fmtTotal(dn1m)}`,
         context,
         true,
       )
