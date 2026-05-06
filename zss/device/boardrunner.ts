@@ -1,9 +1,9 @@
 import { createdevice } from 'zss/device'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
-import { memoryreadcodepagetype } from 'zss/memory/codepageoperations'
+import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
@@ -11,7 +11,7 @@ import {
   memoryreadhalt,
   memoryreadroot,
 } from 'zss/memory/session'
-import { BOARD, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { vmboardrunnerack } from './api'
 
@@ -79,8 +79,10 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
           assignedboard = board
         }
         const maybeboard = memoryboundaryget<CODE_PAGE>(assignedboard)
-        if (ispresent(maybeboard) && ispresent(maybeboard.board)) {
-          memorytickmain(timestamp, [maybeboard.board], memoryreadhalt())
+        const boardentity =
+          memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
+        if (ispresent(boardentity)) {
+          memorytickmain(timestamp, [boardentity], memoryreadhalt())
         }
         vmboardrunnerack(boardrunner, assignedplayer)
       }
@@ -122,6 +124,7 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
           const doc = memorysyncpipe.applyremote(memoryreadroot(), patch)
           if (ispresent(doc)) {
             Object.assign(memoryreadroot(), doc)
+            console.info('boardrunner', 'synced', deepcopy(memoryreadroot()))
           } else {
             boardrunner.reply(message, 'desync')
           }

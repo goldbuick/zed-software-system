@@ -16,6 +16,7 @@ import {
   memoryimportcodepage,
   memoryreadcodepagedata,
   memoryreadcodepagename,
+  memoryreadcodepageruntime,
   memoryreadcodepagestats,
   memoryreadcodepagetype,
 } from './codepageoperations'
@@ -115,12 +116,20 @@ export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {
   if (!ispresent(codepage)) {
     return
   }
-  if (ispresent(codepage.board)) {
-    memorydeleteboardruntime(codepage.board)
-    memoryfreeboardelementsruntime(codepage.board)
+  const rt = memoryreadcodepageruntime(codepage)
+  if (!ispresent(rt)) {
+    return
   }
-  memorydeleteboardelementruntime(codepage.object)
-  memorydeleteboardelementruntime(codepage.terrain)
+  if (ispresent(rt.board)) {
+    memorydeleteboardruntime(rt.board)
+    memoryfreeboardelementsruntime(rt.board)
+  }
+  memorydeleteboardelementruntime(rt.object)
+  memorydeleteboardelementruntime(rt.terrain)
+  if (ispresent(codepage.runtime)) {
+    memoryboundarydelete(codepage.runtime)
+  }
+  codepage.runtime = undefined
 }
 
 export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {

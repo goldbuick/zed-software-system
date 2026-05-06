@@ -3,10 +3,12 @@ import { boardrunnerpatch } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryboundaryget } from 'zss/memory/boundaries'
 import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
-import { memoryreadcodepagetype } from 'zss/memory/codepageoperations'
+import {
+  memoryreadcodepagedata,
+  memoryreadcodepagetype,
+} from 'zss/memory/codepageoperations'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import {
   memoryreadbookbysoftware,
@@ -70,32 +72,22 @@ export function boardrunnerboundarymemorysync(vm: DEVICE) {
     if (!ispresent(maybecodepage)) {
       continue
     }
-    const boundaries = memorycollectboundaryidsforboard(
+    const boardentity =
+      memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybecodepage)
+    if (!ispresent(boardentity)) {
+      continue
+    }
+    const flagboundaries = memorycollectboundaryidsforboard(
       mainbook,
-      maybecodepage.board,
+      boardentity,
     )
-    //
-    // const boardpipe = readboundarypipe(boardid, boardboundary)
-    // const patch = boardpipe.emitdiff(boardboundary)
-    // if (patch.length > 0) {
-    //   boardrunnerpatch(vm, player, patch, boardid)
-    // }
-
-    // const boardentity = memoryreadboardbyaddress(boardid)
-    // if (!ispresent(boardentity)) {
-    //   continue
-    // }
-    // const flagboundaries = memorycollectboundaryidsforboard(
-    //   mainbook,
-    //   boardentity,
-    // )
-    // for (const boundaryid of flagboundaries) {
-    //   const doc = memoryboundaryget(boundaryid) ?? ({} as BOUNDARY_DOC)
-    //   const pipe = readboundarypipe(boundaryid, doc)
-    //   const flagpatch = pipe.emitdiff(doc)
-    //   if (flagpatch.length > 0) {
-    //     boardrunnerpatch(vm, player, flagpatch, boundaryid)
-    //   }
-    // }
+    for (const boundaryid of flagboundaries) {
+      const doc = memoryboundaryget(boundaryid) ?? ({} as BOUNDARY_DOC)
+      const pipe = readboundarypipe(boundaryid, doc)
+      const flagpatch = pipe.emitdiff(doc)
+      if (flagpatch.length > 0) {
+        boardrunnerpatch(vm, player, flagpatch, boundaryid)
+      }
+    }
   }
 }

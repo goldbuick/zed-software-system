@@ -16,7 +16,10 @@ import {
   memoryboundaryalloc,
   memoryboundaryget,
 } from '../boundaries'
-import { memorycreatecodepage } from '../codepageoperations'
+import {
+  memorycreatecodepage,
+  memoryreadcodepageruntime,
+} from '../codepageoperations'
 import { memoryresetbooks } from '../session'
 
 describe('book opaque boundaries', () => {
@@ -33,6 +36,8 @@ describe('book opaque boundaries', () => {
     const stored = memoryboundaryget(book.pages[0])
     expect(stored).toBeDefined()
     expect((stored as { id: string }).id).toBe(cp.id)
+    expect((stored as { runtime?: string }).runtime).toBeDefined()
+    expect(memoryreadcodepageruntime(stored as any)).toEqual({})
     expect(memoryreadcodepage(book, cp.id)?.id).toBe(cp.id)
   })
 
@@ -50,6 +55,9 @@ describe('book opaque boundaries', () => {
     expect(ispresent(again)).toBe(true)
     expect(again!.pages.length).toBe(1)
     expect(memoryreadcodepage(again, cp.id)?.id).toBe(cp.id)
+    const imported = memoryreadcodepage(again, cp.id)
+    expect(imported?.runtime).toBeDefined()
+    expect(imported?.runtime).not.toBe(again!.pages[0])
   })
 
   it('mutates flags through boundary-backed record', () => {
@@ -85,6 +93,7 @@ describe('book opaque boundaries', () => {
       terrain: { runtime: pageterrainruntime },
     })
     const book = memorycreatebook([cp])
+    const pagert = cp.runtime!
 
     expect(memoryboundaryget(book.pages[0])).toBeDefined()
     expect(memoryboundaryget(boardruntime)).toBeDefined()
@@ -97,6 +106,7 @@ describe('book opaque boundaries', () => {
       jest.requireActual<typeof import('../session')>('../session')
     memoryfreebook(book)
 
+    expect(memoryboundaryget(pagert)).toBeUndefined()
     expect(memoryboundaryget(book.pages[0])).toBeUndefined()
     expect(memoryboundaryget(boardruntime)).toBeUndefined()
     expect(memoryboundaryget(terrainruntime)).toBeUndefined()
@@ -122,6 +132,7 @@ describe('book opaque boundaries', () => {
       object: { id: 'obj2', runtime: objectruntime },
     })
     const book = memorycreatebook([cp])
+    const pagert = cp.runtime!
 
     expect(memoryboundaryget(book.pages[0])).toBeDefined()
     expect(memoryboundaryget(boardruntime)).toBeDefined()
@@ -129,6 +140,7 @@ describe('book opaque boundaries', () => {
 
     const removed = memoryclearbookcodepage(book, cp.id)
     expect(removed?.id).toBe(cp.id)
+    expect(memoryboundaryget(pagert)).toBeUndefined()
     expect(memoryboundaryget(book.pages[0])).toBeUndefined()
     expect(memoryboundaryget(boardruntime)).toBeUndefined()
     expect(memoryboundaryget(objectruntime)).toBeUndefined()

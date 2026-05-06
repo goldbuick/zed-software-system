@@ -119,7 +119,6 @@ export enum CODE_PAGE_KEYS {
   terrain,
   charset,
   palette,
-  eighttrack,
 }
 
 export enum CODE_PAGE_TYPE {
@@ -258,18 +257,21 @@ export type BOOK = {
 
 export type BOOK_FLAGS = Record<string, WORD>
 
-export type CODE_PAGE = {
-  // all pages have id & code
-  id: string
-  code: string
-  // content data
+/** Payload behind `CODE_PAGE.runtime` (opaque boundary). */
+export type CODE_PAGE_RUNTIME = {
   board?: BOARD
   object?: BOARD_ELEMENT
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-  // common parsed values
+}
+
+export type CODE_PAGE = {
+  id: string
+  code: string
   stats?: CODE_PAGE_STATS
+  /** Boundary id for `CODE_PAGE_RUNTIME` (board, object, terrain, charset, palette, …). */
+  runtime?: string
 }
 
 export type CODE_PAGE_STATS = {
