@@ -28,7 +28,7 @@ import { NAME } from 'zss/words/types'
 
 import { pilottick } from './pilot'
 
-const TICK_BUDGET = Math.ceil(TICK_FPS)
+const TICK_BUDGET = Math.round(TICK_FPS * 2)
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
@@ -64,23 +64,25 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     const activeboards = memoryreadbookplayerboards(mainbook)
     for (let i = 0; i < activeboards.length; ++i) {
       const board = activeboards[i]
+      const currentrunner = boardrunners[board.id]
       const players = memoryreadplayersonboard(board)
       const eligible = players.filter((player) => !boardrunnerblocked[player])
 
-      const priorrunner = boardrunners[board.id]
-      if (ispresent(priorrunner) && !players.includes(priorrunner)) {
-        delete boardrunners[board.id]
-        delete boardrunneracks[priorrunner]
-      }
-
-      const currentrunner = boardrunners[board.id]
       if (ispresent(currentrunner)) {
-        boardrunneracks[currentrunner] ??= TICK_BUDGET
-        --boardrunneracks[currentrunner]
-        if (boardrunneracks[currentrunner] < 1) {
+        if (!players.includes(currentrunner)) {
           delete boardrunners[board.id]
           delete boardrunneracks[currentrunner]
-          boardrunnerblocked[currentrunner] = true
+          console.info('player', currentrunner, 'has left board', board.id)
+          continue
+        } else {
+          boardrunneracks[currentrunner] ??= TICK_BUDGET
+          --boardrunneracks[currentrunner]
+          if (boardrunneracks[currentrunner] < 1) {
+            delete boardrunners[board.id]
+            delete boardrunneracks[currentrunner]
+            boardrunnerblocked[currentrunner] = true
+            console.info('player', currentrunner, 'has been blocked', board.id)
+          }
         }
       }
 
@@ -88,6 +90,7 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
         const elected = pick(...eligible)
         boardrunners[board.id] = elected
         boardrunneracks[elected] = TICK_BUDGET
+        console.info('player', elected, 'has been elected to board', board.id)
       }
     }
   })

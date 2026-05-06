@@ -21,7 +21,7 @@ import {
 } from 'zss/memory/session'
 import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 
-import { MESSAGE, vmboardrunnerack, vmboardrunnerpatch, vmlocal } from './api'
+import { MESSAGE, vmboardrunnerack, vmboardrunnerpatch } from './api'
 import { lastinputtime } from './vm/state'
 
 gadgetstateprovider((player) => {
