@@ -106,8 +106,9 @@ export function boardrunnertick(
   player: string,
   board: string,
   timestamp: number,
+  boundaries: string[],
 ) {
-  device.emit(player, 'boardrunner:tick', [board, timestamp])
+  device.emit(player, 'boardrunner:tick', [board, timestamp, boundaries])
 }
 
 export function boardrunnerpaint(

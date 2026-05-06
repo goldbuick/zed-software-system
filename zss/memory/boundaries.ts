@@ -15,10 +15,6 @@ export function memoryboundarydelete(id: string) {
   boundaries.delete(id)
 }
 
-/**
- * Store `payload` and return its boundary id. If `maybeid` is a non-empty string
- * and no entry exists yet, that key is used; otherwise a new id is generated.
- */
 export function memoryboundaryalloc(
   payload: unknown,
   maybeid?: string,

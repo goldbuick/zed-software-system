@@ -11,13 +11,11 @@ import {
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
-// one root MEMORY jsonpipe; fan out wrapped patches to activelist + operator
 const boardrunnermemorypipe = createjsonpipe<MEMORY_ROOT>(
   memoryreadroot(),
   memoryrootshouldemitpath,
 )
 
-/** Push root MEMORY snapshot deltas to boardrunner workers, jsonpipe v1. */
 export function boardrunnermemorysync(vm: DEVICE) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {

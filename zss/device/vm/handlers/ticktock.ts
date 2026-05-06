@@ -90,11 +90,6 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
         boardrunners[board.id] = elected
         boardrunneracks[elected] = TICK_BUDGET
       }
-
-      const runner = boardrunners[board.id]
-      if (ispresent(runner)) {
-        boardrunnertick(vm, runner, board.id, mainbook.timestamp)
-      }
     }
   })
   perfmeasure('vm:boardrunnermemorysync', () => {

@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpatch } from 'zss/device/api'
+import { boardrunnerpatch, boardrunnertick } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
@@ -33,11 +33,13 @@ export function boardrunnerboundarymemorysync(vm: DEVICE) {
   for (let i = 0; i < ids.length; ++i) {
     const board = ids[i]
     const player = boardrunners[board]
+
     // bail if board runtime not found
     const mayberuntime = memoryboundaryget<CODE_PAGE_RUNTIME>(board)
     if (!ispresent(mayberuntime?.board)) {
       continue
     }
+
     // read board data to scan for boundary ids
     const boardboundaries = memorycollectboundaryidsforboard(
       mainbook,
@@ -51,5 +53,8 @@ export function boardrunnerboundarymemorysync(vm: DEVICE) {
         boardrunnerpatch(vm, player, patch, boundary)
       }
     }
+
+    // signal tick to the boardrunner
+    boardrunnertick(vm, player, board, mainbook.timestamp, [...boardboundaries])
   }
 }

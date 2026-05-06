@@ -10,22 +10,16 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import type { BOARD, BOOK } from './types'
 
-/**
- * Boundary ids under `book.flags` tied to this board: synth/playqueue owner,
- * gadget layers cache, charset/palette pages, per-player flags + gadget when
- * those players are on the board, and optional `createtrackingid(board.id)` if
- * present (pick tracking otherwise uses stat addresses; see codepages).
- */
 export function memorycollectboundaryidsforboard(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
-): Set<string> {
-  const out = new Set<string>()
+): string[] {
   if (!ispresent(board)) {
-    return out
+    return []
   }
 
   // include board id
+  const out = new Set<string>()
   out.add(board.id)
 
   function maybeaddflagboundary(boundary: string) {
@@ -53,5 +47,5 @@ export function memorycollectboundaryidsforboard(
     }
   }
 
-  return out
+  return Array.from(out)
 }

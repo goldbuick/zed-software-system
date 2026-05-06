@@ -3,8 +3,6 @@ import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
-import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
-import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
@@ -12,9 +10,9 @@ import {
   memoryreadhalt,
   memoryreadroot,
 } from 'zss/memory/session'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_RUNTIME } from 'zss/memory/types'
 
-import { vmboardrunnerack } from './api'
+import { MESSAGE, vmboardrunnerack } from './api'
 
 let assignedplayer = ''
 let assignedboard = ''
@@ -28,16 +26,16 @@ type BOUNDARY_DOC = Record<string, any>
 type BOUNDARY_JSONPIPE = JSON_PIPE_HANDLE<BOUNDARY_DOC>
 const boundarysyncpipes = new Map<string, BOUNDARY_JSONPIPE>()
 
-function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
+function readworkerboundarypipe(
+  message: MESSAGE,
+  boundary: string,
+): BOUNDARY_JSONPIPE {
   if (!boundarysyncpipes.has(boundary)) {
-    const init = memoryboundaryget<BOUNDARY_DOC>(boundary)
-    boundarysyncpipes.set(
-      boundary,
-      createjsonpipe<BOUNDARY_DOC>(
-        init ?? ({} as BOUNDARY_DOC),
-        memoryrootshouldemitpath,
-      ),
-    )
+    const init = memoryboundaryget<BOUNDARY_DOC>(boundary) ?? {}
+    const pipe = createjsonpipe<BOUNDARY_DOC>(init, memoryrootshouldemitpath)
+    boundarysyncpipes.set(boundary, pipe)
+    // trigger a fullsync response to the boardrunner
+    boardrunner.reply(message, 'desync', boundary)
   }
   return boundarysyncpipes.get(boundary)!
 }
@@ -59,7 +57,7 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
       }
       break
     case 'patch':
-      if (message.player !== assignedplayer && isstring(message.data)) {
+      if (isstring(message.data) && message.player !== assignedplayer) {
         return
       }
       break
@@ -75,15 +73,33 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
       break
     case 'tick':
       if (isarray(message.data)) {
-        const [board, timestamp] = message.data as [string, number]
+        const [board, timestamp, boundaries] = message.data as [
+          string,
+          number,
+          string[],
+        ]
         if (assignedboard !== board) {
           assignedboard = board
         }
-        const maybeboard = memoryreadcodepagebyid(assignedboard)
-        const boardentity =
-          memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
-        if (ispresent(boardentity)) {
-          memorytickmain(timestamp, [boardentity], memoryreadhalt())
+        // ensure all boundaries are started
+        for (const boundary of boundaries) {
+          readworkerboundarypipe(message, boundary)
+        }
+        // read the board codepage runtime, to ensure
+        // we have the data to tick the board
+        const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
+        if (ispresent(maybeboard?.board)) {
+          memorytickmain(timestamp, [maybeboard.board], memoryreadhalt())
+          for (const boundary of boundaries) {
+            const boundrypipe = readworkerboundarypipe(message, boundary)
+            if (boundrypipe.isdesynced()) {
+              return
+            }
+            const patch = boundrypipe.emitdiff(maybeboard.board)
+            if (patch.length > 0) {
+              // boardrunnerpatch(boardrunner, assignedplayer, patch, boundary)
+            }
+          }
         }
         vmboardrunnerack(boardrunner, assignedplayer)
       }
@@ -92,10 +108,10 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
       if (isarray(message.data)) {
         const [doc, boundary] = message.data as [any, string]
         if (boundary) {
-          const pipe = readworkerboundarypipe(boundary)
-          memoryboundaryset(boundary, pipe.applyfullsync(doc as BOUNDARY_DOC))
+          const boundrypipe = readworkerboundarypipe(message, boundary)
+          memoryboundaryset(boundary, boundrypipe.applyfullsync(doc))
         } else {
-          const full = memorysyncpipe.applyfullsync(doc as MEMORY_ROOT)
+          const full = memorysyncpipe.applyfullsync(doc)
           Object.assign(memoryreadroot(), full)
         }
       }
@@ -104,15 +120,12 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
       if (isarray(message.data)) {
         const [patch, boundary] = message.data as [Operation[], string]
         if (boundary) {
-          const boundrypipe = readworkerboundarypipe(boundary)
+          const boundrypipe = readworkerboundarypipe(message, boundary)
           if (boundrypipe.isdesynced()) {
             return
           }
-          const root = memoryboundaryget<BOUNDARY_DOC>(boundary)
-          const doc = boundrypipe.applyremote(
-            root ?? ({} as BOUNDARY_DOC),
-            patch,
-          )
+          const root = memoryboundaryget<BOUNDARY_DOC>(boundary) ?? {}
+          const doc = boundrypipe.applyremote(root, patch)
           if (ispresent(doc)) {
             memoryboundaryset(boundary, doc)
           } else {
@@ -122,10 +135,10 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
           if (memorysyncpipe.isdesynced()) {
             return
           }
-          const doc = memorysyncpipe.applyremote(memoryreadroot(), patch)
+          const root = memoryreadroot()
+          const doc = memorysyncpipe.applyremote(root, patch)
           if (ispresent(doc)) {
-            Object.assign(memoryreadroot(), doc)
-            console.info('boardrunner', 'synced', deepcopy(memoryreadroot()))
+            Object.assign(root, doc)
           } else {
             boardrunner.reply(message, 'desync')
           }
@@ -133,7 +146,5 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
       }
       break
     }
-    default:
-      break
   }
 })
