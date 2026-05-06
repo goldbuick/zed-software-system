@@ -1,14 +1,16 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerboundarymemorysync } from 'zss/device/vm/boardrunnerboundarysync'
-import { boardrunnermemorysync } from 'zss/device/vm/boardrunnermemorysync'
 import {
-  boardrunneracks,
-  boardrunnerblocked,
-  boardrunners,
-} from 'zss/device/vm/state'
-import { pick } from 'zss/mapping/array'
-import { TICK_FPS } from 'zss/mapping/tick'
+  boardrunnerassignmentvalid,
+  boardrunnerblock,
+  boardrunnerbudgetdec,
+  boardrunnerelect,
+  boardrunnerevict,
+} from 'zss/device/vm/boardrunnermanagement'
+import { boardrunnermemorysync } from 'zss/device/vm/boardrunnermemorysync'
+import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
+import { boardrunners } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
@@ -26,11 +28,7 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { NAME } from 'zss/words/types'
 
-import { gadgetsynctick } from '../gadgetsynctick'
-
 import { pilottick } from './pilot'
-
-const TICK_BUDGET = Math.round(TICK_FPS * 2)
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
@@ -62,45 +60,37 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       }
     }
   })
-  perfmeasure('vm:gadgetsynctick', () => {
-    gadgetsynctick(vm)
-  })
   perfmeasure('vm:boardrunner', () => {
     const activeboards = memoryreadbookplayerboards(mainbook)
     for (let i = 0; i < activeboards.length; ++i) {
       const board = activeboards[i]
-      const currentrunner = boardrunners[board.id]
-      const players = memoryreadplayersonboard(board)
-      const eligible = players.filter((player) => !boardrunnerblocked[player])
+      const boardid = board.id
 
-      if (ispresent(currentrunner)) {
-        if (!players.includes(currentrunner)) {
-          delete boardrunners[board.id]
-          delete boardrunneracks[currentrunner]
-          console.info('player', currentrunner, 'has left board', board.id)
-          continue
-        } else {
-          boardrunneracks[currentrunner] ??= TICK_BUDGET
-          --boardrunneracks[currentrunner]
-          if (boardrunneracks[currentrunner] < 1) {
-            delete boardrunners[board.id]
-            delete boardrunneracks[currentrunner]
-            boardrunnerblocked[currentrunner] = true
-            console.info('player', currentrunner, 'has been blocked', board.id)
-          }
+      // validate the current runner
+      const currentrunner = boardrunners[boardid]
+      if (boardrunnerassignmentvalid(boardid)) {
+        // current runner is still on the board, check if we hit ack timeout
+        if (boardrunnerbudgetdec(currentrunner)) {
+          // we hit ack timeout
+          boardrunnerblock(currentrunner)
+          boardrunnerevict(boardid, currentrunner)
         }
+      } else {
+        // the current runner is no longer on the board
+        boardrunnerevict(boardid, currentrunner)
       }
 
-      if (!ispresent(boardrunners[board.id]) && eligible.length > 0) {
-        const elected = pick(...eligible)
-        boardrunners[board.id] = elected
-        boardrunneracks[elected] = TICK_BUDGET
-        console.info('player', elected, 'has been elected to board', board.id)
+      // if no runner is assigned, elect a new one
+      if (!boardrunners[boardid]) {
+        boardrunnerelect(boardid)
       }
     }
   })
   perfmeasure('vm:boardrunnermemorysync', () => {
     boardrunnermemorysync(vm)
     boardrunnerboundarymemorysync(vm)
+  })
+  perfmeasure('vm:gadgetsynctick', () => {
+    gadgetsynctick(vm)
   })
 }

@@ -80,12 +80,17 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-export function boardrunnerassign(
+export function boardrunneridle(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:idle')
+}
+
+export function boardrunnerthud(
   device: DEVICELIKE,
   player: string,
-  board: string,
+  thudplayer: string,
 ) {
-  device.emit(player, 'boardrunner:assign', board)
+  // player in this context is the board runner
+  device.emit(player, 'boardrunner:thud', thudplayer)
 }
 
 export function boardrunnerinput(
