@@ -300,6 +300,17 @@ export function vmboardrunnerpatch(
   device.emit(player, 'vm:boardrunnerpatch', [patch, boundary])
 }
 
+/** Boardrunner worker → sim VM: apply [`memorycommitplayertoboard`] on authoritative memory (synchronous via hub). */
+export function vmplayermovetoboard(
+  device: DEVICELIKE,
+  player: string,
+  targetplayer: string,
+  board: string,
+  dest: PT,
+) {
+  device.emit(player, 'vm:playermovetoboard', [targetplayer, board, dest])
+}
+
 export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,

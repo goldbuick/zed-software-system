@@ -1,4 +1,4 @@
-import { vmcli } from 'zss/device/api'
+import { vmcli, vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
@@ -155,12 +155,13 @@ export function memorymakeitcommand(
           )
           if (ispresent(codepage)) {
             writeopenpage(codepage)
-            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            // const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             const dest = {
               x: Math.round(BOARD_WIDTH * 0.5),
               y: Math.round(BOARD_HEIGHT * 0.5),
             }
-            memorymoveplayertoboard(mainbook, player, codepage.id, dest)
+            vmplayermovetoboard(SOFTWARE, player, player, codepage.id, dest)
+            // memorymoveplayertoboard(mainbook, player, codepage.id, dest)
           }
           break
         }

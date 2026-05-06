@@ -3,6 +3,7 @@ import {
   apilog,
   registereditoropen,
   vmcodeaddress,
+  vmplayermovetoboard,
   vmrefscroll,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -108,8 +109,9 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
         const target = memoryreadboardbyaddress(stat)
         if (ispresent(target)) {
-          memorymoveplayertoboard(
-            READ_CONTEXT.book,
+          vmplayermovetoboard(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
             READ_CONTEXT.elementfocus,
             target.id,
             {
@@ -117,6 +119,15 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
               y: randominteger(0, BOARD_HEIGHT - 1),
             },
           )
+          // memorymoveplayertoboard(
+          //   READ_CONTEXT.book,
+          //   READ_CONTEXT.elementfocus,
+          //   target.id,
+          //   {
+          //     x: randominteger(0, BOARD_WIDTH - 1),
+          //     y: randominteger(0, BOARD_HEIGHT - 1),
+          //   },
+          // )
         }
         return 0
       },
