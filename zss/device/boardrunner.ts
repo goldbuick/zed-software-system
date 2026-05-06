@@ -1,18 +1,46 @@
 import { createdevice } from 'zss/device'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
+import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
+import { creategadgetid, ispid } from 'zss/mapping/guid'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import {
+  memoryreadbookflag,
+  memorywritebookflag,
+} from 'zss/memory/bookoperations'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
+import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
   type MEMORY_ROOT,
+  memoryreadbookbysoftware,
   memoryreadhalt,
   memoryreadroot,
 } from 'zss/memory/session'
-import { CODE_PAGE_RUNTIME } from 'zss/memory/types'
+import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 
-import { MESSAGE, vmboardrunnerack, vmboardrunnerpatch } from './api'
+import { MESSAGE, vmboardrunnerack, vmboardrunnerpatch, vmlocal } from './api'
+import { lastinputtime } from './vm/state'
+
+gadgetstateprovider((player) => {
+  if (ispid(player)) {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const owner = creategadgetid(player)
+    let value = memoryreadbookflag(
+      mainbook,
+      owner,
+      'state',
+    ) as MAYBE<GADGET_STATE>
+    if (!ispresent(value)) {
+      value = initstate()
+      memorywritebookflag(mainbook, owner, 'state', value as any)
+    }
+    return value
+  }
+  return initstate()
+})
 
 let assignedplayer = ''
 let assignedboard = ''
@@ -65,6 +93,30 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
     case 'start':
       if (!assignedplayer) {
         assignedplayer = message.player
+      }
+      break
+    case 'input':
+      if (isarray(message.data)) {
+        // if (
+        //   message.player.includes('local') &&
+        //   !memoryhasflags(message.player)
+        // ) {
+        //   vmlocal(boardrunner, message.player)
+        // }
+        if (
+          !message.player.includes('local') ||
+          memoryhasflags(message.player)
+        ) {
+          lastinputtime[message.player] = Date.now()
+          const flags = memoryreadflags(message.player)
+          const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+          if (!isarray(flags.inputqueue)) {
+            flags.inputqueue = []
+          }
+          if (input !== INPUT.NONE) {
+            flags.inputqueue.push([input, mods])
+          }
+        }
       }
       break
     case 'tick':

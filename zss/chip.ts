@@ -502,7 +502,10 @@ export function createchip(
 ) {
   // chip memory
   const mem = createchipid(id)
-  const flags = memoryreadflags(mem)
+
+  function readflags() {
+    return memoryreadflags(mem)
+  }
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
@@ -512,25 +515,26 @@ export function createchip(
   const labels = deepcopy(Object.entries(build.labels ?? {}))
 
   // init
-  if (!isarray(flags.lb) || flags.lb.length !== labels.length) {
+  const initfags = readflags()
+  if (!isarray(initfags.lb) || initfags.lb.length !== labels.length) {
     // entry point state
-    flags.lb = labels
+    initfags.lb = labels
     // lock states
-    flags.lk = ''
+    initfags.lk = ''
     // scroll lock, gets cleared when player closes the scroll
-    flags.sk = ''
+    initfags.sk = ''
     // we leave message unset
-    flags.mg = undefined
+    initfags.mg = undefined
     // we track where we are in execution
-    flags.ec = 1
+    initfags.ec = 1
     // prevent infinite loop lockup
-    flags.lc = 0
+    initfags.lc = 0
     // pause until next tick
-    flags.ys = 0
+    initfags.ys = 0
     // execution frequency
-    flags.ps = 0
+    initfags.ps = 0
     // chip is in ended state awaiting any messages
-    flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
+    initfags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
 
   /**
@@ -588,6 +592,7 @@ export function createchip(
 
     // lifecycle api
     once() {
+      const flags = readflags()
       // reset state
       flags.lc = 0
       flags.ys = 0
@@ -607,6 +612,7 @@ export function createchip(
       }
     },
     tick(cycle) {
+      const flags = readflags()
       // update execution frequency
       const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
@@ -631,21 +637,26 @@ export function createchip(
       return shouldtick
     },
     isended() {
+      const flags = readflags()
       return flags.es === 1
     },
     isfirstpulse() {
+      const flags = readflags()
       return flags.ps === 1
     },
     shouldtick() {
+      const flags = readflags()
       return !flags.sk && (flags.es === 0 || chip.hm() !== 0)
     },
     checkcount() {
+      const flags = readflags()
       if (isnumber(flags.lc)) {
         return ++flags.lc > RUNTIME.YIELD_AT_COUNT
       }
       return true
     },
     haslabel(label) {
+      const flags = readflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -661,6 +672,7 @@ export function createchip(
       return false
     },
     hm() {
+      const flags = readflags()
       if (isarray(flags.mg) && isarray(flags.lb)) {
         const [target] = flags.mg as [string] // unpack message
         if (ispresent(target)) {
@@ -677,32 +689,40 @@ export function createchip(
       return 0
     },
     yield() {
+      const flags = readflags()
       flags.ys = 1
     },
     jump(line) {
+      const flags = readflags()
       flags.ec = line
     },
     sy() {
+      const flags = readflags()
       return !!flags.ys || chip.checkcount()
     },
     send(player, chipid, message, data) {
       SOFTWARE.emit(player, `${senderid(chipid)}:${message}`, data)
     },
     lock(allowed) {
+      const flags = readflags()
       flags.lk = allowed
     },
     unlock() {
+      const flags = readflags()
       flags.lk = ''
     },
     scrolllock(player) {
+      const flags = readflags()
       flags.sk = player
     },
     scrollunlock(player) {
+      const flags = readflags()
       if (flags.sk === player) {
         flags.sk = ''
       }
     },
     message(incoming) {
+      const flags = readflags()
       // internal messages while locked are allowed
       if (
         (flags.sk && incoming.player !== flags.sk) ||
@@ -719,6 +739,7 @@ export function createchip(
       }
     },
     zap(label) {
+      const flags = readflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -736,6 +757,7 @@ export function createchip(
       }
     },
     restore(label) {
+      const flags = readflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -751,6 +773,7 @@ export function createchip(
       }
     },
     getcase() {
+      const flags = readflags()
       // ensure execution cursor
       flags.ec = isnumber(flags.ec) ? flags.ec : 1
 
@@ -797,6 +820,7 @@ export function createchip(
       return flags.ec
     },
     nextcase() {
+      const flags = readflags()
       // get execution cursor state
       const cursor = isnumber(flags.ec) ? flags.ec : 1
       // inc it
@@ -805,6 +829,7 @@ export function createchip(
       return flags.ec
     },
     endofprogram() {
+      const flags = readflags()
       chip.yield()
       flags.es = 1
     },
@@ -953,6 +978,7 @@ export function createchip(
       return chip.command('duplicate', ...words)
     },
     repeatstart(index, ...words) {
+      const flags = readflags()
       const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])
       const repeatcount = `repeatcount${index}`
       const repeatwords = `repeatwords${index}`
@@ -960,6 +986,7 @@ export function createchip(
       flags[repeatwords] = ii < words.length ? words.slice(ii) : undefined
     },
     repeat(index) {
+      const flags = readflags()
       const repeatcount = `repeatcount${index}`
       const repeatwords = `repeatwords${index}`
       if (!isnumber(flags[repeatcount])) {

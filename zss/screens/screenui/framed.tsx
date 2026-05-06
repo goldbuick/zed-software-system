@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import {
+  boardrunnerinput,
   registerbookmarkscroll,
   registerterminalopen,
   registerterminalquickopen,
@@ -42,7 +43,8 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
     bits |= INPUT_SHIFT
   }
   if (ispid(player)) {
-    vminput(SOFTWARE, player, input, bits)
+    // vminput(SOFTWARE, player, input, bits)
+    boardrunnerinput(SOFTWARE, player, input, bits)
   }
 }
 
