@@ -1,4 +1,5 @@
 import {
+  createchipid,
   creategadgetid,
   createlayersid,
   createsynthid,
@@ -7,7 +8,6 @@ import {
 } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { memoryreadplayersonboard } from './boardaccess'
 import type { BOARD, BOOK } from './types'
 
 /**
@@ -21,29 +21,37 @@ export function memorycollectboundaryidsforboard(
   board: MAYBE<BOARD>,
 ): Set<string> {
   const out = new Set<string>()
-  if (!ispresent(book) || !ispresent(board)) {
+  if (!ispresent(board)) {
     return out
   }
-  const mainbook = book
 
-  function maybeaddflagboundary(ownerkey: string) {
-    const bid = mainbook.flags[ownerkey]
+  // include board id
+  out.add(board.id)
+
+  function maybeaddflagboundary(boundary: string) {
+    const bid = book?.flags[boundary]
     if (ispresent(bid)) {
       out.add(bid)
     }
   }
 
+  // add board specific boundaries
   maybeaddflagboundary(createsynthid(board.id))
   maybeaddflagboundary(createlayersid(board.id))
   maybeaddflagboundary(createtrackingid(board.id))
 
-  const onplayers = memoryreadplayersonboard(board)
-  for (let i = 0; i < onplayers.length; ++i) {
-    const playerid = onplayers[i]
-    if (ispid(playerid)) {
-      maybeaddflagboundary(playerid)
-      maybeaddflagboundary(creategadgetid(playerid))
+  // scan objects for chip and player boundaries
+  const ids = Object.keys(board.objects)
+  for (let i = 0; i < ids.length; ++i) {
+    const element = ids[i]
+    // add chip boundary
+    maybeaddflagboundary(createchipid(element))
+    // add player and gadget boundaries if present
+    if (ispid(element)) {
+      maybeaddflagboundary(element)
+      maybeaddflagboundary(creategadgetid(element))
     }
   }
+
   return out
 }

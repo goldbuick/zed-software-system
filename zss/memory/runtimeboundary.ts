@@ -32,8 +32,8 @@ export function memoryensureboardruntime(board: BOARD): BOARD_RUNTIME {
 }
 
 export function memoryreadboardruntime(
-  board: BOARD | undefined,
-): BOARD_RUNTIME | undefined {
+  board: MAYBE<BOARD>,
+): MAYBE<BOARD_RUNTIME> {
   if (!board?.runtime) {
     return undefined
   }
@@ -69,8 +69,8 @@ export function memoryensureboardelementruntime(
 }
 
 export function memoryreadboardelementruntime(
-  element: BOARD_ELEMENT | undefined,
-): BOARD_ELEMENT_RUNTIME | undefined {
+  element: MAYBE<BOARD_ELEMENT>,
+): MAYBE<BOARD_ELEMENT_RUNTIME> {
   if (!element?.runtime) {
     return undefined
   }
