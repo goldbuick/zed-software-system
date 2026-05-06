@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
+import { gadgetclearscroll } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
@@ -9,6 +10,7 @@ import { memoryunlockscroll } from 'zss/memory/runtime'
 import { romread } from 'zss/rom'
 
 export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
+  gadgetclearscroll(message.player)
   const maybeboard = memoryreadplayerboard(message.player)
   if (ispresent(maybeboard)) {
     const objids = Object.keys(maybeboard.objects)

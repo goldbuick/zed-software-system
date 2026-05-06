@@ -26,6 +26,8 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { NAME } from 'zss/words/types'
 
+import { gadgetsynctick } from '../gadgetsynctick'
+
 import { pilottick } from './pilot'
 
 const TICK_BUDGET = Math.round(TICK_FPS * 2)
@@ -59,6 +61,9 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
         }
       }
     }
+  })
+  perfmeasure('vm:gadgetsynctick', () => {
+    gadgetsynctick(vm)
   })
   perfmeasure('vm:boardrunner', () => {
     const activeboards = memoryreadbookplayerboards(mainbook)

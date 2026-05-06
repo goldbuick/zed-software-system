@@ -217,12 +217,8 @@ export function gadgetclientpatch(
   device.emit(player, 'gadgetclient:patch', patch)
 }
 
-export function gadgetserverdesync(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:desync')
-}
-
-export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:clearscroll')
+export function vmgadgetdesync(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:gadgetdesync')
 }
 
 export function heavyttsinfo(

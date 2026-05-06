@@ -97,7 +97,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   switch (route.target) {
     case 'vm':
     case 'modem':
-    case 'gadgetserver':
       return true
   }
   switch (route.path) {

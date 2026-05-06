@@ -19,6 +19,7 @@ import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
+import { handlegadgetdesync } from '../gadgetsynctick'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handleinput } from './input'
@@ -71,6 +72,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,
+  gadgetdesync: handlegadgetdesync,
   halt: handlehalt,
   ticktock: handleticktock,
   boardrunnerack: handleboardrunnerack,

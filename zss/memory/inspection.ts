@@ -1,10 +1,10 @@
 import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import {
-  gadgetserverclearscroll,
   registercopy,
   registereditoropen,
   vmcodeaddress,
+  vmclearscroll,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -567,7 +567,7 @@ export function memoryinspectcommand(path: string, player: string) {
         )
 
         // close scroll
-        gadgetserverclearscroll(SOFTWARE, player)
+        vmclearscroll(SOFTWARE, player)
 
         // wait a little
         await waitfor(800)
