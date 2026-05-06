@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memorytickmain } from 'zss/memory/runtime'
@@ -12,7 +12,7 @@ import {
 } from 'zss/memory/session'
 import { CODE_PAGE_RUNTIME } from 'zss/memory/types'
 
-import { MESSAGE, vmboardrunnerack } from './api'
+import { MESSAGE, vmboardrunnerack, vmboardrunnerpatch } from './api'
 
 let assignedplayer = ''
 let assignedboard = ''
@@ -47,10 +47,6 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
 
   switch (message.target) {
     case 'tick':
-      if (message.player !== assignedplayer) {
-        return
-      }
-      break
     case 'paint':
       if (message.player !== assignedplayer) {
         return
@@ -89,15 +85,18 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
         // we have the data to tick the board
         const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
         if (ispresent(maybeboard?.board)) {
+          // skip updating the over board for now
           memorytickmain(timestamp, [maybeboard.board], memoryreadhalt())
+          // sync all boundaries
           for (const boundary of boundaries) {
             const boundrypipe = readworkerboundarypipe(message, boundary)
             if (boundrypipe.isdesynced()) {
               return
             }
-            const patch = boundrypipe.emitdiff(maybeboard.board)
+            const doc = memoryboundaryget<BOUNDARY_DOC>(boundary) ?? {}
+            const patch = boundrypipe.emitdiff(doc)
             if (patch.length > 0) {
-              // boardrunnerpatch(boardrunner, assignedplayer, patch, boundary)
+              vmboardrunnerpatch(boardrunner, assignedplayer, patch, boundary)
             }
           }
         }

@@ -1,8 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { boardrunnertick } from 'zss/device/api'
 import { boardrunnerboundarymemorysync } from 'zss/device/vm/boardrunnerboundarysync'
-import { boardrunnermemorysync } from 'zss/device/vm/boardrunnersync'
+import { boardrunnermemorysync } from 'zss/device/vm/boardrunnermemorysync'
 import {
   boardrunneracks,
   boardrunnerblocked,

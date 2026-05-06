@@ -291,6 +291,15 @@ export function vmboardrunnerack(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:boardrunnerack')
 }
 
+export function vmboardrunnerpatch(
+  device: DEVICELIKE,
+  player: string,
+  patch: Operation[],
+  boundary?: string,
+) {
+  device.emit(player, 'vm:boardrunnerpatch', [patch, boundary])
+}
+
 export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,

@@ -14,7 +14,7 @@ jest.mock('zss/device/vm/handlers/pilot', () => ({
   pilottick: jest.fn(),
 }))
 
-jest.mock('zss/device/vm/boardrunnersync', () => ({
+jest.mock('zss/device/vm/boardrunnermemorysync', () => ({
   boardrunnerfullmemorysync: jest.fn(),
 }))
 
