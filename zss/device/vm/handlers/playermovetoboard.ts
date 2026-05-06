@@ -3,7 +3,7 @@ import { type MESSAGE, boardrunneridle, boardrunnerthud } from 'zss/device/api'
 import {
   boardrunnerassignmentvalid,
   boardrunnerelect,
-  boardrunnertranfer,
+  boardrunnertransfer,
 } from 'zss/device/vm/boardrunnermanagement'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -27,7 +27,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
       boardrunneridle(vm, targetplayer)
     } else {
       // switch assignment directly to the target player
-      boardrunnertranfer(board, targetplayer)
+      boardrunnertransfer(board, targetplayer)
       // elect a new runner for the prior board
       if (ispresent(currentboard)) {
         boardrunnerelect(currentboard.id)

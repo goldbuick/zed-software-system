@@ -86,11 +86,11 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       }
     }
   })
+  perfmeasure('vm:gadgetsynctick', () => {
+    gadgetsynctick(vm)
+  })
   perfmeasure('vm:boardrunnermemorysync', () => {
     boardrunnermemorysync(vm)
     boardrunnerboundarymemorysync(vm)
-  })
-  perfmeasure('vm:gadgetsynctick', () => {
-    gadgetsynctick(vm)
   })
 }

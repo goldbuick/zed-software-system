@@ -15,6 +15,7 @@ export function boardrunnereligibleforboard(board: string): string[] {
 }
 
 export function boardrunnerassignmentvalid(board: string): boolean {
+  console.info('VM => boardrunnerassignmentvalid', board)
   const runner = boardrunners[board]
   const maybeboard = memoryreadboardbyaddress(board)
   if (!ispresent(runner) || !ispresent(maybeboard)) {
@@ -37,6 +38,7 @@ export function boardrunnerevict(board: string, runner: string): void {
   }
   delete boardrunners[board]
   delete boardrunneracks[runner]
+  console.info('VM => boardrunnerevict', board, runner)
 }
 
 export function boardrunnerelect(board: string): MAYBE<string> {
@@ -47,16 +49,17 @@ export function boardrunnerelect(board: string): MAYBE<string> {
   const elected = pick(...eligible)
   boardrunners[board] = elected
   boardrunneracks[elected] = TICK_BUDGET
+  console.info('VM => boardrunnerelect', board, elected)
   return elected
 }
 
-export function boardrunnertranfer(board: string, runner: string): void {
+export function boardrunnertransfer(board: string, runner: string): void {
   boardrunners[board] = runner
   boardrunneracks[runner] = TICK_BUDGET
   boardrunnerblocked[runner] = false
+  console.info('VM => boardrunnertransfer', board, runner)
 }
 
-/** Decrements ack budget for the current runner; evicts with block if ack drops below 1. */
 export function boardrunnerbudgetdec(runner: string): boolean {
   boardrunneracks[runner] ??= TICK_BUDGET
   --boardrunneracks[runner]

@@ -302,6 +302,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
   const removelist: string[] = []
   for (let i = 0; i < mainbook.activelist.length; ++i) {
     const mayberemove = mainbook.activelist[i]
+    // this is a hack to ensure we drop local players from the active list
     if (mayberemove.startsWith(player)) {
       removelist.push(mayberemove)
     }
