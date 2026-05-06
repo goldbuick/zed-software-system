@@ -3,8 +3,15 @@ import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
+import { memoryreadcodepagetype } from 'zss/memory/codepageoperations'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
-import { type MEMORY_ROOT, memoryreadroot } from 'zss/memory/session'
+import { memorytickmain } from 'zss/memory/runtime'
+import {
+  type MEMORY_ROOT,
+  memoryreadhalt,
+  memoryreadroot,
+} from 'zss/memory/session'
+import { BOARD, CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { vmboardrunnerack } from './api'
 
@@ -70,9 +77,11 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
         const [board, timestamp] = message.data as [string, number]
         if (assignedboard !== board) {
           assignedboard = board
-          // console.info('boardrunner', 'switched to board', assignedboard)
         }
-        // todo: run memorytickmain with the given board(s) derived from assignedboard and timestamp
+        const maybeboard = memoryboundaryget<CODE_PAGE>(assignedboard)
+        if (ispresent(maybeboard) && ispresent(maybeboard.board)) {
+          memorytickmain(timestamp, [maybeboard.board], memoryreadhalt())
+        }
         vmboardrunnerack(boardrunner, assignedplayer)
       }
       break
