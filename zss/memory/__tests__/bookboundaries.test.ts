@@ -54,7 +54,7 @@ describe('book opaque boundaries', () => {
     expect(memoryreadcodepage(again, cp.id)?.id).toBe(cp.id)
     const imported = memoryreadcodepage(again, cp.id)
     expect(imported).toBeDefined()
-    expect(memoryreadcodepageruntime(imported!)).toBeDefined()
+    expect(memoryreadcodepageruntime(imported)).toBeDefined()
     expect(memoryboundaryget(imported!.id)).toBeDefined()
   })
 
