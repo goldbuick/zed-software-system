@@ -97,12 +97,6 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
       break
     case 'input':
       if (isarray(message.data)) {
-        // if (
-        //   message.player.includes('local') &&
-        //   !memoryhasflags(message.player)
-        // ) {
-        //   vmlocal(boardrunner, message.player)
-        // }
         if (
           !message.player.includes('local') ||
           memoryhasflags(message.player)

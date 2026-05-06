@@ -1,10 +1,20 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { gadgetclientpaint, gadgetclientpatch } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { gadgetstate } from 'zss/gadget/data/api'
+import {
+  gadgetstate,
+  gadgetstateprovider,
+  initstate,
+} from 'zss/gadget/data/api'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
+import { creategadgetid, ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import {
+  memoryreadbookflag,
+  memorywritebookflag,
+} from 'zss/memory/bookoperations'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import {
@@ -20,7 +30,23 @@ import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
-import { gadgetclientpaint, gadgetclientpatch } from '../api'
+gadgetstateprovider((player) => {
+  if (ispid(player)) {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const owner = creategadgetid(player)
+    let value = memoryreadbookflag(
+      mainbook,
+      owner,
+      'state',
+    ) as MAYBE<GADGET_STATE>
+    if (!ispresent(value)) {
+      value = initstate()
+      memorywritebookflag(mainbook, owner, 'state', value as any)
+    }
+    return value
+  }
+  return initstate()
+})
 
 const gadgetjsonpipes = new Map<string, JSON_PIPE_HANDLE<GADGET_STATE>>()
 
@@ -62,10 +88,7 @@ export function gadgetsynctick(vm: DEVICE) {
     if (ispresent(board)) {
       const graphics = memoryreadgraphics(player, board)
       const mode = NAME(graphics.graphics)
-      const layerstore = memoryreadbookgadgetlayersforboard(
-        mainbook,
-        board.id,
-      )
+      const layerstore = memoryreadbookgadgetlayersforboard(mainbook, board.id)
       gadgetlayers = layerstore[mode]
     }
 
