@@ -251,7 +251,7 @@ export type BOOK = {
   token?: string // unique token
   timestamp: number
   activelist: string[]
-  pages: string[] // Boundary ids in order; each id maps to a `CODE_PAGE` in session boundaries.
+  pages: CODE_PAGE[] // Ordered code page shells; shells may also be registered at `boundaries[page.id]` for sync.
   flags: Record<string, string> // Per-owner boundary ids; each owner id maps to a boundary-backed `BOOK_FLAGS` record.
 }
 

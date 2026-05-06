@@ -204,10 +204,22 @@ describe('types', () => {
         id: 'test-id',
         name: 'test-name',
         flags: {},
-        pages: [] as string[],
+        pages: [],
         activelist: [],
       }
       expect(isbook(validbook)).toBe(true)
+    })
+
+    it('should reject legacy page id strings in pages', () => {
+      expect(
+        isbook({
+          id: 'test-id',
+          name: 'test-name',
+          flags: {},
+          pages: ['boundary-key-only'],
+          activelist: [],
+        }),
+      ).toBe(false)
     })
 
     it('should reject objects missing required fields', () => {

@@ -7,8 +7,8 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import { memoryfreecodepage } from './bookoperations'
-import { memoryboundarydelete, memoryboundaryget } from './boundaries'
-import { BOOK, CODE_PAGE, MEMORY_LABEL } from './types'
+import { memoryboundarydelete } from './boundaries'
+import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
   halt: false,
@@ -127,10 +127,11 @@ export function memoryfreebook(book: MAYBE<BOOK>) {
     return
   }
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
+    const page = book.pages[i]
     memoryfreecodepage(page)
-    memoryboundarydelete(book.pages[i])
+    memoryboundarydelete(page.id)
   }
+  book.pages = []
   const ids = Object.keys(book.flags)
   for (let i = 0; i < ids.length; ++i) {
     memoryboundarydelete(book.flags[ids[i]])

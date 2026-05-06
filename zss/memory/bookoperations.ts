@@ -85,14 +85,13 @@ export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
 
   const laddress = NAME(address)
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(page)) {
-      if (page.id === address || laddress === memoryreadcodepagename(page)) {
-        memoryfreecodepage(page)
-        memoryboundarydelete(book.pages[i])
-        memoryupdatebooktoken(book)
-        return page
-      }
+    const page = book.pages[i]
+    if (page.id === address || laddress === memoryreadcodepagename(page)) {
+      memoryfreecodepage(page)
+      memoryboundarydelete(page.id)
+      book.pages.splice(i, 1)
+      memoryupdatebooktoken(book)
+      return page
     }
   }
 
@@ -201,12 +200,10 @@ export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
 
   const pagesout: FORMAT_OBJECT[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const cp = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(cp)) {
-      const ex = memoryexportcodepage(cp)
-      if (ispresent(ex)) {
-        pagesout.push(ex)
-      }
+    const cp = book.pages[i]
+    const ex = memoryexportcodepage(cp)
+    if (ispresent(ex)) {
+      pagesout.push(ex)
     }
   }
 
@@ -268,8 +265,9 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
     return undefined
   }
 
-  // map to boundary ids
-  const pages = staged.pages.map((page) => memoryboundaryalloc(page, page.id))
+  for (let i = 0; i < staged.pages.length; ++i) {
+    memoryboundaryalloc(staged.pages[i], staged.pages[i].id)
+  }
   const flags: Record<string, string> = {}
   const flagids = Object.keys(staged.flags ?? {})
   for (let i = 0; i < flagids.length; ++i) {
@@ -284,7 +282,7 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
     token: staged.token,
     timestamp: staged.timestamp,
     activelist: staged.activelist ?? [],
-    pages,
+    pages: staged.pages,
     flags,
   }
 }
@@ -298,11 +296,9 @@ export function memoryreadcodepage(
   }
   const laddress = NAME(address)
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(page)) {
-      if (page.id === address || laddress === memoryreadcodepagename(page)) {
-        return page
-      }
+    const page = book.pages[i]
+    if (page.id === address || laddress === memoryreadcodepagename(page)) {
+      return page
     }
   }
   return undefined
@@ -317,11 +313,9 @@ export function memorylistcodepagedatabytype<T extends CODE_PAGE_TYPE>(
   }
   const out: MAYBE<CODE_PAGE_TYPE_MAP[T]>[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(page)) {
-      if (memoryreadcodepagetype(page) === type) {
-        out.push(memoryreadcodepagedata<T>(page))
-      }
+    const page = book.pages[i]
+    if (memoryreadcodepagetype(page) === type) {
+      out.push(memoryreadcodepagedata<T>(page))
     }
   }
   return out.filter(ispresent)
@@ -337,17 +331,15 @@ export function memorylistcodepagebystat(
   const maybename = NAME(statname)
   const out: MAYBE<CODE_PAGE>[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(page)) {
-      const stats = memoryreadcodepagestats(page)
-      const codepagename = NAME(memoryreadcodepagename(page))
-      if (
-        page.id === statname ||
-        maybename === codepagename ||
-        ispresent(stats[statname])
-      ) {
-        out.push(page)
-      }
+    const page = book.pages[i]
+    const stats = memoryreadcodepagestats(page)
+    const codepagename = NAME(memoryreadcodepagename(page))
+    if (
+      page.id === statname ||
+      maybename === codepagename ||
+      ispresent(stats[statname])
+    ) {
+      out.push(page)
     }
   }
   return out.filter(ispresent)
@@ -362,8 +354,8 @@ export function memorylistcodepagebytype(
   }
   const out: MAYBE<CODE_PAGE>[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(page) && memoryreadcodepagetype(page) === type) {
+    const page = book.pages[i]
+    if (memoryreadcodepagetype(page) === type) {
       out.push(page)
     }
   }
@@ -381,8 +373,8 @@ export function memorylistcodepagebytypeandstat(
   const maybename = NAME(statname)
   const out: MAYBE<CODE_PAGE>[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(page) && memoryreadcodepagetype(page) === type) {
+    const page = book.pages[i]
+    if (memoryreadcodepagetype(page) === type) {
       const stats = memoryreadcodepagestats(page)
       const codepagename = NAME(memoryreadcodepagename(page))
       if (
@@ -407,9 +399,8 @@ export function memoryreadcodepagewithtype(
   }
   const laddress = NAME(address)
   for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
+    const page = book.pages[i]
     if (
-      ispresent(page) &&
       memoryreadcodepagetype(page) === type &&
       (page.id === address || laddress === memoryreadcodepagename(page))
     ) {
@@ -450,13 +441,7 @@ export function memorylistcodepagessorted(book: MAYBE<BOOK>) {
   if (!ispresent(book)) {
     return []
   }
-  const pages: CODE_PAGE[] = []
-  for (let i = 0; i < book.pages.length; ++i) {
-    const page = memoryboundaryget<CODE_PAGE>(book.pages[i])
-    if (ispresent(page)) {
-      pages.push(page)
-    }
-  }
+  const pages: CODE_PAGE[] = [...book.pages]
   const sorted = pages.sort((a, b) => {
     const atype = memoryreadcodepagetype(a)
     const btype = memoryreadcodepagetype(b)
@@ -491,7 +476,8 @@ export function memorywritecodepage(
   if (ispresent(existing)) {
     return false
   }
-  book.pages.push(memoryboundaryalloc(codepage, codepage.id))
+  book.pages.push(codepage)
+  memoryboundaryalloc(codepage, codepage.id)
   memoryupdatebooktoken(book)
   return true
 }
@@ -510,13 +496,15 @@ export function memorywritebookflag(
 }
 
 export function memorycreatebook(pages: CODE_PAGE[]): BOOK {
-  const pageids = pages.map((p) => memoryboundaryalloc(p, p.id))
+  for (let i = 0; i < pages.length; ++i) {
+    memoryboundaryalloc(pages[i], pages[i].id)
+  }
   return {
     id: createsid(),
     name: createnameid(),
     timestamp: 0,
     activelist: [],
-    pages: pageids,
+    pages,
     flags: {},
   }
 }

@@ -42,6 +42,15 @@ export function noop<T>(item: T) {
   return item
 }
 
+export function iscodepage(value: unknown): boolean {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    isstring((value as { id?: unknown }).id) &&
+    isstring((value as { code?: unknown }).code)
+  )
+}
+
 export function isbook(value: any) {
   const flagsvalid =
     value?.flags !== null &&
@@ -53,7 +62,7 @@ export function isbook(value: any) {
     isstring(value.id) &&
     isstring(value.name) &&
     isarray(value.pages) &&
-    value.pages.every((p: unknown) => isstring(p)) &&
+    value.pages.every((p: unknown) => iscodepage(p)) &&
     isarray(value.activelist) &&
     flagsvalid
   )

@@ -27,17 +27,15 @@ describe('book opaque boundaries', () => {
     memoryresetbooks([])
   })
 
-  it('stores code pages in boundaries and resolves by id', () => {
+  it('stores code pages on the book and registers shells by id for sync', () => {
     const cp = memorycreatecodepage('@board testboard\n', {})
     const book = memorycreatebook([cp])
     expect(book.pages.length).toBe(1)
-    expect(book.pages[0]).toBe(cp.id)
+    expect(book.pages[0]).toBe(cp)
     expect(book.flags).toEqual({})
-    const stored = memoryboundaryget(book.pages[0])
-    expect(stored).toBeDefined()
-    expect((stored as { id: string }).id).toBe(cp.id)
-    expect((stored as { runtime?: string }).runtime).toBeDefined()
-    expect(memoryreadcodepageruntime(stored as any)).toEqual({})
+    expect(memoryboundaryget(cp.id)).toBe(cp)
+    expect(cp.runtime).toBeDefined()
+    expect(memoryreadcodepageruntime(cp)).toEqual({})
     expect(memoryreadcodepage(book, cp.id)?.id).toBe(cp.id)
   })
 
@@ -57,7 +55,7 @@ describe('book opaque boundaries', () => {
     expect(memoryreadcodepage(again, cp.id)?.id).toBe(cp.id)
     const imported = memoryreadcodepage(again, cp.id)
     expect(imported?.runtime).toBeDefined()
-    expect(imported?.runtime).not.toBe(again!.pages[0])
+    expect(imported?.runtime).not.toBe(imported?.id)
   })
 
   it('mutates flags through boundary-backed record', () => {
@@ -95,7 +93,7 @@ describe('book opaque boundaries', () => {
     const book = memorycreatebook([cp])
     const pagert = cp.runtime!
 
-    expect(memoryboundaryget(book.pages[0])).toBeDefined()
+    expect(memoryboundaryget(cp.id)).toBe(cp)
     expect(memoryboundaryget(boardruntime)).toBeDefined()
     expect(memoryboundaryget(terrainruntime)).toBeDefined()
     expect(memoryboundaryget(objectruntime)).toBeDefined()
@@ -107,7 +105,8 @@ describe('book opaque boundaries', () => {
     memoryfreebook(book)
 
     expect(memoryboundaryget(pagert)).toBeUndefined()
-    expect(memoryboundaryget(book.pages[0])).toBeUndefined()
+    expect(book.pages.length).toBe(0)
+    expect(memoryboundaryget(cp.id)).toBeUndefined()
     expect(memoryboundaryget(boardruntime)).toBeUndefined()
     expect(memoryboundaryget(terrainruntime)).toBeUndefined()
     expect(memoryboundaryget(objectruntime)).toBeUndefined()
@@ -134,14 +133,15 @@ describe('book opaque boundaries', () => {
     const book = memorycreatebook([cp])
     const pagert = cp.runtime!
 
-    expect(memoryboundaryget(book.pages[0])).toBeDefined()
+    expect(memoryboundaryget(cp.id)).toBe(cp)
     expect(memoryboundaryget(boardruntime)).toBeDefined()
     expect(memoryboundaryget(objectruntime)).toBeDefined()
 
     const removed = memoryclearbookcodepage(book, cp.id)
     expect(removed?.id).toBe(cp.id)
     expect(memoryboundaryget(pagert)).toBeUndefined()
-    expect(memoryboundaryget(book.pages[0])).toBeUndefined()
+    expect(book.pages.length).toBe(0)
+    expect(memoryboundaryget(cp.id)).toBeUndefined()
     expect(memoryboundaryget(boardruntime)).toBeUndefined()
     expect(memoryboundaryget(objectruntime)).toBeUndefined()
   })

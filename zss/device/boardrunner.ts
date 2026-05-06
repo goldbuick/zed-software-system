@@ -4,6 +4,7 @@ import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
+import { memoryreadcodepagebyid } from 'zss/memory/codepages'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memorytickmain } from 'zss/memory/runtime'
 import {
@@ -11,7 +12,7 @@ import {
   memoryreadhalt,
   memoryreadroot,
 } from 'zss/memory/session'
-import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { vmboardrunnerack } from './api'
 
@@ -78,7 +79,7 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
         if (assignedboard !== board) {
           assignedboard = board
         }
-        const maybeboard = memoryboundaryget<CODE_PAGE>(assignedboard)
+        const maybeboard = memoryreadcodepagebyid(assignedboard)
         const boardentity =
           memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
         if (ispresent(boardentity)) {

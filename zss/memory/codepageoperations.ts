@@ -33,7 +33,6 @@ import {
   DIR,
   NAME,
   STAT_TYPE,
-  WORD,
 } from 'zss/words/types'
 
 import {

@@ -3,5 +3,9 @@ const EMIT_SKIP_SEGMENT = /(?:^|\/)(?:stats|loaders|runtime|timestamp)(?:\/|$)/
 
 /** Return false for paths that include a `stats`, `loaders`, `runtime`, or `timestamp` segment. */
 export function memoryrootshouldemitpath(path: string): boolean {
-  return EMIT_SKIP_SEGMENT.test(path) === false
+  const pass = EMIT_SKIP_SEGMENT.test(path) === false
+  if (!pass) {
+    console.info('memoryrootshouldemitpath', 'skipping', path)
+  }
+  return pass
 }
