@@ -1,3 +1,5 @@
+import { MAYBE, isstring } from 'zss/mapping/types'
+
 import {
   memoryboundaryalloc,
   memoryboundarydelete,
@@ -46,8 +48,8 @@ export function memorywriteboardruntime(
   return runtime
 }
 
-export function memorydeleteboardruntime(board: BOARD | undefined): void {
-  if (!board?.runtime) {
+export function memorydeleteboardruntime(board: MAYBE<BOARD>): void {
+  if (!isstring(board?.runtime)) {
     return
   }
   memoryboundarydelete(board.runtime)
@@ -84,7 +86,7 @@ export function memorywriteboardelementruntime(
 }
 
 export function memorydeleteboardelementruntime(
-  element: BOARD_ELEMENT | undefined,
+  element: MAYBE<BOARD_ELEMENT>,
 ): void {
   if (!element?.runtime) {
     return

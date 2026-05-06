@@ -94,22 +94,16 @@ function parsecsscolortonormalizedrgb(
 export function memoryreadcodepageruntime(
   codepage: MAYBE<CODE_PAGE>,
 ): MAYBE<CODE_PAGE_RUNTIME> {
-  if (!ispresent(codepage?.runtime) || codepage.runtime === '') {
-    return undefined
-  }
-  return memoryboundaryget<CODE_PAGE_RUNTIME>(codepage.runtime)
+  return memoryboundaryget<CODE_PAGE_RUNTIME>(codepage?.id ?? '')
 }
 
 export function memoryensurecodepageruntime(
   codepage: CODE_PAGE,
 ): CODE_PAGE_RUNTIME {
-  if (!ispresent(codepage.runtime) || codepage.runtime === '') {
-    codepage.runtime = memoryboundaryalloc({} as CODE_PAGE_RUNTIME)
-  }
-  let rt = memoryboundaryget<CODE_PAGE_RUNTIME>(codepage.runtime)
+  let rt = memoryboundaryget<CODE_PAGE_RUNTIME>(codepage.id)
   if (!ispresent(rt)) {
-    memoryboundaryset(codepage.runtime, {} as CODE_PAGE_RUNTIME)
-    rt = memoryboundaryget<CODE_PAGE_RUNTIME>(codepage.runtime)!
+    rt = {} as CODE_PAGE_RUNTIME
+    memoryboundaryset(codepage.id, rt)
   }
   return rt
 }
@@ -329,10 +323,10 @@ export function memoryimportcodepage(
   if (ispresent(flat.palette)) {
     rt.palette = flat.palette
   }
+  memoryboundaryalloc(rt, flat.id)
   return {
     id: flat.id,
     code: flat.code,
-    runtime: memoryboundaryalloc(rt),
   }
 }
 
@@ -734,10 +728,10 @@ export function memorycodepagetypetostring(
 
 export function memorycreatecodepage(
   code: string,
-  content: Partial<Omit<CODE_PAGE, 'id' | 'code' | 'runtime'>> &
-    Partial<CODE_PAGE_RUNTIME>,
+  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>> & Partial<CODE_PAGE_RUNTIME>,
 ): CODE_PAGE {
   const { stats, board, object, terrain, charset, palette } = content
+  const id = createsid()
   const rt: CODE_PAGE_RUNTIME = {}
   if (ispresent(board)) {
     rt.board = board
@@ -754,10 +748,10 @@ export function memorycreatecodepage(
   if (ispresent(palette)) {
     rt.palette = palette
   }
+  memoryboundaryalloc(rt, id)
   return {
-    id: createsid(),
+    id,
     code,
     stats,
-    runtime: memoryboundaryalloc(rt),
   }
 }

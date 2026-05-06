@@ -129,7 +129,6 @@ export function memoryfreebook(book: MAYBE<BOOK>) {
   for (let i = 0; i < book.pages.length; ++i) {
     const page = book.pages[i]
     memoryfreecodepage(page)
-    memoryboundarydelete(page.id)
   }
   book.pages = []
   const ids = Object.keys(book.flags)

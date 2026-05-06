@@ -257,7 +257,7 @@ export type BOOK = {
 
 export type BOOK_FLAGS = Record<string, WORD>
 
-/** Payload behind `CODE_PAGE.runtime` (opaque boundary). */
+/** Slot payload stored at `boundaries[codepage.id]` (same id as the shell `id`). */
 export type CODE_PAGE_RUNTIME = {
   board?: BOARD
   object?: BOARD_ELEMENT
@@ -270,8 +270,6 @@ export type CODE_PAGE = {
   id: string
   code: string
   stats?: CODE_PAGE_STATS
-  /** Boundary id for `CODE_PAGE_RUNTIME` (board, object, terrain, charset, palette, …). */
-  runtime?: string
 }
 
 export type CODE_PAGE_STATS = {

@@ -88,7 +88,6 @@ export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
     const page = book.pages[i]
     if (page.id === address || laddress === memoryreadcodepagename(page)) {
       memoryfreecodepage(page)
-      memoryboundarydelete(page.id)
       book.pages.splice(i, 1)
       memoryupdatebooktoken(book)
       return page
@@ -116,19 +115,13 @@ export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {
     return
   }
   const rt = memoryreadcodepageruntime(codepage)
-  if (!ispresent(rt)) {
-    return
-  }
-  if (ispresent(rt.board)) {
+  if (ispresent(rt)) {
     memorydeleteboardruntime(rt.board)
     memoryfreeboardelementsruntime(rt.board)
+    memorydeleteboardelementruntime(rt.object)
+    memorydeleteboardelementruntime(rt.terrain)
   }
-  memorydeleteboardelementruntime(rt.object)
-  memorydeleteboardelementruntime(rt.terrain)
-  if (ispresent(codepage.runtime)) {
-    memoryboundarydelete(codepage.runtime)
-  }
-  codepage.runtime = undefined
+  memoryboundarydelete(codepage.id)
 }
 
 export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
@@ -265,9 +258,6 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
     return undefined
   }
 
-  for (let i = 0; i < staged.pages.length; ++i) {
-    memoryboundaryalloc(staged.pages[i], staged.pages[i].id)
-  }
   const flags: Record<string, string> = {}
   const flagids = Object.keys(staged.flags ?? {})
   for (let i = 0; i < flagids.length; ++i) {
@@ -477,7 +467,6 @@ export function memorywritecodepage(
     return false
   }
   book.pages.push(codepage)
-  memoryboundaryalloc(codepage, codepage.id)
   memoryupdatebooktoken(book)
   return true
 }
@@ -496,9 +485,6 @@ export function memorywritebookflag(
 }
 
 export function memorycreatebook(pages: CODE_PAGE[]): BOOK {
-  for (let i = 0; i < pages.length; ++i) {
-    memoryboundaryalloc(pages[i], pages[i].id)
-  }
   return {
     id: createsid(),
     name: createnameid(),

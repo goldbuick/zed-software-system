@@ -23,7 +23,7 @@ export function memoryboundaryalloc(
   payload: unknown,
   maybeid?: string,
 ): string {
-  if (isstring(maybeid) && maybeid !== '' && !boundaries.has(maybeid)) {
+  if (maybeid && isstring(maybeid)) {
     boundaries.set(maybeid, payload)
     return maybeid
   }
