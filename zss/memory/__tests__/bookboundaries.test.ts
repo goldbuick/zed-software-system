@@ -1,10 +1,15 @@
-import { packformat, unpackformat } from 'zss/feature/format'
+import {
+  FORMAT_OBJECT,
+  formatobject,
+  packformat,
+  unpackformat,
+} from 'zss/feature/format'
 import { creategadgetid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   memoryclearbookcodepage,
   memorycreatebook,
-  memoryexportbook,
+  memoryexportbookasjson,
   memoryimportbook,
   memoryreadbookflags,
   memoryreadcodepage,
@@ -17,14 +22,25 @@ import {
 } from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
+  memoryexportcodepage,
   memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
-import {
-  memoryexportbooksasjson,
-  memoryimportbooksfromjson,
-} from 'zss/memory/utilities'
+import { BOOK, BOOK_KEYS } from 'zss/memory/types'
 
 import { memoryresetbooks } from '../session'
+
+/** Test helper: `memoryexportbook` stores pages as plain JSON; `memoryimportbook` needs per-page wire objects. */
+function wirebookforimport(book: BOOK): FORMAT_OBJECT {
+  const j = memoryexportbookasjson(book)
+  const pageswired = book.pages
+    .map((p) => memoryexportcodepage(p))
+    .filter(ispresent)
+  const wired = formatobject({ ...j, pages: pageswired }, BOOK_KEYS, {})
+  if (!ispresent(wired)) {
+    throw new Error('wirebookforimport: formatobject failed')
+  }
+  return wired
+}
 
 describe('book opaque boundaries', () => {
   afterEach(() => {
@@ -45,9 +61,8 @@ describe('book opaque boundaries', () => {
   it('round-trips export and import with embedded pages in wire object', () => {
     const cp = memorycreatecodepage('@object widget\n', {})
     const book = memorycreatebook([cp])
-    const exported = memoryexportbook(book)
-    expect(ispresent(exported)).toBe(true)
-    const packed = packformat(exported!)
+    const exported = wirebookforimport(book)
+    const packed = packformat(exported)
     expect(packed).toBeDefined()
     const unpacked = unpackformat(packed!) as MAYBE<typeof exported>
     expect(ispresent(unpacked)).toBe(true)
@@ -76,15 +91,15 @@ describe('book opaque boundaries', () => {
     const rtbefore = memoryreadcodepageruntime(memoryreadcodepage(book, cp.id))
     expect(rtbefore?.board?.exitnorth).toBe('roomn')
 
-    const json = memoryexportbooksasjson([book])
+    const json = JSON.stringify(wirebookforimport(book))
     memoryboundariesclear()
     memoryresetbooks([])
 
-    const importedlist = memoryimportbooksfromjson(json)
-    expect(importedlist.length).toBe(1)
-    memoryresetbooks(importedlist)
+    const imported = memoryimportbook(JSON.parse(json) as FORMAT_OBJECT)
+    expect(ispresent(imported)).toBe(true)
+    memoryresetbooks([imported!])
 
-    const cp2 = memoryreadcodepage(importedlist[0], cp.id)
+    const cp2 = memoryreadcodepage(imported!, cp.id)
     expect(cp2).toBeDefined()
     const rtafter = memoryreadcodepageruntime(cp2)
     expect(rtafter?.board?.exitnorth).toBe('roomn')

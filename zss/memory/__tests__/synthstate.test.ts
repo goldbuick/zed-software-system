@@ -1,7 +1,8 @@
+import { createsynthid } from 'zss/mapping/guid'
+
 import { memorycreatebook, memoryreadbookflags } from '../bookoperations'
 import { memoryresetbooks } from '../session'
 import {
-  createsynthid,
   memorymergesynthvoice,
   memoryqueuesynthplay,
   memoryreadsynth,

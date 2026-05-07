@@ -1,4 +1,5 @@
 import * as array from 'zss/mapping/array'
+import { TICK_FPS } from 'zss/mapping/tick'
 import {
   boardrunnerassignmentvalid,
   boardrunnerbudgetdec,
@@ -11,7 +12,19 @@ import {
   boardrunnerblocked,
   boardrunners,
 } from 'zss/device/vm/state'
+import * as boardaccess from 'zss/memory/boardaccess'
+import * as boards from 'zss/memory/boards'
 import type { BOARD } from 'zss/memory/types'
+
+jest.mock('zss/memory/boards', () => ({
+  memoryreadboardbyaddress: jest.fn(),
+}))
+
+jest.mock('zss/memory/boardaccess', () => ({
+  memoryreadplayersonboard: jest.fn(),
+}))
+
+const TICK_BUDGET = Math.round(TICK_FPS * 2)
 
 function stubboard(id: string, pids: string[]): BOARD {
   const objects: BOARD['objects'] = {}
@@ -36,121 +49,134 @@ describe('boardrunnermanagement', () => {
 
   afterEach(() => {
     clearboardrunnerstate(boardid, [pid1, pid2])
+    jest.mocked(boards.memoryreadboardbyaddress).mockReset()
+    jest.mocked(boardaccess.memoryreadplayersonboard).mockReset()
     jest.restoreAllMocks()
   })
 
   describe('boardrunnereligibleforboard', () => {
     it('returns players on board that are not blocked', () => {
       const board = stubboard(boardid, [pid1, pid2])
+      jest
+        .mocked(boards.memoryreadboardbyaddress)
+        .mockReturnValue(board as BOARD)
+      jest
+        .mocked(boardaccess.memoryreadplayersonboard)
+        .mockReturnValue([pid1, pid2])
       boardrunnerblocked[pid1] = true
-      expect(boardrunnereligibleforboard(board)).toEqual([pid2])
+      expect(boardrunnereligibleforboard(boardid)).toEqual([pid2])
     })
 
-    it('returns empty for missing board', () => {
-      expect(boardrunnereligibleforboard(undefined)).toEqual([])
+    it('returns empty when board is missing', () => {
+      jest.mocked(boards.memoryreadboardbyaddress).mockReturnValue(undefined)
+      jest.mocked(boardaccess.memoryreadplayersonboard).mockReturnValue([])
+      expect(boardrunnereligibleforboard(boardid)).toEqual([])
     })
   })
 
   describe('boardrunnerassignmentvalid', () => {
     it('is true when runner matches, is on board, and not blocked', () => {
       const board = stubboard(boardid, [pid1])
+      jest
+        .mocked(boards.memoryreadboardbyaddress)
+        .mockReturnValue(board as BOARD)
+      jest
+        .mocked(boardaccess.memoryreadplayersonboard)
+        .mockReturnValue([pid1])
       boardrunners[boardid] = pid1
-      expect(boardrunnerassignmentvalid(board, pid1)).toBe(true)
-    })
-
-    it('is false when player is not the mapped runner', () => {
-      const board = stubboard(boardid, [pid1])
-      boardrunners[boardid] = pid1
-      expect(boardrunnerassignmentvalid(board, pid2)).toBe(false)
+      expect(boardrunnerassignmentvalid(boardid)).toBe(true)
     })
 
     it('is false when runner left the board', () => {
       const board = stubboard(boardid, [])
+      jest
+        .mocked(boards.memoryreadboardbyaddress)
+        .mockReturnValue(board as BOARD)
+      jest.mocked(boardaccess.memoryreadplayersonboard).mockReturnValue([])
       boardrunners[boardid] = pid1
-      expect(boardrunnerassignmentvalid(board, pid1)).toBe(false)
+      expect(boardrunnerassignmentvalid(boardid)).toBe(false)
     })
 
     it('is false when runner is blocked', () => {
       const board = stubboard(boardid, [pid1])
+      jest
+        .mocked(boards.memoryreadboardbyaddress)
+        .mockReturnValue(board as BOARD)
+      jest
+        .mocked(boardaccess.memoryreadplayersonboard)
+        .mockReturnValue([pid1])
       boardrunners[boardid] = pid1
       boardrunnerblocked[pid1] = true
-      expect(boardrunnerassignmentvalid(board, pid1)).toBe(false)
+      expect(boardrunnerassignmentvalid(boardid)).toBe(false)
     })
   })
 
   describe('boardrunnerevict', () => {
-    it('does nothing when runnerid does not match stored', () => {
-      boardrunners[boardid] = pid1
-      boardrunneracks[pid1] = 10
-      boardrunnerevict(boardid, pid2)
-      expect(boardrunners[boardid]).toBe(pid1)
-      expect(boardrunneracks[pid1]).toBe(10)
-    })
-
-    it('clears runner and ack when runnerid matches', () => {
-      boardrunners[boardid] = pid1
-      boardrunneracks[pid1] = 10
-      boardrunnerevict(boardid, pid1)
+    it('returns early when no runner is assigned', () => {
+      boardrunnerevict(boardid)
       expect(boardrunners[boardid]).toBeUndefined()
-      expect(boardrunneracks[pid1]).toBeUndefined()
     })
 
-    it('clears stored runner when runnerid omitted', () => {
+    it('clears runner and ack for the board', () => {
       boardrunners[boardid] = pid1
-      boardrunneracks[pid1] = 3
+      boardrunneracks[pid1] = 10
       boardrunnerevict(boardid)
       expect(boardrunners[boardid]).toBeUndefined()
       expect(boardrunneracks[pid1]).toBeUndefined()
-    })
-
-    it('sets blocked when setblocked true', () => {
-      boardrunners[boardid] = pid1
-      boardrunneracks[pid1] = 5
-      boardrunnerevict(boardid, pid1, { setblocked: true })
-      expect(boardrunnerblocked[pid1]).toBe(true)
     })
   })
 
   describe('boardrunnerelect', () => {
     it('returns undefined when nobody eligible', () => {
-      expect(boardrunnerelect(boardid, [], 99)).toBeUndefined()
+      jest.mocked(boards.memoryreadboardbyaddress).mockReturnValue(undefined)
+      jest.mocked(boardaccess.memoryreadplayersonboard).mockReturnValue([])
+      expect(boardrunnerelect(boardid)).toBeUndefined()
       expect(boardrunners[boardid]).toBeUndefined()
     })
 
     it('picks, assigns runner, and sets ack budget', () => {
+      const board = stubboard(boardid, [pid1, pid2])
+      jest
+        .mocked(boards.memoryreadboardbyaddress)
+        .mockReturnValue(board as BOARD)
+      jest
+        .mocked(boardaccess.memoryreadplayersonboard)
+        .mockReturnValue([pid1, pid2])
+
       jest.spyOn(array, 'pick').mockImplementation(((...args: string[]) =>
         args.flat()[0]) as never)
-      const elected = boardrunnerelect(boardid, [pid1, pid2], 7)
+      const elected = boardrunnerelect(boardid)
       expect(elected).toBe(pid1)
       expect(boardrunners[boardid]).toBe(pid1)
-      expect(boardrunneracks[pid1]).toBe(7)
+      expect(boardrunneracks[pid1]).toBe(TICK_BUDGET)
+      expect(boardrunnerblocked[pid1]).toBe(false)
     })
   })
 
   describe('boardrunnerbudgetdec', () => {
-    it('is no-op without a runner', () => {
-      expect(boardrunnerbudgetdec(boardid)).toBe(false)
+    it('initializes ack and decrements once', () => {
+      expect(boardrunnerbudgetdec(pid1)).toBe(false)
+      expect(boardrunneracks[pid1]).toBe(TICK_BUDGET - 1)
     })
 
-    it('is no-op when ack is missing', () => {
-      boardrunners[boardid] = pid1
-      expect(boardrunnerbudgetdec(boardid)).toBe(false)
-    })
-
-    it('decrements ack and returns false when still >= 1', () => {
-      boardrunners[boardid] = pid1
+    it('returns false when still budget after decrement', () => {
       boardrunneracks[pid1] = 2
-      expect(boardrunnerbudgetdec(boardid)).toBe(false)
+      expect(boardrunnerbudgetdec(pid1)).toBe(false)
       expect(boardrunneracks[pid1]).toBe(1)
     })
 
-    it('evicts with block when exhausted', () => {
+    it('returns true when budget drops below 1', () => {
+      boardrunneracks[pid1] = 1
+      expect(boardrunnerbudgetdec(pid1)).toBe(true)
+      expect(boardrunneracks[pid1]).toBe(0)
+    })
+
+    it('does not evict runner or toggle blocked by itself', () => {
       boardrunners[boardid] = pid1
       boardrunneracks[pid1] = 1
-      expect(boardrunnerbudgetdec(boardid)).toBe(true)
-      expect(boardrunners[boardid]).toBeUndefined()
-      expect(boardrunneracks[pid1]).toBeUndefined()
-      expect(boardrunnerblocked[pid1]).toBe(true)
+      expect(boardrunnerbudgetdec(pid1)).toBe(true)
+      expect(boardrunners[boardid]).toBe(pid1)
+      expect(boardrunnerblocked[pid1]).toBeUndefined()
     })
   })
 })

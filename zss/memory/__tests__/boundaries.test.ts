@@ -15,12 +15,11 @@ describe('memoryboundaryalloc', () => {
     expect(memoryboundaryget('mykey')).toEqual({ x: 1 })
   })
 
-  it('falls back to a new id when optional id is already taken', () => {
+  it('overwrites payload when optional id is reused', () => {
     memoryboundaryalloc({ first: true }, 'same')
     const second = memoryboundaryalloc({ second: true }, 'same')
-    expect(second).not.toBe('same')
-    expect(memoryboundaryget('same')).toEqual({ first: true })
-    expect(memoryboundaryget(second)).toEqual({ second: true })
+    expect(second).toBe('same')
+    expect(memoryboundaryget('same')).toEqual({ second: true })
   })
 
   it('ignores empty string optional id', () => {

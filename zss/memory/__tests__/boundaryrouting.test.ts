@@ -31,7 +31,7 @@ describe('memorycollectboundaryidsforboard', () => {
     } as BOOK
 
     const ids = memorycollectboundaryidsforboard(book, board)
-    expect([...ids].sort()).toEqual(['l1', 's1', 't1'].sort())
+    expect(ids.sort()).toEqual(['bd1', 'l1', 's1', 't1'].sort())
   })
 
   it('adds player flags and gadget owners for pids on the board', () => {
@@ -58,9 +58,9 @@ describe('memorycollectboundaryidsforboard', () => {
     } as BOOK
 
     const ids = memorycollectboundaryidsforboard(book, board)
-    expect(ids.has('sx')).toBe(true)
-    expect(ids.has('pf')).toBe(true)
-    expect(ids.has('gf')).toBe(true)
+    expect(ids.includes('sx')).toBe(true)
+    expect(ids.includes('pf')).toBe(true)
+    expect(ids.includes('gf')).toBe(true)
   })
 
   it('skips flag owners not present on book.flags', () => {
@@ -79,6 +79,6 @@ describe('memorycollectboundaryidsforboard', () => {
       flags: {},
     } as BOOK
 
-    expect([...memorycollectboundaryidsforboard(book, board)]).toEqual([])
+    expect(memorycollectboundaryidsforboard(book, board)).toEqual(['bd3'])
   })
 })

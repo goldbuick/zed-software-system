@@ -1,12 +1,21 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
+import * as boundaries from 'zss/memory/boundaries'
 import * as session from 'zss/memory/session'
 
 import { handleboardrunnerdesync } from '../boardrunnerdesync'
 
+jest.mock('zss/memory/boundaries', () => ({
+  memoryboundaryget: jest.fn(),
+}))
+
 describe('handleboardrunnerdesync', () => {
-  it('calls boardrunnerpaint with a deepcopy of memory root for the player', () => {
+  afterEach(() => {
+    jest.mocked(boundaries.memoryboundaryget).mockReset()
+  })
+
+  it('calls boardrunnerpaint with memory root payload for the player', () => {
     const vm = { emit: jest.fn() } as unknown as DEVICE
     const message = { player: 'player-a' } as MESSAGE
     const paint = jest
@@ -16,21 +25,18 @@ describe('handleboardrunnerdesync', () => {
     const live = session.memoryreadroot()
     handleboardrunnerdesync(vm, message)
 
-    expect(paint).toHaveBeenCalledWith(vm, 'player-a', {
-      doc: expect.any(Object),
-    })
-    const payload = paint.mock.calls[0][2] as { doc: unknown }
-    expect(payload.doc).not.toBe(live)
-    expect(payload).not.toHaveProperty('boundaryid')
+    expect(paint).toHaveBeenCalledWith(vm, 'player-a', live)
 
     paint.mockRestore()
   })
 
-  it('calls boardrunnerpaint with boundary doc when desync data has boundaryid', () => {
+  it('calls boardrunnerpaint with boundary payload when message.data is a boundary id', () => {
     const vm = { emit: jest.fn() } as unknown as DEVICE
+    const doc = { synced: true }
+    jest.mocked(boundaries.memoryboundaryget).mockReturnValue(doc)
     const message = {
       player: 'p2',
-      data: { boundaryid: 'b-edge' },
+      data: 'b-edge',
     } as unknown as MESSAGE
     const paint = jest
       .spyOn(api, 'boardrunnerpaint')
@@ -38,14 +44,8 @@ describe('handleboardrunnerdesync', () => {
 
     handleboardrunnerdesync(vm, message)
 
-    expect(paint).toHaveBeenCalledWith(
-      vm,
-      'p2',
-      expect.objectContaining({
-        boundaryid: 'b-edge',
-        doc: expect.any(Object),
-      }),
-    )
+    expect(boundaries.memoryboundaryget).toHaveBeenCalledWith('b-edge')
+    expect(paint).toHaveBeenCalledWith(vm, 'p2', doc, 'b-edge')
 
     paint.mockRestore()
   })
