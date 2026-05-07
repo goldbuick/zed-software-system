@@ -71,8 +71,10 @@ export function createjsonpipe<T extends object | unknown[]>(
       recordjsonpipeapplyremoteops(filtered.length)
       try {
         //  an RFC 6902 patch array
-        const { newDocument } = applyPatch(root, filtered, true, false)
-        return newDocument
+        root = applyPatch(root, filtered, true, false).newDocument
+        // update shadow
+        shadow = deepcopy(root)
+        return root
       } catch (error: any) {
         void error
         desync = true

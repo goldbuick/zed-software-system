@@ -11,6 +11,7 @@ import { PT } from 'zss/words/types'
 
 import {
   memoryexportboardelement,
+  memoryexportboardelementasjson,
   memoryimportboardelement,
 } from './boardelement'
 import {
@@ -59,6 +60,48 @@ export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
     name: FORMAT_SKIP,
     runtime: FORMAT_SKIP,
   })
+}
+
+export function memoryexportboardasjson(board: MAYBE<BOARD>): any {
+  if (!ispresent(board)) {
+    return undefined
+  }
+  const objects: Record<string, any> = {}
+  for (const object of Object.values(board.objects ?? {})) {
+    objects[object.id ?? ''] = memoryexportboardelementasjson(object)
+  }
+  return {
+    terrain: board.terrain.map(memoryexportboardelementasjson),
+    objects,
+    // stats
+    isdark: board.isdark,
+    startx: board.startx,
+    starty: board.starty,
+    over: board.over,
+    under: board.under,
+    camera: board.camera,
+    graphics: board.graphics,
+    facing: board.facing,
+    charset: board.charset,
+    palette: board.palette,
+    exitnorth: board.exitnorth,
+    exitsouth: board.exitsouth,
+    exitwest: board.exitwest,
+    exiteast: board.exiteast,
+    timelimit: board.timelimit,
+    restartonzap: board.restartonzap,
+    maxplayershots: board.maxplayershots,
+    b1: board.b1,
+    b2: board.b2,
+    b3: board.b3,
+    b4: board.b4,
+    b5: board.b5,
+    b6: board.b6,
+    b7: board.b7,
+    b8: board.b8,
+    b9: board.b9,
+    b10: board.b10,
+  }
 }
 
 export function memoryimportboard(

@@ -7,7 +7,7 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { STR_COLOR, isstrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import { CATEGORY } from 'zss/words/types'
+import { CATEGORY, COLLISION } from 'zss/words/types'
 
 import {
   memoryensureboardelementruntime,
@@ -54,6 +54,90 @@ export function memoryexportboardelement(
     removed: FORMAT_SKIP,
     bucket: FORMAT_SKIP,
   })
+}
+
+export function memoryexportboardelementasjson(
+  boardelement: MAYBE<BOARD_ELEMENT>,
+): any {
+  if (!ispresent(boardelement)) {
+    return undefined
+  }
+  if (ispresent(boardelement.id)) {
+    return {
+      // this element is an instance of an element type
+      kind: boardelement.kind,
+      // objects only
+      id: boardelement.id,
+      x: boardelement.x,
+      y: boardelement.y,
+      lx: boardelement.lx,
+      ly: boardelement.ly,
+      code: boardelement.code,
+      // this is a unique name for this instance
+      name: boardelement.name,
+      // display
+      char: boardelement.char,
+      color: boardelement.color,
+      bg: boardelement.bg,
+      displaychar: boardelement.displaychar,
+      displaycolor: boardelement.displaycolor,
+      displaybg: boardelement.displaybg,
+      displayname: boardelement.displayname,
+      light: boardelement.light,
+      lightdir: boardelement.lightdir,
+      // interaction
+      item: boardelement.item,
+      group: boardelement.group,
+      party: boardelement.party,
+      player: boardelement.player,
+      pushable: boardelement.pushable,
+      collision: boardelement.collision,
+      breakable: boardelement.breakable,
+      tickertext: boardelement.tickertext,
+      tickertime: boardelement.tickertime,
+      // config
+      p1: boardelement.p1,
+      p2: boardelement.p2,
+      p3: boardelement.p3,
+      p4: boardelement.p4,
+      p5: boardelement.p5,
+      p6: boardelement.p6,
+      p7: boardelement.p7,
+      p8: boardelement.p8,
+      p9: boardelement.p9,
+      p10: boardelement.p10,
+      cycle: boardelement.cycle,
+      stepx: boardelement.stepx,
+      stepy: boardelement.stepy,
+      shootx: boardelement.shootx,
+      shooty: boardelement.shooty,
+      didfail: boardelement.didfail,
+      // messages
+      sender: boardelement.sender,
+      arg: boardelement.arg,
+      // cleanup
+      removed: boardelement.removed,
+    }
+  }
+  return {
+    // this element is an instance of an element type
+    kind: boardelement.kind,
+    // display
+    char: boardelement.char,
+    color: boardelement.color,
+    bg: boardelement.bg,
+    displaychar: boardelement.displaychar,
+    displaycolor: boardelement.displaycolor,
+    displaybg: boardelement.displaybg,
+    displayname: boardelement.displayname,
+    // interaction
+    item: boardelement.item,
+    group: boardelement.group,
+    party: boardelement.party,
+    pushable: boardelement.pushable,
+    collision: boardelement.collision,
+    breakable: boardelement.breakable,
+  }
 }
 
 export function memoryimportboardelement(

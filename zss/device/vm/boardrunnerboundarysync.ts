@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpatch, boardrunnertick } from 'zss/device/api'
+import { boardrunnerpatch } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
@@ -22,13 +22,17 @@ function readboundarypipe(id: string, boundary: BOUNDARY_DOC) {
   return createjsonpipe<BOUNDARY_DOC>(boundary, memoryrootshouldemitpath)
 }
 
-export function boardrunnerboundarymemorysync(vm: DEVICE) {
+export function boardrunnerboundarymemorysync(
+  vm: DEVICE,
+  showlog = false,
+): Record<string, string[]> {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
-    return
+    return {}
   }
 
   // build pipes for boardrunners
+  const boardboundaries: Record<string, string[]> = {}
   const ids = Object.keys(boardrunners)
   for (let i = 0; i < ids.length; ++i) {
     const board = ids[i]
@@ -41,20 +45,22 @@ export function boardrunnerboundarymemorysync(vm: DEVICE) {
     }
 
     // read board data to scan for boundary ids
-    const boardboundaries = memorycollectboundaryidsforboard(
+    boardboundaries[board] = memorycollectboundaryidsforboard(
       mainbook,
       mayberuntime.board,
     )
-    for (const boundary of boardboundaries) {
+    for (const boundary of boardboundaries[board]) {
       const doc = memoryboundaryget(boundary) ?? {}
       const pipe = readboundarypipe(boundary, doc)
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
         boardrunnerpatch(vm, player, patch, boundary)
+        if (showlog) {
+          console.info('boardrunnerboundarymemorysync', player, boundary, patch)
+        }
       }
     }
-
-    // signal tick to the boardrunner
-    boardrunnertick(vm, player, board, mainbook.timestamp, [...boardboundaries])
   }
+
+  return boardboundaries
 }

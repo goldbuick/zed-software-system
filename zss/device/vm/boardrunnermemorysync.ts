@@ -16,7 +16,7 @@ const boardrunnermemorypipe = createjsonpipe<MEMORY_ROOT>(
   memoryrootshouldemitpath,
 )
 
-export function boardrunnermemorysync(vm: DEVICE) {
+export function boardrunnermemorysync(vm: DEVICE, showlog = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -29,6 +29,9 @@ export function boardrunnermemorysync(vm: DEVICE) {
     ])
     for (const player of activelist) {
       boardrunnerpatch(vm, player, patch)
+      if (showlog) {
+        console.info('boardrunnermemorysync', player, patch)
+      }
     }
   }
 }

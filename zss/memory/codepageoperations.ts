@@ -38,11 +38,13 @@ import {
 import {
   memorycreateboardelement,
   memoryexportboardelement,
+  memoryexportboardelementasjson,
   memoryimportboardelement,
 } from './boardelement'
 import {
   memorycreateboard,
   memoryexportboard,
+  memoryexportboardasjson,
   memoryimportboard,
 } from './boardlifecycle'
 import { memoryfreeboardelementsruntime } from './boardoperations'
@@ -247,13 +249,16 @@ export function memoryexportcodepageasjson(codepage: MAYBE<CODE_PAGE>): any {
   if (!ispresent(codepage)) {
     return undefined
   }
-  return Object.assign(
-    {
-      id: codepage.id,
-      code: codepage.code,
-    },
-    memoryreadcodepageruntime(codepage) ?? {},
-  )
+  const runtime = memoryreadcodepageruntime(codepage) ?? {}
+  return {
+    id: codepage.id,
+    code: codepage.code,
+    board: memoryexportboardasjson(runtime.board),
+    object: memoryexportboardelementasjson(runtime.object),
+    terrain: memoryexportboardelementasjson(runtime.terrain),
+    charset: memoryexportbitmap(runtime.charset),
+    palette: memoryexportbitmap(runtime.palette),
+  }
 }
 
 export function memoryexportcodepage(

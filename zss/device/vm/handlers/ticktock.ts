@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import { type MESSAGE, boardrunnertick } from 'zss/device/api'
 import { boardrunnerboundarymemorysync } from 'zss/device/vm/boardrunnerboundarysync'
 import {
   boardrunnerassignmentvalid,
@@ -36,6 +36,9 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   if (!ispresent(mainbook) || memoryreadsimfreeze()) {
     return
   }
+  perfmeasure('vm:gadgetsynctick', () => {
+    gadgetsynctick(vm)
+  })
   perfmeasure('vm:pilottick', () => {
     pilottick(vm)
   })
@@ -86,11 +89,19 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       }
     }
   })
-  perfmeasure('vm:boardrunnermemorysync', () => {
+  perfmeasure('vm:boardrunnersync', () => {
     boardrunnermemorysync(vm)
-    boardrunnerboundarymemorysync(vm)
-  })
-  perfmeasure('vm:gadgetsynctick', () => {
-    gadgetsynctick(vm)
+    const boardboundaries = boardrunnerboundarymemorysync(vm)
+    for (const board in boardboundaries) {
+      const player = boardrunners[board]
+      // signal tick to the boardrunner
+      boardrunnertick(
+        vm,
+        player,
+        board,
+        mainbook.timestamp,
+        boardboundaries[board],
+      )
+    }
   })
 }
