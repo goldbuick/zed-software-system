@@ -12,6 +12,7 @@ import {
 import {
   memorycodepagetypetostring,
   memorycreatecodepage,
+  memoryexportcodepage,
   memoryexportcodepageasjson,
   memoryfreecodepage,
   memoryimportcodepage,
@@ -174,7 +175,18 @@ export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
     return undefined
   }
   // return a single tree
-  return formatobject(memoryexportbookasjson(book), BOOK_KEYS, {})
+  return formatobject(book, BOOK_KEYS, {
+    pages: (pages) => pages.map(memoryexportcodepage),
+    flags: (flags) => {
+      const flagsout: Record<string, any> = {}
+      const names = Object.keys(flags)
+      for (let i = 0; i < names.length; ++i) {
+        const name = names[i]
+        flagsout[name] = memoryreadbookflags(book, name)
+      }
+      return flagsout
+    },
+  })
 }
 
 export function memoryhasbookflags(book: MAYBE<BOOK>, id: string) {

@@ -13,6 +13,8 @@ import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { boardrunners } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
+import { memoryboundaryget } from 'zss/memory/boundaries'
+import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import {
@@ -24,7 +26,7 @@ import {
   memoryreadbookbysoftware,
   memoryreadsimfreeze,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
+import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { NAME } from 'zss/words/types'
 
@@ -91,17 +93,29 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   })
   perfmeasure('vm:boardrunnersync', () => {
     boardrunnermemorysync(vm)
-    const boardboundaries = boardrunnerboundarymemorysync(vm)
-    for (const board in boardboundaries) {
+    boardrunnerboundarymemorysync(vm)
+  })
+  perfmeasure('vm:boardrunnersendtick', () => {
+    // signal tick to the boardrunners
+    const ids = Object.keys(boardrunners)
+    for (let i = 0; i < ids.length; ++i) {
+      const board = ids[i]
       const player = boardrunners[board]
-      // signal tick to the boardrunner
-      boardrunnertick(
-        vm,
-        player,
-        board,
-        mainbook.timestamp,
-        boardboundaries[board],
+
+      // bail if board runtime not found
+      const mayberuntime = memoryboundaryget<CODE_PAGE_RUNTIME>(board)
+      if (!ispresent(mayberuntime?.board)) {
+        continue
+      }
+
+      // read board data to scan for boundary ids
+      const boardboundaries = memorycollectboundaryidsforboard(
+        mainbook,
+        mayberuntime.board,
       )
+
+      // send tick to the boardrunner
+      boardrunnertick(vm, player, board, mainbook.timestamp, boardboundaries)
     }
   })
 }

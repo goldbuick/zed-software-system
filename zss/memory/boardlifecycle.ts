@@ -52,10 +52,12 @@ export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
 export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   return formatobject(board, BOARD_KEYS, {
     terrain: (terrain) => terrain.map(memoryexportboardelement),
-    objects: (objects) =>
-      Object.values<BOARD_ELEMENT>(objects)
+    objects: (elements) => {
+      const objects = Object.values<BOARD_ELEMENT>(elements)
         .filter((boardelement) => !boardelement.removed)
-        .map(memoryexportboardelement),
+        .map(memoryexportboardelement)
+      return objects
+    },
     id: FORMAT_SKIP,
     name: FORMAT_SKIP,
     runtime: FORMAT_SKIP,

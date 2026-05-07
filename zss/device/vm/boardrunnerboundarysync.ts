@@ -22,17 +22,13 @@ function readboundarypipe(id: string, boundary: BOUNDARY_DOC) {
   return createjsonpipe<BOUNDARY_DOC>(boundary, memoryrootshouldemitpath)
 }
 
-export function boardrunnerboundarymemorysync(
-  vm: DEVICE,
-  showlog = false,
-): Record<string, string[]> {
+export function boardrunnerboundarymemorysync(vm: DEVICE, showlog = false) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
-    return {}
+    return
   }
 
   // build pipes for boardrunners
-  const boardboundaries: Record<string, string[]> = {}
   const ids = Object.keys(boardrunners)
   for (let i = 0; i < ids.length; ++i) {
     const board = ids[i]
@@ -45,11 +41,11 @@ export function boardrunnerboundarymemorysync(
     }
 
     // read board data to scan for boundary ids
-    boardboundaries[board] = memorycollectboundaryidsforboard(
+    const boardboundaries = memorycollectboundaryidsforboard(
       mainbook,
       mayberuntime.board,
     )
-    for (const boundary of boardboundaries[board]) {
+    for (const boundary of boardboundaries) {
       const doc = memoryboundaryget(boundary) ?? {}
       const pipe = readboundarypipe(boundary, doc)
       const patch = pipe.emitdiff(doc)
@@ -61,6 +57,4 @@ export function boardrunnerboundarymemorysync(
       }
     }
   }
-
-  return boardboundaries
 }
