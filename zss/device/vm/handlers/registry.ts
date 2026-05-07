@@ -9,6 +9,9 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
+import { handleboardrunnerack } from './boardrunnerack'
+import { handleboardrunnerdesync } from './boardrunnerdesync'
+import { handleboardrunnerpatch } from './boardrunnerpatch'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
@@ -16,6 +19,7 @@ import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
+import { handlegadgetdesync } from '../gadgetsynctick'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handleinput } from './input'
@@ -25,6 +29,7 @@ import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
 import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
+import { handleplayermovetoboard } from './playermovetoboard'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
 import { handlequery } from './query'
@@ -36,7 +41,7 @@ import {
   handlerefscroll,
 } from './scroll'
 import { handlesecond } from './second'
-import { handletick } from './tick'
+import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
@@ -67,8 +72,13 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,
+  gadgetdesync: handlegadgetdesync,
   halt: handlehalt,
-  ticktock: handletick,
+  ticktock: handleticktock,
+  boardrunnerack: handleboardrunnerack,
+  boardrunnerpatch: handleboardrunnerpatch,
+  playermovetoboard: handleplayermovetoboard,
+  desync: handleboardrunnerdesync,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,

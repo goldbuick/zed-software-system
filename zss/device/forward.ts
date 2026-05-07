@@ -9,7 +9,6 @@ export function createforward(handler: (message: MESSAGE) => void) {
   function forward(message: any) {
     if (
       ismessage(message) &&
-      message.target !== 'tock' &&
       message.target !== 'ticktock' &&
       syncids.has(message.id) === false
     ) {
@@ -35,7 +34,6 @@ export function createforward(handler: (message: MESSAGE) => void) {
 // outbound message
 export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
     case 'ticktock':
     case 'ready':
       return true
@@ -48,7 +46,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'log':
     case 'chat':
-    case 'tock':
     case 'ticktock':
     case 'ready':
     case 'toast':
@@ -59,6 +56,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       switch (route.target) {
         case 'vm':
         case 'heavy':
+        case 'boardrunner':
         case 'synth':
         case 'modem':
         case 'bridge':
@@ -86,7 +84,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
 // outbound message
 export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
     case 'ticktock':
     case 'second':
       return true
@@ -100,7 +97,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   switch (route.target) {
     case 'vm':
     case 'modem':
-    case 'gadgetserver':
       return true
   }
   switch (route.path) {
@@ -117,7 +113,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
 // create client -> heavy forward
 export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'tock':
     case 'ticktock':
       return false
     case 'second':
@@ -140,5 +135,31 @@ export function shouldforwardclienttoheavy(message: MESSAGE): boolean {
 
 // create heavy -> client forward
 export function shouldforwardheavytoclient(): boolean {
+  return true
+}
+
+// boardrunner worker messages
+
+// create client -> boardrunner forward
+export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'boardrunner':
+          return true
+      }
+      return false
+    }
+  }
+}
+
+// create boardrunner -> client forward
+export function shouldforwardboardrunnertoclient(): boolean {
   return true
 }

@@ -210,11 +210,24 @@ describe('types', () => {
       expect(isbook(validbook)).toBe(true)
     })
 
+    it('should reject legacy page id strings in pages', () => {
+      expect(
+        isbook({
+          id: 'test-id',
+          name: 'test-name',
+          flags: {},
+          pages: ['boundary-key-only'],
+          activelist: [],
+        }),
+      ).toBe(false)
+    })
+
     it('should reject objects missing required fields', () => {
       expect(isbook({})).toBe(false)
       expect(isbook({ id: 'test' })).toBe(false)
       expect(isbook({ id: 'test', name: 'test' })).toBe(false)
-      expect(isbook({ id: 'test', name: 'test', flags: {} })).toBe(false)
+      expect(isbook({ id: 'test', name: 'test', flags: 'sid_f' })).toBe(false) // string flags invalid
+      expect(isbook({ id: 'test', name: 'test', flags: { a: 1 } })).toBe(false) // non-string map value invalid
     })
 
     it('should reject non-objects', () => {

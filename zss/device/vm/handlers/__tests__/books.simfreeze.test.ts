@@ -16,14 +16,14 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
 }))
 
-const minimalbook: BOOK = {
+const minimalbook = {
   id: 'bid_simfreeze',
   name: 'main',
   timestamp: 0,
   activelist: [],
   pages: [],
   flags: {},
-}
+} as unknown as BOOK
 
 describe('handlebooks sim freeze', () => {
   const vm = {} as DEVICE

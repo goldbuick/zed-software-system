@@ -55,3 +55,23 @@ export function createinfohash(source: string): string {
   }
   return chars.join('')
 }
+
+export function createchipid(chip: string) {
+  return `${chip}_chip`
+}
+
+export function createsynthid(board: string) {
+  return `${board}_synth`
+}
+
+export function createlayersid(board: string) {
+  return `${board}_layers`
+}
+
+export function createtrackingid(board: string) {
+  return `${board}_tracking`
+}
+
+export function creategadgetid(player: string) {
+  return `${player}_gadget`
+}

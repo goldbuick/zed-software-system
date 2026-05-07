@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { gadgetserverclearscroll } from 'zss/device/api'
+import { vmclearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { ScrollContext } from 'zss/screens/panel/common'
@@ -23,7 +23,7 @@ export function ScreenUIScrollProvider({
         SOFTWARE.emit(player, target, data)
       },
       sendclose() {
-        gadgetserverclearscroll(SOFTWARE, player)
+        vmclearscroll(SOFTWARE, player)
       },
       didclose() {
         sethasscroll(false)

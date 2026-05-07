@@ -1,10 +1,10 @@
 import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import {
-  gadgetserverclearscroll,
   registercopy,
   registereditoropen,
   vmcodeaddress,
+  vmclearscroll,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -53,6 +53,7 @@ import {
   memorycodepagetoprefix,
   memoryelementtodisplayprefix,
 } from './rendering'
+import { memoryreadboardelementruntime } from './runtimeboundary'
 import { memoryreadbookbysoftware, memoryreadoperator } from './session'
 import {
   BOARD,
@@ -363,9 +364,10 @@ export function memoryinspectchar(
   }
 
   function get(target: string): WORD {
+    const kind = memoryreadboardelementruntime(element)?.kinddata
     const value =
       element?.[target as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[target as keyof BOARD_ELEMENT] ??
+      kind?.[target as keyof BOARD_ELEMENT] ??
       0
     return value
   }
@@ -376,7 +378,9 @@ export function memoryinspectchar(
   }
 
   const strcategory =
-    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+    memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
+      ? 'terrain'
+      : 'object'
   const strname = element.name ?? element.kind ?? 'ERR'
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
   const chip = chipfromelement(board, element)
@@ -445,9 +449,10 @@ export function memoryinspectcolor(
   }
 
   function get(target: string): WORD {
+    const kind = memoryreadboardelementruntime(element)?.kinddata
     const value =
       element?.[target as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[target as keyof BOARD_ELEMENT] ??
+      kind?.[target as keyof BOARD_ELEMENT] ??
       0
     return value
   }
@@ -458,7 +463,9 @@ export function memoryinspectcolor(
   }
 
   const strcategory =
-    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+    memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
+      ? 'terrain'
+      : 'object'
   const strname = element.name ?? element.kind ?? 'ERR'
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
   const chip = chipfromelement(board, element)
@@ -560,7 +567,7 @@ export function memoryinspectcommand(path: string, player: string) {
         )
 
         // close scroll
-        gadgetserverclearscroll(SOFTWARE, player)
+        vmclearscroll(SOFTWARE, player)
 
         // wait a little
         await waitfor(800)
@@ -591,9 +598,10 @@ export function memoryinspectelement(
   }
 
   function get(name: string): WORD {
+    const kind = memoryreadboardelementruntime(element)?.kinddata
     const value =
       element?.[name as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[name as keyof BOARD_ELEMENT]
+      kind?.[name as keyof BOARD_ELEMENT]
 
     if (name === 'group') {
       return parseFloat(element.group?.replace('group', '') ?? '0')
@@ -749,19 +757,27 @@ export function memoryinspectelement(
   lines.push(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['char', 'hk', 'a', ' A ', 'next']),
-      `char: ${element.char ?? element.kinddata?.char ?? 1}`,
+      `char: ${
+        element.char ??
+        memoryreadboardelementruntime(element)?.kinddata?.char ??
+        1
+      }`,
     ),
   )
   lines.push(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['color', 'hk', 'c', ' C ', 'next']),
-      `color: ${element.color ?? element.kinddata?.color ?? 15}`,
+      `color: ${
+        element.color ??
+        memoryreadboardelementruntime(element)?.kinddata?.color ??
+        15
+      }`,
     ),
   )
   lines.push(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['bg', 'hk', 'b', ' B ', 'next']),
-      `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
+      `bg: ${element.bg ?? memoryreadboardelementruntime(element)?.kinddata?.bg ?? 0}`,
     ),
   )
   lines.push(
@@ -821,7 +837,10 @@ export function memoryinspectempty(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y })
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+          if (
+            memoryreadboardelementruntime(maybeobject)?.category ===
+            CATEGORY.ISOBJECT
+          ) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
           memorywriteterrain(board, { x, y })
@@ -833,7 +852,10 @@ export function memoryinspectempty(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y }, true)
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+          if (
+            memoryreadboardelementruntime(maybeobject)?.category ===
+            CATEGORY.ISOBJECT
+          ) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
         }

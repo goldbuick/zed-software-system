@@ -2,53 +2,55 @@ import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 import { memoryreadboardbyaddress } from './boards'
 import { memorypickcodepagewithtypeandstat } from './codepages'
+import { memoryensureboardruntime } from './runtimeboundary'
 import { BOARD, CODE_PAGE_TYPE } from './types'
 
 export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
   }
+  const boardruntime = memoryensureboardruntime(board)
 
   if (isstring(board.over)) {
-    if (isstring(board.overboard)) {
-      const over = memoryreadboardbyaddress(board.overboard)
+    if (isstring(boardruntime.overboard)) {
+      const over = memoryreadboardbyaddress(boardruntime.overboard)
       if (!ispresent(over)) {
-        delete board.overboard
+        delete boardruntime.overboard
       }
     } else {
       const maybeboard = memoryreadboardbyaddress(board.over)
       if (ispresent(maybeboard)) {
-        board.overboard = maybeboard.id
+        boardruntime.overboard = maybeboard.id
       }
     }
-  } else if (isstring(board.overboard)) {
-    delete board.overboard
+  } else if (isstring(boardruntime.overboard)) {
+    delete boardruntime.overboard
   }
 
   if (isstring(board.under)) {
-    if (isstring(board.underboard)) {
-      const under = memoryreadboardbyaddress(board.underboard)
+    if (isstring(boardruntime.underboard)) {
+      const under = memoryreadboardbyaddress(boardruntime.underboard)
       if (!ispresent(under)) {
-        delete board.underboard
+        delete boardruntime.underboard
       }
     } else {
       const maybeboard = memoryreadboardbyaddress(board.under)
       if (ispresent(maybeboard)) {
-        board.underboard = maybeboard.id
+        boardruntime.underboard = maybeboard.id
       }
     }
-  } else if (isstring(board.underboard)) {
-    delete board.underboard
+  } else if (isstring(boardruntime.underboard)) {
+    delete boardruntime.underboard
   }
 
   if (isstring(board.charset)) {
-    if (isstring(board.charsetpage)) {
+    if (isstring(boardruntime.charsetpage)) {
       const charset = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
         board.charset,
       )
       if (!ispresent(charset)) {
-        delete board.charsetpage
+        delete boardruntime.charsetpage
       }
     } else {
       const maybecharset = memorypickcodepagewithtypeandstat(
@@ -56,21 +58,21 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
         board.charset,
       )
       if (ispresent(maybecharset)) {
-        board.charsetpage = maybecharset.id
+        boardruntime.charsetpage = maybecharset.id
       }
     }
-  } else if (isstring(board.charsetpage)) {
-    delete board.charsetpage
+  } else if (isstring(boardruntime.charsetpage)) {
+    delete boardruntime.charsetpage
   }
 
   if (isstring(board.palette)) {
-    if (isstring(board.palettepage)) {
+    if (isstring(boardruntime.palettepage)) {
       const palette = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
         board.palette,
       )
       if (!ispresent(palette)) {
-        delete board.palettepage
+        delete boardruntime.palettepage
       }
     } else {
       const maybepalette = memorypickcodepagewithtypeandstat(
@@ -78,10 +80,10 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
         board.palette,
       )
       if (ispresent(maybepalette)) {
-        board.palettepage = maybepalette.id
+        boardruntime.palettepage = maybepalette.id
       }
     }
-  } else if (isstring(board.palettepage)) {
-    delete board.palettepage
+  } else if (isstring(boardruntime.palettepage)) {
+    delete boardruntime.palettepage
   }
 }

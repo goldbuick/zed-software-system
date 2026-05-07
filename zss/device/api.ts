@@ -5,6 +5,7 @@ without having to include device code
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
+import type { Operation } from 'zss/feature/jsonpipe/observe'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -77,6 +78,60 @@ export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
 
 export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
+}
+
+export function boardrunneridle(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:idle')
+}
+
+export function boardrunnerthud(
+  device: DEVICELIKE,
+  player: string,
+  thudplayer: string,
+) {
+  // player in this context is the board runner
+  device.emit(player, 'boardrunner:thud', thudplayer)
+}
+
+export function boardrunnerinput(
+  device: DEVICELIKE,
+  player: string,
+  input: INPUT,
+  mods: number,
+) {
+  device.emit(player, 'boardrunner:input', [input, mods])
+}
+
+export function boardrunnerstart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:start')
+}
+
+export function boardrunnertick(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+  timestamp: number,
+  boundaries: string[],
+) {
+  device.emit(player, 'boardrunner:tick', [board, timestamp, boundaries])
+}
+
+export function boardrunnerpaint(
+  device: DEVICELIKE,
+  player: string,
+  doc: any,
+  boundary?: string,
+) {
+  device.emit(player, 'boardrunner:paint', [doc, boundary])
+}
+
+export function boardrunnerpatch(
+  device: DEVICELIKE,
+  player: string,
+  patch: Operation[],
+  boundary?: string,
+) {
+  device.emit(player, 'boardrunner:patch', [patch, boundary])
 }
 
 export function bridgestreamstart(
@@ -162,17 +217,13 @@ export function gadgetclientpaint(
 export function gadgetclientpatch(
   device: DEVICELIKE,
   player: string,
-  json: any,
+  patch: Operation[],
 ) {
-  device.emit(player, 'gadgetclient:patch', json)
+  device.emit(player, 'gadgetclient:patch', patch)
 }
 
-export function gadgetserverdesync(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:desync')
-}
-
-export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:clearscroll')
+export function vmgadgetdesync(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:gadgetdesync')
 }
 
 export function heavyttsinfo(
@@ -235,6 +286,30 @@ export function heavymodelstop(
   agentid: string,
 ) {
   device.emit(player, 'heavy:modelstop', agentid)
+}
+
+export function vmboardrunnerack(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:boardrunnerack')
+}
+
+export function vmboardrunnerpatch(
+  device: DEVICELIKE,
+  player: string,
+  patch: Operation[],
+  boundary?: string,
+) {
+  device.emit(player, 'vm:boardrunnerpatch', [patch, boundary])
+}
+
+/** Boardrunner worker → sim VM: apply [`memorycommitplayertoboard`] on authoritative memory (synchronous via hub). */
+export function vmplayermovetoboard(
+  device: DEVICELIKE,
+  player: string,
+  targetplayer: string,
+  board: string,
+  dest: PT,
+) {
+  device.emit(player, 'vm:playermovetoboard', [targetplayer, board, dest])
 }
 
 export function vmlastinputtouch(
@@ -719,6 +794,14 @@ export function registerinspector(
   forcevalue: MAYBE<boolean>,
 ) {
   device.emit(player, 'register:inspector', forcevalue)
+}
+
+export function registerperfmonitor(
+  device: DEVICELIKE,
+  player: string,
+  forcevalue: MAYBE<boolean>,
+) {
+  device.emit(player, 'register:perfmonitor', forcevalue)
 }
 
 export function registerfindany(device: DEVICELIKE, player: string, pts: PT[]) {

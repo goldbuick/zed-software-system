@@ -79,8 +79,9 @@ import {
   apierror,
   apilog,
   apitoast,
+  boardrunnerstart,
   bridgejoin,
-  gadgetserverdesync,
+  vmgadgetdesync,
   heavyllmpreset,
   heavypullvarresult,
   heavyrestoreagents,
@@ -312,6 +313,8 @@ export const register = createdevice(
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
+          // start boardrunner
+          boardrunnerstart(register, myplayerid)
           // setup content watcher
           storagewatchcontent(myplayerid)
           // setup history buffer
@@ -337,7 +340,7 @@ export const register = createdevice(
         break
       case 'ackoperator':
         // reset display
-        gadgetserverdesync(register, myplayerid)
+        vmgadgetdesync(register, myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)
@@ -866,6 +869,14 @@ export const register = createdevice(
             memorywriteconfig('gadget', gadgetval)
           })
         }
+        break
+      }
+      case 'perfmonitor': {
+        const prevperf = useTape.getState().perfmonitor
+        const enabled = ispresent(message.data) ? !!message.data : !prevperf
+        const line1 = `perf monitor ${enabled ? '$greenon' : '$redoff'}`
+        terminalwritelines(register, message.player, line1)
+        useTape.setState({ perfmonitor: enabled })
         break
       }
       case 'findany':

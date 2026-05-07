@@ -42,6 +42,11 @@ import {
   memorycreatecachedsprites,
 } from './renderinglayercache'
 import {
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+  memorywriteboardelementruntime,
+} from './runtimeboundary'
+import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
@@ -121,8 +126,11 @@ export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
     const name = memoryreadcodepagename(codepage)
     const stub: BOARD_ELEMENT = {
       kind: name,
-      kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
+      runtime: '',
     }
+    memorywriteboardelementruntime(stub, {
+      kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
+    })
     return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
   }
   return ''
@@ -145,7 +153,7 @@ export function memoryconverttogadgetcontrollayer(
   control.focusy = maybeobject.y ?? 0
 
   // player flags, then board flags
-  const { graphics, camera, facing } = readgraphics(player, board)
+  const { graphics, camera, facing } = memoryreadgraphics(player, board)
   if (isstring(graphics)) {
     const withgraphics = NAME(graphics)
     switch (graphics) {
@@ -183,7 +191,7 @@ export function memoryconverttogadgetcontrollayer(
 }
 
 export function memoryconverttogadgetlayers(
-  player: string,
+  graphics: string,
   index: number,
   board: MAYBE<BOARD>,
   tickers: string[],
@@ -204,12 +212,12 @@ export function memoryconverttogadgetlayers(
   // update resolve caches
   memoryupdateboardvisuals(board)
 
-  const withgraphics = NAME(readgraphics(player, board).graphics)
+  const withgraphics = NAME(graphics)
   const layers: LAYER[] = []
 
   let iiii = index
   const boardid = board.id
-  const cacheowner = `${player}:${boardid}`
+  const cacheowner = `${withgraphics}:${boardid}`
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const tiles = createcachedtiles(
@@ -356,6 +364,7 @@ export function memoryconverttogadgetlayers(
 
   // layers for display media
   if (whichlayer === DIR.MID) {
+    const boardruntime = memoryreadboardruntime(board)
     // set mood
     layers.push(
       createcachedmedia(
@@ -367,10 +376,10 @@ export function memoryconverttogadgetlayers(
     )
 
     // check for palette
-    if (isstring(board.palettepage)) {
+    if (isstring(boardruntime?.palettepage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
-        board.palettepage,
+        boardruntime.palettepage,
       )
       const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette?.bits)) {
@@ -379,16 +388,16 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/palette',
-            cachedmediabits(board.palettepage, palette.bits),
+            cachedmediabits(boardruntime.palettepage, palette.bits),
           ),
         )
       }
     }
     // check for charset
-    if (isstring(board.charsetpage)) {
+    if (isstring(boardruntime?.charsetpage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
-        board.charsetpage,
+        boardruntime.charsetpage,
       )
       const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset?.bits)) {
@@ -397,7 +406,7 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/charset',
-            cachedmediabits(board.charsetpage, charset.bits),
+            cachedmediabits(boardruntime.charsetpage, charset.bits),
           ),
         )
       }
@@ -430,7 +439,7 @@ export type MEMORY_GADGET_LAYERS = {
   tickers: string[]
 }
 
-function readgraphics(player: string, board: BOARD) {
+export function memoryreadgraphics(player: string, board: BOARD) {
   // player flags, then board flags
   const { graphics, camera, facing } = memoryreadflags(player)
   const withgraphics = graphics ?? board.graphics ?? ''
@@ -477,7 +486,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
     withname = isstring(user) ? user : 'player'
   } else {
     memoryreadelementkind(element)
-    const kind = element.kinddata
+    const kind = memoryreadboardelementruntime(element)?.kinddata
     const fromdisplay = element.displayname ?? kind?.displayname
     const trimmed =
       isstring(fromdisplay) && fromdisplay.trim().length > 0
@@ -492,7 +501,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
 }
 
 export function memoryreadgadgetlayers(
-  player: string,
+  graphics: string,
   board: MAYBE<BOARD>,
 ): MEMORY_GADGET_LAYERS {
   const over: LAYER[] = []
@@ -518,8 +527,8 @@ export function memoryreadgadgetlayers(
     }
   }
 
-  // composite id (include player so per-player graphics produce distinct gadget ids)
-  const id4all: string[] = [player, `${board.id}`]
+  // composite id
+  const id4all: string[] = [`${board.id}`]
 
   // read over / under
   const overboard = memoryreadoverboard(board)
@@ -534,12 +543,12 @@ export function memoryreadgadgetlayers(
 
   // compose layers
   under.push(
-    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, DIR.UNDER),
+    ...memoryconverttogadgetlayers(graphics, 0, underboard, tickers, DIR.UNDER),
   )
   const multi = ispresent(overboard)
   layers.push(
     ...memoryconverttogadgetlayers(
-      player,
+      graphics,
       under.length,
       board,
       tickers,
@@ -549,7 +558,7 @@ export function memoryreadgadgetlayers(
   )
   over.push(
     ...memoryconverttogadgetlayers(
-      player,
+      graphics,
       under.length + layers.length,
       overboard,
       tickers,
@@ -588,5 +597,3 @@ export function memoryreadgadgetlayers(
     tickers,
   }
 }
-
-export { memorycreatecachedsprite } from './renderinglayercache'

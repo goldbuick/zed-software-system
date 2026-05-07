@@ -9,10 +9,17 @@ import {
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  decodepeerwire,
+  encodepeerwire,
+  netmsgtounit8,
+} from 'zss/feature/peerzstdwire'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
+import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { recordPeerWireReceived, recordPeerWireSent } from 'zss/perf/peerwire'
 
 async function readpeerid(): Promise<string | undefined> {
   return await storagereadnetid()
@@ -105,33 +112,10 @@ function netterminaltopic(player: string) {
   return createinfohash(player)
 }
 
-/** Convert only Set & Map so PeerJS binary pack does not hit "Type Set not yet supported". Leaves Uint8Array etc. alone. */
-function serializable<T>(value: T): T {
-  if (value instanceof Set) {
-    return [...value] as T
-  }
-  if (value instanceof Map) {
-    return Object.fromEntries(value) as T
-  }
-  if (Array.isArray(value)) {
-    return value.map(serializable) as T
-  }
-  if (
-    value !== null &&
-    typeof value === 'object' &&
-    (value as object).constructor === Object
-  ) {
-    const out: Record<string, unknown> = {}
-    for (const k of Object.keys(value as object)) {
-      out[k] = serializable((value as Record<string, unknown>)[k])
-    }
-    return out as T
-  }
-  return value
-}
-
 function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
-  void dataconnection.send(serializable(message))
+  const wire = encodepeerwire(message)
+  recordPeerWireSent(wire.byteLength)
+  void dataconnection.send(wire)
 }
 
 function handledataconnection(dataconnection: DataConnection) {
@@ -170,10 +154,11 @@ function handledataconnection(dataconnection: DataConnection) {
     vmsearch(SOFTWARE, player)
   }
 
-  function handleopen() {
+  async function runopen() {
     if (!dataconnection.open) {
       return
     }
+    await ensurezstdwasm()
     apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
     if (ishost()) {
       hostbridge()
@@ -182,7 +167,9 @@ function handledataconnection(dataconnection: DataConnection) {
     }
   }
 
-  dataconnection.on('open', handleopen)
+  dataconnection.on('open', () => {
+    void runopen()
+  })
 
   dataconnection.on('close', () => {
     topicbridge?.disconnect()
@@ -191,18 +178,36 @@ function handledataconnection(dataconnection: DataConnection) {
     }
   })
 
-  dataconnection.on('data', (netmsg: any) => {
-    if (!ispresent(networkpeer)) {
-      return
-    }
-    // Server may send gadgetclient:paint/patch as JSON string (avoids binarypack stack overflow)
-    const message = (
-      typeof netmsg === 'string' ? JSON.parse(netmsg) : netmsg
-    ) as MESSAGE
-    topicbridge?.forward({
-      ...message,
-      session: SOFTWARE.session(),
-    })
+  dataconnection.on('data', (netmsg: unknown) => {
+    void (async () => {
+      if (!ispresent(networkpeer)) {
+        return
+      }
+      const bytes = await netmsgtounit8(netmsg)
+      if (!ispresent(bytes)) {
+        apilog(
+          SOFTWARE,
+          player,
+          'netterminal wire: drop non-binary peer payload',
+        )
+        return
+      }
+      recordPeerWireReceived(bytes.byteLength)
+      try {
+        const message = decodepeerwire(bytes)
+        topicbridge?.forward({
+          ...message,
+          session: SOFTWARE.session(),
+        })
+      } catch (err) {
+        apilog(
+          SOFTWARE,
+          player,
+          'netterminal wire decode',
+          err instanceof Error ? err.message : String(err),
+        )
+      }
+    })()
   })
 
   dataconnection.on('error', (err) => {
@@ -214,7 +219,7 @@ function handledataconnection(dataconnection: DataConnection) {
     )
   })
 
-  handleopen()
+  void runopen()
 }
 
 function netterminalcreate(topicpeerid: string, selfpeerid?: string) {

@@ -23,14 +23,16 @@ import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
+import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
+import { memoryreadplayerboard } from './playermanagement'
 import {
-  memoryreadbookplayerboards,
-  memoryreadplayerboard,
-} from './playermanagement'
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+} from './runtimeboundary'
 import {
   memoryreadbookbysoftware,
   memoryreadloaders,
@@ -72,7 +74,10 @@ export function memoryrestartallchipsandflags() {
     return
   }
 
-  // drop all flags from mainbook
+  const flagids = Object.keys(mainbook.flags)
+  for (let i = 0; i < flagids.length; ++i) {
+    memoryboundarydelete(mainbook.flags[flagids[i]])
+  }
   mainbook.flags = {}
 }
 
@@ -95,18 +100,22 @@ export function memoryrepeatclilast(player: string) {
 
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
 
-export function memorytickmain(playeronly = false) {
+export function memorytickloaders() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
 
   // inc timestamp
-  const timestamp = mainbook.timestamp + 1
+  ++mainbook.timestamp
 
+  // run the loaders
   perfmeasure('memorytick:loaders', () => {
     const loaders = memoryreadloaders()
-    loaders.forEach((code, id) => {
+    const loaderids = Object.keys(loaders)
+    for (let li = 0; li < loaderids.length; ++li) {
+      const id = loaderids[li]
+      const code = loaders[id]
       // cache context
       const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
@@ -131,7 +140,7 @@ export function memorytickmain(playeronly = false) {
       // teardown on ended
       if (os.isended(id)) {
         os.halt(id)
-        loaders.delete(id)
+        delete loaders[id]
       }
 
       // restore context
@@ -139,16 +148,27 @@ export function memorytickmain(playeronly = false) {
         // @ts-expect-error dont bother me
         READ_CONTEXT[key] = OLD_CONTEXT[key]
       })
-    })
+    }
   })
+}
+
+export function memorytickmain(
+  timestamp: number,
+  boards: BOARD[],
+  playeronly = false,
+) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
 
   // track tick
-  mainbook.timestamp = timestamp
-  READ_CONTEXT.timestamp = timestamp
+  READ_CONTEXT.timestamp = mainbook.timestamp = timestamp
 
+  // run the given boards
   perfmeasure('memorytick:boards', () => {
     // update boards / build code / run chips
-    const boards = memoryreadbookplayerboards(mainbook)
+    // const boards = memoryreadbookplayerboards(mainbook)
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
 
@@ -158,9 +178,10 @@ export function memorytickmain(playeronly = false) {
         memoryapplyboardsynthstats(board)
       }
 
-      const drawallowforqueue = board.drawneedfull
+      const boardruntime = memoryreadboardruntime(board)
+      const drawallowforqueue = boardruntime?.drawneedfull
         ? undefined
-        : board.drawallowids
+        : boardruntime?.drawallowids
       const rundraw =
         drawallowforqueue === undefined || drawallowforqueue.size > 0
       const run = memorytickboard(board, timestamp, rundraw, drawallowforqueue)
@@ -220,8 +241,6 @@ export function memorytickmain(playeronly = false) {
   })
 }
 
-export { memoryinvalidatedraw } from './boarddrawdirty'
-
 export function memorytickobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -253,7 +272,9 @@ export function memorytickobject(
 
   // run chip code
   const id = object.id ?? ''
-  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
+  const itemname = NAME(
+    object.name ?? memoryreadboardelementruntime(object)?.kinddata?.name ?? '',
+  )
   os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
 
   // clear ticker
@@ -305,7 +326,11 @@ export function memorytickonce(
 
   READ_CONTEXT.usedisplaystats = true
 
-  const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
+  const itemname = NAME(
+    element.name ??
+      memoryreadboardelementruntime(element)?.kinddata?.name ??
+      '',
+  )
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
 
   objectKeys(OLD_CONTEXT).forEach((key) => {
@@ -356,7 +381,9 @@ export function memoryruncodepage(address: string, label: string) {
 
   const id = `${address}_run`
   const itemname =
-    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
+    READ_CONTEXT.element?.name ??
+    memoryreadboardelementruntime(READ_CONTEXT.element)?.kinddata?.name ??
+    ''
   const itemcode = codepage?.code ?? ''
 
   // set arg to value on chip with id = id

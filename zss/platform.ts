@@ -1,6 +1,8 @@
+import boardrunnerspace from './boardrunnerspace??worker'
 import { MESSAGE, sessionreset } from './device/api'
 import {
   createforward,
+  shouldforwardclienttoboardrunner,
   shouldforwardclienttoheavy,
   shouldforwardclienttoserver,
 } from './device/forward'
@@ -11,6 +13,7 @@ import simspace from './simspace??worker'
 import stubspace from './stubspace??worker'
 
 let heavy: MAYBE<Worker>
+let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
 let platformhalt: MAYBE<() => void>
 
@@ -20,27 +23,34 @@ export function createplatform(isstub = false, climode = false) {
   }
   // reset session
   sessionreset(SOFTWARE)
+
   // create heavy worker
   heavy = new heavyspace()
-
-  // create backend
+  // create boardrunner worker
+  boardrunner = new boardrunnerspace()
+  // create sim/stub worker
   platform = isstub ? new stubspace() : new simspace()
   platform.postMessage({ target: 'config', data: climode })
 
   // create bridge
   const { forward, disconnect } = createforward((message) => {
-    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
-      platform.postMessage(message)
-    }
     if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
       heavy.postMessage(message)
+    }
+    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
+      boardrunner.postMessage(message)
+    }
+    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
+      platform.postMessage(message)
     }
   })
 
   // handle messages from heavy
   function heavymessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    // handles messages from heavy -> server
+    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
+      boardrunner.postMessage(message)
+    }
     if (shouldforwardclienttoserver(message) && ispresent(platform)) {
       platform.postMessage(message)
     }
@@ -48,12 +58,27 @@ export function createplatform(isstub = false, climode = false) {
   }
   heavy.addEventListener('message', heavymessages)
 
+  // handle messages from boardrunner
+  function boardrunnermessages(event: MessageEvent<any>) {
+    const message = event.data as MESSAGE
+    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
+      heavy.postMessage(message)
+    }
+    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
+      platform.postMessage(message)
+    }
+    return forward(message)
+  }
+  boardrunner.addEventListener('message', boardrunnermessages)
+
   // handle messages from  platform
   function platformmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    // handles routing messages from server -> heavy
     if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
       heavy.postMessage(message)
+    }
+    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
+      boardrunner.postMessage(message)
     }
     return forward(message)
   }
@@ -66,6 +91,11 @@ export function createplatform(isstub = false, climode = false) {
       heavy.terminate()
     }
     heavy = undefined
+    if (ispresent(boardrunner)) {
+      boardrunner.removeEventListener('message', boardrunnermessages)
+      boardrunner.terminate()
+    }
+    boardrunner = undefined
     if (ispresent(platform)) {
       platform.removeEventListener('message', platformmessages)
       platform.terminate()

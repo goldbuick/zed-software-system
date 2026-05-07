@@ -1,10 +1,14 @@
 import {
+  creategadgetid,
   createinfohash,
+  createlayersid,
   createnameid,
   createpid,
   createshortnameid,
   createsid,
+  createsynthid,
   createtopic,
+  createtrackingid,
   ispid,
   issid,
 } from 'zss/mapping/guid'
@@ -161,6 +165,15 @@ describe('guid', () => {
       const hash = createinfohash('test')
       const VALID_CHARS = /^[A-Za-z0-9]+$/
       expect(hash).toMatch(VALID_CHARS)
+    })
+  })
+
+  describe('book flag owner ids', () => {
+    it('formats tracking, synth, gadget, and layers owners', () => {
+      expect(createtrackingid('a')).toBe('a_tracking')
+      expect(createsynthid('b')).toBe('b_synth')
+      expect(creategadgetid('c')).toBe('c_gadget')
+      expect(createlayersid('d')).toBe('d_layers')
     })
   })
 })

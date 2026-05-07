@@ -1,9 +1,11 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
+import { ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
 import { PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
+import { memoryreadboardruntime } from './runtimeboundary'
 import {
   memorylistboardnamedelements,
   memorypickboardnearestpt,
@@ -59,10 +61,11 @@ export function memoryreadobjectbypt(
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
   const index = memoryboardelementindex(board, pt)
-  if (index < 0 || !ispresent(board?.lookup)) {
+  const lookup = memoryreadboardruntime(board)?.lookup
+  if (index < 0 || !ispresent(lookup)) {
     return undefined
   }
-  const object = memoryreadobject(board, board.lookup[index] ?? '')
+  const object = memoryreadobject(board, lookup[index] ?? '')
   if (ispresent(object)) {
     return object
   }
@@ -84,8 +87,11 @@ export function memoryreadelement(
     object = Object.values(board.objects).find(
       (el) => el.x === pt.x && el.y === pt.y && !el.removed,
     )
-  } else if (ispresent(board.lookup)) {
-    object = memoryreadobject(board, board.lookup[index] ?? '')
+  } else {
+    const lookup = memoryreadboardruntime(board)?.lookup
+    if (ispresent(lookup)) {
+      object = memoryreadobject(board, lookup[index] ?? '')
+    }
   }
 
   if (ispresent(object)) {
@@ -133,4 +139,11 @@ export function memoryfindboardplayer(
     target,
     memorylistboardnamedelements(board, 'player'),
   )
+}
+
+export function memoryreadplayersonboard(board: MAYBE<BOARD>): string[] {
+  if (!ispresent(board)) {
+    return []
+  }
+  return Object.keys(board.objects).filter(ispid)
 }

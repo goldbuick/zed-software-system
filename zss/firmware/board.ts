@@ -1,5 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
+import { vmplayermovetoboard } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
@@ -35,7 +37,6 @@ import {
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryensuresoftwarecodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
-import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
 import {
   memorylistboardelementsbykind,
@@ -528,12 +529,19 @@ export const BOARD_FIRMWARE = createfirmware()
       }
 
       // yolo
-      memorymoveplayertoboard(
-        READ_CONTEXT.book,
+      vmplayermovetoboard(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
         READ_CONTEXT.elementfocus,
         targetboard.id,
         destpt,
       )
+      // memorymoveplayertoboard(
+      //   READ_CONTEXT.book,
+      //   READ_CONTEXT.elementfocus,
+      //   targetboard.id,
+      //   destpt,
+      // )
 
       return 0
     },

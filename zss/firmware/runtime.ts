@@ -12,6 +12,7 @@ import {
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
+import { memoryreadboardelementruntime } from 'zss/memory/runtimeboundary'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { ARG_TYPE } from 'zss/words/types'
@@ -51,11 +52,14 @@ export const RUNTIME_FIRMWARE = createfirmware({
         chip.scrolllock(player)
         // element sending a scroll to a player
         const shared = gadgetstate(player)
+        const kinddata = memoryreadboardelementruntime(
+          READ_CONTEXT.element,
+        )?.kinddata
         shared.scrollname =
           READ_CONTEXT.element?.displayname ??
-          READ_CONTEXT.element?.kinddata?.displayname ??
+          kinddata?.displayname ??
           READ_CONTEXT.element?.name ??
-          READ_CONTEXT.element?.kinddata?.name ??
+          kinddata?.name ??
           ''
         shared.scroll = gadgetaddcenterpadding(queue)
       }

@@ -15,10 +15,12 @@ import {
 import { FIRMWARE } from 'zss/firmware'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import {
+  memoryexportbookasjson,
   memorylistcodepagessorted,
   memoryreadcodepage,
 } from 'zss/memory/bookoperations'
 import {
+  memoryexportcodepageasjson,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
@@ -79,7 +81,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
                 READ_CONTEXT.elementfocus,
                 zsstexttape(
                   `!bookallexport ${address};$blue[all] $whiteexport book`,
-                  `!bookzztexport ${address};$magenta[zzt] $whiteexport ZZT world`,
+                  `!bookzztexport ${address};$purple[zzt] $whiteexport ZZT world`,
                   pagelines,
                 ),
               )
@@ -99,7 +101,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
           registerdownloadjsonfile(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            deepcopy(book),
+            memoryexportbookasjson(book),
             `${book.name}.book.json`,
           )
         }
@@ -147,7 +149,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
           registerdownloadjsonfile(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            deepcopy(codepage),
+            memoryexportcodepageasjson(codepage),
             `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
           )
         }

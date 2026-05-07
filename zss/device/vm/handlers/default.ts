@@ -1,7 +1,13 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { registercopy, vmcli, vmloader } from 'zss/device/api'
+import {
+  registercopy,
+  vmcli,
+  vmloader,
+  vmplayermovetoboard,
+} from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsezipfilelist } from 'zss/feature/parse/file'
@@ -22,7 +28,6 @@ import type { FINDANY_CONFIG } from 'zss/memory/inspectionfind'
 import { memorymakeitcommand } from 'zss/memory/inspectionmakeit'
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import {
-  memorymoveplayertoboard,
   memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
@@ -63,7 +68,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     }
     case 'admingoto': {
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
       const playerboard = memoryreadplayerboard(path)
       const playerelement = memoryreadobject(playerboard, path)
       if (ispresent(playerboard) && ispresent(playerelement)) {
@@ -71,7 +75,14 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           x: playerelement.x ?? 0,
           y: playerelement.y ?? 0,
         }
-        memorymoveplayertoboard(mainbook, message.player, playerboard.id, dest)
+        vmplayermovetoboard(
+          SOFTWARE,
+          message.player,
+          message.player,
+          playerboard.id,
+          dest,
+        )
+        // memorymoveplayertoboard(mainbook, message.player, playerboard.id, dest)
       }
       break
     }

@@ -9,7 +9,7 @@ import {
   memorycreatebook,
   memoryensurebookcodepagewithtype,
 } from './bookoperations'
-import type { SoftwareSlot } from './session'
+import type { SOFTWARE_SLOT } from './session'
 import {
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
@@ -42,7 +42,7 @@ export function memoryensurebookbyname(name: string) {
 }
 
 export function memoryensuresoftwarebook(
-  slot: SoftwareSlot,
+  slot: SOFTWARE_SLOT,
   maybename?: string,
 ) {
   const prev = memoryreadbookbysoftware(slot)
@@ -68,7 +68,7 @@ export function memoryensuresoftwarebook(
 }
 
 export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
-  slot: SoftwareSlot,
+  slot: SOFTWARE_SLOT,
   address: string,
   createtype: T,
 ) {

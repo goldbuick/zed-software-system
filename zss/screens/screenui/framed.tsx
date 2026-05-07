@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
 import {
+  boardrunnerinput,
   registerbookmarkscroll,
   registerterminalopen,
   registerterminalquickopen,
   synthupdate,
   vmclirepeatlast,
   vmfindany,
-  vminput,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -42,7 +42,8 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
     bits |= INPUT_SHIFT
   }
   if (ispid(player)) {
-    vminput(SOFTWARE, player, input, bits)
+    // vminput(SOFTWARE, player, input, bits)
+    boardrunnerinput(SOFTWARE, player, input, bits)
   }
 }
 

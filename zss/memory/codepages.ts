@@ -9,6 +9,7 @@ import {
   shuffle,
   shufflewithweights,
 } from 'zss/mapping/array'
+import { createtrackingid } from 'zss/mapping/guid'
 import {
   MAYBE,
   isarray,
@@ -32,6 +33,8 @@ import {
 } from './codepageoperations'
 import { memoryreadbookbysoftware, memoryreadbooklist } from './session'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
+
+const TRACKING_IDS_KEY = 'ids'
 
 export function memorylistallcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
@@ -124,25 +127,27 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
     }
   }
   const hasweights = Object.keys(weights).length > 0
-  const trackingstate = memoryreadbookflags(mainbook, 'tracking')
+  const trackingflags = memoryreadbookflags(mainbook, createtrackingid(address))
   switch (pickmode) {
     case 'shuffle': {
       if (hasweights) {
-        if (!ispresent(trackingstate[address])) {
-          trackingstate[address] = shufflewithweights(
+        if (!ispresent(trackingflags[TRACKING_IDS_KEY])) {
+          trackingflags[TRACKING_IDS_KEY] = shufflewithweights(
             allpages.map((page) => [page.id, weights[page.id] ?? 1]),
           )
         }
       } else {
-        if (!ispresent(trackingstate[address])) {
-          trackingstate[address] = shuffle(allpages.map((page) => page.id))
+        if (!ispresent(trackingflags[TRACKING_IDS_KEY])) {
+          trackingflags[TRACKING_IDS_KEY] = shuffle(
+            allpages.map((page) => page.id),
+          )
         }
       }
-      const sourceids = trackingstate[address] as string[]
+      const sourceids = trackingflags[TRACKING_IDS_KEY] as string[]
       if (isarray(sourceids)) {
         const first = sourceids.shift()
         if (sourceids.length === 0) {
-          delete trackingstate[address]
+          delete trackingflags[TRACKING_IDS_KEY]
         }
         return matchedpages[first ?? '']
       }
@@ -150,8 +155,8 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
     }
     case 'inorder': {
       if (hasweights) {
-        if (!ispresent(trackingstate[address])) {
-          trackingstate[address] = inorderwithweights(
+        if (!ispresent(trackingflags[TRACKING_IDS_KEY])) {
+          trackingflags[TRACKING_IDS_KEY] = inorderwithweights(
             allpages.map((page) => [page.id, weights[page.id] ?? 1]),
             (a, b) =>
               (matchedpages[a]?.id ?? '').localeCompare(
@@ -160,8 +165,8 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
           )
         }
       } else {
-        if (!ispresent(trackingstate[address])) {
-          trackingstate[address] = inorder(
+        if (!ispresent(trackingflags[TRACKING_IDS_KEY])) {
+          trackingflags[TRACKING_IDS_KEY] = inorder(
             allpages.map((page) => page.id),
             (a, b) =>
               (matchedpages[a]?.id ?? '').localeCompare(
@@ -170,11 +175,11 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
           )
         }
       }
-      const sourceids = trackingstate[address] as string[]
+      const sourceids = trackingflags[TRACKING_IDS_KEY] as string[]
       if (isarray(sourceids)) {
         const first = sourceids.shift()
         if (sourceids.length === 0) {
-          delete trackingstate[address]
+          delete trackingflags[TRACKING_IDS_KEY]
         }
         return matchedpages[first ?? '']
       }

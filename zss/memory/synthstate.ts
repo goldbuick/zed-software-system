@@ -7,7 +7,8 @@ import {
 } from 'zss/feature/synth/playnotation'
 import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
-import { DEFAULT_BPM, TICK_FPS } from 'zss/mapping/tick'
+import { createsynthid } from 'zss/mapping/guid'
+import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -15,7 +16,9 @@ import { memoryreadbookflag, memorywritebookflag } from './bookoperations'
 import { memoryreadbookbysoftware } from './session'
 import { MEMORY_LABEL } from './types'
 
-const SYNTH_STATE_FLAG = 'synthstate'
+const SYNTH_VOICES_KEY = 'voices'
+const SYNTH_VOICEFX_KEY = 'voicefx'
+
 const SYNTH_STATE_DEFAULT: SYNTH_STATE = {
   voices: {},
   voicefx: {},
@@ -59,20 +62,35 @@ function memorymigratelegacyvoicefx(cache: SYNTH_STATE) {
 
 function readsynthcacheinternal(board: string): SYNTH_STATE {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const cache = memoryreadbookflag(
-    main,
-    SYNTH_STATE_FLAG,
-    board,
-  ) as MAYBE<SYNTH_STATE>
-  // use the cached synth state
-  if (ispresent(cache)) {
-    memorymigratelegacyvoicefx(cache)
-    return cache
+  const owner = createsynthid(board)
+  let voices = memoryreadbookflag(main, owner, SYNTH_VOICES_KEY) as MAYBE<
+    SYNTH_STATE['voices']
+  >
+  let voicefx = memoryreadbookflag(main, owner, SYNTH_VOICEFX_KEY) as MAYBE<
+    SYNTH_STATE['voicefx']
+  >
+  if (!ispresent(voices)) {
+    voices = deepcopy(SYNTH_STATE_DEFAULT.voices)
+    memorywritebookflag(main, owner, SYNTH_VOICES_KEY, voices as any)
   }
-  // create a new synth state
-  const synthstate = deepcopy(SYNTH_STATE_DEFAULT)
-  memorywritebookflag(main, SYNTH_STATE_FLAG, board, synthstate as any)
-  return synthstate
+  if (!ispresent(voicefx)) {
+    voicefx = deepcopy(SYNTH_STATE_DEFAULT.voicefx)
+    memorywritebookflag(main, owner, SYNTH_VOICEFX_KEY, voicefx as any)
+  }
+  const cache: SYNTH_STATE = { voices, voicefx }
+  memorymigratelegacyvoicefx(cache)
+  return cache
+}
+
+function clearvoicesandvoicefx(cache: SYNTH_STATE) {
+  const vk = Object.keys(cache.voices)
+  for (let i = 0; i < vk.length; ++i) {
+    delete cache.voices[vk[i]]
+  }
+  const fxk = Object.keys(cache.voicefx)
+  for (let i = 0; i < fxk.length; ++i) {
+    delete cache.voicefx[fxk[i]]
+  }
 }
 
 export function memoryreadsynth(board: string): MAYBE<SYNTH_STATE> {
@@ -87,8 +105,7 @@ export function memorymergesynthvoice(
 ) {
   const cache = readsynthcacheinternal(board)
   if (NAME(config) === 'restart') {
-    cache.voices = {}
-    cache.voicefx = {}
+    clearvoicesandvoicefx(cache)
     return
   }
   if (!ispresent(cache.voices[idx])) {
@@ -131,30 +148,25 @@ export function memorymergesynthvoicefx(
 
 export type SYNTH_PLAY = [string, number]
 
-const SYNTH_PLAY_FLAG = 'synthplay'
+const SYNTH_PLAYQUEUE_KEY = 'playqueue'
 const SYNTH_PLAY_DEFAULT: SYNTH_PLAY[] = []
 
 function readsynthplayinternal(board: string): SYNTH_PLAY[] {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const queue = memoryreadbookflag(main, SYNTH_PLAY_FLAG, board) as MAYBE<
+  const owner = createsynthid(board)
+  const queue = memoryreadbookflag(main, owner, SYNTH_PLAYQUEUE_KEY) as MAYBE<
     SYNTH_PLAY[]
   >
-  // use queue state
   if (ispresent(queue)) {
     return queue
   }
-  // create a new synth play queue
-  const synthplay = deepcopy(SYNTH_PLAY_DEFAULT)
-  memorywritebookflag(main, SYNTH_PLAY_FLAG, board, synthplay as any)
-  return synthplay
+  const nextqueue = deepcopy(SYNTH_PLAY_DEFAULT)
+  memorywritebookflag(main, owner, SYNTH_PLAYQUEUE_KEY, nextqueue as any)
+  return nextqueue
 }
 
 export function memoryreadsynthplay(board: string): SYNTH_PLAY[] {
   return readsynthplayinternal(board)
-}
-
-function durationsecondsatdefaultbpm(duration: number) {
-  return (duration * 60) / (16 * DEFAULT_BPM)
 }
 
 /** Added after converting pattern end time (seconds) to board ticks; tune if `#play` advances too early/late. */
@@ -190,14 +202,7 @@ export function memoryqueuesynthplay(board: string, play: string) {
   let endtime = 0
   for (let i = 0; i < invokes.length; ++i) {
     const invoke = invokes[i]
-    const pattern = invokeplay(
-      i,
-      0,
-      invoke,
-      true,
-      (duration) => `${duration}n` as any,
-      durationsecondsatdefaultbpm,
-    )
+    const pattern = invokeplay(i, 0, invoke, true)
     endtime = Math.max(endtime, synthplaypatterntickwait(pattern))
   }
 

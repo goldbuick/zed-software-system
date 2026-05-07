@@ -31,6 +31,9 @@ void mainSupport(const in vec2 uv) {
 
 const crtshapefragshader = `
 uniform float viewheight;
+uniform float curvebase;
+uniform float curveamp;
+uniform float curvespeed;
 uniform sampler2D splat;
 
 ${blendutilshader}
@@ -73,8 +76,12 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   n += 0.025 * snoise(uv.st * 800.0);
 
   vec2 xn = 2.0 * (uv.st - 0.5);
-  float fz = 0.005;
-  vec2 edge = bendy(xn, fz * n, -fz * n);
+  // Spatial noise must not be scaled by the full animated curve amount, or UVs
+  // shimmer (reads as fuzz). Clamp noise coupling; breathe the lens uniformly.
+  float warpn = clamp(curvebase, 0.001, 0.012);
+  // 0..1 lerp factor from sin, then scale by curveamp (no negative breathe)
+  float breathe = (sin(time * curvespeed) * 0.5 + 0.5) * curveamp;
+  vec2 edge = bendy(xn, warpn * n + breathe, -warpn * n - breathe);
   vec2 bent = edge.xy * 0.5 + 0.5;
 
   float edgetime = time * 0.3;
@@ -160,10 +167,19 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 type CRTShapeOpts = {
   splat?: Texture
   viewheight?: number
+  curvebase?: number
+  curveamp?: number
+  curvespeed?: number
 }
 
 class CRTShapeEffect extends Effect {
-  constructor({ splat, viewheight }: CRTShapeOpts = {}) {
+  constructor({
+    splat,
+    viewheight,
+    curvebase,
+    curveamp,
+    curvespeed,
+  }: CRTShapeOpts = {}) {
     super('CRTShapeEffect', crtshapefragshader, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.CONVOLUTION,
@@ -174,6 +190,9 @@ class CRTShapeEffect extends Effect {
       uniforms: new Map<string, Uniform>([
         ['splat', new Uniform(splat)],
         ['viewheight', new Uniform(viewheight ?? 128)],
+        ['curvebase', new Uniform(curvebase ?? 0.005)],
+        ['curveamp', new Uniform(curveamp ?? 0)],
+        ['curvespeed', new Uniform(curvespeed ?? 0.4)],
       ]),
     })
   }

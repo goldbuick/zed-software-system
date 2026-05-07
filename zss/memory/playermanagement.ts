@@ -34,6 +34,7 @@ import {
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhaltchip } from './runtime'
+import { memoryreadboardruntime } from './runtimeboundary'
 import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
@@ -140,7 +141,9 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
 
       // see if we have an over board
       // it runs first
-      const over = memoryreadboardbyaddress(board.overboard ?? '')
+      const over = memoryreadboardbyaddress(
+        memoryreadboardruntime(board)?.overboard ?? '',
+      )
       if (ispresent(over)) {
         // only add once
         if (!addedids.has(over.id)) {
@@ -299,6 +302,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
   const removelist: string[] = []
   for (let i = 0; i < mainbook.activelist.length; ++i) {
     const mayberemove = mainbook.activelist[i]
+    // this is a hack to ensure we drop local players from the active list
     if (mayberemove.startsWith(player)) {
       removelist.push(mayberemove)
     }

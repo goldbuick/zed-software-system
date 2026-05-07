@@ -8,10 +8,10 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   apilog,
+  boardrunnerinput,
   registerbookmarkclirun,
   vmcli,
   vmdoot,
-  vminput,
   vmlocal,
   vmrefscroll,
 } from 'zss/device/api'
@@ -195,7 +195,8 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
       if (mods.shift) {
         bits |= INPUT_SHIFT
       }
-      vminput(SOFTWARE, player, input, bits)
+      // vminput(SOFTWARE, player, input, bits)
+      boardrunnerinput(SOFTWARE, player, input, bits)
     }
   })
 }

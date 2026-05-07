@@ -1,16 +1,12 @@
-import { compress, decompress, init } from '@bokuweb/zstd-wasm'
+import { compress, decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
 import { registerinspector, registerstore } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
-import {
-  formatobject,
-  packformat,
-  unformatobject,
-  unpackformat,
-} from 'zss/feature/format'
+import { packformat, unpackformat } from 'zss/feature/format'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
+import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import {
   scrolllinkescapefrag,
@@ -23,13 +19,11 @@ import { COLOR } from 'zss/words/types'
 import { memoryreadobject } from './boardaccess'
 import {
   memoryexportbook,
+  memoryexportbookasjson,
   memoryimportbook,
+  memoryimportbookfromjson,
   memoryreadelementdisplay,
 } from './bookoperations'
-import {
-  memoryexportcodepage,
-  memoryimportcodepage,
-} from './codepageoperations'
 import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
@@ -39,7 +33,7 @@ import {
   memoryreadtopic,
   memorywritehalt,
 } from './session'
-import { BOOK, BOOK_KEYS, FIXED_DATE, MEMORY_LABEL } from './types'
+import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
 
 // In-memory config (register sends at login; utilities render/emit only)
 export const CONFIG_KEYS = [
@@ -143,14 +137,6 @@ registerhyperlinksharedbridge(
     }
   },
 )
-
-let zstdenabled = false
-async function getzstdlib(): Promise<void> {
-  if (!zstdenabled) {
-    await init()
-    zstdenabled = true
-  }
-}
 
 // data encoding for urls
 function base64urltobase64(base64UrlString: string) {
@@ -262,51 +248,15 @@ export function memoryadminmenu(
   scrollwritelines(player, 'cpu #admin', zsstexttape(...rows), 'refscroll')
 }
 
-export function memoryexportbooksasjson(books: BOOK[]): string {
-  const plainobjs: object[] = []
-  for (let i = 0; i < books.length; ++i) {
-    const exported = memoryexportbook(books[i])
-    if (ispresent(exported)) {
-      const plain = unformatobject(exported, BOOK_KEYS, {
-        pages: (pages) => pages.map(memoryimportcodepage),
-      })
-      if (ispresent(plain)) {
-        plainobjs.push(plain)
-      }
-    }
-  }
-  return JSON.stringify(plainobjs, null, 2)
-}
-
-export function memoryimportbooksfromjson(json: string): BOOK[] {
-  const arr = JSON.parse(json) as object[]
-  if (!Array.isArray(arr)) {
-    return []
-  }
-  const books: BOOK[] = []
-  for (let i = 0; i < arr.length; ++i) {
-    const plain = arr[i] as Record<string, unknown>
-    const formatted = formatobject(plain, BOOK_KEYS, {
-      pages: (p: unknown[]) =>
-        (p ?? []).map((page) => memoryexportcodepage(page as any)),
-    })
-    if (ispresent(formatted)) {
-      const book = memoryimportbook(formatted)
-      if (ispresent(book)) {
-        books.push(book)
-      }
-    }
-  }
-  return books
-}
-
 export async function memorycompressbooks(books: BOOK[]) {
+  const jsonbooks = books.map(memoryexportbookasjson)
   if (getclimode()) {
-    return memoryexportbooksasjson(books)
+    return JSON.stringify(jsonbooks)
   }
-  await getzstdlib()
 
-  console.info('saved', books)
+  await ensurezstdwasm()
+  console.info('saved', jsonbooks)
+
   const zip = new JSZip()
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
@@ -315,6 +265,8 @@ export async function memorycompressbooks(books: BOOK[]) {
       // convert to bin
       const bin = packformat(exportedbook)
       if (ispresent(bin)) {
+        // NOTE: NOT using dictionary here, it's not worth the extra complexity
+        // AND it did not make a significant difference in size
         // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
         const binsquash = compress(bin, 15)
         zip.file(book.id, binsquash, { date: FIXED_DATE })
@@ -330,12 +282,16 @@ export async function memorycompressbooks(books: BOOK[]) {
   return base64tobase64url(content)
 }
 
-export async function memorydecompressbooks(base64bytes: string) {
+export async function memorydecompressbooks(
+  base64bytes: string,
+): Promise<BOOK[]> {
   const trimmed = base64bytes.trim()
   if (trimmed.startsWith('[')) {
-    return memoryimportbooksfromjson(base64bytes)
+    const json = JSON.parse(base64bytes) as BOOK[]
+    return json.map(memoryimportbookfromjson).filter(ispresent)
   }
-  await getzstdlib()
+
+  await ensurezstdwasm()
 
   const books: BOOK[] = []
   const content = base64urltobase64(base64bytes)

@@ -1,4 +1,4 @@
-import { vminput, vmpilotstart, vmpilotstop } from 'zss/device/api'
+import { boardrunnerinput, vmpilotstart, vmpilotstop } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { INPUT, INPUT_SHIFT } from 'zss/gadget/data/types'
@@ -28,7 +28,8 @@ export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
         const [action] = readargs(words, 0, [ARG_TYPE.NAME])
         const entry = USERINPUT_MAP[NAME(action)]
         if (entry) {
-          vminput(SOFTWARE, player, entry[0], entry[1])
+          // vminput(SOFTWARE, player, entry[0], entry[1])
+          boardrunnerinput(SOFTWARE, player, entry[0], entry[1])
         }
         return 0
       },
