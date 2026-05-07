@@ -19,6 +19,7 @@ import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
+  deepcopy,
   isarray,
   isnumber,
   ispresent,
@@ -244,15 +245,13 @@ export function memoryexportcodepage(
     return undefined
   }
   const rt = memoryreadcodepageruntime(codepage) ?? ({} as CODE_PAGE_RUNTIME)
-  const wire = {
-    id: codepage.id,
-    code: codepage.code,
-    board: rt.board,
-    object: rt.object,
-    terrain: rt.terrain,
-    charset: rt.charset,
-    palette: rt.palette,
-  }
+  const wire = Object.assign(
+    {
+      id: codepage.id,
+      code: codepage.code,
+    },
+    rt,
+  )
   return formatobject(wire, CODE_PAGE_KEYS, {
     board: memoryexportboard,
     object: memoryexportboardelement,
@@ -277,7 +276,7 @@ export function memorycodepagehasmatch(
   return false
 }
 
-type IMPORTED_CODE_PAGE_WIRE = {
+type CODE_PAGE_WIRE = {
   id: string
   code: string
   board?: BOARD
@@ -293,17 +292,13 @@ export function memoryimportcodepage(
   if (!ispresent(codepageentry)) {
     return undefined
   }
-  const flat = unformatobject<IMPORTED_CODE_PAGE_WIRE>(
-    codepageentry,
-    CODE_PAGE_KEYS,
-    {
-      board: memoryimportboard,
-      object: memoryimportboardelement,
-      terrain: memoryimportboardelement,
-      charset: memoryimportbitmap,
-      palette: memoryimportbitmap,
-    },
-  )
+  const flat = unformatobject<CODE_PAGE_WIRE>(codepageentry, CODE_PAGE_KEYS, {
+    board: memoryimportboard,
+    object: memoryimportboardelement,
+    terrain: memoryimportboardelement,
+    charset: memoryimportbitmap,
+    palette: memoryimportbitmap,
+  })
   if (!ispresent(flat)) {
     return undefined
   }
