@@ -293,7 +293,7 @@ export function memorymoveobject(
     const blockedisedge = blocked.kind === 'edge'
     if (elementisplayer) {
       if (blockedisedge) {
-        if (!memoryplayerblockedbyedge(book, board, element, dest)) {
+        if (!memoryplayerblockedbyedge(board, element, dest)) {
           memorysendtoelement(blocked, element, 'thud')
         }
       } else if (blockedisbullet) {

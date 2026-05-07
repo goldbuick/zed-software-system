@@ -7,7 +7,6 @@ import {
   synthupdate,
   vmclirepeatlast,
   vmfindany,
-  vminput,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'

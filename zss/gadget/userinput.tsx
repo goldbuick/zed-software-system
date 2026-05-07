@@ -12,7 +12,6 @@ import {
   registerbookmarkclirun,
   vmcli,
   vmdoot,
-  vminput,
   vmlocal,
   vmrefscroll,
 } from 'zss/device/api'

@@ -1,7 +1,7 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
 import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
-import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
@@ -12,21 +12,16 @@ import {
 import {
   memorycodepagetypetostring,
   memorycreatecodepage,
-  memoryexportcodepage,
+  memoryexportcodepageasjson,
+  memoryfreecodepage,
   memoryimportcodepage,
   memoryreadcodepagedata,
   memoryreadcodepagename,
-  memoryreadcodepageruntime,
   memoryreadcodepagestats,
   memoryreadcodepagetype,
 } from './codepageoperations'
+import { memoryreadboardelementruntime } from './runtimeboundary'
 import {
-  memorydeleteboardelementruntime,
-  memorydeleteboardruntime,
-  memoryreadboardelementruntime,
-} from './runtimeboundary'
-import {
-  BOARD,
   BOARD_ELEMENT,
   BOOK,
   BOOK_FLAGS,
@@ -35,23 +30,6 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
-
-function memoryreadflagsroot(book: MAYBE<BOOK>): Record<string, BOOK_FLAGS> {
-  if (!ispresent(book)) {
-    return {}
-  }
-  const root: Record<string, BOOK_FLAGS> = {}
-  const ids = Object.keys(book.flags)
-  for (let i = 0; i < ids.length; ++i) {
-    const id = ids[i]
-    const boundaryid = book.flags[id]
-    const flags = memoryboundaryget<BOOK_FLAGS>(boundaryid)
-    if (ispresent(flags)) {
-      root[id] = flags
-    }
-  }
-  return root
-}
 
 export function memoryreadelementcodepage(
   book: MAYBE<BOOK>,
@@ -95,33 +73,6 @@ export function memoryclearbookcodepage(book: MAYBE<BOOK>, address: string) {
   }
 
   return undefined
-}
-
-function memoryfreeboardelementsruntime(board: MAYBE<BOARD>) {
-  if (!ispresent(board)) {
-    return
-  }
-  for (let i = 0; i < board.terrain.length; ++i) {
-    memorydeleteboardelementruntime(board.terrain[i])
-  }
-  const ids = Object.keys(board.objects)
-  for (let i = 0; i < ids.length; ++i) {
-    memorydeleteboardelementruntime(board.objects[ids[i]])
-  }
-}
-
-export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {
-  if (!ispresent(codepage)) {
-    return
-  }
-  const rt = memoryreadcodepageruntime(codepage)
-  if (ispresent(rt)) {
-    memorydeleteboardruntime(rt.board)
-    memoryfreeboardelementsruntime(rt.board)
-    memorydeleteboardelementruntime(rt.object)
-    memorydeleteboardelementruntime(rt.terrain)
-  }
-  memoryboundarydelete(codepage.id)
 }
 
 export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
@@ -186,43 +137,42 @@ export function memoryensurebookcodepagewithtype(
   return [codepage, false]
 }
 
-export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
+export function memoryexportbookasjson(book: MAYBE<BOOK>): any {
   if (!ispresent(book)) {
     return undefined
   }
 
   const pagesout: FORMAT_OBJECT[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const cp = book.pages[i]
-    const ex = memoryexportcodepage(cp)
-    if (ispresent(ex)) {
-      pagesout.push(ex)
+    const codepage = memoryexportcodepageasjson(book.pages[i])
+    if (ispresent(codepage)) {
+      pagesout.push(codepage)
     }
   }
 
-  const flags = deepcopy(memoryreadflagsroot(book))
-  const ids = Object.keys(flags)
-  for (let i = 0; i < ids.length; ++i) {
-    const id = ids[i]
-    if (Object.keys(flags[id]).length === 0) {
-      delete flags[id]
-    }
+  const flagsout: Record<string, any> = {}
+  const names = Object.keys(book.flags)
+  for (let i = 0; i < names.length; ++i) {
+    flagsout[names[i]] = memoryreadbookflags(book, names[i])
   }
 
+  return {
+    id: book.id,
+    name: book.name,
+    token: book.token,
+    timestamp: book.timestamp,
+    activelist: book.activelist,
+    pages: pagesout,
+    flags: flagsout,
+  }
+}
+
+export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
+  if (!ispresent(book)) {
+    return undefined
+  }
   // return a single tree
-  return formatobject(
-    {
-      id: book.id,
-      name: book.name,
-      timestamp: book.timestamp,
-      activelist: book.activelist,
-      pages: pagesout,
-      flags,
-      token: book.token,
-    },
-    BOOK_KEYS,
-    {},
-  )
+  return formatobject(memoryexportbookasjson(book), BOOK_KEYS, {})
 }
 
 export function memoryhasbookflags(book: MAYBE<BOOK>, id: string) {
@@ -240,6 +190,26 @@ export function memoryhasbookmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
     return true
   }
   return false
+}
+
+export function memoryimportbookfromjson(jsonbook: any): MAYBE<BOOK> {
+  if (!ispresent(jsonbook)) {
+    return undefined
+  }
+  // TODO: implement this, but it's a bit more complex than just mapping the JSON to a book
+  // we have to make an memoryimportcodepagefromjson function that can handle the JSON for each codepage
+  // return memoryimportbook(formatobject(bookentry, BOOK_KEYS, {
+  //   pages: (pages) => pages.map(memoryimportcodepage),
+  // }))
+  // return {
+  //   id: jsonbook.id,
+  //   name: jsonbook.name,
+  //   token: jsonbook.token,
+  //   timestamp: jsonbook.timestamp,
+  //   activelist: jsonbook.activelist,
+  //   pages: jsonbook.pages.map(memoryimportcodepage),
+  //   flags: jsonbook.flags,
+  // }
 }
 
 export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
@@ -409,7 +379,7 @@ export function memoryreadbookflag(
   return flags?.[name]
 }
 
-export function memoryreadbookflags(book: MAYBE<BOOK>, id: string) {
+export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): any {
   if (!ispresent(book)) {
     return {}
   }
@@ -422,9 +392,9 @@ export function memoryreadbookflags(book: MAYBE<BOOK>, id: string) {
   if (ispresent(flags)) {
     return flags
   }
-  const nextflags: BOOK_FLAGS = {}
-  book.flags[id] = memoryboundaryalloc(nextflags, boundaryid)
-  return nextflags
+  const stub = {}
+  book.flags[id] = memoryboundaryalloc(stub, boundaryid)
+  return stub
 }
 
 export function memorylistcodepagessorted(book: MAYBE<BOOK>) {

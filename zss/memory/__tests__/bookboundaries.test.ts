@@ -1,7 +1,6 @@
 import { packformat, unpackformat } from 'zss/feature/format'
 import { creategadgetid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-
 import {
   memoryclearbookcodepage,
   memorycreatebook,
@@ -10,16 +9,21 @@ import {
   memoryreadbookflags,
   memoryreadcodepage,
   memorywritebookflag,
-} from '../bookoperations'
+} from 'zss/memory/bookoperations'
 import {
   memoryboundariesclear,
   memoryboundaryalloc,
   memoryboundaryget,
-} from '../boundaries'
+} from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
   memoryreadcodepageruntime,
-} from '../codepageoperations'
+} from 'zss/memory/codepageoperations'
+import {
+  memoryexportbooksasjson,
+  memoryimportbooksfromjson,
+} from 'zss/memory/utilities'
+
 import { memoryresetbooks } from '../session'
 
 describe('book opaque boundaries', () => {
@@ -56,6 +60,34 @@ describe('book opaque boundaries', () => {
     expect(imported).toBeDefined()
     expect(memoryreadcodepageruntime(imported)).toBeDefined()
     expect(memoryboundaryget(imported!.id)).toBeDefined()
+  })
+
+  it('round-trips JSON export/import with board runtime (CLI snapshot shape)', () => {
+    const cp = memorycreatecodepage('@board snapjson\n@exitnorth roomn\n', {
+      board: {
+        id: 'bid',
+        name: 'snapboard',
+        terrain: [],
+        objects: {},
+        exitnorth: 'roomn',
+      },
+    })
+    const book = memorycreatebook([cp])
+    const rtbefore = memoryreadcodepageruntime(memoryreadcodepage(book, cp.id))
+    expect(rtbefore?.board?.exitnorth).toBe('roomn')
+
+    const json = memoryexportbooksasjson([book])
+    memoryboundariesclear()
+    memoryresetbooks([])
+
+    const importedlist = memoryimportbooksfromjson(json)
+    expect(importedlist.length).toBe(1)
+    memoryresetbooks(importedlist)
+
+    const cp2 = memoryreadcodepage(importedlist[0], cp.id)
+    expect(cp2).toBeDefined()
+    const rtafter = memoryreadcodepageruntime(cp2)
+    expect(rtafter?.board?.exitnorth).toBe('roomn')
   })
 
   it('mutates flags through boundary-backed record', () => {

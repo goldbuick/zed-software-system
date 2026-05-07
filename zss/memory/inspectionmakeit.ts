@@ -16,8 +16,7 @@ import {
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
-import { memorymoveplayertoboard } from './playermanagement'
-import { memoryreadbookbysoftware, memoryreadbooklist } from './session'
+import { memoryreadbooklist } from './session'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,

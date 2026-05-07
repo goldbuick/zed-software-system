@@ -1,9 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import { type MESSAGE, boardrunneridle, boardrunnerthud } from 'zss/device/api'
 import {
+  boardrunnerassign,
   boardrunnerassignmentvalid,
   boardrunnerelect,
-  boardrunnertransfer,
+  boardrunnerevict,
 } from 'zss/device/vm/boardrunnermanagement'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -26,12 +27,13 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
       // send a message to the target player's runner that it is idle now
       boardrunneridle(vm, targetplayer)
     } else {
-      // switch assignment directly to the target player
-      boardrunnertransfer(board, targetplayer)
       // elect a new runner for the prior board
       if (ispresent(currentboard)) {
+        boardrunnerevict(currentboard.id)
         boardrunnerelect(currentboard.id)
       }
+      // switch assignment directly to the target player
+      boardrunnerassign(board, targetplayer)
     }
   } else {
     // send a thud message back to the board runner

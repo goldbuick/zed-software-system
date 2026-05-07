@@ -1,9 +1,4 @@
-import {
-  boardrunnerinput,
-  vminput,
-  vmpilotstart,
-  vmpilotstop,
-} from 'zss/device/api'
+import { boardrunnerinput, vmpilotstart, vmpilotstop } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { INPUT, INPUT_SHIFT } from 'zss/gadget/data/types'

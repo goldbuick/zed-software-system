@@ -7,11 +7,9 @@ import { PT } from 'zss/words/types'
 import { memorymoveboardobject } from './boardmovement'
 import { memoryreadboardbyaddress } from './boards'
 import { memoryreadbookflag } from './bookoperations'
-import { memorymoveplayertoboard } from './playermanagement'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
 export function memoryplayerblockedbyedge(
-  book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   element: BOARD_ELEMENT,
   dest: PT,
@@ -25,10 +23,6 @@ export function memoryplayerblockedbyedge(
         y: dest.y,
       })
       return true
-      // return memorymoveplayertoboard(book, elementid, destboard.id, {
-      //   x: BOARD_WIDTH - 1,
-      //   y: dest.y,
-      // })
     }
   } else if (dest.x >= BOARD_WIDTH) {
     const destboard = memoryreadboardbyaddress(board?.exiteast ?? '')
@@ -38,10 +32,6 @@ export function memoryplayerblockedbyedge(
         y: dest.y,
       })
       return true
-      // return memorymoveplayertoboard(book, elementid, destboard.id, {
-      //   x: 0,
-      //   y: dest.y,
-      // })
     }
   } else if (dest.y < 0) {
     const destboard = memoryreadboardbyaddress(board?.exitnorth ?? '')
@@ -51,10 +41,6 @@ export function memoryplayerblockedbyedge(
         y: BOARD_HEIGHT - 1,
       })
       return true
-      // return memorymoveplayertoboard(book, elementid, destboard.id, {
-      //   x: dest.x,
-      //   y: BOARD_HEIGHT - 1,
-      // })
     }
   } else if (dest.y >= BOARD_HEIGHT) {
     const destboard = memoryreadboardbyaddress(board?.exitsouth ?? '')
@@ -64,10 +50,6 @@ export function memoryplayerblockedbyedge(
         y: 0,
       })
       return true
-      // return memorymoveplayertoboard(book, elementid, destboard.id, {
-      //   x: dest.x,
-      //   y: 0,
-      // })
     }
   }
   return false

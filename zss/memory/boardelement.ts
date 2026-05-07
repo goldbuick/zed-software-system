@@ -38,7 +38,6 @@ export function memoryexportboardelement(
     return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
       runtime: FORMAT_SKIP,
       stopped: FORMAT_SKIP,
-      removed: FORMAT_SKIP,
       bucket: FORMAT_SKIP,
     })
   }

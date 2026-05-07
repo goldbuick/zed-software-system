@@ -19,7 +19,6 @@ import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
-  deepcopy,
   isarray,
   isnumber,
   ispresent,
@@ -46,12 +45,18 @@ import {
   memoryexportboard,
   memoryimportboard,
 } from './boardlifecycle'
+import { memoryfreeboardelementsruntime } from './boardoperations'
 import {
   memoryboundaryalloc,
+  memoryboundarydelete,
   memoryboundaryget,
   memoryboundaryset,
 } from './boundaries'
-import { memoryensureboardelementruntime } from './runtimeboundary'
+import {
+  memorydeleteboardelementruntime,
+  memorydeleteboardruntime,
+  memoryensureboardelementruntime,
+} from './runtimeboundary'
 import {
   BITMAP_KEYS,
   BOARD,
@@ -238,19 +243,31 @@ export function memoryimportbitmap(
   })
 }
 
+export function memoryexportcodepageasjson(codepage: MAYBE<CODE_PAGE>): any {
+  if (!ispresent(codepage)) {
+    return undefined
+  }
+  return Object.assign(
+    {
+      id: codepage.id,
+      code: codepage.code,
+    },
+    memoryreadcodepageruntime(codepage) ?? {},
+  )
+}
+
 export function memoryexportcodepage(
   codepage: MAYBE<CODE_PAGE>,
 ): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(codepage)) {
     return undefined
   }
-  const rt = memoryreadcodepageruntime(codepage) ?? ({} as CODE_PAGE_RUNTIME)
   const wire = Object.assign(
     {
       id: codepage.id,
       code: codepage.code,
     },
-    rt,
+    memoryreadcodepageruntime(codepage) ?? {},
   )
   return formatobject(wire, CODE_PAGE_KEYS, {
     board: memoryexportboard,
@@ -286,43 +303,54 @@ type CODE_PAGE_WIRE = {
   palette?: BITMAP
 }
 
-export function memoryimportcodepage(
-  codepageentry: MAYBE<FORMAT_OBJECT>,
-): MAYBE<CODE_PAGE> {
-  if (!ispresent(codepageentry)) {
+export function memoryimportcodepagefromjson(flat: any): MAYBE<CODE_PAGE> {
+  if (!ispresent(flat)) {
     return undefined
   }
-  const flat = unformatobject<CODE_PAGE_WIRE>(codepageentry, CODE_PAGE_KEYS, {
+  memoryboundaryalloc(
+    {
+      board: flat.board,
+      object: flat.object,
+      terrain: flat.terrain,
+      charset: flat.charset,
+      palette: flat.palette,
+    },
+    flat.id,
+  )
+  return {
+    id: flat.id,
+    code: flat.code,
+  }
+}
+
+export function memoryimportcodepage(
+  codepage: MAYBE<FORMAT_OBJECT>,
+): MAYBE<CODE_PAGE> {
+  if (!ispresent(codepage)) {
+    return undefined
+  }
+  const flat = unformatobject<CODE_PAGE_WIRE>(codepage, CODE_PAGE_KEYS, {
     board: memoryimportboard,
     object: memoryimportboardelement,
     terrain: memoryimportboardelement,
     charset: memoryimportbitmap,
     palette: memoryimportbitmap,
   })
-  if (!ispresent(flat)) {
-    return undefined
+  return memoryimportcodepagefromjson(flat)
+}
+
+export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {
+  if (!ispresent(codepage)) {
+    return
   }
-  const rt: CODE_PAGE_RUNTIME = {}
-  if (ispresent(flat.board)) {
-    rt.board = flat.board
+  const rt = memoryreadcodepageruntime(codepage)
+  if (ispresent(rt)) {
+    memorydeleteboardruntime(rt.board)
+    memoryfreeboardelementsruntime(rt.board)
+    memorydeleteboardelementruntime(rt.object)
+    memorydeleteboardelementruntime(rt.terrain)
   }
-  if (ispresent(flat.object)) {
-    rt.object = flat.object
-  }
-  if (ispresent(flat.terrain)) {
-    rt.terrain = flat.terrain
-  }
-  if (ispresent(flat.charset)) {
-    rt.charset = flat.charset
-  }
-  if (ispresent(flat.palette)) {
-    rt.palette = flat.palette
-  }
-  memoryboundaryalloc(rt, flat.id)
-  return {
-    id: flat.id,
-    code: flat.code,
-  }
+  memoryboundarydelete(codepage.id)
 }
 
 export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(

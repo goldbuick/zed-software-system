@@ -235,8 +235,8 @@ function readinput(
   flags.inputcurrent = input
 
   // clear used input
-  flags.inputqueue = flags.inputqueue.filter((item) => {
-    const [check] = item as [INPUT, number]
+  flags.inputqueue = flags.inputqueue.filter((item: [INPUT, number]) => {
+    const [check] = item
     return check !== INPUT.NONE && check !== input
   })
 

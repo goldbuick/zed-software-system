@@ -79,7 +79,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
                 READ_CONTEXT.elementfocus,
                 zsstexttape(
                   `!bookallexport ${address};$blue[all] $whiteexport book`,
-                  `!bookzztexport ${address};$magenta[zzt] $whiteexport ZZT world`,
+                  `!bookzztexport ${address};$purple[zzt] $whiteexport ZZT world`,
                   pagelines,
                 ),
               )

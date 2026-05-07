@@ -28,7 +28,6 @@ import type { FINDANY_CONFIG } from 'zss/memory/inspectionfind'
 import { memorymakeitcommand } from 'zss/memory/inspectionmakeit'
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import {
-  memorymoveplayertoboard,
   memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'

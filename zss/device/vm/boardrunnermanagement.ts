@@ -15,7 +15,7 @@ export function boardrunnereligibleforboard(board: string): string[] {
 }
 
 export function boardrunnerassignmentvalid(board: string): boolean {
-  console.info('VM => boardrunnerassignmentvalid', board)
+  // console.info('VM => boardrunnerassignmentvalid', board)
   const runner = boardrunners[board]
   const maybeboard = memoryreadboardbyaddress(board)
   if (!ispresent(runner) || !ispresent(maybeboard)) {
@@ -32,32 +32,29 @@ export function boardrunnerblock(runner: string): void {
   boardrunnerblocked[runner] = true
 }
 
-export function boardrunnerevict(board: string, runner: string): void {
-  if (!ispresent(board) || !runner || boardrunners[board] !== runner) {
+export function boardrunnerevict(board: string): void {
+  if (!ispresent(boardrunners[board])) {
     return
   }
+  const runner = boardrunners[board]
   delete boardrunners[board]
   delete boardrunneracks[runner]
-  console.info('VM => boardrunnerevict', board, runner)
+  console.info('### evict', runner, board)
 }
 
 export function boardrunnerelect(board: string): MAYBE<string> {
-  const eligible = boardrunnereligibleforboard(board)
-  if (eligible.length === 0) {
-    return undefined
+  const elected = pick(...boardrunnereligibleforboard(board))
+  if (ispresent(elected)) {
+    boardrunnerassign(board, elected)
   }
-  const elected = pick(...eligible)
-  boardrunners[board] = elected
-  boardrunneracks[elected] = TICK_BUDGET
-  console.info('VM => boardrunnerelect', board, elected)
   return elected
 }
 
-export function boardrunnertransfer(board: string, runner: string): void {
+export function boardrunnerassign(board: string, runner: string) {
   boardrunners[board] = runner
   boardrunneracks[runner] = TICK_BUDGET
   boardrunnerblocked[runner] = false
-  console.info('VM => boardrunnertransfer', board, runner)
+  console.info('### assign', runner, board)
 }
 
 export function boardrunnerbudgetdec(runner: string): boolean {
@@ -69,6 +66,6 @@ export function boardrunnerbudgetdec(runner: string): boolean {
   return false
 }
 
-export function boardrunnerbudgetack(runner: string): void {
+export function boardrunnerbudgetack(runner: string) {
   boardrunneracks[runner] = TICK_BUDGET
 }

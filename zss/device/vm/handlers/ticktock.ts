@@ -73,11 +73,11 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
         if (boardrunnerbudgetdec(currentrunner)) {
           // we hit ack timeout
           boardrunnerblock(currentrunner)
-          boardrunnerevict(boardid, currentrunner)
+          boardrunnerevict(boardid)
         }
       } else {
         // the current runner is no longer on the board
-        boardrunnerevict(boardid, currentrunner)
+        boardrunnerevict(boardid)
       }
 
       // if no runner is assigned, elect a new one
@@ -86,11 +86,11 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       }
     }
   })
-  perfmeasure('vm:gadgetsynctick', () => {
-    gadgetsynctick(vm)
-  })
   perfmeasure('vm:boardrunnermemorysync', () => {
     boardrunnermemorysync(vm)
     boardrunnerboundarymemorysync(vm)
+  })
+  perfmeasure('vm:gadgetsynctick', () => {
+    gadgetsynctick(vm)
   })
 }
