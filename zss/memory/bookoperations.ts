@@ -15,6 +15,7 @@ import {
   memoryexportcodepageasjson,
   memoryfreecodepage,
   memoryimportcodepage,
+  memoryimportcodepagefromjson,
   memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagestats,
@@ -153,7 +154,8 @@ export function memoryexportbookasjson(book: MAYBE<BOOK>): any {
   const flagsout: Record<string, any> = {}
   const names = Object.keys(book.flags)
   for (let i = 0; i < names.length; ++i) {
-    flagsout[names[i]] = memoryreadbookflags(book, names[i])
+    const name = names[i]
+    flagsout[name] = memoryreadbookflags(book, name)
   }
 
   return {
@@ -192,28 +194,36 @@ export function memoryhasbookmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
   return false
 }
 
-export function memoryimportbookfromjson(jsonbook: any): MAYBE<BOOK> {
-  if (!ispresent(jsonbook)) {
+export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
+  if (!ispresent(flat)) {
     return undefined
   }
-  // TODO: implement this, but it's a bit more complex than just mapping the JSON to a book
-  // we have to make an memoryimportcodepagefromjson function that can handle the JSON for each codepage
-  // return memoryimportbook(formatobject(bookentry, BOOK_KEYS, {
-  //   pages: (pages) => pages.map(memoryimportcodepage),
-  // }))
-  // return {
-  //   id: jsonbook.id,
-  //   name: jsonbook.name,
-  //   token: jsonbook.token,
-  //   timestamp: jsonbook.timestamp,
-  //   activelist: jsonbook.activelist,
-  //   pages: jsonbook.pages.map(memoryimportcodepage),
-  //   flags: jsonbook.flags,
-  // }
+
+  // import pages
+  const pagesout = flat.pages.map(memoryimportcodepagefromjson)
+
+  // import flags
+  const names = Object.keys(flat.flags)
+  const flagsout: Record<string, string> = {}
+  for (let i = 0; i < names.length; ++i) {
+    const name = names[i]
+    flagsout[name] = memoryboundaryalloc(flat.flags[name], name)
+  }
+
+  // return book
+  return {
+    id: flat.id,
+    name: flat.name,
+    token: flat.token,
+    timestamp: flat.timestamp,
+    activelist: flat.activelist,
+    pages: pagesout,
+    flags: flagsout,
+  }
 }
 
 export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
-  const staged = unformatobject<{
+  const flat = unformatobject<{
     id: string
     name: string
     token: string
@@ -224,25 +234,25 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   }>(bookentry, BOOK_KEYS, {
     pages: (pages) => pages.map(memoryimportcodepage),
   })
-  if (!ispresent(staged)) {
+  if (!ispresent(flat)) {
     return undefined
   }
 
   const flags: Record<string, string> = {}
-  const flagids = Object.keys(staged.flags ?? {})
+  const flagids = Object.keys(flat.flags ?? {})
   for (let i = 0; i < flagids.length; ++i) {
     const id = flagids[i]
-    flags[id] = memoryboundaryalloc(staged.flags[id])
+    flags[id] = memoryboundaryalloc(flat.flags[id])
   }
 
   // return book
   return {
-    id: staged.id,
-    name: staged.name,
-    token: staged.token,
-    timestamp: staged.timestamp,
-    activelist: staged.activelist ?? [],
-    pages: staged.pages,
+    id: flat.id,
+    name: flat.name,
+    token: flat.token,
+    timestamp: flat.timestamp,
+    activelist: flat.activelist ?? [],
+    pages: flat.pages,
     flags,
   }
 }
@@ -383,17 +393,23 @@ export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): any {
   if (!ispresent(book)) {
     return {}
   }
-  let boundaryid = book.flags[id]
-  if (!ispresent(boundaryid)) {
-    boundaryid = memoryboundaryalloc({})
-    book.flags[id] = boundaryid
+
+  // create stub if not present
+  const stub = {}
+  const boundary = book.flags[id]
+  if (!ispresent(boundary)) {
+    book.flags[id] = memoryboundaryalloc(stub)
+    return stub
   }
-  const flags = memoryboundaryget<BOOK_FLAGS>(boundaryid)
+
+  // read boundary
+  const flags = memoryboundaryget<BOOK_FLAGS>(boundary)
   if (ispresent(flags)) {
     return flags
   }
-  const stub = {}
-  book.flags[id] = memoryboundaryalloc(stub, boundaryid)
+
+  // create stub if not present
+  book.flags[id] = memoryboundaryalloc(stub)
   return stub
 }
 
