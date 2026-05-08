@@ -2,7 +2,7 @@
 
 The **hub** is a pub/sub fan-out: every `emit` is delivered to every connected device. Each device filters by **topics** (broadcast) or **directed target** (e.g. `vm:operator`).
 
-**See also:** [devices-and-messaging.md](devices-and-messaging.md) — inventory of every device, three-realm topology, and cross-realm forwarding.
+**See also:** [devices-and-messaging.md](devices-and-messaging.md) — inventory of every device, four-realm topology (main + sim + heavy + boardrunner), and cross-realm forwarding.
 
 ## Mermaid diagram
 
@@ -23,8 +23,11 @@ flowchart TB
     end
 
     subgraph Display["Display pipeline"]
-        GadgetServer["gadgetserver (tock, ticktock)"]
-        GadgetClient["gadgetclient"]
+        GadgetClient["gadgetclient (paint, patch)"]
+    end
+
+    subgraph Sim["Per-board sim"]
+        BoardRunner["boardrunner (paint, patch, tick, input, idle, thud, start)"]
     end
 
     subgraph Heavy["Heavy / agents"]
@@ -38,18 +41,19 @@ flowchart TB
 
     invoke --> VM2
     invoke --> Register
-    invoke --> GadgetServer
     invoke --> GadgetClient
+    invoke --> BoardRunner
     invoke --> HeavyDev
 
     Register -->|vm:operator, vm:login, vm:loader...| VM2
     VM2 -->|replynext ackoperator, acklogin...| Register
     VM2 -->|heavy:ttsinfo, heavy:modelprompt| HeavyDev
 
-    GadgetServer -->|gadgetclient:paint/patch| GadgetClient
-    GadgetClient -->|gadgetserver:desync| GadgetServer
+    VM2 -->|gadgetclient:paint/patch| GadgetClient
+    GadgetClient -->|reply vm:gadgetdesync| VM2
 
-    Clock -->|ticktock| GadgetServer
+    VM2 -->|boardrunner:paint/patch/tick/input| BoardRunner
+    BoardRunner -->|vm:boardrunnerack/patch, vm:playermovetoboard| VM2
 ```
 
 ```
@@ -69,35 +73,29 @@ flowchart TB
     │ emit: second │─────────────────►│              │◄─────────────────│              │
     └──────────────┘                  │              │  vm:operator     │ vmoperator() │
            │                          │              │  vm:login, etc   │ vmcli()      │
-           │ticktock                   │ replynext    │                  │ vmlogin()   │
-           ▼                          │ ackoperator  │─────────────────►│ etc         │
-    ┌──────────────┐                  │ acklogin     │  register:       │              │
-    │ GADGETSERVER │                  │ ackzsswords  │  loginready       │              │
-    │tock,ticktock │                  │ acklook      │  input,savemem    │              │
-    │              │                  │              │  terminal:*,     │              │
-    │ on ticktock: │                  │              │  editor:*, etc    │              │
-    │ build gadget │                  └──────┬───────┘                  └──────┬───────┘
-    │ state       │                           │                                │
-    │ diff→patch  │                           │ vm:loader                      │ loadmem
-    │ or paint    │                           │ vm:cli,vm:input                 │ gadgetserver-
-    └──────┬──────┘                           │                                 │ desync
-           │                                  │                                 │
-           │ gadgetclient:paint               │                                 │
-           │ gadgetclient:patch               │                                 ▼
-           ▼                                  │                         ┌──────────────┐
-    ┌──────────────┐                          │                         │   BRIDGE    │
-    │ GADGETCLIENT │                          │                         │  (no topics) │
-    │ (no topics)  │                          │                         │              │
-    │              │                          │                         │ bridge:join  │
-    │ paint→state  │                          │                         │ bridge:fetch │
-    │ patch→state  │                          │                         │ etc          │
-    │ reply desync │──────────────────────────┘                         └──────────────┘
-    └──────────────┘
-           ▲
-           │ register:input (from userinput, loader, etc)
-           │
-    ┌──────┴──────┐
-    │  USERINPUT  │
+           │ ticktock                 │ replynext    │                  │ vmlogin()    │
+           │                          │ ackoperator  │─────────────────►│ etc          │
+           │                          │ acklogin     │  register:       │              │
+           │                          │ ackzsswords  │  loginready      │              │
+           │ (vm.gadgetsynctick       │ acklook      │  input,savemem   │              │
+           │  emits gadgetclient:*    │              │  terminal:*,     │              │
+           │  inside the same tick)   │              │  editor:*, etc   │              │
+           │                          └──────┬───────┘                  └──────┬───────┘
+           │                                 │                                 │
+           ▼                                 │                                 │
+    ┌──────────────┐                          │ vm:loader                      │ loadmem
+    │ GADGETCLIENT │                          │ vm:cli, vm:input               │ vm:gadgetdesync
+    │ (no topics)  │                          │                                 │
+    │              │◄─────────────────────────┤                                 │
+    │ paint→state  │  gadgetclient:paint      │                                 ▼
+    │ patch→state  │  gadgetclient:patch      │                         ┌──────────────┐
+    │ reply desync │──────────────────────────┘                         │   BRIDGE     │
+    └──────────────┘  vm:gadgetdesync                                   │  (no topics) │
+           ▲                                                            │              │
+           │ register:input (from userinput, loader, etc)                 │ bridge:join  │
+           │                                                            │ bridge:fetch │
+    ┌──────┴──────┐                                                     │ etc          │
+    │  USERINPUT  │                                                     └──────────────┘
     │ (no topics) │  receives userinput:up, userinput:down (from UI)
     └─────────────┘
 ```
@@ -139,7 +137,7 @@ flowchart TB
          │         │
          │         ▼
          │    REGISTER (match iname=register, target→'ackoperator')
-         │         │ gadgetserverdesync(register, player)
+         │         │ vmgadgetdesync(register, player)
          │         │ loadmem(urlcontent) or bridgejoin()
          │         │
          │         ▼
@@ -155,46 +153,51 @@ flowchart TB
 
 ## Main message flows
 
-| From      | To         | Target               | Purpose                         |
-|-----------|------------|----------------------|---------------------------------|
-| vm/stub   | all        | `ready`              | Boot signal, session capture    |
-| clock     | vm         | `ticktock`           | Game loop tick                  |
-| clock     | gadgetserver | `ticktock`       | Render/sync tick                |
-| clock     | all        | `second`             | Keepalive, agent doot            |
-| register  | vm         | `vm:operator`        | Set operator player             |
-| register  | vm         | `vm:login`           | Player login                    |
-| register  | vm         | `vm:loader`          | Load books/content              |
-| register  | vm         | `vm:cli`             | CLI command                     |
-| register  | vm         | `vm:input`           | Keyboard/gamepad input          |
-| vm        | register   | `register:ackoperator`| Operator set ack                |
-| vm        | register   | `register:loginready` | Login result / logout ack      |
-| vm        | register   | `register:acklogin`  | Login success/failure           |
-| vm        | heavy      | `heavy:ttsinfo`      | TTS info request               |
-| vm        | heavy      | `heavy:ttsrequest`   | TTS audio request               |
-| vm        | heavy      | `heavy:modelprompt`  | Serialized classify then optional full agent LLM |
-| register  | gadgetserver | `gadgetserver:desync`| Request full paint (on ackoperator) |
-| register  | gadgetclient | (via api)           | Paint/patch from gadgetserver  |
-| gadgetserver | gadgetclient | `gadgetclient:paint` | Full state (desync)            |
-| gadgetserver | gadgetclient | `gadgetclient:patch` | Incremental patch              |
-| gadgetclient | gadgetserver | `gadgetserver:desync` | Reply on patch error           |
-| agents    | vm         | `vm:doot`            | Agent keepalive                 |
+| From      | To           | Target                      | Purpose                                    |
+|-----------|--------------|-----------------------------|--------------------------------------------|
+| vm/stub   | all          | `ready`                     | Boot signal, session capture               |
+| clock     | vm           | `ticktock`                  | Game loop tick                             |
+| clock     | all          | `second`                    | Keepalive, agent doot                      |
+| register  | vm           | `vm:operator`               | Set operator player                        |
+| register  | vm           | `vm:login`                  | Player login                               |
+| register  | vm           | `vm:loader`                 | Load books/content                         |
+| register  | vm           | `vm:cli`                    | CLI command                                |
+| register  | vm           | `vm:input`                  | Keyboard/gamepad input                     |
+| vm        | register     | `register:ackoperator`      | Operator set ack                           |
+| vm        | register     | `register:loginready`       | Login result / logout ack                  |
+| vm        | register     | `register:acklogin`         | Login success/failure                      |
+| vm        | heavy        | `heavy:ttsinfo`             | TTS info request                           |
+| vm        | heavy        | `heavy:ttsrequest`          | TTS audio request                          |
+| vm        | heavy        | `heavy:modelprompt`         | Serialized classify then optional full agent LLM |
+| vm        | gadgetclient | `gadgetclient:paint`        | Full gadget snapshot for one player        |
+| vm        | gadgetclient | `gadgetclient:patch`        | Per-player jsonpipe patch                  |
+| gadgetclient | vm        | `vm:gadgetdesync` (reply)   | Patch could not apply; ask for paint       |
+| register  | vm           | `vm:gadgetdesync`           | Force a fresh paint (e.g. after acklogin)  |
+| vm        | boardrunner  | `boardrunner:paint`         | Memory or per-boundary jsonpipe full sync  |
+| vm        | boardrunner  | `boardrunner:patch`         | Memory or per-boundary jsonpipe patch      |
+| vm        | boardrunner  | `boardrunner:tick`          | Run one board tick (board + ts + boundaries) |
+| userinput | boardrunner  | `boardrunner:input`         | Keyboard/gamepad input for the runner      |
+| boardrunner | vm         | `vm:boardrunnerack`         | Tick acknowledged; refresh runner budget   |
+| boardrunner | vm         | `vm:boardrunnerpatch`       | Boundary diff back to authoritative memory |
+| boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
+| agents    | vm           | `vm:doot`                   | Agent keepalive                            |
 
 ## Device summary
 
-| Device       | Topics               | Receives (directed)      | Role                          |
-|--------------|----------------------|--------------------------|-------------------------------|
-| clock        | (none)               | —                        | Emits ticktock, second        |
-| vm           | ticktock, second     | vm:*                     | Game logic, login, CLI, loader|
-| register     | ready, second, log, chat, toast | register:* | UI state, storage, bootstrap |
-| gadgetserver | tock, ticktock       | gadgetserver:*            | Gadget state → paint/patch    |
-| gadgetclient | (none)               | gadgetclient:*            | Receives paint/patch from api |
-| heavy        | (none)               | heavy:*                  | TTS, LLM (lazy-loaded)        |
-| bridge       | (none)               | bridge:*                  | Multiplayer / BBS             |
-| modem        | second               | modem:*                   | CRDT sync, presence           |
-| synth        | (none)               | synth:*                   | Audio playback                |
-| userinput    | (none)               | userinput:*               | Input up/down from UI         |
-| forward      | all                  | —                        | Peer sync (worker↔main)       |
-| agent_*      | second               | —                        | Per-agent device, doot to vm  |
+| Device       | Topics                          | Receives (directed)             | Role                                  |
+|--------------|---------------------------------|---------------------------------|---------------------------------------|
+| clock        | (none)                          | —                               | Emits ticktock, second                |
+| vm           | ticktock, second                | vm:*                            | Game logic, login, CLI, loader; per-tick gadget projection and boardrunner orchestration |
+| register     | ready, second, log, chat, toast | register:*                       | UI state, storage, bootstrap          |
+| gadgetclient | (none)                          | gadgetclient:*                   | Receives paint/patch from sim VM      |
+| boardrunner  | (none)                          | boardrunner:*                    | Per-board chip sim on a dedicated worker |
+| heavy        | (none)                          | heavy:*                          | TTS, LLM (lazy-loaded)                |
+| bridge       | (none)                          | bridge:*                         | Multiplayer / BBS                     |
+| modem        | second                          | modem:*                          | CRDT sync, presence                   |
+| synth        | (none)                          | synth:*                          | Audio playback                        |
+| userinput    | (none)                          | userinput:*                      | Input up/down from UI                 |
+| forward      | all                             | —                               | Cross-realm sync (worker↔main)        |
+| agent_*      | second                          | —                               | Per-agent device, doot to vm          |
 
 ## Routing rules (device.handle)
 

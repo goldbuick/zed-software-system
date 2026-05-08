@@ -5,7 +5,7 @@
 ## Dependencies
 
 - `zss/mapping/types` — MAYBE, isnumber, isstring
-- `zss/memory/boardoperations` — memoryevaldir
+- `zss/memory/boarddirection` — memoryevaldir
 - `zss/memory/types` — BOARD, BOARD_ELEMENT, BOOK
 - `./color` — STR_COLOR, mapcolortostrcolor, readcolor
 - `./dir` — EVAL_DIR, readdir

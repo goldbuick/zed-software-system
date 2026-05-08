@@ -10,7 +10,7 @@
 - `zss/mapping/*` — 2d, types
 - `zss/words/types` — PT, WORD
 - `./boardelement` — memoryboardelementisobject
-- `./boardoperations` — memoryreadelement, memoryreadterrain
+- `./boardaccess` — memoryreadelement, memoryreadterrain
 - `./bookoperations` — memoryreadelementdisplay
 - `./inspectionbatch` — memoryreadsecretheap
 - `./playermanagement` — memoryreadplayerboard

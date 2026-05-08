@@ -51,7 +51,7 @@ ZSS does not spawn OS threads; it uses the **browser main thread** and **dedicat
 | **Instantiation** | [`platform.ts`](../../platform.ts): `platform = isstub ? new stubspace() : new simspace()`. |
 | **`isstub` (1st arg to `createplatform`)** | **`isjoin()`** ([`feature/url.ts`](../../feature/url.ts)): if the page URL contains **`/join/`**, the **stub** worker is used; otherwise the full **sim** worker. |
 | **Bundler** | Vite worker entry: `./simspace??worker` or `./stubspace??worker` → [`simspace.ts`](../../simspace.ts) / [`stubspace.ts`](../../stubspace.ts). |
-| **Boot inside worker** | **simspace** imports `clock`, `gadgetserver`, `modem`, [`forward`](../forward.ts), and (via `started`) the real **`vm`**. **stubspace** imports only **`stub`** + `forward` (minimal `vm`-named device). Both assign `onmessage` → `forward(event.data)` into the **worker-local** hub. |
+| **Boot inside worker** | **simspace** imports `clock`, `modem`, [`forward`](../forward.ts), and (via `started`) the real **`vm`** — the VM tick is what produces gadget paint/patch through [`gadgetsynctick`](../vm/gadgetsynctick.ts) (no separate `gadgetserver` device). **stubspace** imports only **`stub`** + `forward` (minimal `vm`-named device). Both assign `onmessage` → `forward(event.data)` into the **worker-local** hub. |
 | **Post-start config** | Main sends `platform.postMessage({ target: 'config', data: climode })`. **simspace** handles it and calls [`setclimode`](../../feature/detect.ts) with the 2nd arg to `createplatform`. **stubspace** does not special-case `config` (message is forwarded into the stub hub). |
 
 ### Heavy worker (`heavyspace`)
@@ -68,7 +68,7 @@ ZSS does not spawn OS threads; it uses the **browser main thread** and **dedicat
 |--------|------|
 | **Instantiation** | [`platform.ts`](../../platform.ts): `boardrunner = new boardrunnerspace()` whenever `createplatform` runs—**always**, alongside heavy and sim or stub. |
 | **Bundler** | `./boardrunnerspace??worker` → [`boardrunnerspace.ts`](../../boardrunnerspace.ts). |
-| **Boot inside worker** | Imports [`device/boardrunner`](../boardrunner.ts) (creates the **`boardrunner`** device on **this** hub only), then `createforward` + `onmessage` per [`shouldforwardboardrunnertoclient`](../forward.ts). Reserved for future board-side work; v1 is plumbing only. |
+| **Boot inside worker** | Imports [`device/boardrunner`](../boardrunner.ts) (creates the **`boardrunner`** device on **this** hub only), then `createforward` + `onmessage` per [`shouldforwardboardrunnertoclient`](../forward.ts). The boardrunner device receives **memory + boundary jsonpipe** snapshots/patches (`boardrunner:paint` / `boardrunner:patch`), runs [`memorytickmain`](../../memory/runtime.ts) for whichever board it is currently elected on, and emits boundary patches back to the sim VM as `vm:boardrunnerack` / `vm:boardrunnerpatch`. |
 
 ### Order of operations (typical browser UI)
 
@@ -100,26 +100,25 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 
 | Device | Hub / realm | Subscribes (topics) | Role |
 |--------|----------------|---------------------|------|
-| `forward` | main + worker (each `createforward` instance) | `all` | Copies messages across `postMessage`; dedupes by `message.id` |
+| `forward` | main + each worker (one `createforward` instance per realm) | `all` | Copies messages across `postMessage`; dedupes by `message.id` |
 | `clock` | sim worker only | — | Emits `ticktock`, `second` |
-| `vm` | sim worker (real sim) | `ticktock`, `second` | Game VM, handlers under `vm/handlers/` |
+| `vm` | sim worker (real sim) | `ticktock`, `second` | Game VM. Handlers in [`vm/handlers/`](../vm/handlers/) (registry: [`registry.ts`](../vm/handlers/registry.ts)). On every `ticktock` it runs the player gadget projection ([`gadgetsynctick`](../vm/gadgetsynctick.ts)), elects/evicts boardrunners, jsonpipe-syncs memory + boundaries to the boardrunner worker ([`boardrunnermemorysync`](../vm/boardrunnermemorysync.ts), [`boardrunnerboundarysync`](../vm/boardrunnerboundarysync.ts)), and emits `boardrunner:tick` to each runner. |
 | `stub` (`name` **`vm`**) | stub worker only | — | Minimal stand-in for `vm` when using stubspace ([`stub.ts`](../stub.ts)) |
-| `gadgetserver` | sim worker | `tock`, `ticktock` | Builds gadget diff → `gadgetclient:paint` / `patch` |
 | `modem` | **both** hubs (imported in sim + userspace) | `second` | Sync / presence (per-realm instance) |
-| `register` | main | `ready`, `second`, `log`, `chat`, `toast` | UI edge: storage, tape, VM calls via `api` |
-| `gadgetclient` | main | — | Applies paint/patch to zustand |
+| `register` | main | `ready`, `second`, `log`, `chat`, `toast` | UI edge: storage, tape, VM calls via `api`; on `acklogin` triggers a `vm:gadgetdesync` so the worker repaints. |
+| `gadgetclient` | main | — | Applies `gadgetclient:paint` / `patch` (jsonpipe) to zustand state ([`gadget/data/state.ts`](../../gadget/data/state.ts)); replies `desync` on bad patches |
 | `userinput` | main | — | Keyboard/gamepad → `vm:*` / `register:*`. Device is **not** loaded from [`userspace.ts`](../../userspace.ts); it is created as a **side effect** of importing [`userinput.tsx`](../../gadget/userinput.tsx) when the UI mounts (e.g. [`Engine`](../../gadget/engine.tsx) → `UserFocus`, tape/terminal/editor imports). |
 | `bridge` | main | — | `bridge:*` multiplayer / fetch / streams |
 | `synth` | main | — | `synth:*` audio |
 | `heavy` | **heavy worker** hub ([`heavyspace.ts`](../../heavyspace.ts)) | — | TTS / LLM, **`heavy:agent*`** lifecycle ([`heavy.ts`](../heavy.ts), [`agentlifecycle.ts`](../../feature/heavy/agentlifecycle.ts)); reached via main `forward` → `postMessage` |
-| `boardrunner` | **boardrunner worker** hub ([`boardrunnerspace.ts`](../../boardrunnerspace.ts)) | — | Stub device ([`boardrunner.ts`](../boardrunner.ts)); worker plumbing for future board work; `boardrunner:*`, `second`, `ready` per [`shouldforwardclienttoboardrunner`](../forward.ts) |
+| `boardrunner` | **boardrunner worker** hub ([`boardrunnerspace.ts`](../../boardrunnerspace.ts)) | — | Real per-board sim ([`boardrunner.ts`](../boardrunner.ts)); receives `boardrunner:paint` / `patch` (memory + per-boundary jsonpipe), `boardrunner:tick` (board id + timestamp + boundary list), and `boardrunner:input`; runs [`memorytickmain`](../../memory/runtime.ts) for the assigned board and emits boundary patches back as `vm:boardrunnerack` / `vm:boardrunnerpatch`. Forwarded by [`shouldforwardclienttoboardrunner`](../forward.ts). |
 | `agent_<pid>` | **heavy worker** (per agent) | `second` | Keepalive → `vm:doot` ([`agent.ts`](../../feature/heavy/agent.ts)); roster persisted in IDB `storage` as `agents_roster` via `register:store` |
 | `SOFTWARE` | whichever hub loaded it | — | Session holder + `emit` helper |
 | **Ephemeral** `createdevice` | varies | — | e.g. one-off TTS in [`feature/tts.ts`](../../feature/tts.ts) |
 
-**stubspace** ([`stubspace.ts`](../../stubspace.ts)) only boots **stub** + **forward** (no clock / gadgetserver / modem imports there). **simspace** ([`simspace.ts`](../../simspace.ts)) boots clock, gadgetserver, modem, vm, and forward.
+**stubspace** ([`stubspace.ts`](../../stubspace.ts)) only boots **stub** + **forward** (no clock / modem imports there). **simspace** ([`simspace.ts`](../../simspace.ts)) boots clock, modem, vm, and forward — gadget paint/patch is produced by the VM tick directly (no `gadgetserver` device any more).
 
-> **Join / stub mode** — When the URL matches [`isjoin()`](../../feature/url.ts) (`/join/`), **`stubspace`** runs instead of **`simspace`**: there is **no** `clock`, **`gadgetserver`**, or sim **`modem`**. The threaded diagrams below are **sim-first**; in stub mode rely on this table and [what creates each thread or worker](#what-creates-each-thread-or-worker).
+> **Join / stub mode** — When the URL matches [`isjoin()`](../../feature/url.ts) (`/join/`), **`stubspace`** runs instead of **`simspace`**: there is **no** `clock` or sim **`modem`**, and the stub `vm` has no real handlers. The threaded diagrams below are **sim-first**; in stub mode rely on this table and [what creates each thread or worker](#what-creates-each-thread-or-worker).
 
 ---
 
@@ -136,11 +135,9 @@ flowchart TB
     Fw[forward]
     Cl[clock]
     VM[vm]
-    GS[gadgetserver]
     MdW[modem]
     Cl -->|ticktock| VM
     Cl -->|second| VM
-    Cl -->|ticktock| GS
   end
   subgraph Main_thread [Main_thread]
     direction TB
@@ -148,7 +145,7 @@ flowchart TB
     Reg[register]
     GC[gadgetclient]
     UI[userinput]
-    Br[bridge]
+    Brm[bridge]
     Sy[synth]
     MdM[modem]
     SW[SOFTWARE]
@@ -161,19 +158,20 @@ flowchart TB
   subgraph Boardrunner_worker [Boardrunner_worker]
     direction TB
     Fb[forward]
-    Br[boardrunner]
+    Brd[boardrunner]
   end
   Fw <-->|postMessage| Fm
   Fm <-->|postMessage| Fh
   Fm <-->|postMessage| Fb
-  Fb --> Br
+  Fb --> Brd
 ```
 
 **What crosses which bridge**
 
-- **Sim ↔ main** — `vm:*`, `modem:*`, `gadgetserver:*` (and related `desync` / `sync` / `joinack` paths) per [`shouldforwardclienttoserver`](../forward.ts) / [`shouldforwardservertoclient`](../forward.ts). **Gadget paint/patch** is `gadgetclient:*` from worker → main UI; **desync** from client → worker.
+- **Sim ↔ main** — `vm:*`, `modem:*`, `gadgetclient:*` paint/patch (sim → main), and `desync` / `sync` / `joinack` paths per [`shouldforwardclienttoserver`](../forward.ts) / [`shouldforwardservertoclient`](../forward.ts).
 - **Main ↔ heavy** — `heavy:*`, `second`, `ready`, and related ack paths per [`shouldforwardclienttoheavy`](../forward.ts) and server→client rules.
-- **Main ↔ boardrunner** — `boardrunner:*`, `second`, `ready` per [`shouldforwardclienttoboardrunner`](../forward.ts); worker → sim uses the same [`shouldforwardclienttoserver`](../forward.ts) gate as heavy in [`platform.ts`](../../platform.ts).
+- **Main ↔ boardrunner** — `boardrunner:*`, `second`, `ready` per [`shouldforwardclienttoboardrunner`](../forward.ts).
+- **Boardrunner ↔ sim** — Both directions are routed via main: [`platform.ts`](../../platform.ts) inspects each cross-realm message and, if it matches the destination's `shouldforward*` predicate, also `postMessage`s it to that worker. So a boardrunner-emitted `vm:boardrunnerpatch` reaches the sim VM without ever entering main's hub.
 
 **`vm:*`, `register:*`, `synth:*`** — Many entrypoints are listed in [`api.ts`](../api.ts).
 
@@ -196,18 +194,21 @@ flowchart LR
   end
   subgraph Sim_worker [Sim_worker]
     VM[vm]
-    GS[gadgetserver]
   end
   subgraph Heavy_worker [Heavy_worker]
     Hy[heavy]
     Ag[agent_*]
   end
+  subgraph Boardrunner_worker [Boardrunner_worker]
+    Brd[boardrunner]
+  end
   UI -->|vminput| VM
   RegIn -->|vmoperator_vmlogin_vmloader_vmcli| VM
   VM -->|register_acks_loginready| RegOut
-  VM -->|gadgetserver_desync| GS
-  GS -->|paint_patch| GC
-  GC -->|gadgetserver_desync| GS
+  VM -->|gadgetclient_paint_patch| GC
+  GC -->|vm_gadgetdesync| VM
+  VM -->|boardrunner_paint_patch_tick_input| Brd
+  Brd -->|vm_boardrunnerack_patch_playermovetoboard| VM
   VM -->|heavy_colon_star| Hy
   VM -->|synth_colon_star| Sy
   RegIn -->|heavy_agentstar_restoreagents| Hy
@@ -230,13 +231,11 @@ flowchart TB
     direction TB
     clock
     vm
-    gadgetserver
     modemSim["modem sim instance"]
-    clock -->|tick| vm
+    clock -->|ticktock| vm
     clock -->|second| vm
-    clock -->|tock| gadgetserver
     clock -->|second| modemSim
-    vm -->|gadgetserver_desync| gadgetserver
+    vm -->|gadgetsynctick_internal| vm
   end
   subgraph Main_thread [Main_thread]
     direction TB
@@ -252,10 +251,10 @@ flowchart TB
     vm -->|register_colon| register
     vm -->|reply_register_paths| register
     vm -->|synth_colon| synth
-    gadgetserver -->|gadgetclient_colon| gadgetclient
-    gadgetclient -->|gadgetserver_colon| gadgetserver
+    vm -->|gadgetclient_paint_patch| gadgetclient
+    gadgetclient -->|reply_vm_gadgetdesync| vm
     register -->|bridge_colon| bridge
-    register -->|gadgetserver_desync| gadgetserver
+    register -->|vm_gadgetdesync| vm
     apihelpers -->|log_chat_toast| register
     clock -->|second| register
     clock -->|second| modemMain
@@ -267,9 +266,12 @@ flowchart TB
   end
   subgraph Boardrunner_worker [Boardrunner_worker]
     boardrunnerDev[boardrunner]
+    boardrunnerDev -->|vm_boardrunnerack_vm_boardrunnerpatch| vm
+    boardrunnerDev -->|vm_playermovetoboard| vm
   end
   clock -->|second| agenth
   clock -->|second| boardrunnerDev
+  vm -->|boardrunner_paint_patch_tick_input| boardrunnerDev
   vm -->|heavy_colon| heavy
   vm -->|heavy_queryresult_etc| heavy
   heavy -->|vm_pilotclear_vm_lastinputtouch| vm
@@ -277,10 +279,10 @@ flowchart TB
 
 **Readout**
 
-- **Sim worker** — `clock`, `vm`, `gadgetserver`, one **`modem`** instance ([`simspace.ts`](../../simspace.ts)).
+- **Sim worker** — `clock`, `vm`, one **`modem`** instance ([`simspace.ts`](../../simspace.ts)). Gadget paint/patch is produced **inside** the VM tick by [`gadgetsynctick`](../vm/gadgetsynctick.ts) and emitted as `gadgetclient:paint` / `gadgetclient:patch`; there is no separate `gadgetserver` device any more.
 - **Main thread** — `register`, `gadgetclient`, `userinput`, `bridge`, `synth`, second **`modem`** instance ([`userspace.ts`](../../userspace.ts)), and `api`-driven emits (**`apihelpers`**); chips/UI often use **`SOFTWARE`** on whichever hub loaded them (sim for game logic).
 - **Heavy worker** — `heavy` plus dynamic **`agent_*`** devices ([`heavyspace.ts`](../../heavyspace.ts), [`feature/heavy/agent.ts`](../../feature/heavy/agent.ts)).
-- **Boardrunner worker** — stub **`boardrunner`** device ([`boardrunnerspace.ts`](../../boardrunnerspace.ts), [`boardrunner.ts`](../boardrunner.ts)); **`second`** reaches it after **sim → main → boardrunner** the same way as heavy.
+- **Boardrunner worker** — `boardrunner` device ([`boardrunnerspace.ts`](../../boardrunnerspace.ts), [`boardrunner.ts`](../boardrunner.ts)). The sim VM elects one player per active board to be its runner each tick ([`boardrunnermanagement.ts`](../vm/boardrunnermanagement.ts)). The runner receives memory + per-boundary jsonpipe paint/patch plus `boardrunner:tick`, runs [`memorytickmain`](../../memory/runtime.ts) for that board, and replies with `vm:boardrunnerack` and one `vm:boardrunnerpatch` per dirty boundary.
 - **`second`** — `clock` runs on sim; **`register`**, **main `modem`**, **`heavy`/`agent_*`**, and **`boardrunner`** receive **`second`** after **sim → main** forward (and main → heavy / boardrunner where applicable), same tick as sim-local `vm` / `modemSim`.
 
 Notes:
@@ -295,27 +297,25 @@ Notes:
 
 | First segment of `target` | Handler device | Handler thread | Mostly emitted from (typical) | Emitter thread |
 |---------------------------|----------------|----------------|-------------------------------|----------------|
-| `tick` | `vm` | Sim worker | `clock` | Sim worker |
-| `tock` | `gadgetserver` | Sim worker | `clock` | Sim worker |
+| `ticktock` | `vm` | Sim worker | `clock` | Sim worker |
 | `second` | `vm` | Sim worker | `clock` | Sim worker |
 | `second` | `modem` | Sim **or** main (two instances) | `clock` | Sim → forward → main |
 | `second` | `register` | Main thread | `clock` (forwarded) | Sim → main |
 | `second` | `heavy`, `agent_*` | Heavy worker | `clock` / main forward | Sim / main → heavy |
 | `second` | `boardrunner` | Boardrunner worker | `clock` / main forward | Sim / main → boardrunner |
-| `boardrunner` | `boardrunner` | Boardrunner worker | (reserved; API later) | main / sim → boardrunner |
+| `boardrunner` | `boardrunner` | Boardrunner worker | `vm` (`boardrunner:paint`, `boardrunner:patch`, `boardrunner:tick`, `boardrunner:idle`, `boardrunner:thud`, `boardrunner:start`), `userinput` (`boardrunner:input`) | Sim / main → boardrunner |
 | `ready` | all devices | per hub | `vm` / stub, [`platformready`](../api.ts) | Sim (or stub worker) |
 | `sessionreset` | all devices | per hub | [`sessionreset`](../api.ts) | usually main (`SOFTWARE`) |
-| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `heavy` (`vm:pilotclear`, `vm:lastinputtouch`), `SOFTWARE` | Main / sim / heavy → sim |
+| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `heavy` (`vm:pilotclear`, `vm:lastinputtouch`), `boardrunner` (`vm:boardrunnerack`, `vm:boardrunnerpatch`, `vm:playermovetoboard`), `gadgetclient` (`vm:gadgetdesync` reply), `SOFTWARE` | Main / sim / heavy / boardrunner → sim |
 | `register` | `register` | Main thread | `vm` (replies), `userinput`, `api` | Sim → main / main |
-| `gadgetserver` | `gadgetserver` | Sim worker | `gadgetclient`, `register`, `api` | Main → sim |
-| `gadgetclient` | `gadgetclient` | Main thread | `gadgetserver`, `api` | Sim → main / main |
+| `gadgetclient` | `gadgetclient` | Main thread | `vm` ([`gadgetsynctick`](../vm/gadgetsynctick.ts) → `gadgetclient:paint` / `gadgetclient:patch`), `api` | Sim → main / main |
 | `heavy` | `heavy` | Heavy worker | `vm`, `api`, [`query`](../vm/handlers/query.ts), [`pilot`](../vm/handlers/pilot.ts), **`heavy:modelprompt`** (serial: classify then optional full prompt), **`heavy:agent*`** / `heavy:restoreagents`, **`heavy:queryresult`** (sim → heavy, VM query replies) | Sim / main → heavy |
 | `synth` | `synth` | Main thread | `api` / firmware | Sim → main / main |
 | `bridge` | `bridge` | Main thread | `api` | Main |
 | `log` | `register` (topic) | Main thread | `api` `apilog`, firmware | any hub → often main |
 | `chat` | `register` (topic) | Main thread | `api` `apichat` | any hub → often main |
 | `toast` | `register` (topic) | Main thread | `api` `apitoast` | any hub → often main |
-| `{chipId}` | matching device id | **same hub as that chip** | `SOFTWARE.emit` from [`gamesend`](../../memory/gamesend.ts) / [`chip`](../../chip.ts) | Sim (typical) |
+| `{chipId}` | matching device id | **same hub as that chip** | `SOFTWARE.emit` from [`gamesend`](../../memory/gamesend.ts) / [`chip`](../../chip.ts) | Sim / boardrunner (typical) |
 
 **Topic vs directed for `register`:** `log`, `chat`, and `toast` use targets with **no** `:` — they match **`register`’s subscribed topics**, not `register:something` directed paths. Other `register:*` messages (e.g. `register:terminal:open`) are directed; see [Rules of the road](#rules-of-the-road) and [`device.ts`](../../device.ts) `parsetarget`.
 
@@ -323,7 +323,7 @@ Nested paths (`register:terminal:open`, `gadgetclient:paint`) still belong to th
 
 ### Machine-readable source
 
-Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **`heavy:*`**, **`gadgetclient:*`**, **`gadgetserver:*`** are the string literals passed to `device.emit` in [`device/api.ts`](../api.ts). `vm` subtargets are dispatched in [`vm/handlers/registry.ts`](../vm/handlers/registry.ts).
+Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **`heavy:*`**, **`gadgetclient:*`**, **`boardrunner:*`** are the string literals passed to `device.emit` in [`device/api.ts`](../api.ts). `vm` subtargets are dispatched in [`vm/handlers/registry.ts`](../vm/handlers/registry.ts).
 
 ---
 
@@ -333,12 +333,13 @@ Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **
 
 - `vm:*`
 - `modem:*`
-- `gadgetserver:*`
-- plus paths ending with `sync`, `desync`, `joinack` on composite targets
+- plus the path suffixes `sync`, `desync`, `joinack` on composite targets
 
-**Heavy** and **second** / **ready** follow [`shouldforwardclienttoheavy`](../forward.ts). Tick/tock are generally **not** forwarded to heavy.
+**Server → client** ([`shouldforwardservertoclient`](../forward.ts)) covers `vm`, `heavy`, `boardrunner`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, plus topics `log`, `chat`, `ticktock`, `ready`, `toast`, `second`, and the composite path suffixes `sync`, `heavy`, `joinack`, `acklook`, `acklogin`, `ackoperator`, `ackzsswords`, `gadgetclient`.
 
-**Boardrunner** follows [`shouldforwardclienttoboardrunner`](../forward.ts) (`boardrunner:*`, `second`, `ready`; not `tock` / `ticktock`).
+**Heavy** and **second** / **ready** follow [`shouldforwardclienttoheavy`](../forward.ts). `ticktock` is **not** forwarded to heavy.
+
+**Boardrunner** follows [`shouldforwardclienttoboardrunner`](../forward.ts) (`boardrunner:*`, `second`, `ready`; not `ticktock`). [`platform.ts`](../../platform.ts) additionally re-applies the `shouldforwardclienttoserver` / `shouldforwardclienttoheavy` / `shouldforwardclienttoboardrunner` predicates to messages **received from** the heavy and boardrunner workers, so worker → worker traffic (e.g. boardrunner → sim VM) is relayed through main without entering main's hub.
 
 ---
 

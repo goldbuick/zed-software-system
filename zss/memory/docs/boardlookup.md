@@ -6,7 +6,7 @@
 
 - `zss/mapping/types` — MAYBE, ispresent, isstring
 - `zss/words/types` — CATEGORY, COLLISION, NAME
-- `./boardoperations` — memoryboardelementindex
+- `./boardaccess` — memoryboardelementindex (moved out of `boardoperations.ts`)
 - `./bookoperations` — memoryreadelementdisplay
 - `./codepageoperations` — memoryapplyelementstats, memoryreadcodepagestatsfromtext
 

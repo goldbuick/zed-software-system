@@ -10,11 +10,12 @@ This document categorizes and summarizes all exported functions from the `device
 3. [Register Device](#register-device)
 4. [Audio & Synthesis](#audio--synthesis)
 5. [Bridge & Networking](#bridge--networking)
-6. [Gadget Client/Server](#gadget-clientserver)
-7. [Message Forwarding](#message-forwarding)
-8. [Modem (Shared State)](#modem-shared-state)
-9. [Session & Lifecycle](#session--lifecycle)
-10. [Types & Utilities](#types--utilities)
+6. [Gadget Client](#gadget-client)
+7. [Boardrunner](#boardrunner)
+8. [Message Forwarding](#message-forwarding)
+9. [Modem (Shared State)](#modem-shared-state)
+10. [Session & Lifecycle](#session--lifecycle)
+11. [Types & Utilities](#types--utilities)
 
 ---
 
@@ -81,6 +82,18 @@ Core virtual machine operations for managing game state, memory, code execution,
 - `vmcodeaddress(book, path)` - Generate code address from book and path
 - `vmcodewatch(device, player, book, path)` - Start watching code changes
 - `vmcoderelease(device, player, book, path)` - Stop watching code changes
+
+### Pilot / Input Plumbing
+- `vmpilotstart(device, player, x, y)` - Start pilot at point
+- `vmpilotstop(device, player)` - Stop pilot
+- `vmpullvarresult(device, player, data)` - Forward a queued read-flag result back to the VM
+- `vmlastinputtouch(device, player, targetplayer)` - Refresh "last input" timestamp for a player
+- `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Boardrunner asks the sim VM to relocate a player
+- `vmgadgetdesync(device, player)` - Ask the sim VM to repaint this player's gadget state
+
+### Boardrunner Acks
+- `vmboardrunnerack(device, player)` - Boardrunner ack of a `boardrunner:tick`; refreshes ack budget
+- `vmboardrunnerpatch(device, player, patch, boundary?)` - Boardrunner sends a boundary jsonpipe patch back to authoritative memory
 
 ### Content & Discovery
 - `vmzztsearch(device, player, field, text)` - Search Museum of ZZT
@@ -218,19 +231,40 @@ Functions for network operations, streaming, and external service integration.
 
 ---
 
-## Gadget Client/Server
+## Gadget Client
 
-**File:** `gadgetserver.ts`, `gadgetclient.ts` (via api.ts)
+**File:** `gadgetclient.ts` (via api.ts)
 
-Functions for managing gadget (UI) state synchronization between server and client.
+Per-player gadget state synchronization. The previous `gadgetserver` device has been removed; the equivalent paint/patch is produced **inside the sim VM tick** by [`gadgetsynctick`](vm/gadgetsynctick.ts) and dispatched via the helpers below.
 
-### Server Operations
-- `gadgetserverdesync(device, player)` - Force desync and full state refresh
-- `gadgetserverclearscroll(device, player)` - Clear scroll on server
-
-### Client Operations
+### Sim → Client
 - `gadgetclientpaint(device, player, json)` - Paint full gadget state (desync)
-- `gadgetclientpatch(device, player, json)` - Apply incremental patch to gadget state
+- `gadgetclientpatch(device, player, patch)` - Apply jsonpipe (RFC 6902) patch to gadget state
+
+### Client → Sim
+- `vmgadgetdesync(device, player)` - Ask the sim VM to repaint after a bad patch (also called by `register` after `acklogin`)
+
+---
+
+## Boardrunner
+
+**File:** `boardrunner.ts` (via api.ts)
+
+Per-board chip simulation that runs inside the **boardrunner worker**. The sim VM elects one player per active board to be its runner ([`vm/boardrunnermanagement.ts`](vm/boardrunnermanagement.ts)) and streams the data the runner needs.
+
+### VM → Boardrunner
+- `boardrunnerstart(device, player)` - Set the runner's assigned player (one-shot)
+- `boardrunnertick(device, player, board, timestamp, boundaries)` - Drive one tick on the runner for `board` with the listed boundary ids
+- `boardrunnerpaint(device, player, doc, boundary?)` - Full jsonpipe sync of memory (no `boundary`) or a single boundary slice
+- `boardrunnerpatch(device, player, patch, boundary?)` - jsonpipe patch of memory or a single boundary slice
+- `boardrunnerinput(device, player, input, mods)` - Forward keyboard / gamepad input to the runner
+- `boardrunneridle(device, player)` - Tell the previously-assigned runner that it is no longer the runner for that board
+- `boardrunnerthud(device, player, thudplayer)` - Report a failed move back to the runner
+
+### Boardrunner → VM
+- `vmboardrunnerack(device, player)` - Ack a `boardrunner:tick`
+- `vmboardrunnerpatch(device, player, patch, boundary?)` - Send a boundary jsonpipe patch back to authoritative memory
+- `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Ask the sim VM to relocate a player
 
 ---
 
@@ -245,11 +279,13 @@ Functions for managing message forwarding between peers, server, client, and hea
 
 ### Forwarding Rules
 - `shouldnotforwardonpeerserver(message)` - Check if message should NOT forward on peer server
-- `shouldforwardservertoclient(message)` - Check if message should forward server→client
+- `shouldforwardservertoclient(message)` - Check if message should forward sim→client (covers `vm`, `heavy`, `boardrunner`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, plus `log/chat/ticktock/ready/toast/second` topics and `sync/heavy/joinack/acklook/acklogin/ackoperator/ackzsswords/gadgetclient` path suffixes)
 - `shouldnotforwardonpeerclient(message)` - Check if message should NOT forward on peer client
-- `shouldforwardclienttoserver(message)` - Check if message should forward client→server
-- `shouldforwardclienttoheavy(message)` - Check if message should forward client→heavy
+- `shouldforwardclienttoserver(message)` - Check if message should forward client→sim (`vm:*`, `modem:*`, `*sync` / `*desync` / `*joinack`)
+- `shouldforwardclienttoheavy(message)` - Check if message should forward client→heavy (`heavy:*`, `second`, `ready`, `*acklook`)
 - `shouldforwardheavytoclient(message)` - Check if message should forward heavy→client
+- `shouldforwardclienttoboardrunner(message)` - Check if message should forward client→boardrunner (`boardrunner:*`, `second`, `ready`)
+- `shouldforwardboardrunnertoclient(message)` - Check if message should forward boardrunner→client
 
 ---
 
@@ -323,26 +359,6 @@ Functions for session management and device lifecycle.
 
 ---
 
-## Summary Statistics
-
-- **Total Exported Functions:** ~127
-- **API Functions:** ~80 (messaging helpers)
-- **Device-Specific Functions:** ~47 (direct device operations)
-- **Types & Interfaces:** ~10
-
-### By Category
-1. **API & Messaging:** ~80 functions
-2. **VM Operations:** ~30 functions
-3. **Register Operations:** ~20 functions
-4. **Audio/Synth/Heavy:** ~18 functions
-5. **Bridge/Networking:** ~10 functions
-6. **Modem/Shared State:** ~8 functions
-7. **Gadget:** ~4 functions
-8. **Forwarding:** ~7 functions
-9. **Lifecycle:** ~2 functions
-
----
-
 ## Notes
 
 - Most functions follow the pattern: `device.emit(player, target, data)`
@@ -351,4 +367,3 @@ Functions for session management and device lifecycle.
 - The system uses a message-passing architecture with devices as message handlers
 - Session management ensures messages are scoped to the correct session
 - Player filtering ensures messages are routed to the correct player
-

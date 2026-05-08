@@ -8,11 +8,16 @@
 - `zss/mapping/tick` — TICK_FPS
 - `zss/words/dir` — dirfrompts, ptapplydir
 - `zss/words/types` — COLLISION, PT
+- `./boardaccess` — memoryboardelementindex, memoryreadobject, memoryreadterrain
 - `./boardelement` — memoryboardelementisobject
-- `./boardoperations` — memoryreadobject, memoryreadterrain, memorydeleteboardobject, etc.
+- `./boardlifecycle` — memorydeleteboardobject
+- `./boards` — memorycheckelementpushable, memoryreadelementstat
+- `./boardtransitions` — memoryplayerblockedbyedge, memoryplayerwaszapped
 - `./gamesend` — memorysendtoelement
+- `./runtimeboundary` — memoryreadboardruntime (for the cached `lookup` table)
 - `./spatialqueries` — memorycheckcollision
-- `./playermanagement` — memorymoveplayertoboard
+
+> **Cross-board moves** are not in this module any more. The boardrunner asks the sim VM via `vm:playermovetoboard` ([`vmplayermovetoboard`](../../device/api.ts)), which calls [`memorymoveplayertoboard`](../playermanagement.ts).
 
 ## Exports
 

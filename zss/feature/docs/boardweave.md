@@ -6,7 +6,14 @@
 
 - `zss/mapping/2d` — indextopt, pttoindex
 - `zss/mapping/types` — deepcopy, ispresent
-- `zss/memory/*` — board ops, movement, collision, groups, export/import for rollback
+- `zss/memory/boardaccess` — memoryreadelement
+- `zss/memory/boardelement` — memoryboardelementisobject
+- `zss/memory/boardlifecycle` — memorycreateboard, memoryreadgroup
+- `zss/memory/boardmovement` — `* as boardmovement`
+- `zss/memory/boards` — memorycheckelementpushable, memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
+- `zss/memory/boardtransitions` — memoryptwithinboard
+- `zss/memory/runtimeboundary` — memoryreadboardruntime
+- `zss/memory/spatialqueries` — memorycheckcollision
 - `zss/words/reader` — READ_CONTEXT
 - `zss/words/types` — COLLISION, PT
 

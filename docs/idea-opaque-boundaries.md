@@ -1,6 +1,8 @@
-# Opaque Boundries 
+# Opaque Boundaries
 
-What is an opaque boundry?
+> **Status:** implemented. Live as `zss/memory/boundaries.ts` (the keyed slice store) and `zss/memory/boundaryrouting.ts` (`memorycollectboundaryidsforboard`). The boardrunner worker (`zss/device/boardrunner.ts`) and the sim VM (`zss/device/vm/boardrunnermemorysync.ts`, `zss/device/vm/boardrunnerboundarysync.ts`) ship them through `jsonpipe` (see `zss/feature/jsonpipe/README.md`).
+
+What is an opaque boundary?
 a way to isolate parts of a nested tree for more concise diffing 
 
 1. We have a top-level key => value map.

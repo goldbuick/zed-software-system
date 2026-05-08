@@ -10,7 +10,8 @@
 - `zss/gadget/data/api` — gadget*
 - `zss/mapping/*` — 2d, func, tick, types
 - `zss/words/types` — CATEGORY, COLOR, PT, WORD
-- `./boardoperations` — memorycreateboardobject, memoryreadelement, memorysafedeleteelement, memorywriteterrain
+- `./boardaccess` — memoryreadelement
+- `./boardlifecycle` — memorycreateboardobject, memorysafedeleteelement, memorywriteterrain
 - `./bookoperations` — memoryreadelementdisplay
 - `./inspection` — memoryinspect*
 - `./inspectionstyle` — memoryinspectstyle, memoryinspectstylemenu

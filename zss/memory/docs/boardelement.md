@@ -17,6 +17,7 @@
 |--------|-------------|
 | `memoryapplyboardelementcolor(element, strcolor)` | Set element color/bg from STR_COLOR |
 | `memoryexportboardelement` | Format for export (object vs terrain) |
+| `memoryexportboardelementasjson` | Plain JSON export for editor / wire use |
 | `memoryimportboardelement` | Unformat from entry |
 | `memoryboardelementisobject` | element.category === CATEGORY.ISOBJECT |
 | `memorycreateboardelement` | New element with createsid() |

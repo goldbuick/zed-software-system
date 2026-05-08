@@ -52,10 +52,9 @@ These modules call `gadgettext` / `gadgethyperlink` in sequence and assign `shar
 ### Clearing the panel vs unlocking scroll
 
 - [`gadgetclearscroll`](../data/api.ts) sets `scrollname` to `''` and `scroll` to `[]` for that player (local gadget state only).
-- [`vmclearscroll`](../../device/api.ts) emits `vm:clearscroll`. The VM handler [`handleclearscroll`](../../device/vm/handlers/scroll.ts) walks the player’s board objects and calls [`memoryunlockscroll`](../../memory/runtime.ts) so each chip’s **scroll lock** can clear (`scrollunlock` on the element).
-- The gadget server, on a client `clearscroll` message, calls **both** `gadgetclearscroll` and `vmclearscroll` so the UI empties and locks release ([`zss/device/gadgetserver.ts`](../../device/gadgetserver.ts)).
+- [`vmclearscroll`](../../device/api.ts) emits `vm:clearscroll`. The VM handler [`handleclearscroll`](../../device/vm/handlers/scroll.ts) walks the player's board objects and calls [`memoryunlockscroll`](../../memory/runtime.ts) so each chip's **scroll lock** can clear (`scrollunlock` on the element); it also calls `gadgetclearscroll` for the player so the panel empties on the next sim → client gadget patch.
 
-So: **`clearscroll` is not only “clear pixels”** — it also propagates unlocks. **`gadgetclearscroll` alone** only clears stored panel content.
+So: **`clearscroll` is not only “clear pixels”** — it also propagates unlocks. **`gadgetclearscroll` alone** only clears stored panel content (no chip unlock).
 
 ### Scroll lock (element → player)
 
@@ -86,7 +85,7 @@ Registered in [`zss/device/vm/handlers/registry.ts`](../../device/vm/handlers/re
 | `refscroll` | [`handlerefscroll`](../../device/vm/handlers/scroll.ts) | Loads `refscroll:menu` with title `#help or $meta+h` via [`scrollwritelines`](../data/scrollwritelines.ts). |
 | `gadgetscroll` | [`handlegadgetscroll`](../../device/vm/handlers/scroll.ts) | Payload `{ scrollname, content, chip? }` → `scrollwritelines`. API: [`vmgadgetscroll`](../../device/api.ts). |
 | `makeitscroll` | [`handlemakeitscroll`](../../device/vm/handlers/scroll.ts) | [`memorymakeitscroll`](../../memory/inspectionmakeit.ts) → title `makeit`. |
-| `clearscroll` | [`handleclearscroll`](../../device/vm/handlers/scroll.ts) | Unlocks scroll on all objects on the player’s board; does not clear gadget state by itself (pair with `gadgetclearscroll` / gadget server flow). |
+| `clearscroll` | [`handleclearscroll`](../../device/vm/handlers/scroll.ts) | Calls [`gadgetclearscroll`](../data/api.ts) to empty the panel on the next gadget patch and walks the player's board objects calling [`memoryunlockscroll`](../../memory/runtime.ts) to release any chip scroll locks. |
 | `bookmarkscroll` | [`handlebookmarkscroll`](../../device/vm/handlers/bookmarkscroll.ts) | [`memorybookmarkscroll`](../../memory/bookmarkscroll.ts): header links + `gadgetbbar`, then [`scrollwritelines`](../../gadget/data/scrollwritelines.ts) for list rows. |
 | `editorbookmarkscroll` | [`handleeditorbookmarkscroll`](../../device/vm/handlers/editorbookmarkscroll.ts) | [`memoryeditorbookmarkscroll`](../../memory/editorbookmarkscroll.ts): snapshot link + `gadgetbbar`, then `scrollwritelines` for entries. |
 | `readzipfilelist` | [`handlereadzipfilelist`](../../device/vm/handlers/zipfile.ts) | Title `zipfilelist`; Zed `!` lines via `scrollwritelines`, chip `zipfilelist`. |

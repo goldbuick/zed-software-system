@@ -58,13 +58,15 @@ zss/lang/       Script compiler pipeline (lexer → AST → JS for chips)
 Boot flow:
 
 1. [`cafe/index.tsx`](../cafe/index.tsx) loads [`zss/userspace.ts`](userspace.ts) (side-effect imports of main-thread devices), then renders [`cafe/app.tsx`](../cafe/app.tsx) → [`zss/gadget/engine.tsx`](gadget/engine.tsx).
-2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **heavyspace** (LLM/TTS-heavy work) and **simspace** or **stubspace** (simulation).
+2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **heavyspace** (LLM/TTS-heavy work), **boardrunnerspace** (per-board sim), and **simspace** or **stubspace** (authoritative VM).
 
-[`zss/simspace.ts`](simspace.ts) runs **inside the worker**: imports clock, gadgetserver, modem, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts).
+[`zss/simspace.ts`](simspace.ts) runs **inside the sim worker**: imports `clock` and `modem`, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts) which dispatches per-tick handlers (including the per-player gadget projection in [`gadgetsynctick`](device/vm/gadgetsynctick.ts)).
+
+[`zss/boardrunnerspace.ts`](boardrunnerspace.ts) runs **inside the boardrunner worker**: imports [`device/boardrunner`](device/boardrunner.ts), which receives jsonpipe paint/patch slices of memory ("boundaries") for the board it has been elected to run, executes [`memorytickmain`](memory/runtime.ts) for that board, and emits boundary patches back to the sim VM.
 
 [`zss/userspace.ts`](userspace.ts) registers **main-thread** devices: `gadgetclient`, `modem`, `bridge`, `register`, `synth`.
 
-**Important detail:** each realm (main window vs worker) has its **own** [`hub`](hub.ts) instance (separate JS globals). [`zss/device/forward.ts`](device/forward.ts) bridges realms: a `forward` device subscribes to topic `all`, dedupes by `message.id`, and either invokes the local `hub` or `postMessage`s to the parent/worker per `shouldforward*` helpers in that file.
+**Important detail:** each realm (main window vs each worker) has its **own** [`hub`](hub.ts) instance (separate JS globals). [`zss/device/forward.ts`](device/forward.ts) bridges realms: a `forward` device subscribes to topic `all`, dedupes by `message.id`, and either invokes the local `hub` or `postMessage`s to the parent/worker per `shouldforward*` helpers in that file. [`zss/platform.ts`](platform.ts) wires sim ↔ main, heavy ↔ main, and boardrunner ↔ main, and also re-routes worker-originated messages between workers via main when their target prefix matches the destination realm.
 
 ```mermaid
 flowchart LR
@@ -76,22 +78,25 @@ flowchart LR
     HubMain[hub]
     ForwardMain[forward device]
   end
-  subgraph worker [simspace worker]
+  subgraph sim [sim worker]
     VM[vm]
     Clock[clock]
-    GadgetServer[gadgetserver]
-    HubWorker[hub]
-    ForwardWorker[forward device]
+    Modem[modem]
+    HubSim[hub]
+    ForwardSim[forward device]
   end
   subgraph heavy [heavy worker]
     HeavyDev[heavy features]
   end
-  ForwardMain <-->|postMessage| ForwardWorker
+  subgraph br [boardrunner worker]
+    BoardRunner[boardrunner]
+  end
+  ForwardMain <-->|postMessage| ForwardSim
   ForwardMain <-->|postMessage| HeavyDev
+  ForwardMain <-->|postMessage| BoardRunner
   HubMain --> Register
   HubMain --> GadgetClient
-  HubWorker --> VM
-  HubWorker --> GadgetServer
+  HubSim --> VM
 ```
 
 CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips Canvas and calls `createplatform(..., true)` so Playwright drives the same stack without WebGL.
@@ -115,7 +120,14 @@ Authoritative diagrams: [`zss/device/docs/message-flow.md`](device/docs/message-
 
 ## VM and handlers (game / OS logic)
 
-[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `ticktock`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `ticktock`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts).
+[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `ticktock`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `ticktock`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts) (including the **boardrunner election** maps: `boardrunners` board → player, `boardrunneracks` ack budget, `boardrunnerblocked`).
+
+Each [`ticktock`](device/vm/handlers/ticktock.ts) the VM:
+
+1. Drives the `pilot` system and ticks loaders ([`memorytickloaders`](memory/runtime.ts)).
+2. Builds per-player gadget projections (paint/patch to `gadgetclient`) via [`gadgetsynctick`](device/vm/gadgetsynctick.ts).
+3. Re-elects a runner per active board (`boardrunnerelect` / `boardrunnerevict`), enforces an ack budget, and emits `boardrunner:tick` to each elected runner with the board id, timestamp, and the list of [boundary ids](memory/boundaryrouting.ts) needed to run that board.
+4. Streams memory and boundary diffs to the boardrunner worker through [`boardrunnermemorysync`](device/vm/boardrunnermemorysync.ts) and [`boardrunnerboundarymemorysync`](device/vm/boardrunnerboundarysync.ts) (jsonpipe full sync + patches).
 
 The **`register`** device ([`zss/device/register.ts`](device/register.ts)) is the **UI-facing edge**: storage, session, tape/terminal/editor zustand stores, and it **emits** `vm:*` calls (via [`zss/device/api.ts`](device/api.ts)) so user actions become VM work.
 
@@ -156,9 +168,11 @@ Shared stdlib: `audio`, `board`, `network`, `transform`, `element`. Example runt
 
 Rough pipeline:
 
-1. **`gadgetserver`** (worker, on `tock`): diff memory → **paint** or **patch** messages to **`gadgetclient`**.
-2. **`gadgetclient`** (main): updates **zustand** state in [`zss/gadget/data/state.ts`](gadget/data/state.ts) (`useGadgetClient`, tape/editor/inspector stores).
+1. **`gadgetsynctick`** (sim worker, called from the VM `ticktock` handler in [`device/vm/handlers/ticktock.ts`](device/vm/handlers/ticktock.ts)): for every active player, projects the cached per-board gadget layers ([`memoryreadbookgadgetlayersforboard`](memory/gadgetlayersflags.ts)) plus the live control layer into the player's gadget state, then emits **`gadgetclient:patch`** (or **`gadgetclient:paint`** when the player asks for a desync) via [`device/api.ts`](device/api.ts).
+2. **`gadgetclient`** (main, [`device/gadgetclient.ts`](device/gadgetclient.ts)): replays the jsonpipe paint/patch into the **zustand** store in [`zss/gadget/data/state.ts`](gadget/data/state.ts) (`useGadgetClient`, tape/editor/inspector stores). Bad patches reply `gadgetdesync` to the sim VM.
 3. **`Engine`** / [`zss/screens/`](screens/) / [`zss/gadget/display/`](gadget/display/): R3F orthographic scene, tiles/sprites, CRT-style effects, tape UI.
+
+Note that the previous `gadgetserver` device has been removed: the same paint/patch messages are now produced **inside the VM tick** (no separate device or `tock` topic), and the `boardrunner` worker handles the per-board chip simulation that used to share that hub.
 
 **Tape editor / terminal input:** [`zss/screens/tape/autocomplete.ts`](screens/tape/autocomplete.ts) computes `#` command and word-list suggestions from lexer tokens and firmware word tables; [`zss/screens/tape/commandarghints.ts`](screens/tape/commandarghints.ts) loads optional long-form help from ROM keys `editor:commands:<name>` (Markdown with YAML `hint:` or legacy `desc;…` lines), cached per command. [`zss/screens/tape/autocompleteui.ts`](screens/tape/autocompleteui.ts) shares suggestion-apply and terminal hint placement. See [`zss/screens/tape/README.md`](screens/tape/README.md).
 
@@ -188,4 +202,4 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 ## Mental model (one paragraph)
 
-**ZSS** keeps **game and engine state in memory**, runs **script as compiled code on chips** with **firmware** defining the command vocabulary, and uses a **session-scoped message hub** so the **VM (worker)** and **React UI (main)** stay loosely coupled: UI sends `vm:*` messages, VM mutates memory and drives **gadgetserver** updates, and the **gadgetclient** store feeds the Three.js terminal aesthetic.
+**ZSS** keeps **game and engine state in memory**, runs **script as compiled code on chips** with **firmware** defining the command vocabulary, and uses a **session-scoped message hub** so the **VM (sim worker)**, the **boardrunner worker** (per-board chip ticks), the **heavy worker** (LLM / TTS), and the **React UI (main)** stay loosely coupled: UI sends `vm:*` messages, the VM mutates memory and elects a player on each active board to be its **boardrunner** (jsonpipe-synced board + boundary slices), each tick the VM also projects the per-player gadget state into **`gadgetclient:patch`** messages, and the **gadgetclient** store feeds the Three.js terminal aesthetic.

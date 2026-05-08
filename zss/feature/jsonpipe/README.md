@@ -1,44 +1,64 @@
 # jsonpipe v1
 
-Plain JSON sync with the **same mechanic as gadget** ([`zss/device/gadgetserver.ts`](../../device/gadgetserver.ts) → [`gadgetclient`](../../device/gadgetclient.ts)): ship a full snapshot once, then RFC 6902 **patch** streams. Jsonpipe uses different wire names on purpose:
+Plain JSON sync with the **same mechanic** the sim VM uses to feed the [`gadgetclient`](../../device/gadgetclient.ts) ([`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) → `gadgetclient:paint` / `patch`): ship a full snapshot once, then RFC 6902 **patch** streams. Jsonpipe uses different in-code names on purpose:
 
-| Gadget | Jsonpipe |
+| Gadget wire (vm → gadgetclient) | Jsonpipe handle |
 |--------|----------|
-| paint | **fullsync** |
-| patch | **patch** |
+| `paint` | **`applyfullsync`** |
+| `patch` | **`emitdiff`** / **`applyremote`** |
 
-Implementation uses **fast-json-patch duplex** [`observe` / `generate`](https://github.com/Starcounter-Jack/JSON-Patch) — **not** `compare` — so deltas come from the library mirror vs the live object.
+Implementation uses **fast-json-patch** [`compare` / `applyPatch`](https://github.com/Starcounter-Jack/JSON-Patch) against an internal **shadow copy** of the latest sync, so deltas come from the shadow vs the live object you pass in.
 
 ## Files
 
 | File | Role |
 |------|------|
-| [`jsonpipe.ts`](jsonpipe.ts) | `filterpatch`, `createjsonpipe`, `applypatchtoreplica` |
-| [`observe.ts`](observe.ts) | Short header comment + re-exports (prefer importing from here or `jsonpipe.ts`) |
+| [`observe.ts`](observe.ts) | `filterpatch`, `createjsonpipe`, `JSON_PIPE_HANDLE<T>`, `Operation` |
 | [`__tests__/jsonpipe.test.ts`](__tests__/jsonpipe.test.ts) | Unit tests |
+
+## API
+
+```ts
+type JSON_PIPE_HANDLE<T> = {
+  emitdiff: (root: T) => Operation[]
+  isdesynced: () => boolean
+  applyremote: (root: T, patch: Operation[]) => MAYBE<T>
+  applyfullsync: (doc: T) => T
+  cleardesync: () => void
+  forcedesync: () => void
+}
+
+createjsonpipe<T>(init: T, shouldemitpath: (path: string) => boolean): JSON_PIPE_HANDLE<T>
+filterpatch(ops: Operation[], shouldemitpath: (path: string) => boolean): Operation[]
+```
 
 ## Duplex flow
 
-1. **Local → wire:** mutate `getroot()` / observed tree → **`emitdiff()`** runs **`generate`** then **`filterpatch(shouldemitpath)`**. Empty array means nothing to send. The mirror is updated inside **`generate`**.
+1. **Local → wire:** call **`emitdiff(root)`**. The handle runs `compare(shadow, root)`, copies the new root into `shadow` if there is any delta, then runs **`filterpatch(shouldemitpath)`**. An empty array means nothing to send.
 
-2. **Remote → no echo:** **`applyremote(patch)`** applies **`filterpatch`** → **`applyPatch`** on the observed root → **`generate`** again and **discard** the return value so the internal mirror matches and remote edits are not mistaken for local outbound deltas.
+2. **Remote → no echo:** call **`applyremote(root, patch)`**. Returns `root` unchanged if every op was filtered out. Otherwise applies the filtered patch with `applyPatch(root, …, validate=true, mutateDocument=false)`, refreshes `shadow` with the new document, and returns it. If `applyPatch` throws, the pipe flips to **desynced** and returns `undefined` so the caller can request a fresh paint.
 
-3. **Full replace:** **`applyfullsync(doc)`** **`unobserve`**s, **`deepcopy`**s the payload into a new root, **`observe`**s again. Prefer **`deepcopy`** on wire **`fullsync`** payloads so you do not alias live graphs.
+3. **Full replace:** **`applyfullsync(doc)`** clears the desync flag and replaces the shadow with a `deepcopy(doc)` (or pass it through if the caller already owns the document). Use this on `paint` / `boardrunner:paint` envelopes.
 
-4. **Peers without an observer:** **`applypatchtoreplica`** — **`filterpatch`** + **`applyPatch`** on a **`deepcopy(doc)`** (gadgetclient-style); returns `{ ok, newdocument }` or `{ ok, error }`.
+4. **Desync recovery:** **`isdesynced()`** lets a producer skip diffing while the consumer is waiting for a paint; **`forcedesync()`** lets a consumer ask the producer for a fresh paint (e.g. the boardrunner does this when its `assignedboard` changes); **`cleardesync()`** resets the flag without replacing the shadow.
 
 ## `filterpatch`
 
-Required symmetric predicate **`shouldemitpath(path)`** on both producer and consumer for paths you omit from the wire (e.g. runtime-only **`lookup`** / **`named`**). **`move` / `copy`** ops are dropped if **`path`** or **`from`** fails the predicate.
+Required symmetric predicate **`shouldemitpath(path)`** on both producer and consumer for paths you omit from the wire (e.g. runtime-only **`lookup`** / **`named`**). **`move` / `copy`** ops are dropped if `path` or `from` fails the predicate.
 
-Use **`() => true`** when nothing is excluded.
+The default filter for `MEMORY`-shaped pipes is [`memoryrootshouldemitpath`](../../memory/jsonpipefilter.ts). Use **`() => true`** when nothing is excluded.
 
 ## Discipline
 
-- Do not **`observe`** with a callback on this pipe unless you suppress it during remote **`generate`** discard batches (implementation uses no callback).
-- Between **`applyPatch`** and the trailing **`generate`** inside **`applyremote`**, **do not interleave** other mutations on the observed object (single-threaded / queued remote applies).
-- Call **`dispose()`** when done (**`unobserve`**).
+- **One pipe per slice.** Memory ships through one `MEMORY_ROOT` pipe; each [boundary id](../../memory/boundaryrouting.ts) ships through its own pipe; each per-player gadget snapshot ships through its own pipe.
+- **Don't interleave** other mutations between `applyPatch` and storing the result — every consumer in this repo follows that pattern (see [`device/boardrunner.ts`](../../device/boardrunner.ts), [`device/gadgetclient.ts`](../../device/gadgetclient.ts)).
+- A non-empty `emitdiff(root)` mutates the internal shadow, so back-to-back calls without sending the patch will lose the delta. Producers always wrap the call as `const patch = pipe.emitdiff(root); if (patch.length) send(patch)`.
 
-## Phase 2 (not implemented here)
+## How the boardrunner uses it
 
-Plumbing **memory document** / **flags + boards** streams into sim VM vs boardrunner, device envelopes (**fullsync** vs **patch**, stream id). See [`zss/simspace.ts`](../../simspace.ts) when wired.
+Two real consumers in production today, both visible in [`zss/device/vm/handlers/ticktock.ts`](../../device/vm/handlers/ticktock.ts):
+
+1. **Memory + boundary stream → boardrunner** — Each sim tick, [`boardrunnermemorysync`](../../device/vm/boardrunnermemorysync.ts) emits a `MEMORY_ROOT` diff to every player in the active list, and [`boardrunnerboundarysync`](../../device/vm/boardrunnerboundarysync.ts) walks the boundary ids returned by [`memorycollectboundaryidsforboard`](../../memory/boundaryrouting.ts) and emits a per-boundary diff to that board's elected runner. The runner ([`zss/device/boardrunner.ts`](../../device/boardrunner.ts)) keeps a `BOUNDARY_JSONPIPE` per boundary id so it can `applyfullsync` (`boardrunner:paint`) and `applyremote` (`boardrunner:patch`) and replies with `vm:boardrunnerack` / `vm:boardrunnerpatch` when boundaries change locally.
+2. **Gadget projection → gadgetclient** — [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) keeps a per-player `JSON_PIPE_HANDLE<GADGET_STATE>` and emits `gadgetclient:patch` each tick. Bad patches reply `vm:gadgetdesync`, which paints a fresh snapshot.
+
+Failure mode: when a remote `applyremote` returns `undefined`, the consumer is **desynced** and the producer must re-`paint` the affected slice (memory root, boundary id, or per-player gadget).

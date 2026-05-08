@@ -13,7 +13,7 @@
 - `zss/mapping/*` — 2d, tick, types
 - `zss/words/types` — PT, WORD
 - `./playermanagement` — memoryreadplayerboard
-- `./index` — memoryreadboardbyaddress
+- `./boards` — memoryreadboardbyaddress
 
 ## Exports
 

@@ -10,7 +10,7 @@
 - `zss/mapping/*` — guid, number, types, value
 - `zss/words/*` — stats, color, types
 - `./boardelement` — memorycreate*, memoryexport/importboardelement
-- `./boardoperations` — memorycreateboard, memoryexport/importboard
+- `./boardlifecycle` — memorycreateboard, memoryexport/importboard
 
 ## Key Exports
 

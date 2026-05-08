@@ -35,6 +35,6 @@ command words
     → readargs(words, index, [ARG_TYPE.KIND, ARG_TYPE.DIR, …])
     → readkind / readdir / readcolor / readexpr / …
     → READ_CONTEXT.board, element, get
-    → memory* (boardoperations, spatialqueries, runtime)
+    → memory* (boardaccess, boardlifecycle, boards, spatialqueries, runtime, …)
     → evaluated values
 ```
