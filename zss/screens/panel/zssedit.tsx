@@ -9,7 +9,6 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import {
   PanelItemProps,
   ScrollContext,
-  chiptarget,
   inputcolor,
   setuppanelitem,
 } from './common'

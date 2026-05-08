@@ -1,4 +1,4 @@
-import { createdevice } from 'zss/device'
+import { createdevice, parsetarget } from 'zss/device'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
@@ -11,7 +11,9 @@ import {
 } from 'zss/memory/bookoperations'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
+import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
+import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import { memorymessagechip, memorytickmain } from 'zss/memory/runtime'
 import {
   type MEMORY_ROOT,
@@ -20,6 +22,7 @@ import {
   memoryreadroot,
 } from 'zss/memory/session'
 import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { NAME } from 'zss/words/types'
 
 import { vmboardrunnerack, vmboardrunnerpatch } from './api'
 import { lastinputtime } from './vm/state'
@@ -64,7 +67,7 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
   return boundarysyncpipes.get(boundary)!
 }
 
-const boardrunner = createdevice('boardrunner', ['vm'], (message) => {
+const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
   if (!boardrunner.session(message)) {
     return
   }
@@ -211,16 +214,21 @@ const boardrunner = createdevice('boardrunner', ['vm'], (message) => {
       break
     }
     default:
-      // chip / scroll / sidebar messages from the sim VM. these arrive with
-      // their original `vm:CHIP:LABEL` target (because we matched via topic,
-      // not by name) so we strip the `vm:` prefix and hand them to the chip
-      // OS the same way `default.ts` does on the sim side.
-      if (message.target.startsWith('vm:')) {
-        const target = message.target.slice('vm:'.length)
-        memorymessagechip({
-          ...message,
-          target,
-        })
+      if (message.target.startsWith('chip:')) {
+        const chiptarget = message.target.slice('chip:'.length)
+        const invoke = parsetarget(chiptarget)
+        if (NAME(invoke.target) === 'self' || !invoke.path) {
+          message.target = message.target.replace('self:', '')
+          memorymessagechip(message)
+        } else {
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          memorysendtoboards(
+            invoke.target,
+            invoke.path,
+            undefined,
+            memoryreadbookplayerboards(mainbook),
+          )
+        }
       }
       break
   }

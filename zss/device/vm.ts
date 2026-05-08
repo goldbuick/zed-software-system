@@ -7,7 +7,7 @@ import { vmhandlers } from './vm/handlers/registry'
 
 const vm = createdevice(
   'vm',
-  ['ticktock', 'second', 'boardrunnerack'],
+  ['ticktock', 'second', 'chip'],
   (message) => {
     if (!vm.session(message)) {
       return

@@ -82,7 +82,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           playerboard.id,
           dest,
         )
-        // memorymoveplayertoboard(mainbook, message.player, playerboard.id, dest)
       }
       break
     }
@@ -232,21 +231,23 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'bookmarkscroll':
       handlebookmarkscrollpanel(vm, message, path)
       break
-    default: {
-      const invoke = parsetarget(path)
-      if (NAME(invoke.target) === 'self' || !invoke.path) {
-        message.target = message.target.replace('self:', '')
-        memorymessagechip(message)
-      } else {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        memorysendtoboards(
-          invoke.target,
-          invoke.path,
-          undefined,
-          memoryreadbookplayerboards(mainbook),
-        )
+    default:
+      if (message.target.startsWith('chip:')) {
+        const chiptarget = message.target.slice('chip:'.length)
+        const invoke = parsetarget(chiptarget)
+        if (NAME(invoke.target) === 'self' || !invoke.path) {
+          message.target = message.target.replace('self:', '')
+          memorymessagechip(message)
+        } else {
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          memorysendtoboards(
+            invoke.target,
+            invoke.path,
+            undefined,
+            memoryreadbookplayerboards(mainbook),
+          )
+        }
       }
       break
-    }
   }
 }

@@ -53,9 +53,7 @@ This document categorizes and summarizes all exported functions, types, constant
 
 - **`inputcolor(active: boolean)`**
   - Returns appropriate input color based on active state
-
-- **`chiptarget(chip: string, target: string)`**
-  - Creates chip target string with VM routing prefix: `vm:${chip}:${target}`
+ 
 
 - **`strsplice(source: string, index: number, removecount?: number, insert?: string)`**
   - String manipulation utility: inserts/removes text at specified index

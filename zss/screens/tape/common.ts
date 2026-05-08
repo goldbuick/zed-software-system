@@ -29,7 +29,7 @@ export type TapeTerminalItemInputProps = {
 }
 
 type TapeTerminalContextState = {
-  sendmessage: (target: string, data: any[]) => void
+  sendmessage: (chip: string, target: string, data: any[]) => void
 }
 
 export const TapeTerminalContext = createContext<TapeTerminalContextState>({
