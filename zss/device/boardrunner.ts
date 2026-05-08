@@ -122,13 +122,15 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
         ]
         if (assignedboard !== board) {
           assignedboard = board
-        }
-        const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
-        if (ispresent(maybeboard?.board)) {
           // ensure all boundaries are started
           for (const boundary of boundaries) {
             readworkerboundarypipe(message, boundary)
+            // please show full code
+            boardrunner.reply(message, 'desync', boundary)
           }
+        }
+        const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
+        if (ispresent(maybeboard?.board)) {
           // skip updating the over board for now
           memorytickmain(timestamp, [maybeboard.board], memoryreadhalt())
           // sync all boundaries
