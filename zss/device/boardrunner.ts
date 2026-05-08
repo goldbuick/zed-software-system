@@ -4,13 +4,7 @@ import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import {
-  MAYBE,
-  deepcopy,
-  isarray,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadbookflag,
   memorywritebookflag,
@@ -75,26 +69,17 @@ const boardrunner = createdevice('boardrunner', ['vm'], (message) => {
     return
   }
 
-  // chip / scroll / sidebar messages from the sim VM. these arrive with
-  // their original `vm:CHIP:LABEL` target (because we matched via topic,
-  // not by name) so we strip the `vm:` prefix and hand them to the chip
-  // OS the same way `default.ts` does on the sim side.
-  if (message.target.startsWith('vm:')) {
-    memorymessagechip({
-      ...message,
-      target: message.target.slice('vm:'.length),
-    })
-    return
-  }
-
   switch (message.target) {
     case 'tick':
     case 'paint':
+      // player scoped messages
       if (message.player !== assignedplayer) {
         return
       }
       break
     case 'patch':
+      // memory patches are for all players
+      // boundary patches are player scoped
       if (isstring(message.data) && message.player !== assignedplayer) {
         return
       }
@@ -225,5 +210,18 @@ const boardrunner = createdevice('boardrunner', ['vm'], (message) => {
       }
       break
     }
+    default:
+      // chip / scroll / sidebar messages from the sim VM. these arrive with
+      // their original `vm:CHIP:LABEL` target (because we matched via topic,
+      // not by name) so we strip the `vm:` prefix and hand them to the chip
+      // OS the same way `default.ts` does on the sim side.
+      if (message.target.startsWith('vm:')) {
+        const target = message.target.slice('vm:'.length)
+        memorymessagechip({
+          ...message,
+          target,
+        })
+      }
+      break
   }
 })
