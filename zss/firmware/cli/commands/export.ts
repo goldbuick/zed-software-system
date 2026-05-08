@@ -13,7 +13,7 @@ import {
   zsstexttape,
 } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import {
   memoryexportbookasjson,
   memorylistcodepagessorted,

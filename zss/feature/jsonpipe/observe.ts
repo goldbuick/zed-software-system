@@ -68,24 +68,28 @@ export function createjsonpipe<T extends object | unknown[]>(
       if (filtered.length === 0) {
         return root
       }
+      // measure the number of ops applied
       recordjsonpipeapplyremoteops(filtered.length)
       try {
         //  an RFC 6902 patch array
-        root = applyPatch(root, filtered, true, false).newDocument
+        const { newDocument: newroot } = applyPatch(root, filtered, true, false)
         // update shadow
-        shadow = deepcopy(root)
-        return root
+        shadow = deepcopy(newroot)
+        // return new root
+        return newroot
       } catch (error: any) {
         void error
-        desync = true
-        return undefined
       }
+      // return undefined to indicate desync
+      desync = true
+      return undefined
     },
 
     applyfullsync: (doc: T) => {
       // flip desync flag for recovery
       desync = false
       shadow = deepcopy(doc)
+      // return new root
       return doc
     },
   }

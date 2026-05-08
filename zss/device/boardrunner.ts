@@ -123,14 +123,12 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
         if (assignedboard !== board) {
           assignedboard = board
         }
-        // ensure all boundaries are started
-        for (const boundary of boundaries) {
-          readworkerboundarypipe(message, boundary)
-        }
-        // read the board codepage runtime, to ensure
-        // we have the data to tick the board
         const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
         if (ispresent(maybeboard?.board)) {
+          // ensure all boundaries are started
+          for (const boundary of boundaries) {
+            readworkerboundarypipe(message, boundary)
+          }
           // skip updating the over board for now
           memorytickmain(timestamp, [maybeboard.board], memoryreadhalt())
           // sync all boundaries
@@ -176,10 +174,7 @@ const boardrunner = createdevice('boardrunner', [], (message) => {
           } else {
             boardrunner.reply(message, 'desync', boundary)
           }
-        } else {
-          if (memorysyncpipe.isdesynced()) {
-            return
-          }
+        } else if (!memorysyncpipe.isdesynced()) {
           const root = memoryreadroot()
           const doc = memorysyncpipe.applyremote(root, patch)
           if (ispresent(doc)) {
