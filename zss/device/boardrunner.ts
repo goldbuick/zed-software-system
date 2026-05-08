@@ -18,7 +18,7 @@ import {
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
-import { memorytickmain } from 'zss/memory/runtime'
+import { memorymessagechip, memorytickmain } from 'zss/memory/runtime'
 import {
   type MEMORY_ROOT,
   memoryreadbookbysoftware,
@@ -70,8 +70,20 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
   return boundarysyncpipes.get(boundary)!
 }
 
-const boardrunner = createdevice('boardrunner', [], (message) => {
+const boardrunner = createdevice('boardrunner', ['vm'], (message) => {
   if (!boardrunner.session(message)) {
+    return
+  }
+
+  // chip / scroll / sidebar messages from the sim VM. these arrive with
+  // their original `vm:CHIP:LABEL` target (because we matched via topic,
+  // not by name) so we strip the `vm:` prefix and hand them to the chip
+  // OS the same way `default.ts` does on the sim side.
+  if (message.target.startsWith('vm:')) {
+    memorymessagechip({
+      ...message,
+      target: message.target.slice('vm:'.length),
+    })
     return
   }
 

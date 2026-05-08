@@ -153,6 +153,10 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
       switch (route.target) {
         case 'boardrunner':
           return true
+        case 'vm':
+          // chip / scroll / sidebar messages also need to reach the
+          // boardrunner so the chip OS running there can deliver them
+          return true
       }
       return false
     }

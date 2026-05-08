@@ -177,6 +177,7 @@ flowchart TB
 | vm        | boardrunner  | `boardrunner:patch`         | Memory or per-boundary jsonpipe patch      |
 | vm        | boardrunner  | `boardrunner:tick`          | Run one board tick (board + ts + boundaries) |
 | userinput | boardrunner  | `boardrunner:input`         | Keyboard/gamepad input for the runner      |
+| sidebar / scroll | vm + boardrunner | `vm:CHIP:LABEL`        | Hyperlink / hotkey / runit / scroll panel item; the same `vm:*` message is delivered to both the sim VM (for `refscroll` / `batch` / `makeit` / `bookmarkscroll` / etc. handlers) and the boardrunner (which strips the `vm:` prefix and hands it to `memorymessagechip` so the originating chip receives the label) |
 | boardrunner | vm         | `vm:boardrunnerack`         | Tick acknowledged; refresh runner budget   |
 | boardrunner | vm         | `vm:boardrunnerpatch`       | Boundary diff back to authoritative memory |
 | boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
@@ -190,7 +191,7 @@ flowchart TB
 | vm           | ticktock, second                | vm:*                            | Game logic, login, CLI, loader; per-tick gadget projection and boardrunner orchestration |
 | register     | ready, second, log, chat, toast | register:*                       | UI state, storage, bootstrap          |
 | gadgetclient | (none)                          | gadgetclient:*                   | Receives paint/patch from sim VM      |
-| boardrunner  | (none)                          | boardrunner:*                    | Per-board chip sim on a dedicated worker |
+| boardrunner  | vm                              | boardrunner:*, vm:*              | Per-board chip sim on a dedicated worker; subscribes to `vm` topic so `vm:CHIP:LABEL` messages from sidebar / scrolls also reach `memorymessagechip` here |
 | heavy        | (none)                          | heavy:*                          | TTS, LLM (lazy-loaded)                |
 | bridge       | (none)                          | bridge:*                         | Multiplayer / BBS                     |
 | modem        | second                          | modem:*                          | CRDT sync, presence                   |

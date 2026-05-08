@@ -284,7 +284,7 @@ Functions for managing message forwarding between peers, server, client, and hea
 - `shouldforwardclienttoserver(message)` - Check if message should forward client→sim (`vm:*`, `modem:*`, `*sync` / `*desync` / `*joinack`)
 - `shouldforwardclienttoheavy(message)` - Check if message should forward client→heavy (`heavy:*`, `second`, `ready`, `*acklook`)
 - `shouldforwardheavytoclient(message)` - Check if message should forward heavy→client
-- `shouldforwardclienttoboardrunner(message)` - Check if message should forward client→boardrunner (`boardrunner:*`, `second`, `ready`)
+- `shouldforwardclienttoboardrunner(message)` - Check if message should forward client→boardrunner (`boardrunner:*`, `vm:*`, `second`, `ready`). `vm:*` is forwarded so chip / scroll / sidebar messages also reach the chip OS running on the boardrunner.
 - `shouldforwardboardrunnertoclient(message)` - Check if message should forward boardrunner→client
 
 ---
