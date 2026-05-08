@@ -47,10 +47,8 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   delete tracking[message.player]
   delete lastinputtime[message.player]
   // ensure the board we left has a runner set
-  if (ispresent(currentboard)) {
-    if (!boardrunnerassignmentvalid(currentboard.id)) {
-      boardrunnerelect(currentboard.id)
-    }
+  if (ispresent(currentboard) && !boardrunnerassignmentvalid(currentboard.id)) {
+    boardrunnerelect(currentboard.id)
   }
   // signal logout
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
@@ -105,10 +103,11 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     lastinputtime[message.player] = Date.now()
     // ensure the board has a runner set
     const currentboard = memoryreadplayerboard(message.player)
-    if (ispresent(currentboard)) {
-      if (!boardrunnerassignmentvalid(currentboard.id)) {
-        boardrunnerelect(currentboard.id)
-      }
+    if (
+      ispresent(currentboard) &&
+      !boardrunnerassignmentvalid(currentboard.id)
+    ) {
+      boardrunnerelect(currentboard.id)
     }
     // signal success
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)

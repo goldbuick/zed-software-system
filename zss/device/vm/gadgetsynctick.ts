@@ -9,6 +9,7 @@ import {
   initstate,
 } from 'zss/gadget/data/api'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
@@ -28,7 +29,6 @@ import {
 } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
-import { NAME } from 'zss/words/types'
 
 gadgetstateprovider((player) => {
   if (ispid(player)) {
@@ -49,17 +49,14 @@ gadgetstateprovider((player) => {
 })
 
 const gadgetjsonpipes = new Map<string, JSON_PIPE_HANDLE<GADGET_STATE>>()
-
 function readgadgetjsonpipe(player: string) {
-  if (gadgetjsonpipes.has(player)) {
-    return gadgetjsonpipes.get(player)!
+  if (!gadgetjsonpipes.has(player)) {
+    const pipe = createjsonpipe<GADGET_STATE>({} as GADGET_STATE, () => true)
+    gadgetjsonpipes.set(player, pipe)
   }
-  const pipe = createjsonpipe<GADGET_STATE>(gadgetstate(player), () => true)
-  gadgetjsonpipes.set(player, pipe)
-  return pipe
+  return gadgetjsonpipes.get(player)!
 }
 
-/** After gadget layer cache; emits gadget JSON patches to clients (former gadgetserver tick). */
 export function gadgetsynctick(vm: DEVICE) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -75,11 +72,12 @@ export function gadgetsynctick(vm: DEVICE) {
     return
   }
 
-  for (const pid of [...gadgetjsonpipes.keys()]) {
-    if (!activelist.includes(pid)) {
-      gadgetjsonpipes.delete(pid)
-    }
-  }
+  // for (const pid of [...gadgetjsonpipes.keys()]) {
+  //   if (!activelist.includes(pid)) {
+  //     gadgetjsonpipes.delete(pid)
+  //   }
+  // }
+
   for (let i = 0; i < activelist.length; ++i) {
     const player = activelist[i]
     const board = memoryreadplayerboard(player)
@@ -87,7 +85,7 @@ export function gadgetsynctick(vm: DEVICE) {
     let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
     if (ispresent(board)) {
       const graphics = memoryreadgraphics(player, board)
-      const mode = NAME(graphics.graphics)
+      const mode = normalizelayerzvariant(graphics.graphics)
       const layerstore = memoryreadbookgadgetlayersforboard(mainbook, board.id)
       gadgetlayers = layerstore[mode]
     }

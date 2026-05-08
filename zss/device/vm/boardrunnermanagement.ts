@@ -30,6 +30,7 @@ export function boardrunnerassignmentvalid(board: string): boolean {
 
 export function boardrunnerblock(runner: string): void {
   boardrunnerblocked[runner] = true
+  console.info('### block', runner)
 }
 
 export function boardrunnerevict(board: string): void {
@@ -39,13 +40,15 @@ export function boardrunnerevict(board: string): void {
   const runner = boardrunners[board]
   delete boardrunners[board]
   delete boardrunneracks[runner]
-  console.info('### evict', runner, board)
+  // console.info('### evict', runner, board)
 }
 
 export function boardrunnerelect(board: string): MAYBE<string> {
   const elected = pick(...boardrunnereligibleforboard(board))
   if (ispresent(elected)) {
     boardrunnerassign(board, elected)
+  } else {
+    boardrunnerevict(board)
   }
   return elected
 }

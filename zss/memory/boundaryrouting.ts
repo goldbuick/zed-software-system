@@ -22,10 +22,10 @@ export function memorycollectboundaryidsforboard(
   const out = new Set<string>()
   out.add(board.id)
 
-  function maybeaddflagboundary(boundary: string) {
-    const bid = book?.flags[boundary]
-    if (ispresent(bid)) {
-      out.add(bid)
+  function maybeaddflagboundary(id: string) {
+    const boundary = book?.flags[id]
+    if (ispresent(boundary)) {
+      out.add(boundary)
     }
   }
 
@@ -36,8 +36,7 @@ export function memorycollectboundaryidsforboard(
 
   // scan objects for chip and player boundaries
   const ids = Object.keys(board.objects)
-  for (let i = 0; i < ids.length; ++i) {
-    const element = ids[i]
+  for (const element of ids) {
     // add chip boundary
     maybeaddflagboundary(createchipid(element))
     // add player and gadget boundaries if present

@@ -1,13 +1,13 @@
 import { RUNTIME } from 'zss/config'
 import type { LAYER } from 'zss/gadget/data/types'
-import { type LayerZVariant, maptolayerz } from 'zss/gadget/graphics/layerz'
+import { type GRAPHICS_MODES, maptolayerz } from 'zss/gadget/graphics/layerz'
 
 /** Padding above the highest board layer Z inside the RenderTexture portal. */
 export const BOARD_INSPECTOR_Z_BUFFER = 200
 
 /** Max Z for `layers` + `over` + optional exit-preview stacks (iso / mode7 / fpv). */
 export function boardinspectorzfromgadgetstacks(
-  variant: LayerZVariant,
+  variant: GRAPHICS_MODES,
   boardlayers: LAYER[],
   over: LAYER[],
   exitpreviewlayerlists: LAYER[][],

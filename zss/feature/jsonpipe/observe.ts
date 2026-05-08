@@ -33,6 +33,8 @@ export type JSON_PIPE_HANDLE<T> = {
   isdesynced: () => boolean
   applyremote: (root: T, patch: Operation[]) => MAYBE<T>
   applyfullsync: (doc: T) => T
+  cleardesync: () => void
+  forcedesync: () => void
 }
 
 /**
@@ -47,7 +49,7 @@ export function createjsonpipe<T extends object | unknown[]>(
   let shadow = deepcopy(init)
 
   return {
-    emitdiff: (root: T) => {
+    emitdiff(root: T) {
       const operations = compare(shadow, root)
       if (operations.length > 0) {
         shadow = deepcopy(root)
@@ -55,11 +57,11 @@ export function createjsonpipe<T extends object | unknown[]>(
       return filterpatch(operations, shouldemitpath)
     },
 
-    isdesynced: () => {
+    isdesynced() {
       return desync
     },
 
-    applyremote: (root: T, patch: Operation[]) => {
+    applyremote(root: T, patch: Operation[]) {
       // skip when waiting for a fullsync
       if (desync) {
         return undefined
@@ -85,12 +87,21 @@ export function createjsonpipe<T extends object | unknown[]>(
       return undefined
     },
 
-    applyfullsync: (doc: T) => {
+    applyfullsync(doc: T) {
       // flip desync flag for recovery
       desync = false
       shadow = deepcopy(doc)
       // return new root
       return doc
+    },
+
+    cleardesync() {
+      desync = false
+    },
+
+    forcedesync() {
+      desync = true
+      shadow = {} as T
     },
   }
 }

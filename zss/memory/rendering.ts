@@ -5,6 +5,7 @@ import {
   VIEWSCALE,
   layersreadmedia,
 } from 'zss/gadget/data/types'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -155,18 +156,7 @@ export function memoryconverttogadgetcontrollayer(
   // player flags, then board flags
   const { graphics, camera, facing } = memoryreadgraphics(player, board)
   if (isstring(graphics)) {
-    const withgraphics = NAME(graphics)
-    switch (graphics) {
-      case 'fpv':
-      case 'iso':
-      case 'flat':
-      case 'mode7':
-        control.graphics = withgraphics
-        break
-      default:
-        control.graphics = 'flat'
-        break
-    }
+    control.graphics = normalizelayerzvariant(graphics)
   }
 
   if (isstring(camera)) {
@@ -212,7 +202,7 @@ export function memoryconverttogadgetlayers(
   // update resolve caches
   memoryupdateboardvisuals(board)
 
-  const withgraphics = NAME(graphics)
+  const withgraphics = normalizelayerzvariant(graphics)
   const layers: LAYER[] = []
 
   let iiii = index

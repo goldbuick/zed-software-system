@@ -11,6 +11,7 @@ import {
 import { boardrunnermemorysync } from 'zss/device/vm/boardrunnermemorysync'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { boardrunners } from 'zss/device/vm/state'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import { memoryboundaryget } from 'zss/memory/boundaries'
@@ -28,7 +29,6 @@ import {
 } from 'zss/memory/session'
 import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
-import { NAME } from 'zss/words/types'
 
 import { pilottick } from './pilot'
 
@@ -38,14 +38,14 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   if (!ispresent(mainbook) || memoryreadsimfreeze()) {
     return
   }
-  perfmeasure('vm:gadgetsynctick', () => {
-    gadgetsynctick(vm)
-  })
   perfmeasure('vm:pilottick', () => {
     pilottick(vm)
   })
   perfmeasure('vm:memorytickloaders', () => {
     memorytickloaders()
+  })
+  perfmeasure('vm:gadgetsynctick', () => {
+    gadgetsynctick(vm)
   })
   perfmeasure('vm:gadgetlayerscache', () => {
     const boards = memoryreadbookplayerboards(mainbook)
@@ -57,7 +57,7 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       for (let p = 0; p < players.length; ++p) {
         const player = players[p]
         const graphics = memoryreadgraphics(player, board)
-        const mode = NAME(graphics.graphics)
+        const mode = normalizelayerzvariant(graphics.graphics)
         if (!ispresent(didrender[mode])) {
           didrender[mode] = true
           store[mode] = memoryreadgadgetlayers(mode, board)
@@ -101,19 +101,13 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     for (let i = 0; i < ids.length; ++i) {
       const board = ids[i]
       const player = boardrunners[board]
-
-      // bail if board runtime not found
+      // code page data shortcut
       const mayberuntime = memoryboundaryget<CODE_PAGE_RUNTIME>(board)
-      if (!ispresent(mayberuntime?.board)) {
-        continue
-      }
-
       // read board data to scan for boundary ids
       const boardboundaries = memorycollectboundaryidsforboard(
         mainbook,
-        mayberuntime.board,
+        mayberuntime?.board,
       )
-
       // send tick to the boardrunner
       boardrunnertick(vm, player, board, mainbook.timestamp, boardboundaries)
     }

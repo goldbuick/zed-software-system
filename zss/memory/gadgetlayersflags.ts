@@ -1,6 +1,6 @@
 /**
  * Gadget layer snapshots per board: owner `createlayersid(boardId)` with inner keys
- * = graphics mode (`NAME(graphics.graphics)`). Avoids importing `rendering` from
+ * = graphics mode (`normalizelayerzvariant(graphics.graphics)`). Avoids importing `rendering` from
  * `bookoperations` (would cycle).
  */
 import { createlayersid } from 'zss/mapping/guid'
@@ -14,8 +14,5 @@ export function memoryreadbookgadgetlayersforboard(
   book: MAYBE<BOOK>,
   boardid: string,
 ): Record<string, MEMORY_GADGET_LAYERS> {
-  return memoryreadbookflags(
-    book,
-    createlayersid(boardid),
-  ) as unknown as Record<string, MEMORY_GADGET_LAYERS>
+  return memoryreadbookflags(book, createlayersid(boardid))
 }
