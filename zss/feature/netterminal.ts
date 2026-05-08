@@ -3,9 +3,9 @@ import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,
+  shouldforwardonpeerclient,
+  shouldforwardonpeerserver,
   shouldforwardservertoclient,
-  shouldnotforwardonpeerclient,
-  shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -125,12 +125,10 @@ function handledataconnection(dataconnection: DataConnection) {
   function hostbridge() {
     // open bridge between peers
     topicbridge = createforward((message) => {
-      if (!ispresent(networkpeer)) {
-        return
-      }
       if (
-        shouldforwardservertoclient(message) &&
-        shouldnotforwardonpeerserver(message) === false
+        ispresent(networkpeer) &&
+        shouldforwardonpeerserver(message) &&
+        shouldforwardservertoclient(message)
       ) {
         sendpeer(dataconnection, message)
       }
@@ -140,12 +138,10 @@ function handledataconnection(dataconnection: DataConnection) {
   function joinbridge() {
     // open bridge between peers
     topicbridge = createforward((message) => {
-      if (!ispresent(networkpeer)) {
-        return
-      }
       if (
-        shouldforwardclienttoserver(message) &&
-        shouldnotforwardonpeerclient(message) === false
+        ispresent(networkpeer) &&
+        shouldforwardonpeerclient(message) &&
+        shouldforwardclienttoserver(message)
       ) {
         sendpeer(dataconnection, message)
       }
@@ -464,8 +460,8 @@ export function netterminalhalt() {
   }
   netterminalsessionserial += 1
   netterminalclearallschedule()
-  subscribetopic = ''
   vmtopic(SOFTWARE, registerreadplayer(), subscribetopic)
+  subscribetopic = ''
   networkpeer?.destroy()
   networkpeer = undefined
 }

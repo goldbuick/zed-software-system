@@ -50,7 +50,7 @@ export function PanelHotkey({
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(chiptarget(chip, target), data)
+    scroll.sendmessage(chip, target, data)
     if (!maybenoclose) {
       scroll.sendclose()
     }

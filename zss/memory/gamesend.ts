@@ -1,5 +1,5 @@
-import { CHIP, senderid } from 'zss/chip'
-import { apichat } from 'zss/device/api'
+import { CHIP } from 'zss/chip'
+import { apichat, chipmessage } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -70,8 +70,7 @@ export function memorysendtoboards(
     for (let i = 0; i < elements.length; ++i) {
       const element = elements[i]
       if (ispresent(element.id)) {
-        const chipmessage = `${senderid(element.id)}:${message}`
-        SOFTWARE.emit('', chipmessage, data)
+        chipmessage(SOFTWARE, '', element.id, message, data)
       }
     }
   }

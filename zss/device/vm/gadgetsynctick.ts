@@ -82,6 +82,7 @@ export function gadgetsynctick(vm: DEVICE) {
     const player = activelist[i]
     const board = memoryreadplayerboard(player)
     const boardid = board?.id ?? ''
+
     let gadgetlayers: MAYBE<MEMORY_GADGET_LAYERS>
     if (ispresent(board)) {
       const graphics = memoryreadgraphics(player, board)

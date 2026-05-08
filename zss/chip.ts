@@ -1,7 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 
 import { RUNTIME } from './config'
-import { MESSAGE, apierror } from './device/api'
+import { MESSAGE, apierror, chipmessage } from './device/api'
 import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,
@@ -477,15 +477,6 @@ function maptoresult(value: WORD): WORD {
 }
 
 /**
- * Creates a sender identifier in the format 'vm:<id>'.
- * @param maybeid - Optional sender ID (defaults to empty string)
- * @returns The formatted sender identifier
- */
-export function senderid(maybeid = '') {
-  return `vm:${maybeid ?? ''}`
-}
-
-/**
  * Creates a new chip instance with the given ID, driver, and compiled build.
  * Initializes chip memory, labels, and execution state. Returns a CHIP object
  * with all lifecycle, state management, messaging, and logic APIs.
@@ -701,7 +692,10 @@ export function createchip(
       return !!flags.ys || chip.checkcount()
     },
     send(player, chipid, message, data) {
-      SOFTWARE.emit(player, `${senderid(chipid)}:${message}`, data)
+      // need two emits here one for vm: one for boardrunner:
+      // or do we have one prefix that gets forwarded to both?
+      // SOFTWARE.emit(player, `${chipid}:${message}`, data)
+      chipmessage(SOFTWARE, player, chipid, message, data)
     },
     lock(allowed) {
       const flags = readflags()

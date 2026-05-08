@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { vmcli } from 'zss/device/api'
+import { chipmessage, vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
@@ -75,7 +75,7 @@ export function TerminalComponent() {
           const input = `#${message} ${data.join(' ')}`
           vmcli(SOFTWARE, player, input)
         } else {
-          SOFTWARE.emit(player, `${target}:${message}`, data)
+          chipmessage(SOFTWARE, player, target, message, data)
         }
       },
     }),

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { vmclearscroll } from 'zss/device/api'
+import { chipmessage, vmclearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { ScrollContext } from 'zss/screens/panel/common'
@@ -19,8 +19,9 @@ export function ScreenUIScrollProvider({
 
   const scrollcontextvalue = useMemo(
     () => ({
-      sendmessage(target: string, data: any[]) {
-        SOFTWARE.emit(player, target, data)
+      sendmessage(chip: string, target: string, data: any[]) {
+        // SOFTWARE.emit(player, target, data)
+        chipmessage(SOFTWARE, player, chip, target, data)
       },
       sendclose() {
         vmclearscroll(SOFTWARE, player)

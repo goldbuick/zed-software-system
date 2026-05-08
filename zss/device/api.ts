@@ -80,6 +80,16 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
+export function chipmessage(
+  device: DEVICELIKE,
+  player: string,
+  chip: string,
+  target: string,
+  data: any[],
+) {
+  device.emit(player, `chip:${chip}:${target}`, data)
+}
+
 export function boardrunneridle(device: DEVICELIKE, player: string) {
   device.emit(player, 'boardrunner:idle')
 }

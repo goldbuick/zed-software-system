@@ -32,26 +32,28 @@ export function createforward(handler: (message: MESSAGE) => void) {
 }
 
 // outbound message
-export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
-  const route = parsetarget(message.target)
+export function shouldforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'ticktock':
-    case 'ready':
+    case 'boardrunner':
       return true
     default: {
-      switch (route.target) {
-        case 'boardrunner':
-          return true
-        case 'vm':
-          if (route.path.startsWith('boardrunner')) {
-            return true
-          }
-          break
-      }
+      // const route = parsetarget(message.target)
       break
     }
   }
+  console.info('server blocked', message.target)
   return false
+}
+
+// outbound message
+export function shouldforwardonpeerclient(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+    case 'second':
+      console.info('client blocked', message.target)
+      return false
+  }
+  return true
 }
 
 // create server -> client forward
@@ -59,22 +61,22 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'log':
     case 'chat':
-    case 'ticktock':
     case 'ready':
     case 'toast':
     case 'second':
+    case 'ticktock':
       return true
     default: {
       const route = parsetarget(message.target)
       switch (route.target) {
-        case 'vm':
+        // case 'vm':
         case 'heavy':
-        case 'boardrunner':
         case 'synth':
         case 'modem':
         case 'bridge':
         case 'register':
         case 'gadgetclient':
+        case 'boardrunner':
           return true
       }
       switch (route.path) {
@@ -90,16 +92,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       }
       break
     }
-  }
-  return false
-}
-
-// outbound message
-export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ticktock':
-    case 'second':
-      return true
   }
   return false
 }
@@ -166,10 +158,10 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
       switch (route.target) {
         case 'boardrunner':
           return true
-        case 'vm':
-          // chip / scroll / sidebar messages also need to reach the
-          // boardrunner so the chip OS running there can deliver them
-          return true
+        // case 'vm':
+        //   // chip / scroll / sidebar messages also need to reach the
+        //   // boardrunner so the chip OS running there can deliver them
+        //   return true
       }
       return false
     }

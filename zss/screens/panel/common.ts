@@ -15,7 +15,7 @@ export type PanelItemProps = {
 }
 
 type ScrollContextState = {
-  sendmessage: (target: string, data: any[]) => void
+  sendmessage: (chip: string, target: string, data: any[]) => void
   sendclose: () => void
   didclose: () => void
 }
@@ -35,11 +35,6 @@ export const theme = {
 
 export function inputcolor(active: boolean) {
   return active ? theme.input.active : theme.input.color
-}
-
-export function chiptarget(chip: string, target: string) {
-  // always prefix with route back to this chip
-  return `vm:${chip}:${target}`
 }
 
 export function strsplice(
