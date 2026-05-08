@@ -33,10 +33,23 @@ export function createforward(handler: (message: MESSAGE) => void) {
 
 // outbound message
 export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
+  const route = parsetarget(message.target)
   switch (message.target) {
     case 'ticktock':
     case 'ready':
       return true
+    default: {
+      switch (route.target) {
+        case 'boardrunner':
+          return true
+        case 'vm':
+          if (route.path.startsWith('boardrunner')) {
+            return true
+          }
+          break
+      }
+      break
+    }
   }
   return false
 }
