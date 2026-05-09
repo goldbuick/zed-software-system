@@ -34,13 +34,34 @@ export function createforward(handler: (message: MESSAGE) => void) {
 // outbound message
 export function shouldforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'boardrunner':
+    case 'log':
+    case 'chat':
+    case 'toast':
       return true
     default: {
-      // const route = parsetarget(message.target)
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'synth':
+        case 'modem':
+        case 'register':
+        case 'boardrunner':
+        case 'gadgetclient':
+          return true
+      }
+      switch (route.path) {
+        case 'sync':
+        case 'joinack':
+        case 'acklook':
+        case 'acklogin':
+        case 'ackoperator':
+        case 'ackzsswords':
+        case 'gadgetclient':
+          return true
+      }
       break
     }
   }
+  // const route = parsetarget(message.target)
   console.info('server blocked', message.target)
   return false
 }
@@ -48,9 +69,9 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
 // outbound message
 export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'ticktock':
     case 'second':
-      console.info('client blocked', message.target)
+    case 'ticktock':
+      // console.info('client blocked', message.target)
       return false
   }
   return true
@@ -69,7 +90,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
     default: {
       const route = parsetarget(message.target)
       switch (route.target) {
-        // case 'vm':
         case 'heavy':
         case 'synth':
         case 'modem':
