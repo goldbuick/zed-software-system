@@ -1,4 +1,5 @@
-import { useCallback, useContext } from 'react'
+import { useCallback, useContext, useMemo } from 'react'
+import { parseterminalmodemprefix } from 'zss/gadget/data/api'
 import { UserInput } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { inputcolor } from 'zss/screens/panel/common'
@@ -17,14 +18,15 @@ export function TerminalHyperlink({
   y,
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
-
   const cc = useContext(TapeTerminalContext)
+  const parsed = useMemo(() => parseterminalmodemprefix(prefix), [prefix])
+
   const invoke = useCallback(() => {
     const [target, ...data] = words
     setTimeout(() => {
-      cc.sendmessage(target, data)
+      cc.sendmessage(parsed?.chip ?? '', target, data)
     }, 100)
-  }, [words, cc])
+  }, [words, parsed?.chip, cc])
 
   const tcolor = inputcolor(!!active)
 

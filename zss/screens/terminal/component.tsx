@@ -69,13 +69,13 @@ export function TerminalComponent() {
 
   const tapecontextvalue = useMemo(
     () => ({
-      sendmessage(maybetarget: string, data: any[]) {
+      sendmessage(chip: string, maybetarget: string, data: any[]) {
         const [target, message] = totarget(maybetarget)
         if (target === 'self') {
           const input = `#${message} ${data.join(' ')}`
           vmcli(SOFTWARE, player, input)
         } else {
-          chipmessage(SOFTWARE, player, target, message, data)
+          chipmessage(SOFTWARE, player, chip, maybetarget, data)
         }
       },
     }),
