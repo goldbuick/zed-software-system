@@ -5,7 +5,7 @@ import {
   unpackformat,
 } from 'zss/feature/format'
 import { creategadgetid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import {
   memoryclearbookcodepage,
   memorycreatebook,

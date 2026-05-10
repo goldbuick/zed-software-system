@@ -7,7 +7,7 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { STR_COLOR, isstrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import { CATEGORY, COLLISION } from 'zss/words/types'
+import { CATEGORY } from 'zss/words/types'
 
 import {
   memoryensureboardelementruntime,

@@ -31,7 +31,7 @@ function stubboard(id: string, pids: string[]): BOARD {
   for (const pid of pids) {
     objects[pid] = {}
   }
-  return { id, terrain: [], objects }
+  return { id, name: 'test', terrain: [], objects }
 }
 
 function clearboardrunnerstate(boardidlocal: string, pids: string[]) {

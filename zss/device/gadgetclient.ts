@@ -2,7 +2,7 @@ import { createdevice } from 'zss/device'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { applylayercacheupdate, useGadgetClient } from 'zss/gadget/data/state'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 
 import { registerreadplayer } from './register'
 

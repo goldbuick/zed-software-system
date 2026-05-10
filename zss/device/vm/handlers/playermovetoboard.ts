@@ -4,7 +4,6 @@ import {
   boardrunnerassign,
   boardrunnerassignmentvalid,
   boardrunnerelect,
-  boardrunnerevict,
 } from 'zss/device/vm/boardrunnermanagement'
 import { ispresent } from 'zss/mapping/types'
 import {
