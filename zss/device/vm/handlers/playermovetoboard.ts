@@ -21,6 +21,13 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
 
   // attempt to move the player to the destination board
   if (memorymoveplayertoboard(mainbook, targetplayer, board, dest)) {
+    console.info(
+      'handleplayermovetoboard',
+      targetplayer,
+      '>>',
+      board,
+      'did move',
+    )
     // elect a new runner for the prior board
     if (
       ispresent(currentboard) &&
@@ -39,6 +46,13 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
       boardrunnerassign(board, targetplayer)
     }
   } else {
+    console.info(
+      'handleplayermovetoboard',
+      targetplayer,
+      '>>',
+      board,
+      'did NOT move',
+    )
     // send a thud message back to the board runner
     boardrunnerthud(vm, message.player, targetplayer)
   }

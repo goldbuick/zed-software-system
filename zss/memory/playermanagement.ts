@@ -15,6 +15,7 @@ import {
 } from './boardlifecycle'
 import {
   memorydeleteboardobjectnamedlookup,
+  memoryinitboardlookup,
   memorywriteboardnamed,
   memorywriteboardobjectlookup,
 } from './boardlookup'
@@ -60,6 +61,9 @@ export function memorymoveplayertoboard(
   if (!ispresent(book) || !ispresent(currentboard)) {
     return false
   }
+
+  // ensure sure the lookup is created for the current board
+  memoryinitboardlookup(currentboard)
 
   // player element
   const element = memoryreadobject(currentboard, player)

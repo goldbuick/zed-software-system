@@ -11,17 +11,10 @@ import {
 import { boardrunnermemorysync } from 'zss/device/vm/boardrunnermemorysync'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { boardrunners } from 'zss/device/vm/state'
-import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import { memoryboundaryget } from 'zss/memory/boundaries'
 import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
-import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
-import {
-  memoryreadgadgetlayers,
-  memoryreadgraphics,
-} from 'zss/memory/rendering'
 import { memorytickloaders } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
@@ -46,24 +39,6 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   })
   perfmeasure('vm:gadgetsynctick', () => {
     gadgetsynctick(vm)
-  })
-  perfmeasure('vm:gadgetlayerscache', () => {
-    const boards = memoryreadbookplayerboards(mainbook)
-    for (let b = 0; b < boards.length; ++b) {
-      const board = boards[b]
-      const store = memoryreadbookgadgetlayersforboard(mainbook, board.id)
-      const didrender: Record<string, boolean> = {}
-      const players = memoryreadplayersonboard(board)
-      for (let p = 0; p < players.length; ++p) {
-        const player = players[p]
-        const graphics = memoryreadgraphics(player, board)
-        const mode = normalizelayerzvariant(graphics.graphics)
-        if (!ispresent(didrender[mode])) {
-          didrender[mode] = true
-          store[mode] = memoryreadgadgetlayers(mode, board)
-        }
-      }
-    }
   })
   perfmeasure('vm:boardrunner', () => {
     const activeboards = memoryreadbookplayerboards(mainbook)

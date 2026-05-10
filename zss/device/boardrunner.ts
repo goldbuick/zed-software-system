@@ -1,19 +1,28 @@
 import { createdevice, parsetarget } from 'zss/device'
+import type { DEVICE } from 'zss/device'
+import type { MESSAGE } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import { MAYBE, deepcopy, isarray, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import {
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
+import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
+import {
+  memoryreadgadgetlayers,
+  memoryreadgraphics,
+} from 'zss/memory/rendering'
 import { memorymessagechip, memorytickmain } from 'zss/memory/runtime'
 import {
   type MEMORY_ROOT,
@@ -21,7 +30,8 @@ import {
   memoryreadhalt,
   memoryreadroot,
 } from 'zss/memory/session'
-import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { perfmeasure } from 'zss/perf/ui'
 import { NAME } from 'zss/words/types'
 
 import { vmboardrunnerack, vmboardrunnerpatch } from './api'
@@ -67,21 +77,88 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
   return boundarysyncpipes.get(boundary)!
 }
 
+function handleboardrunnertick(
+  device: DEVICE,
+  message: MESSAGE,
+  board: string,
+  timestamp: number,
+  boundaries: string[],
+) {
+  if (assignedboard !== board) {
+    // we're assigned to a new board
+    assignedboard = board
+    assignedboundaries = boundaries
+    // so we need to desync the boundaries to
+    // ensure they are current
+    for (const id of boundaries) {
+      readworkerboundarypipe(id).forcedesync()
+      device.reply(message, 'desync', id)
+    }
+  }
+  if (!assignedboard) {
+    return
+  }
+
+  // ack the tick so we don't get blocked
+  vmboardrunnerack(device, assignedplayer)
+
+  // validate the boundaries are in sync and the board codepage is valid
+  const anydesynced = boundaries.some((boundary) =>
+    readworkerboundarypipe(boundary).isdesynced(),
+  )
+  const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
+  if (anydesynced || !ispresent(maybeboard?.board)) {
+    return
+  }
+
+  // tick boards we're in-charge of
+  const updateboards: BOARD[] = [maybeboard.board]
+  memorytickmain(timestamp, updateboards, memoryreadhalt())
+
+  // render the gadget layers for the updated boards
+  perfmeasure('boardrunner:gadgetlayerscache', () => {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    for (let b = 0; b < updateboards.length; ++b) {
+      const boarddata = updateboards[b]
+      const didrender: Record<string, boolean> = {}
+      const players = memoryreadplayersonboard(boarddata)
+      const store = memoryreadbookgadgetlayersforboard(mainbook, boarddata.id)
+      for (let p = 0; p < players.length; ++p) {
+        const graphics = memoryreadgraphics(players[p], boarddata)
+        const mode = normalizelayerzvariant(graphics.graphics)
+        if (ispresent(didrender[mode])) {
+          continue
+        }
+        didrender[mode] = true
+        store[mode] = memoryreadgadgetlayers(mode, boarddata)
+      }
+    }
+  })
+
+  // ensure the boundaries are in sync
+  perfmeasure('boardrunner:boundarysync', () => {
+    for (const id of assignedboundaries) {
+      const pipe = readworkerboundarypipe(id)
+      const doc = memoryboundaryget<BOUNDARY_DOC>(id) ?? {}
+      const patch = pipe.emitdiff(doc)
+      if (patch.length > 0) {
+        vmboardrunnerpatch(device, assignedplayer, patch, id)
+      }
+    }
+  })
+}
+
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
   if (!boardrunner.session(message)) {
     return
   }
 
+  // message filtering
   switch (message.target) {
+    // player scoped messages
     case 'tick':
-      // player scoped messages
-      if (message.player !== assignedplayer) {
-        return
-      }
-      break
     case 'paint':
     case 'patch':
-      // player scoped messages
       if (message.player !== assignedplayer) {
         return
       }
@@ -102,11 +179,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         const anydesynced = assignedboundaries.some((id) =>
           readworkerboundarypipe(id).isdesynced(),
         )
-        if (anydesynced) {
-          // console.info('waiting .... desynced to clear')
-          return
-        }
-        if (!memoryhasflags(message.player)) {
+        if (anydesynced || !memoryhasflags(message.player)) {
           return
         }
         console.info('### handle input', message.player)
@@ -128,65 +201,18 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
           number,
           string[],
         ]
-        // console.info('tick', board, timestamp, boundaries)
-        // detect reassignment
-        if (assignedboard !== board) {
-          assignedboard = board
-          assignedboundaries = boundaries
-          // ensure all boundaries are started
-          for (const id of boundaries) {
-            // we want to force a fullsync to the boundary
-            const pipe = readworkerboundarypipe(id)
-            pipe.forcedesync()
-            // please show full code
-            boardrunner.reply(message, 'desync', id)
-          }
-          // show the assignedboard
-          // console.info('### assignedboard', assignedboard)
-          // console.info('### assignedboundaries', assignedboundaries)
-        }
-        // bail if we don't have an assigned board
-        if (!assignedboard) {
-          return
-        }
-        // ack the tick
-        vmboardrunnerack(boardrunner, assignedplayer)
-        // validate pipes are not desynced
-        const anydesynced = boundaries.some((boundary) =>
-          readworkerboundarypipe(boundary).isdesynced(),
+        handleboardrunnertick(
+          boardrunner,
+          message,
+          board,
+          timestamp,
+          boundaries,
         )
-        if (anydesynced) {
-          // console.info('waiting .... desynced to clear')
-          return
-        }
-        // validate board is present
-        const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
-        if (!ispresent(maybeboard?.board)) {
-          return
-        }
-        // skip updating the over board for now
-        memorytickmain(timestamp, [maybeboard.board], memoryreadhalt())
-        // sync all boundaries
-        for (const id of assignedboundaries) {
-          const pipe = readworkerboundarypipe(id)
-          const doc = memoryboundaryget<BOUNDARY_DOC>(id) ?? {}
-          const patch = pipe.emitdiff(doc)
-          if (patch.length > 0) {
-            vmboardrunnerpatch(boardrunner, assignedplayer, patch, id)
-          }
-        }
       }
       break
     case 'paint':
       if (isarray(message.data)) {
         const [doc, id] = message.data as [any, string]
-        console.info(
-          '### fullsync',
-          id,
-          deepcopy(doc),
-          assignedplayer,
-          message.player,
-        )
         if (id) {
           const boundrypipe = readworkerboundarypipe(id)
           memoryboundaryset(id, boundrypipe.applyfullsync(doc))
