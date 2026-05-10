@@ -1,10 +1,8 @@
-import * as array from 'zss/mapping/array'
-import { TICK_FPS } from 'zss/mapping/tick'
 import {
   boardrunnerassignmentvalid,
   boardrunnerbudgetdec,
-  boardrunnereligibleforboard,
   boardrunnerelect,
+  boardrunnereligibleforboard,
   boardrunnerevict,
 } from 'zss/device/vm/boardrunnermanagement'
 import {
@@ -12,6 +10,8 @@ import {
   boardrunnerblocked,
   boardrunners,
 } from 'zss/device/vm/state'
+import * as array from 'zss/mapping/array'
+import { TICK_FPS } from 'zss/mapping/tick'
 import * as boardaccess from 'zss/memory/boardaccess'
 import * as boards from 'zss/memory/boards'
 import type { BOARD } from 'zss/memory/types'
@@ -57,9 +57,7 @@ describe('boardrunnermanagement', () => {
   describe('boardrunnereligibleforboard', () => {
     it('returns players on board that are not blocked', () => {
       const board = stubboard(boardid, [pid1, pid2])
-      jest
-        .mocked(boards.memoryreadboardbyaddress)
-        .mockReturnValue(board as BOARD)
+      jest.mocked(boards.memoryreadboardbyaddress).mockReturnValue(board)
       jest
         .mocked(boardaccess.memoryreadplayersonboard)
         .mockReturnValue([pid1, pid2])
@@ -77,21 +75,15 @@ describe('boardrunnermanagement', () => {
   describe('boardrunnerassignmentvalid', () => {
     it('is true when runner matches, is on board, and not blocked', () => {
       const board = stubboard(boardid, [pid1])
-      jest
-        .mocked(boards.memoryreadboardbyaddress)
-        .mockReturnValue(board as BOARD)
-      jest
-        .mocked(boardaccess.memoryreadplayersonboard)
-        .mockReturnValue([pid1])
+      jest.mocked(boards.memoryreadboardbyaddress).mockReturnValue(board)
+      jest.mocked(boardaccess.memoryreadplayersonboard).mockReturnValue([pid1])
       boardrunners[boardid] = pid1
       expect(boardrunnerassignmentvalid(boardid)).toBe(true)
     })
 
     it('is false when runner left the board', () => {
       const board = stubboard(boardid, [])
-      jest
-        .mocked(boards.memoryreadboardbyaddress)
-        .mockReturnValue(board as BOARD)
+      jest.mocked(boards.memoryreadboardbyaddress).mockReturnValue(board)
       jest.mocked(boardaccess.memoryreadplayersonboard).mockReturnValue([])
       boardrunners[boardid] = pid1
       expect(boardrunnerassignmentvalid(boardid)).toBe(false)
@@ -99,12 +91,8 @@ describe('boardrunnermanagement', () => {
 
     it('is false when runner is blocked', () => {
       const board = stubboard(boardid, [pid1])
-      jest
-        .mocked(boards.memoryreadboardbyaddress)
-        .mockReturnValue(board as BOARD)
-      jest
-        .mocked(boardaccess.memoryreadplayersonboard)
-        .mockReturnValue([pid1])
+      jest.mocked(boards.memoryreadboardbyaddress).mockReturnValue(board)
+      jest.mocked(boardaccess.memoryreadplayersonboard).mockReturnValue([pid1])
       boardrunners[boardid] = pid1
       boardrunnerblocked[pid1] = true
       expect(boardrunnerassignmentvalid(boardid)).toBe(false)
@@ -136,15 +124,14 @@ describe('boardrunnermanagement', () => {
 
     it('picks, assigns runner, and sets ack budget', () => {
       const board = stubboard(boardid, [pid1, pid2])
-      jest
-        .mocked(boards.memoryreadboardbyaddress)
-        .mockReturnValue(board as BOARD)
+      jest.mocked(boards.memoryreadboardbyaddress).mockReturnValue(board)
       jest
         .mocked(boardaccess.memoryreadplayersonboard)
         .mockReturnValue([pid1, pid2])
 
-      jest.spyOn(array, 'pick').mockImplementation(((...args: string[]) =>
-        args.flat()[0]) as never)
+      jest
+        .spyOn(array, 'pick')
+        .mockImplementation(((...args: string[]) => args.flat()[0]) as never)
       const elected = boardrunnerelect(boardid)
       expect(elected).toBe(pid1)
       expect(boardrunners[boardid]).toBe(pid1)

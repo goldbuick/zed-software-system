@@ -4,13 +4,7 @@ import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import {
-  MAYBE,
-  deepcopy,
-  isarray,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, deepcopy, isarray, ispresent } from 'zss/mapping/types'
 import {
   memoryreadbookflag,
   memorywritebookflag,
@@ -86,17 +80,9 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       }
       break
     case 'paint':
+    case 'patch':
       // player scoped messages
       if (message.player !== assignedplayer) {
-        console.info('### paint blocked', message.player)
-        return
-      }
-      break
-    case 'patch':
-      // memory patches are for all players
-      // boundary patches are player scoped
-      if (isstring(message.data) && message.player !== assignedplayer) {
-        console.info('### patch blocked', message.player, message.data)
         return
       }
       break
@@ -108,7 +94,6 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'start':
       if (!assignedplayer) {
         assignedplayer = message.player
-        console.info('### assignedplayer', assignedplayer, message.player)
       }
       break
     case 'input':

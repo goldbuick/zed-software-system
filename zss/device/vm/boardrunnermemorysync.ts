@@ -22,16 +22,17 @@ export function boardrunnermemorysync(vm: DEVICE, showlog = false) {
     return
   }
   const patch = boardrunnermemorypipe.emitdiff(memoryreadroot())
-  if (patch.length > 0) {
-    const activelist = new Set<string>([
-      memoryreadoperator(),
-      ...(mainbook.activelist ?? []),
-    ])
-    for (const player of activelist) {
-      boardrunnerpatch(vm, player, patch)
-      if (showlog) {
-        console.info('boardrunnermemorysync', player, patch)
-      }
+  if (patch.length === 0) {
+    return
+  }
+  const activelist = new Set<string>([
+    memoryreadoperator(),
+    ...(mainbook.activelist ?? []),
+  ])
+  for (const player of activelist) {
+    boardrunnerpatch(vm, player, patch)
+    if (showlog) {
+      console.info('boardrunnermemorysync', player, patch)
     }
   }
 }

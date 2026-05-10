@@ -1,6 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 
+import { handlegadgetdesync } from '../gadgetsynctick'
+
 import { handleadmin } from './admin'
 import {
   handlelocal,
@@ -19,7 +21,6 @@ import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
-import { handlegadgetdesync } from '../gadgetsynctick'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handleinput } from './input'

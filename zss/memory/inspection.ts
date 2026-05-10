@@ -3,8 +3,8 @@ import { parsetarget } from 'zss/device'
 import {
   registercopy,
   registereditoropen,
-  vmcodeaddress,
   vmclearscroll,
+  vmcodeaddress,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'

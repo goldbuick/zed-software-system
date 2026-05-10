@@ -64,7 +64,7 @@ describe('book opaque boundaries', () => {
     const exported = wirebookforimport(book)
     const packed = packformat(exported)
     expect(packed).toBeDefined()
-    const unpacked = unpackformat(packed!) as MAYBE<typeof exported>
+    const unpacked = unpackformat(packed!)
     expect(ispresent(unpacked)).toBe(true)
     memoryboundariesclear()
     const again = memoryimportbook(unpacked)
@@ -99,7 +99,7 @@ describe('book opaque boundaries', () => {
     expect(ispresent(imported)).toBe(true)
     memoryresetbooks([imported!])
 
-    const cp2 = memoryreadcodepage(imported!, cp.id)
+    const cp2 = memoryreadcodepage(imported, cp.id)
     expect(cp2).toBeDefined()
     const rtafter = memoryreadcodepageruntime(cp2)
     expect(rtafter?.board?.exitnorth).toBe('roomn')
