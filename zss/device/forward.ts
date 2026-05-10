@@ -33,10 +33,12 @@ export function createforward(handler: (message: MESSAGE) => void) {
 
 // outbound message
 export function shouldforwardonpeerserver(message: MESSAGE): boolean {
+  // why does NOT blocking these messages break the host ?
   switch (message.target) {
     case 'log':
     case 'chat':
     case 'toast':
+    case 'second':
       return true
     default: {
       const route = parsetarget(message.target)
@@ -50,18 +52,16 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
       }
       switch (route.path) {
         case 'sync':
+        case 'desync':
         case 'joinack':
         case 'acklook':
         case 'acklogin':
-        case 'ackoperator':
         case 'ackzsswords':
-        case 'gadgetclient':
           return true
       }
       break
     }
   }
-  // const route = parsetarget(message.target)
   console.info('server blocked', message.target)
   return false
 }
@@ -69,12 +69,33 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
 // outbound message
 export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'second':
-    case 'ticktock':
-      // console.info('client blocked', message.target)
-      return false
+    case 'log':
+    case 'chat':
+    case 'toast':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      switch (route.target) {
+        case 'vm':
+        case 'modem':
+          // case 'boardrunner':
+          return true
+      }
+      switch (route.path) {
+        case 'sync':
+        case 'desync':
+        case 'joinack':
+        case 'acklook':
+        case 'acklogin':
+        case 'ackzsswords':
+          // case 'boardrunner':
+          return true
+      }
+      break
+    }
   }
-  return true
+  console.info('client blocked', message.target)
+  return false
 }
 
 // create server -> client forward
@@ -95,8 +116,8 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'modem':
         case 'bridge':
         case 'register':
-        case 'gadgetclient':
         case 'boardrunner':
+        case 'gadgetclient':
           return true
       }
       switch (route.path) {
@@ -107,6 +128,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'acklogin':
         case 'ackoperator':
         case 'ackzsswords':
+        case 'boardrunner':
         case 'gadgetclient':
           return true
       }
