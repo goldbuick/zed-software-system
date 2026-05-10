@@ -13,6 +13,7 @@ How **devices** talk to each other in ZSS: **four JavaScript realms** (main thre
 - [Diagram: logical request paths (compact)](#diagram-logical-request-paths-compact)
 - [Directed graph (full handler edges)](#directed-graph-who-handles-which-target)
 - [Client → worker forwarding (reference)](#client--worker-forwarding-reference)
+- [Unified routing: workers, PEER, and blocked traffic](#unified-routing-workers-peer-and-blocked-traffic)
 - [Discovering message targets](#discovering-message-targets)
 - [Related: MIDI → `#play` import](../../feature/parse/docs/midi-import.md) (file loader → `parsemidi`, diagrams)
 
@@ -339,7 +340,194 @@ Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **
 
 **Heavy** and **second** / **ready** follow [`shouldforwardclienttoheavy`](../forward.ts). `ticktock` is **not** forwarded to heavy.
 
-**Boardrunner** follows [`shouldforwardclienttoboardrunner`](../forward.ts) (`boardrunner:*`, `vm:*`, `second`, `ready`; not `ticktock`). [`platform.ts`](../../platform.ts) additionally re-applies the `shouldforwardclienttoserver` / `shouldforwardclienttoheavy` / `shouldforwardclienttoboardrunner` predicates to messages **received from** the heavy and boardrunner workers, so worker → worker traffic (e.g. boardrunner → sim VM) is relayed through main without entering main's hub. Forwarding `vm:*` to the boardrunner is what lets scroll / sidebar / chip-targeted messages (which still flow to the sim VM as before) also reach the chip OS where the chips actually run.
+**Boardrunner** follows [`shouldforwardclienttoboardrunner`](../forward.ts) (`boardrunner:*`, `second`, `ready`; not `ticktock`; `vm:*` is **not** included—the commented `case 'vm'` in that helper would route chip-style traffic if re-enabled). [`platform.ts`](../../platform.ts) additionally re-applies the `shouldforwardclienttoserver` / `shouldforwardclienttoheavy` / `shouldforwardclienttoboardrunner` predicates to messages **received from** the heavy and boardrunner workers, so worker → worker traffic (e.g. boardrunner → sim VM) is relayed through main without entering main's hub.
+
+---
+
+## Unified routing: workers, PEER, and blocked traffic
+
+Authoritative allow-lists live in [`forward.ts`](../forward.ts). For each **directed** edge below, **blocked** means every other `message.target` does not get `postMessage` on that edge (some paths log `server blocked` / `client blocked` for PeerJS).
+
+[`createforward`](../forward.ts) also skips **`ticktock`** when invoking the **local** hub from an inbound worker payload (`message.target !== 'ticktock'` in `forward()`), so high-frequency clock ticks do not fan out through cross-realm delivery even when other predicates pass.
+
+### Diagram: devices by realm
+
+Each subgraph is one JavaScript **realm** (one `hub`). **`forward`** exists in each realm and bridges over `postMessage`. **`SOFTWARE`** may exist on multiple hubs depending on imports; it is shown under main where [`userspace`](../../userspace.ts) runs. **`userinput`** is created when UI imports [`userinput.tsx`](../../gadget/userinput.tsx), not from `userspace` alone.
+
+```mermaid
+flowchart TB
+  subgraph Main_thread [Main_thread]
+    direction TB
+    Fm[forward]
+    Reg[register]
+    GC[gadgetclient]
+    MdM[modem]
+    Brg[bridge]
+    Syn[synth]
+    UI[userinput]
+    SW[SOFTWARE]
+    EpMain[ephemeral_createdevice]
+  end
+  subgraph Sim_worker [Sim_worker]
+    direction TB
+    Fs[forward]
+    Clk[clock_sim_only]
+    VM[vm_or_stub]
+    MdW[modem_sim_only]
+  end
+  subgraph Heavy_worker [Heavy_worker]
+    direction TB
+    Fh[forward]
+    Hy[heavy]
+    Ag[agent_pid]
+  end
+  subgraph Boardrunner_worker [Boardrunner_worker]
+    direction TB
+    Fb[forward]
+    Brd[boardrunner]
+  end
+```
+
+**Realm notes**
+
+- **Sim vs stub** — Only one platform worker runs per session (`createplatform` chooses [`simspace`](../../simspace.ts) or [`stubspace`](../../stubspace.ts)). **simspace** boots **`clock`**, sim **`modem`**, and **`vm`**. **stubspace** boots **`stub`** (device name **`vm`**) and **`forward`** only—no **`clock`** or sim **`modem`**. Labels **`clock_sim_only`** / **`modem_sim_only`** apply only when **`simspace`** is active.
+- **Heavy** — Dynamic **`agent_<pid>`** devices are created on the heavy hub alongside **`heavy`** ([`feature/heavy/agent.ts`](../../feature/heavy/agent.ts)).
+
+### Diagram: `postMessage` bridges and predicates
+
+Solid arrows are **`postMessage`** between workers and the main thread. [`platform.ts`](../../platform.ts) installs listeners on **heavy**, **boardrunner**, and **sim/stub**; each listener **fan-outs** using the listed predicates (a single inbound message may satisfy multiple and hit multiple workers). Worker → worker routes **relay through main** and never enter main’s hub.
+
+```mermaid
+flowchart LR
+  subgraph Main_thread [Main_thread]
+    Fm[forward]
+  end
+  subgraph Sim_or_stub [Sim_or_stub_worker]
+    Fs[forward]
+  end
+  subgraph Heavy_worker [Heavy_worker]
+    Fh[forward]
+  end
+  subgraph Boardrunner_worker [Boardrunner_worker]
+    Fb[forward]
+  end
+  Fs -->|"shouldforwardservertoclient_sim_only"| Fm
+  Fm -->|"shouldforwardclienttoserver"| Fs
+  Fm -->|"shouldforwardclienttoheavy"| Fh
+  Fh -->|"shouldforwardheavytoclient_true"| Fm
+  Fm -->|"shouldforwardclienttoboardrunner"| Fb
+  Fb -->|"shouldforwardboardrunnertoclient_true"| Fm
+```
+
+**Stub vs sim outbound** — **[`stubspace`](../../stubspace.ts)** posts **every** message from the worker hub to main (`postMessage(message)` with no `shouldforwardservertoclient`). **[`simspace`](../../simspace.ts)** only posts when [`shouldforwardservertoclient`](../forward.ts) returns true. The edge label **`shouldforwardservertoclient_sim_only`** applies only when the platform worker is **simspace**; replace mentally with **all targets** when **stubspace** is active.
+
+**Inbound on main** — When main’s `createforward` receives a message from any worker, it may forward to **other** workers using **`shouldforwardclienttoserver`**, **`shouldforwardclienttoheavy`**, and **`shouldforwardclienttoboardrunner`** together ([`platform.ts`](../../platform.ts)), enabling paths such as boardrunner → sim **`vm:*`** without the message being handled on the main hub first.
+
+### Diagram: PeerJS net-terminal overlay
+
+Peer networking ([`netterminal.ts`](../../feature/netterminal.ts)) is **not** a separate hub; it wraps **`createforward`** and sends compressed payloads over PeerJS **`DataConnection`**. Traffic must pass **both** the Peer-specific predicate **and** the same worker-bridge predicate used for local forwarding—so the wire is **stricter** than sim ↔ main alone.
+
+```mermaid
+flowchart LR
+  subgraph Main_thread [Main_thread]
+    Fm[forward]
+  end
+  subgraph Peer_lane [PeerJS_net_terminal]
+    HostToGuest[host_outbound]
+    GuestToHost[guest_outbound]
+  end
+  Fm <-->|"compound_filters_below"| HostToGuest
+  Fm <-->|"compound_filters_below"| GuestToHost
+```
+
+| Direction | Send when (all must be true) |
+|-----------|-------------------------------|
+| Host → remote peer | [`shouldforwardonpeerserver`](../forward.ts)(`message`) **∧** [`shouldforwardservertoclient`](../forward.ts)(`message`) |
+| Join client → remote peer | [`shouldforwardonpeerclient`](../forward.ts)(`message`) **∧** [`shouldforwardclienttoserver`](../forward.ts)(`message`) |
+
+Decoded payloads from the peer are merged into the local hub through the same **`createforward`** path as other cross-realm traffic.
+
+### Forward vs blocked (tables)
+
+Predicates use [`parsetarget`](../../device.ts): first `:` segment is **`route.target`**, remainder is **`route.path`** (may contain further `:`).
+
+#### Main → sim/stub (`shouldforwardclienttoserver`)
+
+| Allowed | Details |
+|---------|---------|
+| `route.target` | **`vm`**, **`modem`** |
+| `route.path` exactly | **`sync`**, **`desync`**, **`joinack`** (works for any first segment, e.g. composite targets whose remainder matches) |
+
+**Blocked:** all other targets on this edge (e.g. bare **`log`**, **`register:*`**, **`heavy:*`**, **`bridge:*`**, **`gadgetclient:*`** unless carried via matching composite paths above).
+
+#### Sim → main (`shouldforwardservertoclient`) — **simspace only**
+
+| Allowed | Details |
+|---------|---------|
+| Whole-target | **`log`**, **`chat`**, **`ready`**, **`toast`**, **`second`**, **`ticktock`** |
+| `route.target` | **`heavy`**, **`synth`**, **`modem`**, **`bridge`**, **`register`**, **`boardrunner`**, **`gadgetclient`** |
+| `route.path` | **`sync`**, **`heavy`**, **`joinack`**, **`acklook`**, **`acklogin`**, **`ackoperator`**, **`ackzsswords`**, **`boardrunner`**, **`gadgetclient`** |
+
+**Blocked:** everything else (silent `return false`; no console log).
+
+#### Main → heavy (`shouldforwardclienttoheavy`)
+
+| Allowed | Details |
+|---------|---------|
+| Whole-target | **`second`**, **`ready`** (**`ticktock`** explicitly false) |
+| `route.target` | **`heavy`** |
+| `route.path` | **`acklook`** |
+
+**Blocked:** **`ticktock`** and all other targets.
+
+#### Main → boardrunner (`shouldforwardclienttoboardrunner`)
+
+| Allowed | Details |
+|---------|---------|
+| Whole-target | **`second`**, **`ready`** (**`ticktock`** explicitly false) |
+| `route.target` | **`boardrunner`** |
+
+**Blocked:** **`ticktock`**, **`vm:*`**, and all other targets.
+
+#### Heavy → main (`shouldforwardheavytoclient`)
+
+Always **`true`** — no per-target filter at postMessage; further routing to sim/boardrunner uses main’s outbound predicates when the message arrives.
+
+#### Boardrunner → main (`shouldforwardboardrunnertoclient`)
+
+Always **`true`** — same pattern as heavy → main.
+
+#### Peer host outbound (`shouldforwardonpeerserver`)
+
+| Allowed | Details |
+|---------|---------|
+| Whole-target | **`log`**, **`chat`**, **`toast`**, **`second`** |
+| `route.target` | **`synth`**, **`modem`**, **`register`**, **`boardrunner`**, **`gadgetclient`** |
+| `route.path` | **`sync`**, **`desync`**, **`joinack`**, **`acklook`**, **`acklogin`**, **`ackzsswords`** |
+
+**Blocked:** everything else → logs **`server blocked`** with `message.target`.
+
+#### Peer join outbound (`shouldforwardonpeerclient`)
+
+| Allowed | Details |
+|---------|---------|
+| Whole-target | **`log`**, **`chat`**, **`toast`** |
+| `route.target` | **`vm`**, **`modem`** |
+| `route.path` | **`sync`**, **`desync`**, **`joinack`**, **`acklook`**, **`acklogin`**, **`ackzsswords`** |
+
+**Blocked:** everything else → logs **`client blocked`** with `message.target`.
+
+### Peer vs local sim ↔ main (narrower on the wire)
+
+Examples of targets allowed **sim → main** by [`shouldforwardservertoclient`](../forward.ts) but **not** by [`shouldforwardonpeerserver`](../forward.ts) alone for host send (host also requires `shouldforwardservertoclient`, but this table highlights Peer-specific gaps):
+
+| Target pattern | `shouldforwardservertoclient` | `shouldforwardonpeerserver` |
+|----------------|------------------------------|----------------------------|
+| **`ready`**, **`ticktock`** | yes | no |
+| **`heavy:*`** | yes (`route.target`) | no |
+| **`bridge:*`** | yes (`route.target`) | no |
+
+Join-side Peer outbound already intersects with **`shouldforwardclienttoserver`**, which only allows **`vm`**, **`modem`**, and paths **`sync`** / **`desync`** / **`joinack`**—so many main-thread emits never qualify for guest → peer send.
 
 ---
 

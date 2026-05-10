@@ -4,7 +4,13 @@ import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isarray,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import {
   memoryreadbookflag,
   memorywritebookflag,
@@ -74,9 +80,15 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
 
   switch (message.target) {
     case 'tick':
+      // player scoped messages
+      if (message.player !== assignedplayer) {
+        return
+      }
+      break
     case 'paint':
       // player scoped messages
       if (message.player !== assignedplayer) {
+        console.info('### paint blocked', message.player)
         return
       }
       break
@@ -84,6 +96,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       // memory patches are for all players
       // boundary patches are player scoped
       if (isstring(message.data) && message.player !== assignedplayer) {
+        console.info('### patch blocked', message.player, message.data)
         return
       }
       break
@@ -95,6 +108,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'start':
       if (!assignedplayer) {
         assignedplayer = message.player
+        console.info('### assignedplayer', assignedplayer, message.player)
       }
       break
     case 'input':
@@ -110,6 +124,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         if (!memoryhasflags(message.player)) {
           return
         }
+        console.info('### handle input', message.player)
         lastinputtime[message.player] = Date.now()
         const flags = memoryreadflags(message.player)
         const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
@@ -141,6 +156,9 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
             // please show full code
             boardrunner.reply(message, 'desync', id)
           }
+          // show the assignedboard
+          // console.info('### assignedboard', assignedboard)
+          // console.info('### assignedboundaries', assignedboundaries)
         }
         // bail if we don't have an assigned board
         if (!assignedboard) {
@@ -177,7 +195,13 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'paint':
       if (isarray(message.data)) {
         const [doc, id] = message.data as [any, string]
-        // console.info('fullsync', id, deepcopy(doc))
+        console.info(
+          '### fullsync',
+          id,
+          deepcopy(doc),
+          assignedplayer,
+          message.player,
+        )
         if (id) {
           const boundrypipe = readworkerboundarypipe(id)
           memoryboundaryset(id, boundrypipe.applyfullsync(doc))

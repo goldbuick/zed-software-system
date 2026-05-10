@@ -31,71 +31,26 @@ export function createforward(handler: (message: MESSAGE) => void) {
   return { forward, disconnect }
 }
 
-// outbound message
+// outbound message server -> client
 export function shouldforwardonpeerserver(message: MESSAGE): boolean {
-  // why does NOT blocking these messages break the host ?
   switch (message.target) {
-    case 'log':
-    case 'chat':
-    case 'toast':
-    case 'second':
-      return true
-    default: {
-      const route = parsetarget(message.target)
-      switch (route.target) {
-        case 'synth':
-        case 'modem':
-        case 'register':
-        case 'boardrunner':
-        case 'gadgetclient':
-          return true
-      }
-      switch (route.path) {
-        case 'sync':
-        case 'desync':
-        case 'joinack':
-        case 'acklook':
-        case 'acklogin':
-        case 'ackzsswords':
-          return true
-      }
-      break
-    }
+    case 'ready':
+    case 'ticktock':
+      // console.info('server blocked', message.target)
+      return false
   }
-  console.info('server blocked', message.target)
-  return false
+  return true
 }
 
-// outbound message
+// outbound message client -> server
 export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
-    case 'log':
-    case 'chat':
-    case 'toast':
-      return true
-    default: {
-      const route = parsetarget(message.target)
-      switch (route.target) {
-        case 'vm':
-        case 'modem':
-          // case 'boardrunner':
-          return true
-      }
-      switch (route.path) {
-        case 'sync':
-        case 'desync':
-        case 'joinack':
-        case 'acklook':
-        case 'acklogin':
-        case 'ackzsswords':
-          // case 'boardrunner':
-          return true
-      }
-      break
-    }
+    case 'ready':
+    case 'ticktock':
+      // console.info('client blocked', message.target)
+      return false
   }
-  console.info('client blocked', message.target)
-  return false
+  return true
 }
 
 // create server -> client forward

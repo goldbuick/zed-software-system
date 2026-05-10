@@ -30,7 +30,7 @@ export function boardrunnerassignmentvalid(board: string): boolean {
 
 export function boardrunnerblock(runner: string): void {
   boardrunnerblocked[runner] = true
-  console.info('### block', runner)
+  // console.info('### block', runner)
 }
 
 export function boardrunnerevict(board: string): void {
@@ -57,7 +57,7 @@ export function boardrunnerassign(board: string, runner: string) {
   boardrunners[board] = runner
   boardrunneracks[runner] = TICK_BUDGET
   boardrunnerblocked[runner] = false
-  console.info('### assign', runner, board)
+  // console.info('### assign', runner, board)
 }
 
 export function boardrunnerbudgetdec(runner: string): boolean {
