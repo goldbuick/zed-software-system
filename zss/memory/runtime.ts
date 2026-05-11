@@ -19,7 +19,7 @@ import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
-import { memoryinitboardlookup } from './boardlookup'
+import { memoryresetboardlookups } from './boardlookup'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
@@ -85,6 +85,7 @@ export function memoryrestartallchipsandflags() {
 export function memorymessagechip(message: MESSAGE) {
   os.message(message)
 }
+
 // CLI Operations
 
 export function memoryrepeatclilast(player: string) {
@@ -93,8 +94,6 @@ export function memoryrepeatclilast(player: string) {
   const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
     ? flags.playbuffer
     : '')
-  // log it
-  console.info('memoryrepeatclilast', player, '>>', maybecli, flags)
   // run it
   if (maybecli) {
     memoryruncli(player, maybecli, false)
@@ -361,7 +360,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
 
   // ensure sure the lookup is created for the current board
-  memoryinitboardlookup(READ_CONTEXT.board)
+  memoryresetboardlookups(READ_CONTEXT.board)
 
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')

@@ -20,7 +20,6 @@ export function ScreenUIScrollProvider({
   const scrollcontextvalue = useMemo(
     () => ({
       sendmessage(chip: string, target: string, data: any[]) {
-        // SOFTWARE.emit(player, target, data)
         chipmessage(SOFTWARE, player, chip, target, data)
       },
       sendclose() {
