@@ -338,6 +338,7 @@ export function memoryinspectbgarea(
     'bgedit',
     () => all,
     (field, value) => {
+      console.info('??? memoryinspectbgarea set', field, value)
       if (isnumber(value)) {
         all = value
         rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
@@ -347,6 +348,7 @@ export function memoryinspectbgarea(
           }
         })
         boardrunnerpushupdates(vm)
+        console.info('??? memoryinspectbgarea did set')
       }
     },
   )
@@ -429,6 +431,7 @@ export function memoryinspectchararea(
     'charedit',
     () => all,
     (field, value) => {
+      console.info('??? memoryinspectchararea set', field, value)
       if (isnumber(value)) {
         all = value
         rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
@@ -438,6 +441,7 @@ export function memoryinspectchararea(
           }
         })
         boardrunnerpushupdates(vm)
+        console.info('??? memoryinspectchararea did set')
       }
     },
   )
@@ -475,9 +479,11 @@ export function memoryinspectcolor(
     return value
   }
   function set(field: string, value: WORD) {
+    console.info('??? memoryinspectcolor set', field, value)
     if (ispresent(element)) {
       element[field as keyof BOARD_ELEMENT] = value
       boardrunnerpushupdates(vm)
+      console.info('??? memoryinspectcolor did set')
     }
   }
 
@@ -519,6 +525,7 @@ export function memoryinspectcolorarea(
     'coloredit',
     () => all,
     (field, value) => {
+      console.info('??? memoryinspectcolorarea set', field, value)
       if (isnumber(value)) {
         all = value
         for (let y = p1.y; y <= p2.y; ++y) {
@@ -530,6 +537,7 @@ export function memoryinspectcolorarea(
           }
         }
         boardrunnerpushupdates(vm)
+        console.info('??? memoryinspectcolorarea did set')
       }
     },
   )
@@ -558,11 +566,7 @@ export function memoryinspectcommand(vm: DEVICE, path: string, player: string) {
   }
   switch (inspect.path) {
     case 'copycoords':
-      registercopy(
-        SOFTWARE,
-        memoryreadoperator(),
-        [element.x ?? 0, element.y ?? 0].join(' '),
-      )
+      registercopy(SOFTWARE, player, [element.x ?? 0, element.y ?? 0].join(' '))
       break
     case 'bg':
     case 'color':
@@ -653,12 +657,14 @@ export function memoryinspectelement(
   }
   function set(name: string, value: WORD) {
     if (ispresent(element)) {
+      console.info('??? memoryinspectelement set', name, value)
       if (name === 'group') {
         element.group = `group${value as number}`
       } else {
         element[name as keyof BOARD_ELEMENT] = value
       }
       boardrunnerpushupdates(vm)
+      console.info('??? memoryinspectelement did set')
     }
   }
 

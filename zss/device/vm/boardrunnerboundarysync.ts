@@ -78,7 +78,7 @@ export function boardrunnerboundarymemorysync(vm: DEVICE, showlog = false) {
       if (patch.length > 0) {
         boardrunnerpatch(vm, player, patch, boundary)
         if (showlog) {
-          console.info('boardrunnerboundarymemorysync', player, boundary, patch)
+          console.info('$$$ sync', player, boundary, patch.length)
         }
       }
     }

@@ -32,7 +32,7 @@ export function boardrunnermemorysync(vm: DEVICE, showlog = false) {
   for (const player of activelist) {
     boardrunnerpatch(vm, player, patch)
     if (showlog) {
-      console.info('boardrunnermemorysync', player, patch)
+      console.info('MEM sync', player, patch.length)
     }
   }
 }

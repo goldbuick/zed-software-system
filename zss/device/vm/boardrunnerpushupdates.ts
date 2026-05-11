@@ -6,7 +6,7 @@ import { boardrunnermemorysync } from './boardrunnermemorysync'
 
 export function boardrunnerpushupdates(vm: DEVICE) {
   perfmeasure('vm:boardrunnersync', () => {
-    boardrunnermemorysync(vm)
-    boardrunnerboundarymemorysync(vm)
+    boardrunnermemorysync(vm, true)
+    boardrunnerboundarymemorysync(vm, true)
   })
 }

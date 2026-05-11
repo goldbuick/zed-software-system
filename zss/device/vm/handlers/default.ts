@@ -51,7 +51,6 @@ const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
   const { target, path } = parsetarget(message.target.replace('chip:', ''))
-  console.info('??? default', target, path)
   switch (NAME(target)) {
     case 'adminop': {
       switch (path) {
