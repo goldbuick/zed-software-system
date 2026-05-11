@@ -34,7 +34,24 @@ const terminalhyperlinksharedbridges: Record<
   Record<string, HYPERLINK_SHARED_BRIDGE>
 > = {}
 
-/** Register get/set for `HYPERLINK_WITH_SHARED` links so call sites can omit closures (e.g. zip file list). */
+export function registerhyperlinksharedcleanup() {
+  const keys = Object.keys(hyperlinksharedbridges)
+  for (const key of keys) {
+    switch (key) {
+      case 'admin':
+      case 'batch':
+      case 'remix':
+      case 'findany':
+      case 'zipfilelist':
+        break
+      default:
+        // clear out any other bridges
+        delete hyperlinksharedbridges[key]
+        break
+    }
+  }
+}
+
 export function registerhyperlinksharedbridge(
   chip: string,
   type: string,
@@ -43,7 +60,7 @@ export function registerhyperlinksharedbridge(
 ): void {
   const c = NAME(chip)
   const t = NAME(type)
-  hyperlinksharedbridges[c] = hyperlinksharedbridges[c] ?? {}
+  hyperlinksharedbridges[c] ??= {}
   hyperlinksharedbridges[c][t] = { get, set }
 }
 
@@ -60,7 +77,7 @@ export function registerterminalhyperlinksharedbridge(
 ): void {
   const c = NAME(chip)
   const t = NAME(type)
-  terminalhyperlinksharedbridges[c] = terminalhyperlinksharedbridges[c] ?? {}
+  terminalhyperlinksharedbridges[c] ??= {}
   terminalhyperlinksharedbridges[c][t] = { get, set }
 }
 
@@ -116,6 +133,17 @@ export function applyhyperlinksharedmodemsync(
     return
   }
 
+  // halt all other panel shared
+  const allchips = Object.keys(panelshared)
+  for (const c of allchips) {
+    const alltargets = Object.keys(panelshared[c])
+    for (const t of alltargets) {
+      panelshared[c][t]?.()
+      delete panelshared[c][t]
+    }
+  }
+
+  // observe handler
   function setvalue<T extends number | string>(targ: string, value: T) {
     if (ispresent(value) && value !== getforchip(typ, targ)) {
       READ_CONTEXT.board = readcontextcache.board
@@ -125,9 +153,10 @@ export function applyhyperlinksharedmodemsync(
     }
   }
 
-  panelshared[chip] = panelshared[chip] ?? {}
+  panelshared[chip] ??= {}
   const current = getforchip(typ, target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[typ]
 
+  // bail if already created
   if (panelshared[chip][target] !== undefined) {
     return
   }

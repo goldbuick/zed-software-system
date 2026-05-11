@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react'
 import {
   type SharedTextHandle,
-  getUndoManager,
-  markNextPatchAsLocal,
+  getundomanager,
+  marknextpatchaslocal,
   modembroadcastpresence,
-  registerCursorRestore,
-  setCursorBeforeEdit,
+  registercursorrestore,
+  setcursorbeforeedit,
 } from 'zss/device/modem'
 import { usePresence } from 'zss/device/modemhooks'
 import { useEditor } from 'zss/gadget/data/state'
@@ -167,10 +167,10 @@ export function useUndoRedo(
       updatescrolling(cursor)
       useEditor.setState({ cursor, select: undefined })
     }
-    return registerCursorRestore(key, restore)
+    return registercursorrestore(key, restore)
   }, [key, updatescrolling])
 
-  const um = key ? getUndoManager(key) : undefined
+  const um = key ? getundomanager(key) : undefined
   const undomanager =
     ispresent(codepage) && um
       ? {
@@ -197,9 +197,9 @@ export function useEditorSplice(
   const strvaluesplice = useCallback(
     function (index: number, count: number, insert?: string) {
       if (codepage) {
-        setCursorBeforeEdit(codepage.nodeId.key, index)
+        setcursorbeforeedit(codepage.nodeId.key, index)
       }
-      markNextPatchAsLocal()
+      marknextpatchaslocal()
       if (codepage && (count > 0 || ispresent(insert))) {
         codepage.splice(index, count, insert)
       }
@@ -213,9 +213,9 @@ export function useEditorSplice(
   const strvaluespliceonly = useCallback(
     function (index: number, count: number, insert?: string) {
       if (codepage) {
-        setCursorBeforeEdit(codepage.nodeId.key, index)
+        setcursorbeforeedit(codepage.nodeId.key, index)
       }
-      markNextPatchAsLocal()
+      marknextpatchaslocal()
       if (codepage && (count > 0 || ispresent(insert))) {
         codepage.splice(index, count, insert)
       }

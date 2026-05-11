@@ -1,22 +1,22 @@
 /**
- * Integration tests: Y.UndoManager + modem (getUndoManager, setCursorBeforeEdit, registerCursorRestore).
+ * Integration tests: Y.UndoManager + modem (getundomanager, setcursorbeforeedit, registercursorrestore).
  * Exercises the same scenarios as before (insert/undo/redo, interleaved edits, redo clear on new edit).
  */
 
 import {
-  destroyModemForTest,
-  getSharedTextHandleForTest,
-  getUndoManager,
-  markNextPatchAsLocal,
-  registerCursorRestore,
-  resetKeyForTest,
-  setCursorBeforeEdit,
+  destroymodemfortest,
+  getsharedtexthandlefortest,
+  getundomanager,
+  marknextpatchaslocal,
+  registercursorrestore,
+  resetkeyfortest,
+  setcursorbeforeedit,
 } from 'zss/device/modem'
 
 const CODEKEY = 'undoRedoIntegrationCode'
 
 function gettext() {
-  return getSharedTextHandleForTest(CODEKEY)
+  return getsharedtexthandlefortest(CODEKEY)
 }
 
 function getstringcontent(): string {
@@ -29,29 +29,29 @@ async function localinsert(text: string): Promise<void> {
   if (!handle) {
     return
   }
-  markNextPatchAsLocal()
+  marknextpatchaslocal()
   const len = handle.length
-  setCursorBeforeEdit(CODEKEY, len)
+  setcursorbeforeedit(CODEKEY, len)
   handle.insert(len, text)
   await new Promise((r) => setTimeout(r, 0))
 }
 
 describe('undo/redo integration', () => {
   afterAll(() => {
-    destroyModemForTest()
+    destroymodemfortest()
   })
 
   function getUm() {
-    return getUndoManager(CODEKEY)
+    return getundomanager(CODEKEY)
   }
 
   beforeEach(() => {
-    resetKeyForTest(CODEKEY)
+    resetkeyfortest(CODEKEY)
     getUm()
   })
 
   it('insert then undo produces empty string', async () => {
-    registerCursorRestore(CODEKEY, () => {})
+    registercursorrestore(CODEKEY, () => {})
     await localinsert('ab')
     expect(getstringcontent()).toBe('ab')
     getUm()!.undo()
@@ -59,7 +59,7 @@ describe('undo/redo integration', () => {
   })
 
   it('insert, undo, insert (new edit) then undo reverts only second insert', async () => {
-    registerCursorRestore(CODEKEY, () => {})
+    registercursorrestore(CODEKEY, () => {})
     await localinsert('ab')
     getUm()!.undo()
     expect(getstringcontent()).toBe('')
@@ -70,7 +70,7 @@ describe('undo/redo integration', () => {
   })
 
   it('insert, undo, insert, undo, redo leaves only second insert', async () => {
-    registerCursorRestore(CODEKEY, () => {})
+    registercursorrestore(CODEKEY, () => {})
     await localinsert('ab')
     getUm()!.undo()
     await localinsert('x')
@@ -81,7 +81,7 @@ describe('undo/redo integration', () => {
   })
 
   it('insert ab, undo, insert x, redo is no-op (redo stack was cleared)', async () => {
-    registerCursorRestore(CODEKEY, () => {})
+    registercursorrestore(CODEKEY, () => {})
     await localinsert('ab')
     getUm()!.undo()
     expect(getstringcontent()).toBe('')
@@ -91,12 +91,12 @@ describe('undo/redo integration', () => {
   })
 
   it('splice replace: single undo restores prior string; single redo restores after', async () => {
-    registerCursorRestore(CODEKEY, () => {})
+    registercursorrestore(CODEKEY, () => {})
     await localinsert('hello')
     const handle = gettext()
     expect(handle).toBeDefined()
-    markNextPatchAsLocal()
-    setCursorBeforeEdit(CODEKEY, 1)
+    marknextpatchaslocal()
+    setcursorbeforeedit(CODEKEY, 1)
     handle!.splice(1, 2, 'XX')
     expect(getstringcontent()).toBe('hXXlo')
     getUm()!.undo()
@@ -106,7 +106,7 @@ describe('undo/redo integration', () => {
   })
 
   it('two inserts, undo, undo, new insert, undo: only new insert is reverted', async () => {
-    registerCursorRestore(CODEKEY, () => {})
+    registercursorrestore(CODEKEY, () => {})
     await localinsert('a')
     await localinsert('b')
     expect(getstringcontent()).toBe('ab')
@@ -121,7 +121,7 @@ describe('undo/redo integration', () => {
 
   describe('undo 5 then type then redo', () => {
     it('after 5 undos, typing clears redo; redo does nothing', async () => {
-      registerCursorRestore(CODEKEY, () => {})
+      registercursorrestore(CODEKEY, () => {})
       await localinsert('a')
       await localinsert('b')
       await localinsert('c')
@@ -145,7 +145,7 @@ describe('undo/redo integration', () => {
     })
 
     it('after 5 undos, type 3 chars, undo 3, redo 3: back to xyz', async () => {
-      registerCursorRestore(CODEKEY, () => {})
+      registercursorrestore(CODEKEY, () => {})
       await localinsert('a')
       await localinsert('b')
       await localinsert('c')
@@ -173,7 +173,7 @@ describe('undo/redo integration', () => {
     })
 
     it('5 undos, type one, undo that one, redo once: only new char comes back', async () => {
-      registerCursorRestore(CODEKEY, () => {})
+      registercursorrestore(CODEKEY, () => {})
       await localinsert('a')
       await localinsert('b')
       await localinsert('c')
@@ -198,7 +198,7 @@ describe('undo/redo integration', () => {
 
   describe('interleaved undo and new edits', () => {
     it('undo 2, type, undo 2 again (of new), redo 2: only new text back', async () => {
-      registerCursorRestore(CODEKEY, () => {})
+      registercursorrestore(CODEKEY, () => {})
       await localinsert('1')
       await localinsert('2')
       await localinsert('3')
@@ -219,7 +219,7 @@ describe('undo/redo integration', () => {
     })
 
     it('alternating: each new insert clears redo so only last undone edit can redo', async () => {
-      registerCursorRestore(CODEKEY, () => {})
+      registercursorrestore(CODEKEY, () => {})
       await localinsert('a')
       getUm()!.undo()
       await localinsert('b')

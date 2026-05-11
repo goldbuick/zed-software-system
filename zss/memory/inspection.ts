@@ -18,6 +18,7 @@ import {
 import { codepagepicksuffix } from 'zss/firmware/cli/utils'
 import {
   registerhyperlinksharedbridge,
+  registerhyperlinksharedcleanup,
   resolvehyperlinksharedbridge,
 } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -176,7 +177,11 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
       element = memoryreadelement(maybeboard, first)
     }
   }
-  const maybevalue = element?.[name as keyof BOARD_ELEMENT]
+  // get falls back to kind data
+  const kind = memoryreadboardelementruntime(element)?.kinddata
+  const maybevalue =
+    element?.[name as keyof BOARD_ELEMENT] ??
+    kind?.[name as keyof BOARD_ELEMENT]
   switch (name) {
     case 'group':
       return isstring(maybevalue)
@@ -286,6 +291,9 @@ function registerhyperlinksforelement(
       delete elementhyperlinkcontext[key as keyof ELEMENT_HYPERLINK_CONTEXT]
     }
   }
+  // remove any shared bridges that are no longer needed
+  registerhyperlinksharedcleanup()
+  // register new shared bridges
   for (const type of elementhyperlinktypes) {
     const shared = resolvehyperlinksharedbridge(chip, type)
     if (ispresent(shared)) {
@@ -507,22 +515,6 @@ export function memoryinspectchar(
     return
   }
 
-  // function get(target: string): WORD {
-  //   const kind = memoryreadboardelementruntime(element)?.kinddata
-  //   const value =
-  //     element?.[target as keyof BOARD_ELEMENT] ??
-  //     kind?.[target as keyof BOARD_ELEMENT] ??
-  //     0
-  //   return value
-  // }
-  // function set(field: string, value: WORD) {
-  //   console.info('??? memoryinspectchar set', field, value)
-  //   if (ispresent(element)) {
-  //     element[field as keyof BOARD_ELEMENT] = value
-  //     boardrunnerpushupdates(vm)
-  //     console.info('??? memoryinspectchar did set')
-  //   }
-  // }
   const chip = chipfromelement(board, element)
   registerhyperlinksforelement(chip, {
     board: board.id,
@@ -584,23 +576,6 @@ export function memoryinspectcolor(
   if (!ispresent(board)) {
     return
   }
-
-  // function get(target: string): WORD {
-  //   const kind = memoryreadboardelementruntime(element)?.kinddata
-  //   const value =
-  //     element?.[target as keyof BOARD_ELEMENT] ??
-  //     kind?.[target as keyof BOARD_ELEMENT] ??
-  //     0
-  //   return value
-  // }
-  // function set(field: string, value: WORD) {
-  //   console.info('??? memoryinspectcolor set', field, value)
-  //   if (ispresent(element)) {
-  //     element[field as keyof BOARD_ELEMENT] = value
-  //     boardrunnerpushupdates(vm)
-  //     console.info('??? memoryinspectcolor did set')
-  //   }
-  // }
 
   const chip = chipfromelement(board, element)
   registerhyperlinksforelement(chip, {
@@ -723,50 +698,6 @@ export function memoryinspectelement(
     return
   }
 
-  // function get(name: string): WORD {
-  //   const kind = memoryreadboardelementruntime(element)?.kinddata
-  //   const value =
-  //     element?.[name as keyof BOARD_ELEMENT] ??
-  //     kind?.[name as keyof BOARD_ELEMENT]
-
-  //   if (name === 'group') {
-  //     return parseFloat(element.group?.replace('group', '') ?? '0')
-  //   }
-
-  //   if (!ispresent(value)) {
-  //     switch (name) {
-  //       case 'color':
-  //         return 15
-  //       case 'bg':
-  //         return 0
-  //       case 'group':
-  //         return 0
-  //       case 'cycle':
-  //         return CYCLE_DEFAULT
-  //       case 'collision':
-  //         return COLLISION.ISWALK
-  //       case 'pushable':
-  //         return 0
-  //       case 'breakable':
-  //         return 0
-  //     }
-  //   }
-
-  //   return value
-  // }
-  // function set(name: string, value: WORD) {
-  //   if (ispresent(element)) {
-  //     console.info('??? memoryinspectelement set', name, value)
-  //     if (name === 'group') {
-  //       element.group = `group${value as number}`
-  //     } else {
-  //       element[name as keyof BOARD_ELEMENT] = value
-  //     }
-  //     boardrunnerpushupdates(vm)
-  //     console.info('??? memoryinspectelement did set')
-  //   }
-  // }
-
   const chip = chipfromelement(board, element)
   registerhyperlinksforelement(chip, {
     board: board.id,
@@ -776,38 +707,6 @@ export function memoryinspectelement(
 
   const stats = memoryreadcodepagestatdefaults(codepage)
   const targets = objectKeys(stats)
-
-  // const stattypes = new Set<string>([
-  //   'select',
-  //   'charedit',
-  //   'coloredit',
-  //   'bgedit',
-  // ])
-  // for (let i = 0; i < targets.length; ++i) {
-  //   const target = targets[i]
-  //   switch (target) {
-  //     case 'char':
-  //     case 'cycle':
-  //     case 'color':
-  //     case 'bg':
-  //     case 'group':
-  //     case 'collision':
-  //     case 'pushable':
-  //     case 'breakable':
-  //       break
-  //     default:
-  //       if (isarray(stats[target])) {
-  //         const [typ] = stats[target]
-  //         if (isstring(typ)) {
-  //           const lowered = NAME(typ)
-  //           if (lowered && lowered !== 'hk' && lowered !== 'hotkey') {
-  //             stattypes.add(lowered)
-  //           }
-  //         }
-  //       }
-  //       break
-  //   }
-  // }
 
   const lines: string[] = []
   if (isobject) {

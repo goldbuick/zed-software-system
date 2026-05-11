@@ -319,11 +319,11 @@ Functions for shared state synchronization using Yjs (CRDT) and y-protocols (Awa
 - `modemobservevaluestring(key, callback)` - Observe string value changes
 
 ### Undo / Redo
-- `markNextPatchAsLocal()` - Mark the next edit as local (for undo tracking)
-- `consumeLocalPatchFlag()` - Consume the local-patch flag; returns true if next tx was local
-- `setCursorBeforeEdit(key, cursor)` - Store cursor before edit (for cursor restore on undo/redo)
-- `getUndoManager(key)` - Get Y.UndoManager for the shared text at key
-- `registerCursorRestore(key, restore)` - Register callback to restore cursor after undo/redo. Returns unregister.
+- `marknextpatchaslocal()` - Mark the next edit as local (for undo tracking)
+- `consumelocalpatchflag()` - Consume the local-patch flag; returns true if next tx was local
+- `setcursorbeforeedit(key, cursor)` - Store cursor before edit (for cursor restore on undo/redo)
+- `getundomanager(key)` - Get Y.UndoManager for the shared text at key
+- `registercursorrestore(key, restore)` - Register callback to restore cursor after undo/redo. Returns unregister.
 
 ### Presence (Awareness)
 - `modembroadcastpresence(clientId, codepageKey, cursor, select?, name?, color?)` - Update local awareness state
