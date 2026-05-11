@@ -1,8 +1,8 @@
 import {
-  applylayercacheupdate,
-  layersstrippedplayersprites,
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
+  applylayercacheupdate,
+  layersstrippedplayersprites,
   useEditor,
   useGadgetClient,
   useInspector,

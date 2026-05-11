@@ -179,7 +179,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'batch':
       doasync(vm, message.player, async () => {
-        await memoryinspectbatchcommand(path, message.player)
+        await memoryinspectbatchcommand(vm, path, message.player)
         boardrunnerpushupdates(vm)
       })
       break
@@ -199,7 +199,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     }
     case 'inspect':
-      memoryinspectcommand(path, message.player)
+      memoryinspectcommand(vm, path, message.player)
       break
     case 'gadget':
       if (isarray(message.data)) {

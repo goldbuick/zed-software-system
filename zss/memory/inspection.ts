@@ -384,9 +384,11 @@ export function memoryinspectchar(
     return value
   }
   function set(field: string, value: WORD) {
+    console.info('??? memoryinspectchar set', field, value)
     if (ispresent(element)) {
       element[field as keyof BOARD_ELEMENT] = value
       boardrunnerpushupdates(vm)
+      console.info('??? memoryinspectchar did set')
     }
   }
 
@@ -839,6 +841,7 @@ export function memoryinspectelement(
 }
 
 export function memoryinspectempty(
+  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -893,6 +896,8 @@ export function memoryinspectempty(
       break
     }
   }
+
+  boardrunnerpushupdates(vm)
 }
 
 export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {

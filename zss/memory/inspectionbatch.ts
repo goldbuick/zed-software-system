@@ -1,5 +1,5 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
-import { parsetarget } from 'zss/device'
+import { DEVICE, parsetarget } from 'zss/device'
 import { apitoast, registercopy, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
@@ -114,7 +114,11 @@ export async function memoryhassecretheap() {
   return !!(await memoryreadsecretheap())
 }
 
-export async function memoryinspectbatchcommand(path: string, player: string) {
+export async function memoryinspectbatchcommand(
+  vm: DEVICE,
+  path: string,
+  player: string,
+) {
   const board = memoryreadplayerboard(player)
   if (!ispresent(board)) {
     return
@@ -192,16 +196,16 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
     case 'emptyall':
     case 'emptyobjects':
     case 'emptyterrain':
-      memoryinspectempty(player, p1, p2, batch.target)
+      memoryinspectempty(vm, player, p1, p2, batch.target)
       break
     case 'chars':
-      memoryinspectchararea(player, p1, p2, 'char')
+      memoryinspectchararea(vm, player, p1, p2, 'char')
       break
     case 'colors':
-      memoryinspectcolorarea(player, p1, p2, 'color')
+      memoryinspectcolorarea(vm, player, p1, p2, 'color')
       break
     case 'bgs':
-      memoryinspectbgarea(player, p1, p2, 'bg')
+      memoryinspectbgarea(vm, player, p1, p2, 'bg')
       break
     case 'copycoords':
       registercopy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
