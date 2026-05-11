@@ -104,8 +104,10 @@ export const RUNTIME_FIRMWARE = createfirmware({
       chip.id(),
       labelstr,
       wordsstr.split(' '),
-      chip.get,
-      chip.set,
+      (_typ, name) => chip.get(name),
+      (_typ, name, value) => {
+        chip.set(name, value)
+      },
     )
     return 0
   })

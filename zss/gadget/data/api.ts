@@ -20,8 +20,8 @@ const panelqueue: Record<string, PANEL_ITEM[]> = {}
 const panelshared: Record<string, PANEL_SHARED> = {}
 
 type HYPERLINK_SHARED_BRIDGE = {
-  get: (target: string) => WORD
-  set: (name: string, value: WORD) => void
+  get: (type: string, name: string) => WORD
+  set: (type: string, name: string, value: WORD) => void
 }
 
 const hyperlinksharedbridges: Record<
@@ -38,8 +38,8 @@ const terminalhyperlinksharedbridges: Record<
 export function registerhyperlinksharedbridge(
   chip: string,
   type: string,
-  get: (target: string) => WORD,
-  set: (name: string, value: WORD) => void,
+  get: (type: string, name: string) => WORD,
+  set: (type: string, name: string, value: WORD) => void,
 ): void {
   const c = NAME(chip)
   const t = NAME(type)
@@ -55,8 +55,8 @@ export function registerhyperlinksharedbridge(
 export function registerterminalhyperlinksharedbridge(
   chip: string,
   type: string,
-  get: (target: string) => WORD,
-  set: (name: string, value: WORD) => void,
+  get: (type: string, name: string) => WORD,
+  set: (type: string, name: string, value: WORD) => void,
 ): void {
   const c = NAME(chip)
   const t = NAME(type)
@@ -107,8 +107,8 @@ export function applyhyperlinksharedmodemsync(
   chip: string,
   type: string,
   target: string,
-  getforchip: (name: string) => WORD,
-  setforchip: (name: string, value: WORD) => void,
+  getforchip: (type: string, name: string) => WORD,
+  setforchip: (type: string, name: string, value: WORD) => void,
   readcontextcache: READ_CONTEXT_SNAPSHOT,
 ): void {
   const typ = NAME(type) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
@@ -117,16 +117,16 @@ export function applyhyperlinksharedmodemsync(
   }
 
   function setvalue<T extends number | string>(targ: string, value: T) {
-    if (ispresent(value) && value !== getforchip(targ)) {
+    if (ispresent(value) && value !== getforchip(typ, targ)) {
       READ_CONTEXT.board = readcontextcache.board
       READ_CONTEXT.element = readcontextcache.element
       READ_CONTEXT.elementfocus = readcontextcache.elementfocus
-      setforchip(targ, value)
+      setforchip(typ, targ, value)
     }
   }
 
   panelshared[chip] = panelshared[chip] ?? {}
-  const current = getforchip(target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[typ]
+  const current = getforchip(typ, target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[typ]
 
   if (panelshared[chip][target] !== undefined) {
     return
@@ -281,8 +281,8 @@ export function gadgethyperlink(
   chip: string,
   label: string,
   words: WORD[],
-  get: (name: string) => WORD = () => 0,
-  set: (name: string, value: WORD) => void = noop,
+  get: (type: string, name: string) => WORD = () => 0,
+  set: (type: string, name: string, value: WORD) => void = noop,
 ) {
   // pad target-less hyperlinks
   const targetcheck = NAME(maptostring(words[0]))

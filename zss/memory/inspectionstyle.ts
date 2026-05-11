@@ -87,14 +87,14 @@ export async function memoryinspectstyle(
 registerhyperlinksharedbridge(
   'batch',
   'select',
-  (target) => {
+  (_typ, target) => {
     const key = target as keyof STYLE_CONFIG
     if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
       return styleconfig[key]
     }
     return 0
   },
-  (name, value) => {
+  (_typ, name, value) => {
     if (isnumber(value) || isstring(value)) {
       const key = name as keyof STYLE_CONFIG
       if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {

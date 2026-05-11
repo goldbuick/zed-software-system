@@ -70,13 +70,13 @@ export async function memoryinspectremixcommand(path: string, player: string) {
 registerhyperlinksharedbridge(
   'remix',
   'text',
-  (target) => {
+  (_typ, target) => {
     if (target === 'stat') {
       return remixconfig.stat
     }
     return ''
   },
-  (name, value) => {
+  (_typ, name, value) => {
     if (isstring(value) && name === 'stat') {
       remixconfig.stat = value
     }
@@ -86,7 +86,7 @@ registerhyperlinksharedbridge(
 registerhyperlinksharedbridge(
   'remix',
   'number',
-  (target) => {
+  (_typ, target) => {
     if (target === 'patternsize') {
       return remixconfig.patternsize
     }
@@ -95,7 +95,7 @@ registerhyperlinksharedbridge(
     }
     return 0
   },
-  (name, value) => {
+  (_typ, name, value) => {
     if (isnumber(value)) {
       if (name === 'patternsize') {
         remixconfig.patternsize = value

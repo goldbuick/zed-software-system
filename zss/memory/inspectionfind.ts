@@ -46,7 +46,7 @@ export async function memoryfindany(
 registerhyperlinksharedbridge(
   'findany',
   'text',
-  (target) => {
+  (_typ, target) => {
     const key = target as keyof FINDANY_CONFIG
     if (
       key === 'expr1' ||
@@ -58,7 +58,7 @@ registerhyperlinksharedbridge(
     }
     return ''
   },
-  (name, value) => {
+  (_typ, name, value) => {
     if (isstring(value) || isnumber(value)) {
       const key = name as keyof FINDANY_CONFIG
       if (

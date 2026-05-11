@@ -115,14 +115,14 @@ function quotescrollarg(s: string): string {
 registerhyperlinksharedbridge(
   'admin',
   'select',
-  (target) => {
+  (_typ, target) => {
     const p = parseadminselecttarget(target)
     if (!p) {
       return 0
     }
     return memoryreadconfig(p.key) === 'on' ? 1 : 0
   },
-  (target, val) => {
+  (_typ, target, val) => {
     const p = parseadminselecttarget(target)
     if (!p) {
       return

@@ -21,7 +21,7 @@ import {
   resolvehyperlinksharedbridge,
 } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { ptstoarea, rectpoints } from 'zss/mapping/2d'
+import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
 import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
@@ -32,16 +32,23 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
+import { maptonumber, maptostring } from 'zss/mapping/value'
+import { ispt } from 'zss/words/dir'
+import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import {
   memoryboardelementindex,
   memoryreadelement,
   memoryreadelementbyidorindex,
+  memoryreadobject,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
-import { memoryinitboard, memoryreadelementstat } from './boards'
+import {
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadelementstat,
+} from './boards'
 import { memoryreadelementcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import {
@@ -58,10 +65,11 @@ import {
   memoryelementtodisplayprefix,
 } from './rendering'
 import { memoryreadboardelementruntime } from './runtimeboundary'
-import { memoryreadbookbysoftware, memoryreadoperator } from './session'
+import { memoryreadbookbysoftware } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_WIDTH,
   CODE_PAGE,
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
@@ -151,119 +159,6 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
 //   },
 // )
 
-// registerhyperlinksharedbridge(
-//   batchchip,
-//   'bgedit',
-//   () => all,
-//   (field, value) => {
-//     console.info('??? memoryinspectbgarea set', field, value)
-//     if (isnumber(value)) {
-//       all = value
-//       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-//         const el = memoryreadelement(board, pt)
-//         if (ispresent(el)) {
-//           el[field as keyof BOARD_ELEMENT] = value
-//         }
-//       })
-//       boardrunnerpushupdates(vm)
-//       console.info('??? memoryinspectbgarea did set')
-//     }
-//   },
-// )
-
-// registerhyperlinksharedbridge(chip, 'charedit', get, set)
-
-// registerhyperlinksharedbridge(
-//   batchchip,
-//   'charedit',
-//   () => all,
-//   (field, value) => {
-//     console.info('??? memoryinspectchararea set', field, value)
-//     if (isnumber(value)) {
-//       all = value
-//       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-//         const el = memoryreadelement(board, pt)
-//         if (ispresent(el)) {
-//           el[field as keyof BOARD_ELEMENT] = value
-//         }
-//       })
-//       boardrunnerpushupdates(vm)
-//       console.info('??? memoryinspectchararea did set')
-//     }
-//   },
-// )
-
-// registerhyperlinksharedbridge(chip, edittype, get, set)
-
-// registerhyperlinksharedbridge(
-//   batchchip,
-//   'coloredit',
-//   () => all,
-//   (field, value) => {
-//     console.info('??? memoryinspectcolorarea set', field, value)
-//     if (isnumber(value)) {
-//       all = value
-//       for (let y = p1.y; y <= p2.y; ++y) {
-//         for (let x = p1.x; x <= p2.x; ++x) {
-//           const el = memoryreadelement(board, { x, y })
-//           if (ispresent(el)) {
-//             el[field as keyof BOARD_ELEMENT] = value
-//           }
-//         }
-//       }
-//       boardrunnerpushupdates(vm)
-//       console.info('??? memoryinspectcolorarea did set')
-//     }
-//   },
-// )
-
-// const stattypes = new Set<string>([
-//   'select',
-//   'charedit',
-//   'coloredit',
-//   'bgedit',
-// ])
-// for (const typ of stattypes) {
-//   registerhyperlinksharedbridge(chip, typ, get, set)
-// }
-
-/*
-case 'hyperlink':
-        return <PanelHyperlink {...props} />
-      case 'hk':
-      case 'hotkey':
-        return <PanelHotkey {...props} />
-      case 'rn':
-      case 'range':
-        return <PanelRange {...props} />
-      case 'sl':
-      case 'select':
-        return <PanelSelect {...props} />
-      case 'nm':
-      case 'number':
-        return <PanelNumber {...props} />
-      case 'tx':
-      case 'text':
-        return <PanelText {...props} />
-      case 'copyit':
-        return <PanelCopyIt {...props} />
-      case 'openit':
-        return <PanelOpenIt {...props} />
-      case 'viewit':
-        return <PanelViewIt {...props} />
-      case 'runit':
-        return <PanelRunIt {...props} />
-      case 'zssedit':
-        return <PanelZSSEdit {...props} />
-      case 'charedit':
-        return <PanelCharEdit {...props} />
-      case 'coloredit':
-        return <PanelColorEdit {...props} />
-      case 'bgedit':
-        return <PanelColorEdit isbg {...props} />
-
-*/
-
 const elementhyperlinktypes = [
   'rn',
   'range',
@@ -290,20 +185,129 @@ const elementhyperlinkcontext: ELEMENT_HYPERLINK_CONTEXT = {
   board: '',
 }
 
-function registerhyperlinksforelementgetvalue(name: string) {
-  console.info('get', name)
+function registerhyperlinksforelementgetvalue(typ: string, name: string) {
+  const maybeboard = memoryreadboardbyaddress(elementhyperlinkcontext.board)
+  let element: MAYBE<BOARD_ELEMENT>
+  if (elementhyperlinkcontext.elementbyid) {
+    element = memoryreadobject(maybeboard, elementhyperlinkcontext.elementbyid)
+  } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
+    const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
+    element = memoryreadelement(maybeboard, pt)
+  } else if (isarray(elementhyperlinkcontext.elementsbypoints)) {
+    const [first] = elementhyperlinkcontext.elementsbypoints
+    if (ispt(first)) {
+      element = memoryreadelement(maybeboard, first)
+    }
+  }
+  const maybevalue = element?.[name as keyof BOARD_ELEMENT]
+  switch (name) {
+    case 'group':
+      return isstring(maybevalue)
+        ? parseInt(maybevalue.replace('group', ''))
+        : 0
+  }
+  switch (typ) {
+    case 'rn':
+    case 'range':
+    case 'sl':
+    case 'select':
+    case 'nm':
+    case 'number':
+    case 'bgedit':
+    case 'charedit':
+    case 'coloredit':
+      return maptonumber(maybevalue, 0)
+    case 'tx':
+    case 'text':
+    case 'zssedit':
+      return maptostring(maybevalue)
+  }
+  console.info('get', typ, name, elementhyperlinkcontext)
   return 0
 }
 
-function registerhyperlinksforelementsetvalue(name: string, value: WORD) {
-  console.info('set', name, value)
+function registerhyperlinksforelementsetvalue(
+  typ: string,
+  name: string,
+  value: WORD,
+) {
+  const maybeboard = memoryreadboardbyaddress(elementhyperlinkcontext.board)
+  const elements: MAYBE<BOARD_ELEMENT>[] = []
+  if (elementhyperlinkcontext.elementbyid) {
+    elements.push(
+      memoryreadobject(maybeboard, elementhyperlinkcontext.elementbyid),
+    )
+  } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
+    const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
+    elements.push(memoryreadelement(maybeboard, pt))
+  } else if (isarray(elementhyperlinkcontext.elementsbypoints)) {
+    for (const pt of elementhyperlinkcontext.elementsbypoints) {
+      if (ispt(pt)) {
+        elements.push(memoryreadelement(maybeboard, pt))
+      }
+    }
+  }
+  switch (name) {
+    case 'group':
+      if (isnumber(value)) {
+        for (const element of elements) {
+          if (ispresent(element)) {
+            element.group = `group${value}`
+          }
+        }
+      }
+      break
+    default:
+      switch (typ) {
+        case 'rn':
+        case 'range':
+        case 'sl':
+        case 'select':
+        case 'nm':
+        case 'number':
+        case 'bgedit':
+        case 'charedit':
+        case 'coloredit': {
+          const withvalue = maptonumber(value, 0)
+          for (const element of elements) {
+            if (ispresent(element)) {
+              element[name as keyof BOARD_ELEMENT] = withvalue
+            }
+          }
+          break
+        }
+        case 'tx':
+        case 'text':
+        case 'zssedit': {
+          const withvalue = maptostring(value)
+          for (const element of elements) {
+            if (ispresent(element)) {
+              element[name as keyof BOARD_ELEMENT] = withvalue
+            }
+          }
+          break
+        }
+      }
+      break
+  }
+  boardrunnerpushupdates(SOFTWARE)
+  console.info('set', typ, name, value, elementhyperlinkcontext)
 }
 
 function registerhyperlinksforelement(
   chip: string,
   context: ELEMENT_HYPERLINK_CONTEXT,
 ) {
+  const keep = Object.keys(context)
+  const validate = Object.keys(elementhyperlinkcontext)
+  // copy new context
   Object.assign(elementhyperlinkcontext, context)
+  // remove unused keys
+  for (const key of validate) {
+    if (!keep.includes(key)) {
+      delete elementhyperlinkcontext[key as keyof ELEMENT_HYPERLINK_CONTEXT]
+    }
+  }
   for (const type of elementhyperlinktypes) {
     const shared = resolvehyperlinksharedbridge(chip, type)
     if (ispresent(shared)) {
@@ -545,6 +549,7 @@ export function memoryinspectchar(
   registerhyperlinksforelement(chip, {
     board: board.id,
     elementbyid: element.id,
+    elementbyindex: memoryboardelementindex(board, element),
   })
 
   const strcategory =
@@ -623,6 +628,7 @@ export function memoryinspectcolor(
   registerhyperlinksforelement(chip, {
     board: board.id,
     elementbyid: element.id,
+    elementbyindex: memoryboardelementindex(board, element),
   })
 
   const strcategory =
@@ -787,6 +793,7 @@ export function memoryinspectelement(
   registerhyperlinksforelement(chip, {
     board: board.id,
     elementbyid: element.id,
+    elementbyindex: memoryboardelementindex(board, element),
   })
 
   const stats = memoryreadcodepagestatdefaults(codepage)
