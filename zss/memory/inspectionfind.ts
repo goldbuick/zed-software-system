@@ -43,6 +43,37 @@ export async function memoryfindany(
   }
 }
 
+registerhyperlinksharedbridge(
+  'findany',
+  'text',
+  (target) => {
+    const key = target as keyof FINDANY_CONFIG
+    if (
+      key === 'expr1' ||
+      key === 'expr2' ||
+      key === 'expr3' ||
+      key === 'expr4'
+    ) {
+      return findanyconfig[key]
+    }
+    return ''
+  },
+  (name, value) => {
+    if (isstring(value) || isnumber(value)) {
+      const key = name as keyof FINDANY_CONFIG
+      if (
+        key === 'expr1' ||
+        key === 'expr2' ||
+        key === 'expr3' ||
+        key === 'expr4'
+      ) {
+        // @ts-expect-error bah
+        findanyconfig[key] = value
+      }
+    }
+  },
+)
+
 export async function memoryfindanymenu(player: string) {
   const config = await memoryreadfindanyconfig()
   findanyconfig = {
@@ -54,37 +85,6 @@ export async function memoryfindanymenu(player: string) {
   if (!ispresent(board)) {
     return
   }
-
-  registerhyperlinksharedbridge(
-    'findany',
-    'text',
-    (target) => {
-      const key = target as keyof FINDANY_CONFIG
-      if (
-        key === 'expr1' ||
-        key === 'expr2' ||
-        key === 'expr3' ||
-        key === 'expr4'
-      ) {
-        return findanyconfig[key]
-      }
-      return ''
-    },
-    (name, value) => {
-      if (isstring(value) || isnumber(value)) {
-        const key = name as keyof FINDANY_CONFIG
-        if (
-          key === 'expr1' ||
-          key === 'expr2' ||
-          key === 'expr3' ||
-          key === 'expr4'
-        ) {
-          // @ts-expect-error bah
-          findanyconfig[key] = value
-        }
-      }
-    },
-  )
 
   const lines = [
     `find any element(s)`,

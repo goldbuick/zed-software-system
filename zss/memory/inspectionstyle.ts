@@ -84,6 +84,27 @@ export async function memoryinspectstyle(
   }
 }
 
+registerhyperlinksharedbridge(
+  'batch',
+  'select',
+  (target) => {
+    const key = target as keyof STYLE_CONFIG
+    if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
+      return styleconfig[key]
+    }
+    return 0
+  },
+  (name, value) => {
+    if (isnumber(value) || isstring(value)) {
+      const key = name as keyof STYLE_CONFIG
+      if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
+        // @ts-expect-error bah
+        styleconfig[key] = value
+      }
+    }
+  },
+)
+
 export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
   const config = await memoryreadstyleconfig()
   styleconfig = {
@@ -92,31 +113,6 @@ export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
   }
 
   const area = ptstoarea(p1, p2)
-
-  registerhyperlinksharedbridge(
-    'batch',
-    'select',
-    (target) => {
-      const key = target as keyof STYLE_CONFIG
-      if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
-        return styleconfig[key]
-      }
-      return 0
-    },
-    (name, value) => {
-      if (isnumber(value) || isstring(value)) {
-        const key = name as keyof STYLE_CONFIG
-        if (
-          key === 'stylechars' ||
-          key === 'stylecolors' ||
-          key === 'stylebgs'
-        ) {
-          // @ts-expect-error bah
-          styleconfig[key] = value
-        }
-      }
-    },
-  )
 
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,

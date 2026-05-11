@@ -67,6 +67,45 @@ export async function memoryinspectremixcommand(path: string, player: string) {
   }
 }
 
+registerhyperlinksharedbridge(
+  'remix',
+  'text',
+  (target) => {
+    if (target === 'stat') {
+      return remixconfig.stat
+    }
+    return ''
+  },
+  (name, value) => {
+    if (isstring(value) && name === 'stat') {
+      remixconfig.stat = value
+    }
+  },
+)
+
+registerhyperlinksharedbridge(
+  'remix',
+  'number',
+  (target) => {
+    if (target === 'patternsize') {
+      return remixconfig.patternsize
+    }
+    if (target === 'mirror') {
+      return remixconfig.mirror
+    }
+    return 0
+  },
+  (name, value) => {
+    if (isnumber(value)) {
+      if (name === 'patternsize') {
+        remixconfig.patternsize = value
+      } else if (name === 'mirror') {
+        remixconfig.mirror = value
+      }
+    }
+  },
+)
+
 export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
   const config = await memoryreadremixconfig()
   remixconfig = {
@@ -75,44 +114,6 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
   }
 
   const area = ptstoarea(p1, p2)
-
-  registerhyperlinksharedbridge(
-    'remix',
-    'text',
-    (target) => {
-      if (target === 'stat') {
-        return remixconfig.stat
-      }
-      return ''
-    },
-    (name, value) => {
-      if (isstring(value) && name === 'stat') {
-        remixconfig.stat = value
-      }
-    },
-  )
-  registerhyperlinksharedbridge(
-    'remix',
-    'number',
-    (target) => {
-      if (target === 'patternsize') {
-        return remixconfig.patternsize
-      }
-      if (target === 'mirror') {
-        return remixconfig.mirror
-      }
-      return 0
-    },
-    (name, value) => {
-      if (isnumber(value)) {
-        if (name === 'patternsize') {
-          remixconfig.patternsize = value
-        } else if (name === 'mirror') {
-          remixconfig.mirror = value
-        }
-      }
-    },
-  )
 
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
