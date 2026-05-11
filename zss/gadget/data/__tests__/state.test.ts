@@ -1,4 +1,6 @@
 import {
+  applylayercacheupdate,
+  layersstrippedplayersprites,
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
   useEditor,
@@ -7,6 +9,7 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/state'
+import { type LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
 
 describe('state', () => {
   // Note: useEqual is a React hook that uses useRef and cannot be tested
@@ -73,6 +76,77 @@ describe('state', () => {
           sidebar: [],
         },
       })
+    })
+
+    const tileslayer = {
+      id: 't:test',
+      type: LAYER_TYPE.TILES,
+      width: 2,
+      height: 2,
+      char: [0, 0, 0, 0],
+      color: [0, 0, 0, 0],
+      bg: [0, 0, 0, 0],
+      stats: [0, 0, 0, 0],
+    }
+    const spriteswithmixed = {
+      id: 'sp:test',
+      type: LAYER_TYPE.SPRITES,
+      sprites: [
+        {
+          id: 'npc',
+          x: 0,
+          y: 0,
+          char: 1,
+          color: 2,
+          bg: 0,
+          stat: 0,
+        },
+        {
+          id: 'ply',
+          x: 1,
+          y: 1,
+          char: 3,
+          color: 4,
+          bg: 0,
+          stat: 0,
+          pid: 'playerpid',
+        },
+      ],
+    }
+    const ditherlayer = {
+      id: 'd:test',
+      type: LAYER_TYPE.DITHER,
+      width: 1,
+      height: 1,
+      alphas: [0],
+    }
+
+    it('layersstrippedplayersprites removes sprites with pid only', () => {
+      const layers = [tileslayer, spriteswithmixed, ditherlayer]
+      const out = layersstrippedplayersprites(layers)
+      expect(out[0]).toBe(tileslayer)
+      expect(out[2]).toBe(ditherlayer)
+      expect(out[1].type).toBe(LAYER_TYPE.SPRITES)
+      if (out[1].type === LAYER_TYPE.SPRITES) {
+        expect(out[1].sprites).toHaveLength(1)
+        expect(out[1].sprites[0].id).toBe('npc')
+      }
+    })
+
+    it('applylayercacheupdate stores layers without player sprites', () => {
+      const map = new Map<string, LAYER[]>()
+      applylayercacheupdate(map, 'board-a', [
+        tileslayer,
+        spriteswithmixed,
+      ] as LAYER[])
+      const cached = map.get('board-a')
+      expect(cached).toBeDefined()
+      const sp = cached!.find((l) => l.type === LAYER_TYPE.SPRITES)
+      expect(sp?.type).toBe(LAYER_TYPE.SPRITES)
+      if (sp?.type === LAYER_TYPE.SPRITES) {
+        expect(sp.sprites.every((s) => s.pid === undefined)).toBe(true)
+        expect(sp.sprites).toHaveLength(1)
+      }
     })
   })
 

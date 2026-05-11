@@ -1,8 +1,8 @@
-import { MAYBE, deepcopy } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 import { create } from 'zustand'
 
-import { GADGET_STATE, GADGET_ZSS_WORDS, LAYER } from './types'
+import { GADGET_STATE, GADGET_ZSS_WORDS, LAYER, LAYER_TYPE } from './types'
 
 export function emptygadgetstate(): GADGET_STATE {
   return deepcopy({
@@ -28,6 +28,20 @@ export function emptygadgetstate(): GADGET_STATE {
 /** Max board ids kept for exit previews; oldest insertion evicted first. */
 export const LAYERCACHE_MAX_ENTRIES = 64
 
+/** Strip player avatars from layers (sprites with `pid`); used only for layercachemap, not live gadget.layers. */
+export function layersstrippedplayersprites(layers: LAYER[]): LAYER[] {
+  return layers.map((layer) => {
+    if (layer.type !== LAYER_TYPE.SPRITES) {
+      return layer
+    }
+    const sprites = layer.sprites.filter((s) => !ispresent(s.pid))
+    if (sprites.length === layer.sprites.length) {
+      return layer
+    }
+    return { ...layer, sprites }
+  })
+}
+
 export function applylayercacheupdate(
   map: Map<string, LAYER[]>,
   board: string,
@@ -39,7 +53,7 @@ export function applylayercacheupdate(
   if (map.has(board)) {
     map.delete(board)
   }
-  map.set(board, layers)
+  map.set(board, layersstrippedplayersprites(layers))
   while (map.size > LAYERCACHE_MAX_ENTRIES) {
     const oldest = map.keys().next().value!
     map.delete(oldest)

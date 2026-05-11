@@ -6,16 +6,16 @@ import { memoryrepeatclilast, memoryruncli } from 'zss/memory/runtime'
 import { perfmeasure } from 'zss/perf/ui'
 
 export function handlecli(vm: DEVICE, message: MESSAGE): void {
-  memoryruncli(message.player, message.data)
-  perfmeasure('vm:boardrunnersync', () => {
+  perfmeasure('vm:cli', () => {
+    memoryruncli(message.player, message.data)
     boardrunnermemorysync(vm)
     boardrunnerboundarymemorysync(vm)
   })
 }
 
 export function handleclirepeatlast(vm: DEVICE, message: MESSAGE): void {
-  memoryrepeatclilast(message.player)
-  perfmeasure('vm:boardrunnersync', () => {
+  perfmeasure('vm:clirepeatlast', () => {
+    memoryrepeatclilast(message.player)
     boardrunnermemorysync(vm)
     boardrunnerboundarymemorysync(vm)
   })
