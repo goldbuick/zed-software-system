@@ -41,6 +41,9 @@ import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
 
+import { boardrunnerboundarymemorysync } from '../boardrunnerboundarysync'
+import { boardrunnermemorysync } from '../boardrunnermemorysync'
+
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handlezztbridge } from './zzt'
@@ -52,6 +55,7 @@ const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
   const { target, path } = parsetarget(message.target.replace('chip:', ''))
+  console.info('??? default', target, path)
   switch (NAME(target)) {
     case 'adminop': {
       switch (path) {
@@ -180,22 +184,22 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'batch':
       doasync(vm, message.player, async () => {
         await memoryinspectbatchcommand(path, message.player)
+        boardrunnermemorysync(vm)
+        boardrunnerboundarymemorysync(vm)
       })
       break
     case 'remix':
       doasync(vm, message.player, async () => {
         await memoryinspectremixcommand(path, message.player)
+        boardrunnermemorysync(vm)
+        boardrunnerboundarymemorysync(vm)
       })
       break
     case 'empty': {
       const empty = parsetarget(path)
       switch (empty.target) {
         case 'copycoords':
-          registercopy(
-            vm,
-            memoryreadoperator(),
-            empty.path.split(',').join(' '),
-          )
+          registercopy(vm, message.player, empty.path.split(',').join(' '))
           break
       }
       break
@@ -216,6 +220,8 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'makeit':
       memorymakeitcommand(path, message.data ?? '', message.player)
+      boardrunnermemorysync(vm)
+      boardrunnerboundarymemorysync(vm)
       break
     case 'zztbridge':
       handlezztbridge(vm, message)

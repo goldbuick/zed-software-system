@@ -3,7 +3,6 @@ import {
   shouldforwardboardrunnertoclient,
 } from 'zss/device/forward'
 
-import './device/modem'
 import './device/boardrunner'
 
 const { forward } = createforward((message) => {

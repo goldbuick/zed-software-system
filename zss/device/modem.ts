@@ -280,6 +280,7 @@ export function modemwriteinitstring(key: string, value: string) {
 }
 
 export function modemwritevaluenumber(key: string, value: number) {
+  console.info('??? modemwritevaluenumber', key, value)
   SYNC_DOC.transact(() => {
     ROOT.set(key, value)
   }, LOCAL_ORIGIN)
