@@ -39,6 +39,7 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
       // console.info('server blocked', message.target)
       return false
   }
+  // todo, don't forward player scoped messages to peers that will block them
   return true
 }
 

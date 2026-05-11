@@ -31,7 +31,6 @@ import {
   memoryreadroot,
 } from 'zss/memory/session'
 import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
-import { perfmeasure } from 'zss/perf/ui'
 import { NAME } from 'zss/words/types'
 
 import { vmboardrunnerack, vmboardrunnerpatch } from './api'
@@ -116,36 +115,32 @@ function handleboardrunnertick(
   memorytickmain(timestamp, updateboards, memoryreadhalt())
 
   // render the gadget layers for the updated boards
-  perfmeasure('boardrunner:gadgetlayerscache', () => {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    for (let b = 0; b < updateboards.length; ++b) {
-      const boarddata = updateboards[b]
-      const didrender: Record<string, boolean> = {}
-      const players = memoryreadplayersonboard(boarddata)
-      const store = memoryreadbookgadgetlayersforboard(mainbook, boarddata.id)
-      for (let p = 0; p < players.length; ++p) {
-        const graphics = memoryreadgraphics(players[p], boarddata)
-        const mode = normalizelayerzvariant(graphics.graphics)
-        if (ispresent(didrender[mode])) {
-          continue
-        }
-        didrender[mode] = true
-        store[mode] = memoryreadgadgetlayers(mode, boarddata)
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  for (let b = 0; b < updateboards.length; ++b) {
+    const boarddata = updateboards[b]
+    const didrender: Record<string, boolean> = {}
+    const players = memoryreadplayersonboard(boarddata)
+    const store = memoryreadbookgadgetlayersforboard(mainbook, boarddata.id)
+    for (let p = 0; p < players.length; ++p) {
+      const graphics = memoryreadgraphics(players[p], boarddata)
+      const mode = normalizelayerzvariant(graphics.graphics)
+      if (ispresent(didrender[mode])) {
+        continue
       }
+      didrender[mode] = true
+      store[mode] = memoryreadgadgetlayers(mode, boarddata)
     }
-  })
+  }
 
   // ensure the boundaries are in sync
-  perfmeasure('boardrunner:boundarysync', () => {
-    for (const id of assignedboundaries) {
-      const pipe = readworkerboundarypipe(id)
-      const doc = memoryboundaryget<BOUNDARY_DOC>(id) ?? {}
-      const patch = pipe.emitdiff(doc)
-      if (patch.length > 0) {
-        vmboardrunnerpatch(device, assignedplayer, patch, id)
-      }
+  for (const id of assignedboundaries) {
+    const pipe = readworkerboundarypipe(id)
+    const doc = memoryboundaryget<BOUNDARY_DOC>(id) ?? {}
+    const patch = pipe.emitdiff(doc)
+    if (patch.length > 0) {
+      vmboardrunnerpatch(device, assignedplayer, patch, id)
     }
-  })
+  }
 }
 
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
