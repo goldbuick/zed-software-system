@@ -51,7 +51,7 @@ const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
 )
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
-  const { target, path } = parsetarget(message.target)
+  const { target, path } = parsetarget(message.target.replace('chip:', ''))
   switch (NAME(target)) {
     case 'adminop': {
       switch (path) {
@@ -231,23 +231,21 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'bookmarkscroll':
       handlebookmarkscrollpanel(vm, message, path)
       break
-    default:
-      if (message.target.startsWith('chip:')) {
-        const chiptarget = message.target.slice('chip:'.length)
-        const invoke = parsetarget(chiptarget)
-        if (NAME(invoke.target) === 'self' || !invoke.path) {
-          message.target = message.target.replace('self:', '')
-          memorymessagechip(message)
-        } else {
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          memorysendtoboards(
-            invoke.target,
-            invoke.path,
-            undefined,
-            memoryreadbookplayerboards(mainbook),
-          )
-        }
+    default: {
+      // expect that the chip: prefix is already removed from the path
+      if (NAME(target) === 'self' || !path) {
+        message.target = target.replace('self:', '')
+        memorymessagechip(message)
+      } else {
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        memorysendtoboards(
+          target,
+          path,
+          undefined,
+          memoryreadbookplayerboards(mainbook),
+        )
       }
       break
+    }
   }
 }

@@ -98,6 +98,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   const route = parsetarget(message.target)
   switch (route.target) {
     case 'vm':
+    case 'chip':
     case 'modem':
       return true
   }
@@ -153,6 +154,7 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
     default: {
       const route = parsetarget(message.target)
       switch (route.target) {
+        case 'chip':
         case 'boardrunner':
           return true
         // case 'vm':

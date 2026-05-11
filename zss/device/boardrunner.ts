@@ -182,7 +182,6 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         if (anydesynced || !memoryhasflags(message.player)) {
           return
         }
-        console.info('### handle input', message.player)
         lastinputtime[message.player] = Date.now()
         const flags = memoryreadflags(message.player)
         const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
