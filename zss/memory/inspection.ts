@@ -24,7 +24,7 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
-import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
+import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -136,29 +136,6 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
   return lines
 }
 
-// registerhyperlinksharedbridge(
-//   groupchip,
-//   'select',
-//   (target) => {
-//     if (target === 'group') {
-//       return group
-//     }
-//     return 0
-//   },
-//   (name, value) => {
-//     if (name === 'group' && isnumber(value)) {
-//       group = value
-//       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-//         const el = memoryreadelement(board, pt)
-//         if (ispresent(el)) {
-//           el[name as keyof BOARD_ELEMENT] = `group${value}`
-//         }
-//       })
-//       boardrunnerpushupdates(vm)
-//     }
-//   },
-// )
-
 const elementhyperlinktypes = [
   'rn',
   'range',
@@ -216,6 +193,7 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
     case 'bgedit':
     case 'charedit':
     case 'coloredit':
+      // update to return stat default value
       return maptonumber(maybevalue, 0)
     case 'tx':
     case 'text':
