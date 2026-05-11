@@ -25,7 +25,7 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
-import { waitfor } from 'zss/mapping/tick'
+import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -182,12 +182,6 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
   const maybevalue =
     element?.[name as keyof BOARD_ELEMENT] ??
     kind?.[name as keyof BOARD_ELEMENT]
-  switch (name) {
-    case 'group':
-      return isstring(maybevalue)
-        ? parseInt(maybevalue.replace('group', ''))
-        : 0
-  }
   switch (typ) {
     case 'rn':
     case 'range':
@@ -198,14 +192,37 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
     case 'bgedit':
     case 'charedit':
     case 'coloredit':
-      // update to return stat default value
-      return maptonumber(maybevalue, 0)
+      switch (name) {
+        case 'group':
+          return isstring(maybevalue)
+            ? parseInt(maybevalue.replace('group', ''))
+            : 0
+        case 'cycle':
+          return maptonumber(maybevalue, CYCLE_DEFAULT)
+        case 'collision':
+          return maptonumber(maybevalue, COLLISION.ISWALK)
+        case 'p1':
+        case 'p2':
+        case 'p3':
+        case 'p4':
+        case 'p5':
+        case 'p6':
+        case 'p7':
+        case 'p8':
+        case 'p9':
+        case 'p10':
+        case 'item':
+        case 'pushable':
+        case 'breakable':
+        default:
+          // update to return stat default value
+          return maptonumber(maybevalue, 0)
+      }
     case 'tx':
     case 'text':
     case 'zssedit':
       return maptostring(maybevalue)
   }
-  console.info('get', typ, name, elementhyperlinkcontext)
   return 0
 }
 
@@ -274,7 +291,6 @@ function registerhyperlinksforelementsetvalue(
       break
   }
   boardrunnerpushupdates(SOFTWARE)
-  console.info('set', typ, name, value, elementhyperlinkcontext)
 }
 
 function registerhyperlinksforelement(
