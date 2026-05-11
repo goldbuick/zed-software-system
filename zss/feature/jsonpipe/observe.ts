@@ -75,9 +75,16 @@ export function createjsonpipe<T extends object | unknown[]>(
       try {
         //  an RFC 6902 patch array
         const { newDocument: newroot } = applyPatch(root, filtered, true, false)
-        // update shadow
-        shadow = deepcopy(newroot)
-        // return new root
+        // apply the patch to the shadow
+        const { newDocument: newshadow } = applyPatch(
+          shadow,
+          filtered,
+          true,
+          false,
+        )
+        // update the shadow
+        shadow = newshadow
+        // return newroot root
         return newroot
       } catch (error: any) {
         void error
