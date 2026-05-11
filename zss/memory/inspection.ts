@@ -16,7 +16,10 @@ import {
   zsszedlinklinechip,
 } from 'zss/feature/zsstextui'
 import { codepagepicksuffix } from 'zss/firmware/cli/utils'
-import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import {
+  registerhyperlinksharedbridge,
+  resolvehyperlinksharedbridge,
+} from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
@@ -125,12 +128,197 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
   return lines
 }
 
-export async function memoryinspect(
-  vm: DEVICE,
-  player: string,
-  p1: PT,
-  p2: PT,
+// registerhyperlinksharedbridge(
+//   groupchip,
+//   'select',
+//   (target) => {
+//     if (target === 'group') {
+//       return group
+//     }
+//     return 0
+//   },
+//   (name, value) => {
+//     if (name === 'group' && isnumber(value)) {
+//       group = value
+//       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+//         const el = memoryreadelement(board, pt)
+//         if (ispresent(el)) {
+//           el[name as keyof BOARD_ELEMENT] = `group${value}`
+//         }
+//       })
+//       boardrunnerpushupdates(vm)
+//     }
+//   },
+// )
+
+// registerhyperlinksharedbridge(
+//   batchchip,
+//   'bgedit',
+//   () => all,
+//   (field, value) => {
+//     console.info('??? memoryinspectbgarea set', field, value)
+//     if (isnumber(value)) {
+//       all = value
+//       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+//         const el = memoryreadelement(board, pt)
+//         if (ispresent(el)) {
+//           el[field as keyof BOARD_ELEMENT] = value
+//         }
+//       })
+//       boardrunnerpushupdates(vm)
+//       console.info('??? memoryinspectbgarea did set')
+//     }
+//   },
+// )
+
+// registerhyperlinksharedbridge(chip, 'charedit', get, set)
+
+// registerhyperlinksharedbridge(
+//   batchchip,
+//   'charedit',
+//   () => all,
+//   (field, value) => {
+//     console.info('??? memoryinspectchararea set', field, value)
+//     if (isnumber(value)) {
+//       all = value
+//       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+//         const el = memoryreadelement(board, pt)
+//         if (ispresent(el)) {
+//           el[field as keyof BOARD_ELEMENT] = value
+//         }
+//       })
+//       boardrunnerpushupdates(vm)
+//       console.info('??? memoryinspectchararea did set')
+//     }
+//   },
+// )
+
+// registerhyperlinksharedbridge(chip, edittype, get, set)
+
+// registerhyperlinksharedbridge(
+//   batchchip,
+//   'coloredit',
+//   () => all,
+//   (field, value) => {
+//     console.info('??? memoryinspectcolorarea set', field, value)
+//     if (isnumber(value)) {
+//       all = value
+//       for (let y = p1.y; y <= p2.y; ++y) {
+//         for (let x = p1.x; x <= p2.x; ++x) {
+//           const el = memoryreadelement(board, { x, y })
+//           if (ispresent(el)) {
+//             el[field as keyof BOARD_ELEMENT] = value
+//           }
+//         }
+//       }
+//       boardrunnerpushupdates(vm)
+//       console.info('??? memoryinspectcolorarea did set')
+//     }
+//   },
+// )
+
+// const stattypes = new Set<string>([
+//   'select',
+//   'charedit',
+//   'coloredit',
+//   'bgedit',
+// ])
+// for (const typ of stattypes) {
+//   registerhyperlinksharedbridge(chip, typ, get, set)
+// }
+
+/*
+case 'hyperlink':
+        return <PanelHyperlink {...props} />
+      case 'hk':
+      case 'hotkey':
+        return <PanelHotkey {...props} />
+      case 'rn':
+      case 'range':
+        return <PanelRange {...props} />
+      case 'sl':
+      case 'select':
+        return <PanelSelect {...props} />
+      case 'nm':
+      case 'number':
+        return <PanelNumber {...props} />
+      case 'tx':
+      case 'text':
+        return <PanelText {...props} />
+      case 'copyit':
+        return <PanelCopyIt {...props} />
+      case 'openit':
+        return <PanelOpenIt {...props} />
+      case 'viewit':
+        return <PanelViewIt {...props} />
+      case 'runit':
+        return <PanelRunIt {...props} />
+      case 'zssedit':
+        return <PanelZSSEdit {...props} />
+      case 'charedit':
+        return <PanelCharEdit {...props} />
+      case 'coloredit':
+        return <PanelColorEdit {...props} />
+      case 'bgedit':
+        return <PanelColorEdit isbg {...props} />
+
+*/
+
+const elementhyperlinktypes = [
+  'rn',
+  'range',
+  'sl',
+  'select',
+  'nm',
+  'number',
+  'tx',
+  'text',
+  'zssedit',
+  'charedit',
+  'coloredit',
+  'bgedit',
+]
+
+type ELEMENT_HYPERLINK_CONTEXT = {
+  board: string
+  elementbyid?: string
+  elementbyindex?: number
+  elementsbypoints?: PT[]
+}
+
+const elementhyperlinkcontext: ELEMENT_HYPERLINK_CONTEXT = {
+  board: '',
+}
+
+function registerhyperlinksforelementgetvalue(name: string) {
+  console.info('get', name)
+  return 0
+}
+
+function registerhyperlinksforelementsetvalue(name: string, value: WORD) {
+  console.info('set', name, value)
+}
+
+function registerhyperlinksforelement(
+  chip: string,
+  context: ELEMENT_HYPERLINK_CONTEXT,
 ) {
+  Object.assign(elementhyperlinkcontext, context)
+  for (const type of elementhyperlinktypes) {
+    const shared = resolvehyperlinksharedbridge(chip, type)
+    if (ispresent(shared)) {
+      continue
+    }
+    registerhyperlinksharedbridge(
+      chip,
+      type,
+      registerhyperlinksforelementgetvalue,
+      registerhyperlinksforelementsetvalue,
+    )
+  }
+}
+
+export async function memoryinspect(player: string, p1: PT, p2: PT) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   const showpaste = await memoryhassecretheap()
   if (!ispresent(mainbook)) {
@@ -152,7 +340,6 @@ export async function memoryinspect(
     // found element def
     if (ispresent(element) && ispresent(codepage)) {
       memoryinspectelement(
-        vm,
         player,
         board,
         codepage,
@@ -178,13 +365,12 @@ export async function memoryinspect(
       return
     }
   } else {
-    memoryinspectarea(vm, player, p1, p2, showpaste)
+    memoryinspectarea(player, p1, p2, showpaste)
     return
   }
 }
 
 export function memoryinspectarea(
-  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -200,32 +386,12 @@ export function memoryinspectarea(
     return
   }
 
-  let group = 0
   const area = ptstoarea(p1, p2)
   const groupchip = `groups:${area}`
-
-  registerhyperlinksharedbridge(
-    groupchip,
-    'select',
-    (target) => {
-      if (target === 'group') {
-        return group
-      }
-      return 0
-    },
-    (name, value) => {
-      if (name === 'group' && isnumber(value)) {
-        group = value
-        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryreadelement(board, pt)
-          if (ispresent(el)) {
-            el[name as keyof BOARD_ELEMENT] = `group${value}`
-          }
-        })
-        boardrunnerpushupdates(vm)
-      }
-    },
-  )
+  registerhyperlinksforelement(groupchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const grouptokens = [
     'group',
@@ -320,7 +486,6 @@ export function memoryinspectarea(
 }
 
 export function memoryinspectbgarea(
-  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -331,27 +496,11 @@ export function memoryinspectbgarea(
     return
   }
 
-  let all = 0
   const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksharedbridge(
-    batchchip,
-    'bgedit',
-    () => all,
-    (field, value) => {
-      console.info('??? memoryinspectbgarea set', field, value)
-      if (isnumber(value)) {
-        all = value
-        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryreadelement(board, pt)
-          if (ispresent(el)) {
-            el[field as keyof BOARD_ELEMENT] = value
-          }
-        })
-        boardrunnerpushupdates(vm)
-        console.info('??? memoryinspectbgarea did set')
-      }
-    },
-  )
+  registerhyperlinksforelement(batchchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
@@ -362,7 +511,6 @@ export function memoryinspectbgarea(
 }
 
 export function memoryinspectchar(
-  vm: DEVICE,
   player: string,
   element: BOARD_ELEMENT,
   name: string,
@@ -377,22 +525,27 @@ export function memoryinspectchar(
     return
   }
 
-  function get(target: string): WORD {
-    const kind = memoryreadboardelementruntime(element)?.kinddata
-    const value =
-      element?.[target as keyof BOARD_ELEMENT] ??
-      kind?.[target as keyof BOARD_ELEMENT] ??
-      0
-    return value
-  }
-  function set(field: string, value: WORD) {
-    console.info('??? memoryinspectchar set', field, value)
-    if (ispresent(element)) {
-      element[field as keyof BOARD_ELEMENT] = value
-      boardrunnerpushupdates(vm)
-      console.info('??? memoryinspectchar did set')
-    }
-  }
+  // function get(target: string): WORD {
+  //   const kind = memoryreadboardelementruntime(element)?.kinddata
+  //   const value =
+  //     element?.[target as keyof BOARD_ELEMENT] ??
+  //     kind?.[target as keyof BOARD_ELEMENT] ??
+  //     0
+  //   return value
+  // }
+  // function set(field: string, value: WORD) {
+  //   console.info('??? memoryinspectchar set', field, value)
+  //   if (ispresent(element)) {
+  //     element[field as keyof BOARD_ELEMENT] = value
+  //     boardrunnerpushupdates(vm)
+  //     console.info('??? memoryinspectchar did set')
+  //   }
+  // }
+  const chip = chipfromelement(board, element)
+  registerhyperlinksforelement(chip, {
+    board: board.id,
+    elementbyid: element.id,
+  })
 
   const strcategory =
     memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
@@ -400,9 +553,6 @@ export function memoryinspectchar(
       : 'object'
   const strname = element.name ?? element.kind ?? 'ERR'
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-  const chip = chipfromelement(board, element)
-
-  registerhyperlinksharedbridge(chip, 'charedit', get, set)
 
   const lines = [
     `${strcategory}: ${strname} ${strpos}`,
@@ -413,7 +563,6 @@ export function memoryinspectchar(
 }
 
 export function memoryinspectchararea(
-  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -424,27 +573,11 @@ export function memoryinspectchararea(
     return
   }
 
-  let all = 0
   const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksharedbridge(
-    batchchip,
-    'charedit',
-    () => all,
-    (field, value) => {
-      console.info('??? memoryinspectchararea set', field, value)
-      if (isnumber(value)) {
-        all = value
-        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryreadelement(board, pt)
-          if (ispresent(el)) {
-            el[field as keyof BOARD_ELEMENT] = value
-          }
-        })
-        boardrunnerpushupdates(vm)
-        console.info('??? memoryinspectchararea did set')
-      }
-    },
-  )
+  registerhyperlinksforelement(batchchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
@@ -455,7 +588,6 @@ export function memoryinspectchararea(
 }
 
 export function memoryinspectcolor(
-  vm: DEVICE,
   player: string,
   element: BOARD_ELEMENT,
   name: string,
@@ -470,22 +602,28 @@ export function memoryinspectcolor(
     return
   }
 
-  function get(target: string): WORD {
-    const kind = memoryreadboardelementruntime(element)?.kinddata
-    const value =
-      element?.[target as keyof BOARD_ELEMENT] ??
-      kind?.[target as keyof BOARD_ELEMENT] ??
-      0
-    return value
-  }
-  function set(field: string, value: WORD) {
-    console.info('??? memoryinspectcolor set', field, value)
-    if (ispresent(element)) {
-      element[field as keyof BOARD_ELEMENT] = value
-      boardrunnerpushupdates(vm)
-      console.info('??? memoryinspectcolor did set')
-    }
-  }
+  // function get(target: string): WORD {
+  //   const kind = memoryreadboardelementruntime(element)?.kinddata
+  //   const value =
+  //     element?.[target as keyof BOARD_ELEMENT] ??
+  //     kind?.[target as keyof BOARD_ELEMENT] ??
+  //     0
+  //   return value
+  // }
+  // function set(field: string, value: WORD) {
+  //   console.info('??? memoryinspectcolor set', field, value)
+  //   if (ispresent(element)) {
+  //     element[field as keyof BOARD_ELEMENT] = value
+  //     boardrunnerpushupdates(vm)
+  //     console.info('??? memoryinspectcolor did set')
+  //   }
+  // }
+
+  const chip = chipfromelement(board, element)
+  registerhyperlinksforelement(chip, {
+    board: board.id,
+    elementbyid: element.id,
+  })
 
   const strcategory =
     memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
@@ -493,10 +631,7 @@ export function memoryinspectcolor(
       : 'object'
   const strname = element.name ?? element.kind ?? 'ERR'
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-  const chip = chipfromelement(board, element)
   const edittype = name === 'bg' ? 'bgedit' : 'coloredit'
-
-  registerhyperlinksharedbridge(chip, edittype, get, set)
 
   const lines = [
     `${strcategory}: ${strname} ${strpos}`,
@@ -507,7 +642,6 @@ export function memoryinspectcolor(
 }
 
 export function memoryinspectcolorarea(
-  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -518,29 +652,11 @@ export function memoryinspectcolorarea(
     return
   }
 
-  let all = 0
   const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksharedbridge(
-    batchchip,
-    'coloredit',
-    () => all,
-    (field, value) => {
-      console.info('??? memoryinspectcolorarea set', field, value)
-      if (isnumber(value)) {
-        all = value
-        for (let y = p1.y; y <= p2.y; ++y) {
-          for (let x = p1.x; x <= p2.x; ++x) {
-            const el = memoryreadelement(board, { x, y })
-            if (ispresent(el)) {
-              el[field as keyof BOARD_ELEMENT] = value
-            }
-          }
-        }
-        boardrunnerpushupdates(vm)
-        console.info('??? memoryinspectcolorarea did set')
-      }
-    },
-  )
+  registerhyperlinksforelement(batchchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
@@ -570,10 +686,10 @@ export function memoryinspectcommand(vm: DEVICE, path: string, player: string) {
       break
     case 'bg':
     case 'color':
-      memoryinspectcolor(vm, player, element, inspect.path)
+      memoryinspectcolor(player, element, inspect.path)
       break
     case 'char':
-      memoryinspectchar(vm, player, element, inspect.path)
+      memoryinspectchar(player, element, inspect.path)
       break
     case 'empty':
       memorysafedeleteelement(board, element, mainbook.timestamp)
@@ -611,7 +727,6 @@ export function memoryinspectcommand(vm: DEVICE, path: string, player: string) {
 }
 
 export function memoryinspectelement(
-  vm: DEVICE,
   player: string,
   board: BOARD,
   codepage: CODE_PAGE,
@@ -624,87 +739,90 @@ export function memoryinspectelement(
     return
   }
 
-  function get(name: string): WORD {
-    const kind = memoryreadboardelementruntime(element)?.kinddata
-    const value =
-      element?.[name as keyof BOARD_ELEMENT] ??
-      kind?.[name as keyof BOARD_ELEMENT]
+  // function get(name: string): WORD {
+  //   const kind = memoryreadboardelementruntime(element)?.kinddata
+  //   const value =
+  //     element?.[name as keyof BOARD_ELEMENT] ??
+  //     kind?.[name as keyof BOARD_ELEMENT]
 
-    if (name === 'group') {
-      return parseFloat(element.group?.replace('group', '') ?? '0')
-    }
+  //   if (name === 'group') {
+  //     return parseFloat(element.group?.replace('group', '') ?? '0')
+  //   }
 
-    if (!ispresent(value)) {
-      switch (name) {
-        case 'color':
-          return 15
-        case 'bg':
-          return 0
-        case 'group':
-          return 0
-        case 'cycle':
-          return CYCLE_DEFAULT
-        case 'collision':
-          return COLLISION.ISWALK
-        case 'pushable':
-          return 0
-        case 'breakable':
-          return 0
-      }
-    }
+  //   if (!ispresent(value)) {
+  //     switch (name) {
+  //       case 'color':
+  //         return 15
+  //       case 'bg':
+  //         return 0
+  //       case 'group':
+  //         return 0
+  //       case 'cycle':
+  //         return CYCLE_DEFAULT
+  //       case 'collision':
+  //         return COLLISION.ISWALK
+  //       case 'pushable':
+  //         return 0
+  //       case 'breakable':
+  //         return 0
+  //     }
+  //   }
 
-    return value
-  }
-  function set(name: string, value: WORD) {
-    if (ispresent(element)) {
-      console.info('??? memoryinspectelement set', name, value)
-      if (name === 'group') {
-        element.group = `group${value as number}`
-      } else {
-        element[name as keyof BOARD_ELEMENT] = value
-      }
-      boardrunnerpushupdates(vm)
-      console.info('??? memoryinspectelement did set')
-    }
-  }
+  //   return value
+  // }
+  // function set(name: string, value: WORD) {
+  //   if (ispresent(element)) {
+  //     console.info('??? memoryinspectelement set', name, value)
+  //     if (name === 'group') {
+  //       element.group = `group${value as number}`
+  //     } else {
+  //       element[name as keyof BOARD_ELEMENT] = value
+  //     }
+  //     boardrunnerpushupdates(vm)
+  //     console.info('??? memoryinspectelement did set')
+  //   }
+  // }
 
   const chip = chipfromelement(board, element)
+  registerhyperlinksforelement(chip, {
+    board: board.id,
+    elementbyid: element.id,
+  })
+
   const stats = memoryreadcodepagestatdefaults(codepage)
   const targets = objectKeys(stats)
-  const stattypes = new Set<string>([
-    'select',
-    'charedit',
-    'coloredit',
-    'bgedit',
-  ])
-  for (let i = 0; i < targets.length; ++i) {
-    const target = targets[i]
-    switch (target) {
-      case 'char':
-      case 'cycle':
-      case 'color':
-      case 'bg':
-      case 'group':
-      case 'collision':
-      case 'pushable':
-      case 'breakable':
-        break
-      default:
-        if (isarray(stats[target])) {
-          const [typ] = stats[target]
-          if (isstring(typ)) {
-            const lowered = NAME(typ)
-            if (lowered && lowered !== 'hk' && lowered !== 'hotkey') {
-              stattypes.add(lowered)
-            }
-          }
-        }
-        break
-    }
-  }
-  for (const typ of stattypes) {
-    registerhyperlinksharedbridge(chip, typ, get, set)
-  }
+
+  // const stattypes = new Set<string>([
+  //   'select',
+  //   'charedit',
+  //   'coloredit',
+  //   'bgedit',
+  // ])
+  // for (let i = 0; i < targets.length; ++i) {
+  //   const target = targets[i]
+  //   switch (target) {
+  //     case 'char':
+  //     case 'cycle':
+  //     case 'color':
+  //     case 'bg':
+  //     case 'group':
+  //     case 'collision':
+  //     case 'pushable':
+  //     case 'breakable':
+  //       break
+  //     default:
+  //       if (isarray(stats[target])) {
+  //         const [typ] = stats[target]
+  //         if (isstring(typ)) {
+  //           const lowered = NAME(typ)
+  //           if (lowered && lowered !== 'hk' && lowered !== 'hotkey') {
+  //             stattypes.add(lowered)
+  //           }
+  //         }
+  //       }
+  //       break
+  //   }
+  // }
 
   const lines: string[] = []
   if (isobject) {

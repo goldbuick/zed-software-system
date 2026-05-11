@@ -199,13 +199,13 @@ export async function memoryinspectbatchcommand(
       memoryinspectempty(vm, player, p1, p2, batch.target)
       break
     case 'chars':
-      memoryinspectchararea(vm, player, p1, p2, 'char')
+      memoryinspectchararea(player, p1, p2, 'char')
       break
     case 'colors':
-      memoryinspectcolorarea(vm, player, p1, p2, 'color')
+      memoryinspectcolorarea(player, p1, p2, 'color')
       break
     case 'bgs':
-      memoryinspectbgarea(vm, player, p1, p2, 'bg')
+      memoryinspectbgarea(player, p1, p2, 'bg')
       break
     case 'copycoords':
       registercopy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))

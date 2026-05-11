@@ -10,7 +10,7 @@ export function handleinspect(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {
     if (isarray(message.data)) {
       const [p1, p2] = message.data as [PT, PT]
-      await memoryinspect(vm, message.player, p1, p2)
+      await memoryinspect(message.player, p1, p2)
     }
   })
 }
