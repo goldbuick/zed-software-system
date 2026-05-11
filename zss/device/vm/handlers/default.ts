@@ -32,17 +32,13 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorymessagechip } from 'zss/memory/runtime'
-import {
-  memoryreadbookbysoftware,
-  memoryreadoperator,
-} from 'zss/memory/session'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
 
-import { boardrunnerboundarymemorysync } from '../boardrunnerboundarysync'
-import { boardrunnermemorysync } from '../boardrunnermemorysync'
+import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
 
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
@@ -184,15 +180,13 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'batch':
       doasync(vm, message.player, async () => {
         await memoryinspectbatchcommand(path, message.player)
-        boardrunnermemorysync(vm)
-        boardrunnerboundarymemorysync(vm)
+        boardrunnerpushupdates(vm)
       })
       break
     case 'remix':
       doasync(vm, message.player, async () => {
         await memoryinspectremixcommand(path, message.player)
-        boardrunnermemorysync(vm)
-        boardrunnerboundarymemorysync(vm)
+        boardrunnerpushupdates(vm)
       })
       break
     case 'empty': {
@@ -220,8 +214,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'makeit':
       memorymakeitcommand(path, message.data ?? '', message.player)
-      boardrunnermemorysync(vm)
-      boardrunnerboundarymemorysync(vm)
+      boardrunnerpushupdates(vm)
       break
     case 'zztbridge':
       handlezztbridge(vm, message)

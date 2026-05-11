@@ -1,6 +1,5 @@
 import type { DEVICE } from 'zss/device'
 import { type MESSAGE, boardrunnertick } from 'zss/device/api'
-import { boardrunnerboundarymemorysync } from 'zss/device/vm/boardrunnerboundarysync'
 import {
   boardrunnerassignmentvalid,
   boardrunnerblock,
@@ -8,7 +7,6 @@ import {
   boardrunnerelect,
   boardrunnerevict,
 } from 'zss/device/vm/boardrunnermanagement'
-import { boardrunnermemorysync } from 'zss/device/vm/boardrunnermemorysync'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { boardrunners } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
@@ -22,6 +20,8 @@ import {
 } from 'zss/memory/session'
 import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
+
+import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
 
 import { pilottick } from './pilot'
 
@@ -66,10 +66,7 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       }
     }
   })
-  perfmeasure('vm:boardrunnersync', () => {
-    boardrunnermemorysync(vm)
-    boardrunnerboundarymemorysync(vm)
-  })
+  boardrunnerpushupdates(vm)
   perfmeasure('vm:boardrunnersendtick', () => {
     // signal tick to the boardrunners
     const ids = Object.keys(boardrunners)

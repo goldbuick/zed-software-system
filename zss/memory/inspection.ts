@@ -1,5 +1,5 @@
 import { objectKeys } from 'ts-extras'
-import { parsetarget } from 'zss/device'
+import { DEVICE, parsetarget } from 'zss/device'
 import {
   registercopy,
   registereditoropen,
@@ -8,6 +8,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import {
   DIVIDER,
   zsstexttape,
@@ -124,7 +125,12 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
   return lines
 }
 
-export async function memoryinspect(player: string, p1: PT, p2: PT) {
+export async function memoryinspect(
+  vm: DEVICE,
+  player: string,
+  p1: PT,
+  p2: PT,
+) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   const showpaste = await memoryhassecretheap()
   if (!ispresent(mainbook)) {
@@ -146,6 +152,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
     // found element def
     if (ispresent(element) && ispresent(codepage)) {
       memoryinspectelement(
+        vm,
         player,
         board,
         codepage,
@@ -171,12 +178,13 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
       return
     }
   } else {
-    memoryinspectarea(player, p1, p2, showpaste)
+    memoryinspectarea(vm, player, p1, p2, showpaste)
     return
   }
 }
 
 export function memoryinspectarea(
+  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -214,6 +222,7 @@ export function memoryinspectarea(
             el[name as keyof BOARD_ELEMENT] = `group${value}`
           }
         })
+        boardrunnerpushupdates(vm)
       }
     },
   )
@@ -311,6 +320,7 @@ export function memoryinspectarea(
 }
 
 export function memoryinspectbgarea(
+  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -336,6 +346,7 @@ export function memoryinspectbgarea(
             el[field as keyof BOARD_ELEMENT] = value
           }
         })
+        boardrunnerpushupdates(vm)
       }
     },
   )
@@ -349,6 +360,7 @@ export function memoryinspectbgarea(
 }
 
 export function memoryinspectchar(
+  vm: DEVICE,
   player: string,
   element: BOARD_ELEMENT,
   name: string,
@@ -374,6 +386,7 @@ export function memoryinspectchar(
   function set(field: string, value: WORD) {
     if (ispresent(element)) {
       element[field as keyof BOARD_ELEMENT] = value
+      boardrunnerpushupdates(vm)
     }
   }
 
@@ -396,6 +409,7 @@ export function memoryinspectchar(
 }
 
 export function memoryinspectchararea(
+  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -421,6 +435,7 @@ export function memoryinspectchararea(
             el[field as keyof BOARD_ELEMENT] = value
           }
         })
+        boardrunnerpushupdates(vm)
       }
     },
   )
@@ -434,6 +449,7 @@ export function memoryinspectchararea(
 }
 
 export function memoryinspectcolor(
+  vm: DEVICE,
   player: string,
   element: BOARD_ELEMENT,
   name: string,
@@ -459,6 +475,7 @@ export function memoryinspectcolor(
   function set(field: string, value: WORD) {
     if (ispresent(element)) {
       element[field as keyof BOARD_ELEMENT] = value
+      boardrunnerpushupdates(vm)
     }
   }
 
@@ -482,6 +499,7 @@ export function memoryinspectcolor(
 }
 
 export function memoryinspectcolorarea(
+  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -509,6 +527,7 @@ export function memoryinspectcolorarea(
             }
           }
         }
+        boardrunnerpushupdates(vm)
       }
     },
   )
@@ -521,7 +540,7 @@ export function memoryinspectcolorarea(
   scrollwritelines(player, 'bulk set color', zsstexttape(lines), batchchip)
 }
 
-export function memoryinspectcommand(path: string, player: string) {
+export function memoryinspectcommand(vm: DEVICE, path: string, player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -545,13 +564,14 @@ export function memoryinspectcommand(path: string, player: string) {
       break
     case 'bg':
     case 'color':
-      memoryinspectcolor(player, element, inspect.path)
+      memoryinspectcolor(vm, player, element, inspect.path)
       break
     case 'char':
-      memoryinspectchar(player, element, inspect.path)
+      memoryinspectchar(vm, player, element, inspect.path)
       break
     case 'empty':
       memorysafedeleteelement(board, element, mainbook.timestamp)
+      boardrunnerpushupdates(vm)
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {
@@ -585,6 +605,7 @@ export function memoryinspectcommand(path: string, player: string) {
 }
 
 export function memoryinspectelement(
+  vm: DEVICE,
   player: string,
   board: BOARD,
   codepage: CODE_PAGE,
@@ -635,6 +656,7 @@ export function memoryinspectelement(
       } else {
         element[name as keyof BOARD_ELEMENT] = value
       }
+      boardrunnerpushupdates(vm)
     }
   }
 
