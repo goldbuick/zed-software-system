@@ -164,6 +164,9 @@ function handleboardrunnertick(
       store[mode] = memoryreadgadgetlayers(mode, boarddata)
     }
   }
+
+  // ensure the boundaries are in sync
+  boardrunnerpushupdates(device)
 }
 
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
@@ -233,9 +236,6 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
           timestamp,
           boundaries,
         )
-
-        // ensure the boundaries are in sync
-        boardrunnerpushupdates(boardrunner)
       }
       break
     case 'paint':
@@ -288,9 +288,6 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
           const boards = memoryreadbookplayerboards(mainbook)
           memorysendtoboards(message.player, invoke.target, invoke.path, boards)
         }
-
-        // ensure the boundaries are in sync
-        boardrunnerpushupdates(boardrunner)
       }
       break
   }

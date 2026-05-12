@@ -239,7 +239,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
         const boards = memoryreadbookplayerboards(mainbook)
         memorysendtoboards(message.player, target, path, boards)
       }
-      boardrunnerpushupdates(vm)
       break
     }
   }
