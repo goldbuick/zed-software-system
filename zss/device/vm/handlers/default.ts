@@ -236,12 +236,8 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
         memorymessagechip(message)
       } else {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        memorysendtoboards(
-          target,
-          path,
-          undefined,
-          memoryreadbookplayerboards(mainbook),
-        )
+        const boards = memoryreadbookplayerboards(mainbook)
+        memorysendtoboards(message.player, target, path, boards)
       }
       break
     }

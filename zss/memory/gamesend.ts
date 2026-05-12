@@ -1,5 +1,5 @@
 import { CHIP } from 'zss/chip'
-import { apichat, chipmessage } from 'zss/device/api'
+import { apichat } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -17,7 +17,6 @@ import {
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
-import { memoryreadbookplayerboards } from './playermanagement'
 import { memoryelementtologprefix } from './rendering'
 import { memorymessagechip } from './runtime'
 import { memoryreadbookbysoftware } from './session'
@@ -56,9 +55,9 @@ function playerpartyinteraction(
 }
 
 export function memorysendtoboards(
+  player: string,
   target: string | PT,
-  message: string,
-  data: any,
+  label: string,
   boards: BOARD[],
 ) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -70,7 +69,14 @@ export function memorysendtoboards(
     for (let i = 0; i < elements.length; ++i) {
       const element = elements[i]
       if (ispresent(element.id)) {
-        chipmessage(SOFTWARE, '', element.id, message, data)
+        memorymessagechip({
+          id: createsid(),
+          session: SOFTWARE.session(),
+          player,
+          sender: player,
+          target: `${element.id}:${label}`,
+          data: undefined,
+        })
       }
     }
   }
@@ -232,12 +238,6 @@ export function memorysendtoelements(
           memorysendtoelement(fromelement, READ_CONTEXT.element, send.label)
         }
         break
-      case 'ping': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const boards = memoryreadbookplayerboards(mainbook)
-        memorysendtoboards('all', send.label, undefined, boards)
-        break
-      }
       default: {
         // target named elements
         const elements = memorylistboardelementsbyidnameorpts(

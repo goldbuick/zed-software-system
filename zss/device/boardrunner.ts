@@ -208,7 +208,6 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
           return
         }
 
-        console.info('$$$ input', message.data)
 
         // process the input
         const flags = memoryreadflags(message.player)
@@ -287,12 +286,8 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
           memorymessagechip(message)
         } else {
           const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          memorysendtoboards(
-            invoke.target,
-            invoke.path,
-            undefined,
-            memoryreadbookplayerboards(mainbook),
-          )
+          const boards = memoryreadbookplayerboards(mainbook)
+          memorysendtoboards(message.player, invoke.target, invoke.path, boards)
         }
       }
       break
