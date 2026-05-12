@@ -1,5 +1,5 @@
 import { objectKeys } from 'ts-extras'
-import { DEVICE, parsetarget } from 'zss/device'
+import { parsetarget } from 'zss/device'
 import {
   registercopy,
   registereditoropen,
@@ -290,6 +290,8 @@ function registerhyperlinksforelementsetvalue(
       }
       break
   }
+
+  // push jsonpipe changes
   boardrunnerpushupdates(SOFTWARE)
 }
 
@@ -668,6 +670,7 @@ export function memoryinspectcommand(path: string, player: string) {
       break
     case 'empty':
       memorysafedeleteelement(board, element, mainbook.timestamp)
+      // push jsonpipe changes
       boardrunnerpushupdates(SOFTWARE)
       break
     case 'code':

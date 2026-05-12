@@ -28,7 +28,6 @@ export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
         const [action] = readargs(words, 0, [ARG_TYPE.NAME])
         const entry = USERINPUT_MAP[NAME(action)]
         if (entry) {
-          // vminput(SOFTWARE, player, entry[0], entry[1])
           boardrunnerinput(SOFTWARE, player, entry[0], entry[1])
         }
         return 0

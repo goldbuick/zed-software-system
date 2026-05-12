@@ -56,7 +56,6 @@ export function apilog(device: DEVICELIKE, player: string, ...message: any[]) {
   return true
 }
 
-/** Worker → client hook for Playwright E2E: loader lifecycle (forwarded as `register:e2eloaderevent`). */
 export type E2E_LOADER_NOTIFY = {
   phase: 'start' | 'done'
   eventname: string
@@ -311,7 +310,6 @@ export function vmboardrunnerpatch(
   device.emit(player, 'vm:boardrunnerpatch', [patch, boundary])
 }
 
-/** Boardrunner worker → sim VM: apply [`memorycommitplayertoboard`] on authoritative memory (synchronous via hub). */
 export function vmplayermovetoboard(
   device: DEVICELIKE,
   player: string,
@@ -355,7 +353,6 @@ export function heavyagentname(
   device.emit(player, 'heavy:agentname', [agentid, agentname])
 }
 
-/** When `#set user` updates player flags, sync display name to heavy roster if `player` is an agent (no-op for humans). */
 export function heavyagentsyncuserdisplay(
   device: DEVICELIKE,
   player: string,
@@ -385,7 +382,6 @@ export function heavyrestoreagents(
   device.emit(player, 'heavy:restoreagents', roster)
 }
 
-/** Worker applies preset (dispose main generator). Use `{ toast: false }` after login restore. */
 export function heavyllmpreset(
   device: DEVICELIKE,
   player: string,
@@ -396,7 +392,6 @@ export function heavyllmpreset(
   device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
 }
 
-/** Main-thread register: start/stop per-agent vm:doot from client `second` ticks (heavy worker → client). */
 export function registeragentdooton(
   device: DEVICELIKE,
   player: string,

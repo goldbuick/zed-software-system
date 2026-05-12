@@ -195,7 +195,6 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
       if (mods.shift) {
         bits |= INPUT_SHIFT
       }
-      // vminput(SOFTWARE, player, input, bits)
       boardrunnerinput(SOFTWARE, player, input, bits)
     }
   })

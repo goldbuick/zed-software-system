@@ -40,6 +40,7 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   perfmeasure('vm:gadgetsynctick', () => {
     gadgetsynctick(vm)
   })
+  // boardrunner management
   perfmeasure('vm:boardrunner', () => {
     const activeboards = memoryreadbookplayerboards(mainbook)
     for (let i = 0; i < activeboards.length; ++i) {
@@ -66,7 +67,9 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       }
     }
   })
-  boardrunnerpushupdates(vm)
+  perfmeasure('vm:boardrunnerpushupdates', () => {
+    boardrunnerpushupdates(vm)
+  })
   perfmeasure('vm:boardrunnersendtick', () => {
     // signal tick to the boardrunners
     const ids = Object.keys(boardrunners)
