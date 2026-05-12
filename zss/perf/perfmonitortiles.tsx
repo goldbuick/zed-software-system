@@ -12,7 +12,7 @@ import {
   readIvsBroadcastStatsSnapshot,
 } from 'zss/perf/ivsbroadcaststats'
 import { readjsonpipeapplyremotestats } from 'zss/perf/jsonpipeapplystats'
-import { readPeerWireTotals } from 'zss/perf/peerwire'
+import { readpeerwiretotals } from 'zss/perf/peerwire'
 import {
   BKG_PTRN,
   BKG_PTRN_ALT,
@@ -217,7 +217,7 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       tokenizeandwritetextformat(`$yellow fps=$white${gl.fps}`, context, true)
 
       const now = performance.now()
-      const peer = readPeerWireTotals()
+      const peer = readpeerwiretotals()
       let upRate = 0
       let dnRate = 0
       const pt = peerPrev.current

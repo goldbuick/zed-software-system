@@ -26,8 +26,10 @@ export function createplatform(isstub = false, climode = false) {
 
   // create heavy worker
   heavy = new heavyspace()
+
   // create boardrunner worker
   boardrunner = new boardrunnerspace()
+
   // create sim/stub worker
   platform = isstub ? new stubspace() : new simspace()
   platform.postMessage({ target: 'config', data: climode })

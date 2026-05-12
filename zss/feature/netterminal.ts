@@ -2,6 +2,7 @@ import Peer, { DataConnection } from 'peerjs'
 import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
 import {
   createforward,
+  shouldforwardclienttoboardrunner,
   shouldforwardclienttoserver,
   shouldforwardonpeerclient,
   shouldforwardonpeerserver,
@@ -19,7 +20,7 @@ import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { recordPeerWireReceived, recordPeerWireSent } from 'zss/perf/peerwire'
+import { recordpeerwirereceived, recordpeerwiresent } from 'zss/perf/peerwire'
 
 async function readpeerid(): Promise<string | undefined> {
   return await storagereadnetid()
@@ -114,7 +115,7 @@ function netterminaltopic(player: string) {
 
 function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
   const wire = encodepeerwire(message)
-  recordPeerWireSent(wire.byteLength)
+  recordpeerwiresent(wire.byteLength)
   void dataconnection.send(wire)
 }
 
@@ -125,11 +126,10 @@ function handledataconnection(dataconnection: DataConnection) {
   function hostbridge() {
     // open bridge between peers
     topicbridge = createforward((message) => {
-      if (
-        ispresent(networkpeer) &&
-        shouldforwardonpeerserver(message) &&
-        shouldforwardservertoclient(message)
-      ) {
+      if (!ispresent(networkpeer) || !shouldforwardonpeerserver(message)) {
+        return
+      }
+      if (shouldforwardservertoclient(message)) {
         sendpeer(dataconnection, message)
       }
     })
@@ -138,10 +138,12 @@ function handledataconnection(dataconnection: DataConnection) {
   function joinbridge() {
     // open bridge between peers
     topicbridge = createforward((message) => {
+      if (!ispresent(networkpeer) || !shouldforwardonpeerclient(message)) {
+        return
+      }
       if (
-        ispresent(networkpeer) &&
-        shouldforwardonpeerclient(message) &&
-        shouldforwardclienttoserver(message)
+        shouldforwardclienttoserver(message) ||
+        shouldforwardclienttoboardrunner(message)
       ) {
         sendpeer(dataconnection, message)
       }
@@ -188,7 +190,7 @@ function handledataconnection(dataconnection: DataConnection) {
         )
         return
       }
-      recordPeerWireReceived(bytes.byteLength)
+      recordpeerwirereceived(bytes.byteLength)
       try {
         const message = decodepeerwire(bytes)
         topicbridge?.forward({

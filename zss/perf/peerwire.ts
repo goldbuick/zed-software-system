@@ -1,18 +1,18 @@
-let peerWireSent = 0
-let peerWireRecv = 0
+let peerwiresent = 0
+let peerwirerecv = 0
 
-export function recordPeerWireSent(byteLength: number) {
-  if (byteLength > 0) {
-    peerWireSent += byteLength
+export function recordpeerwiresent(bytelength: number) {
+  if (bytelength > 0) {
+    peerwiresent += bytelength
   }
 }
 
-export function recordPeerWireReceived(byteLength: number) {
-  if (byteLength > 0) {
-    peerWireRecv += byteLength
+export function recordpeerwirereceived(bytelength: number) {
+  if (bytelength > 0) {
+    peerwirerecv += bytelength
   }
 }
 
-export function readPeerWireTotals() {
-  return { sent: peerWireSent, recv: peerWireRecv }
+export function readpeerwiretotals() {
+  return { sent: peerwiresent, recv: peerwirerecv }
 }
