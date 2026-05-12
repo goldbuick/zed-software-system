@@ -1,12 +1,14 @@
-import { EffectProps, wrapEffect } from '@react-three/postprocessing'
 import {
   BlendFunction,
   ColorChannel,
   Effect,
   EffectAttribute,
 } from 'postprocessing'
+import { forwardRef, useEffect, useMemo } from 'react'
 import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+
+import { time } from '../display/anim'
 
 import { halftonefragshader } from './halftone'
 import { aasteputilshader, blendutilshader, noiseutilshader } from './util'
@@ -30,10 +32,15 @@ void mainSupport(const in vec2 uv) {
 `
 
 const crtshapefragshader = `
+uniform float animtime;
 uniform float viewheight;
 uniform float curvebase;
-uniform float curveamp;
-uniform float curvespeed;
+uniform float curveamptarget;
+uniform float curveampstart;
+uniform float curveampduration;
+uniform float curvespeedtarget;
+uniform float curvespeedstart;
+uniform float curvespeedduration;
 uniform sampler2D splat;
 
 ${blendutilshader}
@@ -79,13 +86,16 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   // Spatial noise must not be scaled by the full animated curve amount, or UVs
   // shimmer (reads as fuzz). Clamp noise coupling; breathe the lens uniformly.
   float warpn = clamp(curvebase, 0.001, 0.012);
-  // 0..1 lerp factor from sin, then scale by curveamp (no negative breathe)
-  float breathe = (sin(time * curvespeed) * 0.5 + 0.5) * curveamp;
+  float ampt = clamp((animtime - curveampstart) / max(curveampduration, 0.0001), 0.0, 1.0);
+  float ampnow = curveamptarget * sin(ampt * 3.14159265);
+  float speedt = clamp((animtime - curvespeedstart) / max(curvespeedduration, 0.0001), 0.0, 1.0);
+  float speednow = curvespeedtarget * sin(speedt * 3.14159265);
+  float breathe = (sin(animtime * speednow) * 0.5 + 0.5) * ampnow;
   vec2 edge = bendy(xn, warpn * n + breathe, -warpn * n - breathe);
   vec2 bent = edge.xy * 0.5 + 0.5;
 
-  float edgetime = time * 0.3;
-  float edgetime2 = time * 2.0;
+  float edgetime = animtime * 0.3;
+  float edgetime2 = animtime * 2.0;
   vec2 edgewiggle = vec2(cos(edgetime) * 0.1, sin(edgetime) * 0.096);
   vec2 edgewiggle2 = vec2(cos(edgetime2) * 0.005, sin(edgetime2) * 0.005);
   vec2 edgeshine = vec2(edge.x * 5.0 + 3.5, edge.y - 0.3) + edgewiggle + edgewiggle2;
@@ -168,18 +178,10 @@ type CRTShapeOpts = {
   splat?: Texture
   viewheight?: number
   curvebase?: number
-  curveamp?: number
-  curvespeed?: number
 }
 
 class CRTShapeEffect extends Effect {
-  constructor({
-    splat,
-    viewheight,
-    curvebase,
-    curveamp,
-    curvespeed,
-  }: CRTShapeOpts = {}) {
+  constructor({ splat, viewheight, curvebase }: CRTShapeOpts = {}) {
     super('CRTShapeEffect', crtshapefragshader, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.CONVOLUTION,
@@ -188,11 +190,16 @@ class CRTShapeEffect extends Effect {
         ['TEXTURE_PRECISION_HIGH', '1'],
       ]),
       uniforms: new Map<string, Uniform>([
+        ['animtime', time as unknown as Uniform],
         ['splat', new Uniform(splat)],
         ['viewheight', new Uniform(viewheight ?? 128)],
         ['curvebase', new Uniform(curvebase ?? 0.005)],
-        ['curveamp', new Uniform(curveamp ?? 0)],
-        ['curvespeed', new Uniform(curvespeed ?? 0.4)],
+        ['curveamptarget', new Uniform(0)],
+        ['curveampstart', new Uniform(0)],
+        ['curveampduration', new Uniform(0)],
+        ['curvespeedtarget', new Uniform(0)],
+        ['curvespeedstart', new Uniform(0)],
+        ['curvespeedduration', new Uniform(0)],
       ]),
     })
   }
@@ -292,6 +299,22 @@ class CRTShapeEffect extends Effect {
   }
 }
 
-export type CRTShapeProps = EffectProps<typeof CRTShapeEffect>
+export type CRTShapeProps = CRTShapeOpts
 
-export const CRTShape = wrapEffect(CRTShapeEffect)
+export const CRTShape = forwardRef<CRTShapeEffect, CRTShapeProps>(
+  function CRTShape(props, ref) {
+    const effect = useMemo(() => new CRTShapeEffect(props), [])
+    useEffect(() => () => effect.dispose(), [effect])
+    useEffect(() => {
+      if (ispresent(props.viewheight)) {
+        effect.uniforms.get('viewheight')!.value = props.viewheight
+      }
+    }, [effect, props.viewheight])
+    useEffect(() => {
+      if (ispresent(props.curvebase)) {
+        effect.uniforms.get('curvebase')!.value = props.curvebase
+      }
+    }, [effect, props.curvebase])
+    return <primitive ref={ref} object={effect} dispose={null} />
+  },
+)

@@ -18,6 +18,10 @@
 |--------|-------------|
 | `tokenize(text, noWhitespace?)` | Tokenizes text; returns lex result |
 | `hascenter(text)` | Returns text without $CENTER or undefined |
+| `hasticker(text)` | Returns trimmed text without $TICKER or undefined |
+| `hastoast(text)` | Returns trimmed text without $TOAST or undefined |
+| `hasbonk(text)` | Boolean test for $BONK directive |
+| `stripbonk(text)` | Returns trimmed text with $BONK removed |
 | `createwritetextcontext` | Creates WRITE_TEXT_CONTEXT |
 | `tokenizeandwritetextformat(text, context, shouldreset)` | Tokenize + render |
 | `tokenizeandstriptextformat(text)` | Strip formatting; return plain text |

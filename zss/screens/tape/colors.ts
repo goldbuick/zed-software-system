@@ -27,6 +27,7 @@ export const ZSS_TYPE_FLAGMOD = COLOR.DKYELLOW
 export const ZSS_TYPE_COLOR = COLOR.RED
 export const ZSS_TYPE_DIR = COLOR.WHITE
 export const ZSS_TYPE_DIR_MOD = COLOR.LTGRAY
+export const ZSS_TYPE_DIRECTIVE = COLOR.PURPLE
 
 // ---------------------------------------------------------------------------
 // Editor UI (cursor, remote presence)
@@ -482,6 +483,42 @@ export function parsestatformat(image: string): string[] {
   return first.split(' ')
 }
 
+const DIRECTIVE_MARKER_RE = /\$(CENTER|BONK|TICKER|TOAST)\b/gi
+
+/**
+ * Overlay ZSS_TYPE_DIRECTIVE color on $CENTER / $BONK / $TICKER / $TOAST
+ * substrings inside a stringliteral token so they stand out from other
+ * inline `$` markers (color names, flag refs, etc.) in the editor view.
+ */
+function applydirectiveoverlay(
+  yoffset: number,
+  rightedge: number,
+  token: IToken,
+  context: WRITE_TEXT_CONTEXT,
+  tocell: (codeunit: number) => number,
+) {
+  const image = token.image ?? ''
+  if (image.length === 0) {
+    return
+  }
+  const tokenstart = (token.startColumn ?? 1) - 1
+  DIRECTIVE_MARKER_RE.lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = DIRECTIVE_MARKER_RE.exec(image)) !== null) {
+    const start = tocell(tokenstart + match.index)
+    const end = tocell(tokenstart + match.index + match[0].length - 1)
+    clippedapplycolortoindexes(
+      yoffset,
+      rightedge,
+      start,
+      end,
+      ZSS_TYPE_DIRECTIVE,
+      context.active.bg,
+      context,
+    )
+  }
+}
+
 /**
  * Applies syntax highlighting for a single editor row's tokens.
  * When line is provided, token startColumn/endColumn (code-unit) are mapped to cell (grapheme) indices.
@@ -671,6 +708,13 @@ export function applycodetokencolors(
             context,
           )
         }
+        applydirectiveoverlay(
+          yoffset,
+          rightedge,
+          token,
+          context,
+          tocell,
+        )
         break
       }
       default:

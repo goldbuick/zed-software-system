@@ -79,6 +79,10 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
+export function apibonk(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:bonk', undefined)
+}
+
 export function chipmessage(
   device: DEVICELIKE,
   player: string,

@@ -55,7 +55,13 @@ $whiteset stat to array
 #toast text  
 $whiteshow toast notification  
 #ticker text  
-$whiteset ticker text
+$whiteset ticker text  
+$toast text  
+$whiteinline form on any text line  
+$ticker text  
+$whiteinline form on any text line  
+$bonk  
+$whiteinline screen shake; line continues to render
 
 ## board - navigation
 

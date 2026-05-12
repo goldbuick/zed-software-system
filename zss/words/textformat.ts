@@ -55,6 +55,24 @@ export const Center = createToken({
   start_chars_hint: ['$'],
 })
 
+export const Ticker = createToken({
+  name: 'Ticker',
+  pattern: /\$TICKER/i,
+  start_chars_hint: ['$'],
+})
+
+export const Toast = createToken({
+  name: 'Toast',
+  pattern: /\$TOAST/i,
+  start_chars_hint: ['$'],
+})
+
+export const Bonk = createToken({
+  name: 'Bonk',
+  pattern: /\$BONK/i,
+  start_chars_hint: ['$'],
+})
+
 export const MetaKey = createToken({
   name: 'MetaKey',
   pattern: /\$META/i,
@@ -92,6 +110,9 @@ export const allTokens = [
   EscapedDollar,
   HyperLinkText,
   Center,
+  Ticker,
+  Toast,
+  Bonk,
   MetaKey,
   MaybeFlag,
 ]
@@ -112,6 +133,9 @@ const scriptLexerNoWhitespace = new Lexer(
     EscapedDollar,
     HyperLinkText,
     Center,
+    Ticker,
+    Toast,
+    Bonk,
     MetaKey,
     MaybeFlag,
   ],
@@ -122,12 +146,37 @@ const scriptLexerNoWhitespace = new Lexer(
 )
 
 const CENTER_LINE = /\$CENTER/i
+const TICKER_LINE = /\$TICKER/i
+const TOAST_LINE = /\$TOAST/i
+const BONK_LINE = /\$BONK/i
 
 export function hascenter(text: string): MAYBE<string> {
   if (CENTER_LINE.test(text)) {
     return text.replace(CENTER_LINE, '')
   }
   return undefined
+}
+
+export function hasticker(text: string): MAYBE<string> {
+  if (TICKER_LINE.test(text)) {
+    return text.replace(TICKER_LINE, '').trim()
+  }
+  return undefined
+}
+
+export function hastoast(text: string): MAYBE<string> {
+  if (TOAST_LINE.test(text)) {
+    return text.replace(TOAST_LINE, '').trim()
+  }
+  return undefined
+}
+
+export function hasbonk(text: string): boolean {
+  return BONK_LINE.test(text)
+}
+
+export function stripbonk(text: string): string {
+  return text.replace(BONK_LINE, '').trim()
 }
 
 export function tokenize(text: string, noWhitespace = false) {
@@ -335,7 +384,10 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         break
       }
 
-      case Center: {
+      case Center:
+      case Ticker:
+      case Toast:
+      case Bonk: {
         // skip
         break
       }

@@ -3,7 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { Vignette } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { VignetteTechnique } from 'postprocessing'
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { FORCE_TOUCH_UI, RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -12,6 +12,7 @@ import { storagereadconfig } from 'zss/feature/storage'
 import { isjoin } from 'zss/feature/url'
 import { useDeviceData } from 'zss/gadget/device'
 import { CRTShape } from 'zss/gadget/fx/crt'
+import { useCRTAnim } from 'zss/gadget/fx/crtanim'
 import { EffectComposerMain } from 'zss/gadget/graphics/effectcomposer'
 import { doasync } from 'zss/mapping/func'
 import { PerfHud } from 'zss/perf/hud'
@@ -32,6 +33,23 @@ import { TapeViewImage } from './viewimage'
 export function Engine() {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
+  const crtref = useRef<any>(null)
+
+  useEffect(() => {
+    return useCRTAnim.subscribe((s) => {
+      const fx = crtref.current
+      if (!fx) {
+        return
+      }
+      const u = fx.uniforms
+      u.get('curveamptarget').value = s.curveamp.target
+      u.get('curveampstart').value = s.curveamp.start
+      u.get('curveampduration').value = s.curveamp.duration
+      u.get('curvespeedtarget').value = s.curvespeed.target
+      u.get('curvespeedstart').value = s.curvespeed.start
+      u.get('curvespeedduration').value = s.curvespeed.duration
+    })
+  }, [])
 
   // runs the SIM
   useEffect(() => {
@@ -131,10 +149,9 @@ export function Engine() {
                 darkness={0.911}
               />
               <CRTShape
+                ref={crtref}
                 viewheight={viewheight}
                 curvebase={0.005}
-                curveamp={0.002}
-                curvespeed={2}
               />
             </>
           )}

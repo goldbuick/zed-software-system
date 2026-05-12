@@ -29,9 +29,13 @@
 ### Tokenization
 - **tokenize(text, noWhitespace?)** - Tokenizes text into lexical tokens (strings, numbers, flags, colors, etc.)
 - **hascenter(text)** - Checks if text contains $CENTER directive, returns text without center if found
+- **hasticker(text)** - Checks if text contains $TICKER directive, returns trimmed text with marker stripped if found
+- **hastoast(text)** - Checks if text contains $TOAST directive, returns trimmed text with marker stripped if found
+- **hasbonk(text)** - Boolean test for the $BONK directive
+- **stripbonk(text)** - Removes $BONK from text and trims the result
 
 ### Token Constants
-- **Whitespace**, **WhitespaceSkipped**, **Newline**, **StringLiteral**, **StringLiteralDouble**, **EscapedDollar**, **MaybeFlag**, **Center**, **MetaKey**, **NumberLiteral**, **HyperLinkText** (tokens) - Lexer token definitions
+- **Whitespace**, **WhitespaceSkipped**, **Newline**, **StringLiteral**, **StringLiteralDouble**, **EscapedDollar**, **MaybeFlag**, **Center**, **Ticker**, **Toast**, **Bonk**, **MetaKey**, **NumberLiteral**, **HyperLinkText** (tokens) - Lexer token definitions
 - **allTokens** (const) - Array of all token definitions for lexer
 
 ### Text Writing Context
