@@ -33,6 +33,8 @@
 - **hastoast(text)** - Checks if text contains $TOAST directive, returns trimmed text with marker stripped if found
 - **hasbonk(text)** - Boolean test for the $BONK directive
 - **stripbonk(text)** - Removes $BONK from text and trims the result
+- **haszap(text)** - Boolean test for the $ZAP directive
+- **stripzap(text)** - Removes $ZAP from text and trims the result
 
 ### Token Constants
 - **Whitespace**, **WhitespaceSkipped**, **Newline**, **StringLiteral**, **StringLiteralDouble**, **EscapedDollar**, **MaybeFlag**, **Center**, **Ticker**, **Toast**, **Bonk**, **MetaKey**, **NumberLiteral**, **HyperLinkText** (tokens) - Lexer token definitions

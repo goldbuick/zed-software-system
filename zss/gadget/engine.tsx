@@ -45,9 +45,6 @@ export function Engine() {
       u.get('curveamptarget').value = s.curveamp.target
       u.get('curveampstart').value = s.curveamp.start
       u.get('curveampduration').value = s.curveamp.duration
-      u.get('curvespeedtarget').value = s.curvespeed.target
-      u.get('curvespeedstart').value = s.curvespeed.start
-      u.get('curvespeedduration').value = s.curvespeed.duration
     })
   }, [])
 

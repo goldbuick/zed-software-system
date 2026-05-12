@@ -1,4 +1,9 @@
-import { apibonk, apitoast, vmrefscroll } from 'zss/device/api'
+import {
+  apitoast,
+  gadgetclientbonk,
+  gadgetclientzap,
+  vmrefscroll,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -15,7 +20,14 @@ import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import { memoryreadboardelementruntime } from 'zss/memory/runtimeboundary'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { hasbonk, hasticker, hastoast, stripbonk } from 'zss/words/textformat'
+import {
+  hasbonk,
+  hasticker,
+  hastoast,
+  haszap,
+  stripbonk,
+  stripzap,
+} from 'zss/words/textformat'
 import { ARG_TYPE } from 'zss/words/types'
 
 export const RUNTIME_FIRMWARE = createfirmware({
@@ -94,8 +106,12 @@ export const RUNTIME_FIRMWARE = createfirmware({
     let text = textwords.join(' ')
 
     if (hasbonk(text)) {
-      apibonk(SOFTWARE, READ_CONTEXT.elementfocus)
+      gadgetclientbonk(SOFTWARE, READ_CONTEXT.elementfocus)
       text = stripbonk(text)
+    }
+    if (haszap(text)) {
+      gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripzap(text)
     }
 
     let diverted = false

@@ -708,13 +708,7 @@ export function applycodetokencolors(
             context,
           )
         }
-        applydirectiveoverlay(
-          yoffset,
-          rightedge,
-          token,
-          context,
-          tocell,
-        )
+        applydirectiveoverlay(yoffset, rightedge, token, context, tocell)
         break
       }
       default:

@@ -22,6 +22,8 @@
 | `hastoast(text)` | Returns trimmed text without $TOAST or undefined |
 | `hasbonk(text)` | Boolean test for $BONK directive |
 | `stripbonk(text)` | Returns trimmed text with $BONK removed |
+| `haszap(text)` | Boolean test for $ZAP directive |
+| `stripzap(text)` | Returns trimmed text with $ZAP removed |
 | `createwritetextcontext` | Creates WRITE_TEXT_CONTEXT |
 | `tokenizeandwritetextformat(text, context, shouldreset)` | Tokenize + render |
 | `tokenizeandstriptextformat(text)` | Strip formatting; return plain text |
@@ -47,6 +49,10 @@
 | StringLiteralDouble | `"..."` | Quoted string |
 | MaybeFlag | `$name` | Variable interpolation |
 | Center | `$CENTER` | Centering marker |
+| Ticker | `$TICKER` | Ticker marker |
+| Toast | `$TOAST` | Toast marker |
+| Bonk | `$BONK` | Screen shake (gadget client) |
+| Zap | `$ZAP` | Glitch pulse (gadget client) |
 | MetaKey | `$META` | Platform meta key (cmd/ctrl) |
 | NumberLiteral | `$-?(\d*\.)?\d+…` | Char code (e.g. `$123`) |
 | EscapedDollar | `$$` | Literal $ |

@@ -2,9 +2,10 @@ import {
   BINARY_READER,
   JSON_READER,
   TEXT_READER,
-  apibonk,
   apichat,
   apitoast,
+  gadgetclientbonk,
+  gadgetclientzap,
   registerinput,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -22,7 +23,14 @@ import { memoryreadoperator } from 'zss/memory/session'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { hasbonk, hasticker, hastoast, stripbonk } from 'zss/words/textformat'
+import {
+  hasbonk,
+  hasticker,
+  hastoast,
+  haszap,
+  stripbonk,
+  stripzap,
+} from 'zss/words/textformat'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
 import { loaderbinary } from './loader/binary'
@@ -100,8 +108,12 @@ export const LOADER_FIRMWARE = createfirmware({
     let text = words.map(maptostring).join(' ')
 
     if (hasbonk(text)) {
-      apibonk(SOFTWARE, READ_CONTEXT.elementfocus)
+      gadgetclientbonk(SOFTWARE, READ_CONTEXT.elementfocus)
       text = stripbonk(text)
+    }
+    if (haszap(text)) {
+      gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripzap(text)
     }
 
     let diverted = false

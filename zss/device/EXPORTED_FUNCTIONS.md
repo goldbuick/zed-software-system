@@ -240,6 +240,8 @@ Per-player gadget state synchronization. The previous `gadgetserver` device has 
 ### Sim → Client
 - `gadgetclientpaint(device, player, json)` - Paint full gadget state (desync)
 - `gadgetclientpatch(device, player, patch)` - Apply jsonpipe (RFC 6902) patch to gadget state
+- `gadgetclientbonk(device, player)` - Emit `gadgetclient:bonk` (CRT curve hit)
+- `gadgetclientzap(device, player)` - Emit `gadgetclient:zap` (glitch pulse hit)
 
 ### Client → Sim
 - `vmgadgetdesync(device, player)` - Ask the sim VM to repaint after a bad patch (also called by `register` after `acklogin`)

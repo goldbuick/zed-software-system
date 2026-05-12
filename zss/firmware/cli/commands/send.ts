@@ -1,7 +1,8 @@
 import {
-  apibonk,
   apilog,
   apitoast,
+  gadgetclientbonk,
+  gadgetclientzap,
   vmloader,
   vmmakeitscroll,
 } from 'zss/device/api'
@@ -14,7 +15,14 @@ import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
-import { hasbonk, hasticker, hastoast, stripbonk } from 'zss/words/textformat'
+import {
+  hasbonk,
+  hasticker,
+  hastoast,
+  haszap,
+  stripbonk,
+  stripzap,
+} from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, type WORD } from 'zss/words/types'
 
 function readscrolltextfromwords(words: WORD[]) {
@@ -61,8 +69,12 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       let ticker = readscrolltextfromwords(words)
 
       if (hasbonk(ticker)) {
-        apibonk(SOFTWARE, READ_CONTEXT.elementfocus)
+        gadgetclientbonk(SOFTWARE, READ_CONTEXT.elementfocus)
         ticker = stripbonk(ticker)
+      }
+      if (haszap(ticker)) {
+        gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
+        ticker = stripzap(ticker)
       }
 
       let diverted = false

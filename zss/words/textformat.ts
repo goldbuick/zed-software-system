@@ -73,6 +73,12 @@ export const Bonk = createToken({
   start_chars_hint: ['$'],
 })
 
+export const Zap = createToken({
+  name: 'Zap',
+  pattern: /\$ZAP/i,
+  start_chars_hint: ['$'],
+})
+
 export const MetaKey = createToken({
   name: 'MetaKey',
   pattern: /\$META/i,
@@ -113,6 +119,7 @@ export const allTokens = [
   Ticker,
   Toast,
   Bonk,
+  Zap,
   MetaKey,
   MaybeFlag,
 ]
@@ -136,6 +143,7 @@ const scriptLexerNoWhitespace = new Lexer(
     Ticker,
     Toast,
     Bonk,
+    Zap,
     MetaKey,
     MaybeFlag,
   ],
@@ -149,6 +157,7 @@ const CENTER_LINE = /\$CENTER/i
 const TICKER_LINE = /\$TICKER/i
 const TOAST_LINE = /\$TOAST/i
 const BONK_LINE = /\$BONK/i
+const ZAP_LINE = /\$ZAP/i
 
 export function hascenter(text: string): MAYBE<string> {
   if (CENTER_LINE.test(text)) {
@@ -177,6 +186,14 @@ export function hasbonk(text: string): boolean {
 
 export function stripbonk(text: string): string {
   return text.replace(BONK_LINE, '').trim()
+}
+
+export function haszap(text: string): boolean {
+  return ZAP_LINE.test(text)
+}
+
+export function stripzap(text: string): string {
+  return text.replace(ZAP_LINE, '').trim()
 }
 
 export function tokenize(text: string, noWhitespace = false) {

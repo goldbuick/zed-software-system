@@ -303,6 +303,8 @@ export type CRTShapeProps = CRTShapeOpts
 
 export const CRTShape = forwardRef<CRTShapeEffect, CRTShapeProps>(
   function CRTShape(props, ref) {
+    // Single effect instance; uniform updates follow in useEffects below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional one-shot construct
     const effect = useMemo(() => new CRTShapeEffect(props), [])
     useEffect(() => () => effect.dispose(), [effect])
     useEffect(() => {

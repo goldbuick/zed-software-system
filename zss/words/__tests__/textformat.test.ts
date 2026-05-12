@@ -3,7 +3,9 @@ import {
   hascenter,
   hasticker,
   hastoast,
+  haszap,
   stripbonk,
+  stripzap,
 } from 'zss/words/textformat'
 
 describe('textformat line attributes', () => {
@@ -82,6 +84,38 @@ describe('textformat line attributes', () => {
 
     it('handles a bonk-only line by returning an empty string', () => {
       expect(stripbonk('$BONK')).toBe('')
+    })
+  })
+
+  describe('haszap', () => {
+    it('detects $ZAP', () => {
+      expect(haszap('$ZAP hello')).toBe(true)
+    })
+
+    it('matches case-insensitively', () => {
+      expect(haszap('hi $zap there')).toBe(true)
+    })
+
+    it('returns false when marker is absent', () => {
+      expect(haszap('plain text')).toBe(false)
+    })
+  })
+
+  describe('stripzap', () => {
+    it('removes $ZAP and trims the remainder', () => {
+      expect(stripzap('$ZAP hello world')).toBe('hello world')
+    })
+
+    it('matches case-insensitively', () => {
+      expect(stripzap('$zap hi')).toBe('hi')
+    })
+
+    it('returns the original text (trimmed) when marker is absent', () => {
+      expect(stripzap('plain text')).toBe('plain text')
+    })
+
+    it('handles a zap-only line by returning an empty string', () => {
+      expect(stripzap('$ZAP')).toBe('')
     })
   })
 })

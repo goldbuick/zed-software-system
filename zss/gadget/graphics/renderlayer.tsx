@@ -9,6 +9,8 @@ import { useDeviceData } from 'zss/gadget/device'
 import { EffectComposer } from 'zss/gadget/graphics/effectcomposer'
 import { useMedia } from 'zss/gadget/media'
 
+import { useGlitchPulse } from '../fx/glitchpulse'
+
 import { RenderTexture } from './rendertexture'
 
 type RenderToTargetProps = {
@@ -28,24 +30,28 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
     }
   }, [copyPass])
 
+  const glitchactive = useGlitchPulse((state) => state.glitchactive)
+
   return (
     <>
+      {glitchactive && (
+        <Glitch
+          delay={new Vector2(0.05, 0.35)}
+          duration={new Vector2(0.06, 0.28)}
+          strength={new Vector2(0.06, 0.38)}
+          mode={GlitchMode.CONSTANT_WILD}
+          active
+          ratio={0.42}
+        />
+      )}
       {mood.includes('dark') && (
-        <Fragment key="mood">
-          <Glitch
-            delay={new Vector2(10, 60 * 2)} // min and max glitch delay
-            duration={new Vector2(0.1, 3.0)} // min and max glitch duration
-            strength={new Vector2(0, 0.15)} // min and max glitch strength
-            mode={GlitchMode.SPORADIC} // glitch mode
-            active // turn on/off the effect (switches between "mode" prop and GlitchMode.DISABLED)
-            ratio={0.5} // Threshold for strong glitches, 0 - no weak glitches, 1 - no strong glitches.
-          />
+        <>
           <Noise
             opacity={0.5}
             premultiply // enables or disables noise premultiplication
             blendFunction={BlendFunction.DARKEN} // blend mode
           />
-        </Fragment>
+        </>
       )}
       {mood.includes('bright') && (
         <Fragment key="mood">
@@ -85,6 +91,8 @@ export const RenderLayer = memo(function RenderLayer({
 }: RenderLayerProps) {
   const { mood } = useMedia()
   const { viewport } = useThree()
+  useGlitchPulse((state) => state.glitchactive)
+
   const dpr = viewport.dpr * dprscale
   const fbo = useFBO(viewwidth * dpr, viewheight * dpr, {
     samples: 0,
