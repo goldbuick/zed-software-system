@@ -47,6 +47,7 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
 export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ready':
+    case 'second':
     case 'ticktock':
       // console.info('client blocked', message.target)
       return false
