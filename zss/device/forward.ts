@@ -158,14 +158,11 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
         case 'chip':
         case 'boardrunner':
           return true
-        // case 'vm':
-        //   // chip / scroll / sidebar messages also need to reach the
-        //   // boardrunner so the chip OS running there can deliver them
-        //   return true
       }
-      return false
+      break
     }
   }
+  return false
 }
 
 // create boardrunner -> client forward

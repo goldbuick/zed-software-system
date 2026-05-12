@@ -243,9 +243,9 @@ describe('api', () => {
         noop,
       )
       registerhyperlinksharedbridge(chip, 'select', (_typ, _name) => 2, noop)
-      expect(resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x')).toBe(
-        2,
-      )
+      expect(
+        resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x'),
+      ).toBe(2)
     })
 
     it('falls back to terminal registration', () => {
@@ -256,9 +256,9 @@ describe('api', () => {
         (_typ, _name) => 3,
         noop,
       )
-      expect(resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x')).toBe(
-        3,
-      )
+      expect(
+        resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x'),
+      ).toBe(3)
     })
   })
 })

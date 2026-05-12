@@ -43,6 +43,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     // send a thud message back to the board runner
     boardrunnerthud(vm, message.player, targetplayer)
   }
+
   // push jsonpipe changes
   boardrunnerpushupdates(vm)
 }

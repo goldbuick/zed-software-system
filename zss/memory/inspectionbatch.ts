@@ -1,5 +1,5 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
-import { DEVICE, parsetarget } from 'zss/device'
+import { parsetarget } from 'zss/device'
 import { apitoast, registercopy, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
