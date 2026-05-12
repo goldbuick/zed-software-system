@@ -36,15 +36,28 @@ describe('forward boardrunner', () => {
     ).toBe(true)
   })
 
-  it('forwards vm targets so chip / scroll / sidebar messages reach the boardrunner OS', () => {
+  it('forwards chip targets to the boardrunner OS', () => {
+    expect(
+      shouldforwardclienttoboardrunner(
+        createmessage('s', 'p', 'x', 'chip:scroll:label'),
+      ),
+    ).toBe(true)
+    expect(
+      shouldforwardclienttoboardrunner(
+        createmessage('s', 'p', 'x', 'chip:sidebar:panel'),
+      ),
+    ).toBe(true)
+  })
+
+  it('does not forward vm targets to boardrunner (vm stays on the server path)', () => {
     expect(
       shouldforwardclienttoboardrunner(
         createmessage('s', 'p', 'x', 'vm:CHIP:label'),
       ),
-    ).toBe(true)
+    ).toBe(false)
     expect(
       shouldforwardclienttoboardrunner(createmessage('s', 'p', 'x', 'vm:cli')),
-    ).toBe(true)
+    ).toBe(false)
   })
 
   it('does not forward ticktock', () => {

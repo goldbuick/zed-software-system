@@ -236,13 +236,8 @@ describe('api', () => {
   describe('resolvehyperlinksharedbridge', () => {
     it('prefers scroll registration when both exist', () => {
       const chip = `merge_a_${Math.random()}`
-      registerterminalhyperlinksharedbridge(
-        chip,
-        'select',
-        (_typ, _name) => 1,
-        noop,
-      )
-      registerhyperlinksharedbridge(chip, 'select', (_typ, _name) => 2, noop)
+      registerterminalhyperlinksharedbridge(chip, 'select', () => 1, noop)
+      registerhyperlinksharedbridge(chip, 'select', () => 2, noop)
       expect(
         resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x'),
       ).toBe(2)
@@ -250,12 +245,7 @@ describe('api', () => {
 
     it('falls back to terminal registration', () => {
       const chip = `merge_b_${Math.random()}`
-      registerterminalhyperlinksharedbridge(
-        chip,
-        'select',
-        (_typ, _name) => 3,
-        noop,
-      )
+      registerterminalhyperlinksharedbridge(chip, 'select', () => 3, noop)
       expect(
         resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x'),
       ).toBe(3)

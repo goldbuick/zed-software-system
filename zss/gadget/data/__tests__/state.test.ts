@@ -9,7 +9,13 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/state'
-import { type LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
+import {
+  type LAYER,
+  type LAYER_DITHER,
+  type LAYER_SPRITES,
+  type LAYER_TILES,
+  LAYER_TYPE,
+} from 'zss/gadget/data/types'
 
 describe('state', () => {
   // Note: useEqual is a React hook that uses useRef and cannot be tested
@@ -78,7 +84,7 @@ describe('state', () => {
       })
     })
 
-    const tileslayer = {
+    const tileslayer: LAYER_TILES = {
       id: 't:test',
       type: LAYER_TYPE.TILES,
       width: 2,
@@ -88,7 +94,7 @@ describe('state', () => {
       bg: [0, 0, 0, 0],
       stats: [0, 0, 0, 0],
     }
-    const spriteswithmixed = {
+    const spriteswithmixed: LAYER_SPRITES = {
       id: 'sp:test',
       type: LAYER_TYPE.SPRITES,
       sprites: [
@@ -113,7 +119,7 @@ describe('state', () => {
         },
       ],
     }
-    const ditherlayer = {
+    const ditherlayer: LAYER_DITHER = {
       id: 'd:test',
       type: LAYER_TYPE.DITHER,
       width: 1,
@@ -122,7 +128,7 @@ describe('state', () => {
     }
 
     it('layersstrippedplayersprites removes sprites with pid only', () => {
-      const layers = [tileslayer, spriteswithmixed, ditherlayer]
+      const layers: LAYER[] = [tileslayer, spriteswithmixed, ditherlayer]
       const out = layersstrippedplayersprites(layers)
       expect(out[0]).toBe(tileslayer)
       expect(out[2]).toBe(ditherlayer)
