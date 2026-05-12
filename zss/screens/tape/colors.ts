@@ -27,7 +27,7 @@ export const ZSS_TYPE_FLAGMOD = COLOR.DKYELLOW
 export const ZSS_TYPE_COLOR = COLOR.RED
 export const ZSS_TYPE_DIR = COLOR.WHITE
 export const ZSS_TYPE_DIR_MOD = COLOR.LTGRAY
-export const ZSS_TYPE_DIRECTIVE = COLOR.PURPLE
+export const ZSS_TYPE_DIRECTIVE = COLOR.DKGREEN
 
 // ---------------------------------------------------------------------------
 // Editor UI (cursor, remote presence)
@@ -483,10 +483,10 @@ export function parsestatformat(image: string): string[] {
   return first.split(' ')
 }
 
-const DIRECTIVE_MARKER_RE = /\$(CENTER|BONK|TICKER|TOAST)\b/gi
+const DIRECTIVE_MARKER_RE = /\$(CENTER|BONK|TICKER|TOAST|ZAP)\b/gi
 
 /**
- * Overlay ZSS_TYPE_DIRECTIVE color on $CENTER / $BONK / $TICKER / $TOAST
+ * Overlay ZSS_TYPE_DIRECTIVE color on $CENTER / $BONK / $TICKER / $TOAST / $ZAP
  * substrings inside a stringliteral token so they stand out from other
  * inline `$` markers (color names, flag refs, etc.) in the editor view.
  */

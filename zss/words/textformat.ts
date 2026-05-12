@@ -401,10 +401,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         break
       }
 
-      case Center:
-      case Ticker:
+      case Zap:
+      case Bonk:
       case Toast:
-      case Bonk: {
+      case Ticker:
+      case Center: {
         // skip
         break
       }
