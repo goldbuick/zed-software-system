@@ -113,6 +113,7 @@ export function memorymakeitcommand(
       `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
     )
   }
+
   function openeditor(codepage: MAYBE<CODE_PAGE>, didcreate: boolean) {
     doasync(SOFTWARE, player, async () => {
       if (ispresent(codepage)) {

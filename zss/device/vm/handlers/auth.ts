@@ -31,6 +31,8 @@ import {
 import type { BOOK_FLAGS } from 'zss/memory/types'
 import { memoryreadconfig, memorysetconfig } from 'zss/memory/utilities'
 
+import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
+
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
   if (!memoryreadplayeractive(message.player)) {
     registerloginready(vm, message.player)
@@ -40,19 +42,26 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   // grab current board
   const currentboard = memoryreadplayerboard(message.player)
+
   // clear player state
   vmclearscroll(vm, message.player)
   memorylogoutplayer(message.player, !!message.data)
+
   // clear tracking state
   delete tracking[message.player]
   delete lastinputtime[message.player]
+
   // ensure the board we left has a runner set
   if (ispresent(currentboard) && !boardrunnerassignmentvalid(currentboard.id)) {
     boardrunnerelect(currentboard.id)
   }
+
   // signal logout
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
   registerloginready(vm, message.player)
+
+  // push jsonpipe changes
+  boardrunnerpushupdates(vm)
 }
 
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {
@@ -115,6 +124,9 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   } else {
     vm.replynext(message, 'acklogin', false)
   }
+
+  // push jsonpipe changes
+  boardrunnerpushupdates(vm)
 }
 
 export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {

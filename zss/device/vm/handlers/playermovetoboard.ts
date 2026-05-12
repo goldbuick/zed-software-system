@@ -14,20 +14,14 @@ import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import type { PT } from 'zss/words/types'
 
+import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
+
 export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   const [targetplayer, board, dest] = message.data as [string, string, PT]
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const currentboard = memoryreadplayerboard(targetplayer)
-
   // attempt to move the player to the destination board
   if (memorymoveplayertoboard(mainbook, targetplayer, board, dest)) {
-    console.info(
-      'handleplayermovetoboard',
-      targetplayer,
-      '>>',
-      board,
-      'did move',
-    )
     // elect a new runner for the prior board
     if (
       ispresent(currentboard) &&
@@ -46,14 +40,9 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
       boardrunnerassign(board, targetplayer)
     }
   } else {
-    console.info(
-      'handleplayermovetoboard',
-      targetplayer,
-      '>>',
-      board,
-      'did NOT move',
-    )
     // send a thud message back to the board runner
     boardrunnerthud(vm, message.player, targetplayer)
   }
+  // push jsonpipe changes
+  boardrunnerpushupdates(vm)
 }

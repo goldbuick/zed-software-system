@@ -865,7 +865,6 @@ export function memoryinspectelement(
 }
 
 export function memoryinspectempty(
-  vm: DEVICE,
   player: string,
   p1: PT,
   p2: PT,
@@ -920,8 +919,6 @@ export function memoryinspectempty(
       break
     }
   }
-
-  boardrunnerpushupdates(vm)
 }
 
 export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {

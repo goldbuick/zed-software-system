@@ -114,11 +114,7 @@ export async function memoryhassecretheap() {
   return !!(await memoryreadsecretheap())
 }
 
-export async function memoryinspectbatchcommand(
-  vm: DEVICE,
-  path: string,
-  player: string,
-) {
+export async function memoryinspectbatchcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
   if (!ispresent(board)) {
     return
@@ -196,7 +192,7 @@ export async function memoryinspectbatchcommand(
     case 'emptyall':
     case 'emptyobjects':
     case 'emptyterrain':
-      memoryinspectempty(vm, player, p1, p2, batch.target)
+      memoryinspectempty(player, p1, p2, batch.target)
       break
     case 'chars':
       memoryinspectchararea(player, p1, p2, 'char')
