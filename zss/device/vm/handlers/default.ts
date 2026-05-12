@@ -8,6 +8,7 @@ import {
   vmplayermovetoboard,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchwiki } from 'zss/feature/fetchwiki'
 import { parsezipfilelist } from 'zss/feature/parse/file'
@@ -37,8 +38,6 @@ import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
-
-import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
 
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
@@ -198,7 +197,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     }
     case 'inspect':
-      memoryinspectcommand(vm, path, message.player)
+      memoryinspectcommand(path, message.player)
       boardrunnerpushupdates(vm)
       break
     case 'gadget':

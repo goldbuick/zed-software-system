@@ -641,7 +641,7 @@ export function memoryinspectcolorarea(
   scrollwritelines(player, 'bulk set color', zsstexttape(lines), batchchip)
 }
 
-export function memoryinspectcommand(vm: DEVICE, path: string, player: string) {
+export function memoryinspectcommand(path: string, player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -668,7 +668,7 @@ export function memoryinspectcommand(vm: DEVICE, path: string, player: string) {
       break
     case 'empty':
       memorysafedeleteelement(board, element, mainbook.timestamp)
-      boardrunnerpushupdates(vm)
+      boardrunnerpushupdates(SOFTWARE)
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {

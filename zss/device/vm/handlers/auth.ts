@@ -79,9 +79,9 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     zss_bookmarks: _zssbookmarks,
     ...flags
   } = message.data ?? {}
-  console.info('VM => storage', flags)
 
   if (memoryisoperator(message.player)) {
+    console.info('VM => storage', flags)
     memorysetcommandpermissions(
       bannedtokens ?? [],
       rolebytoken ?? {},
