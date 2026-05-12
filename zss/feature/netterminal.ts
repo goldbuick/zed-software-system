@@ -455,15 +455,3 @@ export function netterminaljoin(topicpeerid: string) {
   const selfpeerid = netterminaltopic(player)
   netterminalcreate(topicpeerid, selfpeerid)
 }
-
-export function netterminalhalt() {
-  if (!ispresent(networkpeer) && subscribetopic === '') {
-    return
-  }
-  netterminalsessionserial += 1
-  netterminalclearallschedule()
-  vmtopic(SOFTWARE, registerreadplayer(), subscribetopic)
-  subscribetopic = ''
-  networkpeer?.destroy()
-  networkpeer = undefined
-}

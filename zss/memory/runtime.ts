@@ -55,10 +55,6 @@ import {
 // manages chips
 const os = createos()
 
-export function memorygc() {
-  os.gc()
-}
-
 export function memoryhaltchip(id: string) {
   os.halt(id)
 }

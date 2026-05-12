@@ -3570,11 +3570,6 @@
   resolved "https://registry.npmjs.org/@types/json5/-/json5-0.0.29.tgz"
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
 
-"@types/lodash@^4.17.13":
-  version "4.17.23"
-  resolved "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.23.tgz"
-  integrity sha512-RDvF6wTulMPjrNdCoYRC8gNR880JNGT8uB+REUpC2Ns4pRqQJhGz90wh7rgdXDPpCczF3VGktDuFGVnz8zP7HA==
-
 "@types/mute-stream@^0.0.4":
   version "0.0.4"
   resolved "https://registry.npmjs.org/@types/mute-stream/-/mute-stream-0.0.4.tgz"
@@ -3612,11 +3607,6 @@
   version "2019.7.3"
   resolved "https://registry.npmjs.org/@types/offscreencanvas/-/offscreencanvas-2019.7.3.tgz"
   integrity sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==
-
-"@types/pathfinding@^0.0.9":
-  version "0.0.9"
-  resolved "https://registry.npmjs.org/@types/pathfinding/-/pathfinding-0.0.9.tgz"
-  integrity sha512-b7tf4+gVc8+sRETzJ7pCeqhknQ9XVgYqbH5+ekcHmO5Hf/fy9BTBzSstE9mcOQc81Y0qITda8tF/UsN3huIMwg==
 
 "@types/react-dom@^19.1.2":
   version "19.2.3"

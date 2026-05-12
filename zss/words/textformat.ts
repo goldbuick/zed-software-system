@@ -137,7 +137,7 @@ export function tokenize(text: string, noWhitespace = false) {
   return scriptLexer.tokenize(text)
 }
 
-export type WRITE_PEN_CONTEXT = {
+type WRITE_PEN_CONTEXT = {
   color: number
   bg: number
   topedge: number | undefined
@@ -225,20 +225,6 @@ export function createwritetextcontext(
     bg: [],
     changed() {},
   }
-}
-
-export function applywritetextcontext(
-  dest: WRITE_TEXT_CONTEXT,
-  source: WRITE_TEXT_CONTEXT,
-) {
-  dest.x = source.x
-  dest.y = source.y
-  dest.active.color = source.active.color
-  dest.active.bg = source.active.bg
-  dest.padlineright = source.padlineright
-  dest.panelcarry = source.panelcarry
-  dest.panelcarrycolor = source.panelcarrycolor
-  dest.panelcarrybg = source.panelcarrybg
 }
 
 export function writetextreset(context: WRITE_TEXT_CONTEXT) {
@@ -616,19 +602,6 @@ export function writeplaintext(
 
   // yolo
   context.changed()
-}
-
-export function textformatedges(
-  topedge: number,
-  leftedge: number,
-  rightedge: number,
-  bottomedge: number,
-  context: WRITE_TEXT_CONTEXT,
-) {
-  context.active.topedge = topedge
-  context.active.leftedge = leftedge
-  context.active.rightedge = rightedge
-  context.active.bottomedge = bottomedge
 }
 
 export function textformatreadedges(context: WRITE_TEXT_CONTEXT) {

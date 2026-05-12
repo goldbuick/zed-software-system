@@ -311,17 +311,6 @@ export function modemreadtextsync(key: string): string {
   return ''
 }
 
-/** If key is bound to Y.Text, return its string (may be empty); else undefined for caller fallback. */
-export function modemreadcodepagetextifpresent(
-  key: string,
-): string | undefined {
-  const existing = ROOT.get(key)
-  if (existing instanceof Y.Text) {
-    return existing.toJSON()
-  }
-  return undefined
-}
-
 function modemobservevalue(
   key: string,
   callback: (value: unknown) => void,

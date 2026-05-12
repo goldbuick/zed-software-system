@@ -17,7 +17,6 @@ import {
   memoryfreecodepage,
   memoryimportcodepage,
   memoryimportcodepagefromjson,
-  memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagestats,
   memoryreadcodepagetype,
@@ -30,7 +29,6 @@ import {
   BOOK_KEYS,
   CODE_PAGE,
   CODE_PAGE_TYPE,
-  CODE_PAGE_TYPE_MAP,
 } from './types'
 
 export function memoryreadelementcodepage(
@@ -196,16 +194,6 @@ export function memoryhasbookflags(book: MAYBE<BOOK>, id: string) {
   return ispresent(book.flags[id])
 }
 
-export function memoryhasbookmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
-  if (!ispresent(book)) {
-    return false
-  }
-  if (ids.some((id) => id === book.id)) {
-    return true
-  }
-  return false
-}
-
 export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
   if (!ispresent(flat)) {
     return undefined
@@ -284,23 +272,6 @@ export function memoryreadcodepage(
     }
   }
   return undefined
-}
-
-export function memorylistcodepagedatabytype<T extends CODE_PAGE_TYPE>(
-  book: MAYBE<BOOK>,
-  type: T,
-): CODE_PAGE_TYPE_MAP[T][] {
-  if (!ispresent(book)) {
-    return []
-  }
-  const out: MAYBE<CODE_PAGE_TYPE_MAP[T]>[] = []
-  for (let i = 0; i < book.pages.length; ++i) {
-    const page = book.pages[i]
-    if (memoryreadcodepagetype(page) === type) {
-      out.push(memoryreadcodepagedata<T>(page))
-    }
-  }
-  return out.filter(ispresent)
 }
 
 export function memorylistcodepagebystat(

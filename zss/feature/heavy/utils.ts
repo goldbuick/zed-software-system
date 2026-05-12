@@ -1,14 +1,4 @@
-/// <reference types="@webgpu/types" />
 import { chunktext, cleantextfortts } from './textcleaner'
-
-export async function detectWebGPU() {
-  try {
-    const adapter = await navigator.gpu.requestAdapter()
-    return !!adapter
-  } catch {
-    return false
-  }
-}
 
 // Text splitting stream to break text into chunks
 export class TextSplitterStream {

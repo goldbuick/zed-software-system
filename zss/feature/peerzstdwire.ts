@@ -33,24 +33,3 @@ export async function netmsgtounit8(
   }
   return undefined
 }
-
-/** Wire byte length for perf counters (compressed frame or other binary). */
-export function peerwirebytelength(payload: unknown): number {
-  try {
-    if (payload instanceof ArrayBuffer) {
-      return payload.byteLength
-    }
-    if (ArrayBuffer.isView(payload)) {
-      return payload.byteLength
-    }
-    if (typeof Blob !== 'undefined' && payload instanceof Blob) {
-      return payload.size
-    }
-    if (typeof payload === 'string') {
-      return new TextEncoder().encode(payload).length
-    }
-    return new TextEncoder().encode(JSON.stringify(payload)).length
-  } catch {
-    return 0
-  }
-}

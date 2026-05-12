@@ -1,4 +1,3 @@
-import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { DIVIDER, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -10,6 +9,7 @@ import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryreadsecretheap } from './inspectionbatch'
+import { createinspectionconfig } from './inspectionconfig'
 import { memoryreadplayerboard } from './playermanagement'
 
 type STYLE_CONFIG = {
@@ -18,11 +18,11 @@ type STYLE_CONFIG = {
   stylebgs: number
 }
 
-let styleconfig: STYLE_CONFIG = {
+const styleconfig = createinspectionconfig<STYLE_CONFIG>('styleconfig', {
   stylechars: 1,
   stylecolors: 1,
   stylebgs: 1,
-}
+})
 
 export async function memoryinspectstyle(
   player: string,
@@ -30,7 +30,7 @@ export async function memoryinspectstyle(
   p2: PT,
   mode: string,
 ) {
-  await memorywritestyleconfig(() => styleconfig)
+  await styleconfig.save()
   const board = memoryreadplayerboard(player)
   const secretheap = await memoryreadsecretheap()
   if (!ispresent(board) || !ispresent(secretheap)) {
@@ -45,6 +45,7 @@ export async function memoryinspectstyle(
   const height = y2 - y1 + 1
   const iwidth = Math.min(secretheap.width, width)
   const iheight = Math.min(secretheap.height, height)
+  const cfg = styleconfig.read()
 
   for (let y = 0; y < iheight; ++y) {
     for (let x = 0; x < iwidth; ++x) {
@@ -55,13 +56,13 @@ export async function memoryinspectstyle(
       if (mode === 'styleall' || mode === 'styleobjects') {
         const element = memoryreadelement(board, pt)
         if (ispresent(element) && memoryboardelementisobject(element)) {
-          if (styleconfig.stylechars) {
+          if (cfg.stylechars) {
             element.char = display.char
           }
-          if (styleconfig.stylecolors) {
+          if (cfg.stylecolors) {
             element.color = display.color
           }
-          if (styleconfig.stylebgs) {
+          if (cfg.stylebgs) {
             element.bg = display.bg
           }
         }
@@ -69,13 +70,13 @@ export async function memoryinspectstyle(
       if (mode === 'styleall' || mode === 'styleterrain') {
         const element = memoryreadterrain(board, pt.x, pt.y)
         if (ispresent(element)) {
-          if (styleconfig.stylechars) {
+          if (cfg.stylechars) {
             element.char = display.char
           }
-          if (styleconfig.stylecolors) {
+          if (cfg.stylecolors) {
             element.color = display.color
           }
-          if (styleconfig.stylebgs) {
+          if (cfg.stylebgs) {
             element.bg = display.bg
           }
         }
@@ -90,7 +91,7 @@ registerhyperlinksharedbridge(
   (_typ, target) => {
     const key = target as keyof STYLE_CONFIG
     if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
-      return styleconfig[key]
+      return styleconfig.read()[key]
     }
     return 0
   },
@@ -98,19 +99,14 @@ registerhyperlinksharedbridge(
     if (isnumber(value) || isstring(value)) {
       const key = name as keyof STYLE_CONFIG
       if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
-        // @ts-expect-error bah
-        styleconfig[key] = value
+        styleconfig.write({ ...styleconfig.read(), [key]: Number(value) })
       }
     }
   },
 )
 
 export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
-  const config = await memoryreadstyleconfig()
-  styleconfig = {
-    ...styleconfig,
-    ...config,
-  }
+  await styleconfig.load()
 
   const area = ptstoarea(p1, p2)
 
@@ -130,16 +126,4 @@ export async function memoryinspectstylemenu(player: string, p1: PT, p2: PT) {
     zsszedlinkline(`styleterrain:${area} hk 3 " 3 " next`, 'style terrain'),
   ]
   scrollwritelines(player, 'style', zsstexttape(lines), 'batch')
-}
-
-export async function memoryreadstyleconfig(): Promise<
-  STYLE_CONFIG | undefined
-> {
-  return idbget('styleconfig')
-}
-
-export async function memorywritestyleconfig(
-  updater: (oldValue: STYLE_CONFIG | undefined) => STYLE_CONFIG,
-): Promise<void> {
-  return idbupdate('styleconfig', updater)
 }

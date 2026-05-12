@@ -11,10 +11,6 @@ export const trackinglastlog: Record<string, number> = {}
 export const lastinputtime: Record<string, number> = {}
 
 let flushtick = 0
-export function getflushtick(): number {
-  return flushtick
-}
-
 export function setflushtick(value: number): void {
   flushtick = value
 }

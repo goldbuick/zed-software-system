@@ -1,15 +1,7 @@
 import { scrolllinkunescapefrag } from 'zss/mapping/string'
 
 /** Label segment for `!runit` fallback when bookmarking non-bang lines. */
-export const BOOKMARK_TERMINAL_RUNIT_LABEL = 'Bookmark'
-
-/**
- * Double-quote a string for use after `!runit ` so tokenization keeps one argument
- * (same escape rules as scroll link quoted tokens: `\` and `"`).
- */
-export function bookmarkquotedrunitpayload(s: string): string {
-  return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
-}
+const BOOKMARK_TERMINAL_RUNIT_LABEL = 'Bookmark'
 
 function bookmarkruniteunquotedpayload(left: string): string | undefined {
   const head = '!runit '

@@ -1,393 +1,213 @@
 import type { CstNode, ICstVisitor, IToken } from 'chevrotain'
 
-export type ProgramCstNode = {
-  name: 'program'
-  children: ProgramCstChildren
-} & CstNode
-
 export type ProgramCstChildren = {
-  line?: LineCstNode[]
+  line?: CstNode[]
 }
 
-export type LineCstNode = {
-  name: 'line'
-  children: LineCstChildren
-} & CstNode
-
 export type LineCstChildren = {
-  stmt?: StmtCstNode[]
+  stmt?: CstNode[]
   token_newline?: IToken[]
 }
 
-export type StmtCstNode = {
-  name: 'stmt'
-  children: StmtCstChildren
-} & CstNode
-
 export type StmtCstChildren = {
-  stmt_label?: Stmt_labelCstNode[]
-  stmt_stat?: Stmt_statCstNode[]
-  stmt_text?: Stmt_textCstNode[]
-  stmt_comment?: Stmt_commentCstNode[]
-  stmt_hyperlink?: Stmt_hyperlinkCstNode[]
-  stmt_command?: Stmt_commandCstNode[]
-  short_go?: Short_goCstNode[]
-  short_try?: Short_tryCstNode[]
+  stmt_label?: CstNode[]
+  stmt_stat?: CstNode[]
+  stmt_text?: CstNode[]
+  stmt_comment?: CstNode[]
+  stmt_hyperlink?: CstNode[]
+  stmt_command?: CstNode[]
+  short_go?: CstNode[]
+  short_try?: CstNode[]
 }
-
-export type Inline_goCstNode = {
-  name: 'inline_go'
-  children: Inline_goCstChildren
-} & CstNode
 
 export type Inline_goCstChildren = {
-  short_go: Short_goCstNode[]
-  inline?: InlineCstNode[]
+  short_go: CstNode[]
+  inline?: CstNode[]
 }
-
-export type Inline_tryCstNode = {
-  name: 'inline_try'
-  children: Inline_tryCstChildren
-} & CstNode
 
 export type Inline_tryCstChildren = {
-  short_try: Short_tryCstNode[]
-  inline?: InlineCstNode[]
+  short_try: CstNode[]
+  inline?: CstNode[]
 }
-
-export type Inline_commandCstNode = {
-  name: 'inline_command'
-  children: Inline_commandCstChildren
-} & CstNode
 
 export type Inline_commandCstChildren = {
-  stmt_command: Stmt_commandCstNode[]
-  inline?: InlineCstNode[]
+  stmt_command: CstNode[]
+  inline?: CstNode[]
 }
-
-export type InlineCstNode = {
-  name: 'inline'
-  children: InlineCstChildren
-} & CstNode
 
 export type InlineCstChildren = {
-  stmt_stat?: Stmt_statCstNode[]
-  stmt_text?: Stmt_textCstNode[]
-  stmt_comment?: Stmt_commentCstNode[]
-  stmt_hyperlink?: Stmt_hyperlinkCstNode[]
-  structured_cmd?: Structured_cmdCstNode[]
-  inline_go?: Inline_goCstNode[]
-  inline_try?: Inline_tryCstNode[]
-  inline_command?: Inline_commandCstNode[]
+  stmt_stat?: CstNode[]
+  stmt_text?: CstNode[]
+  stmt_comment?: CstNode[]
+  stmt_hyperlink?: CstNode[]
+  structured_cmd?: CstNode[]
+  inline_go?: CstNode[]
+  inline_try?: CstNode[]
+  inline_command?: CstNode[]
 }
-
-export type Stmt_labelCstNode = {
-  name: 'stmt_label'
-  children: Stmt_labelCstChildren
-} & CstNode
 
 export type Stmt_labelCstChildren = {
   token_label: IToken[]
 }
 
-export type Stmt_statCstNode = {
-  name: 'stmt_stat'
-  children: Stmt_statCstChildren
-} & CstNode
-
 export type Stmt_statCstChildren = {
   token_stat: IToken[]
 }
-
-export type Stmt_textCstNode = {
-  name: 'stmt_text'
-  children: Stmt_textCstChildren
-} & CstNode
 
 export type Stmt_textCstChildren = {
   token_text?: IToken[]
 }
 
-export type Stmt_commentCstNode = {
-  name: 'stmt_comment'
-  children: Stmt_commentCstChildren
-} & CstNode
-
 export type Stmt_commentCstChildren = {
   token_comment: IToken[]
 }
-
-export type Stmt_hyperlinkCstNode = {
-  name: 'stmt_hyperlink'
-  children: Stmt_hyperlinkCstChildren
-} & CstNode
 
 export type Stmt_hyperlinkCstChildren = {
   token_hyperlink: IToken[]
   token_hyperlinktext: IToken[]
 }
 
-export type Stmt_commandCstNode = {
-  name: 'stmt_command'
-  children: Stmt_commandCstChildren
-} & CstNode
-
 export type Stmt_commandCstChildren = {
   token_command: IToken[]
-  words?: WordsCstNode[]
-  structured_cmd?: Structured_cmdCstNode[]
+  words?: CstNode[]
+  structured_cmd?: CstNode[]
 }
-
-export type Structured_cmdCstNode = {
-  name: 'structured_cmd'
-  children: Structured_cmdCstChildren
-} & CstNode
 
 export type Structured_cmdCstChildren = {
-  command_if?: Command_ifCstNode[]
-  command_while?: Command_whileCstNode[]
-  command_repeat?: Command_repeatCstNode[]
-  command_waitfor?: Command_waitforCstNode[]
-  command_foreach?: Command_foreachCstNode[]
-  command_break?: Command_breakCstNode[]
-  command_continue?: Command_continueCstNode[]
+  command_if?: CstNode[]
+  command_while?: CstNode[]
+  command_repeat?: CstNode[]
+  command_waitfor?: CstNode[]
+  command_foreach?: CstNode[]
+  command_break?: CstNode[]
+  command_continue?: CstNode[]
 }
-
-export type Short_goCstNode = {
-  name: 'short_go'
-  children: Short_goCstChildren
-} & CstNode
 
 export type Short_goCstChildren = {
   token_divide: IToken[]
-  string_token?: String_tokenCstNode[]
-  dir?: DirCstNode[]
+  string_token?: CstNode[]
+  dir?: CstNode[]
 }
-
-export type Short_tryCstNode = {
-  name: 'short_try'
-  children: Short_tryCstChildren
-} & CstNode
 
 export type Short_tryCstChildren = {
   token_query: IToken[]
-  string_token?: String_tokenCstNode[]
-  dir?: DirCstNode[]
+  string_token?: CstNode[]
+  dir?: CstNode[]
 }
-
-export type Command_ifCstNode = {
-  name: 'command_if'
-  children: Command_ifCstChildren
-} & CstNode
 
 export type Command_ifCstChildren = {
   token_if: IToken[]
-  words: WordsCstNode[]
-  command_if_block?: Command_if_blockCstNode[]
+  words: CstNode[]
+  command_if_block?: CstNode[]
 }
 
-export type Command_if_blockCstNode = {
-  name: 'command_if_block'
-  children: Command_if_blockCstChildren
-} & CstNode
-
 export type Command_if_blockCstChildren = {
-  inline?: InlineCstNode[]
+  inline?: CstNode[]
   token_do?: IToken[]
-  line?: LineCstNode[]
-  command_else_if?: Command_else_ifCstNode[]
-  command_else?: Command_elseCstNode[]
+  line?: CstNode[]
+  command_else_if?: CstNode[]
+  command_else?: CstNode[]
   token_newline?: IToken[]
   token_command?: IToken[]
   token_done?: IToken[]
 }
 
-export type Command_blockCstNode = {
-  name: 'command_block'
-  children: Command_blockCstChildren
-} & CstNode
-
 export type Command_blockCstChildren = {
-  inline?: InlineCstNode[]
+  inline?: CstNode[]
   token_do?: IToken[]
-  line?: LineCstNode[]
+  line?: CstNode[]
   token_command?: IToken[]
   token_done?: IToken[]
 }
 
-export type Command_forkCstNode = {
-  name: 'command_fork'
-  children: Command_forkCstChildren
-} & CstNode
-
 export type Command_forkCstChildren = {
-  inline?: InlineCstNode[]
+  inline?: CstNode[]
   token_do?: IToken[]
-  line?: LineCstNode[]
+  line?: CstNode[]
 }
-
-export type Command_else_ifCstNode = {
-  name: 'command_else_if'
-  children: Command_else_ifCstChildren
-} & CstNode
 
 export type Command_else_ifCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
   token_if: IToken[]
-  words: WordsCstNode[]
-  command_fork?: Command_forkCstNode[]
+  words: CstNode[]
+  command_fork?: CstNode[]
 }
-
-export type Command_elseCstNode = {
-  name: 'command_else'
-  children: Command_elseCstChildren
-} & CstNode
 
 export type Command_elseCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
-  words?: WordsCstNode[]
-  command_fork?: Command_forkCstNode[]
+  words?: CstNode[]
+  command_fork?: CstNode[]
 }
-
-export type Command_whileCstNode = {
-  name: 'command_while'
-  children: Command_whileCstChildren
-} & CstNode
 
 export type Command_whileCstChildren = {
   token_while: IToken[]
-  words: WordsCstNode[]
-  command_block?: Command_blockCstNode[]
+  words: CstNode[]
+  command_block?: CstNode[]
 }
-
-export type Command_repeatCstNode = {
-  name: 'command_repeat'
-  children: Command_repeatCstChildren
-} & CstNode
 
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
-  words: WordsCstNode[]
-  command_block?: Command_blockCstNode[]
+  words: CstNode[]
+  command_block?: CstNode[]
 }
-
-export type Command_waitforCstNode = {
-  name: 'command_waitfor'
-  children: Command_waitforCstChildren
-} & CstNode
 
 export type Command_waitforCstChildren = {
   token_waitfor: IToken[]
-  words: WordsCstNode[]
-  command_block?: Command_blockCstNode[]
+  words: CstNode[]
+  command_block?: CstNode[]
 }
-
-export type Command_foreachCstNode = {
-  name: 'command_foreach'
-  children: Command_foreachCstChildren
-} & CstNode
 
 export type Command_foreachCstChildren = {
   token_foreach: IToken[]
-  words: WordsCstNode[]
-  command_block?: Command_blockCstNode[]
+  words: CstNode[]
+  command_block?: CstNode[]
 }
-
-export type Command_breakCstNode = {
-  name: 'command_break'
-  children: Command_breakCstChildren
-} & CstNode
 
 export type Command_breakCstChildren = {
   token_break: IToken[]
 }
 
-export type Command_continueCstNode = {
-  name: 'command_continue'
-  children: Command_continueCstChildren
-} & CstNode
-
 export type Command_continueCstChildren = {
   token_continue: IToken[]
 }
-
-export type Command_playCstNode = {
-  name: 'command_play'
-  children: Command_playCstChildren
-} & CstNode
 
 export type Command_playCstChildren = {
   token_command_play: IToken[]
 }
 
-export type Command_toastCstNode = {
-  name: 'command_toast'
-  children: Command_toastCstChildren
-} & CstNode
-
 export type Command_toastCstChildren = {
   token_command_toast: IToken[]
 }
-
-export type Command_tickerCstNode = {
-  name: 'command_ticker'
-  children: Command_tickerCstChildren
-} & CstNode
 
 export type Command_tickerCstChildren = {
   token_command_ticker: IToken[]
 }
 
-export type ExprCstNode = {
-  name: 'expr'
-  children: ExprCstChildren
-} & CstNode
-
 export type ExprCstChildren = {
-  LHS: And_testCstNode[]
+  LHS: CstNode[]
   token_or?: IToken[]
-  RHS?: And_testCstNode[]
+  RHS?: CstNode[]
 }
-
-export type And_testCstNode = {
-  name: 'and_test'
-  children: And_testCstChildren
-} & CstNode
 
 export type And_testCstChildren = {
-  LHS: Not_testCstNode[]
+  LHS: CstNode[]
   token_and?: IToken[]
-  RHS?: Not_testCstNode[]
+  RHS?: CstNode[]
 }
-
-export type Not_testCstNode = {
-  name: 'not_test'
-  children: Not_testCstChildren
-} & CstNode
 
 export type Not_testCstChildren = {
   token_not?: IToken[]
-  LHS?: Not_testCstNode[]
-  comparison?: ComparisonCstNode[]
+  LHS?: CstNode[]
+  comparison?: CstNode[]
 }
-
-export type ComparisonCstNode = {
-  name: 'comparison'
-  children: ComparisonCstChildren
-} & CstNode
 
 export type ComparisonCstChildren = {
-  LHS: Arith_exprCstNode[]
-  comp_op?: Comp_opCstNode[]
-  RHS?: Arith_exprCstNode[]
+  LHS: CstNode[]
+  comp_op?: CstNode[]
+  RHS?: CstNode[]
 }
-
-export type Comp_opCstNode = {
-  name: 'comp_op'
-  children: Comp_opCstChildren
-} & CstNode
 
 export type Comp_opCstChildren = {
   token_iseq?: IToken[]
@@ -398,140 +218,75 @@ export type Comp_opCstChildren = {
   token_isgreaterthanorequal?: IToken[]
 }
 
-export type Expr_valueCstNode = {
-  name: 'expr_value'
-  children: Expr_valueCstChildren
-} & CstNode
-
 export type Expr_valueCstChildren = {
-  LHS: And_test_valueCstNode[]
+  LHS: CstNode[]
   token_or?: IToken[]
-  RHS?: And_test_valueCstNode[]
+  RHS?: CstNode[]
 }
-
-export type And_test_valueCstNode = {
-  name: 'and_test_value'
-  children: And_test_valueCstChildren
-} & CstNode
 
 export type And_test_valueCstChildren = {
-  LHS: Not_test_valueCstNode[]
+  LHS: CstNode[]
   token_and?: IToken[]
-  RHS?: Not_test_valueCstNode[]
+  RHS?: CstNode[]
 }
-
-export type Not_test_valueCstNode = {
-  name: 'not_test_value'
-  children: Not_test_valueCstChildren
-} & CstNode
 
 export type Not_test_valueCstChildren = {
   token_not?: IToken[]
-  LHS?: Not_test_valueCstNode[]
-  arith_expr?: Arith_exprCstNode[]
+  LHS?: CstNode[]
+  arith_expr?: CstNode[]
 }
-
-export type Arith_exprCstNode = {
-  name: 'arith_expr'
-  children: Arith_exprCstChildren
-} & CstNode
 
 export type Arith_exprCstChildren = {
-  LHS?: Token_exprCstNode[]
-  term?: TermCstNode[]
-  RHS?: Arith_expr_itemCstNode[]
+  LHS?: CstNode[]
+  term?: CstNode[]
+  RHS?: CstNode[]
 }
-
-export type Arith_expr_itemCstNode = {
-  name: 'arith_expr_item'
-  children: Arith_expr_itemCstChildren
-} & CstNode
 
 export type Arith_expr_itemCstChildren = {
   token_plus?: IToken[]
   token_minus?: IToken[]
-  term: TermCstNode[]
+  term: CstNode[]
 }
-
-export type TermCstNode = {
-  name: 'term'
-  children: TermCstChildren
-} & CstNode
 
 export type TermCstChildren = {
-  factor: FactorCstNode[]
-  term_item?: Term_itemCstNode[]
+  factor: CstNode[]
+  term_item?: CstNode[]
 }
-
-export type Term_itemCstNode = {
-  name: 'term_item'
-  children: Term_itemCstChildren
-} & CstNode
 
 export type Term_itemCstChildren = {
   token_multiply?: IToken[]
   token_divide?: IToken[]
   token_moddivide?: IToken[]
   token_floordivide?: IToken[]
-  factor: FactorCstNode[]
+  factor: CstNode[]
 }
-
-export type FactorCstNode = {
-  name: 'factor'
-  children: FactorCstChildren
-} & CstNode
 
 export type FactorCstChildren = {
   token_plus?: IToken[]
   token_minus?: IToken[]
-  LHS?: FactorCstNode[]
-  power?: PowerCstNode[]
+  LHS?: CstNode[]
+  power?: CstNode[]
 }
-
-export type PowerCstNode = {
-  name: 'power'
-  children: PowerCstChildren
-} & CstNode
 
 export type PowerCstChildren = {
-  token: TokenCstNode[]
+  token: CstNode[]
   token_power?: IToken[]
-  factor?: FactorCstNode[]
+  factor?: CstNode[]
 }
-
-export type WordsCstNode = {
-  name: 'words'
-  children: WordsCstChildren
-} & CstNode
 
 export type WordsCstChildren = {
-  expr: ExprCstNode[]
+  expr: CstNode[]
 }
-
-export type KindCstNode = {
-  name: 'kind'
-  children: KindCstChildren
-} & CstNode
 
 export type KindCstChildren = {
-  color?: ColorCstNode[]
-  string_token: String_tokenCstNode[]
+  color?: CstNode[]
+  string_token: CstNode[]
 }
-
-export type CategoryCstNode = {
-  name: 'category'
-  children: CategoryCstChildren
-} & CstNode
 
 export type CategoryCstChildren = {
   token_isterrain?: IToken[]
   token_isobject?: IToken[]
 }
-
-export type CollisionCstNode = {
-  name: 'collision'
-  children: CollisionCstChildren
-} & CstNode
 
 export type CollisionCstChildren = {
   token_issolid?: IToken[]
@@ -544,11 +299,6 @@ export type CollisionCstChildren = {
   token_isswimming?: IToken[]
   token_isswimmable?: IToken[]
 }
-
-export type ColorCstNode = {
-  name: 'color'
-  children: ColorCstChildren
-} & CstNode
 
 export type ColorCstChildren = {
   token_black?: IToken[]
@@ -623,11 +373,6 @@ export type ColorCstChildren = {
   token_blltblack?: IToken[]
 }
 
-export type Dir_modCstNode = {
-  name: 'dir_mod'
-  children: Dir_modCstChildren
-} & CstNode
-
 export type Dir_modCstChildren = {
   token_cw?: IToken[]
   token_ccw?: IToken[]
@@ -636,163 +381,98 @@ export type Dir_modCstChildren = {
   token_over?: IToken[]
   token_under?: IToken[]
   token_ground?: IToken[]
-  dir_within?: Dir_withinCstNode[]
-  dir_awayby?: Dir_awaybyCstNode[]
+  dir_within?: CstNode[]
+  dir_awayby?: CstNode[]
   token_elements?: IToken[]
 }
 
-export type Dir_byCstNode = {
-  name: 'dir_by'
-  children: Dir_byCstChildren
-} & CstNode
-
 export type Dir_byCstChildren = {
   token_by: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Dir_atCstNode = {
-  name: 'dir_at'
-  children: Dir_atCstChildren
-} & CstNode
 
 export type Dir_atCstChildren = {
   token_at: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Dir_awayCstNode = {
-  name: 'dir_away'
-  children: Dir_awayCstChildren
-} & CstNode
 
 export type Dir_awayCstChildren = {
   token_away: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Dir_towardCstNode = {
-  name: 'dir_toward'
-  children: Dir_towardCstChildren
-} & CstNode
 
 export type Dir_towardCstChildren = {
   token_toward: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Dir_findCstNode = {
-  name: 'dir_find'
-  children: Dir_findCstChildren
-} & CstNode
 
 export type Dir_findCstChildren = {
   token_find: IToken[]
-  kind?: KindCstNode[]
+  kind?: CstNode[]
   token_numberliteral?: IToken[]
 }
-
-export type Dir_fleeCstNode = {
-  name: 'dir_flee'
-  children: Dir_fleeCstChildren
-} & CstNode
 
 export type Dir_fleeCstChildren = {
   token_flee: IToken[]
-  kind?: KindCstNode[]
+  kind?: CstNode[]
   token_numberliteral?: IToken[]
 }
 
-export type Dir_toCstNode = {
-  name: 'dir_to'
-  children: Dir_toCstChildren
-} & CstNode
-
 export type Dir_toCstChildren = {
   token_to: IToken[]
-  dir: DirCstNode[]
+  dir: CstNode[]
 }
-
-export type Dir_selectCstNode = {
-  name: 'dir_select'
-  children: Dir_selectCstChildren
-} & CstNode
 
 export type Dir_selectCstChildren = {
   token_select: IToken[]
-  simple_token: Simple_tokenCstNode[]
-  color?: ColorCstNode[]
-  string_token: String_tokenCstNode[]
+  simple_token: CstNode[]
+  color?: CstNode[]
+  string_token: CstNode[]
 }
-
-export type Dir_withinCstNode = {
-  name: 'dir_within'
-  children: Dir_withinCstChildren
-} & CstNode
 
 export type Dir_withinCstChildren = {
   token_within: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Dir_awaybyCstNode = {
-  name: 'dir_awayby'
-  children: Dir_awaybyCstChildren
-} & CstNode
 
 export type Dir_awaybyCstChildren = {
   token_awayby: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Dir_floodCstNode = {
-  name: 'dir_flood'
-  children: Dir_floodCstChildren
-} & CstNode
 
 export type Dir_floodCstChildren = {
   token_flood: IToken[]
-  dir: DirCstNode[]
+  dir: CstNode[]
 }
-
-export type Dir_beamCstNode = {
-  name: 'dir_beam'
-  children: Dir_beamCstChildren
-} & CstNode
 
 export type Dir_beamCstChildren = {
   token_beam: IToken[]
-  simple_token: Simple_tokenCstNode[]
-  dir: DirCstNode[]
+  simple_token: CstNode[]
+  dir: CstNode[]
 }
 
-export type DirCstNode = {
-  name: 'dir'
-  children: DirCstChildren
-} & CstNode
-
 export type DirCstChildren = {
-  dir_mod?: Dir_modCstNode[]
+  dir_mod?: CstNode[]
   token_idle?: IToken[]
   token_up?: IToken[]
   token_down?: IToken[]
   token_left?: IToken[]
   token_right?: IToken[]
-  dir_by?: Dir_byCstNode[]
-  dir_at?: Dir_atCstNode[]
-  dir_away?: Dir_awayCstNode[]
-  dir_toward?: Dir_towardCstNode[]
+  dir_by?: CstNode[]
+  dir_at?: CstNode[]
+  dir_away?: CstNode[]
+  dir_toward?: CstNode[]
   token_flow?: IToken[]
   token_seek?: IToken[]
   token_rndns?: IToken[]
   token_rndne?: IToken[]
   token_rnd?: IToken[]
-  dir_find?: Dir_findCstNode[]
-  dir_flee?: Dir_fleeCstNode[]
-  dir_to?: Dir_toCstNode[]
-  dir_select?: Dir_selectCstNode[]
-  dir_flood?: Dir_floodCstNode[]
-  dir_beam?: Dir_beamCstNode[]
+  dir_find?: CstNode[]
+  dir_flee?: CstNode[]
+  dir_to?: CstNode[]
+  dir_select?: CstNode[]
+  dir_flood?: CstNode[]
+  dir_beam?: CstNode[]
   token_i?: IToken[]
   token_u?: IToken[]
   token_north?: IToken[]
@@ -808,246 +488,141 @@ export type DirCstChildren = {
   token_e?: IToken[]
 }
 
-export type Expr_anyCstNode = {
-  name: 'expr_any'
-  children: Expr_anyCstChildren
-} & CstNode
-
 export type Expr_anyCstChildren = {
-  kind?: KindCstNode[]
-  color?: ColorCstNode[]
-  dir?: DirCstNode[]
+  kind?: CstNode[]
+  color?: CstNode[]
+  dir?: CstNode[]
 }
-
-export type Token_expr_anyCstNode = {
-  name: 'token_expr_any'
-  children: Token_expr_anyCstChildren
-} & CstNode
 
 export type Token_expr_anyCstChildren = {
   token_any: IToken[]
-  expr_any: Expr_anyCstNode[]
+  expr_any: CstNode[]
 }
-
-export type Token_expr_countCstNode = {
-  name: 'token_expr_count'
-  children: Token_expr_countCstChildren
-} & CstNode
 
 export type Token_expr_countCstChildren = {
   token_countof: IToken[]
-  expr_any: Expr_anyCstNode[]
+  expr_any: CstNode[]
 }
-
-export type Token_expr_blockedCstNode = {
-  name: 'token_expr_blocked'
-  children: Token_expr_blockedCstChildren
-} & CstNode
 
 export type Token_expr_blockedCstChildren = {
   token_blocked: IToken[]
-  dir: DirCstNode[]
+  dir: CstNode[]
 }
-
-export type Token_expr_absCstNode = {
-  name: 'token_expr_abs'
-  children: Token_expr_absCstChildren
-} & CstNode
 
 export type Token_expr_absCstChildren = {
   token_abs: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_intceilCstNode = {
-  name: 'token_expr_intceil'
-  children: Token_expr_intceilCstChildren
-} & CstNode
 
 export type Token_expr_intceilCstChildren = {
   token_intceil: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_intfloorCstNode = {
-  name: 'token_expr_intfloor'
-  children: Token_expr_intfloorCstChildren
-} & CstNode
 
 export type Token_expr_intfloorCstChildren = {
   token_intfloor: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_introundCstNode = {
-  name: 'token_expr_intround'
-  children: Token_expr_introundCstChildren
-} & CstNode
 
 export type Token_expr_introundCstChildren = {
   token_intround: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_clampCstNode = {
-  name: 'token_expr_clamp'
-  children: Token_expr_clampCstChildren
-} & CstNode
 
 export type Token_expr_clampCstChildren = {
   token_clamp: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_minCstNode = {
-  name: 'token_expr_min'
-  children: Token_expr_minCstChildren
-} & CstNode
 
 export type Token_expr_minCstChildren = {
   token_min: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_maxCstNode = {
-  name: 'token_expr_max'
-  children: Token_expr_maxCstChildren
-} & CstNode
 
 export type Token_expr_maxCstChildren = {
   token_max: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_pickCstNode = {
-  name: 'token_expr_pick'
-  children: Token_expr_pickCstChildren
-} & CstNode
 
 export type Token_expr_pickCstChildren = {
   token_pick: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_pickwithCstNode = {
-  name: 'token_expr_pickwith'
-  children: Token_expr_pickwithCstChildren
-} & CstNode
 
 export type Token_expr_pickwithCstChildren = {
   token_pickwith: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_randomCstNode = {
-  name: 'token_expr_random'
-  children: Token_expr_randomCstChildren
-} & CstNode
 
 export type Token_expr_randomCstChildren = {
   token_random: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_randomwithCstNode = {
-  name: 'token_expr_randomwith'
-  children: Token_expr_randomwithCstChildren
-} & CstNode
 
 export type Token_expr_randomwithCstChildren = {
   token_randomwith: IToken[]
-  simple_token: Simple_tokenCstNode[]
+  simple_token: CstNode[]
 }
-
-export type Token_expr_runCstNode = {
-  name: 'token_expr_run'
-  children: Token_expr_runCstChildren
-} & CstNode
 
 export type Token_expr_runCstChildren = {
   token_run: IToken[]
-  string_token: String_tokenCstNode[]
+  string_token: CstNode[]
 }
-
-export type Token_expr_runwithCstNode = {
-  name: 'token_expr_runwith'
-  children: Token_expr_runwithCstChildren
-} & CstNode
 
 export type Token_expr_runwithCstChildren = {
   token_runwith: IToken[]
-  simple_token: Simple_tokenCstNode[]
-  string_token: String_tokenCstNode[]
+  simple_token: CstNode[]
+  string_token: CstNode[]
 }
-
-export type Token_exprCstNode = {
-  name: 'token_expr'
-  children: Token_exprCstChildren
-} & CstNode
 
 export type Token_exprCstChildren = {
   token_expr_aligned?: IToken[]
   token_contact?: IToken[]
-  token_expr_any?: Token_expr_anyCstNode[]
-  token_expr_count?: Token_expr_countCstNode[]
-  token_expr_blocked?: Token_expr_blockedCstNode[]
-  token_expr_abs?: Token_expr_absCstNode[]
-  token_expr_intceil?: Token_expr_intceilCstNode[]
-  token_expr_intfloor?: Token_expr_intfloorCstNode[]
-  token_expr_intround?: Token_expr_introundCstNode[]
-  token_expr_clamp?: Token_expr_clampCstNode[]
-  token_expr_min?: Token_expr_minCstNode[]
-  token_expr_max?: Token_expr_maxCstNode[]
-  token_expr_pick?: Token_expr_pickCstNode[]
-  token_expr_pickwith?: Token_expr_pickwithCstNode[]
-  token_expr_random?: Token_expr_randomCstNode[]
-  token_expr_randomwith?: Token_expr_randomwithCstNode[]
-  token_expr_run?: Token_expr_runCstNode[]
-  token_expr_runwith?: Token_expr_runwithCstNode[]
+  token_expr_any?: CstNode[]
+  token_expr_count?: CstNode[]
+  token_expr_blocked?: CstNode[]
+  token_expr_abs?: CstNode[]
+  token_expr_intceil?: CstNode[]
+  token_expr_intfloor?: CstNode[]
+  token_expr_intround?: CstNode[]
+  token_expr_clamp?: CstNode[]
+  token_expr_min?: CstNode[]
+  token_expr_max?: CstNode[]
+  token_expr_pick?: CstNode[]
+  token_expr_pickwith?: CstNode[]
+  token_expr_random?: CstNode[]
+  token_expr_randomwith?: CstNode[]
+  token_expr_run?: CstNode[]
+  token_expr_runwith?: CstNode[]
 }
-
-export type String_tokenCstNode = {
-  name: 'string_token'
-  children: String_tokenCstChildren
-} & CstNode
 
 export type String_tokenCstChildren = {
   token_stringliteral?: IToken[]
   token_stringliteraldouble?: IToken[]
 }
 
-export type Simple_tokenCstNode = {
-  name: 'simple_token'
-  children: Simple_tokenCstChildren
-} & CstNode
-
 export type Simple_tokenCstChildren = {
   token_numberliteral?: IToken[]
   token_stringliteral?: IToken[]
   token_stringliteraldouble?: IToken[]
-  color?: ColorCstNode[]
+  color?: CstNode[]
 }
 
-export type TokenCstNode = {
-  name: 'token'
-  children: TokenCstChildren
-} & CstNode
-
 export type TokenCstChildren = {
-  category?: CategoryCstNode[]
-  collision?: CollisionCstNode[]
-  color?: ColorCstNode[]
-  dir?: DirCstNode[]
-  command_play?: Command_playCstNode[]
-  command_toast?: Command_toastCstNode[]
-  command_ticker?: Command_tickerCstNode[]
+  category?: CstNode[]
+  collision?: CstNode[]
+  color?: CstNode[]
+  dir?: CstNode[]
+  command_play?: CstNode[]
+  command_toast?: CstNode[]
+  command_ticker?: CstNode[]
   token_label?: IToken[]
   token_stringliteraldouble?: IToken[]
   token_stringliteral?: IToken[]
   token_numberliteral?: IToken[]
   token_stop?: IToken[]
   token_lparen?: IToken[]
-  expr?: ExprCstNode[]
+  expr?: CstNode[]
   token_rparen?: IToken[]
 }
 

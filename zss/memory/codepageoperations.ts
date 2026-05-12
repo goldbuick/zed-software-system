@@ -284,20 +284,6 @@ export function memoryexportcodepage(
   })
 }
 
-export function memorycodepagehasmatch(
-  codepage: MAYBE<CODE_PAGE>,
-  type: CODE_PAGE_TYPE,
-  ids: string[],
-): boolean {
-  if (!ispresent(codepage) || memoryreadcodepagetype(codepage) !== type) {
-    return false
-  }
-  if (ids.some((id) => id === codepage.id)) {
-    return true
-  }
-  return false
-}
-
 type CODE_PAGE_WIRE = {
   id: string
   code: string

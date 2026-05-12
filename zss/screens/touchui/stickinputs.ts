@@ -134,8 +134,3 @@ export function handlestickdirsmerged(
   handlestickclear()
   applymovedirection(merged)
 }
-
-/** Single zone (keyboard-shift only); used when direction is known active. */
-export function handlestickdir(snapdir: number) {
-  handlestickdirsmerged(null, snapdir, true)
-}

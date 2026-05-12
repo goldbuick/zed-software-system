@@ -8,6 +8,8 @@ import { createpid } from 'zss/mapping/guid'
 import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
 
+export { terminalbookmarkpindisplaylabel }
+
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'
 
 export const BOOKMARK_SCROLL_SCROLLNAME = 'bookmarks'
@@ -26,12 +28,6 @@ export const BOOKMARKS_VERSION = 1
 
 /** Max terminal pins stored and shown (newest kept when over cap). */
 export const TERMINAL_PIN_MAX = 6
-
-export {
-  BOOKMARK_TERMINAL_RUNIT_LABEL,
-  bookmarkquotedrunitpayload,
-  terminalbookmarkpindisplaylabel,
-} from './terminalbookmarkline'
 
 export type ZssUrlBookmark = {
   kind: 'url'

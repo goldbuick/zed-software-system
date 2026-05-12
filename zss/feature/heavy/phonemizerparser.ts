@@ -7,16 +7,7 @@
  * internally; phonemizer provides a ready-made phonemize/list_voices API on top of
  * that stack.
  */
-import {
-  list_voices as listVoicesNpm,
-  phonemize as phonemizeNpm,
-} from 'phonemizer'
-
-export type PhonemizerVoice = {
-  name: string
-  identifier: string
-  languages: { name: string; priority: number }[]
-}
+import { phonemize as phonemizeNpm } from 'phonemizer'
 
 /** Normalize Piper voice codes (e.g. "en-us") to phonemizer identifiers; pass through if already valid. */
 const VOICE_ALIASES: Record<string, string> = {
@@ -27,30 +18,6 @@ const VOICE_ALIASES: Record<string, string> = {
 
 function toPhonemizerVoice(voice: string | undefined): string {
   return VOICE_ALIASES[voice?.toLowerCase() ?? ''] ?? voice ?? 'en-us'
-}
-
-/**
- * List the available voices for the specified language.
- * @param language - Optional language filter (e.g. "en", "en-us")
- * @returns Available voices
- */
-export async function list_voices(
-  language?: string,
-): Promise<PhonemizerVoice[]> {
-  const raw = await listVoicesNpm()
-  const voices: PhonemizerVoice[] = Array.isArray(raw) ? raw : [raw]
-  if (!language) {
-    return voices
-  }
-  const base = (language || '').split('-')[0]
-  if (!base) {
-    return voices
-  }
-  return voices.filter((voice) =>
-    voice.languages?.some(
-      (lang) => lang.name === base || String(lang.name).startsWith(base + '-'),
-    ),
-  )
 }
 
 /**

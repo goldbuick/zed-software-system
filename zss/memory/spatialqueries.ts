@@ -1,4 +1,4 @@
-import { indextopt, pttoindex } from 'zss/mapping/2d'
+import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -122,18 +122,6 @@ export function memorylistboardelementsbycolor(
     }
   }
   return elements
-}
-
-export function memorylistboardelementsbyempty(board: MAYBE<BOARD>): PT[] {
-  const pts: PT[] = []
-  // returns a list of points where empties are
-  for (let i = 0; i < BOARD_SIZE; ++i) {
-    const el = memoryreadelement(board, indextopt(i, BOARD_WIDTH))
-    if (!el?.kind && !el?.name) {
-      pts.push({ x: el?.x ?? 0, y: el?.y ?? 0 })
-    }
-  }
-  return pts
 }
 
 export function memorylistboardelementsbyidnameorpts(
@@ -298,29 +286,6 @@ export function memorylistboardptsbyempty(board: MAYBE<BOARD>): PT[] {
     }
   }
   return pts
-}
-
-export function memorypickboardfarthestpt(
-  pt: PT,
-  items: MAYBE<BOARD_ELEMENT>[],
-) {
-  let ndist = 0
-  let nearest: MAYBE<BOARD_ELEMENT>
-
-  for (let i = 0; i < items.length; ++i) {
-    const item = items[i]
-    if (item) {
-      const ix = pt.x - (item.x ?? 0)
-      const iy = pt.y - (item.y ?? 0)
-      const idist = Math.sqrt(ix * ix + iy * iy)
-      if (nearest === undefined || idist > ndist) {
-        ndist = idist
-        nearest = item
-      }
-    }
-  }
-
-  return nearest
 }
 
 // Listing Elements

@@ -344,15 +344,6 @@ export function heavyagentstart(
   device.emit(player, 'heavy:agentstart', agentname)
 }
 
-export function heavyagentname(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  agentname: string,
-) {
-  device.emit(player, 'heavy:agentname', [agentid, agentname])
-}
-
 export function heavyagentsyncuserdisplay(
   device: DEVICELIKE,
   player: string,
@@ -490,10 +481,6 @@ export function registerdownloadbinaryfile(
     filename,
     mimetype,
   ])
-}
-
-export function registerdev(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:dev', undefined)
 }
 
 export function registershare(device: DEVICELIKE, player: string) {
@@ -782,17 +769,6 @@ export function vmeditorbookmarkscroll(
   ])
 }
 
-export function vmcodepagesnapshot(
-  device: DEVICELIKE,
-  player: string,
-  book: string,
-  path: string[],
-  edtype: string,
-  edtitle: string,
-) {
-  device.emit(player, 'vm:codepagesnapshot', [book, path, edtype, edtitle])
-}
-
 export function registerinspector(
   device: DEVICELIKE,
   player: string,
@@ -831,10 +807,6 @@ export function registerterminalquickopen(
 
 export function registerterminalclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:close')
-}
-
-export function registerterminaltoggle(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:terminal:toggle')
 }
 
 export function registerterminalinclayout(
@@ -954,15 +926,6 @@ export function vmlogout(
 
 export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
-}
-
-export function vminput(
-  device: DEVICELIKE,
-  player: string,
-  input: INPUT,
-  mods: number,
-) {
-  device.emit(player, 'vm:input', [input, mods])
 }
 
 export function vmpilotstart(
