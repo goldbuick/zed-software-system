@@ -6,14 +6,19 @@ import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
-import { creategadgetid, ispid } from 'zss/mapping/guid'
-import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { createchipid, creategadgetid, ispid } from 'zss/mapping/guid'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import {
+  memoryclearbookflags,
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
+import {
+  memoryboundarydelete,
+  memoryboundaryget,
+  memoryboundaryset,
+} from 'zss/memory/boundaries'
 import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memorysendtoboards } from 'zss/memory/gamesend'
@@ -91,6 +96,7 @@ function boardrunnerpushupdates(device: DEVICE) {
   }
 }
 
+let firsttick = true
 function handleboardrunnertick(
   message: MESSAGE,
   board: string,
@@ -103,15 +109,11 @@ function handleboardrunnertick(
     assignedboard = board
     // boundarydidreset is cleared
     boundarydidreset.clear()
+    firsttick = true
   }
 
   // always update the boundaries
   assignedboundaries = boundaries
-
-  // bail if we're not assigned to a board
-  if (!assignedboard) {
-    return
-  }
 
   // so we need to desync the boundaries to
   for (const id of assignedboundaries) {
@@ -131,9 +133,14 @@ function handleboardrunnertick(
 
   // validate the boundaries are in sync and the board codepage is valid
   const anydesynced = assignedboundaries.some((id) => {
-    return readworkerboundarypipe(id).isdesynced()
+    const isdesynced = readworkerboundarypipe(id).isdesynced()
+    if (isdesynced) {
+      console.info(`${self.name} $$$ DESYNCED ${assignedplayer} -> ${id}`)
+    }
+    return isdesynced
   })
   if (anydesynced) {
+    console.info(`${self.name} $$$ WAITING FOR ${assignedplayer}`)
     return
   }
 
@@ -141,6 +148,13 @@ function handleboardrunnertick(
   const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
   if (!ispresent(maybeboard?.board)) {
     return
+  }
+
+  if (firsttick) {
+    firsttick = false
+    console.info(
+      `${self.name} $$$ TICKING ${assignedplayer} -> ${assignedboard}`,
+    )
   }
 
   // tick boards we're in-charge of
@@ -174,6 +188,15 @@ function handleboardrunnertick(
   boardrunnerpushupdates(boardrunner)
 }
 
+function handleboardrunneridle() {
+  // blank out the assigned board
+  assignedboard = ''
+  // boundarydidreset is cleared
+  boundarydidreset.clear()
+  // clear the boundary sync pipes
+  boundarysyncpipes.clear()
+}
+
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
   if (!boardrunner.session(message)) {
     return
@@ -182,9 +205,11 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
   // message filtering
   switch (message.target) {
     // player scoped messages
+    case 'idle':
     case 'tick':
     case 'paint':
     case 'patch':
+    case 'linkdead':
       if (message.player !== assignedplayer) {
         return
       }
@@ -225,6 +250,21 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
 
         // ensure the boundaries are in sync
         boardrunnerpushupdates(boardrunner)
+      }
+      break
+    case 'idle':
+      console.info(`${self.name} $$$ IDLE ${assignedplayer}`)
+      handleboardrunneridle()
+      break
+    case 'linkdead':
+      if (isstring(message.data)) {
+        const { player } = message
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        // nuke it
+        console.info(`${self.name} $$$ LINKDEAD ${player}`)
+        memoryclearbookflags(mainbook, player)
+        memoryclearbookflags(mainbook, createchipid(player))
+        memoryclearbookflags(mainbook, creategadgetid(player))
       }
       break
     case 'tick':

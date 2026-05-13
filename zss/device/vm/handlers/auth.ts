@@ -2,6 +2,8 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
+  boardrunneridle,
+  boardrunnerlinkdead,
   registerinspector,
   registerloginready,
   vmclearscroll,
@@ -10,8 +12,10 @@ import {
   boardrunnerassignmentvalid,
   boardrunnerelect,
 } from 'zss/device/vm/boardrunnermanagement'
-import { lastinputtime, tracking } from 'zss/device/vm/state'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
+import { boardrunners, lastinputtime, tracking } from 'zss/device/vm/state'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { memoryexportbookasjson } from 'zss/memory/bookoperations'
 import {
   memoryistokenbanned,
   memorysetcommandpermissions,
@@ -26,13 +30,12 @@ import {
 import { memoryhaltchip } from 'zss/memory/runtime'
 import {
   memoryisoperator,
+  memoryreadbookbysoftware,
   memoryreadoperator,
   memorywritehalt,
 } from 'zss/memory/session'
-import type { BOOK_FLAGS } from 'zss/memory/types'
+import { BOOK_FLAGS, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig, memorysetconfig } from 'zss/memory/utilities'
-
-import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
 
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
   if (!memoryreadplayeractive(message.player)) {
@@ -41,12 +44,28 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
+  // remove player from the game state
   // grab current board
   const currentboard = memoryreadplayerboard(message.player)
+
+  // signal the boardrunner that the player is dead
+  if (ispresent(currentboard)) {
+    const runner = boardrunners[currentboard.id]
+    if (ispresent(runner)) {
+      boardrunnerlinkdead(vm, runner, message.player)
+    }
+  }
 
   // clear player state
   vmclearscroll(vm, message.player)
   memorylogoutplayer(message.player, !!message.data)
+
+  console.info(
+    'MEMORY STATE on logout',
+    deepcopy(
+      memoryexportbookasjson(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)),
+    ),
+  )
 
   // clear tracking state
   delete tracking[message.player]

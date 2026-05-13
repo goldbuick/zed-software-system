@@ -6,6 +6,7 @@ import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
   memoryboundaryalloc,
+  memoryboundarydelete,
   memoryboundaryget,
   memoryboundaryset,
 } from './boundaries'
@@ -79,11 +80,17 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   if (!ispresent(book)) {
     return
   }
-  const boundaryid = book.flags[id]
-  if (ispresent(boundaryid)) {
-    console.info(`$$$ CLEAR BOOK FLAG ${id} ${boundaryid}`)
-    memoryboundaryset(boundaryid, {})
-  }
+  // track when we nuke a flagset
+  const bid = book.flags[id]
+  const isactive = ispresent(bid)
+  const content = memoryboundaryget(bid)
+  console.info(
+    `${self.name} $$$ CLEAR BOOK FLAG ${id} -> ${bid} active: ${isactive} content:`,
+    content,
+  )
+  // nuke it
+  delete book.flags[id]
+  memoryboundarydelete(bid)
 }
 
 export function memoryreadelementdisplay(

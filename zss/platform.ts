@@ -25,13 +25,15 @@ export function createplatform(isstub = false, climode = false) {
   sessionreset(SOFTWARE)
 
   // create heavy worker
-  heavy = new heavyspace()
+  heavy = new heavyspace({ name: 'heavy' })
 
   // create boardrunner worker
-  boardrunner = new boardrunnerspace()
+  boardrunner = new boardrunnerspace({ name: 'boardrunner' })
 
   // create sim/stub worker
-  platform = isstub ? new stubspace() : new simspace()
+  platform = isstub
+    ? new stubspace({ name: 'stub' })
+    : new simspace({ name: 'sim' })
   platform.postMessage({ target: 'config', data: climode })
 
   // create bridge

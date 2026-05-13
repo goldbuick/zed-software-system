@@ -50,7 +50,7 @@ export function boardrunnerboundarypatch(
   memoryboundaryset(boundary, doc)
 }
 
-export function boardrunnerboundarysync(vm: DEVICE, showlog = false) {
+export function boardrunnerboundarysync(vm: DEVICE) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -76,11 +76,11 @@ export function boardrunnerboundarysync(vm: DEVICE, showlog = false) {
       const pipe = readboundarypipe(id, doc)
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
-        console.info(`$$$ BOUNDARY ${id} sync ${patch.length}`, patch)
+        console.info(
+          `${self.name} $$$ BOUNDARY ${id} sync ${patch.length}`,
+          patch,
+        )
         boardrunnerpatch(vm, player, patch, id)
-        if (showlog) {
-          console.info('$$$ sync', player, id, patch.length)
-        }
       }
     }
   }

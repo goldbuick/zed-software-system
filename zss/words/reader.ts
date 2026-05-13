@@ -1,6 +1,14 @@
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { memoryevaldir } from 'zss/memory/boarddirection'
-import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
+import { memoryexportbookasjson } from 'zss/memory/bookoperations'
+import { memoryreadbookbysoftware, memoryreadroot } from 'zss/memory/session'
+import { BOARD, BOARD_ELEMENT, BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
 import {
   STR_COLOR,
@@ -61,6 +69,12 @@ type ARG_TYPE_VALUES<T extends ARG_TYPES> = {
 }
 
 function didexpect(msg: string, value: any, words: WORD[]) {
+  console.info(
+    `${self.name} $$$ MEMORY STATE on crash`,
+    deepcopy(
+      memoryexportbookasjson(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)),
+    ),
+  )
   console.info(
     words,
     READ_CONTEXT.element,

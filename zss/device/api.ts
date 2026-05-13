@@ -101,6 +101,14 @@ export function boardrunneridle(device: DEVICELIKE, player: string) {
   device.emit(player, 'boardrunner:idle')
 }
 
+export function boardrunnerlinkdead(
+  device: DEVICELIKE,
+  player: string,
+  linkdead: string,
+) {
+  device.emit(player, 'boardrunner:linkdead', linkdead)
+}
+
 export function boardrunnerthud(
   device: DEVICELIKE,
   player: string,
