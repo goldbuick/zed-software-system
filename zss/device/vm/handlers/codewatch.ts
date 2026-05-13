@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { vmcodeaddress } from 'zss/device/api'
 import { modemobservevaluestring } from 'zss/device/modem'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { observers, watching } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
@@ -53,7 +54,7 @@ export function handlecodewatch(_vm: DEVICE, message: MESSAGE): void {
   watching[address].add(message.player)
 }
 
-export function handlecoderelease(_vm: DEVICE, message: MESSAGE): void {
+export function handlecoderelease(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }
@@ -67,6 +68,7 @@ export function handlecoderelease(_vm: DEVICE, message: MESSAGE): void {
       observers[address] = undefined
       if (isstring(maybeobject)) {
         memoryhaltchip(maybeobject)
+        boardrunnerpushupdates(vm)
       }
     }
   }
