@@ -140,11 +140,7 @@ export function Engine() {
           {shouldcrt && (
             <>
               {scanlines && <Scanlines />}
-              <Vignette
-                technique={VignetteTechnique.ESKIL}
-                offset={0.89}
-                darkness={0.911}
-              />
+              <Vignette offset={0.001} darkness={0.55} />
               <CRTShape
                 ref={crtref}
                 viewheight={viewheight}
