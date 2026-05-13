@@ -342,7 +342,6 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     memorydeleteboardobject(board, remove)
 
     // halt chip
-    console.info(`$$$ LOGOUT ${remove}`)
     memoryhaltchip(remove)
 
     // clear memory

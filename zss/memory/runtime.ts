@@ -56,11 +56,11 @@ import {
 const os = createos()
 
 export function memoryhaltchip(id: string) {
-  const mem = createchipid(id)
+  // stop chip execution
   os.halt(id)
-  // always clear flags
+  // ensure we clear flags
+  const mem = createchipid(id)
   memoryclearflags(mem)
-  console.info(`$$$ HALT ${mem}`)
 }
 
 export function memoryrestartallchipsandflags() {

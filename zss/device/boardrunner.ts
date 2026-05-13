@@ -86,7 +86,7 @@ function boardrunnerpushupdates(device: DEVICE) {
     const patch = pipe.emitdiff(doc)
     if (patch.length > 0) {
       vmboardrunnerpatch(device, assignedplayer, patch, id)
-      console.info(`$$$ PUSH ${id} ${patch.length}`)
+      // console.info(`$$$ PUSH ${id} ${patch.length}`)
     }
   }
 }

@@ -36,6 +36,7 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
     <>
       {glitchactive && (
         <Glitch
+          key="glitch"
           delay={new Vector2(0.05, 0.35)}
           duration={new Vector2(0.06, 0.28)}
           strength={new Vector2(0.06, 0.38)}
@@ -45,16 +46,16 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
         />
       )}
       {mood.includes('dark') && (
-        <>
+        <Fragment key="dark">
           <Noise
             opacity={0.5}
             premultiply // enables or disables noise premultiplication
             blendFunction={BlendFunction.DARKEN} // blend mode
           />
-        </>
+        </Fragment>
       )}
       {mood.includes('bright') && (
-        <Fragment key="mood">
+        <Fragment key="bright">
           <Bloom
             intensity={0.111}
             mipmapBlur={false}

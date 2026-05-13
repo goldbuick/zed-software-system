@@ -23,6 +23,7 @@ import {
   memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
+import { memoryhaltchip } from 'zss/memory/runtime'
 import {
   memoryisoperator,
   memoryreadoperator,
@@ -56,12 +57,12 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
     boardrunnerelect(currentboard.id)
   }
 
+  // push jsonpipe changes
+  boardrunnerpushupdates(vm)
+
   // signal logout
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
   registerloginready(vm, message.player)
-
-  // push jsonpipe changes
-  boardrunnerpushupdates(vm)
 }
 
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {
@@ -98,6 +99,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     }
   }
 
+  // token check
   if (isstring(token)) {
     if (memoryistokenbanned(token)) {
       vm.replynext(message, 'acklogin', false)
@@ -106,6 +108,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     memorysetplayertotoken(message.player, token)
   }
 
+  // attempt to login player
   if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
     // start tracking
     tracking[message.player] = 0
