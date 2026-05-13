@@ -68,7 +68,7 @@ export function handlecoderelease(vm: DEVICE, message: MESSAGE): void {
       observers[address] = undefined
       if (isstring(maybeobject)) {
         memoryhaltchip(maybeobject)
-        boardrunnerpushupdates(vm)
+        // boardrunnerpushupdates(vm)
       }
     }
   }

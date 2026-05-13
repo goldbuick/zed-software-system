@@ -86,12 +86,12 @@ function boardrunnerpushupdates(device: DEVICE) {
     const patch = pipe.emitdiff(doc)
     if (patch.length > 0) {
       vmboardrunnerpatch(device, assignedplayer, patch, id)
+      console.info(`$$$ PUSH ${id} ${patch.length}`)
     }
   }
 }
 
 function handleboardrunnertick(
-  device: DEVICE,
   message: MESSAGE,
   board: string,
   timestamp: number,
@@ -123,11 +123,11 @@ function handleboardrunnertick(
     // track that we've desynced this boundary
     boundarydidreset.add(id)
     // signal desync to vm
-    device.reply(message, 'desync', id)
+    boardrunner.reply(message, 'desync', id)
   }
 
   // ack the tick so we don't get blocked
-  vmboardrunnerack(device, assignedplayer)
+  vmboardrunnerack(boardrunner, assignedplayer)
 
   // validate the boundaries are in sync and the board codepage is valid
   const anydesynced = assignedboundaries.some((id) => {
@@ -171,7 +171,7 @@ function handleboardrunnertick(
   }
 
   // ensure the boundaries are in sync
-  boardrunnerpushupdates(device)
+  boardrunnerpushupdates(boardrunner)
 }
 
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
@@ -234,13 +234,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
           number,
           string[],
         ]
-        handleboardrunnertick(
-          boardrunner,
-          message,
-          board,
-          timestamp,
-          boundaries,
-        )
+        handleboardrunnertick(message, board, timestamp, boundaries)
       }
       break
     case 'paint':

@@ -6,8 +6,8 @@ import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
   memoryboundaryalloc,
-  memoryboundarydelete,
   memoryboundaryget,
+  memoryboundaryset,
 } from './boundaries'
 import {
   memorycodepagetypetostring,
@@ -81,9 +81,9 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   }
   const boundaryid = book.flags[id]
   if (ispresent(boundaryid)) {
-    memoryboundarydelete(boundaryid)
+    console.info(`$$$ CLEAR BOOK FLAG ${id} ${boundaryid}`)
+    memoryboundaryset(boundaryid, {})
   }
-  delete book.flags[id]
 }
 
 export function memoryreadelementdisplay(

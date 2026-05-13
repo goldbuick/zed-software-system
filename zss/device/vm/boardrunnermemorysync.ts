@@ -25,6 +25,7 @@ export function boardrunnermemorysync(vm: DEVICE, showlog = false) {
   if (patch.length === 0) {
     return
   }
+  console.info(`$$$ MEM sync ${patch.length}`)
   const activelist = new Set<string>([
     memoryreadoperator(),
     ...(mainbook.activelist ?? []),

@@ -2,7 +2,7 @@ import { objectKeys } from 'ts-extras'
 import { MESSAGE, synthplay } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { ispid } from 'zss/mapping/guid'
+import { createchipid, ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import {
   MAYBE,
@@ -27,7 +27,7 @@ import { memoryensuresoftwarebook } from './books'
 import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memoryreadflags } from './flags'
+import { memoryclearflags, memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
 import { memoryreadplayerboard } from './playermanagement'
 import {
@@ -56,14 +56,18 @@ import {
 const os = createos()
 
 export function memoryhaltchip(id: string) {
+  const mem = createchipid(id)
   os.halt(id)
+  // always clear flags
+  memoryclearflags(mem)
+  console.info(`$$$ HALT ${mem}`)
 }
 
 export function memoryrestartallchipsandflags() {
   // stop all chips
   const ids = os.ids()
   for (let i = 0; i < ids.length; ++i) {
-    os.halt(ids[i])
+    memoryhaltchip(ids[i])
   }
 
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -137,7 +141,7 @@ export function memorytickloaders() {
 
       // teardown on ended
       if (os.isended(id)) {
-        os.halt(id)
+        memoryhaltchip(id)
         delete loaders[id]
       }
 
@@ -209,7 +213,7 @@ export function memorytickmain(
         }
         if (type === CODE_PAGE_TYPE.ERROR) {
           // handle dead code
-          os.halt(id)
+          memoryhaltchip(id)
           // in dev, we only run player objects
         } else if (!playeronly || ispid(object?.id ?? '')) {
           // handle active code
